@@ -50,12 +50,12 @@ struct PacketFifoEntry
 
     PacketFifoEntry() { clear(); }
 
-    PacketFifoEntry(const PacketFifoEntry &s) :
-        packet(s.packet), number(s.number), slack(s.slack), priv(s.priv)
+    PacketFifoEntry(const PacketFifoEntry &s)
+        : packet(s.packet), number(s.number), slack(s.slack), priv(s.priv)
     {}
 
-    PacketFifoEntry(EthPacketPtr p, uint64_t n) :
-        packet(p), number(n), slack(0), priv(-1)
+    PacketFifoEntry(EthPacketPtr p, uint64_t n)
+        : packet(p), number(n), slack(0), priv(-1)
     {}
 
     void
@@ -86,8 +86,8 @@ class PacketFifo
     unsigned _reserved;
 
   public:
-    explicit PacketFifo(int max) :
-        _counter(0), _maxsize(max), _size(0), _reserved(0)
+    explicit PacketFifo(int max)
+        : _counter(0), _maxsize(max), _size(0), _reserved(0)
     {}
     virtual ~PacketFifo() {}
 

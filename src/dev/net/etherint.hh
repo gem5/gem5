@@ -53,8 +53,8 @@ class EtherInt : public Port
     EtherInt *peer;
 
   public:
-    EtherInt(const std::string &name, int idx = InvalidPortID) :
-        Port(name, idx), portName(name), peer(NULL)
+    EtherInt(const std::string &name, int idx = InvalidPortID)
+        : Port(name, idx), portName(name), peer(NULL)
     {}
     virtual ~EtherInt() {}
 

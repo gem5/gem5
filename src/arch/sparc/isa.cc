@@ -69,8 +69,8 @@ namespace
 /* Not applicable for SPARC */
 RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
 RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
-RegClass vecPredRegClass(
-    VecPredRegClass, VecPredRegClassName, 1, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+                         debug::IntRegs);
 RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
@@ -100,14 +100,14 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
         src->setMiscRegNoEffect(MISCREG_TL, i);
         dest->setMiscRegNoEffect(MISCREG_TL, i);
 
-        dest->setMiscRegNoEffect(
-            MISCREG_TT, src->readMiscRegNoEffect(MISCREG_TT));
-        dest->setMiscRegNoEffect(
-            MISCREG_TPC, src->readMiscRegNoEffect(MISCREG_TPC));
-        dest->setMiscRegNoEffect(
-            MISCREG_TNPC, src->readMiscRegNoEffect(MISCREG_TNPC));
-        dest->setMiscRegNoEffect(
-            MISCREG_TSTATE, src->readMiscRegNoEffect(MISCREG_TSTATE));
+        dest->setMiscRegNoEffect(MISCREG_TT,
+                                 src->readMiscRegNoEffect(MISCREG_TT));
+        dest->setMiscRegNoEffect(MISCREG_TPC,
+                                 src->readMiscRegNoEffect(MISCREG_TPC));
+        dest->setMiscRegNoEffect(MISCREG_TNPC,
+                                 src->readMiscRegNoEffect(MISCREG_TNPC));
+        dest->setMiscRegNoEffect(MISCREG_TSTATE,
+                                 src->readMiscRegNoEffect(MISCREG_TSTATE));
     }
 
     // Save off the traplevel
@@ -120,28 +120,28 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     //    dest->setMiscRegNoEffect(MISCREG_CCR,
     //            src->readMiscRegNoEffect(MISCREG_CCR));
     dest->setMiscReg(MISCREG_ASI, src->readMiscRegNoEffect(MISCREG_ASI));
-    dest->setMiscRegNoEffect(
-        MISCREG_TICK, src->readMiscRegNoEffect(MISCREG_TICK));
-    dest->setMiscRegNoEffect(
-        MISCREG_FPRS, src->readMiscRegNoEffect(MISCREG_FPRS));
-    dest->setMiscRegNoEffect(
-        MISCREG_SOFTINT, src->readMiscRegNoEffect(MISCREG_SOFTINT));
-    dest->setMiscRegNoEffect(
-        MISCREG_TICK_CMPR, src->readMiscRegNoEffect(MISCREG_TICK_CMPR));
-    dest->setMiscRegNoEffect(
-        MISCREG_STICK, src->readMiscRegNoEffect(MISCREG_STICK));
-    dest->setMiscRegNoEffect(
-        MISCREG_STICK_CMPR, src->readMiscRegNoEffect(MISCREG_STICK_CMPR));
+    dest->setMiscRegNoEffect(MISCREG_TICK,
+                             src->readMiscRegNoEffect(MISCREG_TICK));
+    dest->setMiscRegNoEffect(MISCREG_FPRS,
+                             src->readMiscRegNoEffect(MISCREG_FPRS));
+    dest->setMiscRegNoEffect(MISCREG_SOFTINT,
+                             src->readMiscRegNoEffect(MISCREG_SOFTINT));
+    dest->setMiscRegNoEffect(MISCREG_TICK_CMPR,
+                             src->readMiscRegNoEffect(MISCREG_TICK_CMPR));
+    dest->setMiscRegNoEffect(MISCREG_STICK,
+                             src->readMiscRegNoEffect(MISCREG_STICK));
+    dest->setMiscRegNoEffect(MISCREG_STICK_CMPR,
+                             src->readMiscRegNoEffect(MISCREG_STICK_CMPR));
 
     // Priv Registers
-    dest->setMiscRegNoEffect(
-        MISCREG_TICK, src->readMiscRegNoEffect(MISCREG_TICK));
-    dest->setMiscRegNoEffect(
-        MISCREG_TBA, src->readMiscRegNoEffect(MISCREG_TBA));
-    dest->setMiscRegNoEffect(
-        MISCREG_PSTATE, src->readMiscRegNoEffect(MISCREG_PSTATE));
-    dest->setMiscRegNoEffect(
-        MISCREG_PIL, src->readMiscRegNoEffect(MISCREG_PIL));
+    dest->setMiscRegNoEffect(MISCREG_TICK,
+                             src->readMiscRegNoEffect(MISCREG_TICK));
+    dest->setMiscRegNoEffect(MISCREG_TBA,
+                             src->readMiscRegNoEffect(MISCREG_TBA));
+    dest->setMiscRegNoEffect(MISCREG_PSTATE,
+                             src->readMiscRegNoEffect(MISCREG_PSTATE));
+    dest->setMiscRegNoEffect(MISCREG_PIL,
+                             src->readMiscRegNoEffect(MISCREG_PIL));
     dest->setMiscReg(MISCREG_CWP, src->readMiscRegNoEffect(MISCREG_CWP));
     //    dest->setMiscRegNoEffect(MISCREG_CANSAVE,
     //            src->readMiscRegNoEffect(MISCREG_CANSAVE));
@@ -156,69 +156,77 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     dest->setMiscReg(MISCREG_GL, src->readMiscRegNoEffect(MISCREG_GL));
 
     // Hyperprivilged registers
-    dest->setMiscRegNoEffect(
-        MISCREG_HPSTATE, src->readMiscRegNoEffect(MISCREG_HPSTATE));
-    dest->setMiscRegNoEffect(
-        MISCREG_HINTP, src->readMiscRegNoEffect(MISCREG_HINTP));
-    dest->setMiscRegNoEffect(
-        MISCREG_HTBA, src->readMiscRegNoEffect(MISCREG_HTBA));
+    dest->setMiscRegNoEffect(MISCREG_HPSTATE,
+                             src->readMiscRegNoEffect(MISCREG_HPSTATE));
+    dest->setMiscRegNoEffect(MISCREG_HINTP,
+                             src->readMiscRegNoEffect(MISCREG_HINTP));
+    dest->setMiscRegNoEffect(MISCREG_HTBA,
+                             src->readMiscRegNoEffect(MISCREG_HTBA));
     dest->setMiscRegNoEffect(MISCREG_STRAND_STS_REG,
-        src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
-    dest->setMiscRegNoEffect(
-        MISCREG_HSTICK_CMPR, src->readMiscRegNoEffect(MISCREG_HSTICK_CMPR));
+                             src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
+    dest->setMiscRegNoEffect(MISCREG_HSTICK_CMPR,
+                             src->readMiscRegNoEffect(MISCREG_HSTICK_CMPR));
 
     // FSR
-    dest->setMiscRegNoEffect(
-        MISCREG_FSR, src->readMiscRegNoEffect(MISCREG_FSR));
+    dest->setMiscRegNoEffect(MISCREG_FSR,
+                             src->readMiscRegNoEffect(MISCREG_FSR));
 
     // Strand Status Register
     dest->setMiscRegNoEffect(MISCREG_STRAND_STS_REG,
-        src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
+                             src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
 
     // MMU Registers
     dest->setMiscRegNoEffect(MISCREG_MMU_P_CONTEXT,
-        src->readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT));
+                             src->readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT));
     dest->setMiscRegNoEffect(MISCREG_MMU_S_CONTEXT,
-        src->readMiscRegNoEffect(MISCREG_MMU_S_CONTEXT));
-    dest->setMiscRegNoEffect(
-        MISCREG_MMU_PART_ID, src->readMiscRegNoEffect(MISCREG_MMU_PART_ID));
-    dest->setMiscRegNoEffect(
-        MISCREG_MMU_LSU_CTRL, src->readMiscRegNoEffect(MISCREG_MMU_LSU_CTRL));
+                             src->readMiscRegNoEffect(MISCREG_MMU_S_CONTEXT));
+    dest->setMiscRegNoEffect(MISCREG_MMU_PART_ID,
+                             src->readMiscRegNoEffect(MISCREG_MMU_PART_ID));
+    dest->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL,
+                             src->readMiscRegNoEffect(MISCREG_MMU_LSU_CTRL));
 
     // Scratchpad Registers
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R0,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R0));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R0));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R1,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R1));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R1));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R2,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R2));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R2));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R3,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R3));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R3));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R4,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R4));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R4));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R5,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R5));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R5));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R6,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R6));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R6));
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R7,
-        src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R7));
+                             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R7));
 
     // Queue Registers
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_HEAD,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_CPU_MONDO_HEAD,
         src->readMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_HEAD));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_TAIL,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_CPU_MONDO_TAIL,
         src->readMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_TAIL));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_HEAD,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_DEV_MONDO_HEAD,
         src->readMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_HEAD));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_TAIL,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_DEV_MONDO_TAIL,
         src->readMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_TAIL));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_HEAD,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_RES_ERROR_HEAD,
         src->readMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_HEAD));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_TAIL,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_RES_ERROR_TAIL,
         src->readMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_TAIL));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_HEAD,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_NRES_ERROR_HEAD,
         src->readMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_HEAD));
-    dest->setMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_TAIL,
+    dest->setMiscRegNoEffect(
+        MISCREG_QUEUE_NRES_ERROR_TAIL,
         src->readMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_TAIL));
 }
 
@@ -539,7 +547,7 @@ ISA::readMiscReg(RegIndex idx)
         // with it
         // change from curCycle() to instCount() until we're done with legion
         DPRINTF(Timer, "Instruction Count when TICK read: %#X stick=%#X\n",
-            tc->getCpuPtr()->instCount(), stick);
+                tc->getCpuPtr()->instCount(), stick);
         return mbits(tc->getCpuPtr()->instCount() + (int64_t)stick, 62, 2) |
                mbits(tick, 63, 63);
     case MISCREG_FPRS:

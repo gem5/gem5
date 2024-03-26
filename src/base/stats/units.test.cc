@@ -85,8 +85,8 @@ TEST(StatsUnitsTest, DegreeCelsius)
 {
     statistics::units::DegreeCelsius *unit =
         statistics::units::DegreeCelsius::get();
-    ASSERT_EQ(
-        unit->getUnitString(), statistics::units::DegreeCelsius::toString());
+    ASSERT_EQ(unit->getUnitString(),
+              statistics::units::DegreeCelsius::toString());
 }
 
 TEST(StatsUnitsTest, Count)
@@ -99,36 +99,38 @@ TEST(StatsUnitsTest, Rate1)
 {
     statistics::units::Rate<statistics::units::Count, statistics::units::Count>
         *unit = statistics::units::Rate<statistics::units::Count,
-            statistics::units::Count>::get();
+                                        statistics::units::Count>::get();
     ASSERT_EQ(unit->getUnitString(), "(Count/Count)");
     ASSERT_EQ(unit->getUnitString(),
-        (statistics::units::Rate<statistics::units::Count,
-            statistics::units::Count>::toString()));
+              (statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::toString()));
 }
 
 TEST(StatsUnitsTest, Rate2)
 {
     statistics::units::Rate<statistics::units::Tick, statistics::units::Second>
         *unit = statistics::units::Rate<statistics::units::Tick,
-            statistics::units::Second>::get();
+                                        statistics::units::Second>::get();
     ASSERT_EQ(unit->getUnitString(), "(Tick/Second)");
-    ASSERT_EQ(unit->getUnitString(),
+    ASSERT_EQ(
+        unit->getUnitString(),
         (statistics::units::Rate<statistics::units::Tick,
-            statistics::units::Second>::toString()));
+                                 statistics::units::Second>::toString()));
 }
 
 TEST(StatsUnitsTest, RateOfRates)
 {
     typedef statistics::units::Rate<statistics::units::Bit,
-        statistics::units::Second>
+                                    statistics::units::Second>
         BitPerSecond;
     typedef statistics::units::Rate<statistics::units::Count,
-        statistics::units::Cycle>
+                                    statistics::units::Cycle>
         CountPerCycle;
     statistics::units::Rate<BitPerSecond, CountPerCycle> *unit =
         statistics::units::Rate<BitPerSecond, CountPerCycle>::get();
     ASSERT_EQ(unit->getUnitString(), "((Bit/Second)/(Count/Cycle))");
-    ASSERT_EQ(unit->getUnitString(),
+    ASSERT_EQ(
+        unit->getUnitString(),
         (statistics::units::Rate<BitPerSecond, CountPerCycle>::toString()));
 }
 
@@ -142,6 +144,6 @@ TEST(StatsUnitsTest, Unspecified)
 {
     statistics::units::Unspecified *unit =
         statistics::units::Unspecified::get();
-    ASSERT_EQ(
-        unit->getUnitString(), statistics::units::Unspecified::toString());
+    ASSERT_EQ(unit->getUnitString(),
+              statistics::units::Unspecified::toString());
 }

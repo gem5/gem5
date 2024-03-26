@@ -63,8 +63,8 @@ class Walker : public ClockedObject
     class WalkerPort : public RequestPort
     {
       public:
-        WalkerPort(const std::string &_name, Walker *_walker) :
-            RequestPort(_name), walker(_walker)
+        WalkerPort(const std::string &_name, Walker *_walker)
+            : RequestPort(_name), walker(_walker)
         {}
 
       protected:
@@ -125,21 +125,21 @@ class Walker : public ClockedObject
 
       public:
         WalkerState(Walker *_walker, BaseMMU::Translation *_translation,
-            const RequestPtr &_req, bool _isFunctional = false) :
-            walker(_walker),
-            req(_req),
-            state(Ready),
-            nextState(Ready),
-            inflight(0),
-            translation(_translation),
-            functional(_isFunctional),
-            timing(false),
-            retrying(false),
-            started(false),
-            squashed(false)
+                    const RequestPtr &_req, bool _isFunctional = false)
+            : walker(_walker),
+              req(_req),
+              state(Ready),
+              nextState(Ready),
+              inflight(0),
+              translation(_translation),
+              functional(_isFunctional),
+              timing(false),
+              retrying(false),
+              started(false),
+              squashed(false)
         {}
-        void initState(
-            ThreadContext *_tc, BaseMMU::Mode _mode, bool _isTiming = false);
+        void initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                       bool _isTiming = false);
         Fault startWalk();
         Fault startFunctional(Addr &addr, unsigned &logBytes);
         bool recvPacket(PacketPtr pkt);
@@ -180,11 +180,11 @@ class Walker : public ClockedObject
   public:
     // Kick off the state machine.
     Fault start(ThreadContext *_tc, BaseMMU::Translation *translation,
-        const RequestPtr &req, BaseMMU::Mode mode);
+                const RequestPtr &req, BaseMMU::Mode mode);
     Fault startFunctional(ThreadContext *_tc, Addr &addr, unsigned &logBytes,
-        BaseMMU::Mode mode);
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+                          BaseMMU::Mode mode);
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   protected:
     // The TLB we're supposed to load.
@@ -217,15 +217,15 @@ class Walker : public ClockedObject
 
     using Params = X86PagetableWalkerParams;
 
-    Walker(const Params &params) :
-        ClockedObject(params),
-        port(name() + ".port", this),
-        funcState(this, NULL, NULL, true),
-        tlb(NULL),
-        sys(params.system),
-        requestorId(sys->getRequestorId(this)),
-        numSquashable(params.num_squash_per_cycle),
-        startWalkWrapperEvent([this] { startWalkWrapper(); }, name())
+    Walker(const Params &params)
+        : ClockedObject(params),
+          port(name() + ".port", this),
+          funcState(this, NULL, NULL, true),
+          tlb(NULL),
+          sys(params.system),
+          requestorId(sys->getRequestorId(this)),
+          numSquashable(params.num_squash_per_cycle),
+          startWalkWrapperEvent([this] { startWalkWrapper(); }, name())
     {}
 };
 

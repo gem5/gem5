@@ -52,13 +52,13 @@ namespace gem5
 {
 namespace X86ISA
 {
-FsWorkload::FsWorkload(const Params &p) :
-    KernelWorkload(p),
-    smbiosTable(p.smbios_table),
-    mpFloatingPointer(p.intel_mp_pointer),
-    mpConfigTable(p.intel_mp_table),
-    rsdp(p.acpi_description_table_pointer),
-    enable_osxsave(p.enable_osxsave)
+FsWorkload::FsWorkload(const Params &p)
+    : KernelWorkload(p),
+      smbiosTable(p.smbios_table),
+      mpFloatingPointer(p.intel_mp_pointer),
+      mpConfigTable(p.intel_mp_table),
+      rsdp(p.acpi_description_table_pointer),
+      enable_osxsave(p.enable_osxsave)
 {}
 
 void
@@ -123,7 +123,7 @@ FsWorkload::initState()
     fatal_if(!kernelObj, "No kernel to load.");
 
     fatal_if(kernelObj->getArch() == loader::I386,
-        "Loading a 32 bit x86 kernel is not supported.");
+             "Loading a 32 bit x86 kernel is not supported.");
 
     ThreadContext *tc = system->threads[0];
     auto phys_proxy = system->physProxy;
@@ -339,8 +339,8 @@ FsWorkload::initState()
 }
 
 void
-FsWorkload::writeOutSMBiosTable(
-    Addr header, Addr &headerSize, Addr &structSize, Addr table)
+FsWorkload::writeOutSMBiosTable(Addr header, Addr &headerSize,
+                                Addr &structSize, Addr table)
 {
     // If the table location isn't specified, just put it after the header.
     // The header size as of the 2.5 SMBios specification is 0x1F bytes.
@@ -390,7 +390,7 @@ FsWorkload::writeOutACPITables(Addr fp, Addr &fpSize)
         rsdp->write(system->physProxy, alloc);
         fpSize = alloc.alloc(0, 0) - fp;
         DPRINTF(ACPI, "Wrote ACPI tables to memory at %llx with size %llx.\n",
-            fp, fpSize);
+                fp, fpSize);
     }
 }
 

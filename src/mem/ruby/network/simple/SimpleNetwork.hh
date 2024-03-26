@@ -88,12 +88,12 @@ class SimpleNetwork : public Network
 
     // Methods used by Topology to setup the network
     void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry);
+                        std::vector<NetDest> &routing_table_entry);
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry);
+                       std::vector<NetDest> &routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry, PortDirection src_outport,
-        PortDirection dst_inport);
+                          std::vector<NetDest> &routing_table_entry,
+                          PortDirection src_outport, PortDirection dst_inport);
 
     void print(std::ostream &out) const;
 
@@ -104,7 +104,7 @@ class SimpleNetwork : public Network
   private:
     void addLink(SwitchID src, SwitchID dest, int link_latency);
     void makeLink(SwitchID src, SwitchID dest,
-        const NetDest &routing_table_entry, int link_latency);
+                  const NetDest &routing_table_entry, int link_latency);
     void makeTopology();
 
     // Private copy constructor and assignment operator

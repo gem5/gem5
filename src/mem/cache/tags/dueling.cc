@@ -41,8 +41,8 @@ void
 Dueler::setSample(uint64_t id, bool team)
 {
     panic_if(popCount(id) != 1, "The id must have a single bit set.");
-    panic_if(
-        _isSample & id, "This dueler is already a sample for id %llu", id);
+    panic_if(_isSample & id, "This dueler is already a sample for id %llu",
+             id);
     _isSample |= id;
     if (team) {
         _team |= id;
@@ -57,26 +57,27 @@ Dueler::isSample(uint64_t id, bool &team) const
 }
 
 DuelingMonitor::DuelingMonitor(std::size_t constituency_size,
-    std::size_t team_size, unsigned num_bits, double low_threshold,
-    double high_threshold) :
-    id(1 << numInstances),
-    constituencySize(constituency_size),
-    teamSize(team_size),
-    lowThreshold(low_threshold),
-    highThreshold(high_threshold),
-    selector(num_bits),
-    regionCounter(0),
-    winner(true)
+                               std::size_t team_size, unsigned num_bits,
+                               double low_threshold, double high_threshold)
+    : id(1 << numInstances),
+      constituencySize(constituency_size),
+      teamSize(team_size),
+      lowThreshold(low_threshold),
+      highThreshold(high_threshold),
+      selector(num_bits),
+      regionCounter(0),
+      winner(true)
 {
-    fatal_if(constituencySize < (NUM_DUELERS * teamSize),
+    fatal_if(
+        constituencySize < (NUM_DUELERS * teamSize),
         "There must be at least team size entries per team in a constituency");
     fatal_if(numInstances > 63, "Too many Dueling instances");
     fatal_if((lowThreshold <= 0.0) || (highThreshold >= 1.0),
-        "The low threshold must be within the range ]0.0, 1.0[");
+             "The low threshold must be within the range ]0.0, 1.0[");
     fatal_if((highThreshold <= 0.0) || (highThreshold >= 1.0),
-        "The high threshold must be within the range ]0.0, 1.0[");
+             "The high threshold must be within the range ]0.0, 1.0[");
     fatal_if(lowThreshold > highThreshold,
-        "The low threshold must be below the high threshold");
+             "The low threshold must be below the high threshold");
     numInstances++;
 
     // Start selector around its middle value

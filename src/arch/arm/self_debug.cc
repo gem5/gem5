@@ -47,8 +47,8 @@ namespace gem5
 using namespace ArmISA;
 
 Fault
-SelfDebug::testDebug(
-    ThreadContext *tc, const RequestPtr &req, BaseMMU::Mode mode)
+SelfDebug::testDebug(ThreadContext *tc, const RequestPtr &req,
+                     BaseMMU::Mode mode)
 {
     Fault fault = NoFault;
 
@@ -61,7 +61,7 @@ SelfDebug::testDebug(
                (req->isCacheInvalidate() && !req->isCacheClean())) {
         bool md = mode == BaseMMU::Write ? true : false;
         fault = testWatchPoints(tc, req->getVaddr(), md, req->isAtomic(),
-            req->getSize(), req->isCacheMaintenance());
+                                req->getSize(), req->isCacheMaintenance());
     }
 
     return fault;
@@ -105,7 +105,8 @@ SelfDebug::triggerException(ThreadContext *tc, Addr vaddr)
 {
     if (to32) {
         return std::make_shared<PrefetchAbort>(vaddr, ArmFault::DebugEvent,
-            false, ArmFault::UnknownTran, ArmFault::BRKPOINT);
+                                               false, ArmFault::UnknownTran,
+                                               ArmFault::BRKPOINT);
     } else {
         return std::make_shared<HardwareBreakpoint>(vaddr, 0x22);
     }
@@ -113,7 +114,7 @@ SelfDebug::triggerException(ThreadContext *tc, Addr vaddr)
 
 Fault
 SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
-    bool atomic, unsigned size, bool cm)
+                           bool atomic, unsigned size, bool cm)
 {
     setAArch32(tc);
     to32 = targetAArch32(tc);
@@ -132,23 +133,23 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
 }
 
 Fault
-SelfDebug::triggerWatchpointException(
-    ThreadContext *tc, Addr vaddr, bool write, bool cm)
+SelfDebug::triggerWatchpointException(ThreadContext *tc, Addr vaddr,
+                                      bool write, bool cm)
 {
     if (to32) {
         ArmFault::DebugType d =
             cm ? ArmFault::WPOINT_CM : ArmFault::WPOINT_NOCM;
-        return std::make_shared<DataAbort>(vaddr,
-            TlbEntry::DomainType::NoAccess, write, ArmFault::DebugEvent, cm,
-            ArmFault::UnknownTran, d);
+        return std::make_shared<DataAbort>(
+            vaddr, TlbEntry::DomainType::NoAccess, write, ArmFault::DebugEvent,
+            cm, ArmFault::UnknownTran, d);
     } else {
         return std::make_shared<Watchpoint>(0, vaddr, write, cm);
     }
 }
 
 bool
-SelfDebug::isDebugEnabledForEL64(
-    ThreadContext *tc, ExceptionLevel el, bool secure, bool mask)
+SelfDebug::isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
+                                 bool secure, bool mask)
 {
     bool route_to_el2 = ArmSystem::haveEL(tc, EL2) &&
                         (!secure || HaveExt(tc, ArmExtension::FEAT_SEL2)) &&
@@ -167,8 +168,8 @@ SelfDebug::isDebugEnabledForEL64(
 }
 
 bool
-SelfDebug::isDebugEnabledForEL32(
-    ThreadContext *tc, ExceptionLevel el, bool secure, bool mask)
+SelfDebug::isDebugEnabledForEL32(ThreadContext *tc, ExceptionLevel el,
+                                 bool secure, bool mask)
 {
     if (el == EL0 && !ELStateUsingAArch32(tc, EL1, secure)) {
         return isDebugEnabledForEL64(tc, el, secure, mask);
@@ -201,8 +202,8 @@ BrkPoint::testLinkedBk(ThreadContext *tc, Addr vaddr, ExceptionLevel el)
 }
 
 bool
-BrkPoint::test(
-    ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr, bool from_link)
+BrkPoint::test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
+               bool from_link)
 {
     bool v = false;
     switch (ctr.bt) {
@@ -323,9 +324,10 @@ SelfDebug::init(ThreadContext *tc)
     for (int i = 0; i <= dfr.brps; i++) {
         const bool isctxaw = i >= (dfr.brps - dfr.ctx_cmps);
 
-        BrkPoint bkp = BrkPoint((MiscRegIndex)(MISCREG_DBGBCR0_EL1 + i),
-            (MiscRegIndex)(MISCREG_DBGBVR0_EL1 + i), this, isctxaw,
-            (bool)mm_fr2.varange, mm_fr1.vmidbits, aarch32);
+        BrkPoint bkp =
+            BrkPoint((MiscRegIndex)(MISCREG_DBGBCR0_EL1 + i),
+                     (MiscRegIndex)(MISCREG_DBGBVR0_EL1 + i), this, isctxaw,
+                     (bool)mm_fr2.varange, mm_fr1.vmidbits, aarch32);
         const DBGBCR ctr = tc->readMiscReg(MISCREG_DBGBCR0_EL1 + i);
 
         bkp.updateControl(ctr);
@@ -334,8 +336,8 @@ SelfDebug::init(ThreadContext *tc)
 
     for (int i = 0; i <= dfr.wrps; i++) {
         WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0_EL1 + i),
-            (MiscRegIndex)(MISCREG_DBGWVR0_EL1 + i), this,
-            (bool)mm_fr2.varange, aarch32);
+                                    (MiscRegIndex)(MISCREG_DBGWVR0_EL1 + i),
+                                    this, (bool)mm_fr2.varange, aarch32);
         const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0_EL1 + i);
 
         wtp.updateControl(ctr);
@@ -445,7 +447,7 @@ BrkPoint::testVMIDMatch(ThreadContext *tc)
 
 bool
 BrkPoint::isEnabled(ThreadContext *tc, ExceptionLevel el, uint8_t hmc,
-    uint8_t ssc, uint8_t pmc)
+                    uint8_t ssc, uint8_t pmc)
 {
     bool v;
     bool aarch32 = conf->isAArch32();
@@ -457,7 +459,7 @@ BrkPoint::isEnabled(ThreadContext *tc, ExceptionLevel el, uint8_t hmc,
         return false;
     } else if (no_el3 && no_el2 && (hmc != 0x0 || ssc != 0x0) &&
                !(!aarch32 &&
-                   ((hmc && ssc == 0x1 && pmc == 0x0) || ssc == 0x3))) {
+                 ((hmc && ssc == 0x1 && pmc == 0x0) || ssc == 0x3))) {
         return false;
     } else if (no_el2 && hmc && ssc == 0x3 && pmc == 0x0) {
         return false;
@@ -508,8 +510,8 @@ BrkPoint::getVMIDfromReg(ThreadContext *tc, bool vs)
 }
 
 bool
-WatchPoint::isEnabled(
-    ThreadContext *tc, ExceptionLevel el, bool hmc, uint8_t ssc, uint8_t pac)
+WatchPoint::isEnabled(ThreadContext *tc, ExceptionLevel el, bool hmc,
+                      uint8_t ssc, uint8_t pac)
 {
     bool v;
     bool aarch32 = conf->isAArch32();
@@ -554,7 +556,7 @@ WatchPoint::isEnabled(
 
 bool
 WatchPoint::test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool &wrt,
-    bool atomic, unsigned size)
+                 bool atomic, unsigned size)
 {
     bool v = false;
     const DBGWCR ctr = tc->readMiscReg(ctrlRegIndex);
@@ -572,8 +574,8 @@ WatchPoint::test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool &wrt,
 }
 
 bool
-WatchPoint::compareAddress(
-    ThreadContext *tc, Addr in_addr, uint8_t bas, uint8_t mask, unsigned size)
+WatchPoint::compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
+                           uint8_t mask, unsigned size)
 {
     Addr addr_tocmp = getAddrfromReg(tc);
     int maxbits = isDoubleAligned(addr_tocmp) ? 4 : 8;
@@ -616,8 +618,8 @@ WatchPoint::compareAddress(
 }
 
 bool
-SoftwareStep::debugExceptionReturnSS(
-    ThreadContext *tc, CPSR spsr, ExceptionLevel dest)
+SoftwareStep::debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
+                                     ExceptionLevel dest)
 {
     bool SS_bit = false;
     bool enabled_src = false;

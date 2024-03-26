@@ -56,22 +56,22 @@ using std::vector;
 namespace gem5
 {
 // initialize hdlcd registers
-HDLcd::HDLcd(const HDLcdParams &p) :
-    AmbaDmaDevice(p, 0xFFFF),
-    // Parameters
-    vnc(p.vnc),
-    workaroundSwapRB(p.workaround_swap_rb),
-    workaroundDmaLineCount(p.workaround_dma_line_count),
-    addrRanges{RangeSize(pioAddr, pioSize)},
-    enableCapture(p.enable_capture),
-    pixelBufferSize(p.pixel_buffer_size),
-    virtRefreshRate(p.virt_refresh_rate),
+HDLcd::HDLcd(const HDLcdParams &p)
+    : AmbaDmaDevice(p, 0xFFFF),
+      // Parameters
+      vnc(p.vnc),
+      workaroundSwapRB(p.workaround_swap_rb),
+      workaroundDmaLineCount(p.workaround_dma_line_count),
+      addrRanges{RangeSize(pioAddr, pioSize)},
+      enableCapture(p.enable_capture),
+      pixelBufferSize(p.pixel_buffer_size),
+      virtRefreshRate(p.virt_refresh_rate),
 
-    virtRefreshEvent([this] { virtRefresh(); }, name()),
-    // Other
-    imgFormat(p.frame_format),
-    pixelPump(*this, *p.pxl_clk, p.pixel_chunk),
-    stats(this)
+      virtRefreshEvent([this] { virtRefresh(); }, name()),
+      // Other
+      imgFormat(p.frame_format),
+      pixelPump(*this, *p.pxl_clk, p.pixel_chunk),
+      stats(this)
 {
     if (vnc)
         vnc->setFrameBuffer(&pixelPump.fb);
@@ -79,10 +79,10 @@ HDLcd::HDLcd(const HDLcdParams &p) :
     imgWriter = createImgWriter(imgFormat, &pixelPump.fb);
 }
 
-HDLcd::HDLcdStats::HDLcdStats(statistics::Group *parent) :
-    statistics::Group(parent, "HDLcd"),
-    ADD_STAT(underruns, statistics::units::Count::get(),
-        "Number of buffer underruns")
+HDLcd::HDLcdStats::HDLcdStats(statistics::Group *parent)
+    : statistics::Group(parent, "HDLcd"),
+      ADD_STAT(underruns, statistics::units::Count::get(),
+               "Number of buffer underruns")
 {
     using namespace statistics;
 
@@ -217,8 +217,8 @@ HDLcd::read(PacketPtr pkt)
 
     const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
-        "Unhandled read size (address: 0x.4x, size: %u)", daddr,
-        pkt->getSize());
+             "Unhandled read size (address: 0x.4x, size: %u)", daddr,
+             pkt->getSize());
 
     const uint32_t data = readReg(daddr);
     DPRINTF(HDLcd, "read register 0x%04x: 0x%x\n", daddr, data);
@@ -236,8 +236,8 @@ HDLcd::write(PacketPtr pkt)
 
     const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
-        "Unhandled read size (address: 0x.4x, size: %u)", daddr,
-        pkt->getSize());
+             "Unhandled read size (address: 0x.4x, size: %u)", daddr,
+             pkt->getSize());
     const uint32_t data = pkt->getLE<uint32_t>();
     DPRINTF(HDLcd, "write register 0x%04x: 0x%x\n", daddr, data);
 
@@ -351,13 +351,14 @@ HDLcd::writeReg(Addr offset, uint32_t value)
 
         if (bus_options.max_outstanding != old_bus_options.max_outstanding) {
             DPRINTF(HDLcd,
-                "Changing HDLcd outstanding DMA transactions: %d -> %d\n",
-                old_bus_options.max_outstanding, bus_options.max_outstanding);
+                    "Changing HDLcd outstanding DMA transactions: %d -> %d\n",
+                    old_bus_options.max_outstanding,
+                    bus_options.max_outstanding);
         }
 
         if (bus_options.burst_len != old_bus_options.burst_len) {
             DPRINTF(HDLcd, "Changing HDLcd DMA burst flags: 0x%x -> 0x%x\n",
-                old_bus_options.burst_len, bus_options.burst_len);
+                    old_bus_options.burst_len, bus_options.burst_len);
         }
     }
         return;
@@ -397,7 +398,7 @@ HDLcd::writeReg(Addr offset, uint32_t value)
 
         if (new_command.enable != command.enable) {
             DPRINTF(HDLcd, "HDLCD switched %s\n",
-                new_command.enable ? "on" : "off");
+                    new_command.enable ? "on" : "off");
 
             if (new_command.enable) {
                 cmdEnable();
@@ -439,12 +440,14 @@ HDLcd::pixelConverter() const
      * blue color select registers. */
     if (!workaroundSwapRB) {
         return PixelConverter(pixel_format.bytes_per_pixel + 1,
-            red_select.offset, green_select.offset, blue_select.offset,
-            red_select.size, green_select.size, blue_select.size, byte_order);
+                              red_select.offset, green_select.offset,
+                              blue_select.offset, red_select.size,
+                              green_select.size, blue_select.size, byte_order);
     } else {
         return PixelConverter(pixel_format.bytes_per_pixel + 1,
-            blue_select.offset, green_select.offset, red_select.offset,
-            blue_select.size, green_select.size, red_select.size, byte_order);
+                              blue_select.offset, green_select.offset,
+                              red_select.offset, blue_select.size,
+                              green_select.size, red_select.size, byte_order);
     }
 }
 
@@ -452,8 +455,9 @@ DisplayTimings
 HDLcd::displayTimings() const
 {
     return DisplayTimings(h_data.val + 1, v_data.val + 1, h_back_porch.val + 1,
-        h_sync.val + 1, h_front_porch.val + 1, v_back_porch.val + 1,
-        v_sync.val + 1, v_front_porch.val + 1);
+                          h_sync.val + 1, h_front_porch.val + 1,
+                          v_back_porch.val + 1, v_sync.val + 1,
+                          v_front_porch.val + 1);
 }
 
 void
@@ -476,8 +480,9 @@ HDLcd::createDmaEngine()
         fb_line_count + (workaroundDmaLineCount ? 1 : 0);
 
     dmaEngine.reset(new DmaEngine(*this, pixelBufferSize,
-        AXI_PORT_WIDTH * dma_burst_len, bus_options.max_outstanding,
-        fb_line_length, fb_line_pitch, dma_lines));
+                                  AXI_PORT_WIDTH * dma_burst_len,
+                                  bus_options.max_outstanding, fb_line_length,
+                                  fb_line_pitch, dma_lines));
 }
 
 void
@@ -575,7 +580,7 @@ HDLcd::pxlFrameDone()
     if (dmaEngine->size()) {
         warn("HDLCD %u bytes still in FIFO after frame: Ensure that DMA "
              "and PixelPump configuration is consistent\n",
-            dmaEngine->size());
+             dmaEngine->size());
         dmaEngine->dumpSettings();
         pixelPump.dumpSettings();
     }
@@ -586,8 +591,8 @@ HDLcd::pxlFrameDone()
     if (enableCapture) {
         if (!pic) {
             pic = simout.create(csprintf("%s.framebuffer.%s", sys->name(),
-                                    imgWriter->getImgExtension()),
-                true);
+                                         imgWriter->getImgExtension()),
+                                true);
         }
 
         assert(pic);
@@ -612,15 +617,15 @@ HDLcd::setInterrupts(uint32_t ints, uint32_t mask)
 }
 
 HDLcd::DmaEngine::DmaEngine(HDLcd &_parent, size_t size, unsigned request_size,
-    unsigned max_pending, size_t line_size, ssize_t line_pitch,
-    unsigned num_lines) :
-    DmaReadFifo(_parent.dmaPort, size, request_size, max_pending,
-        Request::UNCACHEABLE),
-    parent(_parent),
-    lineSize(line_size),
-    linePitch(line_pitch),
-    numLines(num_lines),
-    nextLineAddr(0)
+                            unsigned max_pending, size_t line_size,
+                            ssize_t line_pitch, unsigned num_lines)
+    : DmaReadFifo(_parent.dmaPort, size, request_size, max_pending,
+                  Request::UNCACHEABLE),
+      parent(_parent),
+      lineSize(line_size),
+      linePitch(line_pitch),
+      numLines(num_lines),
+      nextLineAddr(0)
 {}
 
 void

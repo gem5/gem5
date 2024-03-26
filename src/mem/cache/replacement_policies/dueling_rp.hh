@@ -61,11 +61,11 @@ class Dueling : public Base
 
         /** Default constructor. Initialize sub-replacement data. */
         DuelerReplData(const std::shared_ptr<ReplacementData> &repl_data_a,
-            const std::shared_ptr<ReplacementData> &repl_data_b) :
-            ReplacementData(),
-            Dueler(),
-            replDataA(repl_data_a),
-            replDataB(repl_data_b)
+                       const std::shared_ptr<ReplacementData> &repl_data_b)
+            : ReplacementData(),
+              Dueler(),
+              replDataA(repl_data_a),
+              replDataB(repl_data_b)
         {}
     };
 
@@ -99,15 +99,15 @@ class Dueling : public Base
     void invalidate(
         const std::shared_ptr<ReplacementData> &replacement_data) override;
     void touch(const std::shared_ptr<ReplacementData> &replacement_data,
-        const PacketPtr pkt) override;
+               const PacketPtr pkt) override;
     void touch(const std::shared_ptr<ReplacementData> &replacement_data)
         const override;
     void reset(const std::shared_ptr<ReplacementData> &replacement_data,
-        const PacketPtr pkt) override;
+               const PacketPtr pkt) override;
     void reset(const std::shared_ptr<ReplacementData> &replacement_data)
         const override;
-    ReplaceableEntry *getVictim(
-        const ReplacementCandidates &candidates) const override;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const override;
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 

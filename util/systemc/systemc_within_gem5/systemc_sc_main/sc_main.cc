@@ -61,8 +61,8 @@ class Feeder : public sc_core::sc_module
     std::vector<const char *> strings;
 
     SC_HAS_PROCESS(Feeder);
-    Feeder(sc_core::sc_module_name, std::vector<const char *> _strings) :
-        strings(_strings)
+    Feeder(sc_core::sc_module_name, std::vector<const char *> _strings)
+        : strings(_strings)
     {
         SC_THREAD(feed);
         sensitive << clk.pos();

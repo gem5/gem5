@@ -91,7 +91,7 @@ class BPredUnit : public SimObject
      * @return Returns if the branch is taken or not.
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-        PCStateBase &pc, ThreadID tid);
+                 PCStateBase &pc, ThreadID tid);
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -121,7 +121,7 @@ class BPredUnit : public SimObject
      *              or from decode. Its optional and used for statistics.
      */
     void squash(const InstSeqNum &squashed_sn, const PCStateBase &corr_target,
-        bool actually_taken, ThreadID tid, bool from_commit = true);
+                bool actually_taken, ThreadID tid, bool from_commit = true);
 
   protected:
     /** *******************************************************
@@ -153,7 +153,8 @@ class BPredUnit : public SimObject
      * has the branch predictor state associated with the lookup.
      */
     virtual void updateHistories(ThreadID tid, Addr pc, bool uncond,
-        bool taken, Addr target, void *&bp_history) = 0;
+                                 bool taken, Addr target,
+                                 void *&bp_history) = 0;
 
     /**
      * @param tid The thread id.
@@ -177,7 +178,8 @@ class BPredUnit : public SimObject
      * @todo Make this update flexible enough to handle a global predictor.
      */
     virtual void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-        bool squashed, const StaticInstPtr &inst, Addr target) = 0;
+                        bool squashed, const StaticInstPtr &inst,
+                        Addr target) = 0;
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -243,25 +245,25 @@ class BPredUnit : public SimObject
          * information needed to update the predictor, BTB, and RAS.
          */
         PredictorHistory(ThreadID _tid, InstSeqNum sn, Addr _pc,
-            const StaticInstPtr &inst) :
-            seqNum(sn),
-            tid(_tid),
-            pc(_pc),
-            inst(inst),
-            type(getBranchType(inst)),
-            call(inst->isCall()),
-            uncond(inst->isUncondCtrl()),
-            predTaken(false),
-            actuallyTaken(false),
-            condPred(false),
-            btbHit(false),
-            targetProvider(TargetProvider::NoTarget),
-            resteered(false),
-            mispredict(false),
-            target(nullptr),
-            bpHistory(nullptr),
-            indirectHistory(nullptr),
-            rasHistory(nullptr)
+                         const StaticInstPtr &inst)
+            : seqNum(sn),
+              tid(_tid),
+              pc(_pc),
+              inst(inst),
+              type(getBranchType(inst)),
+              call(inst->isCall()),
+              uncond(inst->isUncondCtrl()),
+              predTaken(false),
+              actuallyTaken(false),
+              condPred(false),
+              btbHit(false),
+              targetProvider(TargetProvider::NoTarget),
+              resteered(false),
+              mispredict(false),
+              target(nullptr),
+              bpHistory(nullptr),
+              indirectHistory(nullptr),
+              rasHistory(nullptr)
         {}
 
         ~PredictorHistory()
@@ -344,7 +346,8 @@ class BPredUnit : public SimObject
      * Internal prediction function.
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-        PCStateBase &pc, ThreadID tid, PredictorHistory *&bpu_history);
+                 PCStateBase &pc, ThreadID tid,
+                 PredictorHistory *&bpu_history);
 
     /**
      * Squashes a particular branch instance

@@ -91,7 +91,7 @@ TLB::lookup(Addr vpn, uint8_t asn) const
     }
 
     DPRINTF(TLB, "lookup %#x, asn %#x -> %s ppn %#x\n", vpn, (int)asn,
-        retval ? "hit" : "miss", retval ? retval->PFN1 : 0);
+            retval ? "hit" : "miss", retval ? retval->PFN1 : 0);
     return retval;
 }
 
@@ -150,15 +150,15 @@ TLB::insertAt(PTE &pte, unsigned Index, int _smallPages)
     smallPages = _smallPages;
     if (Index > size) {
         warn("Attempted to write at index (%d) beyond TLB size (%d)", Index,
-            size);
+             size);
     } else {
         // Update TLB
         DPRINTF(TLB, "TLB[%d]: %x %x %x %x\n", Index, pte.Mask << 11,
-            ((pte.VPN << 11) | pte.asid),
-            ((pte.PFN0 << 6) | (pte.C0 << 3) | (pte.D0 << 2) | (pte.V0 << 1) |
-                pte.G),
-            ((pte.PFN1 << 6) | (pte.C1 << 3) | (pte.D1 << 2) | (pte.V1 << 1) |
-                pte.G));
+                ((pte.VPN << 11) | pte.asid),
+                ((pte.PFN0 << 6) | (pte.C0 << 3) | (pte.D0 << 2) |
+                 (pte.V0 << 1) | pte.G),
+                ((pte.PFN1 << 6) | (pte.C1 << 3) | (pte.D1 << 2) |
+                 (pte.V1 << 1) | pte.G));
         if (table[Index].V0 || table[Index].V1) {
             // Previous entry is valid
             PageTable::iterator i = lookupTable.find(table[Index].VPN);
@@ -214,8 +214,8 @@ TLB::unserialize(CheckpointIn &cp)
 }
 
 Fault
-TLB::translateAtomic(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                     BaseMMU::Mode mode)
 {
     panic_if(FullSystem, "translateAtomic not implemented in full system.");
     return tc->getProcessPtr()->pTable->translate(req);
@@ -223,23 +223,23 @@ TLB::translateAtomic(
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    BaseMMU::Translation *translation, BaseMMU::Mode mode)
+                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
 Fault
-TLB::translateFunctional(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
 {
     panic_if(FullSystem, "translateAtomic not implemented in full system.");
     return tc->getProcessPtr()->pTable->translate(req);
 }
 
 Fault
-TLB::finalizePhysical(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }

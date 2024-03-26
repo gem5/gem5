@@ -111,7 +111,7 @@ init_drain(py::module_ &m_native)
         .def("state", &DrainManager::state)
         .def("signalDrainDone", &DrainManager::signalDrainDone)
         .def_static("instance", &DrainManager::instance,
-            py::return_value_policy::reference);
+                    py::return_value_policy::reference);
 }
 
 static void
@@ -150,8 +150,8 @@ init_range(py::module_ &m_native)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
         .def("exclude",
-            static_cast<AddrRangeList (AddrRange::*)(const AddrRangeList &)
-                    const>(&AddrRange::exclude));
+             static_cast<AddrRangeList (AddrRange::*)(const AddrRangeList &)
+                             const>(&AddrRange::exclude));
 
     m.def("RangeEx", &RangeEx);
     m.def("RangeIn", &RangeIn);
@@ -166,19 +166,19 @@ init_pc(py::module_ &m_native)
         .def(py::init<>())
         .def(py::init<Addr, int>())
         .def("__eq__",
-            [](const PcCountPair &self, py::object other) {
-                py::int_ pyPC = other.attr("get_pc")();
-                py::int_ pyCount = other.attr("get_count")();
-                uint64_t cPC = pyPC.cast<uint64_t>();
-                int cCount = pyCount.cast<int>();
-                return (self.getPC() == cPC && self.getCount() == cCount);
-            })
+             [](const PcCountPair &self, py::object other) {
+                 py::int_ pyPC = other.attr("get_pc")();
+                 py::int_ pyCount = other.attr("get_count")();
+                 uint64_t cPC = pyPC.cast<uint64_t>();
+                 int cCount = pyCount.cast<int>();
+                 return (self.getPC() == cPC && self.getCount() == cCount);
+             })
         .def("__hash__",
-            [](const PcCountPair &self) {
-                py::int_ pyPC = py::cast(self.getPC());
-                py::int_ pyCount = py::cast(self.getCount());
-                return py::hash(py::make_tuple(pyPC, pyCount));
-            })
+             [](const PcCountPair &self) {
+                 py::int_ pyPC = py::cast(self.getPC());
+                 py::int_ pyCount = py::cast(self.getCount());
+                 return py::hash(py::make_tuple(pyPC, pyCount));
+             })
         .def("__str__", &PcCountPair::to_string)
         .def("get_pc", &PcCountPair::getPC)
         .def("get_count", &PcCountPair::getCount);
@@ -221,8 +221,8 @@ init_socket(py::module_ &m_native)
     m_socket.def("listenSocketEmptyConfig", &listenSocketEmptyConfig)
         .def("listenSocketInetConfig", &listenSocketInetConfig)
         .def("listenSocketUnixFileConfig", &listenSocketUnixFileConfig)
-        .def(
-            "listenSocketUnixAbstractConfig", &listenSocketUnixAbstractConfig);
+        .def("listenSocketUnixAbstractConfig",
+             &listenSocketUnixAbstractConfig);
 
     py::class_<ListenSocketConfig>(m_socket, "ListenSocketConfig");
 }
@@ -260,11 +260,11 @@ pybind_init_core(py::module_ &m_native)
         .def(float() * py::self)
         .def(py::self / float())
         .def("__str__",
-            [](const Temperature &t) {
-                std::stringstream s;
-                s << t;
-                return s.str();
-            })
+             [](const Temperature &t) {
+                 std::stringstream s;
+                 s << t;
+                 return s.str();
+             })
         .def("__repr__", [](const Temperature &t) {
             std::stringstream s;
             s << "Temperature(" << t.toKelvin() << ")";
@@ -318,10 +318,10 @@ pybind_init_core(py::module_ &m_native)
      */
     m_core.def("serializeAll", &SimObject::serializeAll)
         .def("getCheckpoint",
-            [](const std::string &cpt_dir) {
-                SimObject::setSimObjectResolver(&pybindSimObjectResolver);
-                return new CheckpointIn(cpt_dir);
-            })
+             [](const std::string &cpt_dir) {
+                 SimObject::setSimObjectResolver(&pybindSimObjectResolver);
+                 return new CheckpointIn(cpt_dir);
+             })
 
         ;
 

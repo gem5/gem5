@@ -92,7 +92,7 @@ class DataBlock
     void copyPartial(const DataBlock &dblk, int offset, int len);
     void copyPartial(const DataBlock &dblk, const WriteMask &mask);
     void atomicPartial(const DataBlock &dblk, const WriteMask &mask,
-        bool isAtomicNoReturn = true);
+                       bool isAtomicNoReturn = true);
     bool equal(const DataBlock &obj) const;
     void print(std::ostream &out) const;
 

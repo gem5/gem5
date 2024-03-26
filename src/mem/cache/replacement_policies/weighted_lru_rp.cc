@@ -44,7 +44,7 @@ WeightedLRU::WeightedLRU(const Params &p) : LRU(p) {}
 
 void
 WeightedLRU::touch(const std::shared_ptr<ReplacementData> &replacement_data,
-    int occupancy) const
+                   int occupancy) const
 {
     LRU::touch(replacement_data);
     std::static_pointer_cast<WeightedLRUReplData>(replacement_data)

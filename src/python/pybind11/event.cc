@@ -127,14 +127,14 @@ pybind_init_event(py::module_ &m_native)
             py::arg("event"), py::arg("when"))
         .def("deschedule", &EventQueue::deschedule, py::arg("event"))
         .def("reschedule", &EventQueue::reschedule, py::arg("event"),
-            py::arg("tick"), py::arg("always") = false);
+             py::arg("tick"), py::arg("always") = false);
 
     // TODO: Ownership of global exit events has always been a bit
     // questionable. We currently assume they are owned by the C++
     // world. This is what the old SWIG code did, but that will result
     // in memory leaks.
     py::class_<GlobalSimLoopExitEvent,
-        std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
+               std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
         m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
         .def("getCode", &GlobalSimLoopExitEvent::getCode);
@@ -154,7 +154,7 @@ pybind_init_event(py::module_ &m_native)
 
     py::class_<PyEvent, Event>(m, "PyEvent")
         .def(py::init<Event::Priority>(),
-            py::arg("priority") = (int)Event::Default_Pri);
+             py::arg("priority") = (int)Event::Default_Pri);
 
 #define PRIO(n) c_event.attr(#n) = py::cast((int)Event::n)
     PRIO(Minimum_Pri);

@@ -93,26 +93,26 @@ n_word(int x)
 //  CONSTRUCTORS
 // ----------------------------------------------------------------------------
 
-scfx_rep::scfx_rep() :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep()
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     set_zero();
 }
 
-scfx_rep::scfx_rep(int a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(int a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -130,14 +130,14 @@ scfx_rep::scfx_rep(int a) :
     }
 }
 
-scfx_rep::scfx_rep(unsigned int a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(unsigned int a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -150,14 +150,14 @@ scfx_rep::scfx_rep(unsigned int a) :
     }
 }
 
-scfx_rep::scfx_rep(long a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(long a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -184,14 +184,14 @@ scfx_rep::scfx_rep(long a) :
     }
 }
 
-scfx_rep::scfx_rep(unsigned long a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(unsigned long a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -213,14 +213,14 @@ scfx_rep::scfx_rep(unsigned long a) :
         set_zero();
 }
 
-scfx_rep::scfx_rep(double a) :
-    m_mant(min_mant),
-    m_wp(0),
-    m_sign(),
-    m_state(normal),
-    m_msw(0),
-    m_lsw(0),
-    m_r_flag(false)
+scfx_rep::scfx_rep(double a)
+    : m_mant(min_mant),
+      m_wp(0),
+      m_sign(),
+      m_state(normal),
+      m_msw(0),
+      m_lsw(0),
+      m_r_flag(false)
 {
     m_mant.clear();
 
@@ -243,14 +243,14 @@ scfx_rep::scfx_rep(double a) :
     }
 }
 
-scfx_rep::scfx_rep(int64 a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(int64 a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -271,14 +271,14 @@ scfx_rep::scfx_rep(int64 a) :
     }
 }
 
-scfx_rep::scfx_rep(uint64 a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(uint64 a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -293,14 +293,14 @@ scfx_rep::scfx_rep(uint64 a) :
     }
 }
 
-scfx_rep::scfx_rep(const sc_signed &a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(const sc_signed &a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a.iszero()) {
         set_zero();
@@ -333,14 +333,14 @@ scfx_rep::scfx_rep(const sc_signed &a) :
     }
 }
 
-scfx_rep::scfx_rep(const sc_unsigned &a) :
-    m_mant(min_mant),
-    m_wp(),
-    m_sign(),
-    m_state(),
-    m_msw(),
-    m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(const sc_unsigned &a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a.iszero()) {
         set_zero();
@@ -363,14 +363,14 @@ scfx_rep::scfx_rep(const sc_unsigned &a) :
 }
 
 // copy constructor
-scfx_rep::scfx_rep(const scfx_rep &a) :
-    m_mant(a.m_mant),
-    m_wp(a.m_wp),
-    m_sign(a.m_sign),
-    m_state(a.m_state),
-    m_msw(a.m_msw),
-    m_lsw(a.m_lsw),
-    m_r_flag(false)
+scfx_rep::scfx_rep(const scfx_rep &a)
+    : m_mant(a.m_mant),
+      m_wp(a.m_wp),
+      m_sign(a.m_sign),
+      m_state(a.m_state),
+      m_msw(a.m_msw),
+      m_lsw(a.m_lsw),
+      m_r_flag(false)
 {}
 
 // ----------------------------------------------------------------------------
@@ -427,13 +427,13 @@ scfx_rep::operator delete(void *ptr, std::size_t size)
 //  Convert from character string to sc_fxrep.
 // ----------------------------------------------------------------------------
 
-#define SCFX_FAIL_IF_(cnd) \
-    { \
-        if ((cnd)) { \
-            m_state = not_a_number; \
-            m_mant.clear(); /* to avoid Purify UMRs during assignment */ \
-            return; \
-        } \
+#define SCFX_FAIL_IF_(cnd)                                                    \
+    {                                                                         \
+        if ((cnd)) {                                                          \
+            m_state = not_a_number;                                           \
+            m_mant.clear(); /* to avoid Purify UMRs during assignment */      \
+            return;                                                           \
+        }                                                                     \
     }
 
 void
@@ -1046,7 +1046,7 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
 
 void
 print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
-    sc_fmt fmt, const scfx_params *params)
+            sc_fmt fmt, const scfx_params *params)
 {
     scfx_rep b = a;
 
@@ -1088,12 +1088,12 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
 
         if (params->enc() == SC_TC_ &&
             (numrep == SC_BIN_US || numrep == SC_OCT_US ||
-                numrep == SC_HEX_US) &&
+             numrep == SC_HEX_US) &&
             !numrep_is_sm && params->wl() > 1) {
             --msb;
         } else if (params->enc() == SC_US_ &&
                    (numrep == SC_BIN || numrep == SC_OCT || numrep == SC_HEX ||
-                       numrep == SC_CSD)) {
+                    numrep == SC_CSD)) {
             ++msb;
         }
     } else {
@@ -1133,8 +1133,8 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
         step = 4;
         break;
     default:
-        SC_REPORT_FATAL(
-            sc_core::SC_ID_ASSERTION_FAILED_, "unexpected sc_numrep");
+        SC_REPORT_FATAL(sc_core::SC_ID_ASSERTION_FAILED_,
+                        "unexpected sc_numrep");
         sc_core::sc_abort();
     }
 
@@ -1191,7 +1191,7 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
 
 const char *
 scfx_rep::to_string(sc_numrep numrep, int w_prefix, sc_fmt fmt,
-    const scfx_params *params) const
+                    const scfx_params *params) const
 {
     static scfx_string s;
 
@@ -1203,7 +1203,7 @@ scfx_rep::to_string(sc_numrep numrep, int w_prefix, sc_fmt fmt,
         scfx_print_inf(s, is_neg());
     } else if (is_neg() && !is_zero() &&
                (numrep == SC_BIN_US || numrep == SC_OCT_US ||
-                   numrep == SC_HEX_US)) {
+                numrep == SC_HEX_US)) {
         s += "negative";
     } else if (numrep == SC_DEC || numrep == SC_NOBASE) {
         sc_dt::print_dec(s, *this, w_prefix, fmt);
@@ -1342,7 +1342,7 @@ add_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
 
 static inline int
 sub_with_index(scfx_mant &a, int a_msw, int /*a_lsw*/, const scfx_mant &b,
-    int b_msw, int b_lsw)
+               int b_msw, int b_lsw)
 {
     unsigned carry = 0;
 
@@ -1466,8 +1466,8 @@ static const int half_word_incr = 1;
 #endif
 
 void
-multiply(
-    scfx_rep &result, const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
+multiply(scfx_rep &result, const scfx_rep &lhs, const scfx_rep &rhs,
+         int max_wl)
 {
     //
     // check for special cases
@@ -1607,7 +1607,7 @@ div_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int div_wl)
         if (compare_msw_ff(rhs, remainder) <= 0) {
             result.set_bin(result_index);
             sub_with_index(remainder.m_mant, remainder.m_msw, remainder.m_lsw,
-                rhs.m_mant, rhs.m_msw, rhs.m_lsw);
+                           rhs.m_mant, rhs.m_msw, rhs.m_lsw);
         }
         result_index--;
         remainder.shift_left(1);
@@ -2088,7 +2088,7 @@ scfx_rep::cast(const scfx_params &params, bool &q_flag, bool &o_flag)
 
 void
 align(const scfx_rep &lhs, const scfx_rep &rhs, int &new_wp, int &len_mant,
-    scfx_mant_ref &lhs_mant, scfx_mant_ref &rhs_mant)
+      scfx_mant_ref &lhs_mant, scfx_mant_ref &rhs_mant)
 {
     bool need_lhs = true;
     bool need_rhs = true;
@@ -2343,8 +2343,8 @@ scfx_rep::shift_left(int n)
         int shift_left = n;
         int shift_right = bits_in_word - n;
 
-        SC_ASSERT_(
-            !(m_mant[size() - 1] >> shift_right), "shift_left overflow");
+        SC_ASSERT_(!(m_mant[size() - 1] >> shift_right),
+                   "shift_left overflow");
 
         for (int i = size() - 1; i > 0; i--) {
             m_mant[i] =
@@ -2507,8 +2507,8 @@ scfx_rep::get_slice(int i, int j, const scfx_params &, sc_bv_base &bv) const
 }
 
 bool
-scfx_rep::set_slice(
-    int i, int j, const scfx_params &params, const sc_bv_base &bv)
+scfx_rep::set_slice(int i, int j, const scfx_params &params,
+                    const sc_bv_base &bv)
 {
     if (is_nan() || is_inf())
         return false;
@@ -2553,8 +2553,8 @@ scfx_rep::dump(::std::ostream &os) const
     os << "mant  =" << ::std::endl;
     for (int i = size() - 1; i >= 0; i--) {
         char buf[BUFSIZ];
-        std::sprintf(
-            buf, " %d: %10u (%8x)", i, (int)m_mant[i], (int)m_mant[i]);
+        std::sprintf(buf, " %d: %10u (%8x)", i, (int)m_mant[i],
+                     (int)m_mant[i]);
         os << buf << ::std::endl;
     }
 

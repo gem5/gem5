@@ -135,8 +135,8 @@ class SensitivityEvent : virtual public Sensitivity
   protected:
     const ::sc_core::sc_event *event;
 
-    SensitivityEvent(Process *p, const ::sc_core::sc_event *e = nullptr) :
-        Sensitivity(p), event(e)
+    SensitivityEvent(Process *p, const ::sc_core::sc_event *e = nullptr)
+        : Sensitivity(p), event(e)
     {}
 
   public:
@@ -153,9 +153,9 @@ class SensitivityEvents : virtual public Sensitivity
     std::set<const ::sc_core::sc_event *> events;
 
     SensitivityEvents(Process *p) : Sensitivity(p) {}
-    SensitivityEvents(
-        Process *p, const std::set<const ::sc_core::sc_event *> &s) :
-        Sensitivity(p), events(s)
+    SensitivityEvents(Process *p,
+                      const std::set<const ::sc_core::sc_event *> &s)
+        : Sensitivity(p), events(s)
     {}
 
   public:
@@ -181,20 +181,20 @@ class SensitivityEvents : virtual public Sensitivity
 void newStaticSensitivityEvent(Process *p, const sc_core::sc_event *e);
 void newStaticSensitivityInterface(Process *p, const sc_core::sc_interface *i);
 void newStaticSensitivityPort(Process *p, const sc_core::sc_port_base *pb);
-void newStaticSensitivityExport(
-    Process *p, const sc_core::sc_export_base *exp);
+void newStaticSensitivityExport(Process *p,
+                                const sc_core::sc_export_base *exp);
 void newStaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f);
 
 class StaticSensitivityEvent :
     public StaticSensitivity,
     public SensitivityEvent
 {
-    friend void newStaticSensitivityEvent(
-        Process *p, const sc_core::sc_event *e);
+    friend void newStaticSensitivityEvent(Process *p,
+                                          const sc_core::sc_event *e);
 
   protected:
-    StaticSensitivityEvent(Process *p, const sc_core::sc_event *e) :
-        Sensitivity(p), StaticSensitivity(p), SensitivityEvent(p, e)
+    StaticSensitivityEvent(Process *p, const sc_core::sc_event *e)
+        : Sensitivity(p), StaticSensitivity(p), SensitivityEvent(p, e)
     {}
 };
 
@@ -202,8 +202,8 @@ class StaticSensitivityInterface :
     public StaticSensitivity,
     public SensitivityEvent
 {
-    friend void newStaticSensitivityInterface(
-        Process *p, const sc_core::sc_interface *i);
+    friend void newStaticSensitivityInterface(Process *p,
+                                              const sc_core::sc_interface *i);
 
   protected:
     StaticSensitivityInterface(Process *p, const sc_core::sc_interface *i);
@@ -213,12 +213,12 @@ class StaticSensitivityPort :
     public StaticSensitivity,
     public SensitivityEvents
 {
-    friend void newStaticSensitivityPort(
-        Process *p, const sc_core::sc_port_base *pb);
+    friend void newStaticSensitivityPort(Process *p,
+                                         const sc_core::sc_port_base *pb);
 
   protected:
-    StaticSensitivityPort(Process *p) :
-        Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p)
+    StaticSensitivityPort(Process *p)
+        : Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p)
     {}
 };
 
@@ -227,8 +227,8 @@ class StaticSensitivityExport :
     public SensitivityEvent
 {
   private:
-    friend void newStaticSensitivityExport(
-        Process *p, const sc_core::sc_export_base *exp);
+    friend void newStaticSensitivityExport(Process *p,
+                                           const sc_core::sc_export_base *exp);
 
     StaticSensitivityExport(Process *p, const sc_core::sc_export_base *exp);
 };
@@ -240,11 +240,11 @@ class StaticSensitivityFinder :
   private:
     const sc_core::sc_event_finder *finder;
 
-    friend void newStaticSensitivityFinder(
-        Process *p, const sc_core::sc_event_finder *f);
+    friend void newStaticSensitivityFinder(Process *p,
+                                           const sc_core::sc_event_finder *f);
 
-    StaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f) :
-        Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p), finder(f)
+    StaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f)
+        : Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p), finder(f)
     {}
 
   public:
@@ -256,21 +256,21 @@ class StaticSensitivityFinder :
  */
 
 void newDynamicSensitivityEvent(Process *p, const sc_core::sc_event *e);
-void newDynamicSensitivityEventOrList(
-    Process *p, const sc_core::sc_event_or_list *eol);
-void newDynamicSensitivityEventAndList(
-    Process *p, const sc_core::sc_event_and_list *eal);
+void newDynamicSensitivityEventOrList(Process *p,
+                                      const sc_core::sc_event_or_list *eol);
+void newDynamicSensitivityEventAndList(Process *p,
+                                       const sc_core::sc_event_and_list *eal);
 
 class DynamicSensitivityEvent :
     public DynamicSensitivity,
     public SensitivityEvent
 {
   private:
-    friend void newDynamicSensitivityEvent(
-        Process *p, const sc_core::sc_event *e);
+    friend void newDynamicSensitivityEvent(Process *p,
+                                           const sc_core::sc_event *e);
 
-    DynamicSensitivityEvent(Process *p, const sc_core::sc_event *e) :
-        Sensitivity(p), DynamicSensitivity(p), SensitivityEvent(p, e)
+    DynamicSensitivityEvent(Process *p, const sc_core::sc_event *e)
+        : Sensitivity(p), DynamicSensitivity(p), SensitivityEvent(p, e)
     {}
 };
 
@@ -279,11 +279,12 @@ class DynamicSensitivityEventOrList :
     public SensitivityEvents
 {
   private:
-    friend void newDynamicSensitivityEventOrList(
-        Process *p, const sc_core::sc_event_or_list *eol);
+    friend void
+    newDynamicSensitivityEventOrList(Process *p,
+                                     const sc_core::sc_event_or_list *eol);
 
-    DynamicSensitivityEventOrList(
-        Process *p, const sc_core::sc_event_or_list *eol);
+    DynamicSensitivityEventOrList(Process *p,
+                                  const sc_core::sc_event_or_list *eol);
     ~DynamicSensitivityEventOrList();
 
     bool notifyWork(Event *e) override;
@@ -299,11 +300,12 @@ class DynamicSensitivityEventAndList :
     public SensitivityEvents
 {
   private:
-    friend void newDynamicSensitivityEventAndList(
-        Process *p, const sc_core::sc_event_and_list *eal);
+    friend void
+    newDynamicSensitivityEventAndList(Process *p,
+                                      const sc_core::sc_event_and_list *eal);
 
-    DynamicSensitivityEventAndList(
-        Process *p, const sc_core::sc_event_and_list *eal);
+    DynamicSensitivityEventAndList(Process *p,
+                                   const sc_core::sc_event_and_list *eal);
     ~DynamicSensitivityEventAndList();
 
     bool notifyWork(Event *e) override;

@@ -176,7 +176,7 @@ class Linux : public OperatingSystem
     struct fd_set
     {
 #ifndef LINUX__FD_SETSIZE
-#    define LINUX__FD_SETSIZE 1024
+#define LINUX__FD_SETSIZE 1024
         unsigned long fds_bits[LINUX__FD_SETSIZE / (8 * sizeof(long))];
 #endif
     };
@@ -254,8 +254,8 @@ class Linux : public OperatingSystem
     // For /dev/urandom accesses
     static Random random;
 
-    static int openSpecialFile(
-        std::string path, Process *process, ThreadContext *tc);
+    static int openSpecialFile(std::string path, Process *process,
+                               ThreadContext *tc);
     static std::string procMeminfo(Process *process, ThreadContext *tc);
     static std::string etcPasswd(Process *process, ThreadContext *tc);
     static std::string procSelfMaps(Process *process, ThreadContext *tc);

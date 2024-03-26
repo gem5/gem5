@@ -45,10 +45,10 @@
 #include <sys/ioctl.h>
 
 #if defined(__FreeBSD__)
-#    include <termios.h>
+#include <termios.h>
 
 #else
-#    include <sys/termios.h>
+#include <sys/termios.h>
 
 #endif
 #include "dev/serial/terminal.hh"
@@ -78,8 +78,8 @@ namespace gem5
 /*
  * Poll event for the listen socket
  */
-Terminal::ListenEvent::ListenEvent(Terminal *t, int fd, int e) :
-    PollEvent(fd, e), term(t)
+Terminal::ListenEvent::ListenEvent(Terminal *t, int fd, int e)
+    : PollEvent(fd, e), term(t)
 {}
 
 void
@@ -95,8 +95,8 @@ Terminal::ListenEvent::process(int revent)
 /*
  * Poll event for the data socket
  */
-Terminal::DataEvent::DataEvent(Terminal *t, int fd, int e) :
-    PollEvent(fd, e), term(t)
+Terminal::DataEvent::DataEvent(Terminal *t, int fd, int e)
+    : PollEvent(fd, e), term(t)
 {}
 
 void
@@ -116,19 +116,19 @@ Terminal::DataEvent::process(int revent)
 /*
  * Terminal code
  */
-Terminal::Terminal(const Params &p) :
-    SerialDevice(p),
-    listenEvent(NULL),
-    dataEvent(NULL),
-    number(p.number),
-    data_fd(-1),
-    listener(p.port.build(p.name)),
-    txbuf(16384),
-    rxbuf(16384),
-    outfile(terminalDump(p))
+Terminal::Terminal(const Params &p)
+    : SerialDevice(p),
+      listenEvent(NULL),
+      dataEvent(NULL),
+      number(p.number),
+      data_fd(-1),
+      listener(p.port.build(p.name)),
+      txbuf(16384),
+      rxbuf(16384),
+      outfile(terminalDump(p))
 #if TRACING_ON == 1
-    ,
-    linebuf(16384)
+      ,
+      linebuf(16384)
 #endif
 {
     if (outfile)
@@ -299,7 +299,7 @@ Terminal::readData()
     rxbuf.read((char *)&c, 1);
 
     DPRINTF(TerminalVerbose, "in: \'%c\' %#02x more: %d\n",
-        isprint(c) ? c : ' ', c, !rxbuf.empty());
+            isprint(c) ? c : ' ', c, !rxbuf.empty());
 
     return c;
 }
@@ -354,8 +354,8 @@ Terminal::writeData(uint8_t c)
     if (outfile)
         outfile->stream()->put((char)c);
 
-    DPRINTF(
-        TerminalVerbose, "out: \'%c\' %#02x\n", isprint(c) ? c : ' ', (int)c);
+    DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n", isprint(c) ? c : ' ',
+            (int)c);
 }
 
 } // namespace gem5

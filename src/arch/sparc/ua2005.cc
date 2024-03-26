@@ -70,17 +70,59 @@ static inline std::string
 getMiscRegName(RegIndex index)
 {
     static std::string miscRegName[NumMiscRegs] =
-        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic", "gsr",
-            "softint_set", "softint_clr", "softint", "tick_cmpr", "stick",
-            "stick_cmpr", "tpc", "tnpc", "tstate", "tt", "privtick", "tba",
-            "pstate", "tl", "pil", "cwp",
+        {
+            /*"y", "ccr",*/ "asi",
+            "tick",
+            "fprs",
+            "pcr",
+            "pic",
+            "gsr",
+            "softint_set",
+            "softint_clr",
+            "softint",
+            "tick_cmpr",
+            "stick",
+            "stick_cmpr",
+            "tpc",
+            "tnpc",
+            "tstate",
+            "tt",
+            "privtick",
+            "tba",
+            "pstate",
+            "tl",
+            "pil",
+            "cwp",
             /*"cansave", "canrestore", "cleanwin", "otherwin",
-"wstate",*/ "gl", "hpstate", "htstate", "hintp", "htba", "hver",
-            "strand_sts_reg", "hstick_cmpr", "fsr", "prictx", "secctx",
-            "partId", "lsuCtrlReg", "scratch0", "scratch1", "scratch2",
-            "scratch3", "scratch4", "scratch5", "scratch6", "scratch7",
-            "cpuMondoHead", "cpuMondoTail", "devMondoHead", "devMondoTail",
-            "resErrorHead", "resErrorTail", "nresErrorHead", "nresErrorTail",
+"wstate",*/ "gl",
+            "hpstate",
+            "htstate",
+            "hintp",
+            "htba",
+            "hver",
+            "strand_sts_reg",
+            "hstick_cmpr",
+            "fsr",
+            "prictx",
+            "secctx",
+            "partId",
+            "lsuCtrlReg",
+            "scratch0",
+            "scratch1",
+            "scratch2",
+            "scratch3",
+            "scratch4",
+            "scratch5",
+            "scratch6",
+            "scratch7",
+            "cpuMondoHead",
+            "cpuMondoTail",
+            "devMondoHead",
+            "devMondoTail",
+            "resErrorHead",
+            "resErrorTail",
+            "nresErrorHead",
+            "nresErrorTail",
             "TlbData"};
     return miscRegName[index];
 }
@@ -235,8 +277,8 @@ ISA::setFSReg(int miscReg, RegVal val)
         break;
 
     default:
-        panic(
-            "Invalid write to FS misc register %s\n", getMiscRegName(miscReg));
+        panic("Invalid write to FS misc register %s\n",
+              getMiscRegName(miscReg));
     }
 }
 
@@ -288,23 +330,20 @@ ISA::readFSReg(int miscReg)
         for (x = tc->contextId() & ~3; x < sys->threads.size(); x++) {
             switch (sys->threads[x]->status()) {
             case ThreadContext::Active:
-                temp |=
-                    STS::st_run
-                    << (STS::shft_fsm0 -
-                           ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
+                temp |= STS::st_run
+                        << (STS::shft_fsm0 -
+                            ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
                 break;
             case ThreadContext::Suspended:
                 // should this be idle?
-                temp |=
-                    STS::st_idle
-                    << (STS::shft_fsm0 -
-                           ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
+                temp |= STS::st_idle
+                        << (STS::shft_fsm0 -
+                            ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
                 break;
             case ThreadContext::Halted:
-                temp |=
-                    STS::st_halt
-                    << (STS::shft_fsm0 -
-                           ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
+                temp |= STS::st_halt
+                        << (STS::shft_fsm0 -
+                            ((x & 0x3) * (STS::shft_fsm0 - STS::shft_fsm1)));
                 break;
             default:
                 panic("What state are we in?!\n");
@@ -338,7 +377,7 @@ ISA::processSTickCompare()
 
     if (delay == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
-            (stick_cmpr & mask(63)));
+                (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_STICK_CMPR) & (1ULL << 63))) {
             setMiscReg(MISCREG_SOFTINT, softint | (1ULL << 16));
         }
@@ -365,7 +404,7 @@ ISA::processHSTickCompare()
 
     if (delay == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
-            (stick_cmpr & mask(63)));
+                (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_HSTICK_CMPR) & (1ULL << 63))) {
             setMiscReg(MISCREG_HINTP, 1);
         }

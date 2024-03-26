@@ -72,7 +72,7 @@ struct GEM5_PACKED DmesgEntry
 /** Dump a Linux Demsg entry, pre-v5.10. */
 static int
 dumpDmesgEntry(const uint8_t *base, const uint8_t *end, const ByteOrder bo,
-    std::ostream &os)
+               std::ostream &os)
 {
     const size_t max_length = end - base;
     DmesgEntry de;
@@ -151,8 +151,8 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
             return;
         }
         length = log_buf_len;
-        proxy.readBlob(
-            lb->address() + log_first_idx, log_buf.data(), length_2);
+        proxy.readBlob(lb->address() + log_first_idx, log_buf.data(),
+                       length_2);
         proxy.readBlob(lb->address(), log_buf.data() + length_2, log_next_idx);
     }
 
@@ -196,7 +196,7 @@ struct GEM5_PACKED DmesgMetadataRecord
     /** Read a DmesgMetadataRecord from guest memory. */
     static DmesgMetadataRecord
     read(const TranslatingPortProxy &proxy, Addr address,
-        guest_ptr_t data_offset_mask, const ByteOrder &bo)
+         guest_ptr_t data_offset_mask, const ByteOrder &bo)
     {
         DmesgMetadataRecord metadata;
         proxy.readBlob(address, &metadata, sizeof(metadata));
@@ -302,8 +302,9 @@ struct Metadata_Post_v5_18_0
 template <typename AtomicVarType, typename MetadataStructType>
 struct GEM5_PACKED DmesgRingbuffer
 {
-    static_assert(std::disjunction<std::is_same<AtomicVarType, int32_t>,
-                      std::is_same<AtomicVarType, int64_t>>::value,
+    static_assert(
+        std::disjunction<std::is_same<AtomicVarType, int32_t>,
+                         std::is_same<AtomicVarType, int64_t>>::value,
         "AtomicVarType must be int32_t or int64_t");
 
     using atomic_var_t = AtomicVarType;
@@ -326,7 +327,7 @@ struct GEM5_PACKED DmesgRingbuffer
     /** Read a DmesgRingbuffer from guest memory. */
     static DmesgRingbuffer
     read(const TranslatingPortProxy &proxy, const Addr address,
-        const ByteOrder &bo)
+         const ByteOrder &bo)
     {
         DmesgRingbuffer rb;
         proxy.readBlob(address, &rb, sizeof(rb));
@@ -425,12 +426,13 @@ using Linux32_Ringbuffer_Post_v5_18_0 =
  *
  */
 template <typename ringbuffer_t,
-    typename atomic_var_t = typename ringbuffer_t::atomic_var_t,
-    typename guest_ptr_t = typename ringbuffer_t::guest_ptr_t>
+          typename atomic_var_t = typename ringbuffer_t::atomic_var_t,
+          typename guest_ptr_t = typename ringbuffer_t::guest_ptr_t>
 atomic_var_t
 iterateDataRingbuffer(std::ostream &os, const TranslatingPortProxy &proxy,
-    const ringbuffer_t &rb, const atomic_var_t offset,
-    const guest_ptr_t first_metadata_offset, const ByteOrder bo)
+                      const ringbuffer_t &rb, const atomic_var_t offset,
+                      const guest_ptr_t first_metadata_offset,
+                      const ByteOrder bo)
 {
     using metadata_record_t = typename ringbuffer_t::metadata_record_t;
 
@@ -472,7 +474,7 @@ iterateDataRingbuffer(std::ostream &os, const TranslatingPortProxy &proxy,
         warn_once("Dmesg dump: metadata record (at 0x%08x) does not point "
                   "back to the correponding data record (at 0x%08x). Dmesg "
                   "buffer may be corrupted",
-            metadata.data_buffer.next_offset, offset);
+                  metadata.data_buffer.next_offset, offset);
     }
 
     // Read the message from the data record. This is placed
@@ -480,7 +482,7 @@ iterateDataRingbuffer(std::ostream &os, const TranslatingPortProxy &proxy,
     // the beginning of the record.
     std::vector<uint8_t> message(info.message_size);
     proxy.readBlob(rb.data.data_ring_ptr + offset + sizeof(guest_ptr_t),
-        message.data(), info.message_size);
+                   message.data(), info.message_size);
 
     // Print the record
     ccprintf(os, "[%.6f] ", info.ts_nsec * 10e-9);
@@ -546,7 +548,7 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
 
     if (active_ringbuffer_ptr == 0 ||
         (active_ringbuffer_ptr != dynamic_rb_symbol->address() &&
-            active_ringbuffer_ptr != static_rb_symbol->address())) {
+         active_ringbuffer_ptr != static_rb_symbol->address())) {
         warn("Kernel Dmesg ringbuffer appears to be invalid.\n");
         return;
     }
@@ -662,8 +664,8 @@ extract_kernel_version(ThreadContext *tc)
 
     TranslatingPortProxy proxy(tc);
     std::vector<uint8_t> buffer(BUFFER_SIZE);
-    proxy.readBlob(
-        symbol->address(), buffer.data(), buffer.size() * sizeof(uint8_t));
+    proxy.readBlob(symbol->address(), buffer.data(),
+                   buffer.size() * sizeof(uint8_t));
     auto strings = extract_printable_strings(buffer);
 
     const std::regex version_re{"^(\\d+)\\.(\\d+)\\.(\\d)+$"};

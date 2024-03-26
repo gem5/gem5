@@ -135,8 +135,8 @@ class VarArgsImpl<ABI, Base> : public Base
     void _getImpl();
 
   public:
-    VarArgsImpl(ThreadContext *_tc, const typename ABI::State &_state) :
-        tc(_tc), state(_state)
+    VarArgsImpl(ThreadContext *_tc, const typename ABI::State &_state)
+        : tc(_tc), state(_state)
     {}
 };
 
@@ -168,11 +168,13 @@ class VarArgs
 
 template <typename T>
 struct IsVarArgs : public std::false_type
-{};
+{
+};
 
 template <typename... Types>
 struct IsVarArgs<VarArgs<Types...>> : public std::true_type
-{};
+{
+};
 
 template <typename T>
 constexpr bool IsVarArgsV = IsVarArgs<T>::value;

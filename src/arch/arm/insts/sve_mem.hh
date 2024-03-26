@@ -58,18 +58,20 @@ class SveMemVecFillSpill : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveMemVecFillSpill(const char *mnem, ExtMachInst _machInst,
-        OpClass __opClass, RegIndex _dest, RegIndex _base, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest),
-        base(_base),
-        imm(_imm),
-        memAccessFlags(ArmISA::MMU::AllowUnaligned)
+                       OpClass __opClass, RegIndex _dest, RegIndex _base,
+                       uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          base(_base),
+          imm(_imm),
+          memAccessFlags(ArmISA::MMU::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class SveMemPredFillSpill : public ArmStaticInst
@@ -85,18 +87,20 @@ class SveMemPredFillSpill : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveMemPredFillSpill(const char *mnem, ExtMachInst _machInst,
-        OpClass __opClass, RegIndex _dest, RegIndex _base, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest),
-        base(_base),
-        imm(_imm),
-        memAccessFlags(ArmISA::MMU::AllowUnaligned)
+                        OpClass __opClass, RegIndex _dest, RegIndex _base,
+                        uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          base(_base),
+          imm(_imm),
+          memAccessFlags(ArmISA::MMU::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class SveContigMemSS : public ArmStaticInst
@@ -113,19 +117,21 @@ class SveContigMemSS : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveContigMemSS(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, RegIndex _offset) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        offset(_offset),
-        memAccessFlags(ArmISA::MMU::AllowUnaligned)
+                   RegIndex _dest, RegIndex _gp, RegIndex _base,
+                   RegIndex _offset)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          memAccessFlags(ArmISA::MMU::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class SveContigMemSI : public ArmStaticInst
@@ -142,19 +148,20 @@ class SveContigMemSI : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveContigMemSI(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        imm(_imm),
-        memAccessFlags(ArmISA::MMU::AllowUnaligned)
+                   RegIndex _dest, RegIndex _gp, RegIndex _base, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm),
+          memAccessFlags(ArmISA::MMU::AllowUnaligned)
     {
         baseIsSP = isSP(_base);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace ArmISA

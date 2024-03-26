@@ -29,8 +29,8 @@
 
 namespace gem5
 {
-RequestPortWrapper::RequestPortWrapper(const std::string &name, PortID id) :
-    RequestPort(name, id)
+RequestPortWrapper::RequestPortWrapper(const std::string &name, PortID id)
+    : RequestPort(name, id)
 {}
 
 void
@@ -64,15 +64,15 @@ RequestPortWrapper::setRangeChangeCallback(RecvReqRetryCallback cb)
 }
 
 void
-RequestPortWrapper::setTimingCallbacks(
-    RecvTimingRespCallback resp_cb, RecvReqRetryCallback retry_cb)
+RequestPortWrapper::setTimingCallbacks(RecvTimingRespCallback resp_cb,
+                                       RecvReqRetryCallback retry_cb)
 {
     recvTimingRespCb = std::move(resp_cb);
     recvReqRetryCb = std::move(retry_cb);
 }
 
-ResponsePortWrapper::ResponsePortWrapper(const std::string &name, PortID id) :
-    ResponsePort(name, id)
+ResponsePortWrapper::ResponsePortWrapper(const std::string &name, PortID id)
+    : ResponsePort(name, id)
 {}
 
 AddrRangeList
@@ -104,8 +104,8 @@ ResponsePortWrapper::recvAtomic(PacketPtr packet)
 }
 
 Tick
-ResponsePortWrapper::recvAtomicBackdoor(
-    PacketPtr packet, MemBackdoorPtr &backdoor)
+ResponsePortWrapper::recvAtomicBackdoor(PacketPtr packet,
+                                        MemBackdoorPtr &backdoor)
 {
     if (!recvAtomicBackdoorCb) {
         return ResponsePort::recvAtomicBackdoor(packet, backdoor);
@@ -121,8 +121,8 @@ ResponsePortWrapper::recvFunctional(PacketPtr packet)
 }
 
 void
-ResponsePortWrapper::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+ResponsePortWrapper::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                        MemBackdoorPtr &backdoor)
 {
     if (!recvMemBackdoorReqCb) {
         ResponsePort::recvMemBackdoorReq(req, backdoor);
@@ -138,16 +138,16 @@ ResponsePortWrapper::setGetAddrRangesCallback(GetAddrRangesCallback cb)
 }
 
 void
-ResponsePortWrapper::setTimingCallbacks(
-    RecvTimingReqCallback timing_cb, RecvRespRetryCallback retry_cb)
+ResponsePortWrapper::setTimingCallbacks(RecvTimingReqCallback timing_cb,
+                                        RecvRespRetryCallback retry_cb)
 {
     recvTimingReqCb = std::move(timing_cb);
     recvRespRetryCb = std::move(retry_cb);
 }
 
 void
-ResponsePortWrapper::setAtomicCallbacks(
-    RecvAtomicCallback atomic_cb, RecvAtomicBackdoorCallback backdoor_cb)
+ResponsePortWrapper::setAtomicCallbacks(RecvAtomicCallback atomic_cb,
+                                        RecvAtomicBackdoorCallback backdoor_cb)
 {
     recvAtomicCb = std::move(atomic_cb);
     recvAtomicBackdoorCb = std::move(backdoor_cb);

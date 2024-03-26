@@ -53,8 +53,8 @@ namespace gem5
 {
 namespace ps2
 {
-PS2Keyboard::PS2Keyboard(const PS2KeyboardParams &p) :
-    Device(p), shiftDown(false), enabled(false)
+PS2Keyboard::PS2Keyboard(const PS2KeyboardParams &p)
+    : Device(p), shiftDown(false), enabled(false)
 {
     if (p.vnc)
         p.vnc->setKeyboard(this);
@@ -116,11 +116,11 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             return false;
         } else {
             DPRINTF(PS2,
-                "Setting LEDs: "
-                "caps lock %s, num lock %s, scroll lock %s\n",
-                bits(data[1], 2) ? "on" : "off",
-                bits(data[1], 1) ? "on" : "off",
-                bits(data[1], 0) ? "on" : "off");
+                    "Setting LEDs: "
+                    "caps lock %s, num lock %s, scroll lock %s\n",
+                    bits(data[1], 2) ? "on" : "off",
+                    bits(data[1], 1) ? "on" : "off",
+                    bits(data[1], 0) ? "on" : "off");
             sendAck();
             return true;
         }
@@ -141,7 +141,7 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             } else {
                 DPRINTF(PS2, "Setting scan code set to %d.\n", scan_code);
                 panic_if(scan_code != 0x2,
-                    "PS/2 scan code set %d not supported.", scan_code);
+                         "PS/2 scan code set %d not supported.", scan_code);
             }
         }
         return true;

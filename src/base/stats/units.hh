@@ -39,48 +39,48 @@ namespace gem5
 /**
  * Convenience macros to declare the unit of a stat.
  */
-#define UNIT_CYCLE \
-    GEM5_DEPRECATED_MACRO(UNIT_CYCLE, statistics::units::Cycle::get(), \
-        "Use statistics::units::Cycle::get()")
-#define UNIT_TICK \
-    GEM5_DEPRECATED_MACRO(UNIT_TICK, statistics::units::Tick::get(), \
-        "Use statistics::units::Tick::get()")
-#define UNIT_SECOND \
-    GEM5_DEPRECATED_MACRO(UNIT_SECOND, statistics::units::Second::get(), \
-        "Use statistics::units::Second::get()")
-#define UNIT_BIT \
-    GEM5_DEPRECATED_MACRO(UNIT_BIT, statistics::units::Bit::get(), \
-        "Use statistics::units::Bit::get()")
-#define UNIT_BYTE \
-    GEM5_DEPRECATED_MACRO(UNIT_BYTE, statistics::units::Byte::get(), \
-        "Use statistics::units::Byte::get()")
-#define UNIT_JOULE \
-    GEM5_DEPRECATED_MACRO(UNIT_JOULE, statistics::units::Joule::get(), \
-        "Use statistics::units::Joule::get()")
-#define UNIT_VOLT \
-    GEM5_DEPRECATED_MACRO(UNIT_VOLD, statistics::units::Volt::get(), \
-        "Use statistics::units::Volt::get()")
-#define UNIT_CELSIUS \
-    GEM5_DEPRECATED_MACRO(UNIT_CELSIUS, \
-        statistics::units::DegreeCelsius::get(), \
-        "Use statistics::units::DegreeCelsius::get()")
-#define UNIT_RATE(T1, T2) \
-    GEM5_DEPRECATED_MACRO(UNIT_RATE, \
-        (statistics::units::Rate<T1, T2>::get()), \
-        "Use statistics::units::Rate<T1, T2>::get()")
-#define UNIT_RATIO \
-    GEM5_DEPRECATED_MACRO(UNIT_RATIO, statistics::units::Ratio::get(), \
-        "Use statistics::units::Ratio::get()")
-#define UNIT_COUNT \
-    GEM5_DEPRECATED_MACRO(UNIT_COUNT, statistics::units::Count::get(), \
-        "Use statistics::units::Count::get()")
-#define UNIT_WATT \
-    GEM5_DEPRECATED_MACRO(UNIT_WATT, statistics::units::Watt::get(), \
-        "Use statistics::units::Watt::get()")
-#define UNIT_UNSPECIFIED \
-    GEM5_DEPRECATED_MACRO(UNIT_UNSPECIFIED, \
-        statistics::units::Unspecified::get(), \
-        "Use statistics::units::Unspecified::get()")
+#define UNIT_CYCLE                                                            \
+    GEM5_DEPRECATED_MACRO(UNIT_CYCLE, statistics::units::Cycle::get(),        \
+                          "Use statistics::units::Cycle::get()")
+#define UNIT_TICK                                                             \
+    GEM5_DEPRECATED_MACRO(UNIT_TICK, statistics::units::Tick::get(),          \
+                          "Use statistics::units::Tick::get()")
+#define UNIT_SECOND                                                           \
+    GEM5_DEPRECATED_MACRO(UNIT_SECOND, statistics::units::Second::get(),      \
+                          "Use statistics::units::Second::get()")
+#define UNIT_BIT                                                              \
+    GEM5_DEPRECATED_MACRO(UNIT_BIT, statistics::units::Bit::get(),            \
+                          "Use statistics::units::Bit::get()")
+#define UNIT_BYTE                                                             \
+    GEM5_DEPRECATED_MACRO(UNIT_BYTE, statistics::units::Byte::get(),          \
+                          "Use statistics::units::Byte::get()")
+#define UNIT_JOULE                                                            \
+    GEM5_DEPRECATED_MACRO(UNIT_JOULE, statistics::units::Joule::get(),        \
+                          "Use statistics::units::Joule::get()")
+#define UNIT_VOLT                                                             \
+    GEM5_DEPRECATED_MACRO(UNIT_VOLD, statistics::units::Volt::get(),          \
+                          "Use statistics::units::Volt::get()")
+#define UNIT_CELSIUS                                                          \
+    GEM5_DEPRECATED_MACRO(UNIT_CELSIUS,                                       \
+                          statistics::units::DegreeCelsius::get(),            \
+                          "Use statistics::units::DegreeCelsius::get()")
+#define UNIT_RATE(T1, T2)                                                     \
+    GEM5_DEPRECATED_MACRO(UNIT_RATE,                                          \
+                          (statistics::units::Rate<T1, T2>::get()),           \
+                          "Use statistics::units::Rate<T1, T2>::get()")
+#define UNIT_RATIO                                                            \
+    GEM5_DEPRECATED_MACRO(UNIT_RATIO, statistics::units::Ratio::get(),        \
+                          "Use statistics::units::Ratio::get()")
+#define UNIT_COUNT                                                            \
+    GEM5_DEPRECATED_MACRO(UNIT_COUNT, statistics::units::Count::get(),        \
+                          "Use statistics::units::Count::get()")
+#define UNIT_WATT                                                             \
+    GEM5_DEPRECATED_MACRO(UNIT_WATT, statistics::units::Watt::get(),          \
+                          "Use statistics::units::Watt::get()")
+#define UNIT_UNSPECIFIED                                                      \
+    GEM5_DEPRECATED_MACRO(UNIT_UNSPECIFIED,                                   \
+                          statistics::units::Unspecified::get(),              \
+                          "Use statistics::units::Unspecified::get()")
 
 namespace statistics
 {
@@ -444,15 +444,15 @@ template <typename T1, typename T2>
 class Rate : public Base
 {
     static_assert(std::is_base_of_v<Base, T1>,
-        "Rate(T1,T2) must have "
-        "T1 and T2 derived from statistics::units::Base");
+                  "Rate(T1,T2) must have "
+                  "T1 and T2 derived from statistics::units::Base");
     static_assert(std::is_base_of_v<Base, T2>,
-        "Rate(T1,T2) must have "
-        "T1 and T2 derived from statistics::units::Base");
+                  "Rate(T1,T2) must have "
+                  "T1 and T2 derived from statistics::units::Base");
     static_assert(!std::is_same_v<T1, T2> || std::is_same_v<T1, Count> ||
                       std::is_same_v<T1, Unspecified>,
-        "Rate(T1,T2) must have T1 and T2 of different types; "
-        "otherwise, it would be a Ratio");
+                  "Rate(T1,T2) must have T1 and T2 of different types; "
+                  "otherwise, it would be a Ratio");
 
   private:
     Rate<T1, T2>() {}

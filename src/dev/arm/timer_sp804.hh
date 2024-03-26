@@ -118,7 +118,7 @@ class Sp804 : public AmbaPioDevice
         void restartCounter(uint32_t val);
 
         Timer(std::string __name, Sp804 *parent, ArmInterruptPin *_interrupt,
-            Tick clock);
+              Tick clock);
 
         std::string
         name() const

@@ -60,8 +60,8 @@ class BaseBufferArg
      * Allocate a buffer of size 'size' representing the memory at
      * target address 'addr'.
      */
-    BaseBufferArg(Addr _addr, int _size) :
-        addr(_addr), size(_size), bufPtr(new uint8_t[size])
+    BaseBufferArg(Addr _addr, int _size)
+        : addr(_addr), size(_size), bufPtr(new uint8_t[size])
     {
         // clear out buffer: in case we only partially populate this,
         // and then do a copyOut(), we want to make sure we don't
@@ -139,8 +139,8 @@ class TypedBufferArg : public BaseBufferArg
      * number of bytes to allocate to deal with structs that have
      * variable-size arrays at the end.
      */
-    TypedBufferArg(Addr _addr, int _size = sizeof(T)) :
-        BaseBufferArg(_addr, _size)
+    TypedBufferArg(Addr _addr, int _size = sizeof(T))
+        : BaseBufferArg(_addr, _size)
     {}
 
     /**

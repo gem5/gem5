@@ -71,24 +71,24 @@ CpuLocalTimer::init()
 }
 
 CpuLocalTimer::Timer::Timer(const std::string &timer_name,
-    CpuLocalTimer *_parent, ArmInterruptPin *int_timer,
-    ArmInterruptPin *int_watchdog) :
-    _name(timer_name),
-    parent(_parent),
-    intTimer(int_timer),
-    intWatchdog(int_watchdog),
-    timerControl(0x0),
-    watchdogControl(0x0),
-    rawIntTimer(false),
-    rawIntWatchdog(false),
-    rawResetWatchdog(false),
-    watchdogDisableReg(0x0),
-    pendingIntTimer(false),
-    pendingIntWatchdog(false),
-    timerLoadValue(0x0),
-    watchdogLoadValue(0x0),
-    timerZeroEvent([this] { timerAtZero(); }, name()),
-    watchdogZeroEvent([this] { watchdogAtZero(); }, name())
+                            CpuLocalTimer *_parent, ArmInterruptPin *int_timer,
+                            ArmInterruptPin *int_watchdog)
+    : _name(timer_name),
+      parent(_parent),
+      intTimer(int_timer),
+      intWatchdog(int_watchdog),
+      timerControl(0x0),
+      watchdogControl(0x0),
+      rawIntTimer(false),
+      rawIntWatchdog(false),
+      rawResetWatchdog(false),
+      watchdogDisableReg(0x0),
+      pendingIntTimer(false),
+      pendingIntWatchdog(false),
+      timerLoadValue(0x0),
+      watchdogLoadValue(0x0),
+      timerZeroEvent([this] { timerAtZero(); }, name()),
+      watchdogZeroEvent([this] { watchdogAtZero(); }, name())
 {}
 
 Tick
@@ -106,7 +106,7 @@ CpuLocalTimer::read(PacketPtr pkt)
         localTimer[cpu_id]->read(pkt, daddr);
     else
         panic("Tried to read CpuLocalTimer at offset %#x that doesn't exist\n",
-            daddr);
+              daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -123,8 +123,8 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         break;
     case TimerCounterReg:
         DPRINTF(Timer, "Event schedule for timer %d, clock=%d, prescale=%d\n",
-            timerZeroEvent.when(), parent->clockPeriod(),
-            timerControl.prescalar);
+                timerZeroEvent.when(), parent->clockPeriod(),
+                timerControl.prescalar);
         time = timerZeroEvent.when() - curTick();
         time = (time / parent->clockPeriod()) >> (4 * timerControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
@@ -141,9 +141,9 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         break;
     case WatchdogCounterReg:
         DPRINTF(Timer,
-            "Event schedule for watchdog %d, clock=%d, prescale=%d\n",
-            watchdogZeroEvent.when(), parent->clockPeriod(),
-            watchdogControl.prescalar);
+                "Event schedule for watchdog %d, clock=%d, prescale=%d\n",
+                watchdogZeroEvent.when(), parent->clockPeriod(),
+                watchdogControl.prescalar);
         time = watchdogZeroEvent.when() - curTick();
         time =
             (time / parent->clockPeriod()) >> (4 * watchdogControl.prescalar);

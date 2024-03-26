@@ -42,8 +42,8 @@ namespace gem5
 {
 namespace compression
 {
-RepeatedQwords::RepeatedQwords(const Params &p) :
-    DictionaryCompressor<uint64_t>(p)
+RepeatedQwords::RepeatedQwords(const Params &p)
+    : DictionaryCompressor<uint64_t>(p)
 {}
 
 void
@@ -54,8 +54,8 @@ RepeatedQwords::addToDictionary(DictionaryEntry data)
 }
 
 std::unique_ptr<Base::CompressionData>
-RepeatedQwords::compress(
-    const std::vector<Chunk> &chunks, Cycles &comp_lat, Cycles &decomp_lat)
+RepeatedQwords::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                         Cycles &decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
         DictionaryCompressor::compress(chunks);

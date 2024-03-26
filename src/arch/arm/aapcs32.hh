@@ -63,8 +63,8 @@ struct Aapcs32
 
         Addr retAddr = 0;
 
-        explicit State(const ThreadContext *tc) :
-            nsaa(tc->getReg(ArmISA::int_reg::Spx))
+        explicit State(const ThreadContext *tc)
+            : nsaa(tc->getReg(ArmISA::int_reg::Spx))
         {}
     };
 };
@@ -77,16 +77,18 @@ namespace guest_abi
 
 template <typename T, typename Enabled = void>
 struct IsAapcs32Composite : public std::false_type
-{};
+{
+};
 
 template <typename T>
-struct IsAapcs32Composite<T,
-    typename std::enable_if_t<(
-        std::is_array_v<T> || std::is_class_v<T> || std::is_union_v<T>)&&
-        // VarArgs is technically a composite type, but it's not a normal
-        // argument.
-        !IsVarArgsV<T>>> : public std::true_type
-{};
+struct IsAapcs32Composite<
+    T, typename std::enable_if_t<(std::is_array_v<T> || std::is_class_v<T> ||
+                                  std::is_union_v<T>)&&
+                                 // VarArgs is technically a composite type,
+                                 // but it's not a normal argument.
+                                 !IsVarArgsV<T>>> : public std::true_type
+{
+};
 
 template <typename T>
 constexpr bool IsAapcs32CompositeV = IsAapcs32Composite<T>::value;
@@ -101,11 +103,13 @@ using Aapcs32HomogeneousAggregate = T[count];
 
 template <typename T>
 struct IsAapcs32HomogeneousAggregate : public std::false_type
-{};
+{
+};
 
 template <typename E, size_t N>
 struct IsAapcs32HomogeneousAggregate<E[N]> : public std::true_type
-{};
+{
+};
 
 template <typename T>
 constexpr bool IsAapcs32HomogeneousAggregateV =
@@ -144,8 +148,8 @@ struct Aapcs32ArgumentBase
 
 template <typename Integer>
 struct Result<Aapcs32, Integer,
-    typename std::enable_if_t<std::is_integral_v<Integer> &&
-                              (sizeof(Integer) < sizeof(uint32_t))>>
+              typename std::enable_if_t<std::is_integral_v<Integer> &&
+                                        (sizeof(Integer) < sizeof(uint32_t))>>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
@@ -158,8 +162,8 @@ struct Result<Aapcs32, Integer,
 
 template <typename Integer>
 struct Result<Aapcs32, Integer,
-    typename std::enable_if_t<std::is_integral_v<Integer> &&
-                              (sizeof(Integer) == sizeof(uint32_t))>>
+              typename std::enable_if_t<std::is_integral_v<Integer> &&
+                                        (sizeof(Integer) == sizeof(uint32_t))>>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
@@ -170,8 +174,8 @@ struct Result<Aapcs32, Integer,
 
 template <typename Integer>
 struct Result<Aapcs32, Integer,
-    typename std::enable_if_t<std::is_integral_v<Integer> &&
-                              (sizeof(Integer) == sizeof(uint64_t))>>
+              typename std::enable_if_t<std::is_integral_v<Integer> &&
+                                        (sizeof(Integer) == sizeof(uint64_t))>>
 {
     static void
     store(ThreadContext *tc, const Integer &i)
@@ -187,7 +191,8 @@ struct Result<Aapcs32, Integer,
 };
 
 template <typename Integer>
-struct Argument<Aapcs32, Integer,
+struct Argument<
+    Aapcs32, Integer,
     typename std::enable_if_t<std::is_integral_v<Integer> &&
                               (sizeof(Integer) <= sizeof(uint32_t))>> :
     public Aapcs32ArgumentBase
@@ -207,7 +212,8 @@ struct Argument<Aapcs32, Integer,
 };
 
 template <typename Integer>
-struct Argument<Aapcs32, Integer,
+struct Argument<
+    Aapcs32, Integer,
     typename std::enable_if_t<std::is_integral_v<Integer> &&
                               (sizeof(Integer) > sizeof(uint32_t))>> :
     public Aapcs32ArgumentBase
@@ -246,7 +252,7 @@ struct Argument<Aapcs32, Integer,
 
 template <typename Float>
 struct Result<Aapcs32, Float,
-    typename std::enable_if_t<std::is_floating_point_v<Float>>>
+              typename std::enable_if_t<std::is_floating_point_v<Float>>>
 {
     static void
     store(ThreadContext *tc, const Float &f, Aapcs32::State &state)
@@ -258,7 +264,7 @@ struct Result<Aapcs32, Float,
 
 template <typename Float>
 struct Argument<Aapcs32, Float,
-    typename std::enable_if_t<std::is_floating_point_v<Float>>> :
+                typename std::enable_if_t<std::is_floating_point_v<Float>>> :
     public Aapcs32ArgumentBase
 {
     static Float
@@ -278,7 +284,7 @@ struct Argument<Aapcs32, Float,
 
 template <typename Composite>
 struct Result<Aapcs32, Composite,
-    typename std::enable_if_t<IsAapcs32CompositeV<Composite>>>
+              typename std::enable_if_t<IsAapcs32CompositeV<Composite>>>
 {
     static void
     store(ThreadContext *tc, const Composite &composite, Aapcs32::State &state)
@@ -305,7 +311,7 @@ struct Result<Aapcs32, Composite,
 
 template <typename Composite>
 struct Argument<Aapcs32, Composite,
-    typename std::enable_if_t<IsAapcs32CompositeV<Composite>>> :
+                typename std::enable_if_t<IsAapcs32CompositeV<Composite>>> :
     public Aapcs32ArgumentBase
 {
     static Composite
@@ -453,15 +459,17 @@ namespace guest_abi
 
 template <typename Integer>
 struct Result<Aapcs32Vfp, Integer,
-    typename std::enable_if_t<std::is_integral_v<Integer>>> :
+              typename std::enable_if_t<std::is_integral_v<Integer>>> :
     public Result<Aapcs32, Integer>
-{};
+{
+};
 
 template <typename Integer>
 struct Argument<Aapcs32Vfp, Integer,
-    typename std::enable_if_t<std::is_integral_v<Integer>>> :
+                typename std::enable_if_t<std::is_integral_v<Integer>>> :
     public Argument<Aapcs32, Integer>
-{};
+{
+};
 
 /*
  * Floating point arguments and return values.
@@ -469,7 +477,7 @@ struct Argument<Aapcs32Vfp, Integer,
 
 template <typename Float>
 struct Result<Aapcs32Vfp, Float,
-    typename std::enable_if_t<std::is_floating_point_v<Float>>>
+              typename std::enable_if_t<std::is_floating_point_v<Float>>>
 {
     static void
     store(ThreadContext *tc, const Float &f, Aapcs32Vfp::State &state)
@@ -489,7 +497,7 @@ struct Result<Aapcs32Vfp, Float,
 
 template <typename Float>
 struct Argument<Aapcs32Vfp, Float,
-    typename std::enable_if_t<std::is_floating_point_v<Float>>> :
+                typename std::enable_if_t<std::is_floating_point_v<Float>>> :
     public Aapcs32ArgumentBase
 {
     static Float
@@ -519,18 +527,22 @@ struct Argument<Aapcs32Vfp, Float,
  */
 
 template <typename Composite>
-struct Result<Aapcs32Vfp, Composite,
+struct Result<
+    Aapcs32Vfp, Composite,
     typename std::enable_if_t<IsAapcs32CompositeV<Composite> &&
                               !IsAapcs32HomogeneousAggregateV<Composite>>> :
     public Result<Aapcs32, Composite>
-{};
+{
+};
 
 template <typename Composite>
-struct Argument<Aapcs32Vfp, Composite,
+struct Argument<
+    Aapcs32Vfp, Composite,
     typename std::enable_if_t<IsAapcs32CompositeV<Composite> &&
                               !IsAapcs32HomogeneousAggregateV<Composite>>> :
     public Argument<Aapcs32, Composite>
-{};
+{
+};
 
 /*
  * Homogeneous Aggregate argument and return values.
@@ -549,7 +561,8 @@ struct Aapcs32ArrayType<E[N]>
 };
 
 template <typename HA>
-struct Argument<Aapcs32Vfp, HA,
+struct Argument<
+    Aapcs32Vfp, HA,
     typename std::enable_if_t<IsAapcs32HomogeneousAggregateV<HA>>> :
     public Aapcs32ArgumentBase
 {
@@ -600,7 +613,7 @@ struct Argument<Aapcs32Vfp, HA,
 
 template <typename HA>
 struct Result<Aapcs32Vfp, HA,
-    typename std::enable_if_t<IsAapcs32HomogeneousAggregateV<HA>>>
+              typename std::enable_if_t<IsAapcs32HomogeneousAggregateV<HA>>>
 {
     static bool
     useBaseABI(Aapcs32Vfp::State &state)

@@ -292,8 +292,8 @@ sc_set_time_resolution(double d, sc_time_unit tu)
 
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
-        SC_REPORT_ERROR(
-            SC_ID_SET_TIME_RESOLUTION_, "value not a power of ten");
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
+                        "value not a power of ten");
     }
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "simulation running");
@@ -305,8 +305,8 @@ sc_set_time_resolution(double d, sc_time_unit tu)
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
     if (gem5::clockFrequencyFixed()) {
-        SC_REPORT_ERROR(
-            SC_ID_SET_TIME_RESOLUTION_, "sc_time object(s) constructed");
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
+                        "sc_time object(s) constructed");
     }
 
     double seconds = d * sc_gem5::TimeUnitScale[tu];
@@ -351,8 +351,8 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
 
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
-        SC_REPORT_ERROR(
-            SC_ID_SET_DEFAULT_TIME_UNIT_, "value not a power of ten");
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
+                        "value not a power of ten");
     }
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_, "simulation running");
@@ -364,8 +364,8 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
     if (gem5::clockFrequencyFixed()) {
-        SC_REPORT_ERROR(
-            SC_ID_SET_DEFAULT_TIME_UNIT_, "sc_time object(s) constructed");
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
+                        "sc_time object(s) constructed");
     }
 
     // Normalize d to seconds.
@@ -377,7 +377,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
         resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
-            "value smaller than time resolution");
+                        "value smaller than time resolution");
     }
 }
 
@@ -387,8 +387,8 @@ sc_get_default_time_unit()
     return sc_time(defaultUnit, SC_SEC);
 }
 
-sc_time_tuple::sc_time_tuple(const sc_time &t) :
-    _value(), _unit(SC_SEC), _set(true)
+sc_time_tuple::sc_time_tuple(const sc_time &t)
+    : _value(), _unit(SC_SEC), _set(true)
 {
     if (!t.value())
         return;

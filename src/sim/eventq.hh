@@ -406,12 +406,12 @@ class Event : public EventBase, public Serializable
      *
      * @ingroup api_eventq
      */
-    Event(Priority p = Default_Pri, Flags f = 0) :
-        nextBin(nullptr),
-        nextInBin(nullptr),
-        _when(0),
-        _priority(p),
-        flags(Initialized | f)
+    Event(Priority p = Default_Pri, Flags f = 0)
+        : nextBin(nullptr),
+          nextInBin(nullptr),
+          _when(0),
+          _priority(p),
+          flags(Initialized | f)
     {
         assert(f.noneSet(~PublicWrite));
 #ifndef NDEBUG
@@ -720,10 +720,10 @@ class EventQueue
          *
          * @ingroup api_eventq
          */
-        ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true) :
-            new_eq(*_new_eq),
-            old_eq(*curEventQueue()),
-            doMigrate((&new_eq != &old_eq) && _doMigrate)
+        ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true)
+            : new_eq(*_new_eq),
+              old_eq(*curEventQueue()),
+              doMigrate((&new_eq != &old_eq) && _doMigrate)
         {
             if (doMigrate) {
                 old_eq.unlock();
@@ -1174,8 +1174,9 @@ class MemberEventWrapper final : public Event, public Named
   public:
     [[deprecated("Use reference version of this constructor "
                  "instead")]] MemberEventWrapper(CLASS *object,
-        bool del = false, Priority p = Default_Pri) :
-        MemberEventWrapper{*object, del, p}
+                                                 bool del = false,
+                                                 Priority p = Default_Pri)
+        : MemberEventWrapper{*object, del, p}
     {}
 
     /**
@@ -1185,9 +1186,9 @@ class MemberEventWrapper final : public Event, public Named
      * @param del if true, flag this event as AutoDelete
      * @param p priority of this event
      */
-    MemberEventWrapper(
-        CLASS &object, bool del = false, Priority p = Default_Pri) :
-        Event(p), Named(object.name() + ".wrapped_event"), mObject(&object)
+    MemberEventWrapper(CLASS &object, bool del = false,
+                       Priority p = Default_Pri)
+        : Event(p), Named(object.name() + ".wrapped_event"), mObject(&object)
     {
         if (del)
             setFlags(AutoDelete);
@@ -1228,8 +1229,9 @@ class EventFunctionWrapper : public Event
      * @ingroup api_eventq
      */
     EventFunctionWrapper(const std::function<void(void)> &callback,
-        const std::string &name, bool del = false, Priority p = Default_Pri) :
-        Event(p), callback(callback), _name(name)
+                         const std::string &name, bool del = false,
+                         Priority p = Default_Pri)
+        : Event(p), callback(callback), _name(name)
     {
         if (del)
             setFlags(AutoDelete);
@@ -1275,10 +1277,10 @@ class EventFunctionWrapper : public Event
  *
  * @ingroup api_serialize
  */
-#define UNSERIALIZE_EVENT(event) \
-    do { \
-        event.unserializeSection(cp, #event); \
-        eventQueue()->checkpointReschedule(&event); \
+#define UNSERIALIZE_EVENT(event)                                              \
+    do {                                                                      \
+        event.unserializeSection(cp, #event);                                 \
+        eventQueue()->checkpointReschedule(&event);                           \
     } while (0)
 
 } // namespace gem5

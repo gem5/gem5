@@ -82,7 +82,8 @@ Java_gem5_Ops_setupCallTypes(JNIEnv *env, jclass clazz)
         env->GetStaticFieldID(clazz, "_callTypes", "Ljava/util/Map;");
     env->SetStaticObjectField(clazz, map_field_id, map);
 
-    jmethodID map_put_id = env->GetMethodID(map_class, "put",
+    jmethodID map_put_id = env->GetMethodID(
+        map_class, "put",
         "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
     jmethodID ops_constr_id = env->GetMethodID(clazz, "<init>", "()V");
@@ -197,7 +198,7 @@ Java_gem5_Ops_fail(JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_code)
 
 JNIEXPORT jlong JNICALL
 Java_gem5_Ops_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c, jlong d,
-    jlong e, jlong f)
+                  jlong e, jlong f)
 {
     uint64_t result = getDispatchTable(env, obj)->m5_sum(a, b, c, d, e, f);
     if (result & 0x8000000000000000ULL)
@@ -206,8 +207,8 @@ Java_gem5_Ops_sum(JNIEnv *env, jobject obj, jlong a, jlong b, jlong c, jlong d,
 }
 
 JNIEXPORT jlong JNICALL
-Java_gem5_Ops_init_1param(
-    JNIEnv *env, jobject obj, jlong j_key_str1, jlong j_key_str2)
+Java_gem5_Ops_init_1param(JNIEnv *env, jobject obj, jlong j_key_str1,
+                          jlong j_key_str2)
 {
     uint64_t param =
         getDispatchTable(env, obj)->m5_init_param(j_key_str1, j_key_str2);
@@ -217,36 +218,36 @@ Java_gem5_Ops_init_1param(
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_checkpoint(
-    JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_ns_period)
+Java_gem5_Ops_checkpoint(JNIEnv *env, jobject obj, jlong j_ns_delay,
+                         jlong j_ns_period)
 {
     getDispatchTable(env, obj)->m5_checkpoint(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_reset_1stats(
-    JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_ns_period)
+Java_gem5_Ops_reset_1stats(JNIEnv *env, jobject obj, jlong j_ns_delay,
+                           jlong j_ns_period)
 {
     getDispatchTable(env, obj)->m5_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_dump_1stats(
-    JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_ns_period)
+Java_gem5_Ops_dump_1stats(JNIEnv *env, jobject obj, jlong j_ns_delay,
+                          jlong j_ns_period)
 {
     getDispatchTable(env, obj)->m5_dump_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_dump_1reset_1stats(
-    JNIEnv *env, jobject obj, jlong j_ns_delay, jlong j_ns_period)
+Java_gem5_Ops_dump_1reset_1stats(JNIEnv *env, jobject obj, jlong j_ns_delay,
+                                 jlong j_ns_period)
 {
     getDispatchTable(env, obj)->m5_dump_reset_stats(j_ns_delay, j_ns_period);
 }
 
 JNIEXPORT jlong JNICALL
-Java_gem5_Ops_read_1file(
-    JNIEnv *env, jobject obj, jbyteArray j_buffer, jlong j_len, jlong j_offset)
+Java_gem5_Ops_read_1file(JNIEnv *env, jobject obj, jbyteArray j_buffer,
+                         jlong j_len, jlong j_offset)
 {
     jbyte *buffer = env->GetByteArrayElements(j_buffer, 0);
 
@@ -259,7 +260,7 @@ Java_gem5_Ops_read_1file(
 
 JNIEXPORT jlong JNICALL
 Java_gem5_Ops_write_1file(JNIEnv *env, jobject obj, jbyteArray j_buffer,
-    jlong j_len, jlong j_offset, jstring j_filename)
+                          jlong j_len, jlong j_offset, jstring j_filename)
 {
     jbyte *buffer = env->GetByteArrayElements(j_buffer, 0);
     const char *filename = env->GetStringUTFChars(j_filename, NULL);
@@ -291,8 +292,8 @@ Java_gem5_Ops_dist_1toggle_1sync(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_add_symbol(
-    JNIEnv *env, jobject obj, jlong j_addr, jstring j_symbol)
+Java_gem5_Ops_add_symbol(JNIEnv *env, jobject obj, jlong j_addr,
+                         jstring j_symbol)
 {
     const char *symbol = env->GetStringUTFChars(j_symbol, NULL);
 
@@ -314,15 +315,15 @@ Java_gem5_Ops_panic(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_work_1begin(
-    JNIEnv *env, jobject obj, jlong j_workid, jlong j_threadid)
+Java_gem5_Ops_work_1begin(JNIEnv *env, jobject obj, jlong j_workid,
+                          jlong j_threadid)
 {
     getDispatchTable(env, obj)->m5_work_begin(j_workid, j_threadid);
 }
 
 JNIEXPORT void JNICALL
-Java_gem5_Ops_work_1end(
-    JNIEnv *env, jobject obj, jlong j_workid, jlong j_threadid)
+Java_gem5_Ops_work_1end(JNIEnv *env, jobject obj, jlong j_workid,
+                        jlong j_threadid)
 {
     getDispatchTable(env, obj)->m5_work_end(j_workid, j_threadid);
 }

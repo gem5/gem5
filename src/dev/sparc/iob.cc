@@ -191,7 +191,7 @@ Iob::writeIob(PacketPtr pkt)
         intMan[index].cpu = bits(data, 12, 8);
         intMan[index].vector = bits(data, 5, 0);
         DPRINTF(Iob, "Wrote IntMan %d cpu %d, vec %d\n", index,
-            intMan[index].cpu, intMan[index].vector);
+                intMan[index].cpu, intMan[index].vector);
         return;
     }
 
@@ -202,7 +202,7 @@ Iob::writeIob(PacketPtr pkt)
         if (bits(data, 1, 1))
             intCtl[index].pend = false;
         DPRINTF(Iob, "Wrote IntCtl %d pend %d cleared %d\n", index,
-            intCtl[index].pend, bits(data, 2, 2));
+                intCtl[index].pend, bits(data, 2, 2));
         return;
     }
 
@@ -243,14 +243,14 @@ Iob::writeJBus(PacketPtr pkt)
         data = pkt->getBE<uint64_t>();
         jIntBusy[index].busy = bits(data, 5, 5);
         DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", index,
-            jIntBusy[index].busy);
+                jIntBusy[index].busy);
         return;
     }
     if (accessAddr == JIntABusyAddr) {
         data = pkt->getBE<uint64_t>();
         jIntBusy[cpuid].busy = bits(data, 5, 5);
         DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", cpuid,
-            jIntBusy[cpuid].busy);
+                jIntBusy[cpuid].busy);
         return;
     };
 
@@ -266,10 +266,10 @@ Iob::receiveDeviceInterrupt(DeviceId devid)
     intCtl[devid].mask = true;
     intCtl[devid].pend = true;
     DPRINTF(Iob, "Receiving Device interrupt: %d for cpu %d vec %d\n", devid,
-        intMan[devid].cpu, intMan[devid].vector);
+            intMan[devid].cpu, intMan[devid].vector);
     auto tc = sys->threads[intMan[devid].cpu];
-    tc->getCpuPtr()->postInterrupt(
-        tc->threadId(), SparcISA::IT_INT_VEC, intMan[devid].vector);
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+                                   intMan[devid].vector);
 }
 
 void
@@ -284,11 +284,11 @@ Iob::generateIpi(Type type, int cpu_id, int vector)
     switch (type) {
     case 0: // interrupt
         DPRINTF(Iob,
-            "Generating interrupt because of I/O write to cpu: "
-            "%d vec %d\n",
-            cpu_id, vector);
-        tc->getCpuPtr()->postInterrupt(
-            tc->threadId(), SparcISA::IT_INT_VEC, vector);
+                "Generating interrupt because of I/O write to cpu: "
+                "%d vec %d\n",
+                cpu_id, vector);
+        tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+                                       vector);
         break;
     case 1: // reset
         warn("Sending reset to CPU: %d\n", cpu_id);
@@ -319,7 +319,7 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
         return false;
 
     DPRINTF(Iob, "Receiving jBus interrupt: %d for cpu %d vec %d\n", source,
-        cpu_id, jIntVec);
+            cpu_id, jIntVec);
 
     jIntBusy[cpu_id].busy = true;
     jIntBusy[cpu_id].source = source;
@@ -327,8 +327,8 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
     jBusData1[cpu_id] = d1;
 
     auto tc = sys->threads[cpu_id];
-    tc->getCpuPtr()->postInterrupt(
-        tc->threadId(), SparcISA::IT_INT_VEC, jIntVec);
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+                                   jIntVec);
     return true;
 }
 

@@ -180,7 +180,8 @@ class AbstractController : public ClockedObject, public Consumer
     //! By default, it does nothing. Behavior is protocol-specific
     virtual void
     notifyCoalesced(const Addr &addr, const RubyRequestType &type,
-        const RequestPtr &req, const DataBlock &data_blk, const bool &was_miss)
+                    const RequestPtr &req, const DataBlock &data_blk,
+                    const bool &was_miss)
     {}
 
     //! Function for collating statistics from all the controllers of this
@@ -265,8 +266,9 @@ class AbstractController : public ClockedObject, public Consumer
      * @param the type of the destination (optional)
      * @return the MachineID of the destination
      */
-    MachineID mapAddressToDownstreamMachine(
-        Addr addr, MachineType mtype = MachineType_NUM) const;
+    MachineID
+    mapAddressToDownstreamMachine(Addr addr,
+                                  MachineType mtype = MachineType_NUM) const;
 
     /** List of downstream destinations (towards memory) */
     const NetDest &
@@ -318,7 +320,7 @@ class AbstractController : public ClockedObject, public Consumer
     template <typename EventType, typename StateType>
     void
     incomingTransactionStart(Addr addr, EventType type, StateType initialState,
-        bool retried, bool isAddressed = true)
+                             bool retried, bool isAddressed = true)
     {
         auto &m_inTrans =
             isAddressed ? m_inTransAddressed : m_inTransUnaddressed;
@@ -340,8 +342,8 @@ class AbstractController : public ClockedObject, public Consumer
      */
     template <typename StateType>
     void
-    incomingTransactionEnd(
-        Addr addr, StateType finalState, bool isAddressed = true)
+    incomingTransactionEnd(Addr addr, StateType finalState,
+                           bool isAddressed = true)
     {
         auto &m_inTrans =
             isAddressed ? m_inTransAddressed : m_inTransUnaddressed;
@@ -351,13 +353,13 @@ class AbstractController : public ClockedObject, public Consumer
 
         auto stat_iter_ev = stats.inTransStateChanges.find(trans.transaction);
         gem5_assert(stat_iter_ev != stats.inTransStateChanges.end(),
-            "%s: event type=%d not marked as in_trans in SLICC", name(),
-            trans.transaction);
+                    "%s: event type=%d not marked as in_trans in SLICC",
+                    name(), trans.transaction);
 
         auto stat_iter_state = stat_iter_ev->second.find(trans.state);
         gem5_assert(stat_iter_state != stat_iter_ev->second.end(),
-            "%s: event type=%d has no transition from state=%d", name(),
-            trans.transaction, trans.state);
+                    "%s: event type=%d has no transition from state=%d",
+                    name(), trans.transaction, trans.state);
 
         ++(*stat_iter_state->second[(unsigned)finalState]);
 
@@ -380,8 +382,8 @@ class AbstractController : public ClockedObject, public Consumer
      */
     template <typename EventType>
     void
-    outgoingTransactionStart(
-        Addr addr, EventType type, bool isAddressed = true)
+    outgoingTransactionStart(Addr addr, EventType type,
+                             bool isAddressed = true)
     {
         auto &m_outTrans =
             isAddressed ? m_outTransAddressed : m_outTransUnaddressed;
@@ -410,8 +412,8 @@ class AbstractController : public ClockedObject, public Consumer
 
         auto stat_iter = stats.outTransLatHist.find(trans.transaction);
         gem5_assert(stat_iter != stats.outTransLatHist.end(),
-            "%s: event type=%d not marked as out_trans in SLICC", name(),
-            trans.transaction);
+                    "%s: event type=%d not marked as out_trans in SLICC",
+                    name(), trans.transaction);
 
         stat_iter->second->sample(ticksToCycles(curTick() - trans.time));
         if (retried)
@@ -445,8 +447,8 @@ class AbstractController : public ClockedObject, public Consumer
     }
 
     virtual bool
-    hasBeenPrefetched(
-        const Addr &addr, const bool &is_secure, const RequestorID &requestor)
+    hasBeenPrefetched(const Addr &addr, const bool &is_secure,
+                      const RequestorID &requestor)
     {
         fatal("hasBeenPrefetched: prefetching not supported");
         return false;
@@ -507,7 +509,7 @@ class AbstractController : public ClockedObject, public Consumer
 
       public:
         MemoryPort(const std::string &_name, AbstractController *_controller,
-            PortID id = InvalidPortID);
+                   PortID id = InvalidPortID);
 
       protected:
         // Function for receiving a timing response from the peer port.
@@ -559,7 +561,8 @@ class AbstractController : public ClockedObject, public Consumer
         // potential final states. Potential initial states are states that
         // appear in transitions triggered by that event. Currently all states
         // are considered as potential final states.
-        std::unordered_map<unsigned,
+        std::unordered_map<
+            unsigned,
             std::unordered_map<unsigned, std::vector<statistics::Scalar *>>>
             inTransStateChanges;
 

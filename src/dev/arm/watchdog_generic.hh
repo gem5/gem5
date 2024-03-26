@@ -97,9 +97,9 @@ class GenericWatchdog : public PioDevice
         notify(void) override
         {
             panic_if(parent.enabled(),
-                "The Generic Watchdog shall be disabled when "
-                "the System Counter is being updated, or "
-                "the results are unpredictable");
+                     "The Generic Watchdog shall be disabled when "
+                     "the System Counter is being updated, or "
+                     "the results are unpredictable");
         }
 
       protected:

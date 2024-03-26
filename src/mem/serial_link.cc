@@ -56,37 +56,37 @@ namespace gem5
 SerialLink::SerialLinkResponsePort::SerialLinkResponsePort(
     const std::string &_name, SerialLink &_serial_link,
     SerialLinkRequestPort &_mem_side_port, Cycles _delay, int _resp_limit,
-    const std::vector<AddrRange> &_ranges) :
-    ResponsePort(_name),
-    serial_link(_serial_link),
-    mem_side_port(_mem_side_port),
-    delay(_delay),
-    ranges(_ranges.begin(), _ranges.end()),
-    outstandingResponses(0),
-    retryReq(false),
-    respQueueLimit(_resp_limit),
-    sendEvent([this] { trySendTiming(); }, _name)
+    const std::vector<AddrRange> &_ranges)
+    : ResponsePort(_name),
+      serial_link(_serial_link),
+      mem_side_port(_mem_side_port),
+      delay(_delay),
+      ranges(_ranges.begin(), _ranges.end()),
+      outstandingResponses(0),
+      retryReq(false),
+      respQueueLimit(_resp_limit),
+      sendEvent([this] { trySendTiming(); }, _name)
 {}
 
 SerialLink::SerialLinkRequestPort::SerialLinkRequestPort(
     const std::string &_name, SerialLink &_serial_link,
-    SerialLinkResponsePort &_cpu_side_port, Cycles _delay, int _req_limit) :
-    RequestPort(_name),
-    serial_link(_serial_link),
-    cpu_side_port(_cpu_side_port),
-    delay(_delay),
-    reqQueueLimit(_req_limit),
-    sendEvent([this] { trySendTiming(); }, _name)
+    SerialLinkResponsePort &_cpu_side_port, Cycles _delay, int _req_limit)
+    : RequestPort(_name),
+      serial_link(_serial_link),
+      cpu_side_port(_cpu_side_port),
+      delay(_delay),
+      reqQueueLimit(_req_limit),
+      sendEvent([this] { trySendTiming(); }, _name)
 {}
 
-SerialLink::SerialLink(const SerialLinkParams &p) :
-    ClockedObject(p),
-    cpu_side_port(p.name + ".cpu_side_port", *this, mem_side_port,
-        ticksToCycles(p.delay), p.resp_size, p.ranges),
-    mem_side_port(p.name + ".mem_side_port", *this, cpu_side_port,
-        ticksToCycles(p.delay), p.req_size),
-    num_lanes(p.num_lanes),
-    link_speed(p.link_speed)
+SerialLink::SerialLink(const SerialLinkParams &p)
+    : ClockedObject(p),
+      cpu_side_port(p.name + ".cpu_side_port", *this, mem_side_port,
+                    ticksToCycles(p.delay), p.resp_size, p.ranges),
+      mem_side_port(p.name + ".mem_side_port", *this, cpu_side_port,
+                    ticksToCycles(p.delay), p.req_size),
+      num_lanes(p.num_lanes),
+      link_speed(p.link_speed)
 {}
 
 Port &
@@ -130,7 +130,7 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
     // all checks are done when the request is accepted on the response
     // side, so we are guaranteed to have space for the response
     DPRINTF(SerialLink, "recvTimingResp: %s addr 0x%x\n", pkt->cmdString(),
-        pkt->getAddr());
+            pkt->getAddr());
 
     DPRINTF(SerialLink, "Request queue size: %d\n", transmitList.size());
 
@@ -143,8 +143,8 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
     // have to wait to receive the whole packet. So we only account for the
     // deserialization latency.
     Cycles cycles = delay;
-    cycles += Cycles(divCeil(
-        pkt->getSize() * 8, serial_link.num_lanes * serial_link.link_speed));
+    cycles += Cycles(divCeil(pkt->getSize() * 8,
+                             serial_link.num_lanes * serial_link.link_speed));
     Tick t = serial_link.clockEdge(cycles);
 
     //@todo: If the processor sends two uncached requests towards HMC and the
@@ -161,13 +161,13 @@ bool
 SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(SerialLink, "recvTimingReq: %s addr 0x%x\n", pkt->cmdString(),
-        pkt->getAddr());
+            pkt->getAddr());
 
     // we should not see a timing request if we are already in a retry
     assert(!retryReq);
 
     DPRINTF(SerialLink, "Response queue size: %d outresp: %d\n",
-        transmitList.size(), outstandingResponses);
+            transmitList.size(), outstandingResponses);
 
     // if the request queue is full then there is no hope
     if (mem_side_port.reqQueueFull()) {
@@ -204,8 +204,9 @@ SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
             // serial link, we should account for its deserialization latency
             // only.
             Cycles cycles = delay;
-            cycles += Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed));
+            cycles += Cycles(
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
 
             //@todo: If the processor sends two uncached requests towards HMC
@@ -276,7 +277,7 @@ SerialLink::SerialLinkRequestPort::trySendTiming()
     PacketPtr pkt = req.pkt;
 
     DPRINTF(SerialLink, "trySend request addr 0x%x, queue size %d\n",
-        pkt->getAddr(), transmitList.size());
+            pkt->getAddr(), transmitList.size());
 
     if (sendTimingReq(pkt)) {
         // send successful
@@ -290,8 +291,9 @@ SerialLink::SerialLinkRequestPort::trySendTiming()
             DPRINTF(SerialLink, "Scheduling next send\n");
 
             // Make sure bandwidth limitation is met
-            Cycles cycles = Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed));
+            Cycles cycles = Cycles(
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_req.tick, t));
         }
@@ -319,7 +321,7 @@ SerialLink::SerialLinkResponsePort::trySendTiming()
     PacketPtr pkt = resp.pkt;
 
     DPRINTF(SerialLink, "trySend response addr 0x%x, outstanding %d\n",
-        pkt->getAddr(), outstandingResponses);
+            pkt->getAddr(), outstandingResponses);
 
     if (sendTimingResp(pkt)) {
         // send successful
@@ -335,8 +337,9 @@ SerialLink::SerialLinkResponsePort::trySendTiming()
             DPRINTF(SerialLink, "Scheduling next send\n");
 
             // Make sure bandwidth limitation is met
-            Cycles cycles = Cycles(divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed));
+            Cycles cycles = Cycles(
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_resp.tick, t));
         }

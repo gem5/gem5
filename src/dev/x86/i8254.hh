@@ -54,8 +54,8 @@ class I8254 : public BasicPioDevice
         }
 
       public:
-        X86Intel8254Timer(const std::string &name, I8254 *_parent) :
-            Intel8254Timer(_parent, name), parent(_parent)
+        X86Intel8254Timer(const std::string &name, I8254 *_parent)
+            : Intel8254Timer(_parent, name), parent(_parent)
         {}
     };
 
@@ -77,8 +77,8 @@ class I8254 : public BasicPioDevice
             return BasicPioDevice::getPort(if_name, idx);
     }
 
-    I8254(const Params &p) :
-        BasicPioDevice(p, 4), latency(p.pio_latency), pit(p.name, this)
+    I8254(const Params &p)
+        : BasicPioDevice(p, 4), latency(p.pio_latency), pit(p.name, this)
     {
         for (int i = 0; i < p.port_int_pin_connection_count; i++) {
             intPin.push_back(new IntSourcePin<I8254>(

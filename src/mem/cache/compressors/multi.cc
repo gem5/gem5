@@ -47,8 +47,8 @@ namespace gem5
 namespace compression
 {
 Multi::MultiCompData::MultiCompData(
-    unsigned index, std::unique_ptr<Base::CompressionData> comp_data) :
-    CompressionData(), index(index), compData(std::move(comp_data))
+    unsigned index, std::unique_ptr<Base::CompressionData> comp_data)
+    : CompressionData(), index(index), compData(std::move(comp_data))
 {
     setSizeBits(compData->getSizeBits());
 }
@@ -59,13 +59,13 @@ Multi::MultiCompData::getIndex() const
     return index;
 }
 
-Multi::Multi(const Params &p) :
-    Base(p),
-    compressors(p.compressors),
-    numEncodingBits(p.encoding_in_tags ?
-                        0 :
-                        std::log2(alignToPowerOfTwo(compressors.size()))),
-    multiStats(stats, *this)
+Multi::Multi(const Params &p)
+    : Base(p),
+      compressors(p.compressors),
+      numEncodingBits(p.encoding_in_tags ?
+                          0 :
+                          std::log2(alignToPowerOfTwo(compressors.size()))),
+      multiStats(stats, *this)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
 }
@@ -87,8 +87,8 @@ Multi::setCache(BaseCache *_cache)
 }
 
 std::unique_ptr<Base::CompressionData>
-Multi::compress(
-    const std::vector<Chunk> &chunks, Cycles &comp_lat, Cycles &decomp_lat)
+Multi::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                Cycles &decomp_lat)
 {
     struct Results
     {
@@ -98,9 +98,11 @@ Multi::compress(
         uint8_t compressionFactor;
 
         Results(unsigned index,
-            std::unique_ptr<Base::CompressionData> comp_data,
-            Cycles decomp_lat, std::size_t blk_size) :
-            index(index), compData(std::move(comp_data)), decompLat(decomp_lat)
+                std::unique_ptr<Base::CompressionData> comp_data,
+                Cycles decomp_lat, std::size_t blk_size)
+            : index(index),
+              compData(std::move(comp_data)),
+              decompLat(decomp_lat)
         {
             const std::size_t size = compData->getSize();
             // If the compressed size is worse than the uncompressed size,
@@ -124,7 +126,7 @@ Multi::compress(
     {
         bool
         operator()(const std::shared_ptr<Results> &lhs,
-            const std::shared_ptr<Results> &rhs) const
+                   const std::shared_ptr<Results> &rhs) const
         {
             const std::size_t lhs_cf = lhs->compressionFactor;
             const std::size_t rhs_cf = rhs->compressionFactor;
@@ -146,17 +148,18 @@ Multi::compress(
 
     // Find the ranking of the compressor outputs
     std::priority_queue<std::shared_ptr<Results>,
-        std::vector<std::shared_ptr<Results>>, ResultsComparator>
+                        std::vector<std::shared_ptr<Results>>,
+                        ResultsComparator>
         results;
     Cycles max_comp_lat;
     for (unsigned i = 0; i < compressors.size(); i++) {
         Cycles temp_decomp_lat;
         auto temp_comp_data =
             compressors[i]->compress(data, comp_lat, temp_decomp_lat);
-        temp_comp_data->setSizeBits(
-            temp_comp_data->getSizeBits() + numEncodingBits);
-        results.push(std::make_shared<Results>(
-            i, std::move(temp_comp_data), temp_decomp_lat, blkSize));
+        temp_comp_data->setSizeBits(temp_comp_data->getSizeBits() +
+                                    numEncodingBits);
+        results.push(std::make_shared<Results>(i, std::move(temp_comp_data),
+                                               temp_decomp_lat, blkSize));
         max_comp_lat = std::max(max_comp_lat, comp_lat);
     }
 
@@ -192,11 +195,11 @@ Multi::decompress(const CompressionData *comp_data, uint64_t *cache_line)
         casted_comp_data->compData.get(), cache_line);
 }
 
-Multi::MultiStats::MultiStats(BaseStats &base_group, Multi &_compressor) :
-    statistics::Group(&base_group),
-    compressor(_compressor),
-    ADD_STAT(ranks, statistics::units::Count::get(),
-        "Number of times each compressor had the nth best compression")
+Multi::MultiStats::MultiStats(BaseStats &base_group, Multi &_compressor)
+    : statistics::Group(&base_group),
+      compressor(_compressor),
+      ADD_STAT(ranks, statistics::units::Count::get(),
+               "Number of times each compressor had the nth best compression")
 {}
 
 void

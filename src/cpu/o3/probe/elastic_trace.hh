@@ -386,7 +386,7 @@ class ElasticTrace : public ProbeListenerObject
      * @param commit        True if instruction is committed, false if squashed
      */
     void addDepTraceRecord(const DynInstConstPtr &head_inst,
-        InstExecInfo *exec_info_ptr, bool commit);
+                           InstExecInfo *exec_info_ptr, bool commit);
 
     /**
      * Clear entries in the temporary store of execution info objects to free

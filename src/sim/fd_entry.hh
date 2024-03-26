@@ -101,14 +101,14 @@ class FDEntry : public Serializable
 class HBFDEntry : public FDEntry
 {
   public:
-    HBFDEntry(int flags, int sim_fd, bool close_on_exec = false) :
-        FDEntry(close_on_exec), _flags(flags), _simFD(sim_fd)
+    HBFDEntry(int flags, int sim_fd, bool close_on_exec = false)
+        : FDEntry(close_on_exec), _flags(flags), _simFD(sim_fd)
     {
         _class = FDClass::fd_hb;
     }
 
-    HBFDEntry(HBFDEntry const &reg, bool close_on_exec = false) :
-        FDEntry(close_on_exec), _flags(reg._flags), _simFD(reg._simFD)
+    HBFDEntry(HBFDEntry const &reg, bool close_on_exec = false)
+        : FDEntry(close_on_exec), _flags(reg._flags), _simFD(reg._simFD)
     {
         _class = FDClass::fd_hb;
     }
@@ -158,18 +158,18 @@ class FileFDEntry : public HBFDEntry
 {
   public:
     FileFDEntry(int sim_fd, int flags, std::string const &file_name,
-        uint64_t file_offset, bool close_on_exec = false) :
-        HBFDEntry(flags, sim_fd, close_on_exec),
-        _fileName(file_name),
-        _fileOffset(file_offset)
+                uint64_t file_offset, bool close_on_exec = false)
+        : HBFDEntry(flags, sim_fd, close_on_exec),
+          _fileName(file_name),
+          _fileOffset(file_offset)
     {
         _class = FDClass::fd_file;
     }
 
-    FileFDEntry(FileFDEntry const &reg, bool close_on_exec = false) :
-        HBFDEntry(reg._flags, reg._simFD, close_on_exec),
-        _fileName(reg._fileName),
-        _fileOffset(reg._fileOffset)
+    FileFDEntry(FileFDEntry const &reg, bool close_on_exec = false)
+        : HBFDEntry(reg._flags, reg._simFD, close_on_exec),
+          _fileName(reg._fileName),
+          _fileOffset(reg._fileOffset)
     {
         _class = FDClass::fd_file;
     }
@@ -235,18 +235,18 @@ class PipeFDEntry : public HBFDEntry
     };
 
     PipeFDEntry(int sim_fd, int flags, EndType pipe_end_type,
-        bool close_on_exec = false) :
-        HBFDEntry(flags, sim_fd, close_on_exec),
-        _pipeReadSource(-1),
-        _pipeEndType(pipe_end_type)
+                bool close_on_exec = false)
+        : HBFDEntry(flags, sim_fd, close_on_exec),
+          _pipeReadSource(-1),
+          _pipeEndType(pipe_end_type)
     {
         _class = FDClass::fd_pipe;
     }
 
-    PipeFDEntry(PipeFDEntry const &pipe, bool close_on_exec = false) :
-        HBFDEntry(pipe._flags, pipe._simFD, close_on_exec),
-        _pipeReadSource(pipe._pipeReadSource),
-        _pipeEndType(pipe._pipeEndType)
+    PipeFDEntry(PipeFDEntry const &pipe, bool close_on_exec = false)
+        : HBFDEntry(pipe._flags, pipe._simFD, close_on_exec),
+          _pipeReadSource(pipe._pipeReadSource),
+          _pipeEndType(pipe._pipeEndType)
     {
         _class = FDClass::fd_pipe;
     }
@@ -295,14 +295,16 @@ class DeviceFDEntry : public FDEntry
 {
   public:
     DeviceFDEntry(EmulatedDriver *driver, std::string const &file_name,
-        bool close_on_exec = false) :
-        FDEntry(close_on_exec), _driver(driver), _fileName(file_name)
+                  bool close_on_exec = false)
+        : FDEntry(close_on_exec), _driver(driver), _fileName(file_name)
     {
         _class = FDClass::fd_device;
     }
 
-    DeviceFDEntry(DeviceFDEntry const &dev, bool close_on_exec = false) :
-        FDEntry(close_on_exec), _driver(dev._driver), _fileName(dev._fileName)
+    DeviceFDEntry(DeviceFDEntry const &dev, bool close_on_exec = false)
+        : FDEntry(close_on_exec),
+          _driver(dev._driver),
+          _fileName(dev._fileName)
     {
         _class = FDClass::fd_device;
     }
@@ -336,20 +338,20 @@ class SocketFDEntry : public HBFDEntry
 {
   public:
     SocketFDEntry(int sim_fd, int domain, int type, int protocol,
-        bool close_on_exec = false) :
-        HBFDEntry(0, sim_fd, close_on_exec),
-        _domain(domain),
-        _type(type),
-        _protocol(protocol)
+                  bool close_on_exec = false)
+        : HBFDEntry(0, sim_fd, close_on_exec),
+          _domain(domain),
+          _type(type),
+          _protocol(protocol)
     {
         _class = FDClass::fd_socket;
     }
 
-    SocketFDEntry(SocketFDEntry const &reg, bool close_on_exec = false) :
-        HBFDEntry(reg._flags, reg._simFD, close_on_exec),
-        _domain(reg._domain),
-        _type(reg._type),
-        _protocol(reg._protocol)
+    SocketFDEntry(SocketFDEntry const &reg, bool close_on_exec = false)
+        : HBFDEntry(reg._flags, reg._simFD, close_on_exec),
+          _domain(reg._domain),
+          _type(reg._type),
+          _protocol(reg._protocol)
     {
         _class = FDClass::fd_socket;
     }

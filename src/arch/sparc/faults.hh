@@ -67,15 +67,15 @@ class SparcFaultBase : public FaultBase
         const FaultPriority priority;
         const PrivilegeLevelSpec nextPrivilegeLevel;
         FaultVals(const FaultName &name_, const TrapType &trapType_,
-            const FaultPriority &priority_, const PrivilegeLevelSpec &il) :
-            name(name_),
-            trapType(trapType_),
-            priority(priority_),
-            nextPrivilegeLevel(il)
+                  const FaultPriority &priority_, const PrivilegeLevelSpec &il)
+            : name(name_),
+              trapType(trapType_),
+              priority(priority_),
+              nextPrivilegeLevel(il)
         {}
     };
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
     virtual PrivilegeLevel getNextLevel(PrivilegeLevel current) = 0;
@@ -114,110 +114,140 @@ class SparcFault : public SparcFaultBase
 class PowerOnReset : public SparcFault<PowerOnReset>
 {
   public:
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class WatchDogReset : public SparcFault<WatchDogReset>
-{};
+{
+};
 
 class ExternallyInitiatedReset : public SparcFault<ExternallyInitiatedReset>
-{};
+{
+};
 
 class SoftwareInitiatedReset : public SparcFault<SoftwareInitiatedReset>
-{};
+{
+};
 
 class REDStateException : public SparcFault<REDStateException>
-{};
+{
+};
 
 class StoreError : public SparcFault<StoreError>
-{};
+{
+};
 
 class InstructionAccessException :
     public SparcFault<InstructionAccessException>
-{};
+{
+};
 
 // class InstructionAccessMMUMiss : public SparcFault<InstructionAccessMMUMiss>
 // {};
 
 class InstructionAccessError : public SparcFault<InstructionAccessError>
-{};
+{
+};
 
 class IllegalInstruction : public SparcFault<IllegalInstruction>
-{};
+{
+};
 
 class PrivilegedOpcode : public SparcFault<PrivilegedOpcode>
-{};
+{
+};
 
 // class UnimplementedLDD : public SparcFault<UnimplementedLDD> {};
 
 // class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
 
 class FpDisabled : public SparcFault<FpDisabled>
-{};
+{
+};
 class VecDisabled : public SparcFault<VecDisabled>
-{};
+{
+};
 
 class FpExceptionIEEE754 : public SparcFault<FpExceptionIEEE754>
-{};
+{
+};
 
 class FpExceptionOther : public SparcFault<FpExceptionOther>
-{};
+{
+};
 
 class TagOverflow : public SparcFault<TagOverflow>
-{};
+{
+};
 
 class CleanWindow : public SparcFault<CleanWindow>
-{};
+{
+};
 
 class DivisionByZero : public SparcFault<DivisionByZero>
-{};
+{
+};
 
 class InternalProcessorError : public SparcFault<InternalProcessorError>
-{};
+{
+};
 
 class InstructionInvalidTSBEntry :
     public SparcFault<InstructionInvalidTSBEntry>
-{};
+{
+};
 
 class DataInvalidTSBEntry : public SparcFault<DataInvalidTSBEntry>
-{};
+{
+};
 
 class DataAccessException : public SparcFault<DataAccessException>
-{};
+{
+};
 
 // class DataAccessMMUMiss : public SparcFault<DataAccessMMUMiss> {};
 
 class DataAccessError : public SparcFault<DataAccessError>
-{};
+{
+};
 
 class DataAccessProtection : public SparcFault<DataAccessProtection>
-{};
+{
+};
 
 class MemAddressNotAligned : public SparcFault<MemAddressNotAligned>
-{};
+{
+};
 
 class LDDFMemAddressNotAligned : public SparcFault<LDDFMemAddressNotAligned>
-{};
+{
+};
 
 class STDFMemAddressNotAligned : public SparcFault<STDFMemAddressNotAligned>
-{};
+{
+};
 
 class PrivilegedAction : public SparcFault<PrivilegedAction>
-{};
+{
+};
 
 class LDQFMemAddressNotAligned : public SparcFault<LDQFMemAddressNotAligned>
-{};
+{
+};
 
 class STQFMemAddressNotAligned : public SparcFault<STQFMemAddressNotAligned>
-{};
+{
+};
 
 class InstructionRealTranslationMiss :
     public SparcFault<InstructionRealTranslationMiss>
-{};
+{
+};
 
 class DataRealTranslationMiss : public SparcFault<DataRealTranslationMiss>
-{};
+{
+};
 
 // class AsyncDataError : public SparcFault<AsyncDataError> {};
 
@@ -248,19 +278,24 @@ class InterruptLevelN : public EnumeratedFault<InterruptLevelN>
 };
 
 class HstickMatch : public SparcFault<HstickMatch>
-{};
+{
+};
 
 class TrapLevelZero : public SparcFault<TrapLevelZero>
-{};
+{
+};
 
 class InterruptVector : public SparcFault<InterruptVector>
-{};
+{
+};
 
 class PAWatchpoint : public SparcFault<PAWatchpoint>
-{};
+{
+};
 
 class VAWatchpoint : public SparcFault<VAWatchpoint>
-{};
+{
+};
 
 class FastInstructionAccessMMUMiss :
     public SparcFault<FastInstructionAccessMMUMiss>
@@ -271,8 +306,8 @@ class FastInstructionAccessMMUMiss :
   public:
     FastInstructionAccessMMUMiss(Addr addr) : vaddr(addr) {}
     FastInstructionAccessMMUMiss() : vaddr(0) {}
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
@@ -283,32 +318,37 @@ class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
   public:
     FastDataAccessMMUMiss(Addr addr) : vaddr(addr) {}
     FastDataAccessMMUMiss() : vaddr(0) {}
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class FastDataAccessProtection : public SparcFault<FastDataAccessProtection>
-{};
+{
+};
 
 class InstructionBreakpoint : public SparcFault<InstructionBreakpoint>
-{};
+{
+};
 
 class CpuMondo : public SparcFault<CpuMondo>
-{};
+{
+};
 
 class DevMondo : public SparcFault<DevMondo>
-{};
+{
+};
 
 class ResumableError : public SparcFault<ResumableError>
-{};
+{
+};
 
 class SpillNNormal : public EnumeratedFault<SpillNNormal>
 {
   public:
     SpillNNormal(uint32_t n) : EnumeratedFault<SpillNNormal>(n) { ; }
     // These need to be handled specially to enable spill traps in SE
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class SpillNOther : public EnumeratedFault<SpillNOther>
@@ -322,8 +362,8 @@ class FillNNormal : public EnumeratedFault<FillNNormal>
   public:
     FillNNormal(uint32_t n) : EnumeratedFault<FillNNormal>(n) {}
     // These need to be handled specially to enable fill traps in SE
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class FillNOther : public EnumeratedFault<FillNOther>
@@ -337,8 +377,8 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
   public:
     TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n) {}
     // In SE, trap instructions are requesting services from the OS.
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 /*
@@ -454,8 +494,8 @@ void getREDVector(RegVal TT, Addr &PC, Addr &NPC);
 
 void getHyperVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT);
 
-void getPrivVector(
-    ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT, RegVal TL);
+void getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT,
+                   RegVal TL);
 
 } // namespace SparcISA
 } // namespace gem5

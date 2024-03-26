@@ -80,14 +80,14 @@ class LoopPredictor : public SimObject
         uint8_t age;
         bool dir; // only for useDirectionBit
 
-        LoopEntry() :
-            numIter(0),
-            currentIter(0),
-            currentIterSpec(0),
-            confidence(0),
-            tag(0),
-            age(0),
-            dir(0)
+        LoopEntry()
+            : numIter(0),
+              currentIter(0),
+              currentIterSpec(0),
+              confidence(0),
+              tag(0),
+              age(0),
+              dir(0)
         {}
     };
 
@@ -158,15 +158,15 @@ class LoopPredictor : public SimObject
         int loopHit;
         bool predTaken;
 
-        BranchInfo() :
-            loopTag(0),
-            currentIter(0),
-            loopPred(false),
-            loopPredValid(false),
-            loopIndex(0),
-            loopIndexB(0),
-            loopHit(0),
-            predTaken(false)
+        BranchInfo()
+            : loopTag(0),
+              currentIter(0),
+              loopPred(false),
+              loopPredValid(false),
+              loopIndex(0),
+              loopIndexB(0),
+              loopHit(0),
+              predTaken(false)
         {}
     };
 
@@ -200,7 +200,7 @@ class LoopPredictor : public SimObject
      * @result the result of the prediction, if it could be predicted
      */
     bool getLoop(Addr pc, BranchInfo *bi, bool speculative,
-        unsigned instShiftAmt) const;
+                 unsigned instShiftAmt) const;
 
     /**
      * Updates the loop predictor.
@@ -231,7 +231,8 @@ class LoopPredictor : public SimObject
      * @param instShiftAmt Number of bits to shift instructions
      */
     void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-        bool tage_pred, BranchInfo *bi, unsigned instShiftAmt);
+                          bool tage_pred, BranchInfo *bi,
+                          unsigned instShiftAmt);
 
     /**
      * Get the loop prediction
@@ -247,7 +248,8 @@ class LoopPredictor : public SimObject
      * @result the prediction, true if taken
      */
     bool loopPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-        BranchInfo *bi, bool prev_pred_taken, unsigned instShiftAmt);
+                     BranchInfo *bi, bool prev_pred_taken,
+                     unsigned instShiftAmt);
 
     /**
      * Update the stats

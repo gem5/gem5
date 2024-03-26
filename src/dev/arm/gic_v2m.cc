@@ -66,14 +66,14 @@
 
 namespace gem5
 {
-Gicv2m::Gicv2m(const Params &p) :
-    PioDevice(p), pioDelay(p.pio_delay), frames(p.frames), gic(p.gic)
+Gicv2m::Gicv2m(const Params &p)
+    : PioDevice(p), pioDelay(p.pio_delay), frames(p.frames), gic(p.gic)
 {
     // Assert SPI ranges start at 32
     for (int i = 0; i < frames.size(); i++) {
         if (frames[i]->spi_base < 32)
             fatal("Gicv2m: Frame %d's SPI base (%d) is not in SPI space\n", i,
-                frames[i]->spi_base);
+                  frames[i]->spi_base);
     }
     unsigned int x = frames.size();
     fatal_if(!isPowerOf2(x), "Gicv2m: The v2m shim must be configured with "
@@ -102,8 +102,8 @@ Gicv2m::read(PacketPtr pkt)
 
     switch (offset) {
     case MSI_TYPER:
-        pkt->setLE<uint32_t>(
-            (frames[frame]->spi_base << 16) | frames[frame]->spi_len);
+        pkt->setLE<uint32_t>((frames[frame]->spi_base << 16) |
+                             frames[frame]->spi_len);
         break;
 
     case PER_ID4:

@@ -159,8 +159,8 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 // table is provided here.
 
 int
-RoutingUnit::outportCompute(
-    RouteInfo route, int inport, PortDirection inport_dirn)
+RoutingUnit::outportCompute(RouteInfo route, int inport,
+                            PortDirection inport_dirn)
 {
     int outport = -1;
 
@@ -201,8 +201,8 @@ RoutingUnit::outportCompute(
 // Only for reference purpose in a Mesh
 // By default Garnet uses the routing table
 int
-RoutingUnit::outportComputeXY(
-    RouteInfo route, int inport, PortDirection inport_dirn)
+RoutingUnit::outportComputeXY(RouteInfo route, int inport,
+                              PortDirection inport_dirn)
 {
     PortDirection outport_dirn = "Unknown";
 
@@ -258,8 +258,8 @@ RoutingUnit::outportComputeXY(
 // Template for implementing custom routing algorithm
 // using port directions. (Example adaptive)
 int
-RoutingUnit::outportComputeCustom(
-    RouteInfo route, int inport, PortDirection inport_dirn)
+RoutingUnit::outportComputeCustom(RouteInfo route, int inport,
+                                  PortDirection inport_dirn)
 {
     panic("%s placeholder executed", __FUNCTION__);
 }

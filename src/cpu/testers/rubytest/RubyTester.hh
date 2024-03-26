@@ -74,8 +74,8 @@ class RubyTester : public ClockedObject
         // and DataOnly CpuPorts will map to that RubyPort
 
         CpuPort(const std::string &_name, RubyTester *_tester, PortID _id,
-            PortID _index) :
-            RequestPort(_name, _id), tester(_tester), globalIdx(_index)
+                PortID _index)
+            : RequestPort(_name, _id), tester(_tester), globalIdx(_index)
         {}
 
       protected:
@@ -98,8 +98,8 @@ class RubyTester : public ClockedObject
     RubyTester(const Params &p);
     ~RubyTester();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     bool isInstOnlyCpuPort(int idx);
     bool isInstDataCpuPort(int idx);

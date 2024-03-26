@@ -65,8 +65,10 @@ namespace gem5
 {
 using namespace X86ISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
-    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+      regCache32(this),
+      regCache64(this)
 {}
 
 bool
@@ -105,8 +107,8 @@ RemoteGDB::gdbRegs()
         } else if (arch == loader::I386) {
             return &regCache32;
         } else if (arch != loader::UnknownArch) {
-            panic(
-                "Unrecognized workload arch %s.", loader::archToString(arch));
+            panic("Unrecognized workload arch %s.",
+                  loader::archToString(arch));
         }
     }
 

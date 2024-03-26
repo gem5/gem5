@@ -73,9 +73,9 @@ class DRAMInterface : public MemInterface
         uint8_t bank;
         Tick timeStamp;
 
-        constexpr Command(
-            Data::MemCommand::cmds _type, uint8_t _bank, Tick time_stamp) :
-            type(_type), bank(_bank), timeStamp(time_stamp)
+        constexpr Command(Data::MemCommand::cmds _type, uint8_t _bank,
+                          Tick time_stamp)
+            : type(_type), bank(_bank), timeStamp(time_stamp)
         {}
     };
 
@@ -560,8 +560,8 @@ class DRAMInterface : public MemInterface
      * @param act_tick Time when the activation takes place
      * @param row Index of the row
      */
-    void activateBank(
-        Rank &rank_ref, Bank &bank_ref, Tick act_tick, uint32_t row);
+    void activateBank(Rank &rank_ref, Bank &bank_ref, Tick act_tick,
+                      uint32_t row);
 
     /**
      * Precharge a given bank and also update when the precharge is
@@ -575,7 +575,7 @@ class DRAMInterface : public MemInterface
      * @param trace Is this an auto precharge then do not add to trace
      */
     void prechargeBank(Rank &rank_ref, Bank &bank_ref, Tick pre_tick,
-        bool auto_or_preall = false, bool trace = true);
+                       bool auto_or_preall = false, bool trace = true);
 
     struct DRAMStats : public statistics::Group
     {
@@ -651,8 +651,8 @@ class DRAMInterface : public MemInterface
      * @return One-hot encoded mask of bank indices
      * @return boolean indicating burst can issue seamlessly, with no gaps
      */
-    std::pair<std::vector<uint32_t>, bool> minBankPrep(
-        const MemPacketQueue &queue, Tick min_col_at) const;
+    std::pair<std::vector<uint32_t>, bool>
+    minBankPrep(const MemPacketQueue &queue, Tick min_col_at) const;
 
     /*
      * @return time to send a burst of data without gaps
@@ -683,7 +683,8 @@ class DRAMInterface : public MemInterface
     void setupRank(const uint8_t rank, const bool is_read) override;
 
     MemPacket *decodePacket(const PacketPtr pkt, Addr pkt_addr,
-        unsigned int size, bool is_read, uint8_t pseudo_channel = 0) override;
+                            unsigned int size, bool is_read,
+                            uint8_t pseudo_channel = 0) override;
 
     /**
      * Iterate through dram ranks to exit self-refresh in order to drain
@@ -732,8 +733,8 @@ class DRAMInterface : public MemInterface
      * @return an iterator to the selected packet, else queue.end()
      * @return the tick when the packet selected will issue
      */
-    std::pair<MemPacketQueue::iterator, Tick> chooseNextFRFCFS(
-        MemPacketQueue &queue, Tick min_col_at) const override;
+    std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const override;
 
     /**
      * Actually do the burst - figure out the latency it
@@ -749,8 +750,9 @@ class DRAMInterface : public MemInterface
      * @return pair, tick when current burst is issued and
      *               tick when next burst can issue
      */
-    std::pair<Tick, Tick> doBurstAccess(MemPacket *mem_pkt, Tick next_burst_at,
-        const std::vector<MemPacketQueue> &queue) override;
+    std::pair<Tick, Tick>
+    doBurstAccess(MemPacket *mem_pkt, Tick next_burst_at,
+                  const std::vector<MemPacketQueue> &queue) override;
 
     /**
      * Check if a burst operation can be issued to the DRAM

@@ -49,14 +49,14 @@
 
 namespace gem5
 {
-LupioBLK::LupioBLK(const Params &params) :
-    DmaDevice(params),
-    platform(params.platform),
-    dmaEvent([this] { dmaEventDone(); }, name()),
-    pioAddr(params.pio_addr),
-    pioSize(params.pio_size),
-    image(*params.image),
-    lupioBLKIntID(params.int_id)
+LupioBLK::LupioBLK(const Params &params)
+    : DmaDevice(params),
+      platform(params.platform),
+      dmaEvent([this] { dmaEventDone(); }, name()),
+      pioAddr(params.pio_addr),
+      pioSize(params.pio_size),
+      image(*params.image),
+      lupioBLKIntID(params.int_id)
 {
     static_assert(SECTOR_SIZE == SectorSize, "Sector size of disk image must"
                                              " match LupIO device\n");
@@ -124,7 +124,7 @@ LupioBLK::lupioBLKRead(const uint8_t addr)
     default:
         panic("Unexpected read to the LupioBLK device at address"
               " %#llx!\n",
-            addr);
+              addr);
         break;
     }
     return r;
@@ -164,7 +164,7 @@ LupioBLK::lupioBLKWrite(const uint8_t addr, uint64_t val64)
     default:
         panic("Unexpected write to the LupioBLK device at address"
               " %#llx!\n",
-            addr);
+              addr);
         break;
     }
 }
@@ -210,7 +210,7 @@ LupioBLK::read(PacketPtr pkt)
     Addr addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioBLK, "Read request - addr: %#x, size: %#x\n", addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t read_request = lupioBLKRead(addr);
     DPRINTF(LupioBLK, "Packet Read: %d\n", read_request);
@@ -226,7 +226,7 @@ LupioBLK::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioBLK, "Write register %#x value %#x\n", daddr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioBLKWrite(daddr, pkt->getUintX(byteOrder));
     DPRINTF(LupioBLK, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

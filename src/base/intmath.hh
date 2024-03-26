@@ -134,7 +134,7 @@ divCeil(const T &a, const U &b)
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) <= sizeof(uint32_t)>
 mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
-    std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
     uint64_t product = (uint64_t)val_a * (uint64_t)val_b;
     low = product;
@@ -147,7 +147,7 @@ mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) <= sizeof(uint32_t)>
 mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
-    std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
     uint64_t product = (int64_t)val_a * (int64_t)val_b;
     low = product;
@@ -170,7 +170,7 @@ mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
 mulUnsignedManual(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
-    std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+                  std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
     low = val_a * val_b;
 
@@ -198,7 +198,7 @@ mulUnsignedManual(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
 mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
-    std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
+            std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
 #ifdef __SIZEOF_INT128__
     __uint128_t val = (__uint128_t)val_a * (__uint128_t)val_b;
@@ -212,7 +212,7 @@ mulUnsigned(std::make_unsigned_t<T> &high, std::make_unsigned_t<T> &low,
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
 mulSignedManual(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
-    std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+                std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
     uint64_t u_high = 0, u_low = 0;
     mulUnsigned<T>(u_high, u_low, val_a, val_b);
@@ -232,7 +232,7 @@ mulSignedManual(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
 template <typename T>
 static constexpr std::enable_if_t<sizeof(T) == sizeof(uint64_t)>
 mulSigned(std::make_signed_t<T> &high, std::make_signed_t<T> &low,
-    std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
+          std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
 #ifdef __SIZEOF_INT128__
     __int128_t val = (__int128_t)val_a * (__int128_t)val_b;

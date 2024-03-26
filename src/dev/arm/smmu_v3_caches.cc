@@ -60,12 +60,13 @@
 namespace gem5
 {
 SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
-    statistics::Group *parent, const std::string &name) :
-    replacementPolicy(decodePolicyName(policy_name)),
-    nextToReplace(0),
-    random(seed),
-    useStamp(0),
-    baseCacheStats(parent, name)
+                                 statistics::Group *parent,
+                                 const std::string &name)
+    : replacementPolicy(decodePolicyName(policy_name)),
+      nextToReplace(0),
+      random(seed),
+      useStamp(0),
+      baseCacheStats(parent, name)
 {}
 
 int
@@ -83,30 +84,30 @@ SMMUv3BaseCache::decodePolicyName(const std::string &policy_name)
 }
 
 SMMUv3BaseCache::SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
-    statistics::Group *parent, const std::string &name) :
-    statistics::Group(parent, name.c_str()),
-    ADD_STAT(averageLookups,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Second>::get(),
-        "Average number lookups per second"),
-    ADD_STAT(totalLookups, statistics::units::Count::get(),
-        "Total number of lookups"),
-    ADD_STAT(averageMisses,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Second>::get(),
-        "Average number misses per second"),
-    ADD_STAT(totalMisses, statistics::units::Count::get(),
-        "Total number of misses"),
-    ADD_STAT(averageUpdates,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Second>::get(),
-        "Average number updates per second"),
-    ADD_STAT(totalUpdates, statistics::units::Count::get(),
-        "Total number of updates"),
-    ADD_STAT(
-        averageHitRate, statistics::units::Ratio::get(), "Average hit rate"),
-    ADD_STAT(insertions, statistics::units::Count::get(),
-        "Number of insertions (not replacements)")
+    statistics::Group *parent, const std::string &name)
+    : statistics::Group(parent, name.c_str()),
+      ADD_STAT(averageLookups,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Average number lookups per second"),
+      ADD_STAT(totalLookups, statistics::units::Count::get(),
+               "Total number of lookups"),
+      ADD_STAT(averageMisses,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Average number misses per second"),
+      ADD_STAT(totalMisses, statistics::units::Count::get(),
+               "Total number of misses"),
+      ADD_STAT(averageUpdates,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Average number updates per second"),
+      ADD_STAT(totalUpdates, statistics::units::Count::get(),
+               "Total number of updates"),
+      ADD_STAT(averageHitRate, statistics::units::Ratio::get(),
+               "Average hit rate"),
+      ADD_STAT(insertions, statistics::units::Count::get(),
+               "Number of insertions (not replacements)")
 {
     using namespace statistics;
 
@@ -140,10 +141,10 @@ SMMUv3BaseCache::SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
  */
 
 SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
-    const std::string &policy, statistics::Group *parent,
-    const std::string &name) :
-    SMMUv3BaseCache(policy, SMMUTLB_SEED, parent, name),
-    associativity(_associativity)
+                 const std::string &policy, statistics::Group *parent,
+                 const std::string &name)
+    : SMMUv3BaseCache(policy, SMMUTLB_SEED, parent, name),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -414,9 +415,9 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
  */
 
 ARMArchTLB::ARMArchTLB(unsigned numEntries, unsigned _associativity,
-    const std::string &policy, statistics::Group *parent) :
-    SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent, "tlb"),
-    associativity(_associativity)
+                       const std::string &policy, statistics::Group *parent)
+    : SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent, "tlb"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -609,9 +610,9 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
  */
 
 IPACache::IPACache(unsigned numEntries, unsigned _associativity,
-    const std::string &policy, statistics::Group *parent) :
-    SMMUv3BaseCache(policy, IPACACHE_SEED, parent, "ipa"),
-    associativity(_associativity)
+                   const std::string &policy, statistics::Group *parent)
+    : SMMUv3BaseCache(policy, IPACACHE_SEED, parent, "ipa"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -786,9 +787,9 @@ IPACache::pickEntryIdxToReplace(const Set &set)
  */
 
 ConfigCache::ConfigCache(unsigned numEntries, unsigned _associativity,
-    const std::string &policy, statistics::Group *parent) :
-    SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent, "cfg"),
-    associativity(_associativity)
+                         const std::string &policy, statistics::Group *parent)
+    : SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent, "cfg"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -947,12 +948,12 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
  */
 
 WalkCache::WalkCache(const std::array<unsigned, 2 * WALK_CACHE_LEVELS> &_sizes,
-    unsigned _associativity, const std::string &policy,
-    statistics::Group *parent) :
-    SMMUv3BaseCache(policy, WALKCACHE_SEED, parent, "walk"),
-    walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
-    associativity(_associativity),
-    sizes()
+                     unsigned _associativity, const std::string &policy,
+                     statistics::Group *parent)
+    : SMMUv3BaseCache(policy, WALKCACHE_SEED, parent, "walk"),
+      walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
+      associativity(_associativity),
+      sizes()
 {
     unsigned numEntries =
         std::accumulate(&_sizes[0], &_sizes[2 * WALK_CACHE_LEVELS], 0);
@@ -991,7 +992,7 @@ WalkCache::WalkCache(const std::array<unsigned, 2 * WALK_CACHE_LEVELS> &_sizes,
 
 const WalkCache::Entry *
 WalkCache::lookup(Addr va, Addr vaMask, uint16_t asid, uint16_t vmid,
-    unsigned stage, unsigned level, bool updStats)
+                  unsigned stage, unsigned level, bool updStats)
 {
     const Entry *result = NULL;
 
@@ -1039,14 +1040,15 @@ WalkCache::store(const Entry &incoming)
 
     incoming.lastUsed = 0;
 
-    const Entry *existing = lookup(incoming.va, incoming.vaMask, incoming.asid,
-        incoming.vmid, incoming.stage, incoming.level, false);
+    const Entry *existing =
+        lookup(incoming.va, incoming.vaMask, incoming.asid, incoming.vmid,
+               incoming.stage, incoming.level, false);
 
     if (existing) {
         *const_cast<Entry *>(existing) = incoming;
     } else {
-        Set &set = sets[pickSetIdx(
-            incoming.va, incoming.vaMask, incoming.stage, incoming.level)];
+        Set &set = sets[pickSetIdx(incoming.va, incoming.vaMask,
+                                   incoming.stage, incoming.level)];
         set[pickEntryIdxToReplace(set, incoming.stage, incoming.level)] =
             incoming;
     }
@@ -1057,8 +1059,8 @@ WalkCache::store(const Entry &incoming)
 }
 
 void
-WalkCache::invalidateVA(
-    Addr va, uint16_t asid, uint16_t vmid, const bool leaf_only)
+WalkCache::invalidateVA(Addr va, uint16_t asid, uint16_t vmid,
+                        const bool leaf_only)
 {
     for (size_t s = 0; s < sets.size(); s++) {
         Set &set = sets[s];
@@ -1134,8 +1136,8 @@ WalkCache::invalidateAll()
 }
 
 size_t
-WalkCache::pickSetIdx(
-    Addr va, Addr vaMask, unsigned stage, unsigned level) const
+WalkCache::pickSetIdx(Addr va, Addr vaMask, unsigned stage,
+                      unsigned level) const
 {
     (void)stage;
 
@@ -1162,8 +1164,8 @@ WalkCache::pickSetIdx(
 }
 
 size_t
-WalkCache::pickEntryIdxToReplace(
-    const Set &set, unsigned stage, unsigned level)
+WalkCache::pickEntryIdxToReplace(const Set &set, unsigned stage,
+                                 unsigned level)
 {
     size_t lru_idx = 0;
     uint32_t lru_tick = UINT32_MAX;
@@ -1196,16 +1198,16 @@ WalkCache::pickEntryIdxToReplace(
     }
 }
 
-WalkCache::WalkCacheStats::WalkCacheStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(totalLookupsByStageLevel, statistics::units::Count::get(),
-        "Total number of lookups"),
-    ADD_STAT(totalMissesByStageLevel, statistics::units::Count::get(),
-        "Total number of misses"),
-    ADD_STAT(totalUpdatesByStageLevel, statistics::units::Count::get(),
-        "Total number of updates"),
-    ADD_STAT(insertionsByStageLevel, statistics::units::Count::get(),
-        "Number of insertions (not replacements)")
+WalkCache::WalkCacheStats::WalkCacheStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(totalLookupsByStageLevel, statistics::units::Count::get(),
+               "Total number of lookups"),
+      ADD_STAT(totalMissesByStageLevel, statistics::units::Count::get(),
+               "Total number of misses"),
+      ADD_STAT(totalUpdatesByStageLevel, statistics::units::Count::get(),
+               "Total number of updates"),
+      ADD_STAT(insertionsByStageLevel, statistics::units::Count::get(),
+               "Number of insertions (not replacements)")
 {
     using namespace statistics;
 
@@ -1226,44 +1228,44 @@ WalkCache::WalkCacheStats::WalkCacheStats(statistics::Group *parent) :
             totalUpdatesByStageLevel.ysubname(l, csprintf("L%d", l));
             insertionsByStageLevel.ysubname(l, csprintf("L%d", l));
 
-            auto avg_lookup = new statistics::Formula(this,
-                csprintf("averageLookups_S%dL%d", s + 1, l).c_str(),
+            auto avg_lookup = new statistics::Formula(
+                this, csprintf("averageLookups_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                    statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number lookups per second");
             avg_lookup->flags(pdf);
             averageLookupsByStageLevel.push_back(avg_lookup);
 
             *avg_lookup = totalLookupsByStageLevel[s][l] / simSeconds;
 
-            auto avg_misses = new statistics::Formula(this,
-                csprintf("averageMisses_S%dL%d", s + 1, l).c_str(),
+            auto avg_misses = new statistics::Formula(
+                this, csprintf("averageMisses_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                    statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number misses per second");
             avg_misses->flags(pdf);
             averageMissesByStageLevel.push_back(avg_misses);
 
             *avg_misses = totalMissesByStageLevel[s][l] / simSeconds;
 
-            auto avg_updates = new statistics::Formula(this,
-                csprintf("averageUpdates_S%dL%d", s + 1, l).c_str(),
+            auto avg_updates = new statistics::Formula(
+                this, csprintf("averageUpdates_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                    statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number updates per second");
             avg_updates->flags(pdf);
             averageUpdatesByStageLevel.push_back(avg_updates);
 
             *avg_updates = totalUpdatesByStageLevel[s][l] / simSeconds;
 
-            auto avg_hitrate = new statistics::Formula(this,
-                csprintf("averageHitRate_S%dL%d", s + 1, l).c_str(),
+            auto avg_hitrate = new statistics::Formula(
+                this, csprintf("averageHitRate_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Ratio::get(), "Average hit rate");
             avg_hitrate->flags(pdf);
             averageHitRateByStageLevel.push_back(avg_hitrate);
 
             *avg_hitrate = (totalLookupsByStageLevel[s][l] -
-                               totalMissesByStageLevel[s][l]) /
+                            totalMissesByStageLevel[s][l]) /
                            totalLookupsByStageLevel[s][l];
         }
     }

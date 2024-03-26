@@ -54,8 +54,8 @@ sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
     _gem5_channel = new sc_gem5::Channel(this);
 }
 
-sc_prim_channel::sc_prim_channel(const char *_name) :
-    sc_object(_name), _gem5_channel(nullptr)
+sc_prim_channel::sc_prim_channel(const char *_name)
+    : sc_object(_name), _gem5_channel(nullptr)
 {
     if (sc_is_running()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "simulation running");
@@ -135,8 +135,8 @@ sc_prim_channel::next_trigger(const sc_time &t, const sc_event_or_list &eol)
 }
 
 void
-sc_prim_channel::next_trigger(
-    double d, sc_time_unit u, const sc_event_or_list &eol)
+sc_prim_channel::next_trigger(double d, sc_time_unit u,
+                              const sc_event_or_list &eol)
 {
     ::sc_core::next_trigger(d, u, eol);
 }
@@ -148,8 +148,8 @@ sc_prim_channel::next_trigger(const sc_time &t, const sc_event_and_list &eal)
 }
 
 void
-sc_prim_channel::next_trigger(
-    double d, sc_time_unit u, const sc_event_and_list &eal)
+sc_prim_channel::next_trigger(double d, sc_time_unit u,
+                              const sc_event_and_list &eal)
 {
     ::sc_core::next_trigger(d, u, eal);
 }

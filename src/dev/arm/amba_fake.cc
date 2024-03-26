@@ -61,7 +61,7 @@ AmbaFake::read(PacketPtr pkt)
     pkt->setLE<uint32_t>(0);
     if (!readId(pkt, ambaId, pioAddr) && !params().ignore_access)
         panic("Tried to read AmbaFake %s at offset %#x that doesn't exist\n",
-            name(), daddr);
+              name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -74,7 +74,7 @@ AmbaFake::write(PacketPtr pkt)
 
     if (!params().ignore_access)
         panic("Tried to write AmbaFake %s at offset %#x that doesn't exist\n",
-            name(), daddr);
+              name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;

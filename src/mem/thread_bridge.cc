@@ -32,13 +32,13 @@
 
 namespace gem5
 {
-ThreadBridge::ThreadBridge(const ThreadBridgeParams &p) :
-    SimObject(p), in_port_("in_port", *this), out_port_("out_port", *this)
+ThreadBridge::ThreadBridge(const ThreadBridgeParams &p)
+    : SimObject(p), in_port_("in_port", *this), out_port_("out_port", *this)
 {}
 
-ThreadBridge::IncomingPort::IncomingPort(
-    const std::string &name, ThreadBridge &device) :
-    ResponsePort(name), device_(device)
+ThreadBridge::IncomingPort::IncomingPort(const std::string &name,
+                                         ThreadBridge &device)
+    : ResponsePort(name), device_(device)
 {}
 
 AddrRangeList
@@ -75,9 +75,9 @@ ThreadBridge::IncomingPort::recvFunctional(PacketPtr pkt)
     device_.out_port_.sendFunctional(pkt);
 }
 
-ThreadBridge::OutgoingPort::OutgoingPort(
-    const std::string &name, ThreadBridge &device) :
-    RequestPort(name), device_(device)
+ThreadBridge::OutgoingPort::OutgoingPort(const std::string &name,
+                                         ThreadBridge &device)
+    : RequestPort(name), device_(device)
 {}
 
 void

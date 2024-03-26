@@ -64,11 +64,11 @@ class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE
 
     uint16_t gtag(ThreadID tid, Addr pc, int bank) const override;
 
-    void handleAllocAndUReset(
-        bool alloc, bool taken, TAGEBase::BranchInfo *bi, int nrand) override;
+    void handleAllocAndUReset(bool alloc, bool taken, TAGEBase::BranchInfo *bi,
+                              int nrand) override;
 
-    void handleTAGEUpdate(
-        Addr branch_pc, bool taken, TAGEBase::BranchInfo *bi) override;
+    void handleTAGEUpdate(Addr branch_pc, bool taken,
+                          TAGEBase::BranchInfo *bi) override;
 };
 
 class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
@@ -116,18 +116,18 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
         const TAGE_SC_L_64KB_StatisticalCorrectorParams &p);
 
     unsigned getIndBiasBank(Addr branch_pc, BranchInfo *bi, int hitBank,
-        int altBank) const override;
+                            int altBank) const override;
 
     int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum,
-        int64_t phist) override;
+                     int64_t phist) override;
 
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
-        BranchInfo *tage_bi, Addr corrTarget) override;
+                         BranchInfo *tage_bi, Addr corrTarget) override;
 
     void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo *bi,
-        int64_t phist) override;
+                  int64_t phist) override;
 };
 
 class TAGE_SC_L_64KB : public TAGE_SC_L

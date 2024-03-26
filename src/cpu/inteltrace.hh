@@ -45,9 +45,9 @@ class IntelTraceRecord : public InstRecord
 {
   public:
     IntelTraceRecord(Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        const StaticInstPtr _macroStaticInst = NULL) :
-        InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
+                     const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                     const StaticInstPtr _macroStaticInst = NULL)
+        : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
     {}
 
     void dump();
@@ -60,7 +60,8 @@ class IntelTrace : public InstTracer
 
     IntelTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
-        const PCStateBase &pc, const StaticInstPtr macroStaticInst = NULL)
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = NULL)
     {
         if (!debug::ExecEnable)
             return NULL;

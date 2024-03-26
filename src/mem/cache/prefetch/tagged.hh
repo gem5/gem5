@@ -53,8 +53,8 @@ class Tagged : public Queued
     ~Tagged() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

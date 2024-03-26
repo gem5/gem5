@@ -36,17 +36,18 @@
 namespace sc_core
 {
 sc_report::sc_report(sc_severity _severity, const char *msg_type,
-    const char *msg, int _verbosity, const char *_fileName, int _lineNumber,
-    sc_time _time, const char *_processName, int _id) :
-    _severity(_severity),
-    _msgType(msg_type),
-    _msg(msg),
-    _verbosity(_verbosity),
-    _fileName(_fileName),
-    _lineNumber(_lineNumber),
-    _time(_time),
-    _processName(_processName),
-    _id(_id)
+                     const char *msg, int _verbosity, const char *_fileName,
+                     int _lineNumber, sc_time _time, const char *_processName,
+                     int _id)
+    : _severity(_severity),
+      _msgType(msg_type),
+      _msg(msg),
+      _verbosity(_verbosity),
+      _fileName(_fileName),
+      _lineNumber(_lineNumber),
+      _time(_time),
+      _processName(_processName),
+      _id(_id)
 {
     if (_msgType)
         _msgType = strdup(_msgType);
@@ -55,9 +56,9 @@ sc_report::sc_report(sc_severity _severity, const char *msg_type,
     _what = sc_report_compose_message(*this);
 }
 
-sc_report::sc_report(const sc_report &r) :
-    sc_report(r._severity, r._msgType, r._msg, r._verbosity, r._fileName,
-        r._lineNumber, r._time, r._processName, r._id)
+sc_report::sc_report(const sc_report &r)
+    : sc_report(r._severity, r._msgType, r._msg, r._verbosity, r._fileName,
+                r._lineNumber, r._time, r._processName, r._id)
 {}
 
 sc_report &
@@ -110,7 +111,7 @@ sc_report::is_suppressed(int id)
 
     return (msgInfo.actions == SC_DO_NOTHING ||
             (msgInfo.sevActions[SC_INFO] == SC_DO_NOTHING &&
-                msgInfo.sevActions[SC_WARNING] == SC_DO_NOTHING));
+             msgInfo.sevActions[SC_WARNING] == SC_DO_NOTHING));
 }
 
 void

@@ -47,8 +47,8 @@ sc_unwind_exception::is_reset() const
 }
 
 sc_unwind_exception::sc_unwind_exception() : _isReset(false) {}
-sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &e) :
-    _isReset(e._isReset)
+sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &e)
+    : _isReset(e._isReset)
 {}
 sc_unwind_exception::~sc_unwind_exception() throw() {}
 
@@ -70,15 +70,15 @@ sc_get_curr_process_handle()
 
 sc_process_handle::sc_process_handle() : _gem5_process(nullptr) {}
 
-sc_process_handle::sc_process_handle(const sc_process_handle &handle) :
-    _gem5_process(handle._gem5_process)
+sc_process_handle::sc_process_handle(const sc_process_handle &handle)
+    : _gem5_process(handle._gem5_process)
 {
     if (_gem5_process)
         _gem5_process->incref();
 }
 
-sc_process_handle::sc_process_handle(sc_object *obj) :
-    _gem5_process(dynamic_cast<::sc_gem5::Process *>(obj))
+sc_process_handle::sc_process_handle(sc_object *obj)
+    : _gem5_process(dynamic_cast<::sc_gem5::Process *>(obj))
 {
     if (_gem5_process)
         _gem5_process->incref();

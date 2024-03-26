@@ -83,8 +83,8 @@ class BurstHelper
     /** Number of bursts serviced so far for a system packet **/
     unsigned int burstsServiced;
 
-    BurstHelper(unsigned int _burstCount) :
-        burstCount(_burstCount), burstsServiced(0)
+    BurstHelper(unsigned int _burstCount)
+        : burstCount(_burstCount), burstsServiced(0)
     {}
 };
 
@@ -232,23 +232,23 @@ class MemPacket
     }
 
     MemPacket(PacketPtr _pkt, bool is_read, bool is_dram, uint8_t _channel,
-        uint8_t _rank, uint8_t _bank, uint32_t _row, uint16_t bank_id,
-        Addr _addr, unsigned int _size) :
-        entryTime(curTick()),
-        readyTime(curTick()),
-        pkt(_pkt),
-        _requestorId(pkt->requestorId()),
-        read(is_read),
-        dram(is_dram),
-        pseudoChannel(_channel),
-        rank(_rank),
-        bank(_bank),
-        row(_row),
-        bankId(bank_id),
-        addr(_addr),
-        size(_size),
-        burstHelper(NULL),
-        _qosValue(_pkt->qosValue())
+              uint8_t _rank, uint8_t _bank, uint32_t _row, uint16_t bank_id,
+              Addr _addr, unsigned int _size)
+        : entryTime(curTick()),
+          readyTime(curTick()),
+          pkt(_pkt),
+          _requestorId(pkt->requestorId()),
+          read(is_read),
+          dram(is_dram),
+          pseudoChannel(_channel),
+          rank(_rank),
+          bank(_bank),
+          row(_row),
+          bankId(bank_id),
+          addr(_addr),
+          size(_size),
+          burstHelper(NULL),
+          _qosValue(_pkt->qosValue())
     {}
 };
 
@@ -295,12 +295,12 @@ class MemCtrl : public qos::MemCtrl
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
-        Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &backdoor) override;
 
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor) override;
 
         bool recvTimingReq(PacketPtr) override;
 
@@ -331,13 +331,16 @@ class MemCtrl : public qos::MemCtrl
      * in these methods
      */
     virtual void processNextReqEvent(MemInterface *mem_intr,
-        MemPacketQueue &resp_queue, EventFunctionWrapper &resp_event,
-        EventFunctionWrapper &next_req_event, bool &retry_wr_req);
+                                     MemPacketQueue &resp_queue,
+                                     EventFunctionWrapper &resp_event,
+                                     EventFunctionWrapper &next_req_event,
+                                     bool &retry_wr_req);
     EventFunctionWrapper nextReqEvent;
 
     virtual void processRespondEvent(MemInterface *mem_intr,
-        MemPacketQueue &queue, EventFunctionWrapper &resp_event,
-        bool &retry_rd_req);
+                                     MemPacketQueue &queue,
+                                     EventFunctionWrapper &resp_event,
+                                     bool &retry_rd_req);
     EventFunctionWrapper respondEvent;
 
     /**
@@ -371,8 +374,8 @@ class MemCtrl : public qos::MemCtrl
      * eventually go to
      * @return if all the read pkts are already serviced by wrQ
      */
-    bool addToReadQueue(
-        PacketPtr pkt, unsigned int pkt_count, MemInterface *mem_intr);
+    bool addToReadQueue(PacketPtr pkt, unsigned int pkt_count,
+                        MemInterface *mem_intr);
 
     /**
      * Decode the incoming pkt, create a mem_pkt and push to the
@@ -385,8 +388,8 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr The memory interface this pkt will
      * eventually go to
      */
-    void addToWriteQueue(
-        PacketPtr pkt, unsigned int pkt_count, MemInterface *mem_intr);
+    void addToWriteQueue(PacketPtr pkt, unsigned int pkt_count,
+                         MemInterface *mem_intr);
 
     /**
      * Actually do the burst based on media specific access function.
@@ -409,8 +412,8 @@ class MemCtrl : public qos::MemCtrl
      * @param static_latency Static latency to add before sending the packet
      * @param mem_intr the memory interface to access
      */
-    virtual void accessAndRespond(
-        PacketPtr pkt, Tick static_latency, MemInterface *mem_intr);
+    virtual void accessAndRespond(PacketPtr pkt, Tick static_latency,
+                                  MemInterface *mem_intr);
 
     /**
      * Determine if there is a packet that can issue.
@@ -445,8 +448,9 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr the memory interface to choose from
      * @return an iterator to the selected packet, else queue.end()
      */
-    virtual MemPacketQueue::iterator chooseNext(
-        MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_intr);
+    virtual MemPacketQueue::iterator chooseNext(MemPacketQueue &queue,
+                                                Tick extra_col_delay,
+                                                MemInterface *mem_intr);
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
@@ -456,8 +460,9 @@ class MemCtrl : public qos::MemCtrl
      * @param extra_col_delay Any extra delay due to a read/write switch
      * @return an iterator to the selected packet, else queue.end()
      */
-    virtual std::pair<MemPacketQueue::iterator, Tick> chooseNextFRFCFS(
-        MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_intr);
+    virtual std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick extra_col_delay,
+                     MemInterface *mem_intr);
 
     /**
      * Calculate burst window aligned tick
@@ -489,8 +494,8 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr memory interface
      * @return An address aligned to a memory burst
      */
-    virtual bool pktSizeCheck(
-        MemPacket *mem_pkt, MemInterface *mem_intr) const;
+    virtual bool pktSizeCheck(MemPacket *mem_pkt,
+                              MemInterface *mem_intr) const;
 
     /**
      * The controller's main read and write queues,
@@ -727,8 +732,8 @@ class MemCtrl : public qos::MemCtrl
      *                           in a burst window
      * @return tick for command issue without contention
      */
-    virtual Tick verifySingleCmd(
-        Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd);
+    virtual Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                                 bool row_cmd);
 
     /**
      * Check for command bus contention for multi-cycle (2 currently)
@@ -744,8 +749,8 @@ class MemCtrl : public qos::MemCtrl
      *                           in a burst window
      * @return tick for command issue without contention
      */
-    virtual Tick verifyMultiCmd(
-        Tick cmd_tick, Tick max_cmds_per_burst, Tick max_multi_cmd_split = 0);
+    virtual Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                                Tick max_multi_cmd_split = 0);
 
     /**
      * Is there a respondEvent scheduled?
@@ -803,8 +808,8 @@ class MemCtrl : public qos::MemCtrl
      */
     bool inWriteBusState(bool next_state, const MemInterface *mem_intr) const;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;
@@ -814,8 +819,8 @@ class MemCtrl : public qos::MemCtrl
     virtual Tick recvAtomic(PacketPtr pkt);
     virtual Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
     virtual void recvFunctional(PacketPtr pkt);
-    virtual void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+    virtual void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                    MemBackdoorPtr &backdoor);
     virtual bool recvTimingReq(PacketPtr pkt);
 
     bool recvFunctionalLogic(PacketPtr pkt, MemInterface *mem_intr);

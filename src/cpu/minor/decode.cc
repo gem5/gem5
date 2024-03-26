@@ -46,26 +46,26 @@ namespace gem5
 {
 namespace minor
 {
-Decode::Decode(const std::string &name, MinorCPU &cpu_,
-    const BaseMinorCPUParams &params, Latch<ForwardInstData>::Output inp_,
-    Latch<ForwardInstData>::Input out_,
-    std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer) :
-    Named(name),
-    cpu(cpu_),
-    inp(inp_),
-    out(out_),
-    nextStageReserve(next_stage_input_buffer),
-    outputWidth(params.executeInputWidth),
-    processMoreThanOneInput(params.decodeCycleInput),
-    decodeInfo(params.numThreads),
-    threadPriority(0)
+Decode::Decode(
+    const std::string &name, MinorCPU &cpu_, const BaseMinorCPUParams &params,
+    Latch<ForwardInstData>::Output inp_, Latch<ForwardInstData>::Input out_,
+    std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer)
+    : Named(name),
+      cpu(cpu_),
+      inp(inp_),
+      out(out_),
+      nextStageReserve(next_stage_input_buffer),
+      outputWidth(params.executeInputWidth),
+      processMoreThanOneInput(params.decodeCycleInput),
+      decodeInfo(params.numThreads),
+      threadPriority(0)
 {
     if (outputWidth < 1)
         fatal("%s: executeInputWidth must be >= 1 (%d)\n", name, outputWidth);
 
     if (params.decodeInputBufferSize < 1) {
         fatal("%s: decodeInputBufferSize must be >= 1 (%d)\n", name,
-            params.decodeInputBufferSize);
+              params.decodeInputBufferSize);
     }
 
     /* Per-thread input buffers */
@@ -104,12 +104,12 @@ Decode::popInput(ThreadID tid)
  *  decode because this is the first place that execSeqNums are known
  *  (these are used as the 'FetchSeq' in tracing data) */
 static void
-dynInstAddTracing(
-    MinorDynInstPtr inst, StaticInstPtr static_inst, MinorCPU &cpu)
+dynInstAddTracing(MinorDynInstPtr inst, StaticInstPtr static_inst,
+                  MinorCPU &cpu)
 {
-    inst->traceData = cpu.getTracer()->getInstRecord(curTick(),
-        cpu.getContext(inst->id.threadId), inst->staticInst, *inst->pc,
-        static_inst);
+    inst->traceData = cpu.getTracer()->getInstRecord(
+        curTick(), cpu.getContext(inst->id.threadId), inst->staticInst,
+        *inst->pc, static_inst);
 
     /* Use the execSeqNum as the fetch sequence number as this most closely
      *  matches the other processor models' idea of fetch sequence */
@@ -160,7 +160,7 @@ Decode::evaluate()
 
                 if (inst->isFault()) {
                     DPRINTF(Decode, "Fault being passed: %d\n",
-                        inst->fault->name());
+                            inst->fault->name());
 
                     decode_info.inputIndex++;
                     decode_info.inMacroop = false;
@@ -193,13 +193,13 @@ Decode::evaluate()
                     }
 
                     DPRINTF(Decode,
-                        "Microop decomposition inputIndex:"
-                        " %d output_index: %d lastMicroop: %s microopPC:"
-                        " %s inst: %d\n",
-                        decode_info.inputIndex, output_index,
-                        (static_micro_inst->isLastMicroop() ? "true" :
-                                                              "false"),
-                        *decode_info.microopPC, *output_inst);
+                            "Microop decomposition inputIndex:"
+                            " %d output_index: %d lastMicroop: %s microopPC:"
+                            " %s inst: %d\n",
+                            decode_info.inputIndex, output_index,
+                            (static_micro_inst->isLastMicroop() ? "true" :
+                                                                  "false"),
+                            *decode_info.microopPC, *output_inst);
 
                     /* Acknowledge that the static_inst isn't mine, it's my
                      * parent macro-op's */
@@ -215,9 +215,10 @@ Decode::evaluate()
                 } else {
                     /* Doesn't need decomposing, pass on instruction */
                     DPRINTF(Decode,
-                        "Passing on inst: %s inputIndex:"
-                        " %d output_index: %d\n",
-                        *output_inst, decode_info.inputIndex, output_index);
+                            "Passing on inst: %s inputIndex:"
+                            " %d output_index: %d\n",
+                            *output_inst, decode_info.inputIndex,
+                            output_index);
 
                     parent_static_inst = static_inst;
 

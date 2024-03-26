@@ -196,8 +196,8 @@ class ArmSigInterruptPinGen : public ArmInterruptPinGen
     ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p);
 
     ArmInterruptPin *get(ThreadContext *tc = nullptr) override;
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   protected:
     ArmSigInterruptPin *pin;

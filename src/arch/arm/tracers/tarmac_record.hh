@@ -97,7 +97,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
         TraceInstEntry(const TarmacContext &tarmCtx, bool predicate);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         /** Number of instructions being traced */
@@ -134,7 +134,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
         void update(const TarmacContext &tarmCtx);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         /** Register update functions. */
@@ -159,10 +159,10 @@ class TarmacTracerRecord : public TarmacBaseRecord
     {
       public:
         TraceMemEntry(const TarmacContext &tarmCtx, uint8_t _size, Addr _addr,
-            uint64_t _data);
+                      uint64_t _data);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         /** True if memory access is a load */
@@ -171,8 +171,9 @@ class TarmacTracerRecord : public TarmacBaseRecord
 
   public:
     TarmacTracerRecord(Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        TarmacTracer &_tracer, const StaticInstPtr _macroStaticInst = NULL);
+                       const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                       TarmacTracer &_tracer,
+                       const StaticInstPtr _macroStaticInst = NULL);
 
     virtual void dump() override;
 
@@ -182,16 +183,16 @@ class TarmacTracerRecord : public TarmacBaseRecord
 
   protected:
     /** Generates an Entry for the executed instruction. */
-    virtual void addInstEntry(
-        std::vector<InstPtr> &queue, const TarmacContext &ptr);
+    virtual void addInstEntry(std::vector<InstPtr> &queue,
+                              const TarmacContext &ptr);
 
     /** Generates an Entry for every triggered memory access */
-    virtual void addMemEntry(
-        std::vector<MemPtr> &queue, const TarmacContext &ptr);
+    virtual void addMemEntry(std::vector<MemPtr> &queue,
+                             const TarmacContext &ptr);
 
     /** Generate an Entry for every register being written. */
-    virtual void addRegEntry(
-        std::vector<RegPtr> &queue, const TarmacContext &ptr);
+    virtual void addRegEntry(std::vector<RegPtr> &queue,
+                             const TarmacContext &ptr);
 
   protected:
     /** Generate and update a register entry. */

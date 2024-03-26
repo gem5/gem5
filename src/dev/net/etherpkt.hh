@@ -74,8 +74,8 @@ class EthPacketData
 
     EthPacketData() : data(nullptr), bufLength(0), length(0), simLength(0) {}
 
-    explicit EthPacketData(unsigned size) :
-        data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
+    explicit EthPacketData(unsigned size)
+        : data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
     {}
 
     ~EthPacketData()

@@ -67,8 +67,8 @@ class SignalSinkPort : public Port
     }
 
   public:
-    SignalSinkPort(const std::string &_name, PortID _id = InvalidPortID) :
-        Port(_name, _id)
+    SignalSinkPort(const std::string &_name, PortID _id = InvalidPortID)
+        : Port(_name, _id)
     {}
 
     const State &
@@ -87,9 +87,9 @@ class SignalSinkPort : public Port
     {
         _source = dynamic_cast<SignalSourcePort<State> *>(&peer);
         fatal_if(!_source,
-            "Attempt to bind signal pin %s to "
-            "incompatible pin %s",
-            name(), peer.name());
+                 "Attempt to bind signal pin %s to "
+                 "incompatible pin %s",
+                 name(), peer.name());
         // The state of sink has to match the state of source.
         _state = _source->state();
         Port::bind(peer);
@@ -110,16 +110,16 @@ class SignalSourcePort : public Port
     State _state;
 
   public:
-    SignalSourcePort(const std::string &_name, PortID _id = InvalidPortID) :
-        Port(_name, _id)
+    SignalSourcePort(const std::string &_name, PortID _id = InvalidPortID)
+        : Port(_name, _id)
     {
         _state = {};
     }
 
     // Give an initial value to the _state instead of using a default value.
-    SignalSourcePort(
-        const std::string &_name, PortID _id, const State &init_state) :
-        SignalSourcePort(_name, _id)
+    SignalSourcePort(const std::string &_name, PortID _id,
+                     const State &init_state)
+        : SignalSourcePort(_name, _id)
     {
         _state = init_state;
     }
@@ -144,9 +144,9 @@ class SignalSourcePort : public Port
     {
         sink = dynamic_cast<SignalSinkPort<State> *>(&peer);
         fatal_if(!sink,
-            "Attempt to bind signal pin %s to "
-            "incompatible pin %s",
-            name(), peer.name());
+                 "Attempt to bind signal pin %s to "
+                 "incompatible pin %s",
+                 name(), peer.name());
         Port::bind(peer);
     }
     void

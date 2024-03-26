@@ -91,7 +91,7 @@ class FsWorkload : public KernelWorkload
     loader::ObjectFile *getBootLoader(loader::ObjectFile *const obj);
 
     template <template <class ABI, class Base> class FuncEvent,
-        typename... Args>
+              typename... Args>
     PCEvent *
     addSkipFunc(Args... args)
     {
@@ -105,7 +105,7 @@ class FsWorkload : public KernelWorkload
     }
 
     template <template <class ABI, class Base> class FuncEvent,
-        typename... Args>
+              typename... Args>
     PCEvent *
     addSkipFuncOrPanic(Args... args)
     {

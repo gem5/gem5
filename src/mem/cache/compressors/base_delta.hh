@@ -101,11 +101,11 @@ class BaseDelta : public DictionaryCompressor<BaseType>
      */
     using PatternFactory =
         typename DictionaryCompressor<BaseType>::template Factory<PatternM,
-            PatternX>;
+                                                                  PatternX>;
 
     std::unique_ptr<typename DictionaryCompressor<BaseType>::Pattern>
     getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
-        const int match_location) const override
+               const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
@@ -122,9 +122,9 @@ class BaseDelta : public DictionaryCompressor<BaseType>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
-        Cycles &decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
   public:
     typedef BaseDictionaryCompressorParams Params;
@@ -139,10 +139,11 @@ class BaseDelta<BaseType, DeltaSizeBits>::PatternX :
   public:
     // A delta entry containing the value 0 is added even if it is an entirely
     // new base
-    PatternX(const DictionaryEntry bytes, const int match_location) :
-        DictionaryCompressor<BaseType>::UncompressedPattern(X, 0,
-            std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)) + DeltaSizeBits,
-            match_location, bytes)
+    PatternX(const DictionaryEntry bytes, const int match_location)
+        : DictionaryCompressor<BaseType>::UncompressedPattern(
+              X, 0,
+              std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)) + DeltaSizeBits,
+              match_location, bytes)
     {}
 };
 
@@ -153,10 +154,10 @@ class BaseDelta<BaseType, DeltaSizeBits>::PatternM :
   public:
     // The number of bits reserved for the bitmask entry is proportional to
     // the maximum number of bases
-    PatternM(const DictionaryEntry bytes, const int match_location) :
-        DictionaryCompressor<BaseType>::template DeltaPattern<DeltaSizeBits>(M,
-            1, std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)), match_location,
-            bytes)
+    PatternM(const DictionaryEntry bytes, const int match_location)
+        : DictionaryCompressor<BaseType>::template DeltaPattern<DeltaSizeBits>(
+              M, 1, std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)),
+              match_location, bytes)
     {}
 };
 

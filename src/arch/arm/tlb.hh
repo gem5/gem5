@@ -76,7 +76,8 @@ class TlbTestInterface
      * @param domain Domain type
      */
     virtual Fault translationCheck(const RequestPtr &req, bool is_priv,
-        BaseMMU::Mode mode, TlbEntry::DomainType domain) = 0;
+                                   BaseMMU::Mode mode,
+                                   TlbEntry::DomainType domain) = 0;
 
     /**
      * Check if a page table walker access should be forced to fail.
@@ -91,8 +92,9 @@ class TlbTestInterface
      * @param lookup_level Page table walker level
      */
     virtual Fault walkCheck(Addr pa, Addr size, Addr va, bool is_secure,
-        Addr is_priv, BaseMMU::Mode mode, TlbEntry::DomainType domain,
-        enums::ArmLookupLevel lookup_level) = 0;
+                            Addr is_priv, BaseMMU::Mode mode,
+                            TlbEntry::DomainType domain,
+                            enums::ArmLookupLevel lookup_level) = 0;
 };
 
 class TLB : public BaseTLB
@@ -219,11 +221,12 @@ class TLB : public BaseTLB
     void flush(const TLBIOp &tlbi_op);
 
     Fault trickBoxCheck(const RequestPtr &req, BaseMMU::Mode mode,
-        TlbEntry::DomainType domain);
+                        TlbEntry::DomainType domain);
 
     Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz,
-        bool is_exec, bool is_write, TlbEntry::DomainType domain,
-        LookupLevel lookup_level);
+                            bool is_exec, bool is_write,
+                            TlbEntry::DomainType domain,
+                            LookupLevel lookup_level);
 
     void printTlb() const;
 
@@ -235,22 +238,23 @@ class TLB : public BaseTLB
     }
 
     Fault
-    translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override
+    translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                    BaseMMU::Mode mode) override
     {
         panic("unimplemented");
     }
 
     void
     translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override
+                    BaseMMU::Translation *translation,
+                    BaseMMU::Mode mode) override
     {
         panic("unimplemented");
     }
 
     Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode) const override
+                     BaseMMU::Mode mode) const override
     {
         panic("unimplemented");
     }
@@ -284,7 +288,7 @@ class TLB : public BaseTLB
      * @param entry_type type of entry to flush (instruction/data/unified)
      */
     void _flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool ignore_asn,
-        ExceptionLevel target_el, bool in_host, TypeTLB entry_type);
+                   ExceptionLevel target_el, bool in_host, TypeTLB entry_type);
 
     /** Check if the tlb entry passed as an argument needs to
      * be "promoted" as a unified entry:

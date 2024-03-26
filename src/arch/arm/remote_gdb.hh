@@ -144,8 +144,8 @@ class RemoteGDB : public BaseRemoteGDB
     {
         return {"qXfer:features:read+"};
     };
-    bool getXferFeaturesRead(
-        const std::string &annex, std::string &output) override;
+    bool getXferFeaturesRead(const std::string &annex,
+                             std::string &output) override;
 };
 
 } // namespace ArmISA

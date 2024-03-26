@@ -110,7 +110,7 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
      *                       set, a prepended '-' clears the flag
      */
     Gem5SimControl(sc_core::sc_module_name name, const std::string &configFile,
-        uint64_t simulationEnd, const std::string &gem5DebugFlags);
+                   uint64_t simulationEnd, const std::string &gem5DebugFlags);
 
     void registerSlavePort(const std::string &name, SCSlavePort *port);
     void registerMasterPort(const std::string &name, SCMasterPort *port);

@@ -39,16 +39,16 @@ namespace gem5
 {
 namespace bloom_filter
 {
-MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams &p) :
-    Base(p),
-    numHashes(p.num_hashes),
-    parFilterSize(p.size / numHashes),
-    isParallel(p.is_parallel),
-    skipBits(p.skip_bits)
+MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams &p)
+    : Base(p),
+      numHashes(p.num_hashes),
+      parFilterSize(p.size / numHashes),
+      isParallel(p.is_parallel),
+      skipBits(p.skip_bits)
 {
     if (p.size % numHashes) {
         fatal("Can't divide filter (%d) in %d equal portions", p.size,
-            numHashes);
+              numHashes);
     }
 }
 

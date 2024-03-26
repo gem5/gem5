@@ -40,7 +40,7 @@ namespace garnet
 {
 // Constructor for the flit
 flit::flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
-    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
+           MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
@@ -80,7 +80,7 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
     assert(new_id < new_size);
 
     flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route, new_size,
-        m_msg_ptr, msgSize, bWidth, m_time);
+                        m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
     return fl;
@@ -95,7 +95,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
     assert(new_id < new_size);
 
     flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route, new_size,
-        m_msg_ptr, msgSize, bWidth, m_time);
+                        m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
     return fl;

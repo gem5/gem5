@@ -6,10 +6,10 @@
 
 namespace gem5
 {
-HMCController::HMCController(const HMCControllerParams &p) :
-    NoncoherentXBar(p),
-    numMemSidePorts(p.port_mem_side_ports_connection_count),
-    rr_counter(0)
+HMCController::HMCController(const HMCControllerParams &p)
+    : NoncoherentXBar(p),
+      numMemSidePorts(p.port_mem_side_ports_connection_count),
+      rr_counter(0)
 {
     assert(p.port_cpu_side_ports_connection_count == 1);
 }
@@ -53,12 +53,12 @@ HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     // port
     if (!reqLayers[mem_side_port_id]->tryTiming(src_port)) {
         DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x BUSY\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
     DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x\n", src_port->name(),
-        pkt->cmdString(), pkt->getAddr());
+            pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -87,14 +87,14 @@ HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     if (!success) {
         DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x RETRY\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // restore the header delay as it is additive
         pkt->headerDelay = old_header_delay;
 
         // occupy until the header is sent
-        reqLayers[mem_side_port_id]->failedTiming(
-            src_port, clockEdge(Cycles(1)));
+        reqLayers[mem_side_port_id]->failedTiming(src_port,
+                                                  clockEdge(Cycles(1)));
 
         return false;
     }

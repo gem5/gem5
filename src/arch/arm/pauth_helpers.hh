@@ -58,8 +58,8 @@ upperAndLowerRange(ThreadContext *tc, ExceptionLevel el)
     return (el == EL1 || el == EL0 || (el == EL2 && hcr.e2h == 1));
 }
 
-bool calculateTBI(
-    ThreadContext *tc, ExceptionLevel el, uint64_t ptr, bool data);
+bool calculateTBI(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
+                  bool data);
 
 int calculateBottomPACBit(ThreadContext *tc, ExceptionLevel el, bool top_bit);
 
@@ -72,10 +72,11 @@ Fault trapPACUse(ThreadContext *tc, ExceptionLevel el);
 // 64-bit quantity.
 
 uint64_t addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
-    uint64_t modifier, uint64_t k1, uint64_t k0, bool data);
+                uint64_t modifier, uint64_t k1, uint64_t k0, bool data);
 
 uint64_t auth(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
-    uint64_t modifier, uint64_t k1, uint64_t K0, bool data, uint8_t errorcode);
+              uint64_t modifier, uint64_t k1, uint64_t K0, bool data,
+              uint8_t errorcode);
 
 Fault authDA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 

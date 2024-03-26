@@ -37,8 +37,8 @@ namespace sc_core
 
 sc_event_and_list::sc_event_and_list() : autoDelete(false), busy(0) {}
 
-sc_event_and_list::sc_event_and_list(const sc_event_and_list &eal) :
-    events(eal.events), autoDelete(false), busy(0)
+sc_event_and_list::sc_event_and_list(const sc_event_and_list &eal)
+    : events(eal.events), autoDelete(false), busy(0)
 {}
 
 sc_event_and_list::sc_event_and_list(const sc_event &e) : sc_event_and_list()
@@ -46,8 +46,8 @@ sc_event_and_list::sc_event_and_list(const sc_event &e) : sc_event_and_list()
     insert(e);
 }
 
-sc_event_and_list::sc_event_and_list(bool auto_delete) :
-    autoDelete(auto_delete), busy(0)
+sc_event_and_list::sc_event_and_list(bool auto_delete)
+    : autoDelete(auto_delete), busy(0)
 {}
 
 sc_event_and_list::~sc_event_and_list() {}
@@ -121,8 +121,8 @@ sc_event_and_list::insert(sc_event_and_list const &eal)
 
 sc_event_or_list::sc_event_or_list() : autoDelete(false), busy(0) {}
 
-sc_event_or_list::sc_event_or_list(const sc_event_or_list &eol) :
-    events(eol.events), autoDelete(false), busy(0)
+sc_event_or_list::sc_event_or_list(const sc_event_or_list &eol)
+    : events(eol.events), autoDelete(false), busy(0)
 {}
 
 sc_event_or_list::sc_event_or_list(const sc_event &e) : sc_event_or_list()
@@ -130,8 +130,8 @@ sc_event_or_list::sc_event_or_list(const sc_event &e) : sc_event_or_list()
     insert(e);
 }
 
-sc_event_or_list::sc_event_or_list(bool auto_delete) :
-    autoDelete(auto_delete), busy(0)
+sc_event_or_list::sc_event_or_list(bool auto_delete)
+    : autoDelete(auto_delete), busy(0)
 {}
 
 sc_event_or_list &
@@ -301,13 +301,13 @@ operator|(sc_event_or_expr expr, sc_event_or_list const &eol)
  * sc_event
  */
 
-sc_event::sc_event() :
-    _gem5_event(
-        new ::sc_gem5::Event(this, sc_core::sc_gen_unique_name("event")))
+sc_event::sc_event()
+    : _gem5_event(
+          new ::sc_gem5::Event(this, sc_core::sc_gen_unique_name("event")))
 {}
 
-sc_event::sc_event(const char *_name) :
-    _gem5_event(new ::sc_gem5::Event(this, _name))
+sc_event::sc_event(const char *_name)
+    : _gem5_event(new ::sc_gem5::Event(this, _name))
 {}
 
 sc_event::~sc_event() { delete _gem5_event; }
@@ -406,14 +406,16 @@ sc_event::operator|(const sc_event_or_list &eol) const
     return expr;
 }
 
-sc_event::sc_event(bool) :
-    _gem5_event(new ::sc_gem5::Event(this,
-        sc_core::sc_gen_unique_name("$$$internal kernel event$$$"), true))
+sc_event::sc_event(bool)
+    : _gem5_event(new ::sc_gem5::Event(
+          this, sc_core::sc_gen_unique_name("$$$internal kernel event$$$"),
+          true))
 {}
 
-sc_event::sc_event(bool, const char *_name) :
-    _gem5_event(new ::sc_gem5::Event(this,
-        (std::string("$$$internal kernel event$$$") + _name).c_str(), true))
+sc_event::sc_event(bool, const char *_name)
+    : _gem5_event(new ::sc_gem5::Event(
+          this, (std::string("$$$internal kernel event$$$") + _name).c_str(),
+          true))
 {}
 
 const std::vector<sc_event *> &

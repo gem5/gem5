@@ -34,28 +34,28 @@
 #define _DEV_ATA_ATAREG_H_
 
 #if defined(__linux__)
-#    include <endian.h>
+#include <endian.h>
 
 #elif defined(__sun)
-#    include <sys/isa_defs.h>
+#include <sys/isa_defs.h>
 
 #else
-#    include <machine/endian.h>
+#include <machine/endian.h>
 
 #endif
 
 #ifdef LITTLE_ENDIAN
-#    define ATA_BYTE_ORDER LITTLE_ENDIAN
+#define ATA_BYTE_ORDER LITTLE_ENDIAN
 #elif defined(BIG_ENDIAN)
-#    define ATA_BYTE_ORDER BIG_ENDIAN
+#define ATA_BYTE_ORDER BIG_ENDIAN
 #elif defined(_LITTLE_ENDIAN)
-#    define ATA_BYTE_ORDER 1
-#    define LITTLE_ENDIAN 1
+#define ATA_BYTE_ORDER 1
+#define LITTLE_ENDIAN 1
 #elif defined(_BIG_ENDIAN)
-#    define ATA_BYTE_ORDER 0
-#    define LITTLE_ENDIAN 1
+#define ATA_BYTE_ORDER 0
+#define LITTLE_ENDIAN 1
 #else
-#    error "No endianess defined"
+#error "No endianess defined"
 #endif
 
 /*

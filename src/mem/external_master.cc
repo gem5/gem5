@@ -48,13 +48,13 @@ namespace gem5
 {
 std::map<std::string, ExternalMaster::Handler *> ExternalMaster::portHandlers;
 
-ExternalMaster::ExternalMaster(const ExternalMasterParams &params) :
-    SimObject(params),
-    externalPort(NULL),
-    portName(params.name + ".port"),
-    portType(params.port_type),
-    portData(params.port_data),
-    id(params.system->getRequestorId(this))
+ExternalMaster::ExternalMaster(const ExternalMasterParams &params)
+    : SimObject(params),
+      externalPort(NULL),
+      portName(params.name + ".port"),
+      portType(params.port_type),
+      portData(params.port_data),
+      id(params.system->getRequestorId(this))
 {}
 
 Port &
@@ -62,7 +62,7 @@ ExternalMaster::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         DPRINTF(ExternalPort, "Trying to bind external port: %s %s\n",
-            portType, portName);
+                portType, portName);
 
         if (!externalPort) {
             auto handlerIter = portHandlers.find(portType);
@@ -76,7 +76,7 @@ ExternalMaster::getPort(const std::string &if_name, PortID idx)
             if (!externalPort) {
                 fatal("%s: Can't find external port type: %s"
                       " port_data: '%s'\n",
-                    portName, portType, portData);
+                      portName, portType, portData);
             }
         }
         return *externalPort;
@@ -96,8 +96,8 @@ ExternalMaster::init()
 }
 
 void
-ExternalMaster::registerHandler(
-    const std::string &handler_name, Handler *handler)
+ExternalMaster::registerHandler(const std::string &handler_name,
+                                Handler *handler)
 {
     portHandlers[handler_name] = handler;
 }

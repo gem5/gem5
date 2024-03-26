@@ -65,31 +65,32 @@ namespace gem5
 {
 // constructor
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-    Process *_process, BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder) :
-    ThreadState(_cpu, _thread_num, _process),
-    regFiles{{{*_isa->regClasses().at(IntRegClass)},
-        {*_isa->regClasses().at(FloatRegClass)},
-        {*_isa->regClasses().at(VecRegClass)},
-        {*_isa->regClasses().at(VecElemClass)},
-        {*_isa->regClasses().at(VecPredRegClass)},
-        {*_isa->regClasses().at(MatRegClass)},
-        {*_isa->regClasses().at(CCRegClass)}}},
-    isa(_isa),
-    predicate(true),
-    memAccPredicate(true),
-    comInstEventQueue("instruction-based event queue"),
-    system(_sys),
-    mmu(_mmu),
-    decoder(_decoder),
-    htmTransactionStarts(0),
-    htmTransactionStops(0)
+                           Process *_process, BaseMMU *_mmu, BaseISA *_isa,
+                           InstDecoder *_decoder)
+    : ThreadState(_cpu, _thread_num, _process),
+      regFiles{{{*_isa->regClasses().at(IntRegClass)},
+                {*_isa->regClasses().at(FloatRegClass)},
+                {*_isa->regClasses().at(VecRegClass)},
+                {*_isa->regClasses().at(VecElemClass)},
+                {*_isa->regClasses().at(VecPredRegClass)},
+                {*_isa->regClasses().at(MatRegClass)},
+                {*_isa->regClasses().at(CCRegClass)}}},
+      isa(_isa),
+      predicate(true),
+      memAccPredicate(true),
+      comInstEventQueue("instruction-based event queue"),
+      system(_sys),
+      mmu(_mmu),
+      decoder(_decoder),
+      htmTransactionStarts(0),
+      htmTransactionStops(0)
 {
     clearArchRegs();
 }
 
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-    BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder) :
-    SimpleThread(_cpu, _thread_num, _sys, nullptr, _mmu, _isa, _decoder)
+                           BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder)
+    : SimpleThread(_cpu, _thread_num, _sys, nullptr, _mmu, _isa, _decoder)
 {}
 
 void

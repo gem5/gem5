@@ -58,21 +58,21 @@ CortexA76::setCluster(CortexA76Cluster *_cluster, int _num)
     set_evs_param("RVBARADDR", params().RVBARADDR);
     set_evs_param("VINITHI", params().VINITHI);
     set_evs_param("enable_trace_special_hlt_imm16",
-        params().enable_trace_special_hlt_imm16);
+                  params().enable_trace_special_hlt_imm16);
     set_evs_param("l2cache-hit_latency", params().l2cache_hit_latency);
-    set_evs_param(
-        "l2cache-maintenance_latency", params().l2cache_maintenance_latency);
+    set_evs_param("l2cache-maintenance_latency",
+                  params().l2cache_maintenance_latency);
     set_evs_param("l2cache-miss_latency", params().l2cache_miss_latency);
-    set_evs_param(
-        "l2cache-read_access_latency", params().l2cache_read_access_latency);
+    set_evs_param("l2cache-read_access_latency",
+                  params().l2cache_read_access_latency);
     set_evs_param("l2cache-read_latency", params().l2cache_read_latency);
     set_evs_param("l2cache-size", params().l2cache_size);
     set_evs_param("l2cache-snoop_data_transfer_latency",
-        params().l2cache_snoop_data_transfer_latency);
-    set_evs_param(
-        "l2cache-snoop_issue_latency", params().l2cache_snoop_issue_latency);
-    set_evs_param(
-        "l2cache-write_access_latency", params().l2cache_write_access_latency);
+                  params().l2cache_snoop_data_transfer_latency);
+    set_evs_param("l2cache-snoop_issue_latency",
+                  params().l2cache_snoop_issue_latency);
+    set_evs_param("l2cache-write_access_latency",
+                  params().l2cache_write_access_latency);
     set_evs_param("l2cache-write_latency", params().l2cache_write_latency);
     set_evs_param("max_code_cache_mb", params().max_code_cache_mb);
     set_evs_param("min_sync_level", params().min_sync_level);
@@ -108,8 +108,8 @@ CortexA76::getPort(const std::string &if_name, PortID idx)
         return Base::getPort(if_name, idx);
 }
 
-CortexA76Cluster::CortexA76Cluster(const Params &p) :
-    SimObject(p), cores(p.cores), evs(p.evs)
+CortexA76Cluster::CortexA76Cluster(const Params &p)
+    : SimObject(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);
@@ -127,68 +127,68 @@ CortexA76Cluster::CortexA76Cluster(const Params &p) :
     set_evs_param("core.cpi_div", p.cpi_div);
     set_evs_param("core.cpi_mul", p.cpi_mul);
     set_evs_param("core.dcache-hit_latency", p.dcache_hit_latency);
-    set_evs_param(
-        "core.dcache-maintenance_latency", p.dcache_maintenance_latency);
+    set_evs_param("core.dcache-maintenance_latency",
+                  p.dcache_maintenance_latency);
     set_evs_param("core.dcache-miss_latency", p.dcache_miss_latency);
     set_evs_param("core.dcache-prefetch_enabled", p.dcache_prefetch_enabled);
-    set_evs_param(
-        "core.dcache-read_access_latency", p.dcache_read_access_latency);
+    set_evs_param("core.dcache-read_access_latency",
+                  p.dcache_read_access_latency);
     set_evs_param("core.dcache-read_latency", p.dcache_read_latency);
     set_evs_param("core.dcache-snoop_data_transfer_latency",
-        p.dcache_snoop_data_transfer_latency);
+                  p.dcache_snoop_data_transfer_latency);
     set_evs_param("core.dcache-state_modelled", p.dcache_state_modelled);
-    set_evs_param(
-        "core.dcache-write_access_latency", p.dcache_write_access_latency);
+    set_evs_param("core.dcache-write_access_latency",
+                  p.dcache_write_access_latency);
     set_evs_param("core.dcache-write_latency", p.dcache_write_latency);
     set_evs_param("core.default_opmode", p.default_opmode);
     set_evs_param("core.diagnostics", p.diagnostics);
     set_evs_param("core.enable_simulation_performance_optimizations",
-        p.enable_simulation_performance_optimizations);
-    set_evs_param(
-        "core.ext_abort_device_read_is_sync", p.ext_abort_device_read_is_sync);
+                  p.enable_simulation_performance_optimizations);
+    set_evs_param("core.ext_abort_device_read_is_sync",
+                  p.ext_abort_device_read_is_sync);
     set_evs_param("core.ext_abort_device_write_is_sync",
-        p.ext_abort_device_write_is_sync);
-    set_evs_param(
-        "core.ext_abort_so_read_is_sync", p.ext_abort_so_read_is_sync);
-    set_evs_param(
-        "core.ext_abort_so_write_is_sync", p.ext_abort_so_write_is_sync);
+                  p.ext_abort_device_write_is_sync);
+    set_evs_param("core.ext_abort_so_read_is_sync",
+                  p.ext_abort_so_read_is_sync);
+    set_evs_param("core.ext_abort_so_write_is_sync",
+                  p.ext_abort_so_write_is_sync);
     set_evs_param("core.gicv3.cpuintf-mmap-access-level",
-        p.gicv3_cpuintf_mmap_access_level);
+                  p.gicv3_cpuintf_mmap_access_level);
     set_evs_param("core.has_peripheral_port", p.has_peripheral_port);
-    set_evs_param(
-        "core.has_statistical_profiling", p.has_statistical_profiling);
+    set_evs_param("core.has_statistical_profiling",
+                  p.has_statistical_profiling);
     set_evs_param("core.icache-hit_latency", p.icache_hit_latency);
-    set_evs_param(
-        "core.icache-maintenance_latency", p.icache_maintenance_latency);
+    set_evs_param("core.icache-maintenance_latency",
+                  p.icache_maintenance_latency);
     set_evs_param("core.icache-miss_latency", p.icache_miss_latency);
     set_evs_param("core.icache-prefetch_enabled", p.icache_prefetch_enabled);
-    set_evs_param(
-        "core.icache-read_access_latency", p.icache_read_access_latency);
+    set_evs_param("core.icache-read_access_latency",
+                  p.icache_read_access_latency);
     set_evs_param("core.icache-read_latency", p.icache_read_latency);
     set_evs_param("core.icache-state_modelled", p.icache_state_modelled);
     set_evs_param("core.l3cache-hit_latency", p.l3cache_hit_latency);
-    set_evs_param(
-        "core.l3cache-maintenance_latency", p.l3cache_maintenance_latency);
+    set_evs_param("core.l3cache-maintenance_latency",
+                  p.l3cache_maintenance_latency);
     set_evs_param("core.l3cache-miss_latency", p.l3cache_miss_latency);
-    set_evs_param(
-        "core.l3cache-read_access_latency", p.l3cache_read_access_latency);
+    set_evs_param("core.l3cache-read_access_latency",
+                  p.l3cache_read_access_latency);
     set_evs_param("core.l3cache-read_latency", p.l3cache_read_latency);
     set_evs_param("core.l3cache-size", p.l3cache_size);
     set_evs_param("core.l3cache-snoop_data_transfer_latency",
-        p.l3cache_snoop_data_transfer_latency);
-    set_evs_param(
-        "core.l3cache-snoop_issue_latency", p.l3cache_snoop_issue_latency);
-    set_evs_param(
-        "core.l3cache-write_access_latency", p.l3cache_write_access_latency);
+                  p.l3cache_snoop_data_transfer_latency);
+    set_evs_param("core.l3cache-snoop_issue_latency",
+                  p.l3cache_snoop_issue_latency);
+    set_evs_param("core.l3cache-write_access_latency",
+                  p.l3cache_write_access_latency);
     set_evs_param("core.l3cache-write_latency", p.l3cache_write_latency);
     set_evs_param("core.pchannel_treat_simreset_as_poreset",
-        p.pchannel_treat_simreset_as_poreset);
+                  p.pchannel_treat_simreset_as_poreset);
     set_evs_param("core.periph_address_end", p.periph_address_end);
     set_evs_param("core.periph_address_start", p.periph_address_start);
     set_evs_param("core.ptw_latency", p.ptw_latency);
     set_evs_param("core.tlb_latency", p.tlb_latency);
     set_evs_param("core.treat-dcache-cmos-to-pou-as-nop",
-        p.treat_dcache_cmos_to_pou_as_nop);
+                  p.treat_dcache_cmos_to_pou_as_nop);
     set_evs_param("core.walk_cache_latency", p.walk_cache_latency);
 }
 

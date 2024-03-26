@@ -69,12 +69,12 @@ class PCState : public GenericISA::UPCState<4>
     uint32_t _vl = 0;
 
   public:
-    PCState(const PCState &other) :
-        Base(other),
-        _rvType(other._rvType),
-        _vlenb(other._vlenb),
-        _vtype(other._vtype),
-        _vl(other._vl)
+    PCState(const PCState &other)
+        : Base(other),
+          _rvType(other._rvType),
+          _vlenb(other._vlenb),
+          _vtype(other._vtype),
+          _vl(other._vl)
     {}
     PCState &operator=(const PCState &other) = default;
     PCState() = default;

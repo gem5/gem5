@@ -44,23 +44,24 @@ namespace gem5
 {
 namespace branch_prediction
 {
-BranchTargetBuffer::BranchTargetBuffer(const Params &params) :
-    ClockedObject(params), numThreads(params.numThreads), stats(this)
+BranchTargetBuffer::BranchTargetBuffer(const Params &params)
+    : ClockedObject(params), numThreads(params.numThreads), stats(this)
 {}
 
 BranchTargetBuffer::BranchTargetBufferStats::BranchTargetBufferStats(
-    statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(
-        lookups, statistics::units::Count::get(), "Number of BTB lookups"),
-    ADD_STAT(misses, statistics::units::Count::get(), "Number of BTB misses"),
-    ADD_STAT(
-        updates, statistics::units::Count::get(), "Number of BTB updates"),
-    ADD_STAT(mispredict, statistics::units::Count::get(),
-        "Number of BTB mispredictions. "
-        "No target found or target wrong."),
-    ADD_STAT(
-        evictions, statistics::units::Count::get(), "Number of BTB evictions")
+    statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(lookups, statistics::units::Count::get(),
+               "Number of BTB lookups"),
+      ADD_STAT(misses, statistics::units::Count::get(),
+               "Number of BTB misses"),
+      ADD_STAT(updates, statistics::units::Count::get(),
+               "Number of BTB updates"),
+      ADD_STAT(mispredict, statistics::units::Count::get(),
+               "Number of BTB mispredictions. "
+               "No target found or target wrong."),
+      ADD_STAT(evictions, statistics::units::Count::get(),
+               "Number of BTB evictions")
 {
     using namespace statistics;
     lookups.init(enums::Num_BranchType).flags(total | pdf);

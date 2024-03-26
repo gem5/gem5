@@ -54,7 +54,8 @@ namespace prefetch
 {
 void
 Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
-    RequestorID requestor_id, bool tag_prefetch, Tick t)
+                                  RequestorID requestor_id, bool tag_prefetch,
+                                  Tick t)
 {
     /* Create a prefetch memory request */
     RequestPtr req =
@@ -86,7 +87,7 @@ Queued::DeferredPacket::startTranslation(BaseMMU *mmu)
 
 void
 Queued::DeferredPacket::finish(const Fault &fault, const RequestPtr &req,
-    ThreadContext *tc, BaseMMU::Mode mode)
+                               ThreadContext *tc, BaseMMU::Mode mode)
 {
     assert(ongoingTranslation);
     ongoingTranslation = false;
@@ -94,18 +95,18 @@ Queued::DeferredPacket::finish(const Fault &fault, const RequestPtr &req,
     owner->translationComplete(this, failed, *cache);
 }
 
-Queued::Queued(const QueuedPrefetcherParams &p) :
-    Base(p),
-    queueSize(p.queue_size),
-    missingTranslationQueueSize(
-        p.max_prefetch_requests_with_pending_translation),
-    latency(p.latency),
-    queueSquash(p.queue_squash),
-    queueFilter(p.queue_filter),
-    cacheSnoop(p.cache_snoop),
-    tagPrefetch(p.tag_prefetch),
-    throttleControlPct(p.throttle_control_percentage),
-    statsQueued(this)
+Queued::Queued(const QueuedPrefetcherParams &p)
+    : Base(p),
+      queueSize(p.queue_size),
+      missingTranslationQueueSize(
+          p.max_prefetch_requests_with_pending_translation),
+      latency(p.latency),
+      queueSquash(p.queue_squash),
+      queueFilter(p.queue_filter),
+      cacheSnoop(p.cache_snoop),
+      tagPrefetch(p.tag_prefetch),
+      throttleControlPct(p.throttle_control_percentage),
+      statsQueued(this)
 {}
 
 Queued::~Queued()
@@ -133,9 +134,9 @@ Queued::printQueue(const std::list<DeferredPacket> &queue) const
         /* Set paddr to 0 if not yet translated */
         Addr paddr = it->pkt ? it->pkt->getAddr() : 0;
         DPRINTF(HWPrefetchQueue,
-            "%s[%d]: Prefetch Req VA: %#x PA: %#x "
-            "prio: %3d\n",
-            queue_name, pos, vaddr, paddr, it->priority);
+                "%s[%d]: Prefetch Req VA: %#x PA: %#x "
+                "prio: %3d\n",
+                queue_name, pos, vaddr, paddr, it->priority);
     }
 }
 
@@ -184,10 +185,10 @@ Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
             if (itr->pfInfo.getAddr() == blk_addr &&
                 itr->pfInfo.isSecure() == is_secure) {
                 DPRINTF(HWPrefetch,
-                    "Removing pf candidate addr: %#x "
-                    "(cl: %#x), demand request going to the same addr\n",
-                    itr->pfInfo.getAddr(),
-                    blockAddress(itr->pfInfo.getAddr()));
+                        "Removing pf candidate addr: %#x "
+                        "(cl: %#x), demand request going to the same addr\n",
+                        itr->pfInfo.getAddr(),
+                        blockAddress(itr->pfInfo.getAddr()));
                 delete itr->pkt;
                 itr = pfq.erase(itr);
                 statsQueued.pfRemovedDemand++;
@@ -223,9 +224,9 @@ Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
             PrefetchInfo new_pfi(pfi, addr_prio.first);
             statsQueued.pfIdentified++;
             DPRINTF(HWPrefetch,
-                "Found a pf candidate addr: %#x, "
-                "inserting into prefetch queue.\n",
-                new_pfi.getAddr());
+                    "Found a pf candidate addr: %#x, "
+                    "inserting into prefetch queue.\n",
+                    new_pfi.getAddr());
             // Create and insert the request
             insert(pkt, new_pfi, addr_prio.second, cache);
             num_pfs += 1;
@@ -266,23 +267,23 @@ Queued::getPacket()
     return pkt;
 }
 
-Queued::QueuedStats::QueuedStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(pfIdentified, statistics::units::Count::get(),
-        "number of prefetch candidates identified"),
-    ADD_STAT(pfBufferHit, statistics::units::Count::get(),
-        "number of redundant prefetches already in prefetch queue"),
-    ADD_STAT(pfInCache, statistics::units::Count::get(),
-        "number of redundant prefetches already in cache/mshr dropped"),
-    ADD_STAT(pfRemovedDemand, statistics::units::Count::get(),
-        "number of prefetches dropped due to a demand for the same "
-        "address"),
-    ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
-        "number of prefetches dropped due to prefetch queue size"),
-    ADD_STAT(pfSpanPage, statistics::units::Count::get(),
-        "number of prefetches that crossed the page"),
-    ADD_STAT(pfUsefulSpanPage, statistics::units::Count::get(),
-        "number of prefetches that is useful and crossed the page")
+Queued::QueuedStats::QueuedStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(pfIdentified, statistics::units::Count::get(),
+               "number of prefetch candidates identified"),
+      ADD_STAT(pfBufferHit, statistics::units::Count::get(),
+               "number of redundant prefetches already in prefetch queue"),
+      ADD_STAT(pfInCache, statistics::units::Count::get(),
+               "number of redundant prefetches already in cache/mshr dropped"),
+      ADD_STAT(pfRemovedDemand, statistics::units::Count::get(),
+               "number of prefetches dropped due to a demand for the same "
+               "address"),
+      ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
+               "number of prefetches dropped due to prefetch queue size"),
+      ADD_STAT(pfSpanPage, statistics::units::Count::get(),
+               "number of prefetches that crossed the page"),
+      ADD_STAT(pfUsefulSpanPage, statistics::units::Count::get(),
+               "number of prefetches that is useful and crossed the page")
 {}
 
 void
@@ -301,8 +302,8 @@ Queued::processMissingTranslations(unsigned max)
 }
 
 void
-Queued::translationComplete(
-    DeferredPacket *dp, bool failed, const CacheAccessor &cache)
+Queued::translationComplete(DeferredPacket *dp, bool failed,
+                            const CacheAccessor &cache)
 {
     auto it = pfqMissingTranslation.begin();
     while (it != pfqMissingTranslation.end()) {
@@ -314,38 +315,38 @@ Queued::translationComplete(
     assert(it != pfqMissingTranslation.end());
     if (!failed) {
         DPRINTF(HWPrefetch,
-            "%s Translation of vaddr %#x succeeded: "
-            "paddr %#x \n",
-            mmu->name(), it->translationRequest->getVaddr(),
-            it->translationRequest->getPaddr());
+                "%s Translation of vaddr %#x succeeded: "
+                "paddr %#x \n",
+                mmu->name(), it->translationRequest->getVaddr(),
+                it->translationRequest->getPaddr());
         Addr target_paddr = it->translationRequest->getPaddr();
         // check if this prefetch is already redundant
         if (cacheSnoop &&
             (cache.inCache(target_paddr, it->pfInfo.isSecure()) ||
-                cache.inMissQueue(target_paddr, it->pfInfo.isSecure()))) {
+             cache.inMissQueue(target_paddr, it->pfInfo.isSecure()))) {
             statsQueued.pfInCache++;
             DPRINTF(HWPrefetch,
-                "Dropping redundant in "
-                "cache/MSHR prefetch addr:%#x\n",
-                target_paddr);
+                    "Dropping redundant in "
+                    "cache/MSHR prefetch addr:%#x\n",
+                    target_paddr);
         } else {
             Tick pf_time = curTick() + clockPeriod() * latency;
-            it->createPkt(
-                target_paddr, blkSize, requestorId, tagPrefetch, pf_time);
+            it->createPkt(target_paddr, blkSize, requestorId, tagPrefetch,
+                          pf_time);
             addToQueue(pfq, *it);
         }
     } else {
         DPRINTF(HWPrefetch,
-            "%s Translation of vaddr %#x failed, dropping "
-            "prefetch request %#x \n",
-            mmu->name(), it->translationRequest->getVaddr());
+                "%s Translation of vaddr %#x failed, dropping "
+                "prefetch request %#x \n",
+                mmu->name(), it->translationRequest->getVaddr());
     }
     pfqMissingTranslation.erase(it);
 }
 
 bool
 Queued::alreadyInQueue(std::list<DeferredPacket> &queue,
-    const PrefetchInfo &pfi, int32_t priority)
+                       const PrefetchInfo &pfi, int32_t priority)
 {
     bool found = false;
     iterator it;
@@ -379,18 +380,19 @@ Queued::alreadyInQueue(std::list<DeferredPacket> &queue,
 }
 
 RequestPtr
-Queued::createPrefetchRequest(
-    Addr addr, PrefetchInfo const &pfi, PacketPtr pkt)
+Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
+                              PacketPtr pkt)
 {
-    RequestPtr translation_req = std::make_shared<Request>(addr, blkSize,
-        pkt->req->getFlags(), requestorId, pfi.getPC(), pkt->req->contextId());
+    RequestPtr translation_req = std::make_shared<Request>(
+        addr, blkSize, pkt->req->getFlags(), requestorId, pfi.getPC(),
+        pkt->req->contextId());
     translation_req->setFlags(Request::PREFETCH);
     return translation_req;
 }
 
 void
 Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority,
-    const CacheAccessor &cache)
+               const CacheAccessor &cache)
 {
     if (queueFilter) {
         if (alreadyInQueue(pfq, new_pfi, priority)) {
@@ -460,12 +462,12 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority,
     }
     if (has_target_pa && cacheSnoop &&
         (cache.inCache(target_paddr, new_pfi.isSecure()) ||
-            cache.inMissQueue(target_paddr, new_pfi.isSecure()))) {
+         cache.inMissQueue(target_paddr, new_pfi.isSecure()))) {
         statsQueued.pfInCache++;
         DPRINTF(HWPrefetch,
-            "Dropping redundant in "
-            "cache/MSHR prefetch addr:%#x\n",
-            target_paddr);
+                "Dropping redundant in "
+                "cache/MSHR prefetch addr:%#x\n",
+                target_paddr);
         return;
     }
 
@@ -473,21 +475,21 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority,
     DeferredPacket dpp(this, new_pfi, 0, priority, cache);
     if (has_target_pa) {
         Tick pf_time = curTick() + clockPeriod() * latency;
-        dpp.createPkt(
-            target_paddr, blkSize, requestorId, tagPrefetch, pf_time);
+        dpp.createPkt(target_paddr, blkSize, requestorId, tagPrefetch,
+                      pf_time);
         DPRINTF(HWPrefetch,
-            "Prefetch queued. "
-            "addr:%#x priority: %3d tick:%lld.\n",
-            new_pfi.getAddr(), priority, pf_time);
+                "Prefetch queued. "
+                "addr:%#x priority: %3d tick:%lld.\n",
+                new_pfi.getAddr(), priority, pf_time);
         addToQueue(pfq, dpp);
     } else {
         // Add the translation request and try to resolve it later
         dpp.setTranslationRequest(translation_req);
         dpp.tc = system->threads[translation_req->contextId()];
         DPRINTF(HWPrefetch,
-            "Prefetch queued with no translation. "
-            "addr:%#x priority: %3d\n",
-            new_pfi.getAddr(), priority);
+                "Prefetch queued with no translation. "
+                "addr:%#x priority: %3d\n",
+                new_pfi.getAddr(), priority);
         addToQueue(pfqMissingTranslation, dpp);
     }
 }
@@ -500,12 +502,12 @@ Queued::addToQueue(std::list<DeferredPacket> &queue, DeferredPacket &dpp)
         statsQueued.pfRemovedFull++;
         /* Lowest priority packet */
         iterator it = queue.end();
-        panic_if(
-            it == queue.begin(), "Prefetch queue is both full and empty!");
+        panic_if(it == queue.begin(),
+                 "Prefetch queue is both full and empty!");
         --it;
         /* Look for oldest in that level of priority */
-        panic_if(
-            it == queue.begin(), "Prefetch queue is full with 1 element!");
+        panic_if(it == queue.begin(),
+                 "Prefetch queue is full with 1 element!");
         iterator prev = it;
         bool cont = true;
         /* While not at the head of the queue */
@@ -518,9 +520,9 @@ Queued::addToQueue(std::list<DeferredPacket> &queue, DeferredPacket &dpp)
                 it = prev;
         }
         DPRINTF(HWPrefetch,
-            "Prefetch queue full, removing lowest priority "
-            "oldest packet, addr: %#x\n",
-            it->pfInfo.getAddr());
+                "Prefetch queue full, removing lowest priority "
+                "oldest packet, addr: %#x\n",
+                it->pfInfo.getAddr());
         delete it->pkt;
         queue.erase(it);
     }

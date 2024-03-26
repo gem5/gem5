@@ -393,34 +393,34 @@ class PM4Queue
     PM4MapQueues _pkt;
 
   public:
-    PM4Queue() :
-        _id(0),
-        q(nullptr),
-        _wptr(0),
-        _offset(0),
-        _processing(false),
-        _ib(false),
-        _pkt()
+    PM4Queue()
+        : _id(0),
+          q(nullptr),
+          _wptr(0),
+          _offset(0),
+          _processing(false),
+          _ib(false),
+          _pkt()
     {}
-    PM4Queue(int id, QueueDesc *queue, Addr offset) :
-        _id(id),
-        q(queue),
-        _wptr(queue->rptr),
-        _ibWptr(0),
-        _offset(offset),
-        _processing(false),
-        _ib(false),
-        _pkt()
+    PM4Queue(int id, QueueDesc *queue, Addr offset)
+        : _id(id),
+          q(queue),
+          _wptr(queue->rptr),
+          _ibWptr(0),
+          _offset(offset),
+          _processing(false),
+          _ib(false),
+          _pkt()
     {}
-    PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt) :
-        _id(id),
-        q(queue),
-        _wptr(queue->rptr),
-        _ibWptr(0),
-        _offset(offset),
-        _processing(false),
-        _ib(false),
-        _pkt(*pkt)
+    PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt)
+        : _id(id),
+          q(queue),
+          _wptr(queue->rptr),
+          _ibWptr(0),
+          _offset(offset),
+          _processing(false),
+          _ib(false),
+          _pkt(*pkt)
     {}
 
     QueueDesc *

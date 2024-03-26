@@ -42,8 +42,9 @@ class SparcMacroInst : public SparcStaticInst
 
     // Constructor.
     SparcMacroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        uint32_t _numMicroops) :
-        SparcStaticInst(mnem, _machInst, __opClass), numMicroops(_numMicroops)
+                   uint32_t _numMicroops)
+        : SparcStaticInst(mnem, _machInst, __opClass),
+          numMicroops(_numMicroops)
     {
         assert(numMicroops);
         microops = new StaticInstPtr[numMicroops];
@@ -52,8 +53,9 @@ class SparcMacroInst : public SparcStaticInst
 
     ~SparcMacroInst() { delete[] microops; }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     StaticInstPtr *microops;
 
@@ -87,9 +89,8 @@ class SparcMicroInst : public SparcStaticInst
 {
   protected:
     // Constructor.
-    SparcMicroInst(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        SparcStaticInst(mnem, _machInst, __opClass)
+    SparcMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : SparcStaticInst(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;
     }
@@ -120,9 +121,9 @@ class SparcDelayedMicroInst : public SparcMicroInst
 {
   protected:
     // Constructor.
-    SparcDelayedMicroInst(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        SparcMicroInst(mnem, _machInst, __opClass)
+    SparcDelayedMicroInst(const char *mnem, ExtMachInst _machInst,
+                          OpClass __opClass)
+        : SparcMicroInst(mnem, _machInst, __opClass)
     {
         flags[IsDelayedCommit] = true;
     }

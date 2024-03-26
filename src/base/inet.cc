@@ -92,7 +92,7 @@ EthAddr::parse(const std::string &addr)
     // the sscanf function won't work.
     int bytes[ETH_ADDR_LEN == 6 ? ETH_ADDR_LEN : -1];
     if (sscanf(addr.c_str(), "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1],
-            &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETH_ADDR_LEN) {
+               &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETH_ADDR_LEN) {
         std::memset(data, 0xff, ETH_ADDR_LEN);
         return;
     }
@@ -148,7 +148,7 @@ operator<<(std::ostream &stream, const IpAddress &ia)
 {
     uint32_t ip = ia.ip();
     ccprintf(stream, "%x.%x.%x.%x", (uint8_t)(ip >> 24), (uint8_t)(ip >> 16),
-        (uint8_t)(ip >> 8), (uint8_t)(ip >> 0));
+             (uint8_t)(ip >> 8), (uint8_t)(ip >> 0));
     return stream;
 }
 

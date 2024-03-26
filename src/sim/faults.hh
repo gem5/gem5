@@ -58,8 +58,8 @@ class FaultBase
 {
   public:
     virtual FaultName name() const = 0;
-    virtual void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    virtual void invoke(ThreadContext *tc,
+                        const StaticInstPtr &inst = nullStaticInstPtr);
     virtual ~FaultBase(){};
 };
 
@@ -77,7 +77,7 @@ class UnimpFault : public FaultBase
         return "Unimplemented simulator feature";
     }
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // A fault to trigger a system call in SE mode.
@@ -90,7 +90,7 @@ class SESyscallFault : public FaultBase
     }
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class ReExec : public FaultBase
@@ -102,7 +102,7 @@ class ReExec : public FaultBase
         return "Re-execution fault";
     }
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 /*
@@ -122,7 +122,7 @@ class SyscallRetryFault : public FaultBase
     }
     SyscallRetryFault() {}
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class GenericPageTableFault : public FaultBase
@@ -138,7 +138,7 @@ class GenericPageTableFault : public FaultBase
     }
     GenericPageTableFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     Addr
     getFaultVAddr() const
     {
@@ -159,7 +159,7 @@ class GenericAlignmentFault : public FaultBase
     }
     GenericAlignmentFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     Addr
     getFaultVAddr() const
     {
@@ -174,8 +174,8 @@ class GenericHtmFailureFault : public FaultBase
     HtmFailureFaultCause cause;
 
   public:
-    GenericHtmFailureFault(uint64_t htm_uid, HtmFailureFaultCause _cause) :
-        htmUid(htm_uid), cause(_cause)
+    GenericHtmFailureFault(uint64_t htm_uid, HtmFailureFaultCause _cause)
+        : htmUid(htm_uid), cause(_cause)
     {}
 
     FaultName
@@ -195,7 +195,7 @@ class GenericHtmFailureFault : public FaultBase
         return cause;
     }
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 } // namespace gem5

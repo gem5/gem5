@@ -68,10 +68,12 @@ class SEWorkload : public gem5::SEWorkload
     };
 
     struct SyscallABI32 : public GenericSyscallABI32, public BaseSyscallABI
-    {};
+    {
+    };
 
     struct SyscallABI64 : public GenericSyscallABI64, public BaseSyscallABI
-    {};
+    {
+    };
 };
 
 } // namespace SparcISA
@@ -80,8 +82,8 @@ namespace guest_abi
 {
 template <typename ABI>
 struct Result<ABI, SyscallReturn,
-    typename std::enable_if_t<
-        std::is_base_of_v<SparcISA::SEWorkload::BaseSyscallABI, ABI>>>
+              typename std::enable_if_t<std::is_base_of_v<
+                  SparcISA::SEWorkload::BaseSyscallABI, ABI>>>
 {
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
@@ -111,9 +113,9 @@ struct Result<ABI, SyscallReturn,
 
 template <typename Arg>
 struct Argument<SparcISA::SEWorkload::SyscallABI32, Arg,
-    typename std::enable_if_t<
-        std::is_integral_v<Arg> &&
-        SparcISA::SEWorkload::SyscallABI32::IsWideV<Arg>>>
+                typename std::enable_if_t<
+                    std::is_integral_v<Arg> &&
+                    SparcISA::SEWorkload::SyscallABI32::IsWideV<Arg>>>
 {
     using ABI = SparcISA::SEWorkload::SyscallABI32;
 
@@ -121,7 +123,7 @@ struct Argument<SparcISA::SEWorkload::SyscallABI32, Arg,
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state + 1 >= ABI::ArgumentRegs.size(),
-            "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
         auto high = ABI::ArgumentRegs[state++];
         auto low = ABI::ArgumentRegs[state++];
         return (Arg)ABI::mergeRegs(tc, low, high);

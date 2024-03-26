@@ -91,8 +91,8 @@ class Ticked : public Serializable
 
   public:
     Ticked(ClockedObject &object_,
-        statistics::Scalar *imported_num_cycles = NULL,
-        Event::Priority priority = Event::CPU_Tick_Pri);
+           statistics::Scalar *imported_num_cycles = NULL,
+           Event::Priority priority = Event::CPU_Tick_Pri);
 
     virtual ~Ticked() {}
 
@@ -168,7 +168,7 @@ class TickedObject : public ClockedObject, public Ticked
 {
   public:
     TickedObject(const TickedObjectParams &params,
-        Event::Priority priority = Event::CPU_Tick_Pri);
+                 Event::Priority priority = Event::CPU_Tick_Pri);
 
     /** Disambiguate to make these functions overload correctly */
     using ClockedObject::regStats;

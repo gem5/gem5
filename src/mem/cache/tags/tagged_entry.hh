@@ -123,7 +123,7 @@ class TaggedEntry : public ReplaceableEntry
     print() const override
     {
         return csprintf("tag: %#x secure: %d valid: %d | %s", getTag(),
-            isSecure(), isValid(), ReplaceableEntry::print());
+                        isSecure(), isValid(), ReplaceableEntry::print());
     }
 
   protected:

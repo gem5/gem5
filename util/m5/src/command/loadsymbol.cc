@@ -39,7 +39,8 @@ do_loadsymbol(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command load_symbol = {"loadsymbol", 0, 0, do_loadsymbol,
+Command load_symbol = {
+    "loadsymbol", 0, 0, do_loadsymbol,
     "\n"
     "        load a preselected symbol file into gem5's symbol table"};
 

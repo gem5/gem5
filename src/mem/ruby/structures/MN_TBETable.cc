@@ -116,14 +116,15 @@ MN_TBETable::chooseNewDistributor()
     // This calls an O(n) function n times = O(n^2) worst case.
     // TODO this should be improved if n grows > 16
     ready_sync_tbes.erase(std::remove_if(ready_sync_tbes.begin(),
-                              ready_sync_tbes.end(), hasNonSyncDependency),
-        ready_sync_tbes.end());
+                                         ready_sync_tbes.end(),
+                                         hasNonSyncDependency),
+                          ready_sync_tbes.end());
 
     // TODO shouldn't use age?
 
     // Extend ready_nonsync_tbes with the contents of ready_sync_tbes
     ready_nonsync_tbes.insert(ready_nonsync_tbes.end(),
-        ready_sync_tbes.begin(), ready_sync_tbes.end());
+                              ready_sync_tbes.begin(), ready_sync_tbes.end());
 
     // Check if no candidates
     if (ready_nonsync_tbes.empty())
@@ -132,9 +133,9 @@ MN_TBETable::chooseNewDistributor()
     // Otherwise select the minimum timestamp = oldest element
     auto it =
         std::min_element(ready_nonsync_tbes.begin(), ready_nonsync_tbes.end(),
-            [](const MiscNode_TBE *a, const MiscNode_TBE *b) {
-                return a->gettimestamp() - b->gettimestamp();
-            });
+                         [](const MiscNode_TBE *a, const MiscNode_TBE *b) {
+                             return a->gettimestamp() - b->gettimestamp();
+                         });
     assert(it != ready_nonsync_tbes.end());
     return *it;
 }

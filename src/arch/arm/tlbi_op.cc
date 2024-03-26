@@ -327,7 +327,7 @@ TLBIRMVA::match(TlbEntry *te, vmid_t vmid) const
     if (addr_match) {
         return tgMap[rangeData.tg] == te->tg &&
                (resTLBIttl(rangeData.tg, rangeData.ttl) ||
-                   rangeData.ttl == te->lookupLevel);
+                rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }
@@ -343,7 +343,7 @@ TLBIRMVAA::match(TlbEntry *te, vmid_t vmid) const
     if (addr_match) {
         return tgMap[rangeData.tg] == te->tg &&
                (resTLBIttl(rangeData.tg, rangeData.ttl) ||
-                   rangeData.ttl == te->lookupLevel);
+                rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }

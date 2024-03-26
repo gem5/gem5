@@ -44,8 +44,8 @@ class SEWorkload : public gem5::SEWorkload
   public:
     PARAMS(RiscvSEWorkload);
 
-    SEWorkload(const Params &p, Addr page_shift) :
-        gem5::SEWorkload(p, page_shift)
+    SEWorkload(const Params &p, Addr page_shift)
+        : gem5::SEWorkload(p, page_shift)
     {}
 
     void

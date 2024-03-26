@@ -85,7 +85,7 @@ class SMMUDevicePort : public QueuedResponsePort
 
   public:
     SMMUDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc,
-        PortID _id = InvalidPortID);
+                   PortID _id = InvalidPortID);
     virtual ~SMMUDevicePort() {}
 
     virtual AddrRangeList
@@ -105,8 +105,8 @@ class SMMUControlPort : public SimpleTimingPort
     virtual AddrRangeList getAddrRanges() const;
 
   public:
-    SMMUControlPort(
-        const std::string &_name, SMMUv3 &_smmu, AddrRange _addrRange);
+    SMMUControlPort(const std::string &_name, SMMUv3 &_smmu,
+                    AddrRange _addrRange);
     virtual ~SMMUControlPort() {}
 };
 

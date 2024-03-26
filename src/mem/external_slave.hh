@@ -74,8 +74,8 @@ class ExternalSlave : public SimObject
         ExternalSlave &owner;
 
       public:
-        ExternalPort(const std::string &name_, ExternalSlave &owner_) :
-            ResponsePort(name_), owner(owner_)
+        ExternalPort(const std::string &name_, ExternalSlave &owner_)
+            : ResponsePort(name_), owner(owner_)
         {}
 
         ~ExternalPort() {}
@@ -95,8 +95,9 @@ class ExternalSlave : public SimObject
       public:
         /** Create or find an external port which can be bound.  Returns
          *  NULL on failure */
-        virtual ExternalPort *getExternalPort(const std::string &name,
-            ExternalSlave &owner, const std::string &port_data) = 0;
+        virtual ExternalPort *
+        getExternalPort(const std::string &name, ExternalSlave &owner,
+                        const std::string &port_data) = 0;
     };
 
   protected:
@@ -126,13 +127,13 @@ class ExternalSlave : public SimObject
     ExternalSlave(const ExternalSlaveParams &params);
 
     /** Port interface.  Responds only to port "port" */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     /** Register a handler which can provide ports with port_type ==
      *  handler_name */
-    static void registerHandler(
-        const std::string &handler_name, Handler *handler);
+    static void registerHandler(const std::string &handler_name,
+                                Handler *handler);
 
     void init() override;
 };

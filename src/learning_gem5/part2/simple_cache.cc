@@ -35,16 +35,16 @@
 
 namespace gem5
 {
-SimpleCache::SimpleCache(const SimpleCacheParams &params) :
-    ClockedObject(params),
-    latency(params.latency),
-    blockSize(params.system->cacheLineSize()),
-    capacity(params.size / blockSize),
-    memPort(params.name + ".mem_side", this),
-    blocked(false),
-    originalPacket(nullptr),
-    waitingPortId(-1),
-    stats(this)
+SimpleCache::SimpleCache(const SimpleCacheParams &params)
+    : ClockedObject(params),
+      latency(params.latency),
+      blockSize(params.system->cacheLineSize()),
+      capacity(params.size / blockSize),
+      memPort(params.name + ".mem_side", this),
+      blocked(false),
+      originalPacket(nullptr),
+      waitingPortId(-1),
+      stats(this)
 {
     // Since the CPU side ports are a vector of ports, create an instance of
     // the CPUSidePort for each connection. This member of params is
@@ -61,7 +61,7 @@ SimpleCache::getPort(const std::string &if_name, PortID idx)
     // This is the name from the Python SimObject declaration in SimpleCache.py
     if (if_name == "mem_side") {
         panic_if(idx != InvalidPortID,
-            "Mem side of simple cache not a vector port");
+                 "Mem side of simple cache not a vector port");
         return memPort;
     } else if (if_name == "cpu_side" && idx < cpuPorts.size()) {
         // We should have already created all of the ports in the constructor
@@ -211,8 +211,8 @@ SimpleCache::handleRequest(PacketPtr pkt, int port_id)
 
     // Schedule an event after cache access latency to actually access
     schedule(new EventFunctionWrapper([this, pkt] { accessTiming(pkt); },
-                 name() + ".accessEvent", true),
-        clockEdge(latency));
+                                      name() + ".accessEvent", true),
+             clockEdge(latency));
 
     return true;
 }
@@ -289,7 +289,7 @@ SimpleCache::accessTiming(PacketPtr pkt)
     bool hit = accessFunctional(pkt);
 
     DPRINTF(SimpleCache, "%s for packet: %s\n", hit ? "Hit" : "Miss",
-        pkt->print());
+            pkt->print());
 
     if (hit) {
         // Respond to the CPU side
@@ -313,7 +313,7 @@ SimpleCache::accessTiming(PacketPtr pkt)
         } else {
             DPRINTF(SimpleCache, "Upgrading packet to block size\n");
             panic_if(addr - block_addr + size > blockSize,
-                "Cannot handle accesses that span multiple cache lines");
+                     "Cannot handle accesses that span multiple cache lines");
             // Unaligned access to one cache block
             assert(pkt->needsResponse());
             MemCmd cmd;
@@ -378,8 +378,8 @@ SimpleCache::insert(PacketPtr pkt)
         do {
             bucket = random_mt.random(0, (int)cacheStore.bucket_count() - 1);
         } while ((bucket_size = cacheStore.bucket_size(bucket)) == 0);
-        auto block = std::next(
-            cacheStore.begin(bucket), random_mt.random(0, bucket_size - 1));
+        auto block = std::next(cacheStore.begin(bucket),
+                               random_mt.random(0, bucket_size - 1));
 
         DPRINTF(SimpleCache, "Removing addr %#x\n", block->first);
 
@@ -428,15 +428,15 @@ SimpleCache::sendRangeChange() const
     }
 }
 
-SimpleCache::SimpleCacheStats::SimpleCacheStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
-    ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
-    ADD_STAT(missLatency, statistics::units::Tick::get(),
-        "Ticks for misses to the cache"),
-    ADD_STAT(hitRatio, statistics::units::Ratio::get(),
-        "The ratio of hits to the total accesses to the cache",
-        hits / (hits + misses))
+SimpleCache::SimpleCacheStats::SimpleCacheStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
+      ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
+      ADD_STAT(missLatency, statistics::units::Tick::get(),
+               "Ticks for misses to the cache"),
+      ADD_STAT(hitRatio, statistics::units::Ratio::get(),
+               "The ratio of hits to the total accesses to the cache",
+               hits / (hits + misses))
 {
     missLatency.init(16); // number of buckets
 }

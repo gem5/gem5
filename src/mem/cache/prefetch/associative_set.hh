@@ -44,7 +44,7 @@ template <class Entry>
 class AssociativeSet
 {
     static_assert(std::is_base_of_v<TaggedEntry, Entry>,
-        "Entry must derive from TaggedEntry");
+                  "Entry must derive from TaggedEntry");
 
     /** Associativity of the container */
     const int associativity;
@@ -72,7 +72,8 @@ class AssociativeSet
      * @param init_val initial value of the elements of the set
      */
     AssociativeSet(int assoc, int num_entries, BaseIndexingPolicy *idx_policy,
-        replacement_policy::Base *rpl_policy, Entry const &init_val = Entry());
+                   replacement_policy::Base *rpl_policy,
+                   Entry const &init_val = Entry());
 
     /**
      * Find an entry within the set

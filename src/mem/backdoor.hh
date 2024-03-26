@@ -120,8 +120,8 @@ class MemBackdoor
         _flags = f;
     }
 
-    MemBackdoor(AddrRange r, uint8_t *p, Flags flags) :
-        _range(r), _ptr(p), _flags(flags)
+    MemBackdoor(AddrRange r, uint8_t *p, Flags flags)
+        : _range(r), _ptr(p), _flags(flags)
     {}
 
     MemBackdoor() : MemBackdoor(AddrRange(), nullptr, NoAccess) {}
@@ -163,8 +163,8 @@ class MemBackdoorReq
     MemBackdoor::Flags _flags;
 
   public:
-    MemBackdoorReq(AddrRange r, MemBackdoor::Flags new_flags) :
-        _range(r), _flags(new_flags)
+    MemBackdoorReq(AddrRange r, MemBackdoor::Flags new_flags)
+        : _range(r), _flags(new_flags)
     {}
 
     const AddrRange &

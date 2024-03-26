@@ -91,8 +91,8 @@ template <typename T>
 class AtomicGeneric3Op : public TypedAtomicOpFunctor<T>
 {
   public:
-    AtomicGeneric3Op(T _a, T _c, std::function<void(T *, T, T)> _op) :
-        a(_a), c(_c), op(_op)
+    AtomicGeneric3Op(T _a, T _c, std::function<void(T *, T, T)> _op)
+        : a(_a), c(_c), op(_op)
     {}
     AtomicOpFunctor *
     clone() override
@@ -115,9 +115,10 @@ template <typename T>
 class AtomicGenericPair3Op : public TypedAtomicOpFunctor<T>
 {
   public:
-    AtomicGenericPair3Op(std::array<T, 2> &_a, std::array<T, 2> _c,
-        std::function<void(T *, std::array<T, 2> &, std::array<T, 2>)> _op) :
-        a(_a), c(_c), op(_op)
+    AtomicGenericPair3Op(
+        std::array<T, 2> &_a, std::array<T, 2> _c,
+        std::function<void(T *, std::array<T, 2> &, std::array<T, 2>)> _op)
+        : a(_a), c(_c), op(_op)
     {}
     AtomicOpFunctor *
     clone() override

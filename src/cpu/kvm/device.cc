@@ -65,7 +65,7 @@ KvmDevice::getAttrPtr(uint32_t group, uint64_t attr, void *data) const
 
     if (ioctl(KVM_GET_DEVICE_ATTR, &dattr) == -1) {
         panic("Failed to get attribute (group: %i, attr: %i, errno: %i)",
-            group, attr, errno);
+              group, attr, errno);
     }
 #else
     panic("Kernel headers don't support KVM_GET_DEVICE_ATTR\n");
@@ -85,7 +85,7 @@ KvmDevice::setAttrPtr(uint32_t group, uint64_t attr, const void *data) const
 
     if (ioctl(KVM_SET_DEVICE_ATTR, &dattr) == -1) {
         panic("Failed to set attribute (group: %i, attr: %i, errno: %i)",
-            group, attr, errno);
+              group, attr, errno);
     }
 #else
     panic("Kernel headers don't support KVM_GET_DEVICE_ATTR\n");

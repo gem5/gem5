@@ -101,8 +101,8 @@ class RegId
   public:
     inline constexpr RegId();
 
-    constexpr RegId(const RegClass &reg_class, RegIndex reg_idx) :
-        _regClass(&reg_class), regIdx(reg_idx), numPinnedWrites(0)
+    constexpr RegId(const RegClass &reg_class, RegIndex reg_idx)
+        : _regClass(&reg_class), regIdx(reg_idx), numPinnedWrites(0)
     {}
 
     constexpr operator RegIndex() const { return index(); }
@@ -214,8 +214,11 @@ class RegClass
 
   public:
     constexpr RegClass(RegClassType type, const char *new_name,
-        size_t num_regs, const debug::Flag &debug_flag) :
-        _type(type), _name(new_name), _numRegs(num_regs), debugFlag(debug_flag)
+                       size_t num_regs, const debug::Flag &debug_flag)
+        : _type(type),
+          _name(new_name),
+          _numRegs(num_regs),
+          debugFlag(debug_flag)
     {}
 
     constexpr RegClass
@@ -304,8 +307,8 @@ class RegClass
     inline constexpr RegId operator[](RegIndex idx) const;
 };
 
-inline constexpr RegClass invalidRegClass(
-    InvalidRegClass, "invalid", 0, debug::InvalidReg);
+inline constexpr RegClass invalidRegClass(InvalidRegClass, "invalid", 0,
+                                          debug::InvalidReg);
 
 constexpr RegId::RegId() : RegId(invalidRegClass, 0) {}
 
@@ -348,8 +351,8 @@ class RegClassIterator
   private:
     RegId id;
 
-    RegClassIterator(const RegClass &reg_class, RegIndex idx) :
-        id(reg_class, idx)
+    RegClassIterator(const RegClass &reg_class, RegIndex idx)
+        : id(reg_class, idx)
     {}
 
     friend class RegClass;
@@ -437,8 +440,8 @@ class VecElemRegClassOps : public TypedRegClassOps<ValueType>
     size_t elemsPerVec;
 
   public:
-    explicit VecElemRegClassOps(size_t elems_per_vec) :
-        elemsPerVec(elems_per_vec)
+    explicit VecElemRegClassOps(size_t elems_per_vec)
+        : elemsPerVec(elems_per_vec)
     {}
 
     std::string
@@ -462,17 +465,17 @@ class PhysRegId : private RegId
     bool pinned;
 
   public:
-    explicit PhysRegId() :
-        RegId(invalidRegClass, -1), flatIdx(-1), numPinnedWritesToComplete(0)
+    explicit PhysRegId()
+        : RegId(invalidRegClass, -1), flatIdx(-1), numPinnedWritesToComplete(0)
     {}
 
     /** Scalar PhysRegId constructor. */
-    explicit PhysRegId(
-        const RegClass &reg_class, RegIndex _regIdx, RegIndex _flatIdx) :
-        RegId(reg_class, _regIdx),
-        flatIdx(_flatIdx),
-        numPinnedWritesToComplete(0),
-        pinned(false)
+    explicit PhysRegId(const RegClass &reg_class, RegIndex _regIdx,
+                       RegIndex _flatIdx)
+        : RegId(reg_class, _regIdx),
+          flatIdx(_flatIdx),
+          numPinnedWritesToComplete(0),
+          pinned(false)
     {}
 
     /** Visible RegId methods */
@@ -611,7 +614,7 @@ struct hash<gem5::RegId>
         // considered by this hash function, so we may wish to perform a
         // different operation to include that information in the hash.
         static_assert(sizeof(gem5::RegIndex) < sizeof(size_t),
-            "sizeof(RegIndex) should be less than sizeof(size_t)");
+                      "sizeof(RegIndex) should be less than sizeof(size_t)");
 
         return concatenated_hash;
     }

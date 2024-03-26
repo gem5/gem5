@@ -147,8 +147,10 @@ namespace gem5
 {
 using namespace SparcISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
-    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+      regCache32(this),
+      regCache64(this)
 {}
 
 ///////////////////////////////////////////////////////////

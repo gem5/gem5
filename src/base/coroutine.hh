@@ -65,12 +65,13 @@ class Coroutine : public Fiber
     // in case the channel should be void (Coroutine template parameters
     // are void. (See following ArgChannel, RetChannel typedef)
     struct Empty
-    {};
+    {
+    };
     using ArgChannel = typename std::conditional_t<std::is_same_v<Arg, void>,
-        Empty, std::stack<Arg>>;
+                                                   Empty, std::stack<Arg>>;
 
     using RetChannel = typename std::conditional_t<std::is_same_v<Ret, void>,
-        Empty, std::stack<Ret>>;
+                                                   Empty, std::stack<Ret>>;
 
   public:
     /**
@@ -181,8 +182,8 @@ class Coroutine : public Fiber
      *
      * @ingroup api_coroutine
      */
-    Coroutine(std::function<void(CallerType &)> f, bool run_coroutine = true) :
-        Fiber(), task(f), caller(*this)
+    Coroutine(std::function<void(CallerType &)> f, bool run_coroutine = true)
+        : Fiber(), task(f), caller(*this)
     {
         // When desired, run the Coroutine after it is created
         if (run_coroutine)

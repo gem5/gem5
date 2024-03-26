@@ -35,8 +35,8 @@ namespace gem5
 {
 using namespace RiscvISA;
 
-LupV::LupV(const Params &params) :
-    Platform(params), pic(params.pic), uartIntID(params.uart_int_id)
+LupV::LupV(const Params &params)
+    : Platform(params), pic(params.pic), uartIntID(params.uart_int_id)
 {}
 
 void

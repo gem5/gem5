@@ -47,14 +47,14 @@
 namespace gem5
 {
 PacketQueue::PacketQueue(EventManager &_em, const std::string &_label,
-    const std::string &_sendEventName, bool force_order,
-    bool disable_sanity_check) :
-    em(_em),
-    sendEvent([this] { processSendEvent(); }, _sendEventName),
-    _disableSanityCheck(disable_sanity_check),
-    forceOrder(force_order),
-    label(_label),
-    waitingOnRetry(false)
+                         const std::string &_sendEventName, bool force_order,
+                         bool disable_sanity_check)
+    : em(_em),
+      sendEvent([this] { processSendEvent(); }, _sendEventName),
+      _disableSanityCheck(disable_sanity_check),
+      forceOrder(force_order),
+      label(_label),
+      waitingOnRetry(false)
 {}
 
 PacketQueue::~PacketQueue() {}
@@ -104,8 +104,8 @@ void
 PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
 {
     DPRINTF(PacketQueue, "%s for %s address %x size %d when %lu ord: %i\n",
-        __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(), when,
-        forceOrder);
+            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(), when,
+            forceOrder);
 
     // we can still send a packet before the end of this tick
     assert(when >= curTick());
@@ -230,10 +230,10 @@ PacketQueue::drain()
     }
 }
 
-ReqPacketQueue::ReqPacketQueue(
-    EventManager &_em, RequestPort &_mem_side_port, const std::string _label) :
-    PacketQueue(_em, _label, name(_mem_side_port, _label)),
-    memSidePort(_mem_side_port)
+ReqPacketQueue::ReqPacketQueue(EventManager &_em, RequestPort &_mem_side_port,
+                               const std::string _label)
+    : PacketQueue(_em, _label, name(_mem_side_port, _label)),
+      memSidePort(_mem_side_port)
 {}
 
 bool
@@ -243,9 +243,11 @@ ReqPacketQueue::sendTiming(PacketPtr pkt)
 }
 
 SnoopRespPacketQueue::SnoopRespPacketQueue(EventManager &_em,
-    RequestPort &_mem_side_port, bool force_order, const std::string _label) :
-    PacketQueue(_em, _label, name(_mem_side_port, _label), force_order),
-    memSidePort(_mem_side_port)
+                                           RequestPort &_mem_side_port,
+                                           bool force_order,
+                                           const std::string _label)
+    : PacketQueue(_em, _label, name(_mem_side_port, _label), force_order),
+      memSidePort(_mem_side_port)
 {}
 
 bool
@@ -255,9 +257,10 @@ SnoopRespPacketQueue::sendTiming(PacketPtr pkt)
 }
 
 RespPacketQueue::RespPacketQueue(EventManager &_em,
-    ResponsePort &_cpu_side_port, bool force_order, const std::string _label) :
-    PacketQueue(_em, _label, name(_cpu_side_port, _label), force_order),
-    cpuSidePort(_cpu_side_port)
+                                 ResponsePort &_cpu_side_port,
+                                 bool force_order, const std::string _label)
+    : PacketQueue(_em, _label, name(_cpu_side_port, _label), force_order),
+      cpuSidePort(_cpu_side_port)
 {}
 
 bool

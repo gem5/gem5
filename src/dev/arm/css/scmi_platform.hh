@@ -169,14 +169,14 @@ struct Message
 class VirtualChannel : public SimObject
 {
   public:
-    VirtualChannel(const ScmiChannelParams &p) :
-        SimObject(p),
-        msgBuffer(),
-        pendingMessage(false),
-        shmem(p.shmem_range),
-        physID(p.phys_id),
-        virtID(p.virt_id),
-        doorbell(p.doorbell)
+    VirtualChannel(const ScmiChannelParams &p)
+        : SimObject(p),
+          msgBuffer(),
+          pendingMessage(false),
+          shmem(p.shmem_range),
+          physID(p.phys_id),
+          virtID(p.virt_id),
+          doorbell(p.doorbell)
     {}
 
     /** Set a pointer to the SCMI platform */
@@ -253,10 +253,10 @@ class PlatformChannel : public VirtualChannel
 class Communication : public SimObject
 {
   public:
-    Communication(const ScmiCommunicationParams &p) :
-        SimObject(p),
-        platformChan(p.platform_channel),
-        agentChan(p.agent_channel)
+    Communication(const ScmiCommunicationParams &p)
+        : SimObject(p),
+          platformChan(p.platform_channel),
+          agentChan(p.agent_channel)
     {}
 
     PlatformChannel *platformChan;

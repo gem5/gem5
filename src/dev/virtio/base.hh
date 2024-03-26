@@ -129,8 +129,8 @@ class VirtDescriptor
      * @param queue Queue owning this descriptor.
      * @param index Index within the queue.
      */
-    VirtDescriptor(
-        PortProxy &memProxy, ByteOrder bo, VirtQueue &queue, Index index);
+    VirtDescriptor(PortProxy &memProxy, ByteOrder bo, VirtQueue &queue,
+                   Index index);
     // WORKAROUND: The noexcept declaration works around a bug where
     // gcc 4.7 tries to call the wrong constructor when emplacing
     // something into a vector.
@@ -504,8 +504,8 @@ class VirtQueue : public Serializable
             Index index;
         };
 
-        VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size) :
-            header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)
+        VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size)
+            : header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)
         {}
 
         /** Reset any state in the ring buffer. */
@@ -554,8 +554,8 @@ class VirtQueue : public Serializable
 
             /* Read and byte-swap the elements in the ring */
             T temp[ring.size()];
-            _proxy.readBlob(
-                _base + sizeof(header), temp, sizeof(T) * ring.size());
+            _proxy.readBlob(_base + sizeof(header), temp,
+                            sizeof(T) * ring.size());
             for (int i = 0; i < ring.size(); ++i)
                 ring[i] = gtoh(temp[i], byteOrder);
         }
@@ -569,8 +569,8 @@ class VirtQueue : public Serializable
             T temp[ring.size()];
             for (int i = 0; i < ring.size(); ++i)
                 temp[i] = htog(ring[i], byteOrder);
-            _proxy.writeBlob(
-                _base + sizeof(header), temp, sizeof(T) * ring.size());
+            _proxy.writeBlob(_base + sizeof(header), temp,
+                             sizeof(T) * ring.size());
             writeHeader();
         }
 
@@ -638,7 +638,7 @@ class VirtIODeviceBase : public SimObject
 
     typedef VirtIODeviceBaseParams Params;
     VirtIODeviceBase(const Params &params, DeviceId id, size_t config_size,
-        FeatureBits features);
+                     FeatureBits features);
     virtual ~VirtIODeviceBase();
 
   public:

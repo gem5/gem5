@@ -42,15 +42,15 @@ namespace sc_gem5
 {
 struct ReportMsgInfo
 {
-    explicit ReportMsgInfo() :
-        actions(sc_core::SC_UNSPECIFIED),
-        count(0),
-        limit(-1),
-        sevActions{sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED,
-            sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED},
-        sevCounts{0, 0, 0, 0},
-        sevLimits{-1, -1, -1, -1},
-        id(-1)
+    explicit ReportMsgInfo()
+        : actions(sc_core::SC_UNSPECIFIED),
+          count(0),
+          limit(-1),
+          sevActions{sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED,
+                     sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED},
+          sevCounts{0, 0, 0, 0},
+          sevLimits{-1, -1, -1, -1},
+          id(-1)
     {}
 
     void
@@ -77,8 +77,8 @@ struct ReportMsgInfo
 
 struct ReportSevInfo
 {
-    explicit ReportSevInfo(sc_core::sc_actions actions) :
-        actions(actions), count(0), limit(-1)
+    explicit ReportSevInfo(sc_core::sc_actions actions)
+        : actions(actions), count(0), limit(-1)
     {}
 
     void

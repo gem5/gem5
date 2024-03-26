@@ -36,7 +36,8 @@ using namespace gem5;
 namespace
 {
 class TestTarget : public Extensible<TestTarget>
-{};
+{
+};
 
 class IntegerExtension : public Extension<TestTarget, IntegerExtension>
 {

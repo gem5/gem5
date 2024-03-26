@@ -101,11 +101,11 @@ class CfiMemory : public AbstractMemory
     /** Metadata about the erase blocks in flash */
     struct BlockData : public Serializable
     {
-        BlockData(const CfiMemory &_parent, ssize_t number, ssize_t size) :
-            Serializable(),
-            locked(number, false),
-            blockSize(size),
-            parent(_parent)
+        BlockData(const CfiMemory &_parent, ssize_t number, ssize_t size)
+            : Serializable(),
+              locked(number, false),
+              blockSize(size),
+              parent(_parent)
         {}
 
         /**
@@ -184,8 +184,8 @@ class CfiMemory : public AbstractMemory
         // program buffer max size = 32 words
         static const ssize_t MAX_BUFFER_SIZE = 32 * 4;
 
-        ProgramBuffer(const CfiMemory &_parent) :
-            Serializable(), parent(_parent)
+        ProgramBuffer(const CfiMemory &_parent)
+            : Serializable(), parent(_parent)
         {}
 
         /**
@@ -250,11 +250,11 @@ class CfiMemory : public AbstractMemory
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
-        Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &_backdoor) override;
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &_backdoor) override;
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &_backdoor) override;
         bool recvTimingReq(PacketPtr pkt) override;
         void recvRespRetry() override;
         AddrRangeList getAddrRanges() const override;
@@ -357,8 +357,8 @@ class CfiMemory : public AbstractMemory
 
     DrainState drain() override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
     void init() override;
 
     void serialize(CheckpointOut &cp) const override;
@@ -368,8 +368,8 @@ class CfiMemory : public AbstractMemory
     Tick recvAtomic(PacketPtr pkt);
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &_backdoor);
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &_backdoor);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
 

@@ -92,13 +92,13 @@ ArmISA::Interrupts::takeInt32(InterruptTypes int_type) const
     } else {
         // SCR IRQ == 1
         if ((!is_secure) && (hcr_mask_override_bit ||
-                                (!scr_fwaw_bit && !hcr_mask_override_bit)))
+                             (!scr_fwaw_bit && !hcr_mask_override_bit)))
             mask = INT_MASK_T;
         else
             mask = INT_MASK_M;
     }
     return ((mask == INT_MASK_T) ||
-               ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
+            ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
            (mask != INT_MASK_P);
 }
 
@@ -271,7 +271,7 @@ ArmISA::Interrupts::takeInt64(InterruptTypes int_type) const
         }
     }
     return ((mask == INT_MASK_T) ||
-               ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
+            ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
            (mask != INT_MASK_P);
 }
 
@@ -402,7 +402,7 @@ ArmISA::Interrupts::takeVirtualInt64(InterruptTypes int_type) const
     }
 
     return ((mask == INT_MASK_T) ||
-               ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
+            ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
            (mask != INT_MASK_P);
 }
 

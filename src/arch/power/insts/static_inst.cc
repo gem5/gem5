@@ -70,8 +70,8 @@ PowerStaticInst::printReg(std::ostream &os, RegId reg) const
 }
 
 std::string
-PowerStaticInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+PowerStaticInst::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

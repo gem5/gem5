@@ -44,21 +44,21 @@
 
 namespace gem5
 {
-Wavefront::Wavefront(const Params &p) :
-    SimObject(p),
-    wfSlotId(p.wf_slot_id),
-    simdId(p.simdId),
-    maxIbSize(p.max_ib_size),
-    _gpuISA(*this),
-    vmWaitCnt(-1),
-    expWaitCnt(-1),
-    lgkmWaitCnt(-1),
-    vmemInstsIssued(0),
-    expInstsIssued(0),
-    lgkmInstsIssued(0),
-    sleepCnt(0),
-    barId(WFBarrier::InvalidID),
-    stats(this)
+Wavefront::Wavefront(const Params &p)
+    : SimObject(p),
+      wfSlotId(p.wf_slot_id),
+      simdId(p.simdId),
+      maxIbSize(p.max_ib_size),
+      _gpuISA(*this),
+      vmWaitCnt(-1),
+      expWaitCnt(-1),
+      lgkmWaitCnt(-1),
+      vmemInstsIssued(0),
+      expInstsIssued(0),
+      lgkmInstsIssued(0),
+      sleepCnt(0),
+      barId(WFBarrier::InvalidID),
+      stats(this)
 {
     lastTrace = 0;
     execUnitId = -1;
@@ -146,48 +146,56 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
             case PrivateSegBuf:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     task->amdQueue.scratch_resource_descriptor[0]);
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting PrivateSegBuffer: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->amdQueue.scratch_resource_descriptor[0]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[0]);
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     task->amdQueue.scratch_resource_descriptor[1]);
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting PrivateSegBuffer: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->amdQueue.scratch_resource_descriptor[1]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[1]);
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     task->amdQueue.scratch_resource_descriptor[2]);
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting PrivateSegBuffer: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->amdQueue.scratch_resource_descriptor[2]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[2]);
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     task->amdQueue.scratch_resource_descriptor[3]);
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting PrivateSegBuffer: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->amdQueue.scratch_resource_descriptor[3]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[3]);
                 break;
             case DispatchPtr:
                 physSgprIdx =
@@ -196,20 +204,20 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                     physSgprIdx, bits(host_disp_pkt_addr, 31, 0));
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting DispatchPtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(host_disp_pkt_addr, 31, 0));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting DispatchPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(host_disp_pkt_addr, 31, 0));
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
                 computeUnit->srf[simdId]->write(
                     physSgprIdx, bits(host_disp_pkt_addr, 63, 32));
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting DispatchPtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(host_disp_pkt_addr, 63, 32));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting DispatchPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(host_disp_pkt_addr, 63, 32));
 
                 ++regInitIdx;
                 break;
@@ -220,58 +228,58 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                     physSgprIdx, bits(task->hostAMDQueueAddr, 31, 0));
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting QueuePtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(task->hostAMDQueueAddr, 31, 0));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting QueuePtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(task->hostAMDQueueAddr, 31, 0));
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
                 computeUnit->srf[simdId]->write(
                     physSgprIdx, bits(task->hostAMDQueueAddr, 63, 32));
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting QueuePtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(task->hostAMDQueueAddr, 63, 32));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting QueuePtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(task->hostAMDQueueAddr, 63, 32));
 
                 ++regInitIdx;
                 break;
             case KernargSegPtr:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(
-                    physSgprIdx, bits(kernarg_addr, 31, 0));
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                bits(kernarg_addr, 31, 0));
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting KernargSegPtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(kernarg_addr, 31, 0));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting KernargSegPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(kernarg_addr, 31, 0));
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(
-                    physSgprIdx, bits(kernarg_addr, 63, 32));
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                bits(kernarg_addr, 63, 32));
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting KernargSegPtr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    bits(kernarg_addr, 63, 32));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting KernargSegPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, bits(kernarg_addr, 63, 32));
 
                 ++regInitIdx;
                 break;
             case DispatchId:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(
-                    physSgprIdx, task->dispatchId());
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                task->dispatchId());
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting DispatchId: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->dispatchId());
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting DispatchId: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, task->dispatchId());
 
                 // Dispatch ID in gem5 is an int. Set upper 32-bits to zero.
                 physSgprIdx =
@@ -282,18 +290,20 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
             case FlatScratchInit:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     (TheGpuISA::ScalarRegU32)(
                         task->amdQueue.scratch_backing_memory_location &
                         0xffffffff));
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting FlatScratch Addr: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    (TheGpuISA::ScalarRegU32)(
-                        task->amdQueue.scratch_backing_memory_location &
-                        0xffffffff));
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting FlatScratch Addr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        (TheGpuISA::ScalarRegU32)(
+                            task->amdQueue.scratch_backing_memory_location &
+                            0xffffffff));
 
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
@@ -303,10 +313,11 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                     physSgprIdx, task->amdQueue.scratch_workitem_byte_size);
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting FlatScratch size: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->amdQueue.scratch_workitem_byte_size);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting FlatScratch size: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        task->amdQueue.scratch_workitem_byte_size);
                 /**
                  * Since flat scratch init is needed for this kernel, this
                  * kernel is going to have flat memory instructions and we
@@ -333,22 +344,23 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 hidden_priv_base =
                     (uint64_t)task->amdQueue.scratch_resource_descriptor[0] |
                     (((uint64_t)task->amdQueue.scratch_resource_descriptor[1] &
-                         0x000000000000ffff)
-                        << 32);
-                computeUnit->shader->initShHiddenPrivateBase(hidden_priv_base,
+                      0x000000000000ffff)
+                     << 32);
+                computeUnit->shader->initShHiddenPrivateBase(
+                    hidden_priv_base,
                     task->amdQueue.scratch_backing_memory_location);
                 break;
             case PrivateSegSize:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                computeUnit->srf[simdId]->write(
-                    physSgprIdx, task->privMemPerItem());
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                task->privMemPerItem());
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting private segment size: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    task->privMemPerItem());
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting private segment size: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, task->privMemPerItem());
                 break;
             case GridWorkgroupCountX:
                 physSgprIdx =
@@ -359,10 +371,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting num WG X: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    wiCount);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG X: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, wiCount);
                 break;
             case GridWorkgroupCountY:
                 physSgprIdx =
@@ -373,10 +385,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting num WG Y: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    wiCount);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG Y: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, wiCount);
                 break;
             case GridWorkgroupCountZ:
                 physSgprIdx =
@@ -387,10 +399,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting num WG Z: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    wiCount);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG Z: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, wiCount);
                 break;
             case WorkgroupIdX:
                 physSgprIdx =
@@ -399,10 +411,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting WG ID X: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    workGroupId[0]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID X: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, workGroupId[0]);
                 break;
             case WorkgroupIdY:
                 physSgprIdx =
@@ -411,10 +423,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting WG ID Y: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    workGroupId[1]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID Y: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, workGroupId[1]);
                 break;
             case WorkgroupIdZ:
                 physSgprIdx =
@@ -423,10 +435,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting WG ID Z: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    workGroupId[2]);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID Z: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, workGroupId[2]);
                 break;
             case PrivSegWaveByteOffset:
                 physSgprIdx =
@@ -444,17 +456,19 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                  * kernel. to get the global ID we multiply the WGID by
                  * the WG size, then add the WFID of the wave within its WG.
                  */
-                computeUnit->srf[simdId]->write(physSgprIdx,
+                computeUnit->srf[simdId]->write(
+                    physSgprIdx,
                     1024 * (wgId * (wgSz / 64) + wfId) *
                         task->amdQueue.compute_tmpring_size_wavesize);
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting Private Seg Offset: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    1024 * (wgId * (wgSz / 64) + wfId) *
-                        task->amdQueue.compute_tmpring_size_wavesize);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting Private Seg Offset: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx,
+                        1024 * (wgId * (wgSz / 64) + wfId) *
+                            task->amdQueue.compute_tmpring_size_wavesize);
                 break;
             case WorkgroupInfo:
                 firstWave = (wfId == 0) ? 1 : 0;
@@ -468,10 +482,10 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
                 ++regInitIdx;
                 DPRINTF(GPUInitAbi,
-                    "CU%d: WF[%d][%d]: wave[%d] "
-                    "Setting WG Info: s[%d] = %x\n",
-                    computeUnit->cu_id, simdId, wfSlotId, wfDynId, physSgprIdx,
-                    finalValue);
+                        "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG Info: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                        physSgprIdx, finalValue);
                 break;
             default:
                 fatal("SGPR enable bit %i not supported\n", en_bit);
@@ -552,7 +566,7 @@ Wavefront::setStatus(status_e newStatus)
     if (computeUnit->idleCUTimeout > 0) {
         // Wavefront's status transitions to stalled or stopped
         if ((newStatus == S_STOPPED || newStatus == S_STALLED ||
-                newStatus == S_WAITCNT || newStatus == S_BARRIER) &&
+             newStatus == S_WAITCNT || newStatus == S_BARRIER) &&
             (status != newStatus)) {
             computeUnit->idleWfs++;
             assert(computeUnit->idleWfs <=
@@ -564,7 +578,7 @@ Wavefront::setStatus(status_e newStatus)
             // Wavefront's status transitions to an active state (from
             // a stopped or stalled state)
         } else if ((status == S_STOPPED || status == S_STALLED ||
-                       status == S_WAITCNT || status == S_BARRIER) &&
+                    status == S_WAITCNT || status == S_BARRIER) &&
                    (status != newStatus)) {
             // if all WFs in the CU were idle then check if the idleness
             // period exceeded the timeout threshold
@@ -572,8 +586,9 @@ Wavefront::setStatus(status_e newStatus)
                 (computeUnit->shader->n_wf * computeUnit->numVectorALUs)) {
                 panic_if((curTick() - lastNonIdleTick) >=
                              computeUnit->idleCUTimeout,
-                    "CU%d has been idle for %d ticks at tick %d",
-                    computeUnit->cu_id, computeUnit->idleCUTimeout, curTick());
+                         "CU%d has been idle for %d ticks at tick %d",
+                         computeUnit->cu_id, computeUnit->idleCUTimeout,
+                         curTick());
             }
             computeUnit->idleWfs--;
             assert(computeUnit->idleWfs >= 0);
@@ -654,8 +669,8 @@ Wavefront::isOldestInstScalarALU()
 
     if (status != S_STOPPED && ii->isScalar() &&
         (ii->isNop() || ii->isReturn() || ii->isEndOfKernel() ||
-            ii->isBranch() || ii->isALU() ||
-            (ii->isKernArgSeg() && ii->isLoad()))) {
+         ii->isBranch() || ii->isALU() ||
+         (ii->isKernArgSeg() && ii->isLoad()))) {
         return true;
     }
 
@@ -670,7 +685,7 @@ Wavefront::isOldestInstVectorALU()
 
     if (status != S_STOPPED && !ii->isScalar() &&
         (ii->isNop() || ii->isReturn() || ii->isBranch() || ii->isALU() ||
-            ii->isEndOfKernel() || (ii->isKernArgSeg() && ii->isLoad()))) {
+         ii->isEndOfKernel() || (ii->isKernArgSeg() && ii->isLoad()))) {
         return true;
     }
 
@@ -779,12 +794,12 @@ Wavefront::validateRequestCounters()
 {
     panic_if(wrGmReqsInPipe < 0 || rdGmReqsInPipe < 0 || wrLmReqsInPipe < 0 ||
                  rdLmReqsInPipe < 0 || outstandingReqs < 0,
-        "Negative requests in pipe for WF%d for slot%d"
-        " and SIMD%d: Rd GlobalMem Reqs=%d, Wr GlobalMem Reqs=%d,"
-        " Rd LocalMem Reqs=%d, Wr LocalMem Reqs=%d,"
-        " Outstanding Reqs=%d\n",
-        wfDynId, wfSlotId, simdId, rdGmReqsInPipe, wrGmReqsInPipe,
-        rdLmReqsInPipe, wrLmReqsInPipe, outstandingReqs);
+             "Negative requests in pipe for WF%d for slot%d"
+             " and SIMD%d: Rd GlobalMem Reqs=%d, Wr GlobalMem Reqs=%d,"
+             " Rd LocalMem Reqs=%d, Wr LocalMem Reqs=%d,"
+             " Outstanding Reqs=%d\n",
+             wfDynId, wfSlotId, simdId, rdGmReqsInPipe, wrGmReqsInPipe,
+             rdLmReqsInPipe, wrLmReqsInPipe, outstandingReqs);
 }
 
 void
@@ -820,8 +835,8 @@ Wavefront::reserveGmResource(GPUDynInstPtr ii)
 void
 Wavefront::reserveLmResource(GPUDynInstPtr ii)
 {
-    fatal_if(
-        ii->isScalar(), "Scalar instructions can not access Shared memory!!!");
+    fatal_if(ii->isScalar(),
+             "Scalar instructions can not access Shared memory!!!");
     if (ii->isLoad()) {
         rdLmReqsInPipe++;
     } else if (ii->isStore()) {
@@ -875,7 +890,7 @@ Wavefront::reserveResources()
         reserveLmResource(ii);
     } else if (ii->isPrivateSeg()) {
         fatal_if(ii->isScalar(),
-            "Scalar instructions can not access Private memory!!!");
+                 "Scalar instructions can not access Private memory!!!");
         reserveGmResource(ii);
     } else {
         panic("reserveResources -> Couldn't process op!\n");
@@ -919,10 +934,10 @@ Wavefront::exec()
 
     const Addr old_pc = pc();
     DPRINTF(GPUExec,
-        "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
-        "(pc: %#x; seqNum: %d)\n",
-        computeUnit->cu_id, simdId, wfSlotId, wfDynId, ii->disassemble(),
-        old_pc, ii->seqNum());
+            "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
+            "(pc: %#x; seqNum: %d)\n",
+            computeUnit->cu_id, simdId, wfSlotId, wfDynId, ii->disassemble(),
+            old_pc, ii->seqNum());
 
     ii->execute(ii);
     // delete the dynamic instruction from the pipeline map
@@ -962,8 +977,8 @@ Wavefront::exec()
         for (const auto &virtIdx : srcVecOp.virtIndices()) {
             // This check should never fail, but to be safe we check
             if (rawDist.find(virtIdx) != rawDist.end()) {
-                stats.vecRawDistance.sample(
-                    stats.numInstrExecuted.value() - rawDist[virtIdx]);
+                stats.vecRawDistance.sample(stats.numInstrExecuted.value() -
+                                            rawDist[virtIdx]);
             }
             // increment number of reads to this register
             vecReads[virtIdx]++;
@@ -991,11 +1006,12 @@ Wavefront::exec()
         instructionBuffer.pop_front();
     } else {
         DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave%d %s taken branch\n",
-            computeUnit->cu_id, simdId, wfSlotId, wfDynId, ii->disassemble());
+                computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                ii->disassemble());
         discardFetch();
     }
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] (pc: %#x)\n",
-        computeUnit->cu_id, simdId, wfSlotId, wfDynId, pc());
+            computeUnit->cu_id, simdId, wfSlotId, wfDynId, pc());
 
     if (computeUnit->shader->hsail_mode == Shader::SIMT) {
         const int num_active_lanes = execMask().count();
@@ -1428,8 +1444,8 @@ Wavefront::computeActualWgSz(HSAQueueEntry *task)
 {
     actualWgSzTotal = 1;
     for (int d = 0; d < HSAQueueEntry::MAX_DIM; ++d) {
-        actualWgSz[d] = std::min(
-            workGroupSz[d], gridSz[d] - task->wgId(d) * workGroupSz[d]);
+        actualWgSz[d] = std::min(workGroupSz[d],
+                                 gridSz[d] - task->wgId(d) * workGroupSz[d]);
         actualWgSzTotal *= actualWgSz[d];
     }
 }
@@ -1460,31 +1476,31 @@ Wavefront::releaseBarrier()
     barId = WFBarrier::InvalidID;
 }
 
-Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(
-        numInstrExecuted, "number of instructions executed by this WF slot"),
-    ADD_STAT(schCycles, "number of cycles spent in schedule stage"),
-    ADD_STAT(schStalls, "number of cycles WF is stalled in SCH stage"),
-    ADD_STAT(schRfAccessStalls, "number of cycles wave selected in SCH but "
-                                "RF denied adding instruction"),
-    ADD_STAT(schResourceStalls, "number of cycles stalled in sch by resource"
-                                " not available"),
-    ADD_STAT(schOpdNrdyStalls, "number of cycles stalled in sch waiting for "
-                               "RF reads to complete"),
-    ADD_STAT(schLdsArbStalls,
-        "number of cycles wave stalled due to LDS-VRF arbitration"),
-    // FIXME: the name of the WF needs to be unique
-    ADD_STAT(numTimesBlockedDueWAXDependencies,
-        "number of times the wf's "
-        "instructions are blocked due to WAW or WAR dependencies"),
-    // FIXME: the name of the WF needs to be unique
-    ADD_STAT(numTimesBlockedDueRAWDependencies,
-        "number of times the wf's "
-        "instructions are blocked due to RAW dependencies"),
-    ADD_STAT(vecRawDistance,
-        "Count of RAW distance in dynamic instructions for this WF"),
-    ADD_STAT(readsPerWrite, "Count of Vector reads per write for this WF")
+Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numInstrExecuted,
+               "number of instructions executed by this WF slot"),
+      ADD_STAT(schCycles, "number of cycles spent in schedule stage"),
+      ADD_STAT(schStalls, "number of cycles WF is stalled in SCH stage"),
+      ADD_STAT(schRfAccessStalls, "number of cycles wave selected in SCH but "
+                                  "RF denied adding instruction"),
+      ADD_STAT(schResourceStalls, "number of cycles stalled in sch by resource"
+                                  " not available"),
+      ADD_STAT(schOpdNrdyStalls, "number of cycles stalled in sch waiting for "
+                                 "RF reads to complete"),
+      ADD_STAT(schLdsArbStalls,
+               "number of cycles wave stalled due to LDS-VRF arbitration"),
+      // FIXME: the name of the WF needs to be unique
+      ADD_STAT(numTimesBlockedDueWAXDependencies,
+               "number of times the wf's "
+               "instructions are blocked due to WAW or WAR dependencies"),
+      // FIXME: the name of the WF needs to be unique
+      ADD_STAT(numTimesBlockedDueRAWDependencies,
+               "number of times the wf's "
+               "instructions are blocked due to RAW dependencies"),
+      ADD_STAT(vecRawDistance,
+               "Count of RAW distance in dynamic instructions for this WF"),
+      ADD_STAT(readsPerWrite, "Count of Vector reads per write for this WF")
 {
     vecRawDistance.init(0, 20, 1);
     readsPerWrite.init(0, 4, 1);

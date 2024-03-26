@@ -62,8 +62,8 @@ struct DisplayTimings : public Serializable
      * @param vbp Vertical back porch in scan lines.
      */
     DisplayTimings(unsigned width, unsigned height, unsigned hbp,
-        unsigned h_sync, unsigned hfp, unsigned vbp, unsigned v_sync,
-        unsigned vfp);
+                   unsigned h_sync, unsigned hfp, unsigned vbp,
+                   unsigned v_sync, unsigned vfp);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -162,8 +162,8 @@ struct DisplayTimings : public Serializable
 class BasePixelPump : public EventManager, public Clocked, public Serializable
 {
   public:
-    BasePixelPump(
-        EventManager &em, ClockDomain &pxl_clk, unsigned pixel_chunk);
+    BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
+                  unsigned pixel_chunk);
     virtual ~BasePixelPump();
 
     void serialize(CheckpointOut &cp) const override;

@@ -49,41 +49,41 @@ namespace gem5
 {
 namespace o3
 {
-ElasticTrace::ElasticTrace(const ElasticTraceParams &params) :
-    ProbeListenerObject(params),
-    regEtraceListenersEvent([this] { regEtraceListeners(); }, name()),
-    firstWin(true),
-    lastClearedSeqNum(0),
-    depWindowSize(params.depWindowSize),
-    dataTraceStream(nullptr),
-    instTraceStream(nullptr),
-    startTraceInst(params.startTraceInst),
-    allProbesReg(false),
-    traceVirtAddr(params.traceVirtAddr),
-    stats(this)
+ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
+    : ProbeListenerObject(params),
+      regEtraceListenersEvent([this] { regEtraceListeners(); }, name()),
+      firstWin(true),
+      lastClearedSeqNum(0),
+      depWindowSize(params.depWindowSize),
+      dataTraceStream(nullptr),
+      instTraceStream(nullptr),
+      startTraceInst(params.startTraceInst),
+      allProbesReg(false),
+      traceVirtAddr(params.traceVirtAddr),
+      stats(this)
 {
     cpu = dynamic_cast<CPU *>(params.manager);
 
     fatal_if(!cpu,
-        "Manager of %s is not of type O3CPU and thus does not "
-        "support dependency tracing.\n",
-        name());
+             "Manager of %s is not of type O3CPU and thus does not "
+             "support dependency tracing.\n",
+             name());
 
     fatal_if(depWindowSize == 0,
-        "depWindowSize parameter must be non-zero. "
-        "Recommended size is 3x ROB size in the O3CPU.\n");
+             "depWindowSize parameter must be non-zero. "
+             "Recommended size is 3x ROB size in the O3CPU.\n");
 
     fatal_if(cpu->numThreads > 1,
-        "numThreads = %i, %s supports tracing for"
-        "single-threaded workload only",
-        cpu->numThreads, name());
+             "numThreads = %i, %s supports tracing for"
+             "single-threaded workload only",
+             cpu->numThreads, name());
     // Initialize the protobuf output stream
     fatal_if(params.instFetchTraceFile == "",
-        "Assign instruction fetch "
-        "trace file path to instFetchTraceFile");
+             "Assign instruction fetch "
+             "trace file path to instFetchTraceFile");
     fatal_if(params.dataDepTraceFile == "",
-        "Assign data dependency "
-        "trace file path to dataDepTraceFile");
+             "Assign data dependency "
+             "trace file path to dataDepTraceFile");
     std::string filename =
         simout.resolve(name() + "." + params.instFetchTraceFile);
     instTraceStream = new ProtoOutputStream(filename);
@@ -109,7 +109,7 @@ void
 ElasticTrace::regProbeListeners()
 {
     inform("@%llu: regProbeListeners() called, startTraceInst = %llu",
-        curTick(), startTraceInst);
+           curTick(), startTraceInst);
     if (startTraceInst == 0) {
         // If we want to start tracing from the start of the simulation,
         // register all elastic trace probes now.
@@ -117,8 +117,8 @@ ElasticTrace::regProbeListeners()
     } else {
         // Schedule an event to register all elastic trace probes when
         // specified no. of instructions are committed.
-        cpu->getContext(0)->scheduleInstCountEvent(
-            &regEtraceListenersEvent, startTraceInst);
+        cpu->getContext(0)->scheduleInstCountEvent(&regEtraceListenersEvent,
+                                                   startTraceInst);
     }
 }
 
@@ -128,7 +128,7 @@ ElasticTrace::regEtraceListeners()
     assert(!allProbesReg);
     inform("@%llu: No. of instructions committed = %llu, registering elastic"
            " probe listeners",
-        curTick(), cpu->numSimulatedInsts());
+           curTick(), cpu->numSimulatedInsts());
     // Create new listeners: provide method to be called upon a notify() for
     // each probe point.
     listeners.push_back(new ProbeListenerArg<ElasticTrace, RequestPtr>(
@@ -152,8 +152,8 @@ void
 ElasticTrace::fetchReqTrace(const RequestPtr &req)
 {
     DPRINTFR(ElasticTrace, "Fetch Req %i,(%lli,%lli,%lli),%i,%i,%lli\n",
-        (MemCmd::ReadReq), req->getPC(), req->getVaddr(), req->getPaddr(),
-        req->getFlags(), req->getSize(), curTick());
+             (MemCmd::ReadReq), req->getPC(), req->getVaddr(), req->getPaddr(),
+             req->getFlags(), req->getSize(), curTick());
 
     // Create a protobuf message including the request fields necessary to
     // recreate the request in the TraceCPU.
@@ -179,14 +179,14 @@ ElasticTrace::recordExecTick(const DynInstConstPtr &dyn_inst)
     if (dyn_inst->seqNum <= lastClearedSeqNum) {
         DPRINTFR(ElasticTrace, "[sn:%lli] Ignoring in execute as instruction \
         has already retired (mostly squashed)",
-            dyn_inst->seqNum);
+                 dyn_inst->seqNum);
         // Do nothing as program has proceeded and this inst has been
         // propagated backwards to handle something.
         return;
     }
 
     DPRINTFR(ElasticTrace, "[sn:%lli] Execute Tick = %i\n", dyn_inst->seqNum,
-        curTick());
+             curTick());
     // Either the execution info object will already exist if this
     // instruction had a register dependency recorded in the rename probe
     // listener before entering execute stage or it will not exist and will
@@ -215,14 +215,14 @@ ElasticTrace::recordToCommTick(const DynInstConstPtr &dyn_inst)
     auto itr_exec_info = tempStore.find(dyn_inst->seqNum);
     if (itr_exec_info == tempStore.end()) {
         DPRINTFR(ElasticTrace,
-            "recordToCommTick: [sn:%lli] Not in temp store,"
-            " skipping.\n",
-            dyn_inst->seqNum);
+                 "recordToCommTick: [sn:%lli] Not in temp store,"
+                 " skipping.\n",
+                 dyn_inst->seqNum);
         return;
     }
 
     DPRINTFR(ElasticTrace, "[sn:%lli] To Commit Tick = %i\n", dyn_inst->seqNum,
-        curTick());
+             curTick());
     InstExecInfo *exec_info_ptr = itr_exec_info->second;
     exec_info_ptr->toCommitTick = curTick();
 }
@@ -251,9 +251,10 @@ ElasticTrace::updateRegDep(const DynInstConstPtr &dyn_inst)
             // Get the physical register index of the i'th source register.
             PhysRegIdPtr phys_src_reg = dyn_inst->renamedSrcIdx(src_idx);
             DPRINTFR(ElasticTrace,
-                "[sn:%lli] Check map for src reg"
-                " %i (%s)\n",
-                seq_num, phys_src_reg->flatIndex(), phys_src_reg->className());
+                     "[sn:%lli] Check map for src reg"
+                     " %i (%s)\n",
+                     seq_num, phys_src_reg->flatIndex(),
+                     phys_src_reg->className());
             auto itr_writer = physRegDepMap.find(phys_src_reg->flatIndex());
             if (itr_writer != physRegDepMap.end()) {
                 InstSeqNum last_writer = itr_writer->second;
@@ -282,9 +283,10 @@ ElasticTrace::updateRegDep(const DynInstConstPtr &dyn_inst)
             // register.
             PhysRegIdPtr phys_dest_reg = dyn_inst->renamedDestIdx(dest_idx);
             DPRINTFR(ElasticTrace,
-                "[sn:%lli] Update map for dest reg"
-                " %i (%s)\n",
-                seq_num, phys_dest_reg->flatIndex(), dest_reg.className());
+                     "[sn:%lli] Update map for dest reg"
+                     " %i (%s)\n",
+                     seq_num, phys_dest_reg->flatIndex(),
+                     dest_reg.className());
             physRegDepMap[phys_dest_reg->flatIndex()] = seq_num;
         }
     }
@@ -295,8 +297,8 @@ ElasticTrace::updateRegDep(const DynInstConstPtr &dyn_inst)
 void
 ElasticTrace::removeRegDepMapEntry(const SeqNumRegPair &inst_reg_pair)
 {
-    DPRINTFR(
-        ElasticTrace, "Remove Map entry for Reg %i\n", inst_reg_pair.second);
+    DPRINTFR(ElasticTrace, "Remove Map entry for Reg %i\n",
+             inst_reg_pair.second);
     auto itr_regdep_map = physRegDepMap.find(inst_reg_pair.second);
     if (itr_regdep_map != physRegDepMap.end())
         physRegDepMap.erase(itr_regdep_map);
@@ -315,7 +317,7 @@ ElasticTrace::addSquashedInst(const DynInstConstPtr &head_inst)
     // If there is a squashed load for which a read request was
     // sent before it got squashed then add it to the trace.
     DPRINTFR(ElasticTrace, "Attempt to add squashed inst [sn:%lli]\n",
-        head_inst->seqNum);
+             head_inst->seqNum);
     // Get pointer to the execution info object corresponding to the inst.
     InstExecInfo *exec_info_ptr = itr_exec_info->second;
     if (head_inst->isLoad() && exec_info_ptr->executeTick != MaxTick &&
@@ -333,7 +335,7 @@ void
 ElasticTrace::addCommittedInst(const DynInstConstPtr &head_inst)
 {
     DPRINTFR(ElasticTrace, "Attempt to add committed inst [sn:%lli]\n",
-        head_inst->seqNum);
+             head_inst->seqNum);
 
     // Add the instruction to the depTrace.
     if (!head_inst->isNop()) {
@@ -344,9 +346,9 @@ ElasticTrace::addCommittedInst(const DynInstConstPtr &head_inst)
         auto itr_temp_store = tempStore.find(head_inst->seqNum);
         if (itr_temp_store == tempStore.end()) {
             DPRINTFR(ElasticTrace,
-                "addCommittedInst: [sn:%lli] Not in temp "
-                "store, skipping.\n",
-                head_inst->seqNum);
+                     "addCommittedInst: [sn:%lli] Not in temp "
+                     "store, skipping.\n",
+                     head_inst->seqNum);
             return;
         }
 
@@ -368,21 +370,21 @@ ElasticTrace::addCommittedInst(const DynInstConstPtr &head_inst)
         // cost of bigger traces.
         if (head_inst->getFault() != NoFault) {
             DPRINTF(ElasticTrace,
-                "%s [sn:%lli] has faulted so "
-                "skip adding it to the trace\n",
-                (head_inst->isMemRef() ? "Load/store" : "Comp inst."),
-                head_inst->seqNum);
+                    "%s [sn:%lli] has faulted so "
+                    "skip adding it to the trace\n",
+                    (head_inst->isMemRef() ? "Load/store" : "Comp inst."),
+                    head_inst->seqNum);
         } else if (head_inst->isMemRef() && !head_inst->hasRequest()) {
             DPRINTF(ElasticTrace,
-                "Load/store [sn:%lli]  has no request so "
-                "skip adding it to the trace\n",
-                head_inst->seqNum);
+                    "Load/store [sn:%lli]  has no request so "
+                    "skip adding it to the trace\n",
+                    head_inst->seqNum);
         } else if (!head_inst->readPredicate()) {
             DPRINTF(ElasticTrace,
-                "%s [sn:%lli] is predicated false so "
-                "skip adding it to the trace\n",
-                (head_inst->isMemRef() ? "Load/store" : "Comp inst."),
-                head_inst->seqNum);
+                    "%s [sn:%lli] is predicated false so "
+                    "skip adding it to the trace\n",
+                    (head_inst->isMemRef() ? "Load/store" : "Comp inst."),
+                    head_inst->seqNum);
         } else {
             // Add record to depTrace with commit parameter as true.
             addDepTraceRecord(head_inst, exec_info_ptr, true);
@@ -394,8 +396,8 @@ ElasticTrace::addCommittedInst(const DynInstConstPtr &head_inst)
 }
 
 void
-ElasticTrace::addDepTraceRecord(
-    const DynInstConstPtr &head_inst, InstExecInfo *exec_info_ptr, bool commit)
+ElasticTrace::addDepTraceRecord(const DynInstConstPtr &head_inst,
+                                InstExecInfo *exec_info_ptr, bool commit)
 {
     // Create a record to assign dynamic intruction related fields.
     TraceInfo *new_record = new TraceInfo;
@@ -436,7 +438,7 @@ ElasticTrace::addDepTraceRecord(
         // Store the record in depTrace.
         depTrace.push_back(new_record);
         DPRINTF(ElasticTrace, "Added first inst record %lli to DepTrace.\n",
-            new_record->instNum);
+                new_record->instNum);
         return;
     }
 
@@ -456,9 +458,9 @@ ElasticTrace::addDepTraceRecord(
             // computational delay
             new_record->physRegDepList.push_back(*dep_set_it);
             DPRINTF(ElasticTrace,
-                "Inst %lli has register dependency on "
-                "%lli\n",
-                new_record->instNum, *dep_set_it);
+                    "Inst %lli has register dependency on "
+                    "%lli\n",
+                    new_record->instNum, *dep_set_it);
             TraceInfo *reg_dep = trace_info_itr->second;
             reg_dep->numDepts++;
             compDelayPhysRegDep(reg_dep, new_record);
@@ -475,9 +477,9 @@ ElasticTrace::addDepTraceRecord(
             // picked up by the commit probe listener. But a request is not
             // issued and registers are not written to in these cases.
             DPRINTF(ElasticTrace,
-                "Inst %lli has register dependency on "
-                "%lli is skipped\n",
-                new_record->instNum, *dep_set_it);
+                    "Inst %lli has register dependency on "
+                    "%lli is skipped\n",
+                    new_record->instNum, *dep_set_it);
         }
     }
 
@@ -506,7 +508,7 @@ ElasticTrace::addDepTraceRecord(
     // Store the record in depTrace.
     depTrace.push_back(new_record);
     DPRINTF(ElasticTrace, "Added %s inst %lli to DepTrace.\n",
-        (commit ? "committed" : "squashed"), new_record->instNum);
+            (commit ? "committed" : "squashed"), new_record->instNum);
 
     // To process the number of records specified by depWindowSize in the
     // forward direction, the depTrace must have twice as many records
@@ -525,8 +527,8 @@ ElasticTrace::addDepTraceRecord(
 }
 
 void
-ElasticTrace::updateCommitOrderDep(
-    TraceInfo *new_record, bool find_load_not_store)
+ElasticTrace::updateCommitOrderDep(TraceInfo *new_record,
+                                   bool find_load_not_store)
 {
     assert(new_record->isStore());
     // Iterate in reverse direction to search for the last committed
@@ -615,7 +617,8 @@ void
 ElasticTrace::assignRobDep(TraceInfo *past_record, TraceInfo *new_record)
 {
     DPRINTF(ElasticTrace, "%s %lli has ROB dependency on %lli\n",
-        new_record->typeToStr(), new_record->instNum, past_record->instNum);
+            new_record->typeToStr(), new_record->instNum,
+            past_record->instNum);
     // Add dependency on past record
     new_record->robDepList.push_back(past_record->instNum);
     // Update new_record's compute delay with respect to the past record
@@ -628,8 +631,8 @@ ElasticTrace::assignRobDep(TraceInfo *past_record, TraceInfo *new_record)
 }
 
 bool
-ElasticTrace::hasStoreCommitted(
-    TraceInfo *past_record, Tick execute_tick) const
+ElasticTrace::hasStoreCommitted(TraceInfo *past_record,
+                                Tick execute_tick) const
 {
     return (past_record->isStore() && past_record->commitTick <= execute_tick);
 }
@@ -652,8 +655,8 @@ ElasticTrace::hasLoadBeenSent(TraceInfo *past_record, Tick execute_tick) const
 bool
 ElasticTrace::hasCompCompleted(TraceInfo *past_record, Tick execute_tick) const
 {
-    return (
-        past_record->isComp() && past_record->toCommitTick <= execute_tick);
+    return (past_record->isComp() &&
+            past_record->toCommitTick <= execute_tick);
 }
 
 void
@@ -688,7 +691,7 @@ ElasticTrace::compDelayRob(TraceInfo *past_record, TraceInfo *new_record)
     Tick execution_tick = 0, completion_tick = 0;
 
     DPRINTF(ElasticTrace, "Seq num %lli has ROB dependency on seq num %lli.\n",
-        new_record->instNum, past_record->instNum);
+            new_record->instNum, past_record->instNum);
 
     // Get the tick when the node is executed as per the modelling of
     // computation delay
@@ -709,7 +712,7 @@ ElasticTrace::compDelayRob(TraceInfo *past_record, TraceInfo *new_record)
     comp_delay = execution_tick - completion_tick;
 
     DPRINTF(ElasticTrace, "Computational delay is %lli - %lli = %lli\n",
-        execution_tick, completion_tick, comp_delay);
+            execution_tick, completion_tick, comp_delay);
 
     // Assign the computational delay with respect to the dependency which
     // completes the latest.
@@ -718,12 +721,12 @@ ElasticTrace::compDelayRob(TraceInfo *past_record, TraceInfo *new_record)
     else
         new_record->compDelay = std::min(comp_delay, new_record->compDelay);
     DPRINTF(ElasticTrace, "Final computational delay = %lli.\n",
-        new_record->compDelay);
+            new_record->compDelay);
 }
 
 void
-ElasticTrace::compDelayPhysRegDep(
-    TraceInfo *past_record, TraceInfo *new_record)
+ElasticTrace::compDelayPhysRegDep(TraceInfo *past_record,
+                                  TraceInfo *new_record)
 {
     // The computation delay is the delay between the completion tick of the
     // inst. pointed to by past_record and the execution tick of its dependent
@@ -732,9 +735,9 @@ ElasticTrace::compDelayPhysRegDep(
     Tick execution_tick = 0, completion_tick = 0;
 
     DPRINTF(ElasticTrace,
-        "Seq. num %lli has register dependency on seq. num"
-        " %lli.\n",
-        new_record->instNum, past_record->instNum);
+            "Seq. num %lli has register dependency on seq. num"
+            " %lli.\n",
+            new_record->instNum, past_record->instNum);
 
     // Get the tick when the node is executed as per the modelling of
     // computation delay
@@ -752,7 +755,7 @@ ElasticTrace::compDelayPhysRegDep(
     assert(execution_tick >= completion_tick);
     comp_delay = execution_tick - completion_tick;
     DPRINTF(ElasticTrace, "Computational delay is %lli - %lli = %lli\n",
-        execution_tick, completion_tick, comp_delay);
+            execution_tick, completion_tick, comp_delay);
 
     // Assign the computational delay with respect to the dependency which
     // completes the latest.
@@ -761,7 +764,7 @@ ElasticTrace::compDelayPhysRegDep(
     else
         new_record->compDelay = std::min(comp_delay, new_record->compDelay);
     DPRINTF(ElasticTrace, "Final computational delay = %lli.\n",
-        new_record->compDelay);
+            new_record->compDelay);
 }
 
 Tick
@@ -808,15 +811,16 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
         // that we do include in the trace.
         if (!temp_ptr->isComp() || temp_ptr->numDepts != 0) {
             DPRINTFR(ElasticTrace,
-                "Instruction with seq. num %lli "
-                "is as follows:\n",
-                temp_ptr->instNum);
+                     "Instruction with seq. num %lli "
+                     "is as follows:\n",
+                     temp_ptr->instNum);
             if (temp_ptr->isLoad() || temp_ptr->isStore()) {
                 DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
                 DPRINTFR(ElasticTrace,
-                    "\thas a request with phys addr %i, "
-                    "size %i, flags %i\n",
-                    temp_ptr->physAddr, temp_ptr->size, temp_ptr->reqFlags);
+                         "\thas a request with phys addr %i, "
+                         "size %i, flags %i\n",
+                         temp_ptr->physAddr, temp_ptr->size,
+                         temp_ptr->reqFlags);
             } else {
                 DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
             }
@@ -831,7 +835,7 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             }
             assert(temp_ptr->compDelay != -1);
             DPRINTFR(ElasticTrace, "\thas computational delay %lli\n",
-                temp_ptr->compDelay);
+                     temp_ptr->compDelay);
 
             // Create a protobuf message for the dependency record
             ProtoMessage::InstDepRecord dep_pkt;
@@ -853,8 +857,8 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             }
             while (!temp_ptr->robDepList.empty()) {
                 DPRINTFR(ElasticTrace,
-                    "\thas order (rob) dependency on %lli\n",
-                    temp_ptr->robDepList.front());
+                         "\thas order (rob) dependency on %lli\n",
+                         temp_ptr->robDepList.front());
                 dep_pkt.add_rob_dep(temp_ptr->robDepList.front());
                 temp_ptr->robDepList.pop_front();
             }
@@ -863,7 +867,7 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             }
             while (!temp_ptr->physRegDepList.empty()) {
                 DPRINTFR(ElasticTrace, "\thas register dependency on %lli\n",
-                    temp_ptr->physRegDepList.front());
+                         temp_ptr->physRegDepList.front());
                 dep_pkt.add_reg_dep(temp_ptr->physRegDepList.front());
                 temp_ptr->physRegDepList.pop_front();
             }
@@ -891,30 +895,30 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
     depTrace.erase(dep_trace_itr_start, dep_trace_itr);
 }
 
-ElasticTrace::ElasticTraceStats::ElasticTraceStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(numRegDep, statistics::units::Count::get(),
-        "Number of register dependencies recorded during tracing"),
-    ADD_STAT(numOrderDepStores, statistics::units::Count::get(),
-        "Number of commit order (rob) dependencies for a store "
-        "recorded on a past load/store during tracing"),
-    ADD_STAT(numIssueOrderDepLoads, statistics::units::Count::get(),
-        "Number of loads that got assigned issue order dependency "
-        "because they were dependency-free"),
-    ADD_STAT(numIssueOrderDepStores, statistics::units::Count::get(),
-        "Number of stores that got assigned issue order dependency "
-        "because they were dependency-free"),
-    ADD_STAT(numIssueOrderDepOther, statistics::units::Count::get(),
-        "Number of non load/store insts that got assigned issue order "
-        "dependency because they were dependency-free"),
-    ADD_STAT(numFilteredNodes, statistics::units::Count::get(),
-        "No. of nodes filtered out before writing the output trace"),
-    ADD_STAT(maxNumDependents, statistics::units::Count::get(),
-        "Maximum number or dependents on any instruction"),
-    ADD_STAT(maxTempStoreSize, statistics::units::Count::get(),
-        "Maximum size of the temporary store during the run"),
-    ADD_STAT(maxPhysRegDepMapSize, statistics::units::Count::get(),
-        "Maximum size of register dependency map")
+ElasticTrace::ElasticTraceStats::ElasticTraceStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numRegDep, statistics::units::Count::get(),
+               "Number of register dependencies recorded during tracing"),
+      ADD_STAT(numOrderDepStores, statistics::units::Count::get(),
+               "Number of commit order (rob) dependencies for a store "
+               "recorded on a past load/store during tracing"),
+      ADD_STAT(numIssueOrderDepLoads, statistics::units::Count::get(),
+               "Number of loads that got assigned issue order dependency "
+               "because they were dependency-free"),
+      ADD_STAT(numIssueOrderDepStores, statistics::units::Count::get(),
+               "Number of stores that got assigned issue order dependency "
+               "because they were dependency-free"),
+      ADD_STAT(numIssueOrderDepOther, statistics::units::Count::get(),
+               "Number of non load/store insts that got assigned issue order "
+               "dependency because they were dependency-free"),
+      ADD_STAT(numFilteredNodes, statistics::units::Count::get(),
+               "No. of nodes filtered out before writing the output trace"),
+      ADD_STAT(maxNumDependents, statistics::units::Count::get(),
+               "Maximum number or dependents on any instruction"),
+      ADD_STAT(maxTempStoreSize, statistics::units::Count::get(),
+               "Maximum size of the temporary store during the run"),
+      ADD_STAT(maxPhysRegDepMapSize, statistics::units::Count::get(),
+               "Maximum size of register dependency map")
 {}
 
 const std::string &

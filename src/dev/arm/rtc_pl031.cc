@@ -48,15 +48,15 @@
 
 namespace gem5
 {
-PL031::PL031(const Params &p) :
-    AmbaIntDevice(p, 0x1000),
-    lastWrittenTick(0),
-    loadVal(0),
-    matchVal(0),
-    rawInt(false),
-    maskInt(false),
-    pendingInt(false),
-    matchEvent([this] { counterMatch(); }, name())
+PL031::PL031(const Params &p)
+    : AmbaIntDevice(p, 0x1000),
+      lastWrittenTick(0),
+      loadVal(0),
+      matchVal(0),
+      rawInt(false),
+      maskInt(false),
+      pendingInt(false),
+      matchEvent([this] { counterMatch(); }, name())
 {
     // Make a temporary copy so mkutctime can modify it.
     struct tm local_time = p.time;
@@ -158,7 +158,7 @@ void
 PL031::resyncMatch()
 {
     DPRINTF(Timer, "Setting up new match event match=%d time=%d\n", matchVal,
-        timeVal);
+            timeVal);
 
     uint32_t seconds_until = matchVal - timeVal;
     Tick ticks_until = sim_clock::as_int::s * seconds_until;
@@ -168,8 +168,8 @@ PL031::resyncMatch()
         deschedule(matchEvent);
     }
     schedule(matchEvent, curTick() + ticks_until);
-    DPRINTF(
-        Timer, "-- Scheduling new event for: %d\n", curTick() + ticks_until);
+    DPRINTF(Timer, "-- Scheduling new event for: %d\n",
+            curTick() + ticks_until);
 }
 
 void

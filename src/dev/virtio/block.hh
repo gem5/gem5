@@ -144,7 +144,7 @@ class VirtIOBlock : public VirtIODeviceBase
      * @param size Request data size.
      */
     Status read(const BlkRequest &req, VirtDescriptor *desc_chain,
-        size_t off_data, size_t size);
+                size_t off_data, size_t size);
     /**
      * Device write request.
      *
@@ -156,7 +156,7 @@ class VirtIOBlock : public VirtIODeviceBase
      * @param size Request data size.
      */
     Status write(const BlkRequest &req, VirtDescriptor *desc_chain,
-        size_t off_data, size_t size);
+                 size_t off_data, size_t size);
 
   protected:
     /**
@@ -166,8 +166,8 @@ class VirtIOBlock : public VirtIODeviceBase
     {
       public:
         RequestQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-            VirtIOBlock &_parent) :
-            VirtQueue(proxy, bo, size), parent(_parent)
+                     VirtIOBlock &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
         {}
         virtual ~RequestQueue() {}
 

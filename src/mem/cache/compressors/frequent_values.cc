@@ -43,28 +43,28 @@ namespace gem5
 {
 namespace compression
 {
-FrequentValues::FrequentValues(const Params &p) :
-    Base(p),
-    useHuffmanEncoding(p.max_code_length != 0),
-    indexEncoder(p.max_code_length),
-    counterBits(p.counter_bits),
-    codeGenerationTicks(p.code_generation_ticks),
-    checkSaturation(p.check_saturation),
-    numVFTEntries(p.vft_entries),
-    numSamples(p.num_samples),
-    takenSamples(0),
-    phase(SAMPLING),
-    VFT(p.vft_assoc, p.vft_entries, p.vft_indexing_policy,
-        p.vft_replacement_policy, VFTEntry(counterBits)),
-    codeGenerationEvent([this] { phase = COMPRESSING; }, name())
+FrequentValues::FrequentValues(const Params &p)
+    : Base(p),
+      useHuffmanEncoding(p.max_code_length != 0),
+      indexEncoder(p.max_code_length),
+      counterBits(p.counter_bits),
+      codeGenerationTicks(p.code_generation_ticks),
+      checkSaturation(p.check_saturation),
+      numVFTEntries(p.vft_entries),
+      numSamples(p.num_samples),
+      takenSamples(0),
+      phase(SAMPLING),
+      VFT(p.vft_assoc, p.vft_entries, p.vft_indexing_policy,
+          p.vft_replacement_policy, VFTEntry(counterBits)),
+      codeGenerationEvent([this] { phase = COMPRESSING; }, name())
 {
     fatal_if((numVFTEntries - 1) > mask(chunkSizeBits),
-        "There are more VFT entries than possible values.");
+             "There are more VFT entries than possible values.");
 }
 
 std::unique_ptr<Base::CompressionData>
-FrequentValues::compress(
-    const std::vector<Chunk> &chunks, Cycles &comp_lat, Cycles &decomp_lat)
+FrequentValues::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                         Cycles &decomp_lat)
 {
     std::unique_ptr<CompData> comp_data =
         std::unique_ptr<CompData>(new CompData());
@@ -114,9 +114,9 @@ FrequentValues::compress(
         length += code.length;
 
         DPRINTF(CacheComp,
-            "Compressed %016x to %016x (Size = %d) "
-            "(Phase: %d)\n",
-            chunk, code.code, length, phase);
+                "Compressed %016x to %016x (Size = %d) "
+                "(Phase: %d)\n",
+                chunk, code.code, length, phase);
 
         comp_data->compressedValues.emplace_back(code, chunk);
 
@@ -157,9 +157,9 @@ FrequentValues::decompress(const CompressionData *comp_data, uint64_t *data)
                 // Either the value will be found and the codes match, or the
                 // value will not be found because it is an uncompressed entry
                 assert(((code.length <= 64) &&
-                           (code.code == comp_chunk.code.code)) ||
+                        (code.code == comp_chunk.code.code)) ||
                        (comp_chunk.code.code ==
-                           indexEncoder.encode(uncompressedValue).code));
+                        indexEncoder.encode(uncompressedValue).code));
             } else {
                 // The value at the given VFT entry must match the one stored,
                 // if it is not the uncompressed value
@@ -170,7 +170,7 @@ FrequentValues::decompress(const CompressionData *comp_data, uint64_t *data)
 
         decomp_chunks.push_back(comp_chunk.value);
         DPRINTF(CacheComp, "Decompressed %016x to %016x\n",
-            comp_chunk.code.code, comp_chunk.value);
+                comp_chunk.code.code, comp_chunk.value);
     }
 
     // Concatenate the decompressed words to generate the cache lines
@@ -178,8 +178,8 @@ FrequentValues::decompress(const CompressionData *comp_data, uint64_t *data)
 }
 
 void
-FrequentValues::sampleValues(
-    const std::vector<uint64_t> &data, bool is_invalidation)
+FrequentValues::sampleValues(const std::vector<uint64_t> &data,
+                             bool is_invalidation)
 {
     const std::vector<Chunk> chunks = toChunks(data.data());
     for (const Chunk &chunk : chunks) {

@@ -64,8 +64,8 @@ class PersistentTable
     ~PersistentTable();
 
     // Public Methods
-    void persistentRequestLock(
-        Addr address, MachineID locker, AccessType type);
+    void persistentRequestLock(Addr address, MachineID locker,
+                               AccessType type);
     void persistentRequestUnlock(Addr address, MachineID unlocker);
     bool okToIssueStarving(Addr address, MachineID machID) const;
     MachineID findSmallest(Addr address) const;

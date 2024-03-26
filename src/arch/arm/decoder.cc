@@ -53,13 +53,13 @@ namespace ArmISA
 {
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
-Decoder::Decoder(const ArmDecoderParams &params) :
-    InstDecoder(params, &data),
-    dvmEnabled(params.dvm_enabled),
-    data(0),
-    fpscrLen(0),
-    fpscrStride(0),
-    decoderFlavor(safe_cast<ISA *>(params.isa)->decoderFlavor())
+Decoder::Decoder(const ArmDecoderParams &params)
+    : InstDecoder(params, &data),
+      dvmEnabled(params.dvm_enabled),
+      data(0),
+      fpscrLen(0),
+      fpscrStride(0),
+      decoderFlavor(safe_cast<ISA *>(params.isa)->decoderFlavor())
 {
     reset();
 
@@ -111,8 +111,8 @@ Decoder::process()
             emi.instBits = emi.instBits | word;
             bigThumb = false;
             consumeBytes(2);
-            DPRINTF(
-                Decoder, "Second half of 32 bit Thumb: %#x.\n", emi.instBits);
+            DPRINTF(Decoder, "Second half of 32 bit Thumb: %#x.\n",
+                    emi.instBits);
         } else {
             uint16_t highBits = word & 0xF800;
             if (highBits == 0xE800 || highBits == 0xF000 ||
@@ -122,8 +122,8 @@ Decoder::process()
                 if (offset == 0) {
                     // We've got the whole thing.
                     emi.instBits = (data >> 16) | (data << 16);
-                    DPRINTF(
-                        Decoder, "All of 32 bit Thumb: %#x.\n", emi.instBits);
+                    DPRINTF(Decoder, "All of 32 bit Thumb: %#x.\n",
+                            emi.instBits);
                     consumeBytes(4);
                 } else {
                     // We only have the first half word.
@@ -145,7 +145,7 @@ Decoder::process()
                     foundIt = true;
                     itBits = bits(word, 7, 0);
                     DPRINTF(Decoder, "IT detected, cond = %#x, mask = %#x\n",
-                        itBits.cond, itBits.mask);
+                            itBits.cond, itBits.mask);
                 }
             }
         }

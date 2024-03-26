@@ -58,12 +58,13 @@ class AddressProfiler
     void clearStats();
 
     void addTraceSample(Addr data_addr, Addr pc_addr, RubyRequestType type,
-        RubyAccessMode access_mode, NodeID id, bool sharing_miss);
+                        RubyAccessMode access_mode, NodeID id,
+                        bool sharing_miss);
     void profileRetry(Addr data_addr, AccessType type, int count);
     void profileGetX(Addr datablock, Addr PC, const Set &owner,
-        const Set &sharers, NodeID requestor);
+                     const Set &sharers, NodeID requestor);
     void profileGetS(Addr datablock, Addr PC, const Set &owner,
-        const Set &sharers, NodeID requestor);
+                     const Set &sharers, NodeID requestor);
 
     void print(std::ostream &out) const;
 
@@ -103,12 +104,12 @@ class AddressProfiler
     int m_num_of_sequencers;
 };
 
-AccessTraceForAddress &lookupTraceForAddress(
-    Addr addr, AddressProfiler::AddressMap &record_map);
+AccessTraceForAddress &
+lookupTraceForAddress(Addr addr, AddressProfiler::AddressMap &record_map);
 
 void printSorted(std::ostream &out, int num_of_sequencers,
-    const AddressProfiler::AddressMap &record_map, std::string description,
-    Profiler *profiler);
+                 const AddressProfiler::AddressMap &record_map,
+                 std::string description, Profiler *profiler);
 
 inline std::ostream &
 operator<<(std::ostream &out, const AddressProfiler &obj)

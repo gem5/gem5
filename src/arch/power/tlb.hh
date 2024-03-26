@@ -54,9 +54,9 @@ struct TlbEntry
 
     TlbEntry() {}
 
-    TlbEntry(
-        Addr asn, Addr vaddr, Addr paddr, bool uncacheable, bool read_only) :
-        _pageStart(paddr)
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr, bool uncacheable,
+             bool read_only)
+        : _pageStart(paddr)
     {
         if (uncacheable || read_only)
             warn("Power TlbEntry does not support uncacheable"
@@ -144,14 +144,15 @@ class TLB : public BaseTLB
     static Fault checkCacheability(const RequestPtr &req);
     Fault translateInst(const RequestPtr &req, ThreadContext *tc);
     Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode) const override;
+                           BaseMMU::Mode mode) const override;
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;

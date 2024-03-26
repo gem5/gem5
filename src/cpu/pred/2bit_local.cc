@@ -49,13 +49,13 @@ namespace gem5
 {
 namespace branch_prediction
 {
-LocalBP::LocalBP(const LocalBPParams &params) :
-    BPredUnit(params),
-    localPredictorSize(params.localPredictorSize),
-    localCtrBits(params.localCtrBits),
-    localPredictorSets(localPredictorSize / localCtrBits),
-    localCtrs(localPredictorSets, SatCounter8(localCtrBits)),
-    indexMask(localPredictorSets - 1)
+LocalBP::LocalBP(const LocalBPParams &params)
+    : BPredUnit(params),
+      localPredictorSize(params.localPredictorSize),
+      localCtrBits(params.localCtrBits),
+      localPredictorSets(localPredictorSize / localCtrBits),
+      localCtrs(localPredictorSets, SatCounter8(localCtrBits)),
+      indexMask(localPredictorSets - 1)
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -76,7 +76,7 @@ LocalBP::LocalBP(const LocalBPParams &params) :
 
 void
 LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-    Addr target, void *&bp_history)
+                         Addr target, void *&bp_history)
 {
     // Place holder for a function that is called to update predictor history
 }
@@ -100,7 +100,7 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void *&bp_history)
 
 void
 LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
-    bool squashed, const StaticInstPtr &inst, Addr target)
+                bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;

@@ -87,21 +87,21 @@ to_lower(const std::string &s)
 // Split the string s into lhs and rhs on the first occurence of the
 // character c. Character c is not included in either lhs or rhs. If
 // character c is not contained within string s, lsh equals s.
-bool split_first(
-    const std::string &s, std::string &lhs, std::string &rhs, char c);
+bool split_first(const std::string &s, std::string &lhs, std::string &rhs,
+                 char c);
 
 // Split the string s into lhs and rhs on the last occurence of the
 // character c. Character c is not included in either lhs or rhs. If
 // character c is not contained within string s, lhs equals s.
-bool split_last(
-    const std::string &s, std::string &lhs, std::string &rhs, char c);
+bool split_last(const std::string &s, std::string &lhs, std::string &rhs,
+                char c);
 
 // Tokenize the string <s> splitting on the character <token>, and
 // place the result in the string vector <vector>.  If <ign> is true,
 // then empty result strings (due to trailing tokens, or consecutive
 // tokens) are skipped.
 void tokenize(std::vector<std::string> &vector, const std::string &s,
-    char token, bool ign = true);
+              char token, bool ign = true);
 
 /**
  * @{
@@ -166,9 +166,9 @@ __to_number(const std::string &value)
  */
 template <class T>
 inline std::enable_if_t<(std::is_integral_v<T> ||
-                            std::is_floating_point_v<T> ||
-                            std::is_enum_v<T>)&&!std::is_same_v<bool, T>,
-    bool>
+                         std::is_floating_point_v<T> ||
+                         std::is_enum_v<T>)&&!std::is_same_v<bool, T>,
+                        bool>
 to_number(const std::string &value, T &retval)
 {
     try {

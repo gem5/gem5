@@ -91,9 +91,9 @@ enum Type
 
 } // namespace auxv
 
-#define GEM5_DEPRECATE_AT(NAME, name) \
-    M5_AT_##NAME \
-        [[deprecated("Replace M5_AT_" #NAME " with gem5::auxv::" #name)]] = \
+#define GEM5_DEPRECATE_AT(NAME, name)                                         \
+    M5_AT_##NAME                                                              \
+        [[deprecated("Replace M5_AT_" #NAME " with gem5::auxv::" #name)]] =   \
             gem5::auxv::name
 
 enum AuxiliaryVectorType

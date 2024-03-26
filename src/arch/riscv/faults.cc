@@ -59,8 +59,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     auto pc_state = tc->pcState().as<PCState>();
 
-    DPRINTFS(
-        Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n", name(), pc_state);
+    DPRINTFS(Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n", name(),
+             pc_state);
 
     if (FullSystem) {
         PrivilegeMode pp = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
@@ -73,7 +73,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // and is not necessary recoverable. There's nothing we can do here so
         // we'll just warn our user that the CPU state might be broken.
         warn_if(isNonMaskableInterrupt() && pp == PRV_M && status.mie == 0,
-            "NMI overwriting M-mode trap handler state");
+                "NMI overwriting M-mode trap handler state");
 
         // Set fault handler privilege mode
         if (isNonMaskableInterrupt()) {
@@ -208,7 +208,7 @@ IllegalInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
     if (!tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId())) {
         auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
         panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
-            tc->pcState(), reason.c_str());
+              tc->pcState(), reason.c_str());
     }
 }
 
@@ -222,7 +222,7 @@ void
 IllegalFrmFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic("Illegal floating-point rounding mode 0x%x at pc %s.", frm,
-        tc->pcState());
+          tc->pcState());
 }
 
 void

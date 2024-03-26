@@ -135,9 +135,9 @@ DefaultResponsePort defaultResponsePort;
 /**
  * Request port
  */
-[[deprecated]] RequestPort::RequestPort(
-    const std::string &name, SimObject *_owner, PortID _id) :
-    Port(name, _id), _responsePort(&defaultResponsePort), owner{*_owner}
+[[deprecated]] RequestPort::RequestPort(const std::string &name,
+                                        SimObject *_owner, PortID _id)
+    : Port(name, _id), _responsePort(&defaultResponsePort), owner{*_owner}
 {}
 
 /*** FIXME:
@@ -146,10 +146,10 @@ DefaultResponsePort defaultResponsePort;
  * Using 1 instead of nullptr prevents warning upon dereference. It should be
  * OK until definitive removal of owner.
  */
-RequestPort::RequestPort(const std::string &name, PortID _id) :
-    Port(name, _id),
-    _responsePort(&defaultResponsePort),
-    owner{*reinterpret_cast<SimObject *>(1)}
+RequestPort::RequestPort(const std::string &name, PortID _id)
+    : Port(name, _id),
+      _responsePort(&defaultResponsePort),
+      owner{*reinterpret_cast<SimObject *>(1)}
 {}
 
 RequestPort::~RequestPort() {}
@@ -159,7 +159,7 @@ RequestPort::bind(Port &peer)
 {
     auto *response_port = dynamic_cast<ResponsePort *>(&peer);
     fatal_if(!response_port, "Can't bind port %s to non-response port %s.",
-        name(), peer.name());
+             name(), peer.name());
     // request port keeps track of the response port
     _responsePort = response_port;
     Port::bind(peer);
@@ -171,9 +171,9 @@ void
 RequestPort::unbind()
 {
     panic_if(!isConnected(),
-        "Can't unbind request port %s which is "
-        "not bound.",
-        name());
+             "Can't unbind request port %s which is "
+             "not bound.",
+             name());
     _responsePort->responderUnbind();
     _responsePort = &defaultResponsePort;
     Port::unbind();
@@ -224,12 +224,12 @@ RequestPort::removeTrace(PacketPtr pkt) const
  * Response port
  */
 
-[[deprecated]] ResponsePort::ResponsePort(
-    const std::string &name, SimObject *_owner, PortID _id) :
-    Port(name, _id),
-    _requestPort(&defaultRequestPort),
-    defaultBackdoorWarned(false),
-    owner{*_owner}
+[[deprecated]] ResponsePort::ResponsePort(const std::string &name,
+                                          SimObject *_owner, PortID _id)
+    : Port(name, _id),
+      _requestPort(&defaultRequestPort),
+      defaultBackdoorWarned(false),
+      owner{*_owner}
 {}
 
 /*** FIXME:
@@ -238,11 +238,11 @@ RequestPort::removeTrace(PacketPtr pkt) const
  * Using 1 instead of nullptr prevents warning upon dereference. It should be
  * OK until definitive removal of owner.
  */
-ResponsePort::ResponsePort(const std::string &name, PortID id) :
-    Port(name, id),
-    _requestPort(&defaultRequestPort),
-    defaultBackdoorWarned(false),
-    owner{*reinterpret_cast<SimObject *>(1)}
+ResponsePort::ResponsePort(const std::string &name, PortID id)
+    : Port(name, id),
+      _requestPort(&defaultRequestPort),
+      defaultBackdoorWarned(false),
+      owner{*reinterpret_cast<SimObject *>(1)}
 {}
 
 ResponsePort::~ResponsePort() {}
@@ -266,19 +266,19 @@ ResponsePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
     if (!defaultBackdoorWarned) {
         DPRINTF(ResponsePort,
-            "Port %s doesn't support requesting a back door.", name());
+                "Port %s doesn't support requesting a back door.", name());
         defaultBackdoorWarned = true;
     }
     return recvAtomic(pkt);
 }
 
 void
-ResponsePort::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+ResponsePort::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                 MemBackdoorPtr &backdoor)
 {
     if (!defaultBackdoorWarned) {
         DPRINTF(ResponsePort,
-            "Port %s doesn't support requesting a back door.", name());
+                "Port %s doesn't support requesting a back door.", name());
         defaultBackdoorWarned = true;
     }
 }

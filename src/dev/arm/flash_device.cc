@@ -61,24 +61,24 @@ namespace gem5
  * Flash Device constructor and destructor
  */
 
-FlashDevice::FlashDevice(const FlashDeviceParams &p) :
-    AbstractNVM(p),
-    diskSize(0),
-    blockSize(p.blk_size),
-    pageSize(p.page_size),
-    GCActivePercentage(p.GC_active),
-    readLatency(p.read_lat),
-    writeLatency(p.write_lat),
-    eraseLatency(p.erase_lat),
-    dataDistribution(p.data_distribution),
-    numPlanes(p.num_planes),
-    stats(this),
-    pagesPerBlock(0),
-    pagesPerDisk(0),
-    blocksPerDisk(0),
-    planeMask(numPlanes - 1),
-    planeEventQueue(numPlanes),
-    planeEvent([this] { actionComplete(); }, name())
+FlashDevice::FlashDevice(const FlashDeviceParams &p)
+    : AbstractNVM(p),
+      diskSize(0),
+      blockSize(p.blk_size),
+      pageSize(p.page_size),
+      GCActivePercentage(p.GC_active),
+      readLatency(p.read_lat),
+      writeLatency(p.write_lat),
+      eraseLatency(p.erase_lat),
+      dataDistribution(p.data_distribution),
+      numPlanes(p.num_planes),
+      stats(this),
+      pagesPerBlock(0),
+      pagesPerDisk(0),
+      blocksPerDisk(0),
+      planeMask(numPlanes - 1),
+      planeEventQueue(numPlanes),
+      planeEvent([this] { actionComplete(); }, name())
 {
     /*
      * Let 'a' be a power of two of n bits, written such that a-n is the msb
@@ -107,9 +107,9 @@ FlashDevice::initializeFlash(uint64_t disk_size, uint32_t sector_size)
 
     /** Sanity information: check flash configuration */
     DPRINTF(FlashDevice,
-        "diskSize: %d Bytes; %d pages per block, %d pages "
-        "per disk\n",
-        diskSize, pagesPerBlock, pagesPerDisk);
+            "diskSize: %d Bytes; %d pages per block, %d pages "
+            "per disk\n",
+            diskSize, pagesPerBlock, pagesPerDisk);
 
     locationTable.resize(pagesPerDisk);
 
@@ -151,10 +151,10 @@ FlashDevice::~FlashDevice() { DPRINTF(FlashDevice, "Remove FlashDevice\n"); }
  */
 void
 FlashDevice::accessDevice(uint64_t address, uint32_t amount,
-    const std::function<void()> &event, Actions action)
+                          const std::function<void()> &event, Actions action)
 {
     DPRINTF(FlashDevice, "Flash calculation for %d bytes in %d pages\n",
-        amount, pageSize);
+            amount, pageSize);
 
     std::vector<Tick> time(numPlanes, 0);
     uint64_t logic_page_addr = address / pageSize;
@@ -173,12 +173,12 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
             (logic_page_addr % pagesPerBlock);
 
         DPRINTF(FlashDevice,
-            "Index 0x%8x, Block 0x%8x, pages/block %d,"
-            " logic address 0x%8x\n",
-            index, locationTable[logic_page_addr].block, pagesPerBlock,
-            logic_page_addr);
+                "Index 0x%8x, Block 0x%8x, pages/block %d,"
+                " logic address 0x%8x\n",
+                index, locationTable[logic_page_addr].block, pagesPerBlock,
+                logic_page_addr);
         DPRINTF(FlashDevice, "Page %d; %d bytes up to this point\n", count,
-            (count * pageSize));
+                (count * pageSize));
 
         plane_address = locationTable[logic_page_addr].block & planeMask;
 
@@ -234,7 +234,7 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
             (time[plane_address] > time[count]) ? plane_address : count;
 
         DPRINTF(FlashDevice, "Plane %d is busy for %d ticks\n", count,
-            time[count]);
+                time[count]);
 
         if (time[count] != 0) {
             struct CallBackEntry cbe;
@@ -256,7 +256,7 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
                 schedule(planeEvent, planeEventQueue[count].back().time);
             else if (planeEventQueue[count].back().time < planeEvent.when())
                 reschedule(planeEvent,
-                    planeEventQueue[plane_address].back().time, true);
+                           planeEventQueue[plane_address].back().time, true);
         }
     }
 
@@ -265,7 +265,7 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
     // could execute its event, but in the same tick.
     planeEventQueue[plane_address].back().function = event;
     DPRINTF(FlashDevice, "Callback queued for plane %d; %d in queue\n",
-        plane_address, planeEventQueue[plane_address].size());
+            plane_address, planeEventQueue[plane_address].size());
     DPRINTF(FlashDevice, "first event @ %d\n", planeEvent.when());
 }
 
@@ -314,7 +314,7 @@ FlashDevice::actionComplete()
         if (!planeEventQueue[plane_address].empty())
             if (planeEventQueue[next_event].empty() ||
                 (planeEventQueue[plane_address].front().time <
-                    planeEventQueue[next_event].front().time))
+                 planeEventQueue[next_event].front().time))
                 next_event = plane_address;
     }
 
@@ -357,10 +357,9 @@ FlashDevice::remap(uint64_t logic_page_addr)
     } else {
         // calculate how much time GC would have taken
         uint32_t block = locationTable[logic_page_addr].block;
-        Tick time =
-            ((GCActivePercentage * (accessTimes(block, ActionCopy) +
-                                       accessTimes(block, ActionErase))) /
-                100);
+        Tick time = ((GCActivePercentage * (accessTimes(block, ActionCopy) +
+                                            accessTimes(block, ActionErase))) /
+                     100);
 
         // use block as the logical start address of the block
         block = locationTable[logic_page_addr].block * pagesPerBlock;
@@ -377,8 +376,8 @@ FlashDevice::remap(uint64_t logic_page_addr)
         /*stats*/
         ++stats.totalGCActivations;
 
-        DPRINTF(
-            FlashDevice, "Remap with erase action returns %d ticks\n", time);
+        DPRINTF(FlashDevice, "Remap with erase action returns %d ticks\n",
+                time);
 
         return time;
     }
@@ -453,20 +452,20 @@ FlashDevice::getUnknownPages(uint32_t index)
     return unknownPages[index >> 5] & (0x01 << (index % 32));
 }
 
-FlashDevice::FlashDeviceStats::FlashDeviceStats(statistics::Group *parent) :
-    statistics::Group(parent, "FlashDevice"),
-    ADD_STAT(totalGCActivations, statistics::units::Count::get(),
-        "Number of Garbage collector activations"),
-    ADD_STAT(writeAccess, statistics::units::Count::get(),
-        "Histogram of write addresses"),
-    ADD_STAT(readAccess, statistics::units::Count::get(),
-        "Histogram of read addresses"),
-    ADD_STAT(fileSystemAccess, statistics::units::Count::get(),
-        "Histogram of file system accesses"),
-    ADD_STAT(writeLatency, statistics::units::Tick::get(),
-        "Histogram of write latency"),
-    ADD_STAT(readLatency, statistics::units::Tick::get(),
-        "Histogram of read latency")
+FlashDevice::FlashDeviceStats::FlashDeviceStats(statistics::Group *parent)
+    : statistics::Group(parent, "FlashDevice"),
+      ADD_STAT(totalGCActivations, statistics::units::Count::get(),
+               "Number of Garbage collector activations"),
+      ADD_STAT(writeAccess, statistics::units::Count::get(),
+               "Histogram of write addresses"),
+      ADD_STAT(readAccess, statistics::units::Count::get(),
+               "Histogram of read addresses"),
+      ADD_STAT(fileSystemAccess, statistics::units::Count::get(),
+               "Histogram of file system accesses"),
+      ADD_STAT(writeLatency, statistics::units::Tick::get(),
+               "Histogram of write latency"),
+      ADD_STAT(readLatency, statistics::units::Tick::get(),
+               "Histogram of read latency")
 {
     using namespace statistics;
 
@@ -500,9 +499,9 @@ FlashDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(location_table_size);
     for (uint32_t count = 0; count < location_table_size; count++) {
         paramOut(cp, csprintf("locationTable[%d].page", count),
-            locationTable[count].page);
+                 locationTable[count].page);
         paramOut(cp, csprintf("locationTable[%d].block", count),
-            locationTable[count].block);
+                 locationTable[count].block);
     }
 };
 
@@ -524,9 +523,9 @@ FlashDevice::unserialize(CheckpointIn &cp)
     locationTable.resize(location_table_size);
     for (uint32_t count = 0; count < location_table_size; count++) {
         paramIn(cp, csprintf("locationTable[%d].page", count),
-            locationTable[count].page);
+                locationTable[count].page);
         paramIn(cp, csprintf("locationTable[%d].block", count),
-            locationTable[count].block);
+                locationTable[count].block);
     }
 };
 

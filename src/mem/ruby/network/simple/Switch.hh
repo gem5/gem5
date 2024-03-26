@@ -88,9 +88,9 @@ class Switch : public BasicRouter
 
     void addInPort(const std::vector<MessageBuffer *> &in);
     void addOutPort(const std::vector<MessageBuffer *> &out,
-        const NetDest &routing_table_entry, Cycles link_latency,
-        int link_weight, int bw_multiplier, bool is_external,
-        PortDirection dst_inport = "");
+                    const NetDest &routing_table_entry, Cycles link_latency,
+                    int link_weight, int bw_multiplier, bool is_external,
+                    PortDirection dst_inport = "");
 
     void resetStats();
     void collateStats();

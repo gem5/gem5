@@ -54,8 +54,8 @@ namespace gem5
 struct RequestorInfo
 {
     RequestorInfo(const SimObject *_obj, std::string requestor_name,
-        RequestorID requestor_id) :
-        obj(_obj), req_name(requestor_name), id(requestor_id)
+                  RequestorID requestor_id)
+        : obj(_obj), req_name(requestor_name), id(requestor_id)
     {}
 
     /** SimObject related to the Requestor */

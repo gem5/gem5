@@ -145,9 +145,9 @@ Gem5Extension::copy_from(const tlm::tlm_extension_base &ext)
     packet = from.packet;
 }
 
-AtomicExtension::AtomicExtension(
-    std::shared_ptr<gem5::AtomicOpFunctor> o, bool r) :
-    op(o), returnRequired(r)
+AtomicExtension::AtomicExtension(std::shared_ptr<gem5::AtomicOpFunctor> o,
+                                 bool r)
+    : op(o), returnRequired(r)
 {}
 
 tlm::tlm_extension_base *
@@ -190,8 +190,8 @@ AtomicExtension::getAtomicOpFunctor() const
     return op.get();
 }
 
-ControlExtension::ControlExtension() :
-    privileged(false), secure(false), instruction(false), qos(0)
+ControlExtension::ControlExtension()
+    : privileged(false), secure(false), instruction(false), qos(0)
 {
     [[maybe_unused]] static ControlConversionRegister *conversion_register =
         new ControlConversionRegister();

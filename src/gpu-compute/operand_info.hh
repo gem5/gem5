@@ -43,10 +43,10 @@ class OperandInfo
   public:
     OperandInfo() = delete;
     OperandInfo(int opSelectorVal, int size, bool src, bool scalar_reg,
-        bool vector_reg, bool imm) :
-        _opSelectorVal(opSelectorVal),
-        _size(size),
-        _numDWords(size <= 4 ? 1 : size / 4)
+                bool vector_reg, bool imm)
+        : _opSelectorVal(opSelectorVal),
+          _size(size),
+          _numDWords(size <= 4 ? 1 : size / 4)
     {
         if (src)
             flags.set(SRC);

@@ -394,46 +394,46 @@ sc_int_base::check_value() const
 }
 
 // constructors
-sc_int_base::sc_int_base(const sc_bv_base &v) :
-    m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_bv_base &v)
+    : m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = v;
 }
-sc_int_base::sc_int_base(const sc_lv_base &v) :
-    m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_lv_base &v)
+    : m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = v;
 }
-sc_int_base::sc_int_base(const sc_uint_subref_r &v) :
-    m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_uint_subref_r &v)
+    : m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = v.to_uint64();
 }
-sc_int_base::sc_int_base(const sc_signed_subref_r &v) :
-    m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_signed_subref_r &v)
+    : m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = v.to_uint64();
 }
-sc_int_base::sc_int_base(const sc_unsigned_subref_r &v) :
-    m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_unsigned_subref_r &v)
+    : m_val(0), m_len(v.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = v.to_uint64();
 }
 
-sc_int_base::sc_int_base(const sc_signed &a) :
-    m_val(0), m_len(a.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_signed &a)
+    : m_val(0), m_len(a.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = a.to_int64();
 }
 
-sc_int_base::sc_int_base(const sc_unsigned &a) :
-    m_val(0), m_len(a.length()), m_ulen(SC_INTWIDTH - m_len)
+sc_int_base::sc_int_base(const sc_unsigned &a)
+    : m_val(0), m_len(a.length()), m_ulen(SC_INTWIDTH - m_len)
 {
     check_length();
     *this = a.to_int64();
@@ -509,11 +509,11 @@ sc_int_base &
 sc_int_base::operator=(const char *a)
 {
     if (a == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is zero");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is zero");
     } else if (*a == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is empty");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is empty");
     } else
         try {
             int len = m_len;
@@ -522,8 +522,8 @@ sc_int_base::operator=(const char *a)
         } catch (const sc_core::sc_report &) {
             std::stringstream msg;
             msg << "character string '" << a << "' is not valid";
-            SC_REPORT_ERROR(
-                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                            msg.str().c_str());
         }
     return *this;
 }
@@ -632,8 +632,8 @@ sc_int_base::concat_get_data(sc_digit *dst_p, int low_i) const
 
     // PROCESS THE FIRST WORD:
     mask = (~UINT_ZERO << left_shift);
-    dst_p[dst_i] = (sc_digit)(
-        (dst_p[dst_i] & ~mask) | ((val << left_shift) & DIGIT_MASK));
+    dst_p[dst_i] = (sc_digit)((dst_p[dst_i] & ~mask) |
+                              ((val << left_shift) & DIGIT_MASK));
     switch (end_i - dst_i) {
     // BITS ARE ACROSS TWO WORDS:
     case 1:

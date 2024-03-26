@@ -51,13 +51,13 @@ namespace gem5
 {
 using namespace RiscvISA;
 
-Plic::Plic(const Params &params) :
-    PlicBase(params),
-    system(params.system),
-    nSrc(params.n_src),
-    nContext(params.n_contexts),
-    registers(params.name, pioAddr, this),
-    update([this] { updateOutput(); }, name() + ".update")
+Plic::Plic(const Params &params)
+    : PlicBase(params),
+      system(params.system),
+      nSrc(params.n_src),
+      nContext(params.n_contexts),
+      registers(params.name, pioAddr, this),
+      update([this] { updateOutput(); }, name() + ".update")
 {}
 
 void
@@ -82,7 +82,7 @@ Plic::post(int src_id)
         effPriority[i][src_id] = enabled ? pendingPriority[src_id] : 0;
     }
     DPRINTF(Plic, "Int post request - source: %#x, current priority: %#x\n",
-        src_id, pendingPriority[src_id]);
+            src_id, pendingPriority[src_id]);
 
     // Propagate output changes
     propagateOutput();
@@ -109,7 +109,7 @@ Plic::clear(int src_id)
         effPriority[i][src_id] = 0;
     }
     DPRINTF(Plic, "Int clear request - source: %#x, current priority: %#x\n",
-        src_id, pendingPriority[src_id]);
+            src_id, pendingPriority[src_id]);
 
     // Propagate output changes
     propagateOutput();
@@ -121,7 +121,7 @@ Plic::read(PacketPtr pkt)
     // Check for atomic operation
     bool is_atomic = pkt->isAtomicOp() && pkt->cmd == MemCmd::SwapReq;
     DPRINTF(Plic, "Read request - addr: %#x, size: %#x, atomic:%d\n",
-        pkt->getAddr(), pkt->getSize(), is_atomic);
+            pkt->getAddr(), pkt->getSize(), is_atomic);
 
     // Perform register read
     registers.read(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
@@ -140,7 +140,7 @@ Tick
 Plic::write(PacketPtr pkt)
 {
     DPRINTF(Plic, "Write request - addr: %#x, size: %#x\n", pkt->getAddr(),
-        pkt->getSize());
+            pkt->getSize());
 
     // Perform register write
     registers.write(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
@@ -175,11 +175,11 @@ Plic::init()
 
     // Setup outputs
     output = PlicOutput{std::vector<uint32_t>(nContext, 0x0),
-        std::vector<uint32_t>(nContext, 0x0)};
+                        std::vector<uint32_t>(nContext, 0x0)};
 
     DPRINTF(Plic,
-        "Device init - %d contexts, %d sources, %d pending registers\n",
-        nContext, nSrc, nSrc32);
+            "Device init - %d contexts, %d sources, %d pending registers\n",
+            nContext, nSrc, nSrc32);
 
     BasicPioDevice::init();
 }
@@ -202,8 +202,8 @@ Plic::PlicRegisters::init()
     reserved.emplace_back("reserved3", reserve3_size);
 
     // Sanity check
-    assert(
-        plic->pioSize >= thresholdStart + plic->nContext * thresholdPadding);
+    assert(plic->pioSize >=
+           thresholdStart + plic->nContext * thresholdPadding);
     assert((int)plic->pioSize <= maxBankSize);
 
     // Calculate hole sizes
@@ -222,16 +222,16 @@ Plic::PlicRegisters::init()
         for (int j = 0; j < plic->nSrc32; j++) {
             enable[i].emplace_back(std::string("enable") + std::to_string(i) +
                                        "_" + std::to_string(j),
-                0);
+                                   0);
         }
         enable_holes.emplace_back(
             std::string("enable_hole") + std::to_string(i), enable_hole_size);
 
-        threshold.emplace_back(
-            std::string("threshold") + std::to_string(i), 0);
+        threshold.emplace_back(std::string("threshold") + std::to_string(i),
+                               0);
         claim.emplace_back(std::string("claim") + std::to_string(i), 0);
-        claim_holes.emplace_back(
-            std::string("claim_hole") + std::to_string(i), claim_hole_size);
+        claim_holes.emplace_back(std::string("claim_hole") + std::to_string(i),
+                                 claim_hole_size);
     }
 
     // Add registers to bank
@@ -297,7 +297,7 @@ Plic::writePriority(Register32 &reg, const uint32_t &data, const int src_id)
 
 void
 Plic::writeEnable(Register32 &reg, const uint32_t &data, const int src32_id,
-    const int context_id)
+                  const int context_id)
 {
     reg.update(data);
 
@@ -309,17 +309,17 @@ Plic::writeEnable(Register32 &reg, const uint32_t &data, const int src32_id,
         }
     }
     DPRINTF(Plic, "Enable updated - context: %d, src32: %d, val: %#x\n",
-        context_id, src32_id, reg.get());
+            context_id, src32_id, reg.get());
 }
 
 void
-Plic::writeThreshold(
-    Register32 &reg, const uint32_t &data, const int context_id)
+Plic::writeThreshold(Register32 &reg, const uint32_t &data,
+                     const int context_id)
 {
     reg.update(data);
 
     DPRINTF(Plic, "Threshold updated - context: %d, val: %d\n", context_id,
-        reg.get());
+            reg.get());
 }
 
 uint32_t
@@ -335,19 +335,19 @@ Plic::readClaim(Register32 &reg, const int context_id)
         if (bits(registers.pending[src_index].get(), src_offset)) {
             lastID[context_id] = max_int_id;
             DPRINTF(Plic, "Claim success - context: %d, interrupt ID: %d\n",
-                context_id, max_int_id);
+                    context_id, max_int_id);
             clear(max_int_id);
             reg.update(max_int_id);
             return reg.get();
         } else {
             DPRINTF(Plic,
-                "Claim already cleared - context: %d, interrupt ID: %d\n",
-                context_id, max_int_id);
+                    "Claim already cleared - context: %d, interrupt ID: %d\n",
+                    context_id, max_int_id);
             return 0;
         }
     } else {
         warn("PLIC claim repeated (not completed) - context: %d, last: %d",
-            context_id, lastID[context_id]);
+             context_id, lastID[context_id]);
         return lastID[context_id];
     }
 }
@@ -364,7 +364,7 @@ Plic::writeClaim(Register32 &reg, const uint32_t &data, const int context_id)
     assert(lastID[context_id] == reg.get());
     lastID[context_id] = 0;
     DPRINTF(Plic, "Complete - context: %d, interrupt ID: %d\n", context_id,
-        reg.get());
+            reg.get());
     updateInt();
 }
 
@@ -373,7 +373,7 @@ Plic::propagateOutput()
 {
     // Calculate new output
     PlicOutput new_output{std::vector<uint32_t>(nContext, 0x0),
-        std::vector<uint32_t>(nContext, 0x0)};
+                          std::vector<uint32_t>(nContext, 0x0)};
     uint32_t max_id;
     uint32_t max_priority;
     for (int i = 0; i < nContext; i++) {
@@ -409,8 +409,8 @@ Plic::updateOutput()
 
     // Schedule next update event (if any)
     if (!outputQueue.empty()) {
-        DPRINTF(
-            Plic, "Update scheduled - tick: %d\n", outputQueue.begin()->first);
+        DPRINTF(Plic, "Update scheduled - tick: %d\n",
+                outputQueue.begin()->first);
         schedule(update, outputQueue.begin()->first);
     }
 
@@ -432,13 +432,13 @@ Plic::updateInt()
         uint32_t threshold = registers.threshold[i].get();
         if (priority > threshold && max_id > 0 && lastID[i] == 0) {
             DPRINTF(Plic, "Int posted - thread: %d, int id: %d, ", thread_id,
-                int_id);
+                    int_id);
             DPRINTFR(Plic, "pri: %d, thres: %d\n", priority, threshold);
             tc->getCpuPtr()->postInterrupt(tc->threadId(), int_id, 0);
         } else {
             if (priority > 0) {
                 DPRINTF(Plic, "Int filtered - thread: %d, int id: %d, ",
-                    thread_id, int_id);
+                        thread_id, int_id);
                 DPRINTFR(Plic, "pri: %d, thres: %d\n", priority, threshold);
             }
             tc->getCpuPtr()->clearInterrupt(tc->threadId(), int_id, 0);
@@ -470,12 +470,12 @@ Plic::serialize(CheckpointOut &cp) const
     }
     for (auto const &it : outputQueue) {
         paramOut(cp, std::string("output_tick") + std::to_string(n_outputs),
-            it.first);
+                 it.first);
         arrayParamOut(cp, std::string("output_id") + std::to_string(n_outputs),
-            it.second.maxID);
+                      it.second.maxID);
         arrayParamOut(cp,
-            std::string("output_pri") + std::to_string(n_outputs),
-            it.second.maxPriority);
+                      std::string("output_pri") + std::to_string(n_outputs),
+                      it.second.maxPriority);
         n_outputs++;
     }
     SERIALIZE_SCALAR(n_outputs);
@@ -484,7 +484,7 @@ Plic::serialize(CheckpointOut &cp) const
     SERIALIZE_CONTAINER(pendingPriority);
     for (int i = 0; i < effPriority.size(); i++) {
         arrayParamOut(cp, std::string("effPriority") + std::to_string(i),
-            effPriority[i]);
+                      effPriority[i]);
     }
     SERIALIZE_CONTAINER(lastID);
 }
@@ -516,12 +516,12 @@ Plic::unserialize(CheckpointIn &cp)
         Tick output_tick;
         std::vector<uint32_t> output_id;
         std::vector<uint32_t> output_pri;
-        paramIn(
-            cp, std::string("output_tick") + std::to_string(i), output_tick);
-        arrayParamIn(
-            cp, std::string("output_id") + std::to_string(i), output_id);
-        arrayParamIn(
-            cp, std::string("output_pri") + std::to_string(i), output_pri);
+        paramIn(cp, std::string("output_tick") + std::to_string(i),
+                output_tick);
+        arrayParamIn(cp, std::string("output_id") + std::to_string(i),
+                     output_id);
+        arrayParamIn(cp, std::string("output_pri") + std::to_string(i),
+                     output_pri);
         outputQueue[output_tick] = PlicOutput{output_id, output_pri};
     }
     if (!outputQueue.empty()) {
@@ -532,7 +532,7 @@ Plic::unserialize(CheckpointIn &cp)
     UNSERIALIZE_CONTAINER(pendingPriority);
     for (int i = 0; i < effPriority.size(); i++) {
         arrayParamIn(cp, std::string("effPriority") + std::to_string(i),
-            effPriority[i]);
+                     effPriority[i]);
     }
     UNSERIALIZE_CONTAINER(lastID);
     updateInt();

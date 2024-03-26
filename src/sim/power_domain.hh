@@ -75,8 +75,8 @@ class PowerDomain : public PowerState
      * domain will change its own power state if required and if there is a
      * power state, it will schedule an event to update its followers
      */
-    void pwrStateChangeCallback(
-        enums::PwrState new_pwr_state, PowerState *leader);
+    void pwrStateChangeCallback(enums::PwrState new_pwr_state,
+                                PowerState *leader);
 
     /**
      * Function called by a follower to register itself as

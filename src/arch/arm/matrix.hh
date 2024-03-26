@@ -163,14 +163,14 @@ class HorizontalSlice
     size_t strideElts;
 
   private:
-    HorizontalSlice(
-        Container &cnt, size_t _startBytes, size_t _strideBytes, size_t idx) :
-        container(&cnt),
-        index(idx),
-        xElems(container->xSize() / sizeof(ElemType)),
-        yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
-        startElts(_startBytes / sizeof(ElemType)),
-        strideElts(_strideBytes / sizeof(ElemType))
+    HorizontalSlice(Container &cnt, size_t _startBytes, size_t _strideBytes,
+                    size_t idx)
+        : container(&cnt),
+          index(idx),
+          xElems(container->xSize() / sizeof(ElemType)),
+          yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
+          startElts(_startBytes / sizeof(ElemType)),
+          strideElts(_strideBytes / sizeof(ElemType))
     {
         gem5_assert(xElems > 0, "The number of xElems cannot be 0");
         gem5_assert(yElems > 0, "The number of yElems cannot be 0");
@@ -239,14 +239,14 @@ class VerticalSlice
     size_t strideElts;
 
   private:
-    VerticalSlice(
-        Container &cnt, size_t _startBytes, size_t _strideBytes, size_t idx) :
-        container(&cnt),
-        index(idx),
-        xElems(container->xSize() / sizeof(ElemType)),
-        yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
-        startElts(_startBytes / sizeof(ElemType)),
-        strideElts(_strideBytes / sizeof(ElemType))
+    VerticalSlice(Container &cnt, size_t _startBytes, size_t _strideBytes,
+                  size_t idx)
+        : container(&cnt),
+          index(idx),
+          xElems(container->xSize() / sizeof(ElemType)),
+          yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
+          startElts(_startBytes / sizeof(ElemType)),
+          strideElts(_strideBytes / sizeof(ElemType))
     {
         gem5_assert(xElems > 0, "The number of xElems cannot be 0");
         gem5_assert(yElems > 0, "The number of yElems cannot be 0");
@@ -346,8 +346,8 @@ class Tile
     asVSlice(size_t col_idx)
     {
         assert(col_idx < container->xSize());
-        return VerticalSlice<ElemType, Container, true>(
-            *container, startBytes, strideBytes, col_idx);
+        return VerticalSlice<ElemType, Container, true>(*container, startBytes,
+                                                        strideBytes, col_idx);
     };
 
     void
@@ -536,9 +536,9 @@ struct ParseParam<MatStore<X, Y>>
     parse(const std::string &str, MatStore<X, Y> &value)
     {
         fatal_if(str.size() > 2 * X * Y,
-            "Matrix register value overflow at unserialize");
+                 "Matrix register value overflow at unserialize");
         fatal_if(str.size() < 2 * X * Y,
-            "Matrix register value underflow at unserialize");
+                 "Matrix register value underflow at unserialize");
 
         for (int i = 0; i < X * Y; i++) {
             uint8_t b = 0;

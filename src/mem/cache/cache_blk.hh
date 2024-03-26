@@ -140,10 +140,10 @@ class CacheBlk : public TaggedEntry
             return (req_low <= highAddr) && (req_high >= lowAddr);
         }
 
-        Lock(const RequestPtr &req) :
-            contextId(req->contextId()),
-            lowAddr(req->getPaddr()),
-            highAddr(lowAddr + req->getSize() - 1)
+        Lock(const RequestPtr &req)
+            : contextId(req->contextId()),
+              lowAddr(req->getPaddr()),
+              highAddr(lowAddr + req->getSize() - 1)
         {}
     };
 
@@ -349,7 +349,7 @@ class CacheBlk : public TaggedEntry
      * @param task_ID The new task ID.
      */
     void insert(const Addr tag, const bool is_secure,
-        const int src_requestor_ID, const uint32_t task_ID);
+                const int src_requestor_ID, const uint32_t task_ID);
     using TaggedEntry::insert;
 
     /**
@@ -446,8 +446,9 @@ class CacheBlk : public TaggedEntry
         }
         return csprintf("state: %x (%c) writable: %d readable: %d "
                         "dirty: %d prefetched: %d | %s",
-            coherence, s, isSet(WritableBit), isSet(ReadableBit),
-            isSet(DirtyBit), wasPrefetched(), TaggedEntry::print());
+                        coherence, s, isSet(WritableBit), isSet(ReadableBit),
+                        isSet(DirtyBit), wasPrefetched(),
+                        TaggedEntry::print());
     }
 
     /**
@@ -623,7 +624,7 @@ class CacheBlkPrintWrapper : public Printable
     CacheBlkPrintWrapper(CacheBlk *_blk) : blk(_blk) {}
     virtual ~CacheBlkPrintWrapper() {}
     void print(std::ostream &o, int verbosity = 0,
-        const std::string &prefix = "") const;
+               const std::string &prefix = "") const;
 };
 
 } // namespace gem5

@@ -36,8 +36,8 @@
 
 namespace gem5
 {
-InvalidateGenerator::InvalidateGenerator(const Params &p) :
-    DirectedGenerator(p)
+InvalidateGenerator::InvalidateGenerator(const Params &p)
+    : DirectedGenerator(p)
 {
     //
     // First, issue loads to bring the block into S state
@@ -95,8 +95,8 @@ InvalidateGenerator::initiate()
         // will delete it
         delete pkt;
 
-        DPRINTF(
-            DirectedTest, "failed to issue request - sequencer not ready\n");
+        DPRINTF(DirectedTest,
+                "failed to issue request - sequencer not ready\n");
         return false;
     }
 }

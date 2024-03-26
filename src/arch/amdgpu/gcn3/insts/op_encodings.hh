@@ -209,7 +209,7 @@ class Inst_SMEM : public GCN3GPUStaticInst
      */
     void
     calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU64 &addr,
-        ScalarRegU32 offset)
+             ScalarRegU32 offset)
     {
         Addr vaddr = ((addr.rawData() + offset) & ~0x3);
         gpu_dyn_inst->scalarAddr = vaddr;
@@ -222,12 +222,12 @@ class Inst_SMEM : public GCN3GPUStaticInst
      */
     void
     calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU128 &s_rsrc_desc,
-        ScalarRegU32 offset)
+             ScalarRegU32 offset)
     {
         BufferRsrcDescriptor rsrc_desc;
         ScalarRegU32 clamped_offset(offset);
         std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-            sizeof(BufferRsrcDescriptor));
+                    sizeof(BufferRsrcDescriptor));
 
         /**
          * The address is clamped if:
@@ -423,8 +423,8 @@ class Inst_DS : public GCN3GPUStaticInst
                 for (int i = 0; i < N; ++i) {
                     (reinterpret_cast<VecElemU32 *>(
                         gpuDynInst->d_data))[lane * N + i] =
-                        wf->ldsChunk->read<VecElemU32>(
-                            vaddr + i * sizeof(VecElemU32));
+                        wf->ldsChunk->read<VecElemU32>(vaddr +
+                                                       i * sizeof(VecElemU32));
                 }
             }
         }
@@ -493,9 +493,11 @@ class Inst_DS : public GCN3GPUStaticInst
             if (gpuDynInst->exec_mask[lane]) {
                 Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
                 Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
-                wf->ldsChunk->write<T>(vaddr0,
+                wf->ldsChunk->write<T>(
+                    vaddr0,
                     (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2]);
-                wf->ldsChunk->write<T>(vaddr1,
+                wf->ldsChunk->write<T>(
+                    vaddr1,
                     (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2 + 1]);
             }
         }
@@ -589,11 +591,12 @@ class Inst_MUBUF : public GCN3GPUStaticInst
         // create request and set flags
         gpuDynInst->resetEntireStatusVector();
         gpuDynInst->setStatusVector(0, 1);
-        RequestPtr req = std::make_shared<Request>(0, 0, 0,
-            gpuDynInst->computeUnit()->requestorId(), 0, gpuDynInst->wfDynId);
+        RequestPtr req = std::make_shared<Request>(
+            0, 0, 0, gpuDynInst->computeUnit()->requestorId(), 0,
+            gpuDynInst->wfDynId);
         gpuDynInst->setRequestFlags(req);
-        gpuDynInst->computeUnit()->injectGlobalMemFence(
-            gpuDynInst, false, req);
+        gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false,
+                                                        req);
     }
 
     /**
@@ -619,7 +622,7 @@ class Inst_MUBUF : public GCN3GPUStaticInst
     template <typename VOFF, typename VIDX, typename SRSRC, typename SOFF>
     void
     calcAddr(GPUDynInstPtr gpuDynInst, VOFF v_off, VIDX v_idx,
-        SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
+             SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
     {
         Addr vaddr = 0;
         Addr base_addr = 0;
@@ -630,7 +633,7 @@ class Inst_MUBUF : public GCN3GPUStaticInst
         BufferRsrcDescriptor rsrc_desc;
 
         std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-            sizeof(BufferRsrcDescriptor));
+                    sizeof(BufferRsrcDescriptor));
 
         base_addr = rsrc_desc.baseAddr;
 
@@ -658,12 +661,12 @@ class Inst_MUBUF : public GCN3GPUStaticInst
                     Addr off_msb = buf_off / elem_size;
                     Addr off_lsb = buf_off % elem_size;
                     DPRINTF(GCN3,
-                        "mubuf swizzled lane %d: "
-                        "idx_stride = %llx, elem_size = %llx, "
-                        "idx_msb = %llx, idx_lsb = %llx, "
-                        "off_msb = %llx, off_lsb = %llx\n",
-                        lane, idx_stride, elem_size, idx_msb, idx_lsb, off_msb,
-                        off_lsb);
+                            "mubuf swizzled lane %d: "
+                            "idx_stride = %llx, elem_size = %llx, "
+                            "idx_msb = %llx, idx_lsb = %llx, "
+                            "off_msb = %llx, off_lsb = %llx\n",
+                            lane, idx_stride, elem_size, idx_msb, idx_lsb,
+                            off_msb, off_lsb);
 
                     buffer_offset =
                         (idx_msb * stride + off_msb * elem_size) * idx_stride +
@@ -683,12 +686,12 @@ class Inst_MUBUF : public GCN3GPUStaticInst
                     if (buffer_offset >=
                         rsrc_desc.numRecords - s_offset.rawData()) {
                         DPRINTF(GCN3,
-                            "mubuf out-of-bounds condition 1: "
-                            "lane = %d, buffer_offset = %llx, "
-                            "const_stride = %llx, "
-                            "const_num_records = %llx\n",
-                            lane, buf_off + stride * buf_idx, rsrc_desc.stride,
-                            rsrc_desc.numRecords);
+                                "mubuf out-of-bounds condition 1: "
+                                "lane = %d, buffer_offset = %llx, "
+                                "const_stride = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off + stride * buf_idx,
+                                rsrc_desc.stride, rsrc_desc.numRecords);
                         oobMask.set(lane);
                         continue;
                     }
@@ -697,11 +700,11 @@ class Inst_MUBUF : public GCN3GPUStaticInst
                 if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
                     if (buf_idx >= rsrc_desc.numRecords || buf_off >= stride) {
                         DPRINTF(GCN3,
-                            "mubuf out-of-bounds condition 2: "
-                            "lane = %d, offset = %llx, "
-                            "index = %llx, "
-                            "const_num_records = %llx\n",
-                            lane, buf_off, buf_idx, rsrc_desc.numRecords);
+                                "mubuf out-of-bounds condition 2: "
+                                "lane = %d, offset = %llx, "
+                                "index = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off, buf_idx, rsrc_desc.numRecords);
                         oobMask.set(lane);
                         continue;
                     }
@@ -710,10 +713,10 @@ class Inst_MUBUF : public GCN3GPUStaticInst
                 vaddr += buffer_offset;
 
                 DPRINTF(GCN3,
-                    "Calculating mubuf address for lane %d: "
-                    "vaddr = %llx, base_addr = %llx, "
-                    "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
-                    lane, vaddr, base_addr, stride, buf_idx, buf_off);
+                        "Calculating mubuf address for lane %d: "
+                        "vaddr = %llx, base_addr = %llx, "
+                        "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
+                        lane, vaddr, base_addr, stride, buf_idx, buf_off);
                 gpuDynInst->addr.at(lane) = vaddr;
             }
         }
@@ -843,7 +846,8 @@ class Inst_FLAT : public GCN3GPUStaticInst
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
-                    wf->ldsChunk->write<T>(vaddr,
+                    wf->ldsChunk->write<T>(
+                        vaddr,
                         (reinterpret_cast<T *>(gpuDynInst->d_data))[lane]);
                 }
             }

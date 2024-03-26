@@ -67,8 +67,8 @@ class GarnetSyntheticTraffic : public ClockedObject
     // main simulation loop (one cycle)
     void tick();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     /**
      * Print state of address in memory system via PrintReq (for
@@ -84,8 +84,8 @@ class GarnetSyntheticTraffic : public ClockedObject
         GarnetSyntheticTraffic *tester;
 
       public:
-        CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester) :
-            RequestPort(_name), tester(_tester)
+        CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester)
+            : RequestPort(_name), tester(_tester)
         {}
 
       protected:

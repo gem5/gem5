@@ -41,8 +41,8 @@ namespace linux
 {
 using PrintkVarArgs =
     guest_abi::VarArgs<Addr, int32_t, uint32_t, int64_t, uint64_t>;
-int printk(
-    std::string &out, ThreadContext *tc, Addr format_ptr, PrintkVarArgs args);
+int printk(std::string &out, ThreadContext *tc, Addr format_ptr,
+           PrintkVarArgs args);
 
 } // namespace linux
 } // namespace gem5

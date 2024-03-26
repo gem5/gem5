@@ -67,15 +67,15 @@ class BackingStoreEntry
      * pointers, because PhysicalMemory is responsible for that.
      */
     BackingStoreEntry(AddrRange range, uint8_t *pmem, bool conf_table_reported,
-        bool in_addr_map, bool kvm_map, int shm_fd = -1,
-        off_t shm_offset = 0) :
-        range(range),
-        pmem(pmem),
-        confTableReported(conf_table_reported),
-        inAddrMap(in_addr_map),
-        kvmMap(kvm_map),
-        shmFd(shm_fd),
-        shmOffset(shm_offset)
+                      bool in_addr_map, bool kvm_map, int shm_fd = -1,
+                      off_t shm_offset = 0)
+        : range(range),
+          pmem(pmem),
+          confTableReported(conf_table_reported),
+          inAddrMap(in_addr_map),
+          kvmMap(kvm_map),
+          shmFd(shm_fd),
+          shmOffset(shm_offset)
     {}
 
     /**
@@ -177,17 +177,19 @@ class PhysicalMemory : public Serializable
      * @param kvm_map Should KVM map this memory for the guest
      */
     void createBackingStore(AddrRange range,
-        const std::vector<AbstractMemory *> &_memories,
-        bool conf_table_reported, bool in_addr_map, bool kvm_map);
+                            const std::vector<AbstractMemory *> &_memories,
+                            bool conf_table_reported, bool in_addr_map,
+                            bool kvm_map);
 
   public:
     /**
      * Create a physical memory object, wrapping a number of memories.
      */
     PhysicalMemory(const std::string &_name,
-        const std::vector<AbstractMemory *> &_memories,
-        bool mmap_using_noreserve, const std::string &shared_backstore,
-        bool auto_unlink_shared_backstore);
+                   const std::vector<AbstractMemory *> &_memories,
+                   bool mmap_using_noreserve,
+                   const std::string &shared_backstore,
+                   bool auto_unlink_shared_backstore);
 
     /**
      * Unmap all the backing store we have used.
@@ -289,7 +291,7 @@ class PhysicalMemory : public Serializable
      * @param pmem The host pointer to this backing store
      */
     void serializeStore(CheckpointOut &cp, unsigned int store_id,
-        AddrRange range, uint8_t *pmem) const;
+                        AddrRange range, uint8_t *pmem) const;
 
     /**
      * Unserialize the memories in the system. As with the

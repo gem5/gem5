@@ -28,7 +28,7 @@
 #include <csignal>
 
 #ifndef __VERIFY_INST_HH__
-#    define __VERIFY_INST_HH__
+#define __VERIFY_INST_HH__
 
 void abi_verify_inst(const siginfo_t &info, int func);
 

@@ -182,8 +182,8 @@ class FALRU : public BaseTags
      * @param in_cache_mask Mask indicating the caches in which the blk fits.
      * @return Pointer to the cache block.
      */
-    CacheBlk *accessBlock(
-        const PacketPtr pkt, Cycles &lat, CachesMask *in_cache_mask);
+    CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat,
+                          CachesMask *in_cache_mask);
 
     /**
      * Just a wrapper of above function to conform with the base interface.
@@ -219,7 +219,8 @@ class FALRU : public BaseTags
      * @return Cache block to be replaced.
      */
     CacheBlk *findVictim(Addr addr, const bool is_secure,
-        const std::size_t size, std::vector<CacheBlk *> &evict_blks) override;
+                         const std::size_t size,
+                         std::vector<CacheBlk *> &evict_blks) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
@@ -277,7 +278,7 @@ class FALRU : public BaseTags
     {
       public:
         CacheTracking(unsigned min_size, unsigned max_size,
-            unsigned block_size, statistics::Group *parent);
+                      unsigned block_size, statistics::Group *parent);
 
         /**
          * Initialiaze cache blocks and the tracking mechanism

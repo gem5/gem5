@@ -30,7 +30,7 @@
 #include <sys/types.h>
 
 #if defined(__sun__) || defined(__SUNPRO_CC)
-#    include <sys/file.h>
+#include <sys/file.h>
 
 #endif
 
@@ -206,7 +206,7 @@ fcntlHelper(int fd, int cmd, ArgT arg)
     if (retval == -1) {
         char *errstr = strerror(errno);
         panic("fcntl(%d, %d, %s): \"%s\" when setting up async IO.\n", errstr,
-            fd, cmd, arg);
+              fd, cmd, arg);
     }
     return retval;
 }
@@ -218,7 +218,7 @@ fcntlHelper(int fd, int cmd)
     if (retval == -1) {
         char *errstr = strerror(errno);
         panic("fcntl(%d, %d): \"%s\" when setting up async IO.\n", errstr, fd,
-            cmd);
+              cmd);
     }
     return retval;
 }

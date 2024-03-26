@@ -78,8 +78,8 @@ class QueuedResponsePort : public ResponsePort
      * QueuePort constructor.
      */
     QueuedResponsePort(const std::string &name, RespPacketQueue &resp_queue,
-        PortID id = InvalidPortID) :
-        ResponsePort(name, id), respQueue(resp_queue)
+                       PortID id = InvalidPortID)
+        : ResponsePort(name, id), respQueue(resp_queue)
     {}
 
     virtual ~QueuedResponsePort() {}
@@ -142,10 +142,11 @@ class QueuedRequestPort : public RequestPort
      * QueuePort constructor.
      */
     QueuedRequestPort(const std::string &name, ReqPacketQueue &req_queue,
-        SnoopRespPacketQueue &snoop_resp_queue, PortID id = InvalidPortID) :
-        RequestPort(name, id),
-        reqQueue(req_queue),
-        snoopRespQueue(snoop_resp_queue)
+                      SnoopRespPacketQueue &snoop_resp_queue,
+                      PortID id = InvalidPortID)
+        : RequestPort(name, id),
+          reqQueue(req_queue),
+          snoopRespQueue(snoop_resp_queue)
     {}
 
     virtual ~QueuedRequestPort() {}

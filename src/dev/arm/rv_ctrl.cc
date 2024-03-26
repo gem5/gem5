@@ -47,8 +47,8 @@
 
 namespace gem5
 {
-RealViewCtrl::RealViewCtrl(const Params &p) :
-    BasicPioDevice(p, 0xD4), flags(0), scData(0)
+RealViewCtrl::RealViewCtrl(const Params &p)
+    : BasicPioDevice(p, 0xD4), flags(0), scData(0)
 {}
 
 Tick
@@ -118,7 +118,7 @@ RealViewCtrl::read(PacketPtr pkt)
         break;
     default:
         warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
-            daddr);
+             daddr);
         pkt->setLE<uint32_t>(0);
         break;
     }
@@ -163,8 +163,8 @@ RealViewCtrl::write(PacketPtr pkt)
         // http://infocenter.arm.com/help/topic/com.arm.doc.dui0447h/CACDEFGH.html
         CfgCtrlReg req = pkt->getLE<uint32_t>();
         if (!req.start) {
-            DPRINTF(
-                RVCTRL, "SCReg: write %#x to ctrl but not starting\n", req);
+            DPRINTF(RVCTRL, "SCReg: write %#x to ctrl but not starting\n",
+                    req);
             break;
         }
 
@@ -172,7 +172,7 @@ RealViewCtrl::write(PacketPtr pkt)
         if (it_dev == devices.end()) {
             warn_once("SCReg: Access to unknown device "
                       "dcc%d:site%d:pos%d:fn%d:dev%d\n",
-                req.dcc, req.site, req.pos, req.func, req.dev);
+                      req.dcc, req.site, req.pos, req.func, req.dev);
             break;
         }
 
@@ -192,7 +192,7 @@ RealViewCtrl::write(PacketPtr pkt)
     default:
         warn("Tried to write RVIO at offset %#x (data %#x) that doesn't "
              "exist\n",
-            daddr, pkt->getLE<uint32_t>());
+             daddr, pkt->getLE<uint32_t>());
         break;
     }
     pkt->makeAtomicResponse();
@@ -213,7 +213,7 @@ RealViewCtrl::unserialize(CheckpointIn &cp)
 
 void
 RealViewCtrl::registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
-    uint8_t dcc, uint16_t dev, Device *handler)
+                             uint8_t dcc, uint16_t dev, Device *handler)
 {
     CfgCtrlReg addr = 0;
     addr.func = func;
@@ -225,20 +225,20 @@ RealViewCtrl::registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
     if (devices.find(addr) != devices.end()) {
         fatal("Platform device dcc%d:site%d:pos%d:fn%d:dev%d "
               "already registered.",
-            addr.dcc, addr.site, addr.pos, addr.func, addr.dev);
+              addr.dcc, addr.site, addr.pos, addr.func, addr.dev);
     }
 
     devices[addr] = handler;
 }
 
-RealViewOsc::RealViewOsc(const RealViewOscParams &p) :
-    ClockDomain(p, p.voltage_domain),
-    RealViewCtrl::Device(
-        *p.parent, RealViewCtrl::FUNC_OSC, p.site, p.position, p.dcc, p.device)
+RealViewOsc::RealViewOsc(const RealViewOscParams &p)
+    : ClockDomain(p, p.voltage_domain),
+      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_OSC, p.site,
+                           p.position, p.dcc, p.device)
 {
     if (sim_clock::as_float::s / p.freq > UINT32_MAX) {
         fatal("Oscillator frequency out of range: %f\n",
-            sim_clock::as_float::s / p.freq / 1E6);
+              sim_clock::as_float::s / p.freq / 1E6);
     }
 
     _clockPeriod = p.freq;

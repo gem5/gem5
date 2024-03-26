@@ -156,8 +156,8 @@ class RubySystem : public ClockedObject
     void
     enqueueRubyEvent(Tick tick)
     {
-        auto e = new EventFunctionWrapper(
-            [this] { processRubyEvent(); }, "RubyEvent");
+        auto e = new EventFunctionWrapper([this] { processRubyEvent(); },
+                                          "RubyEvent");
         schedule(e, tick);
     }
 
@@ -167,12 +167,13 @@ class RubySystem : public ClockedObject
     RubySystem &operator=(const RubySystem &obj);
 
     void makeCacheRecorder(uint8_t *uncompressed_trace,
-        uint64_t cache_trace_size, uint64_t block_size_bytes);
+                           uint64_t cache_trace_size,
+                           uint64_t block_size_bytes);
 
     static void readCompressedTrace(std::string filename, uint8_t *&raw_data,
-        uint64_t &uncompressed_trace_size);
-    static void writeCompressedTrace(
-        uint8_t *raw_data, std::string file, uint64_t uncompressed_trace_size);
+                                    uint64_t &uncompressed_trace_size);
+    static void writeCompressedTrace(uint8_t *raw_data, std::string file,
+                                     uint64_t uncompressed_trace_size);
 
     void processRubyEvent();
 

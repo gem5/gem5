@@ -143,8 +143,8 @@ class SimControl : public Gem5SystemC::Module
     void switchCpu(unsigned cpuNum, unsigned numTotalCpus);
 };
 
-SimControl::SimControl(sc_core::sc_module_name name, int argc_, char **argv_) :
-    Gem5SystemC::Module(name), argc(argc_), argv(argv_)
+SimControl::SimControl(sc_core::sc_module_name name, int argc_, char **argv_)
+    : Gem5SystemC::Module(name), argc(argc_), argv(argv_)
 {
     SC_THREAD(run);
 
@@ -209,8 +209,8 @@ SimControl::SimControl(sc_core::sc_module_name name, int argc_, char **argv_) :
             if (option == "-p") {
                 if (num_args < 3)
                     usage(prog_name);
-                config_manager->setParam(
-                    argv[arg_ptr], argv[arg_ptr + 1], argv[arg_ptr + 2]);
+                config_manager->setParam(argv[arg_ptr], argv[arg_ptr + 1],
+                                         argv[arg_ptr + 2]);
                 arg_ptr += 3;
             } else if (option == "-v") {
                 std::vector<std::string> values;
@@ -218,8 +218,8 @@ SimControl::SimControl(sc_core::sc_module_name name, int argc_, char **argv_) :
                 if (num_args < 3)
                     usage(prog_name);
                 tokenize(values, argv[2], ',');
-                config_manager->setParamVector(
-                    argv[arg_ptr], argv[arg_ptr], values);
+                config_manager->setParamVector(argv[arg_ptr], argv[arg_ptr],
+                                               values);
                 arg_ptr += 3;
             } else if (option == "-d") {
                 if (num_args < 1)

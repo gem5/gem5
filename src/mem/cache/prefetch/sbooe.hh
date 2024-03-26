@@ -109,11 +109,11 @@ class SBOOE : public Queued
         /** Sequential stride for this prefetcher */
         const int stride;
 
-        Sandbox(unsigned int max_entries, int _stride) :
-            entries(max_entries),
-            sandboxScore(0),
-            lateScore(0),
-            stride(_stride)
+        Sandbox(unsigned int max_entries, int _stride)
+            : entries(max_entries),
+              sandboxScore(0),
+              lateScore(0),
+              stride(_stride)
         {}
 
         /**
@@ -159,8 +159,8 @@ class SBOOE : public Queued
     SBOOE(const SBOOEPrefetcherParams &p);
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

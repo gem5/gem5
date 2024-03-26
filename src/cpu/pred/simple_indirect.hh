@@ -58,11 +58,11 @@ class SimpleIndirectPredictor : public IndirectPredictor
     /** Indirect predictor interface */
     void reset() override;
 
-    const PCStateBase *lookup(
-        ThreadID tid, InstSeqNum sn, Addr pc, void *&iHistory) override;
+    const PCStateBase *lookup(ThreadID tid, InstSeqNum sn, Addr pc,
+                              void *&iHistory) override;
     void update(ThreadID tid, InstSeqNum sn, Addr pc, bool squash, bool taken,
-        const PCStateBase &target, BranchType br_type,
-        void *&iHistory) override;
+                const PCStateBase &target, BranchType br_type,
+                void *&iHistory) override;
     void squash(ThreadID tid, InstSeqNum sn, void *&iHistory) override;
     void commit(ThreadID tid, InstSeqNum sn, void *&iHistory) override;
 
@@ -92,8 +92,8 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     struct HistoryEntry
     {
-        HistoryEntry(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num) :
-            pcAddr(br_addr), targetAddr(tgt_addr), seqNum(seq_num)
+        HistoryEntry(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num)
+            : pcAddr(br_addr), targetAddr(tgt_addr), seqNum(seq_num)
         {}
         HistoryEntry() : pcAddr(0), targetAddr(0), seqNum(0) {}
         Addr pcAddr;
@@ -119,8 +119,8 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
         bool was_indirect;
 
-        IndirectHistory() :
-            pcAddr(MaxAddr), targetAddr(MaxAddr), was_indirect(false)
+        IndirectHistory()
+            : pcAddr(MaxAddr), targetAddr(MaxAddr), was_indirect(false)
         {}
     };
 
@@ -137,9 +137,9 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     // ---- Internal functions ----- //
     bool lookup(ThreadID tid, Addr br_addr, PCStateBase *&target,
-        IndirectHistory *&history);
+                IndirectHistory *&history);
     void recordTarget(ThreadID tid, InstSeqNum sn, const PCStateBase &target,
-        IndirectHistory *&history);
+                      IndirectHistory *&history);
 
     // Helper functions to generate and modify the
     // direction info

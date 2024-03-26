@@ -42,14 +42,14 @@
 
 namespace gem5
 {
-LupioTTY::LupioTTY(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    writChar(-1),
-    readChar(-1),
-    writIntrEn(false),
-    readIntrEn(false),
-    terminal(params.terminal),
-    platform(params.platform)
+LupioTTY::LupioTTY(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      writChar(-1),
+      readChar(-1),
+      writIntrEn(false),
+      readIntrEn(false),
+      terminal(params.terminal),
+      platform(params.platform)
 {
     // setup serial device callbacks
     terminal->regInterfaceCallback([this]() { dataAvailable(); });
@@ -169,7 +169,7 @@ LupioTTY::read(PacketPtr pkt)
     Addr tty_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioTTY, "Read request - addr: %#x, size: %#x\n", tty_addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t val = lupioTTYRead(tty_addr);
     pkt->setUintX(val, byteOrder);
@@ -184,7 +184,7 @@ LupioTTY::write(PacketPtr pkt)
 {
     Addr tty_addr = pkt->getAddr() - pioAddr;
     DPRINTF(LupioTTY, "Write request - addr: %#x pktAddr: %#x value: %c\n",
-        tty_addr, pkt->getAddr(), pkt->getUintX(byteOrder));
+            tty_addr, pkt->getAddr(), pkt->getUintX(byteOrder));
 
     lupioTTYWrite(tty_addr, pkt->getUintX(byteOrder));
 

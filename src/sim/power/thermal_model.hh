@@ -72,8 +72,8 @@ class ThermalResistor : public SimObject, public ThermalEntity
         node2 = n2;
     }
 
-    LinearEquation getEquation(
-        ThermalNode *tn, unsigned n, double step) const override;
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
+                               double step) const override;
 
   private:
     /* Resistance value in K/W */
@@ -93,8 +93,8 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
     typedef ThermalCapacitorParams Params;
     ThermalCapacitor(const Params &p);
 
-    LinearEquation getEquation(
-        ThermalNode *tn, unsigned n, double step) const override;
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
+                               double step) const override;
 
     void
     setNodes(ThermalNode *n1, ThermalNode *n2)
@@ -126,8 +126,8 @@ class ThermalReference : public SimObject, public ThermalEntity
         node = n;
     }
 
-    LinearEquation getEquation(
-        ThermalNode *tn, unsigned n, double step) const override;
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
+                               double step) const override;
 
     /* Fixed temperature value */
     const Temperature _temperature;

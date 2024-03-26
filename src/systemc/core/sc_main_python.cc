@@ -42,8 +42,8 @@ void
 sc_main(pybind11::args args)
 {
     using namespace gem5;
-    panic_if(
-        ::sc_gem5::scMainFiber.called(), "sc_main called more than once.");
+    panic_if(::sc_gem5::scMainFiber.called(),
+             "sc_main called more than once.");
 
     int argc = args.size();
     char **argv = new char *[argc];

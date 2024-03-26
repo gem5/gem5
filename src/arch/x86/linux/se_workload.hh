@@ -107,7 +107,8 @@ class EmuLinux : public SEWorkload
 namespace guest_abi
 {
 template <typename Arg>
-struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
+struct Argument<
+    X86ISA::EmuLinux::SyscallABI32, Arg,
     typename std::enable_if_t<std::is_integral_v<Arg> &&
                               X86ISA::EmuLinux::SyscallABI32::IsWideV<Arg>>>
 {
@@ -117,7 +118,7 @@ struct Argument<X86ISA::EmuLinux::SyscallABI32, Arg,
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state + 1 >= ABI::ArgumentRegs.size(),
-            "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
         auto low = ABI::ArgumentRegs[state++];
         auto high = ABI::ArgumentRegs[state++];
         return (Arg)ABI::mergeRegs(tc, low, high);

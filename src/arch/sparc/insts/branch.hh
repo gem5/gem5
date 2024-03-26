@@ -48,8 +48,9 @@ class Branch : public SparcStaticInst
   protected:
     using SparcStaticInst::SparcStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -59,12 +60,13 @@ class BranchDisp : public Branch
 {
   protected:
     BranchDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        int32_t _disp) :
-        Branch(mnem, _machInst, __opClass), disp(_disp)
+               int32_t _disp)
+        : Branch(mnem, _machInst, __opClass), disp(_disp)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     int32_t disp;
 };
@@ -77,8 +79,8 @@ class BranchNBits : public BranchDisp
 {
   protected:
     // Constructor
-    BranchNBits(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        BranchDisp(mnem, _machInst, __opClass, szext<bits>(_machInst) << 2)
+    BranchNBits(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : BranchDisp(mnem, _machInst, __opClass, szext<bits>(_machInst) << 2)
     {}
 };
 
@@ -89,10 +91,10 @@ class BranchSplit : public BranchDisp
 {
   protected:
     // Constructor
-    BranchSplit(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        BranchDisp(mnem, _machInst, __opClass,
-            sext<18>((bits(_machInst, 21, 20) << 16) |
-                     (bits(_machInst, 13, 0) << 2)))
+    BranchSplit(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : BranchDisp(mnem, _machInst, __opClass,
+                     sext<18>((bits(_machInst, 21, 20) << 16) |
+                              (bits(_machInst, 13, 0) << 2)))
     {}
 };
 
@@ -104,12 +106,13 @@ class BranchImm13 : public Branch
 {
   protected:
     // Constructor
-    BranchImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        Branch(mnem, _machInst, __opClass), imm(szext<13>(_machInst))
+    BranchImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Branch(mnem, _machInst, __opClass), imm(szext<13>(_machInst))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     int32_t imm;
 };

@@ -75,7 +75,8 @@ TEST(Aapcs64, IsAapcs64Hfa)
     EXPECT_FALSE(guest_abi::IsAapcs64HfaV<int32_t[3]>);
     EXPECT_FALSE(guest_abi::IsAapcs64HfaV<float>);
     struct Struct
-    {};
+    {
+    };
     EXPECT_FALSE(guest_abi::IsAapcs64HfaV<Struct>);
     EXPECT_FALSE(guest_abi::IsAapcs64HfaV<void>);
 }

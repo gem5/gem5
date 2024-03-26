@@ -92,8 +92,8 @@ X86ISA::Cmos::readRegister(uint8_t reg)
         DPRINTF(CMOS, "Reading CMOS RTC reg %x as %x.\n", reg, val);
     } else {
         val = regs[reg];
-        DPRINTF(
-            CMOS, "Reading non-volitile CMOS address %x as %x.\n", reg, val);
+        DPRINTF(CMOS, "Reading non-volitile CMOS address %x as %x.\n", reg,
+                val);
     }
     return val;
 }
@@ -106,8 +106,8 @@ X86ISA::Cmos::writeRegister(uint8_t reg, uint8_t val)
         DPRINTF(CMOS, "Writing CMOS RTC reg %x with %x.\n", reg, val);
         rtc.writeData(reg, val);
     } else {
-        DPRINTF(
-            CMOS, "Writing non-volitile CMOS address %x with %x.\n", reg, val);
+        DPRINTF(CMOS, "Writing non-volitile CMOS address %x with %x.\n", reg,
+                val);
         regs[reg] = val;
     }
 }

@@ -56,8 +56,8 @@ struct DebugBreakEvent : public GlobalEvent
 //
 // constructor: schedule at specified time
 //
-DebugBreakEvent::DebugBreakEvent(Tick when) :
-    GlobalEvent(when, Debug_Break_Pri, AutoDelete)
+DebugBreakEvent::DebugBreakEvent(Tick when)
+    : GlobalEvent(when, Debug_Break_Pri, AutoDelete)
 {}
 
 //

@@ -50,8 +50,9 @@ class RegOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -63,8 +64,8 @@ class ImmOp : public RiscvStaticInst
   protected:
     I imm;
 
-    ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
+    ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
     {}
 };
 
@@ -76,8 +77,9 @@ class SystemOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -90,18 +92,19 @@ class CSROp : public RiscvStaticInst
     uint64_t uimm;
 
     /// Constructor
-    CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass),
-        csr(_machInst.funct12),
-        uimm(_machInst.csrimm)
+    CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass),
+          csr(_machInst.funct12),
+          uimm(_machInst.csrimm)
     {
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;
         }
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

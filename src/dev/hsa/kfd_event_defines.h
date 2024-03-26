@@ -45,9 +45,9 @@ namespace gem5
 #define SLOTS_PER_PAGE KFD_SIGNAL_EVENT_LIMIT
 
 #define KFD_MMAP_GPU_ID_SHIFT (46 - PAGE_SHIFT)
-#define KFD_MMAP_GPU_ID_MASK \
+#define KFD_MMAP_GPU_ID_MASK                                                  \
     (((1ULL << KFD_GPU_ID_HASH_WIDTH) - 1) << KFD_MMAP_GPU_ID_SHIFT)
-#define KFD_MMAP_GPU_ID(gpu_id) \
+#define KFD_MMAP_GPU_ID(gpu_id)                                               \
     ((((uint64_t)gpu_id) << KFD_MMAP_GPU_ID_SHIFT) & KFD_MMAP_GPU_ID_MASK)
 
 } // namespace gem5

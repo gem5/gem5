@@ -251,16 +251,16 @@ inline static std::ostream &
 operator<<(std::ostream &os, const ExtMachInst &emi)
 {
     ccprintf(os,
-        "\n{\n\tleg = %#x,\n\trex = %#x,\n\t"
-        "vex/xop = %#x,\n\t"
-        "op = {\n\t\ttype = %s,\n\t\top = %#x,\n\t\t},\n\t"
-        "modRM = %#x,\n\tsib = %#x,\n\t"
-        "immediate = %#x,\n\tdisplacement = %#x\n\t"
-        "dispSize = %d}\n",
-        (uint8_t)emi.legacy, (uint8_t)emi.rex, (uint8_t)emi.vex,
-        opcodeTypeToStr(emi.opcode.type), (uint8_t)emi.opcode.op,
-        (uint8_t)emi.modRM, (uint8_t)emi.sib, emi.immediate, emi.displacement,
-        emi.dispSize);
+             "\n{\n\tleg = %#x,\n\trex = %#x,\n\t"
+             "vex/xop = %#x,\n\t"
+             "op = {\n\t\ttype = %s,\n\t\top = %#x,\n\t\t},\n\t"
+             "modRM = %#x,\n\tsib = %#x,\n\t"
+             "immediate = %#x,\n\tdisplacement = %#x\n\t"
+             "dispSize = %d}\n",
+             (uint8_t)emi.legacy, (uint8_t)emi.rex, (uint8_t)emi.vex,
+             opcodeTypeToStr(emi.opcode.type), (uint8_t)emi.opcode.op,
+             (uint8_t)emi.modRM, (uint8_t)emi.sib, emi.immediate,
+             emi.displacement, emi.dispSize);
     return os;
 }
 
@@ -304,10 +304,10 @@ operator==(const ExtMachInst &emi1, const ExtMachInst &emi2)
 // and UNSERIALIZE_SCALAR.
 template <>
 void paramOut(CheckpointOut &cp, const std::string &name,
-    const X86ISA::ExtMachInst &machInst);
+              const X86ISA::ExtMachInst &machInst);
 template <>
-void paramIn(
-    CheckpointIn &cp, const std::string &name, X86ISA::ExtMachInst &machInst);
+void paramIn(CheckpointIn &cp, const std::string &name,
+             X86ISA::ExtMachInst &machInst);
 
 } // namespace gem5
 
@@ -320,10 +320,9 @@ struct hash<gem5::X86ISA::ExtMachInst>
     operator()(const gem5::X86ISA::ExtMachInst &emi) const
     {
         return (((uint64_t)emi.legacy << 48) | ((uint64_t)emi.rex << 40) |
-                   ((uint64_t)emi.vex << 32) | ((uint64_t)emi.modRM << 24) |
-                   ((uint64_t)emi.sib << 16) |
-                   ((uint64_t)emi.opcode.type << 8) |
-                   ((uint64_t)emi.opcode.op)) ^
+                ((uint64_t)emi.vex << 32) | ((uint64_t)emi.modRM << 24) |
+                ((uint64_t)emi.sib << 16) | ((uint64_t)emi.opcode.type << 8) |
+                ((uint64_t)emi.opcode.op)) ^
                emi.immediate ^ emi.displacement ^ emi.mode ^ emi.opSize ^
                emi.addrSize ^ emi.stackSize ^ emi.dispSize;
     };

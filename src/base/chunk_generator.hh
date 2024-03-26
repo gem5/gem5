@@ -83,8 +83,8 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    ChunkGenerator(Addr _startAddr, Addr totalSize, Addr _chunkSize) :
-        startAddr(_startAddr), chunkSize(_chunkSize)
+    ChunkGenerator(Addr _startAddr, Addr totalSize, Addr _chunkSize)
+        : startAddr(_startAddr), chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
         assert(chunkSize == 0 || isPowerOf2(chunkSize));

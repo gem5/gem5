@@ -37,10 +37,10 @@
 
 namespace gem5
 {
-SeriesRequestGenerator::SeriesRequestGenerator(const Params &p) :
-    DirectedGenerator(p),
-    m_addr_increment_size(p.addr_increment_size),
-    m_percent_writes(p.percent_writes)
+SeriesRequestGenerator::SeriesRequestGenerator(const Params &p)
+    : DirectedGenerator(p),
+      m_addr_increment_size(p.addr_increment_size),
+      m_percent_writes(p.percent_writes)
 {
     m_status = ruby::SeriesRequestGeneratorStatus_Thinking;
     m_active_node = 0;
@@ -85,7 +85,7 @@ SeriesRequestGenerator::initiate()
         delete pkt;
 
         DPRINTF(DirectedTest,
-            "failed to initiate request - sequencer not ready\n");
+                "failed to initiate request - sequencer not ready\n");
         return false;
     }
 }

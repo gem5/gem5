@@ -299,11 +299,11 @@ class Rename
     struct RenameHistory
     {
         RenameHistory(InstSeqNum _instSeqNum, const RegId &_archReg,
-            PhysRegIdPtr _newPhysReg, PhysRegIdPtr _prevPhysReg) :
-            instSeqNum(_instSeqNum),
-            archReg(_archReg),
-            newPhysReg(_newPhysReg),
-            prevPhysReg(_prevPhysReg)
+                      PhysRegIdPtr _newPhysReg, PhysRegIdPtr _prevPhysReg)
+            : instSeqNum(_instSeqNum),
+              archReg(_archReg),
+              newPhysReg(_newPhysReg),
+              prevPhysReg(_prevPhysReg)
         {}
 
         /** The sequence number of the instruction that renamed. */

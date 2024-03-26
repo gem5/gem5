@@ -54,10 +54,13 @@ BmpWriter::getCompleteHeader() const
     const uint32_t pixel_array_size(sizeof(PixelType) * fb.area());
     const uint32_t file_size(sizeof(CompleteV1Header) + pixel_array_size);
 
-    const CompleteV1Header header = {// File header
+    const CompleteV1Header header = {
+        // File header
         {
-            {'B', 'M'},              /* Magic */
-            file_size, 0, 0,         /* Reserved */
+            {'B', 'M'}, /* Magic */
+            file_size,
+            0,
+            0,                       /* Reserved */
             sizeof(CompleteV1Header) /* Offset to pixel array */
         },
         // Info/DIB header
@@ -93,7 +96,7 @@ BmpWriter::write(std::ostream &bmp) const
             line_buffer[x] = fb.pixel(x, fb.height() - y - 1);
 
         bmp.write(reinterpret_cast<const char *>(line_buffer.data()),
-            line_buffer.size() * sizeof(line_buffer[0]));
+                  line_buffer.size() * sizeof(line_buffer[0]));
     }
 
     bmp.flush();

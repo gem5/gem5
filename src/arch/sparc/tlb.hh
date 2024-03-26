@@ -119,7 +119,7 @@ class TLB : public BaseTLB
      * @return A pointer to a tlb entry
      */
     TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0,
-        bool update_used = true);
+                     bool update_used = true);
 
     /** Remove all entries from the TLB */
     void flushAll() override;
@@ -127,7 +127,7 @@ class TLB : public BaseTLB
   protected:
     /** Insert a PTE into the TLB. */
     void insert(Addr vpn, int partition_id, int context_id, bool real,
-        const PageTableEntry &PTE, int entry = -1);
+                const PageTableEntry &PTE, int entry = -1);
 
     /** Given an entry id, read that tlb entries' tag. */
     uint64_t TagRead(int entry);
@@ -145,8 +145,8 @@ class TLB : public BaseTLB
     /** Checks if the virtual address provided is a valid one. */
     bool validVirtualAddress(Addr va, bool am);
 
-    void writeSfsr(
-        bool write, ContextType ct, bool se, FaultTypes ft, int asi);
+    void writeSfsr(bool write, ContextType ct, bool se, FaultTypes ft,
+                   int asi);
 
     void clearUsedBits();
 
@@ -171,14 +171,15 @@ class TLB : public BaseTLB
 
     void dumpAll();
 
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode) const override;
+                           BaseMMU::Mode mode) const override;
     Cycles doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Cycles doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
@@ -191,11 +192,12 @@ class TLB : public BaseTLB
     uint64_t TteRead(int entry);
 
   private:
-    void writeSfsr(
-        Addr a, bool write, ContextType ct, bool se, FaultTypes ft, int asi);
+    void writeSfsr(Addr a, bool write, ContextType ct, bool se, FaultTypes ft,
+                   int asi);
 
     uint64_t MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
-        uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config);
+                        uint64_t c0_config, uint64_t cX_tsb,
+                        uint64_t cX_config);
 
     TlbEntry *cacheEntry[2];
     ASI cacheAsi[2];

@@ -51,17 +51,17 @@
 
 namespace gem5
 {
-VncInput::VncInput(const Params &p) :
-    SimObject(p),
-    keyboard(NULL),
-    mouse(NULL),
-    fb(&FrameBuffer::dummy),
-    _videoWidth(fb->width()),
-    _videoHeight(fb->height()),
-    captureEnabled(p.frame_capture),
-    captureCurrentFrame(0),
-    captureLastHash(0),
-    imgFormat(p.img_format)
+VncInput::VncInput(const Params &p)
+    : SimObject(p),
+      keyboard(NULL),
+      mouse(NULL),
+      fb(&FrameBuffer::dummy),
+      _videoWidth(fb->width()),
+      _videoHeight(fb->height()),
+      captureEnabled(p.frame_capture),
+      captureCurrentFrame(0),
+      captureLastHash(0),
+      imgFormat(p.img_format)
 {
     if (captureEnabled) {
         // remove existing frame output directory if it exists, then create a
@@ -100,7 +100,7 @@ VncInput::setDirty()
 
     if (_videoWidth != width || _videoHeight != height) {
         DPRINTF(VNC, "Updating video params: width: %d height: %d\n", width,
-            height);
+                height);
 
         _videoWidth = width;
         _videoHeight = height;
@@ -126,8 +126,8 @@ VncInput::captureFrameBuffer()
     // get the filename for the current frame
     char frameFilenameBuffer[64];
     snprintf(frameFilenameBuffer, 64, "fb.%06d.%lld.%s.gz",
-        captureCurrentFrame, static_cast<long long int>(curTick()),
-        captureImage->getImgExtension());
+             captureCurrentFrame, static_cast<long long int>(curTick()),
+             captureImage->getImgExtension());
     const std::string frameFilename(frameFilenameBuffer);
 
     // create the compressed framebuffer file

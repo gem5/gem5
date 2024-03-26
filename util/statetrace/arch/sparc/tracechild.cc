@@ -274,7 +274,7 @@ SparcTraceChild::SparcTraceChild()
 
 int
 SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
-    uint64_t &target1, uint64_t &target2)
+                            uint64_t &target1, uint64_t &target2)
 {
     // We can identify the instruction categories we care about using the top
     // 10 bits of the instruction, excluding the annul bit in the 3rd most
@@ -292,7 +292,7 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
               (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
     // or a bcc
     bool bcc = (cond & 0x7) && (sig == 0x1 || sig == 0x2 || sig == 0x3 ||
-                                   sig == 0x5 || sig == 0x6);
+                                sig == 0x5 || sig == 0x6);
 
     if (annul) {
         if (bcc) {
@@ -466,7 +466,7 @@ SparcTraceChild::outputStartState(ostream &os)
         if (v8)
             regspot = regspot >> 32;
         sprintf(obuf, "0x%016llx: Window save %d = 0x%016llx\n", sp, x + 1,
-            regspot);
+                regspot);
         os << obuf;
         sp += v8 ? 4 : 8;
     }
@@ -484,8 +484,8 @@ SparcTraceChild::outputStartState(ostream &os)
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         if (v8)
             cargv = cargv >> 32;
-        sprintf(
-            obuf, "0x%016llx: argv[%d] = 0x%016llx\n", sp, argCount++, cargv);
+        sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n", sp, argCount++,
+                cargv);
         os << obuf;
         sp += v8 ? 4 : 8;
     } while (cargv);
@@ -496,8 +496,8 @@ SparcTraceChild::outputStartState(ostream &os)
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         if (v8)
             cenvp = cenvp >> 32;
-        sprintf(
-            obuf, "0x%016llx: envp[%d] = 0x%016llx\n", sp, envCount++, cenvp);
+        sprintf(obuf, "0x%016llx: envp[%d] = 0x%016llx\n", sp, envCount++,
+                cenvp);
         os << obuf;
         sp += v8 ? 4 : 8;
     } while (cenvp);
@@ -512,7 +512,7 @@ SparcTraceChild::outputStartState(ostream &os)
             auxVal = auxVal >> 32;
         sp += (v8 ? 4 : 8);
         sprintf(obuf, "0x%016llx: Auxiliary vector = {0x%016llx, 0x%016llx}\n",
-            sp - 8, auxType, auxVal);
+                sp - 8, auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
     // Print out the argument strings, environment strings, and file name.
@@ -528,7 +528,7 @@ SparcTraceChild::outputStartState(ostream &os)
                 current += cbuf[x];
             else {
                 sprintf(obuf, "0x%016llx: \"%s\"\n", currentStart,
-                    current.c_str());
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;

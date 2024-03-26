@@ -50,20 +50,20 @@ namespace memory
 {
 namespace qos
 {
-MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p) :
-    MemCtrl(p),
-    requestLatency(p.request_latency),
-    responseLatency(p.response_latency),
-    memoryPacketSize(p.memory_packet_size),
-    readBufferSize(p.read_buffer_size),
-    writeBufferSize(p.write_buffer_size),
-    port(name() + ".port", *this),
-    interface(p.interface),
-    retryRdReq(false),
-    retryWrReq(false),
-    nextRequest(0),
-    nextReqEvent(*this),
-    stats(this)
+MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p)
+    : MemCtrl(p),
+      requestLatency(p.request_latency),
+      responseLatency(p.response_latency),
+      memoryPacketSize(p.memory_packet_size),
+      readBufferSize(p.read_buffer_size),
+      writeBufferSize(p.write_buffer_size),
+      port(name() + ".port", *this),
+      interface(p.interface),
+      retryRdReq(false),
+      retryWrReq(false),
+      nextRequest(0),
+      nextReqEvent(*this),
+      stats(this)
 {
     // Resize read and write queue to allocate space
     // for configured QoS priorities
@@ -103,7 +103,8 @@ Tick
 MemSinkCtrl::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(),
-        "%s Should not see packets where cache is responding\n", __func__);
+             "%s Should not see packets where cache is responding\n",
+             __func__);
 
     interface->access(pkt);
     return responseLatency;
@@ -136,16 +137,17 @@ MemSinkCtrl::recvTimingReq(PacketPtr pkt)
     bool req_accepted = true;
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "%s. Should only see "
-        "read and writes at memory controller\n",
-        __func__);
+             "%s. Should only see "
+             "read and writes at memory controller\n",
+             __func__);
 
     panic_if(pkt->cacheResponding(),
-        "%s. Should not see packets where cache is responding\n", __func__);
+             "%s. Should not see packets where cache is responding\n",
+             __func__);
 
     DPRINTF(QOS, "%s: REQUESTOR %s request %s addr %lld size %d\n", __func__,
-        _system->getRequestorName(pkt->req->requestorId()), pkt->cmdString(),
-        pkt->getAddr(), pkt->getSize());
+            _system->getRequestorName(pkt->req->requestorId()),
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     uint64_t required_entries = divCeil(pkt->getSize(), memoryPacketSize);
 
@@ -186,15 +188,15 @@ MemSinkCtrl::recvTimingReq(PacketPtr pkt)
     if (req_accepted) {
         // The packet is accepted - log it
         logRequest(pkt->isRead() ? READ : WRITE, pkt->req->requestorId(),
-            pkt->qosValue(), pkt->getAddr(), required_entries);
+                   pkt->qosValue(), pkt->getAddr(), required_entries);
     }
 
     // Check if we have to process next request event
     if (!nextReqEvent.scheduled()) {
         DPRINTF(QOS,
-            "%s scheduling next request at "
-            "time %d (next is %d)\n",
-            __func__, std::max(curTick(), nextRequest), nextRequest);
+                "%s scheduling next request at "
+                "time %d (next is %d)\n",
+                __func__, std::max(curTick(), nextRequest), nextRequest);
         schedule(nextReqEvent, std::max(curTick(), nextRequest));
     }
     return req_accepted;
@@ -219,21 +221,21 @@ MemSinkCtrl::processNextReqEvent()
         (busState == READ ? &readQueue : &writeQueue);
 
     DPRINTF(QOS, "%s DUMPING %s queues status\n", __func__,
-        (busState == WRITE ? "WRITE" : "READ"));
+            (busState == WRITE ? "WRITE" : "READ"));
 
     if (debug::QOS) {
         for (uint8_t i = 0; i < numPriorities(); ++i) {
             std::string plist = "";
             for (auto &e :
-                (busState == WRITE ? writeQueue[i] : readQueue[i])) {
+                 (busState == WRITE ? writeQueue[i] : readQueue[i])) {
                 plist += (std::to_string(e->req->requestorId())) + " ";
             }
             DPRINTF(QOS,
-                "%s priority Queue [%i] contains %i elements, "
-                "packets are: [%s]\n",
-                __func__, i,
-                busState == WRITE ? writeQueueSizes[i] : readQueueSizes[i],
-                plist);
+                    "%s priority Queue [%i] contains %i elements, "
+                    "packets are: [%s]\n",
+                    __func__, i,
+                    busState == WRITE ? writeQueueSizes[i] : readQueueSizes[i],
+                    plist);
         }
     }
 
@@ -244,8 +246,8 @@ MemSinkCtrl::processNextReqEvent()
         curr_prio--;
 
         DPRINTF(QOS, "%s checking %s queue [%d] priority [%d packets]\n",
-            __func__, (busState == READ ? "READ" : "WRITE"), curr_prio,
-            queue->size());
+                __func__, (busState == READ ? "READ" : "WRITE"), curr_prio,
+                queue->size());
 
         if (!queue->empty()) {
             // Call the queue policy to select packet from priority queue
@@ -254,10 +256,11 @@ MemSinkCtrl::processNextReqEvent()
             queue->erase(p_it);
 
             DPRINTF(QOS,
-                "%s scheduling packet address %d for requestor %s from "
-                "priority queue %d\n",
-                __func__, pkt->getAddr(),
-                _system->getRequestorName(pkt->req->requestorId()), curr_prio);
+                    "%s scheduling packet address %d for requestor %s from "
+                    "priority queue %d\n",
+                    __func__, pkt->getAddr(),
+                    _system->getRequestorName(pkt->req->requestorId()),
+                    curr_prio);
             break;
         }
     }
@@ -271,11 +274,11 @@ MemSinkCtrl::processNextReqEvent()
     uint64_t removed_entries = divCeil(pkt->getSize(), memoryPacketSize);
 
     DPRINTF(QOS,
-        "%s scheduled packet address %d for requestor %s size is %d, "
-        "corresponds to %d memory packets\n",
-        __func__, pkt->getAddr(),
-        _system->getRequestorName(pkt->req->requestorId()), pkt->getSize(),
-        removed_entries);
+            "%s scheduled packet address %d for requestor %s size is %d, "
+            "corresponds to %d memory packets\n",
+            __func__, pkt->getAddr(),
+            _system->getRequestorName(pkt->req->requestorId()), pkt->getSize(),
+            removed_entries);
 
     // Schedule response
     panic_if(!pkt->needsResponse(), "%s response not required\n", __func__);
@@ -286,12 +289,13 @@ MemSinkCtrl::processNextReqEvent()
 
     // Log the response
     logResponse(pkt->isRead() ? READ : WRITE, pkt->req->requestorId(),
-        pkt->qosValue(), pkt->getAddr(), removed_entries, responseLatency);
+                pkt->qosValue(), pkt->getAddr(), removed_entries,
+                responseLatency);
 
     // Schedule the response
     port.schedTimingResp(pkt, curTick() + responseLatency);
     DPRINTF(QOS, "%s response scheduled at time %d\n", __func__,
-        curTick() + responseLatency);
+            curTick() + responseLatency);
 
     // Finally - handle retry requests - this handles control
     // to the port, so do it last
@@ -308,7 +312,7 @@ MemSinkCtrl::processNextReqEvent()
         !nextReqEvent.scheduled()) {
         schedule(nextReqEvent, curTick() + requestLatency);
         DPRINTF(QOS, "%s scheduling next request event at tick %d\n", __func__,
-            curTick() + requestLatency);
+                curTick() + requestLatency);
     }
 }
 
@@ -316,24 +320,24 @@ DrainState
 MemSinkCtrl::drain()
 {
     if (totalReadQueueSize || totalWriteQueueSize) {
-        DPRINTF(
-            Drain, "%s queues have requests, waiting to drain\n", __func__);
+        DPRINTF(Drain, "%s queues have requests, waiting to drain\n",
+                __func__);
         return DrainState::Draining;
     } else {
         return DrainState::Drained;
     }
 }
 
-MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(numReadRetries, statistics::units::Count::get(),
-        "Number of read retries"),
-    ADD_STAT(numWriteRetries, statistics::units::Count::get(),
-        "Number of write retries")
+MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numReadRetries, statistics::units::Count::get(),
+               "Number of read retries"),
+      ADD_STAT(numWriteRetries, statistics::units::Count::get(),
+               "Number of write retries")
 {}
 
-MemSinkCtrl::MemoryPort::MemoryPort(const std::string &n, MemSinkCtrl &m) :
-    QueuedResponsePort(n, queue, true), mem(m), queue(mem, *this, true)
+MemSinkCtrl::MemoryPort::MemoryPort(const std::string &n, MemSinkCtrl &m)
+    : QueuedResponsePort(n, queue, true), mem(m), queue(mem, *this, true)
 {}
 
 AddrRangeList
@@ -371,8 +375,8 @@ MemSinkCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
     return mem.recvTimingReq(pkt);
 }
 
-MemSinkInterface::MemSinkInterface(const QoSMemSinkInterfaceParams &_p) :
-    AbstractMemory(_p)
+MemSinkInterface::MemSinkInterface(const QoSMemSinkInterfaceParams &_p)
+    : AbstractMemory(_p)
 {}
 
 } // namespace qos

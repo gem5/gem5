@@ -112,7 +112,7 @@ class Fetch
 
         void
         finish(const Fault &fault, const RequestPtr &req,
-            gem5::ThreadContext *tc, BaseMMU::Mode mode)
+               gem5::ThreadContext *tc, BaseMMU::Mode mode)
         {
             assert(mode == BaseMMU::Execute);
             fetch->finishTranslation(fault, req);
@@ -313,15 +313,16 @@ class Fetch
     }
 
     /** Squashes a specific thread and resets the PC. */
-    void doSquash(
-        const PCStateBase &new_pc, const DynInstPtr squashInst, ThreadID tid);
+    void doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
+                  ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode
      *  that should be sqaushed.
      */
     void squashFromDecode(const PCStateBase &new_pc,
-        const DynInstPtr squashInst, const InstSeqNum seq_num, ThreadID tid);
+                          const DynInstPtr squashInst,
+                          const InstSeqNum seq_num, ThreadID tid);
 
     /** Checks if a thread is stalled. */
     bool checkStall(ThreadID tid) const;
@@ -336,7 +337,7 @@ class Fetch
      * squash should be the commit stage.
      */
     void squash(const PCStateBase &new_pc, const InstSeqNum seq_num,
-        DynInstPtr squashInst, ThreadID tid);
+                DynInstPtr squashInst, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -373,8 +374,8 @@ class Fetch
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
-        StaticInstPtr curMacroop, const PCStateBase &this_pc,
-        const PCStateBase &next_pc, bool trace);
+                         StaticInstPtr curMacroop, const PCStateBase &this_pc,
+                         const PCStateBase &next_pc, bool trace);
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     ThreadID getFetchingThread();

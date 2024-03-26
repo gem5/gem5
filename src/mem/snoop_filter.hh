@@ -93,13 +93,13 @@ class SnoopFilter : public SimObject
 
     typedef std::vector<QueuedResponsePort *> SnoopList;
 
-    SnoopFilter(const SnoopFilterParams &p) :
-        SimObject(p),
-        reqLookupResult(cachedLocations.end()),
-        linesize(p.system->cacheLineSize()),
-        lookupLatency(p.lookup_latency),
-        maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
-        stats(this)
+    SnoopFilter(const SnoopFilterParams &p)
+        : SimObject(p),
+          reqLookupResult(cachedLocations.end()),
+          linesize(p.system->cacheLineSize()),
+          lookupLatency(p.lookup_latency),
+          maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
+          stats(this)
     {}
 
     /**
@@ -124,8 +124,8 @@ class SnoopFilter : public SimObject
 
         // make sure we can deal with this many ports
         fatal_if(id > SNOOP_MASK_SIZE,
-            "Snoop filter only supports %d snooping ports, got %d\n",
-            SNOOP_MASK_SIZE, id);
+                 "Snoop filter only supports %d snooping ports, got %d\n",
+                 SNOOP_MASK_SIZE, id);
     }
 
     /**
@@ -140,8 +140,8 @@ class SnoopFilter : public SimObject
      * @param cpu_side_port     Response port where the request came from.
      * @return Pair of a vector of snoop target ports and lookup latency.
      */
-    std::pair<SnoopList, Cycles> lookupRequest(
-        const Packet *cpkt, const ResponsePort &cpu_side_port);
+    std::pair<SnoopList, Cycles>
+    lookupRequest(const Packet *cpkt, const ResponsePort &cpu_side_port);
 
     /**
      * For an un-successful request, revert the change to the snoop
@@ -176,7 +176,7 @@ class SnoopFilter : public SimObject
      *                 destination of the snoop response.
      */
     void updateSnoopResponse(const Packet *cpkt, const ResponsePort &rsp_port,
-        const ResponsePort &req_port);
+                             const ResponsePort &req_port);
 
     /**
      * Pass snoop responses that travel downward through the snoop
@@ -188,7 +188,7 @@ class SnoopFilter : public SimObject
      * @param req_port RequestPort through which the response is forwarded.
      */
     void updateSnoopForward(const Packet *cpkt, const ResponsePort &rsp_port,
-        const RequestPort &req_port);
+                            const RequestPort &req_port);
 
     /**
      * Update the snoop filter with a response from below (outer /
@@ -291,8 +291,8 @@ class SnoopFilter : public SimObject
          *
          * @param end_it Iterator to the end of the internal cache.
          */
-        ReqLookupResult(SnoopFilterCache::iterator end_it) :
-            it(end_it), retryItem{0, 0}
+        ReqLookupResult(SnoopFilterCache::iterator end_it)
+            : it(end_it), retryItem{0, 0}
         {}
         ReqLookupResult() = delete;
     } reqLookupResult;

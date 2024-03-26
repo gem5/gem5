@@ -180,8 +180,8 @@ class ReturnAddrStack : public SimObject
      * @param brType The type of the branch.
      * @param ras_history The pointer to the history object.
      */
-    void commit(
-        ThreadID tid, bool misp, const BranchType brType, void *&ras_history);
+    void commit(ThreadID tid, bool misp, const BranchType brType,
+                void *&ras_history);
 
   private:
     class RASHistory

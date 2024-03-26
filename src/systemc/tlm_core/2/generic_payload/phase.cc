@@ -47,7 +47,7 @@ struct tlm_phase_registry
 
         if (name.empty()) {
             SC_REPORT_FATAL(sc_core::SC_ID_INTERNAL_ERROR_,
-                "unexpected empty tlm_phase name");
+                            "unexpected empty tlm_phase name");
             return UNINITIALIZED_PHASE;
         }
 
@@ -60,7 +60,8 @@ struct tlm_phase_registry
         }
 
         if (names_[it->second] != name) {
-            SC_REPORT_FATAL(sc_core::SC_ID_INTERNAL_ERROR_,
+            SC_REPORT_FATAL(
+                sc_core::SC_ID_INTERNAL_ERROR_,
                 "tlm_phase registration failed: duplicate type info");
             sc_core::sc_abort();
         }
@@ -95,8 +96,8 @@ struct tlm_phase_registry
 
 tlm_phase::tlm_phase(unsigned int id) : m_id(id) {}
 
-tlm_phase::tlm_phase(const std::type_info &type, const char *name) :
-    m_id(tlm_phase_registry::instance().register_phase(type, name))
+tlm_phase::tlm_phase(const std::type_info &type, const char *name)
+    : m_id(tlm_phase_registry::instance().register_phase(type, name))
 {}
 
 const char *

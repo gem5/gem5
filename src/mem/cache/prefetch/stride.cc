@@ -61,8 +61,8 @@ namespace gem5
 {
 namespace prefetch
 {
-Stride::StrideEntry::StrideEntry(const SatCounter8 &init_confidence) :
-    TaggedEntry(), confidence(init_confidence)
+Stride::StrideEntry::StrideEntry(const SatCounter8 &init_confidence)
+    : TaggedEntry(), confidence(init_confidence)
 {
     invalidate();
 }
@@ -76,14 +76,14 @@ Stride::StrideEntry::invalidate()
     confidence.reset();
 }
 
-Stride::Stride(const StridePrefetcherParams &p) :
-    Queued(p),
-    initConfidence(p.confidence_counter_bits, p.initial_confidence),
-    threshConf(p.confidence_threshold / 100.0),
-    useRequestorId(p.use_requestor_id),
-    degree(p.degree),
-    pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
-        p.table_replacement_policy)
+Stride::Stride(const StridePrefetcherParams &p)
+    : Queued(p),
+      initConfidence(p.confidence_counter_bits, p.initial_confidence),
+      threshConf(p.confidence_threshold / 100.0),
+      useRequestorId(p.use_requestor_id),
+      degree(p.degree),
+      pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
+                  p.table_replacement_policy)
 {}
 
 Stride::PCTable *
@@ -103,9 +103,10 @@ Stride::allocateNewContext(int context)
 {
     // Create new table
     auto insertion_result = pcTables.insert(std::make_pair(
-        context, PCTable(pcTableInfo.assoc, pcTableInfo.numEntries,
-                     pcTableInfo.indexingPolicy, pcTableInfo.replacementPolicy,
-                     StrideEntry(initConfidence))));
+        context,
+        PCTable(pcTableInfo.assoc, pcTableInfo.numEntries,
+                pcTableInfo.indexingPolicy, pcTableInfo.replacementPolicy,
+                StrideEntry(initConfidence))));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
@@ -115,7 +116,8 @@ Stride::allocateNewContext(int context)
 
 void
 Stride::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                          std::vector<AddrPriority> &addresses,
+                          const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -153,10 +155,10 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         }
 
         DPRINTF(HWPrefetch,
-            "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
-            "conf %d\n",
-            pc, pf_addr, is_secure ? "s" : "ns", new_stride,
-            stride_match ? "match" : "change", (int)entry->confidence);
+                "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
+                "conf %d\n",
+                pc, pf_addr, is_secure ? "s" : "ns", new_stride,
+                stride_match ? "match" : "change", (int)entry->confidence);
 
         entry->lastAddr = pf_addr;
 
@@ -179,7 +181,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     } else {
         // Miss in table
         DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
-            is_secure ? "s" : "ns");
+                is_secure ? "s" : "ns");
 
         StrideEntry *entry = pcTable->findVictim(pc);
 

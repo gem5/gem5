@@ -42,7 +42,7 @@
 #include "dev/net/etherpkt.hh"
 
 #if HAVE_TUNTAP
-#    include "params/EtherTap.hh"
+#include "params/EtherTap.hh"
 
 #endif
 
@@ -92,8 +92,8 @@ class EtherTapBase : public SimObject
     EtherTapInt *interface;
 
   public:
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     bool recvSimulated(EthPacketPtr packet);
     void sendSimulated(void *data, size_t len);
@@ -110,8 +110,8 @@ class EtherTapInt : public EtherInt
     EtherTapBase *tap;
 
   public:
-    EtherTapInt(const std::string &name, EtherTapBase *t) :
-        EtherInt(name), tap(t)
+    EtherTapInt(const std::string &name, EtherTapBase *t)
+        : EtherInt(name), tap(t)
     {}
 
     bool

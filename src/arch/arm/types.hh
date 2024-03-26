@@ -460,7 +460,7 @@ unknownMode32(OperatingMode mode)
 constexpr unsigned MaxSveVecLenInBits = 2048;
 static_assert(MaxSveVecLenInBits >= 128 && MaxSveVecLenInBits <= 2048 &&
                   MaxSveVecLenInBits % 128 == 0,
-    "Unsupported max. SVE vector length");
+              "Unsupported max. SVE vector length");
 constexpr unsigned MaxSveVecLenInBytes = MaxSveVecLenInBits >> 3;
 constexpr unsigned MaxSveVecLenInWords = MaxSveVecLenInBits >> 5;
 constexpr unsigned MaxSveVecLenInDWords = MaxSveVecLenInBits >> 6;
@@ -474,7 +474,7 @@ static_assert(MaxSmeVecLenInBits >= 128 && MaxSmeVecLenInBits <= 2048 &&
                   // check for the zero case here as we already know it
                   // is over 128.
                   (MaxSmeVecLenInBits & (MaxSmeVecLenInBits - 1)) == 0,
-    "Unsupported max. SME vector length");
+              "Unsupported max. SME vector length");
 constexpr unsigned MaxSmeVecLenInBytes = MaxSmeVecLenInBits >> 3;
 constexpr unsigned MaxSmeVecLenInWords = MaxSmeVecLenInBits >> 5;
 constexpr unsigned MaxSmeVecLenInDWords = MaxSmeVecLenInBits >> 6;

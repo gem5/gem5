@@ -62,7 +62,7 @@ namespace sc_dt
 // Handles the cases 3 and 4 and returns the result in u.
 void
 add_on_help(small_type &us, int /* unb */, int und, sc_digit *ud,
-    small_type vs, int /* vnb */, int vnd, const sc_digit *vd)
+            small_type vs, int /* vnb */, int vnd, const sc_digit *vd)
 {
     vnd = vec_skip_leading_zeros(vnd, vd);
 
@@ -115,7 +115,7 @@ vice versa.
 
 void
 mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
-    int vnd, const sc_digit *vd)
+                   int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_signed_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_signed
@@ -176,7 +176,7 @@ mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
 
 void
 mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
-    int vnd, const sc_digit *vd)
+                     int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_unsigned_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_unsigned
@@ -241,7 +241,7 @@ mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
 
 void
 div_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
-    int vnd, const sc_digit *vd)
+                   int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_signed_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_signed
@@ -299,7 +299,7 @@ div_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
 
 void
 div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
-    int vnd, const sc_digit *vd)
+                     int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_unsigned_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_unsigned
@@ -361,7 +361,7 @@ div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
 
 void
 mod_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
-    int /* vnb */, int vnd, const sc_digit *vd)
+                   int /* vnb */, int vnd, const sc_digit *vd)
 {
 #define COPY_DIGITS copy_digits_signed
     { // Body of mod_on_help
@@ -426,7 +426,7 @@ mod_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
 
 void
 mod_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
-    int /* vnb */, int vnd, const sc_digit *vd)
+                     int /* vnb */, int vnd, const sc_digit *vd)
 {
 #define COPY_DIGITS copy_digits_unsigned
     { // Body of mod_on_help
@@ -497,7 +497,7 @@ mod_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
 // Handles the cases 2-5 and returns the result in u.
 void
 and_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
-    int /* vnb */, int vnd, const sc_digit *vd)
+            int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;
@@ -571,7 +571,7 @@ and_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
 // Handles the cases 3-5 and returns the result in u.
 void
 or_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
-    int /* vnb */, int vnd, const sc_digit *vd)
+           int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;
@@ -648,7 +648,7 @@ or_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
 // Handles the cases 3-5 and returns the result in u.
 void
 xor_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
-    int /* vnb */, int vnd, const sc_digit *vd)
+            int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;

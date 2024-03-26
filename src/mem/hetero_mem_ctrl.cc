@@ -55,17 +55,18 @@ namespace gem5
 {
 namespace memory
 {
-HeteroMemCtrl::HeteroMemCtrl(const HeteroMemCtrlParams &p) :
-    MemCtrl(p), nvm(p.nvm)
+HeteroMemCtrl::HeteroMemCtrl(const HeteroMemCtrlParams &p)
+    : MemCtrl(p), nvm(p.nvm)
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
     readQueue.resize(p.qos_priorities);
     writeQueue.resize(p.qos_priorities);
 
-    fatal_if(dynamic_cast<DRAMInterface *>(dram) == nullptr,
+    fatal_if(
+        dynamic_cast<DRAMInterface *>(dram) == nullptr,
         "HeteroMemCtrl's dram interface must be of type DRAMInterface.\n");
     fatal_if(dynamic_cast<NVMInterface *>(nvm) == nullptr,
-        "HeteroMemCtrl's nvm interface must be of type NVMInterface.\n");
+             "HeteroMemCtrl's nvm interface must be of type NVMInterface.\n");
 
     // hook up interfaces to the controller
     dram->setCtrl(this, commandWindow);
@@ -81,7 +82,7 @@ HeteroMemCtrl::HeteroMemCtrl(const HeteroMemCtrlParams &p) :
     if (p.write_low_thresh_perc >= p.write_high_thresh_perc)
         fatal("Write buffer low threshold %d must be smaller than the "
               "high threshold %d\n",
-            p.write_low_thresh_perc, p.write_high_thresh_perc);
+              p.write_low_thresh_perc, p.write_high_thresh_perc);
 }
 
 Tick
@@ -105,13 +106,13 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
 {
     // This is where we enter from the outside world
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
-        pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
                                      "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "Should only see read and writes at memory controller\n");
+             "Should only see read and writes at memory controller\n");
 
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -190,11 +191,12 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
 
 void
 HeteroMemCtrl::processRespondEvent(MemInterface *mem_intr,
-    MemPacketQueue &queue, EventFunctionWrapper &resp_event,
-    bool &retry_rd_req)
+                                   MemPacketQueue &queue,
+                                   EventFunctionWrapper &resp_event,
+                                   bool &retry_rd_req)
 {
     DPRINTF(MemCtrl,
-        "processRespondEvent(): Some req has reached its readyTime\n");
+            "processRespondEvent(): Some req has reached its readyTime\n");
 
     if (queue.front()->isDram()) {
         MemCtrl::processRespondEvent(dram, queue, resp_event, retry_rd_req);
@@ -204,8 +206,8 @@ HeteroMemCtrl::processRespondEvent(MemInterface *mem_intr,
 }
 
 MemPacketQueue::iterator
-HeteroMemCtrl::chooseNext(
-    MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_int)
+HeteroMemCtrl::chooseNext(MemPacketQueue &queue, Tick extra_col_delay,
+                          MemInterface *mem_int)
 {
     // This method does the arbitration between requests.
 
@@ -242,8 +244,8 @@ HeteroMemCtrl::chooseNext(
 }
 
 std::pair<MemPacketQueue::iterator, Tick>
-HeteroMemCtrl::chooseNextFRFCFS(
-    MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_intr)
+HeteroMemCtrl::chooseNextFRFCFS(MemPacketQueue &queue, Tick extra_col_delay,
+                                MemInterface *mem_intr)
 {
     auto selected_pkt_it = queue.end();
     auto nvm_pkt_it = queue.end();
@@ -343,15 +345,15 @@ HeteroMemCtrl::nvmWriteBlock(MemInterface *mem_intr)
 Tick
 HeteroMemCtrl::minReadToWriteDataGap()
 {
-    return std::min(
-        dram->minReadToWriteDataGap(), nvm->minReadToWriteDataGap());
+    return std::min(dram->minReadToWriteDataGap(),
+                    nvm->minReadToWriteDataGap());
 }
 
 Tick
 HeteroMemCtrl::minWriteToReadDataGap()
 {
-    return std::min(
-        dram->minWriteToReadDataGap(), nvm->minWriteToReadDataGap());
+    return std::min(dram->minWriteToReadDataGap(),
+                    nvm->minWriteToReadDataGap());
 }
 
 Addr
@@ -410,11 +412,11 @@ HeteroMemCtrl::drain()
     // if there is anything in any of our internal queues, keep track
     // of that as well
     if (!(!totalWriteQueueSize && !totalReadQueueSize && respQueue.empty() &&
-            allIntfDrained())) {
+          allIntfDrained())) {
         DPRINTF(Drain,
-            "Memory controller not drained, write: %d, read: %d,"
-            " resp: %d\n",
-            totalWriteQueueSize, totalReadQueueSize, respQueue.size());
+                "Memory controller not drained, write: %d, read: %d,"
+                " resp: %d\n",
+                totalWriteQueueSize, totalReadQueueSize, respQueue.size());
 
         // the only queue that is not drained automatically over time
         // is the write queue, thus kick things into action if needed

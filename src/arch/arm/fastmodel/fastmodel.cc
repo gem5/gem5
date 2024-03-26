@@ -48,8 +48,8 @@ namespace gem5
 namespace
 {
 void
-fastmodel_sc_report_handler(
-    const sc_core::sc_report &report, const sc_core::sc_actions &actions)
+fastmodel_sc_report_handler(const sc_core::sc_report &report,
+                            const sc_core::sc_actions &actions)
 {
     const char *msg = report.get_msg();
     if (!msg)
@@ -80,11 +80,11 @@ arm_fast_model_pybind(pybind11::module_ &m_internal)
         // especially since there are other preferred methods for setting up
         // the parameters of a component.
         .def("scx_set_parameter",
-            static_cast<bool (*)(const std::string &, const std::string &)>(
-                &scx::scx_set_parameter))
+             static_cast<bool (*)(const std::string &, const std::string &)>(
+                 &scx::scx_set_parameter))
         .def("scx_get_parameter",
-            static_cast<bool (*)(const std::string &, std::string &)>(
-                &scx::scx_get_parameter))
+             static_cast<bool (*)(const std::string &, std::string &)>(
+                 &scx::scx_get_parameter))
         .def("scx_get_parameter_list", &scx::scx_get_parameter_list)
 
         .def("scx_set_cpi_file", &scx::scx_set_cpi_file)
@@ -98,9 +98,9 @@ arm_fast_model_pybind(pybind11::module_ &m_internal)
         .def(
             "scx_parse_and_configure",
             [](int argc, std::vector<char *> argv, const char *trailer = NULL,
-                bool sig_handler = true) {
-                scx::scx_parse_and_configure(
-                    argc, argv.data(), trailer, sig_handler);
+               bool sig_handler = true) {
+                scx::scx_parse_and_configure(argc, argv.data(), trailer,
+                                             sig_handler);
             },
             pybind11::arg("argc"), pybind11::arg("argv"),
             pybind11::arg("trailer") = NULL,
@@ -108,26 +108,26 @@ arm_fast_model_pybind(pybind11::module_ &m_internal)
 
         // CADI stuff.
         .def("scx_start_cadi_server", &scx::scx_start_cadi_server,
-            pybind11::arg("start") = true, pybind11::arg("run") = true,
-            pybind11::arg("debug") = false)
+             pybind11::arg("start") = true, pybind11::arg("run") = true,
+             pybind11::arg("debug") = false)
         .def("scx_enable_cadi_log", &scx::scx_enable_cadi_log,
-            pybind11::arg("log") = true)
+             pybind11::arg("log") = true)
         .def("scx_print_port_number", &scx::scx_print_port_number,
-            pybind11::arg("print") = true)
+             pybind11::arg("print") = true)
 
         .def("scx_print_statistics", &scx::scx_print_statistics,
-            pybind11::arg("print") = true)
+             pybind11::arg("print") = true)
         .def("scx_load_plugin", &scx::scx_load_plugin)
         .def("scx_sync", &scx::scx_sync)
         .def("scx_set_min_sync_latency",
-            static_cast<void (*)(double)>(&scx::scx_set_min_sync_latency))
-        .def("scx_set_min_sync_latency",
-            static_cast<void (*)(sg::ticks_t)>(&scx::scx_set_min_sync_latency))
+             static_cast<void (*)(double)>(&scx::scx_set_min_sync_latency))
+        .def("scx_set_min_sync_latency", static_cast<void (*)(sg::ticks_t)>(
+                                             &scx::scx_set_min_sync_latency))
         .def("scx_get_min_sync_latency",
-            static_cast<double (*)()>(&scx::scx_get_min_sync_latency))
+             static_cast<double (*)()>(&scx::scx_get_min_sync_latency))
         .def("scx_get_min_sync_latency",
-            static_cast<sg::ticks_t (*)(sg::Tag<sg::ticks_t> *)>(
-                &scx::scx_get_min_sync_latency));
+             static_cast<sg::ticks_t (*)(sg::Tag<sg::ticks_t> *)>(
+                 &scx::scx_get_min_sync_latency));
 
     // submodule for gem5-specific functions
     auto gem5 = arm_fast_model.def_submodule("gem5");

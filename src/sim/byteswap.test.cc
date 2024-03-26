@@ -86,20 +86,20 @@ TEST(ByteswapTest, swap_byte)
 
 TEST(ByteswapTest, htog)
 {
-#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) && \
+#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) &&                     \
     BYTE_ORDER == BIG_ENDIAN
     EXPECT_EQ(0xefcdab8967452301,
-        htog((uint64_t)0xefcdab8967452301, ByteOrder::big));
+              htog((uint64_t)0xefcdab8967452301, ByteOrder::big));
     EXPECT_EQ(0x1032547698badcfe,
-        htog((uint64_t)0x1032547698badcfe, ByteOrder::big));
+              htog((uint64_t)0x1032547698badcfe, ByteOrder::big));
     EXPECT_EQ(0xb14171b771b01c0b,
-        htog((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
+              htog((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
     EXPECT_EQ(0xffffffff00000000,
-        htog((uint64_t)0xffffffff00000000, ByteOrder::big));
+              htog((uint64_t)0xffffffff00000000, ByteOrder::big));
     EXPECT_EQ(0x5555555555555555,
-        htog((uint64_t)0x5555555555555555, ByteOrder::big));
+              htog((uint64_t)0x5555555555555555, ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
+              htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
     EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, ByteOrder::big));
     EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, ByteOrder::big));
     EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, ByteOrder::big));
@@ -113,17 +113,17 @@ TEST(ByteswapTest, htog)
     EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::big));
     EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0x0123456789abcdef,
-        htog((uint64_t)0xefcdab8967452301, ByteOrder::little));
+              htog((uint64_t)0xefcdab8967452301, ByteOrder::little));
     EXPECT_EQ(0xfedcba9876543210,
-        htog((uint64_t)0x1032547698badcfe, ByteOrder::little));
+              htog((uint64_t)0x1032547698badcfe, ByteOrder::little));
     EXPECT_EQ(0x0b1cb071b77141b1,
-        htog((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
+              htog((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
     EXPECT_EQ(0x00000000ffffffff,
-        htog((uint64_t)0xffffffff00000000, ByteOrder::little));
+              htog((uint64_t)0xffffffff00000000, ByteOrder::little));
     EXPECT_EQ(0x5555555555555555,
-        htog((uint64_t)0x5555555555555555, ByteOrder::little));
+              htog((uint64_t)0x5555555555555555, ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
+              htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
     EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, ByteOrder::little));
     EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, ByteOrder::little));
     EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, ByteOrder::little));
@@ -138,17 +138,17 @@ TEST(ByteswapTest, htog)
     EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::little));
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER == LITTLE_ENDIAN
     EXPECT_EQ(0x0123456789abcdef,
-        htog((uint64_t)0xefcdab8967452301, ByteOrder::big));
+              htog((uint64_t)0xefcdab8967452301, ByteOrder::big));
     EXPECT_EQ(0xfedcba9876543210,
-        htog((uint64_t)0x1032547698badcfe, ByteOrder::big));
+              htog((uint64_t)0x1032547698badcfe, ByteOrder::big));
     EXPECT_EQ(0x0b1cb071b77141b1,
-        htog((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
+              htog((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
     EXPECT_EQ(0x00000000ffffffff,
-        htog((uint64_t)0xffffffff00000000, ByteOrder::big));
+              htog((uint64_t)0xffffffff00000000, ByteOrder::big));
     EXPECT_EQ(0x5555555555555555,
-        htog((uint64_t)0x5555555555555555, ByteOrder::big));
+              htog((uint64_t)0x5555555555555555, ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
+              htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
     EXPECT_EQ(0x0123cdef, htog((uint32_t)0xefcd2301, ByteOrder::big));
     EXPECT_EQ(0xfedc3210, htog((uint32_t)0x1032dcfe, ByteOrder::big));
     EXPECT_EQ(0x0b1c41b1, htog((uint32_t)0xb1411c0b, ByteOrder::big));
@@ -162,17 +162,17 @@ TEST(ByteswapTest, htog)
     EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::big));
     EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0xefcdab8967452301,
-        htog((uint64_t)0xefcdab8967452301, ByteOrder::little));
+              htog((uint64_t)0xefcdab8967452301, ByteOrder::little));
     EXPECT_EQ(0x1032547698badcfe,
-        htog((uint64_t)0x1032547698badcfe, ByteOrder::little));
+              htog((uint64_t)0x1032547698badcfe, ByteOrder::little));
     EXPECT_EQ(0xb14171b771b01c0b,
-        htog((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
+              htog((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
     EXPECT_EQ(0xffffffff00000000,
-        htog((uint64_t)0xffffffff00000000, ByteOrder::little));
+              htog((uint64_t)0xffffffff00000000, ByteOrder::little));
     EXPECT_EQ(0x5555555555555555,
-        htog((uint64_t)0x5555555555555555, ByteOrder::little));
+              htog((uint64_t)0x5555555555555555, ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
+              htog((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
     EXPECT_EQ(0xefcd2301, htog((uint32_t)0xefcd2301, ByteOrder::little));
     EXPECT_EQ(0x1032dcfe, htog((uint32_t)0x1032dcfe, ByteOrder::little));
     EXPECT_EQ(0xb1411c0b, htog((uint32_t)0xb1411c0b, ByteOrder::little));
@@ -186,26 +186,26 @@ TEST(ByteswapTest, htog)
     EXPECT_EQ(0x5555, htog((uint16_t)0x5555, ByteOrder::little));
     EXPECT_EQ(0xa0a0, htog((uint16_t)0xa0a0, ByteOrder::little));
 #else
-#    error Invalid Endianess
+#error Invalid Endianess
 #endif
 }
 
 TEST(ByteswapTest, gtoh)
 {
-#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) && \
+#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) &&                     \
     BYTE_ORDER == BIG_ENDIAN
     EXPECT_EQ(0xefcdab8967452301,
-        gtoh((uint64_t)0xefcdab8967452301, ByteOrder::big));
+              gtoh((uint64_t)0xefcdab8967452301, ByteOrder::big));
     EXPECT_EQ(0x1032547698badcfe,
-        gtoh((uint64_t)0x1032547698badcfe, ByteOrder::big));
+              gtoh((uint64_t)0x1032547698badcfe, ByteOrder::big));
     EXPECT_EQ(0xb14171b771b01c0b,
-        gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
+              gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
     EXPECT_EQ(0xffffffff00000000,
-        gtoh((uint64_t)0xffffffff00000000, ByteOrder::big));
+              gtoh((uint64_t)0xffffffff00000000, ByteOrder::big));
     EXPECT_EQ(0x5555555555555555,
-        gtoh((uint64_t)0x5555555555555555, ByteOrder::big));
+              gtoh((uint64_t)0x5555555555555555, ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
+              gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
     EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, ByteOrder::big));
     EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, ByteOrder::big));
     EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, ByteOrder::big));
@@ -219,17 +219,17 @@ TEST(ByteswapTest, gtoh)
     EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::big));
     EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0x0123456789abcdef,
-        gtoh((uint64_t)0xefcdab8967452301, ByteOrder::little));
+              gtoh((uint64_t)0xefcdab8967452301, ByteOrder::little));
     EXPECT_EQ(0xfedcba9876543210,
-        gtoh((uint64_t)0x1032547698badcfe, ByteOrder::little));
+              gtoh((uint64_t)0x1032547698badcfe, ByteOrder::little));
     EXPECT_EQ(0x0b1cb071b77141b1,
-        gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
+              gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
     EXPECT_EQ(0x00000000ffffffff,
-        gtoh((uint64_t)0xffffffff00000000, ByteOrder::little));
+              gtoh((uint64_t)0xffffffff00000000, ByteOrder::little));
     EXPECT_EQ(0x5555555555555555,
-        gtoh((uint64_t)0x5555555555555555, ByteOrder::little));
+              gtoh((uint64_t)0x5555555555555555, ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
+              gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
     EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, ByteOrder::little));
     EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, ByteOrder::little));
     EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, ByteOrder::little));
@@ -244,17 +244,17 @@ TEST(ByteswapTest, gtoh)
     EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::little));
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER == LITTLE_ENDIAN
     EXPECT_EQ(0x0123456789abcdef,
-        gtoh((uint64_t)0xefcdab8967452301, ByteOrder::big));
+              gtoh((uint64_t)0xefcdab8967452301, ByteOrder::big));
     EXPECT_EQ(0xfedcba9876543210,
-        gtoh((uint64_t)0x1032547698badcfe, ByteOrder::big));
+              gtoh((uint64_t)0x1032547698badcfe, ByteOrder::big));
     EXPECT_EQ(0x0b1cb071b77141b1,
-        gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
+              gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::big));
     EXPECT_EQ(0x00000000ffffffff,
-        gtoh((uint64_t)0xffffffff00000000, ByteOrder::big));
+              gtoh((uint64_t)0xffffffff00000000, ByteOrder::big));
     EXPECT_EQ(0x5555555555555555,
-        gtoh((uint64_t)0x5555555555555555, ByteOrder::big));
+              gtoh((uint64_t)0x5555555555555555, ByteOrder::big));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
+              gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::big));
     EXPECT_EQ(0x0123cdef, gtoh((uint32_t)0xefcd2301, ByteOrder::big));
     EXPECT_EQ(0xfedc3210, gtoh((uint32_t)0x1032dcfe, ByteOrder::big));
     EXPECT_EQ(0x0b1c41b1, gtoh((uint32_t)0xb1411c0b, ByteOrder::big));
@@ -268,17 +268,17 @@ TEST(ByteswapTest, gtoh)
     EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::big));
     EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::big));
     EXPECT_EQ(0xefcdab8967452301,
-        gtoh((uint64_t)0xefcdab8967452301, ByteOrder::little));
+              gtoh((uint64_t)0xefcdab8967452301, ByteOrder::little));
     EXPECT_EQ(0x1032547698badcfe,
-        gtoh((uint64_t)0x1032547698badcfe, ByteOrder::little));
+              gtoh((uint64_t)0x1032547698badcfe, ByteOrder::little));
     EXPECT_EQ(0xb14171b771b01c0b,
-        gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
+              gtoh((uint64_t)0xb14171b771b01c0b, ByteOrder::little));
     EXPECT_EQ(0xffffffff00000000,
-        gtoh((uint64_t)0xffffffff00000000, ByteOrder::little));
+              gtoh((uint64_t)0xffffffff00000000, ByteOrder::little));
     EXPECT_EQ(0x5555555555555555,
-        gtoh((uint64_t)0x5555555555555555, ByteOrder::little));
+              gtoh((uint64_t)0x5555555555555555, ByteOrder::little));
     EXPECT_EQ(0xa0a0a0a0a0a0a0a0,
-        gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
+              gtoh((uint64_t)0xa0a0a0a0a0a0a0a0, ByteOrder::little));
     EXPECT_EQ(0xefcd2301, gtoh((uint32_t)0xefcd2301, ByteOrder::little));
     EXPECT_EQ(0x1032dcfe, gtoh((uint32_t)0x1032dcfe, ByteOrder::little));
     EXPECT_EQ(0xb1411c0b, gtoh((uint32_t)0xb1411c0b, ByteOrder::little));
@@ -292,7 +292,7 @@ TEST(ByteswapTest, gtoh)
     EXPECT_EQ(0x5555, gtoh((uint16_t)0x5555, ByteOrder::little));
     EXPECT_EQ(0xa0a0, gtoh((uint16_t)0xa0a0, ByteOrder::little));
 #else
-#    error Invalid Endianess
+#error Invalid Endianess
 #endif
 }
 

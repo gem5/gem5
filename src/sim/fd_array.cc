@@ -47,14 +47,17 @@
 namespace gem5
 {
 FDArray::FDArray(std::string const &input, std::string const &output,
-    std::string const &errout) :
-    _fdArray(),
-    _input(input),
-    _output(output),
-    _errout(errout),
-    _imap{{"", -1}, {"cin", STDIN_FILENO}, {"stdin", STDIN_FILENO}},
-    _oemap{{"", -1}, {"cout", STDOUT_FILENO}, {"stdout", STDOUT_FILENO},
-        {"cerr", STDERR_FILENO}, {"stderr", STDERR_FILENO}}
+                 std::string const &errout)
+    : _fdArray(),
+      _input(input),
+      _output(output),
+      _errout(errout),
+      _imap{{"", -1}, {"cin", STDIN_FILENO}, {"stdin", STDIN_FILENO}},
+      _oemap{{"", -1},
+             {"cout", STDOUT_FILENO},
+             {"stdout", STDOUT_FILENO},
+             {"cerr", STDERR_FILENO},
+             {"stderr", STDERR_FILENO}}
 {
     int sim_fd;
     std::map<std::string, int>::iterator it;
@@ -80,8 +83,8 @@ FDArray::FDArray(std::string const &input, std::string const &output,
     else
         sim_fd = openOutputFile(output);
 
-    ffd = std::make_shared<FileFDEntry>(
-        sim_fd, O_WRONLY | O_CREAT | O_TRUNC, output, false);
+    ffd = std::make_shared<FileFDEntry>(sim_fd, O_WRONLY | O_CREAT | O_TRUNC,
+                                        output, false);
     _fdArray[STDOUT_FILENO] = ffd;
 
     if (output == errout)
@@ -91,8 +94,8 @@ FDArray::FDArray(std::string const &input, std::string const &output,
     else
         sim_fd = openOutputFile(errout);
 
-    ffd = std::make_shared<FileFDEntry>(
-        sim_fd, O_WRONLY | O_CREAT | O_TRUNC, errout, false);
+    ffd = std::make_shared<FileFDEntry>(sim_fd, O_WRONLY | O_CREAT | O_TRUNC,
+                                        errout, false);
     _fdArray[STDERR_FILENO] = ffd;
 }
 
@@ -148,7 +151,7 @@ FDArray::restoreFileOffsets()
 
     if (_input != stdin_ffd->getFileName()) {
         warn("Using new input file (%s) rather than checkpointed (%s)\n",
-            _input, stdin_ffd->getFileName());
+             _input, stdin_ffd->getFileName());
         stdin_ffd->setFileName(_input);
         stdin_ffd->setFileOffset(0);
     }
@@ -172,7 +175,7 @@ FDArray::restoreFileOffsets()
 
     if (_output != stdout_ffd->getFileName()) {
         warn("Using new output file (%s) rather than checkpointed (%s)\n",
-            _output, stdout_ffd->getFileName());
+             _output, stdout_ffd->getFileName());
         stdout_ffd->setFileName(_output);
         stdout_ffd->setFileOffset(0);
     }
@@ -196,7 +199,7 @@ FDArray::restoreFileOffsets()
 
     if (_errout != stderr_ffd->getFileName()) {
         warn("Using new error file (%s) rather than checkpointed (%s)\n",
-            _errout, stderr_ffd->getFileName());
+             _errout, stderr_ffd->getFileName());
         stderr_ffd->setFileName(_errout);
         stderr_ffd->setFileOffset(0);
     }
@@ -308,8 +311,8 @@ FDArray::openInputFile(std::string const &filename) const
 int
 FDArray::openOutputFile(std::string const &filename) const
 {
-    return openFile(
-        simout.resolve(filename), O_WRONLY | O_CREAT | O_TRUNC, 0664);
+    return openFile(simout.resolve(filename), O_WRONLY | O_CREAT | O_TRUNC,
+                    0664);
 }
 
 std::shared_ptr<FDEntry>
@@ -396,8 +399,8 @@ FDArray::unserialize(CheckpointIn &cp, Process *process_ptr)
             fdep = std::make_shared<DeviceFDEntry>(nullptr, "");
             break;
         case FDEntry::FDClass::fd_pipe:
-            fdep = std::make_shared<PipeFDEntry>(
-                0, 0, PipeFDEntry::EndType::read);
+            fdep = std::make_shared<PipeFDEntry>(0, 0,
+                                                 PipeFDEntry::EndType::read);
             break;
         case FDEntry::FDClass::fd_socket:
             fdep = std::make_shared<SocketFDEntry>(0, 0, 0, 0);

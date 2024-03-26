@@ -60,8 +60,8 @@ namespace gem5
 {
 OutputDirectory simout;
 
-OutputStream::OutputStream(const std::string &name, std::ostream *stream) :
-    _name(name), _stream(stream)
+OutputStream::OutputStream(const std::string &name, std::ostream *stream)
+    : _name(name), _stream(stream)
 {}
 
 OutputStream::~OutputStream() {}
@@ -72,11 +72,13 @@ OutputStream::relocate(const OutputDirectory &dir)
 
 template <class StreamType>
 OutputFile<StreamType>::OutputFile(const OutputDirectory &dir,
-    const std::string &name, std::ios_base::openmode mode, bool recreateable) :
-    OutputStream(name, new stream_type_t()),
-    _mode(mode),
-    _recreateable(recreateable),
-    _fstream(static_cast<stream_type_t *>(_stream))
+                                   const std::string &name,
+                                   std::ios_base::openmode mode,
+                                   bool recreateable)
+    : OutputStream(name, new stream_type_t()),
+      _mode(mode),
+      _recreateable(recreateable),
+      _fstream(static_cast<stream_type_t *>(_stream))
 {
     std::string resolved_path = dir.resolve(_name);
 
@@ -213,7 +215,7 @@ OutputDirectory::create(const std::string &name, bool binary, bool no_gz)
 
 OutputStream *
 OutputDirectory::open(const std::string &name, std::ios_base::openmode mode,
-    bool recreateable, bool no_gz)
+                      bool recreateable, bool no_gz)
 {
     OutputStream *os;
 
@@ -312,7 +314,7 @@ OutputDirectory::remove(const std::string &name, bool recursive)
             if (!subdir) {
                 perror("opendir");
                 fatal("Error opening directory for recursive removal '%s'\n",
-                    fname);
+                      fname);
             }
 
             struct dirent *de = readdir(subdir);

@@ -46,7 +46,7 @@ namespace ruby
 struct DMARequest
 {
     DMARequest(uint64_t start_paddr, int len, bool write, int bytes_completed,
-        int bytes_issued, uint8_t *data, PacketPtr pkt);
+               int bytes_issued, uint8_t *data, PacketPtr pkt);
 
     uint64_t start_paddr;
     int len;

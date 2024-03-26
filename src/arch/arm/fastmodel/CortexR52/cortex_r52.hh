@@ -60,8 +60,8 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 
   public:
     PARAMS(FastModelCortexR52);
-    CortexR52(const Params &p) :
-        Base(p, scx::scx_get_iris_connection_interface())
+    CortexR52(const Params &p)
+        : Base(p, scx::scx_get_iris_connection_interface())
     {}
 
     template <class T>
@@ -71,8 +71,8 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 
     void setResetAddr(Addr addr, bool secure = false) override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 class CortexR52Cluster : public SimObject
@@ -103,8 +103,8 @@ class CortexR52Cluster : public SimObject
     PARAMS(FastModelCortexR52Cluster);
     CortexR52Cluster(const Params &p);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 template <class T>

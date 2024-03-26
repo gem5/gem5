@@ -67,7 +67,7 @@ class MemState : public Serializable
 {
   public:
     MemState(Process *owner, Addr brk_point, Addr stack_base,
-        Addr max_stack_size, Addr next_thread_stack_base, Addr mmap_end);
+             Addr max_stack_size, Addr next_thread_stack_base, Addr mmap_end);
 
     MemState &operator=(const MemState &in);
 
@@ -182,7 +182,8 @@ class MemState : public Serializable
      * @param offset Offset in file in which region starts.
      */
     void mapRegion(Addr start_addr, Addr length,
-        const std::string &name = "anon", int sim_fd = -1, Addr offset = 0);
+                   const std::string &name = "anon", int sim_fd = -1,
+                   Addr offset = 0);
 
     /**
      * Unmap a pre-existing region. Depending on the range being unmapped
@@ -288,14 +289,14 @@ class MemState : public Serializable
             if (optParamIn(cp, "fileOffset", offset, false)) {
                 host_fd = open(name.c_str(), O_RDONLY);
                 fatal_if(host_fd < 0,
-                    "Failed to open %s file "
-                    "while unserializing file-backed VMA\n",
-                    name);
+                         "Failed to open %s file "
+                         "while unserializing file-backed VMA\n",
+                         name);
             }
             paramIn(cp, "addrRangeStart", start);
             paramIn(cp, "addrRangeEnd", end);
-            _vmaList.emplace_back(
-                AddrRange(start, end), _pageBytes, name, host_fd, offset);
+            _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name,
+                                  host_fd, offset);
             close(host_fd);
         }
     }
@@ -309,8 +310,8 @@ class MemState : public Serializable
     /**
      * @param
      */
-    void replicatePage(
-        const MemState &in, Addr vaddr, Addr new_paddr, bool alloc_page);
+    void replicatePage(const MemState &in, Addr vaddr, Addr new_paddr,
+                       bool alloc_page);
 
     /**
      * @param

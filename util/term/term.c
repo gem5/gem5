@@ -127,8 +127,8 @@ remote_connect_inet(char *host, char *port)
 
     res0 = res;
     do {
-        if ((s = socket(
-                 res0->ai_family, res0->ai_socktype, res0->ai_protocol)) < 0)
+        if ((s = socket(res0->ai_family, res0->ai_socktype,
+                        res0->ai_protocol)) < 0)
             continue;
 
         if (connect(s, res0->ai_addr, res0->ai_addrlen) == 0)
@@ -183,7 +183,8 @@ remote_connect_unix(const char *cpath)
         // we include will be part of the lookup.
         int len = strlen(path);
         if (len < path_size) {
-            fprintf(stderr,
+            fprintf(
+                stderr,
                 "warning: Truncated abstract socket from %d to %d bytes.\n",
                 len, path_size);
             path_size = len;

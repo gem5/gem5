@@ -68,7 +68,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("Int reg idx %d doesn't match, one: %#x, two: %#x",
-                id.index(), t1, t2);
+                  id.index(), t1, t2);
     }
 
     // Then loop through the floating point registers.
@@ -77,7 +77,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
-                id.index(), t1, t2);
+                  id.index(), t1, t2);
     }
 
     // Then loop through the vector registers.
@@ -89,8 +89,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         two->getReg(id, vec2.data());
         if (vec1 != vec2) {
             panic("Vec reg idx %d doesn't match, one: %#x, two: %#x",
-                id.index(), vec_class->valString(vec1.data()),
-                vec_class->valString(vec2.data()));
+                  id.index(), vec_class->valString(vec1.data()),
+                  vec_class->valString(vec2.data()));
         }
     }
 
@@ -103,8 +103,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         two->getReg(id, pred2.data());
         if (pred1 != pred2) {
             panic("Pred reg idx %d doesn't match, one: %s, two: %s",
-                id.index(), vec_pred_class->valString(pred1.data()),
-                vec_pred_class->valString(pred2.data()));
+                  id.index(), vec_pred_class->valString(pred1.data()),
+                  vec_pred_class->valString(pred2.data()));
         }
     }
 
@@ -117,8 +117,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         two->getReg(id, mat2.data());
         if (mat1 != mat2) {
             panic("Mat reg idx %d doesn't match, one: %#x, two: %#x",
-                id.index(), mat_class->valString(mat1.data()),
-                mat_class->valString(mat2.data()));
+                  id.index(), mat_class->valString(mat1.data()),
+                  mat_class->valString(mat2.data()));
         }
     }
 
@@ -127,7 +127,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         RegVal t2 = two->readMiscRegNoEffect(i);
         if (t1 != t2)
             panic("Misc reg idx %d doesn't match, one: %#x, two: %#x", i, t1,
-                t2);
+                  t2);
     }
 
     // loop through the Condition Code registers.
@@ -136,7 +136,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
-                id.index(), t1, t2);
+                  id.index(), t1, t2);
     }
     if (one->pcState() != two->pcState())
         panic("PC state doesn't match.");
@@ -205,8 +205,8 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
             reg_ptr += reg_bytes;
         }
 
-        arrayParamOut(
-            cp, std::string("regs.") + reg_class->name(), regs, array_bytes);
+        arrayParamOut(cp, std::string("regs.") + reg_class->name(), regs,
+                      array_bytes);
     }
 
     tc.pcState().serialize(cp);
@@ -227,8 +227,8 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
         const size_t array_bytes = reg_bytes * reg_count;
 
         uint8_t regs[array_bytes];
-        arrayParamIn(
-            cp, std::string("regs.") + reg_class->name(), regs, array_bytes);
+        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs,
+                     array_bytes);
 
         auto *reg_ptr = regs;
         for (const auto &id : *reg_class) {

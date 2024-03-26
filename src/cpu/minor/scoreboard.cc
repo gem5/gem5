@@ -95,7 +95,8 @@ Scoreboard::findIndex(const RegId &reg, Index &scoreboard_index)
 
 void
 Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
-    ThreadContext *thread_context, bool mark_unpredictable)
+                            ThreadContext *thread_context,
+                            bool mark_unpredictable)
 {
     if (inst->isFault())
         return;
@@ -126,9 +127,9 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
             }
 
             DPRINTF(MinorScoreboard,
-                "Marking up inst: %s"
-                " regIndex: %d final numResults: %d returnCycle: %d\n",
-                *inst, index, numResults[index], returnCycle[index]);
+                    "Marking up inst: %s"
+                    " regIndex: %d final numResults: %d returnCycle: %d\n",
+                    *inst, index, numResults[index], returnCycle[index]);
         } else {
             /* Use an invalid ID to mark invalid/untracked dests */
             inst->flatDestRegIdx[dest_index] = RegId();
@@ -137,8 +138,8 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
 }
 
 InstSeqNum
-Scoreboard::execSeqNumToWaitFor(
-    MinorDynInstPtr inst, ThreadContext *thread_context)
+Scoreboard::execSeqNumToWaitFor(MinorDynInstPtr inst,
+                                ThreadContext *thread_context)
 {
     InstSeqNum ret = 0;
 
@@ -160,8 +161,8 @@ Scoreboard::execSeqNumToWaitFor(
         }
     }
 
-    DPRINTF(
-        MinorScoreboard, "Inst: %s depends on execSeqNum: %d\n", *inst, ret);
+    DPRINTF(MinorScoreboard, "Inst: %s depends on execSeqNum: %d\n", *inst,
+            ret);
 
     return ret;
 }
@@ -193,18 +194,18 @@ Scoreboard::clearInstDests(MinorDynInstPtr inst, bool clear_unpredictable)
             }
 
             DPRINTF(MinorScoreboard,
-                "Clearing inst: %s"
-                " regIndex: %d final numResults: %d\n",
-                *inst, index, numResults[index]);
+                    "Clearing inst: %s"
+                    " regIndex: %d final numResults: %d\n",
+                    *inst, index, numResults[index]);
         }
     }
 }
 
 bool
 Scoreboard::canInstIssue(MinorDynInstPtr inst,
-    const std::vector<Cycles> *src_reg_relative_latencies,
-    const std::vector<bool> *cant_forward_from_fu_indices, Cycles now,
-    ThreadContext *thread_context)
+                         const std::vector<Cycles> *src_reg_relative_latencies,
+                         const std::vector<bool> *cant_forward_from_fu_indices,
+                         Cycles now, ThreadContext *thread_context)
 {
     /* Always allow fault to be issued */
     if (inst->isFault())
@@ -247,10 +248,10 @@ Scoreboard::canInstIssue(MinorDynInstPtr inst,
 
             Cycles relative_latency =
                 (cant_forward ?
-                        Cycles(0) :
-                        (src_index >= num_relative_latencies ?
-                                default_relative_latency :
-                                (*src_reg_relative_latencies)[src_index]));
+                     Cycles(0) :
+                     (src_index >= num_relative_latencies ?
+                          default_relative_latency :
+                          (*src_reg_relative_latencies)[src_index]));
 
             if (returnCycle[index] > (now + relative_latency) ||
                 numUnpredictableResults[index] != 0) {
@@ -264,9 +265,10 @@ Scoreboard::canInstIssue(MinorDynInstPtr inst,
         if (ret && num_srcs > num_relative_latencies &&
             num_relative_latencies != 0) {
             DPRINTF(MinorTiming,
-                "Warning, inst: %s timing extra decode has"
-                " more src. regs: %d than relative latencies: %d\n",
-                staticInst->disassemble(0), num_srcs, num_relative_latencies);
+                    "Warning, inst: %s timing extra decode has"
+                    " more src. regs: %d than relative latencies: %d\n",
+                    staticInst->disassemble(0), num_srcs,
+                    num_relative_latencies);
         }
     }
 

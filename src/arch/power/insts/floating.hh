@@ -46,8 +46,8 @@ class FloatOp : public PowerStaticInst
     bool rc;
 
     /// Constructor
-    FloatOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass), rc(machInst.rc)
+    FloatOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass), rc(machInst.rc)
     {}
 
     // Test for NaN (maximum biased exponent & non-zero fraction)
@@ -146,8 +146,9 @@ class FloatOp : public PowerStaticInst
         return c;
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

@@ -42,13 +42,13 @@ namespace ruby
 {
 namespace garnet
 {
-OutputUnit::OutputUnit(
-    int id, PortDirection direction, Router *router, uint32_t consumerVcs) :
-    Consumer(router),
-    m_router(router),
-    m_id(id),
-    m_direction(direction),
-    m_vc_per_vnet(consumerVcs)
+OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
+                       uint32_t consumerVcs)
+    : Consumer(router),
+      m_router(router),
+      m_id(id),
+      m_direction(direction),
+      m_vc_per_vnet(consumerVcs)
 {
     const int m_num_vcs = consumerVcs * m_router->get_num_vnets();
     outVcState.reserve(m_num_vcs);
@@ -61,11 +61,12 @@ void
 OutputUnit::decrement_credit(int out_vc)
 {
     DPRINTF(RubyNetwork,
-        "Router %d OutputUnit %s decrementing credit:%d for "
-        "outvc %d at time: %lld for %s\n",
-        m_router->get_id(), m_router->getPortDirectionName(get_direction()),
-        outVcState[out_vc].get_credit_count(), out_vc, m_router->curCycle(),
-        m_credit_link->name());
+            "Router %d OutputUnit %s decrementing credit:%d for "
+            "outvc %d at time: %lld for %s\n",
+            m_router->get_id(),
+            m_router->getPortDirectionName(get_direction()),
+            outVcState[out_vc].get_credit_count(), out_vc,
+            m_router->curCycle(), m_credit_link->name());
 
     outVcState[out_vc].decrement_credit();
 }
@@ -74,11 +75,12 @@ void
 OutputUnit::increment_credit(int out_vc)
 {
     DPRINTF(RubyNetwork,
-        "Router %d OutputUnit %s incrementing credit:%d for "
-        "outvc %d at time: %lld from:%s\n",
-        m_router->get_id(), m_router->getPortDirectionName(get_direction()),
-        outVcState[out_vc].get_credit_count(), out_vc, m_router->curCycle(),
-        m_credit_link->name());
+            "Router %d OutputUnit %s incrementing credit:%d for "
+            "outvc %d at time: %lld from:%s\n",
+            m_router->get_id(),
+            m_router->getPortDirectionName(get_direction()),
+            outVcState[out_vc].get_credit_count(), out_vc,
+            m_router->curCycle(), m_credit_link->name());
 
     outVcState[out_vc].increment_credit();
 }

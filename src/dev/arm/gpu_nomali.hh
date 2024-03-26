@@ -156,8 +156,8 @@ class NoMaliGpu : public PioDevice
      * @param intno GPU interrupt type
      * @param set Was the interrupt raised (1) or lowered (0)?
      */
-    static void _interrupt(
-        nomali_handle_t h, void *usr, nomali_int_t intno, int set);
+    static void _interrupt(nomali_handle_t h, void *usr, nomali_int_t intno,
+                           int set);
 
     /**
      * Reset callback from the NoMali library.

@@ -79,8 +79,8 @@ AbstractCacheEntry::changePermission(AccessPermission new_perm)
 void
 AbstractCacheEntry::setLocked(int context)
 {
-    DPRINTF(
-        RubyCache, "Setting Lock for addr: %#x to %d\n", m_Address, context);
+    DPRINTF(RubyCache, "Setting Lock for addr: %#x to %d\n", m_Address,
+            context);
     m_locked = context;
 }
 
@@ -95,7 +95,7 @@ bool
 AbstractCacheEntry::isLocked(int context) const
 {
     DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n",
-        m_Address, m_locked, context);
+            m_Address, m_locked, context);
     return m_locked == context;
 }
 

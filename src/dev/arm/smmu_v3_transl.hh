@@ -123,23 +123,26 @@ class SMMUTranslationProcess : public SMMUProcess
     bool findConfig(Yield &yield, TranslContext &tc, TranslResult &tr);
 
     void walkCacheLookup(Yield &yield, const WalkCache::Entry *&walkEntry,
-        Addr addr, uint16_t asid, uint16_t vmid, unsigned stage,
-        unsigned level);
+                         Addr addr, uint16_t asid, uint16_t vmid,
+                         unsigned stage, unsigned level);
 
     void walkCacheUpdate(Yield &yield, Addr va, Addr vaMask, Addr pa,
-        unsigned stage, unsigned level, bool leaf, uint8_t permissions);
+                         unsigned stage, unsigned level, bool leaf,
+                         uint8_t permissions);
 
     TranslResult walkStage1And2(Yield &yield, Addr addr,
-        const ArmISA::PageTableOps *pt_ops, unsigned level, Addr walkPtr);
+                                const ArmISA::PageTableOps *pt_ops,
+                                unsigned level, Addr walkPtr);
 
     TranslResult walkStage2(Yield &yield, Addr addr, bool final_tr,
-        const ArmISA::PageTableOps *pt_ops, unsigned level, Addr walkPtr);
+                            const ArmISA::PageTableOps *pt_ops, unsigned level,
+                            Addr walkPtr);
 
     TranslResult translateStage1And2(Yield &yield, Addr addr);
     TranslResult translateStage2(Yield &yield, Addr addr, bool final_tr);
 
-    TranslResult combineTranslations(
-        const TranslResult &s1tr, const TranslResult &s2tr) const;
+    TranslResult combineTranslations(const TranslResult &s1tr,
+                                     const TranslResult &s2tr) const;
 
     /**
      * Used to force ordering on transactions with same
@@ -168,15 +171,15 @@ class SMMUTranslationProcess : public SMMUProcess
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
     void doReadCD(Yield &yield, ContextDescriptor &cd,
-        const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
+                  const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
     void doReadConfig(Yield &yield, Addr addr, void *ptr, size_t size,
-        uint32_t sid, uint32_t ssid);
+                      uint32_t sid, uint32_t ssid);
     void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr, unsigned stage,
-        unsigned level);
+                   unsigned level);
 
   public:
-    SMMUTranslationProcess(
-        const std::string &name, SMMUv3 &_smmu, SMMUv3DeviceInterface &_ifc);
+    SMMUTranslationProcess(const std::string &name, SMMUv3 &_smmu,
+                           SMMUv3DeviceInterface &_ifc);
 
     virtual ~SMMUTranslationProcess();
 

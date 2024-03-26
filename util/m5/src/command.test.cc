@@ -37,7 +37,8 @@ bool ran_test1 = false;
 
 // A dummy class so we can make a reference to pass around.
 class DispatchTable
-{};
+{
+};
 
 DispatchTable dt;
 

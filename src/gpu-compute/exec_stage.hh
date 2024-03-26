@@ -73,7 +73,7 @@ class ExecStage
 {
   public:
     ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
-        ScheduleToExecute &from_schedule);
+              ScheduleToExecute &from_schedule);
     ~ExecStage() {}
     void init();
     void exec();

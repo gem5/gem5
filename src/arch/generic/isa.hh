@@ -122,8 +122,8 @@ class BaseISA : public SimObject
         return true;
     }
     virtual bool
-    handleLockedWrite(
-        ExecContext *xc, const RequestPtr &req, Addr cacheBlockMask)
+    handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+                      Addr cacheBlockMask)
     {
         return handleLockedWrite(req, cacheBlockMask);
     }

@@ -56,13 +56,13 @@ class extend_element
     static_assert(std::is_integral<IntDestElemType>::value &&
                       std::is_integral<IntSrcElemType>::value &&
                       sizeof(IntDestElemType) >= sizeof(IntSrcElemType),
-        "Extended Element Dest and Src types must both be "
-        "integer types, and Dest must be at least as large "
-        "as Src.");
-    using type =
-        typename std::conditional<std::is_signed<IntSrcElemType>::value,
-            typename std::make_signed<IntDestElemType>::type,
-            typename std::make_unsigned<IntDestElemType>::type>::type;
+                  "Extended Element Dest and Src types must both be "
+                  "integer types, and Dest must be at least as large "
+                  "as Src.");
+    using type = typename std::conditional<
+        std::is_signed<IntSrcElemType>::value,
+        typename std::make_signed<IntDestElemType>::type,
+        typename std::make_unsigned<IntDestElemType>::type>::type;
 };
 
 } // namespace vector_element_traits

@@ -58,9 +58,10 @@ namespace Gem5SystemC
 Gem5SimControl *Gem5SimControl::instance = nullptr;
 
 Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
-    const std::string &configFile, uint64_t simulationEnd,
-    const std::string &gem5DebugFlags) :
-    Gem5SystemC::Module(name), simulationEnd(simulationEnd)
+                               const std::string &configFile,
+                               uint64_t simulationEnd,
+                               const std::string &gem5DebugFlags)
+    : Gem5SystemC::Module(name), simulationEnd(simulationEnd)
 {
     SC_THREAD(run);
 
@@ -70,10 +71,10 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     instance = this;
 
     // register the systemc slave and master port handler
-    gem5::ExternalSlave::registerHandler(
-        "tlm_slave", new SCSlavePortHandler(*this));
-    gem5::ExternalMaster::registerHandler(
-        "tlm_master", new SCMasterPortHandler(*this));
+    gem5::ExternalSlave::registerHandler("tlm_slave",
+                                         new SCSlavePortHandler(*this));
+    gem5::ExternalMaster::registerHandler("tlm_master",
+                                          new SCMasterPortHandler(*this));
 
     gem5::trace::setDebugLogger(&logger);
 
@@ -85,8 +86,8 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     gem5::initSignals();
 
     gem5::statistics::initSimStats();
-    gem5::statistics::registerHandlers(
-        CxxConfig::statsReset, CxxConfig::statsDump);
+    gem5::statistics::registerHandlers(CxxConfig::statsReset,
+                                       CxxConfig::statsDump);
 
     gem5::trace::enable();
 

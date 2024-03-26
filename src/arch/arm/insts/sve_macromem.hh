@@ -46,7 +46,7 @@ namespace gem5
 namespace ArmISA
 {
 template <typename Element, template <typename> class MicroopLdMemType,
-    template <typename> class MicroopDeIntrlvType>
+          template <typename> class MicroopDeIntrlvType>
 class SveLdStructSS : public PredMacroOp
 {
   protected:
@@ -58,28 +58,28 @@ class SveLdStructSS : public PredMacroOp
 
   public:
     SveLdStructSS(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, RegIndex _offset,
-        uint8_t _numregs) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        offset(_offset),
-        numregs(_numregs)
+                  RegIndex _dest, RegIndex _gp, RegIndex _base,
+                  RegIndex _offset, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          numregs(_numregs)
     {
         numMicroops = numregs * 2;
 
         microOps = new StaticInstPtr[numMicroops];
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i] = new MicroopLdMemType<Element>(mnem, machInst,
-                static_cast<RegIndex>(INTRLVREG0 + i), _gp, _base, _offset,
-                _numregs, i);
+            microOps[i] = new MicroopLdMemType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp,
+                _base, _offset, _numregs, i);
         }
         for (int i = 0; i < numregs; ++i) {
-            microOps[i + numregs] = new MicroopDeIntrlvType<Element>(mnem,
-                machInst, static_cast<RegIndex>((_dest + i) % 32), _numregs, i,
-                this);
+            microOps[i + numregs] = new MicroopDeIntrlvType<Element>(
+                mnem, machInst, static_cast<RegIndex>((_dest + i) % 32),
+                _numregs, i, this);
         }
 
         microOps[0]->setFirstMicroop();
@@ -98,8 +98,8 @@ class SveLdStructSS : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -121,7 +121,7 @@ class SveLdStructSS : public PredMacroOp
 };
 
 template <typename Element, template <typename> class MicroopStMemType,
-    template <typename> class MicroopIntrlvType>
+          template <typename> class MicroopIntrlvType>
 class SveStStructSS : public PredMacroOp
 {
   protected:
@@ -133,29 +133,29 @@ class SveStStructSS : public PredMacroOp
 
   public:
     SveStStructSS(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, RegIndex _offset,
-        uint8_t _numregs) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        offset(_offset),
-        numregs(_numregs)
+                  RegIndex _dest, RegIndex _gp, RegIndex _base,
+                  RegIndex _offset, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          numregs(_numregs)
     {
         numMicroops = numregs * 2;
 
         microOps = new StaticInstPtr[numMicroops];
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i] = new MicroopIntrlvType<Element>(mnem, machInst,
-                static_cast<RegIndex>(INTRLVREG0 + i), _dest, _numregs, i,
-                this);
+            microOps[i] = new MicroopIntrlvType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _dest,
+                _numregs, i, this);
         }
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i + numregs] = new MicroopStMemType<Element>(mnem,
-                machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp, _base,
-                _offset, _numregs, i);
+            microOps[i + numregs] = new MicroopStMemType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp,
+                _base, _offset, _numregs, i);
         }
 
         microOps[0]->setFirstMicroop();
@@ -174,8 +174,8 @@ class SveStStructSS : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -197,7 +197,7 @@ class SveStStructSS : public PredMacroOp
 };
 
 template <typename Element, template <typename> class MicroopLdMemType,
-    template <typename> class MicroopDeIntrlvType>
+          template <typename> class MicroopDeIntrlvType>
 class SveLdStructSI : public PredMacroOp
 {
   protected:
@@ -209,28 +209,28 @@ class SveLdStructSI : public PredMacroOp
 
   public:
     SveLdStructSI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, int64_t _imm,
-        uint8_t _numregs) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        imm(_imm),
-        numregs(_numregs)
+                  RegIndex _dest, RegIndex _gp, RegIndex _base, int64_t _imm,
+                  uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm),
+          numregs(_numregs)
     {
         numMicroops = numregs * 2;
 
         microOps = new StaticInstPtr[numMicroops];
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i] = new MicroopLdMemType<Element>(mnem, machInst,
-                static_cast<RegIndex>(INTRLVREG0 + i), _gp, _base, _imm,
-                _numregs, i);
+            microOps[i] = new MicroopLdMemType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp,
+                _base, _imm, _numregs, i);
         }
         for (int i = 0; i < numregs; ++i) {
-            microOps[i + numregs] = new MicroopDeIntrlvType<Element>(mnem,
-                machInst, static_cast<RegIndex>((_dest + i) % 32), _numregs, i,
-                this);
+            microOps[i + numregs] = new MicroopDeIntrlvType<Element>(
+                mnem, machInst, static_cast<RegIndex>((_dest + i) % 32),
+                _numregs, i, this);
         }
 
         microOps[0]->setFirstMicroop();
@@ -249,8 +249,8 @@ class SveLdStructSI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -273,7 +273,7 @@ class SveLdStructSI : public PredMacroOp
 };
 
 template <typename Element, template <typename> class MicroopStMemType,
-    template <typename> class MicroopIntrlvType>
+          template <typename> class MicroopIntrlvType>
 class SveStStructSI : public PredMacroOp
 {
   protected:
@@ -285,29 +285,29 @@ class SveStStructSI : public PredMacroOp
 
   public:
     SveStStructSI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, int64_t _imm,
-        uint8_t _numregs) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        imm(_imm),
-        numregs(_numregs)
+                  RegIndex _dest, RegIndex _gp, RegIndex _base, int64_t _imm,
+                  uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm),
+          numregs(_numregs)
     {
         numMicroops = numregs * 2;
 
         microOps = new StaticInstPtr[numMicroops];
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i] = new MicroopIntrlvType<Element>(mnem, machInst,
-                static_cast<RegIndex>(INTRLVREG0 + i), _dest, _numregs, i,
-                this);
+            microOps[i] = new MicroopIntrlvType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _dest,
+                _numregs, i, this);
         }
 
         for (int i = 0; i < numregs; ++i) {
-            microOps[i + numregs] = new MicroopStMemType<Element>(mnem,
-                machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp, _base,
-                _imm, _numregs, i);
+            microOps[i + numregs] = new MicroopStMemType<Element>(
+                mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i), _gp,
+                _base, _imm, _numregs, i);
         }
 
         microOps[0]->setFirstMicroop();
@@ -326,8 +326,8 @@ class SveStStructSI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
         printMnemonic(ss, "", false);
@@ -350,8 +350,8 @@ class SveStStructSI : public PredMacroOp
 };
 
 template <typename RegElemType, typename MemElemType,
-    template <typename, typename> class MicroopType,
-    template <typename> class FirstFaultWritebackMicroopType>
+          template <typename, typename> class MicroopType,
+          template <typename> class FirstFaultWritebackMicroopType>
 class SveIndexedMemVI : public PredMacroOp
 {
   protected:
@@ -362,13 +362,13 @@ class SveIndexedMemVI : public PredMacroOp
 
   public:
     SveIndexedMemVI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, uint64_t _imm,
-        bool firstFault) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        imm(_imm)
+                    RegIndex _dest, RegIndex _gp, RegIndex _base,
+                    uint64_t _imm, bool firstFault)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm)
     {
         bool isLoad = (__opClass == MemReadOp);
         assert(!firstFault || isLoad);
@@ -400,9 +400,10 @@ class SveIndexedMemVI : public PredMacroOp
         }
 
         for (int i = 0; i < num_elems; i++, uop++) {
-            *uop = new MicroopType<RegElemType, MemElemType>(mnem, machInst,
-                __opClass, _dest, _gp, isLoad ? (RegIndex)VECREG_UREG0 : _base,
-                _imm, i, num_elems, firstFault);
+            *uop = new MicroopType<RegElemType, MemElemType>(
+                mnem, machInst, __opClass, _dest, _gp,
+                isLoad ? (RegIndex)VECREG_UREG0 : _base, _imm, i, num_elems,
+                firstFault);
         }
 
         if (firstFault) {
@@ -428,8 +429,8 @@ class SveIndexedMemVI : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;
@@ -449,8 +450,8 @@ class SveIndexedMemVI : public PredMacroOp
 };
 
 template <typename RegElemType, typename MemElemType,
-    template <typename, typename> class MicroopType,
-    template <typename> class FirstFaultWritebackMicroopType>
+          template <typename, typename> class MicroopType,
+          template <typename> class FirstFaultWritebackMicroopType>
 class SveIndexedMemSV : public PredMacroOp
 {
   protected:
@@ -465,17 +466,17 @@ class SveIndexedMemSV : public PredMacroOp
 
   public:
     SveIndexedMemSV(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _gp, RegIndex _base, RegIndex _offset,
-        bool _offsetIs32, bool _offsetIsSigned, bool _offsetIsScaled,
-        bool firstFault) :
-        PredMacroOp(mnem, machInst, __opClass),
-        dest(_dest),
-        gp(_gp),
-        base(_base),
-        offset(_offset),
-        offsetIs32(_offsetIs32),
-        offsetIsSigned(_offsetIsSigned),
-        offsetIsScaled(_offsetIsScaled)
+                    RegIndex _dest, RegIndex _gp, RegIndex _base,
+                    RegIndex _offset, bool _offsetIs32, bool _offsetIsSigned,
+                    bool _offsetIsScaled, bool firstFault)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          offsetIs32(_offsetIs32),
+          offsetIsSigned(_offsetIsSigned),
+          offsetIsScaled(_offsetIsScaled)
     {
         bool isLoad = (__opClass == MemReadOp);
         assert(!firstFault || isLoad);
@@ -507,8 +508,8 @@ class SveIndexedMemSV : public PredMacroOp
         }
 
         for (int i = 0; i < num_elems; i++, uop++) {
-            *uop = new MicroopType<RegElemType, MemElemType>(mnem, machInst,
-                __opClass, _dest, _gp, _base,
+            *uop = new MicroopType<RegElemType, MemElemType>(
+                mnem, machInst, __opClass, _dest, _gp, _base,
                 isLoad ? (RegIndex)VECREG_UREG0 : _offset, _offsetIs32,
                 _offsetIsSigned, _offsetIsScaled, i, num_elems, firstFault);
         }
@@ -536,8 +537,8 @@ class SveIndexedMemSV : public PredMacroOp
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         // TODO: add suffix to transfer and base registers
         std::stringstream ss;

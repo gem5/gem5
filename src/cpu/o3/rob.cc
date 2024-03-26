@@ -53,14 +53,14 @@ namespace gem5
 {
 namespace o3
 {
-ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params) :
-    robPolicy(params.smtROBPolicy),
-    cpu(_cpu),
-    numEntries(params.numROBEntries),
-    squashWidth(params.squashWidth),
-    numInstsInROB(0),
-    numThreads(params.numThreads),
-    stats(_cpu)
+ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
+    : robPolicy(params.smtROBPolicy),
+      cpu(_cpu),
+      numEntries(params.numROBEntries),
+      squashWidth(params.squashWidth),
+      numInstsInROB(0),
+      numThreads(params.numThreads),
+      stats(_cpu)
 {
     // Figure out rob policy
     if (robPolicy == SMTQueuePolicy::Dynamic) {
@@ -225,8 +225,8 @@ ROB::insertInst(const DynInstPtr &inst)
 
     assert((*tail) == inst);
 
-    DPRINTF(
-        ROB, "[tid:%i] Now has %d instructions.\n", tid, threadEntries[tid]);
+    DPRINTF(ROB, "[tid:%i] Now has %d instructions.\n", tid,
+            threadEntries[tid]);
 }
 
 void
@@ -245,9 +245,9 @@ ROB::retireHead(ThreadID tid)
     assert(head_inst->readyToCommit());
 
     DPRINTF(ROB,
-        "[tid:%i] Retiring head instruction, "
-        "instruction PC %s, [sn:%llu]\n",
-        tid, head_inst->pcState(), head_inst->seqNum);
+            "[tid:%i] Retiring head instruction, "
+            "instruction PC %s, [sn:%llu]\n",
+            tid, head_inst->pcState(), head_inst->seqNum);
 
     --numInstsInROB;
     --threadEntries[tid];
@@ -310,7 +310,7 @@ ROB::doSquash(ThreadID tid)
 {
     stats.writes++;
     DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n", tid,
-        squashedSeqNum[tid]);
+            squashedSeqNum[tid]);
 
     assert(squashIt[tid] != instList[tid].end());
 
@@ -339,8 +339,8 @@ ROB::doSquash(ThreadID tid)
                               (*squashIt[tid])->seqNum > squashedSeqNum[tid];
          ++numSquashed) {
         DPRINTF(ROB, "[tid:%i] Squashing instruction PC %s, seq num %i.\n",
-            (*squashIt[tid])->threadNumber, (*squashIt[tid])->pcState(),
-            (*squashIt[tid])->seqNum);
+                (*squashIt[tid])->threadNumber, (*squashIt[tid])->pcState(),
+                (*squashIt[tid])->seqNum);
 
         // Mark the instruction as squashed, and ready to commit so that
         // it can drain out of the pipeline.
@@ -463,9 +463,9 @@ ROB::squash(InstSeqNum squash_num, ThreadID tid)
 {
     if (isEmpty(tid)) {
         DPRINTF(ROB,
-            "Does not need to squash due to being empty "
-            "[sn:%llu]\n",
-            squash_num);
+                "Does not need to squash due to being empty "
+                "[sn:%llu]\n",
+                squash_num);
 
         return;
     }
@@ -511,12 +511,12 @@ ROB::readTailInst(ThreadID tid)
     return *tail_thread;
 }
 
-ROB::ROBStats::ROBStats(statistics::Group *parent) :
-    statistics::Group(parent, "rob"),
-    ADD_STAT(
-        reads, statistics::units::Count::get(), "The number of ROB reads"),
-    ADD_STAT(
-        writes, statistics::units::Count::get(), "The number of ROB writes")
+ROB::ROBStats::ROBStats(statistics::Group *parent)
+    : statistics::Group(parent, "rob"),
+      ADD_STAT(reads, statistics::units::Count::get(),
+               "The number of ROB reads"),
+      ADD_STAT(writes, statistics::units::Count::get(),
+               "The number of ROB writes")
 {}
 
 DynInstPtr

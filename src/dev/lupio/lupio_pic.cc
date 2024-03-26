@@ -36,14 +36,14 @@
 
 namespace gem5
 {
-LupioPIC::LupioPIC(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    nSrc(params.n_src),
-    nThread(params.num_threads),
-    intType(params.int_type),
-    mask{0},
-    enable{0}
+LupioPIC::LupioPIC(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      nSrc(params.n_src),
+      nThread(params.num_threads),
+      intType(params.int_type),
+      mask{0},
+      enable{0}
 {
     // CPU0 receives all IRQ sources by default
     enable[0] = 0xFFFFFFFF;
@@ -111,8 +111,8 @@ LupioPIC::lupioPicRead(uint8_t addr)
         break;
 
     default:
-        panic(
-            "Unexpected read to the LupioPIC device at address %#llx!", addr);
+        panic("Unexpected read to the LupioPIC device at address %#llx!",
+              addr);
         break;
     }
     return r;
@@ -139,8 +139,8 @@ LupioPIC::lupioPicWrite(uint8_t addr, uint64_t val64)
         break;
 
     default:
-        panic(
-            "Unexpected write to the LupioPIC device at address %#llx!", addr);
+        panic("Unexpected write to the LupioPIC device at address %#llx!",
+              addr);
         break;
     }
 }
@@ -151,7 +151,7 @@ LupioPIC::read(PacketPtr pkt)
     Addr pic_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioPIC, "Read request - addr: %#x, size: %#x\n", pic_addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t read_val = lupioPicRead(pic_addr);
     DPRINTF(LupioPIC, "Packet Read: %#x\n", read_val);
@@ -167,7 +167,7 @@ LupioPIC::write(PacketPtr pkt)
     Addr pic_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioPIC, "Write register %#x value %#x\n", pic_addr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioPicWrite(pic_addr, pkt->getUintX(byteOrder));
     DPRINTF(LupioPIC, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

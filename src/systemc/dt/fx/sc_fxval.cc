@@ -287,7 +287,7 @@ print_dec(scfx_string &s, scfx_ieee_double id, int w_prefix, sc_fmt fmt)
 
 static void
 print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
-    int w_prefix, sc_fmt fmt, const scfx_params *params)
+            int w_prefix, sc_fmt fmt, const scfx_params *params)
 {
     scfx_ieee_double id2 = id;
 
@@ -331,12 +331,12 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
 
         if (params->enc() == SC_TC_ &&
             (numrep == SC_BIN_US || numrep == SC_OCT_US ||
-                numrep == SC_HEX_US) &&
+             numrep == SC_HEX_US) &&
             !numrep_is_sm && params->wl() > 1) {
             --msb;
         } else if (params->enc() == SC_US_ &&
                    (numrep == SC_BIN || numrep == SC_OCT || numrep == SC_HEX ||
-                       numrep == SC_CSD)) {
+                    numrep == SC_CSD)) {
             ++msb;
         }
     } else {
@@ -376,8 +376,8 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
         step = 4;
         break;
     default:
-        SC_REPORT_FATAL(
-            sc_core::SC_ID_ASSERTION_FAILED_, "unexpected sc_numrep");
+        SC_REPORT_FATAL(sc_core::SC_ID_ASSERTION_FAILED_,
+                        "unexpected sc_numrep");
         sc_core::sc_abort();
     }
 
@@ -434,7 +434,7 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
 
 const char *
 to_string(const scfx_ieee_double &id, sc_numrep numrep, int w_prefix,
-    sc_fmt fmt, const scfx_params *params = 0)
+          sc_fmt fmt, const scfx_params *params = 0)
 {
     static scfx_string s;
 
@@ -446,7 +446,7 @@ to_string(const scfx_ieee_double &id, sc_numrep numrep, int w_prefix,
         scfx_print_inf(s, static_cast<bool>(id.negative()));
     } else if (id.negative() && !id.is_zero() &&
                (numrep == SC_BIN_US || numrep == SC_OCT_US ||
-                   numrep == SC_HEX_US)) {
+                numrep == SC_HEX_US)) {
         s += "negative";
     } else if (numrep == SC_DEC) {
         sc_dt::print_dec(s, id, w_prefix, fmt);
@@ -605,10 +605,10 @@ sc_fxval_fast::unlock_observer(sc_fxval_fast_observer *observer_) const
     m_observer = observer_;
 }
 
-#define SCFX_FAIL_IF_(cnd) \
-    { \
-        if ((cnd)) \
-            return static_cast<double>(scfx_ieee_double::nan()); \
+#define SCFX_FAIL_IF_(cnd)                                                    \
+    {                                                                         \
+        if ((cnd))                                                            \
+            return static_cast<double>(scfx_ieee_double::nan());              \
     }
 
 double

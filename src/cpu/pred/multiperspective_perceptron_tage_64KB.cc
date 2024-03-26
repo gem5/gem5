@@ -44,16 +44,16 @@ namespace gem5
 namespace branch_prediction
 {
 MPP_StatisticalCorrector_64KB::MPP_StatisticalCorrector_64KB(
-    const MPP_StatisticalCorrector_64KBParams &p) :
-    MPP_StatisticalCorrector(p),
-    numEntriesSecondLocalHistories(p.numEntriesSecondLocalHistories),
-    numEntriesThirdLocalHistories(p.numEntriesThirdLocalHistories),
-    snb(p.snb),
-    logSnb(p.logSnb),
-    sm(p.sm),
-    tnb(p.tnb),
-    logTnb(p.logTnb),
-    tm(p.tm)
+    const MPP_StatisticalCorrector_64KBParams &p)
+    : MPP_StatisticalCorrector(p),
+      numEntriesSecondLocalHistories(p.numEntriesSecondLocalHistories),
+      numEntriesThirdLocalHistories(p.numEntriesThirdLocalHistories),
+      snb(p.snb),
+      logSnb(p.logSnb),
+      sm(p.sm),
+      tnb(p.tnb),
+      logTnb(p.logTnb),
+      tm(p.tm)
 {
     initGEHLTable(snb, sm, sgehl, logSnb, ws, -1);
     initGEHLTable(tnb, tm, tgehl, logTnb, wt, -1);
@@ -83,17 +83,18 @@ MPP_StatisticalCorrector_64KB::getBiasLSUM(
 }
 
 int
-MPP_StatisticalCorrector_64KB::gPredictions(ThreadID tid, Addr branch_pc,
-    StatisticalCorrector::BranchInfo *bi, int &lsum, int64_t phist)
+MPP_StatisticalCorrector_64KB::gPredictions(
+    ThreadID tid, Addr branch_pc, StatisticalCorrector::BranchInfo *bi,
+    int &lsum, int64_t phist)
 {
     MPP_SCThreadHistory *sh = static_cast<MPP_SCThreadHistory *>(scHistory);
     unsigned int pc = branch_pc;
     lsum += gPredict((pc << 1) + bi->predBeforeSC, sh->globalHist << 11, gm,
-        ggehl, gnb, logGnb, wg);
+                     ggehl, gnb, logGnb, wg);
 
     // Local History #1
     lsum += 2.02 * gPredict(branch_pc, sh->getLocalHistory(1, branch_pc), lm,
-                       lgehl, lnb, logLnb, wl);
+                            lgehl, lnb, logLnb, wl);
     if (sh->getLocalHistory(1, branch_pc) == 2047)
         lsum += 4;
     if (sh->getLocalHistory(1, branch_pc) == 0)
@@ -101,14 +102,14 @@ MPP_StatisticalCorrector_64KB::gPredictions(ThreadID tid, Addr branch_pc,
 
     // Local History #3
     lsum += gPredict(branch_pc, sh->getLocalHistory(3, branch_pc) << 11, tm,
-        tgehl, tnb, logTnb, wt);
+                     tgehl, tnb, logTnb, wt);
 
     // Local History #2
     lsum += gPredict(branch_pc, sh->getLocalHistory(2, branch_pc), sm, sgehl,
-        snb, logSnb, ws);
+                     snb, logSnb, ws);
 
-    lsum += gPredict(
-        branch_pc, sh->getHistoryStackEntry(), pm, pgehl, pnb, logPnb, wp);
+    lsum += gPredict(branch_pc, sh->getHistoryStackEntry(), pm, pgehl, pnb,
+                     logPnb, wp);
 
     int thres = pUpdateThreshold[getIndUpd(branch_pc)];
 
@@ -117,29 +118,30 @@ MPP_StatisticalCorrector_64KB::gPredictions(ThreadID tid, Addr branch_pc,
 
 void
 MPP_StatisticalCorrector_64KB::gUpdates(ThreadID tid, Addr pc, bool taken,
-    StatisticalCorrector::BranchInfo *bi, int64_t phist)
+                                        StatisticalCorrector::BranchInfo *bi,
+                                        int64_t phist)
 {
     MPP_SCThreadHistory *sh = static_cast<MPP_SCThreadHistory *>(scHistory);
 
     gUpdate((pc << 1) + bi->predBeforeSC, taken, sh->globalHist << 11, gm,
-        ggehl, gnb, logGnb, wg, bi);
+            ggehl, gnb, logGnb, wg, bi);
 
-    gUpdate(
-        pc, taken, sh->getLocalHistory(1, pc), lm, lgehl, lnb, logLnb, wl, bi);
+    gUpdate(pc, taken, sh->getLocalHistory(1, pc), lm, lgehl, lnb, logLnb, wl,
+            bi);
 
-    gUpdate(
-        pc, taken, sh->getLocalHistory(2, pc), sm, sgehl, snb, logSnb, ws, bi);
+    gUpdate(pc, taken, sh->getLocalHistory(2, pc), sm, sgehl, snb, logSnb, ws,
+            bi);
 
     gUpdate(pc, taken, sh->getLocalHistory(3, pc) << 11, tm, tgehl, tnb,
-        logTnb, wt, bi);
+            logTnb, wt, bi);
 
-    gUpdate(
-        pc, taken, sh->getHistoryStackEntry(), pm, pgehl, pnb, logPnb, wp, bi);
+    gUpdate(pc, taken, sh->getHistoryStackEntry(), pm, pgehl, pnb, logPnb, wp,
+            bi);
 }
 
 void
-MPP_StatisticalCorrector_64KB::scHistoryUpdate(Addr branch_pc,
-    const StaticInstPtr &inst, bool taken,
+MPP_StatisticalCorrector_64KB::scHistoryUpdate(
+    Addr branch_pc, const StaticInstPtr &inst, bool taken,
     StatisticalCorrector::BranchInfo *bi, Addr corrTarget)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
@@ -151,15 +153,15 @@ MPP_StatisticalCorrector_64KB::scHistoryUpdate(Addr branch_pc,
 
     if (brtype & 1) {
         sh->globalHist = (sh->globalHist << 1) + taken;
-        sh->updateLocalHistory(
-            2, branch_pc, taken, (branch_pc ^ (branch_pc >> 4)) & 15);
+        sh->updateLocalHistory(2, branch_pc, taken,
+                               (branch_pc ^ (branch_pc >> 4)) & 15);
         sh->updateLocalHistory(3, branch_pc, taken);
     }
-    sh->updateHistoryStack(
-        corrTarget, taken, inst->isCall(), inst->isReturn());
+    sh->updateHistoryStack(corrTarget, taken, inst->isCall(),
+                           inst->isReturn());
 
-    StatisticalCorrector::scHistoryUpdate(
-        branch_pc, inst, taken, bi, corrTarget);
+    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken, bi,
+                                          corrTarget);
 }
 
 size_t
@@ -202,8 +204,8 @@ MPP_StatisticalCorrector_64KB::getSizeInBits() const
 }
 
 MultiperspectivePerceptronTAGE64KB::MultiperspectivePerceptronTAGE64KB(
-    const MultiperspectivePerceptronTAGE64KBParams &p) :
-    MultiperspectivePerceptronTAGE(p)
+    const MultiperspectivePerceptronTAGE64KBParams &p)
+    : MultiperspectivePerceptronTAGE(p)
 {}
 
 void

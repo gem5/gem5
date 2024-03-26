@@ -154,19 +154,19 @@ class VGic : public PioDevice
      */
     struct vcpuIntData : public Serializable
     {
-        vcpuIntData() :
-            vctrl(0),
-            hcr(0),
-            eisr(0),
-            VMGrp0En(0),
-            VMGrp1En(0),
-            VMAckCtl(0),
-            VMFiqEn(0),
-            VMCBPR(0),
-            VEM(0),
-            VMABP(0),
-            VMBP(0),
-            VMPriMask(0)
+        vcpuIntData()
+            : vctrl(0),
+              hcr(0),
+              eisr(0),
+              VMGrp0En(0),
+              VMGrp1En(0),
+              VMAckCtl(0),
+              VMFiqEn(0),
+              VMCBPR(0),
+              VEM(0),
+              VMABP(0),
+              VMBP(0),
+              VMPriMask(0)
         {
             std::fill(LR.begin(), LR.end(), 0);
         }

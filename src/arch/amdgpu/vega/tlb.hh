@@ -206,11 +206,11 @@ class GpuTLB : public ClockedObject
 
     void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
-    void pagingProtectionChecks(
-        PacketPtr pkt, VegaTlbEntry *tlb_entry, Mode mode);
+    void pagingProtectionChecks(PacketPtr pkt, VegaTlbEntry *tlb_entry,
+                                Mode mode);
 
-    void updatePhysAddresses(
-        Addr virt_page_addr, VegaTlbEntry *tlb_entry, Addr phys_page_addr);
+    void updatePhysAddresses(Addr virt_page_addr, VegaTlbEntry *tlb_entry,
+                             Addr phys_page_addr);
 
     void issueTLBLookup(PacketPtr pkt);
 
@@ -218,8 +218,8 @@ class GpuTLB : public ClockedObject
     class CpuSidePort : public ResponsePort
     {
       public:
-        CpuSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index) :
-            ResponsePort(_name), tlb(gpu_TLB), index(_index)
+        CpuSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : ResponsePort(_name), tlb(gpu_TLB), index(_index)
         {}
 
       protected:
@@ -255,8 +255,8 @@ class GpuTLB : public ClockedObject
     class MemSidePort : public RequestPort
     {
       public:
-        MemSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index) :
-            RequestPort(_name), tlb(gpu_TLB), index(_index)
+        MemSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : RequestPort(_name), tlb(gpu_TLB), index(_index)
         {}
 
         std::deque<PacketPtr> retries;
@@ -285,8 +285,8 @@ class GpuTLB : public ClockedObject
     // TLB ports on the memory side
     std::vector<MemSidePort *> memSidePort;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     Fault createPagefault(Addr vaddr, Mode mode);
 
@@ -304,8 +304,8 @@ class GpuTLB : public ClockedObject
      *  send request to lower level TLB on a miss,
      *  or start a page walk if this was the last-level TLB).
      */
-    void translationReturn(
-        Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt);
+    void translationReturn(Addr virtPageAddr, tlbOutcome outcome,
+                           PacketPtr pkt);
 
     class TLBEvent : public Event
     {

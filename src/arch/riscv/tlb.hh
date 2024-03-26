@@ -103,7 +103,7 @@ class TLB : public BaseTLB
     void demapPage(Addr vaddr, uint64_t asn) override;
 
     Fault checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-        BaseMMU::Mode mode, PTESv39 pte);
+                           BaseMMU::Mode mode, PTESv39 pte);
     Fault createPagefault(Addr vaddr, BaseMMU::Mode mode);
 
     PrivilegeMode getMemPriv(ThreadContext *tc, BaseMMU::Mode mode);
@@ -126,14 +126,15 @@ class TLB : public BaseTLB
 
     Addr translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode);
 
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode) const override;
+                           BaseMMU::Mode mode) const override;
 
   private:
     uint64_t
@@ -148,9 +149,11 @@ class TLB : public BaseTLB
     void remove(size_t idx);
 
     Fault translate(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed);
+                    BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                    bool &delayed);
     Fault doTranslate(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed);
+                      BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                      bool &delayed);
 };
 
 } // namespace RiscvISA

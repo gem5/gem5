@@ -46,12 +46,13 @@ class MemOp : public PowerStaticInst
     unsigned memAccessFlags;
 
     /// Constructor
-    MemOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass), memAccessFlags(0)
+    MemOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass), memAccessFlags(0)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -63,12 +64,13 @@ class MemDispOp : public MemOp
     int64_t d;
 
     /// Constructor
-    MemDispOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        MemOp(mnem, _machInst, __opClass), d(sext<16>(machInst.d))
+    MemDispOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : MemOp(mnem, _machInst, __opClass), d(sext<16>(machInst.d))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -80,12 +82,13 @@ class MemDispShiftOp : public MemOp
     int64_t ds;
 
     /// Constructor
-    MemDispShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        MemOp(mnem, _machInst, __opClass), ds(sext<14>(machInst.ds))
+    MemDispShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : MemOp(mnem, _machInst, __opClass), ds(sext<14>(machInst.ds))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -95,12 +98,13 @@ class MemIndexOp : public MemOp
 {
   protected:
     /// Constructor
-    MemIndexOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        MemOp(mnem, _machInst, __opClass)
+    MemIndexOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : MemOp(mnem, _machInst, __opClass)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

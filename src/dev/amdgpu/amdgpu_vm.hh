@@ -258,8 +258,8 @@ class AMDGPUVM : public Serializable
     bool
     inSys(Addr vaddr)
     {
-        return (
-            (vaddr >= vmContext0.sysAddrL) && (vaddr <= vmContext0.sysAddrH));
+        return ((vaddr >= vmContext0.sysAddrL) &&
+                (vaddr <= vmContext0.sysAddrH));
     }
 
     Addr
@@ -365,8 +365,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        AGPTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
-            TranslationGen(vaddr, size), vm(_vm)
+        AGPTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
+            : TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -378,8 +378,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        GARTTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
-            TranslationGen(vaddr, size), vm(_vm)
+        GARTTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
+            : TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -391,8 +391,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        MMHUBTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
-            TranslationGen(vaddr, size), vm(_vm)
+        MMHUBTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
+            : TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -407,8 +407,11 @@ class AMDGPUVM : public Serializable
 
       public:
         UserTranslationGen(AMDGPUVM *_vm, VegaISA::Walker *_walker, int _vmid,
-            Addr vaddr, Addr size) :
-            TranslationGen(vaddr, size), vm(_vm), walker(_walker), vmid(_vmid)
+                           Addr vaddr, Addr size)
+            : TranslationGen(vaddr, size),
+              vm(_vm),
+              walker(_walker),
+              vmid(_vmid)
         {}
     };
 };

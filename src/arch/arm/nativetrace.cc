@@ -56,12 +56,12 @@ using namespace ArmISA;
 
 namespace trace
 {
-[[maybe_unused]] static const char *regNames[] = {"r0", "r1", "r2", "r3", "r4",
-    "r5", "r6", "r7", "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc", "cpsr",
-    "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11",
-    "f12", "f13", "f14", "f15", "f16", "f17", "f18", "f19", "f20", "f21",
-    "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
-    "fpscr"};
+[[maybe_unused]] static const char *regNames[] = {
+    "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",   "r7",  "r8",  "r9",
+    "r10", "fp",  "r12", "sp",  "lr",  "pc",  "cpsr", "f0",  "f1",  "f2",
+    "f3",  "f4",  "f5",  "f6",  "f7",  "f8",  "f9",   "f10", "f11", "f12",
+    "f13", "f14", "f15", "f16", "f17", "f18", "f19",  "f20", "f21", "f22",
+    "f23", "f24", "f25", "f26", "f27", "f28", "f29",  "f30", "f31", "fpscr"};
 
 void
 ArmNativeTrace::ThreadState::update(NativeTrace *parent)
@@ -177,26 +177,26 @@ ArmNativeTrace::check(NativeTraceRecord *record)
 
             if (!nState.changed[i]) {
                 DPRINTF(ExecRegDelta,
-                    "%s [%5s] "
-                    "Native:         %#010x         "
-                    "M5:     %#010x => %#010x\n",
-                    vergence, regNames[i], nState.newState[i],
-                    mState.oldState[i], mState.newState[i]);
+                        "%s [%5s] "
+                        "Native:         %#010x         "
+                        "M5:     %#010x => %#010x\n",
+                        vergence, regNames[i], nState.newState[i],
+                        mState.oldState[i], mState.newState[i]);
             } else if (!mState.changed[i]) {
                 DPRINTF(ExecRegDelta,
-                    "%s [%5s] "
-                    "Native: %#010x => %#010x "
-                    "M5:             %#010x        \n",
-                    vergence, regNames[i], nState.oldState[i],
-                    nState.newState[i], mState.newState[i]);
+                        "%s [%5s] "
+                        "Native: %#010x => %#010x "
+                        "M5:             %#010x        \n",
+                        vergence, regNames[i], nState.oldState[i],
+                        nState.newState[i], mState.newState[i]);
             } else {
                 DPRINTF(ExecRegDelta,
-                    "%s [%5s] "
-                    "Native: %#010x => %#010x "
-                    "M5:     %#010x => %#010x\n",
-                    vergence, regNames[i], nState.oldState[i],
-                    nState.newState[i], mState.oldState[i],
-                    mState.newState[i]);
+                        "%s [%5s] "
+                        "Native: %#010x => %#010x "
+                        "M5:     %#010x => %#010x\n",
+                        vergence, regNames[i], nState.oldState[i],
+                        nState.newState[i], mState.oldState[i],
+                        mState.newState[i]);
             }
 #endif
         }

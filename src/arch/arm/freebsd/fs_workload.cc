@@ -51,9 +51,9 @@ using namespace free_bsd;
 
 namespace ArmISA
 {
-FsFreebsd::FsFreebsd(const Params &p) :
-    ArmISA::FsWorkload(p),
-    enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
+FsFreebsd::FsFreebsd(const Params &p)
+    : ArmISA::FsWorkload(p),
+      enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {
     if (p.panic_on_panic) {
         kernelPanic = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -89,18 +89,18 @@ FsFreebsd::initState()
     // Check if the kernel image has a symbol that tells us it supports
     // device trees.
     fatal_if(kernelSymtab.find("fdt_get_range") == kernelSymtab.end(),
-        "Kernel must have fdt support.");
+             "Kernel must have fdt support.");
     fatal_if(params().dtb_filename == "", "dtb file is not specified.");
 
     // Kernel supports flattened device tree and dtb file specified.
     // Using Device Tree Blob to describe system configuration.
     inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-        params().dtb_addr);
+           params().dtb_addr);
 
     auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
     warn_if(!dtb_file->addBootCmdLine(commandLine.c_str(), commandLine.size()),
-        "Couldn't append bootargs to DTB file: %s", params().dtb_filename);
+            "Couldn't append bootargs to DTB file: %s", params().dtb_filename);
 
     Addr ra = dtb_file->findReleaseAddr();
     if (ra)

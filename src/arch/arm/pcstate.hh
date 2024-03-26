@@ -94,16 +94,16 @@ class PCState : public GenericISA::UPCState<4>
         npc(val + (thumb() ? 2 : 4));
     }
 
-    PCState(const PCState &other) :
-        Base(other),
-        flags(other.flags),
-        nextFlags(other.nextFlags),
-        _itstate(other._itstate),
-        _nextItstate(other._nextItstate),
-        _size(other._size),
-        _illegalExec(other._illegalExec),
-        _debugStep(other._debugStep),
-        _stepped(other._stepped)
+    PCState(const PCState &other)
+        : Base(other),
+          flags(other.flags),
+          nextFlags(other.nextFlags),
+          _itstate(other._itstate),
+          _nextItstate(other._nextItstate),
+          _size(other._size),
+          _illegalExec(other._illegalExec),
+          _debugStep(other._debugStep),
+          _stepped(other._stepped)
     {}
     PCState &operator=(const PCState &other) = default;
 
@@ -283,7 +283,7 @@ class PCState : public GenericISA::UPCState<4>
             uint8_t cond_mask = it.mask;
             uint8_t thumb_cond = it.cond;
             DPRINTF(Decoder, "Advancing ITSTATE from %#x,%#x.\n", thumb_cond,
-                cond_mask);
+                    cond_mask);
             cond_mask <<= 1;
             uint8_t new_bit = bits(cond_mask, 4);
             cond_mask &= mask(4);
@@ -292,7 +292,7 @@ class PCState : public GenericISA::UPCState<4>
             else
                 replaceBits(thumb_cond, 0, new_bit);
             DPRINTF(Decoder, "Advancing ITSTATE to %#x,%#x.\n", thumb_cond,
-                cond_mask);
+                    cond_mask);
             it.mask = cond_mask;
             it.cond = thumb_cond;
             _itstate = it;

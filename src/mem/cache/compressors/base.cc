@@ -74,27 +74,27 @@ Base::CompressionData::getSize() const
     return std::ceil(_size / (float)CHAR_BIT);
 }
 
-Base::Base(const Params &p) :
-    SimObject(p),
-    blkSize(p.block_size),
-    chunkSizeBits(p.chunk_size_bits),
-    sizeThreshold((blkSize * p.size_threshold_percentage) / 100),
-    compChunksPerCycle(p.comp_chunks_per_cycle),
-    compExtraLatency(p.comp_extra_latency),
-    decompChunksPerCycle(p.decomp_chunks_per_cycle),
-    decompExtraLatency(p.decomp_extra_latency),
-    cache(nullptr),
-    stats(*this)
+Base::Base(const Params &p)
+    : SimObject(p),
+      blkSize(p.block_size),
+      chunkSizeBits(p.chunk_size_bits),
+      sizeThreshold((blkSize * p.size_threshold_percentage) / 100),
+      compChunksPerCycle(p.comp_chunks_per_cycle),
+      compExtraLatency(p.comp_extra_latency),
+      decompChunksPerCycle(p.decomp_chunks_per_cycle),
+      decompExtraLatency(p.decomp_extra_latency),
+      cache(nullptr),
+      stats(*this)
 {
-    fatal_if(
-        64 % chunkSizeBits, "64 must be a multiple of the chunk granularity.");
+    fatal_if(64 % chunkSizeBits,
+             "64 must be a multiple of the chunk granularity.");
 
     fatal_if(((CHAR_BIT * blkSize) / chunkSizeBits) < compChunksPerCycle,
-        "Compressor processes more chunks per cycle than the number of "
-        "chunks in the input");
+             "Compressor processes more chunks per cycle than the number of "
+             "chunks in the input");
     fatal_if(((CHAR_BIT * blkSize) / chunkSizeBits) < decompChunksPerCycle,
-        "Decompressor processes more chunks per cycle than the number of "
-        "chunks in the input");
+             "Decompressor processes more chunks per cycle than the number of "
+             "chunks in the input");
 
     fatal_if(blkSize < sizeThreshold, "Compressed data must fit in a block");
 }
@@ -119,7 +119,7 @@ Base::toChunks(const uint64_t *data) const
         const int index_64 = std::floor(i / (double)num_chunks_per_64);
         const unsigned start = i % num_chunks_per_64;
         chunks[i] = bits(data[index_64], (start + 1) * chunkSizeBits - 1,
-            start * chunkSizeBits);
+                         start * chunkSizeBits);
     }
 
     return chunks;
@@ -138,7 +138,7 @@ Base::fromChunks(const std::vector<Chunk> &chunks, uint64_t *data) const
         const int index_64 = std::floor(i / (double)num_chunks_per_64);
         const unsigned start = i % num_chunks_per_64;
         replaceBits(data[index_64], (start + 1) * chunkSizeBits - 1,
-            start * chunkSizeBits, chunks[i]);
+                    start * chunkSizeBits, chunks[i]);
     }
 }
 
@@ -159,7 +159,7 @@ Base::compress(const uint64_t *data, Cycles &comp_lat, Cycles &decomp_lat)
 
     // Check if decompressed line matches original cache line
     fatal_if(std::memcmp(data, decomp_data, blkSize),
-        "Decompressed line does not match original line.");
+             "Decompressed line does not match original line.");
 #endif
 
     // Get compression size. If compressed size is greater than the size
@@ -182,9 +182,9 @@ Base::compress(const uint64_t *data, Cycles &comp_lat, Cycles &decomp_lat)
 
     // Print debug information
     DPRINTF(CacheComp,
-        "Compressed cache line from %d to %d bits. "
-        "Compression latency: %llu, decompression latency: %llu\n",
-        blkSize * 8, comp_size_bits, comp_lat, decomp_lat);
+            "Compressed cache line from %d to %d bits. "
+            "Compression latency: %llu, decompression latency: %llu\n",
+            blkSize * 8, comp_size_bits, comp_lat, decomp_lat);
 
     return comp_data;
 }
@@ -198,7 +198,7 @@ Base::getDecompressionLatency(const CacheBlk *blk)
     if (comp_blk && comp_blk->isCompressed()) {
         const Cycles decomp_lat = comp_blk->getDecompressionLatency();
         DPRINTF(CacheComp, "Decompressing block: %s (%d cycles)\n",
-            comp_blk->print(), decomp_lat);
+                comp_blk->print(), decomp_lat);
         stats.decompressions += 1;
         return decomp_lat;
     }
@@ -227,24 +227,24 @@ Base::setSizeBits(CacheBlk *blk, const std::size_t size_bits)
     static_cast<CompressionBlk *>(blk)->setSizeBits(size_bits);
 }
 
-Base::BaseStats::BaseStats(Base &_compressor) :
-    statistics::Group(&_compressor),
-    compressor(_compressor),
-    ADD_STAT(compressions, statistics::units::Count::get(),
-        "Total number of compressions"),
-    ADD_STAT(failedCompressions, statistics::units::Count::get(),
-        "Total number of failed compressions"),
-    ADD_STAT(compressionSize, statistics::units::Count::get(),
-        "Number of blocks that were compressed to this power of two "
-        "size"),
-    ADD_STAT(compressionSizeBits, statistics::units::Bit::get(),
-        "Total compressed data size"),
-    ADD_STAT(avgCompressionSizeBits,
-        statistics::units::Rate<statistics::units::Bit,
-            statistics::units::Count>::get(),
-        "Average compression size"),
-    ADD_STAT(decompressions, statistics::units::Count::get(),
-        "Total number of decompressions")
+Base::BaseStats::BaseStats(Base &_compressor)
+    : statistics::Group(&_compressor),
+      compressor(_compressor),
+      ADD_STAT(compressions, statistics::units::Count::get(),
+               "Total number of compressions"),
+      ADD_STAT(failedCompressions, statistics::units::Count::get(),
+               "Total number of failed compressions"),
+      ADD_STAT(compressionSize, statistics::units::Count::get(),
+               "Number of blocks that were compressed to this power of two "
+               "size"),
+      ADD_STAT(compressionSizeBits, statistics::units::Bit::get(),
+               "Total compressed data size"),
+      ADD_STAT(avgCompressionSizeBits,
+               statistics::units::Rate<statistics::units::Bit,
+                                       statistics::units::Count>::get(),
+               "Average compression size"),
+      ADD_STAT(decompressions, statistics::units::Count::get(),
+               "Total number of decompressions")
 {}
 
 void
@@ -261,11 +261,12 @@ Base::BaseStats::regStats()
         std::string str_i = std::to_string(1 << i);
         compressionSize.subname(1 + i, str_i);
         compressionSize.subdesc(1 + i,
-            "Number of blocks that compressed to fit in " + str_i + " bits");
+                                "Number of blocks that compressed to fit in " +
+                                    str_i + " bits");
     }
 
-    avgCompressionSizeBits.flags(
-        statistics::total | statistics::nozero | statistics::nonan);
+    avgCompressionSizeBits.flags(statistics::total | statistics::nozero |
+                                 statistics::nonan);
     avgCompressionSizeBits = compressionSizeBits / compressions;
 }
 

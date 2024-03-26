@@ -181,7 +181,8 @@ class DistIface : public Drainable, public Serializable
          * simulation is to exit)
          */
         virtual bool progress(Tick send_tick, Tick next_repeat,
-            ReqType do_ckpt, ReqType do_exit, ReqType do_stop_sync) = 0;
+                              ReqType do_ckpt, ReqType do_exit,
+                              ReqType do_stop_sync) = 0;
         /**
          * Abort processing an on-going sync event (in case of an error, e.g.
          * lost connection to a peer gem5)
@@ -219,7 +220,7 @@ class DistIface : public Drainable, public Serializable
         ~SyncNode() {}
         bool run(bool same_tick) override;
         bool progress(Tick max_req_tick, Tick next_repeat, ReqType do_ckpt,
-            ReqType do_exit, ReqType do_stop_sync) override;
+                      ReqType do_exit, ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType req) override;
         void requestExit(ReqType req) override;
@@ -255,7 +256,7 @@ class DistIface : public Drainable, public Serializable
 
         bool run(bool same_tick) override;
         bool progress(Tick max_req_tick, Tick next_repeat, ReqType do_ckpt,
-            ReqType do_exit, ReqType do_stop_sync) override;
+                      ReqType do_exit, ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType) override
         {
@@ -343,11 +344,13 @@ class DistIface : public Drainable, public Serializable
             Tick sendDelay;
 
             Desc() : sendTick(0), sendDelay(0) {}
-            Desc(EthPacketPtr p, Tick s, Tick d) :
-                packet(p), sendTick(s), sendDelay(d)
+            Desc(EthPacketPtr p, Tick s, Tick d)
+                : packet(p), sendTick(s), sendDelay(d)
             {}
-            Desc(const Desc &d) :
-                packet(d.packet), sendTick(d.sendTick), sendDelay(d.sendDelay)
+            Desc(const Desc &d)
+                : packet(d.packet),
+                  sendTick(d.sendTick),
+                  sendDelay(d.sendDelay)
             {}
 
             void serialize(CheckpointOut &cp) const override;
@@ -398,8 +401,8 @@ class DistIface : public Drainable, public Serializable
          * contention and adjust receive tick for the incoming packets
          * accordingly.
          */
-        Tick calcReceiveTick(
-            Tick send_tick, Tick send_delay, Tick prev_recv_tick);
+        Tick calcReceiveTick(Tick send_tick, Tick send_delay,
+                             Tick prev_recv_tick);
 
         /**
          * Flag to set if receive ticks for pending packets need to be
@@ -414,12 +417,12 @@ class DistIface : public Drainable, public Serializable
          * @param em The event manager associated with the simulated Ethernet
          * link.
          */
-        RecvScheduler(EventManager *em) :
-            prevRecvTick(0),
-            recvDone(nullptr),
-            linkDelay(0),
-            eventManager(em),
-            ckptRestore(false)
+        RecvScheduler(EventManager *em)
+            : prevRecvTick(0),
+              recvDone(nullptr),
+              linkDelay(0),
+              eventManager(em),
+              ckptRestore(false)
         {}
 
         /**
@@ -440,8 +443,8 @@ class DistIface : public Drainable, public Serializable
         /**
          * Push a newly arrived packet into the desc queue.
          */
-        void pushPacket(
-            EthPacketPtr new_packet, Tick send_tick, Tick send_delay);
+        void pushPacket(EthPacketPtr new_packet, Tick send_tick,
+                        Tick send_delay);
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -531,8 +534,8 @@ class DistIface : public Drainable, public Serializable
      * to the destination alongside the packet).
      * @param packet Pointer to the packet to send.
      */
-    virtual void sendPacket(
-        const Header &header, const EthPacketPtr &packet) = 0;
+    virtual void sendPacket(const Header &header,
+                            const EthPacketPtr &packet) = 0;
     /**
      * Send out a control command to the remote end.
      * @param header Meta info describing the command (e.g. sync request)
@@ -576,8 +579,8 @@ class DistIface : public Drainable, public Serializable
      * @param em The event manager associated with the simulated Ethernet link
      */
     DistIface(unsigned dist_rank, unsigned dist_size, Tick sync_start,
-        Tick sync_repeat, EventManager *em, bool use_pseudo_op, bool is_switch,
-        int num_nodes);
+              Tick sync_repeat, EventManager *em, bool use_pseudo_op,
+              bool is_switch, int num_nodes);
 
     virtual ~DistIface();
     /**

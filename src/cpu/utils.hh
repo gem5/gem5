@@ -86,7 +86,7 @@ transferNeedsBurst(Addr addr, unsigned int size, unsigned int block_size)
  */
 inline bool
 isAnyActiveElement(const std::vector<bool>::const_iterator &it_start,
-    const std::vector<bool>::const_iterator &it_end)
+                   const std::vector<bool>::const_iterator &it_end)
 {
     auto it_tmp = it_start;
     for (; it_tmp != it_end && !(*it_tmp); ++it_tmp)

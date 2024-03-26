@@ -67,29 +67,29 @@ const AddrRange Gicv3Distributor::GICD_CPENDSGIR(0x0f10, 0x0f20);
 const AddrRange Gicv3Distributor::GICD_SPENDSGIR(0x0f20, 0x0f30);
 const AddrRange Gicv3Distributor::GICD_IROUTER(0x6000, 0x7fe0);
 
-Gicv3Distributor::Gicv3Distributor(Gicv3 *gic, uint32_t it_lines) :
-    gic(gic),
-    itLines(it_lines),
-    ARE(true),
-    EnableGrp1S(0),
-    EnableGrp1NS(0),
-    EnableGrp0(0),
-    irqGroup(it_lines, 0),
-    irqEnabled(it_lines, false),
-    irqPending(it_lines, false),
-    irqPendingIspendr(it_lines, false),
-    irqActive(it_lines, false),
-    irqPriority(it_lines, 0xAA),
-    irqConfig(it_lines, Gicv3::INT_LEVEL_SENSITIVE),
-    irqGrpmod(it_lines, 0),
-    irqNsacr(it_lines, 0),
-    irqAffinityRouting(it_lines, 0),
-    gicdTyper(0),
-    gicdPidr0(0x92),
-    gicdPidr1(0xb4),
-    gicdPidr2(gic->params().gicv4 ? 0x4b : 0x3b),
-    gicdPidr3(0),
-    gicdPidr4(0x44)
+Gicv3Distributor::Gicv3Distributor(Gicv3 *gic, uint32_t it_lines)
+    : gic(gic),
+      itLines(it_lines),
+      ARE(true),
+      EnableGrp1S(0),
+      EnableGrp1NS(0),
+      EnableGrp0(0),
+      irqGroup(it_lines, 0),
+      irqEnabled(it_lines, false),
+      irqPending(it_lines, false),
+      irqPendingIspendr(it_lines, false),
+      irqActive(it_lines, false),
+      irqPriority(it_lines, 0xAA),
+      irqConfig(it_lines, Gicv3::INT_LEVEL_SENSITIVE),
+      irqGrpmod(it_lines, 0),
+      irqNsacr(it_lines, 0),
+      irqAffinityRouting(it_lines, 0),
+      gicdTyper(0),
+      gicdPidr0(0x92),
+      gicdPidr1(0xb4),
+      gicdPidr2(gic->params().gicv4 ? 0x4b : 0x3b),
+      gicdPidr3(0),
+      gicdPidr4(0x44)
 {
     panic_if(it_lines > Gicv3::INTID_SECURE, "Invalid value for it_lines!");
     /*
@@ -488,8 +488,8 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 }
 
 void
-Gicv3Distributor::write(
-    Addr addr, uint64_t data, size_t size, bool is_secure_access)
+Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
+                        bool is_secure_access)
 {
     if (GICD_IGROUPR.contains(addr)) { // Interrupt Group Registers
         if (!DS && !is_secure_access) {
@@ -507,7 +507,7 @@ Gicv3Distributor::write(
              i++, int_id++) {
             irqGroup[int_id] = data & (1 << i) ? 1 : 0;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d group %d\n",
-                int_id, irqGroup[int_id]);
+                    int_id, irqGroup[int_id]);
         }
 
         return;
@@ -530,9 +530,9 @@ Gicv3Distributor::write(
             if (enable) {
                 if (!irqEnabled[int_id]) {
                     DPRINTF(GIC,
-                        "Gicv3Distributor::write(): "
-                        "int_id %d enabled\n",
-                        int_id);
+                            "Gicv3Distributor::write(): "
+                            "int_id %d enabled\n",
+                            int_id);
                 }
 
                 irqEnabled[int_id] = true;
@@ -559,9 +559,9 @@ Gicv3Distributor::write(
             if (disable) {
                 if (irqEnabled[int_id]) {
                     DPRINTF(GIC,
-                        "Gicv3Distributor::write(): "
-                        "int_id %d disabled\n",
-                        int_id);
+                            "Gicv3Distributor::write(): "
+                            "int_id %d disabled\n",
+                            int_id);
                 }
 
                 irqEnabled[int_id] = false;
@@ -590,9 +590,9 @@ Gicv3Distributor::write(
 
             if (pending) {
                 DPRINTF(GIC,
-                    "Gicv3Distributor::write() (GICD_ISPENDR): "
-                    "int_id %d (SPI) pending bit set\n",
-                    int_id);
+                        "Gicv3Distributor::write() (GICD_ISPENDR): "
+                        "int_id %d (SPI) pending bit set\n",
+                        int_id);
                 irqPending[int_id] = true;
                 irqPendingIspendr[int_id] = true;
             }
@@ -668,9 +668,9 @@ Gicv3Distributor::write(
             if (clear) {
                 if (irqActive[int_id]) {
                     DPRINTF(GIC,
-                        "Gicv3Distributor::write(): "
-                        "int_id %d active cleared\n",
-                        int_id);
+                            "Gicv3Distributor::write(): "
+                            "int_id %d active cleared\n",
+                            int_id);
                 }
 
                 irqActive[int_id] = false;
@@ -701,7 +701,7 @@ Gicv3Distributor::write(
 
             irqPriority[int_id] = prio;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d priority %d\n",
-                int_id, irqPriority[int_id]);
+                    int_id, irqPriority[int_id]);
         }
 
         return;
@@ -733,7 +733,7 @@ Gicv3Distributor::write(
             irqConfig[int_id] = data & (0x2 << i) ? Gicv3::INT_EDGE_TRIGGERED :
                                                     Gicv3::INT_LEVEL_SENSITIVE;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d config %d\n",
-                int_id, irqConfig[int_id]);
+                    int_id, irqConfig[int_id]);
         }
 
         return;
@@ -809,9 +809,9 @@ Gicv3Distributor::write(
         }
 
         DPRINTF(GIC,
-            "Gicv3Distributor::write(): "
-            "int_id %d GICD_IROUTER %#llx\n",
-            int_id, irqAffinityRouting[int_id]);
+                "Gicv3Distributor::write(): "
+                "int_id %d GICD_IROUTER %#llx\n",
+                int_id, irqAffinityRouting[int_id]);
         return;
     }
 
@@ -835,9 +835,9 @@ Gicv3Distributor::write(
             EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1NS;
             EnableGrp0 = data & GICD_CTLR_ENABLEGRP0;
             DPRINTF(GIC,
-                "Gicv3Distributor::write(): (DS 1)"
-                "EnableGrp1NS %d EnableGrp0 %d\n",
-                EnableGrp1NS, EnableGrp0);
+                    "Gicv3Distributor::write(): (DS 1)"
+                    "EnableGrp1NS %d EnableGrp0 %d\n",
+                    EnableGrp1NS, EnableGrp0);
         } else {
             if (is_secure_access) {
                 /*
@@ -867,10 +867,10 @@ Gicv3Distributor::write(
                 EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1NS;
                 EnableGrp0 = data & GICD_CTLR_ENABLEGRP0;
                 DPRINTF(GIC,
-                    "Gicv3Distributor::write(): (DS 0 secure)"
-                    "DS %d "
-                    "EnableGrp1S %d EnableGrp1NS %d EnableGrp0 %d\n",
-                    DS, EnableGrp1S, EnableGrp1NS, EnableGrp0);
+                        "Gicv3Distributor::write(): (DS 0 secure)"
+                        "DS %d "
+                        "EnableGrp1S %d EnableGrp1NS %d EnableGrp0 %d\n",
+                        DS, EnableGrp1S, EnableGrp1NS, EnableGrp0);
 
                 if (data & GICD_CTLR_DS) {
                     EnableGrp1S = 0;
@@ -889,9 +889,9 @@ Gicv3Distributor::write(
 
                 EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1A;
                 DPRINTF(GIC,
-                    "Gicv3Distributor::write(): (DS 0 non-secure)"
-                    "EnableGrp1NS %d\n",
-                    EnableGrp1NS);
+                        "Gicv3Distributor::write(): (DS 0 non-secure)"
+                        "EnableGrp1NS %d\n",
+                        EnableGrp1NS);
             }
         }
 
@@ -913,7 +913,7 @@ Gicv3Distributor::write(
         const uint32_t intid = bits(data, 9, 0);
         if (isNotSPI(intid) || irqPending[intid] ||
             (nsAccessToSecInt(intid, is_secure_access) &&
-                irqNsacr[intid] == 0)) {
+             irqNsacr[intid] == 0)) {
             return;
         } else {
             // Valid SPI, set interrupt pending
@@ -932,7 +932,7 @@ Gicv3Distributor::write(
         const uint32_t intid = bits(data, 9, 0);
         if (isNotSPI(intid) || !irqPending[intid] ||
             (nsAccessToSecInt(intid, is_secure_access) &&
-                irqNsacr[intid] < 2)) {
+             irqNsacr[intid] < 2)) {
             return;
         } else {
             // Valid SPI, clear interrupt pending
@@ -987,9 +987,9 @@ Gicv3Distributor::sendInt(uint32_t int_id)
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
     DPRINTF(GIC,
-        "Gicv3Distributor::sendInt(): "
-        "int_id %d (SPI) pending bit set\n",
-        int_id);
+            "Gicv3Distributor::sendInt(): "
+            "int_id %d (SPI) pending bit set\n",
+            int_id);
     update();
 }
 
@@ -1078,7 +1078,7 @@ Gicv3Distributor::update()
 
             if ((irqPriority[int_id] < target_cpu_interface->hppi.prio) ||
                 (irqPriority[int_id] == target_cpu_interface->hppi.prio &&
-                    int_id < target_cpu_interface->hppi.intid)) {
+                 int_id < target_cpu_interface->hppi.intid)) {
                 target_cpu_interface->hppi.intid = int_id;
                 target_cpu_interface->hppi.prio = irqPriority[int_id];
                 target_cpu_interface->hppi.group = int_group;

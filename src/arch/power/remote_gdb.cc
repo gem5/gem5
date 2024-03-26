@@ -153,8 +153,10 @@ namespace gem5
 {
 using namespace PowerISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
-    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+      regCache32(this),
+      regCache64(this)
 {}
 
 /*
@@ -294,10 +296,10 @@ RemoteGDB::gdbRegs()
 bool
 RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 {
-#define GDB_XML(x, s) \
-    { \
-        x, std::string( \
-               reinterpret_cast<const char *>(Blobs::s), Blobs::s##_len) \
+#define GDB_XML(x, s)                                                         \
+    {                                                                         \
+        x, std::string(reinterpret_cast<const char *>(Blobs::s),              \
+                       Blobs::s##_len)                                        \
     }
     static const std::map<std::string, std::string> annexMap32{
         GDB_XML("target.xml", gdb_xml_powerpc_32),

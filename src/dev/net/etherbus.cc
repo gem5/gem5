@@ -48,13 +48,13 @@
 
 namespace gem5
 {
-EtherBus::EtherBus(const Params &p) :
-    SimObject(p),
-    ticksPerByte(p.speed),
-    loopback(p.loopback),
-    event([this] { txDone(); }, "ethernet bus completion"),
-    sender(0),
-    dump(p.dump)
+EtherBus::EtherBus(const Params &p)
+    : SimObject(p),
+      ticksPerByte(p.speed),
+      loopback(p.loopback),
+      event([this] { txDone(); }, "ethernet bus completion"),
+      sender(0),
+      dump(p.dump)
 {}
 
 void
@@ -102,7 +102,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
     sender = sndr;
     int delay = (int)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n", delay,
-        ticksPerByte);
+            ticksPerByte);
     schedule(event, curTick() + delay);
 
     return true;

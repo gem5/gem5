@@ -148,10 +148,10 @@ class Interrupts : public BaseInterrupts
         if (checkNonMaskableInterrupt())
             return std::make_shared<NonMaskableInterruptFault>();
         std::bitset<NumInterruptTypes> mask = globalMask();
-        const std::vector<int> interrupt_order{INT_EXT_MACHINE,
-            INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE, INT_EXT_SUPER,
-            INT_SOFTWARE_SUPER, INT_TIMER_SUPER, INT_EXT_USER,
-            INT_SOFTWARE_USER, INT_TIMER_USER};
+        const std::vector<int> interrupt_order{
+            INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
+            INT_EXT_SUPER,   INT_SOFTWARE_SUPER,   INT_TIMER_SUPER,
+            INT_EXT_USER,    INT_SOFTWARE_USER,    INT_TIMER_USER};
         for (const int &id : interrupt_order)
             if (checkInterrupt(id) && mask[id])
                 return std::make_shared<InterruptFault>(id);

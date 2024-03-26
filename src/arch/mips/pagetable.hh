@@ -81,9 +81,9 @@ struct TlbEntry
 {
     Addr _pageStart;
     TlbEntry() {}
-    TlbEntry(
-        Addr asn, Addr vaddr, Addr paddr, bool uncacheable, bool read_only) :
-        _pageStart(paddr)
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr, bool uncacheable,
+             bool read_only)
+        : _pageStart(paddr)
     {
         if (uncacheable || read_only)
             warn("MIPS TlbEntry does not support uncacheable"

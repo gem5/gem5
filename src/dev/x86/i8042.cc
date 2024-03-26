@@ -45,13 +45,13 @@ namespace gem5
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
 
-X86ISA::I8042::I8042(const Params &p) :
-    PioDevice(p),
-    latency(p.pio_latency),
-    dataPort(p.data_port),
-    commandPort(p.command_port),
-    mouse(p.mouse),
-    keyboard(p.keyboard)
+X86ISA::I8042::I8042(const Params &p)
+    : PioDevice(p),
+      latency(p.pio_latency),
+      dataPort(p.data_port),
+      commandPort(p.command_port),
+      mouse(p.mouse),
+      keyboard(p.keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
     fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
@@ -160,37 +160,37 @@ X86ISA::I8042::write(PacketPtr pkt)
         case WriteCommandByte:
             commandByte = data;
             DPRINTF(I8042,
-                "Got data %#02x for \"Write "
-                "command byte\" command.\n",
-                data);
+                    "Got data %#02x for \"Write "
+                    "command byte\" command.\n",
+                    data);
             statusReg.passedSelfTest = (uint8_t)commandByte.passedSelfTest;
             break;
         case WriteMouseOutputBuff:
             DPRINTF(I8042,
-                "Got data %#02x for \"Write "
-                "mouse output buffer\" command.\n",
-                data);
+                    "Got data %#02x for \"Write "
+                    "mouse output buffer\" command.\n",
+                    data);
             writeData(data, true);
             break;
         case WriteKeyboardOutputBuff:
             DPRINTF(I8042,
-                "Got data %#02x for \"Write "
-                "keyboad output buffer\" command.\n",
-                data);
+                    "Got data %#02x for \"Write "
+                    "keyboad output buffer\" command.\n",
+                    data);
             writeData(data, false);
             break;
         case WriteOutputPort:
             DPRINTF(I8042,
-                "Got data %#02x for \"Write "
-                "output port\" command.\n",
-                data);
+                    "Got data %#02x for \"Write "
+                    "output port\" command.\n",
+                    data);
             panic_if(bits(data, 0) != 1, "Reset bit should be 1");
             // Safe to ignore otherwise
             break;
         default:
             panic("Data written for unrecognized "
                   "command %#02x\n",
-                lastCommand);
+                  lastCommand);
         }
         lastCommand = NoCommand;
     } else if (addr == commandPort) {
@@ -202,17 +202,17 @@ X86ISA::I8042::write(PacketPtr pkt)
             data < ReadControllerRamBase + RamSize) {
             panic("Attempted to use i8042 read controller RAM command to "
                   "get byte %d.\n",
-                data - ReadControllerRamBase);
+                  data - ReadControllerRamBase);
         } else if (data > WriteControllerRamBase &&
                    data < WriteControllerRamBase + RamSize) {
             panic("Attempted to use i8042 write controller RAM command to "
                   "get byte %d.\n",
-                data - WriteControllerRamBase);
+                  data - WriteControllerRamBase);
         } else if (data >= PulseOutputBitBase &&
                    data < PulseOutputBitBase + NumOutputBits) {
             panic("Attempted to use i8042 pulse output bit command to "
                   "to pulse bit %d.\n",
-                data - PulseOutputBitBase);
+                  data - PulseOutputBitBase);
         }
         switch (data) {
         case GetCommandByte:

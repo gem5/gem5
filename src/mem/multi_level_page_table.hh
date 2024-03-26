@@ -137,7 +137,7 @@ struct WalkWrapper<Final, Only>
 {
     static void
     walk(System *system, Addr pageSize, Addr table, Addr vaddr, bool allocate,
-        Final *entry)
+         Final *entry)
     {
         entry->read(system->physProxy, table, vaddr);
     }
@@ -148,7 +148,7 @@ struct WalkWrapper<Final, First, Second, Rest...>
 {
     static void
     walk(System *system, Addr pageSize, Addr table, Addr vaddr, bool allocate,
-        Final *entry)
+         Final *entry)
     {
         First first;
         first.read(system->physProxy, table, vaddr);
@@ -162,15 +162,15 @@ struct WalkWrapper<Final, First, Second, Rest...>
         } else {
             next = first.paddr();
         }
-        WalkWrapper<Final, Second, Rest...>::walk(
-            system, pageSize, next, vaddr, allocate, entry);
+        WalkWrapper<Final, Second, Rest...>::walk(system, pageSize, next,
+                                                  vaddr, allocate, entry);
     }
 };
 
 template <class... EntryTypes>
 void
 walk(System *system, Addr pageSize, Addr table, Addr vaddr, bool allocate,
-    typename LastType<EntryTypes...>::type *entry)
+     typename LastType<EntryTypes...>::type *entry)
 {
     WalkWrapper<typename LastType<EntryTypes...>::type, EntryTypes...>::walk(
         system, pageSize, table, vaddr, allocate, entry);
@@ -195,8 +195,8 @@ class MultiLevelPageTable : public EmulationPageTable
 
   public:
     MultiLevelPageTable(const std::string &__name, uint64_t _pid, System *_sys,
-        Addr _pageSize) :
-        EmulationPageTable(__name, _pid, _pageSize), system(_sys)
+                        Addr _pageSize)
+        : EmulationPageTable(__name, _pid, _pageSize), system(_sys)
     {}
 
     ~MultiLevelPageTable() {}
@@ -224,15 +224,15 @@ class MultiLevelPageTable : public EmulationPageTable
         Final entry;
 
         for (int64_t offset = 0; offset < size; offset += _pageSize) {
-            walk<EntryTypes...>(
-                system, _pageSize, _basePtr, vaddr + offset, true, &entry);
+            walk<EntryTypes...>(system, _pageSize, _basePtr, vaddr + offset,
+                                true, &entry);
 
-            entry.reset(
-                paddr + offset, true, flags & Uncacheable, flags & ReadOnly);
+            entry.reset(paddr + offset, true, flags & Uncacheable,
+                        flags & ReadOnly);
             entry.write(system->physProxy);
 
-            DPRINTF(
-                MMU, "New mapping: %#x-%#x\n", vaddr + offset, paddr + offset);
+            DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr + offset,
+                    paddr + offset);
         }
     }
 
@@ -246,15 +246,15 @@ class MultiLevelPageTable : public EmulationPageTable
         for (int64_t offset = 0; offset < size; offset += _pageSize) {
             // Unmap the original mapping.
             walk<EntryTypes...>(system, _pageSize, _basePtr, vaddr + offset,
-                false, &old_entry);
+                                false, &old_entry);
             old_entry.present(false);
             old_entry.write(system->physProxy);
 
             // Map the new one.
             walk<EntryTypes...>(system, _pageSize, _basePtr,
-                new_vaddr + offset, true, &new_entry);
+                                new_vaddr + offset, true, &new_entry);
             new_entry.reset(old_entry.paddr(), true, old_entry.uncacheable(),
-                old_entry.readonly());
+                            old_entry.readonly());
             new_entry.write(system->physProxy);
         }
     }
@@ -267,10 +267,10 @@ class MultiLevelPageTable : public EmulationPageTable
         Final entry;
 
         for (int64_t offset = 0; offset < size; offset += _pageSize) {
-            walk<EntryTypes...>(
-                system, _pageSize, _basePtr, vaddr + offset, false, &entry);
+            walk<EntryTypes...>(system, _pageSize, _basePtr, vaddr + offset,
+                                false, &entry);
             fatal_if(!entry.present(),
-                "PageTable::unmap: Address %#x not mapped.", vaddr);
+                     "PageTable::unmap: Address %#x not mapped.", vaddr);
             entry.present(false);
             entry.write(system->physProxy);
             DPRINTF(MMU, "Unmapping: %#x\n", vaddr);

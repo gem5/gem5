@@ -107,8 +107,8 @@ class Module : public sc_core::sc_channel
         Module &module;
 
       public:
-        SCEventQueue(const std::string &name, Module &module_) :
-            gem5::EventQueue(name), module(module_)
+        SCEventQueue(const std::string &name, Module &module_)
+            : gem5::EventQueue(name), module(module_)
         {}
 
         /** Signal module to wakeup */
@@ -148,8 +148,8 @@ class Module : public sc_core::sc_channel
     void eventLoop();
 
     /** Run eventLoop up to num_cycles and return the final event */
-    gem5::GlobalSimLoopExitEvent *simulate(
-        gem5::Tick num_cycles = gem5::MaxTick);
+    gem5::GlobalSimLoopExitEvent *
+    simulate(gem5::Tick num_cycles = gem5::MaxTick);
 };
 
 /** There are assumptions throughout Gem5SystemC file that a tick is 1ps.

@@ -53,8 +53,8 @@ namespace gem5
 namespace MipsISA
 {
 static inline RegVal
-readRegOtherThread(
-    ThreadContext *tc, const RegId &reg, ThreadID tid = InvalidThreadID)
+readRegOtherThread(ThreadContext *tc, const RegId &reg,
+                   ThreadID tid = InvalidThreadID)
 {
     ThreadContext *otc = nullptr;
     if (tid != InvalidThreadID)
@@ -76,7 +76,7 @@ readRegOtherThread(
 
 static inline void
 setRegOtherThread(ThreadContext *tc, const RegId &reg, RegVal val,
-    ThreadID tid = InvalidThreadID)
+                  ThreadID tid = InvalidThreadID)
 {
     ThreadContext *otc = nullptr;
     if (tid != InvalidThreadID)
@@ -97,15 +97,15 @@ setRegOtherThread(ThreadContext *tc, const RegId &reg, RegVal val,
 }
 
 static inline RegVal
-readRegOtherThread(
-    ExecContext *xc, const RegId &reg, ThreadID tid = InvalidThreadID)
+readRegOtherThread(ExecContext *xc, const RegId &reg,
+                   ThreadID tid = InvalidThreadID)
 {
     return readRegOtherThread(xc->tcBase(), reg, tid);
 }
 
 static inline void
 setRegOtherThread(ExecContext *xc, const RegId &reg, RegVal val,
-    ThreadID tid = InvalidThreadID)
+                  ThreadID tid = InvalidThreadID)
 {
     setRegOtherThread(xc->tcBase(), reg, val, tid);
 }
@@ -140,8 +140,8 @@ haltThread(TC *tc)
         tc->setMiscReg(misc_reg::TcRestart, pc.npc());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
-            curTick(), tc->threadId(), tc->getCpuPtr()->name(), pc.pc(),
-            pc.npc());
+             curTick(), tc->threadId(), tc->getCpuPtr()->name(), pc.pc(),
+             pc.npc());
     }
 }
 
@@ -158,7 +158,7 @@ restoreThread(TC *tc)
         tc->activate();
 
         warn("%i: Restoring thread %i in %s @ PC %x", curTick(),
-            tc->threadId(), tc->getCpuPtr()->name(), restartPC);
+             tc->threadId(), tc->getCpuPtr()->name(), restartPC);
     }
 }
 
@@ -184,8 +184,8 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
 
             if (tidTCStatus.da == 1 && tidTCHalt.h == 0 &&
                 tidTCStatus.a == 0 && success == 0) {
-                setRegOtherThread(
-                    tc, miscRegClass[misc_reg::TcRestart], Rs, tid);
+                setRegOtherThread(tc, miscRegClass[misc_reg::TcRestart], Rs,
+                                  tid);
                 setRegOtherThread(tc, intRegClass[Rd_bits], Rt, tid);
 
                 StatusReg status = tc->readMiscReg(misc_reg::Status);
@@ -205,8 +205,8 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
                 tidTCStatus.asid = tcStatus.asid;
 
                 // Write Status Register
-                setRegOtherThread(
-                    tc, miscRegClass[misc_reg::TcStatus], tidTCStatus, tid);
+                setRegOtherThread(tc, miscRegClass[misc_reg::TcStatus],
+                                  tidTCStatus, tid);
 
                 // Mark As Successful Fork
                 success = 1;
@@ -258,7 +258,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
             tcStatus.a = 0;
             tc->setMiscReg(misc_reg::TcStatus, tcStatus);
             warn("%i: Deactivating Hardware Thread Context #%i", curTick(),
-                tc->threadId());
+                 tc->threadId());
         }
     } else if (src_reg > 0) {
         if ((src_reg & ~yield_mask) != 0) {

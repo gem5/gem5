@@ -66,7 +66,7 @@ VMA::sliceRegionRight(Addr slice_addr)
     _addrRange = AddrRange(_addrRange.start(), slice_addr);
 
     DPRINTF(Vma, "slice right vma start %#x end %#x\n", _addrRange.start(),
-        _addrRange.end());
+            _addrRange.end());
 
     sanityCheck();
 }
@@ -91,7 +91,7 @@ VMA::sliceRegionLeft(Addr slice_addr)
     _addrRange = AddrRange(slice_addr, _addrRange.end());
 
     DPRINTF(Vma, "slice left vma start %#x end %#x\n", _addrRange.start(),
-        _addrRange.end());
+            _addrRange.end());
 
     sanityCheck();
 }
@@ -117,8 +117,8 @@ VMA::sanityCheck()
     assert((_addrRange.end() % _pageBytes) == 0);
 }
 
-VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length, off_t offset) :
-    _buffer(nullptr), _length(length), _offset(offset)
+VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length, off_t offset)
+    : _buffer(nullptr), _length(length), _offset(offset)
 {
     panic_if(_length == 0, "Tried to mmap file of length zero");
 
@@ -129,7 +129,7 @@ VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length, off_t offset) :
 
     // Don't bother mapping more than the actual file size
     panic_if(offset > file_stat.st_size,
-        "Tried to mmap with offset greater than file size");
+             "Tried to mmap with offset greater than file size");
     _length = std::min((size_t)(file_stat.st_size - offset), _length);
 
     // cannot call mmap with _length == 0
@@ -137,7 +137,7 @@ VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length, off_t offset) :
         _buffer = mmap(NULL, _length, PROT_READ, MAP_PRIVATE, fd, offset);
         if (_buffer == MAP_FAILED) {
             panic("Failed to map file into host address space: %s",
-                strerror(errno));
+                  strerror(errno));
         }
     } else {
         panic("Tried to mmap 0 bytes");
@@ -148,8 +148,8 @@ VMA::MappedFileBuffer::~MappedFileBuffer()
 {
     if (_buffer) {
         panic_if(munmap(_buffer, _length) == -1,
-            "mmap: failed to unmap file-backed host memory: %s",
-            strerror(errno));
+                 "mmap: failed to unmap file-backed host memory: %s",
+                 strerror(errno));
     }
 }
 

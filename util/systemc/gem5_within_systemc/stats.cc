@@ -103,8 +103,8 @@ statsDump()
             dynamic_cast<gem5::statistics::VectorDistInfo *>(stat);
         const gem5::statistics::SparseHistInfo *sparse =
             dynamic_cast<gem5::statistics::SparseHistInfo *>(stat);
-        const gem5::statistics::InfoProxy<gem5::statistics::Vector2d,
-            gem5::statistics::Vector2dInfo> *info =
+        const gem5::statistics::InfoProxy<
+            gem5::statistics::Vector2d, gem5::statistics::Vector2dInfo> *info =
             dynamic_cast<gem5::statistics::InfoProxy<
                 gem5::statistics::Vector2d, gem5::statistics::Vector2dInfo> *>(
                 stat);

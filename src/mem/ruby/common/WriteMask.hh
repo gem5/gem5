@@ -63,12 +63,12 @@ class WriteMask
 
     WriteMask(int size) : mSize(size), mMask(size, false), mAtomic(false) {}
 
-    WriteMask(int size, std::vector<bool> &mask) :
-        mSize(size), mMask(mask), mAtomic(false)
+    WriteMask(int size, std::vector<bool> &mask)
+        : mSize(size), mMask(mask), mAtomic(false)
     {}
 
-    WriteMask(int size, std::vector<bool> &mask, AtomicOpVector atomicOp) :
-        mSize(size), mMask(mask), mAtomic(true), mAtomicOp(atomicOp)
+    WriteMask(int size, std::vector<bool> &mask, AtomicOpVector atomicOp)
+        : mSize(size), mMask(mask), mAtomic(true), mAtomicOp(atomicOp)
     {}
 
     ~WriteMask() {}
@@ -226,7 +226,7 @@ class WriteMask
      * specific atomic operation.
      */
     void performAtomic(uint8_t *p, std::deque<uint8_t *> &atomicChangeLog,
-        bool isAtomicNoReturn = true) const;
+                       bool isAtomicNoReturn = true) const;
 
     const AtomicOpVector &
     getAtomicOps() const

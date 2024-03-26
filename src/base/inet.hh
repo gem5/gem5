@@ -373,8 +373,8 @@ struct IpNetmask : public IpAddress
 
   public:
     IpNetmask() : IpAddress(), _netmask(0) {}
-    IpNetmask(const uint32_t __ip, const uint8_t __netmask) :
-        IpAddress(__ip), _netmask(__netmask)
+    IpNetmask(const uint32_t __ip, const uint8_t __netmask)
+        : IpAddress(__ip), _netmask(__netmask)
     {}
 
     /**
@@ -404,8 +404,8 @@ struct IpWithPort : public IpAddress
 
   public:
     IpWithPort() : IpAddress(), _port(0) {}
-    IpWithPort(const uint32_t __ip, const uint16_t __port) :
-        IpAddress(__ip), _port(__port)
+    IpWithPort(const uint32_t __ip, const uint16_t __port)
+        : IpAddress(__ip), _port(__port)
     {}
 
     /**
@@ -880,8 +880,8 @@ class Ip6Ptr
     Ip6Hdr *
     get()
     {
-        return (
-            Ip6Hdr *)(p->data + sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0));
+        return (Ip6Hdr *)(p->data + sizeof(eth_hdr) +
+                          ((eth_hdr_vlan) ? 4 : 0));
     }
     Ip6Hdr *
     operator->()

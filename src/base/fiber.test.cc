@@ -95,12 +95,12 @@ SwitchingFiber c("C", {&a, Fiber::primaryFiber(), Fiber::primaryFiber()});
 
 std::vector<SwitchingFiber *>::iterator expectedIt;
 std::vector<SwitchingFiber *> expected({&a, &b, &a, &a, /* main Fiber, */
-    &a, &b, &c, &a, &c,
-    /* main Fiber, */ &c, &c});
+                                        &a, &b, &c, &a, &c,
+                                        /* main Fiber, */ &c, &c});
 
-SwitchingFiber::SwitchingFiber(
-    const char *name, std::initializer_list<Fiber *> l) :
-    name(name), next(l)
+SwitchingFiber::SwitchingFiber(const char *name,
+                               std::initializer_list<Fiber *> l)
+    : name(name), next(l)
 {}
 
 void

@@ -67,7 +67,7 @@ class BankedArray
 
   public:
     BankedArray(unsigned int banks, Cycles accessLatency,
-        unsigned int startIndexBit, RubySystem *rs);
+                unsigned int startIndexBit, RubySystem *rs);
 
     // Note: We try the access based on the cache index, not the address
     // This is so we don't get aliasing on blocks being replaced

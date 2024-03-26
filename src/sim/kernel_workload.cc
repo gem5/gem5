@@ -33,11 +33,11 @@
 
 namespace gem5
 {
-KernelWorkload::KernelWorkload(const Params &p) :
-    Workload(p),
-    _loadAddrMask(p.load_addr_mask),
-    _loadAddrOffset(p.load_addr_offset),
-    commandLine(p.command_line)
+KernelWorkload::KernelWorkload(const Params &p)
+    : Workload(p),
+      _loadAddrMask(p.load_addr_mask),
+      _loadAddrOffset(p.load_addr_offset),
+      commandLine(p.command_line)
 {
     if (params().object_file == "") {
         inform("No kernel set for full system simulation. "
@@ -46,8 +46,8 @@ KernelWorkload::KernelWorkload(const Params &p) :
         kernelObj = loader::createObjectFile(params().object_file);
         inform("kernel located at: %s", params().object_file);
 
-        fatal_if(
-            !kernelObj, "Could not load kernel file %s", params().object_file);
+        fatal_if(!kernelObj, "Could not load kernel file %s",
+                 params().object_file);
 
         image = kernelObj->buildImage();
 
@@ -81,13 +81,13 @@ KernelWorkload::KernelWorkload(const Params &p) :
     if (extras_addrs.empty())
         extras_addrs.resize(p.extras.size(), MaxAddr);
     fatal_if(p.extras.size() != extras_addrs.size(),
-        "Additional kernel objects, not all load addresses specified\n");
+             "Additional kernel objects, not all load addresses specified\n");
     for (int ker_idx = 0; ker_idx < p.extras.size(); ker_idx++) {
         const std::string &obj_name = p.extras[ker_idx];
         const bool raw = extras_addrs[ker_idx] != MaxAddr;
         auto *obj = loader::createObjectFile(obj_name, raw);
         fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
-            obj_name);
+                 obj_name);
         extras.push_back(obj);
     }
 }
@@ -107,9 +107,9 @@ KernelWorkload::initState()
             // Validate kernel mapping before loading binary
             fatal_if(!system->isMemAddr(mapper(_start)) ||
                          !system->isMemAddr(mapper(_end)),
-                "Kernel is mapped to invalid location (not memory). "
-                "start (%#x) - end (%#x) %#x:%#x\n",
-                _start, _end, mapper(_start), mapper(_end));
+                     "Kernel is mapped to invalid location (not memory). "
+                     "start (%#x) - end (%#x) %#x:%#x\n",
+                     _start, _end, mapper(_start), mapper(_end));
         }
         // Load program sections into memory
         image.write(phys_mem);

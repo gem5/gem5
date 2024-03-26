@@ -39,8 +39,8 @@ class ThreadBridge : public SimObject
   public:
     explicit ThreadBridge(const ThreadBridgeParams &p);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   private:
     class IncomingPort : public ResponsePort

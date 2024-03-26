@@ -47,8 +47,8 @@ std::vector<uint8_t> test_written_data;
 uint64_t test_max_buf_size;
 
 uint64_t
-test_m5_write_file(
-    void *buffer, uint64_t len, uint64_t offset, const char *filename)
+test_m5_write_file(void *buffer, uint64_t len, uint64_t offset,
+                   const char *filename)
 {
     if (test_max_buf_size && len > test_max_buf_size)
         len = test_max_buf_size;
@@ -255,5 +255,5 @@ TEST(Writefile, CappedWriteSize)
 TEST(WritefileDeathTest, BadFile)
 {
     EXPECT_EXIT(run({"writefile", "this is not a valid path#$#$://\\\\"}),
-        ::testing::ExitedWithCode(2), "Error opening ");
+                ::testing::ExitedWithCode(2), "Error opening ");
 }

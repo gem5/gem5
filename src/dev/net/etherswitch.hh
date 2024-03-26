@@ -58,8 +58,8 @@ class EtherSwitch : public SimObject
     EtherSwitch(const Params &p);
     ~EtherSwitch();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   protected:
     /**
@@ -69,8 +69,8 @@ class EtherSwitch : public SimObject
     {
       public:
         Interface(const std::string &name, EtherSwitch *_etherSwitch,
-            uint64_t outputBufferSize, Tick delay, Tick delay_var, double rate,
-            unsigned id);
+                  uint64_t outputBufferSize, Tick delay, Tick delay_var,
+                  double rate, unsigned id);
         /**
          * When a packet is received from a device, route it
          * through an (several) output queue(s)
@@ -86,8 +86,8 @@ class EtherSwitch : public SimObject
         Tick switchingDelay();
 
         Interface *lookupDestPort(networking::EthAddr destAddr);
-        void learnSenderAddr(
-            networking::EthAddr srcMacAddr, Interface *sender);
+        void learnSenderAddr(networking::EthAddr srcMacAddr,
+                             Interface *sender);
 
         void serialize(CheckpointOut &cp) const;
         void unserialize(CheckpointIn &cp);
@@ -103,8 +103,8 @@ class EtherSwitch : public SimObject
       protected:
         struct PortFifoEntry : public Serializable
         {
-            PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id) :
-                packet(pkt), recvTick(recv_tick), srcId(id)
+            PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id)
+                : packet(pkt), recvTick(recv_tick), srcId(id)
             {}
 
             EthPacketPtr packet;
@@ -127,8 +127,8 @@ class EtherSwitch : public SimObject
             struct EntryOrder
             {
                 bool
-                operator()(
-                    const PortFifoEntry &lhs, const PortFifoEntry &rhs) const
+                operator()(const PortFifoEntry &lhs,
+                           const PortFifoEntry &rhs) const
                 {
                     if (lhs.recvTick == rhs.recvTick)
                         return lhs.srcId < rhs.srcId;
@@ -143,8 +143,8 @@ class EtherSwitch : public SimObject
             unsigned _size;
 
           public:
-            PortFifo(const std::string &name, int max) :
-                objName(name), _maxsize(max), _size(0)
+            PortFifo(const std::string &name, int max)
+                : objName(name), _maxsize(max), _size(0)
             {}
             ~PortFifo() {}
 

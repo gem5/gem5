@@ -45,7 +45,7 @@ do_work_end(const DispatchTable &dt, Args &args)
 }
 
 Command workend = {"workend", 0, 2, do_work_end,
-    "[workid [threadid]]\n"
-    "        Exit immediately"};
+                   "[workid [threadid]]\n"
+                   "        Exit immediately"};
 
 } // anonymous namespace

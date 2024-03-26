@@ -69,8 +69,8 @@ class SimulatorThreads
     SimulatorThreads(const SimulatorThreads &) = delete;
     SimulatorThreads &operator=(SimulatorThreads &) = delete;
 
-    SimulatorThreads(uint32_t num_queues) :
-        terminate(false), numQueues(num_queues), barrier(num_queues)
+    SimulatorThreads(uint32_t num_queues)
+        : terminate(false), numQueues(num_queues), barrier(num_queues)
     {
         threads.reserve(num_queues);
     }
@@ -220,10 +220,11 @@ simulate(Tick num_cycles)
 
     if (numMainEventQueues > 1) {
         fatal_if(simQuantum == 0,
-            "Quantum for multi-eventq simulation not specified");
+                 "Quantum for multi-eventq simulation not specified");
 
-        quantum_event.reset(new GlobalSyncEvent(curTick() + simQuantum,
-            simQuantum, EventBase::Progress_Event_Pri, 0));
+        quantum_event.reset(
+            new GlobalSyncEvent(curTick() + simQuantum, simQuantum,
+                                EventBase::Progress_Event_Pri, 0));
 
         inParallelMode = true;
     }
@@ -294,8 +295,8 @@ doSimLoop(EventQueue *eventq)
         // there should always be at least one event (the SimLoopExitEvent
         // we just scheduled) in the queue
         assert(!eventq->empty());
-        assert(
-            curTick() <= eventq->nextTick() && "event scheduled in the past");
+        assert(curTick() <= eventq->nextTick() &&
+               "event scheduled in the past");
 
         if (mainQueue && async_event) {
             async_event = false;

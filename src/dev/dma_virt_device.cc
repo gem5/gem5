@@ -34,22 +34,22 @@
 namespace gem5
 {
 void
-DmaVirtDevice::dmaReadVirt(
-    Addr host_addr, unsigned size, DmaCallback *cb, void *data, Tick delay)
+DmaVirtDevice::dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
+                           void *data, Tick delay)
 {
     dmaVirt(&DmaDevice::dmaRead, host_addr, size, cb, data, delay);
 }
 
 void
-DmaVirtDevice::dmaWriteVirt(
-    Addr host_addr, unsigned size, DmaCallback *cb, void *data, Tick delay)
+DmaVirtDevice::dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *cb,
+                            void *data, Tick delay)
 {
     dmaVirt(&DmaDevice::dmaWrite, host_addr, size, cb, data, delay);
 }
 
 void
 DmaVirtDevice::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
-    DmaCallback *cb, void *data, Tick delay)
+                       DmaCallback *cb, void *data, Tick delay)
 {
     if (size == 0) {
         if (cb)

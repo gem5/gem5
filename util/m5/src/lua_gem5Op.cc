@@ -253,19 +253,18 @@ do_work_end(lua_State *L)
     return 0;
 }
 
-extern "C"
-{
-    int luaopen_gem5OpLua(lua_State *);
+extern "C" {
+int luaopen_gem5OpLua(lua_State *);
 }
 
 int
 luaopen_gem5OpLua(lua_State *L)
 {
     map_m5_mem();
-#define ADD_FUNC(fname) \
-    do { \
-        lua_pushcfunction(L, fname); \
-        lua_setfield(L, -2, #fname); \
+#define ADD_FUNC(fname)                                                       \
+    do {                                                                      \
+        lua_pushcfunction(L, fname);                                          \
+        lua_setfield(L, -2, #fname);                                          \
     } while (0)
 
     lua_newtable(L);

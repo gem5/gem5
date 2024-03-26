@@ -54,10 +54,10 @@ class ScalarRegisterFile : public RegisterFile
     ~ScalarRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
-    virtual void scheduleWriteOperands(
-        Wavefront *w, GPUDynInstPtr ii) override;
-    virtual void scheduleWriteOperandsFromLoad(
-        Wavefront *w, GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperands(Wavefront *w,
+                                       GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperandsFromLoad(Wavefront *w,
+                                               GPUDynInstPtr ii) override;
     virtual void waveExecuteInst(Wavefront *w, GPUDynInstPtr ii) override;
 
     void
@@ -91,7 +91,7 @@ class ScalarRegisterFile : public RegisterFile
     printReg(Wavefront *wf, int regIdx) const
     {
         DPRINTF(GPUSRF, "WF[%d][%d]: Id%d s[%d] = %#x\n", wf->simdId,
-            wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx]);
+                wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx]);
     }
 
   private:

@@ -44,21 +44,21 @@ namespace gem5
 /**
  * the default constructor that works with SWIG
  */
-LdsState::LdsState(const Params &params) :
-    ClockedObject(params),
-    tickEvent(this),
-    cuPort(name() + ".port", this),
-    maximumSize(params.size),
-    range(params.range),
-    bankConflictPenalty(params.bankConflictPenalty),
-    banks(params.banks)
+LdsState::LdsState(const Params &params)
+    : ClockedObject(params),
+      tickEvent(this),
+      cuPort(name() + ".port", this),
+      maximumSize(params.size),
+      range(params.range),
+      bankConflictPenalty(params.bankConflictPenalty),
+      banks(params.banks)
 {
-    fatal_if(
-        params.banks <= 0, "Number of LDS banks should be positive number");
+    fatal_if(params.banks <= 0,
+             "Number of LDS banks should be positive number");
     fatal_if((params.banks & (params.banks - 1)) != 0,
-        "Number of LDS banks should be a power of 2");
-    fatal_if(
-        params.size <= 0, "cannot allocate an LDS with a size less than 1");
+             "Number of LDS banks should be a power of 2");
+    fatal_if(params.size <= 0,
+             "cannot allocate an LDS with a size less than 1");
     fatal_if(params.size % 2, "the LDS should be an even number");
 }
 
@@ -98,8 +98,8 @@ LdsState::countBankConflicts(PacketPtr packet, unsigned *bankAccesses)
 
 // Count the total number of bank conflicts for the local memory packet
 unsigned
-LdsState::countBankConflicts(
-    GPUDynInstPtr gpuDynInst, unsigned *numBankAccesses)
+LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
+                             unsigned *numBankAccesses)
 {
     int bank_conflicts = 0;
     std::vector<int> bank;
@@ -154,7 +154,7 @@ LdsState::countBankConflicts(
         bank_conflicts += max_bank;
     }
     panic_if(bank_conflicts > parent->wfSize(),
-        "Max bank conflicts should match num of work items per instr");
+             "Max bank conflicts should match num of work items per instr");
     return bank_conflicts;
 }
 

@@ -63,13 +63,13 @@ namespace gem5
 {
 namespace X86ISA
 {
-GpuTLB::GpuTLB(const Params &p) :
-    ClockedObject(p),
-    configAddress(0),
-    size(p.size),
-    cleanupEvent([this] { cleanup(); }, name(), false, Event::Maximum_Pri),
-    exitEvent([this] { exitCallback(); }, name()),
-    stats(this)
+GpuTLB::GpuTLB(const Params &p)
+    : ClockedObject(p),
+      configAddress(0),
+      size(p.size),
+      cleanupEvent([this] { cleanup(); }, name(), false, Event::Maximum_Pri),
+      exitEvent([this] { exitCallback(); }, name()),
+      stats(this)
 {
     assoc = p.assoc;
     assert(assoc <= size);
@@ -198,9 +198,9 @@ GpuTLB::lookupIt(Addr va, bool update_lru)
 
         if ((*entry)->vaddr <= va && (*entry)->vaddr + page_size > va) {
             DPRINTF(GPUTLB,
-                "Matched vaddr %#x to entry starting at %#x "
-                "with size %#x.\n",
-                va, (*entry)->vaddr, page_size);
+                    "Matched vaddr %#x to entry starting at %#x "
+                    "with size %#x.\n",
+                    va, (*entry)->vaddr, page_size);
 
             if (update_lru) {
                 entryList[set].push_front(*entry);
@@ -281,8 +281,8 @@ GpuTLB::demapPage(Addr va, uint64_t asn)
 namespace
 {
 Cycles
-localMiscRegAccess(
-    bool read, RegIndex regNum, ThreadContext *tc, PacketPtr pkt)
+localMiscRegAccess(bool read, RegIndex regNum, ThreadContext *tc,
+                   PacketPtr pkt)
 {
     if (read) {
         RegVal data = htole(tc->readMiscReg(regNum));
@@ -329,8 +329,8 @@ GpuTLB::translateInt(bool read, const RequestPtr &req, ThreadContext *tc)
         assert(!(IOPort & ~0xFFFF));
         if (IOPort == 0xCF8 && req->getSize() == 4) {
             req->setLocalAccessor([read](ThreadContext *tc, PacketPtr pkt) {
-                return localMiscRegAccess(
-                    read, misc_reg::PciConfigAddress, tc, pkt);
+                return localMiscRegAccess(read, misc_reg::PciConfigAddress, tc,
+                                          pkt);
             });
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
             req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
@@ -410,8 +410,8 @@ GpuTLB::tlbLookup(const RequestPtr &req, ThreadContext *tc, bool update_stats)
 
 Fault
 GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
-    Translation *translation, Mode mode, bool &delayedResponse, bool timing,
-    int &latency)
+                  Translation *translation, Mode mode, bool &delayedResponse,
+                  bool timing, int &latency)
 {
     uint32_t flags = req->getFlags();
     int seg = flags & SegmentFlagMask;
@@ -439,7 +439,7 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
 
             // Check for a null segment selector.
             if (!(seg == segment_idx::Tsg || seg == segment_idx::Idtr ||
-                    seg == segment_idx::Hs || seg == segment_idx::Ls) &&
+                  seg == segment_idx::Hs || seg == segment_idx::Ls) &&
                 !tc->readMiscRegNoEffect(misc_reg::segSel(seg))) {
                 return std::make_shared<GeneralProtection>(0);
             }
@@ -494,9 +494,9 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
                     fatal("GpuTLB doesn't support full-system mode\n");
                 } else {
                     DPRINTF(GPUTLB,
-                        "Handling a TLB miss for address %#x "
-                        "at pc %#x.\n",
-                        vaddr, tc->pcState().instAddr());
+                            "Handling a TLB miss for address %#x "
+                            "at pc %#x.\n",
+                            vaddr, tc->pcState().instAddr());
 
                     Process *p = tc->getProcessPtr();
                     const EmulationPageTable::Entry *pte =
@@ -512,16 +512,16 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
                     }
 
                     if (!pte) {
-                        return std::make_shared<PageFault>(
-                            vaddr, true, mode, true, false);
+                        return std::make_shared<PageFault>(vaddr, true, mode,
+                                                           true, false);
                     } else {
                         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
 
                         DPRINTF(GPUTLB, "Mapping %#x to %#x\n", alignedVaddr,
-                            pte->paddr);
+                                pte->paddr);
 
-                        TlbEntry gpuEntry(
-                            p->pid(), alignedVaddr, pte->paddr, false, false);
+                        TlbEntry gpuEntry(p->pid(), alignedVaddr, pte->paddr,
+                                          false, false);
                         entry = insert(alignedVaddr, gpuEntry);
                     }
 
@@ -546,21 +546,21 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
-                return std::make_shared<PageFault>(
-                    vaddr, true, mode, inUser, false);
+                return std::make_shared<PageFault>(vaddr, true, mode, inUser,
+                                                   false);
             }
 
             if (storeCheck && badWrite) {
                 // This would fault if this were a write, so return a page
                 // fault that reflects that happening.
-                return std::make_shared<PageFault>(
-                    vaddr, true, BaseMMU::Write, inUser, false);
+                return std::make_shared<PageFault>(vaddr, true, BaseMMU::Write,
+                                                   inUser, false);
             }
 
             DPRINTF(GPUTLB,
-                "Entry found with paddr %#x, doing protection "
-                "checks.\n",
-                entry->paddr);
+                    "Entry found with paddr %#x, doing protection "
+                    "checks.\n",
+                    entry->paddr);
 
             int page_size = entry->size();
             Addr paddr = entry->paddr | (vaddr & (page_size - 1));
@@ -602,24 +602,24 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
 };
 
 Fault
-GpuTLB::translateAtomic(
-    const RequestPtr &req, ThreadContext *tc, Mode mode, int &latency)
+GpuTLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
+                        int &latency)
 {
     bool delayedResponse;
 
-    return GpuTLB::translate(
-        req, tc, nullptr, mode, delayedResponse, false, latency);
+    return GpuTLB::translate(req, tc, nullptr, mode, delayedResponse, false,
+                             latency);
 }
 
 void
 GpuTLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    Translation *translation, Mode mode, int &latency)
+                        Translation *translation, Mode mode, int &latency)
 {
     bool delayedResponse;
     assert(translation);
 
-    Fault fault = GpuTLB::translate(
-        req, tc, translation, mode, delayedResponse, true, latency);
+    Fault fault = GpuTLB::translate(req, tc, translation, mode,
+                                    delayedResponse, true, latency);
 
     if (!delayedResponse)
         translation->finish(fault, req, tc, mode);
@@ -658,8 +658,8 @@ GpuTLB::issueTLBLookup(PacketPtr pkt)
     bool update_stats = !sender_state->isPrefetch;
     ThreadContext *tmp_tc = sender_state->tc;
 
-    DPRINTF(
-        GPUTLB, "Translation req. for virt. page addr %#x\n", virt_page_addr);
+    DPRINTF(GPUTLB, "Translation req. for virt. page addr %#x\n",
+            virt_page_addr);
 
     int req_cnt = sender_state->reqCnt.back();
 
@@ -711,25 +711,25 @@ GpuTLB::issueTLBLookup(PacketPtr pkt)
 
     if (translationReturnEvent.count(virt_page_addr)) {
         panic("Virtual Page Address %#x already has a return event\n",
-            virt_page_addr);
+              virt_page_addr);
     }
 
     translationReturnEvent[virt_page_addr] = tlb_event;
     assert(tlb_event);
 
     DPRINTF(GPUTLB, "schedule translationReturnEvent @ curTick %d\n",
-        curTick() + cyclesToTicks(Cycles(hitLatency)));
+            curTick() + cyclesToTicks(Cycles(hitLatency)));
 
     schedule(tlb_event, curTick() + cyclesToTicks(Cycles(hitLatency)));
 }
 
-GpuTLB::TLBEvent::TLBEvent(
-    GpuTLB *_tlb, Addr _addr, tlbOutcome tlb_outcome, PacketPtr _pkt) :
-    Event(CPU_Tick_Pri),
-    tlb(_tlb),
-    virtPageAddr(_addr),
-    outcome(tlb_outcome),
-    pkt(_pkt)
+GpuTLB::TLBEvent::TLBEvent(GpuTLB *_tlb, Addr _addr, tlbOutcome tlb_outcome,
+                           PacketPtr _pkt)
+    : Event(CPU_Tick_Pri),
+      tlb(_tlb),
+      virtPageAddr(_addr),
+      outcome(tlb_outcome),
+      pkt(_pkt)
 {}
 
 /**
@@ -737,8 +737,8 @@ GpuTLB::TLBEvent::TLBEvent(
  * an assertion is fired.
  */
 void
-GpuTLB::pagingProtectionChecks(
-    ThreadContext *tc, PacketPtr pkt, TlbEntry *tlb_entry, Mode mode)
+GpuTLB::pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
+                               TlbEntry *tlb_entry, Mode mode)
 {
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
     uint32_t flags = pkt->req->getFlags();
@@ -770,8 +770,8 @@ GpuTLB::pagingProtectionChecks(
  * The latter calls handelHit with TLB miss as tlbOutcome.
  */
 void
-GpuTLB::handleTranslationReturn(
-    Addr virt_page_addr, tlbOutcome tlb_outcome, PacketPtr pkt)
+GpuTLB::handleTranslationReturn(Addr virt_page_addr, tlbOutcome tlb_outcome,
+                                PacketPtr pkt)
 {
     assert(pkt);
     Addr vaddr = pkt->req->getVaddr();
@@ -814,9 +814,9 @@ GpuTLB::handleTranslationReturn(
      * Next step is to do the paging protection checks.
      */
     DPRINTF(GPUTLB,
-        "Entry found with vaddr %#x,  doing protection checks "
-        "while paddr was %#x.\n",
-        local_entry->vaddr, local_entry->paddr);
+            "Entry found with vaddr %#x,  doing protection checks "
+            "while paddr was %#x.\n",
+            local_entry->vaddr, local_entry->paddr);
 
     pagingProtectionChecks(tc, pkt, local_entry, mode);
     int page_size = local_entry->size();
@@ -899,23 +899,23 @@ GpuTLB::translationReturn(Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt)
              */
             if (!memSidePort[0]->sendTimingReq(pkt)) {
                 DPRINTF(GPUTLB,
-                    "Failed sending translation request to "
-                    "lower level TLB for addr %#x\n",
-                    virtPageAddr);
+                        "Failed sending translation request to "
+                        "lower level TLB for addr %#x\n",
+                        virtPageAddr);
 
                 memSidePort[0]->retries.push_back(pkt);
             } else {
                 DPRINTF(GPUTLB,
-                    "Sent translation request to lower level "
-                    "TLB for addr %#x\n",
-                    virtPageAddr);
+                        "Sent translation request to lower level "
+                        "TLB for addr %#x\n",
+                        virtPageAddr);
             }
         } else {
             // this is the last level TLB. Start a page walk
             DPRINTF(GPUTLB,
-                "Last level TLB - start a page walk for "
-                "addr %#x\n",
-                virtPageAddr);
+                    "Last level TLB - start a page walk for "
+                    "addr %#x\n",
+                    virtPageAddr);
 
             if (update_stats)
                 stats.pageTableCycles -= (req_cnt * curTick());
@@ -923,8 +923,8 @@ GpuTLB::translationReturn(Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt)
             TLBEvent *tlb_event = translationReturnEvent[virtPageAddr];
             assert(tlb_event);
             tlb_event->updateOutcome(PAGE_WALK);
-            schedule(
-                tlb_event, curTick() + cyclesToTicks(Cycles(missLatency2)));
+            schedule(tlb_event,
+                     curTick() + cyclesToTicks(Cycles(missLatency2)));
         }
     } else if (outcome == PAGE_WALK) {
         if (update_stats)
@@ -1008,7 +1008,7 @@ GpuTLB::CpuSidePort::recvTimingReq(PacketPtr pkt)
         return true;
     } else {
         DPRINTF(GPUTLB, "Reached maxCoalescedReqs number %d\n",
-            tlb->outstandingReqs);
+                tlb->outstandingReqs);
         return false;
     }
 }
@@ -1035,16 +1035,16 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
 
     if (tlb_outcome == TLB_HIT) {
         DPRINTF(GPUTLB,
-            "Functional Translation Done - TLB hit for addr "
-            "%#x\n",
-            vaddr);
+                "Functional Translation Done - TLB hit for addr "
+                "%#x\n",
+                vaddr);
 
         local_entry = safe_cast<TlbEntry *>(sender_state->tlbEntry);
     } else {
         DPRINTF(GPUTLB,
-            "Functional Translation Done - TLB miss for addr "
-            "%#x\n",
-            vaddr);
+                "Functional Translation Done - TLB miss for addr "
+                "%#x\n",
+                vaddr);
 
         /**
          * We are returning either from a page walk or from a hit at a
@@ -1067,9 +1067,9 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
     }
 
     DPRINTF(GPUTLB,
-        "Entry found with vaddr %#x, doing protection checks "
-        "while paddr was %#x.\n",
-        local_entry->vaddr, local_entry->paddr);
+            "Entry found with vaddr %#x, doing protection checks "
+            "while paddr was %#x.\n",
+            local_entry->vaddr, local_entry->paddr);
 
     /**
      * Do paging checks if it's a normal functional access.  If it's for a
@@ -1137,8 +1137,8 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
                 return;
         } else {
             // Need to access the page table and update the TLB
-            DPRINTF(
-                GPUTLB, "Doing a page walk for address %#x\n", virt_page_addr);
+            DPRINTF(GPUTLB, "Doing a page walk for address %#x\n",
+                    virt_page_addr);
 
             Process *p = tc->getProcessPtr();
 
@@ -1158,8 +1158,8 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
                 // the second page table lookup
                 assert(pte);
 
-                DPRINTF(
-                    GPUTLB, "Mapping %#x to %#x\n", alignedVaddr, pte->paddr);
+                DPRINTF(GPUTLB, "Mapping %#x to %#x\n", alignedVaddr,
+                        pte->paddr);
 
                 sender_state->tlbEntry = new TlbEntry(
                     p->pid(), virt_page_addr, pte->paddr, false, false);
@@ -1170,13 +1170,13 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
                 // and handled accordingly.
                 if (pte) {
                     DPRINTF(GPUTLB, "Mapping %#x to %#x\n", alignedVaddr,
-                        pte->paddr);
+                            pte->paddr);
 
                     sender_state->tlbEntry = new TlbEntry(
                         p->pid(), virt_page_addr, pte->paddr, false, false);
                 } else {
-                    DPRINTF(
-                        GPUPrefetch, "Prefetch failed %#x\n", alignedVaddr);
+                    DPRINTF(GPUPrefetch, "Prefetch failed %#x\n",
+                            alignedVaddr);
 
                     sender_state->tlbEntry = nullptr;
 
@@ -1186,7 +1186,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
         }
     } else {
         DPRINTF(GPUPrefetch, "Functional Hit for vaddr %#x\n",
-            tlb->lookup(pkt->req->getVaddr()));
+                tlb->lookup(pkt->req->getVaddr()));
 
         TlbEntry *entry = tlb->lookup(pkt->req->getVaddr(), update_stats);
 
@@ -1231,7 +1231,7 @@ GpuTLB::MemSidePort::recvTimingResp(PacketPtr pkt)
     Addr virt_page_addr = roundDown(pkt->req->getVaddr(), X86ISA::PageBytes);
 
     DPRINTF(GPUTLB, "MemSidePort recvTiming for virt_page_addr %#x\n",
-        virt_page_addr);
+            virt_page_addr);
 
     TLBEvent *tlb_event = tlb->translationReturnEvent[virt_page_addr];
     assert(tlb_event);
@@ -1397,24 +1397,24 @@ GpuTLB::exitCallback()
     TLBFootprint.clear();
 }
 
-GpuTLB::GpuTLBStats::GpuTLBStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(localNumTLBAccesses, "Number of TLB accesses"),
-    ADD_STAT(localNumTLBHits, "Number of TLB hits"),
-    ADD_STAT(localNumTLBMisses, "Number of TLB misses"),
-    ADD_STAT(localTLBMissRate, "TLB miss rate"),
-    ADD_STAT(globalNumTLBAccesses, "Number of TLB accesses"),
-    ADD_STAT(globalNumTLBHits, "Number of TLB hits"),
-    ADD_STAT(globalNumTLBMisses, "Number of TLB misses"),
-    ADD_STAT(globalTLBMissRate, "TLB miss rate"),
-    ADD_STAT(accessCycles, "Cycles spent accessing this TLB level"),
-    ADD_STAT(pageTableCycles, "Cycles spent accessing the page table"),
-    ADD_STAT(numUniquePages, "Number of unique pages touched"),
-    ADD_STAT(localCycles, "Number of cycles spent in queue for all "
-                          "incoming reqs"),
-    ADD_STAT(localLatency, "Avg. latency over incoming coalesced reqs"),
-    ADD_STAT(avgReuseDistance, "avg. reuse distance over all pages (in "
-                               "ticks)")
+GpuTLB::GpuTLBStats::GpuTLBStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(localNumTLBAccesses, "Number of TLB accesses"),
+      ADD_STAT(localNumTLBHits, "Number of TLB hits"),
+      ADD_STAT(localNumTLBMisses, "Number of TLB misses"),
+      ADD_STAT(localTLBMissRate, "TLB miss rate"),
+      ADD_STAT(globalNumTLBAccesses, "Number of TLB accesses"),
+      ADD_STAT(globalNumTLBHits, "Number of TLB hits"),
+      ADD_STAT(globalNumTLBMisses, "Number of TLB misses"),
+      ADD_STAT(globalTLBMissRate, "TLB miss rate"),
+      ADD_STAT(accessCycles, "Cycles spent accessing this TLB level"),
+      ADD_STAT(pageTableCycles, "Cycles spent accessing the page table"),
+      ADD_STAT(numUniquePages, "Number of unique pages touched"),
+      ADD_STAT(localCycles, "Number of cycles spent in queue for all "
+                            "incoming reqs"),
+      ADD_STAT(localLatency, "Avg. latency over incoming coalesced reqs"),
+      ADD_STAT(avgReuseDistance, "avg. reuse distance over all pages (in "
+                                 "ticks)")
 {
     localLatency = localCycles / localNumTLBAccesses;
 

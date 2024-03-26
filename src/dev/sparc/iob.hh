@@ -129,8 +129,8 @@ class Iob : public PioDevice
     Tick write(PacketPtr pkt) override;
     void generateIpi(Type type, int cpu_id, int vector);
     void receiveDeviceInterrupt(DeviceId devid);
-    bool receiveJBusInterrupt(
-        int cpu_id, int source, uint64_t d0, uint64_t d1);
+    bool receiveJBusInterrupt(int cpu_id, int source, uint64_t d0,
+                              uint64_t d1);
 
     AddrRangeList getAddrRanges() const override;
 

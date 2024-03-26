@@ -110,18 +110,18 @@ struct VegaTlbEntry : public Serializable
     // A sequence number to keep track of LRU.
     uint64_t lruSeq;
 
-    VegaTlbEntry() :
-        vmid(0), paddr(0), vaddr(0), logBytes(PageShift), pte(), lruSeq(0)
+    VegaTlbEntry()
+        : vmid(0), paddr(0), vaddr(0), logBytes(PageShift), pte(), lruSeq(0)
     {}
 
     VegaTlbEntry(Addr _vmid, Addr _vaddr, Addr _paddr, unsigned _logBytes,
-        PageTableEntry _pte) :
-        vmid(_vmid),
-        paddr(_paddr),
-        vaddr(_vaddr),
-        logBytes(_logBytes),
-        pte(_pte),
-        lruSeq(0)
+                 PageTableEntry _pte)
+        : vmid(_vmid),
+          paddr(_paddr),
+          vaddr(_vaddr),
+          logBytes(_logBytes),
+          pte(_pte),
+          lruSeq(0)
     {}
 
     // Return the page size in bytes

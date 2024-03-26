@@ -45,7 +45,7 @@ do_work_begin(const DispatchTable &dt, Args &args)
 }
 
 Command workbegin = {"workbegin", 0, 2, do_work_begin,
-    "[workid][threadid]\n"
-    "        Exit immediately"};
+                     "[workid][threadid]\n"
+                     "        Exit immediately"};
 
 } // anonymous namespace

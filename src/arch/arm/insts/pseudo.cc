@@ -46,10 +46,10 @@ namespace gem5
 {
 using namespace ArmISA;
 
-DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst) :
-    ArmStaticInst("gem5decoderFault", _machInst, No_OpClass),
-    faultId(static_cast<DecoderFault>(
-        static_cast<uint8_t>(_machInst.decoderFault)))
+DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
+    : ArmStaticInst("gem5decoderFault", _machInst, No_OpClass),
+      faultId(static_cast<DecoderFault>(
+          static_cast<uint8_t>(_machInst.decoderFault)))
 {
     // Don't call execute() if we're on a speculative path and the
     // fault is an internal panic fault.
@@ -68,8 +68,8 @@ DecoderFaultInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
         } else {
             // TODO: We should check if we the receiving end is in
             // aarch64 mode and raise a PCAlignment fault instead.
-            return std::make_shared<PrefetchAbort>(
-                pc, ArmFault::AlignmentFault);
+            return std::make_shared<PrefetchAbort>(pc,
+                                                   ArmFault::AlignmentFault);
         }
 
     case DecoderFault::PANIC:
@@ -100,15 +100,15 @@ DecoderFaultInst::faultName() const
 }
 
 std::string
-DecoderFaultInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+DecoderFaultInst::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     return csprintf("gem5fault %s", faultName());
 }
 
-FailUnimplemented::FailUnimplemented(
-    const char *_mnemonic, ExtMachInst _machInst) :
-    ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+FailUnimplemented::FailUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
 {
     // don't call execute() (which panics) if we're on a
     // speculative path
@@ -116,9 +116,10 @@ FailUnimplemented::FailUnimplemented(
 }
 
 FailUnimplemented::FailUnimplemented(const char *_mnemonic,
-    ExtMachInst _machInst, const std::string &_fullMnemonic) :
-    ArmStaticInst(_mnemonic, _machInst, No_OpClass),
-    fullMnemonic(_fullMnemonic)
+                                     ExtMachInst _machInst,
+                                     const std::string &_fullMnemonic)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
+      fullMnemonic(_fullMnemonic)
 {
     // don't call execute() (which panics) if we're on a
     // speculative path
@@ -132,16 +133,16 @@ FailUnimplemented::execute(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 std::string
-FailUnimplemented::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+FailUnimplemented::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (unimplemented)",
-        fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+                    fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
 }
 
-WarnUnimplemented::WarnUnimplemented(
-    const char *_mnemonic, ExtMachInst _machInst) :
-    ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
+                                     ExtMachInst _machInst)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
 {
     // don't call execute() (which panics) if we're on a
     // speculative path
@@ -149,10 +150,11 @@ WarnUnimplemented::WarnUnimplemented(
 }
 
 WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
-    ExtMachInst _machInst, const std::string &_fullMnemonic) :
-    ArmStaticInst(_mnemonic, _machInst, No_OpClass),
-    warned(false),
-    fullMnemonic(_fullMnemonic)
+                                     ExtMachInst _machInst,
+                                     const std::string &_fullMnemonic)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
+      warned(false),
+      fullMnemonic(_fullMnemonic)
 {
     // don't call execute() (which panics) if we're on a
     // speculative path
@@ -164,7 +166,7 @@ WarnUnimplemented::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     if (!warned) {
         warn("\tinstruction '%s' unimplemented\n",
-            fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+             fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
         warned = true;
     }
 
@@ -172,15 +174,15 @@ WarnUnimplemented::execute(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 std::string
-WarnUnimplemented::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+WarnUnimplemented::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (unimplemented)",
-        fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
+                    fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
 }
 
-IllegalExecInst::IllegalExecInst(ExtMachInst _machInst) :
-    ArmStaticInst("Illegal Execution", _machInst, No_OpClass)
+IllegalExecInst::IllegalExecInst(ExtMachInst _machInst)
+    : ArmStaticInst("Illegal Execution", _machInst, No_OpClass)
 {}
 
 Fault
@@ -189,8 +191,8 @@ IllegalExecInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
     return std::make_shared<IllegalInstSetStateFault>();
 }
 
-DebugStep::DebugStep(ExtMachInst _machInst) :
-    ArmStaticInst("DebugStep", _machInst, No_OpClass)
+DebugStep::DebugStep(ExtMachInst _machInst)
+    : ArmStaticInst("DebugStep", _machInst, No_OpClass)
 {}
 
 Fault
@@ -204,8 +206,8 @@ DebugStep::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
     bool ldx = sd->getSstep()->getLdx();
 
-    return std::make_shared<SoftwareStepFault>(
-        machInst, ldx, pc_state.stepped());
+    return std::make_shared<SoftwareStepFault>(machInst, ldx,
+                                               pc_state.stepped());
 }
 
 } // namespace gem5

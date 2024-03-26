@@ -79,8 +79,8 @@ class RegisterFile : public SimObject
         int regIdx;
 
       public:
-        RegisterEvent(RegisterFile *_rf, int _regIdx) :
-            rf(_rf), regIdx(_regIdx)
+        RegisterEvent(RegisterFile *_rf, int _regIdx)
+            : rf(_rf), regIdx(_regIdx)
         {
             setFlags(AutoDelete);
         }
@@ -90,8 +90,8 @@ class RegisterFile : public SimObject
     class MarkRegFreeScbEvent : public RegisterEvent
     {
       public:
-        MarkRegFreeScbEvent(RegisterFile *_rf, int _regIdx) :
-            RegisterEvent(_rf, _regIdx)
+        MarkRegFreeScbEvent(RegisterFile *_rf, int _regIdx)
+            : RegisterEvent(_rf, _regIdx)
         {}
         void process();
     };
@@ -100,8 +100,8 @@ class RegisterFile : public SimObject
     class MarkRegBusyScbEvent : public RegisterEvent
     {
       public:
-        MarkRegBusyScbEvent(RegisterFile *_rf, int _regIdx) :
-            RegisterEvent(_rf, _regIdx)
+        MarkRegBusyScbEvent(RegisterFile *_rf, int _regIdx)
+            : RegisterEvent(_rf, _regIdx)
         {}
         void process();
     };
@@ -130,8 +130,8 @@ class RegisterFile : public SimObject
 
     // The following two functions are only called by returning loads to
     // check if the register file can support the incoming writes
-    virtual bool canScheduleWriteOperandsFromLoad(
-        Wavefront *w, GPUDynInstPtr ii);
+    virtual bool canScheduleWriteOperandsFromLoad(Wavefront *w,
+                                                  GPUDynInstPtr ii);
     // Queue the register writes. Assumes canScheduleWriteOperandsFromLoad
     // was called immediately prior and returned True
     virtual void scheduleWriteOperandsFromLoad(Wavefront *w, GPUDynInstPtr ii);

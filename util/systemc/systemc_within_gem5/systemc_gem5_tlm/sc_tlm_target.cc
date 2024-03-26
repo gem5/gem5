@@ -89,12 +89,12 @@ Target::executeTransaction(tlm::tlm_generic_payload &trans)
 
     if (cmd == tlm::TLM_READ_COMMAND) {
         memcpy(mem + trans.get_address(), // destination
-            trans.get_data_ptr(),         // source
-            trans.get_data_length());     // size
+               trans.get_data_ptr(),      // source
+               trans.get_data_length());  // size
     } else if (cmd == tlm::TLM_WRITE_COMMAND) {
-        memcpy(trans.get_data_ptr(),   // destination
-            mem + trans.get_address(), // source
-            trans.get_data_length());  // size
+        memcpy(trans.get_data_ptr(),      // destination
+               mem + trans.get_address(), // source
+               trans.get_data_length());  // size
     }
 
     cout << "\033[1;32m(" << name() << ")@" << setfill(' ') << setw(12)

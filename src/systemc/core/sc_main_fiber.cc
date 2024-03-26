@@ -67,7 +67,8 @@ ScMainFiber::main()
         } catch (...) {
             // There was some other type of exception we need to wrap.
             _resultStr = "uncaught exception";
-            reportHandlerProc(reportifyException(),
+            reportHandlerProc(
+                reportifyException(),
                 ::sc_core::sc_report_handler::get_catch_actions());
         }
         scheduler.clear();

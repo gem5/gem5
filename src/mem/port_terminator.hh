@@ -109,8 +109,8 @@ class PortTerminator : public SimObject
   public:
     PortTerminator(const PortTerminatorParams &params);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

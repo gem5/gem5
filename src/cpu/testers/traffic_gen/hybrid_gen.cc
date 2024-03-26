@@ -46,7 +46,8 @@
 
 namespace gem5
 {
-HybridGen::HybridGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+HybridGen::HybridGen(
+    SimObject &obj, RequestorID requestor_id, Tick _duration,
     Addr start_addr_dram, Addr end_addr_dram, Addr blocksize_dram,
     Addr start_addr_nvm, Addr end_addr_nvm, Addr blocksize_nvm,
     Addr cacheline_size, Tick min_period, Tick max_period,
@@ -56,54 +57,54 @@ HybridGen::HybridGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
     unsigned int buffer_size_nvm, unsigned int nbr_of_banks_nvm,
     unsigned int nbr_of_banks_util_nvm, enums::AddrMap addr_mapping,
     unsigned int nbr_of_ranks_dram, unsigned int nbr_of_ranks_nvm,
-    uint8_t nvm_percent) :
-    BaseGen(obj, requestor_id, _duration),
-    startAddrDram(start_addr_dram),
-    endAddrDram(end_addr_dram),
-    blocksizeDram(blocksize_dram),
-    startAddrNvm(start_addr_nvm),
-    endAddrNvm(end_addr_nvm),
-    blocksizeNvm(blocksize_nvm),
-    cacheLineSize(cacheline_size),
-    minPeriod(min_period),
-    maxPeriod(max_period),
-    readPercent(read_percent),
-    dataLimit(data_limit),
-    numSeqPktsDram(num_seq_pkts_dram),
-    numSeqPktsNvm(num_seq_pkts_nvm),
-    countNumSeqPkts(0),
-    addr(0),
-    pageSizeDram(page_size_dram),
-    pageBitsDram(floorLog2(pageSizeDram / blocksizeDram)),
-    bankBitsDram(floorLog2(nbr_of_banks_dram)),
-    blockBitsDram(floorLog2(blocksizeDram)),
-    nbrOfBanksDram(nbr_of_banks_dram),
-    nbrOfBanksUtilDram(nbr_of_banks_util_dram),
-    bufferSizeNvm(buffer_size_nvm),
-    pageBitsNvm(floorLog2(bufferSizeNvm / blocksizeNvm)),
-    bankBitsNvm(floorLog2(nbr_of_banks_nvm)),
-    blockBitsNvm(floorLog2(blocksizeNvm)),
-    nbrOfBanksNvm(nbr_of_banks_nvm),
-    nbrOfBanksUtilNvm(nbr_of_banks_util_nvm),
-    addrMapping(addr_mapping),
-    nbrOfRanksDram(nbr_of_ranks_dram),
-    rankBitsDram(floorLog2(nbrOfRanksDram)),
-    nbrOfRanksNvm(nbr_of_ranks_nvm),
-    rankBitsNvm(floorLog2(nbrOfRanksNvm)),
-    nvmPercent(nvm_percent),
-    isRead(true),
-    isNvm(false),
-    dataManipulated(0)
+    uint8_t nvm_percent)
+    : BaseGen(obj, requestor_id, _duration),
+      startAddrDram(start_addr_dram),
+      endAddrDram(end_addr_dram),
+      blocksizeDram(blocksize_dram),
+      startAddrNvm(start_addr_nvm),
+      endAddrNvm(end_addr_nvm),
+      blocksizeNvm(blocksize_nvm),
+      cacheLineSize(cacheline_size),
+      minPeriod(min_period),
+      maxPeriod(max_period),
+      readPercent(read_percent),
+      dataLimit(data_limit),
+      numSeqPktsDram(num_seq_pkts_dram),
+      numSeqPktsNvm(num_seq_pkts_nvm),
+      countNumSeqPkts(0),
+      addr(0),
+      pageSizeDram(page_size_dram),
+      pageBitsDram(floorLog2(pageSizeDram / blocksizeDram)),
+      bankBitsDram(floorLog2(nbr_of_banks_dram)),
+      blockBitsDram(floorLog2(blocksizeDram)),
+      nbrOfBanksDram(nbr_of_banks_dram),
+      nbrOfBanksUtilDram(nbr_of_banks_util_dram),
+      bufferSizeNvm(buffer_size_nvm),
+      pageBitsNvm(floorLog2(bufferSizeNvm / blocksizeNvm)),
+      bankBitsNvm(floorLog2(nbr_of_banks_nvm)),
+      blockBitsNvm(floorLog2(blocksizeNvm)),
+      nbrOfBanksNvm(nbr_of_banks_nvm),
+      nbrOfBanksUtilNvm(nbr_of_banks_util_nvm),
+      addrMapping(addr_mapping),
+      nbrOfRanksDram(nbr_of_ranks_dram),
+      rankBitsDram(floorLog2(nbrOfRanksDram)),
+      nbrOfRanksNvm(nbr_of_ranks_nvm),
+      rankBitsNvm(floorLog2(nbrOfRanksNvm)),
+      nvmPercent(nvm_percent),
+      isRead(true),
+      isNvm(false),
+      dataManipulated(0)
 {
     if (blocksizeDram > cacheLineSize)
         fatal("TrafficGen %s Dram block size (%d) is larger than "
               "cache line size (%d)\n",
-            name(), blocksizeDram, cacheLineSize);
+              name(), blocksizeDram, cacheLineSize);
 
     if (blocksizeNvm > cacheLineSize)
         fatal("TrafficGen %s Nvm block size (%d) is larger than "
               "cache line size (%d)\n",
-            name(), blocksizeNvm, cacheLineSize);
+              name(), blocksizeNvm, cacheLineSize);
 
     if (readPercent > 100)
         fatal("%s cannot have more than 100% reads", name());
@@ -114,12 +115,12 @@ HybridGen::HybridGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
     if (nbrOfBanksUtilDram > nbrOfBanksDram)
         fatal("Attempting to use more Dram banks (%d) than "
               "what is available (%d)\n",
-            nbrOfBanksUtilDram, nbrOfBanksDram);
+              nbrOfBanksUtilDram, nbrOfBanksDram);
 
     if (nbrOfBanksUtilNvm > nbrOfBanksNvm)
         fatal("Attempting to use more Nvm banks (%d) than "
               "what is available (%d)\n",
-            nbrOfBanksUtilNvm, nbrOfBanksNvm);
+              nbrOfBanksUtilNvm, nbrOfBanksNvm);
 }
 
 void
@@ -139,9 +140,8 @@ HybridGen::getNextPacket()
                 (nvmPercent == 100 || random_mt.random(0, 100) < nvmPercent);
 
         // choose if we generate a read or a write here
-        isRead =
-            readPercent != 0 &&
-            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+        isRead = readPercent != 0 && (readPercent == 100 ||
+                                      random_mt.random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
                (readPercent == 100 && isRead) || readPercent != 100);
@@ -203,21 +203,21 @@ HybridGen::getNextPacket()
             // Explicity increment the column bits
             unsigned int new_col =
                 ((addr / blocksize / nbrOfBanks / nbrOfRanks) %
-                    (pageSize / blocksize)) +
+                 (pageSize / blocksize)) +
                 1;
             replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
-                blockBits + bankBits + rankBits, new_col);
+                        blockBits + bankBits + rankBits, new_col);
         }
     }
 
     DPRINTF(TrafficGen,
-        "HybridGen::getNextPacket: %c to addr %x, "
-        "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
-        isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
+            "HybridGen::getNextPacket: %c to addr %x, "
+            "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
+            isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 
     // create a new request packet
-    PacketPtr pkt = getPacket(
-        addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    PacketPtr pkt = getPacket(addr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // add the amount of data manipulated to the total
     dataManipulated += blocksize;
@@ -259,20 +259,20 @@ HybridGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     if (addrMapping == enums::RoRaBaCoCh || addrMapping == enums::RoRaBaChCo) {
         // Block bits, then page bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + pageBits + bankBits - 1,
-            blockBits + pageBits, new_bank);
+                    blockBits + pageBits, new_bank);
         replaceBits(addr, blockBits + pageBits - 1, blockBits, new_col);
         if (rankBits != 0) {
             replaceBits(addr, blockBits + pageBits + bankBits + rankBits - 1,
-                blockBits + pageBits + bankBits, new_rank);
+                        blockBits + pageBits + bankBits, new_rank);
         }
     } else if (addrMapping == enums::RoCoRaBaCh) {
         // Block bits, then bank bits, then rank bits, then page bits
         replaceBits(addr, blockBits + bankBits - 1, blockBits, new_bank);
         replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
-            blockBits + bankBits + rankBits, new_col);
+                    blockBits + bankBits + rankBits, new_col);
         if (rankBits != 0) {
             replaceBits(addr, blockBits + bankBits + rankBits - 1,
-                blockBits + bankBits, new_rank);
+                        blockBits + bankBits, new_rank);
         }
     }
 }

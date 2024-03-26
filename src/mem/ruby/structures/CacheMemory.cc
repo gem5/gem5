@@ -65,15 +65,15 @@ operator<<(std::ostream &out, const CacheMemory &obj)
     return out;
 }
 
-CacheMemory::CacheMemory(const Params &p) :
-    SimObject(p),
-    dataArray(p.dataArrayBanks, p.dataAccessLatency, p.start_index_bit,
-        p.ruby_system),
-    tagArray(
-        p.tagArrayBanks, p.tagAccessLatency, p.start_index_bit, p.ruby_system),
-    atomicALUArray(
-        p.atomicALUs, p.atomicLatency * p.ruby_system->clockPeriod()),
-    cacheMemoryStats(this)
+CacheMemory::CacheMemory(const Params &p)
+    : SimObject(p),
+      dataArray(p.dataArrayBanks, p.dataAccessLatency, p.start_index_bit,
+                p.ruby_system),
+      tagArray(p.tagArrayBanks, p.tagAccessLatency, p.start_index_bit,
+               p.ruby_system),
+      atomicALUArray(p.atomicALUs,
+                     p.atomicLatency * p.ruby_system->clockPeriod()),
+      cacheMemoryStats(this)
 {
     m_cache_size = p.size;
     m_cache_assoc = p.assoc;
@@ -100,9 +100,9 @@ CacheMemory::init()
     assert(m_cache_num_set_bits > 0);
 
     m_cache.resize(m_cache_num_sets,
-        std::vector<AbstractCacheEntry *>(m_cache_assoc, nullptr));
-    replacement_data.resize(
-        m_cache_num_sets, std::vector<ReplData>(m_cache_assoc, nullptr));
+                   std::vector<AbstractCacheEntry *>(m_cache_assoc, nullptr));
+    replacement_data.resize(m_cache_num_sets,
+                            std::vector<ReplData>(m_cache_assoc, nullptr));
     // instantiate all the replacement_data here
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
@@ -129,7 +129,7 @@ CacheMemory::addressToCacheSet(Addr address) const
 {
     assert(address == makeLineAddress(address));
     return bitSelect(address, m_start_index_bit,
-        m_start_index_bit + m_cache_num_set_bits - 1);
+                     m_start_index_bit + m_cache_num_set_bits - 1);
 }
 
 // Given a cache index: returns the index of the tag in a set.
@@ -183,8 +183,8 @@ CacheMemory::getAddressAtIdx(int idx) const
 }
 
 bool
-CacheMemory::tryCacheAccess(
-    Addr address, RubyRequestType type, DataBlock *&data_ptr)
+CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
+                            DataBlock *&data_ptr)
 {
     DPRINTF(RubyCache, "trying to access address: %#x\n", address);
     AbstractCacheEntry *entry = lookup(address);
@@ -196,26 +196,26 @@ CacheMemory::tryCacheAccess(
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                address);
+                    address);
             return true;
         }
         if ((entry->m_Permission == AccessPermission_Read_Only) &&
             (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                address);
+                    address);
             return true;
         }
         // The line must not be accessible
     }
-    DPRINTF(
-        RubyCache, "Do not have permission to access address: %#x\n", address);
+    DPRINTF(RubyCache, "Do not have permission to access address: %#x\n",
+            address);
     data_ptr = NULL;
     return false;
 }
 
 bool
-CacheMemory::testCacheAccess(
-    Addr address, RubyRequestType type, DataBlock *&data_ptr)
+CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
+                             DataBlock *&data_ptr)
 {
     DPRINTF(RubyCache, "testing address: %#x\n", address);
     AbstractCacheEntry *entry = lookup(address);
@@ -226,7 +226,7 @@ CacheMemory::testCacheAccess(
         data_ptr = &(entry->getDataBlk());
 
         DPRINTF(RubyCache, "have permission for address %#x?: %d\n", address,
-            entry->m_Permission != AccessPermission_NotPresent);
+                entry->m_Permission != AccessPermission_NotPresent);
         return entry->m_Permission != AccessPermission_NotPresent;
     }
 
@@ -299,8 +299,8 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
             set[i] = entry; // Init entry
             set[i]->m_Address = address;
             set[i]->m_Permission = AccessPermission_Invalid;
-            DPRINTF(
-                RubyCache, "Allocate clearing lock for addr: 0x%x\n", address);
+            DPRINTF(RubyCache, "Allocate clearing lock for addr: 0x%x\n",
+                    address);
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
             set[i]->setPosition(cacheSet, i);
@@ -451,8 +451,8 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder *tr) const
                     Tick lastAccessTick;
                     lastAccessTick = m_cache[i][j]->getLastAccess();
                     tr->addRecord(cntrl, m_cache[i][j]->m_Address, 0,
-                        request_type, lastAccessTick,
-                        m_cache[i][j]->getDataBlk());
+                                  request_type, lastAccessTick,
+                                  m_cache[i][j]->getDataBlk());
                     warmedUpBlocks++;
                 }
             }
@@ -460,10 +460,10 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder *tr) const
     }
 
     DPRINTF(RubyCacheTrace,
-        "%s: %lli blocks of %lli total blocks"
-        "recorded %.2f%% \n",
-        name().c_str(), warmedUpBlocks, totalBlocks,
-        (float(warmedUpBlocks) / float(totalBlocks)) * 100.0);
+            "%s: %lli blocks of %lli total blocks"
+            "recorded %.2f%% \n",
+            name().c_str(), warmedUpBlocks, totalBlocks,
+            (float(warmedUpBlocks) / float(totalBlocks)) * 100.0);
 }
 
 void
@@ -516,8 +516,8 @@ CacheMemory::clearLockedAll(int context)
         for (auto j = set.begin(); j != set.end(); ++j) {
             AbstractCacheEntry *line = *j;
             if (line && line->isLocked(context)) {
-                DPRINTF(
-                    RubyCache, "Clear Lock for addr: %#x\n", line->m_Address);
+                DPRINTF(RubyCache, "Clear Lock for addr: %#x\n",
+                        line->m_Address);
                 line->clearLocked();
             }
         }
@@ -530,37 +530,37 @@ CacheMemory::isLocked(Addr address, int context)
     AbstractCacheEntry *entry = lookup(address);
     assert(entry != nullptr);
     DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n", address,
-        entry->m_locked, context);
+            entry->m_locked, context);
     return entry->isLocked(context);
 }
 
-CacheMemory::CacheMemoryStats::CacheMemoryStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(numDataArrayReads, "Number of data array reads"),
-    ADD_STAT(numDataArrayWrites, "Number of data array writes"),
-    ADD_STAT(numTagArrayReads, "Number of tag array reads"),
-    ADD_STAT(numTagArrayWrites, "Number of tag array writes"),
-    ADD_STAT(numTagArrayStalls, "Number of stalls caused by tag array"),
-    ADD_STAT(numDataArrayStalls, "Number of stalls caused by data array"),
-    ADD_STAT(numAtomicALUOperations, "Number of atomic ALU operations"),
-    ADD_STAT(numAtomicALUArrayStalls,
-        "Number of stalls caused by atomic ALU array"),
-    ADD_STAT(htmTransCommitReadSet, "Read set size of a committed "
-                                    "transaction"),
-    ADD_STAT(htmTransCommitWriteSet, "Write set size of a committed "
-                                     "transaction"),
-    ADD_STAT(htmTransAbortReadSet, "Read set size of a aborted transaction"),
-    ADD_STAT(htmTransAbortWriteSet, "Write set size of a aborted "
-                                    "transaction"),
-    ADD_STAT(m_demand_hits, "Number of cache demand hits"),
-    ADD_STAT(m_demand_misses, "Number of cache demand misses"),
-    ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
-        m_demand_hits + m_demand_misses),
-    ADD_STAT(m_prefetch_hits, "Number of cache prefetch hits"),
-    ADD_STAT(m_prefetch_misses, "Number of cache prefetch misses"),
-    ADD_STAT(m_prefetch_accesses, "Number of cache prefetch accesses",
-        m_prefetch_hits + m_prefetch_misses),
-    ADD_STAT(m_accessModeType, "")
+CacheMemory::CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numDataArrayReads, "Number of data array reads"),
+      ADD_STAT(numDataArrayWrites, "Number of data array writes"),
+      ADD_STAT(numTagArrayReads, "Number of tag array reads"),
+      ADD_STAT(numTagArrayWrites, "Number of tag array writes"),
+      ADD_STAT(numTagArrayStalls, "Number of stalls caused by tag array"),
+      ADD_STAT(numDataArrayStalls, "Number of stalls caused by data array"),
+      ADD_STAT(numAtomicALUOperations, "Number of atomic ALU operations"),
+      ADD_STAT(numAtomicALUArrayStalls,
+               "Number of stalls caused by atomic ALU array"),
+      ADD_STAT(htmTransCommitReadSet, "Read set size of a committed "
+                                      "transaction"),
+      ADD_STAT(htmTransCommitWriteSet, "Write set size of a committed "
+                                       "transaction"),
+      ADD_STAT(htmTransAbortReadSet, "Read set size of a aborted transaction"),
+      ADD_STAT(htmTransAbortWriteSet, "Write set size of a aborted "
+                                      "transaction"),
+      ADD_STAT(m_demand_hits, "Number of cache demand hits"),
+      ADD_STAT(m_demand_misses, "Number of cache demand misses"),
+      ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
+               m_demand_hits + m_demand_misses),
+      ADD_STAT(m_prefetch_hits, "Number of cache prefetch hits"),
+      ADD_STAT(m_prefetch_misses, "Number of cache prefetch misses"),
+      ADD_STAT(m_prefetch_accesses, "Number of cache prefetch accesses",
+               m_prefetch_hits + m_prefetch_misses),
+      ADD_STAT(m_accessModeType, "")
 {
     numDataArrayReads.flags(statistics::nozero);
 
@@ -615,7 +615,7 @@ void
 CacheMemory::recordRequestType(CacheRequestType requestType, Addr addr)
 {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
-        CacheRequestType_to_string(requestType));
+            CacheRequestType_to_string(requestType));
     switch (requestType) {
     case CacheRequestType_DataArrayRead:
         if (m_resource_stalls)
@@ -644,7 +644,7 @@ CacheMemory::recordRequestType(CacheRequestType requestType, Addr addr)
         return;
     default:
         warn("CacheMemory access_type not found: %s",
-            CacheRequestType_to_string(requestType));
+             CacheRequestType_to_string(requestType));
     }
 }
 
@@ -660,8 +660,8 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
             return true;
         else {
             DPRINTF(RubyResourceStalls,
-                "Tag array stall on addr %#x in set %d\n", addr,
-                addressToCacheSet(addr));
+                    "Tag array stall on addr %#x in set %d\n", addr,
+                    addressToCacheSet(addr));
             cacheMemoryStats.numTagArrayStalls++;
             return false;
         }
@@ -670,8 +670,8 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
             return true;
         else {
             DPRINTF(RubyResourceStalls,
-                "Data array stall on addr %#x in set %d\n", addr,
-                addressToCacheSet(addr));
+                    "Data array stall on addr %#x in set %d\n", addr,
+                    addressToCacheSet(addr));
             cacheMemoryStats.numDataArrayStalls++;
             return false;
         }
@@ -680,8 +680,8 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
             return true;
         else {
             DPRINTF(RubyResourceStalls,
-                "Atomic ALU array stall on addr %#x in line address %#x\n",
-                addr, makeLineAddress(addr));
+                    "Atomic ALU array stall on addr %#x in line address %#x\n",
+                    addr, makeLineAddress(addr));
             cacheMemoryStats.numAtomicALUArrayStalls++;
             return false;
         }
@@ -733,7 +733,7 @@ CacheMemory::htmAbortTransaction()
     cacheMemoryStats.htmTransAbortReadSet.sample(htmReadSetSize);
     cacheMemoryStats.htmTransAbortWriteSet.sample(htmWriteSetSize);
     DPRINTF(HtmMem, "htmAbortTransaction: read set=%u write set=%u\n",
-        htmReadSetSize, htmWriteSetSize);
+            htmReadSetSize, htmWriteSetSize);
 }
 
 void
@@ -761,7 +761,7 @@ CacheMemory::htmCommitTransaction()
     cacheMemoryStats.htmTransCommitReadSet.sample(htmReadSetSize);
     cacheMemoryStats.htmTransCommitWriteSet.sample(htmWriteSetSize);
     DPRINTF(HtmMem, "htmCommitTransaction: read set=%u write set=%u\n",
-        htmReadSetSize, htmWriteSetSize);
+            htmReadSetSize, htmWriteSetSize);
 }
 
 void

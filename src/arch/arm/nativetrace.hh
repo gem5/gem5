@@ -129,8 +129,8 @@ class ArmNativeTrace : public NativeTrace
   public:
     using Params = ArmNativeTraceParams;
 
-    ArmNativeTrace(const Params &p) :
-        NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
+    ArmNativeTrace(const Params &p)
+        : NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
     {}
 
     void check(NativeTraceRecord *record);

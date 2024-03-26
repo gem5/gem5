@@ -108,8 +108,9 @@ class FaultModel : public SimObject
     };
 
     int declare_router(int number_of_inputs, int number_of_outputs,
-        int number_of_vcs_per_vnet, int number_of_buff_per_data_vc,
-        int number_of_buff_per_ctrl_vc);
+                       int number_of_vcs_per_vnet,
+                       int number_of_buff_per_data_vc,
+                       int number_of_buff_per_ctrl_vc);
 
     std::string fault_type_to_string(int fault_type_index);
 
@@ -122,8 +123,8 @@ class FaultModel : public SimObject
 
     bool fault_vector(int routerID, int temperature, float fault_vector[]);
 
-    bool fault_prob(
-        int routerID, int temperature, float *aggregate_fault_prob);
+    bool fault_prob(int routerID, int temperature,
+                    float *aggregate_fault_prob);
 
     // for debugging purposes
 

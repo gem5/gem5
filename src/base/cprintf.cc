@@ -38,8 +38,8 @@ namespace gem5
 {
 namespace cp
 {
-Print::Print(std::ostream &stream, const std::string &format) :
-    stream(stream), format(format.c_str()), ptr(format.c_str()), cont(false)
+Print::Print(std::ostream &stream, const std::string &format)
+    : stream(stream), format(format.c_str()), ptr(format.c_str()), cont(false)
 {
     savedFlags = stream.flags();
     savedFill = stream.fill();
@@ -47,8 +47,8 @@ Print::Print(std::ostream &stream, const std::string &format) :
     savedWidth = stream.width();
 }
 
-Print::Print(std::ostream &stream, const char *format) :
-    stream(stream), format(format), ptr(format), cont(false)
+Print::Print(std::ostream &stream, const char *format)
+    : stream(stream), format(format), ptr(format), cont(false)
 {
     savedFlags = stream.flags();
     savedFill = stream.fill();

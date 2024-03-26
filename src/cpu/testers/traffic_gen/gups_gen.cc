@@ -37,20 +37,21 @@
 
 namespace gem5
 {
-GUPSGen::GUPSGen(const GUPSGenParams &params) :
-    ClockedObject(params),
-    nextCreateEvent([this] { createNextReq(); }, name()),
-    nextSendEvent([this] { sendNextReq(); }, name()),
-    system(params.system),
-    requestorId(system->getRequestorId(this)),
-    port(name() + ".port", this),
-    startAddr(params.start_addr),
-    memSize(params.mem_size),
-    updateLimit(params.update_limit),
-    elementSize(sizeof(uint64_t)), // every element in the table is a uint64_t
-    reqQueueSize(params.request_queue_size),
-    initMemory(params.init_memory),
-    stats(this)
+GUPSGen::GUPSGen(const GUPSGenParams &params)
+    : ClockedObject(params),
+      nextCreateEvent([this] { createNextReq(); }, name()),
+      nextSendEvent([this] { sendNextReq(); }, name()),
+      system(params.system),
+      requestorId(system->getRequestorId(this)),
+      port(name() + ".port", this),
+      startAddr(params.start_addr),
+      memSize(params.mem_size),
+      updateLimit(params.update_limit),
+      elementSize(
+          sizeof(uint64_t)), // every element in the table is a uint64_t
+      reqQueueSize(params.request_queue_size),
+      initMemory(params.init_memory),
+      stats(this)
 {}
 
 Port &
@@ -85,8 +86,8 @@ GUPSGen::startup()
             uint8_t write_data[block_size];
             for (uint64_t offset = 0; offset < stride_size; offset++) {
                 uint64_t value = start_index + offset;
-                std::memcpy(
-                    write_data + offset * elementSize, &value, elementSize);
+                std::memcpy(write_data + offset * elementSize, &value,
+                            elementSize);
             }
             Addr addr = indexToAddr(start_index);
             PacketPtr pkt = getWritePacket(addr, block_size, write_data);
@@ -138,14 +139,14 @@ void
 GUPSGen::handleResponse(PacketPtr pkt)
 {
     onTheFlyRequests--;
-    DPRINTF(
-        GUPSGen, "%s: onTheFlyRequests: %d.\n", __func__, onTheFlyRequests);
+    DPRINTF(GUPSGen, "%s: onTheFlyRequests: %d.\n", __func__,
+            onTheFlyRequests);
     if (pkt->isWrite()) {
         DPRINTF(GUPSGen,
-            "%s: received a write resp. pkt->addr_range: %s,"
-            " pkt->data: %d\n",
-            __func__, pkt->getAddrRange().to_string(),
-            *pkt->getPtr<uint64_t>());
+                "%s: received a write resp. pkt->addr_range: %s,"
+                " pkt->data: %d\n",
+                __func__, pkt->getAddrRange().to_string(),
+                *pkt->getPtr<uint64_t>());
         stats.totalUpdates++;
         stats.totalWrites++;
         stats.totalBytesWritten += elementSize;
@@ -155,7 +156,7 @@ GUPSGen::handleResponse(PacketPtr pkt)
         delete pkt;
     } else {
         DPRINTF(GUPSGen, "%s: received a read resp. pkt->addr_range: %s\n",
-            __func__, pkt->getAddrRange().to_string());
+                __func__, pkt->getAddrRange().to_string());
 
         stats.totalReads++;
         stats.totalBytesRead += elementSize;
@@ -196,7 +197,7 @@ GUPSGen::createNextReq()
 
         uint64_t *updated_value = pkt->getPtr<uint64_t>();
         DPRINTF(GUPSGen, "%s: Read value %lu from address %s", __func__,
-            *updated_value, pkt->getAddrRange().to_string());
+                *updated_value, pkt->getAddrRange().to_string());
         *updated_value ^= updateTable[pkt->req];
         updateTable.erase(pkt->req);
         Addr addr = pkt->getAddr();
@@ -245,18 +246,18 @@ GUPSGen::sendNextReq()
         exitTimes[pkt->req] = curTick();
         if (pkt->isWrite()) {
             DPRINTF(GUPSGen,
-                "%s: Sent write pkt, pkt->addr_range: "
-                "%s, pkt->data: %lu.\n",
-                __func__, pkt->getAddrRange().to_string(),
-                *pkt->getPtr<uint64_t>());
+                    "%s: Sent write pkt, pkt->addr_range: "
+                    "%s, pkt->data: %lu.\n",
+                    __func__, pkt->getAddrRange().to_string(),
+                    *pkt->getPtr<uint64_t>());
         } else {
             DPRINTF(GUPSGen, "%s: Sent read pkt, pkt->addr_range: %s.\n",
-                __func__, pkt->getAddrRange().to_string());
+                    __func__, pkt->getAddrRange().to_string());
         }
         port.sendTimingPacket(pkt);
         onTheFlyRequests++;
         DPRINTF(GUPSGen, "%s: onTheFlyRequests: %d.\n", __func__,
-            onTheFlyRequests);
+                onTheFlyRequests);
         requestPool.pop();
     }
 
@@ -317,38 +318,38 @@ GUPSGen::GenPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen *parent) :
-    statistics::Group(parent),
-    ADD_STAT(totalUpdates, statistics::units::Count::get(),
-        "Total number of updates the generator made in the memory"),
-    ADD_STAT(GUPS,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Second>::get(),
-        "Rate of billion updates per second"),
-    ADD_STAT(totalReads, statistics::units::Count::get(),
-        "Total number of read requests"),
-    ADD_STAT(totalBytesRead, statistics::units::Byte::get(),
-        "Total number of bytes read"),
-    ADD_STAT(avgReadBW,
-        statistics::units::Rate<statistics::units::Byte,
-            statistics::units::Second>::get(),
-        "Average read bandwidth received from memory"),
-    ADD_STAT(totalReadLat, statistics::units::Tick::get(),
-        "Total latency of read requests."),
-    ADD_STAT(avgReadLat, statistics::units::Tick::get(),
-        "Average latency for read requests"),
-    ADD_STAT(totalWrites, statistics::units::Count::get(),
-        "Total number of write requests"),
-    ADD_STAT(totalBytesWritten, statistics::units::Byte::get(),
-        "Total number of bytes written"),
-    ADD_STAT(avgWriteBW,
-        statistics::units::Rate<statistics::units::Byte,
-            statistics::units::Second>::get(),
-        "Average write bandwidth received from memory"),
-    ADD_STAT(totalWriteLat, statistics::units::Tick::get(),
-        "Total latency of write requests."),
-    ADD_STAT(avgWriteLat, statistics::units::Tick::get(),
-        "Average latency for write requests")
+GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen *parent)
+    : statistics::Group(parent),
+      ADD_STAT(totalUpdates, statistics::units::Count::get(),
+               "Total number of updates the generator made in the memory"),
+      ADD_STAT(GUPS,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Rate of billion updates per second"),
+      ADD_STAT(totalReads, statistics::units::Count::get(),
+               "Total number of read requests"),
+      ADD_STAT(totalBytesRead, statistics::units::Byte::get(),
+               "Total number of bytes read"),
+      ADD_STAT(avgReadBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average read bandwidth received from memory"),
+      ADD_STAT(totalReadLat, statistics::units::Tick::get(),
+               "Total latency of read requests."),
+      ADD_STAT(avgReadLat, statistics::units::Tick::get(),
+               "Average latency for read requests"),
+      ADD_STAT(totalWrites, statistics::units::Count::get(),
+               "Total number of write requests"),
+      ADD_STAT(totalBytesWritten, statistics::units::Byte::get(),
+               "Total number of bytes written"),
+      ADD_STAT(avgWriteBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average write bandwidth received from memory"),
+      ADD_STAT(totalWriteLat, statistics::units::Tick::get(),
+               "Total latency of write requests."),
+      ADD_STAT(avgWriteLat, statistics::units::Tick::get(),
+               "Average latency for write requests")
 {}
 
 void

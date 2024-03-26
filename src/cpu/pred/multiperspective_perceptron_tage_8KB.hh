@@ -59,8 +59,8 @@ class MPP_TAGE_8KB : public MPP_TAGE
 class MPP_LoopPredictor_8KB : public MPP_LoopPredictor
 {
   public:
-    MPP_LoopPredictor_8KB(const MPP_LoopPredictor_8KBParams &p) :
-        MPP_LoopPredictor(p)
+    MPP_LoopPredictor_8KB(const MPP_LoopPredictor_8KBParams &p)
+        : MPP_LoopPredictor(p)
     {}
 };
 
@@ -68,14 +68,16 @@ class MPP_StatisticalCorrector_8KB : public MPP_StatisticalCorrector
 {
     StatisticalCorrector::SCThreadHistory *makeThreadHistory() override;
     int gPredictions(ThreadID tid, Addr branch_pc,
-        StatisticalCorrector::BranchInfo *bi, int &lsum,
-        int64_t phist) override;
+                     StatisticalCorrector::BranchInfo *bi, int &lsum,
+                     int64_t phist) override;
     void getBiasLSUM(Addr branch_pc, StatisticalCorrector::BranchInfo *bi,
-        int &lsum) const override;
+                     int &lsum) const override;
     void gUpdates(ThreadID tid, Addr pc, bool taken,
-        StatisticalCorrector::BranchInfo *bi, int64_t phist) override;
+                  StatisticalCorrector::BranchInfo *bi,
+                  int64_t phist) override;
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
-        StatisticalCorrector::BranchInfo *bi, Addr corrTarget) override;
+                         StatisticalCorrector::BranchInfo *bi,
+                         Addr corrTarget) override;
 
   public:
     MPP_StatisticalCorrector_8KB(const MPP_StatisticalCorrector_8KBParams &p);

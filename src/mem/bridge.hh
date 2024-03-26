@@ -164,8 +164,8 @@ class Bridge : public ClockedObject
          * @param _ranges a number of address ranges to forward
          */
         BridgeResponsePort(const std::string &_name, Bridge &_bridge,
-            BridgeRequestPort &_memSidePort, Cycles _delay, int _resp_limit,
-            std::vector<AddrRange> _ranges);
+                           BridgeRequestPort &_memSidePort, Cycles _delay,
+                           int _resp_limit, std::vector<AddrRange> _ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule
@@ -198,8 +198,8 @@ class Bridge : public ClockedObject
 
         /** When receiving an Atomic backdoor request from the peer port,
             pass it to the bridge. */
-        Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &backdoor) override;
 
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
@@ -207,8 +207,8 @@ class Bridge : public ClockedObject
 
         /** When receiving a Functional backdoor request from the peer port,
             pass it to the bridge. */
-        void recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor) override;
 
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
@@ -267,7 +267,8 @@ class Bridge : public ClockedObject
          * @param _req_limit the size of the request queue
          */
         BridgeRequestPort(const std::string &_name, Bridge &_bridge,
-            BridgeResponsePort &_cpuSidePort, Cycles _delay, int _req_limit);
+                          BridgeResponsePort &_cpuSidePort, Cycles _delay,
+                          int _req_limit);
 
         /**
          * Is this side blocked from accepting new request packets.
@@ -312,8 +313,8 @@ class Bridge : public ClockedObject
     BridgeRequestPort memSidePort;
 
   public:
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
 

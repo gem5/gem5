@@ -60,8 +60,8 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     Tick repeat;
 
   public:
-    GlobalSimLoopExitEvent(
-        Tick when, const std::string &_cause, int c, Tick repeat = 0);
+    GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
+                           Tick repeat = 0);
     GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     const std::string

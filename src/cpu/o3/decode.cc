@@ -59,20 +59,20 @@ namespace gem5
 {
 namespace o3
 {
-Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params) :
-    cpu(_cpu),
-    renameToDecodeDelay(params.renameToDecodeDelay),
-    iewToDecodeDelay(params.iewToDecodeDelay),
-    commitToDecodeDelay(params.commitToDecodeDelay),
-    fetchToDecodeDelay(params.fetchToDecodeDelay),
-    decodeWidth(params.decodeWidth),
-    numThreads(params.numThreads),
-    stats(_cpu)
+Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
+    : cpu(_cpu),
+      renameToDecodeDelay(params.renameToDecodeDelay),
+      iewToDecodeDelay(params.iewToDecodeDelay),
+      commitToDecodeDelay(params.commitToDecodeDelay),
+      fetchToDecodeDelay(params.fetchToDecodeDelay),
+      decodeWidth(params.decodeWidth),
+      numThreads(params.numThreads),
+      stats(_cpu)
 {
     if (decodeWidth > MaxWidth)
         fatal("decodeWidth (%d) is larger than compiled limit (%d),\n"
               "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
-            decodeWidth, static_cast<int>(MaxWidth));
+              decodeWidth, static_cast<int>(MaxWidth));
 
     // @todo: Make into a parameter
     skidBufferMax = (fetchToDecodeDelay + 1) * params.decodeWidth;
@@ -117,29 +117,29 @@ Decode::name() const
     return cpu->name() + ".decode";
 }
 
-Decode::DecodeStats::DecodeStats(CPU *cpu) :
-    statistics::Group(cpu, "decode"),
-    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-        "Number of cycles decode is idle"),
-    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-        "Number of cycles decode is blocked"),
-    ADD_STAT(runCycles, statistics::units::Cycle::get(),
-        "Number of cycles decode is running"),
-    ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-        "Number of cycles decode is unblocking"),
-    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-        "Number of cycles decode is squashing"),
-    ADD_STAT(branchResolved, statistics::units::Count::get(),
-        "Number of times decode resolved a branch"),
-    ADD_STAT(branchMispred, statistics::units::Count::get(),
-        "Number of times decode detected a branch misprediction"),
-    ADD_STAT(controlMispred, statistics::units::Count::get(),
-        "Number of times decode detected an instruction incorrectly "
-        "predicted as a control"),
-    ADD_STAT(decodedInsts, statistics::units::Count::get(),
-        "Number of instructions handled by decode"),
-    ADD_STAT(squashedInsts, statistics::units::Count::get(),
-        "Number of squashed instructions handled by decode")
+Decode::DecodeStats::DecodeStats(CPU *cpu)
+    : statistics::Group(cpu, "decode"),
+      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
+               "Number of cycles decode is idle"),
+      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
+               "Number of cycles decode is blocked"),
+      ADD_STAT(runCycles, statistics::units::Cycle::get(),
+               "Number of cycles decode is running"),
+      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
+               "Number of cycles decode is unblocking"),
+      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
+               "Number of cycles decode is squashing"),
+      ADD_STAT(branchResolved, statistics::units::Count::get(),
+               "Number of times decode resolved a branch"),
+      ADD_STAT(branchMispred, statistics::units::Count::get(),
+               "Number of times decode detected a branch misprediction"),
+      ADD_STAT(controlMispred, statistics::units::Count::get(),
+               "Number of times decode detected an instruction incorrectly "
+               "predicted as a control"),
+      ADD_STAT(decodedInsts, statistics::units::Count::get(),
+               "Number of instructions handled by decode"),
+      ADD_STAT(squashedInsts, statistics::units::Count::get(),
+               "Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);
     blockedCycles.prereq(blockedCycles);
@@ -281,9 +281,9 @@ void
 Decode::squash(const DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(Decode,
-        "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
-        "prediction detected at decode.\n",
-        tid, inst->seqNum);
+            "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
+            "prediction detected at decode.\n",
+            tid, inst->seqNum);
 
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
@@ -397,10 +397,10 @@ Decode::skidInsert(ThreadID tid)
         skidBuffer[tid].push(inst);
 
         DPRINTF(Decode,
-            "Inserting [tid:%d][sn:%lli] PC: %s into decode "
-            "skidBuffer %i\n",
-            inst->threadNumber, inst->seqNum, inst->pcState(),
-            skidBuffer[tid].size());
+                "Inserting [tid:%d][sn:%lli] PC: %s into decode "
+                "skidBuffer %i\n",
+                inst->threadNumber, inst->seqNum, inst->pcState(),
+                skidBuffer[tid].size());
     }
 
     // @todo: Eventually need to enforce this by not letting a thread
@@ -500,9 +500,9 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
     // Check squash signals from commit.
     if (fromCommit->commitInfo[tid].squash) {
         DPRINTF(Decode,
-            "[tid:%i] Squashing instructions due to squash "
-            "from commit.\n",
-            tid);
+                "[tid:%i] Squashing instructions due to squash "
+                "from commit.\n",
+                tid);
 
         squash(tid);
 
@@ -514,8 +514,8 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
     }
 
     if (decodeStatus[tid] == Blocked) {
-        DPRINTF(
-            Decode, "[tid:%i] Done blocking, switching to unblocking.\n", tid);
+        DPRINTF(Decode, "[tid:%i] Done blocking, switching to unblocking.\n",
+                tid);
 
         decodeStatus[tid] = Unblocking;
 
@@ -527,8 +527,8 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
     if (decodeStatus[tid] == Squashing) {
         // Switch status to running if decode isn't being told to block or
         // squash this cycle.
-        DPRINTF(
-            Decode, "[tid:%i] Done squashing, switching to running.\n", tid);
+        DPRINTF(Decode, "[tid:%i] Done squashing, switching to running.\n",
+                tid);
 
         decodeStatus[tid] = Running;
 
@@ -595,9 +595,9 @@ Decode::decode(bool &status_change, ThreadID tid)
     // will allow, as long as it is not currently blocked.
     if (decodeStatus[tid] == Running || decodeStatus[tid] == Idle) {
         DPRINTF(Decode,
-            "[tid:%i] Not blocked, so attempting to run "
-            "stage.\n",
-            tid);
+                "[tid:%i] Not blocked, so attempting to run "
+                "stage.\n",
+                tid);
 
         decodeInsts(tid);
     } else if (decodeStatus[tid] == Unblocking) {
@@ -631,17 +631,17 @@ Decode::decodeInsts(ThreadID tid)
 
     if (insts_available == 0) {
         DPRINTF(Decode,
-            "[tid:%i] Nothing to do, breaking out"
-            " early.\n",
-            tid);
+                "[tid:%i] Nothing to do, breaking out"
+                " early.\n",
+                tid);
         // Should I change the status to idle?
         ++stats.idleCycles;
         return;
     } else if (decodeStatus[tid] == Unblocking) {
         DPRINTF(Decode,
-            "[tid:%i] Unblocking, removing insts from skid "
-            "buffer.\n",
-            tid);
+                "[tid:%i] Unblocking, removing insts from skid "
+                "buffer.\n",
+                tid);
         ++stats.unblockCycles;
     } else if (decodeStatus[tid] == Running) {
         ++stats.runCycles;
@@ -660,15 +660,15 @@ Decode::decodeInsts(ThreadID tid)
         insts_to_decode.pop();
 
         DPRINTF(Decode,
-            "[tid:%i] Processing instruction [sn:%lli] with "
-            "PC %s\n",
-            tid, inst->seqNum, inst->pcState());
+                "[tid:%i] Processing instruction [sn:%lli] with "
+                "PC %s\n",
+                tid, inst->seqNum, inst->pcState());
 
         if (inst->isSquashed()) {
             DPRINTF(Decode,
-                "[tid:%i] Instruction %i with PC %s is "
-                "squashed, skipping.\n",
-                tid, inst->seqNum, inst->pcState());
+                    "[tid:%i] Instruction %i with PC %s is "
+                    "squashed, skipping.\n",
+                    tid, inst->seqNum, inst->pcState());
 
             ++stats.squashedInsts;
 
@@ -731,10 +731,10 @@ Decode::decodeInsts(ThreadID tid)
                 squash(inst, inst->threadNumber);
 
                 DPRINTF(Decode,
-                    "[tid:%i] [sn:%llu] "
-                    "Updating predictions: Wrong predicted target: %s \
+                        "[tid:%i] [sn:%llu] "
+                        "Updating predictions: Wrong predicted target: %s \
                         PredPC: %s\n",
-                    tid, inst->seqNum, inst->readPredTarg(), *target);
+                        tid, inst->seqNum, inst->readPredTarg(), *target);
                 // The micro pc after an instruction level branch should be 0
                 inst->setPredTarg(*target);
                 break;

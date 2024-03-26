@@ -107,7 +107,7 @@ class Scoreboard
         assert(phys_reg->flatIndex() < numPhysRegs);
 
         DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n",
-            phys_reg->index(), phys_reg->className());
+                phys_reg->index(), phys_reg->className());
 
         regScoreBoard[phys_reg->flatIndex()] = true;
     }

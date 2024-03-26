@@ -216,8 +216,8 @@ ForwardLineData::reportData(std::ostream &os) const
         os << id;
 }
 
-ForwardInstData::ForwardInstData(unsigned int width, ThreadID tid) :
-    numInsts(width), threadId(tid)
+ForwardInstData::ForwardInstData(unsigned int width, ThreadID tid)
+    : numInsts(width), threadId(tid)
 {
     bubbleFill();
 }

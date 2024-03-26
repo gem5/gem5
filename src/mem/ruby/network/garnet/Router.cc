@@ -44,18 +44,18 @@ namespace ruby
 {
 namespace garnet
 {
-Router::Router(const Params &p) :
-    BasicRouter(p),
-    Consumer(this),
-    m_latency(p.latency),
-    m_virtual_networks(p.virt_nets),
-    m_vc_per_vnet(p.vcs_per_vnet),
-    m_num_vcs(m_virtual_networks * m_vc_per_vnet),
-    m_bit_width(p.width),
-    m_network_ptr(nullptr),
-    routingUnit(this),
-    switchAllocator(this),
-    crossbarSwitch(this)
+Router::Router(const Params &p)
+    : BasicRouter(p),
+      Consumer(this),
+      m_latency(p.latency),
+      m_virtual_networks(p.virt_nets),
+      m_vc_per_vnet(p.vcs_per_vnet),
+      m_num_vcs(m_virtual_networks * m_vc_per_vnet),
+      m_bit_width(p.width),
+      m_network_ptr(nullptr),
+      routingUnit(this),
+      switchAllocator(this),
+      crossbarSwitch(this)
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -99,14 +99,14 @@ Router::wakeup()
 }
 
 void
-Router::addInPort(
-    PortDirection inport_dirn, NetworkLink *in_link, CreditLink *credit_link)
+Router::addInPort(PortDirection inport_dirn, NetworkLink *in_link,
+                  CreditLink *credit_link)
 {
     fatal_if(in_link->bitWidth != m_bit_width,
-        "Widths of link %s(%d)does"
-        " not match that of Router%d(%d). Consider inserting SerDes "
-        "Units.",
-        in_link->name(), in_link->bitWidth, m_id, m_bit_width);
+             "Widths of link %s(%d)does"
+             " not match that of Router%d(%d). Consider inserting SerDes "
+             "Units.",
+             in_link->name(), in_link->bitWidth, m_id, m_bit_width);
 
     int port_num = m_input_unit.size();
     InputUnit *input_unit = new InputUnit(port_num, inport_dirn, this);
@@ -125,12 +125,12 @@ Router::addInPort(
 
 void
 Router::addOutPort(PortDirection outport_dirn, NetworkLink *out_link,
-    std::vector<NetDest> &routing_table_entry, int link_weight,
-    CreditLink *credit_link, uint32_t consumerVcs)
+                   std::vector<NetDest> &routing_table_entry, int link_weight,
+                   CreditLink *credit_link, uint32_t consumerVcs)
 {
     fatal_if(out_link->bitWidth != m_bit_width,
-        "Widths of units do not match."
-        " Consider inserting SerDes Units");
+             "Widths of units do not match."
+             " Consider inserting SerDes Units");
 
     int port_num = m_output_unit.size();
     OutputUnit *output_unit =
@@ -260,8 +260,8 @@ Router::printAggregateFaultProbability(std::ostream &out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     float aggregate_fault_prob;
-    get_aggregate_fault_probability(
-        temperature_celcius, &aggregate_fault_prob);
+    get_aggregate_fault_probability(temperature_celcius,
+                                    &aggregate_fault_prob);
     out << "Router-" << m_id << " fault probability: ";
     out << aggregate_fault_prob << std::endl;
 }

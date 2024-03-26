@@ -90,7 +90,8 @@ struct Result
  */
 template <typename ABI>
 struct Result<ABI, void>
-{};
+{
+};
 
 template <typename ABI, typename Arg, typename Enabled = void>
 struct Argument

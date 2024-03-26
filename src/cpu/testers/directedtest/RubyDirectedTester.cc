@@ -48,12 +48,12 @@
 
 namespace gem5
 {
-RubyDirectedTester::RubyDirectedTester(const Params &p) :
-    ClockedObject(p),
-    directedStartEvent(
-        [this] { wakeup(); }, "Directed tick", false, Event::CPU_Tick_Pri),
-    m_requests_to_complete(p.requests_to_complete),
-    generator(p.generator)
+RubyDirectedTester::RubyDirectedTester(const Params &p)
+    : ClockedObject(p),
+      directedStartEvent([this] { wakeup(); }, "Directed tick", false,
+                         Event::CPU_Tick_Pri),
+      m_requests_to_complete(p.requests_to_complete),
+      generator(p.generator)
 {
     m_requests_completed = 0;
 
@@ -119,7 +119,7 @@ void
 RubyDirectedTester::hitCallback(ruby::NodeID proc, Addr addr)
 {
     DPRINTF(DirectedTest, "completed request for proc: %d addr: 0x%x\n", proc,
-        addr);
+            addr);
 
     generator->performCallback(proc, addr);
     schedule(directedStartEvent, curTick());

@@ -80,8 +80,8 @@ class DRAMsim3Wrapper
     unsigned int _burstSize;
 
     template <typename T>
-    T extractConfig(
-        const std::string &field_name, const std::string &file_name) const;
+    T extractConfig(const std::string &field_name,
+                    const std::string &file_name) const;
 
   public:
     /**
@@ -92,8 +92,9 @@ class DRAMsim3Wrapper
      * @param working_dir Path pre-pended to config files
      */
     DRAMsim3Wrapper(const std::string &config_file,
-        const std::string &working_dir, std::function<void(uint64_t)> read_cb,
-        std::function<void(uint64_t)> write_cb);
+                    const std::string &working_dir,
+                    std::function<void(uint64_t)> read_cb,
+                    std::function<void(uint64_t)> write_cb);
     ~DRAMsim3Wrapper();
 
     /**
@@ -113,7 +114,7 @@ class DRAMsim3Wrapper
      * @param write_callback Callback used for write completions
      */
     void setCallbacks(std::function<void(uint64_t)> read_complete,
-        std::function<void(uint64_t)> write_complete);
+                      std::function<void(uint64_t)> write_complete);
 
     /**
      * Determine if the controller can accept a new packet or not.

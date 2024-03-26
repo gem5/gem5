@@ -82,11 +82,11 @@ class GUPSGen : public ClockedObject
         PacketPtr blockedPacket;
 
       public:
-        GenPort(const std::string &name, GUPSGen *owner) :
-            RequestPort(name),
-            owner(owner),
-            _blocked(false),
-            blockedPacket(nullptr)
+        GenPort(const std::string &name, GUPSGen *owner)
+            : RequestPort(name),
+              owner(owner),
+              _blocked(false),
+              blockedPacket(nullptr)
         {}
 
         /**
@@ -324,8 +324,8 @@ class GUPSGen : public ClockedObject
   public:
     GUPSGen(const GUPSGenParams &params);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

@@ -127,9 +127,9 @@ X86NativeTrace::checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[])
     if (mXmmBuf[num * 2] != nXmmBuf[num * 2] ||
         mXmmBuf[num * 2 + 1] != nXmmBuf[num * 2 + 1]) {
         DPRINTF(ExecRegDelta,
-            "Register xmm%d should be 0x%016x%016x but is 0x%016x%016x.\n",
-            num, nXmmBuf[num * 2 + 1], nXmmBuf[num * 2], mXmmBuf[num * 2 + 1],
-            mXmmBuf[num * 2]);
+                "Register xmm%d should be 0x%016x%016x but is 0x%016x%016x.\n",
+                num, nXmmBuf[num * 2 + 1], nXmmBuf[num * 2],
+                mXmmBuf[num * 2 + 1], mXmmBuf[num * 2]);
         return false;
     }
     return true;

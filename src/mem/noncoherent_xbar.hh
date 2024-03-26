@@ -89,11 +89,11 @@ class NoncoherentXBar : public BaseXBar
         RespPacketQueue queue;
 
       public:
-        NoncoherentXBarResponsePort(
-            const std::string &_name, NoncoherentXBar &_xbar, PortID _id) :
-            QueuedResponsePort(_name, queue, _id),
-            xbar(_xbar),
-            queue(_xbar, *this)
+        NoncoherentXBarResponsePort(const std::string &_name,
+                                    NoncoherentXBar &_xbar, PortID _id)
+            : QueuedResponsePort(_name, queue, _id),
+              xbar(_xbar),
+              queue(_xbar, *this)
         {}
 
       protected:
@@ -122,8 +122,8 @@ class NoncoherentXBar : public BaseXBar
         }
 
         void
-        recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override
+        recvMemBackdoorReq(const MemBackdoorReq &req,
+                           MemBackdoorPtr &backdoor) override
         {
             xbar.recvMemBackdoorReq(req, backdoor);
         }
@@ -147,9 +147,9 @@ class NoncoherentXBar : public BaseXBar
         NoncoherentXBar &xbar;
 
       public:
-        NoncoherentXBarRequestPort(
-            const std::string &_name, NoncoherentXBar &_xbar, PortID _id) :
-            RequestPort(_name, _id), xbar(_xbar)
+        NoncoherentXBarRequestPort(const std::string &_name,
+                                   NoncoherentXBar &_xbar, PortID _id)
+            : RequestPort(_name, _id), xbar(_xbar)
         {}
 
       protected:
@@ -176,10 +176,10 @@ class NoncoherentXBar : public BaseXBar
     virtual bool recvTimingResp(PacketPtr pkt, PortID mem_side_port_id);
     void recvReqRetry(PortID mem_side_port_id);
     Tick recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
-        MemBackdoorPtr *backdoor = nullptr);
+                            MemBackdoorPtr *backdoor = nullptr);
     void recvFunctional(PacketPtr pkt, PortID cpu_side_port_id);
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor);
 
   public:
     NoncoherentXBar(const NoncoherentXBarParams &p);

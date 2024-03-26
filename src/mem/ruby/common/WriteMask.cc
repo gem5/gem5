@@ -36,8 +36,10 @@ namespace gem5
 {
 namespace ruby
 {
-WriteMask::WriteMask() :
-    mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false), mAtomic(false)
+WriteMask::WriteMask()
+    : mSize(RubySystem::getBlockSizeBytes()),
+      mMask(mSize, false),
+      mAtomic(false)
 {}
 
 void
@@ -51,8 +53,8 @@ WriteMask::print(std::ostream &out) const
 }
 
 void
-WriteMask::performAtomic(
-    uint8_t *p, std::deque<uint8_t *> &log, bool isAtomicNoReturn) const
+WriteMask::performAtomic(uint8_t *p, std::deque<uint8_t *> &log,
+                         bool isAtomicNoReturn) const
 {
     int offset;
     uint8_t *block_update;

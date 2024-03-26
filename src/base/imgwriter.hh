@@ -84,8 +84,8 @@ class ImgWriter
  *           when calling the appropriate object method
  * @return smart pointer to the allocated Image Writer
  */
-std::unique_ptr<ImgWriter> createImgWriter(
-    enums::ImageFormat type, const FrameBuffer *fb);
+std::unique_ptr<ImgWriter> createImgWriter(enums::ImageFormat type,
+                                           const FrameBuffer *fb);
 
 } // namespace gem5
 

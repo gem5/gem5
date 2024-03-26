@@ -85,8 +85,8 @@ class IrregularStreamBuffer : public Queued
     struct AddressMappingEntry : public TaggedEntry
     {
         std::vector<AddressMapping> mappings;
-        AddressMappingEntry(size_t num_mappings, unsigned counter_bits) :
-            TaggedEntry(), mappings(num_mappings, counter_bits)
+        AddressMappingEntry(size_t num_mappings, unsigned counter_bits)
+            : TaggedEntry(), mappings(num_mappings, counter_bits)
         {}
 
         void
@@ -116,8 +116,8 @@ class IrregularStreamBuffer : public Queued
      * @param is_secure whether this page is inside the secure memory area
      * @param physical_address corresponding physical address
      */
-    void addStructuralToPhysicalEntry(
-        Addr structuralAddress, bool is_secure, Addr physical_address);
+    void addStructuralToPhysicalEntry(Addr structuralAddress, bool is_secure,
+                                      Addr physical_address);
 
     /**
      * Obtain the Physical-to-Structured mapping entry of the given physical
@@ -134,8 +134,8 @@ class IrregularStreamBuffer : public Queued
     ~IrregularStreamBuffer() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

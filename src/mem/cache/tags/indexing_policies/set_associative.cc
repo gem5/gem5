@@ -59,8 +59,8 @@ SetAssociative::extractSet(const Addr addr) const
 }
 
 Addr
-SetAssociative::regenerateAddr(
-    const Addr tag, const ReplaceableEntry *entry) const
+SetAssociative::regenerateAddr(const Addr tag,
+                               const ReplaceableEntry *entry) const
 {
     return (tag << tagShift) | (entry->getSet() << setShift);
 }

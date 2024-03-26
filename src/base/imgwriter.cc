@@ -42,7 +42,7 @@
 #include "config/have_png.hh"
 
 #if HAVE_PNG
-#    include "base/pngwriter.hh"
+#include "base/pngwriter.hh"
 
 #endif
 

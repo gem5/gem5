@@ -60,8 +60,8 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
 
   public:
     PARAMS(FastModelCortexA76);
-    CortexA76(const Params &p) :
-        Base(p, scx::scx_get_iris_connection_interface())
+    CortexA76(const Params &p)
+        : Base(p, scx::scx_get_iris_connection_interface())
     {}
 
     void initState() override;
@@ -73,8 +73,8 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
 
     void setResetAddr(Addr addr, bool secure = false) override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 class CortexA76Cluster : public SimObject
@@ -105,8 +105,8 @@ class CortexA76Cluster : public SimObject
 
     CortexA76Cluster(const Params &p);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 template <class T>

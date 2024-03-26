@@ -64,8 +64,8 @@ DmaThread::issueLoadOps()
     if (location >= 0) {
         Addr address = addrManager->getAddress(location);
         DPRINTF(ProtocolTest, "%s Episode %d: Issuing Load - Addr %s\n",
-            this->getName(), curEpisode->getEpisodeId(),
-            ruby::printAddress(address));
+                this->getName(), curEpisode->getEpisodeId(),
+                ruby::printAddress(address));
 
         int load_size = sizeof(Value);
 
@@ -73,7 +73,8 @@ DmaThread::issueLoadOps()
         assert(address % load_size == 0);
 
         auto req = std::make_shared<Request>(address, load_size, 0,
-            tester->requestorId(), 0, threadId, nullptr);
+                                             tester->requestorId(), 0,
+                                             threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
 
@@ -120,13 +121,14 @@ DmaThread::issueStoreOps()
         assert(address % sizeof(Value) == 0);
 
         DPRINTF(ProtocolTest,
-            "%s Episode %d: Issuing Store - Addr %s - "
-            "Value %d\n",
-            this->getName(), curEpisode->getEpisodeId(),
-            ruby::printAddress(address), new_value);
+                "%s Episode %d: Issuing Store - Addr %s - "
+                "Value %d\n",
+                this->getName(), curEpisode->getEpisodeId(),
+                ruby::printAddress(address), new_value);
 
         auto req = std::make_shared<Request>(address, sizeof(Value), 0,
-            tester->requestorId(), 0, threadId, nullptr);
+                                             tester->requestorId(), 0,
+                                             threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
 
@@ -143,8 +145,8 @@ DmaThread::issueStoreOps()
         }
 
         // add an outstanding store
-        addOutstandingReqs(
-            outstandingStores, address, lane, location, new_value);
+        addOutstandingReqs(outstandingStores, address, lane, location,
+                           new_value);
 
         // increment the number of outstanding ld_st requests
         pendingLdStCount++;
@@ -204,10 +206,10 @@ DmaThread::hitCallback(PacketPtr pkt)
     Addr addr = pkt->getAddr();
 
     DPRINTF(ProtocolTest,
-        "%s Episode %d: hitCallback - Command %s -"
-        " Addr %s\n",
-        this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
-        ruby::printAddress(addr));
+            "%s Episode %d: hitCallback - Command %s -"
+            " Addr %s\n",
+            this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
+            ruby::printAddress(addr));
 
     if (resp_cmd == MemCmd::SwapResp) {
         // response to a pending atomic
@@ -225,7 +227,8 @@ DmaThread::hitCallback(PacketPtr pkt)
 
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
-            curEpisode->getEpisodeId(), value, curTick(), 0);
+                                    curEpisode->getEpisodeId(), value,
+                                    curTick(), 0);
 
         // this Atomic is done
         pendingAtomicCount--;
@@ -259,13 +262,14 @@ DmaThread::hitCallback(PacketPtr pkt)
 
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
-            curEpisode->getEpisodeId(), req.storedValue, curTick(), 0);
+                                    curEpisode->getEpisodeId(),
+                                    req.storedValue, curTick(), 0);
 
         // the Write is now done
         pendingLdStCount--;
     } else {
         panic("UnsupportedMemCmd response type: %s",
-            resp_cmd.toString().c_str());
+              resp_cmd.toString().c_str());
     }
 
     delete pkt->senderState;

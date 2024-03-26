@@ -128,9 +128,10 @@ class FlatFloatRegClassOps : public RegClassOps
 
 inline constexpr FlatFloatRegClassOps flatFloatRegClassOps;
 
-inline constexpr RegClass flatFloatRegClass = RegClass(
-    FloatRegClass, FloatRegClassName, float_reg::NumRegs, debug::FloatRegs)
-                                                  .ops(flatFloatRegClassOps);
+inline constexpr RegClass flatFloatRegClass =
+    RegClass(FloatRegClass, FloatRegClassName, float_reg::NumRegs,
+             debug::FloatRegs)
+        .ops(flatFloatRegClassOps);
 
 class FloatRegClassOps : public FlatFloatRegClassOps
 {
@@ -139,10 +140,11 @@ class FloatRegClassOps : public FlatFloatRegClassOps
 
 inline constexpr FloatRegClassOps floatRegClassOps;
 
-inline constexpr RegClass floatRegClass = RegClass(
-    FloatRegClass, FloatRegClassName, float_reg::NumRegs, debug::FloatRegs)
-                                              .ops(floatRegClassOps)
-                                              .needsFlattening();
+inline constexpr RegClass floatRegClass =
+    RegClass(FloatRegClass, FloatRegClassName, float_reg::NumRegs,
+             debug::FloatRegs)
+        .ops(floatRegClassOps)
+        .needsFlattening();
 
 namespace float_reg
 {

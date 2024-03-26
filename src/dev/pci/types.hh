@@ -45,8 +45,8 @@ struct PciBusAddr
   public:
     PciBusAddr() = delete;
 
-    constexpr PciBusAddr(uint8_t _bus, uint8_t _dev, uint8_t _func) :
-        bus(_bus), dev(_dev), func(_func)
+    constexpr PciBusAddr(uint8_t _bus, uint8_t _dev, uint8_t _func)
+        : bus(_bus), dev(_dev), func(_func)
     {}
 
     constexpr bool

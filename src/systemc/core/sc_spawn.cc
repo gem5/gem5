@@ -42,7 +42,7 @@ namespace sc_gem5
 {
 Process *
 spawnWork(ProcessFuncWrapper *func, const char *name,
-    const ::sc_core::sc_spawn_options *opts)
+          const ::sc_core::sc_spawn_options *opts)
 {
     bool method = false;
     bool dontInitialize = false;
@@ -102,8 +102,8 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
     if (opts && opts->_dontInitialize && opts->_events.empty() &&
         opts->_ports.empty() && opts->_exports.empty() &&
         opts->_interfaces.empty() && opts->_finders.empty()) {
-        SC_REPORT_WARNING(
-            sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_, proc->name());
+        SC_REPORT_WARNING(sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_,
+                          proc->name());
     }
 
     scheduler.reg(proc);
@@ -115,8 +115,8 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
 
 namespace sc_core
 {
-sc_spawn_options::sc_spawn_options() :
-    _spawnMethod(false), _dontInitialize(false), _stackSize(-1)
+sc_spawn_options::sc_spawn_options()
+    : _spawnMethod(false), _dontInitialize(false), _stackSize(-1)
 {}
 
 void
@@ -186,8 +186,8 @@ sc_spawn_options::reset_signal_is(const sc_out<bool> &port, bool value)
 }
 
 void
-sc_spawn_options::reset_signal_is(
-    const sc_signal_in_if<bool> &iface, bool value)
+sc_spawn_options::reset_signal_is(const sc_signal_in_if<bool> &iface,
+                                  bool value)
 {
     _if_resets.emplace_back(&iface, value, true);
 }
@@ -211,8 +211,8 @@ sc_spawn_options::async_reset_signal_is(const sc_out<bool> &port, bool value)
 }
 
 void
-sc_spawn_options::async_reset_signal_is(
-    const sc_signal_in_if<bool> &iface, bool value)
+sc_spawn_options::async_reset_signal_is(const sc_signal_in_if<bool> &iface,
+                                        bool value)
 {
     _if_resets.emplace_back(&iface, value, false);
 }

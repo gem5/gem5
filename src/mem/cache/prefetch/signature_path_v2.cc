@@ -38,17 +38,19 @@ namespace gem5
 {
 namespace prefetch
 {
-SignaturePathV2::SignaturePathV2(const SignaturePathPrefetcherV2Params &p) :
-    SignaturePath(p),
-    globalHistoryRegister(p.global_history_register_entries,
-        p.global_history_register_entries,
-        p.global_history_register_indexing_policy,
-        p.global_history_register_replacement_policy, GlobalHistoryEntry())
+SignaturePathV2::SignaturePathV2(const SignaturePathPrefetcherV2Params &p)
+    : SignaturePath(p),
+      globalHistoryRegister(
+          p.global_history_register_entries, p.global_history_register_entries,
+          p.global_history_register_indexing_policy,
+          p.global_history_register_replacement_policy, GlobalHistoryEntry())
 {}
 
 void
 SignaturePathV2::handleSignatureTableMiss(stride_t current_block,
-    signature_t &new_signature, double &new_conf, stride_t &new_stride)
+                                          signature_t &new_signature,
+                                          double &new_conf,
+                                          stride_t &new_stride)
 {
     bool found = false;
 
@@ -94,8 +96,8 @@ SignaturePathV2::calculatePrefetchConfidence(
 }
 
 void
-SignaturePathV2::increasePatternEntryCounter(
-    PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry)
+SignaturePathV2::increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                             PatternStrideEntry &pstride_entry)
 {
     if (pattern_entry.counter.isSaturated()) {
         pattern_entry.counter >>= 1;
@@ -115,7 +117,9 @@ SignaturePathV2::increasePatternEntryCounter(
 
 void
 SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
-    stride_t last_offset, stride_t delta, double path_confidence)
+                                             stride_t last_offset,
+                                             stride_t delta,
+                                             double path_confidence)
 {
     // Always use the replacement policy to assign new entries, as all
     // of them are unique, there are never "hits" in the GHR

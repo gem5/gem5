@@ -519,96 +519,96 @@ enum kfd_mmio_remap
 #define AMDKFD_IOW(nr, type) _IOW(AMDKFD_IOCTL_BASE, nr, type)
 #define AMDKFD_IOWR(nr, type) _IOWR(AMDKFD_IOCTL_BASE, nr, type)
 
-#define AMDKFD_IOC_GET_VERSION \
+#define AMDKFD_IOC_GET_VERSION                                                \
     AMDKFD_IOR(0x01, struct kfd_ioctl_get_version_args)
 
-#define AMDKFD_IOC_CREATE_QUEUE \
+#define AMDKFD_IOC_CREATE_QUEUE                                               \
     AMDKFD_IOWR(0x02, struct kfd_ioctl_create_queue_args)
 
-#define AMDKFD_IOC_DESTROY_QUEUE \
+#define AMDKFD_IOC_DESTROY_QUEUE                                              \
     AMDKFD_IOWR(0x03, struct kfd_ioctl_destroy_queue_args)
 
-#define AMDKFD_IOC_SET_MEMORY_POLICY \
+#define AMDKFD_IOC_SET_MEMORY_POLICY                                          \
     AMDKFD_IOW(0x04, struct kfd_ioctl_set_memory_policy_args)
 
-#define AMDKFD_IOC_GET_CLOCK_COUNTERS \
+#define AMDKFD_IOC_GET_CLOCK_COUNTERS                                         \
     AMDKFD_IOWR(0x05, struct kfd_ioctl_get_clock_counters_args)
 
-#define AMDKFD_IOC_GET_PROCESS_APERTURES \
+#define AMDKFD_IOC_GET_PROCESS_APERTURES                                      \
     AMDKFD_IOR(0x06, struct kfd_ioctl_get_process_apertures_args)
 
-#define AMDKFD_IOC_UPDATE_QUEUE \
+#define AMDKFD_IOC_UPDATE_QUEUE                                               \
     AMDKFD_IOW(0x07, struct kfd_ioctl_update_queue_args)
 
-#define AMDKFD_IOC_CREATE_EVENT \
+#define AMDKFD_IOC_CREATE_EVENT                                               \
     AMDKFD_IOWR(0x08, struct kfd_ioctl_create_event_args)
 
-#define AMDKFD_IOC_DESTROY_EVENT \
+#define AMDKFD_IOC_DESTROY_EVENT                                              \
     AMDKFD_IOW(0x09, struct kfd_ioctl_destroy_event_args)
 
 #define AMDKFD_IOC_SET_EVENT AMDKFD_IOW(0x0A, struct kfd_ioctl_set_event_args)
 
-#define AMDKFD_IOC_RESET_EVENT \
+#define AMDKFD_IOC_RESET_EVENT                                                \
     AMDKFD_IOW(0x0B, struct kfd_ioctl_reset_event_args)
 
-#define AMDKFD_IOC_WAIT_EVENTS \
+#define AMDKFD_IOC_WAIT_EVENTS                                                \
     AMDKFD_IOWR(0x0C, struct kfd_ioctl_wait_events_args)
 
-#define AMDKFD_IOC_DBG_REGISTER \
+#define AMDKFD_IOC_DBG_REGISTER                                               \
     AMDKFD_IOW(0x0D, struct kfd_ioctl_dbg_register_args)
 
-#define AMDKFD_IOC_DBG_UNREGISTER \
+#define AMDKFD_IOC_DBG_UNREGISTER                                             \
     AMDKFD_IOW(0x0E, struct kfd_ioctl_dbg_unregister_args)
 
-#define AMDKFD_IOC_DBG_ADDRESS_WATCH \
+#define AMDKFD_IOC_DBG_ADDRESS_WATCH                                          \
     AMDKFD_IOW(0x0F, struct kfd_ioctl_dbg_address_watch_args)
 
-#define AMDKFD_IOC_DBG_WAVE_CONTROL \
+#define AMDKFD_IOC_DBG_WAVE_CONTROL                                           \
     AMDKFD_IOW(0x10, struct kfd_ioctl_dbg_wave_control_args)
 
-#define AMDKFD_IOC_SET_SCRATCH_BACKING_VA \
+#define AMDKFD_IOC_SET_SCRATCH_BACKING_VA                                     \
     AMDKFD_IOWR(0x11, struct kfd_ioctl_set_scratch_backing_va_args)
 
-#define AMDKFD_IOC_GET_TILE_CONFIG \
+#define AMDKFD_IOC_GET_TILE_CONFIG                                            \
     AMDKFD_IOWR(0x12, struct kfd_ioctl_get_tile_config_args)
 
-#define AMDKFD_IOC_SET_TRAP_HANDLER \
+#define AMDKFD_IOC_SET_TRAP_HANDLER                                           \
     AMDKFD_IOW(0x13, struct kfd_ioctl_set_trap_handler_args)
 
-#define AMDKFD_IOC_GET_PROCESS_APERTURES_NEW \
+#define AMDKFD_IOC_GET_PROCESS_APERTURES_NEW                                  \
     AMDKFD_IOWR(0x14, struct kfd_ioctl_get_process_apertures_new_args)
 
-#define AMDKFD_IOC_ACQUIRE_VM \
+#define AMDKFD_IOC_ACQUIRE_VM                                                 \
     AMDKFD_IOW(0x15, struct kfd_ioctl_acquire_vm_args)
 
-#define AMDKFD_IOC_ALLOC_MEMORY_OF_GPU \
+#define AMDKFD_IOC_ALLOC_MEMORY_OF_GPU                                        \
     AMDKFD_IOWR(0x16, struct kfd_ioctl_alloc_memory_of_gpu_args)
 
-#define AMDKFD_IOC_FREE_MEMORY_OF_GPU \
+#define AMDKFD_IOC_FREE_MEMORY_OF_GPU                                         \
     AMDKFD_IOW(0x17, struct kfd_ioctl_free_memory_of_gpu_args)
 
-#define AMDKFD_IOC_MAP_MEMORY_TO_GPU \
+#define AMDKFD_IOC_MAP_MEMORY_TO_GPU                                          \
     AMDKFD_IOWR(0x18, struct kfd_ioctl_map_memory_to_gpu_args)
 
-#define AMDKFD_IOC_UNMAP_MEMORY_FROM_GPU \
+#define AMDKFD_IOC_UNMAP_MEMORY_FROM_GPU                                      \
     AMDKFD_IOWR(0x19, struct kfd_ioctl_unmap_memory_from_gpu_args)
 
-#define AMDKFD_IOC_SET_CU_MASK \
+#define AMDKFD_IOC_SET_CU_MASK                                                \
     AMDKFD_IOW(0x1A, struct kfd_ioctl_set_cu_mask_args)
 
-#define AMDKFD_IOC_GET_QUEUE_WAVE_STATE \
+#define AMDKFD_IOC_GET_QUEUE_WAVE_STATE                                       \
     AMDKFD_IOWR(0x1B, struct kfd_ioctl_get_queue_wave_state_args)
 
-#define AMDKFD_IOC_GET_DMABUF_INFO \
+#define AMDKFD_IOC_GET_DMABUF_INFO                                            \
     AMDKFD_IOWR(0x1C, struct kfd_ioctl_get_dmabuf_info_args)
 
-#define AMDKFD_IOC_IMPORT_DMABUF \
+#define AMDKFD_IOC_IMPORT_DMABUF                                              \
     AMDKFD_IOWR(0x1D, struct kfd_ioctl_import_dmabuf_args)
 
-#define AMDKFD_IOC_ALLOC_QUEUE_GWS \
+#define AMDKFD_IOC_ALLOC_QUEUE_GWS                                            \
     AMDKFD_IOWR(0x1E, struct kfd_ioctl_alloc_queue_gws_args)
 
-#define AMDKFD_IOC_SMI_EVENTS \
+#define AMDKFD_IOC_SMI_EVENTS                                                 \
     AMDKFD_IOWR(0x1F, struct kfd_ioctl_smi_events_args)
 
 #define AMDKFD_COMMAND_START 0x01

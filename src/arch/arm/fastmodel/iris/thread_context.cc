@@ -71,46 +71,48 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
 
     call().memory_getMemorySpaces(_instId, memorySpaces);
     for (const auto &space : memorySpaces) {
-        memorySpaceIds.emplace(
-            Iris::CanonicalMsn(space.canonicalMsn), space.spaceId);
+        memorySpaceIds.emplace(Iris::CanonicalMsn(space.canonicalMsn),
+                               space.spaceId);
     }
     call().memory_getUsefulAddressTranslations(_instId, translations);
 
     typedef ThreadContext Self;
     iris::EventSourceInfo evSrcInfo;
 
-    client.registerEventCallback<Self, &Self::breakpointHit>(this,
-        "ec_IRIS_BREAKPOINT_HIT", "Handle hitting a breakpoint",
+    client.registerEventCallback<Self, &Self::breakpointHit>(
+        this, "ec_IRIS_BREAKPOINT_HIT", "Handle hitting a breakpoint",
         "Iris::ThreadContext");
     call().event_getEventSource(_instId, evSrcInfo, "IRIS_BREAKPOINT_HIT");
     call().eventStream_create(_instId, breakpointEventStreamId,
-        evSrcInfo.evSrcId, client.getInstId());
+                              evSrcInfo.evSrcId, client.getInstId());
 
     for (auto it = bps.begin(); it != bps.end(); it++)
         installBp(it);
 
-    client.registerEventCallback<Self, &Self::semihostingEvent>(this,
-        "ec_IRIS_SEMIHOSTING_CALL_EXTENSION", "Handle a semihosting call",
-        "Iris::ThreadContext");
-    call().event_getEventSource(
-        _instId, evSrcInfo, "IRIS_SEMIHOSTING_CALL_EXTENSION");
+    client.registerEventCallback<Self, &Self::semihostingEvent>(
+        this, "ec_IRIS_SEMIHOSTING_CALL_EXTENSION",
+        "Handle a semihosting call", "Iris::ThreadContext");
+    call().event_getEventSource(_instId, evSrcInfo,
+                                "IRIS_SEMIHOSTING_CALL_EXTENSION");
     call().eventStream_create(_instId, semihostingEventStreamId,
-        evSrcInfo.evSrcId, client.getInstId(),
-        // Set all arguments to their defaults, except syncEc which is
-        // changed to true.
-        nullptr, "", false, 0, nullptr, false, false, true);
+                              evSrcInfo.evSrcId, client.getInstId(),
+                              // Set all arguments to their defaults, except
+                              // syncEc which is changed to true.
+                              nullptr, "", false, 0, nullptr, false, false,
+                              true);
 }
 
 iris::ResourceId
-ThreadContext::extractResourceId(
-    const ResourceMap &resources, const std::string &name)
+ThreadContext::extractResourceId(const ResourceMap &resources,
+                                 const std::string &name)
 {
     return resources.at(name).rscId;
 }
 
 void
 ThreadContext::extractResourceMap(ResourceIds &ids,
-    const ResourceMap &resources, const IdxNameMap &idx_names)
+                                  const ResourceMap &resources,
+                                  const IdxNameMap &idx_names)
 {
     for (const auto &idx_name : idx_names) {
         int idx = idx_name.first;
@@ -195,8 +197,8 @@ ThreadContext::uninstallBp(BpInfoIt it)
 void
 ThreadContext::delBp(BpInfoIt it)
 {
-    panic_if(
-        !it->second->empty(), "BP info still had events associated with it.");
+    panic_if(!it->second->empty(),
+             "BP info still had events associated with it.");
 
     if (it->second->validIds())
         uninstallBp(it);
@@ -206,8 +208,10 @@ ThreadContext::delBp(BpInfoIt it)
 
 iris::IrisErrorCode
 ThreadContext::instanceRegistryChanged(uint64_t esId,
-    const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-    bool syncEc, std::string &error_message_out)
+                                       const iris::IrisValueMap &fields,
+                                       uint64_t time, uint64_t sInstId,
+                                       bool syncEc,
+                                       std::string &error_message_out)
 {
     const std::string &event = fields.at("EVENT").getString();
     const iris::InstanceId id = fields.at("INST_ID").getU64();
@@ -228,8 +232,8 @@ ThreadContext::instanceRegistryChanged(uint64_t esId,
 
 iris::IrisErrorCode
 ThreadContext::phaseInitLeave(uint64_t esId, const iris::IrisValueMap &fields,
-    uint64_t time, uint64_t sInstId, bool syncEc,
-    std::string &error_message_out)
+                              uint64_t time, uint64_t sInstId, bool syncEc,
+                              std::string &error_message_out)
 {
     std::vector<iris::ResourceInfo> resources;
     call().resource_getList(_instId, resources);
@@ -257,8 +261,9 @@ ThreadContext::phaseInitLeave(uint64_t esId, const iris::IrisValueMap &fields,
 
 iris::IrisErrorCode
 ThreadContext::simulationTimeEvent(uint64_t esId,
-    const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-    bool syncEc, std::string &error_message_out)
+                                   const iris::IrisValueMap &fields,
+                                   uint64_t time, uint64_t sInstId,
+                                   bool syncEc, std::string &error_message_out)
 {
     if (fields.at("RUNNING").getAsBool()) {
         // If this is just simulation time starting up, don't do anything.
@@ -295,8 +300,8 @@ ThreadContext::simulationTimeEvent(uint64_t esId,
 
 iris::IrisErrorCode
 ThreadContext::breakpointHit(uint64_t esId, const iris::IrisValueMap &fields,
-    uint64_t time, uint64_t sInstId, bool syncEc,
-    std::string &error_message_out)
+                             uint64_t time, uint64_t sInstId, bool syncEc,
+                             std::string &error_message_out)
 {
     // Handle the breakpoint event later when the fastmodel simulation is
     // stopped.
@@ -307,8 +312,9 @@ ThreadContext::breakpointHit(uint64_t esId, const iris::IrisValueMap &fields,
 
 iris::IrisErrorCode
 ThreadContext::semihostingEvent(uint64_t esId,
-    const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-    bool syncEc, std::string &error_message_out)
+                                const iris::IrisValueMap &fields,
+                                uint64_t time, uint64_t sInstId, bool syncEc,
+                                std::string &error_message_out)
 {
     if (ArmSystem::callSemihosting(this, true)) {
         // Stop execution in case an exit of the sim loop was scheduled. We
@@ -328,18 +334,19 @@ ThreadContext::semihostingEvent(uint64_t esId,
 }
 
 ThreadContext::ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
-    gem5::BaseMMU *mmu, BaseISA *isa, iris::IrisConnectionInterface *iris_if,
-    const std::string &iris_path) :
-    _cpu(cpu),
-    _threadId(id),
-    _system(system),
-    _mmu(mmu),
-    _isa(isa),
-    _irisPath(iris_path),
-    vecRegs(ArmISA::NumVecRegs),
-    vecPredRegs(ArmISA::NumVecPredRegs),
-    comInstEventQueue("instruction-based event queue"),
-    client(iris_if, "client." + iris_path)
+                             gem5::BaseMMU *mmu, BaseISA *isa,
+                             iris::IrisConnectionInterface *iris_if,
+                             const std::string &iris_path)
+    : _cpu(cpu),
+      _threadId(id),
+      _system(system),
+      _mmu(mmu),
+      _isa(isa),
+      _irisPath(iris_path),
+      vecRegs(ArmISA::NumVecRegs),
+      vecPredRegs(ArmISA::NumVecPredRegs),
+      comInstEventQueue("instruction-based event queue"),
+      client(iris_if, "client." + iris_path)
 {
     iris::InstanceInfo info;
     auto ret_code = noThrow().instanceRegistry_getInstanceInfoByName(
@@ -355,35 +362,37 @@ ThreadContext::ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
     typedef ThreadContext Self;
     iris::EventSourceInfo evSrcInfo;
 
-    client.registerEventCallback<Self, &Self::instanceRegistryChanged>(this,
-        "ec_IRIS_INSTANCE_REGISTRY_CHANGED", "Install the iris instance ID",
-        "Iris::ThreadContext");
+    client.registerEventCallback<Self, &Self::instanceRegistryChanged>(
+        this, "ec_IRIS_INSTANCE_REGISTRY_CHANGED",
+        "Install the iris instance ID", "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdGlobalInstance, evSrcInfo,
-        "IRIS_INSTANCE_REGISTRY_CHANGED");
+                                "IRIS_INSTANCE_REGISTRY_CHANGED");
     regEventStreamId = iris::IRIS_UINT64_MAX;
-    static const std::vector<std::string> fields = {
-        "EVENT", "INST_ID", "INST_NAME"};
+    static const std::vector<std::string> fields = {"EVENT", "INST_ID",
+                                                    "INST_NAME"};
     call().eventStream_create(iris::IrisInstIdGlobalInstance, regEventStreamId,
-        evSrcInfo.evSrcId, client.getInstId(), &fields);
+                              evSrcInfo.evSrcId, client.getInstId(), &fields);
 
-    client.registerEventCallback<Self, &Self::phaseInitLeave>(this,
-        "ec_IRIS_SIM_PHASE_INIT_LEAVE", "Initialize register contexts",
+    client.registerEventCallback<Self, &Self::phaseInitLeave>(
+        this, "ec_IRIS_SIM_PHASE_INIT_LEAVE", "Initialize register contexts",
         "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdSimulationEngine, evSrcInfo,
-        "IRIS_SIM_PHASE_INIT_LEAVE");
+                                "IRIS_SIM_PHASE_INIT_LEAVE");
     initEventStreamId = iris::IRIS_UINT64_MAX;
     call().eventStream_create(iris::IrisInstIdSimulationEngine,
-        initEventStreamId, evSrcInfo.evSrcId, client.getInstId());
+                              initEventStreamId, evSrcInfo.evSrcId,
+                              client.getInstId());
 
-    client.registerEventCallback<Self, &Self::simulationTimeEvent>(this,
-        "ec_IRIS_SIMULATION_TIME_EVENT",
+    client.registerEventCallback<Self, &Self::simulationTimeEvent>(
+        this, "ec_IRIS_SIMULATION_TIME_EVENT",
         "Handle simulation time stopping for breakpoints or stepping",
         "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdSimulationEngine, evSrcInfo,
-        "IRIS_SIMULATION_TIME_EVENT");
+                                "IRIS_SIMULATION_TIME_EVENT");
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     call().eventStream_create(iris::IrisInstIdSimulationEngine,
-        timeEventStreamId, evSrcInfo.evSrcId, client.getInstId());
+                              timeEventStreamId, evSrcInfo.evSrcId,
+                              client.getInstId());
 
     breakpointEventStreamId = iris::IRIS_UINT64_MAX;
     semihostingEventStreamId = iris::IRIS_UINT64_MAX;
@@ -391,24 +400,25 @@ ThreadContext::ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
     auto enable_lambda = [this] {
         call().perInstanceExecution_setState(_instId, true);
     };
-    enableAfterPseudoEvent = new EventFunctionWrapper(enable_lambda,
-        "resume after pseudo inst", false, Event::Sim_Exit_Pri + 1);
+    enableAfterPseudoEvent =
+        new EventFunctionWrapper(enable_lambda, "resume after pseudo inst",
+                                 false, Event::Sim_Exit_Pri + 1);
 }
 
 ThreadContext::~ThreadContext()
 {
-    call().eventStream_destroy(
-        iris::IrisInstIdSimulationEngine, initEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdSimulationEngine,
+                               initEventStreamId);
     initEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIM_PHASE_INIT_LEAVE");
 
-    call().eventStream_destroy(
-        iris::IrisInstIdGlobalInstance, regEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdGlobalInstance,
+                               regEventStreamId);
     regEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_INSTANCE_REGISTRY_CHANGED");
 
-    call().eventStream_destroy(
-        iris::IrisInstIdGlobalInstance, timeEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdGlobalInstance,
+                               timeEventStreamId);
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
 
@@ -442,8 +452,8 @@ ThreadContext::remove(PCEvent *e)
 }
 
 void
-ThreadContext::readMem(
-    iris::MemorySpaceId space, Addr addr, void *p, size_t size)
+ThreadContext::readMem(iris::MemorySpaceId space, Addr addr, void *p,
+                       size_t size)
 {
     iris::MemoryReadResult r;
     auto err = call().memory_read(_instId, r, space, addr, 1, size);
@@ -452,8 +462,8 @@ ThreadContext::readMem(
 }
 
 void
-ThreadContext::writeMem(
-    iris::MemorySpaceId space, Addr addr, const void *p, size_t size)
+ThreadContext::writeMem(iris::MemorySpaceId space, Addr addr, const void *p,
+                        size_t size)
 {
     std::vector<uint64_t> data((size + 7) / 8);
     std::memcpy(data.data(), p, size);
@@ -464,11 +474,11 @@ ThreadContext::writeMem(
 
 bool
 ThreadContext::translateAddress(Addr &paddr, iris::MemorySpaceId p_space,
-    Addr vaddr, iris::MemorySpaceId v_space)
+                                Addr vaddr, iris::MemorySpaceId v_space)
 {
     iris::MemoryAddressTranslationResult result;
-    auto ret = noThrow().memory_translateAddress(
-        _instId, result, v_space, vaddr, p_space);
+    auto ret = noThrow().memory_translateAddress(_instId, result, v_space,
+                                                 vaddr, p_space);
 
     if (ret != iris::E_ok) {
         // Check if there was  a legal translation between these two spaces.
@@ -544,8 +554,8 @@ ThreadContext::readMemWithCurrentMsn(Addr vaddr, size_t size, char *data)
 }
 
 void
-ThreadContext::writeMemWithCurrentMsn(
-    Addr vaddr, size_t size, const char *data)
+ThreadContext::writeMemWithCurrentMsn(Addr vaddr, size_t size,
+                                      const char *data)
 {
     writeMem(getMemorySpaceId(Iris::CurrentMsn), vaddr, data, size);
 }
@@ -614,8 +624,8 @@ ThreadContext::getMiscRegRscId(RegIndex misc_reg) const
         rsc_id = miscRegIds.at(misc_reg);
 
     panic_if(rsc_id == iris::IRIS_UINT64_MAX,
-        "Misc reg %s is not supported by fast model.",
-        ArmISA::miscRegClass[misc_reg]);
+             "Misc reg %s is not supported by fast model.",
+             ArmISA::miscRegClass[misc_reg]);
     return rsc_id;
 }
 
@@ -791,8 +801,8 @@ ThreadContext::getIntRegRscId(RegIndex int_reg) const
         rsc_id = regIds.at(int_reg);
 
     panic_if(rsc_id == iris::IRIS_UINT64_MAX,
-        "Int reg %s is not supported by fast model.",
-        ArmISA::intRegClass[int_reg]);
+             "Int reg %s is not supported by fast model.",
+             ArmISA::intRegClass[int_reg]);
     return rsc_id;
 }
 
@@ -840,8 +850,8 @@ ThreadContext::setIntRegFlat(RegIndex idx, uint64_t val)
 {
     auto rsc_id = getIntRegFlatRscId(idx);
     panic_if(rsc_id == iris::IRIS_UINT64_MAX,
-        "Int reg %s is not supported by fast model.",
-        ArmISA::intRegClass[idx]);
+             "Int reg %s is not supported by fast model.",
+             ArmISA::intRegClass[idx]);
     iris::ResourceWriteResult result;
     call().resource_write(_instId, result, rsc_id, val);
 }
@@ -871,7 +881,8 @@ ThreadContext::setCCRegFlat(RegIndex idx, RegVal val)
 {
     auto rsc_id = getCCRegFlatRscId(idx);
     panic_if(rsc_id == iris::IRIS_UINT64_MAX,
-        "CC reg %s is not supported by fast model.", ArmISA::ccRegClass[idx]);
+             "CC reg %s is not supported by fast model.",
+             ArmISA::ccRegClass[idx]);
     iris::ResourceWriteResult result;
     call().resource_write(_instId, result, rsc_id, val);
 }

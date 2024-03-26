@@ -46,13 +46,13 @@ Module *_new_module;
 
 UniqueNameGen globalNameGen;
 
-Module::Module(const char *name) :
-    _name(name),
-    _sc_mod(nullptr),
-    _obj(nullptr),
-    _ended(false),
-    _deprecatedConstructor(false),
-    bindingIndex(0)
+Module::Module(const char *name)
+    : _name(name),
+      _sc_mod(nullptr),
+      _obj(nullptr),
+      _ended(false),
+      _deprecatedConstructor(false),
+      bindingIndex(0)
 {
     using namespace gem5;
     panic_if(_new_module, "Previous module not finished.\n");
@@ -110,8 +110,8 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
 {
     using namespace gem5;
     panic_if(proxies.size() > ports.size(),
-        "Trying to bind %d interfaces/ports to %d ports.\n", proxies.size(),
-        ports.size());
+             "Trying to bind %d interfaces/ports to %d ports.\n",
+             proxies.size(), ports.size());
 
     auto proxyIt = proxies.begin();
     auto portIt = ports.begin();

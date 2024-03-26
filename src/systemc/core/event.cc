@@ -39,17 +39,17 @@
 
 namespace sc_gem5
 {
-Event::Event(sc_core::sc_event *_sc_event, bool internal) :
-    Event(_sc_event, nullptr, internal)
+Event::Event(sc_core::sc_event *_sc_event, bool internal)
+    : Event(_sc_event, nullptr, internal)
 {}
 
-Event::Event(
-    sc_core::sc_event *_sc_event, const char *_basename_cstr, bool internal) :
-    _sc_event(_sc_event),
-    _basename(_basename_cstr ? _basename_cstr : ""),
-    _inHierarchy(!internal),
-    delayedNotify([this]() { this->notify(); }),
-    _triggeredStamp(~0ULL)
+Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
+             bool internal)
+    : _sc_event(_sc_event),
+      _basename(_basename_cstr ? _basename_cstr : ""),
+      _inHierarchy(!internal),
+      delayedNotify([this]() { this->notify(); }),
+      _triggeredStamp(~0ULL)
 {
     if (_basename == "" && ::sc_core::sc_is_running())
         _basename = ::sc_core::sc_gen_unique_name("event");
@@ -76,8 +76,8 @@ Event::Event(
             std::string message = path + original_name +
                                   ". Latter declaration will be renamed to " +
                                   path + _basename;
-            SC_REPORT_WARNING(
-                sc_core::SC_ID_INSTANCE_EXISTS_, message.c_str());
+            SC_REPORT_WARNING(sc_core::SC_ID_INSTANCE_EXISTS_,
+                              message.c_str());
         }
 
         _name = path + _basename;

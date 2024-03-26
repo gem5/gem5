@@ -39,8 +39,8 @@ struct Access
     Addr addr;
     Addr size;
 
-    Access(bool _read, Addr _addr, Addr _size) :
-        read(_read), addr(_addr), size(_size)
+    Access(bool _read, Addr _addr, Addr _size)
+        : read(_read), addr(_addr), size(_size)
     {}
 
     bool
@@ -70,8 +70,8 @@ class BackingStore
     rangeCheck(Addr addr, Addr size)
     {
         panic_if(addr < base || addr + size > base + store.size(),
-            "Range [%#x,%#x) outside of [%#x,%#x).", addr, addr + size, base,
-            base + store.size());
+                 "Range [%#x,%#x) outside of [%#x,%#x).", addr, addr + size,
+                 base, base + store.size());
     }
 
     mutable Accesses accesses;
@@ -138,23 +138,23 @@ class BackingStore
 
 ::testing::AssertionResult
 accessed(const char *expr1, const char *expr2, const BackingStore &store,
-    const Accesses &expected)
+         const Accesses &expected)
 {
     return store.expect_accesses(expected);
 }
 
-#define EXPECT_ACCESSES(store, ...) \
-    do { \
-        Accesses expected({__VA_ARGS__}); \
-        EXPECT_PRED_FORMAT2(accessed, store, expected); \
-        store.accesses.clear(); \
+#define EXPECT_ACCESSES(store, ...)                                           \
+    do {                                                                      \
+        Accesses expected({__VA_ARGS__});                                     \
+        EXPECT_PRED_FORMAT2(accessed, store, expected);                       \
+        store.accesses.clear();                                               \
     } while (false)
 
 std::ostream &
 operator<<(std::ostream &os, const Access &access)
 {
     ccprintf(os, "%s(%#x, %d)", access.read ? "read" : "write", access.addr,
-        access.size);
+             access.size);
     return os;
 }
 

@@ -60,8 +60,8 @@ MinorActivityRecorder::minorTrace() const
             stages << ',';
     }
 
-    minor::minorTrace(
-        "activity=%d stages=%s\n", getActivityCount(), stages.str());
+    minor::minorTrace("activity=%d stages=%s\n", getActivityCount(),
+                      stages.str());
 }
 
 } // namespace minor

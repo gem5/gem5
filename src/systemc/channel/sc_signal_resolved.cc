@@ -32,14 +32,14 @@
 
 namespace sc_core
 {
-sc_signal_resolved::sc_signal_resolved() :
-    sc_interface(),
-    sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(
-        sc_gen_unique_name("signal_resolved"))
+sc_signal_resolved::sc_signal_resolved()
+    : sc_interface(),
+      sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(
+          sc_gen_unique_name("signal_resolved"))
 {}
 
-sc_signal_resolved::sc_signal_resolved(const char *name) :
-    sc_interface(), sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(name)
+sc_signal_resolved::sc_signal_resolved(const char *name)
+    : sc_interface(), sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(name)
 {}
 
 sc_signal_resolved::~sc_signal_resolved() {}
@@ -84,8 +84,10 @@ sc_signal_resolved::update()
     using sc_dt::Log_X;
     using sc_dt::Log_Z;
     static sc_dt::sc_logic_value_t merge_table[4][4] = {
-        {Log_0, Log_X, Log_0, Log_X}, {Log_X, Log_1, Log_1, Log_X},
-        {Log_0, Log_1, Log_Z, Log_X}, {Log_X, Log_X, Log_X, Log_X}};
+        {Log_0, Log_X, Log_0, Log_X},
+        {Log_X, Log_1, Log_1, Log_X},
+        {Log_0, Log_1, Log_Z, Log_X},
+        {Log_X, Log_X, Log_X, Log_X}};
 
     // Resolve the inputs, and give the result to the underlying signal class.
     m_new_val = Log_Z;

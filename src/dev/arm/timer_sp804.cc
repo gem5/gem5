@@ -50,23 +50,23 @@
 
 namespace gem5
 {
-Sp804::Sp804(const Params &p) :
-    AmbaPioDevice(p, 0x1000),
-    timer0(name() + ".timer0", this, p.int0->get(), p.clock0),
-    timer1(name() + ".timer1", this, p.int1->get(), p.clock1)
+Sp804::Sp804(const Params &p)
+    : AmbaPioDevice(p, 0x1000),
+      timer0(name() + ".timer0", this, p.int0->get(), p.clock0),
+      timer1(name() + ".timer1", this, p.int1->get(), p.clock1)
 {}
 
 Sp804::Timer::Timer(std::string __name, Sp804 *_parent,
-    ArmInterruptPin *_interrupt, Tick _clock) :
-    _name(__name),
-    parent(_parent),
-    interrupt(_interrupt),
-    clock(_clock),
-    control(0x20),
-    rawInt(false),
-    pendingInt(false),
-    loadValue(0xffffffff),
-    zeroEvent([this] { counterAtZero(); }, name())
+                    ArmInterruptPin *_interrupt, Tick _clock)
+    : _name(__name),
+      parent(_parent),
+      interrupt(_interrupt),
+      clock(_clock),
+      control(0x20),
+      rawInt(false),
+      pendingInt(false),
+      loadValue(0xffffffff),
+      zeroEvent([this] { counterAtZero(); }, name())
 {}
 
 Tick
@@ -96,7 +96,7 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
         break;
     case CurrentReg:
         DPRINTF(Timer, "Event schedule for %d, clock=%d, prescale=%d\n",
-            zeroEvent.when(), clock, control.timerPrescale);
+                zeroEvent.when(), clock, control.timerPrescale);
         Tick time;
         time = zeroEvent.when() - curTick();
         time = (time / clock) >> (4 * control.timerPrescale);
@@ -120,7 +120,7 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
         break;
     }
     DPRINTF(Timer, "Reading %#x from Timer at offset: %#x\n",
-        pkt->getLE<uint32_t>(), daddr);
+            pkt->getLE<uint32_t>(), daddr);
 }
 
 Tick
@@ -136,8 +136,8 @@ Sp804::write(PacketPtr pkt)
     else if ((daddr - Timer::Size) < Timer::Size)
         timer1.write(pkt, daddr - Timer::Size);
     else if (!readId(pkt, ambaId, pioAddr))
-        panic(
-            "Tried to write SP804 at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to write SP804 at offset %#x that doesn't exist\n",
+              daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -146,7 +146,7 @@ void
 Sp804::Timer::write(PacketPtr pkt, Addr daddr)
 {
     DPRINTF(Timer, "Writing %#x to Timer at offset: %#x\n",
-        pkt->getLE<uint32_t>(), daddr);
+            pkt->getLE<uint32_t>(), daddr);
     switch (daddr) {
     case LoadReg:
         loadValue = pkt->getLE<uint32_t>();

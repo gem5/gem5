@@ -215,7 +215,7 @@ class PowerLinux : public Linux, public OpenFlagTable<PowerLinux>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
 

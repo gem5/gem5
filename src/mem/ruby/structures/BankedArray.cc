@@ -40,8 +40,8 @@ namespace gem5
 namespace ruby
 {
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
-    unsigned int startIndexBit, RubySystem *rs) :
-    m_ruby_system(rs)
+                         unsigned int startIndexBit, RubySystem *rs)
+    : m_ruby_system(rs)
 {
     this->banks = banks;
     this->accessLatency = accessLatency;

@@ -60,10 +60,10 @@ class DiskImage : public SimObject
 
     virtual std::streampos size() const = 0;
 
-    virtual std::streampos read(
-        uint8_t *data, std::streampos offset) const = 0;
-    virtual std::streampos write(
-        const uint8_t *data, std::streampos offset) = 0;
+    virtual std::streampos read(uint8_t *data,
+                                std::streampos offset) const = 0;
+    virtual std::streampos write(const uint8_t *data,
+                                 std::streampos offset) = 0;
 };
 
 /**

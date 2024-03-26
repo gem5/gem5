@@ -57,8 +57,8 @@ SmeAddOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-SmeAddVlOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeAddVlOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -72,8 +72,8 @@ SmeAddVlOp::generateDisassembly(
 }
 
 std::string
-SmeLd1xSt1xOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeLd1xSt1xOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -90,8 +90,8 @@ SmeLd1xSt1xOp::generateDisassembly(
 }
 
 std::string
-SmeLdrStrOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeLdrStrOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -104,8 +104,8 @@ SmeLdrStrOp::generateDisassembly(
 }
 
 std::string
-SmeMovExtractOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeMovExtractOp::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -120,8 +120,8 @@ SmeMovExtractOp::generateDisassembly(
 }
 
 std::string
-SmeMovInsertOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeMovInsertOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -153,8 +153,8 @@ SmeOPOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-SmeRdsvlOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeRdsvlOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -166,8 +166,8 @@ SmeRdsvlOp::generateDisassembly(
 }
 
 std::string
-SmeZeroOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SmeZeroOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ArmStaticInst::printMnemonic(ss, "", false);

@@ -154,21 +154,21 @@ class TAGEBase : public SimObject
         // for stats purposes
         unsigned provider;
 
-        BranchInfo(const TAGEBase &tage) :
-            pathHist(0),
-            ptGhist(0),
-            hitBank(0),
-            hitBankIndex(0),
-            altBank(0),
-            altBankIndex(0),
-            bimodalIndex(0),
-            tagePred(false),
-            altTaken(false),
-            condBranch(false),
-            longestMatchPred(false),
-            pseudoNewAlloc(false),
-            branchPC(0),
-            provider(-1)
+        BranchInfo(const TAGEBase &tage)
+            : pathHist(0),
+              ptGhist(0),
+              hitBank(0),
+              hitBankIndex(0),
+              altBank(0),
+              altBankIndex(0),
+              bimodalIndex(0),
+              tagePred(false),
+              altTaken(false),
+              condBranch(false),
+              longestMatchPred(false),
+              pseudoNewAlloc(false),
+              branchPC(0),
+              provider(-1)
         {
             int sz = tage.nHistoryTables + 1;
             storage = new int[sz * 5];
@@ -291,8 +291,9 @@ class TAGEBase : public SimObject
      * base class).
      */
     virtual void updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-        BranchInfo *b, bool speculative,
-        const StaticInstPtr &inst = nullStaticInstPtr, Addr target = MaxAddr);
+                                 BranchInfo *b, bool speculative,
+                                 const StaticInstPtr &inst = nullStaticInstPtr,
+                                 Addr target = MaxAddr);
 
     /**
      * Restores speculatively updated path and direction histories.
@@ -322,8 +323,8 @@ class TAGEBase : public SimObject
      * pseudo newly allocated entries
      */
     virtual void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-        BranchInfo *bi, int nrand, Addr corrTarget, bool pred,
-        bool preAdjustAlloc = false);
+                                  BranchInfo *bi, int nrand, Addr corrTarget,
+                                  bool pred, bool preAdjustAlloc = false);
 
     /**
      * TAGE prediction called from TAGE::predict
@@ -333,8 +334,8 @@ class TAGEBase : public SimObject
      * @param cond_branch True if the branch is conditional.
      * @param bi Pointer to the BranchInfo
      */
-    bool tagePredict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo *bi);
+    bool tagePredict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                     BranchInfo *bi);
 
     /**
      * Update the stats
@@ -359,8 +360,8 @@ class TAGEBase : public SimObject
      * On a prediction, calculates the TAGE indices and tags for
      * all the different history lengths
      */
-    virtual void calculateIndicesAndTags(
-        ThreadID tid, Addr branch_pc, BranchInfo *bi);
+    virtual void calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
+                                         BranchInfo *bi);
 
     /**
      * Calculation of the index for useAltPredForNewlyAllocated
@@ -378,8 +379,8 @@ class TAGEBase : public SimObject
     /**
      * Handles Allocation and U bits reset on an update
      */
-    virtual void handleAllocAndUReset(
-        bool alloc, bool taken, BranchInfo *bi, int nrand);
+    virtual void handleAllocAndUReset(bool alloc, bool taken, BranchInfo *bi,
+                                      int nrand);
 
     /**
      * Handles the U bits reset

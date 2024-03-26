@@ -35,8 +35,8 @@ namespace gem5
 {
 namespace compression
 {
-FPC::FPCCompData::FPCCompData(int zero_run_size_bits) :
-    CompData(), zeroRunSizeBits(zero_run_size_bits)
+FPC::FPCCompData::FPCCompData(int zero_run_size_bits)
+    : CompData(), zeroRunSizeBits(zero_run_size_bits)
 {}
 
 void
@@ -75,8 +75,8 @@ FPC::FPCCompData::addEntry(std::unique_ptr<Pattern> pattern)
     CompData::addEntry(std::move(pattern));
 }
 
-FPC::FPC(const Params &p) :
-    DictionaryCompressor<uint32_t>(p), zeroRunSizeBits(p.zero_run_bits)
+FPC::FPC(const Params &p)
+    : DictionaryCompressor<uint32_t>(p), zeroRunSizeBits(p.zero_run_bits)
 {}
 
 void

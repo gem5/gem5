@@ -100,7 +100,7 @@ class TarmacBaseRecord : public InstRecord
     {
         InstEntry() = default;
         InstEntry(ThreadContext *thread, const PCStateBase &pc,
-            const StaticInstPtr staticInst, bool predicate);
+                  const StaticInstPtr staticInst, bool predicate);
 
         bool taken;
         Addr addr;
@@ -142,8 +142,8 @@ class TarmacBaseRecord : public InstRecord
 
   public:
     TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        const StaticInstPtr _macroStaticInst = nullptr);
+                     const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                     const StaticInstPtr _macroStaticInst = nullptr);
 
     virtual void dump() = 0;
 

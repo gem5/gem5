@@ -60,25 +60,25 @@ enum BMIRegOffset
     BMIDescTablePtr = 0x4
 };
 
-IdeController::Channel::Channel(
-    std::string new_name, IdeController *new_ctrl, bool new_primary) :
-    Named(new_name), ctrl(new_ctrl), primary(new_primary)
+IdeController::Channel::Channel(std::string new_name, IdeController *new_ctrl,
+                                bool new_primary)
+    : Named(new_name), ctrl(new_ctrl), primary(new_primary)
 {
     bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
     bmiRegs.status.dmaCap1 = 1;
 }
 
-IdeController::IdeController(const Params &p) :
-    PciDevice(p),
-    configSpaceRegs(name() + ".config_space_regs"),
-    primary(name() + ".primary", this, true),
-    secondary(name() + ".secondary", this, false),
-    ioShift(p.io_shift),
-    ctrlOffset(p.ctrl_offset)
+IdeController::IdeController(const Params &p)
+    : PciDevice(p),
+      configSpaceRegs(name() + ".config_space_regs"),
+      primary(name() + ".primary", this, true),
+      secondary(name() + ".secondary", this, false),
+      ioShift(p.io_shift),
+      ctrlOffset(p.ctrl_offset)
 {
     panic_if(params().disks.size() > 4,
-        "IDE controllers support a maximum of 4 devices attached!");
+             "IDE controllers support a maximum of 4 devices attached!");
 
     // Assign the disks to channels
     for (int i = 0; i < params().disks.size(); i++) {
@@ -167,7 +167,7 @@ IdeController::readConfig(PacketPtr pkt)
     configSpaceRegs.read(offset, pkt->getPtr<void>(), size);
 
     DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n", offset, size,
-        pkt->getUintX(ByteOrder::little));
+            pkt->getUintX(ByteOrder::little));
 
     pkt->makeAtomicResponse();
     return configDelay;
@@ -184,7 +184,7 @@ IdeController::writeConfig(PacketPtr pkt)
     size_t size = pkt->getSize();
 
     DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n", offset,
-        size, pkt->getUintX(ByteOrder::little));
+            size, pkt->getUintX(ByteOrder::little));
 
     configSpaceRegs.write(offset, pkt->getConstPtr<void>(), size);
 
@@ -193,8 +193,8 @@ IdeController::writeConfig(PacketPtr pkt)
 }
 
 void
-IdeController::Channel::accessCommand(
-    Addr offset, int size, uint8_t *data, bool read)
+IdeController::Channel::accessCommand(Addr offset, int size, uint8_t *data,
+                                      bool read)
 {
     const Addr SelectOffset = 6;
     const uint8_t SelectDevBit = 0x10;
@@ -213,8 +213,8 @@ IdeController::Channel::accessCommand(
 }
 
 void
-IdeController::Channel::accessControl(
-    Addr offset, int size, uint8_t *data, bool read)
+IdeController::Channel::accessControl(Addr offset, int size, uint8_t *data,
+                                      bool read)
 {
     if (selected() == NULL) {
         assert(size == sizeof(uint8_t));
@@ -227,8 +227,8 @@ IdeController::Channel::accessControl(
 }
 
 void
-IdeController::Channel::accessBMI(
-    Addr offset, int size, uint8_t *data, bool read)
+IdeController::Channel::accessBMI(Addr offset, int size, uint8_t *data,
+                                  bool read)
 {
     assert(offset + size <= sizeof(BMIRegs));
     if (read) {
@@ -322,7 +322,7 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
     int bar_num;
     Addr offset;
     panic_if(!getBAR(addr, bar_num, offset),
-        "IDE controller access to invalid address: %#x.", addr);
+             "IDE controller access to invalid address: %#x.", addr);
 
     switch (bar_num) {
     case 0:
@@ -364,7 +364,7 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
     else
         data = pkt->getLE<uint32_t>();
     DPRINTF(IdeCtrl, "%s from offset: %#x size: %#x data: %#x\n",
-        read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(), data);
+            read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(), data);
 #endif
 
     pkt->makeAtomicResponse();
@@ -407,8 +407,8 @@ IdeController::serialize(CheckpointOut &cp) const
 }
 
 void
-IdeController::Channel::serialize(
-    const std::string &base, CheckpointOut &cp) const
+IdeController::Channel::serialize(const std::string &base,
+                                  CheckpointOut &cp) const
 {
     uint8_t command = bmiRegs.command;
     paramOut(cp, base + ".bmiRegs.command", command);

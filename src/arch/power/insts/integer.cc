@@ -107,8 +107,8 @@ IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-IntArithOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntArithOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -161,8 +161,8 @@ IntArithOp::generateDisassembly(
 }
 
 std::string
-IntImmArithOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntImmArithOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool negateImm = false;
@@ -220,8 +220,8 @@ IntImmArithOp::generateDisassembly(
 }
 
 std::string
-IntDispArithOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntDispArithOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSrcs = true;
@@ -264,8 +264,8 @@ IntDispArithOp::generateDisassembly(
 }
 
 std::string
-IntLogicOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntLogicOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -323,8 +323,8 @@ IntLogicOp::generateDisassembly(
 }
 
 std::string
-IntImmLogicOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntImmLogicOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printRegs = true;
@@ -369,8 +369,8 @@ IntImmLogicOp::generateDisassembly(
 }
 
 std::string
-IntCompOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntCompOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -420,8 +420,8 @@ IntCompOp::generateDisassembly(
 }
 
 std::string
-IntImmCompOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntImmCompOp::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -468,8 +468,8 @@ IntImmCompOp::generateDisassembly(
 }
 
 std::string
-IntImmCompLogicOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntImmCompLogicOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -516,8 +516,8 @@ IntImmCompLogicOp::generateDisassembly(
 }
 
 std::string
-IntShiftOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntShiftOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -575,8 +575,8 @@ IntShiftOp::generateDisassembly(
 }
 
 std::string
-IntConcatShiftOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntConcatShiftOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -634,8 +634,8 @@ IntConcatShiftOp::generateDisassembly(
 }
 
 std::string
-IntRotateOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntRotateOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -718,8 +718,8 @@ IntRotateOp::generateDisassembly(
 }
 
 std::string
-IntConcatRotateOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntConcatRotateOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = false;
@@ -797,8 +797,8 @@ IntConcatRotateOp::generateDisassembly(
 }
 
 std::string
-IntTrapOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntTrapOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::string ext;
     std::stringstream ss;
@@ -846,8 +846,8 @@ IntTrapOp::generateDisassembly(
 }
 
 std::string
-IntImmTrapOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+IntImmTrapOp::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::string ext;
     std::stringstream ss;

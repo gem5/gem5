@@ -109,8 +109,8 @@ class VirtIOConsole : public VirtIODeviceBase
     {
       public:
         TermRecvQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-            VirtIOConsole &_parent) :
-            VirtQueue(proxy, bo, size), parent(_parent)
+                      VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
         {}
         virtual ~TermRecvQueue() {}
 
@@ -142,8 +142,8 @@ class VirtIOConsole : public VirtIODeviceBase
     {
       public:
         TermTransQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-            VirtIOConsole &_parent) :
-            VirtQueue(proxy, bo, size), parent(_parent)
+                       VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
         {}
         virtual ~TermTransQueue() {}
 

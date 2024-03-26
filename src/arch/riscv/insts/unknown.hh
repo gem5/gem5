@@ -50,8 +50,8 @@ namespace RiscvISA
 class Unknown : public RiscvStaticInst
 {
   public:
-    Unknown(ExtMachInst _machInst) :
-        RiscvStaticInst("unknown", _machInst, No_OpClass)
+    Unknown(ExtMachInst _machInst)
+        : RiscvStaticInst("unknown", _machInst, No_OpClass)
     {}
 
     Fault
@@ -61,8 +61,8 @@ class Unknown : public RiscvStaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return csprintf("unknown opcode %#02x", machInst.opcode);
     }

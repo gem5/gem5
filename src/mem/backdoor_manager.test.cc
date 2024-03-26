@@ -55,8 +55,8 @@ TEST_F(BackdoorManagerTest, BasicRemapTest)
     AddrRange pkt_range = originalRanges[0];
 
     uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(
-        remappedRanges[0], ptr, MemBackdoor::Flags::Readable);
+    MemBackdoor remapped_backdoor(remappedRanges[0], ptr,
+                                  MemBackdoor::Flags::Readable);
     MemBackdoorPtr reverted_backdoor =
         getRevertedBackdoor(&remapped_backdoor, pkt_range);
 
@@ -83,11 +83,12 @@ TEST_F(BackdoorManagerTest, ShrinkTest)
      */
     Addr diff = 0x1000;
     AddrRange remapped_backdoor_range(remappedRanges[0].start() - diff, // 0x0
-        remappedRanges[0].end() + diff); // 0x3000
+                                      remappedRanges[0].end() +
+                                          diff); // 0x3000
 
     uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(
-        remapped_backdoor_range, ptr, MemBackdoor::Flags::Readable);
+    MemBackdoor remapped_backdoor(remapped_backdoor_range, ptr,
+                                  MemBackdoor::Flags::Readable);
     MemBackdoorPtr reverted_backdoor =
         getRevertedBackdoor(&remapped_backdoor, pkt_range);
 
@@ -112,8 +113,8 @@ TEST_F(BackdoorManagerTest, ReuseTest)
      * both packets can be fulfilled by this backdoor.
      */
     uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(
-        remappedRanges[0], ptr, MemBackdoor::Flags::Readable);
+    MemBackdoor remapped_backdoor(remappedRanges[0], ptr,
+                                  MemBackdoor::Flags::Readable);
     /**
      * For the first packet, a new backdoor should be constructed.
      */

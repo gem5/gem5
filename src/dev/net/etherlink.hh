@@ -108,7 +108,7 @@ class EtherLink : public SimObject
 
       public:
         Link(const std::string &name, EtherLink *p, int num, double rate,
-            Tick delay, Tick delay_var, EtherDump *dump);
+             Tick delay, Tick delay_var, EtherDump *dump);
         ~Link() {}
 
         const std::string
@@ -176,8 +176,8 @@ class EtherLink : public SimObject
     EtherLink(const Params &p);
     virtual ~EtherLink();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

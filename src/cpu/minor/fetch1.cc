@@ -55,28 +55,29 @@ namespace gem5
 {
 namespace minor
 {
-Fetch1::Fetch1(const std::string &name_, MinorCPU &cpu_,
-    const BaseMinorCPUParams &params, Latch<BranchData>::Output inp_,
-    Latch<ForwardLineData>::Input out_, Latch<BranchData>::Output prediction_,
-    std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer) :
-    Named(name_),
-    cpu(cpu_),
-    inp(inp_),
-    out(out_),
-    prediction(prediction_),
-    nextStageReserve(next_stage_input_buffer),
-    icachePort(name_ + ".icache_port", *this, cpu_),
-    lineSnap(params.fetch1LineSnapWidth),
-    maxLineWidth(params.fetch1LineWidth),
-    fetchLimit(params.fetch1FetchLimit),
-    fetchInfo(params.numThreads),
-    threadPriority(0),
-    requests(name_ + ".requests", "lines", params.fetch1FetchLimit),
-    transfers(name_ + ".transfers", "lines", params.fetch1FetchLimit),
-    icacheState(IcacheRunning),
-    lineSeqNum(InstId::firstLineSeqNum),
-    numFetchesInMemorySystem(0),
-    numFetchesInITLB(0)
+Fetch1::Fetch1(
+    const std::string &name_, MinorCPU &cpu_, const BaseMinorCPUParams &params,
+    Latch<BranchData>::Output inp_, Latch<ForwardLineData>::Input out_,
+    Latch<BranchData>::Output prediction_,
+    std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer)
+    : Named(name_),
+      cpu(cpu_),
+      inp(inp_),
+      out(out_),
+      prediction(prediction_),
+      nextStageReserve(next_stage_input_buffer),
+      icachePort(name_ + ".icache_port", *this, cpu_),
+      lineSnap(params.fetch1LineSnapWidth),
+      maxLineWidth(params.fetch1LineWidth),
+      fetchLimit(params.fetch1FetchLimit),
+      fetchInfo(params.numThreads),
+      threadPriority(0),
+      requests(name_ + ".requests", "lines", params.fetch1FetchLimit),
+      transfers(name_ + ".transfers", "lines", params.fetch1FetchLimit),
+      icacheState(IcacheRunning),
+      lineSeqNum(InstId::firstLineSeqNum),
+      numFetchesInMemorySystem(0),
+      numFetchesInITLB(0)
 {
     for (auto &info : fetchInfo)
         info.pc.reset(params.isa[0]->newPCState());
@@ -89,7 +90,7 @@ Fetch1::Fetch1(const std::string &name_, MinorCPU &cpu_,
     if (maxLineWidth == 0) {
         maxLineWidth = cpu.cacheLineSize();
         DPRINTF(Fetch, "maxLineWidth set to cache line size of: %d\n",
-            maxLineWidth);
+                maxLineWidth);
     }
 
     size_t inst_size = cpu.threads[0]->decoder->moreBytesSize();
@@ -98,13 +99,13 @@ Fetch1::Fetch1(const std::string &name_, MinorCPU &cpu_,
     if ((lineSnap % inst_size) != 0) {
         fatal("%s: fetch1LineSnapWidth must be a multiple "
               "of the inst width (%d)\n",
-            name_, inst_size);
+              name_, inst_size);
     }
 
     if ((maxLineWidth >= lineSnap && (maxLineWidth % inst_size)) != 0) {
         fatal("%s: fetch1LineWidth must be a multiple of"
               " the inst width (%d), and >= fetch1LineSnapWidth (%d)\n",
-            name_, inst_size, lineSnap);
+              name_, inst_size, lineSnap);
     }
 
     if (fetchLimit < 1) {
@@ -157,20 +158,21 @@ Fetch1::fetchLine(ThreadID tid)
     unsigned int request_size = maxLineWidth - line_offset;
 
     /* Fill in the line's id */
-    InstId request_id(
-        tid, thread.streamSeqNum, thread.predictionSeqNum, lineSeqNum);
+    InstId request_id(tid, thread.streamSeqNum, thread.predictionSeqNum,
+                      lineSeqNum);
 
     FetchRequestPtr request =
         new FetchRequest(*this, request_id, thread.fetchAddr);
 
     DPRINTF(Fetch,
-        "Inserting fetch into the fetch queue "
-        "%s addr: 0x%x pc: %s line_offset: %d request_size: %d\n",
-        request_id, aligned_pc, thread.fetchAddr, line_offset, request_size);
+            "Inserting fetch into the fetch queue "
+            "%s addr: 0x%x pc: %s line_offset: %d request_size: %d\n",
+            request_id, aligned_pc, thread.fetchAddr, line_offset,
+            request_size);
 
     request->request->setContext(cpu.threads[tid]->getTC()->contextId());
-    request->request->setVirt(aligned_pc, request_size, Request::INST_FETCH,
-        cpu.instRequestorId(),
+    request->request->setVirt(
+        aligned_pc, request_size, Request::INST_FETCH, cpu.instRequestorId(),
         /* I've no idea why we need the PC, but give it */
         thread.fetchAddr);
 
@@ -186,8 +188,9 @@ Fetch1::fetchLine(ThreadID tid)
     /* Submit the translation request.  The response will come
      *  through finish/markDelayed on this request as it bears
      *  the Translation interface */
-    cpu.threads[request->id.threadId]->mmu->translateTiming(request->request,
-        cpu.getContext(request->id.threadId), request, BaseMMU::Execute);
+    cpu.threads[request->id.threadId]->mmu->translateTiming(
+        request->request, cpu.getContext(request->id.threadId), request,
+        BaseMMU::Execute);
 
     lineSeqNum++;
 
@@ -228,7 +231,7 @@ Fetch1::FetchRequest::makePacket()
 
 void
 Fetch1::FetchRequest::finish(const Fault &fault_, const RequestPtr &request_,
-    ThreadContext *tc, BaseMMU::Mode mode)
+                             ThreadContext *tc, BaseMMU::Mode mode)
 {
     fault = fault_;
 
@@ -246,12 +249,13 @@ Fetch1::handleTLBResponse(FetchRequestPtr response)
 
     if (response->fault != NoFault) {
         DPRINTF(Fetch,
-            "Fault in address ITLB translation: %s, "
-            "paddr: 0x%x, vaddr: 0x%x\n",
-            response->fault->name(),
-            (response->request->hasPaddr() ? response->request->getPaddr() :
-                                             0),
-            response->request->getVaddr());
+                "Fault in address ITLB translation: %s, "
+                "paddr: 0x%x, vaddr: 0x%x\n",
+                response->fault->name(),
+                (response->request->hasPaddr() ?
+                     response->request->getPaddr() :
+                     0),
+                response->request->getVaddr());
 
         if (debug::MinorTrace)
             minorTraceResponseLine(name(), response);
@@ -362,7 +366,7 @@ Fetch1::stepQueues()
 
     if (icacheState != old_icache_state) {
         DPRINTF(Fetch, "Step in state %s moving to state %s\n",
-            old_icache_state, icacheState);
+                old_icache_state, icacheState);
     }
 }
 
@@ -383,20 +387,21 @@ Fetch1::numInFlightFetches()
 
 /** Print the appropriate MinorLine line for a fetch response */
 void
-Fetch1::minorTraceResponseLine(
-    const std::string &name, Fetch1::FetchRequestPtr response) const
+Fetch1::minorTraceResponseLine(const std::string &name,
+                               Fetch1::FetchRequestPtr response) const
 {
     const RequestPtr &request = response->request;
 
     if (response->packet && response->packet->isError()) {
         minorLine(*this, "id=F;%s vaddr=0x%x fault=\"error packet\"\n",
-            response->id, request->getVaddr());
+                  response->id, request->getVaddr());
     } else if (response->fault != NoFault) {
         minorLine(*this, "id=F;%s vaddr=0x%x fault=\"%s\"\n", response->id,
-            request->getVaddr(), response->fault->name());
+                  request->getVaddr(), response->fault->name());
     } else {
         minorLine(*this, "id=%s size=%d vaddr=0x%x paddr=0x%x\n", response->id,
-            request->getSize(), request->getVaddr(), request->getPaddr());
+                  request->getSize(), request->getVaddr(),
+                  request->getPaddr());
     }
 }
 
@@ -422,8 +427,8 @@ Fetch1::recvTimingResp(PacketPtr response)
         minorTraceResponseLine(name(), fetch_request);
 
     if (response->isError()) {
-        DPRINTF(
-            Fetch, "Received error response packet: %s\n", fetch_request->id);
+        DPRINTF(Fetch, "Received error response packet: %s\n",
+                fetch_request->id);
     }
 
     /* We go to idle even if there are more things to do on the queues as
@@ -508,10 +513,10 @@ Fetch1::updateExpectedSeqNums(const BranchData &branch)
     Fetch1ThreadInfo &thread = fetchInfo[branch.threadId];
 
     DPRINTF(Fetch,
-        "Updating streamSeqNum from: %d to %d,"
-        " predictionSeqNum from: %d to %d\n",
-        thread.streamSeqNum, branch.newStreamSeqNum, thread.predictionSeqNum,
-        branch.newPredictionSeqNum);
+            "Updating streamSeqNum from: %d to %d,"
+            " predictionSeqNum from: %d to %d\n",
+            thread.streamSeqNum, branch.newStreamSeqNum,
+            thread.predictionSeqNum, branch.newPredictionSeqNum);
 
     /* Change the stream */
     thread.streamSeqNum = branch.newStreamSeqNum;
@@ -522,8 +527,8 @@ Fetch1::updateExpectedSeqNums(const BranchData &branch)
 }
 
 void
-Fetch1::processResponse(
-    Fetch1::FetchRequestPtr response, ForwardLineData &line)
+Fetch1::processResponse(Fetch1::FetchRequestPtr response,
+                        ForwardLineData &line)
 {
     Fetch1ThreadInfo &thread = fetchInfo[response->id.threadId];
     PacketPtr packet = response->packet;
@@ -547,7 +552,7 @@ Fetch1::processResponse(
          * can't be sure that this fault will actually reach Execute, and we
          * can't (currently) selectively remove this stream from the queues */
         DPRINTF(Fetch, "Stopping line fetch because of fault: %s\n",
-            response->fault->name());
+                response->fault->name());
         thread.state = Fetch1::FetchWaitingForPC;
     } else {
         line.adoptPacketData(packet);
@@ -578,15 +583,15 @@ Fetch1::evaluate()
          * to predicted changes of stream from Fetch2 */
         if (execute_branch.isStreamChange()) {
             if (thread.state == FetchHalted) {
-                DPRINTF(
-                    Fetch, "Halted, ignoring branch: %s\n", execute_branch);
+                DPRINTF(Fetch, "Halted, ignoring branch: %s\n",
+                        execute_branch);
             } else {
                 changeStream(execute_branch);
             }
 
             if (!fetch2_branch.isBubble()) {
                 DPRINTF(Fetch, "Ignoring simultaneous prediction: %s\n",
-                    fetch2_branch);
+                        fetch2_branch);
             }
 
             /* The streamSeqNum tagging in request/response ->req should handle
@@ -599,9 +604,9 @@ Fetch1::evaluate()
              */
             if (fetch2_branch.newStreamSeqNum != thread.streamSeqNum) {
                 DPRINTF(Fetch,
-                    "Not changing stream on prediction: %s,"
-                    " streamSeqNum mismatch\n",
-                    fetch2_branch);
+                        "Not changing stream on prediction: %s,"
+                        " streamSeqNum mismatch\n",
+                        fetch2_branch);
             } else {
                 changeStream(fetch2_branch);
             }
@@ -611,8 +616,8 @@ Fetch1::evaluate()
         if (execute_branch.threadId != InvalidThreadID &&
             execute_branch.isStreamChange()) {
             if (fetchInfo[execute_branch.threadId].state == FetchHalted) {
-                DPRINTF(
-                    Fetch, "Halted, ignoring branch: %s\n", execute_branch);
+                DPRINTF(Fetch, "Halted, ignoring branch: %s\n",
+                        execute_branch);
             } else {
                 changeStream(execute_branch);
             }
@@ -625,9 +630,9 @@ Fetch1::evaluate()
             } else if (fetch2_branch.newStreamSeqNum !=
                        fetchInfo[fetch2_branch.threadId].streamSeqNum) {
                 DPRINTF(Fetch,
-                    "Not changing stream on prediction: %s,"
-                    " streamSeqNum mismatch\n",
-                    fetch2_branch);
+                        "Not changing stream on prediction: %s,"
+                        " streamSeqNum mismatch\n",
+                        fetch2_branch);
             } else {
                 changeStream(fetch2_branch);
             }
@@ -718,9 +723,9 @@ Fetch1::isDrained()
     for (ThreadID tid = 0; tid < cpu.numThreads; tid++) {
         Fetch1ThreadInfo &thread = fetchInfo[tid];
         DPRINTF(Drain, "isDrained[tid:%d]: %s %s%s\n", tid,
-            thread.state == FetchHalted,
-            (numInFlightFetches() == 0 ? "" : "inFlightFetches "),
-            ((*out.inputWire).isBubble() ? "" : "outputtingLine"));
+                thread.state == FetchHalted,
+                (numInFlightFetches() == 0 ? "" : "inFlightFetches "),
+                ((*out.inputWire).isBubble() ? "" : "outputtingLine"));
 
         drained = drained && (thread.state != FetchRunning);
     }
@@ -742,7 +747,7 @@ Fetch1::FetchRequest::isDiscardable() const
     /* Can't discard lines in TLB/memory */
     return state != InTranslation && state != RequestIssuing &&
            (id.streamSeqNum != thread.streamSeqNum ||
-               id.predictionSeqNum != thread.predictionSeqNum);
+            id.predictionSeqNum != thread.predictionSeqNum);
 }
 
 void
@@ -761,8 +766,9 @@ Fetch1::minorTrace() const
 
     minor::minorTrace("state=%s icacheState=%s in_tlb_mem=%s/%s"
                       " streamSeqNum=%d lines=%s\n",
-        thread.state, icacheState, numFetchesInITLB, numFetchesInMemorySystem,
-        thread.streamSeqNum, data.str());
+                      thread.state, icacheState, numFetchesInITLB,
+                      numFetchesInMemorySystem, thread.streamSeqNum,
+                      data.str());
     requests.minorTrace();
     transfers.minorTrace();
 }

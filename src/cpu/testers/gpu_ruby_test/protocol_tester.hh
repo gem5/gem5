@@ -72,8 +72,8 @@ class ProtocolTester : public ClockedObject
     {
       public:
         SeqPort(const std::string &_name, ProtocolTester *_tester, PortID _id,
-            PortID _index) :
-            RequestPort(_name, _id)
+                PortID _index)
+            : RequestPort(_name, _id)
         {}
 
       protected:
@@ -89,8 +89,8 @@ class ProtocolTester : public ClockedObject
     {
       public:
         GMTokenPort(const std::string &name, ProtocolTester *_tester,
-            PortID id = InvalidPortID) :
-            TokenRequestPort(name, _tester, id)
+                    PortID id = InvalidPortID)
+            : TokenRequestPort(name, _tester, id)
         {}
         ~GMTokenPort() {}
 
@@ -127,8 +127,8 @@ class ProtocolTester : public ClockedObject
     {
         return _requestorId;
     };
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     int
     getEpisodeLength() const

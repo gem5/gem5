@@ -164,8 +164,8 @@ class DuelingMonitor
     static unsigned numInstances;
 
     DuelingMonitor(std::size_t constituency_size, std::size_t team_size = 1,
-        unsigned num_bits = 10, double low_threshold = 0.5,
-        double high_threshold = 0.5);
+                   unsigned num_bits = 10, double low_threshold = 0.5,
+                   double high_threshold = 0.5);
     ~DuelingMonitor() = default;
 
     /**

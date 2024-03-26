@@ -534,8 +534,8 @@ segAttr(int index)
 
 } // namespace misc_reg
 
-inline constexpr RegClass miscRegClass(
-    MiscRegClass, MiscRegClassName, misc_reg::NumRegs, debug::MiscRegs);
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+                                       misc_reg::NumRegs, debug::MiscRegs);
 
 /**
  * A type to describe the condition code bits of the RFLAGS register,
@@ -903,7 +903,7 @@ class SegDescriptorLimit
     {
         bool g = (bits(limit, 31, 24) != 0);
         panic_if(g && bits(limit, 11, 0) != mask(12),
-            "Inlimitid segment limit %#x", limit);
+                 "Inlimitid segment limit %#x", limit);
         if (g)
             limit = limit >> 12;
         replaceBits(storage, 51, 48, bits(limit, 23, 16));

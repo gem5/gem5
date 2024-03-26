@@ -36,26 +36,27 @@ namespace gem5
 {
 namespace prefetch
 {
-IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p) :
-    Queued(p),
-    maxPrefetchDistance(p.max_prefetch_distance),
-    shiftValues(p.shift_values),
-    prefetchThreshold(p.prefetch_threshold),
-    streamCounterThreshold(p.stream_counter_threshold),
-    streamingDistance(p.streaming_distance),
-    prefetchTable(p.pt_table_assoc, p.pt_table_entries,
-        p.pt_table_indexing_policy, p.pt_table_replacement_policy,
-        PrefetchTableEntry(p.num_indirect_counter_bits)),
-    ipd(p.ipd_table_assoc, p.ipd_table_entries, p.ipd_table_indexing_policy,
-        p.ipd_table_replacement_policy,
-        IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
-    ipdEntryTrackingMisses(nullptr),
-    byteOrder(p.sys->getGuestByteOrder())
+IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
+    : Queued(p),
+      maxPrefetchDistance(p.max_prefetch_distance),
+      shiftValues(p.shift_values),
+      prefetchThreshold(p.prefetch_threshold),
+      streamCounterThreshold(p.stream_counter_threshold),
+      streamingDistance(p.streaming_distance),
+      prefetchTable(p.pt_table_assoc, p.pt_table_entries,
+                    p.pt_table_indexing_policy, p.pt_table_replacement_policy,
+                    PrefetchTableEntry(p.num_indirect_counter_bits)),
+      ipd(p.ipd_table_assoc, p.ipd_table_entries, p.ipd_table_indexing_policy,
+          p.ipd_table_replacement_policy,
+          IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
+      ipdEntryTrackingMisses(nullptr),
+      byteOrder(p.sys->getGuestByteOrder())
 {}
 
 void
 IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                                  std::vector<AddrPriority> &addresses,
+                                  const CacheAccessor &cache)
 {
     // This prefetcher requires a PC
     if (!pfi.hasPC()) {
@@ -163,8 +164,8 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-IndirectMemory::allocateOrUpdateIPDEntry(
-    const PrefetchTableEntry *pt_entry, int64_t index)
+IndirectMemory::allocateOrUpdateIPDEntry(const PrefetchTableEntry *pt_entry,
+                                         int64_t index)
 {
     // The address of the pt_entry is used to index the IPD
     Addr ipd_entry_addr = (Addr)pt_entry;

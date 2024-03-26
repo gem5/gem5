@@ -69,8 +69,8 @@ class EtherBus : public SimObject
         return (bool)packet;
     }
     bool send(EtherInt *sender, EthPacketPtr &packet);
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

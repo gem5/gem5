@@ -62,12 +62,12 @@ class Base : public SimObject
     /**
      * Create and clear the filter.
      */
-    Base(const BloomFilterBaseParams &p) :
-        SimObject(p),
-        offsetBits(p.offset_bits),
-        filter(p.size, SatCounter8(p.num_bits)),
-        sizeBits(floorLog2(p.size)),
-        setThreshold(p.threshold)
+    Base(const BloomFilterBaseParams &p)
+        : SimObject(p),
+          offsetBits(p.offset_bits),
+          filter(p.size, SatCounter8(p.num_bits)),
+          sizeBits(floorLog2(p.size)),
+          setThreshold(p.threshold)
     {
         clear();
     }

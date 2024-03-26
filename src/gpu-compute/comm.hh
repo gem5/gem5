@@ -109,7 +109,7 @@ class ScheduleToExecute : public PipeStageIFace
      * stage.
      */
     void dispatchTransition(const GPUDynInstPtr &gpu_dyn_inst,
-        int func_unit_id, DISPATCH_STATUS disp_status);
+                            int func_unit_id, DISPATCH_STATUS disp_status);
     void dispatchTransition(int func_unit_id, DISPATCH_STATUS disp_status);
     DISPATCH_STATUS dispatchStatus(int func_unit_id) const;
 

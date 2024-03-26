@@ -46,8 +46,8 @@ class X86IdeController : public IdeController
     PARAMS(X86IdeController);
     X86IdeController(const Params &p);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void postInterrupt(bool is_primary) override;
     void clearInterrupt(bool is_primary) override;

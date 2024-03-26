@@ -60,8 +60,8 @@ class HTMSequencer : public Sequencer
 
     // callback to acknowledge HTM requests and
     // notify cpu core when htm transaction fails in cache
-    void htmCallback(
-        Addr, const HtmCallbackMode, const HtmFailedInCacheReason);
+    void htmCallback(Addr, const HtmCallbackMode,
+                     const HtmFailedInCacheReason);
 
     bool empty() const override;
     void print(std::ostream &out) const override;
@@ -82,7 +82,7 @@ class HTMSequencer : public Sequencer
     void rubyHtmCallback(PacketPtr pkt, const HtmFailedInCacheReason fail_r);
 
     RequestStatus insertRequest(PacketPtr pkt, RubyRequestType primary_type,
-        RubyRequestType secondary_type) override;
+                                RubyRequestType secondary_type) override;
 
     // Private copy constructor and assignment operator
     HTMSequencer(const HTMSequencer &obj);

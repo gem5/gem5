@@ -88,16 +88,16 @@ class HSAQueueDescriptor
     GfxVersion gfxVersion;
 
     HSAQueueDescriptor(uint64_t base_ptr, uint64_t db_ptr, uint64_t hri_ptr,
-        uint32_t size, GfxVersion gfxVersion) :
-        basePointer(base_ptr),
-        doorbellPointer(db_ptr),
-        writeIndex(0),
-        readIndex(0),
-        numElts(size / AQL_PACKET_SIZE),
-        hostReadIndexPtr(hri_ptr),
-        stalledOnDmaBufAvailability(false),
-        dmaInProgress(false),
-        gfxVersion(gfxVersion)
+                       uint32_t size, GfxVersion gfxVersion)
+        : basePointer(base_ptr),
+          doorbellPointer(db_ptr),
+          writeIndex(0),
+          readIndex(0),
+          numElts(size / AQL_PACKET_SIZE),
+          hostReadIndexPtr(hri_ptr),
+          stalledOnDmaBufAvailability(false),
+          dmaInProgress(false),
+          gfxVersion(gfxVersion)
     {}
     uint64_t
     spaceRemaining()
@@ -154,17 +154,17 @@ class HSAQueueDescriptor
             (gfxVersion == GfxVersion::gfx803)) {
             retAddr = basePointer + ((ix % (numElts / 2)) * objSize());
             DPRINTF(HSAPacketProcessor,
-                "ptr() gfx8: base: 0x%x, "
-                "index: 0x%x, numElts: 0x%x, numElts/2: 0x%x, "
-                "objSize: 0x%x, retAddr: 0x%x\n",
-                basePointer, ix, numElts, numElts / 2, objSize(), retAddr);
+                    "ptr() gfx8: base: 0x%x, "
+                    "index: 0x%x, numElts: 0x%x, numElts/2: 0x%x, "
+                    "objSize: 0x%x, retAddr: 0x%x\n",
+                    basePointer, ix, numElts, numElts / 2, objSize(), retAddr);
         } else {
             retAddr = basePointer + ((ix % numElts) * objSize());
             DPRINTF(HSAPacketProcessor,
-                "ptr() gfx9: base: 0x%x, "
-                "index: 0x%x, numElts: 0x%x, objSize: 0x%x, "
-                "retAddr: 0x%x\n",
-                basePointer, ix, numElts, objSize(), retAddr);
+                    "ptr() gfx9: base: 0x%x, "
+                    "index: 0x%x, numElts: 0x%x, objSize: 0x%x, "
+                    "retAddr: 0x%x\n",
+                    basePointer, ix, numElts, objSize(), retAddr);
         }
         return retAddr;
     }
@@ -231,7 +231,7 @@ class AQLRingBuffer
     dispPending() const
     {
         int packet_type = (_aqlBuf[_dispIdx % _aqlBuf.size()].header >>
-                              HSA_PACKET_HEADER_TYPE) &
+                           HSA_PACKET_HEADER_TYPE) &
                           ((1 << HSA_PACKET_HEADER_WIDTH_TYPE) - 1);
         return (_dispIdx < _wrIdx) && packet_type != HSA_PACKET_TYPE_INVALID;
     }
@@ -326,8 +326,8 @@ struct QCntxt
     AQLRingBuffer *aqlBuf;
     // used for HSA packets that enforce synchronization with barrier bit
     bool barrierBit;
-    QCntxt(HSAQueueDescriptor *q_desc, AQLRingBuffer *aql_buf) :
-        qDesc(q_desc), aqlBuf(aql_buf), barrierBit(false)
+    QCntxt(HSAQueueDescriptor *q_desc, AQLRingBuffer *aql_buf)
+        : qDesc(q_desc), aqlBuf(aql_buf), barrierBit(false)
     {}
     QCntxt() : qDesc(NULL), aqlBuf(NULL), barrierBit(false) {}
 };
@@ -375,8 +375,8 @@ class HSAPacketProcessor : public DmaVirtDevice
         uint32_t rqIdx;
 
       public:
-        QueueProcessEvent(HSAPacketProcessor *_hsaPP, uint32_t _rqIdx) :
-            Event(Default_Pri), hsaPP(_hsaPP), rqIdx(_rqIdx)
+        QueueProcessEvent(HSAPacketProcessor *_hsaPP, uint32_t _rqIdx)
+            : Event(Default_Pri), hsaPP(_hsaPP), rqIdx(_rqIdx)
         {}
         virtual void process();
         virtual const char *description() const;
@@ -387,8 +387,8 @@ class HSAPacketProcessor : public DmaVirtDevice
     class RQLEntry
     {
       public:
-        RQLEntry(HSAPacketProcessor *hsaPP, uint32_t rqIdx) :
-            aqlProcessEvent(hsaPP, rqIdx)
+        RQLEntry(HSAPacketProcessor *hsaPP, uint32_t rqIdx)
+            : aqlProcessEvent(hsaPP, rqIdx)
         {}
         QCntxt qCntxt;
         bool
@@ -455,9 +455,10 @@ class HSAPacketProcessor : public DmaVirtDevice
     ~HSAPacketProcessor();
     TranslationGenPtr translate(Addr vaddr, Addr size) override;
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
-        uint64_t basePointer, uint64_t queue_id, uint32_t size,
-        int doorbellSize, GfxVersion gfxVersion, Addr offset = 0,
-        uint64_t rd_idx = 0);
+                            uint64_t basePointer, uint64_t queue_id,
+                            uint32_t size, int doorbellSize,
+                            GfxVersion gfxVersion, Addr offset = 0,
+                            uint64_t rd_idx = 0);
     void unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize);
     void setDevice(GPUCommandProcessor *dev);
     void setGPUDevice(AMDGPUDevice *gpu_device);
@@ -482,8 +483,8 @@ class HSAPacketProcessor : public DmaVirtDevice
     void schedAQLProcessing(uint32_t rl_idx);
     void schedAQLProcessing(uint32_t rl_idx, Tick delay);
 
-    void sendAgentDispatchCompletionSignal(
-        void *pkt, hsa_signal_value_t signal);
+    void sendAgentDispatchCompletionSignal(void *pkt,
+                                           hsa_signal_value_t signal);
     void sendCompletionSignal(hsa_signal_value_t signal);
 
     /**
@@ -498,18 +499,18 @@ class HSAPacketProcessor : public DmaVirtDevice
         uint32_t rl_idx;
 
         dma_series_ctx(uint32_t _pkts_ttl, uint32_t _pkts_2_go,
-            uint32_t _start_ix, uint32_t _rl_idx) :
-            pkts_ttl(_pkts_2_go),
-            pkts_2_go(_pkts_2_go),
-            start_ix(_start_ix),
-            rl_idx(_rl_idx){};
+                       uint32_t _start_ix, uint32_t _rl_idx)
+            : pkts_ttl(_pkts_2_go),
+              pkts_2_go(_pkts_2_go),
+              start_ix(_start_ix),
+              rl_idx(_rl_idx){};
         ~dma_series_ctx(){};
     };
 
     void updateReadDispIdDma();
     void cmdQueueCmdDma(HSAPacketProcessor *hsaPP, int pid, bool isRead,
-        uint32_t ix_start, unsigned num_pkts, dma_series_ctx *series_ctx,
-        void *dest_4debug);
+                        uint32_t ix_start, unsigned num_pkts,
+                        dma_series_ctx *series_ctx, void *dest_4debug);
     void handleReadDMA();
 };
 

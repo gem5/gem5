@@ -58,10 +58,10 @@ class MacroopBase : public X86StaticInst
 
     // Constructor.
     MacroopBase(const char *mnem, ExtMachInst _machInst, uint32_t _numMicroops,
-        X86ISA::EmulEnv _env) :
-        X86StaticInst(mnem, _machInst, No_OpClass),
-        numMicroops(_numMicroops),
-        env(_env)
+                X86ISA::EmulEnv _env)
+        : X86StaticInst(mnem, _machInst, No_OpClass),
+          numMicroops(_numMicroops),
+          env(_env)
     {
         assert(numMicroops);
         microops = new StaticInstPtr[numMicroops];
@@ -82,8 +82,8 @@ class MacroopBase : public X86StaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }

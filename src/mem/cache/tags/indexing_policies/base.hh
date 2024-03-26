@@ -145,8 +145,8 @@ class BaseIndexingPolicy : public SimObject
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    virtual std::vector<ReplaceableEntry *> getPossibleEntries(
-        const Addr addr) const = 0;
+    virtual std::vector<ReplaceableEntry *>
+    getPossibleEntries(const Addr addr) const = 0;
 
     /**
      * Regenerate an entry's address from its tag and assigned indexing bits.
@@ -155,8 +155,8 @@ class BaseIndexingPolicy : public SimObject
      * @param entry The entry.
      * @return the entry's original address.
      */
-    virtual Addr regenerateAddr(
-        const Addr tag, const ReplaceableEntry *entry) const = 0;
+    virtual Addr regenerateAddr(const Addr tag,
+                                const ReplaceableEntry *entry) const = 0;
 };
 
 } // namespace gem5

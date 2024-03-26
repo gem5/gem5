@@ -57,8 +57,10 @@ namespace ruby
 {
 const int PRIORITY_SWITCH_LIMIT = 128;
 
-PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets) :
-    Consumer(sw, Switch::PERFECTSWITCH_EV_PRI), m_switch_id(sid), m_switch(sw)
+PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
+    : Consumer(sw, Switch::PERFECTSWITCH_EV_PRI),
+      m_switch_id(sid),
+      m_switch(sw)
 {
     m_wakeups_wo_switch = 0;
     m_virtual_networks = virt_nets;
@@ -101,9 +103,9 @@ PerfectSwitch::updatePriorityGroups(int vnet, MessageBuffer *in_buf)
     m_in_prio[vnet].push_back(in_buf);
 
     std::sort(m_in_prio[vnet].begin(), m_in_prio[vnet].end(),
-        [](const MessageBuffer *i, const MessageBuffer *j) {
-            return i->routingPriority() < j->routingPriority();
-        });
+              [](const MessageBuffer *i, const MessageBuffer *j) {
+                  return i->routingPriority() < j->routingPriority();
+              });
 
     // reset groups
     m_in_prio_groups[vnet].clear();
@@ -118,8 +120,9 @@ PerfectSwitch::updatePriorityGroups(int vnet, MessageBuffer *in_buf)
 
 void
 PerfectSwitch::addOutPort(const std::vector<MessageBuffer *> &out,
-    const NetDest &routing_table_entry, const PortDirection &dst_inport,
-    Tick routing_latency, int link_weight)
+                          const NetDest &routing_table_entry,
+                          const PortDirection &dst_inport,
+                          Tick routing_latency, int link_weight)
 {
     // Add to routing unit
     m_switch->getRoutingUnit().addOutPort(
@@ -160,9 +163,9 @@ PerfectSwitch::operateVnet(int vnet)
             }
         }
         DPRINTF(RubyNetwork,
-            "vnet %d: %d pending msgs. "
-            "Checking port %d first\n",
-            vnet, m_pending_message_count[vnet], start_in_port);
+                "vnet %d: %d pending msgs. "
+                "Checking port %d first\n",
+                vnet, m_pending_message_count[vnet], start_in_port);
         // check all ports starting with the one with the oldest message
         for (int i = 0; i < in.size(); ++i) {
             int in_port = (i + start_in_port) % in.size();
@@ -194,7 +197,8 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
 
         output_links.clear();
         m_switch->getRoutingUnit().route(*net_msg_ptr, vnet,
-            m_network_ptr->isVNetOrdered(vnet), output_links);
+                                         m_network_ptr->isVNetOrdered(vnet),
+                                         output_links);
 
         // Check for resources - for all outgoing queues
         bool enough = true;
@@ -206,9 +210,9 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
                 enough = false;
 
             DPRINTF(RubyNetwork,
-                "Checking if node is blocked ..."
-                "outgoing: %d, vnet: %d, enough: %d\n",
-                outgoing, vnet, enough);
+                    "Checking if node is blocked ..."
+                    "outgoing: %d, vnet: %d, enough: %d\n",
+                    outgoing, vnet, enough);
         }
 
         // There were not enough resources
@@ -254,12 +258,12 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
 
             // Enqeue msg
             DPRINTF(RubyNetwork,
-                "Enqueuing net msg from "
-                "inport[%d][%d] to outport [%d][%d].\n",
-                buffer->getIncomingLink(), vnet, outgoing, vnet);
+                    "Enqueuing net msg from "
+                    "inport[%d][%d] to outport [%d][%d].\n",
+                    buffer->getIncomingLink(), vnet, outgoing, vnet);
 
-            out_port.buffers[vnet]->enqueue(
-                msg_ptr, current_time, out_port.latency);
+            out_port.buffers[vnet]->enqueue(msg_ptr, current_time,
+                                            out_port.latency);
         }
     }
 }

@@ -81,10 +81,10 @@ class VoltageDomain : public SimObject
     voltage(PerfLevel perf_level) const
     {
         gem5_assert(perf_level < numVoltages(),
-            "VoltageDomain %s "
-            "request for voltage perf level %u is outside "
-            "of numVoltages %u",
-            name(), perf_level, numVoltages());
+                    "VoltageDomain %s "
+                    "request for voltage perf level %u is outside "
+                    "of numVoltages %u",
+                    name(), perf_level, numVoltages());
         return voltageOpPoints[perf_level];
     }
 

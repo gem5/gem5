@@ -126,7 +126,7 @@ class OutputFile : public OutputStream
     friend class OutputDirectory;
 
     OutputFile(const OutputDirectory &dir, const std::string &name,
-        std::ios_base::openmode mode, bool recreateable);
+               std::ios_base::openmode mode, bool recreateable);
 
     /* Prevent copying */
     OutputFile(const OutputFile<StreamType> &f);
@@ -230,8 +230,8 @@ class OutputDirectory
      * output stream; false otherwise
      * @return OutputStream instance representing the created file
      */
-    OutputStream *create(
-        const std::string &name, bool binary = false, bool no_gz = false);
+    OutputStream *create(const std::string &name, bool binary = false,
+                         bool no_gz = false);
 
     /**
      * Open a file in this directory (optionally compressed).
@@ -248,7 +248,7 @@ class OutputDirectory
      * @return OutputStream instance representing the opened file
      */
     OutputStream *open(const std::string &name, std::ios_base::openmode mode,
-        bool recreateable = true, bool no_gz = false);
+                       bool recreateable = true, bool no_gz = false);
 
     /**
      * Closes an output file and free the corresponding OutputFile.

@@ -247,7 +247,7 @@ class ArchTimer :
 
   public:
     ArchTimer(const std::string &name, SimObject &parent,
-        SystemCounter &sysctr, ArmInterruptPin *interrupt);
+              SystemCounter &sysctr, ArmInterruptPin *interrupt);
 
     /// Returns the timer name.
     std::string
@@ -319,8 +319,8 @@ class ArchTimerKvm : public ArchTimer
 
   public:
     ArchTimerKvm(const std::string &name, ArmSystem &system, SimObject &parent,
-        SystemCounter &sysctr, ArmInterruptPin *interrupt) :
-        ArchTimer(name, parent, sysctr, interrupt), system(system)
+                 SystemCounter &sysctr, ArmInterruptPin *interrupt)
+        : ArchTimer(name, parent, sysctr, interrupt), system(system)
     {}
 
   protected:
@@ -349,10 +349,13 @@ class GenericTimer : public SimObject
     {
       public:
         CoreTimers(GenericTimer &_parent, ArmSystem &system, unsigned cpu,
-            ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
-            ArmInterruptPin *irq_el1_virt, ArmInterruptPin *irq_el2_ns_phys,
-            ArmInterruptPin *irq_el2_ns_virt, ArmInterruptPin *irq_el2_s_phys,
-            ArmInterruptPin *irq_el2_s_virt);
+                   ArmInterruptPin *irq_el3_phys,
+                   ArmInterruptPin *irq_el1_phys,
+                   ArmInterruptPin *irq_el1_virt,
+                   ArmInterruptPin *irq_el2_ns_phys,
+                   ArmInterruptPin *irq_el2_ns_virt,
+                   ArmInterruptPin *irq_el2_s_phys,
+                   ArmInterruptPin *irq_el2_s_virt);
 
         /// Generic Timer parent reference
         GenericTimer &parent;
@@ -437,14 +440,14 @@ class GenericTimer : public SimObject
     ArmSystem &system;
 
     void handleStream(CoreTimers::EventStream *ev_stream, ArchTimer *timer,
-        RegVal old_cnt_ctl, RegVal cnt_ctl);
+                      RegVal old_cnt_ctl, RegVal cnt_ctl);
 };
 
 class GenericTimerISA : public ArmISA::BaseISADevice
 {
   public:
-    GenericTimerISA(GenericTimer &_parent, unsigned _cpu) :
-        parent(_parent), cpu(_cpu)
+    GenericTimerISA(GenericTimer &_parent, unsigned _cpu)
+        : parent(_parent), cpu(_cpu)
     {}
 
     void setMiscReg(int misc_reg, RegVal val) override;
@@ -501,8 +504,8 @@ class GenericTimerFrame : public PioDevice
   private:
     /// CNTBase/CNTEL0Base (Memory-mapped timer frame)
     uint64_t timerRead(Addr addr, size_t size, bool is_sec, bool to_el0) const;
-    void timerWrite(
-        Addr addr, size_t size, uint64_t data, bool is_sec, bool to_el0);
+    void timerWrite(Addr addr, size_t size, uint64_t data, bool is_sec,
+                    bool to_el0);
     const AddrRange timerRange;
     AddrRange timerEl0Range;
 

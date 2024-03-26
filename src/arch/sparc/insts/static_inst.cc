@@ -39,21 +39,21 @@ namespace gem5
 namespace SparcISA
 {
 const char *CondTestAbbrev[] = {[Never] = "nev",
-    [Equal] = "e",
-    [LessOrEqual] = "le",
-    [Less] = "l",
-    [LessOrEqualUnsigned] = "leu",
-    [CarrySet] = "c",
-    [Negative] = "n",
-    [OverflowSet] = "o",
-    [Always] = "a",
-    [NotEqual] = "ne",
-    [Greater] = "g",
-    [GreaterOrEqual] = "ge",
-    [GreaterUnsigned] = "gu",
-    [CarryClear] = "cc",
-    [Positive] = "p",
-    [OverflowClear] = "oc"};
+                                [Equal] = "e",
+                                [LessOrEqual] = "le",
+                                [Less] = "l",
+                                [LessOrEqualUnsigned] = "leu",
+                                [CarrySet] = "c",
+                                [Negative] = "n",
+                                [OverflowSet] = "o",
+                                [Always] = "a",
+                                [NotEqual] = "ne",
+                                [Greater] = "g",
+                                [GreaterOrEqual] = "ge",
+                                [GreaterUnsigned] = "gu",
+                                [CarryClear] = "cc",
+                                [Positive] = "p",
+                                [OverflowClear] = "oc"};
 
 void
 SparcStaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
@@ -62,8 +62,8 @@ SparcStaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
 }
 
 void
-SparcStaticInst::printRegArray(
-    std::ostream &os, const RegId *indexArray, int num) const
+SparcStaticInst::printRegArray(std::ostream &os, const RegId *indexArray,
+                               int num) const
 {
     if (num <= 0)
         return;
@@ -257,8 +257,8 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
 }
 
 std::string
-SparcStaticInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+SparcStaticInst::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -377,7 +377,7 @@ SparcStaticInst::passesCondition(uint32_t codes, uint32_t condition)
     }
     panic("Tried testing condition nonexistant "
           "condition code %d",
-        condition);
+          condition);
 }
 
 } // namespace SparcISA

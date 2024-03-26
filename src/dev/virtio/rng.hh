@@ -72,8 +72,8 @@ class VirtIORng : public VirtIODeviceBase
     class RngQueue : public VirtQueue
     {
       public:
-        RngQueue(
-            PortProxy &proxy, ByteOrder bo, uint16_t size, VirtIORng &_parent);
+        RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+                 VirtIORng &_parent);
         virtual ~RngQueue() {}
 
         void

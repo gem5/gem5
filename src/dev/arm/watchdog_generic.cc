@@ -42,20 +42,20 @@
 
 namespace gem5
 {
-GenericWatchdog::GenericWatchdog(const GenericWatchdogParams &p) :
-    PioDevice(p),
-    timeoutEvent([this] { timeout(); }, name()),
-    controlStatus(0),
-    offset(0),
-    compare(0),
-    iidr(0),
-    refreshFrame(p.refresh_start, p.refresh_start + 0x10000),
-    controlFrame(p.control_start, p.control_start + 0x10000),
-    pioLatency(p.pio_latency),
-    cnt(*p.system_counter),
-    cntListener(*this),
-    ws0(p.ws0->get()),
-    ws1(p.ws1->get())
+GenericWatchdog::GenericWatchdog(const GenericWatchdogParams &p)
+    : PioDevice(p),
+      timeoutEvent([this] { timeout(); }, name()),
+      controlStatus(0),
+      offset(0),
+      compare(0),
+      iidr(0),
+      refreshFrame(p.refresh_start, p.refresh_start + 0x10000),
+      controlFrame(p.control_start, p.control_start + 0x10000),
+      pioLatency(p.pio_latency),
+      cnt(*p.system_counter),
+      cntListener(*this),
+      ws0(p.ws0->get()),
+      ws1(p.ws1->get())
 {
     cnt.registerListener(&cntListener);
 }

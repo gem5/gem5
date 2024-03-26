@@ -88,8 +88,8 @@ MC146818::setTime(const struct tm time)
 }
 
 MC146818::MC146818(EventManager *em, const std::string &n,
-    const struct tm time, bool bcd, Tick frequency) :
-    EventManager(em), _name(n), event(this, frequency), tickEvent(this)
+                   const struct tm time, bool bcd, Tick frequency)
+    : EventManager(em), _name(n), event(this, frequency), tickEvent(this)
 {
     memset(clock_data, 0, sizeof(clock_data));
 
@@ -155,13 +155,13 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
             if (!rega_dv_disabled(stat_regA) &&
                 stat_regA.dv != RTCA_DV_32768HZ) {
                 inform("RTC: Unimplemented divider configuration: %i\n",
-                    stat_regA.dv);
+                       stat_regA.dv);
                 panic_unsupported = true;
             }
 
             if (stat_regA.rs != RTCA_RS_1024HZ) {
-                inform(
-                    "RTC: Unimplemented interrupt rate: %i\n", stat_regA.rs);
+                inform("RTC: Unimplemented interrupt rate: %i\n",
+                       stat_regA.rs);
                 panic_unsupported = true;
             }
 
@@ -183,8 +183,8 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
             stat_regB = data;
             if (stat_regB.aie || stat_regB.uie) {
                 inform("RTC: Unimplemented interrupt configuration: %s %s\n",
-                    stat_regB.aie ? "alarm" : "",
-                    stat_regB.uie ? "update" : "");
+                       stat_regB.aie ? "alarm" : "",
+                       stat_regB.uie ? "update" : "");
                 panic_unsupported = true;
             }
 
@@ -304,8 +304,8 @@ MC146818::unserialize(const std::string &base, CheckpointIn &cp)
     tickEvent.offset = rtcClockTickOffset;
 }
 
-MC146818::RTCEvent::RTCEvent(MC146818 *_parent, Tick i) :
-    parent(_parent), interval(i), offset(i)
+MC146818::RTCEvent::RTCEvent(MC146818 *_parent, Tick i)
+    : parent(_parent), interval(i), offset(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
 }

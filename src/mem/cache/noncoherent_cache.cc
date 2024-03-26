@@ -58,8 +58,8 @@
 
 namespace gem5
 {
-NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams &p) :
-    BaseCache(p, p.system->cacheLineSize())
+NoncoherentCache::NoncoherentCache(const NoncoherentCacheParams &p)
+    : BaseCache(p, p.system->cacheLineSize())
 {
     assert(p.tags);
     assert(p.replacement_policy);
@@ -76,8 +76,8 @@ NoncoherentCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 }
 
 bool
-NoncoherentCache::access(
-    PacketPtr pkt, CacheBlk *&blk, Cycles &lat, PacketList &writebacks)
+NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
+                         PacketList &writebacks)
 {
     bool success = BaseCache::access(pkt, blk, lat, writebacks);
 
@@ -115,8 +115,8 @@ NoncoherentCache::doWritebacksAtomic(PacketList &writebacks)
 }
 
 void
-NoncoherentCache::handleTimingReqMiss(
-    PacketPtr pkt, CacheBlk *blk, Tick forward_time, Tick request_time)
+NoncoherentCache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk,
+                                      Tick forward_time, Tick request_time)
 {
     // miss
     Addr blk_addr = pkt->getBlockAddr(blkSize);
@@ -137,14 +137,15 @@ NoncoherentCache::recvTimingReq(PacketPtr pkt)
                                      "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "Should only see read and writes at non-coherent cache\n");
+             "Should only see read and writes at non-coherent cache\n");
 
     BaseCache::recvTimingReq(pkt);
 }
 
 PacketPtr
 NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-    bool needs_writable, bool is_whole_line_write) const
+                                   bool needs_writable,
+                                   bool is_whole_line_write) const
 {
     // We also fill for writebacks from the coherent caches above us,
     // and they do not need responses
@@ -160,13 +161,13 @@ NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
     pkt->allocate();
     DPRINTF(Cache, "%s created %s from %s\n", __func__, pkt->print(),
-        cpu_pkt->print());
+            cpu_pkt->print());
     return pkt;
 }
 
 Cycles
-NoncoherentCache::handleAtomicReqMiss(
-    PacketPtr pkt, CacheBlk *&blk, PacketList &writebacks)
+NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
+                                      PacketList &writebacks)
 {
     PacketPtr bus_pkt =
         createMissPacket(pkt, blk, true, pkt->isWholeLineWrite(blkSize));
@@ -190,7 +191,7 @@ NoncoherentCache::handleAtomicReqMiss(
         // Any reponse that does not have an error should be filling,
         // afterall it is a read response
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
-            bus_pkt->getAddr());
+                bus_pkt->getAddr());
         blk = handleFill(bus_pkt, blk, writebacks, allocOnFill(bus_pkt->cmd));
         assert(blk);
     }
@@ -220,7 +221,7 @@ NoncoherentCache::recvAtomic(PacketPtr pkt)
                                      "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "Should only see read and writes at non-coherent cache\n");
+             "Should only see read and writes at non-coherent cache\n");
 
     return BaseCache::recvAtomic(pkt);
 }
@@ -235,8 +236,8 @@ NoncoherentCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 }
 
 void
-NoncoherentCache::serviceMSHRTargets(
-    MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
+NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
+                                     CacheBlk *blk)
 {
     // First offset for critical word first calculations
     const int initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);

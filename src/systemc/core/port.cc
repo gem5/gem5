@@ -127,23 +127,23 @@ Port::finalize()
         std::ostringstream ss;
         ss << size() << " binds exceeds maximum of " << maxSize()
            << " allowed";
-        portBase->report_error(
-            sc_core::SC_ID_COMPLETE_BINDING_, ss.str().c_str());
+        portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
+                               ss.str().c_str());
     }
 
     switch (portBase->_portPolicy()) {
     case sc_core::SC_ONE_OR_MORE_BOUND:
         if (size() == 0)
-            portBase->report_error(
-                sc_core::SC_ID_COMPLETE_BINDING_, "port not bound");
+            portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
+                                   "port not bound");
         break;
     case sc_core::SC_ALL_BOUND:
         if (size() < maxSize() || size() < 1) {
             std::stringstream ss;
             ss << size() << " actual binds is less than required "
                << maxSize();
-            portBase->report_error(
-                sc_core::SC_ID_COMPLETE_BINDING_, ss.str().c_str());
+            portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
+                                   ss.str().c_str());
         }
         break;
     case sc_core::SC_ZERO_OR_MORE_BOUND:

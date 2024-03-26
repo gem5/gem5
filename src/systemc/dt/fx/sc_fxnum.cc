@@ -517,8 +517,8 @@ overflow(double &c, const scfx_params &params, bool &o_flag)
         }
         case SC_WRAP_SM: // sign magnitude wrap-around
         {
-            SC_ERROR_IF_(
-                params.enc() == SC_US_, sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
+            SC_ERROR_IF_(params.enc() == SC_US_,
+                         sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
 
             int n_bits = params.n_bits();
 
@@ -609,8 +609,8 @@ sc_fxnum_fast::cast()
 }
 
 // defined in sc_fxval.cpp;
-extern const char *to_string(
-    const scfx_ieee_double &, sc_numrep, int, sc_fmt, const scfx_params * = 0);
+extern const char *to_string(const scfx_ieee_double &, sc_numrep, int, sc_fmt,
+                             const scfx_params * = 0);
 
 // explicit conversion to character string
 

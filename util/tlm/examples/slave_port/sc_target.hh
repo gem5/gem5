@@ -61,14 +61,15 @@ struct Target : sc_module
     unsigned char *mem;
 
     Target(sc_core::sc_module_name name, bool debug,
-        unsigned long long int size, unsigned int offset);
+           unsigned long long int size, unsigned int offset);
     SC_HAS_PROCESS(Target);
 
     /** TLM interface functions */
     virtual void b_transport(tlm::tlm_generic_payload &trans, sc_time &delay);
     virtual unsigned int transport_dbg(tlm::tlm_generic_payload &trans);
     virtual tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &trans,
-        tlm::tlm_phase &phase, sc_time &delay);
+                                               tlm::tlm_phase &phase,
+                                               sc_time &delay);
 
     /** Callback of Payload Event Queue: */
     void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);

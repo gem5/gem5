@@ -54,8 +54,8 @@ namespace py = pybind11;
 namespace gem5
 {
 EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
-    const unsigned char *code, int zlen, int len) :
-    abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
+                               const unsigned char *code, int zlen, int len)
+    : abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
 {
     getList().push_back(this);
 }

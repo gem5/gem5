@@ -50,7 +50,7 @@ do_sum(const DispatchTable &dt, Args &args)
 }
 
 Command sum = {"sum", 2, 6, do_sum,
-    "<a> <b> [c [d [e [f]]]]\n"
-    "        Sum a-f (defaults are 0), for testing purposes"};
+               "<a> <b> [c [d [e [f]]]]\n"
+               "        Sum a-f (defaults are 0), for testing purposes"};
 
 } // anonymous namespace

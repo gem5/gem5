@@ -58,7 +58,7 @@ class ArmLinux : public Linux
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
 
@@ -278,7 +278,7 @@ class ArmLinux32 : public ArmLinux, public OpenFlagTable<ArmLinux32>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
 
@@ -530,7 +530,7 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
 

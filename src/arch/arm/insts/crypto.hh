@@ -131,7 +131,7 @@ class Crypto
 
     void load2Reg(uint32_t *X, uint32_t *Y, uint8_t *output, uint8_t *input);
     void load3Reg(uint32_t *X, uint32_t *Y, uint32_t *Z, uint8_t *output,
-        uint8_t *input, uint8_t *input2);
+                  uint8_t *input, uint8_t *input2);
     void store1Reg(uint8_t *output, uint32_t *X);
 
   public:

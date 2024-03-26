@@ -565,7 +565,7 @@ class UFSHostDevice : public DmaDevice
          * Constructor and destructor
          */
         UFSSCSIDevice(const UFSHostDeviceParams &p, uint32_t lun_id,
-            const Callback &transfer_cb, const Callback &read_cb);
+                      const Callback &transfer_cb, const Callback &read_cb);
         ~UFSSCSIDevice();
 
         /**
@@ -928,7 +928,7 @@ class UFSHostDevice : public DmaDevice
      * Host controller layer
      */
     void taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
-        Addr finaladdress, uint32_t finalsize);
+                     Addr finaladdress, uint32_t finalsize);
 
     /**
      * Transfer Start function. Starts the transfer handler once the transfer
@@ -946,7 +946,7 @@ class UFSHostDevice : public DmaDevice
      * follow in the next transaction.
      */
     void transferHandler(struct UTPTransferReqDesc *request_in, int req_pos,
-        Addr finaladdress, uint32_t finalsize, uint32_t done);
+                         Addr finaladdress, uint32_t finalsize, uint32_t done);
 
     /**
      * Transfer SCSI function. Determines which Logic unit to address and
@@ -970,8 +970,9 @@ class UFSHostDevice : public DmaDevice
      * Acknowledges UPIU frame and prepares the UTP response frame
      */
     void transferDone(Addr responseStartAddr, uint32_t req_pos,
-        struct UTPUPIURSP request_out, uint32_t size, Addr address,
-        uint8_t *destination, bool finished, uint32_t lun_id);
+                      struct UTPUPIURSP request_out, uint32_t size,
+                      Addr address, uint8_t *destination, bool finished,
+                      uint32_t lun_id);
     /**
      * final UTP, sends the last acknowledge data structure to the system;
      * prepares the clean up functions.
@@ -992,10 +993,11 @@ class UFSHostDevice : public DmaDevice
      * been pushed to the memory
      */
     void writeDevice(Event *additional_action, bool toDisk, Addr start,
-        int size, uint8_t *destination, uint64_t SCSIDiskOffset,
-        uint32_t lun_id);
+                     int size, uint8_t *destination, uint64_t SCSIDiskOffset,
+                     uint32_t lun_id);
     void readDevice(bool lastTransfer, Addr SCSIStart, uint32_t SCSISize,
-        uint8_t *SCSIDestination, bool no_cache, Event *additional_action);
+                    uint8_t *SCSIDestination, bool no_cache,
+                    Event *additional_action);
 
     /**
      * Disk transfer management functions
@@ -1004,9 +1006,11 @@ class UFSHostDevice : public DmaDevice
      * in SCSIresume.
      */
     void manageWriteTransfer(uint8_t LUN, uint64_t offset,
-        uint32_t sg_table_length, struct UFSHCDSGEntry *sglist);
+                             uint32_t sg_table_length,
+                             struct UFSHCDSGEntry *sglist);
     void manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
-        uint32_t sg_table_length, struct UFSHCDSGEntry *sglist);
+                            uint32_t sg_table_length,
+                            struct UFSHCDSGEntry *sglist);
 
     /**
      * Read done

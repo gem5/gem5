@@ -84,16 +84,16 @@ class Queued : public Base
          * @param prio This prefetch priority
          */
         DeferredPacket(Queued *o, PrefetchInfo const &pfi, Tick t,
-            int32_t prio, const CacheAccessor &_cache) :
-            owner(o),
-            pfInfo(pfi),
-            tick(t),
-            pkt(nullptr),
-            priority(prio),
-            translationRequest(),
-            tc(nullptr),
-            ongoingTranslation(false),
-            cache(&_cache)
+                       int32_t prio, const CacheAccessor &_cache)
+            : owner(o),
+              pfInfo(pfi),
+              tick(t),
+              pkt(nullptr),
+              priority(prio),
+              translationRequest(),
+              tc(nullptr),
+              ongoingTranslation(false),
+              cache(&_cache)
         {}
 
         bool
@@ -123,7 +123,7 @@ class Queued : public Base
          * @param t time when the prefetch becomes ready
          */
         void createPkt(Addr paddr, unsigned blk_size, RequestorID requestor_id,
-            bool tag_prefetch, Tick t);
+                       bool tag_prefetch, Tick t);
 
         /**
          * Sets the translation request needed to obtain the physical address
@@ -141,7 +141,7 @@ class Queued : public Base
         {}
 
         void finish(const Fault &fault, const RequestPtr &req,
-            ThreadContext *tc, BaseMMU::Mode mode) override;
+                    ThreadContext *tc, BaseMMU::Mode mode) override;
 
         /**
          * Issues the translation request to the provided MMU
@@ -204,14 +204,15 @@ class Queued : public Base
     Queued(const QueuedPrefetcherParams &p);
     virtual ~Queued();
 
-    void notify(
-        const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) override;
+    void notify(const CacheAccessProbeArg &acc,
+                const PrefetchInfo &pfi) override;
 
     void insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority,
-        const CacheAccessor &cache);
+                const CacheAccessor &cache);
 
     virtual void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses, const CacheAccessor &cache) = 0;
+                                   std::vector<AddrPriority> &addresses,
+                                   const CacheAccessor &cache) = 0;
     PacketPtr getPacket() override;
 
     Tick
@@ -247,8 +248,8 @@ class Queued : public Base
      * @param failed whether the translation was successful
      * @param cache accessor for lookups on the cache that originated this pkt
      */
-    void translationComplete(
-        DeferredPacket *dp, bool failed, const CacheAccessor &cache);
+    void translationComplete(DeferredPacket *dp, bool failed,
+                             const CacheAccessor &cache);
 
     /**
      * Checks whether the specified prefetch request is already in the
@@ -259,7 +260,7 @@ class Queued : public Base
      * @return True if the prefetch request was found in the queue
      */
     bool alreadyInQueue(std::list<DeferredPacket> &queue,
-        const PrefetchInfo &pfi, int32_t priority);
+                        const PrefetchInfo &pfi, int32_t priority);
 
     /**
      * Returns the maxmimum number of prefetch requests that are allowed
@@ -271,8 +272,8 @@ class Queued : public Base
      */
     size_t getMaxPermittedPrefetches(size_t total) const;
 
-    RequestPtr createPrefetchRequest(
-        Addr addr, PrefetchInfo const &pfi, PacketPtr pkt);
+    RequestPtr createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
+                                     PacketPtr pkt);
 };
 
 } // namespace prefetch

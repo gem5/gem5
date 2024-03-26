@@ -59,7 +59,7 @@ class Set
         if (size > NUMBER_BITS_PER_SET)
             fatal("Number of bits(%d) < size specified(%d). "
                   "Increase the number of bits and recompile.\n",
-                NUMBER_BITS_PER_SET, size);
+                  NUMBER_BITS_PER_SET, size);
     }
 
     Set(const Set &obj) : m_nSize(obj.m_nSize), bits(obj.bits) {}
@@ -242,7 +242,7 @@ class Set
         if (size > NUMBER_BITS_PER_SET)
             fatal("Number of bits(%d) < size specified(%d). "
                   "Increase the number of bits and recompile.\n",
-                NUMBER_BITS_PER_SET, size);
+                  NUMBER_BITS_PER_SET, size);
         m_nSize = size;
         bits.reset();
     }

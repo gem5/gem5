@@ -177,7 +177,7 @@ getPrivilegeModeSet(ThreadContext *tc)
 template <typename xint>
 static void
 setRegNoEffectWithMask(ThreadContext *context, RiscvType type,
-    PrivilegeModeSet pms, CSRIndex idx, xint val)
+                       PrivilegeModeSet pms, CSRIndex idx, xint val)
 {
     RegVal oldVal, newVal;
     RegVal mask = CSRMasks[type][pms].at(idx);
@@ -189,7 +189,7 @@ setRegNoEffectWithMask(ThreadContext *context, RiscvType type,
 template <typename xint>
 static void
 setRegWithMask(ThreadContext *context, RiscvType type, PrivilegeModeSet pms,
-    CSRIndex idx, xint val)
+               CSRIndex idx, xint val)
 {
     RegVal oldVal, newVal;
     RegVal mask = CSRMasks[type][pms].at(idx);
@@ -198,8 +198,10 @@ setRegWithMask(ThreadContext *context, RiscvType type, PrivilegeModeSet pms,
     context->setMiscReg(CSRData.at(idx).physIndex, newVal);
 }
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
-    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+      regCache32(this),
+      regCache64(this)
 {}
 
 bool
@@ -216,8 +218,8 @@ RemoteGDB::acc(Addr va, size_t len)
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
-            Fault fault = walker->startFunctional(
-                context(), paddr, logBytes, BaseMMU::Read);
+            Fault fault = walker->startFunctional(context(), paddr, logBytes,
+                                                  BaseMMU::Read);
             if (fault != NoFault)
                 return false;
         }
@@ -348,8 +350,8 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
     setRegWithMask(context, RV32, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV32, pms, CSR_UIP, r.uip);
     context->setMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex, r.utvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex, r.uscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex,
+                                r.uscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex, r.uepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
     context->setMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex, r.utval);
@@ -361,10 +363,10 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex, r.stvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex, r.scounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex, r.sscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex,
+                                r.scounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex,
+                                r.sscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_SEPC).physIndex, r.sepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex, r.scause);
     context->setMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex, r.stval);
@@ -378,10 +380,10 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex, r.mcounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex, r.mscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex,
+                                r.mcounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex,
+                                r.mscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_MEPC).physIndex, r.mepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
     context->setMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex, r.mtval);
@@ -506,8 +508,8 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
     setRegWithMask(context, RV64, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV64, pms, CSR_UIP, r.uip);
     context->setMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex, r.utvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex, r.uscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex,
+                                r.uscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex, r.uepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
     context->setMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex, r.utval);
@@ -519,10 +521,10 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex, r.stvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex, r.scounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex, r.sscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex,
+                                r.scounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex,
+                                r.sscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_SEPC).physIndex, r.sepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex, r.scause);
     context->setMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex, r.stval);
@@ -536,10 +538,10 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
     context->setMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex, r.mcounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex, r.mscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex,
+                                r.mcounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex,
+                                r.mscratch);
     context->setMiscRegNoEffect(CSRData.at(CSR_MEPC).physIndex, r.mepc);
     context->setMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
     context->setMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex, r.mtval);
@@ -556,21 +558,21 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
      *
      * Import using #include blobs/<blob_name>.hh
      */
-#define GDB_XML(x, s) \
-    { \
-        x, std::string( \
-               reinterpret_cast<const char *>(Blobs::s), Blobs::s##_len) \
+#define GDB_XML(x, s)                                                         \
+    {                                                                         \
+        x, std::string(reinterpret_cast<const char *>(Blobs::s),              \
+                       Blobs::s##_len)                                        \
     }
     static const std::map<std::string, std::string>
         annexMaps[enums::Num_RiscvType] = {
             [RV32] = {GDB_XML("target.xml", gdb_xml_riscv_32bit_target),
-                GDB_XML("riscv-32bit-cpu.xml", gdb_xml_riscv_32bit_cpu),
-                GDB_XML("riscv-32bit-fpu.xml", gdb_xml_riscv_32bit_fpu),
-                GDB_XML("riscv-32bit-csr.xml", gdb_xml_riscv_32bit_csr)},
+                      GDB_XML("riscv-32bit-cpu.xml", gdb_xml_riscv_32bit_cpu),
+                      GDB_XML("riscv-32bit-fpu.xml", gdb_xml_riscv_32bit_fpu),
+                      GDB_XML("riscv-32bit-csr.xml", gdb_xml_riscv_32bit_csr)},
             [RV64] = {GDB_XML("target.xml", gdb_xml_riscv_64bit_target),
-                GDB_XML("riscv-64bit-cpu.xml", gdb_xml_riscv_64bit_cpu),
-                GDB_XML("riscv-64bit-fpu.xml", gdb_xml_riscv_64bit_fpu),
-                GDB_XML("riscv-64bit-csr.xml", gdb_xml_riscv_64bit_csr)},
+                      GDB_XML("riscv-64bit-cpu.xml", gdb_xml_riscv_64bit_cpu),
+                      GDB_XML("riscv-64bit-fpu.xml", gdb_xml_riscv_64bit_fpu),
+                      GDB_XML("riscv-64bit-csr.xml", gdb_xml_riscv_64bit_csr)},
         };
     auto &annexMap = annexMaps[getRvType(context())];
     auto it = annexMap.find(annex);

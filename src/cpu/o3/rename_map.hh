@@ -219,7 +219,7 @@ class UnifiedRenameMap
 
     /** Initializes rename map with given parameters. */
     void init(const BaseISA::RegClasses &regClasses, PhysRegFile *_regFile,
-        UnifiedFreeList *freeList);
+              UnifiedFreeList *freeList);
 
     /**
      * Tell rename map to get a new free physical register to remap

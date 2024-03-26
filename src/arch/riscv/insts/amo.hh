@@ -44,16 +44,17 @@ namespace RiscvISA
 class MemFenceMicro : public RiscvMicroInst
 {
   public:
-    MemFenceMicro(ExtMachInst _machInst, OpClass __opClass) :
-        RiscvMicroInst("fence", _machInst, __opClass)
+    MemFenceMicro(ExtMachInst _machInst, OpClass __opClass)
+        : RiscvMicroInst("fence", _machInst, __opClass)
     {}
 
   protected:
     using RiscvMicroInst::RiscvMicroInst;
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // load-reserved
@@ -62,8 +63,9 @@ class LoadReserved : public RiscvMacroInst
   protected:
     using RiscvMacroInst::RiscvMacroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class LoadReservedMicro : public RiscvMicroInst
@@ -72,8 +74,9 @@ class LoadReservedMicro : public RiscvMicroInst
     Request::Flags memAccessFlags;
     using RiscvMicroInst::RiscvMicroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // store-cond
@@ -82,8 +85,9 @@ class StoreCond : public RiscvMacroInst
   protected:
     using RiscvMacroInst::RiscvMacroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class StoreCondMicro : public RiscvMicroInst
@@ -92,8 +96,9 @@ class StoreCondMicro : public RiscvMicroInst
     Request::Flags memAccessFlags;
     using RiscvMicroInst::RiscvMicroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // AMOs
@@ -102,8 +107,9 @@ class AtomicMemOp : public RiscvMacroInst
   protected:
     using RiscvMacroInst::RiscvMacroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class AtomicMemOpMicro : public RiscvMicroInst
@@ -112,8 +118,9 @@ class AtomicMemOpMicro : public RiscvMicroInst
     Request::Flags memAccessFlags;
     using RiscvMicroInst::RiscvMicroInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**

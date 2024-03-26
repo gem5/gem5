@@ -162,8 +162,8 @@ class AMD64TraceChild : public TraceChild
     };
 
   private:
-    int64_t getRegs(
-        user_regs_struct &myregs, user_fpregs_struct &myfpregs, int num);
+    int64_t getRegs(user_regs_struct &myregs, user_fpregs_struct &myfpregs,
+                    int num);
     user_regs_struct regs;
     user_regs_struct oldregs;
     user_fpregs_struct fpregs;

@@ -56,14 +56,16 @@ using std::string;
 
 namespace gem5
 {
-const char *NsRxStateStrings[] = {"rxIdle", "rxDescRefr", "rxDescRead",
-    "rxFifoBlock", "rxFragWrite", "rxDescWrite", "rxAdvance"};
+const char *NsRxStateStrings[] = {"rxIdle",      "rxDescRefr",  "rxDescRead",
+                                  "rxFifoBlock", "rxFragWrite", "rxDescWrite",
+                                  "rxAdvance"};
 
-const char *NsTxStateStrings[] = {"txIdle", "txDescRefr", "txDescRead",
-    "txFifoBlock", "txFragRead", "txDescWrite", "txAdvance"};
+const char *NsTxStateStrings[] = {"txIdle",      "txDescRefr", "txDescRead",
+                                  "txFifoBlock", "txFragRead", "txDescWrite",
+                                  "txAdvance"};
 
 const char *NsDmaState[] = {"dmaIdle", "dmaReading", "dmaWriting",
-    "dmaReadWaiting", "dmaWriteWaiting"};
+                            "dmaReadWaiting", "dmaWriteWaiting"};
 
 using namespace networking;
 
@@ -71,76 +73,76 @@ using namespace networking;
 //
 // NSGigE PCI Device
 //
-NSGigE::NSGigE(const Params &p) :
-    EtherDevBase(p),
-    ioEnable(false),
-    txFifo(p.tx_fifo_size),
-    rxFifo(p.rx_fifo_size),
-    txPacket(0),
-    rxPacket(0),
-    txPacketBufPtr(NULL),
-    rxPacketBufPtr(NULL),
-    txXferLen(0),
-    rxXferLen(0),
-    rxDmaFree(false),
-    txDmaFree(false),
-    txState(txIdle),
-    txEnable(false),
-    CTDD(false),
-    txHalt(false),
-    txFragPtr(0),
-    txDescCnt(0),
-    txDmaState(dmaIdle),
-    rxState(rxIdle),
-    rxEnable(false),
-    CRDD(false),
-    rxPktBytes(0),
-    rxHalt(false),
-    rxFragPtr(0),
-    rxDescCnt(0),
-    rxDmaState(dmaIdle),
-    extstsEnable(false),
-    eepromState(eepromStart),
-    eepromClk(false),
-    eepromBitsToRx(0),
-    eepromOpcode(0),
-    eepromAddress(0),
-    eepromData(0),
-    dmaReadDelay(p.dma_read_delay),
-    dmaWriteDelay(p.dma_write_delay),
-    dmaReadFactor(p.dma_read_factor),
-    dmaWriteFactor(p.dma_write_factor),
-    rxDmaData(NULL),
-    rxDmaAddr(0),
-    rxDmaLen(0),
-    txDmaData(NULL),
-    txDmaAddr(0),
-    txDmaLen(0),
-    rxDmaReadEvent([this] { rxDmaReadDone(); }, name()),
-    rxDmaWriteEvent([this] { rxDmaWriteDone(); }, name()),
-    txDmaReadEvent([this] { txDmaReadDone(); }, name()),
-    txDmaWriteEvent([this] { txDmaWriteDone(); }, name()),
-    dmaDescFree(p.dma_desc_free),
-    dmaDataFree(p.dma_data_free),
-    txDelay(p.tx_delay),
-    rxDelay(p.rx_delay),
-    rxKickTick(0),
-    rxKickEvent([this] { rxKick(); }, name()),
-    txKickTick(0),
-    txKickEvent([this] { txKick(); }, name()),
-    txEvent([this] { txEventTransmit(); }, name()),
-    rxFilterEnable(p.rx_filter),
-    acceptBroadcast(false),
-    acceptMulticast(false),
-    acceptUnicast(false),
-    acceptPerfect(false),
-    acceptArp(false),
-    multicastHashEnable(false),
-    intrDelay(p.intr_delay),
-    intrTick(0),
-    cpuPendingIntr(false),
-    intrEvent(0),
-    interface(0)
+NSGigE::NSGigE(const Params &p)
+    : EtherDevBase(p),
+      ioEnable(false),
+      txFifo(p.tx_fifo_size),
+      rxFifo(p.rx_fifo_size),
+      txPacket(0),
+      rxPacket(0),
+      txPacketBufPtr(NULL),
+      rxPacketBufPtr(NULL),
+      txXferLen(0),
+      rxXferLen(0),
+      rxDmaFree(false),
+      txDmaFree(false),
+      txState(txIdle),
+      txEnable(false),
+      CTDD(false),
+      txHalt(false),
+      txFragPtr(0),
+      txDescCnt(0),
+      txDmaState(dmaIdle),
+      rxState(rxIdle),
+      rxEnable(false),
+      CRDD(false),
+      rxPktBytes(0),
+      rxHalt(false),
+      rxFragPtr(0),
+      rxDescCnt(0),
+      rxDmaState(dmaIdle),
+      extstsEnable(false),
+      eepromState(eepromStart),
+      eepromClk(false),
+      eepromBitsToRx(0),
+      eepromOpcode(0),
+      eepromAddress(0),
+      eepromData(0),
+      dmaReadDelay(p.dma_read_delay),
+      dmaWriteDelay(p.dma_write_delay),
+      dmaReadFactor(p.dma_read_factor),
+      dmaWriteFactor(p.dma_write_factor),
+      rxDmaData(NULL),
+      rxDmaAddr(0),
+      rxDmaLen(0),
+      txDmaData(NULL),
+      txDmaAddr(0),
+      txDmaLen(0),
+      rxDmaReadEvent([this] { rxDmaReadDone(); }, name()),
+      rxDmaWriteEvent([this] { rxDmaWriteDone(); }, name()),
+      txDmaReadEvent([this] { txDmaReadDone(); }, name()),
+      txDmaWriteEvent([this] { txDmaWriteDone(); }, name()),
+      dmaDescFree(p.dma_desc_free),
+      dmaDataFree(p.dma_data_free),
+      txDelay(p.tx_delay),
+      rxDelay(p.rx_delay),
+      rxKickTick(0),
+      rxKickEvent([this] { rxKick(); }, name()),
+      txKickTick(0),
+      txKickEvent([this] { txKick(); }, name()),
+      txEvent([this] { txEventTransmit(); }, name()),
+      rxFilterEnable(p.rx_filter),
+      acceptBroadcast(false),
+      acceptMulticast(false),
+      acceptUnicast(false),
+      acceptPerfect(false),
+      acceptArp(false),
+      multicastHashEnable(false),
+      intrDelay(p.intr_delay),
+      intrTick(0),
+      cpuPendingIntr(false),
+      intrEvent(0),
+      interface(0)
 {
     interface = new NSGigEInt(name() + ".int0", this);
 
@@ -202,7 +204,7 @@ NSGigE::read(PacketPtr pkt)
     // The mask is to give you only the offset into the device register file
     Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "read  da=%#x pa=%#x size=%d\n", daddr,
-        pkt->getAddr(), pkt->getSize());
+            pkt->getAddr(), pkt->getSize());
 
     // there are some reserved registers, you can see ns_gige_reg.h and
     // the spec sheet for details
@@ -340,7 +342,7 @@ NSGigE::read(PacketPtr pkt)
 
             panic("reading RFDR for something other than pattern"
                   " matching or hashing! %#x\n",
-                rfaddr);
+                  rfaddr);
         }
         break;
 
@@ -420,7 +422,7 @@ NSGigE::write(PacketPtr pkt)
 
     Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x size=%d\n", daddr,
-        pkt->getAddr(), pkt->getSize());
+            pkt->getAddr(), pkt->getSize());
 
     if (daddr > LAST && daddr <= RESERVED) {
         panic("Accessing reserved register");
@@ -484,7 +486,7 @@ NSGigE::write(PacketPtr pkt)
                 // Now set the appropriate writable bits
                 regs.config |=
                     reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
-                              CFGR_RESERVED | CFGR_T64ADDR | CFGR_PCI64_DET);
+                            CFGR_RESERVED | CFGR_T64ADDR | CFGR_PCI64_DET);
             }
 
             if (reg & CFGR_AUTO_1000)
@@ -574,9 +576,8 @@ NSGigE::write(PacketPtr pkt)
             // Only write writable bits
             regs.gpior &= GPIOR_UNUSED | GPIOR_GP5_IN | GPIOR_GP4_IN |
                           GPIOR_GP3_IN | GPIOR_GP2_IN | GPIOR_GP1_IN;
-            regs.gpior |=
-                reg & ~(GPIOR_UNUSED | GPIOR_GP5_IN | GPIOR_GP4_IN |
-                          GPIOR_GP3_IN | GPIOR_GP2_IN | GPIOR_GP1_IN);
+            regs.gpior |= reg & ~(GPIOR_UNUSED | GPIOR_GP5_IN | GPIOR_GP4_IN |
+                                  GPIOR_GP3_IN | GPIOR_GP2_IN | GPIOR_GP1_IN);
             /* these just control general purpose i/o pins, don't matter */
             break;
 
@@ -656,7 +657,7 @@ NSGigE::write(PacketPtr pkt)
                 }
                 panic("writing RFDR for something other than pattern matching "
                       "or hashing! %#x\n",
-                    rfaddr);
+                      rfaddr);
             }
             break;
 
@@ -772,8 +773,8 @@ NSGigE::devIntrPost(uint32_t interrupts)
     }
 
     DPRINTF(EthernetIntr,
-        "interrupt written to ISR: intr=%#x isr=%#x imr=%#x\n", interrupts,
-        regs.isr, regs.imr);
+            "interrupt written to ISR: intr=%#x isr=%#x imr=%#x\n", interrupts,
+            regs.isr, regs.imr);
 
     if ((regs.isr & regs.imr)) {
         Tick when = curTick();
@@ -824,8 +825,8 @@ NSGigE::devIntrClear(uint32_t interrupts)
     regs.isr &= ~interrupts;
 
     DPRINTF(EthernetIntr,
-        "interrupt cleared from ISR: intr=%x isr=%x imr=%x\n", interrupts,
-        regs.isr, regs.imr);
+            "interrupt cleared from ISR: intr=%x isr=%x imr=%x\n", interrupts,
+            regs.isr, regs.imr);
 
     if (!(regs.isr & regs.imr))
         cpuIntrClear();
@@ -835,7 +836,7 @@ void
 NSGigE::devIntrChangeMask()
 {
     DPRINTF(EthernetIntr, "interrupt mask changed: isr=%x imr=%x masked=%x\n",
-        regs.isr, regs.imr, regs.isr & regs.imr);
+            regs.isr, regs.imr, regs.isr & regs.imr);
 
     if (regs.isr & regs.imr)
         cpuIntrPost(curTick());
@@ -859,7 +860,7 @@ NSGigE::cpuIntrPost(Tick when)
     assert(intrTick >= curTick() || intrTick == 0);
     if (when > intrTick && intrTick != 0) {
         DPRINTF(EthernetIntr, "don't need to schedule event...intrTick=%d\n",
-            intrTick);
+                intrTick);
         return;
     }
 
@@ -869,7 +870,7 @@ NSGigE::cpuIntrPost(Tick when)
     }
 
     DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
-        intrTick);
+            intrTick);
 
     if (intrEvent)
         intrEvent->squash();
@@ -892,7 +893,7 @@ NSGigE::cpuInterrupt()
     // Don't send an interrupt if there's already one
     if (cpuPendingIntr) {
         DPRINTF(EthernetIntr,
-            "would send an interrupt now, but there's already pending\n");
+                "would send an interrupt now, but there's already pending\n");
     } else {
         // Send interrupt
         cpuPendingIntr = true;
@@ -1000,8 +1001,8 @@ NSGigE::rxDmaReadDone()
     assert(rxDmaState == dmaReading);
     rxDmaState = dmaIdle;
 
-    DPRINTF(
-        EthernetDMA, "rx dma read  paddr=%#x len=%d\n", rxDmaAddr, rxDmaLen);
+    DPRINTF(EthernetDMA, "rx dma read  paddr=%#x len=%d\n", rxDmaAddr,
+            rxDmaLen);
     DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
 
     // If the transmit state machine has a pending DMA, let it go first
@@ -1030,8 +1031,8 @@ NSGigE::rxDmaWriteDone()
     assert(rxDmaState == dmaWriting);
     rxDmaState = dmaIdle;
 
-    DPRINTF(
-        EthernetDMA, "rx dma write paddr=%#x len=%d\n", rxDmaAddr, rxDmaLen);
+    DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n", rxDmaAddr,
+            rxDmaLen);
     DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
 
     // If the transmit state machine has a pending DMA, let it go first
@@ -1047,7 +1048,7 @@ NSGigE::rxKick()
     bool is64bit = (bool)(regs.config & CFGR_M64ADDR);
 
     DPRINTF(EthernetSM, "receive kick rxState=%s (rxBuf.size=%d) %d-bit\n",
-        NsRxStateStrings[rxState], rxFifo.size(), is64bit ? 64 : 32);
+            NsRxStateStrings[rxState], rxFifo.size(), is64bit ? 64 : 32);
 
     Addr link, bufptr;
     uint32_t &cmdsts = is64bit ? rxDesc64.cmdsts : rxDesc32.cmdsts;
@@ -1056,7 +1057,7 @@ NSGigE::rxKick()
 next:
     if (rxKickTick > curTick()) {
         DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
-            rxKickTick);
+                rxKickTick);
 
         goto exit;
     }
@@ -1136,10 +1137,10 @@ next:
             goto exit;
 
         DPRINTF(EthernetDesc, "rxDesc: addr=%08x read descriptor\n",
-            regs.rxdp & 0x3fffffff);
+                regs.rxdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
-            "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n", link,
-            bufptr, cmdsts, extsts);
+                "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n", link,
+                bufptr, cmdsts, extsts);
 
         if (cmdsts & CMDSTS_OWN) {
             devIntrPost(ISR_RXIDLE);
@@ -1177,9 +1178,9 @@ next:
                     TcpPtr tcp(ip);
                     if (tcp) {
                         DPRINTF(Ethernet,
-                            "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
-                            tcp->sport(), tcp->dport(), tcp->seq(),
-                            tcp->ack());
+                                "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                                tcp->sport(), tcp->dport(), tcp->seq(),
+                                tcp->ack());
                     }
                 }
             }
@@ -1255,11 +1256,11 @@ next:
              */
 
             DPRINTF(EthernetDesc,
-                "rxDesc: addr=%08x writeback cmdsts extsts\n",
-                regs.rxdp & 0x3fffffff);
+                    "rxDesc: addr=%08x writeback cmdsts extsts\n",
+                    regs.rxdp & 0x3fffffff);
             DPRINTF(EthernetDesc,
-                "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n", link,
-                bufptr, cmdsts, extsts);
+                    "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n",
+                    link, bufptr, cmdsts, extsts);
 
             rxDmaAddr = regs.rxdp & 0x3fffffff;
             rxDmaData = &cmdsts;
@@ -1338,8 +1339,8 @@ next:
         panic("Invalid rxState!");
     }
 
-    DPRINTF(
-        EthernetSM, "entering next rxState=%s\n", NsRxStateStrings[rxState]);
+    DPRINTF(EthernetSM, "entering next rxState=%s\n",
+            NsRxStateStrings[rxState]);
     goto next;
 
 exit:
@@ -1347,7 +1348,7 @@ exit:
      * @todo do we want to schedule a future kick?
      */
     DPRINTF(EthernetSM, "rx state machine exited rxState=%s\n",
-        NsRxStateStrings[rxState]);
+            NsRxStateStrings[rxState]);
 
     if (!rxKickEvent.scheduled())
         schedule(rxKickEvent, rxKickTick);
@@ -1361,8 +1362,8 @@ NSGigE::transmit()
         return;
     }
 
-    DPRINTF(
-        Ethernet, "Attempt Pkt Transmit: txFifo length=%d\n", txFifo.size());
+    DPRINTF(Ethernet, "Attempt Pkt Transmit: txFifo length=%d\n",
+            txFifo.size());
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
         if (debug::Ethernet) {
@@ -1372,8 +1373,9 @@ NSGigE::transmit()
                 TcpPtr tcp(ip);
                 if (tcp) {
                     DPRINTF(Ethernet,
-                        "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
-                        tcp->sport(), tcp->dport(), tcp->seq(), tcp->ack());
+                            "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                            tcp->sport(), tcp->dport(), tcp->seq(),
+                            tcp->ack());
                 }
             }
         }
@@ -1384,7 +1386,7 @@ NSGigE::transmit()
         etherDeviceStats.txPackets++;
 
         DPRINTF(Ethernet, "Successful Xmit! now txFifoAvail is %d\n",
-            txFifo.avail());
+                txFifo.avail());
         txFifo.pop();
 
         /*
@@ -1423,8 +1425,8 @@ NSGigE::txDmaReadDone()
     assert(txDmaState == dmaReading);
     txDmaState = dmaIdle;
 
-    DPRINTF(
-        EthernetDMA, "tx dma read  paddr=%#x len=%d\n", txDmaAddr, txDmaLen);
+    DPRINTF(EthernetDMA, "tx dma read  paddr=%#x len=%d\n", txDmaAddr,
+            txDmaLen);
     DDUMP(EthernetDMA, txDmaData, txDmaLen);
 
     // If the receive state machine  has a pending DMA, let it go first
@@ -1453,8 +1455,8 @@ NSGigE::txDmaWriteDone()
     assert(txDmaState == dmaWriting);
     txDmaState = dmaIdle;
 
-    DPRINTF(
-        EthernetDMA, "tx dma write paddr=%#x len=%d\n", txDmaAddr, txDmaLen);
+    DPRINTF(EthernetDMA, "tx dma write paddr=%#x len=%d\n", txDmaAddr,
+            txDmaLen);
     DDUMP(EthernetDMA, txDmaData, txDmaLen);
 
     // If the receive state machine  has a pending DMA, let it go first
@@ -1470,7 +1472,7 @@ NSGigE::txKick()
     bool is64bit = (bool)(regs.config & CFGR_M64ADDR);
 
     DPRINTF(EthernetSM, "transmit kick txState=%s %d-bit\n",
-        NsTxStateStrings[txState], is64bit ? 64 : 32);
+            NsTxStateStrings[txState], is64bit ? 64 : 32);
 
     Addr link, bufptr;
     uint32_t &cmdsts = is64bit ? txDesc64.cmdsts : txDesc32.cmdsts;
@@ -1479,7 +1481,7 @@ NSGigE::txKick()
 next:
     if (txKickTick > curTick()) {
         DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
-            txKickTick);
+                txKickTick);
         goto exit;
     }
 
@@ -1551,10 +1553,10 @@ next:
             goto exit;
 
         DPRINTF(EthernetDesc, "txDesc: addr=%08x read descriptor\n",
-            regs.txdp & 0x3fffffff);
+                regs.txdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
-            "txDesc: link=%#x bufptr=%#x cmdsts=%#08x extsts=%#08x\n", link,
-            bufptr, cmdsts, extsts);
+                "txDesc: link=%#x bufptr=%#x cmdsts=%#08x extsts=%#08x\n",
+                link, bufptr, cmdsts, extsts);
 
         if (cmdsts & CMDSTS_OWN) {
             txState = txFifoBlock;
@@ -1638,7 +1640,7 @@ next:
                 // packet bigger want to make sure
                 if (txPacket->length > 1514)
                     panic("transmit packet too large, %s > 1514\n",
-                        txPacket->length);
+                          txPacket->length);
 
 #ifndef NDEBUG
                 bool success =
@@ -1662,8 +1664,8 @@ next:
                 cmdsts |= CMDSTS_OK;
 
                 DPRINTF(EthernetDesc,
-                    "txDesc writeback: cmdsts=%08x extsts=%08x\n", cmdsts,
-                    extsts);
+                        "txDesc writeback: cmdsts=%08x extsts=%08x\n", cmdsts,
+                        extsts);
 
                 txDmaFree = dmaDescFree;
                 txDmaAddr = regs.txdp & 0x3fffffff;
@@ -1776,8 +1778,8 @@ next:
         panic("invalid state");
     }
 
-    DPRINTF(
-        EthernetSM, "entering next txState=%s\n", NsTxStateStrings[txState]);
+    DPRINTF(EthernetSM, "entering next txState=%s\n",
+            NsTxStateStrings[txState]);
     goto next;
 
 exit:
@@ -1785,7 +1787,7 @@ exit:
      * @todo do we want to schedule a future kick?
      */
     DPRINTF(EthernetSM, "tx state machine exited txState=%s\n",
-        NsTxStateStrings[txState]);
+            NsTxStateStrings[txState]);
 
     if (!txKickEvent.scheduled())
         schedule(txKickEvent, txKickTick);
@@ -1951,7 +1953,7 @@ NSGigE::recvPacket(EthPacketPtr packet)
     etherDeviceStats.rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifoAvail=%d\n",
-        rxFifo.avail());
+            rxFifo.avail());
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
@@ -1960,7 +1962,7 @@ NSGigE::recvPacket(EthPacketPtr packet)
 
     if (!rxFilterEnable) {
         DPRINTF(Ethernet,
-            "receive packet filtering disabled . . . packet dropped\n");
+                "receive packet filtering disabled . . . packet dropped\n");
         return true;
     }
 
@@ -1975,8 +1977,8 @@ NSGigE::recvPacket(EthPacketPtr packet)
         TcpPtr tcp(ip);
         if (ip) {
             DPRINTF(Ethernet,
-                "packet won't fit in receive buffer...pkt ID %d dropped\n",
-                ip->id());
+                    "packet won't fit in receive buffer...pkt ID %d dropped\n",
+                    ip->id());
             if (tcp) {
                 DPRINTF(Ethernet, "Seq=%d\n", tcp->seq());
             }

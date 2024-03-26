@@ -46,8 +46,8 @@ namespace gem5
 using namespace ArmISA;
 
 bool
-ArmISA::calculateTBI(
-    ThreadContext *tc, ExceptionLevel el, uint64_t ptr, bool data)
+ArmISA::calculateTBI(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
+                     bool data)
 {
     bool tbi = false;
     if (upperAndLowerRange(tc, el)) {
@@ -73,8 +73,8 @@ ArmISA::calculateTBI(
 }
 
 int
-ArmISA::calculateBottomPACBit(
-    ThreadContext *tc, ExceptionLevel el, bool top_bit)
+ArmISA::calculateBottomPACBit(ThreadContext *tc, ExceptionLevel el,
+                              bool top_bit)
 {
     uint32_t tsz_field;
     bool using64k;
@@ -117,8 +117,8 @@ ArmISA::trapPACUse(ThreadContext *tc, ExceptionLevel target_el)
 
     switch (target_el) {
     case EL2:
-        return std::make_shared<HypervisorTrap>(
-            0x0, 0, ExceptionClass::TRAPPED_PAC);
+        return std::make_shared<HypervisorTrap>(0x0, 0,
+                                                ExceptionClass::TRAPPED_PAC);
     case EL3:
         return std::make_shared<SecureMonitorTrap>(
             0x0, 0, ExceptionClass::TRAPPED_PAC);
@@ -129,7 +129,7 @@ ArmISA::trapPACUse(ThreadContext *tc, ExceptionLevel target_el)
 
 uint64_t
 ArmISA::addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
-    uint64_t modifier, uint64_t k1, uint64_t k0, bool data)
+               uint64_t modifier, uint64_t k1, uint64_t k0, bool data)
 {
     uint64_t PAC;
     uint64_t result;
@@ -156,7 +156,7 @@ ArmISA::addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
                 selbit = (tcr.tbi1 == 1 || tcr.tbi0 == 1) ? b55 : b63;
             } else {
                 selbit = ((tcr.tbi1 == 1 && tcr.tbid1 == 0) ||
-                             (tcr.tbi0 == 1 && tcr.tbid0 == 0)) ?
+                          (tcr.tbi0 == 1 && tcr.tbid0 == 0)) ?
                              b55 :
                              b63;
             }
@@ -169,7 +169,7 @@ ArmISA::addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
                     (have_el2 && (tcr.tbi0 == 1 || tcr.tbi1 == 1)) ? b55 : b63;
             } else {
                 selbit = (have_el2 && ((tcr.tbi1 == 1 && tcr.tbid1 == 0) ||
-                                          (tcr.tbi0 == 1 && tcr.tbid0 == 0))) ?
+                                       (tcr.tbi0 == 1 && tcr.tbid0 == 0))) ?
                              b55 :
                              b63;
             }
@@ -221,7 +221,8 @@ ArmISA::addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
 
 uint64_t
 ArmISA::auth(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
-    uint64_t modifier, uint64_t k1, uint64_t k0, bool data, uint8_t errorcode)
+             uint64_t modifier, uint64_t k1, uint64_t k0, bool data,
+             uint8_t errorcode)
 {
     uint64_t PAC;
     uint64_t result;

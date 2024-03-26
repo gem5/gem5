@@ -38,7 +38,7 @@
 
 #ifndef SMT_MAX_THREADS
 /** The number of TPUs in any processor. */
-#    define SMT_MAX_THREADS 4
+#define SMT_MAX_THREADS 4
 #endif
 
 namespace gem5

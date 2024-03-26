@@ -36,32 +36,32 @@
 #define __SINIC_REG32(NAME, VAL) static const uint32_t NAME = (VAL);
 #define __SINIC_REG64(NAME, VAL) static const uint64_t NAME = (VAL);
 
-#define __SINIC_VAL32(NAME, OFFSET, WIDTH) \
-    static const uint32_t NAME##_width = WIDTH; \
-    static const uint32_t NAME##_offset = OFFSET; \
-    static const uint32_t NAME##_mask = (1 << WIDTH) - 1; \
-    static const uint32_t NAME = ((1 << WIDTH) - 1) << OFFSET; \
-    static inline uint32_t get_##NAME(uint32_t reg) \
-    { \
-        return (reg & NAME) >> OFFSET; \
-    } \
-    static inline uint32_t set_##NAME(uint32_t reg, uint32_t val) \
-    { \
-        return (reg & ~NAME) | ((val << OFFSET) & NAME); \
+#define __SINIC_VAL32(NAME, OFFSET, WIDTH)                                    \
+    static const uint32_t NAME##_width = WIDTH;                               \
+    static const uint32_t NAME##_offset = OFFSET;                             \
+    static const uint32_t NAME##_mask = (1 << WIDTH) - 1;                     \
+    static const uint32_t NAME = ((1 << WIDTH) - 1) << OFFSET;                \
+    static inline uint32_t get_##NAME(uint32_t reg)                           \
+    {                                                                         \
+        return (reg & NAME) >> OFFSET;                                        \
+    }                                                                         \
+    static inline uint32_t set_##NAME(uint32_t reg, uint32_t val)             \
+    {                                                                         \
+        return (reg & ~NAME) | ((val << OFFSET) & NAME);                      \
     }
 
-#define __SINIC_VAL64(NAME, OFFSET, WIDTH) \
-    static const uint64_t NAME##_width = WIDTH; \
-    static const uint64_t NAME##_offset = OFFSET; \
-    static const uint64_t NAME##_mask = (1ULL << WIDTH) - 1; \
-    static const uint64_t NAME = ((1ULL << WIDTH) - 1) << OFFSET; \
-    static inline uint64_t get_##NAME(uint64_t reg) \
-    { \
-        return (reg & NAME) >> OFFSET; \
-    } \
-    static inline uint64_t set_##NAME(uint64_t reg, uint64_t val) \
-    { \
-        return (reg & ~NAME) | ((val << OFFSET) & NAME); \
+#define __SINIC_VAL64(NAME, OFFSET, WIDTH)                                    \
+    static const uint64_t NAME##_width = WIDTH;                               \
+    static const uint64_t NAME##_offset = OFFSET;                             \
+    static const uint64_t NAME##_mask = (1ULL << WIDTH) - 1;                  \
+    static const uint64_t NAME = ((1ULL << WIDTH) - 1) << OFFSET;             \
+    static inline uint64_t get_##NAME(uint64_t reg)                           \
+    {                                                                         \
+        return (reg & NAME) >> OFFSET;                                        \
+    }                                                                         \
+    static inline uint64_t set_##NAME(uint64_t reg, uint64_t val)             \
+    {                                                                         \
+        return (reg & ~NAME) | ((val << OFFSET) & NAME);                      \
     }
 
 namespace gem5
@@ -198,38 +198,22 @@ regInfo(Addr daddr)
 {
     static registers::Info invalid = {0, false, false, "invalid"};
     static registers::Info info[] = {
-        {4, true, true, "Config"},
-        {4, false, true, "Command"},
-        {4, true, true, "IntrStatus"},
-        {4, true, true, "IntrMask"},
-        {4, true, false, "RxMaxCopy"},
-        {4, true, false, "TxMaxCopy"},
-        {4, true, false, "ZeroCopySize"},
-        {4, true, false, "ZeroCopyMark"},
-        {4, true, false, "VirtualCount"},
-        {4, true, false, "RxMaxIntr"},
-        {4, true, false, "RxFifoSize"},
-        {4, true, false, "TxFifoSize"},
-        {4, true, false, "RxFifoLow"},
-        {4, true, false, "TxFifoLow"},
-        {4, true, false, "RxFifoHigh"},
-        {4, true, false, "TxFifoHigh"},
-        {8, true, true, "RxData"},
-        invalid,
-        {8, true, false, "RxDone"},
-        invalid,
-        {8, true, false, "RxWait"},
-        invalid,
-        {8, true, true, "TxData"},
-        invalid,
-        {8, true, false, "TxDone"},
-        invalid,
-        {8, true, false, "TxWait"},
-        invalid,
-        {8, true, false, "HwAddr"},
-        invalid,
-        {8, true, false, "RxStatus"},
-        invalid,
+        {4, true, true, "Config"},        {4, false, true, "Command"},
+        {4, true, true, "IntrStatus"},    {4, true, true, "IntrMask"},
+        {4, true, false, "RxMaxCopy"},    {4, true, false, "TxMaxCopy"},
+        {4, true, false, "ZeroCopySize"}, {4, true, false, "ZeroCopyMark"},
+        {4, true, false, "VirtualCount"}, {4, true, false, "RxMaxIntr"},
+        {4, true, false, "RxFifoSize"},   {4, true, false, "TxFifoSize"},
+        {4, true, false, "RxFifoLow"},    {4, true, false, "TxFifoLow"},
+        {4, true, false, "RxFifoHigh"},   {4, true, false, "TxFifoHigh"},
+        {8, true, true, "RxData"},        invalid,
+        {8, true, false, "RxDone"},       invalid,
+        {8, true, false, "RxWait"},       invalid,
+        {8, true, true, "TxData"},        invalid,
+        {8, true, false, "TxDone"},       invalid,
+        {8, true, false, "TxWait"},       invalid,
+        {8, true, false, "HwAddr"},       invalid,
+        {8, true, false, "RxStatus"},     invalid,
     };
 
     return info[daddr / 4];

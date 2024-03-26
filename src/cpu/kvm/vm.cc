@@ -59,8 +59,8 @@ namespace gem5
 namespace
 {
 constexpr int ExpectedKvmApiVersion = 12;
-static_assert(
-    KVM_API_VERSION == ExpectedKvmApiVersion, "Unsupported KVM version");
+static_assert(KVM_API_VERSION == ExpectedKvmApiVersion,
+              "Unsupported KVM version");
 
 } // anonymous namespace
 
@@ -235,8 +235,8 @@ Kvm::getSupportedCPUID() const
             cpuid->nent = i;
             ++i;
         } while (!getSupportedCPUID(*cpuid));
-        supportedCPUIDCache.assign(
-            cpuid->entries, cpuid->entries + cpuid->nent);
+        supportedCPUIDCache.assign(cpuid->entries,
+                                   cpuid->entries + cpuid->nent);
     }
 
     return supportedCPUIDCache;
@@ -305,14 +305,14 @@ Kvm::createVM()
     return vmFD;
 }
 
-KvmVM::KvmVM(const KvmVMParams &params) :
-    SimObject(params),
-    kvm(new Kvm()),
-    system(params.system),
-    vmFD(kvm->createVM()),
-    started(false),
-    _hasKernelIRQChip(false),
-    nextVCPUID(0)
+KvmVM::KvmVM(const KvmVMParams &params)
+    : SimObject(params),
+      kvm(new Kvm()),
+      system(params.system),
+      vmFD(kvm->createVM()),
+      started(false),
+      _hasKernelIRQChip(false),
+      nextVCPUID(0)
 {
     system->setKvmVM(this);
     maxMemorySlot = kvm->capNumMemSlots();
@@ -375,7 +375,7 @@ KvmVM::delayedStartup()
 
         if (pmem) {
             DPRINTF(Kvm, "Mapping region: 0x%p -> 0x%llx [size: 0x%llx]\n",
-                pmem, range.start(), range.size());
+                    pmem, range.start(), range.size());
 
             if (range.interleaved()) {
                 panic("Tried to map an interleaved memory range into "
@@ -420,8 +420,8 @@ KvmVM::allocMemSlot(uint64_t size)
 }
 
 void
-KvmVM::setupMemSlot(
-    const KvmVM::MemSlot num, void *host_addr, Addr guest, uint32_t flags)
+KvmVM::setupMemSlot(const KvmVM::MemSlot num, void *host_addr, Addr guest,
+                    uint32_t flags)
 {
     MemorySlot &slot = memorySlots.at(num.num);
     slot.active = true;
@@ -447,7 +447,7 @@ KvmVM::freeMemSlot(const KvmVM::MemSlot num)
 
 void
 KvmVM::setUserMemoryRegion(uint32_t slot, void *host_addr, Addr guest_addr,
-    uint64_t len, uint32_t flags)
+                           uint64_t len, uint32_t flags)
 {
     struct kvm_userspace_memory_region m;
 
@@ -462,8 +462,8 @@ KvmVM::setUserMemoryRegion(uint32_t slot, void *host_addr, Addr guest_addr,
         panic("Failed to setup KVM memory region:\n"
               "\tHost Address: 0x%p\n"
               "\tGuest Address: 0x%llx\n",
-            "\tSize: %ll\n", "\tFlags: 0x%x\n", m.userspace_addr,
-            m.guest_phys_addr, m.memory_size, m.flags);
+              "\tSize: %ll\n", "\tFlags: 0x%x\n", m.userspace_addr,
+              m.guest_phys_addr, m.memory_size, m.flags);
     }
 }
 
@@ -483,7 +483,7 @@ KvmVM::coalesceMMIO(Addr start, int size)
     zone.pad = 0;
 
     DPRINTF(Kvm, "KVM: Registering coalesced MMIO region [0x%x, 0x%x]\n",
-        zone.addr, zone.addr + zone.size - 1);
+            zone.addr, zone.addr + zone.size - 1);
     if (ioctl(KVM_REGISTER_COALESCED_MMIO, (void *)&zone) == -1)
         panic("KVM: Failed to register coalesced MMIO region (%i)\n", errno);
 }
@@ -579,7 +579,7 @@ KvmVM::kvmArmPreferredTarget(struct kvm_vcpu_init &target) const
 {
     if (ioctl(KVM_ARM_PREFERRED_TARGET, &target) == -1) {
         panic("KVM: Failed to get ARM preferred CPU target (errno: %i)\n",
-            errno);
+              errno);
     }
 }
 #endif

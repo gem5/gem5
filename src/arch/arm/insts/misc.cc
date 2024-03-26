@@ -213,8 +213,8 @@ RegOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-RegRegRegImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegRegImmOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -228,8 +228,8 @@ RegRegRegImmOp::generateDisassembly(
 }
 
 std::string
-RegRegRegRegOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegRegRegOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -244,8 +244,8 @@ RegRegRegRegOp::generateDisassembly(
 }
 
 std::string
-RegRegRegOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegRegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -258,8 +258,8 @@ RegRegRegOp::generateDisassembly(
 }
 
 std::string
-RegRegImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegImmOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -271,8 +271,8 @@ RegRegImmOp::generateDisassembly(
 }
 
 std::string
-MiscRegRegImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MiscRegRegImmOp::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -283,8 +283,8 @@ MiscRegRegImmOp::generateDisassembly(
 }
 
 std::string
-RegMiscRegImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegMiscRegImmOp::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -295,8 +295,8 @@ RegMiscRegImmOp::generateDisassembly(
 }
 
 std::string
-RegImmImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegImmImmOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -306,8 +306,8 @@ RegImmImmOp::generateDisassembly(
 }
 
 std::string
-RegRegImmImmOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegImmImmOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -319,8 +319,8 @@ RegRegImmImmOp::generateDisassembly(
 }
 
 std::string
-RegImmRegOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegImmRegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -331,8 +331,8 @@ RegImmRegOp::generateDisassembly(
 }
 
 std::string
-RegImmRegShiftOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegImmRegShiftOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -344,15 +344,15 @@ RegImmRegShiftOp::generateDisassembly(
 }
 
 std::string
-UnknownOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+UnknownOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (inst %#08x)", "unknown", encoding());
 }
 
 McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
-    uint64_t _iss, MiscRegIndex _miscReg) :
-    ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+                               uint64_t _iss, MiscRegIndex _miscReg)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
 {
     flags[IsNonSpeculative] = true;
     iss = _iss;
@@ -366,15 +366,16 @@ McrMrcMiscInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 std::string
-McrMrcMiscInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+McrMrcMiscInst::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (pipe flush)", mnemonic);
 }
 
 McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
-    ExtMachInst _machInst, uint64_t _iss, MiscRegIndex _miscReg) :
-    McrMrcMiscInst(_mnemonic, _machInst, _iss, _miscReg)
+                                     ExtMachInst _machInst, uint64_t _iss,
+                                     MiscRegIndex _miscReg)
+    : McrMrcMiscInst(_mnemonic, _machInst, _iss, _miscReg)
 {}
 
 Fault
@@ -384,14 +385,14 @@ McrMrcImplDefined::execute(ExecContext *xc, trace::InstRecord *traceData) const
     if (fault != NoFault) {
         return fault;
     } else {
-        return std::make_shared<UndefinedInstruction>(
-            machInst, false, mnemonic);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
     }
 }
 
 std::string
-McrMrcImplDefined::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+McrMrcImplDefined::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (implementation defined)", mnemonic);
 }
@@ -445,8 +446,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIMVA tlbiOp(
-            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), false);
+        TLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0),
+                       false);
 
         tlbiOp(tc);
         return;
@@ -456,8 +457,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIMVA tlbiOp(
-            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), true);
+        TLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0),
+                       true);
 
         tlbiOp(tc);
         return;
@@ -467,8 +468,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIMVA tlbiOp(
-            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), false);
+        TLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0),
+                       false);
 
         tlbiOp.broadcast(tc);
         return;
@@ -478,8 +479,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIMVA tlbiOp(
-            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), true);
+        TLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0),
+                       true);
 
         tlbiOp.broadcast(tc);
         return;
@@ -589,8 +590,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIIPA tlbiOp(
-            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, false);
+        TLBIIPA tlbiOp(EL1, secure,
+                       static_cast<Addr>(bits(value, 35, 0)) << 12, false);
 
         tlbiOp(tc);
         return;
@@ -601,8 +602,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIIPA tlbiOp(
-            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, true);
+        TLBIIPA tlbiOp(EL1, secure,
+                       static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
         tlbiOp(tc);
         return;
@@ -613,8 +614,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIIPA tlbiOp(
-            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, false);
+        TLBIIPA tlbiOp(EL1, secure,
+                       static_cast<Addr>(bits(value, 35, 0)) << 12, false);
 
         tlbiOp.broadcast(tc);
         return;
@@ -625,8 +626,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-        TLBIIPA tlbiOp(
-            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, true);
+        TLBIIPA tlbiOp(EL1, secure,
+                       static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
         tlbiOp.broadcast(tc);
         return;

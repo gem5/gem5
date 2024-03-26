@@ -54,8 +54,8 @@ namespace ruby
 struct MachineID
 {
     MachineID() : type(MachineType_NUM), num(0) {}
-    MachineID(MachineType mach_type, NodeID node_id) :
-        type(mach_type), num(node_id)
+    MachineID(MachineType mach_type, NodeID node_id)
+        : type(mach_type), num(node_id)
     {}
 
     MachineType type;

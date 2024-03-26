@@ -43,10 +43,10 @@
 #include <sys/stat.h>
 
 #if defined(__FreeBSD__)
-#    include <termios.h>
+#include <termios.h>
 
 #else
-#    include <sys/termios.h>
+#include <sys/termios.h>
 
 #endif
 #include "base/vnc/vncserver.hh"
@@ -70,10 +70,12 @@
 
 namespace gem5
 {
-const PixelConverter VncServer::pixelConverter(4, // 4 bytes / pixel
-    16, 8, 0, // R in [23, 16], G in [15, 8], B in [7, 0]
-    8, 8, 8,  // 8 bits / channel
-    ByteOrder::little);
+const PixelConverter
+    VncServer::pixelConverter(4, // 4 bytes / pixel
+                              16, 8,
+                              0, // R in [23, 16], G in [15, 8], B in [7, 0]
+                              8, 8, 8, // 8 bits / channel
+                              ByteOrder::little);
 
 /** @file
  * Implementiation of a VNC server
@@ -82,8 +84,8 @@ const PixelConverter VncServer::pixelConverter(4, // 4 bytes / pixel
 /**
  * Poll event for the listen socket
  */
-VncServer::ListenEvent::ListenEvent(VncServer *vs, int fd, int e) :
-    PollEvent(fd, e), vncserver(vs)
+VncServer::ListenEvent::ListenEvent(VncServer *vs, int fd, int e)
+    : PollEvent(fd, e), vncserver(vs)
 {}
 
 void
@@ -95,8 +97,8 @@ VncServer::ListenEvent::process(int revent)
 /**
  * Poll event for the data socket
  */
-VncServer::DataEvent::DataEvent(VncServer *vs, int fd, int e) :
-    PollEvent(fd, e), vncserver(vs)
+VncServer::DataEvent::DataEvent(VncServer *vs, int fd, int e)
+    : PollEvent(fd, e), vncserver(vs)
 {}
 
 void
@@ -111,16 +113,16 @@ VncServer::DataEvent::process(int revent)
 /**
  * VncServer
  */
-VncServer::VncServer(const Params &p) :
-    VncInput(p),
-    listenEvent(NULL),
-    dataEvent(NULL),
-    number(p.number),
-    dataFd(-1),
-    listener(p.port.build(p.name)),
-    sendUpdate(false),
-    supportsRawEnc(false),
-    supportsResizeEnc(false)
+VncServer::VncServer(const Params &p)
+    : VncInput(p),
+      listenEvent(NULL),
+      dataEvent(NULL),
+      number(p.number),
+      dataFd(-1),
+      listener(p.port.build(p.name)),
+      sendUpdate(false),
+      supportsRawEnc(false),
+      supportsResizeEnc(false)
 {
     if (p.port)
         listen();
@@ -258,7 +260,7 @@ VncServer::data()
             break;
         default:
             warn("Unimplemented message type recv from client: %d\n",
-                message_type);
+                 message_type);
             detach();
             break;
         }
@@ -383,7 +385,7 @@ VncServer::checkProtocolVersion()
 
     // Figure out the major/minor numbers
     if (sscanf(version_string, "RFB %03d.%03d\n", &major_version,
-            &minor_version) != 2) {
+               &minor_version) != 2) {
         warn(" Malformed protocol version %s\n", version_string);
         sendError("Malformed protocol version\n");
         detach();
@@ -391,7 +393,7 @@ VncServer::checkProtocolVersion()
     }
 
     DPRINTF(VNC, "Client request protocol version %d.%d\n", major_version,
-        minor_version);
+            minor_version);
 
     // If it's not 3.X we don't support it
     if (major_version != 3 || minor_version < 2) {
@@ -479,12 +481,12 @@ VncServer::setPixelFormat()
         return;
 
     DPRINTF(VNC, " -- bpp = %d; depth = %d; be = %d\n", pfm.px.bpp,
-        pfm.px.depth, pfm.px.bigendian);
+            pfm.px.depth, pfm.px.bigendian);
     DPRINTF(VNC, " -- true color = %d red,green,blue max = %d,%d,%d\n",
-        pfm.px.truecolor, betoh(pfm.px.redmax), betoh(pfm.px.greenmax),
-        betoh(pfm.px.bluemax));
+            pfm.px.truecolor, betoh(pfm.px.redmax), betoh(pfm.px.greenmax),
+            betoh(pfm.px.bluemax));
     DPRINTF(VNC, " -- red,green,blue shift = %d,%d,%d\n", pfm.px.redshift,
-        pfm.px.greenshift, pfm.px.blueshift);
+            pfm.px.greenshift, pfm.px.blueshift);
 
     if (betoh(pfm.px.bpp) != pixelFormat.bpp ||
         betoh(pfm.px.depth) != pixelFormat.depth ||
@@ -552,7 +554,7 @@ VncServer::requestFbUpdate()
     fbr.height = betoh(fbr.height);
 
     DPRINTF(VNC, " -- x = %d y = %d w = %d h = %d\n", fbr.x, fbr.y, fbr.width,
-        fbr.height);
+            fbr.height);
 
     sendFrameBufferUpdate();
 }
@@ -567,7 +569,7 @@ VncServer::recvKeyboardInput()
 
     kem.key = betoh(kem.key);
     DPRINTF(VNC, " -- received key code %d (%s)\n", kem.key,
-        kem.down_flag ? "down" : "up");
+            kem.down_flag ? "down" : "up");
 
     if (keyboard)
         keyboard->keyPress(kem.key, kem.down_flag);
@@ -585,7 +587,7 @@ VncServer::recvPointerInput()
     pem.x = betoh(pem.x);
     pem.y = betoh(pem.y);
     DPRINTF(VNC, " -- pointer at x = %d y = %d buttons = %#x\n", pem.x, pem.y,
-        pem.button_mask);
+            pem.button_mask);
 
     if (mouse)
         mouse->mouseAt(pem.x, pem.y, pem.button_mask);

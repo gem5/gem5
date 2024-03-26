@@ -72,7 +72,7 @@ inline void
 minorInst(const Named &named, const char *fmt, Args... args)
 {
     DPRINTFS(MinorTrace, &named, (std::string("MinorInst: ") + fmt).c_str(),
-        args...);
+             args...);
 }
 
 /** DPRINTFN for MinorTrace MinorLine line reporting */
@@ -81,7 +81,7 @@ inline void
 minorLine(const Named &named, const char *fmt, Args... args)
 {
     DPRINTFS(MinorTrace, &named, (std::string("MinorLine: ") + fmt).c_str(),
-        args...);
+             args...);
 }
 
 } // namespace minor

@@ -94,8 +94,8 @@ archPrctlFunc(SyscallDesc *desc, ThreadContext *tc, int code, uint64_t addr)
 }
 
 SyscallReturn
-setThreadArea32Func(
-    SyscallDesc *desc, ThreadContext *tc, VPtr<UserDesc32> userDesc)
+setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
+                    VPtr<UserDesc32> userDesc)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;
@@ -109,9 +109,9 @@ setThreadArea32Func(
 
     assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86p->gdtSize());
 
-    TypedBufferArg<uint64_t> gdt(
-        x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
-        numTLSEntries * sizeof(uint64_t));
+    TypedBufferArg<uint64_t> gdt(x86p->gdtStart() +
+                                     minTLSEntry * sizeof(uint64_t),
+                                 numTLSEntries * sizeof(uint64_t));
 
     if (!gdt.copyIn(proxy))
         panic("Failed to copy in GDT for %s.\n", desc->name());

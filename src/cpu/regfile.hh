@@ -48,12 +48,12 @@ class RegFile
   public:
     const RegClass &regClass;
 
-    RegFile(const RegClass &info, const size_t new_size) :
-        data(new_size << info.regShift()),
-        _size(new_size),
-        _regShift(info.regShift()),
-        _regBytes(info.regBytes()),
-        regClass(info)
+    RegFile(const RegClass &info, const size_t new_size)
+        : data(new_size << info.regShift()),
+          _size(new_size),
+          _regShift(info.regShift()),
+          _regBytes(info.regBytes()),
+          regClass(info)
     {}
 
     RegFile(const RegClass &info) : RegFile(info, info.numRegs()) {}
@@ -86,8 +86,8 @@ class RegFile
     reg(size_t idx) const
     {
         assert(sizeof(Reg) == _regBytes && idx < _size);
-        return *reinterpret_cast<const Reg *>(
-            data.data() + (idx << _regShift));
+        return *reinterpret_cast<const Reg *>(data.data() +
+                                              (idx << _regShift));
     }
 
     void *

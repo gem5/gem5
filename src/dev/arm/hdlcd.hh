@@ -347,8 +347,8 @@ class HDLcd : public AmbaDmaDevice
     class PixelPump : public BasePixelPump
     {
       public:
-        PixelPump(HDLcd &p, ClockDomain &pxl_clk, unsigned pixel_chunk) :
-            BasePixelPump(p, pxl_clk, pixel_chunk), parent(p)
+        PixelPump(HDLcd &p, ClockDomain &pxl_clk, unsigned pixel_chunk)
+            : BasePixelPump(p, pxl_clk, pixel_chunk), parent(p)
         {}
 
         void dumpSettings();
@@ -360,8 +360,8 @@ class HDLcd : public AmbaDmaDevice
             return parent.pxlNext(p);
         }
         size_t
-        nextLine(
-            std::vector<Pixel>::iterator pixel_it, size_t line_length) override
+        nextLine(std::vector<Pixel>::iterator pixel_it,
+                 size_t line_length) override
         {
             return parent.lineNext(pixel_it, line_length);
         }
@@ -418,8 +418,8 @@ class HDLcd : public AmbaDmaDevice
     {
       public:
         DmaEngine(HDLcd &_parent, size_t size, unsigned request_size,
-            unsigned max_pending, size_t line_size, ssize_t line_pitch,
-            unsigned num_lines);
+                  unsigned max_pending, size_t line_size, ssize_t line_pitch,
+                  unsigned num_lines);
 
         void startFrame(Addr fb_base);
         void abortFrame();

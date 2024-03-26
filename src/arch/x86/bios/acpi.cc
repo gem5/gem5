@@ -108,7 +108,7 @@ RSDP::write(PortProxy &phys_proxy, Allocator &alloc) const
 
     Mem *data = (Mem *)mem.data();
     static_assert(sizeof(signature) - 1 == sizeof(data->signature),
-        "signature length mismatch");
+                  "signature length mismatch");
     std::memcpy(data->signature, signature, sizeof(data->signature));
     fillCopy(data->oemID, sizeof(data->oemID), params().oem_id);
     data->revision = params().revision;
@@ -134,8 +134,8 @@ RSDP::write(PortProxy &phys_proxy, Allocator &alloc) const
 }
 
 Addr
-SysDescTable::writeBuf(
-    PortProxy &phys_proxy, Allocator &alloc, std::vector<uint8_t> &mem) const
+SysDescTable::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                       std::vector<uint8_t> &mem) const
 {
     // An empty SysDescTable doesn't make any sense, so assert that somebody
     // else allocated a large enough blob.
@@ -145,7 +145,7 @@ SysDescTable::writeBuf(
     Addr addr = alloc.alloc(mem.size());
 
     DPRINTF(ACPI, "Writing system description table [%llx - %llx]\n", addr,
-        addr + mem.size());
+            addr + mem.size());
 
     // Fill in the header.
     auto &p = params();
@@ -170,14 +170,14 @@ SysDescTable::writeBuf(
 
 //// RSDT, XSDT
 template <class T>
-RXSDT<T>::RXSDT(const Params &p, const char *_signature, uint8_t _revision) :
-    SysDescTable(p, _signature, _revision)
+RXSDT<T>::RXSDT(const Params &p, const char *_signature, uint8_t _revision)
+    : SysDescTable(p, _signature, _revision)
 {}
 
 template <class T>
 Addr
-RXSDT<T>::writeBuf(
-    PortProxy &phys_proxy, Allocator &alloc, std::vector<uint8_t> &mem) const
+RXSDT<T>::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                   std::vector<uint8_t> &mem) const
 {
     // Since this table ends with a variably sized array, it can't be extended
     // by another table type.
@@ -189,11 +189,11 @@ RXSDT<T>::writeBuf(
 
     Ptr *ptr_array = reinterpret_cast<Ptr *>(mem.data() + base_size);
     DPRINTF(ACPI, "RXSDT: Writing %d entries (ptr size: %d)\n", entries.size(),
-        sizeof(Ptr));
+            sizeof(Ptr));
     for (const auto *entry : entries) {
         Addr entry_addr = entry->write(phys_proxy, alloc);
         fatal_if((entry_addr & mask(sizeof(Ptr) * 8)) != entry_addr,
-            "RXSDT: Entry address doesn't fit in pointer type.");
+                 "RXSDT: Entry address doesn't fit in pointer type.");
         DPRINTF(ACPI, "RXSDT: wrote entry @ %llx\n", entry_addr);
         *ptr_array++ = entry_addr;
     }
@@ -206,13 +206,13 @@ RSDT::RSDT(const Params &p) : RXSDT(p, "RSDT", 1) { entries = p.entries; }
 XSDT::XSDT(const Params &p) : RXSDT(p, "XSDT", 1) { entries = p.entries; }
 
 //// MADT
-MADT::MADT::MADT(const Params &p) :
-    SysDescTable(p, "APIC", 4), records(p.records)
+MADT::MADT::MADT(const Params &p)
+    : SysDescTable(p, "APIC", 4), records(p.records)
 {}
 
 Addr
-MADT::MADT::writeBuf(
-    PortProxy &phys_proxy, Allocator &alloc, std::vector<uint8_t> &mem) const
+MADT::MADT::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                     std::vector<uint8_t> &mem) const
 {
     // Since this table ends with a variably sized array, it can't be extended
     // by another table type.
@@ -229,7 +229,7 @@ MADT::MADT::writeBuf(
     }
 
     DPRINTF(ACPI, "MADT: writing %d records (size: %d)\n", records.size(),
-        mem.size());
+            mem.size());
 
     return SysDescTable::writeBuf(phys_proxy, alloc, mem);
 }
@@ -238,8 +238,8 @@ void
 MADT::Record::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.size() >= sizeof(Mem));
-    DPRINTF(
-        ACPI, "MADT: writing record type %d (size: %d)\n", type, mem.size());
+    DPRINTF(ACPI, "MADT: writing record type %d (size: %d)\n", type,
+            mem.size());
 
     Mem *header = reinterpret_cast<Mem *>(mem.data());
     header->type = type;

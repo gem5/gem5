@@ -36,9 +36,9 @@ namespace gem5
 {
 namespace o3
 {
-UnifiedFreeList::UnifiedFreeList(
-    const std::string &_my_name, PhysRegFile *_regFile) :
-    _name(_my_name), regFile(_regFile)
+UnifiedFreeList::UnifiedFreeList(const std::string &_my_name,
+                                 PhysRegFile *_regFile)
+    : _name(_my_name), regFile(_regFile)
 {
     DPRINTF(FreeList, "Creating new free list object.\n");
 

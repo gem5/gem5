@@ -65,8 +65,9 @@ enum IntDeliveryMode
     NumModes
 };
 
-static const char *const names[NumModes] = {"Fixed", "LowestPriority", "SMI",
-    "Reserved", "NMI", "INIT", "Startup", "ExtInt"};
+static const char *const names[NumModes] = {
+    "Fixed", "LowestPriority", "SMI",     "Reserved",
+    "NMI",   "INIT",           "Startup", "ExtInt"};
 
 static inline bool
 isReserved(int mode)

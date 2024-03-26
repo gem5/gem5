@@ -53,7 +53,7 @@ scfx_tc2csd(scfx_string &s, int w_prefix)
 {
     if (w_prefix != 0) {
         SC_ASSERT_(s[0] == '0' && s[1] == 'c' && s[2] == 's' && s[3] == 'd',
-            "invalid prefix");
+                   "invalid prefix");
     }
 
     scfx_string csd;
@@ -105,9 +105,9 @@ scfx_tc2csd(scfx_string &s, int w_prefix)
 void
 scfx_csd2tc(scfx_string &csd)
 {
-    SC_ASSERT_(
-        csd[0] == '0' && csd[1] == 'c' && csd[2] == 's' && csd[3] == 'd',
-        "invalid prefix");
+    SC_ASSERT_(csd[0] == '0' && csd[1] == 'c' && csd[2] == 's' &&
+                   csd[3] == 'd',
+               "invalid prefix");
 
     scfx_string s;
 

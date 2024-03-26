@@ -47,22 +47,23 @@ TraceRecord::print(std::ostream &out) const
         << "]";
 }
 
-CacheRecorder::CacheRecorder() :
-    m_uncompressed_trace(NULL),
-    m_uncompressed_trace_size(0),
-    m_block_size_bytes(RubySystem::getBlockSizeBytes())
+CacheRecorder::CacheRecorder()
+    : m_uncompressed_trace(NULL),
+      m_uncompressed_trace_size(0),
+      m_block_size_bytes(RubySystem::getBlockSizeBytes())
 {}
 
 CacheRecorder::CacheRecorder(uint8_t *uncompressed_trace,
-    uint64_t uncompressed_trace_size, std::vector<RubyPort *> &ruby_port_map,
-    uint64_t block_size_bytes) :
-    m_uncompressed_trace(uncompressed_trace),
-    m_uncompressed_trace_size(uncompressed_trace_size),
-    m_ruby_port_map(ruby_port_map),
-    m_bytes_read(0),
-    m_records_read(0),
-    m_records_flushed(0),
-    m_block_size_bytes(block_size_bytes)
+                             uint64_t uncompressed_trace_size,
+                             std::vector<RubyPort *> &ruby_port_map,
+                             uint64_t block_size_bytes)
+    : m_uncompressed_trace(uncompressed_trace),
+      m_uncompressed_trace_size(uncompressed_trace_size),
+      m_ruby_port_map(ruby_port_map),
+      m_bytes_read(0),
+      m_records_read(0),
+      m_records_flushed(0),
+      m_block_size_bytes(block_size_bytes)
 
 {
     if (m_uncompressed_trace != NULL) {
@@ -92,8 +93,9 @@ CacheRecorder::enqueueNextFlushRequest()
     if (m_records_flushed < m_records.size()) {
         TraceRecord *rec = m_records[m_records_flushed];
         m_records_flushed++;
-        auto req = std::make_shared<Request>(rec->m_data_address,
-            m_block_size_bytes, 0, Request::funcRequestorId);
+        auto req =
+            std::make_shared<Request>(rec->m_data_address, m_block_size_bytes,
+                                      0, Request::funcRequestorId);
         MemCmd::Command requestType = MemCmd::FlushReq;
         Packet *pkt = new Packet(req, requestType);
         pkt->req->setReqInstSeqNum(m_records_flushed);
@@ -166,7 +168,7 @@ CacheRecorder::enqueueNextFetchRequest()
 
 void
 CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
-    RubyRequestType type, Tick time, DataBlock &data)
+                         RubyRequestType type, Tick time, DataBlock &data)
 {
     TraceRecord *rec =
         (TraceRecord *)malloc(sizeof(TraceRecord) + m_block_size_bytes);
@@ -175,11 +177,11 @@ CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
     rec->m_data_address = data_addr;
     rec->m_pc_address = pc_addr;
     rec->m_type = type;
-    memcpy(
-        rec->m_data, data.getData(0, m_block_size_bytes), m_block_size_bytes);
+    memcpy(rec->m_data, data.getData(0, m_block_size_bytes),
+           m_block_size_bytes);
 
     DPRINTF(RubyCacheTrace, "Inside addRecord with cntrl id %d and type %d\n",
-        cntrl, type);
+            cntrl, type);
     m_records.push_back(rec);
 }
 
@@ -197,8 +199,8 @@ CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
         if (current_size + record_size > total_size) {
             uint8_t *new_buf = new (std::nothrow) uint8_t[total_size * 2];
             if (new_buf == NULL) {
-                fatal(
-                    "Unable to allocate buffer of size %s\n", total_size * 2);
+                fatal("Unable to allocate buffer of size %s\n",
+                      total_size * 2);
             }
             total_size = total_size * 2;
             uint8_t *old_buf = *buf;

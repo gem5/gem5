@@ -33,10 +33,10 @@
 #include "base/random.hh"
 #include "traffic_generator.hh"
 
-TrafficGenerator::TrafficGenerator(sc_core::sc_module_name name) :
-    sc_core::sc_module(name),
-    requestInProgress(0),
-    peq(this, &TrafficGenerator::peq_cb)
+TrafficGenerator::TrafficGenerator(sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
+      requestInProgress(0),
+      peq(this, &TrafficGenerator::peq_cb)
 {
     socket.register_nb_transport_bw(this, &TrafficGenerator::nb_transport_bw);
     SC_THREAD(process);
@@ -103,8 +103,8 @@ TrafficGenerator::process()
 }
 
 void
-TrafficGenerator::peq_cb(
-    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
+TrafficGenerator::peq_cb(tlm::tlm_generic_payload &trans,
+                         const tlm::tlm_phase &phase)
 {
     if (phase == tlm::END_REQ ||
         (&trans == requestInProgress && phase == tlm::BEGIN_RESP)) {
@@ -112,8 +112,8 @@ TrafficGenerator::peq_cb(
         requestInProgress = 0;
         endRequestEvent.notify();
     } else if (phase == tlm::BEGIN_REQ || phase == tlm::END_RESP)
-        SC_REPORT_FATAL(
-            "TLM-2", "Illegal transaction phase received by initiator");
+        SC_REPORT_FATAL("TLM-2",
+                        "Illegal transaction phase received by initiator");
 
     if (phase == tlm::BEGIN_RESP) {
         checkTransaction(trans);
@@ -142,7 +142,8 @@ TrafficGenerator::checkTransaction(tlm::tlm_generic_payload &trans)
 
 tlm::tlm_sync_enum
 TrafficGenerator::nb_transport_bw(tlm::tlm_generic_payload &trans,
-    tlm::tlm_phase &phase, sc_core::sc_time &delay)
+                                  tlm::tlm_phase &phase,
+                                  sc_core::sc_time &delay)
 {
     trans.acquire();
     peq.notify(trans, phase, delay);

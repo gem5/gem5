@@ -65,7 +65,7 @@ class WeightedLRU : public LRU
 
     using Base::touch;
     void touch(const std::shared_ptr<ReplacementData> &replacement_data,
-        int occupancy) const;
+               int occupancy) const;
 
     /**
      * Instantiate a replacement data entry.
@@ -80,8 +80,8 @@ class WeightedLRU : public LRU
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry *getVictim(
-        const ReplacementCandidates &candidates) const override;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const override;
 };
 
 } // namespace replacement_policy

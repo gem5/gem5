@@ -37,11 +37,10 @@
 
 namespace gem5
 {
-CheckTable::CheckTable(
-    int _num_writers, int _num_readers, RubyTester *_tester) :
-    m_num_writers(_num_writers),
-    m_num_readers(_num_readers),
-    m_tester_ptr(_tester)
+CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester *_tester)
+    : m_num_writers(_num_writers),
+      m_num_readers(_num_readers),
+      m_tester_ptr(_tester)
 {
     Addr physical = 0;
 
@@ -103,7 +102,7 @@ CheckTable::addCheck(Addr address)
     DPRINTF(RubyTest, "Adding check for address: %s\n", address);
 
     Check *check_ptr = new Check(address, 100 + m_check_vector.size(),
-        m_num_writers, m_num_readers, m_tester_ptr);
+                                 m_num_writers, m_num_readers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
         // Insert it once per byte
         m_lookup_map[address + i] = check_ptr;
@@ -115,8 +114,8 @@ Check *
 CheckTable::getRandomCheck()
 {
     assert(m_check_vector.size() > 0);
-    return m_check_vector[random_mt.random<unsigned>(
-        0, m_check_vector.size() - 1)];
+    return m_check_vector[random_mt.random<unsigned>(0, m_check_vector.size() -
+                                                            1)];
 }
 
 Check *

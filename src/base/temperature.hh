@@ -120,14 +120,14 @@ class Temperature
         return Temperature(value - rhs.value);
     }
 
-    friend constexpr Temperature operator*(
-        const Temperature &lhs, const double &rhs);
+    friend constexpr Temperature operator*(const Temperature &lhs,
+                                           const double &rhs);
 
-    friend constexpr Temperature operator*(
-        const double &lhs, const Temperature &rhs);
+    friend constexpr Temperature operator*(const double &lhs,
+                                           const Temperature &rhs);
 
-    friend constexpr Temperature operator/(
-        const Temperature &lhs, const double &rhs);
+    friend constexpr Temperature operator/(const Temperature &lhs,
+                                           const double &rhs);
 
     Temperature &
     operator+=(const Temperature &rhs)

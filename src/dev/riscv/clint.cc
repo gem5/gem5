@@ -48,12 +48,12 @@ namespace gem5
 {
 using namespace RiscvISA;
 
-Clint::Clint(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    nThread(params.num_threads),
-    signal(params.name + ".signal", 0, this),
-    registers(params.name + ".registers", params.pio_addr, this)
+Clint::Clint(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      nThread(params.num_threads),
+      signal(params.name + ".signal", 0, this),
+      registers(params.name + ".registers", params.pio_addr, this)
 {}
 
 void
@@ -80,8 +80,8 @@ Clint::raiseInterruptPin(int id)
         if (mtime >= mtimecmp) {
             if (mtime == mtimecmp) {
                 DPRINTF(Clint,
-                    "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
-                    context_id, mtime, mtimecmp);
+                        "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
+                        context_id, mtime, mtimecmp);
             }
             tc->getCpuPtr()->postInterrupt(
                 tc->threadId(), ExceptionCode::INT_TIMER_MACHINE, 0);
@@ -149,8 +149,8 @@ Clint::writeMSIP(Register32 &reg, const uint32_t &data, const int thread_id)
     auto tc = system->threads[thread_id];
     if (data > 0) {
         DPRINTF(Clint, "MSIP posted - thread: %d\n", thread_id);
-        tc->getCpuPtr()->postInterrupt(
-            tc->threadId(), ExceptionCode::INT_SOFTWARE_MACHINE, 0);
+        tc->getCpuPtr()->postInterrupt(tc->threadId(),
+                                       ExceptionCode::INT_SOFTWARE_MACHINE, 0);
     } else {
         DPRINTF(Clint, "MSIP cleared - thread: %d\n", thread_id);
         tc->getCpuPtr()->clearInterrupt(
@@ -164,7 +164,7 @@ Clint::read(PacketPtr pkt)
     // Check for atomic operation
     bool is_atomic = pkt->isAtomicOp() && pkt->cmd == MemCmd::SwapReq;
     DPRINTF(Clint, "Read request - addr: %#x, size: %#x, atomic:%d\n",
-        pkt->getAddr(), pkt->getSize(), is_atomic);
+            pkt->getAddr(), pkt->getSize(), is_atomic);
 
     // Perform register read
     registers.read(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
@@ -183,7 +183,7 @@ Tick
 Clint::write(PacketPtr pkt)
 {
     DPRINTF(Clint, "Write request - addr: %#x, size: %#x\n", pkt->getAddr(),
-        pkt->getSize());
+            pkt->getSize());
 
     // Perform register write
     registers.write(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());

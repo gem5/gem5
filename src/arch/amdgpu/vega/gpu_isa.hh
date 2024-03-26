@@ -56,8 +56,8 @@ class GPUISA
     T
     readConstVal(int opIdx) const
     {
-        panic_if(
-            !std::is_integral_v<T>, "Constant values must be an integer.");
+        panic_if(!std::is_integral_v<T>,
+                 "Constant values must be an integer.");
         T val(0);
 
         if (isPosConstVal(opIdx)) {

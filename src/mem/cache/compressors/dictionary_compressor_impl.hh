@@ -60,8 +60,8 @@ DictionaryCompressor<T>::CompData::addEntry(std::unique_ptr<Pattern> pattern)
 }
 
 template <class T>
-DictionaryCompressor<T>::DictionaryCompressor(const Params &p) :
-    BaseDictionaryCompressor(p)
+DictionaryCompressor<T>::DictionaryCompressor(const Params &p)
+    : BaseDictionaryCompressor(p)
 {
     dictionary.resize(dictionarySize);
 
@@ -135,8 +135,8 @@ DictionaryCompressor<T>::compress(const std::vector<Chunk> &chunks)
     CompData *const comp_data_ptr = static_cast<CompData *>(comp_data.get());
     for (const auto &value : chunks) {
         std::unique_ptr<Pattern> pattern = compressValue(value);
-        DPRINTF(
-            CacheComp, "Compressed %016x to %s\n", value, pattern->print());
+        DPRINTF(CacheComp, "Compressed %016x to %s\n", value,
+                pattern->print());
         comp_data_ptr->addEntry(std::move(pattern));
     }
 
@@ -146,8 +146,8 @@ DictionaryCompressor<T>::compress(const std::vector<Chunk> &chunks)
 
 template <class T>
 std::unique_ptr<Base::CompressionData>
-DictionaryCompressor<T>::compress(
-    const std::vector<Chunk> &chunks, Cycles &comp_lat, Cycles &decomp_lat)
+DictionaryCompressor<T>::compress(const std::vector<Chunk> &chunks,
+                                  Cycles &comp_lat, Cycles &decomp_lat)
 {
     // Set latencies based on the degree of parallelization, and any extra
     // latencies due to shifting or packaging
@@ -179,8 +179,8 @@ DictionaryCompressor<T>::decompressValue(const Pattern *pattern)
 
 template <class T>
 void
-DictionaryCompressor<T>::decompress(
-    const CompressionData *comp_data, uint64_t *data)
+DictionaryCompressor<T>::decompress(const CompressionData *comp_data,
+                                    uint64_t *data)
 {
     const CompData *casted_comp_data =
         static_cast<const CompData *>(comp_data);

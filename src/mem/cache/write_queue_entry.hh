@@ -79,8 +79,8 @@ class WriteQueueEntry : public QueueEntry, public Printable
         TargetList() {}
         void add(PacketPtr pkt, Tick readyTime, Counter order);
         bool trySatisfyFunctional(PacketPtr pkt);
-        void print(
-            std::ostream &os, int verbosity, const std::string &prefix) const;
+        void print(std::ostream &os, int verbosity,
+                   const std::string &prefix) const;
     };
 
     /** A list of write queue entriess. */
@@ -119,7 +119,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
      * @param _order The logical order of this write.
      */
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-        Tick when_ready, Counter _order);
+                  Tick when_ready, Counter _order);
 
     /**
      * Mark this entry as free.
@@ -172,7 +172,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
      * Prints the contents of this MSHR for debugging.
      */
     void print(std::ostream &os, int verbosity = 0,
-        const std::string &prefix = "") const override;
+               const std::string &prefix = "") const override;
     /**
      * A no-args wrapper of print(std::ostream...)  meant to be
      * invoked from DPRINTFs avoiding string overheads in fast mode

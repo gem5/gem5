@@ -43,8 +43,8 @@ const int NumArchRegs = NumRegs;
 
 } // namespace float_reg
 
-inline constexpr RegClass floatRegClass(
-    FloatRegClass, FloatRegClassName, float_reg::NumRegs, debug::FloatRegs);
+inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
+                                        float_reg::NumRegs, debug::FloatRegs);
 
 } // namespace SparcISA
 } // namespace gem5

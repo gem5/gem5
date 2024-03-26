@@ -43,8 +43,8 @@
 
 namespace gem5
 {
-SMMURequestPort::SMMURequestPort(const std::string &_name, SMMUv3 &_smmu) :
-    RequestPort(_name), smmu(_smmu)
+SMMURequestPort::SMMURequestPort(const std::string &_name, SMMUv3 &_smmu)
+    : RequestPort(_name), smmu(_smmu)
 {}
 
 bool
@@ -59,8 +59,8 @@ SMMURequestPort::recvReqRetry()
     return smmu.recvReqRetry();
 }
 
-SMMUTableWalkPort::SMMUTableWalkPort(const std::string &_name, SMMUv3 &_smmu) :
-    RequestPort(_name), smmu(_smmu)
+SMMUTableWalkPort::SMMUTableWalkPort(const std::string &_name, SMMUv3 &_smmu)
+    : RequestPort(_name), smmu(_smmu)
 {}
 
 bool
@@ -75,11 +75,11 @@ SMMUTableWalkPort::recvReqRetry()
     return smmu.tableWalkRecvReqRetry();
 }
 
-SMMUDevicePort::SMMUDevicePort(
-    const std::string &_name, SMMUv3DeviceInterface &_ifc, PortID _id) :
-    QueuedResponsePort(_name, respQueue, _id),
-    ifc(_ifc),
-    respQueue(_ifc, *this)
+SMMUDevicePort::SMMUDevicePort(const std::string &_name,
+                               SMMUv3DeviceInterface &_ifc, PortID _id)
+    : QueuedResponsePort(_name, respQueue, _id),
+      ifc(_ifc),
+      respQueue(_ifc, *this)
 {}
 
 void
@@ -101,9 +101,9 @@ SMMUDevicePort::recvTimingReq(PacketPtr pkt)
     return ifc.recvTimingReq(pkt);
 }
 
-SMMUControlPort::SMMUControlPort(
-    const std::string &_name, SMMUv3 &_smmu, AddrRange _addrRange) :
-    SimpleTimingPort(_name, &_smmu), smmu(_smmu), addrRange(_addrRange)
+SMMUControlPort::SMMUControlPort(const std::string &_name, SMMUv3 &_smmu,
+                                 AddrRange _addrRange)
+    : SimpleTimingPort(_name, &_smmu), smmu(_smmu), addrRange(_addrRange)
 {}
 
 Tick
@@ -114,7 +114,7 @@ SMMUControlPort::recvAtomic(PacketPtr pkt)
 
     if (!addrRange.contains(addr) || !addrRange.contains(addr + size))
         panic("SMMU: invalid address on control port %x, packet size %d", addr,
-            size);
+              size);
 
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
@@ -130,12 +130,12 @@ SMMUControlPort::getAddrRanges() const
     return list;
 }
 
-SMMUATSMemoryPort::SMMUATSMemoryPort(
-    const std::string &_name, SMMUv3DeviceInterface &_ifc) :
-    QueuedRequestPort(_name, reqQueue, snoopRespQueue),
-    ifc(_ifc),
-    reqQueue(_ifc, *this),
-    snoopRespQueue(_ifc, *this)
+SMMUATSMemoryPort::SMMUATSMemoryPort(const std::string &_name,
+                                     SMMUv3DeviceInterface &_ifc)
+    : QueuedRequestPort(_name, reqQueue, snoopRespQueue),
+      ifc(_ifc),
+      reqQueue(_ifc, *this),
+      snoopRespQueue(_ifc, *this)
 {}
 
 bool
@@ -144,9 +144,9 @@ SMMUATSMemoryPort::recvTimingResp(PacketPtr pkt)
     return ifc.atsRecvTimingResp(pkt);
 }
 
-SMMUATSDevicePort::SMMUATSDevicePort(
-    const std::string &_name, SMMUv3DeviceInterface &_ifc) :
-    QueuedResponsePort(_name, respQueue), ifc(_ifc), respQueue(_ifc, *this)
+SMMUATSDevicePort::SMMUATSDevicePort(const std::string &_name,
+                                     SMMUv3DeviceInterface &_ifc)
+    : QueuedResponsePort(_name, respQueue), ifc(_ifc), respQueue(_ifc, *this)
 {}
 
 void

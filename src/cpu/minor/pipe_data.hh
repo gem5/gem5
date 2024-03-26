@@ -126,23 +126,24 @@ class BranchData /* : public ReportIF, public BubbleIF */
     BranchData() {}
 
     BranchData(Reason reason_, ThreadID thread_id,
-        InstSeqNum new_stream_seq_num, InstSeqNum new_prediction_seq_num,
-        const PCStateBase &_target, MinorDynInstPtr inst_) :
-        reason(reason_),
-        threadId(thread_id),
-        newStreamSeqNum(new_stream_seq_num),
-        newPredictionSeqNum(new_prediction_seq_num),
-        inst(inst_)
+               InstSeqNum new_stream_seq_num,
+               InstSeqNum new_prediction_seq_num, const PCStateBase &_target,
+               MinorDynInstPtr inst_)
+        : reason(reason_),
+          threadId(thread_id),
+          newStreamSeqNum(new_stream_seq_num),
+          newPredictionSeqNum(new_prediction_seq_num),
+          inst(inst_)
     {
         set(target, _target);
     }
 
-    BranchData(const BranchData &other) :
-        reason(other.reason),
-        threadId(other.threadId),
-        newStreamSeqNum(other.newStreamSeqNum),
-        newPredictionSeqNum(other.newPredictionSeqNum),
-        inst(other.inst)
+    BranchData(const BranchData &other)
+        : reason(other.reason),
+          threadId(other.threadId),
+          newStreamSeqNum(other.newStreamSeqNum),
+          newPredictionSeqNum(other.newPredictionSeqNum),
+          inst(other.inst)
     {
         set(target, other.target);
     }
@@ -238,16 +239,16 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
 
   public:
     ForwardLineData() {}
-    ForwardLineData(const ForwardLineData &other) :
-        bubbleFlag(other.bubbleFlag),
-        lineBaseAddr(other.lineBaseAddr),
-        pc(other.pc->clone()),
-        fetchAddr(other.fetchAddr),
-        lineWidth(other.lineWidth),
-        fault(other.fault),
-        id(other.id),
-        line(other.line),
-        packet(other.packet)
+    ForwardLineData(const ForwardLineData &other)
+        : bubbleFlag(other.bubbleFlag),
+          lineBaseAddr(other.lineBaseAddr),
+          pc(other.pc->clone()),
+          fetchAddr(other.fetchAddr),
+          lineWidth(other.lineWidth),
+          fault(other.fault),
+          id(other.id),
+          line(other.line),
+          packet(other.packet)
     {}
     ForwardLineData &
     operator=(const ForwardLineData &other)
@@ -326,8 +327,8 @@ class ForwardInstData /* : public ReportIF, public BubbleIF */
     ThreadID threadId;
 
   public:
-    explicit ForwardInstData(
-        unsigned int width = 0, ThreadID tid = InvalidThreadID);
+    explicit ForwardInstData(unsigned int width = 0,
+                             ThreadID tid = InvalidThreadID);
 
     ForwardInstData(const ForwardInstData &src);
 

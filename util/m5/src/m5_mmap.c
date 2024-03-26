@@ -53,7 +53,7 @@
 void *m5_mem = NULL;
 
 #ifndef M5OP_ADDR
-#    define M5OP_ADDR 0
+#define M5OP_ADDR 0
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 

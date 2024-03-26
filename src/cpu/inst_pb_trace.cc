@@ -68,8 +68,8 @@ InstPBTraceRecord::dump()
         tracer.traceMem(staticInst, getAddr(), getSize(), getFlags());
 }
 
-InstPBTrace::InstPBTrace(const InstPBTraceParams &p) :
-    InstTracer(p), buf(nullptr), bufSize(0), curMsg(nullptr)
+InstPBTrace::InstPBTrace(const InstPBTraceParams &p)
+    : InstTracer(p), buf(nullptr), bufSize(0), curMsg(nullptr)
 {
     // Create our output file
     createTraceFile(p.file_name);
@@ -116,7 +116,8 @@ InstPBTrace::~InstPBTrace() { closeStreams(); }
 
 InstPBTraceRecord *
 InstPBTrace::getInstRecord(Tick when, ThreadContext *tc,
-    const StaticInstPtr si, const PCStateBase &pc, const StaticInstPtr mi)
+                           const StaticInstPtr si, const PCStateBase &pc,
+                           const StaticInstPtr mi)
 {
     // Only record the trace if Exec debugging is enabled
     if (!debug::ExecEnable)
@@ -126,8 +127,8 @@ InstPBTrace::getInstRecord(Tick when, ThreadContext *tc,
 }
 
 void
-InstPBTrace::traceInst(
-    ThreadContext *tc, StaticInstPtr si, const PCStateBase &pc)
+InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si,
+                       const PCStateBase &pc)
 {
     if (curMsg) {
         // TODO if we are running multi-threaded I assume we'd need a lock here

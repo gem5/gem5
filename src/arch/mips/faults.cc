@@ -64,23 +64,23 @@ template <>
 FaultVals MipsFault<BreakpointFault>::vals = {"Breakpoint", 0x180, ExcCodeBp};
 
 template <>
-FaultVals MipsFault<DspStateDisabledFault>::vals = {
-    "DSP Disabled Fault", 0x180, ExcCodeDummy};
+FaultVals MipsFault<DspStateDisabledFault>::vals = {"DSP Disabled Fault",
+                                                    0x180, ExcCodeDummy};
 
 template <>
-FaultVals MipsFault<MachineCheckFault>::vals = {
-    "Machine Check", 0x180, ExcCodeMCheck};
+FaultVals MipsFault<MachineCheckFault>::vals = {"Machine Check", 0x180,
+                                                ExcCodeMCheck};
 
 template <>
 FaultVals MipsFault<ResetFault>::vals = {"Reset Fault", 0x000, ExcCodeDummy};
 
 template <>
-FaultVals MipsFault<SoftResetFault>::vals = {
-    "Soft Reset Fault", 0x000, ExcCodeDummy};
+FaultVals MipsFault<SoftResetFault>::vals = {"Soft Reset Fault", 0x000,
+                                             ExcCodeDummy};
 
 template <>
-FaultVals MipsFault<NonMaskableInterrupt>::vals = {
-    "Non Maskable Interrupt", 0x000, ExcCodeDummy};
+FaultVals MipsFault<NonMaskableInterrupt>::vals = {"Non Maskable Interrupt",
+                                                   0x000, ExcCodeDummy};
 
 template <>
 FaultVals MipsFault<CoprocessorUnusableFault>::vals = {
@@ -90,16 +90,16 @@ template <>
 FaultVals MipsFault<InterruptFault>::vals = {"Interrupt", 0x000, ExcCodeInt};
 
 template <>
-FaultVals MipsFault<AddressErrorFault>::vals = {
-    "Address Error", 0x180, ExcCodeDummy};
+FaultVals MipsFault<AddressErrorFault>::vals = {"Address Error", 0x180,
+                                                ExcCodeDummy};
 
 template <>
-FaultVals MipsFault<TlbInvalidFault>::vals = {
-    "Invalid TLB Entry Exception", 0x180, ExcCodeDummy};
+FaultVals MipsFault<TlbInvalidFault>::vals = {"Invalid TLB Entry Exception",
+                                              0x180, ExcCodeDummy};
 
 template <>
-FaultVals MipsFault<TlbRefillFault>::vals = {
-    "TLB Refill Exception", 0x180, ExcCodeDummy};
+FaultVals MipsFault<TlbRefillFault>::vals = {"TLB Refill Exception", 0x180,
+                                             ExcCodeDummy};
 
 template <>
 MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals = {
@@ -126,8 +126,8 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
     auto pc = tc->pcState().as<PCState>();
     DPRINTF(MipsPRA, "PC: %s\n", pc);
     bool delay_slot = pc.pc() + sizeof(MachInst) != pc.npc();
-    tc->setMiscRegNoEffect(
-        misc_reg::Epc, pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
+    tc->setMiscRegNoEffect(misc_reg::Epc,
+                           pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
 
     // Set Cause_EXCCODE field
     CauseReg cause = tc->readMiscReg(misc_reg::Cause);

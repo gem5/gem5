@@ -43,10 +43,10 @@
 
 namespace gem5
 {
-VirtIOBlock::VirtIOBlock(const Params &params) :
-    VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
-    qRequests(params.system->physProxy, byteOrder, params.queueSize, *this),
-    image(*params.image)
+VirtIOBlock::VirtIOBlock(const Params &params)
+    : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
+      qRequests(params.system->physProxy, byteOrder, params.queueSize, *this),
+      image(*params.image)
 {
     registerQueue(qRequests);
 
@@ -66,13 +66,13 @@ VirtIOBlock::readConfig(PacketPtr pkt, Addr cfgOffset)
 
 VirtIOBlock::Status
 VirtIOBlock::read(const BlkRequest &req, VirtDescriptor *desc_chain,
-    size_t off_data, size_t size)
+                  size_t off_data, size_t size)
 {
     std::vector<uint8_t> data(size);
     uint64_t sector(req.sector);
 
     DPRINTF(VIOBlock, "Read request starting @ sector %i (size: %i)\n", sector,
-        size);
+            size);
 
     if (size % SectorSize != 0)
         panic("Unexpected request/sector size relationship\n");
@@ -92,13 +92,13 @@ VirtIOBlock::read(const BlkRequest &req, VirtDescriptor *desc_chain,
 
 VirtIOBlock::Status
 VirtIOBlock::write(const BlkRequest &req, VirtDescriptor *desc_chain,
-    size_t off_data, size_t size)
+                   size_t off_data, size_t size)
 {
     std::vector<uint8_t> data(size);
     uint64_t sector(req.sector);
 
     DPRINTF(VIOBlock, "Write request starting @ sector %i (size: %i)\n",
-        sector, size);
+            sector, size);
 
     if (size % SectorSize != 0)
         panic("Unexpected request/sector size relationship\n");
@@ -130,8 +130,8 @@ VirtIOBlock::RequestQueue::onNotifyDescriptor(VirtDescriptor *desc)
     req.sector = htog(req.sector, byteOrder);
 
     Status status;
-    const size_t data_size(
-        desc->chainSize() - sizeof(BlkRequest) - sizeof(Status));
+    const size_t data_size(desc->chainSize() - sizeof(BlkRequest) -
+                           sizeof(Status));
 
     switch (req.type) {
     case T_IN:

@@ -139,7 +139,7 @@ class AddressManager
     void releaseLocation(Location atomic_loc, Location loc);
     // update a log table entry with a given set of values
     void updateLogTable(Location loc, int threadId, int episodeId,
-        Value new_value, Tick curTick, int cuId = -1);
+                        Value new_value, Tick curTick, int cuId = -1);
     // return the current value in the log table
     Value getLoggedValue(Location loc) const;
     // validate atomic response
@@ -154,8 +154,8 @@ class AddressManager
     class LastWriter
     {
       public:
-        LastWriter() :
-            threadId(-1), cuId(-1), episodeId(-1), value(0), writeTick(0)
+        LastWriter()
+            : threadId(-1), cuId(-1), episodeId(-1), value(0), writeTick(0)
         {}
 
         const std::string

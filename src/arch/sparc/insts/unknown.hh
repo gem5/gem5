@@ -42,8 +42,8 @@ class Unknown : public SparcStaticInst
 {
   public:
     // Constructor
-    Unknown(ExtMachInst _machInst) :
-        SparcStaticInst("unknown", _machInst, No_OpClass)
+    Unknown(ExtMachInst _machInst)
+        : SparcStaticInst("unknown", _machInst, No_OpClass)
     {}
 
     Fault
@@ -53,8 +53,8 @@ class Unknown : public SparcStaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return "Unknown instruction";
     }

@@ -47,13 +47,13 @@ namespace gem5
 {
 namespace RiscvISA
 {
-MmioVirtIO::MmioVirtIO(const RiscvMmioVirtIOParams &params) :
-    PlicIntDevice(params),
-    hostFeaturesSelect(0),
-    guestFeaturesSelect(0),
-    pageSize(0),
-    interruptStatus(0),
-    vio(*params.vio)
+MmioVirtIO::MmioVirtIO(const RiscvMmioVirtIOParams &params)
+    : PlicIntDevice(params),
+      hostFeaturesSelect(0),
+      guestFeaturesSelect(0),
+      pageSize(0),
+      interruptStatus(0),
+      vio(*params.vio)
 {
     vio.registerKickCallback([this]() { kick(); });
 }
@@ -190,7 +190,7 @@ MmioVirtIO::write(Addr offset, uint32_t value)
             vio.setGuestFeatures(value);
         } else if (value != 0) {
             warn("Setting unimplemented guest features register %u: %u\n",
-                guestFeaturesSelect, value);
+                 guestFeaturesSelect, value);
         }
         return;
 
@@ -201,7 +201,7 @@ MmioVirtIO::write(Addr offset, uint32_t value)
     case OFF_GUEST_PAGE_SIZE:
         // TODO: We only support 4096 byte pages at the moment
         panic_if(value != VirtQueue::ALIGN_SIZE,
-            "Unhandled VirtIO page size: %u", value);
+                 "Unhandled VirtIO page size: %u", value);
         pageSize = value;
         return;
 
@@ -218,7 +218,7 @@ MmioVirtIO::write(Addr offset, uint32_t value)
         // TODO: We currently only support the hard-coded 4k alignment used
         // in legacy VirtIO.
         panic_if(value != VirtQueue::ALIGN_SIZE,
-            "Unhandled VirtIO alignment size: %u", value);
+                 "Unhandled VirtIO alignment size: %u", value);
         return;
 
     case OFF_QUEUE_PFN:

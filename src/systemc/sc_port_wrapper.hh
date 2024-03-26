@@ -53,8 +53,8 @@ class ScPortWrapper : public gem5::Port
   public:
     using ScPort = sc_core::sc_port_b<IF>;
 
-    ScPortWrapper(ScPort &p, const std::string &name, gem5::PortID id) :
-        gem5::Port(name, id), port_(p)
+    ScPortWrapper(ScPort &p, const std::string &name, gem5::PortID id)
+        : gem5::Port(name, id), port_(p)
     {}
 
     ScPort &
@@ -84,7 +84,7 @@ class ScPortWrapper : public gem5::Port
             port_.bind(iface->interface());
         } else {
             fatal("Attempt to bind sc_port %s to incompatible port %s.",
-                name(), peer.name());
+                  name(), peer.name());
         }
         gem5::Port::bind(peer);
     }
@@ -97,8 +97,8 @@ template <typename IF>
 class ScInterfaceWrapper : public gem5::Port
 {
   public:
-    ScInterfaceWrapper(IF &i, const std::string name, gem5::PortID id) :
-        gem5::Port(name, id), iface_(i)
+    ScInterfaceWrapper(IF &i, const std::string name, gem5::PortID id)
+        : gem5::Port(name, id), iface_(i)
     {}
 
     IF &
@@ -123,8 +123,8 @@ class ScInterfaceWrapper : public gem5::Port
         // fatal error if peer is neither ScPortWrapper nor ScExportWrapper
         fatal_if(!dynamic_cast<ScPortWrapper<IF> *>(&peer) &&
                      !dynamic_cast<ScExportWrapper<IF> *>(&peer),
-            "Attempt to bind sc_interface %s to incompatible port %s.", name(),
-            peer.name());
+                 "Attempt to bind sc_interface %s to incompatible port %s.",
+                 name(), peer.name());
 
         // Don't bind to peer otherwise we may have error messages saying that
         // this interface has already be bound since the peer may already did
@@ -142,8 +142,8 @@ class ScExportWrapper : public gem5::Port
   public:
     using ScExport = sc_core::sc_export<IF>;
 
-    ScExportWrapper(ScExport &p, const std::string &name, gem5::PortID id) :
-        gem5::Port(name, id), port_(p)
+    ScExportWrapper(ScExport &p, const std::string &name, gem5::PortID id)
+        : gem5::Port(name, id), port_(p)
     {}
 
     ScExport &
@@ -167,8 +167,8 @@ class ScExportWrapper : public gem5::Port
 
         auto *iface = dynamic_cast<ScInterfaceWrapper<IF> *>(&peer);
         fatal_if(!iface,
-            "Attempt to bind sc_export %s to incompatible port %s.", name(),
-            peer.name());
+                 "Attempt to bind sc_export %s to incompatible port %s.",
+                 name(), peer.name());
 
         port_.bind(iface->interface());
         gem5::Port::bind(peer);

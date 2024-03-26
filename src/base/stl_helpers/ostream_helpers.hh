@@ -86,7 +86,7 @@ opExtractPrimDisp(std::ostream &os, const std::tuple<T...> &p)
             std::size_t n{0};
             os << '(';
             ((opExtractSecDisp(os, e) << (++n != sizeof...(T) ? ", " : "")),
-                ...);
+             ...);
             os << ')';
         },
         p);
@@ -146,17 +146,17 @@ template <typename, typename = void>
 constexpr bool isOpExtractNativelySupported = false;
 
 template <typename T>
-constexpr bool isOpExtractNativelySupported<T,
-    std::void_t<decltype(
-        std::declval<std::ostream &>() << std::declval<T>())>> = true;
+constexpr bool isOpExtractNativelySupported<
+    T, std::void_t<decltype(std::declval<std::ostream &>()
+                            << std::declval<T>())>> = true;
 
 template <typename, typename = void>
 constexpr bool isOpExtractHelped = false;
 
 template <typename T>
-constexpr bool isOpExtractHelped<T,
-    std::void_t<decltype(opExtractPrimDisp(
-        std::declval<std::ostream &>(), std::declval<T>()))>> = true;
+constexpr bool isOpExtractHelped<
+    T, std::void_t<decltype(opExtractPrimDisp(std::declval<std::ostream &>(),
+                                              std::declval<T>()))>> = true;
 
 template <typename T>
 constexpr bool needsDispatch =

@@ -153,9 +153,10 @@ class SerialLink : public ClockedObject
          * @param _ranges a number of address ranges to forward
          */
         SerialLinkResponsePort(const std::string &_name,
-            SerialLink &_serial_link, SerialLinkRequestPort &_mem_side_port,
-            Cycles _delay, int _resp_limit,
-            const std::vector<AddrRange> &_ranges);
+                               SerialLink &_serial_link,
+                               SerialLinkRequestPort &_mem_side_port,
+                               Cycles _delay, int _resp_limit,
+                               const std::vector<AddrRange> &_ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule
@@ -248,8 +249,9 @@ class SerialLink : public ClockedObject
          * @param _req_limit the size of the request queue
          */
         SerialLinkRequestPort(const std::string &_name,
-            SerialLink &_serial_link, SerialLinkResponsePort &_cpu_side_port,
-            Cycles _delay, int _req_limit);
+                              SerialLink &_serial_link,
+                              SerialLinkResponsePort &_cpu_side_port,
+                              Cycles _delay, int _req_limit);
 
         /**
          * Is this side blocked from accepting new request packets.

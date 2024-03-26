@@ -56,8 +56,8 @@ class Walker : public ClockedObject
     class WalkerPort : public RequestPort
     {
       public:
-        WalkerPort(const std::string &_name, Walker *_walker) :
-            RequestPort(_name), walker(_walker)
+        WalkerPort(const std::string &_name, Walker *_walker)
+            : RequestPort(_name), walker(_walker)
         {}
 
       protected:
@@ -103,27 +103,26 @@ class Walker : public ClockedObject
         int blockFragmentSize;
 
       public:
-        WalkerState(
-            Walker *_walker, PacketPtr pkt, bool is_functional = false) :
-            walker(_walker),
-            state(Ready),
-            nextState(Ready),
-            dataSize(8),
-            enableNX(true),
-            retrying(false),
-            started(false),
-            tlbPkt(pkt),
-            blockFragmentSize(0)
+        WalkerState(Walker *_walker, PacketPtr pkt, bool is_functional = false)
+            : walker(_walker),
+              state(Ready),
+              nextState(Ready),
+              dataSize(8),
+              enableNX(true),
+              retrying(false),
+              started(false),
+              tlbPkt(pkt),
+              blockFragmentSize(0)
         {
             DPRINTF(GPUPTWalker, "Walker::WalkerState %p %p %d\n", this,
-                walker, state);
+                    walker, state);
         }
 
         void initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
-            bool is_functional = false);
+                       bool is_functional = false);
         void startWalk();
-        Fault startFunctional(
-            Addr base, Addr vaddr, PageTableEntry &pte, unsigned &logBytes);
+        Fault startFunctional(Addr base, Addr vaddr, PageTableEntry &pte,
+                              unsigned &logBytes);
 
         bool isRetrying();
         void retry();
@@ -142,7 +141,7 @@ class Walker : public ClockedObject
         Fault stepWalk();
         void stepTimingWalk();
         void walkStateMachine(PageTableEntry &pte, Addr &nextRead,
-            bool &doEndWalk, Fault &fault);
+                              bool &doEndWalk, Fault &fault);
         void sendPackets();
         void endWalk();
         Fault pageFault(bool present);
@@ -167,12 +166,12 @@ class Walker : public ClockedObject
     // Kick off the state machine.
     void startTiming(PacketPtr pkt, Addr base, Addr vaddr, BaseMMU::Mode mode);
     Fault startFunctional(Addr base, Addr vaddr, PageTableEntry &pte,
-        unsigned &logBytes, BaseMMU::Mode mode);
+                          unsigned &logBytes, BaseMMU::Mode mode);
     Fault startFunctional(Addr base, Addr &addr, unsigned &logBytes,
-        BaseMMU::Mode mode, bool &isSystem);
+                          BaseMMU::Mode mode, bool &isSystem);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     Addr
     getBaseAddr() const
@@ -210,8 +209,8 @@ class Walker : public ClockedObject
     void recvReqRetry();
     bool sendTiming(WalkerState *sendingState, PacketPtr pkt);
 
-    void walkerResponse(
-        WalkerState *state, VegaTlbEntry &entry, PacketPtr pkt);
+    void walkerResponse(WalkerState *state, VegaTlbEntry &entry,
+                        PacketPtr pkt);
 
     // System pointer for functional accesses
     System *system;
@@ -224,14 +223,14 @@ class Walker : public ClockedObject
         tlb = _tlb;
     }
 
-    Walker(const VegaPagetableWalkerParams &p) :
-        ClockedObject(p),
-        port(name() + ".port", this),
-        funcState(this, nullptr, true),
-        tlb(nullptr),
-        requestorId(p.system->getRequestorId(this)),
-        deviceRequestorId(999),
-        system(p.system)
+    Walker(const VegaPagetableWalkerParams &p)
+        : ClockedObject(p),
+          port(name() + ".port", this),
+          funcState(this, nullptr, true),
+          tlb(nullptr),
+          requestorId(p.system->getRequestorId(this)),
+          deviceRequestorId(999),
+          system(p.system)
     {
         DPRINTF(GPUPTWalker, "Walker::Walker %p\n", this);
     }

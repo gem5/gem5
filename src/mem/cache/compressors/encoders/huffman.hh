@@ -88,16 +88,16 @@ class Huffman : public Base
 
       public:
         /** Initialize node as a leaf node. */
-        Node(uint64_t value, uint64_t frequency) :
-            _frequency(frequency), _value(value), _left(), _right()
+        Node(uint64_t value, uint64_t frequency)
+            : _frequency(frequency), _value(value), _left(), _right()
         {}
 
         /** Initialize node as an internal node. */
-        Node(Node *left, Node *right) :
-            _frequency(left->getFrequency() + right->getFrequency()),
-            _value(0),
-            _left(left),
-            _right(right)
+        Node(Node *left, Node *right)
+            : _frequency(left->getFrequency() + right->getFrequency()),
+              _value(0),
+              _left(left),
+              _right(right)
         {}
 
         /** Getter for the frequency counter. */

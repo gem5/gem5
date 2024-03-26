@@ -231,8 +231,8 @@ class BaseCPU : public ClockedObject
      *
      * @return a reference to the port with the given name
      */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     /** Get cpu task id */
     uint32_t
@@ -743,8 +743,8 @@ class BaseCPU : public ClockedObject
      * memory subsystem to be in a stable, i.e. pre-speculative, state as
      * well. */
     virtual void
-    htmSendAbortSignal(
-        ThreadID tid, uint64_t htm_uid, HtmFailureFaultCause cause)
+    htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                       HtmFailureFaultCause cause)
     {
         panic("htmSendAbortSignal not implemented");
     }

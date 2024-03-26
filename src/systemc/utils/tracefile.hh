@@ -101,8 +101,8 @@ class TraceVal<::sc_core::sc_signal_in_if<T>, Base> : public Base
     T oldVal;
 
   public:
-    TraceVal(const ::sc_core::sc_signal_in_if<T> *_iface, int _width) :
-        Base(_width), iface(_iface), oldVal(iface->read())
+    TraceVal(const ::sc_core::sc_signal_in_if<T> *_iface, int _width)
+        : Base(_width), iface(_iface), oldVal(iface->read())
     {}
     ~TraceVal() {}
 
@@ -136,11 +136,11 @@ class TraceVal<::sc_core::sc_event, Base> : public Base
     const Event *event;
 
   public:
-    TraceVal(const ::sc_core::sc_event *_event, int _width) :
-        Base(_width),
-        triggered(false),
-        oldStamp(0),
-        event(Event::getFromScEvent(_event))
+    TraceVal(const ::sc_core::sc_event *_event, int _width)
+        : Base(_width),
+          triggered(false),
+          oldStamp(0),
+          event(Event::getFromScEvent(_event))
     {}
     ~TraceVal() {}
 
@@ -173,11 +173,11 @@ class TraceValFxnumBase : public Base
     T oldVal;
 
   public:
-    TraceValFxnumBase(const T *_t, int _width) :
-        Base(_width),
-        t(_t),
-        oldVal(_t->m_params.type_params(), _t->m_params.enc(),
-            _t->m_params.cast_switch(), 0)
+    TraceValFxnumBase(const T *_t, int _width)
+        : Base(_width),
+          t(_t),
+          oldVal(_t->m_params.type_params(), _t->m_params.enc(),
+                 _t->m_params.cast_switch(), 0)
     {}
     ~TraceValFxnumBase() {}
 
@@ -253,58 +253,58 @@ class TraceFile : public sc_core::sc_trace_file
     virtual void addTraceVal(const float *v, const std::string &name) = 0;
     virtual void addTraceVal(const double *v, const std::string &name) = 0;
 
-    virtual void addTraceVal(
-        const sc_dt::sc_logic *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_int_base *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_uint_base *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_signed *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_unsigned *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_bv_base *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_lv_base *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_fxval *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_fxval_fast *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_fxnum *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_dt::sc_fxnum_fast *v, const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_logic *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_int_base *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_uint_base *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_signed *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_unsigned *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_bv_base *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_lv_base *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_fxval *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_fxval_fast *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_fxnum *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_dt::sc_fxnum_fast *v,
+                             const std::string &name) = 0;
 
-    virtual void addTraceVal(
-        const sc_core::sc_event *v, const std::string &name) = 0;
-    virtual void addTraceVal(
-        const sc_core::sc_time *v, const std::string &name) = 0;
+    virtual void addTraceVal(const sc_core::sc_event *v,
+                             const std::string &name) = 0;
+    virtual void addTraceVal(const sc_core::sc_time *v,
+                             const std::string &name) = 0;
 
-    virtual void addTraceVal(
-        const unsigned char *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const char *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const unsigned short *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const short *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const unsigned int *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const int *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const unsigned long *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const long *v, const std::string &name, int width) = 0;
+    virtual void addTraceVal(const unsigned char *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const char *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const unsigned short *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const short *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const unsigned int *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const int *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const unsigned long *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const long *v, const std::string &name,
+                             int width) = 0;
 
-    virtual void addTraceVal(
-        const sc_dt::int64 *v, const std::string &name, int width) = 0;
-    virtual void addTraceVal(
-        const sc_dt::uint64 *v, const std::string &name, int width) = 0;
+    virtual void addTraceVal(const sc_dt::int64 *v, const std::string &name,
+                             int width) = 0;
+    virtual void addTraceVal(const sc_dt::uint64 *v, const std::string &name,
+                             int width) = 0;
 
     virtual void addTraceVal(const unsigned int *, const std::string &name,
-        const char **literals) = 0;
+                             const char **literals) = 0;
 
     virtual void writeComment(const std::string &comment) = 0;
 };

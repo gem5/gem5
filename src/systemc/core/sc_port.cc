@@ -40,8 +40,8 @@ namespace sc_core
 namespace
 {
 void
-reportError(
-    const char *id, const char *add_msg, const char *name, const char *kind)
+reportError(const char *id, const char *add_msg, const char *name,
+            const char *kind)
 {
     std::string msg;
     if (add_msg)
@@ -54,8 +54,8 @@ reportError(
 
 } // namespace
 
-sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
-    sc_object(n), _gem5Port(nullptr)
+sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p)
+    : sc_object(n), _gem5Port(nullptr)
 {
     if (sc_is_running()) {
         reportError(SC_ID_INSERT_PORT_, "simulation running", name(), kind());
@@ -80,8 +80,8 @@ sc_port_base::warn_port_constructor() const
     static bool warned = false;
     if (!warned) {
         SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_,
-            "interface and/or port binding in port constructors "
-            "is deprecated");
+                       "interface and/or port binding in port constructors "
+                       "is deprecated");
         warned = true;
     }
 }

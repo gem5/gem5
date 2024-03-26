@@ -173,8 +173,8 @@ class BaseRemoteGDB
     void trap(ContextID id, GDBSignal sig, const std::string &stopReason = "");
     bool sendMessage(std::string message);
     // schedule a trap event with these properties
-    void scheduleTrapEvent(
-        ContextID id, GDBSignal type, int delta, std::string stopReason);
+    void scheduleTrapEvent(ContextID id, GDBSignal type, int delta,
+                           std::string stopReason);
     /** @} */ // end of api_remote_gdb
 
     template <class GDBStub, class... Args>
@@ -212,8 +212,8 @@ class BaseRemoteGDB
         BaseRemoteGDB *gdb;
 
       public:
-        SocketEvent(BaseRemoteGDB *gdb, int fd, int e) :
-            PollEvent(fd, e), gdb(gdb)
+        SocketEvent(BaseRemoteGDB *gdb, int fd, int e)
+            : PollEvent(fd, e), gdb(gdb)
         {}
 
         void
@@ -352,8 +352,8 @@ class BaseRemoteGDB
     void insertHardBreak(Addr addr, size_t kind);
     void removeHardBreak(Addr addr, size_t kind);
 
-    void sendTPacket(
-        GDBSignal sig, ContextID id, const std::string &stopReason);
+    void sendTPacket(GDBSignal sig, ContextID id,
+                     const std::string &stopReason);
     void sendSPacket(GDBSignal sig);
     // The OPacket allow to send string to be displayed by the remote GDB
     void sendOPacket(const std::string message);
@@ -399,8 +399,8 @@ class BaseRemoteGDB
         const char *const name;
         const Func func;
 
-        GdbMultiLetterCommand(const char *_name, Func _func) :
-            name(_name), func(_func)
+        GdbMultiLetterCommand(const char *_name, Func _func)
+            : name(_name), func(_func)
         {}
     };
 
@@ -447,8 +447,8 @@ class BaseRemoteGDB
         const char *const argSep;
         const Func func;
 
-        QuerySetCommand(Func _func, const char *_argSep = nullptr) :
-            argSep(_argSep), func(_func)
+        QuerySetCommand(Func _func, const char *_argSep = nullptr)
+            : argSep(_argSep), func(_func)
         {}
     };
 
@@ -477,11 +477,11 @@ class BaseRemoteGDB
         return sys;
     }
 
-    void encodeBinaryData(
-        const std::string &unencoded, std::string &encoded) const;
+    void encodeBinaryData(const std::string &unencoded,
+                          std::string &encoded) const;
 
     void encodeXferResponse(const std::string &unencoded, std::string &encoded,
-        size_t offset, size_t unencoded_length) const;
+                            size_t offset, size_t unencoded_length) const;
 
     // checkBpKind checks if a kind of breakpoint is legal. This function
     // should be implemented by subclasses by arch. The "kind" is considered to
@@ -501,8 +501,8 @@ class BaseRemoteGDB
      * @param[out] output set to the decoded XML
      * @return true if the given annex was found
      */
-    virtual bool getXferFeaturesRead(
-        const std::string &annex, std::string &output);
+    virtual bool getXferFeaturesRead(const std::string &annex,
+                                     std::string &output);
 };
 
 template <class T>

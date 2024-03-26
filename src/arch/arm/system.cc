@@ -60,49 +60,48 @@ using namespace ArmISA;
 ArmRelease::ArmRelease(const ArmReleaseParams &p) : SimObject(p)
 {
     for (auto ext : p.extensions) {
-        fatal_if(
-            _extensions.find(ext) != _extensions.end(), "Duplicated FEAT_\n");
+        fatal_if(_extensions.find(ext) != _extensions.end(),
+                 "Duplicated FEAT_\n");
 
         _extensions[ext] = true;
     }
 }
 
-ArmSystem::ArmSystem(const Params &p) :
-    System(p),
-    _genericTimer(nullptr),
-    _gic(nullptr),
-    _pwrCtrl(nullptr),
-    _highestELIs64(p.highest_el_is_64),
-    _physAddrRange64(p.phys_addr_range_64),
-    _haveLargeAsid64(p.have_large_asid_64),
-    _sveVL(p.sve_vl),
-    _smeVL(p.sme_vl),
-    semihosting(p.semihosting),
-    release(p.release),
-    multiProc(p.multi_proc)
+ArmSystem::ArmSystem(const Params &p)
+    : System(p),
+      _genericTimer(nullptr),
+      _gic(nullptr),
+      _pwrCtrl(nullptr),
+      _highestELIs64(p.highest_el_is_64),
+      _physAddrRange64(p.phys_addr_range_64),
+      _haveLargeAsid64(p.have_large_asid_64),
+      _sveVL(p.sve_vl),
+      _smeVL(p.sme_vl),
+      semihosting(p.semihosting),
+      release(p.release),
+      multiProc(p.multi_proc)
 {
     if (p.auto_reset_addr) {
         _resetAddr = workload->getEntry();
     } else {
         _resetAddr = p.reset_addr;
         warn_if(workload->getEntry() != _resetAddr,
-            "Workload entry point %#x and reset address %#x are different",
-            workload->getEntry(), _resetAddr);
+                "Workload entry point %#x and reset address %#x are different",
+                workload->getEntry(), _resetAddr);
     }
 
     bool wl_is_64 = (workload->getArch() == loader::Arm64);
     if (wl_is_64 != _highestELIs64) {
         warn("Highest ARM exception-level set to AArch%d but the workload "
              "is for AArch%d. Assuming you wanted these to match.",
-            _highestELIs64 ? 64 : 32, wl_is_64 ? 64 : 32);
+             _highestELIs64 ? 64 : 32, wl_is_64 ? 64 : 32);
         _highestELIs64 = wl_is_64;
     }
 
     if (_highestELIs64 &&
         (_physAddrRange64 < 32 || _physAddrRange64 > MaxPhysAddrRange ||
-            (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42) ||
-            (_physAddrRange64 == 52 &&
-                !release->has(ArmExtension::FEAT_LPA)))) {
+         (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42) ||
+         (_physAddrRange64 == 52 && !release->has(ArmExtension::FEAT_LPA)))) {
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
     }
 }

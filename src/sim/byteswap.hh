@@ -35,19 +35,19 @@
 
 // This lets us figure out what the byte order of the host system is
 #if defined(__linux__)
-#    include <endian.h>
+#include <endian.h>
 // If this is a linux system, lets used the optimized definitions if they
 // exist. If one doesn't exist, we pretty much get what is listed below, so it
 // all works out
-#    include <byteswap.h>
+#include <byteswap.h>
 #elif defined(__sun)
-#    include <sys/isa_defs.h>
+#include <sys/isa_defs.h>
 #else
-#    include <machine/endian.h>
+#include <machine/endian.h>
 #endif
 
 #if defined(__APPLE__)
-#    include <libkern/OSByteOrder.h>
+#include <libkern/OSByteOrder.h>
 #endif
 
 #include <type_traits>
@@ -110,7 +110,7 @@ swap_byte16(uint16_t x)
 
 template <typename T>
 inline std::enable_if_t<sizeof(T) == 8 && std::is_convertible_v<T, uint64_t>,
-    T>
+                        T>
 swap_byte(T x)
 {
     return swap_byte64((uint64_t)x);
@@ -118,7 +118,7 @@ swap_byte(T x)
 
 template <typename T>
 inline std::enable_if_t<sizeof(T) == 4 && std::is_convertible_v<T, uint32_t>,
-    T>
+                        T>
 swap_byte(T x)
 {
     return swap_byte32((uint32_t)x);
@@ -126,7 +126,7 @@ swap_byte(T x)
 
 template <typename T>
 inline std::enable_if_t<sizeof(T) == 2 && std::is_convertible_v<T, uint16_t>,
-    T>
+                        T>
 swap_byte(T x)
 {
     return swap_byte16((uint16_t)x);
@@ -172,7 +172,7 @@ letobe(T value)
 
 // For conversions not involving the guest system, we can define the functions
 // conditionally based on the BYTE_ORDER macro and outside of the namespaces
-#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) && \
+#if (defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN)) &&                     \
     BYTE_ORDER == BIG_ENDIAN
 const ByteOrder HostByteOrder = ByteOrder::big;
 template <typename T>
@@ -226,7 +226,7 @@ betoh(T value)
     return swap_byte(value);
 }
 #else
-#    error Invalid Endianess
+#error Invalid Endianess
 #endif
 
 template <typename T>

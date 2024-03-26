@@ -134,7 +134,7 @@ class SHiP : public BRRIP
      * @param pkt Packet that generated this hit.
      */
     void touch(const std::shared_ptr<ReplacementData> &replacement_data,
-        const PacketPtr pkt) override;
+               const PacketPtr pkt) override;
     void touch(const std::shared_ptr<ReplacementData> &replacement_data)
         const override;
 
@@ -146,7 +146,7 @@ class SHiP : public BRRIP
      * @param pkt Packet that generated this miss.
      */
     void reset(const std::shared_ptr<ReplacementData> &replacement_data,
-        const PacketPtr pkt) override;
+               const PacketPtr pkt) override;
     void reset(const std::shared_ptr<ReplacementData> &replacement_data)
         const override;
 

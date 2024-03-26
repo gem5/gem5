@@ -352,9 +352,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         addMicroarchitectureProbe(SimObject *object, std::string name)
         {
             panic_if(!object,
-                "malformed probe-point"
-                " definition with name %s\n",
-                name);
+                     "malformed probe-point"
+                     " definition with name %s\n",
+                     name);
 
             microArchitectureEventSet.emplace(object, name);
         }
@@ -362,10 +362,10 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
       protected:
         struct RegularProbe : public ProbeListenerArgBase<uint64_t>
         {
-            RegularProbe(
-                RegularEvent *parent, SimObject *obj, std::string name) :
-                ProbeListenerArgBase(obj->getProbeManager(), name),
-                parentEvent(parent)
+            RegularProbe(RegularEvent *parent, SimObject *obj,
+                         std::string name)
+                : ProbeListenerArgBase(obj->getProbeManager(), name),
+                  parentEvent(parent)
             {}
 
             RegularProbe() = delete;
@@ -419,17 +419,17 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     /** State of a counter within the PMU. **/
     struct CounterState : public Serializable
     {
-        CounterState(
-            PMU &pmuReference, uint64_t counter_id, const bool is_64_bit) :
-            eventId(0),
-            filter(0),
-            enabled(false),
-            overflow64(is_64_bit),
-            sourceEvent(nullptr),
-            counterId(counter_id),
-            value(0),
-            resetValue(false),
-            pmu(pmuReference)
+        CounterState(PMU &pmuReference, uint64_t counter_id,
+                     const bool is_64_bit)
+            : eventId(0),
+              filter(0),
+              enabled(false),
+              overflow64(is_64_bit),
+              sourceEvent(nullptr),
+              counterId(counter_id),
+              value(0),
+              resetValue(false),
+              pmu(pmuReference)
         {}
 
         void serialize(CheckpointOut &cp) const override;
@@ -517,7 +517,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
             std::string userString = csprintf(mainString, args...);
 
             warn("[counterId = %d, eventId = %d, sourceEvent = 0x%x] %s",
-                counterId, eventId, sourceEvent, userString.c_str());
+                 counterId, eventId, sourceEvent, userString.c_str());
         }
     };
 

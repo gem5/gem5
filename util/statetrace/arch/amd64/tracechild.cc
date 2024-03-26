@@ -77,8 +77,8 @@ AMD64TraceChild::sendState(int socket)
 }
 
 int64_t
-AMD64TraceChild::getRegs(
-    user_regs_struct &myregs, user_fpregs_struct &myfpregs, int num)
+AMD64TraceChild::getRegs(user_regs_struct &myregs,
+                         user_fpregs_struct &myfpregs, int num)
 {
     assert(num < numregs && num >= 0);
     switch (num) {
@@ -368,8 +368,8 @@ AMD64TraceChild::outputStartState(ostream &os)
     uint64_t cargv;
     do {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(
-            obuf, "0x%016lx: argv[%d] = 0x%016lx\n", sp, argCount++, cargv);
+        sprintf(obuf, "0x%016lx: argv[%d] = 0x%016lx\n", sp, argCount++,
+                cargv);
         if (cargv)
             if (highestInfo < cargv)
                 highestInfo = cargv;
@@ -382,8 +382,8 @@ AMD64TraceChild::outputStartState(ostream &os)
     uint64_t cenvp;
     do {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(
-            obuf, "0x%016lx: envp[%d] = 0x%016lx\n", sp, envCount++, cenvp);
+        sprintf(obuf, "0x%016lx: envp[%d] = 0x%016lx\n", sp, envCount++,
+                cenvp);
         os << obuf;
         sp += 8;
     } while (cenvp);
@@ -394,7 +394,7 @@ AMD64TraceChild::outputStartState(ostream &os)
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 8;
         sprintf(obuf, "0x%016lx: Auxiliary vector = {0x%016lx, 0x%016lx}\n",
-            sp - 16, auxType, auxVal);
+                sp - 16, auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
     // Print out the argument strings, environment strings, and file name.
@@ -409,8 +409,8 @@ AMD64TraceChild::outputStartState(ostream &os)
             if (cbuf[x])
                 current += cbuf[x];
             else {
-                sprintf(
-                    obuf, "0x%016lx: \"%s\"\n", currentStart, current.c_str());
+                sprintf(obuf, "0x%016lx: \"%s\"\n", currentStart,
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;
@@ -433,19 +433,19 @@ AMD64TraceChild::findSyscall()
         for (int i = 0; i < sizeof(uint64_t); i++) {
             unsigned char byte = buf & 0xFF;
             if (!foundOpcode) {
-                if (!(byte == 0x66 ||                  // operand override
-                        byte == 0x67 ||                // address override
-                        byte == 0x2E ||                // cs
-                        byte == 0x3E ||                // ds
-                        byte == 0x26 ||                // es
-                        byte == 0x64 ||                // fs
-                        byte == 0x65 ||                // gs
-                        byte == 0x36 ||                // ss
-                        byte == 0xF0 ||                // lock
-                        byte == 0xF2 ||                // repe
-                        byte == 0xF3 ||                // repne
-                        (byte >= 0x40 && byte <= 0x4F) // REX
-                        )) {
+                if (!(byte == 0x66 ||                // operand override
+                      byte == 0x67 ||                // address override
+                      byte == 0x2E ||                // cs
+                      byte == 0x3E ||                // ds
+                      byte == 0x26 ||                // es
+                      byte == 0x64 ||                // fs
+                      byte == 0x65 ||                // gs
+                      byte == 0x36 ||                // ss
+                      byte == 0xF0 ||                // lock
+                      byte == 0xF2 ||                // repe
+                      byte == 0xF3 ||                // repne
+                      (byte >= 0x40 && byte <= 0x4F) // REX
+                      )) {
                     foundOpcode = true;
                 }
             }

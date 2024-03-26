@@ -124,7 +124,8 @@ class PMP : public SimObject
      * @return Fault.
      */
     Fault pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-        RiscvISA::PrivilegeMode pmode, ThreadContext *tc, Addr vaddr = 0);
+                   RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
+                   Addr vaddr = 0);
 
     /**
      * pmpUpdateCfg updates the pmpcfg for a pmp

@@ -68,7 +68,8 @@ class TrafficGenerator : public sc_core::sc_module
     void checkTransaction(tlm::tlm_generic_payload &trans);
 
     virtual tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload &trans,
-        tlm::tlm_phase &phase, sc_core::sc_time &delay);
+                                               tlm::tlm_phase &phase,
+                                               sc_core::sc_time &delay);
 };
 
 #endif

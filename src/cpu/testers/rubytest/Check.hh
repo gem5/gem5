@@ -51,11 +51,11 @@ class Check
 {
   public:
     Check(Addr address, Addr pc, int _num_writers, int _num_readers,
-        RubyTester *_tester);
+          RubyTester *_tester);
 
     void initiate(); // Does Action or Check or nether
-    void performCallback(
-        ruby::NodeID proc, ruby::SubBlock *data, Cycles curTime);
+    void performCallback(ruby::NodeID proc, ruby::SubBlock *data,
+                         Cycles curTime);
     Addr
     getAddress() const
     {

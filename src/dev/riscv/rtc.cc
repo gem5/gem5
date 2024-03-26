@@ -42,15 +42,16 @@
 
 namespace gem5
 {
-RiscvRTC::RiscvRTC(const Params &params) :
-    SimObject(params),
-    rtc(this, params.name, params.time, params.bcd, params.frequency,
-        params.port_int_pin_connection_count)
+RiscvRTC::RiscvRTC(const Params &params)
+    : SimObject(params),
+      rtc(this, params.name, params.time, params.bcd, params.frequency,
+          params.port_int_pin_connection_count)
 {}
 
 RiscvRTC::RTC::RTC(EventManager *em, const std::string &n,
-    const struct tm time, bool bcd, Tick frequency, int int_pin_count) :
-    MC146818(em, n, time, bcd, frequency)
+                   const struct tm time, bool bcd, Tick frequency,
+                   int int_pin_count)
+    : MC146818(em, n, time, bcd, frequency)
 {
     for (int i = 0; i < int_pin_count; i++) {
         intPin.emplace_back(

@@ -40,8 +40,8 @@ namespace gem5
 uint32_t
 SimplePoolManager::minAllocatedElements(uint32_t size)
 {
-    fatal_if(
-        size <= 0 || size > poolSize(), "Illegal VGPR region size=%d\n", size);
+    fatal_if(size <= 0 || size > poolSize(), "Illegal VGPR region size=%d\n",
+             size);
 
     return size % minAllocation() > 0 ?
                (minAllocation() - (size % minAllocation())) + size :
@@ -79,8 +79,8 @@ SimplePoolManager::freeRegion(uint32_t firstIdx, uint32_t lastIdx)
 }
 
 uint32_t
-SimplePoolManager::allocateRegion(
-    const uint32_t size, uint32_t *reservedPoolSize)
+SimplePoolManager::allocateRegion(const uint32_t size,
+                                  uint32_t *reservedPoolSize)
 {
     uint32_t actualSize = minAllocatedElements(size);
     uint32_t startIdx = _nxtFreeIdx;

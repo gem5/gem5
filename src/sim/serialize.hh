@@ -87,12 +87,12 @@ class CheckpointIn
     }
 
     bool find(const std::string &section, const std::string &entry,
-        std::string &value);
+              std::string &value);
 
     bool entryExists(const std::string &section, const std::string &entry);
     bool sectionExists(const std::string &section);
-    void visitSection(
-        const std::string &section, IniFile::VisitSectionCallback cb);
+    void visitSection(const std::string &section,
+                      IniFile::VisitSectionCallback cb);
     /** @}*/ // end of api_checkout group
 
     // The following static functions have to do with checkpoint
@@ -214,10 +214,10 @@ class Serializable
 
         ScopedCheckpointSection() = delete;
         ScopedCheckpointSection(const ScopedCheckpointSection &) = delete;
-        ScopedCheckpointSection &operator=(
-            const ScopedCheckpointSection &) = delete;
-        ScopedCheckpointSection &operator=(
-            ScopedCheckpointSection &&) = delete;
+        ScopedCheckpointSection &
+        operator=(const ScopedCheckpointSection &) = delete;
+        ScopedCheckpointSection &
+        operator=(ScopedCheckpointSection &&) = delete;
 
       private:
         void pushName(const char *name);
@@ -315,8 +315,8 @@ class Serializable
      * @param outstream The cpt file.
      * @ingroup api_serialize
      */
-    static void generateCheckpointOut(
-        const std::string &cpt_dir, std::ofstream &outstream);
+    static void generateCheckpointOut(const std::string &cpt_dir,
+                                      std::ofstream &outstream);
 
   private:
     static std::stack<std::string> path;
@@ -361,14 +361,14 @@ paramInImpl(CheckpointIn &cp, const std::string &name, T &param)
  */
 template <class T>
 bool
-optParamIn(
-    CheckpointIn &cp, const std::string &name, T &param, bool do_warn = true)
+optParamIn(CheckpointIn &cp, const std::string &name, T &param,
+           bool do_warn = true)
 {
     if (paramInImpl(cp, name, param))
         return true;
 
     warn_if(do_warn, "optional parameter %s:%s not present",
-        Serializable::currentSection(), name);
+            Serializable::currentSection(), name);
     return false;
 }
 
@@ -384,7 +384,7 @@ void
 paramIn(CheckpointIn &cp, const std::string &name, T &param)
 {
     fatal_if(!paramInImpl(cp, name, param), "Can't unserialize '%s:%s'",
-        Serializable::currentSection(), name);
+             Serializable::currentSection(), name);
 }
 
 /**
@@ -393,7 +393,7 @@ paramIn(CheckpointIn &cp, const std::string &name, T &param)
 template <class InputIterator>
 void
 arrayParamOut(CheckpointOut &os, const std::string &name, InputIterator start,
-    InputIterator end)
+              InputIterator end)
 {
     os << name << "=";
     auto it = start;
@@ -412,7 +412,7 @@ arrayParamOut(CheckpointOut &os, const std::string &name, InputIterator start,
  */
 template <class T>
 decltype(std::begin(std::declval<const T &>()),
-    std::end(std::declval<const T &>()), void())
+         std::end(std::declval<const T &>()), void())
 arrayParamOut(CheckpointOut &os, const std::string &name, const T &param)
 {
     arrayParamOut(os, name, std::begin(param), std::end(param));
@@ -423,8 +423,8 @@ arrayParamOut(CheckpointOut &os, const std::string &name, const T &param)
  */
 template <class T>
 void
-arrayParamOut(
-    CheckpointOut &os, const std::string &name, const T *param, unsigned size)
+arrayParamOut(CheckpointOut &os, const std::string &name, const T *param,
+              unsigned size)
 {
     arrayParamOut(os, name, param, param + size);
 }
@@ -444,24 +444,24 @@ arrayParamOut(
 template <class T, class InsertIterator>
 void
 arrayParamIn(CheckpointIn &cp, const std::string &name,
-    InsertIterator inserter, ssize_t fixed_size = -1)
+             InsertIterator inserter, ssize_t fixed_size = -1)
 {
     const std::string &section = Serializable::currentSection();
     std::string str;
     fatal_if(!cp.find(section, name, str), "Can't unserialize '%s:%s'.",
-        section, name);
+             section, name);
 
     std::vector<std::string> tokens;
     tokenize(tokens, str, ' ');
 
     fatal_if(fixed_size >= 0 && tokens.size() != fixed_size,
-        "Array size mismatch on %s:%s (Got %u, expected %u)'\n", section, name,
-        tokens.size(), fixed_size);
+             "Array size mismatch on %s:%s (Got %u, expected %u)'\n", section,
+             name, tokens.size(), fixed_size);
 
     for (const auto &token : tokens) {
         T value;
         fatal_if(!ParseParam<T>::parse(token, value),
-            "Could not parse \"%s\".", str);
+                 "Could not parse \"%s\".", str);
         *inserter = value;
     }
 }
@@ -470,13 +470,13 @@ arrayParamIn(CheckpointIn &cp, const std::string &name,
  * @ingroup api_serialize
  */
 template <class T>
-decltype(
-    std::declval<T>().insert(std::declval<typename T::value_type>()), void())
+decltype(std::declval<T>().insert(std::declval<typename T::value_type>()),
+         void())
 arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
 {
     param.clear();
-    arrayParamIn<typename T::value_type>(
-        cp, name, std::inserter(param, param.begin()));
+    arrayParamIn<typename T::value_type>(cp, name,
+                                         std::inserter(param, param.begin()));
 }
 
 /**
@@ -484,7 +484,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
  */
 template <class T>
 decltype(std::declval<T>().push_back(std::declval<typename T::value_type>()),
-    void())
+         void())
 arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
 {
     param.clear();
@@ -496,8 +496,8 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, T &param)
  */
 template <class T>
 void
-arrayParamIn(
-    CheckpointIn &cp, const std::string &name, T *param, unsigned size)
+arrayParamIn(CheckpointIn &cp, const std::string &name, T *param,
+             unsigned size)
 {
     struct ArrayInserter
     {
@@ -523,7 +523,7 @@ arrayParamIn(
 template <class T>
 void
 mappingParamOut(CheckpointOut &os, const char *sectionName,
-    const char *const names[], const T *param, unsigned size)
+                const char *const names[], const T *param, unsigned size)
 {
     Serializable::ScopedCheckpointSection sec(os, sectionName);
     for (unsigned i = 0; i < size; ++i) {
@@ -537,7 +537,7 @@ mappingParamOut(CheckpointOut &os, const char *sectionName,
 template <class T>
 void
 mappingParamIn(CheckpointIn &cp, const char *sectionName,
-    const char *const names[], T *param, unsigned size)
+               const char *const names[], T *param, unsigned size)
 {
     Serializable::ScopedCheckpointSection sec(cp, sectionName);
     std::unordered_map<std::string, size_t> name_to_index;
@@ -551,11 +551,12 @@ mappingParamIn(CheckpointIn &cp, const char *sectionName,
             param[name_to_index[key]] = value;
         }
     }
-    cp.visitSection(Serializable::currentSection(),
+    cp.visitSection(
+        Serializable::currentSection(),
         [name_to_index](const std::string &key, const std::string &val) {
             if (!name_to_index.count(key)) {
                 warn("unknown entry found in checkpoint: %s %s %s\n",
-                    Serializable::currentSection(), key, val);
+                     Serializable::currentSection(), key, val);
             }
         });
 }
@@ -600,11 +601,11 @@ mappingParamIn(CheckpointIn &cp, const char *sectionName,
  *
  * @ingroup api_serialize
  */
-#define UNSERIALIZE_ENUM(scalar) \
-    do { \
-        int tmp; \
-        ::gem5::paramIn(cp, #scalar, tmp); \
-        scalar = static_cast<decltype(scalar)>(tmp); \
+#define UNSERIALIZE_ENUM(scalar)                                              \
+    do {                                                                      \
+        int tmp;                                                              \
+        ::gem5::paramIn(cp, #scalar, tmp);                                    \
+        scalar = static_cast<decltype(scalar)>(tmp);                          \
     } while (0)
 
 /**
@@ -612,7 +613,7 @@ mappingParamIn(CheckpointIn &cp, const char *sectionName,
  *
  * @ingroup api_serialize
  */
-#define SERIALIZE_ARRAY(member, size) \
+#define SERIALIZE_ARRAY(member, size)                                         \
     ::gem5::arrayParamOut(cp, #member, member, size)
 
 /**
@@ -620,7 +621,7 @@ mappingParamIn(CheckpointIn &cp, const char *sectionName,
  *
  * @ingroup api_serialize
  */
-#define UNSERIALIZE_ARRAY(member, size) \
+#define UNSERIALIZE_ARRAY(member, size)                                       \
     ::gem5::arrayParamIn(cp, #member, member, size)
 
 /**
@@ -660,13 +661,13 @@ mappingParamIn(CheckpointIn &cp, const char *sectionName,
 /**
  * \def SERIALIZE_MAPPING(member, names, size)
  */
-#define SERIALIZE_MAPPING(member, names, size) \
+#define SERIALIZE_MAPPING(member, names, size)                                \
     ::gem5::mappingParamOut(cp, #member, names, member, size)
 
 /**
  * \def UNSERIALIZE_MAPPING(member, names, size)
  */
-#define UNSERIALIZE_MAPPING(member, names, size) \
+#define UNSERIALIZE_MAPPING(member, names, size)                              \
     ::gem5::mappingParamIn(cp, #member, names, member, size)
 
 } // namespace gem5

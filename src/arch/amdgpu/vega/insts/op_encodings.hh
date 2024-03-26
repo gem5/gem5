@@ -209,7 +209,7 @@ class Inst_SMEM : public VEGAGPUStaticInst
      */
     void
     calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU64 &addr,
-        ScalarRegU32 offset)
+             ScalarRegU32 offset)
     {
         Addr vaddr = ((addr.rawData() + offset) & ~0x3);
         gpu_dyn_inst->scalarAddr = vaddr;
@@ -222,12 +222,12 @@ class Inst_SMEM : public VEGAGPUStaticInst
      */
     void
     calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU128 &s_rsrc_desc,
-        ScalarRegU32 offset)
+             ScalarRegU32 offset)
     {
         BufferRsrcDescriptor rsrc_desc;
         ScalarRegU32 clamped_offset(offset);
         std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-            sizeof(BufferRsrcDescriptor));
+                    sizeof(BufferRsrcDescriptor));
 
         /**
          * The address is clamped if:
@@ -282,7 +282,8 @@ class Inst_VOP2 : public VEGAGPUStaticInst
         origSrc0_sdwa.read();
         origSrc1.read();
 
-        DPRINTF(VEGA,
+        DPRINTF(
+            VEGA,
             "Handling %s SRC SDWA. SRC0: register v[%d], "
             "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
             "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
@@ -295,8 +296,8 @@ class Inst_VOP2 : public VEGAGPUStaticInst
             extData.iFmt_VOP_SDWA.SRC1_SEXT, extData.iFmt_VOP_SDWA.SRC1_NEG,
             extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-        processSDWA_src(
-            extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1, origSrc1);
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
 
         return src0_sdwa;
     }
@@ -325,14 +326,14 @@ class Inst_VOP2 : public VEGAGPUStaticInst
         src0_dpp.read();
 
         DPRINTF(VEGA,
-            "Handling %s SRC DPP. SRC0: register v[%d], "
-            "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
-            "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
-            opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
-            extData.iFmt_VOP_DPP.DPP_CTRL, extData.iFmt_VOP_DPP.SRC0_ABS,
-            extData.iFmt_VOP_DPP.SRC0_NEG, extData.iFmt_VOP_DPP.SRC1_ABS,
-            extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
-            extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
+                "Handling %s SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
+                "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
+                extData.iFmt_VOP_DPP.DPP_CTRL, extData.iFmt_VOP_DPP.SRC0_ABS,
+                extData.iFmt_VOP_DPP.SRC0_NEG, extData.iFmt_VOP_DPP.SRC1_ABS,
+                extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
+                extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
 
         processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
 
@@ -341,8 +342,8 @@ class Inst_VOP2 : public VEGAGPUStaticInst
 
     template <typename ConstT, typename T>
     void
-    vop2Helper(
-        GPUDynInstPtr gpuDynInst, void (*fOpImpl)(T &, T &, T &, Wavefront *))
+    vop2Helper(GPUDynInstPtr gpuDynInst,
+               void (*fOpImpl)(T &, T &, T &, Wavefront *))
     {
         Wavefront *wf = gpuDynInst->wavefront();
         T src0(gpuDynInst, instData.SRC0);
@@ -532,8 +533,8 @@ class Inst_DS : public VEGAGPUStaticInst
                 for (int i = 0; i < N; ++i) {
                     (reinterpret_cast<VecElemU32 *>(
                         gpuDynInst->d_data))[lane * N + i] =
-                        wf->ldsChunk->read<VecElemU32>(
-                            vaddr + i * sizeof(VecElemU32));
+                        wf->ldsChunk->read<VecElemU32>(vaddr +
+                                                       i * sizeof(VecElemU32));
                 }
             }
         }
@@ -602,9 +603,11 @@ class Inst_DS : public VEGAGPUStaticInst
             if (gpuDynInst->exec_mask[lane]) {
                 Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
                 Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
-                wf->ldsChunk->write<T>(vaddr0,
+                wf->ldsChunk->write<T>(
+                    vaddr0,
                     (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2]);
-                wf->ldsChunk->write<T>(vaddr1,
+                wf->ldsChunk->write<T>(
+                    vaddr1,
                     (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2 + 1]);
             }
         }
@@ -731,11 +734,12 @@ class Inst_MUBUF : public VEGAGPUStaticInst
         // create request and set flags
         gpuDynInst->resetEntireStatusVector();
         gpuDynInst->setStatusVector(0, 1);
-        RequestPtr req = std::make_shared<Request>(0, 0, 0,
-            gpuDynInst->computeUnit()->requestorId(), 0, gpuDynInst->wfDynId);
+        RequestPtr req = std::make_shared<Request>(
+            0, 0, 0, gpuDynInst->computeUnit()->requestorId(), 0,
+            gpuDynInst->wfDynId);
         gpuDynInst->setRequestFlags(req);
-        gpuDynInst->computeUnit()->injectGlobalMemFence(
-            gpuDynInst, false, req);
+        gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false,
+                                                        req);
     }
 
     /**
@@ -761,7 +765,7 @@ class Inst_MUBUF : public VEGAGPUStaticInst
     template <typename VOFF, typename VIDX, typename SRSRC, typename SOFF>
     void
     calcAddr(GPUDynInstPtr gpuDynInst, VOFF v_off, VIDX v_idx,
-        SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
+             SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
     {
         Addr vaddr = 0;
         Addr base_addr = 0;
@@ -772,7 +776,7 @@ class Inst_MUBUF : public VEGAGPUStaticInst
         BufferRsrcDescriptor rsrc_desc;
 
         std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-            sizeof(BufferRsrcDescriptor));
+                    sizeof(BufferRsrcDescriptor));
 
         base_addr = rsrc_desc.baseAddr;
 
@@ -800,12 +804,12 @@ class Inst_MUBUF : public VEGAGPUStaticInst
                     Addr off_msb = buf_off / elem_size;
                     Addr off_lsb = buf_off % elem_size;
                     DPRINTF(VEGA,
-                        "mubuf swizzled lane %d: "
-                        "idx_stride = %llx, elem_size = %llx, "
-                        "idx_msb = %llx, idx_lsb = %llx, "
-                        "off_msb = %llx, off_lsb = %llx\n",
-                        lane, idx_stride, elem_size, idx_msb, idx_lsb, off_msb,
-                        off_lsb);
+                            "mubuf swizzled lane %d: "
+                            "idx_stride = %llx, elem_size = %llx, "
+                            "idx_msb = %llx, idx_lsb = %llx, "
+                            "off_msb = %llx, off_lsb = %llx\n",
+                            lane, idx_stride, elem_size, idx_msb, idx_lsb,
+                            off_msb, off_lsb);
 
                     buffer_offset =
                         (idx_msb * stride + off_msb * elem_size) * idx_stride +
@@ -825,12 +829,12 @@ class Inst_MUBUF : public VEGAGPUStaticInst
                     if (buffer_offset >=
                         rsrc_desc.numRecords - s_offset.rawData()) {
                         DPRINTF(VEGA,
-                            "mubuf out-of-bounds condition 1: "
-                            "lane = %d, buffer_offset = %llx, "
-                            "const_stride = %llx, "
-                            "const_num_records = %llx\n",
-                            lane, buf_off + stride * buf_idx, stride,
-                            rsrc_desc.numRecords);
+                                "mubuf out-of-bounds condition 1: "
+                                "lane = %d, buffer_offset = %llx, "
+                                "const_stride = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off + stride * buf_idx, stride,
+                                rsrc_desc.numRecords);
                         oobMask.set(lane);
                         continue;
                     }
@@ -839,11 +843,11 @@ class Inst_MUBUF : public VEGAGPUStaticInst
                 if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
                     if (buf_idx >= rsrc_desc.numRecords || buf_off >= stride) {
                         DPRINTF(VEGA,
-                            "mubuf out-of-bounds condition 2: "
-                            "lane = %d, offset = %llx, "
-                            "index = %llx, "
-                            "const_num_records = %llx\n",
-                            lane, buf_off, buf_idx, rsrc_desc.numRecords);
+                                "mubuf out-of-bounds condition 2: "
+                                "lane = %d, offset = %llx, "
+                                "index = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off, buf_idx, rsrc_desc.numRecords);
                         oobMask.set(lane);
                         continue;
                     }
@@ -852,10 +856,10 @@ class Inst_MUBUF : public VEGAGPUStaticInst
                 vaddr += buffer_offset;
 
                 DPRINTF(VEGA,
-                    "Calculating mubuf address for lane %d: "
-                    "vaddr = %llx, base_addr = %llx, "
-                    "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
-                    lane, vaddr, base_addr, stride, buf_idx, buf_off);
+                        "Calculating mubuf address for lane %d: "
+                        "vaddr = %llx, base_addr = %llx, "
+                        "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
+                        lane, vaddr, base_addr, stride, buf_idx, buf_off);
                 gpuDynInst->addr.at(lane) = vaddr;
             }
         }
@@ -988,7 +992,8 @@ class Inst_FLAT : public VEGAGPUStaticInst
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
-                    wf->ldsChunk->write<T>(vaddr,
+                    wf->ldsChunk->write<T>(
+                        vaddr,
                         (reinterpret_cast<T *>(gpuDynInst->d_data))[lane]);
                 }
             }
@@ -1048,7 +1053,7 @@ class Inst_FLAT : public VEGAGPUStaticInst
 
     void
     calcAddr(GPUDynInstPtr gpuDynInst, ScalarRegU32 vaddr, ScalarRegU32 saddr,
-        ScalarRegI32 offset)
+             ScalarRegI32 offset)
     {
         // Offset is a 13-bit field w/the following meanings:
         // In Flat instructions, offset is a 12-bit unsigned number
@@ -1127,7 +1132,7 @@ class Inst_FLAT : public VEGAGPUStaticInst
 
     void
     calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,
-        ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
+                 ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
     {
         // Use SGPR pair as a base address and add VGPR-offset and
         // instruction offset. The VGPR-offset is always 32-bits so we
@@ -1142,7 +1147,7 @@ class Inst_FLAT : public VEGAGPUStaticInst
 
     void
     calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-        ScalarRegI32 offset)
+                 ScalarRegI32 offset)
     {
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {

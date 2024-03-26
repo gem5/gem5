@@ -75,15 +75,15 @@ class MPP_TAGE : public TAGEBase
         virtual ~BranchInfo() {}
     };
 
-    MPP_TAGE(const MPP_TAGEParams &p) :
-        TAGEBase(p), tunedHistoryLengths(p.tunedHistoryLengths)
+    MPP_TAGE(const MPP_TAGEParams &p)
+        : TAGEBase(p), tunedHistoryLengths(p.tunedHistoryLengths)
     {}
 
     void calculateParameters() override;
-    void handleTAGEUpdate(
-        Addr branch_pc, bool taken, TAGEBase::BranchInfo *bi) override;
-    void handleAllocAndUReset(
-        bool alloc, bool taken, TAGEBase::BranchInfo *bi, int nrand) override;
+    void handleTAGEUpdate(Addr branch_pc, bool taken,
+                          TAGEBase::BranchInfo *bi) override;
+    void handleAllocAndUReset(bool alloc, bool taken, TAGEBase::BranchInfo *bi,
+                              int nrand) override;
     void handleUReset() override;
     void resetUctr(uint8_t &u) override;
     int bindex(Addr pc_in) const override;
@@ -92,11 +92,11 @@ class MPP_TAGE : public TAGEBase
     unsigned getUseAltIdx(TAGEBase::BranchInfo *bi, Addr branch_pc) override;
     void adjustAlloc(bool &alloc, bool taken, bool pred_taken) override;
     void updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-        TAGEBase::BranchInfo *b, bool speculative, const StaticInstPtr &inst,
-        Addr target) override;
+                         TAGEBase::BranchInfo *b, bool speculative,
+                         const StaticInstPtr &inst, Addr target) override;
 
     void updatePathAndGlobalHistory(ThreadHistory &tHist, int brtype,
-        bool taken, Addr branch_pc, Addr target);
+                                    bool taken, Addr branch_pc, Addr target);
 };
 
 class MPP_LoopPredictor : public LoopPredictor
@@ -128,8 +128,8 @@ class MPP_StatisticalCorrector : public StatisticalCorrector
 
     struct MPP_SCThreadHistory : public StatisticalCorrector::SCThreadHistory
     {
-        MPP_SCThreadHistory() :
-            globalHist(0), historyStack(16, 0), historyStackPointer(0)
+        MPP_SCThreadHistory()
+            : globalHist(0), historyStack(16, 0), historyStackPointer(0)
         {}
         int64_t globalHist; // global history
         std::vector<int64_t> historyStack;
@@ -142,8 +142,8 @@ class MPP_StatisticalCorrector : public StatisticalCorrector
         }
 
         void
-        updateHistoryStack(
-            Addr target, bool taken, bool is_call, bool is_return)
+        updateHistoryStack(Addr target, bool taken, bool is_call,
+                           bool is_return)
         {
             unsigned int truncated_target = target;
             historyStack[historyStackPointer] =
@@ -175,30 +175,34 @@ class MPP_StatisticalCorrector : public StatisticalCorrector
 
     void initBias() override;
     unsigned getIndBias(Addr branch_pc, StatisticalCorrector::BranchInfo *bi,
-        bool bias) const override;
-    unsigned getIndBiasSK(
-        Addr branch_pc, StatisticalCorrector::BranchInfo *bi) const override;
+                        bool bias) const override;
+    unsigned getIndBiasSK(Addr branch_pc,
+                          StatisticalCorrector::BranchInfo *bi) const override;
     unsigned getIndBiasBank(Addr branch_pc,
-        StatisticalCorrector::BranchInfo *bi, int hitBank,
-        int altBank) const override;
+                            StatisticalCorrector::BranchInfo *bi, int hitBank,
+                            int altBank) const override;
     unsigned getIndUpd(Addr branch_pc) const override;
     int gIndexLogsSubstr(int nbr, int i) override;
 
     bool scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-        StatisticalCorrector::BranchInfo *bi, bool prev_pred_taken,
-        bool bias_bit, bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
-        int hitBank, int altBank, int64_t phist, int init_lsum) override;
+                   StatisticalCorrector::BranchInfo *bi, bool prev_pred_taken,
+                   bool bias_bit, bool use_conf_ctr, int8_t conf_ctr,
+                   unsigned conf_bits, int hitBank, int altBank, int64_t phist,
+                   int init_lsum) override;
 
     void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-        StatisticalCorrector::BranchInfo *bi, Addr target, bool b, int hitBank,
-        int altBank, int64_t phist) override;
+                          StatisticalCorrector::BranchInfo *bi, Addr target,
+                          bool b, int hitBank, int altBank,
+                          int64_t phist) override;
 
     virtual void getBiasLSUM(Addr branch_pc,
-        StatisticalCorrector::BranchInfo *bi, int &lsum) const = 0;
+                             StatisticalCorrector::BranchInfo *bi,
+                             int &lsum) const = 0;
 
     void gUpdate(Addr branch_pc, bool taken, int64_t hist,
-        std::vector<int> &length, std::vector<int8_t> *tab, int nbr, int logs,
-        std::vector<int8_t> &w, StatisticalCorrector::BranchInfo *bi) override;
+                 std::vector<int> &length, std::vector<int8_t> *tab, int nbr,
+                 int logs, std::vector<int8_t> &w,
+                 StatisticalCorrector::BranchInfo *bi) override;
 };
 
 class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
@@ -217,13 +221,13 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
         StatisticalCorrector::BranchInfo *scBranchInfo;
         bool predictedTaken;
         MPPTAGEBranchInfo(Addr pc, int pcshift, bool cond, TAGEBase &tage,
-            LoopPredictor &loopPredictor,
-            StatisticalCorrector &statisticalCorrector) :
-            MPPBranchInfo(pc, pcshift, cond),
-            tageBranchInfo(tage.makeBranchInfo()),
-            lpBranchInfo(loopPredictor.makeBranchInfo()),
-            scBranchInfo(statisticalCorrector.makeBranchInfo()),
-            predictedTaken(false)
+                          LoopPredictor &loopPredictor,
+                          StatisticalCorrector &statisticalCorrector)
+            : MPPBranchInfo(pc, pcshift, cond),
+              tageBranchInfo(tage.makeBranchInfo()),
+              lpBranchInfo(loopPredictor.makeBranchInfo()),
+              scBranchInfo(statisticalCorrector.makeBranchInfo()),
+              predictedTaken(false)
         {}
         virtual ~MPPTAGEBranchInfo()
         {
@@ -234,7 +238,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
     };
 
     unsigned int getIndex(ThreadID tid, MPPTAGEBranchInfo &bi,
-        const HistorySpec &spec, int index) const;
+                          const HistorySpec &spec, int index) const;
     int computePartialSum(ThreadID tid, MPPTAGEBranchInfo &bi) const;
     void updatePartial(ThreadID tid, MPPTAGEBranchInfo &bi, bool taken);
     void updateHistories(ThreadID tid, MPPTAGEBranchInfo &bi, bool taken);
@@ -248,9 +252,10 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
     bool lookup(ThreadID tid, Addr instPC, void *&bp_history) override;
 
     void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-        bool squashed, const StaticInstPtr &inst, Addr target) override;
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-        Addr target, void *&bp_history) override;
+                         Addr target, void *&bp_history) override;
     void squash(ThreadID tid, void *&bp_history) override;
 };
 

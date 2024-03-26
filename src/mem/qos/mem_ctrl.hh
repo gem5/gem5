@@ -113,7 +113,7 @@ class MemCtrl : public ClockedObject
 
     /** Hash of requestors - address of request - queue of times of request */
     std::unordered_map<RequestorID,
-        std::unordered_map<uint64_t, std::deque<uint64_t>>>
+                       std::unordered_map<uint64_t, std::deque<uint64_t>>>
         requestTimes;
 
     /**
@@ -195,7 +195,7 @@ class MemCtrl : public ClockedObject
      * @param entries number of entries to record
      */
     void logRequest(BusState dir, RequestorID id, uint8_t _qos, Addr addr,
-        uint64_t entries);
+                    uint64_t entries);
 
     /**
      * Called upon receiving a response,
@@ -209,7 +209,7 @@ class MemCtrl : public ClockedObject
      * @param delay response delay
      */
     void logResponse(BusState dir, RequestorID id, uint8_t _qos, Addr addr,
-        uint64_t entries, double delay);
+                     uint64_t entries, double delay);
 
     /**
      * Assign priority to a packet by executing
@@ -222,7 +222,7 @@ class MemCtrl : public ClockedObject
      */
     template <typename Queues>
     uint8_t qosSchedule(std::initializer_list<Queues *> queues_ptr,
-        uint64_t queue_entry_size, const PacketPtr pkt);
+                        uint64_t queue_entry_size, const PacketPtr pkt);
 
     using SimObject::schedule;
     uint8_t schedule(RequestorID id, uint64_t data);
@@ -262,7 +262,7 @@ class MemCtrl : public ClockedObject
      */
     template <typename Queues>
     void escalate(std::initializer_list<Queues *> queues,
-        uint64_t queue_entry_size, RequestorID id, uint8_t tgt_prio);
+                  uint64_t queue_entry_size, RequestorID id, uint8_t tgt_prio);
 
     /**
      * Escalates/demotes priority of all packets
@@ -281,7 +281,7 @@ class MemCtrl : public ClockedObject
      */
     template <typename Queues>
     void escalateQueues(Queues &queues, uint64_t queue_entry_size,
-        RequestorID id, uint8_t curr_prio, uint8_t tgt_prio);
+                        RequestorID id, uint8_t curr_prio, uint8_t tgt_prio);
 
   public:
     /**
@@ -413,7 +413,7 @@ class MemCtrl : public ClockedObject
 template <typename Queues>
 void
 MemCtrl::escalateQueues(Queues &queues, uint64_t queue_entry_size,
-    RequestorID id, uint8_t curr_prio, uint8_t tgt_prio)
+                        RequestorID id, uint8_t curr_prio, uint8_t tgt_prio)
 {
     auto it = queues[curr_prio].begin();
     while (it != queues[curr_prio].end()) {
@@ -424,35 +424,35 @@ MemCtrl::escalateQueues(Queues &queues, uint64_t queue_entry_size,
         auto pkt = *it;
 
         DPRINTF(QOS,
-            "qos::MemCtrl::escalateQueues checking priority %d packet "
-            "id %d address %d\n",
-            curr_prio, pkt->requestorId(), pkt->getAddr());
+                "qos::MemCtrl::escalateQueues checking priority %d packet "
+                "id %d address %d\n",
+                curr_prio, pkt->requestorId(), pkt->getAddr());
 
         // Found a packet to move
         if (pkt->requestorId() == id) {
             uint64_t moved_entries = divCeil(pkt->getSize(), queue_entry_size);
 
             DPRINTF(QOS,
-                "qos::MemCtrl::escalateQueues Requestor %s [id %d] moving "
-                "packet addr %d size %d (p size %d) from priority %d "
-                "to priority %d - "
-                "this requestor packets %d (entries to move %d)\n",
-                requestors[id], id, pkt->getAddr(), pkt->getSize(),
-                queue_entry_size, curr_prio, tgt_prio,
-                packetPriorities[id][curr_prio], moved_entries);
+                    "qos::MemCtrl::escalateQueues Requestor %s [id %d] moving "
+                    "packet addr %d size %d (p size %d) from priority %d "
+                    "to priority %d - "
+                    "this requestor packets %d (entries to move %d)\n",
+                    requestors[id], id, pkt->getAddr(), pkt->getSize(),
+                    queue_entry_size, curr_prio, tgt_prio,
+                    packetPriorities[id][curr_prio], moved_entries);
 
             if (pkt->isRead()) {
                 panic_if(readQueueSizes[curr_prio] < moved_entries,
-                    "qos::MemCtrl::escalateQueues requestor %s negative "
-                    "READ packets for priority %d",
-                    requestors[id], tgt_prio);
+                         "qos::MemCtrl::escalateQueues requestor %s negative "
+                         "READ packets for priority %d",
+                         requestors[id], tgt_prio);
                 readQueueSizes[curr_prio] -= moved_entries;
                 readQueueSizes[tgt_prio] += moved_entries;
             } else if (pkt->isWrite()) {
                 panic_if(writeQueueSizes[curr_prio] < moved_entries,
-                    "qos::MemCtrl::escalateQueues requestor %s negative "
-                    "WRITE packets for priority %d",
-                    requestors[id], tgt_prio);
+                         "qos::MemCtrl::escalateQueues requestor %s negative "
+                         "WRITE packets for priority %d",
+                         requestors[id], tgt_prio);
                 writeQueueSizes[curr_prio] -= moved_entries;
                 writeQueueSizes[tgt_prio] += moved_entries;
             }
@@ -465,9 +465,9 @@ MemCtrl::escalateQueues(Queues &queues, uint64_t queue_entry_size,
             // increment the iterator
             it = queues[curr_prio].erase(it);
             panic_if(packetPriorities[id][curr_prio] < moved_entries,
-                "qos::MemCtrl::escalateQueues requestor %s negative "
-                "packets for priority %d",
-                requestors[id], tgt_prio);
+                     "qos::MemCtrl::escalateQueues requestor %s negative "
+                     "packets for priority %d",
+                     requestors[id], tgt_prio);
 
             packetPriorities[id][curr_prio] -= moved_entries;
             packetPriorities[id][tgt_prio] += moved_entries;
@@ -481,16 +481,16 @@ MemCtrl::escalateQueues(Queues &queues, uint64_t queue_entry_size,
 template <typename Queues>
 void
 MemCtrl::escalate(std::initializer_list<Queues *> queues,
-    uint64_t queue_entry_size, RequestorID id, uint8_t tgt_prio)
+                  uint64_t queue_entry_size, RequestorID id, uint8_t tgt_prio)
 {
     // If needed, initialize all counters and statistics
     // for this requestor
     addRequestor(id);
 
     DPRINTF(QOS,
-        "qos::MemCtrl::escalate Requestor %s [id %d] to priority "
-        "%d (currently %d packets)\n",
-        requestors[id], id, tgt_prio, packetPriorities[id][tgt_prio]);
+            "qos::MemCtrl::escalate Requestor %s [id %d] to priority "
+            "%d (currently %d packets)\n",
+            requestors[id], id, tgt_prio, packetPriorities[id][tgt_prio]);
 
     for (uint8_t curr_prio = 0; curr_prio < numPriorities(); ++curr_prio) {
         // Skip target priority
@@ -500,14 +500,14 @@ MemCtrl::escalate(std::initializer_list<Queues *> queues,
         // Process other priority packet
         while (packetPriorities[id][curr_prio] > 0) {
             DPRINTF(QOS,
-                "qos::MemCtrl::escalate MID %d checking priority %d "
-                "(packets %d)- current packets in prio %d:  %d\n"
-                "\t(source read %d source write %d target read %d, "
-                "target write %d)\n",
-                id, curr_prio, packetPriorities[id][curr_prio], tgt_prio,
-                packetPriorities[id][tgt_prio], readQueueSizes[curr_prio],
-                writeQueueSizes[curr_prio], readQueueSizes[tgt_prio],
-                writeQueueSizes[tgt_prio]);
+                    "qos::MemCtrl::escalate MID %d checking priority %d "
+                    "(packets %d)- current packets in prio %d:  %d\n"
+                    "\t(source read %d source write %d target read %d, "
+                    "target write %d)\n",
+                    id, curr_prio, packetPriorities[id][curr_prio], tgt_prio,
+                    packetPriorities[id][tgt_prio], readQueueSizes[curr_prio],
+                    writeQueueSizes[curr_prio], readQueueSizes[tgt_prio],
+                    writeQueueSizes[tgt_prio]);
 
             // Check both read and write queue
             for (auto q : queues) {
@@ -517,17 +517,17 @@ MemCtrl::escalate(std::initializer_list<Queues *> queues,
     }
 
     DPRINTF(QOS,
-        "qos::MemCtrl::escalate Completed requestor %s [id %d] to "
-        "priority %d (now %d packets)\n\t(total read %d, total write %d)"
-        "\n",
-        requestors[id], id, tgt_prio, packetPriorities[id][tgt_prio],
-        readQueueSizes[tgt_prio], writeQueueSizes[tgt_prio]);
+            "qos::MemCtrl::escalate Completed requestor %s [id %d] to "
+            "priority %d (now %d packets)\n\t(total read %d, total write %d)"
+            "\n",
+            requestors[id], id, tgt_prio, packetPriorities[id][tgt_prio],
+            readQueueSizes[tgt_prio], writeQueueSizes[tgt_prio]);
 }
 
 template <typename Queues>
 uint8_t
 MemCtrl::qosSchedule(std::initializer_list<Queues *> queues,
-    const uint64_t queue_entry_size, const PacketPtr pkt)
+                     const uint64_t queue_entry_size, const PacketPtr pkt)
 {
     // Schedule packet.
     uint8_t pkt_priority = schedule(pkt);
@@ -546,9 +546,9 @@ MemCtrl::qosSchedule(std::initializer_list<Queues *> queues,
 
             if (qosPriorityEscalation) {
                 DPRINTF(QOS,
-                    "qos::MemCtrl::qosSchedule: (syncro) escalating "
-                    "REQUESTOR %s to assigned priority %d\n",
-                    _system->getRequestorName(requestor.first), prio);
+                        "qos::MemCtrl::qosSchedule: (syncro) escalating "
+                        "REQUESTOR %s to assigned priority %d\n",
+                        _system->getRequestorName(requestor.first), prio);
                 escalate(queues, queue_entry_size, requestor.first, prio);
             }
         }
@@ -556,9 +556,9 @@ MemCtrl::qosSchedule(std::initializer_list<Queues *> queues,
 
     if (qosPriorityEscalation) {
         DPRINTF(QOS,
-            "qos::MemCtrl::qosSchedule: escalating "
-            "REQUESTOR %s to assigned priority %d\n",
-            _system->getRequestorName(pkt->requestorId()), pkt_priority);
+                "qos::MemCtrl::qosSchedule: escalating "
+                "REQUESTOR %s to assigned priority %d\n",
+                _system->getRequestorName(pkt->requestorId()), pkt_priority);
         escalate(queues, queue_entry_size, pkt->requestorId(), pkt_priority);
     }
 

@@ -182,9 +182,9 @@ class Base : public SimObject
      * @param decomp_lat Decompression latency in number of cycles.
      * @return Cache line after compression.
      */
-    virtual std::unique_ptr<CompressionData> compress(
-        const std::vector<Chunk> &chunks, Cycles &comp_lat,
-        Cycles &decomp_lat) = 0;
+    virtual std::unique_ptr<CompressionData>
+    compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) = 0;
 
     /**
      * Apply the decompression process to the compressed data.
@@ -192,8 +192,8 @@ class Base : public SimObject
      * @param comp_data Compressed cache line.
      * @param cache_line The cache line to be decompressed.
      */
-    virtual void decompress(
-        const CompressionData *comp_data, uint64_t *cache_line) = 0;
+    virtual void decompress(const CompressionData *comp_data,
+                            uint64_t *cache_line) = 0;
 
   public:
     typedef BaseCacheCompressorParams Params;
@@ -212,8 +212,8 @@ class Base : public SimObject
      * @param decomp_lat Decompression latency in number of cycles.
      * @return Cache line after compression.
      */
-    std::unique_ptr<CompressionData> compress(
-        const uint64_t *data, Cycles &comp_lat, Cycles &decomp_lat);
+    std::unique_ptr<CompressionData>
+    compress(const uint64_t *data, Cycles &comp_lat, Cycles &decomp_lat);
 
     /**
      * Get the decompression latency if the block is compressed. Latency is 0

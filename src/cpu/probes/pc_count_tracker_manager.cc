@@ -31,8 +31,8 @@
 namespace gem5
 {
 PcCountTrackerManager::PcCountTrackerManager(
-    const PcCountTrackerManagerParams &p) :
-    SimObject(p)
+    const PcCountTrackerManagerParams &p)
+    : SimObject(p)
 {
     currentPair = PcCountPair(0, 0);
     ifListNotEmpty = true;
@@ -61,7 +61,7 @@ PcCountTrackerManager::checkCount(Addr pc)
         if (targetPair.find(currentPair) != targetPair.end()) {
             // if the current PC Count pair is one of the target pairs
             DPRINTF(PcCountTracker, "pc:%s encountered\n",
-                currentPair.to_string());
+                    currentPair.to_string());
 
             exitSimLoopNow("simpoint starting point found");
             // raise the SIMPOINT_BEGIN exit event
@@ -69,7 +69,7 @@ PcCountTrackerManager::checkCount(Addr pc)
             targetPair.erase(currentPair);
             // erase the encountered PC Count pair from the target pairs
             DPRINTF(PcCountTracker, "There are %i targets remained\n",
-                targetPair.size());
+                    targetPair.size());
         }
 
         if (targetPair.empty()) {

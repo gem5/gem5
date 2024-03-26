@@ -50,13 +50,13 @@
 
 namespace gem5
 {
-Pl050::Pl050(const Pl050Params &p) :
-    AmbaIntDevice(p, 0x1000),
-    control(0),
-    status(0x43),
-    clkdiv(0),
-    rawInterrupts(0),
-    ps2Device(p.ps2)
+Pl050::Pl050(const Pl050Params &p)
+    : AmbaIntDevice(p, 0x1000),
+      control(0),
+      status(0x43),
+      clkdiv(0),
+      rawInterrupts(0),
+      ps2Device(p.ps2)
 {
     ps2Device->hostRegDataAvailable([this]() { this->updateRxInt(); });
 }
@@ -122,9 +122,9 @@ Pl050::write(PacketPtr pkt)
     const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     panic_if(pkt->getSize() != 1,
-        "PL050: Unexpected write size "
-        "(offset: %#x, data: %#x, size: %u)\n",
-        daddr, data, pkt->getSize());
+             "PL050: Unexpected write size "
+             "(offset: %#x, data: %#x, size: %u)\n",
+             daddr, data, pkt->getSize());
 
     switch (daddr) {
     case kmiCr:
@@ -186,11 +186,11 @@ Pl050::updateIntCtrl(InterruptReg ints, ControlReg ctrl)
 
     if (!old_pending && new_pending) {
         DPRINTF(Pl050, "Generate interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
-            rawInterrupts, control, getInterrupt());
+                rawInterrupts, control, getInterrupt());
         interrupt->raise();
     } else if (old_pending && !new_pending) {
         DPRINTF(Pl050, "Clear interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
-            rawInterrupts, control, getInterrupt());
+                rawInterrupts, control, getInterrupt());
         interrupt->clear();
     }
 }

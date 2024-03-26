@@ -75,25 +75,26 @@ class Stage2LookUp : public BaseMMU::Translation
 
   public:
     Stage2LookUp(MMU *_mmu, TlbEntry s1_te, const RequestPtr &_req,
-        MMU::Translation *_transState, BaseMMU::Mode _mode, bool _timing,
-        bool _functional, bool _secure, MMU::ArmTranslationType _tranType) :
-        mmu(_mmu),
-        stage1Te(s1_te),
-        s1Req(_req),
-        transState(_transState),
-        mode(_mode),
-        timing(_timing),
-        functional(_functional),
-        tranType(_tranType),
-        stage2Te(nullptr),
-        fault(NoFault),
-        complete(false),
-        selfDelete(false),
-        secure(_secure)
+                 MMU::Translation *_transState, BaseMMU::Mode _mode,
+                 bool _timing, bool _functional, bool _secure,
+                 MMU::ArmTranslationType _tranType)
+        : mmu(_mmu),
+          stage1Te(s1_te),
+          s1Req(_req),
+          transState(_transState),
+          mode(_mode),
+          timing(_timing),
+          functional(_functional),
+          tranType(_tranType),
+          stage2Te(nullptr),
+          fault(NoFault),
+          complete(false),
+          selfDelete(false),
+          secure(_secure)
     {
         req = std::make_shared<Request>();
         req->setVirt(s1_te.pAddr(s1Req->getVaddr()), s1Req->getSize(),
-            s1Req->getFlags(), s1Req->requestorId(), 0);
+                     s1Req->getFlags(), s1Req->requestorId(), 0);
     }
 
     Fault getTe(ThreadContext *tc, TlbEntry *destTe);
@@ -117,7 +118,7 @@ class Stage2LookUp : public BaseMMU::Translation
     {}
 
     void finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode);
+                BaseMMU::Mode mode);
 };
 
 } // namespace ArmISA

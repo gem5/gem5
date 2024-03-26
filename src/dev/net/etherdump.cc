@@ -45,10 +45,10 @@ using std::string;
 
 namespace gem5
 {
-EtherDump::EtherDump(const Params &p) :
-    SimObject(p),
-    stream(simout.create(p.file, true)->stream()),
-    maxlen(p.maxlen)
+EtherDump::EtherDump(const Params &p)
+    : SimObject(p),
+      stream(simout.create(p.file, true)->stream()),
+      maxlen(p.maxlen)
 {}
 
 #define DLT_EN10MB 1 // Ethernet (10Mb)

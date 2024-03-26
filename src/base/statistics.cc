@@ -73,7 +73,7 @@ void
 InfoAccess::setInfo(Group *parent, Info *info)
 {
     panic_if(statsMap().find(this) != statsMap().end() || _info != nullptr,
-        "shouldn't register stat twice!");
+             "shouldn't register stat twice!");
 
     // New-style stats are reachable through the hierarchy and
     // shouldn't be added to the global lists.
@@ -138,28 +138,28 @@ InfoAccess::newStyleStats() const
     return _info != nullptr;
 }
 
-Formula::Formula(Group *parent, const char *name, const char *desc) :
-    DataWrapVec<Formula, FormulaInfoProxy>(
-        parent, name, units::Unspecified::get(), desc)
+Formula::Formula(Group *parent, const char *name, const char *desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name,
+                                             units::Unspecified::get(), desc)
 
 {}
 
 Formula::Formula(Group *parent, const char *name, const units::Base *unit,
-    const char *desc) :
-    DataWrapVec<Formula, FormulaInfoProxy>(parent, name, unit, desc)
+                 const char *desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, unit, desc)
 {}
 
-Formula::Formula(
-    Group *parent, const char *name, const char *desc, const Temp &r) :
-    DataWrapVec<Formula, FormulaInfoProxy>(
-        parent, name, units::Unspecified::get(), desc)
+Formula::Formula(Group *parent, const char *name, const char *desc,
+                 const Temp &r)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name,
+                                             units::Unspecified::get(), desc)
 {
     *this = r;
 }
 
 Formula::Formula(Group *parent, const char *name, const units::Base *unit,
-    const char *desc, const Temp &r) :
-    DataWrapVec<Formula, FormulaInfoProxy>(parent, name, unit, desc)
+                 const char *desc, const Temp &r)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, unit, desc)
 {
     *this = r;
 }

@@ -35,16 +35,16 @@
 
 namespace gem5
 {
-GPUStaticInst::GPUStaticInst(const std::string &opcode) :
-    executed_as(enums::SC_NONE),
-    _opcode(opcode),
-    _instNum(0),
-    _instAddr(0),
-    srcVecDWords(-1),
-    dstVecDWords(-1),
-    srcScalarDWords(-1),
-    dstScalarDWords(-1),
-    maxOpSize(-1)
+GPUStaticInst::GPUStaticInst(const std::string &opcode)
+    : executed_as(enums::SC_NONE),
+      _opcode(opcode),
+      _instNum(0),
+      _instAddr(0),
+      srcVecDWords(-1),
+      dstVecDWords(-1),
+      srcScalarDWords(-1),
+      dstScalarDWords(-1),
+      maxOpSize(-1)
 {}
 
 const std::string &
@@ -78,16 +78,16 @@ GPUStaticInst::initDynOperandInfo(Wavefront *wf, ComputeUnit *cu)
             phys_idxs.push_back(phys_idx);
         }
         DPRINTF(GPUInst,
-            "%s adding %s %s (%d->%d) operand that uses "
-            "%d registers.\n",
-            disassemble(),
-            (opType == OpType::SRC_VEC || opType == OpType::DST_VEC) ?
-                "vector" :
-                "scalar",
-            (opType == OpType::SRC_VEC || opType == OpType::SRC_SCALAR) ?
-                "src" :
-                "dst",
-            virt_idxs[0], phys_idxs[0], num_dwords);
+                "%s adding %s %s (%d->%d) operand that uses "
+                "%d registers.\n",
+                disassemble(),
+                (opType == OpType::SRC_VEC || opType == OpType::DST_VEC) ?
+                    "vector" :
+                    "scalar",
+                (opType == OpType::SRC_VEC || opType == OpType::SRC_SCALAR) ?
+                    "src" :
+                    "dst",
+                virt_idxs[0], phys_idxs[0], num_dwords);
 
         op.setVirtToPhysMapping(virt_idxs, phys_idxs);
 
@@ -97,20 +97,22 @@ GPUStaticInst::initDynOperandInfo(Wavefront *wf, ComputeUnit *cu)
     for (auto &srcOp : srcOps) {
         if (srcOp.isVectorReg()) {
             generateVirtToPhysMap(srcOp, srcVecRegOps,
-                &RegisterManager::mapVgpr, OpType::SRC_VEC);
+                                  &RegisterManager::mapVgpr, OpType::SRC_VEC);
         } else if (srcOp.isScalarReg()) {
             generateVirtToPhysMap(srcOp, srcScalarRegOps,
-                &RegisterManager::mapSgpr, OpType::SRC_SCALAR);
+                                  &RegisterManager::mapSgpr,
+                                  OpType::SRC_SCALAR);
         }
     }
 
     for (auto &dstOp : dstOps) {
         if (dstOp.isVectorReg()) {
             generateVirtToPhysMap(dstOp, dstVecRegOps,
-                &RegisterManager::mapVgpr, OpType::DST_VEC);
+                                  &RegisterManager::mapVgpr, OpType::DST_VEC);
         } else if (dstOp.isScalarReg()) {
             generateVirtToPhysMap(dstOp, dstScalarRegOps,
-                &RegisterManager::mapSgpr, OpType::DST_SCALAR);
+                                  &RegisterManager::mapSgpr,
+                                  OpType::DST_SCALAR);
         }
     }
 }

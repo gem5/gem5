@@ -37,8 +37,8 @@ PersistentTable::PersistentTable() {}
 PersistentTable::~PersistentTable() {}
 
 void
-PersistentTable::persistentRequestLock(
-    Addr address, MachineID locker, AccessType type)
+PersistentTable::persistentRequestLock(Addr address, MachineID locker,
+                                       AccessType type)
 {
     assert(address == makeLineAddress(address));
 

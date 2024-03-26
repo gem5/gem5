@@ -59,7 +59,7 @@ Network::Network(const Params &p) : ClockedObject(p)
     m_control_msg_size = p.control_msg_size;
 
     fatal_if(p.data_msg_size > p.ruby_system->getBlockSizeBytes(),
-        "%s: data message size > cache line size", name());
+             "%s: data message size > cache line size", name());
     m_data_msg_size = p.data_msg_size + m_control_msg_size;
 
     params().ruby_system->registerNetwork(this);
@@ -97,8 +97,9 @@ Network::Network(const Params &p) : ClockedObject(p)
     assert(m_nodes != 0);
     assert(m_virtual_networks != 0);
 
-    m_topology_ptr = new Topology(m_nodes, p.routers.size(),
-        m_virtual_networks, p.ext_links, p.int_links);
+    m_topology_ptr =
+        new Topology(m_nodes, p.routers.size(), m_virtual_networks,
+                     p.ext_links, p.int_links);
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -182,8 +183,8 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
 }
 
 void
-Network::checkNetworkAllocation(
-    NodeID local_id, bool ordered, int network_num, std::string vnet_type)
+Network::checkNetworkAllocation(NodeID local_id, bool ordered, int network_num,
+                                std::string vnet_type)
 {
     fatal_if(local_id >= m_nodes, "Node ID is out of range");
     fatal_if(network_num >= m_virtual_networks, "Network id is out of range");
@@ -197,7 +198,7 @@ Network::checkNetworkAllocation(
 
 void
 Network::setToNetQueue(NodeID global_id, bool ordered, int network_num,
-    std::string vnet_type, MessageBuffer *b)
+                       std::string vnet_type, MessageBuffer *b)
 {
     NodeID local_id = getLocalNodeID(global_id);
     checkNetworkAllocation(local_id, ordered, network_num, vnet_type);
@@ -210,7 +211,7 @@ Network::setToNetQueue(NodeID global_id, bool ordered, int network_num,
 
 void
 Network::setFromNetQueue(NodeID global_id, bool ordered, int network_num,
-    std::string vnet_type, MessageBuffer *b)
+                         std::string vnet_type, MessageBuffer *b)
 {
     NodeID local_id = getLocalNodeID(global_id);
     checkNetworkAllocation(local_id, ordered, network_num, vnet_type);

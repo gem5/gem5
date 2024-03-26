@@ -58,8 +58,8 @@ class Barrier
     unsigned numLeft;
 
   public:
-    Barrier(unsigned _numWaiting) :
-        numWaiting(_numWaiting), generation(0), numLeft(_numWaiting)
+    Barrier(unsigned _numWaiting)
+        : numWaiting(_numWaiting), generation(0), numLeft(_numWaiting)
     {}
 
     bool

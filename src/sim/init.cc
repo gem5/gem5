@@ -56,16 +56,17 @@ namespace gem5
 {
 pybind11::module_ *EmbeddedPyBind::mod = nullptr;
 
-EmbeddedPyBind::EmbeddedPyBind(
-    const char *_name, void (*init_func)(py::module_ &), const char *_base) :
-    initFunc(init_func), name(_name), base(_base)
+EmbeddedPyBind::EmbeddedPyBind(const char *_name,
+                               void (*init_func)(py::module_ &),
+                               const char *_base)
+    : initFunc(init_func), name(_name), base(_base)
 {
     init();
 }
 
-EmbeddedPyBind::EmbeddedPyBind(
-    const char *_name, void (*init_func)(py::module_ &)) :
-    EmbeddedPyBind(_name, init_func, "")
+EmbeddedPyBind::EmbeddedPyBind(const char *_name,
+                               void (*init_func)(py::module_ &))
+    : EmbeddedPyBind(_name, init_func, "")
 {}
 
 void
@@ -101,8 +102,8 @@ EmbeddedPyBind::initPending(const std::string &finished)
     auto &pending = getPending();
 
     auto range = pending.equal_range(finished);
-    std::list<std::pair<std::string, EmbeddedPyBind *>> todo(
-        range.first, range.second);
+    std::list<std::pair<std::string, EmbeddedPyBind *>> todo(range.first,
+                                                             range.second);
     pending.erase(range.first, range.second);
 
     for (auto &entry : todo)

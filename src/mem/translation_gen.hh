@@ -102,8 +102,8 @@ class TranslationGen
      * may need, like pointers back to the object actually doing the
      * translation.
      */
-    TranslationGen(Addr new_start, Addr new_size) :
-        _start(new_start), _size(new_size)
+    TranslationGen(Addr new_start, Addr new_size)
+        : _start(new_start), _size(new_size)
     {}
     virtual ~TranslationGen() {}
 
@@ -174,8 +174,8 @@ class TranslationGenConstIterator
     /** Construct a blank iterator, used by end(). */
     TranslationGenConstIterator() {}
     /** Construct a valid new iterator and set it's starting conditions. */
-    TranslationGenConstIterator(const TranslationGen *parent, Addr start) :
-        current{start}, gen(parent), end(false)
+    TranslationGenConstIterator(const TranslationGen *parent, Addr start)
+        : current{start}, gen(parent), end(false)
     {
         update();
     }
@@ -186,8 +186,8 @@ class TranslationGenConstIterator
     using pointer = const value_type *;
     using iterator_category = std::forward_iterator_tag;
 
-    TranslationGenConstIterator(const TranslationGenConstIterator &other) :
-        current(other.current), gen(other.gen)
+    TranslationGenConstIterator(const TranslationGenConstIterator &other)
+        : current(other.current), gen(other.gen)
     {}
 
     TranslationGenConstIterator &

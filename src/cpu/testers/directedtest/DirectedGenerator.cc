@@ -33,8 +33,8 @@
 
 namespace gem5
 {
-DirectedGenerator::DirectedGenerator(const Params &p) :
-    SimObject(p), requestorId(p.system->getRequestorId(this))
+DirectedGenerator::DirectedGenerator(const Params &p)
+    : SimObject(p), requestorId(p.system->getRequestorId(this))
 {
     m_num_cpus = p.num_cpus;
     m_directed_tester = NULL;

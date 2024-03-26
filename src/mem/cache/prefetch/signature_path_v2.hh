@@ -60,25 +60,28 @@ class SignaturePathV2 : public SignaturePath
         double confidence;
         stride_t lastBlock;
         stride_t delta;
-        GlobalHistoryEntry() :
-            signature(0), confidence(0.0), lastBlock(0), delta(0)
+        GlobalHistoryEntry()
+            : signature(0), confidence(0.0), lastBlock(0), delta(0)
         {}
     };
     /** Global History Register */
     AssociativeSet<GlobalHistoryEntry> globalHistoryRegister;
 
-    double calculateLookaheadConfidence(PatternEntry const &sig,
+    double calculateLookaheadConfidence(
+        PatternEntry const &sig,
         PatternStrideEntry const &lookahead) const override;
 
-    double calculatePrefetchConfidence(PatternEntry const &sig,
+    double calculatePrefetchConfidence(
+        PatternEntry const &sig,
         PatternStrideEntry const &lookahead) const override;
 
-    void increasePatternEntryCounter(PatternEntry &pattern_entry,
-        PatternStrideEntry &pstride_entry) override;
+    void
+    increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                PatternStrideEntry &pstride_entry) override;
 
     void handleSignatureTableMiss(stride_t current_block,
-        signature_t &new_signature, double &new_conf,
-        stride_t &new_stride) override;
+                                  signature_t &new_signature, double &new_conf,
+                                  stride_t &new_stride) override;
 
     /**
      * In this version of the Signature Path Prefetcher, there is no auxiliary
@@ -86,11 +89,13 @@ class SignaturePathV2 : public SignaturePath
      */
     void
     auxiliaryPrefetcher(Addr ppn, stride_t current_block, bool is_secure,
-        std::vector<AddrPriority> &addresses) override
+                        std::vector<AddrPriority> &addresses) override
     {}
 
     virtual void handlePageCrossingLookahead(signature_t signature,
-        stride_t last_offset, stride_t delta, double path_confidence) override;
+                                             stride_t last_offset,
+                                             stride_t delta,
+                                             double path_confidence) override;
 
   public:
     SignaturePathV2(const SignaturePathPrefetcherV2Params &p);

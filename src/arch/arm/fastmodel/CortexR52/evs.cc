@@ -67,18 +67,18 @@ ScxEvsCortexR52<Types>::setResetAddr(int core, Addr addr, bool secure)
 }
 
 template <class Types>
-ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
-    name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
-    evs(_evs),
-    cpu(_cpu),
-    llpp(evs->llpp[cpu], name + ".llpp", -1),
-    flash(evs->flash[cpu], name + ".flash", -1),
-    amba(evs->amba[cpu], name + ".amba", -1),
-    core_reset(name + ".core_reset", 0),
-    poweron_reset(name + ".poweron_reset", 0),
-    halt(name + ".halt", 0),
-    standbywfi(name + ".standbywfi"),
-    cfgvectable((name + "cfgvectable").c_str())
+ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu)
+    : name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
+      evs(_evs),
+      cpu(_cpu),
+      llpp(evs->llpp[cpu], name + ".llpp", -1),
+      flash(evs->flash[cpu], name + ".flash", -1),
+      amba(evs->amba[cpu], name + ".amba", -1),
+      core_reset(name + ".core_reset", 0),
+      poweron_reset(name + ".poweron_reset", 0),
+      halt(name + ".halt", 0),
+      standbywfi(name + ".standbywfi"),
+      cfgvectable((name + "cfgvectable").c_str())
 {
     for (int i = 0; i < Evs::PpiCount; i++) {
         ppis.emplace_back(
@@ -93,13 +93,13 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
 
 template <class Types>
 ScxEvsCortexR52<Types>::ScxEvsCortexR52(
-    const sc_core::sc_module_name &mod_name, const Params &p) :
-    Base(mod_name),
-    ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
-    top_reset(p.name + ".top_reset", 0),
-    dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset"),
-    params(p)
+    const sc_core::sc_module_name &mod_name, const Params &p)
+    : Base(mod_name),
+      ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
+      top_reset(p.name + ".top_reset", 0),
+      dbg_reset(p.name + ".dbg_reset", 0),
+      model_reset(p.name + ".model_reset"),
+      params(p)
 {
     model_reset.onChange([this](const bool &new_val) {
         // Set reset for all cores.

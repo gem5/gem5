@@ -245,10 +245,10 @@ median(T val_0, T val_1, T val_2)
 {
     if (std::is_floating_point_v<T>) {
         return std::fmax(std::fmin(val_0, val_1),
-            std::fmin(std::fmax(val_0, val_1), val_2));
+                         std::fmin(std::fmax(val_0, val_1), val_2));
     } else {
-        return std::max(
-            std::min(val_0, val_1), std::min(std::max(val_0, val_1), val_2));
+        return std::max(std::min(val_0, val_1),
+                        std::min(std::max(val_0, val_1), val_2));
     }
 }
 
@@ -314,7 +314,7 @@ muladd(VecElemI64 &dst, VecElemI32 val_0, VecElemI32 val_1, VecElemI64 val_2)
  */
 int
 dppInstImpl(SqDPPVals dppCtrl, int currLane, int rowNum, int rowOffset,
-    bool &outOfBounds)
+            bool &outOfBounds)
 {
     // local variables
     // newLane will be the same as the input lane unless swizzling happens
@@ -560,7 +560,7 @@ processDPP(GPUDynInstPtr gpuDynInst, InFmt_VOP_DPP dppInst, T &src0, T &src1)
 template <typename T>
 T
 sdwaInstSrcImpl_helper(T currOperVal, const T origOperVal,
-    const SDWASelVals sel, const bool signExt)
+                       const SDWASelVals sel, const bool signExt)
 {
     // local variables
     int low_bit = 0, high_bit = 0;
@@ -650,8 +650,8 @@ sdwaInstSrcImpl_helper(T currOperVal, const T origOperVal,
  */
 template <typename T>
 void
-sdwaInstSrcImpl(
-    T &currOper, T &origCurrOper, const SDWASelVals sel, const bool signExt)
+sdwaInstSrcImpl(T &currOper, T &origCurrOper, const SDWASelVals sel,
+                const bool signExt)
 {
     // iterate over all lanes, setting appropriate, selected value
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -669,7 +669,8 @@ sdwaInstSrcImpl(
 template <typename T>
 T
 sdwaInstDstImpl_helper(T currDstVal, const T origDstVal, const bool clamp,
-    const SDWASelVals sel, const SDWADstVals unusedBits_format)
+                       const SDWASelVals sel,
+                       const SDWADstVals unusedBits_format)
 {
     // local variables
     int low_bit = 0, high_bit = 0;
@@ -709,9 +710,9 @@ sdwaInstDstImpl_helper(T currDstVal, const T origDstVal, const bool clamp,
             currBits_thisByte = bits(currDstVal, high_bit, low_bit);
             newBits =
                 ((byte == sel) ?
-                        origBits_thisByte :
-                        ((preserve) ? currBits_thisByte :
-                                      (((byte > sel) && signExt) ? 0xff : 0)));
+                     origBits_thisByte :
+                     ((preserve) ? currBits_thisByte :
+                                   (((byte > sel) && signExt) ? 0xff : 0)));
             retVal = insertBits(retVal, high_bit, low_bit, newBits);
         }
     } else if (sel < SDWA_DWORD) { // we are selecting 1 word
@@ -733,12 +734,12 @@ sdwaInstDstImpl_helper(T currDstVal, const T origDstVal, const bool clamp,
             */
             origBits_thisWord = bits(origDstVal, high_bit, low_bit);
             currBits_thisWord = bits(currDstVal, high_bit, low_bit);
-            newBits = ((word == (sel & 0x1)) ?
-                           origBits_thisWord :
-                           ((preserve) ? currBits_thisWord :
-                                         (((word > (sel & 0x1)) && signExt) ?
-                                                 0xffff :
-                                                 0)));
+            newBits =
+                ((word == (sel & 0x1)) ?
+                     origBits_thisWord :
+                     ((preserve) ?
+                          currBits_thisWord :
+                          (((word > (sel & 0x1)) && signExt) ? 0xffff : 0)));
             retVal = insertBits(retVal, high_bit, low_bit, newBits);
         }
     } else {
@@ -773,7 +774,7 @@ sdwaInstDstImpl_helper(T currDstVal, const T origDstVal, const bool clamp,
 template <typename T>
 void
 sdwaInstDstImpl(T &dstOper, T &origDstOper, const bool clamp,
-    const SDWASelVals sel, const SDWADstVals unusedBits_format)
+                const SDWASelVals sel, const SDWADstVals unusedBits_format)
 {
     // iterate over all lanes, setting appropriate, selected value
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -792,7 +793,8 @@ sdwaInstDstImpl(T &dstOper, T &origDstOper, const bool clamp,
 template <typename T>
 void
 processSDWA_src_helper(T &currSrc, T &origCurrSrc, const SDWASelVals src_sel,
-    const bool src_signExt, const bool src_abs, const bool src_neg)
+                       const bool src_signExt, const bool src_abs,
+                       const bool src_neg)
 {
     /**
      * STEP 1: check if the absolute value (ABS) or negation (NEG) tags
@@ -839,8 +841,8 @@ processSDWA_src(InFmt_VOP_SDWA sdwaInst, T &src0, T &origSrc0)
     assert(!sdwaInst.SRC1_NEG);
     assert(!sdwaInst.SRC1_ABS);
 
-    processSDWA_src_helper(
-        src0, origSrc0, src0_sel, src0_signExt, src0_abs, src0_neg);
+    processSDWA_src_helper(src0, origSrc0, src0_sel, src0_signExt, src0_abs,
+                           src0_neg);
 }
 
 /**
@@ -852,8 +854,8 @@ processSDWA_src(InFmt_VOP_SDWA sdwaInst, T &src0, T &origSrc0)
  */
 template <typename T>
 void
-processSDWA_src(
-    InFmt_VOP_SDWA sdwaInst, T &src0, T &origSrc0, T &src1, T &origSrc1)
+processSDWA_src(InFmt_VOP_SDWA sdwaInst, T &src0, T &origSrc0, T &src1,
+                T &origSrc1)
 {
     // local variables
     const SDWASelVals src0_sel = (SDWASelVals)sdwaInst.SRC0_SEL;
@@ -865,10 +867,10 @@ processSDWA_src(
     const bool src1_neg = sdwaInst.SRC1_NEG;
     const bool src1_abs = sdwaInst.SRC1_ABS;
 
-    processSDWA_src_helper(
-        src0, origSrc0, src0_sel, src0_signExt, src0_abs, src0_neg);
-    processSDWA_src_helper(
-        src1, origSrc1, src1_sel, src1_signExt, src1_abs, src1_neg);
+    processSDWA_src_helper(src0, origSrc0, src0_sel, src0_signExt, src0_abs,
+                           src0_neg);
+    processSDWA_src_helper(src1, origSrc1, src1_sel, src1_signExt, src1_abs,
+                           src1_neg);
 }
 
 /**

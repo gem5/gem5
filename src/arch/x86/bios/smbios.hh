@@ -222,8 +222,8 @@ class SMBiosTable : public SimObject
         smbiosHeader.intermediateHeader.tableAddr = addr;
     }
 
-    void writeOut(
-        PortProxy &proxy, Addr addr, Addr &headerSize, Addr &structSize);
+    void writeOut(PortProxy &proxy, Addr addr, Addr &headerSize,
+                  Addr &structSize);
 };
 
 } // namespace smbios

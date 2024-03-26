@@ -69,7 +69,7 @@ template <class Entry>
 class Queue : public Drainable, public Named
 {
     static_assert(std::is_base_of_v<QueueEntry, Entry>,
-        "Entry must be derived from QueueEntry");
+                  "Entry must be derived from QueueEntry");
 
   protected:
     /** Local label (for functional print requests) */
@@ -130,14 +130,14 @@ class Queue : public Drainable, public Named
      * @param reserve The extra overflow entries needed.
      */
     Queue(const std::string &_label, int num_entries, int reserve,
-        const std::string &name) :
-        Named(name),
-        label(_label),
-        numEntries(num_entries + reserve),
-        numReserve(reserve),
-        entries(numEntries, name + ".entry"),
-        _numInService(0),
-        allocated(0)
+          const std::string &name)
+        : Named(name),
+          label(_label),
+          numEntries(num_entries + reserve),
+          numReserve(reserve),
+          entries(numEntries, name + ".entry"),
+          _numInService(0),
+          allocated(0)
     {
         for (int i = 0; i < numEntries; ++i) {
             freeList.push_back(&entries[i]);
@@ -171,8 +171,8 @@ class Queue : public Drainable, public Named
      * @return Pointer to the matching WriteQueueEntry, null if not found.
      */
     Entry *
-    findMatch(
-        Addr blk_addr, bool is_secure, bool ignore_uncacheable = true) const
+    findMatch(Addr blk_addr, bool is_secure,
+              bool ignore_uncacheable = true) const
     {
         for (const auto &entry : allocatedList) {
             // we ignore any entries allocated for uncacheable

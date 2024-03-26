@@ -54,11 +54,11 @@ SimObjectResolver *SimObject::_objNameResolver = NULL;
 //
 // SimObject constructor: used to maintain static simObjectList
 //
-SimObject::SimObject(const Params &p) :
-    EventManager(getEventQueue(p.eventq_index)),
-    statistics::Group(nullptr),
-    Named(p.name),
-    _params(p)
+SimObject::SimObject(const Params &p)
+    : EventManager(getEventQueue(p.eventq_index)),
+      statistics::Group(nullptr),
+      Named(p.name),
+      _params(p)
 {
     simObjectList.push_back(this);
     probeManager = new ProbeManager(this);

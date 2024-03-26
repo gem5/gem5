@@ -53,7 +53,7 @@ class EmbeddedPyBind
 {
   public:
     EmbeddedPyBind(const char *_name, void (*init_func)(pybind11::module_ &),
-        const char *_base);
+                   const char *_base);
 
     EmbeddedPyBind(const char *_name, void (*init_func)(pybind11::module_ &));
 

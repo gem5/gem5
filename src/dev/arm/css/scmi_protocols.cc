@@ -50,16 +50,16 @@ Protocol::name() const
     return platform.name();
 }
 
-BaseProtocol::BaseProtocol(Platform &_platform) :
-    Protocol(_platform),
-    vendor(platform.params().base_vendor),
-    subvendor(platform.params().base_subvendor),
-    implementationVersion(platform.params().base_impl_version)
+BaseProtocol::BaseProtocol(Platform &_platform)
+    : Protocol(_platform),
+      vendor(platform.params().base_vendor),
+      subvendor(platform.params().base_subvendor),
+      implementationVersion(platform.params().base_impl_version)
 {
     fatal_if(vendor.length() > MAX_STRING_SIZE,
-        "Invalid BASE_PROTOCOL VENDOR size\n");
+             "Invalid BASE_PROTOCOL VENDOR size\n");
     fatal_if(subvendor.length() > MAX_STRING_SIZE,
-        "Invalid BASE_PROTOCOL SUBVENDOR size\n");
+             "Invalid BASE_PROTOCOL SUBVENDOR size\n");
 }
 
 void

@@ -215,7 +215,7 @@ class Shader : public ClockedObject
             // if the value is initilized and we get
             // a differnt base later.
             panic_if(shHiddenPrivateBaseVmid != 0,
-                "Currently we support only single process\n");
+                     "Currently we support only single process\n");
         }
         shHiddenPrivateBaseVmid = sh_hidden_base_new;
     }
@@ -279,20 +279,20 @@ class Shader : public ClockedObject
     bool processTimingPacket(PacketPtr pkt);
 
     void AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
-        MemCmd cmd, bool suppress_func_errors);
+                   MemCmd cmd, bool suppress_func_errors);
 
     void ReadMem(uint64_t address, void *ptr, uint32_t sz, int cu_id);
 
     void ReadMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
-        bool suppress_func_errors);
+                 bool suppress_func_errors);
 
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id);
 
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
-        bool suppress_func_errors);
+                  bool suppress_func_errors);
 
     void doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
-        bool suppress_func_errors, int cu_id);
+                            bool suppress_func_errors, int cu_id);
 
     void
     registerCU(int cu_id, ComputeUnit *compute_unit)

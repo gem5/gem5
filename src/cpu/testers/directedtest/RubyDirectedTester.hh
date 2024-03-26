@@ -56,8 +56,8 @@ class RubyDirectedTester : public ClockedObject
 
       public:
         CpuPort(const std::string &_name, RubyDirectedTester *_tester,
-            PortID _id) :
-            RequestPort(_name, _id), tester(_tester)
+                PortID _id)
+            : RequestPort(_name, _id), tester(_tester)
         {}
 
       protected:
@@ -73,8 +73,8 @@ class RubyDirectedTester : public ClockedObject
     RubyDirectedTester(const Params &p);
     ~RubyDirectedTester();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     RequestPort *getCpuPort(int idx);
 

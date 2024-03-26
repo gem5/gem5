@@ -42,18 +42,19 @@
 
 namespace gem5
 {
-VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p) :
-    ClockedObject(p),
-    TLBProbesPerCycle(p.probesPerCycle),
-    coalescingWindow(p.coalescingWindow),
-    disableCoalescing(p.disableCoalescing),
-    probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
-        false, Event::CPU_Tick_Pri),
-    cleanupEvent([this] { processCleanupEvent(); },
-        "Cleanup issuedTranslationsTable hashmap", false, Event::Maximum_Pri),
-    tlb_level(p.tlb_level),
-    maxDownstream(p.maxDownstream),
-    numDownstream(0)
+VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
+    : ClockedObject(p),
+      TLBProbesPerCycle(p.probesPerCycle),
+      coalescingWindow(p.coalescingWindow),
+      disableCoalescing(p.disableCoalescing),
+      probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
+                    false, Event::CPU_Tick_Pri),
+      cleanupEvent([this] { processCleanupEvent(); },
+                   "Cleanup issuedTranslationsTable hashmap", false,
+                   Event::Maximum_Pri),
+      tlb_level(p.tlb_level),
+      maxDownstream(p.maxDownstream),
+      numDownstream(0)
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
@@ -145,7 +146,7 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
 
     DPRINTF(GPUTLB, "Update phys. addr. for %d coalesced reqs for page %#x\n",
-        issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
+            issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
 
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState *>(pkt->senderState);
@@ -297,7 +298,8 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
             coalescer->coalescerFIFO[tick_index][i].push_back(pkt);
 
             DPRINTF(GPUTLB, "Coalesced req %i w/ tick_index %d has %d reqs\n",
-                i, tick_index, coalescer->coalescerFIFO[tick_index][i].size());
+                    i, tick_index,
+                    coalescer->coalescerFIFO[tick_index][i].size());
 
             didCoalesce = true;
             break;
@@ -316,16 +318,16 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
         coalescer->coalescerFIFO[tick_index].push_back(new_array);
 
         DPRINTF(GPUTLB,
-            "coalescerFIFO[%d] now has %d coalesced reqs after "
-            "push\n",
-            tick_index, coalescer->coalescerFIFO[tick_index].size());
+                "coalescerFIFO[%d] now has %d coalesced reqs after "
+                "push\n",
+                tick_index, coalescer->coalescerFIFO[tick_index].size());
     }
 
     // schedule probeTLBEvent next cycle to send the
     // coalesced requests to the TLB
     if (!coalescer->probeTLBEvent.scheduled()) {
-        coalescer->schedule(
-            coalescer->probeTLBEvent, curTick() + coalescer->clockPeriod());
+        coalescer->schedule(coalescer->probeTLBEvent,
+                            curTick() + coalescer->clockPeriod());
     }
 
     return true;
@@ -353,9 +355,9 @@ VegaTLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 
     if (map_count) {
         DPRINTF(GPUTLB,
-            "Warning! Functional access to addr %#x sees timing "
-            "req. pending\n",
-            virt_page_addr);
+                "Warning! Functional access to addr %#x sees timing "
+                "req. pending\n",
+                virt_page_addr);
     }
 
     coalescer->memSidePort[0]->sendFunctional(pkt);
@@ -384,8 +386,8 @@ VegaTLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
     coalescer->decrementNumDownstream();
 
     DPRINTF(GPUTLB,
-        "recvTimingReq: clscr = %p, numDownstream = %d, max = %d\n", coalescer,
-        coalescer->numDownstream, coalescer->maxDownstream);
+            "recvTimingReq: clscr = %p, numDownstream = %d, max = %d\n",
+            coalescer, coalescer->numDownstream, coalescer->maxDownstream);
 
     coalescer->unstallPorts();
     return true;
@@ -396,8 +398,8 @@ VegaTLBCoalescer::MemSidePort::recvReqRetry()
 {
     // we've receeived a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled())
-        coalescer->schedule(
-            coalescer->probeTLBEvent, curTick() + coalescer->clockPeriod());
+        coalescer->schedule(coalescer->probeTLBEvent,
+                            curTick() + coalescer->clockPeriod());
 }
 
 void
@@ -441,7 +443,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
         int vector_index = 0;
 
         DPRINTF(GPUTLB, "coalescedReq_cnt is %d for tick_index %d\n",
-            coalescedReq_cnt, iter->first);
+                coalescedReq_cnt, iter->first);
 
         while (i < coalescedReq_cnt) {
             ++i;
@@ -463,9 +465,9 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
             if (pending_reqs) {
                 DPRINTF(GPUTLB,
-                    "Cannot issue - There are pending reqs for "
-                    "page %#x\n",
-                    virt_page_addr);
+                        "Cannot issue - There are pending reqs for "
+                        "page %#x\n",
+                        virt_page_addr);
 
                 ++vector_index;
                 continue;
@@ -474,7 +476,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
             // send the coalesced request for virt_page_addr
             if (!memSidePort[0]->sendTimingReq(first_packet)) {
                 DPRINTF(GPUTLB, "Failed to send TLB request for page %#x",
-                    virt_page_addr);
+                        virt_page_addr);
 
                 // No need for a retries queue since we are already
                 // buffering the coalesced request in coalescerFIFO.
@@ -500,7 +502,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
                     queuingCycles += (curCycle() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n", name(),
-                        req_cnt);
+                            req_cnt);
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
@@ -509,7 +511,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x\n",
-                    virt_page_addr);
+                        virt_page_addr);
 
                 // copy coalescedReq to issuedTranslationsTable
                 issuedTranslationsTable[virt_page_addr] =
@@ -535,7 +537,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
                     // coalesced requests to the TLB
                     if (!probeTLBEvent.scheduled()) {
                         schedule(probeTLBEvent,
-                            cyclesToTicks(curCycle() + Cycles(1)));
+                                 cyclesToTicks(curCycle() + Cycles(1)));
                     }
                     return;
                 }
@@ -561,7 +563,7 @@ VegaTLBCoalescer::processCleanupEvent()
         issuedTranslationsTable.erase(cleanup_addr);
 
         DPRINTF(GPUTLB, "Cleanup - Delete coalescer entry with key %#x\n",
-            cleanup_addr);
+                cleanup_addr);
     }
 }
 
@@ -605,8 +607,8 @@ VegaTLBCoalescer::insertStalledPortIfNotMapped(CpuSidePort *port)
     stalledPortsMap[port] = port;
     stalledPortsQueue.push(port);
     DPRINTF(GPUTLB,
-        "insertStalledPortIfNotMapped: port %p, mapSz = %d, qsz = %d\n", port,
-        stalledPortsMap.size(), stalledPortsQueue.size());
+            "insertStalledPortIfNotMapped: port %p, mapSz = %d, qsz = %d\n",
+            port, stalledPortsMap.size(), stalledPortsQueue.size());
 }
 
 bool
@@ -615,7 +617,7 @@ VegaTLBCoalescer::mustStallCUPort(CpuSidePort *port)
     assert(tlb_level == 1);
 
     DPRINTF(GPUTLB, "mustStallCUPort: downstream = %d, max = %d\n",
-        numDownstream, maxDownstream);
+            numDownstream, maxDownstream);
 
     if (availDownstreamSlots() == 0 || numDownstream == maxDownstream) {
         warn("RED ALERT - VegaTLBCoalescer::mustStallCUPort\n");

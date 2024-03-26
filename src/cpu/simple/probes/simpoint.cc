@@ -41,14 +41,14 @@
 
 namespace gem5
 {
-SimPoint::SimPoint(const SimPointParams &p) :
-    ProbeListenerObject(p),
-    intervalSize(p.interval),
-    intervalCount(0),
-    intervalDrift(0),
-    simpointStream(NULL),
-    currentBBV(0, 0),
-    currentBBVInstCount(0)
+SimPoint::SimPoint(const SimPointParams &p)
+    : ProbeListenerObject(p),
+      intervalSize(p.interval),
+      intervalCount(0),
+      intervalDrift(0),
+      simpointStream(NULL),
+      currentBBV(0, 0),
+      currentBBVInstCount(0)
 {
     simpointStream = simout.create(p.profile_file, false);
     if (!simpointStream)
@@ -65,7 +65,7 @@ void
 SimPoint::regProbeListeners()
 {
     typedef ProbeListenerArg<SimPoint,
-        std::pair<SimpleThread *, StaticInstPtr>>
+                             std::pair<SimpleThread *, StaticInstPtr>>
         SimPointListener;
     listeners.push_back(
         new SimPointListener(this, "Commit", &SimPoint::profile));

@@ -53,13 +53,16 @@
 
 namespace gem5
 {
-TranslatingPortProxy::TranslatingPortProxy(
-    ThreadContext *tc, Request::Flags _flags) :
-    PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc), flags(_flags)
+TranslatingPortProxy::TranslatingPortProxy(ThreadContext *tc,
+                                           Request::Flags _flags)
+    : PortProxy(tc, tc->getSystemPtr()->cacheLineSize()),
+      _tc(tc),
+      flags(_flags)
 {}
 
 bool
-TranslatingPortProxy::tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
+TranslatingPortProxy::tryOnBlob(
+    BaseMMU::Mode mode, TranslationGenPtr gen,
     std::function<void(const TranslationGen::Range &)> func) const
 {
     // Wether we're trying to get past a fault.
@@ -88,7 +91,8 @@ bool
 TranslatingPortProxy::tryReadBlob(Addr addr, void *p, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Read;
-    return tryOnBlob(mode,
+    return tryOnBlob(
+        mode,
         _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
             PortProxy::readBlobPhys(range.paddr, flags, p, range.size);
@@ -97,11 +101,12 @@ TranslatingPortProxy::tryReadBlob(Addr addr, void *p, uint64_t size) const
 }
 
 bool
-TranslatingPortProxy::tryWriteBlob(
-    Addr addr, const void *p, uint64_t size) const
+TranslatingPortProxy::tryWriteBlob(Addr addr, const void *p,
+                                   uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
-    return tryOnBlob(mode,
+    return tryOnBlob(
+        mode,
         _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
             PortProxy::writeBlobPhys(range.paddr, flags, p, range.size);
@@ -113,7 +118,8 @@ bool
 TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
-    return tryOnBlob(mode,
+    return tryOnBlob(
+        mode,
         _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, v](const auto &range) {
             PortProxy::memsetBlobPhys(range.paddr, flags, v, range.size);

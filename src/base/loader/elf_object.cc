@@ -99,15 +99,15 @@ void
 setInterpDir(const std::string &dirname)
 {
     fatal_if(!interpDir.empty(),
-        "Error: setInterpDir has already been called once\n");
+             "Error: setInterpDir has already been called once\n");
     interpDir = dirname;
 }
 
 ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
 {
     // get a pointer to elf structure
-    elf = elf_memory(
-        (char *)const_cast<uint8_t *>(imageData->data()), imageData->len());
+    elf = elf_memory((char *)const_cast<uint8_t *>(imageData->data()),
+                     imageData->len());
     assert(elf);
     gelf_getehdr(elf, &ehdr);
 
@@ -140,8 +140,8 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
 
     // should have found at least one loadable segment
     warn_if(image.segments().empty(),
-        "No loadable segments in '%s'. ELF file corrupted?\n",
-        imageData->filename());
+            "No loadable segments in '%s'. ELF file corrupted?\n",
+            imageData->filename());
 
     for ([[maybe_unused]] auto &seg : image.segments())
         DPRINTFR(Loader, "%s\n", seg);
@@ -214,12 +214,12 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                     break;
                 }
 
-                loader::Symbol symbol(
-                    binding, symbol_type, sym_name, sym.st_value, sym.st_size);
+                loader::Symbol symbol(binding, symbol_type, sym_name,
+                                      sym.st_value, sym.st_size);
 
                 if (_symtab.insert(symbol)) {
                     DPRINTF(Loader, "Symbol: %-40s value %#x.\n",
-                        symbol.name(), symbol.address());
+                            symbol.name(), symbol.address());
                 }
             }
         }
@@ -389,7 +389,7 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
         // data to take up the extra space. This should be zeroed when
         // loaded into memory.
         image.addSegment({name + "(uninitialized)",
-            phdr.p_paddr + phdr.p_filesz, uninitialized});
+                          phdr.p_paddr + phdr.p_filesz, uninitialized});
     }
 
     const Addr file_start = phdr.p_offset;
@@ -415,8 +415,8 @@ ElfObject::getSections()
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    Elf *elf = elf_memory(
-        (char *)const_cast<uint8_t *>(imageData->data()), imageData->len());
+    Elf *elf = elf_memory((char *)const_cast<uint8_t *>(imageData->data()),
+                          imageData->len());
     assert(elf != NULL);
 
     // Check that we actually have a elf file

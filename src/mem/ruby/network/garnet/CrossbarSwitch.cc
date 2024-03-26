@@ -40,12 +40,12 @@ namespace ruby
 {
 namespace garnet
 {
-CrossbarSwitch::CrossbarSwitch(Router *router) :
-    Consumer(router),
-    m_router(router),
-    m_num_vcs(m_router->get_num_vcs()),
-    m_crossbar_activity(0),
-    switchBuffers(0)
+CrossbarSwitch::CrossbarSwitch(Router *router)
+    : Consumer(router),
+      m_router(router),
+      m_num_vcs(m_router->get_num_vcs()),
+      m_crossbar_activity(0),
+      switchBuffers(0)
 {}
 
 void
@@ -64,9 +64,9 @@ void
 CrossbarSwitch::wakeup()
 {
     DPRINTF(RubyNetwork,
-        "CrossbarSwitch at Router %d woke up "
-        "at time: %lld\n",
-        m_router->get_id(), m_router->curCycle());
+            "CrossbarSwitch at Router %d woke up "
+            "at time: %lld\n",
+            m_router->get_id(), m_router->curCycle());
 
     for (auto &switch_buffer : switchBuffers) {
         if (!switch_buffer.isReady(curTick())) {

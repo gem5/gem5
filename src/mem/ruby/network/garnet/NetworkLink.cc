@@ -41,17 +41,17 @@ namespace ruby
 {
 namespace garnet
 {
-NetworkLink::NetworkLink(const Params &p) :
-    ClockedObject(p),
-    Consumer(this),
-    m_id(p.link_id),
-    m_type(NUM_LINK_TYPES_),
-    m_latency(p.link_latency),
-    m_link_utilized(0),
-    m_virt_nets(p.virt_nets),
-    linkBuffer(),
-    link_consumer(nullptr),
-    link_srcQueue(nullptr)
+NetworkLink::NetworkLink(const Params &p)
+    : ClockedObject(p),
+      Consumer(this),
+      m_id(p.link_id),
+      m_type(NUM_LINK_TYPES_),
+      m_latency(p.link_latency),
+      m_link_utilized(0),
+      m_virt_nets(p.virt_nets),
+      linkBuffer(),
+      link_consumer(nullptr),
+      link_srcQueue(nullptr)
 {
     int num_vnets = (p.supported_vnets).size();
     mVnets.resize(num_vnets);
@@ -84,18 +84,18 @@ void
 NetworkLink::wakeup()
 {
     DPRINTF(RubyNetwork, "Woke up to transfer flits from %s\n",
-        src_object->name());
+            src_object->name());
     assert(link_srcQueue != nullptr);
     assert(curTick() == clockEdge());
     if (link_srcQueue->isReady(curTick())) {
         flit *t_flit = link_srcQueue->getTopFlit();
         DPRINTF(RubyNetwork, "Transmission will finish at %ld :%s\n",
-            clockEdge(m_latency), *t_flit);
+                clockEdge(m_latency), *t_flit);
         if (m_type != NUM_LINK_TYPES_) {
             // Only for assertions and debug messages
             assert(t_flit->m_width == bitWidth);
             assert((std::find(mVnets.begin(), mVnets.end(),
-                        t_flit->get_vnet()) != mVnets.end()) ||
+                              t_flit->get_vnet()) != mVnets.end()) ||
                    (mVnets.size() == 0));
         }
         t_flit->set_time(clockEdge(m_latency));

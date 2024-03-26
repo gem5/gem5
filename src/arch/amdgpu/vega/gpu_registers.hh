@@ -179,32 +179,32 @@ using VecRegContainerU64 =
 
 struct StatusReg
 {
-    StatusReg() :
-        SCC(0),
-        SPI_PRIO(0),
-        USER_PRIO(0),
-        PRIV(0),
-        TRAP_EN(0),
-        TTRACE_EN(0),
-        EXPORT_RDY(0),
-        EXECZ(0),
-        VCCZ(0),
-        IN_TG(0),
-        IN_BARRIER(0),
-        HALT(0),
-        TRAP(0),
-        TTRACE_CU_EN(0),
-        VALID(0),
-        ECC_ERR(0),
-        SKIP_EXPORT(0),
-        PERF_EN(0),
-        COND_DBG_USER(0),
-        COND_DBG_SYS(0),
-        ALLOW_REPLAY(0),
-        INSTRUCTION_ATC(0),
-        RESERVED(0),
-        MUST_EXPORT(0),
-        RESERVED_1(0)
+    StatusReg()
+        : SCC(0),
+          SPI_PRIO(0),
+          USER_PRIO(0),
+          PRIV(0),
+          TRAP_EN(0),
+          TTRACE_EN(0),
+          EXPORT_RDY(0),
+          EXECZ(0),
+          VCCZ(0),
+          IN_TG(0),
+          IN_BARRIER(0),
+          HALT(0),
+          TRAP(0),
+          TTRACE_CU_EN(0),
+          VALID(0),
+          ECC_ERR(0),
+          SKIP_EXPORT(0),
+          PERF_EN(0),
+          COND_DBG_USER(0),
+          COND_DBG_SYS(0),
+          ALLOW_REPLAY(0),
+          INSTRUCTION_ATC(0),
+          RESERVED(0),
+          MUST_EXPORT(0),
+          RESERVED_1(0)
     {}
 
     uint32_t SCC : 1;

@@ -47,8 +47,8 @@ class AMDGPUMemoryManager : public ClockedObject
     class GPUMemPort : public RequestPort
     {
       public:
-        GPUMemPort(const std::string &_name, AMDGPUMemoryManager &_gpuMemMgr) :
-            RequestPort(_name), gpu_mem(_gpuMemMgr)
+        GPUMemPort(const std::string &_name, AMDGPUMemoryManager &_gpuMemMgr)
+            : RequestPort(_name), gpu_mem(_gpuMemMgr)
         {}
 
         bool recvTimingResp(PacketPtr pkt) override;
@@ -56,8 +56,8 @@ class AMDGPUMemoryManager : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
-            SenderState(Event *callback, Addr addr, uint64_t requestId) :
-                _callback(callback), _addr(addr), _requestId(requestId)
+            SenderState(Event *callback, Addr addr, uint64_t requestId)
+                : _callback(callback), _addr(addr), _requestId(requestId)
             {}
 
             Event *_callback;
@@ -99,7 +99,7 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param callback Event callback to call after all bytes are written.
      */
     void writeRequest(Addr addr, uint8_t *data, int size, Request::Flags flag,
-        Event *callback);
+                      Event *callback);
 
     /**
      * Read size amount of data from device memory at addr using flags and
@@ -112,7 +112,7 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param callback Event callback to call after all bytes are read.
      */
     void readRequest(Addr addr, uint8_t *data, int size, Request::Flags flag,
-        Event *callback);
+                     Event *callback);
 
     /**
      * Get the requestorID for the memory manager. This ID is used for all

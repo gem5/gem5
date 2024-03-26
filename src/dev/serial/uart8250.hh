@@ -101,14 +101,14 @@ class Uart8250 : public Uart
             RegisterBase &_reg1, &_reg2;
 
           public:
-            PairedRegister(RegisterBase &reg1, RegisterBase &reg2) :
-                RegisterBase(reg1.name() + "/" + reg2.name(), reg1.size()),
-                _reg1(reg1),
-                _reg2(reg2)
+            PairedRegister(RegisterBase &reg1, RegisterBase &reg2)
+                : RegisterBase(reg1.name() + "/" + reg2.name(), reg1.size()),
+                  _reg1(reg1),
+                  _reg2(reg2)
             {
                 panic_if(reg1.size() != reg2.size(),
-                    "Mismatched paired register sizes %d, %d", reg1.size(),
-                    reg2.size());
+                         "Mismatched paired register sizes %d, %d",
+                         reg1.size(), reg2.size());
             }
 
             void
@@ -134,8 +134,8 @@ class Uart8250 : public Uart
             RegisterBase *selected = nullptr;
 
           public:
-            BankedRegister(RegisterBase &reg1, RegisterBase &reg2) :
-                PairedRegister(reg1, reg2), selected(&reg1)
+            BankedRegister(RegisterBase &reg1, RegisterBase &reg2)
+                : PairedRegister(reg1, reg2), selected(&reg1)
             {}
 
             void

@@ -47,15 +47,16 @@ class CondLogicOp : public PowerStaticInst
     uint32_t bt;
 
     /// Constructor
-    CondLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass),
-        ba(machInst.ba),
-        bb(machInst.bb),
-        bt(machInst.bt)
+    CondLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass),
+          ba(machInst.ba),
+          bb(machInst.bb),
+          bt(machInst.bt)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -68,14 +69,15 @@ class CondMoveOp : public PowerStaticInst
     uint32_t bfa;
 
     /// Constructor
-    CondMoveOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass),
-        bf(machInst.bf),
-        bfa(machInst.bfa)
+    CondMoveOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass),
+          bf(machInst.bf),
+          bfa(machInst.bfa)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

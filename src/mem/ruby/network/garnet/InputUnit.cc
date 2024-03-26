@@ -40,12 +40,12 @@ namespace ruby
 {
 namespace garnet
 {
-InputUnit::InputUnit(int id, PortDirection direction, Router *router) :
-    Consumer(router),
-    m_router(router),
-    m_id(id),
-    m_direction(direction),
-    m_vc_per_vnet(m_router->get_vc_per_vnet())
+InputUnit::InputUnit(int id, PortDirection direction, Router *router)
+    : Consumer(router),
+      m_router(router),
+      m_id(id),
+      m_direction(direction),
+      m_vc_per_vnet(m_router->get_vc_per_vnet())
 {
     const int m_num_vcs = m_router->get_num_vcs();
     m_num_buffer_reads.resize(m_num_vcs / m_vc_per_vnet);
@@ -79,8 +79,8 @@ InputUnit::wakeup()
     if (m_in_link->isReady(curTick())) {
         t_flit = m_in_link->consumeLink();
         DPRINTF(RubyNetwork, "Router[%d] Consuming:%s Width: %d Flit:%s\n",
-            m_router->get_id(), m_in_link->name(), m_router->getBitWidth(),
-            *t_flit);
+                m_router->get_id(), m_in_link->name(), m_router->getBitWidth(),
+                *t_flit);
         assert(t_flit->m_width == m_router->getBitWidth());
         int vc = t_flit->get_vc();
         t_flit->increment_hops(); // for stats
@@ -91,8 +91,8 @@ InputUnit::wakeup()
             set_vc_active(vc, curTick());
 
             // Route computation for this vc
-            int outport = m_router->route_compute(
-                t_flit->get_route(), m_id, m_direction);
+            int outport = m_router->route_compute(t_flit->get_route(), m_id,
+                                                  m_direction);
 
             // Update output port in VC
             // All flits in this packet will use this output port
@@ -141,7 +141,7 @@ void
 InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
 {
     DPRINTF(RubyNetwork, "Router[%d]: Sending a credit vc:%d free:%d to %s\n",
-        m_router->get_id(), in_vc, free_signal, m_credit_link->name());
+            m_router->get_id(), in_vc, free_signal, m_credit_link->name());
     Credit *t_credit = new Credit(in_vc, free_signal, curTime);
     creditQueue.insert(t_credit);
     m_credit_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));

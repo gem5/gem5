@@ -158,7 +158,8 @@ class RequestPort :
     [[deprecated("RequestPort ownership is deprecated. "
                  "Owner should now be registered in derived "
                  "classes.")]] RequestPort(const std::string &name,
-        SimObject *_owner, PortID id = InvalidPortID);
+                                           SimObject *_owner,
+                                           PortID id = InvalidPortID);
 
     RequestPort(const std::string &name, PortID id = InvalidPortID);
 
@@ -251,8 +252,8 @@ class RequestPort :
      *        it should pass this pointer through, or if not, return without
      *        passing the request further downstream.
      */
-    void sendMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+    void sendMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor);
 
   public:
     /* The timing protocol. */
@@ -382,7 +383,8 @@ class ResponsePort :
     [[deprecated("ResponsePort ownership is deprecated. "
                  "Owner should now be registered in derived "
                  "classes.")]] ResponsePort(const std::string &name,
-        SimObject *_owner, PortID id = InvalidPortID);
+                                            SimObject *_owner,
+                                            PortID id = InvalidPortID);
 
     ResponsePort(const std::string &name, PortID id = InvalidPortID);
 
@@ -559,8 +561,8 @@ class ResponsePort :
      * Default implementations.
      */
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override;
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor) override;
 
     bool
     tryTiming(PacketPtr pkt) override
@@ -621,12 +623,12 @@ RequestPort::sendFunctional(PacketPtr pkt) const
 }
 
 inline void
-RequestPort::sendMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+RequestPort::sendMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor)
 {
     try {
-        return FunctionalRequestProtocol::sendMemBackdoorReq(
-            _responsePort, req, backdoor);
+        return FunctionalRequestProtocol::sendMemBackdoorReq(_responsePort,
+                                                             req, backdoor);
     } catch (UnboundPortException) {
         reportUnbound();
     }

@@ -42,8 +42,8 @@ namespace gem5
 uint32_t
 DynPoolManager::minAllocatedElements(uint32_t size)
 {
-    fatal_if(
-        size <= 0 || size > poolSize(), "Illegal VGPR region size=%d\n", size);
+    fatal_if(size <= 0 || size > poolSize(), "Illegal VGPR region size=%d\n",
+             size);
 
     return size % minAllocation() > 0 ?
                (minAllocation() - (size % minAllocation())) + size :
@@ -96,24 +96,24 @@ DynPoolManager::canAllocate(uint32_t numRegions, uint32_t size)
     uint32_t actualSize = minAllocatedElements(size);
     uint32_t numAvailChunks = 0;
     DPRINTF(GPUVRF,
-        "Checking if we can allocate %d regions of size %d "
-        "registers\n",
-        numRegions, actualSize);
+            "Checking if we can allocate %d regions of size %d "
+            "registers\n",
+            numRegions, actualSize);
     for (auto it : freeSpaceRecord) {
         numAvailChunks += (it.second - it.first) / actualSize;
     }
 
     if (numAvailChunks >= numRegions) {
         DPRINTF(GPUVRF,
-            "Able to allocate %d regions of size %d; "
-            "number of available regions: %d\n",
-            numRegions, actualSize, numAvailChunks);
+                "Able to allocate %d regions of size %d; "
+                "number of available regions: %d\n",
+                numRegions, actualSize, numAvailChunks);
         return true;
     } else {
         DPRINTF(GPUVRF,
-            "Unable to allocate %d regions of size %d; "
-            "number of available regions: %d\n",
-            numRegions, actualSize, numAvailChunks);
+                "Unable to allocate %d regions of size %d; "
+                "number of available regions: %d\n",
+                numRegions, actualSize, numAvailChunks);
         return false;
     }
 }
@@ -149,9 +149,9 @@ DynPoolManager::allocateRegion(const uint32_t size, uint32_t *reservedPoolSize)
         it++;
     }
     DPRINTF(GPUVRF,
-        "totRegSpace %d allocating Register at %d and"
-        " size %d\n",
-        _totRegSpaceAvailable, startIdx, actualSize);
+            "totRegSpace %d allocating Register at %d and"
+            " size %d\n",
+            _totRegSpaceAvailable, startIdx, actualSize);
     return startIdx;
 }
 
@@ -160,7 +160,7 @@ DynPoolManager::freeRegion(uint32_t firstIdx, uint32_t lastIdx)
 {
     // lastIdx-firstIdx should give the size of free space
     DPRINTF(GPUVRF, "freeing Region at %d %d, size %d\n", firstIdx, lastIdx,
-        lastIdx - firstIdx);
+            lastIdx - firstIdx);
 
     // Current dynamic register allocation does not handle wraparound
     assert(firstIdx < lastIdx);
@@ -169,14 +169,14 @@ DynPoolManager::freeRegion(uint32_t firstIdx, uint32_t lastIdx)
     // Consolidate with other regions. Need to check if firstIdx or lastIdx
     // already exist
     auto firstIt = std::find_if(freeSpaceRecord.begin(), freeSpaceRecord.end(),
-        [&](const std::pair<int, int> &element) {
-            return element.second == firstIdx;
-        });
+                                [&](const std::pair<int, int> &element) {
+                                    return element.second == firstIdx;
+                                });
 
     auto lastIt = std::find_if(freeSpaceRecord.begin(), freeSpaceRecord.end(),
-        [&](const std::pair<int, int> &element) {
-            return element.first == lastIdx;
-        });
+                               [&](const std::pair<int, int> &element) {
+                                   return element.first == lastIdx;
+                               });
 
     if (firstIt != freeSpaceRecord.end() && lastIt != freeSpaceRecord.end()) {
         firstIt->second = lastIt->second;

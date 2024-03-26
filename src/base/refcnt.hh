@@ -135,11 +135,12 @@ class RefCountingPtr
     /** Convenience aliases for const/non-const versions of T w/ friendship. */
     /** @{ */
     static constexpr auto TisConst = std::is_const_v<T>;
-    using ConstT = typename std::conditional_t<TisConst, RefCountingPtr<T>,
+    using ConstT = typename std::conditional_t<
+        TisConst, RefCountingPtr<T>,
         RefCountingPtr<typename std::add_const<T>::type>>;
     friend ConstT;
-    using NonConstT = typename std::conditional_t<TisConst,
-        RefCountingPtr<typename std::remove_const<T>::type>,
+    using NonConstT = typename std::conditional_t<
+        TisConst, RefCountingPtr<typename std::remove_const<T>::type>,
         RefCountingPtr<T>>;
     friend NonConstT;
     /** @} */

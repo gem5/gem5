@@ -78,7 +78,7 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
         TraceInstEntryV8(const TarmacContext &tarmCtx, bool predicate);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         Addr paddr;
@@ -94,7 +94,7 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
         TraceRegEntryV8(const TarmacContext &tarmCtx, const RegId &reg);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         void updateInt(const TarmacContext &tarmCtx) override;
@@ -122,10 +122,10 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
     {
       public:
         TraceMemEntryV8(const TarmacContext &tarmCtx, uint8_t _size,
-            Addr _addr, uint64_t _data);
+                        Addr _addr, uint64_t _data);
 
         virtual void print(std::ostream &outs, int verbosity = 0,
-            const std::string &prefix = "") const override;
+                           const std::string &prefix = "") const override;
 
       protected:
         Addr paddr;
@@ -133,10 +133,11 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
 
   public:
     TarmacTracerRecordV8(Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        TarmacTracer &_parent, const StaticInstPtr _macroStaticInst = NULL) :
-        TarmacTracerRecord(
-            _when, _thread, _staticInst, _pc, _parent, _macroStaticInst)
+                         const StaticInstPtr _staticInst,
+                         const PCStateBase &_pc, TarmacTracer &_parent,
+                         const StaticInstPtr _macroStaticInst = NULL)
+        : TarmacTracerRecord(_when, _thread, _staticInst, _pc, _parent,
+                             _macroStaticInst)
     {}
 
   protected:

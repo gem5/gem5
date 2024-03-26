@@ -94,12 +94,12 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
             uint32_t reg_val = gpuDevice->getRegVal(offset);
 
             DPRINTF(AMDGPUDevice, "Reading value of %#lx from regs: %#lx\n",
-                offset, reg_val);
+                    offset, reg_val);
 
             pkt->setLE<uint32_t>(reg_val);
         } else {
             DPRINTF(AMDGPUDevice, "NBIO Unknown MMIO %#x (%#x)\n", offset,
-                pkt->getAddr());
+                    pkt->getAddr());
         }
         break;
     }
@@ -117,7 +117,7 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
             insertBits(mm_index_reg, 63, 32, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MM_DATA) {
         DPRINTF(AMDGPUDevice, "MM write to reg %#lx data %#lx\n", mm_index_reg,
-            pkt->getLE<uint32_t>());
+                pkt->getLE<uint32_t>());
         gpuDevice->setRegVal(AMDGPU_MM_DATA, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_35) {
         // See psp_v3_1_bootloader_load_sos in amdgpu driver code.
@@ -161,9 +161,9 @@ AMDGPUNbio::writeFrame(PacketPtr pkt, Addr offset)
 {
     if (offset == psp_ring_listen_addr) {
         DPRINTF(AMDGPUDevice,
-            "Saw psp_ring_listen_addr with size %ld value "
-            "%ld\n",
-            pkt->getSize(), pkt->getUintX(ByteOrder::little));
+                "Saw psp_ring_listen_addr with size %ld value "
+                "%ld\n",
+                pkt->getSize(), pkt->getUintX(ByteOrder::little));
 
         /*
          * In ROCm versions 4.x this packet is a 4 byte value. In ROCm 5.x
@@ -180,7 +180,7 @@ AMDGPUNbio::writeFrame(PacketPtr pkt, Addr offset)
         }
 
         DPRINTF(AMDGPUDevice, "Setting PSP ring device address to %#lx\n",
-            psp_ring_dev_addr);
+                psp_ring_dev_addr);
     }
 }
 

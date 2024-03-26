@@ -61,9 +61,9 @@ static_assert(NUM_QREGS == 32, "Unexpected number of aarch64 vector regs.");
 
 #define EXTRACT_FIELD(v, name) (((v)&name##_MASK) >> name##_SHIFT)
 
-#define CORE_REG(name, size) \
-    (KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_##size | \
-        KVM_REG_ARM_CORE_REG(name))
+#define CORE_REG(name, size)                                                  \
+    (KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_##size |                 \
+     KVM_REG_ARM_CORE_REG(name))
 
 #define INT_REG(name) CORE_REG(name, U64)
 #define SIMD_REG(name) CORE_REG(name, U128)
@@ -129,8 +129,8 @@ const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegIdMap = {
     MiscRegInfo(SYS_MPIDR_EL1, MISCREG_MPIDR_EL1, "MPIDR(EL1)"),
 };
 
-ArmV8KvmCPU::ArmV8KvmCPU(const ArmV8KvmCPUParams &params) :
-    BaseArmKvmCPU(params)
+ArmV8KvmCPU::ArmV8KvmCPU(const ArmV8KvmCPUParams &params)
+    : BaseArmKvmCPU(params)
 {}
 
 ArmV8KvmCPU::~ArmV8KvmCPU() {}
@@ -193,8 +193,8 @@ ArmV8KvmCPU::dump() const
                 decodeAArch64SysReg(op0, op1, crn, crm, op2));
 
             inform("  %s (op0: %i, op1: %i, crn: %i, crm: %i, op2: %i): %s",
-                miscRegName[idx], op0, op1, crn, crm, op2,
-                getAndFormatOneReg(reg));
+                   miscRegName[idx], op0, op1, crn, crm, op2,
+                   getAndFormatOneReg(reg));
         } break;
 
         case KVM_REG_ARM_DEMUX: {
@@ -204,7 +204,7 @@ ArmV8KvmCPU::dump() const
                 inform("  CSSIDR[%i]: %s\n", val, getAndFormatOneReg(reg));
             } else {
                 inform("  UNKNOWN[%i:%i]: %s\n", id, val,
-                    getAndFormatOneReg(reg));
+                       getAndFormatOneReg(reg));
             }
         } break;
 
@@ -361,7 +361,7 @@ ArmV8KvmCPU::updateThreadContext()
     // switching to thumb.
     pc.nextThumb(cpsr.t);
     DPRINTF(KvmContext, "  PC := 0x%x (t: %i, a64: %i)\n", pc.instAddr(),
-        pc.thumb(), pc.aarch64());
+            pc.thumb(), pc.aarch64());
     tc->pcState(pc);
 }
 
@@ -393,14 +393,15 @@ ArmV8KvmCPU::getSysRegMap() const
             info[MISCREG_PRI_S_WR] || info[MISCREG_PRI_NS_WR] ||
             info[MISCREG_HYP_NS_WR] || info[MISCREG_MON_NS0_WR] ||
             info[MISCREG_MON_NS1_WR]);
-        const bool implemented(
-            info[MISCREG_IMPLEMENTED] || info[MISCREG_WARN_NOT_FAIL]);
+        const bool implemented(info[MISCREG_IMPLEMENTED] ||
+                               info[MISCREG_WARN_NOT_FAIL]);
 
         // Only add implemented registers that we are going to be able
         // to write.
         if (implemented && writeable)
             sysRegMap.emplace_back(reg, idx, miscRegName[idx],
-                deviceRegSet.find(idx) != deviceRegSet.end());
+                                   deviceRegSet.find(idx) !=
+                                       deviceRegSet.end());
     }
 
     return sysRegMap;

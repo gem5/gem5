@@ -30,8 +30,8 @@
 
 namespace gem5
 {
-FutexKey::FutexKey(uint64_t addr_in, uint64_t tgid_in) :
-    addr(addr_in), tgid(tgid_in)
+FutexKey::FutexKey(uint64_t addr_in, uint64_t tgid_in)
+    : addr(addr_in), tgid(tgid_in)
 {}
 
 bool
@@ -40,8 +40,8 @@ FutexKey::operator==(const FutexKey &in) const
     return addr == in.addr && tgid == in.tgid;
 }
 
-WaiterState::WaiterState(ThreadContext *_tc, int _bitmask) :
-    tc(_tc), bitmask(_bitmask)
+WaiterState::WaiterState(ThreadContext *_tc, int _bitmask)
+    : tc(_tc), bitmask(_bitmask)
 {}
 
 bool
@@ -87,8 +87,8 @@ FutexMap::wakeup(Addr addr, uint64_t tgid, int count)
 }
 
 void
-FutexMap::suspend_bitset(
-    Addr addr, uint64_t tgid, ThreadContext *tc, int bitmask)
+FutexMap::suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
+                         int bitmask)
 {
     FutexKey key(addr, tgid);
     auto it = find(key);

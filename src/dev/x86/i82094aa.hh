@@ -98,8 +98,8 @@ class I82094AA : public BasicPioDevice
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     bool recvResponse(PacketPtr pkt);
 

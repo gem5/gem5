@@ -81,7 +81,7 @@ class Episode
     };
 
     Episode(ProtocolTester *tester, TesterThread *thread, int num_loads,
-        int num_stores);
+            int num_stores);
     ~Episode();
 
     // return episode id
@@ -109,8 +109,8 @@ class Episode
         return isActive;
     }
     // check if the input episode and this one have any data race
-    bool checkDRF(
-        Location atomic_loc, Location loc, bool isStore, int max_lane) const;
+    bool checkDRF(Location atomic_loc, Location loc, bool isStore,
+                  int max_lane) const;
 
   private:
     // pointers to tester, thread and address amanger structures

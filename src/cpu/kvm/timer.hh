@@ -70,11 +70,11 @@ class BaseKvmTimer
      * @param hostFactor Performance scaling factor
      * @param hostFreq Clock frequency of the host
      */
-    BaseKvmTimer(int signo, float hostFactor, Tick hostFreq) :
-        signo(signo),
-        _resolution(0),
-        hostFactor(hostFactor),
-        hostFreq(hostFreq){};
+    BaseKvmTimer(int signo, float hostFactor, Tick hostFreq)
+        : signo(signo),
+          _resolution(0),
+          hostFactor(hostFactor),
+          hostFreq(hostFreq){};
     virtual ~BaseKvmTimer(){};
 
     /**
@@ -206,8 +206,8 @@ class PosixKvmTimer : public BaseKvmTimer
      * @param hostFactor Performance scaling factor
      * @param hostFreq Clock frequency of the host
      */
-    PosixKvmTimer(
-        int signo, clockid_t clockID, float hostFactor, Tick hostFreq);
+    PosixKvmTimer(int signo, clockid_t clockID, float hostFactor,
+                  Tick hostFreq);
     ~PosixKvmTimer();
 
     void arm(Tick ticks) override;
@@ -248,8 +248,8 @@ class PerfKvmTimer : public BaseKvmTimer
      * @param hostFactor Performance scaling factor
      * @param hostFreq Clock frequency of the host
      */
-    PerfKvmTimer(
-        PerfKvmCounter &ctr, int signo, float hostFactor, Tick hostFreq);
+    PerfKvmTimer(PerfKvmCounter &ctr, int signo, float hostFactor,
+                 Tick hostFreq);
     ~PerfKvmTimer();
 
     void arm(Tick ticks);

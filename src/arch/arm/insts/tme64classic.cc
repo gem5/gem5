@@ -51,8 +51,8 @@ Tstart64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 Fault
-Tstart64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                      trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
@@ -70,22 +70,22 @@ Tcancel64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 Fault
-Tcancel64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                       trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
-MicroTcommit64::initiateAcc(
-    ExecContext *xc, trace::InstRecord *traceData) const
+MicroTcommit64::initiateAcc(ExecContext *xc,
+                            trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
-MicroTcommit64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                            trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }

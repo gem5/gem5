@@ -44,8 +44,8 @@ namespace gem5
 namespace linux
 {
 int
-printk(
-    std::string &str, ThreadContext *tc, Addr format_ptr, PrintkVarArgs args)
+printk(std::string &str, ThreadContext *tc, Addr format_ptr,
+       PrintkVarArgs args)
 {
     std::string format;
     std::ostringstream out;

@@ -63,9 +63,9 @@ using namespace linux;
 
 namespace ArmISA
 {
-FsLinux::FsLinux(const Params &p) :
-    ArmISA::FsWorkload(p),
-    enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
+FsLinux::FsLinux(const Params &p)
+    : ArmISA::FsWorkload(p),
+      enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {}
 
 void
@@ -95,26 +95,27 @@ FsLinux::initState()
 
         if (initrd_file_specified) {
             inform("Loading initrd file: %s at address %#x\n",
-                params().initrd_filename, params().initrd_addr);
+                   params().initrd_filename, params().initrd_addr);
 
             loader::ImageFileDataPtr initrd_file_data(
                 new loader::ImageFileData(params().initrd_filename));
             system->physProxy.writeBlob(params().initrd_addr,
-                initrd_file_data->data(), initrd_file_data->len());
+                                        initrd_file_data->data(),
+                                        initrd_file_data->len());
             initrd_len = initrd_file_data->len();
         }
 
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-            params().dtb_addr);
+               params().dtb_addr);
 
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootData(commandLine.c_str(), commandLine.size(),
-                params().initrd_addr, initrd_len)) {
+                                   params().initrd_addr, initrd_len)) {
             warn("couldn't append bootargs to DTB file: %s\n",
-                params().dtb_filename);
+                 params().dtb_filename);
         }
 
         dtb_file->buildImage()
@@ -141,8 +142,8 @@ FsLinux::initState()
 
         AddrRangeList atagRanges = system->getPhysMem().getConfAddrRanges();
         fatal_if(atagRanges.size() != 1,
-            "Expected a single ATAG memory entry but got %d",
-            atagRanges.size());
+                 "Expected a single ATAG memory entry but got %d",
+                 atagRanges.size());
         AtagMem am;
         am.memSize(atagRanges.begin()->size());
         am.memStart(atagRanges.begin()->start());
@@ -151,7 +152,7 @@ FsLinux::initState()
         ad.cmdline(commandLine);
 
         DPRINTF(Loader, "boot command line %d bytes: %s\n", ad.size() << 2,
-            commandLine);
+                commandLine);
 
         AtagNone an;
 
@@ -228,16 +229,17 @@ FsLinux::startup()
 
     const std::string dmesg_output_fname = name() + ".dmesg";
 
-    kernelPanic = addKernelFuncEvent<linux::PanicOrOopsEvent>("panic",
-        "Kernel panic in simulated kernel", dmesg_output_fname,
+    kernelPanic = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+        "panic", "Kernel panic in simulated kernel", dmesg_output_fname,
         params().on_panic);
     if (kernelPanic == nullptr) {
         warn("Could not add Kernel Panic event handler. "
              "`panic` symbol not found.");
     }
 
-    kernelOops = addKernelFuncEvent<linux::PanicOrOopsEvent>("oops_exit",
-        "Kernel oops in guest", dmesg_output_fname, params().on_oops);
+    kernelOops = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+        "oops_exit", "Kernel oops in guest", dmesg_output_fname,
+        params().on_oops);
     if (kernelOops == nullptr) {
         warn("Could not add Kernel Oops event handler. "
              "`oops_exit` symbol not found.");
@@ -253,8 +255,8 @@ FsLinux::startup()
 
     // constant arguments to udelay() have some precomputation done ahead of
     // time. Constant comes from code.
-    skipConstUDelay = addSkipFunc<SkipUDelay>(
-        "__loop_const_udelay", "__const_udelay", 1000, 107374);
+    skipConstUDelay = addSkipFunc<SkipUDelay>("__loop_const_udelay",
+                                              "__const_udelay", 1000, 107374);
     if (!skipConstUDelay) {
         skipConstUDelay = addSkipFuncOrPanic<SkipUDelay>(
             "__const_udelay", "__const_udelay", 1000, 107374);
@@ -295,7 +297,7 @@ FsLinux::dumpDmesg()
  */
 void
 DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
-    std::string &next_task_str, int32_t &mm)
+                          std::string &next_task_str, int32_t &mm)
 {
     linux::ThreadInfo ti(tc);
     Addr task_descriptor = tc->getReg(int_reg::R2);
@@ -317,7 +319,7 @@ DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
  */
 void
 DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
-    std::string &next_task_str, int32_t &mm)
+                            std::string &next_task_str, int32_t &mm)
 {
     linux::ThreadInfo ti(tc);
     Addr task_struct = tc->getReg(int_reg::X1);
@@ -366,9 +368,9 @@ DumpStats::process(ThreadContext *tc)
     // Task file is read by cache occupancy plotting script or
     // Streamline conversion script.
     ccprintf(*(taskFile->stream()),
-        "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
-        curTick(), taskMap[pid], tc->cpuId(), (int)pid, (int)tgid,
-        next_task_str);
+             "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
+             curTick(), taskMap[pid], tc->cpuId(), (int)pid, (int)tgid,
+             next_task_str);
     taskFile->stream()->flush();
 
     // Dump and reset statistics

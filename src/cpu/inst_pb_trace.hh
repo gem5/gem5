@@ -67,9 +67,9 @@ class InstPBTraceRecord : public InstRecord
 {
   public:
     InstPBTraceRecord(InstPBTrace &_tracer, Tick when, ThreadContext *tc,
-        const StaticInstPtr si, const PCStateBase &pc,
-        const StaticInstPtr mi = NULL) :
-        InstRecord(when, tc, si, pc, mi), tracer(_tracer)
+                      const StaticInstPtr si, const PCStateBase &pc,
+                      const StaticInstPtr mi = NULL)
+        : InstRecord(when, tc, si, pc, mi), tracer(_tracer)
     {}
 
     /** called by the cpu when the instruction commits.
@@ -89,8 +89,9 @@ class InstPBTrace : public InstTracer
     virtual ~InstPBTrace();
 
     InstPBTraceRecord *getInstRecord(Tick when, ThreadContext *tc,
-        const StaticInstPtr si, const PCStateBase &pc,
-        const StaticInstPtr mi = NULL) override;
+                                     const StaticInstPtr si,
+                                     const PCStateBase &pc,
+                                     const StaticInstPtr mi = NULL) override;
 
   protected:
     std::unique_ptr<uint8_t[]> buf;

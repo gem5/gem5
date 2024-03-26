@@ -55,15 +55,15 @@ namespace guest_abi
 // greater than 4 for Riscv 32.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if_t<std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
-                              std::is_integral_v<Arg> &&
-                              ABI::template IsWideV<Arg>>>
+                typename std::enable_if_t<
+                    std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
+                    std::is_integral_v<Arg> && ABI::template IsWideV<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-            "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
         return bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };

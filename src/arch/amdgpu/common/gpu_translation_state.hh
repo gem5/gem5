@@ -85,29 +85,30 @@ struct GpuTranslationState : public Packet::SenderState
     Packet::SenderState *saved;
 
     GpuTranslationState(BaseMMU::Mode tlb_mode, ThreadContext *_tc,
-        bool _prefetch = false, Packet::SenderState *_saved = nullptr) :
-        tlbMode(tlb_mode),
-        tc(_tc),
-        deviceId(0),
-        pasId(0),
-        tlbEntry(nullptr),
-        isPrefetch(_prefetch),
-        issueTime(0),
-        hitLevel(0),
-        saved(_saved)
+                        bool _prefetch = false,
+                        Packet::SenderState *_saved = nullptr)
+        : tlbMode(tlb_mode),
+          tc(_tc),
+          deviceId(0),
+          pasId(0),
+          tlbEntry(nullptr),
+          isPrefetch(_prefetch),
+          issueTime(0),
+          hitLevel(0),
+          saved(_saved)
     {}
 
     GpuTranslationState(BaseMMU::Mode tlb_mode, bool _prefetch = false,
-        Packet::SenderState *_saved = nullptr) :
-        tlbMode(tlb_mode),
-        tc(nullptr),
-        deviceId(0),
-        pasId(0),
-        tlbEntry(nullptr),
-        isPrefetch(_prefetch),
-        issueTime(0),
-        hitLevel(0),
-        saved(_saved)
+                        Packet::SenderState *_saved = nullptr)
+        : tlbMode(tlb_mode),
+          tc(nullptr),
+          deviceId(0),
+          pasId(0),
+          tlbEntry(nullptr),
+          isPrefetch(_prefetch),
+          issueTime(0),
+          hitLevel(0),
+          saved(_saved)
     {}
 };
 

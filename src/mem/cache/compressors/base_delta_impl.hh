@@ -42,8 +42,8 @@ namespace gem5
 namespace compression
 {
 template <class BaseType, std::size_t DeltaSizeBits>
-BaseDelta<BaseType, DeltaSizeBits>::BaseDelta(const Params &p) :
-    DictionaryCompressor<BaseType>(p)
+BaseDelta<BaseType, DeltaSizeBits>::BaseDelta(const Params &p)
+    : DictionaryCompressor<BaseType>(p)
 {}
 
 template <class BaseType, std::size_t DeltaSizeBits>
@@ -85,10 +85,10 @@ BaseDelta<BaseType, DeltaSizeBits>::compress(
     if (diff < 0) {
         comp_data->setSizeBits(DictionaryCompressor<BaseType>::blkSize * 8);
         DPRINTF(CacheComp, "Base%dDelta%d compression failed\n",
-            8 * sizeof(BaseType), DeltaSizeBits);
+                8 * sizeof(BaseType), DeltaSizeBits);
     } else if (diff > 0) {
-        comp_data->setSizeBits(
-            comp_data->getSizeBits() + 8 * sizeof(BaseType) * diff);
+        comp_data->setSizeBits(comp_data->getSizeBits() +
+                               8 * sizeof(BaseType) * diff);
     }
 
     // Return compressed line

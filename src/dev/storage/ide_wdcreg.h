@@ -56,7 +56,7 @@
 #define WDCS_CORR 0x04 /* corrected data */
 #define WDCS_IDX 0x02  /* index */
 #define WDCS_ERR 0x01  /* error */
-#define WDCS_BITS \
+#define WDCS_BITS                                                             \
     "\020\010BSY\007DRDY\006DWF\005DSC\004DRQ\003CORR\002IDX\001ERR"
 
 /*

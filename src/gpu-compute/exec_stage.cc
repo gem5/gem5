@@ -42,15 +42,15 @@
 namespace gem5
 {
 ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
-    ScheduleToExecute &from_schedule) :
-    computeUnit(cu),
-    fromSchedule(from_schedule),
-    lastTimeInstExecuted(false),
-    thisTimeInstExecuted(false),
-    instrExecuted(false),
-    executionResourcesUsed(0),
-    _name(cu.name() + ".ExecStage"),
-    stats(&cu)
+                     ScheduleToExecute &from_schedule)
+    : computeUnit(cu),
+      fromSchedule(from_schedule),
+      lastTimeInstExecuted(false),
+      thisTimeInstExecuted(false),
+      instrExecuted(false),
+      executionResourcesUsed(0),
+      _name(cu.name() + ".ExecStage"),
+      stats(&cu)
 
 {
     stats.numTransActiveIdle = 0;
@@ -172,7 +172,7 @@ ExecStage::exec()
             assert(gpu_dyn_inst);
             Wavefront *wf = gpu_dyn_inst->wavefront();
             DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n", unitId,
-                wf->simdId, wf->wfDynId, gpu_dyn_inst->disassemble());
+                    wf->simdId, wf->wfDynId, gpu_dyn_inst->disassemble());
             DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
             wf->exec();
             (computeUnit.scheduleStage).deleteFromSch(wf);
@@ -198,21 +198,22 @@ ExecStage::exec()
     collectStatistics(PostExec, 0);
 }
 
-ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent) :
-    statistics::Group(parent, "ExecStage"),
-    ADD_STAT(
-        numTransActiveIdle, "number of CU transitions from active to idle"),
-    ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),
-    ADD_STAT(numCyclesWithInstrIssued,
-        "number of cycles the CU issued at least one instruction"),
-    ADD_STAT(spc, "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
-    ADD_STAT(idleDur, "duration of idle periods in cycles"),
-    ADD_STAT(numCyclesWithInstrTypeIssued,
-        "Number of cycles at least one "
-        "instruction issued to execution resource type"),
-    ADD_STAT(numCyclesWithNoInstrTypeIssued,
-        "Number of clks no instructions"
-        " issued to execution resource type")
+ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
+    : statistics::Group(parent, "ExecStage"),
+      ADD_STAT(numTransActiveIdle,
+               "number of CU transitions from active to idle"),
+      ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),
+      ADD_STAT(numCyclesWithInstrIssued,
+               "number of cycles the CU issued at least one instruction"),
+      ADD_STAT(spc,
+               "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
+      ADD_STAT(idleDur, "duration of idle periods in cycles"),
+      ADD_STAT(numCyclesWithInstrTypeIssued,
+               "Number of cycles at least one "
+               "instruction issued to execution resource type"),
+      ADD_STAT(numCyclesWithNoInstrTypeIssued,
+               "Number of clks no instructions"
+               " issued to execution resource type")
 {
     ComputeUnit *compute_unit = static_cast<ComputeUnit *>(parent);
 

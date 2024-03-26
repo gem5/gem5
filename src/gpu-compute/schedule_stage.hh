@@ -62,8 +62,8 @@ class ScheduleStage
 {
   public:
     ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
-        ScoreboardCheckToSchedule &from_scoreboard_check,
-        ScheduleToExecute &to_execute);
+                  ScoreboardCheckToSchedule &from_scoreboard_check,
+                  ScheduleToExecute &to_execute);
     ~ScheduleStage();
     void init();
     void exec();
@@ -168,8 +168,8 @@ class ScheduleStage
     // reserve resources for waves surviving arbitration in dispatchList
     void reserveResources();
 
-    void doDispatchListTransition(
-        int unitId, DISPATCH_STATUS s, const GPUDynInstPtr &gpu_dyn_inst);
+    void doDispatchListTransition(int unitId, DISPATCH_STATUS s,
+                                  const GPUDynInstPtr &gpu_dyn_inst);
     void doDispatchListTransition(int unitId, DISPATCH_STATUS s);
 
     // Set tracking wfDynId for each wave present in schedule stage

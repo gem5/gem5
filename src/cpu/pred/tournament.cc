@@ -48,24 +48,24 @@ namespace gem5
 {
 namespace branch_prediction
 {
-TournamentBP::TournamentBP(const TournamentBPParams &params) :
-    BPredUnit(params),
-    localPredictorSize(params.localPredictorSize),
-    localCtrBits(params.localCtrBits),
-    localCtrs(localPredictorSize, SatCounter8(localCtrBits)),
-    localHistoryTableSize(params.localHistoryTableSize),
-    localHistoryBits(ceilLog2(params.localPredictorSize)),
-    globalPredictorSize(params.globalPredictorSize),
-    globalCtrBits(params.globalCtrBits),
-    globalCtrs(globalPredictorSize, SatCounter8(globalCtrBits)),
-    globalHistory(params.numThreads, 0),
-    globalHistoryBits(ceilLog2(params.globalPredictorSize) >
-                              ceilLog2(params.choicePredictorSize) ?
-                          ceilLog2(params.globalPredictorSize) :
-                          ceilLog2(params.choicePredictorSize)),
-    choicePredictorSize(params.choicePredictorSize),
-    choiceCtrBits(params.choiceCtrBits),
-    choiceCtrs(choicePredictorSize, SatCounter8(choiceCtrBits))
+TournamentBP::TournamentBP(const TournamentBPParams &params)
+    : BPredUnit(params),
+      localPredictorSize(params.localPredictorSize),
+      localCtrBits(params.localCtrBits),
+      localCtrs(localPredictorSize, SatCounter8(localCtrBits)),
+      localHistoryTableSize(params.localHistoryTableSize),
+      localHistoryBits(ceilLog2(params.localPredictorSize)),
+      globalPredictorSize(params.globalPredictorSize),
+      globalCtrBits(params.globalCtrBits),
+      globalCtrs(globalPredictorSize, SatCounter8(globalCtrBits)),
+      globalHistory(params.numThreads, 0),
+      globalHistoryBits(ceilLog2(params.globalPredictorSize) >
+                                ceilLog2(params.choicePredictorSize) ?
+                            ceilLog2(params.globalPredictorSize) :
+                            ceilLog2(params.choicePredictorSize)),
+      choicePredictorSize(params.choicePredictorSize),
+      choiceCtrBits(params.choiceCtrBits),
+      choiceCtrs(choicePredictorSize, SatCounter8(choiceCtrBits))
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -190,7 +190,7 @@ TournamentBP::lookup(ThreadID tid, Addr pc, void *&bp_history)
 
 void
 TournamentBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-    Addr target, void *&bp_history)
+                              Addr target, void *&bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {
@@ -217,7 +217,7 @@ TournamentBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
 
 void
 TournamentBP::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-    bool squashed, const StaticInstPtr &inst, Addr target)
+                     bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
 

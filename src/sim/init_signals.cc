@@ -49,7 +49,7 @@
 #include <string>
 
 #if defined(__FreeBSD__)
-#    include <sys/param.h>
+#include <sys/param.h>
 
 #endif
 
@@ -83,7 +83,7 @@ setupAltStack()
 
 static void
 installSignalHandler(int signal, void (*handler)(int sigtype),
-    int flags = SA_RESTART, struct sigaction *old_sa = NULL)
+                     int flags = SA_RESTART, struct sigaction *old_sa = NULL)
 {
     struct sigaction sa;
 
@@ -149,8 +149,8 @@ abortHandler(int sigtype)
 {
     const EventQueue *const eq(curEventQueue());
     if (eq) {
-        ccprintf(
-            std::cerr, "Program aborted at tick %llu\n", eq->getCurTick());
+        ccprintf(std::cerr, "Program aborted at tick %llu\n",
+                 eq->getCurTick());
     } else {
         STATIC_ERR("Program aborted\n\n");
     }
@@ -203,8 +203,8 @@ initSignals()
 
     // Setup a SIGSEGV handler with a private stack
     if (setupAltStack()) {
-        installSignalHandler(
-            SIGSEGV, segvHandler, SA_RESETHAND | SA_NODEFER | SA_ONSTACK);
+        installSignalHandler(SIGSEGV, segvHandler,
+                             SA_RESETHAND | SA_NODEFER | SA_ONSTACK);
     } else {
         warn("Failed to setup stack for SIGSEGV handler, "
              "using default signal handler.\n");

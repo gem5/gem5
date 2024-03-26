@@ -35,8 +35,8 @@
 
 namespace gem5
 {
-static const int roundOps[] = {
-    FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD};
+static const int roundOps[] = {FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO,
+                               FE_UPWARD};
 
 void
 setFpRound(RoundingMode rm)

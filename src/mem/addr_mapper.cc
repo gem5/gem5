@@ -39,10 +39,10 @@
 
 namespace gem5
 {
-AddrMapper::AddrMapper(const AddrMapperParams &p) :
-    SimObject(p),
-    memSidePort(name() + "-mem_side_port", *this),
-    cpuSidePort(name() + "-cpu_side_port", *this)
+AddrMapper::AddrMapper(const AddrMapperParams &p)
+    : SimObject(p),
+      memSidePort(name() + "-mem_side_port", *this),
+      cpuSidePort(name() + "-cpu_side_port", *this)
 {}
 
 void
@@ -83,11 +83,11 @@ AddrMapper::recvFunctionalSnoop(PacketPtr pkt)
 }
 
 void
-AddrMapper::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+AddrMapper::recvMemBackdoorReq(const MemBackdoorReq &req,
+                               MemBackdoorPtr &backdoor)
 {
-    AddrRange remapped_req_range = AddrRange(
-        remapAddr(req.range().start()), remapAddr(req.range().end()));
+    AddrRange remapped_req_range = AddrRange(remapAddr(req.range().start()),
+                                             remapAddr(req.range().end()));
     MemBackdoorReq remapped_req(remapped_req_range, req.flags());
     memSidePort.sendMemBackdoorReq(remapped_req, backdoor);
     if (backdoor != nullptr) {
@@ -226,11 +226,11 @@ AddrMapper::recvRangeChange()
     cpuSidePort.sendRangeChange();
 }
 
-RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p) :
-    AddrMapper(p),
-    originalRanges(p.original_ranges),
-    remappedRanges(p.remapped_ranges),
-    backdoorManager(originalRanges, remappedRanges)
+RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p)
+    : AddrMapper(p),
+      originalRanges(p.original_ranges),
+      remappedRanges(p.remapped_ranges),
+      backdoorManager(originalRanges, remappedRanges)
 {
     if (originalRanges.size() != remappedRanges.size())
         fatal("AddrMapper: original and shadowed range list must "
@@ -257,8 +257,8 @@ RangeAddrMapper::remapAddr(Addr addr) const
 }
 
 MemBackdoorPtr
-RangeAddrMapper::getRevertedBackdoor(
-    MemBackdoorPtr &backdoor, const AddrRange &range)
+RangeAddrMapper::getRevertedBackdoor(MemBackdoorPtr &backdoor,
+                                     const AddrRange &range)
 {
     return backdoorManager.getRevertedBackdoor(backdoor, range);
 }

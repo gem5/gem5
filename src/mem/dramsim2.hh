@@ -186,8 +186,8 @@ class DRAMSim2 : public AbstractMemory
 
     DrainState drain() override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
     void startup() override;

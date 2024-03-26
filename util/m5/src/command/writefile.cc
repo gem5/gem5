@@ -40,7 +40,7 @@ namespace
 {
 void
 write_file(const DispatchTable &dt, const std::string &filename,
-    const std::string &host_filename)
+           const std::string &host_filename)
 {
     std::cout << "Opening \"" << filename << "\"." << std::endl;
     std::ifstream src(filename, std::ios_base::in | std::ios_base::binary);
@@ -90,7 +90,8 @@ do_write_file(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command write_file_cmd = {"writefile", 1, 2, do_write_file,
+Command write_file_cmd = {
+    "writefile", 1, 2, do_write_file,
     "<filename> [host filename]\n"
     "        Write a file to the host, optionally with a different "
     "name"};

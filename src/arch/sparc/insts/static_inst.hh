@@ -93,13 +93,14 @@ class SparcStaticInst : public StaticInst
   protected:
     ExtMachInst machInst;
 
-    SparcStaticInst(
-        const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass) :
-        StaticInst(_mnemonic, __opClass), machInst(_machInst)
+    SparcStaticInst(const char *_mnemonic, ExtMachInst _machInst,
+                    OpClass __opClass)
+        : StaticInst(_mnemonic, __opClass), machInst(_machInst)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     static void printMnemonic(std::ostream &os, const char *mnemonic);
     static void printReg(std::ostream &os, RegId reg);
@@ -107,8 +108,8 @@ class SparcStaticInst : public StaticInst
     void printSrcReg(std::ostream &os, int reg) const;
     void printDestReg(std::ostream &os, int reg) const;
 
-    void printRegArray(
-        std::ostream &os, const RegId *indexArray, int num) const;
+    void printRegArray(std::ostream &os, const RegId *indexArray,
+                       int num) const;
 
     void advancePC(PCStateBase &pcState) const override;
     void advancePC(ThreadContext *tc) const override;
@@ -123,8 +124,8 @@ class SparcStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(
-        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
+    buildRetPC(const PCStateBase &cur_pc,
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_ptr = call_pc.clone();
         auto &ret = ret_ptr->as<PCState>();

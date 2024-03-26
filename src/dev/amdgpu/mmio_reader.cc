@@ -82,9 +82,10 @@ AMDMMIOReader::readFromTrace(PacketPtr pkt, int barnum, Addr offset)
         value = std::get<1>(std::get<1>(trace_BARs[barnum][offset].front()));
         DPRINTF(AMDGPUDevice, "Read MMIO %d\n", trace_cur_index);
         DPRINTF(AMDGPUDevice,
-            "Reading from trace with offset: %#x on BAR %#x"
-            ". Progress is: %#f\n",
-            offset, barnum, float(trace_cur_index) / float(trace_final_index));
+                "Reading from trace with offset: %#x on BAR %#x"
+                ". Progress is: %#f\n",
+                offset, barnum,
+                float(trace_cur_index) / float(trace_final_index));
 
         /* Leave at least one value for this offset. */
         if (trace_BARs[barnum][offset].size() > 1) {
@@ -105,9 +106,10 @@ AMDMMIOReader::writeFromTrace(PacketPtr pkt, int barnum, Addr offset)
         trace_BARs[barnum][offset].size() > 0 &&
         trace_cur_index == std::get<0>(trace_BARs[barnum][offset].front())) {
         DPRINTF(AMDGPUDevice,
-            "Write matches trace with offset: %#x on "
-            "BAR %#x. Progress is: %#f\n",
-            offset, barnum, float(trace_cur_index) / float(trace_final_index));
+                "Write matches trace with offset: %#x on "
+                "BAR %#x. Progress is: %#f\n",
+                offset, barnum,
+                float(trace_cur_index) / float(trace_final_index));
         trace_BARs[barnum][offset].pop_front();
         trace_cur_index++;
     }

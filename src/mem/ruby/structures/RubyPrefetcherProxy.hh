@@ -76,7 +76,7 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
 {
   public:
     RubyPrefetcherProxy(AbstractController *parent, prefetch::Base *prefetcher,
-        MessageBuffer *pf_queue);
+                        MessageBuffer *pf_queue);
 
     /** Deschedled the ready prefetch event */
     void deschedulePrefetch();
@@ -87,14 +87,14 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     /**
      * Notify PF probes hit/miss/fill
      */
-    void notifyPfHit(
-        const RequestPtr &req, bool is_read, const DataBlock &data_blk);
-    void notifyPfMiss(
-        const RequestPtr &req, bool is_read, const DataBlock &data_blk);
-    void notifyPfFill(
-        const RequestPtr &req, const DataBlock &data_blk, bool from_pf);
-    void notifyPfEvict(
-        Addr blkAddr, bool hwPrefetched, RequestorID requestorID);
+    void notifyPfHit(const RequestPtr &req, bool is_read,
+                     const DataBlock &data_blk);
+    void notifyPfMiss(const RequestPtr &req, bool is_read,
+                      const DataBlock &data_blk);
+    void notifyPfFill(const RequestPtr &req, const DataBlock &data_blk,
+                      bool from_pf);
+    void notifyPfEvict(Addr blkAddr, bool hwPrefetched,
+                       RequestorID requestorID);
 
     /** Registers probes. */
     void regProbePoints();
@@ -153,8 +153,8 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     }
 
     bool
-    hasBeenPrefetched(
-        Addr addr, bool is_secure, RequestorID requestor) const override
+    hasBeenPrefetched(Addr addr, bool is_secure,
+                      RequestorID requestor) const override
     {
         return cacheCntrl->hasBeenPrefetched(addr, is_secure, requestor);
     }

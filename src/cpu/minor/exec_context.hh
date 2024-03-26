@@ -82,8 +82,8 @@ class ExecContext : public gem5::ExecContext
     MinorDynInstPtr inst;
 
     ExecContext(MinorCPU &cpu_, SimpleThread &thread_, Execute &execute_,
-        MinorDynInstPtr inst_) :
-        cpu(cpu_), thread(thread_), execute(execute_), inst(inst_)
+                MinorDynInstPtr inst_)
+        : cpu(cpu_), thread(thread_), execute(execute_), inst(inst_)
     {
         DPRINTF(MinorExecute, "ExecContext setting PC: %s\n", *inst->pc);
         pcState(*inst->pc);
@@ -99,11 +99,12 @@ class ExecContext : public gem5::ExecContext
 
     Fault
     initiateMemRead(Addr addr, unsigned int size, Request::Flags flags,
-        const std::vector<bool> &byte_enable) override
+                    const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
-            size, addr, flags, nullptr, nullptr, byte_enable);
+                                            size, addr, flags, nullptr,
+                                            nullptr, byte_enable);
     }
 
     Fault
@@ -116,21 +117,22 @@ class ExecContext : public gem5::ExecContext
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr, Request::Flags flags,
-        uint64_t *res, const std::vector<bool> &byte_enable) override
+             uint64_t *res, const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, false /* store */, data,
-            size, addr, flags, res, nullptr, byte_enable);
+                                            size, addr, flags, res, nullptr,
+                                            byte_enable);
     }
 
     Fault
     initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
-        AtomicOpFunctorPtr amo_op) override
+                   AtomicOpFunctorPtr amo_op) override
     {
         // AMO requests are pushed through the store path
-        return execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
-            size, addr, flags, nullptr, std::move(amo_op),
-            std::vector<bool>(size, true));
+        return execute.getLSQ().pushRequest(
+            inst, false /* amo */, nullptr, size, addr, flags, nullptr,
+            std::move(amo_op), std::vector<bool>(size, true));
     }
 
     RegVal

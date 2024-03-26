@@ -65,7 +65,8 @@ class Port
 
   protected:
     class UnboundPortException
-    {};
+    {
+    };
 
     [[noreturn]] void reportUnbound() const;
 

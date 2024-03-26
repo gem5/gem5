@@ -65,11 +65,11 @@ class VcdTraceFile : public TraceFile
     VcdTraceScope topScope;
 
   public:
-    VcdTraceFile(const std::string &name) :
-        TraceFile(name + ".vcd"),
-        lastPrintedTime(0),
-        deltasAtNow(0),
-        initialized(false)
+    VcdTraceFile(const std::string &name)
+        : TraceFile(name + ".vcd"),
+          lastPrintedTime(0),
+          deltasAtNow(0),
+          initialized(false)
     {
         _nextName[NextNameChars] = '\0';
         for (int i = 0; i < NextNameChars; i++)
@@ -82,7 +82,7 @@ class VcdTraceFile : public TraceFile
     template <typename TV>
     void
     addNewTraceVal(const typename TV::TracedType *v, const std::string &name,
-        int width = 1)
+                   int width = 1)
     {
         VcdTraceValBase *tv = new TV(v, nextSignalName(), width);
         traceVals.push_back(tv);
@@ -93,58 +93,58 @@ class VcdTraceFile : public TraceFile
     void addTraceVal(const float *v, const std::string &name) override;
     void addTraceVal(const double *v, const std::string &name) override;
 
-    void addTraceVal(
-        const sc_dt::sc_logic *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_int_base *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_uint_base *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_signed *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_unsigned *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_bv_base *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_lv_base *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_fxval *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_fxval_fast *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_fxnum *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_dt::sc_fxnum_fast *v, const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_logic *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_int_base *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_uint_base *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_signed *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_unsigned *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_bv_base *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_lv_base *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_fxval *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_fxval_fast *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_fxnum *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_dt::sc_fxnum_fast *v,
+                     const std::string &name) override;
 
-    void addTraceVal(
-        const sc_core::sc_event *v, const std::string &name) override;
-    void addTraceVal(
-        const sc_core::sc_time *v, const std::string &name) override;
+    void addTraceVal(const sc_core::sc_event *v,
+                     const std::string &name) override;
+    void addTraceVal(const sc_core::sc_time *v,
+                     const std::string &name) override;
 
-    void addTraceVal(
-        const unsigned char *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const char *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const unsigned short *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const short *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const unsigned int *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const int *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const unsigned long *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const long *v, const std::string &name, int width) override;
+    void addTraceVal(const unsigned char *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const char *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const unsigned short *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const short *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const unsigned int *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const int *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const unsigned long *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const long *v, const std::string &name,
+                     int width) override;
 
-    void addTraceVal(
-        const sc_dt::int64 *v, const std::string &name, int width) override;
-    void addTraceVal(
-        const sc_dt::uint64 *v, const std::string &name, int width) override;
+    void addTraceVal(const sc_dt::int64 *v, const std::string &name,
+                     int width) override;
+    void addTraceVal(const sc_dt::uint64 *v, const std::string &name,
+                     int width) override;
 
     void addTraceVal(const unsigned int *, const std::string &name,
-        const char **literals) override;
+                     const char **literals) override;
 
     void writeComment(const std::string &comment) override;
 };

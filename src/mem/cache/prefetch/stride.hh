@@ -83,8 +83,8 @@ class StridePrefetcherHashedSetAssociative : public SetAssociative
 
   public:
     StridePrefetcherHashedSetAssociative(
-        const StridePrefetcherHashedSetAssociativeParams &p) :
-        SetAssociative(p)
+        const StridePrefetcherHashedSetAssociativeParams &p)
+        : SetAssociative(p)
     {}
     ~StridePrefetcherHashedSetAssociative() = default;
 };
@@ -114,12 +114,12 @@ class Stride : public Queued
         replacement_policy::Base *const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
-            BaseIndexingPolicy *indexing_policy,
-            replacement_policy::Base *repl_policy) :
-            assoc(assoc),
-            numEntries(num_entries),
-            indexingPolicy(indexing_policy),
-            replacementPolicy(repl_policy)
+                    BaseIndexingPolicy *indexing_policy,
+                    replacement_policy::Base *repl_policy)
+            : assoc(assoc),
+              numEntries(num_entries),
+              indexingPolicy(indexing_policy),
+              replacementPolicy(repl_policy)
         {}
     } pcTableInfo;
 
@@ -158,8 +158,8 @@ class Stride : public Queued
     Stride(const StridePrefetcherParams &p);
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

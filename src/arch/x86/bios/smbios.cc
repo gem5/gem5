@@ -85,9 +85,9 @@ X86ISA::smbios::SMBiosStructure::writeOut(PortProxy &proxy, Addr addr)
     return length + getStringLength();
 }
 
-X86ISA::smbios::SMBiosStructure::SMBiosStructure(
-    const Params &p, uint8_t _type) :
-    SimObject(p), type(_type), handle(0), stringFields(false)
+X86ISA::smbios::SMBiosStructure::SMBiosStructure(const Params &p,
+                                                 uint8_t _type)
+    : SimObject(p), type(_type), handle(0), stringFields(false)
 {}
 
 void
@@ -145,21 +145,21 @@ X86ISA::smbios::SMBiosStructure::readString(int n)
 }
 
 void
-X86ISA::smbios::SMBiosStructure::setString(
-    int n, const std::string &new_string)
+X86ISA::smbios::SMBiosStructure::setString(int n,
+                                           const std::string &new_string)
 {
     assert(n > 0 && n <= strings.size());
     strings[n - 1] = new_string;
 }
 
-X86ISA::smbios::BiosInformation::BiosInformation(const Params &p) :
-    SMBiosStructure(p, Type),
-    startingAddrSegment(p.starting_addr_segment),
-    romSize(p.rom_size),
-    majorVer(p.major),
-    minorVer(p.minor),
-    embContFirmwareMajor(p.emb_cont_firmware_major),
-    embContFirmwareMinor(p.emb_cont_firmware_minor)
+X86ISA::smbios::BiosInformation::BiosInformation(const Params &p)
+    : SMBiosStructure(p, Type),
+      startingAddrSegment(p.starting_addr_segment),
+      romSize(p.rom_size),
+      majorVer(p.major),
+      minorVer(p.minor),
+      embContFirmwareMajor(p.emb_cont_firmware_major),
+      embContFirmwareMinor(p.emb_cont_firmware_minor)
 {
     vendor = addString(p.vendor);
     version = addString(p.version);
@@ -199,8 +199,8 @@ X86ISA::smbios::BiosInformation::writeOut(PortProxy &proxy, Addr addr)
     return size;
 }
 
-X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p) :
-    SimObject(p), structures(p.structures)
+X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p)
+    : SimObject(p), structures(p.structures)
 {
     smbiosHeader.majorVersion = p.major_version;
     smbiosHeader.minorVersion = p.minor_version;
@@ -211,8 +211,8 @@ X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p) :
 }
 
 void
-X86ISA::smbios::SMBiosTable::writeOut(
-    PortProxy &proxy, Addr addr, Addr &headerSize, Addr &structSize)
+X86ISA::smbios::SMBiosTable::writeOut(PortProxy &proxy, Addr addr,
+                                      Addr &headerSize, Addr &structSize)
 {
     headerSize = 0x1F;
 
@@ -245,8 +245,8 @@ X86ISA::smbios::SMBiosTable::writeOut(
      */
     uint8_t intChecksum = 0;
 
-    proxy.writeBlob(
-        addr + 0x10, smbiosHeader.intermediateHeader.anchorString, 5);
+    proxy.writeBlob(addr + 0x10, smbiosHeader.intermediateHeader.anchorString,
+                    5);
     for (int i = 0; i < 5; i++)
         intChecksum += smbiosHeader.intermediateHeader.anchorString[i];
 
@@ -267,8 +267,8 @@ X86ISA::smbios::SMBiosTable::writeOut(
         numStructs >>= 8;
     }
 
-    proxy.writeBlob(
-        addr + 0x1E, &smbiosHeader.intermediateHeader.smbiosBCDRevision, 1);
+    proxy.writeBlob(addr + 0x1E,
+                    &smbiosHeader.intermediateHeader.smbiosBCDRevision, 1);
     intChecksum += smbiosHeader.intermediateHeader.smbiosBCDRevision;
 
     /*

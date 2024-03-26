@@ -105,8 +105,8 @@ main(int argc, char *argv[], char *envp[])
             return 1;
         }
     }
-    if (!child->startTracing(
-            argv[startProgramArgs], argv + startProgramArgs)) {
+    if (!child->startTracing(argv[startProgramArgs],
+                             argv + startProgramArgs)) {
         cerr << "Couldn't start target program" << endl;
         return 1;
     }
@@ -132,7 +132,7 @@ main(int argc, char *argv[], char *envp[])
         bzero((char *)&serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
         bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
-            server->h_length);
+              server->h_length);
         serv_addr.sin_port = htons(8000);
         if (connect(sock, (sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
             cerr << "Couldn't connect to server! " << strerror(errno) << endl;

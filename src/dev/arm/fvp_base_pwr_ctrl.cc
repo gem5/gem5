@@ -49,13 +49,13 @@
 
 namespace gem5
 {
-FVPBasePwrCtrl::FVPBasePwrCtrl(const FVPBasePwrCtrlParams &params) :
-    BasicPioDevice(params, 0x1000),
-    regs(),
-    system(*static_cast<ArmSystem *>(sys))
+FVPBasePwrCtrl::FVPBasePwrCtrl(const FVPBasePwrCtrlParams &params)
+    : BasicPioDevice(params, 0x1000),
+      regs(),
+      system(*static_cast<ArmSystem *>(sys))
 {
     warn_if(sys->multiThread,
-        "Base Power Controller does not support multi-threaded systems\n");
+            "Base Power Controller does not support multi-threaded systems\n");
     system.setPowerController(this);
 }
 
@@ -76,9 +76,9 @@ FVPBasePwrCtrl::setStandByWfi(ThreadContext *const tc)
 
     if (!pwrs->pwfi)
         DPRINTF(FVPBasePwrCtrl,
-            "FVPBasePwrCtrl::setStandByWfi: STANDBYWFI "
-            "asserted for core %d\n",
-            tc->contextId());
+                "FVPBasePwrCtrl::setStandByWfi: STANDBYWFI "
+                "asserted for core %d\n",
+                tc->contextId());
     pwrs->pwfi = 1;
     if (pwrs->l0 && (pwrs->pp || pwrs->pc))
         powerCoreOff(tc, pwrs);
@@ -91,9 +91,9 @@ FVPBasePwrCtrl::clearStandByWfi(ThreadContext *const tc)
 
     if (pwrs->pwfi)
         DPRINTF(FVPBasePwrCtrl,
-            "FVPBasePwrCtrl::clearStandByWfi: STANDBYWFI "
-            "deasserted for core %d\n",
-            tc->contextId());
+                "FVPBasePwrCtrl::clearStandByWfi: STANDBYWFI "
+                "deasserted for core %d\n",
+                tc->contextId());
     pwrs->pwfi = 0;
 }
 
@@ -104,9 +104,9 @@ FVPBasePwrCtrl::setWakeRequest(ThreadContext *const tc)
 
     if (!pwrs->pwk)
         DPRINTF(FVPBasePwrCtrl,
-            "FVPBasePwrCtrl::setWakeRequest: WakeRequest "
-            "asserted for core %d\n",
-            tc->contextId());
+                "FVPBasePwrCtrl::setWakeRequest: WakeRequest "
+                "asserted for core %d\n",
+                tc->contextId());
     pwrs->pwk = 1;
     if (!pwrs->l0 && pwrs->wen) {
         pwrs->wk = WK_GICWR;
@@ -123,9 +123,9 @@ FVPBasePwrCtrl::clearWakeRequest(ThreadContext *const tc)
 
     if (pwrs->pwk)
         DPRINTF(FVPBasePwrCtrl,
-            "FVPBasePwrCtrl::clearWakeRequest: "
-            "WakeRequest deasserted for core %d\n",
-            tc->contextId());
+                "FVPBasePwrCtrl::clearWakeRequest: "
+                "WakeRequest deasserted for core %d\n",
+                tc->contextId());
     pwrs->pwk = 0;
 }
 
@@ -156,11 +156,11 @@ FVPBasePwrCtrl::read(PacketPtr pkt)
     default:
         warn("FVPBasePwrCtrl::read: Unexpected address (0x%x:%i), "
              "assuming RAZ\n",
-            addr, size);
+             addr, size);
     }
 
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::read: 0x%x<-0x%x(%i)\n", resp,
-        addr, size);
+            addr, size);
 
     pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
@@ -248,11 +248,11 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
     default:
         warn("FVPBasePwrCtrl::write: Unexpected address (0x%x:%i), "
              "assuming WI\n",
-            addr, size);
+             addr, size);
     }
 
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::write: 0x%x->0x%x(%i)\n", data,
-        addr, size);
+            addr, size);
 
     pkt->makeResponse();
     return pioDelay;
@@ -280,9 +280,9 @@ void
 FVPBasePwrCtrl::powerCoreOn(ThreadContext *const tc, PwrStatus *const pwrs)
 {
     DPRINTF(FVPBasePwrCtrl,
-        "FVPBasePwrCtrl::powerCoreOn: Powering ON "
-        "core %d\n",
-        tc->contextId());
+            "FVPBasePwrCtrl::powerCoreOn: Powering ON "
+            "core %d\n",
+            tc->contextId());
     pwrs->l0 = 1;
     poweredCoresPerCluster[tc->socketId()]++;
     // Clear pending power-offs to the core
@@ -301,9 +301,9 @@ void
 FVPBasePwrCtrl::powerCoreOff(ThreadContext *const tc, PwrStatus *const pwrs)
 {
     DPRINTF(FVPBasePwrCtrl,
-        "FVPBasePwrCtrl::powerCoreOff: Powering OFF "
-        "core %d\n",
-        tc->contextId());
+            "FVPBasePwrCtrl::powerCoreOff: Powering OFF "
+            "core %d\n",
+            tc->contextId());
     pwrs->l0 = 0;
     poweredCoresPerCluster[tc->socketId()]--;
     // Clear pending power-offs to the core
@@ -318,9 +318,9 @@ void
 FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
 {
     DPRINTF(FVPBasePwrCtrl,
-        "FVPBasePwrCtrl::startCoreUp: Starting core %d "
-        "from the power controller\n",
-        tc->contextId());
+            "FVPBasePwrCtrl::startCoreUp: Starting core %d "
+            "from the power controller\n",
+            tc->contextId());
     clearStandByWfi(tc);
     clearWakeRequest(tc);
 

@@ -103,13 +103,13 @@ class Fetch2 : public Named
     {
         Fetch2ThreadInfo() {}
 
-        Fetch2ThreadInfo(const Fetch2ThreadInfo &other) :
-            inputIndex(other.inputIndex),
-            havePC(other.havePC),
-            lastStreamSeqNum(other.lastStreamSeqNum),
-            expectedStreamSeqNum(other.expectedStreamSeqNum),
-            predictionSeqNum(other.predictionSeqNum),
-            blocked(other.blocked)
+        Fetch2ThreadInfo(const Fetch2ThreadInfo &other)
+            : inputIndex(other.inputIndex),
+              havePC(other.havePC),
+              lastStreamSeqNum(other.lastStreamSeqNum),
+              expectedStreamSeqNum(other.expectedStreamSeqNum),
+              predictionSeqNum(other.predictionSeqNum),
+              blocked(other.blocked)
         {
             set(pc, other.pc);
         }
@@ -196,11 +196,12 @@ class Fetch2 : public Named
 
   public:
     Fetch2(const std::string &name, MinorCPU &cpu_,
-        const BaseMinorCPUParams &params, Latch<ForwardLineData>::Output inp_,
-        Latch<BranchData>::Output branchInp_,
-        Latch<BranchData>::Input predictionOut_,
-        Latch<ForwardInstData>::Input out_,
-        std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
+           const BaseMinorCPUParams &params,
+           Latch<ForwardLineData>::Output inp_,
+           Latch<BranchData>::Output branchInp_,
+           Latch<BranchData>::Input predictionOut_,
+           Latch<ForwardInstData>::Input out_,
+           std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
 
   public:
     /** Pass on input/buffer data to the output if you can */

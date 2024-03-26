@@ -56,7 +56,7 @@ class FDArray : public Serializable
      * @param errout Used to initialize the stderr file descriptor
      */
     FDArray(std::string const &input, std::string const &output,
-        std::string const &errout);
+            std::string const &errout);
 
     /**
      * Figure out the file offsets for all currently open files and save them

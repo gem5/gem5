@@ -91,8 +91,8 @@ class MessageBuffer : public SimObject
     delayHead(Tick current_time, Tick delta)
     {
         MsgPtr m = m_prio_heap.front();
-        std::pop_heap(
-            m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
+        std::pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
+                      std::greater<MsgPtr>());
         m_prio_heap.pop_back();
         enqueue(m, current_time, delta);
     }
@@ -115,7 +115,7 @@ class MessageBuffer : public SimObject
         if (m_consumer != NULL) {
             fatal("Trying to connect %s to MessageBuffer %s. \
                   \n%s already connected. Check the cntrl_id's.\n",
-                *consumer, *this, *m_consumer);
+                  *consumer, *this, *m_consumer);
         }
         m_consumer = consumer;
     }
@@ -143,7 +143,7 @@ class MessageBuffer : public SimObject
     }
 
     void enqueue(MsgPtr message, Tick curTime, Tick delta,
-        bool bypassStrictFIFO = false);
+                 bool bypassStrictFIFO = false);
 
     // Defer enqueueing a message to a later cycle by putting it aside and not
     // enqueueing it in this cycle

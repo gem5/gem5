@@ -55,8 +55,8 @@ class FailUnimplemented : public SparcStaticInst
 {
   public:
     /// Constructor
-    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst) :
-        SparcStaticInst(_mnemonic, _machInst, No_OpClass)
+    FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
+        : SparcStaticInst(_mnemonic, _machInst, No_OpClass)
     {}
 
     Fault
@@ -68,8 +68,8 @@ class FailUnimplemented : public SparcStaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }
@@ -92,8 +92,8 @@ class WarnUnimplemented : public SparcStaticInst
 
   public:
     /// Constructor
-    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst) :
-        SparcStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+    WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
+        : SparcStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
     {}
 
     Fault
@@ -108,8 +108,8 @@ class WarnUnimplemented : public SparcStaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
     }

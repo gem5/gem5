@@ -75,18 +75,18 @@ tarmacDump(const TarmacTracerParams &p)
 
 } // namespace
 
-TarmacTracer::TarmacTracer(const Params &p) :
-    InstTracer(p),
-    outstream(tarmacDump(p)),
-    startTick(p.start_tick),
-    endTick(p.end_tick)
+TarmacTracer::TarmacTracer(const Params &p)
+    : InstTracer(p),
+      outstream(tarmacDump(p)),
+      startTick(p.start_tick),
+      endTick(p.end_tick)
 {
     // Wrong parameter setting: The trace end happens before the
     // trace start.
     panic_if(startTick > endTick,
-        "Tarmac start point: %lu is bigger than "
-        "Tarmac end point: %lu\n",
-        startTick, endTick);
+             "Tarmac start point: %lu is bigger than "
+             "Tarmac end point: %lu\n",
+             startTick, endTick);
 
     // By default cpu tracers in gem5 are not tracing faults
     // (exceptions).
@@ -98,8 +98,9 @@ TarmacTracer::TarmacTracer(const Params &p) :
 
 InstRecord *
 TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
-    const StaticInstPtr staticInst, const PCStateBase &pc,
-    const StaticInstPtr macroStaticInst)
+                            const StaticInstPtr staticInst,
+                            const PCStateBase &pc,
+                            const StaticInstPtr macroStaticInst)
 {
     // Check if we need to start tracing since we have passed the
     // tick start point.
@@ -108,12 +109,12 @@ TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
 
     if (ArmSystem::highestELIs64(tc)) {
         // TarmacTracerV8
-        return new TarmacTracerRecordV8(
-            when, tc, staticInst, pc, *this, macroStaticInst);
+        return new TarmacTracerRecordV8(when, tc, staticInst, pc, *this,
+                                        macroStaticInst);
     } else {
         // TarmacTracer
-        return new TarmacTracerRecord(
-            when, tc, staticInst, pc, *this, macroStaticInst);
+        return new TarmacTracerRecord(when, tc, staticInst, pc, *this,
+                                      macroStaticInst);
     }
 }
 

@@ -63,21 +63,22 @@ class GicV2Registers
     virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
     virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
 
-    virtual void writeDistributor(
-        ContextID ctx, Addr daddr, uint32_t data) = 0;
+    virtual void writeDistributor(ContextID ctx, Addr daddr,
+                                  uint32_t data) = 0;
     virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
 
   protected:
-    static void copyDistRegister(
-        GicV2Registers *from, GicV2Registers *to, ContextID ctx, Addr daddr);
-    static void copyCpuRegister(
-        GicV2Registers *from, GicV2Registers *to, ContextID ctx, Addr daddr);
+    static void copyDistRegister(GicV2Registers *from, GicV2Registers *to,
+                                 ContextID ctx, Addr daddr);
+    static void copyCpuRegister(GicV2Registers *from, GicV2Registers *to,
+                                ContextID ctx, Addr daddr);
     static void copyBankedDistRange(System *sys, GicV2Registers *from,
-        GicV2Registers *to, Addr daddr, size_t size);
-    static void clearBankedDistRange(
-        System *sys, GicV2Registers *to, Addr daddr, size_t size);
-    static void copyDistRange(
-        GicV2Registers *from, GicV2Registers *to, Addr daddr, size_t size);
+                                    GicV2Registers *to, Addr daddr,
+                                    size_t size);
+    static void clearBankedDistRange(System *sys, GicV2Registers *to,
+                                     Addr daddr, size_t size);
+    static void copyDistRange(GicV2Registers *from, GicV2Registers *to,
+                              Addr daddr, size_t size);
     static void clearDistRange(GicV2Registers *to, Addr daddr, size_t size);
 };
 
@@ -231,13 +232,13 @@ class GicV2 : public BaseGic, public GicV2Registers
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
-        BankedRegs() :
-            intEnabled(0),
-            pendingInt(0),
-            activeInt(0),
-            intGroup(0),
-            intConfig{0},
-            intPriority{0}
+        BankedRegs()
+            : intEnabled(0),
+              pendingInt(0),
+              activeInt(0),
+              intGroup(0),
+              intConfig{0},
+              intPriority{0}
         {}
     };
     std::vector<BankedRegs *> bankedRegs;
@@ -369,7 +370,8 @@ class GicV2 : public BaseGic, public GicV2Registers
             if (gem5ExtensionsEnabled) {
                 ctx_mask = ctx;
             } else {
-                fatal_if(ctx >= 8,
+                fatal_if(
+                    ctx >= 8,
                     "%s requires the gem5_extensions parameter to support "
                     "more than 8 cores\n",
                     name());
@@ -574,8 +576,8 @@ class GicV2 : public BaseGic, public GicV2Registers
      * @param pkt packet to respond to
      */
     Tick writeDistributor(PacketPtr pkt);
-    void writeDistributor(
-        ContextID ctx, Addr daddr, uint32_t data, size_t data_sz);
+    void writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
+                          size_t data_sz);
     void
     writeDistributor(ContextID ctx, Addr daddr, uint32_t data) override
     {

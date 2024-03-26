@@ -53,7 +53,8 @@ class PayloadEvent : public gem5::Event
     OWNER &port;
     const std::string eventName;
     void (OWNER::*handler)(PayloadEvent<OWNER> *pe,
-        tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
+                           tlm::tlm_generic_payload &trans,
+                           const tlm::tlm_phase &phase);
 
   protected:
     tlm::tlm_generic_payload *t;
@@ -73,16 +74,17 @@ class PayloadEvent : public gem5::Event
     }
 
     PayloadEvent(OWNER &port_,
-        void (OWNER::*handler_)(PayloadEvent<OWNER> *pe,
-            tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase),
-        const std::string &event_name) :
-        port(port_), eventName(event_name), handler(handler_)
+                 void (OWNER::*handler_)(PayloadEvent<OWNER> *pe,
+                                         tlm::tlm_generic_payload &trans,
+                                         const tlm::tlm_phase &phase),
+                 const std::string &event_name)
+        : port(port_), eventName(event_name), handler(handler_)
     {}
 
     /// Schedule an event into gem5
     void
     notify(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase,
-        const sc_core::sc_time &delay)
+           const sc_core::sc_time &delay)
     {
         assert(!scheduled());
 

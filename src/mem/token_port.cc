@@ -91,7 +91,7 @@ TokenResponsePort::bind(Port &peer)
     auto *request_port = dynamic_cast<RequestPort *>(&peer);
     if (!token_request_port && !request_port) {
         fatal("Attempt to bind port %s to unsupported response port %s.",
-            name(), peer.name());
+              name(), peer.name());
     } else if (token_request_port) {
         // response port keeps track of the request port
         tokenRequestPort = token_request_port;
@@ -115,7 +115,7 @@ TokenResponsePort::recvRespRetry()
 {
     // fallback to QueuedResponsePort-like impl for now
     panic_if(respQueue.empty(),
-        "Attempted to retry a response when no retry was queued!\n");
+             "Attempted to retry a response when no retry was queued!\n");
 
     PacketPtr pkt = respQueue.front();
     bool success = ResponsePort::sendTimingResp(pkt);
@@ -155,10 +155,10 @@ TokenManager::recvTokens(int num_tokens)
     availableTokens += num_tokens;
 
     DPRINTF(TokenPort, "Received %d tokens, have %d\n", num_tokens,
-        availableTokens);
+            availableTokens);
 
     panic_if(availableTokens > maxTokens,
-        "More tokens available than the maximum after recvTokens!\n");
+             "More tokens available than the maximum after recvTokens!\n");
 }
 
 bool
@@ -171,12 +171,12 @@ void
 TokenManager::acquireTokens(int num_tokens)
 {
     panic_if(!haveTokens(num_tokens),
-        "Attempted to acquire more tokens than are available!\n");
+             "Attempted to acquire more tokens than are available!\n");
 
     availableTokens -= num_tokens;
 
     DPRINTF(TokenPort, "Acquired %d tokens, have %d\n", num_tokens,
-        availableTokens);
+            availableTokens);
 }
 
 } // namespace gem5

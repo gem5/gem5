@@ -262,8 +262,8 @@ class PCStateWithNext : public PCStateBase
 
     MicroPC _nupc = 1;
 
-    PCStateWithNext(const PCStateWithNext &other) :
-        PCStateBase(other), _npc(other._npc), _nupc(other._nupc)
+    PCStateWithNext(const PCStateWithNext &other)
+        : PCStateBase(other), _npc(other._npc), _nupc(other._nupc)
     {}
     PCStateWithNext &operator=(const PCStateWithNext &other) = default;
     PCStateWithNext() {}
@@ -535,8 +535,8 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
         nnpc(val + 2 * InstWidth);
     }
 
-    DelaySlotPCState(const DelaySlotPCState &other) :
-        Base(other), _nnpc(other._nnpc)
+    DelaySlotPCState(const DelaySlotPCState &other)
+        : Base(other), _nnpc(other._nnpc)
     {}
     DelaySlotPCState &operator=(const DelaySlotPCState &other) = default;
     DelaySlotPCState() {}
@@ -547,7 +547,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     {
         return !(this->nnpc() == this->npc() + InstWidth &&
                  (this->npc() == this->pc() + InstWidth ||
-                     this->npc() == this->pc() + 2 * InstWidth));
+                  this->npc() == this->pc() + 2 * InstWidth));
     }
 
     // Advance the PC.

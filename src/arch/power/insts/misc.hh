@@ -43,8 +43,9 @@ class MiscOp : public PowerStaticInst
   protected:
     using PowerStaticInst::PowerStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

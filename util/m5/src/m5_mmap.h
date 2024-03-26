@@ -44,15 +44,14 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    extern void *m5_mem;
-    extern uint64_t m5op_addr;
-    extern const char *m5_mmap_dev;
-    void map_m5_mem();
-    void unmap_m5_mem();
+extern void *m5_mem;
+extern uint64_t m5op_addr;
+extern const char *m5_mmap_dev;
+void map_m5_mem();
+void unmap_m5_mem();
 
 #ifdef __cplusplus
 }

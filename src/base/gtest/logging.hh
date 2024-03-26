@@ -37,7 +37,8 @@ namespace gem5
 // exception being thrown after the panic/fatal message has been printed, but
 // there will at least be some indication what went wrong.
 struct GTestException
-{};
+{
+};
 
 class GTestLogOutput : public std::ostringstream
 {
@@ -58,8 +59,8 @@ class GTestLogOutput : public std::ostringstream
 
   public:
     template <typename... Args>
-    GTestLogOutput(Args &&... args) :
-        std::ostringstream(std::forward<Args>(args)...), eventHook(*this)
+    GTestLogOutput(Args &&... args)
+        : std::ostringstream(std::forward<Args>(args)...), eventHook(*this)
     {}
 };
 

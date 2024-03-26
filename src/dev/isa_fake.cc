@@ -40,8 +40,8 @@
 
 namespace gem5
 {
-IsaFake::IsaFake(const Params &p) :
-    BasicPioDevice(p, p.ret_bad_addr ? 0 : p.pio_size)
+IsaFake::IsaFake(const Params &p)
+    : BasicPioDevice(p, p.ret_bad_addr ? 0 : p.pio_size)
 {
     retData8 = p.ret_data8;
     retData16 = p.ret_data16;
@@ -56,16 +56,16 @@ IsaFake::read(PacketPtr pkt)
 
     if (params().warn_access != "")
         warn("Device %s accessed by read to address %#x size=%d\n", name(),
-            pkt->getAddr(), pkt->getSize());
+             pkt->getAddr(), pkt->getSize());
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "read to bad address va=%#x size=%d\n",
-            pkt->getAddr(), pkt->getSize());
+                pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
-        assert(
-            pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-        DPRINTF(
-            IsaFake, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
+        assert(pkt->getAddr() >= pioAddr &&
+               pkt->getAddr() < pioAddr + pioSize);
+        DPRINTF(IsaFake, "read  va=%#x size=%d\n", pkt->getAddr(),
+                pkt->getSize());
         switch (pkt->getSize()) {
         case sizeof(uint64_t):
             pkt->setLE(retData64);
@@ -113,15 +113,15 @@ IsaFake::write(PacketPtr pkt)
             panic("invalid access size: %u\n", pkt->getSize());
         }
         warn("Device %s accessed by write to address %#x size=%d data=%#x\n",
-            name(), pkt->getAddr(), pkt->getSize(), data);
+             name(), pkt->getAddr(), pkt->getSize(), data);
     }
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "write to bad address va=%#x size=%d \n",
-            pkt->getAddr(), pkt->getSize());
+                pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
         DPRINTF(IsaFake, "write - va=%#x size=%d \n", pkt->getAddr(),
-            pkt->getSize());
+                pkt->getSize());
 
         if (params().update_data) {
             switch (pkt->getSize()) {

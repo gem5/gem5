@@ -101,11 +101,12 @@ class SCMasterPort : public gem5::ExternalMaster::ExternalPort
 
     // The TLM target interface
     tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &trans,
-        tlm::tlm_phase &phase, sc_core::sc_time &t);
+                                       tlm::tlm_phase &phase,
+                                       sc_core::sc_time &t);
     void b_transport(tlm::tlm_generic_payload &trans, sc_core::sc_time &t);
     unsigned int transport_dbg(tlm::tlm_generic_payload &trans);
-    bool get_direct_mem_ptr(
-        tlm::tlm_generic_payload &trans, tlm::tlm_dmi &dmi_data);
+    bool get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
+                            tlm::tlm_dmi &dmi_data);
 
     // Gem5 SCMasterPort interface
     bool recvTimingResp(gem5::PacketPtr pkt);
@@ -114,7 +115,7 @@ class SCMasterPort : public gem5::ExternalMaster::ExternalPort
 
   public:
     SCMasterPort(const std::string &name_, const std::string &systemc_name,
-        gem5::ExternalMaster &owner_, Gem5SimControl &simControl);
+                 gem5::ExternalMaster &owner_, Gem5SimControl &simControl);
 
     void bindToTransactor(Gem5MasterTransactor *transactor);
 
@@ -122,8 +123,8 @@ class SCMasterPort : public gem5::ExternalMaster::ExternalPort
 
   private:
     void sendEndReq(tlm::tlm_generic_payload &trans);
-    void sendBeginResp(
-        tlm::tlm_generic_payload &trans, sc_core::sc_time &delay);
+    void sendBeginResp(tlm::tlm_generic_payload &trans,
+                       sc_core::sc_time &delay);
 
     void handleBeginReq(tlm::tlm_generic_payload &trans);
     void handleEndResp(tlm::tlm_generic_payload &trans);
@@ -142,9 +143,9 @@ class SCMasterPortHandler : public gem5::ExternalMaster::Handler
   public:
     SCMasterPortHandler(Gem5SimControl &control) : control(control) {}
 
-    gem5::ExternalMaster::ExternalPort *getExternalPort(
-        const std::string &name, gem5::ExternalMaster &owner,
-        const std::string &port_data);
+    gem5::ExternalMaster::ExternalPort *
+    getExternalPort(const std::string &name, gem5::ExternalMaster &owner,
+                    const std::string &port_data);
 };
 
 } // namespace Gem5SystemC

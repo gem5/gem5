@@ -53,8 +53,8 @@ namespace gem5
 {
 namespace ps2
 {
-TouchKit::TouchKit(const PS2TouchKitParams &p) :
-    Device(p), vnc(p.vnc), enabled(false), touchKitEnabled(false)
+TouchKit::TouchKit(const PS2TouchKitParams &p)
+    : Device(p), vnc(p.vnc), enabled(false), touchKitEnabled(false)
 {
     if (vnc)
         vnc->setMouse(this);

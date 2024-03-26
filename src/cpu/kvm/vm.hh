@@ -411,8 +411,8 @@ class KvmVM : public SimObject
      * @param guest_addr Address in the guest
      * @param flags Flags (see the KVM API documentation)
      */
-    void setupMemSlot(
-        const MemSlot slot, void *host_addr, Addr guest_addr, uint32_t flags);
+    void setupMemSlot(const MemSlot slot, void *host_addr, Addr guest_addr,
+                      uint32_t flags);
 
     /**
      * Disable a memory slot.
@@ -496,7 +496,7 @@ class KvmVM : public SimObject
      * @param flags Flags (see the KVM API documentation)
      */
     void setUserMemoryRegion(uint32_t slot, void *host_addr, Addr guest_addr,
-        uint64_t len, uint32_t flags);
+                             uint64_t len, uint32_t flags);
     /** @} */
 
     /**

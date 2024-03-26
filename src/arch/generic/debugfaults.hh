@@ -69,8 +69,8 @@ class M5DebugFault : public FaultBase
     M5DebugFault(std::string _m) : _message(_m) {}
 
     template <class... Args>
-    M5DebugFault(const std::string &format, const Args &... args) :
-        _message(csprintf(format, args...))
+    M5DebugFault(const std::string &format, const Args &... args)
+        : _message(csprintf(format, args...))
     {}
 
     std::string
@@ -81,7 +81,7 @@ class M5DebugFault : public FaultBase
 
     void
     invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override
+           const StaticInstPtr &inst = nullStaticInstPtr) override
     {
         debugFunc();
         advancePC(tc, inst);
@@ -107,13 +107,13 @@ class M5DebugOnceFault : public M5DebugFault
   public:
     template <class OnceToken, class... Args>
     M5DebugOnceFault(const OnceToken &token, const std::string &format,
-        const Args &... args) :
-        M5DebugFault(format, args...), once(lookUpToken<Flavor>(token))
+                     const Args &... args)
+        : M5DebugFault(format, args...), once(lookUpToken<Flavor>(token))
     {}
 
     void
     invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override
+           const StaticInstPtr &inst = nullStaticInstPtr) override
     {
         if (!once) {
             once = true;

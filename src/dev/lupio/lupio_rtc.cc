@@ -35,8 +35,8 @@
 
 namespace gem5
 {
-LupioRTC::LupioRTC(const Params &params) :
-    BasicPioDevice(params, params.pio_size), time(params.time)
+LupioRTC::LupioRTC(const Params &params)
+    : BasicPioDevice(params, params.pio_size), time(params.time)
 {
     start = mktime(&time);
 }
@@ -96,7 +96,7 @@ LupioRTC::read(PacketPtr pkt)
 {
     bool is_atomic = pkt->isAtomicOp() && pkt->cmd == MemCmd::SwapReq;
     DPRINTF(LupioRTC, "Read request - addr: %#x, size: %#x, atomic:%d\n",
-        pkt->getAddr(), pkt->getSize(), is_atomic);
+            pkt->getAddr(), pkt->getSize(), is_atomic);
 
     Addr rtc_addr = pkt->getAddr() - pioAddr;
     uint8_t time_val = lupioRTCRead(rtc_addr);

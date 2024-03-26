@@ -174,9 +174,11 @@ class ISA : public BaseISA
 
   protected:
     void addressTranslation(MMU::ArmTranslationType tran_type,
-        BaseMMU::Mode mode, Request::Flags flags, RegVal val);
+                            BaseMMU::Mode mode, Request::Flags flags,
+                            RegVal val);
     void addressTranslation64(MMU::ArmTranslationType tran_type,
-        BaseMMU::Mode mode, Request::Flags flags, RegVal val);
+                              BaseMMU::Mode mode, Request::Flags flags,
+                              RegVal val);
 
   public:
     SelfDebug *
@@ -258,7 +260,7 @@ class ISA : public BaseISA
                 break;
             default:
                 warn("Trying to access SPSR in an invalid mode: %d\n",
-                    cpsr.mode);
+                     cpsr.mode);
                 flat_idx = MISCREG_SPSR;
                 break;
             }
@@ -378,8 +380,8 @@ class ISA : public BaseISA
     static void
     zeroSveVecRegUpperPart(Elem *v, unsigned eCount)
     {
-        static_assert(
-            sizeof(Elem) <= sizeof(uint64_t), "Elem type is too large.");
+        static_assert(sizeof(Elem) <= sizeof(uint64_t),
+                      "Elem type is too large.");
         eCount *= (sizeof(uint64_t) / sizeof(Elem));
         for (int i = 16 / sizeof(Elem); i < eCount; ++i) {
             v[i] = 0;
@@ -429,14 +431,14 @@ class ISA : public BaseISA
     void handleLockedRead(const RequestPtr &req) override;
     void handleLockedRead(ExecContext *xc, const RequestPtr &req) override;
 
-    bool handleLockedWrite(
-        const RequestPtr &req, Addr cacheBlockMask) override;
-    bool handleLockedWrite(
-        ExecContext *xc, const RequestPtr &req, Addr cacheBlockMask) override;
+    bool handleLockedWrite(const RequestPtr &req,
+                           Addr cacheBlockMask) override;
+    bool handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+                           Addr cacheBlockMask) override;
 
     void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
-    void handleLockedSnoop(
-        ExecContext *xc, PacketPtr pkt, Addr cacheBlockMask) override;
+    void handleLockedSnoop(ExecContext *xc, PacketPtr pkt,
+                           Addr cacheBlockMask) override;
     void handleLockedSnoopHit() override;
     void handleLockedSnoopHit(ExecContext *xc) override;
 

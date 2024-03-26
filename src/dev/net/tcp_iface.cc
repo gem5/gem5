@@ -60,15 +60,15 @@
 #include "sim/sim_exit.hh"
 
 #if defined(__FreeBSD__)
-#    include <netinet/in.h>
+#include <netinet/in.h>
 
 #endif
 
 // MSG_NOSIGNAL does not exists on OS X
 #if defined(__APPLE__) || defined(__MACH__)
-#    ifndef MSG_NOSIGNAL
-#        define MSG_NOSIGNAL SO_NOSIGPIPE
-#    endif
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL SO_NOSIGPIPE
+#endif
 #endif
 
 namespace gem5
@@ -79,19 +79,20 @@ int TCPIface::fdStatic = -1;
 bool TCPIface::anyListening = false;
 
 TCPIface::TCPIface(std::string server_name, unsigned server_port,
-    unsigned dist_rank, unsigned dist_size, Tick sync_start, Tick sync_repeat,
-    EventManager *em, bool use_pseudo_op, bool is_switch, int num_nodes) :
-    DistIface(dist_rank, dist_size, sync_start, sync_repeat, em, use_pseudo_op,
-        is_switch, num_nodes),
-    serverName(server_name),
-    serverPort(server_port),
-    isSwitch(is_switch),
-    listening(false)
+                   unsigned dist_rank, unsigned dist_size, Tick sync_start,
+                   Tick sync_repeat, EventManager *em, bool use_pseudo_op,
+                   bool is_switch, int num_nodes)
+    : DistIface(dist_rank, dist_size, sync_start, sync_repeat, em,
+                use_pseudo_op, is_switch, num_nodes),
+      serverName(server_name),
+      serverPort(server_port),
+      isSwitch(is_switch),
+      listening(false)
 {
     if (is_switch && isPrimary) {
         while (!listen(serverPort)) {
             DPRINTF(DistEthernet, "TCPIface(listen): Can't bind port %d\n",
-                serverPort);
+                    serverPort);
             serverPort++;
         }
         inform("tcp_iface listening on port %d", serverPort);
@@ -157,10 +158,11 @@ TCPIface::establishConnection()
 
     if (isSwitch) {
         if (cur_id == 0) { // first connection accepted in the ctor already
-            auto const &iface0 = std::find_if(nodes.begin(), nodes.end(),
-                [](const std::pair<NodeInfo, int> &cn) -> bool {
-                    return cn.first.rank == cur_rank;
-                });
+            auto const &iface0 =
+                std::find_if(nodes.begin(), nodes.end(),
+                             [](const std::pair<NodeInfo, int> &cn) -> bool {
+                                 return cn.first.rank == cur_rank;
+                             });
             assert(iface0 != nodes.end());
             assert(iface0->first.distIfaceId == 0);
             sock = iface0->second;
@@ -174,7 +176,7 @@ TCPIface::establishConnection()
             assert(ni.distIfaceId == cur_id);
         }
         inform("Link okay  (iface:%d -> (node:%d, iface:%d))", distIfaceId,
-            ni.rank, ni.distIfaceId);
+               ni.rank, ni.distIfaceId);
         if (ni.distIfaceId < ni.distIfaceNum - 1) {
             cur_id++;
         } else {
@@ -193,12 +195,12 @@ TCPIface::establishConnection()
         ni.distIfaceNum = distIfaceNum;
         sendTCP(sock, &ni, sizeof(ni));
         DPRINTF(DistEthernet, "Connected, waiting for ack (distIfaceId:%d\n",
-            distIfaceId);
+                distIfaceId);
         if (!recvTCP(sock, &ni, sizeof(ni)))
             panic("Failed to receive ack");
         assert(ni.rank == rank);
         inform("Link okay  (iface:%d -> switch iface:%d)", distIfaceId,
-            ni.distIfaceId);
+               ni.distIfaceId);
     }
     sockRegistry.push_back(sock);
 }
@@ -238,15 +240,15 @@ TCPIface::connect()
     addr_hint.ai_socktype = SOCK_STREAM;
     addr_hint.ai_protocol = IPPROTO_TCP;
 
-    ret = getaddrinfo(
-        serverName.c_str(), port_str.c_str(), &addr_hint, &addr_results);
+    ret = getaddrinfo(serverName.c_str(), port_str.c_str(), &addr_hint,
+                      &addr_results);
     panic_if(ret < 0, "getaddrinf() failed: %s", strerror(errno));
 
     DPRINTF(DistEthernet, "Connecting to %s:%s\n", serverName.c_str(),
-        port_str.c_str());
+            port_str.c_str());
 
     ret = ::connect(sock, (struct sockaddr *)(addr_results->ai_addr),
-        addr_results->ai_addrlen);
+                    addr_results->ai_addrlen);
     panic_if(ret < 0, "connect() failed: %s", strerror(errno));
 
     freeaddrinfo(addr_results);
@@ -307,7 +309,7 @@ void
 TCPIface::sendCmd(const Header &header)
 {
     DPRINTF(DistEthernetCmd, "TCPIface::sendCmd() type: %d\n",
-        static_cast<int>(header.msgType));
+            static_cast<int>(header.msgType));
     // Global commands (i.e. sync request) are always sent by the primary
     // DistIface. The transfer method is simply implemented as point-to-point
     // messages for now
@@ -320,7 +322,7 @@ TCPIface::recvHeader(Header &header)
 {
     bool ret = recvTCP(sock, &header, sizeof(header));
     DPRINTF(DistEthernetCmd, "TCPIface::recvHeader() type: %d ret: %d\n",
-        static_cast<int>(header.msgType), ret);
+            static_cast<int>(header.msgType), ret);
     return ret;
 }
 

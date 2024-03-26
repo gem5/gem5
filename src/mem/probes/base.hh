@@ -77,9 +77,9 @@ class BaseMemProbe : public SimObject
     class PacketListener : public ProbeListenerArgBase<probing::PacketInfo>
     {
       public:
-        PacketListener(
-            BaseMemProbe &_parent, ProbeManager *pm, const std::string &name) :
-            ProbeListenerArgBase(pm, name), parent(_parent)
+        PacketListener(BaseMemProbe &_parent, ProbeManager *pm,
+                       const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
         {}
 
         void

@@ -63,8 +63,8 @@ RegOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-RegImmImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegImmImmOp64::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -76,8 +76,8 @@ RegImmImmOp64::generateDisassembly(
 }
 
 std::string
-RegRegImmImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegImmImmOp64::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -89,8 +89,8 @@ RegRegImmImmOp64::generateDisassembly(
 }
 
 std::string
-RegRegRegImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegRegRegImmOp64::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -104,8 +104,8 @@ RegRegRegImmOp64::generateDisassembly(
 }
 
 std::string
-UnknownOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+UnknownOp64::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (inst %#08x)", "unknown", encoding());
 }
@@ -125,8 +125,8 @@ MiscRegOp64::generateTrap(ExceptionLevel el) const
 }
 
 Fault
-MiscRegOp64::generateTrap(
-    ExceptionLevel el, ExceptionClass ec, uint32_t iss) const
+MiscRegOp64::generateTrap(ExceptionLevel el, ExceptionClass ec,
+                          uint32_t iss) const
 {
     switch (el) {
     case EL1:
@@ -156,8 +156,8 @@ MiscRegImmOp64::miscRegImm() const
 }
 
 std::string
-MiscRegImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MiscRegImmOp64::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -168,8 +168,8 @@ MiscRegImmOp64::generateDisassembly(
 }
 
 std::string
-MiscRegRegImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MiscRegRegImmOp64::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -187,8 +187,8 @@ MiscRegRegImmOp64::iss() const
 }
 
 std::string
-RegMiscRegImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+RegMiscRegImmOp64::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -206,14 +206,14 @@ RegMiscRegImmOp64::iss() const
 }
 
 Fault
-MiscRegImplDefined64::execute(
-    ExecContext *xc, trace::InstRecord *traceData) const
+MiscRegImplDefined64::execute(ExecContext *xc,
+                              trace::InstRecord *traceData) const
 {
     auto tc = xc->tcBase();
     const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
-    return checkFaultAccessAArch64SysReg(
-        MISCREG_IMPDEF_UNIMPL, cpsr, tc, *this);
+    return checkFaultAccessAArch64SysReg(MISCREG_IMPDEF_UNIMPL, cpsr, tc,
+                                         *this);
 }
 
 std::string
@@ -239,8 +239,8 @@ RegNone::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 void
-TlbiOp64::performTlbi(
-    ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
+TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx,
+                      RegVal value) const
 {
     ThreadContext *tc = xc->tcBase();
     auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
@@ -365,15 +365,15 @@ TlbiOp64::performTlbi(
     }
     // AArch64 TLB Invalidate by VA, EL3
     case MISCREG_TLBI_VAE3_Xt: {
-        TLBIMVAA tlbiOp(
-            EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+        TLBIMVAA tlbiOp(EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        false);
         tlbiOp(tc);
         return;
     }
     // AArch64 TLB Invalidate by VA, Last Level, EL3
     case MISCREG_TLBI_VALE3_Xt: {
-        TLBIMVAA tlbiOp(
-            EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+        TLBIMVAA tlbiOp(EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        true);
         tlbiOp(tc);
         return;
     }
@@ -383,8 +383,8 @@ TlbiOp64::performTlbi(
     // We are currently not distinguishing Inner and Outer domains.
     // We therefore implement TLBIOS instructions as TLBIIS
     case MISCREG_TLBI_VAE3OS_Xt: {
-        TLBIMVAA tlbiOp(
-            EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+        TLBIMVAA tlbiOp(EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        false);
 
         tlbiOp.broadcast(tc);
         return;
@@ -395,8 +395,8 @@ TlbiOp64::performTlbi(
     // We are currently not distinguishing Inner and Outer domains.
     // We therefore implement TLBIOS instructions as TLBIIS
     case MISCREG_TLBI_VALE3OS_Xt: {
-        TLBIMVAA tlbiOp(
-            EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+        TLBIMVAA tlbiOp(EL3, true, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        true);
 
         tlbiOp.broadcast(tc);
         return;
@@ -414,11 +414,13 @@ TlbiOp64::performTlbi(
                 asid_16bits ? bits(value, 63, 48) : bits(value, 55, 48);
 
             TLBIMVA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, asid, false);
+                           static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                           false);
             tlbiOp(tc);
         } else {
             TLBIMVAA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+                            static_cast<Addr>(bits(value, 43, 0)) << 12,
+                            false);
             tlbiOp(tc);
         }
         return;
@@ -436,11 +438,12 @@ TlbiOp64::performTlbi(
                 asid_16bits ? bits(value, 63, 48) : bits(value, 55, 48);
 
             TLBIMVA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, asid, true);
+                           static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                           true);
             tlbiOp(tc);
         } else {
             TLBIMVAA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+                            static_cast<Addr>(bits(value, 43, 0)) << 12, true);
             tlbiOp(tc);
         }
         return;
@@ -462,11 +465,13 @@ TlbiOp64::performTlbi(
                 asid_16bits ? bits(value, 63, 48) : bits(value, 55, 48);
 
             TLBIMVA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, asid, false);
+                           static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                           false);
             tlbiOp.broadcast(tc);
         } else {
             TLBIMVAA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+                            static_cast<Addr>(bits(value, 43, 0)) << 12,
+                            false);
             tlbiOp.broadcast(tc);
         }
         return;
@@ -488,11 +493,12 @@ TlbiOp64::performTlbi(
                 asid_16bits ? bits(value, 63, 48) : bits(value, 55, 48);
 
             TLBIMVA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, asid, true);
+                           static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                           true);
             tlbiOp.broadcast(tc);
         } else {
             TLBIMVAA tlbiOp(EL2, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+                            static_cast<Addr>(bits(value, 43, 0)) << 12, true);
             tlbiOp.broadcast(tc);
         }
         return;
@@ -512,7 +518,8 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, asid, false);
+                       static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                       false);
 
         tlbiOp(tc);
         return;
@@ -532,7 +539,8 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, asid, true);
+                       static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                       true);
 
         tlbiOp(tc);
         return;
@@ -556,7 +564,8 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, asid, false);
+                       static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                       false);
 
         tlbiOp.broadcast(tc);
         return;
@@ -575,7 +584,8 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, asid, true);
+                       static_cast<Addr>(bits(value, 43, 0)) << 12, asid,
+                       true);
 
         tlbiOp.broadcast(tc);
         return;
@@ -634,7 +644,7 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVAA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+                        static_cast<Addr>(bits(value, 43, 0)) << 12, false);
 
         tlbiOp(tc);
         return;
@@ -653,7 +663,7 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVAA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+                        static_cast<Addr>(bits(value, 43, 0)) << 12, true);
 
         tlbiOp(tc);
         return;
@@ -676,7 +686,7 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVAA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, false);
+                        static_cast<Addr>(bits(value, 43, 0)) << 12, false);
 
         tlbiOp.broadcast(tc);
         return;
@@ -701,7 +711,7 @@ TlbiOp64::performTlbi(
 
         bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
         TLBIMVAA tlbiOp(target_el, secure,
-            static_cast<Addr>(bits(value, 43, 0)) << 12, true);
+                        static_cast<Addr>(bits(value, 43, 0)) << 12, true);
 
         tlbiOp.broadcast(tc);
         return;
@@ -717,7 +727,8 @@ TlbiOp64::performTlbi(
 
             const int top_bit = ArmSystem::physAddrRange(tc) == 52 ? 39 : 35;
             TLBIIPA tlbiOp(EL1, secure,
-                static_cast<Addr>(bits(value, top_bit, 0)) << 12, false);
+                           static_cast<Addr>(bits(value, top_bit, 0)) << 12,
+                           false);
 
             tlbiOp(tc);
         }
@@ -733,7 +744,7 @@ TlbiOp64::performTlbi(
                           !bits(value, 63);
 
             TLBIIPA tlbiOp(EL1, secure,
-                static_cast<Addr>(bits(value, 35, 0)) << 12, true);
+                           static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
             tlbiOp(tc);
         }
@@ -755,7 +766,8 @@ TlbiOp64::performTlbi(
 
             const int top_bit = ArmSystem::physAddrRange(tc) == 52 ? 39 : 35;
             TLBIIPA tlbiOp(EL1, secure,
-                static_cast<Addr>(bits(value, top_bit, 0)) << 12, false);
+                           static_cast<Addr>(bits(value, top_bit, 0)) << 12,
+                           false);
 
             tlbiOp.broadcast(tc);
         }
@@ -776,7 +788,7 @@ TlbiOp64::performTlbi(
                           !bits(value, 63);
 
             TLBIIPA tlbiOp(EL1, secure,
-                static_cast<Addr>(bits(value, 35, 0)) << 12, true);
+                           static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
             tlbiOp.broadcast(tc);
         }

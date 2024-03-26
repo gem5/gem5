@@ -59,10 +59,10 @@ class IntOp : public PowerStaticInst
     uint32_t sh;
 
     /// Constructor
-    IntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass),
-        rc(machInst.rc),
-        oe(machInst.oe)
+    IntOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass),
+          rc(machInst.rc),
+          oe(machInst.oe)
     {}
 
     /* Compute the CR (condition register) field using signed comparison */
@@ -105,8 +105,9 @@ class IntOp : public PowerStaticInst
         return cr.cr0;
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -119,14 +120,15 @@ class IntImmOp : public IntOp
     uint32_t ui;
 
     /// Constructor
-    IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass),
-        si(sext<16>(machInst.si)),
-        ui(machInst.si)
+    IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass),
+          si(sext<16>(machInst.si)),
+          ui(machInst.si)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -136,8 +138,8 @@ class IntArithOp : public IntOp
 {
   protected:
     /// Constructor
-    IntArithOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass)
+    IntArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass)
     {}
 
     /* Compute 128-bit sum of 128-bit to 64-bit unsigned integer addition */
@@ -371,8 +373,9 @@ class IntArithOp : public IntOp
         return std::make_tuple(ov, q, r);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -384,12 +387,13 @@ class IntImmArithOp : public IntArithOp
     int32_t si;
 
     /// Constructor
-    IntImmArithOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntArithOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    IntImmArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntArithOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -401,13 +405,14 @@ class IntDispArithOp : public IntArithOp
     int64_t d;
 
     /// Constructor
-    IntDispArithOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntArithOp(mnem, _machInst, __opClass),
-        d(sext<16>((machInst.d0 << 6) | (machInst.d1 << 1) | machInst.d2))
+    IntDispArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntArithOp(mnem, _machInst, __opClass),
+          d(sext<16>((machInst.d0 << 6) | (machInst.d1 << 1) | machInst.d2))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -420,12 +425,13 @@ class IntCompOp : public IntOp
     uint8_t bf;
 
     /// Constructor
-    IntCompOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass), l(machInst.l), bf(machInst.bf)
+    IntCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass), l(machInst.l), bf(machInst.bf)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -437,12 +443,13 @@ class IntImmCompOp : public IntCompOp
     int32_t si;
 
     /// Constructor
-    IntImmCompOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntCompOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    IntImmCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntCompOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -454,13 +461,13 @@ class IntImmCompLogicOp : public IntCompOp
     uint32_t ui;
 
     /// Constructor
-    IntImmCompLogicOp(
-        const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntCompOp(mnem, _machInst, __opClass), ui(machInst.ui)
+    IntImmCompLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntCompOp(mnem, _machInst, __opClass), ui(machInst.ui)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -470,8 +477,8 @@ class IntLogicOp : public IntOp
 {
   protected:
     /// Constructor
-    IntLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass)
+    IntLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass)
     {}
 
     /* Compute the number of consecutive zero bits starting from the
@@ -538,8 +545,9 @@ class IntLogicOp : public IntOp
         }
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -551,12 +559,13 @@ class IntImmLogicOp : public IntLogicOp
     uint32_t ui;
 
     /// Constructor
-    IntImmLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntLogicOp(mnem, _machInst, __opClass), ui(machInst.ui)
+    IntImmLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntLogicOp(mnem, _machInst, __opClass), ui(machInst.ui)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -569,12 +578,13 @@ class IntShiftOp : public IntOp
     uint8_t sh;
 
     /// Constructor
-    IntShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass), sh(machInst.sh)
+    IntShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass), sh(machInst.sh)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -587,13 +597,14 @@ class IntConcatShiftOp : public IntOp
     uint8_t sh;
 
     /// Constructor
-    IntConcatShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass),
-        sh((machInst.shn << 5) | machInst.sh)
+    IntConcatShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass),
+          sh((machInst.shn << 5) | machInst.sh)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -608,10 +619,10 @@ class IntRotateOp : public IntShiftOp
     uint8_t me;
 
     /// Constructor
-    IntRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntShiftOp(mnem, _machInst, __opClass),
-        mb(machInst.mb),
-        me(machInst.me)
+    IntRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntShiftOp(mnem, _machInst, __opClass),
+          mb(machInst.mb),
+          me(machInst.me)
     {}
 
     inline uint64_t
@@ -637,8 +648,9 @@ class IntRotateOp : public IntShiftOp
         }
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -653,11 +665,10 @@ class IntConcatRotateOp : public IntConcatShiftOp
     uint8_t me;
 
     /// Constructor
-    IntConcatRotateOp(
-        const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntConcatShiftOp(mnem, _machInst, __opClass),
-        mb((machInst.mbn << 5) | machInst.mb),
-        me((machInst.men << 5) | machInst.mb)
+    IntConcatRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntConcatShiftOp(mnem, _machInst, __opClass),
+          mb((machInst.mbn << 5) | machInst.mb),
+          me((machInst.men << 5) | machInst.mb)
     {}
 
     inline uint64_t
@@ -679,8 +690,9 @@ class IntConcatRotateOp : public IntConcatShiftOp
         }
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -692,8 +704,8 @@ class IntTrapOp : public IntOp
     uint8_t to;
 
     /// Constructor
-    IntTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntOp(mnem, _machInst, __opClass), to(machInst.to)
+    IntTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntOp(mnem, _machInst, __opClass), to(machInst.to)
     {}
 
     inline bool
@@ -753,8 +765,9 @@ class IntTrapOp : public IntOp
         return str;
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -766,12 +779,13 @@ class IntImmTrapOp : public IntTrapOp
     int32_t si;
 
     /// Constructor
-    IntImmTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        IntTrapOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    IntImmTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntTrapOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

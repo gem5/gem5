@@ -48,8 +48,8 @@
 
 namespace gem5
 {
-TraceGen::InputStream::InputStream(const std::string &filename) :
-    trace(filename)
+TraceGen::InputStream::InputStream(const std::string &filename)
+    : trace(filename)
 {
     init();
 }
@@ -63,7 +63,7 @@ TraceGen::InputStream::init()
         panic("Failed to read packet header from trace\n");
     } else if (header_msg.tick_freq() != sim_clock::Frequency) {
         panic("Trace was recorded with a different tick frequency %d\n",
-            header_msg.tick_freq());
+              header_msg.tick_freq());
     }
 }
 
@@ -104,8 +104,8 @@ TraceGen::nextPacketTick(bool elastic, Tick delay) const
 
     assert(nextElement.isValid());
 
-    DPRINTF(
-        TrafficGen, "Next packet tick is %d\n", tickOffset + nextElement.tick);
+    DPRINTF(TrafficGen, "Next packet tick is %d\n",
+            tickOffset + nextElement.tick);
 
     // if the playback is supposed to be elastic, add the delay
     if (elastic)
@@ -142,17 +142,18 @@ TraceGen::getNextPacket()
     assert(currElement.isValid());
 
     DPRINTF(TrafficGen, "TraceGen::getNextPacket: %c %d %d %d 0x%x\n",
-        currElement.cmd.isRead() ? 'r' : 'w', currElement.addr,
-        currElement.blocksize, currElement.tick, currElement.flags);
+            currElement.cmd.isRead() ? 'r' : 'w', currElement.addr,
+            currElement.blocksize, currElement.tick, currElement.flags);
 
-    PacketPtr pkt = getPacket(currElement.addr + addrOffset,
-        currElement.blocksize, currElement.cmd, currElement.flags);
+    PacketPtr pkt =
+        getPacket(currElement.addr + addrOffset, currElement.blocksize,
+                  currElement.cmd, currElement.flags);
 
     if (!traceComplete)
         DPRINTF(TrafficGen, "nextElement: %c addr %d size %d tick %d (%d)\n",
-            nextElement.cmd.isRead() ? 'r' : 'w', nextElement.addr,
-            nextElement.blocksize, nextElement.tick + tickOffset,
-            nextElement.tick);
+                nextElement.cmd.isRead() ? 'r' : 'w', nextElement.addr,
+                nextElement.blocksize, nextElement.tick + tickOffset,
+                nextElement.tick);
 
     return pkt;
 }
@@ -165,7 +166,7 @@ TraceGen::exit()
     // trace was played.
     if (!traceComplete) {
         warn("Trace player %s was unable to replay the entire trace!\n",
-            name());
+             name());
     }
 
     // Clear any flags and start over again from the beginning of the

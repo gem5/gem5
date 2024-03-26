@@ -274,8 +274,8 @@ vtype_SEW(const uint64_t vtype)
  * Ref: https://github.com/qemu/qemu/blob/5e9d14f2/target/riscv/cpu.h
  */
 inline uint64_t
-vtype_VLMAX(
-    const uint64_t vtype, const uint64_t vlen, const bool per_reg = false)
+vtype_VLMAX(const uint64_t vtype, const uint64_t vlen,
+            const bool per_reg = false)
 {
     int64_t lmul = (int64_t)sext<3>(bits(vtype, 2, 0));
     lmul = per_reg ? std::min<int64_t>(0, lmul) : lmul;
@@ -606,7 +606,7 @@ f_to_ui(FloatType a, uint_fast8_t mode)
 }
 
 template <typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)>
+          typename IntType = decltype(double_width<FloatType>::type::v)>
 IntType
 f_to_wui(FloatType a, uint_fast8_t mode)
 {
@@ -616,7 +616,7 @@ f_to_wui(FloatType a, uint_fast8_t mode)
 }
 
 template <typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type>
+          typename FloatType = typename double_widthf<IntType>::type>
 IntType
 f_to_nui(FloatType a, uint_fast8_t mode)
 {
@@ -637,7 +637,7 @@ f_to_i(FloatType a, uint_fast8_t mode)
 }
 
 template <typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)>
+          typename IntType = decltype(double_width<FloatType>::type::v)>
 IntType
 f_to_wi(FloatType a, uint_fast8_t mode)
 {
@@ -647,7 +647,7 @@ f_to_wi(FloatType a, uint_fast8_t mode)
 }
 
 template <typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type>
+          typename FloatType = typename double_widthf<IntType>::type>
 IntType
 f_to_ni(FloatType a, uint_fast8_t mode)
 {
@@ -668,7 +668,7 @@ ui_to_f(IntType a)
 }
 
 template <typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type>
+          typename FloatType = typename double_widthf<IntType>::type>
 FloatType
 ui_to_wf(IntType a)
 {
@@ -678,7 +678,7 @@ ui_to_wf(IntType a)
 }
 
 template <typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)>
+          typename IntType = decltype(double_width<FloatType>::type::v)>
 FloatType
 ui_to_nf(IntType a)
 {
@@ -699,7 +699,7 @@ i_to_f(IntType a)
 }
 
 template <typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type>
+          typename FloatType = typename double_widthf<IntType>::type>
 FloatType
 i_to_wf(IntType a)
 {
@@ -708,8 +708,8 @@ i_to_wf(IntType a)
     GEM5_UNREACHABLE;
 }
 
-template <typename FloatType, typename IntType = std::make_signed_t<decltype(
-                                  double_width<FloatType>::type::v)> >
+template <typename FloatType, typename IntType = std::make_signed_t<
+                                  decltype(double_width<FloatType>::type::v)> >
 FloatType
 i_to_nf(IntType a)
 {
@@ -719,7 +719,7 @@ i_to_nf(IntType a)
 }
 
 template <typename FloatType,
-    typename FloatWType = typename double_width<FloatType>::type>
+          typename FloatWType = typename double_width<FloatType>::type>
 FloatWType
 f_to_wf(FloatType a)
 {
@@ -729,7 +729,7 @@ f_to_wf(FloatType a)
 }
 
 template <typename FloatNType,
-    typename FloatType = typename double_width<FloatNType>::type>
+          typename FloatType = typename double_width<FloatNType>::type>
 FloatNType
 f_to_nf(FloatType a)
 {

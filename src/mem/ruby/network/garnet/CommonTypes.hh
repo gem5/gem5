@@ -89,13 +89,13 @@ enum RoutingAlgorithm
 
 struct RouteInfo
 {
-    RouteInfo() :
-        vnet(0),
-        src_ni(0),
-        src_router(0),
-        dest_ni(0),
-        dest_router(0),
-        hops_traversed(0)
+    RouteInfo()
+        : vnet(0),
+          src_ni(0),
+          src_router(0),
+          dest_ni(0),
+          dest_router(0),
+          hops_traversed(0)
     {}
 
     // destination format for table-based routing

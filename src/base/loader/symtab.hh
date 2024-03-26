@@ -79,23 +79,23 @@ class Symbol
     };
 
     Symbol(const Binding binding, const SymbolType type,
-        const std::string &name, const Addr addr, const size_t size) :
-        _binding(binding),
-        _type(type),
-        _name(name),
-        _address(addr),
-        _size(size),
-        _sizeIsValid(true)
+           const std::string &name, const Addr addr, const size_t size)
+        : _binding(binding),
+          _type(type),
+          _name(name),
+          _address(addr),
+          _size(size),
+          _sizeIsValid(true)
     {}
 
     Symbol(const Binding binding, const SymbolType type,
-        const std::string &name, const Addr addr) :
-        _binding(binding),
-        _type(type),
-        _name(name),
-        _address(addr),
-        _size(0x0),
-        _sizeIsValid(false)
+           const std::string &name, const Addr addr)
+        : _binding(binding),
+          _type(type),
+          _name(name),
+          _address(addr),
+          _size(0x0),
+          _sizeIsValid(false)
     {}
 
     Symbol(const Symbol &other) = default;
@@ -248,7 +248,7 @@ class SymbolTable
     filter(SymTabFilter filter) const
     {
         SymTabOp apply_filter = [filter](SymbolTable &symtab,
-                                    const Symbol &symbol) {
+                                         const Symbol &symbol) {
             if (filter(symbol)) {
                 symtab.insert(symbol);
             }
@@ -348,10 +348,11 @@ class SymbolTable
     SymbolTablePtr
     offset(Addr addr_offset) const
     {
-        SymTabOp op = [addr_offset](
-                          SymbolTable &symtab, const Symbol &symbol) {
+        SymTabOp op = [addr_offset](SymbolTable &symtab,
+                                    const Symbol &symbol) {
             symtab.insert(Symbol(symbol.binding(), symbol.type(),
-                symbol.name(), symbol.address() + addr_offset));
+                                 symbol.name(),
+                                 symbol.address() + addr_offset));
         };
         return operate(op);
     }
@@ -368,7 +369,7 @@ class SymbolTable
     {
         SymTabOp op = [m](SymbolTable &symtab, const Symbol &symbol) {
             symtab.insert(Symbol(symbol.binding(), symbol.type(),
-                symbol.name(), symbol.address() & m));
+                                 symbol.name(), symbol.address() & m));
         };
         return operate(op);
     }
@@ -451,8 +452,9 @@ class SymbolTable
      * @param default_binding The binding to be used if an unserialized
      *                        symbol's binding is not found.
      */
-    void unserialize(const std::string &base, CheckpointIn &cp,
-        Symbol::Binding default_binding = Symbol::Binding::Global);
+    void
+    unserialize(const std::string &base, CheckpointIn &cp,
+                Symbol::Binding default_binding = Symbol::Binding::Global);
 
     /**
      * Search for a symbol by its address. Since many symbols can map to the

@@ -174,8 +174,8 @@ class PciHost : public PioDevice
      * @param pin Interrupt pin
      * @return A device-specific DeviceInterface instance.
      */
-    virtual DeviceInterface registerDevice(
-        PciDevice *device, PciBusAddr bus_addr, PciIntPin pin);
+    virtual DeviceInterface registerDevice(PciDevice *device,
+                                           PciBusAddr bus_addr, PciIntPin pin);
 
     /** @} */
 
@@ -329,8 +329,8 @@ class GenericPciHost : public PciHost
     void postInt(const PciBusAddr &addr, PciIntPin pin) override;
     void clearInt(const PciBusAddr &addr, PciIntPin pin) override;
 
-    virtual uint32_t mapPciInterrupt(
-        const PciBusAddr &bus_addr, PciIntPin pin) const;
+    virtual uint32_t mapPciInterrupt(const PciBusAddr &bus_addr,
+                                     PciIntPin pin) const;
 
   protected:
     Platform &platform;

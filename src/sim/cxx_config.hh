@@ -82,9 +82,8 @@ class CxxConfigDirectoryEntry
          *  or another from-string parameter set with setParam... */
         const bool isSimObject;
 
-        ParamDesc(
-            const std::string &name_, bool isVector_, bool isSimObject_) :
-            name(name_), isVector(isVector_), isSimObject(isSimObject_)
+        ParamDesc(const std::string &name_, bool isVector_, bool isSimObject_)
+            : name(name_), isVector(isVector_), isSimObject(isSimObject_)
         {}
     };
 
@@ -100,8 +99,8 @@ class CxxConfigDirectoryEntry
         /** Is this a request or response port */
         const bool isRequestor;
 
-        PortDesc(const std::string &name_, bool isVector_, bool isRequestor_) :
-            name(name_), isVector(isVector_), isRequestor(isRequestor_)
+        PortDesc(const std::string &name_, bool isVector_, bool isRequestor_)
+            : name(name_), isVector(isVector_), isRequestor(isRequestor_)
         {}
     };
 
@@ -139,7 +138,8 @@ class CxxConfigParams
         AddToConfigDir(const std::string &name, CxxConfigDirectoryEntry *entry)
         {
             auto it_success = cxxConfigDirectory().insert({name, entry});
-            panic_if(!it_success.second,
+            panic_if(
+                !it_success.second,
                 "Failed to insert config directory entry %s (duplicate?).",
                 name);
         }
@@ -178,8 +178,8 @@ class CxxConfigParams
 
     /** As setSimObjectVector but set a whole vector of references */
     virtual bool
-    setSimObjectVector(
-        const std::string &name, const std::vector<SimObject *> &simObjects)
+    setSimObjectVector(const std::string &name,
+                       const std::vector<SimObject *> &simObjects)
     {
         return false;
     }
@@ -189,8 +189,8 @@ class CxxConfigParams
      *  false if the parameter name is not valid or the string cannot be
      *  parsed as the type of the parameter */
     virtual bool
-    setParam(
-        const std::string &name, const std::string &value, const Flags flags)
+    setParam(const std::string &name, const std::string &value,
+             const Flags flags)
     {
         return false;
     }
@@ -199,7 +199,7 @@ class CxxConfigParams
      *  into elements */
     virtual bool
     setParamVector(const std::string &name,
-        const std::vector<std::string> &values, const Flags flags)
+                   const std::vector<std::string> &values, const Flags flags)
     {
         return false;
     }
@@ -235,17 +235,18 @@ class CxxConfigFileBase
      *  For booleans, the function expects "true" or "false" in value.
      *  For NULL SimObjects, it expects "Null" */
     virtual bool getParam(const std::string &object_name,
-        const std::string &param_name, std::string &value) const = 0;
+                          const std::string &param_name,
+                          std::string &value) const = 0;
 
     /** Get a list/vector parameter */
     virtual bool getParamVector(const std::string &object_name,
-        const std::string &param_name,
-        std::vector<std::string> &values) const = 0;
+                                const std::string &param_name,
+                                std::vector<std::string> &values) const = 0;
 
     /** Get the peer (connected) ports of the named ports */
     virtual bool getPortPeers(const std::string &object_name,
-        const std::string &port_name,
-        std::vector<std::string> &peers) const = 0;
+                              const std::string &port_name,
+                              std::vector<std::string> &peers) const = 0;
 
     /** Does an object with this path exist? */
     virtual bool objectExists(const std::string &object_name) const = 0;
@@ -257,8 +258,8 @@ class CxxConfigFileBase
      *  SimObject.  If return_paths is true then full paths are returned.
      *  If false, only the last name component for each object is returned */
     virtual void getObjectChildren(const std::string &object_name,
-        std::vector<std::string> &children,
-        bool return_paths = false) const = 0;
+                                   std::vector<std::string> &children,
+                                   bool return_paths = false) const = 0;
 
     /** Load config file */
     virtual bool load(const std::string &filename) = 0;

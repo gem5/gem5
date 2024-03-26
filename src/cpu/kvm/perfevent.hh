@@ -197,8 +197,8 @@ class PerfKvmCounter
      * @param tid Thread to sample (0 indicates current thread)
      * @param parent Group leader
      */
-    PerfKvmCounter(
-        PerfKvmCounterConfig &config, pid_t tid, const PerfKvmCounter &parent);
+    PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid,
+                   const PerfKvmCounter &parent);
     /**
      * Create a new counter, but don't attach it.
      */
@@ -232,8 +232,8 @@ class PerfKvmCounter
      * @param parent Group leader
      */
     void
-    attach(
-        PerfKvmCounterConfig &config, pid_t tid, const PerfKvmCounter &parent)
+    attach(PerfKvmCounterConfig &config, pid_t tid,
+           const PerfKvmCounter &parent)
     {
         attach(config, tid, parent.fd);
     }

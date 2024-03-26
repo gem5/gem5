@@ -202,7 +202,7 @@ ARMTraceChild::outputStartState(ostream &os)
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 4;
         sprintf(obuf, "0x%08x: Auxiliary vector = {0x%08x, 0x%08x}\n", sp - 8,
-            auxType, auxVal);
+                auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
     // Print out the argument strings, environment strings, and file name.
@@ -217,8 +217,8 @@ ARMTraceChild::outputStartState(ostream &os)
             if (cbuf[x])
                 current += cbuf[x];
             else {
-                sprintf(
-                    obuf, "0x%08x: \"%s\"\n", currentStart, current.c_str());
+                sprintf(obuf, "0x%08x: \"%s\"\n", currentStart,
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;

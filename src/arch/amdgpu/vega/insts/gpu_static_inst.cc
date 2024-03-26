@@ -40,8 +40,8 @@ namespace gem5
 {
 namespace VegaISA
 {
-VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode) :
-    GPUStaticInst(opcode), _srcLiteral(0)
+VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode)
+    : GPUStaticInst(opcode), _srcLiteral(0)
 {}
 
 VEGAGPUStaticInst::~VEGAGPUStaticInst() {}

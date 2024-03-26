@@ -47,14 +47,14 @@
 
 namespace gem5
 {
-EnergyCtrl::EnergyCtrl(const Params &p) :
-    BasicPioDevice(p, PIO_NUM_FIELDS * 4), // each field is 32 bit
-    dvfsHandler(p.dvfs_handler),
-    domainID(0),
-    domainIDIndexToRead(0),
-    perfLevelAck(0),
-    perfLevelToRead(0),
-    updateAckEvent([this] { updatePLAck(); }, name())
+EnergyCtrl::EnergyCtrl(const Params &p)
+    : BasicPioDevice(p, PIO_NUM_FIELDS * 4), // each field is 32 bit
+      dvfsHandler(p.dvfs_handler),
+      domainID(0),
+      domainIDIndexToRead(0),
+      perfLevelAck(0),
+      perfLevelToRead(0),
+      updateAckEvent([this] { updatePLAck(); }, name())
 {
     fatal_if(!p.dvfs_handler, "EnergyCtrl: Needs a DVFSHandler for a "
                               "functioning system.\n");
@@ -73,12 +73,12 @@ EnergyCtrl::read(PacketPtr pkt)
     if (!dvfsHandler->isEnabled()) {
         // NB: Zero is a good response if the handler is disabled
         pkt->setLE<uint32_t>(0);
-        warn_once(
-            "EnergyCtrl: Disabled handler, ignoring read from reg %i\n", reg);
+        warn_once("EnergyCtrl: Disabled handler, ignoring read from reg %i\n",
+                  reg);
         DPRINTF(EnergyCtrl,
-            "dvfs handler disabled, return 0 for read from "
-            "reg %i\n",
-            reg);
+                "dvfs handler disabled, return 0 for read from "
+                "reg %i\n",
+                reg);
         pkt->makeAtomicResponse();
         return pioDelay;
     }
@@ -99,13 +99,13 @@ EnergyCtrl::read(PacketPtr pkt)
     case DVFS_DOMAINID_AT_INDEX:
         result = dvfsHandler->domainID(domainIDIndexToRead);
         DPRINTF(EnergyCtrl, "reading domain id at index %d as %d\n",
-            domainIDIndexToRead, result);
+                domainIDIndexToRead, result);
         break;
     case DVFS_HANDLER_TRANS_LATENCY:
         // Return transition latency in nanoseconds
         result = dvfsHandler->transLatency() / sim_clock::as_int::ns;
-        DPRINTF(
-            EnergyCtrl, "reading dvfs handler trans latency %d ns\n", result);
+        DPRINTF(EnergyCtrl, "reading dvfs handler trans latency %d ns\n",
+                result);
         break;
     case DOMAIN_ID:
         result = domainID;
@@ -114,7 +114,7 @@ EnergyCtrl::read(PacketPtr pkt)
     case PERF_LEVEL:
         result = dvfsHandler->perfLevel(domainID);
         DPRINTF(EnergyCtrl, "reading domain %d perf level: %d\n", domainID,
-            result);
+                result);
         break;
     case PERF_LEVEL_ACK:
         result = perfLevelAck;
@@ -131,13 +131,13 @@ EnergyCtrl::read(PacketPtr pkt)
         period = dvfsHandler->clkPeriodAtPerfLevel(domainID, perfLevelToRead);
         result = ticksTokHz(period);
         DPRINTF(EnergyCtrl, "reading freq %d KHz at perf level: %d\n", result,
-            perfLevelToRead);
+                perfLevelToRead);
         break;
     case VOLT_AT_PERF_LEVEL:
         voltage = dvfsHandler->voltageAtPerfLevel(domainID, perfLevelToRead);
         result = toMicroVolt(voltage);
         DPRINTF(EnergyCtrl, "reading voltage %d u-volt at perf level: %d\n",
-            result, perfLevelToRead);
+                result, perfLevelToRead);
         break;
     default:
         panic("Tried to read EnergyCtrl at offset %#x / reg %i\n", daddr, reg);
@@ -164,11 +164,11 @@ EnergyCtrl::write(PacketPtr pkt)
         // Ignore writes to a disabled controller
         warn_once("EnergyCtrl: Disabled handler, ignoring write %u to "
                   "reg %i\n",
-            data, reg);
+                  data, reg);
         DPRINTF(EnergyCtrl,
-            "dvfs handler disabled, ignoring write %u to "
-            "reg %i\n",
-            data, reg);
+                "dvfs handler disabled, ignoring write %u to "
+                "reg %i\n",
+                data, reg);
         pkt->makeAtomicResponse();
         return pioDelay;
     }
@@ -176,8 +176,8 @@ EnergyCtrl::write(PacketPtr pkt)
     switch (reg) {
     case DVFS_DOMAINID_AT_INDEX:
         domainIDIndexToRead = data;
-        DPRINTF(
-            EnergyCtrl, "writing domain id index:%d\n", domainIDIndexToRead);
+        DPRINTF(EnergyCtrl, "writing domain id index:%d\n",
+                domainIDIndexToRead);
         break;
     case DOMAIN_ID:
         // Extra check to ensure that a valid domain ID is being queried
@@ -200,12 +200,12 @@ EnergyCtrl::write(PacketPtr pkt)
             }
             schedule(updateAckEvent, curTick() + dvfsHandler->transLatency());
             DPRINTF(EnergyCtrl, "writing domain %d perf level: %d\n", domainID,
-                data);
+                    data);
         } else {
             DPRINTF(EnergyCtrl,
-                "invalid / ineffective perf level:%d for "
-                "domain:%d\n",
-                data, domainID);
+                    "invalid / ineffective perf level:%d for "
+                    "domain:%d\n",
+                    data, domainID);
         }
         break;
     case PERF_LEVEL_TO_READ:

@@ -71,11 +71,11 @@ class Router : public BasicRouter, public Consumer
     void print(std::ostream &out) const {};
 
     void init();
-    void addInPort(
-        PortDirection inport_dirn, NetworkLink *link, CreditLink *credit_link);
+    void addInPort(PortDirection inport_dirn, NetworkLink *link,
+                   CreditLink *credit_link);
     void addOutPort(PortDirection outport_dirn, NetworkLink *link,
-        std::vector<NetDest> &routing_table_entry, int link_weight,
-        CreditLink *credit_link, uint32_t consumerVcs);
+                    std::vector<NetDest> &routing_table_entry, int link_weight,
+                    CreditLink *credit_link, uint32_t consumerVcs);
 
     Cycles
     get_pipe_stages()
@@ -164,15 +164,15 @@ class Router : public BasicRouter, public Consumer
     bool
     get_fault_vector(int temperature, float fault_vector[])
     {
-        return m_network_ptr->fault_model->fault_vector(
-            m_id, temperature, fault_vector);
+        return m_network_ptr->fault_model->fault_vector(m_id, temperature,
+                                                        fault_vector);
     }
     bool
-    get_aggregate_fault_probability(
-        int temperature, float *aggregate_fault_prob)
+    get_aggregate_fault_probability(int temperature,
+                                    float *aggregate_fault_prob)
     {
-        return m_network_ptr->fault_model->fault_prob(
-            m_id, temperature, aggregate_fault_prob);
+        return m_network_ptr->fault_model->fault_prob(m_id, temperature,
+                                                      aggregate_fault_prob);
     }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);

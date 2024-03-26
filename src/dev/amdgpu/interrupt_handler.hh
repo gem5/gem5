@@ -137,8 +137,8 @@ class AMDGPUInterruptHandler : public DmaDevice
         uint32_t data;
 
       public:
-        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data) :
-            Event(), deviceIh(deviceIh), data(data)
+        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data)
+            : Event(), deviceIh(deviceIh), data(data)
         {
             setFlags(Event::AutoDelete);
         }
@@ -163,8 +163,8 @@ class AMDGPUInterruptHandler : public DmaDevice
 
     struct SenderState : public Packet::SenderState
     {
-        SenderState(Packet::SenderState *sender_state, Addr addr) :
-            saved(sender_state), _addr(addr)
+        SenderState(Packet::SenderState *sender_state, Addr addr)
+            : saved(sender_state), _addr(addr)
         {}
         Packet::SenderState *saved;
         Addr _addr;
@@ -192,7 +192,7 @@ class AMDGPUInterruptHandler : public DmaDevice
         gpuDevice = gpu_device;
     }
     void prepareInterruptCookie(ContextID cntxtId, uint32_t ring_id,
-        uint32_t client_id, uint32_t source_id);
+                                uint32_t client_id, uint32_t source_id);
     void submitInterruptCookie();
     void submitWritePointer();
     void intrPost();

@@ -179,9 +179,9 @@ asiIsMmu(ASI asi)
 {
     return asi == ASI_MMU || asi == ASI_LSU_CONTROL_REG ||
            (asi >= ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0 &&
-               asi <= ASI_IMMU_CTXT_ZERO_CONFIG) ||
+            asi <= ASI_IMMU_CTXT_ZERO_CONFIG) ||
            (asi >= ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0 &&
-               asi <= ASI_IMMU_CTXT_NONZERO_CONFIG) ||
+            asi <= ASI_IMMU_CTXT_NONZERO_CONFIG) ||
            (asi >= ASI_IMMU && asi <= ASI_IMMU_TSB_PS1_PTR_REG) ||
            (asi >= ASI_ITLB_DATA_IN_REG && asi <= ASI_TLB_INVALIDATE_ALL);
 }

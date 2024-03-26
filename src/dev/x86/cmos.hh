@@ -64,8 +64,8 @@ class Cmos : public BasicPioDevice
         std::vector<IntSourcePin<X86RTC> *> intPin;
 
         X86RTC(EventManager *em, const std::string &n, const struct tm time,
-            bool bcd, Tick frequency, int int_pin_count) :
-            MC146818(em, n, time, bcd, frequency)
+               bool bcd, Tick frequency, int int_pin_count)
+            : MC146818(em, n, time, bcd, frequency)
         {
             for (int i = 0; i < int_pin_count; i++) {
                 intPin.push_back(new IntSourcePin<X86RTC>(
@@ -80,11 +80,11 @@ class Cmos : public BasicPioDevice
   public:
     typedef CmosParams Params;
 
-    Cmos(const Params &p) :
-        BasicPioDevice(p, 2),
-        latency(p.pio_latency),
-        rtc(this, name() + ".rtc", p.time, true, 5000000000ULL,
-            p.port_int_pin_connection_count)
+    Cmos(const Params &p)
+        : BasicPioDevice(p, 2),
+          latency(p.pio_latency),
+          rtc(this, name() + ".rtc", p.time, true, 5000000000ULL,
+              p.port_int_pin_connection_count)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;

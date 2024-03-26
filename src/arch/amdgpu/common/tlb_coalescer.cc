@@ -41,16 +41,17 @@
 
 namespace gem5
 {
-TLBCoalescer::TLBCoalescer(const Params &p) :
-    ClockedObject(p),
-    TLBProbesPerCycle(p.probesPerCycle),
-    coalescingWindow(p.coalescingWindow),
-    disableCoalescing(p.disableCoalescing),
-    probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
-        false, Event::CPU_Tick_Pri),
-    cleanupEvent([this] { processCleanupEvent(); },
-        "Cleanup issuedTranslationsTable hashmap", false, Event::Maximum_Pri),
-    stats(this)
+TLBCoalescer::TLBCoalescer(const Params &p)
+    : ClockedObject(p),
+      TLBProbesPerCycle(p.probesPerCycle),
+      coalescingWindow(p.coalescingWindow),
+      disableCoalescing(p.disableCoalescing),
+      probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
+                    false, Event::CPU_Tick_Pri),
+      cleanupEvent([this] { processCleanupEvent(); },
+                   "Cleanup issuedTranslationsTable hashmap", false,
+                   Event::Maximum_Pri),
+      stats(this)
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
@@ -142,7 +143,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     Addr virt_page_addr = roundDown(pkt->req->getVaddr(), X86ISA::PageBytes);
 
     DPRINTF(GPUTLB, "Update phys. addr. for %d coalesced reqs for page %#x\n",
-        issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
+            issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
 
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState *>(pkt->senderState);
@@ -288,7 +289,8 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
             coalescer->coalescerFIFO[tick_index][i].push_back(pkt);
 
             DPRINTF(GPUTLB, "Coalesced req %i w/ tick_index %d has %d reqs\n",
-                i, tick_index, coalescer->coalescerFIFO[tick_index][i].size());
+                    i, tick_index,
+                    coalescer->coalescerFIFO[tick_index][i].size());
 
             didCoalesce = true;
             break;
@@ -307,16 +309,16 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
         coalescer->coalescerFIFO[tick_index].push_back(new_array);
 
         DPRINTF(GPUTLB,
-            "coalescerFIFO[%d] now has %d coalesced reqs after "
-            "push\n",
-            tick_index, coalescer->coalescerFIFO[tick_index].size());
+                "coalescerFIFO[%d] now has %d coalesced reqs after "
+                "push\n",
+                tick_index, coalescer->coalescerFIFO[tick_index].size());
     }
 
     // schedule probeTLBEvent next cycle to send the
     // coalesced requests to the TLB
     if (!coalescer->probeTLBEvent.scheduled()) {
-        coalescer->schedule(
-            coalescer->probeTLBEvent, curTick() + coalescer->clockPeriod());
+        coalescer->schedule(coalescer->probeTLBEvent,
+                            curTick() + coalescer->clockPeriod());
     }
 
     return true;
@@ -348,9 +350,9 @@ TLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 
     if (map_count) {
         DPRINTF(GPUTLB,
-            "Warning! Functional access to addr %#x sees timing "
-            "req. pending\n",
-            virt_page_addr);
+                "Warning! Functional access to addr %#x sees timing "
+                "req. pending\n",
+                virt_page_addr);
     }
 
     coalescer->memSidePort[0]->sendFunctional(pkt);
@@ -379,8 +381,8 @@ TLBCoalescer::MemSidePort::recvReqRetry()
 {
     // we've receeived a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled())
-        coalescer->schedule(
-            coalescer->probeTLBEvent, curTick() + coalescer->clockPeriod());
+        coalescer->schedule(coalescer->probeTLBEvent,
+                            curTick() + coalescer->clockPeriod());
 }
 
 void
@@ -422,7 +424,7 @@ TLBCoalescer::processProbeTLBEvent()
         int vector_index = 0;
 
         DPRINTF(GPUTLB, "coalescedReq_cnt is %d for tick_index %d\n",
-            coalescedReq_cnt, iter->first);
+                coalescedReq_cnt, iter->first);
 
         while (i < coalescedReq_cnt) {
             ++i;
@@ -437,9 +439,9 @@ TLBCoalescer::processProbeTLBEvent()
 
             if (pending_reqs) {
                 DPRINTF(GPUTLB,
-                    "Cannot issue - There are pending reqs for "
-                    "page %#x\n",
-                    virt_page_addr);
+                        "Cannot issue - There are pending reqs for "
+                        "page %#x\n",
+                        virt_page_addr);
 
                 ++vector_index;
                 rejected = true;
@@ -450,7 +452,7 @@ TLBCoalescer::processProbeTLBEvent()
             // send the coalesced request for virt_page_addr
             if (!memSidePort[0]->sendTimingReq(first_packet)) {
                 DPRINTF(GPUTLB, "Failed to send TLB request for page %#x\n",
-                    virt_page_addr);
+                        virt_page_addr);
 
                 // No need for a retries queue since we are already buffering
                 // the coalesced request in coalescerFIFO.
@@ -471,7 +473,7 @@ TLBCoalescer::processProbeTLBEvent()
                     stats.queuingCycles += (curTick() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n", name(),
-                        req_cnt);
+                            req_cnt);
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
@@ -480,7 +482,7 @@ TLBCoalescer::processProbeTLBEvent()
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x\n",
-                    virt_page_addr);
+                        virt_page_addr);
 
                 // copy coalescedReq to issuedTranslationsTable
                 issuedTranslationsTable[virt_page_addr] =
@@ -517,18 +519,18 @@ TLBCoalescer::processCleanupEvent()
         issuedTranslationsTable.erase(cleanup_addr);
 
         DPRINTF(GPUTLB, "Cleanup - Delete coalescer entry with key %#x\n",
-            cleanup_addr);
+                cleanup_addr);
     }
 }
 
-TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(uncoalescedAccesses, "Number of uncoalesced TLB accesses"),
-    ADD_STAT(coalescedAccesses, "Number of coalesced TLB accesses"),
-    ADD_STAT(queuingCycles, "Number of cycles spent in queue"),
-    ADD_STAT(localqueuingCycles,
-        "Number of cycles spent in queue for all incoming reqs"),
-    ADD_STAT(localLatency, "Avg. latency over all incoming pkts")
+TLBCoalescer::TLBCoalescerStats::TLBCoalescerStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(uncoalescedAccesses, "Number of uncoalesced TLB accesses"),
+      ADD_STAT(coalescedAccesses, "Number of coalesced TLB accesses"),
+      ADD_STAT(queuingCycles, "Number of cycles spent in queue"),
+      ADD_STAT(localqueuingCycles,
+               "Number of cycles spent in queue for all incoming reqs"),
+      ADD_STAT(localLatency, "Avg. latency over all incoming pkts")
 {
     localLatency = localqueuingCycles / uncoalescedAccesses;
 }

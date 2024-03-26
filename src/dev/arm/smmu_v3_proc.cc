@@ -45,8 +45,8 @@
 
 namespace gem5
 {
-SMMUProcess::SMMUProcess(const std::string &name, SMMUv3 &_smmu) :
-    coroutine(NULL), myName(name), smmu(_smmu)
+SMMUProcess::SMMUProcess(const std::string &name, SMMUv3 &_smmu)
+    : coroutine(NULL), myName(name), smmu(_smmu)
 {}
 
 SMMUProcess::~SMMUProcess() { delete coroutine; }

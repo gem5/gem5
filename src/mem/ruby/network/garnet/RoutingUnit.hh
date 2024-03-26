@@ -63,12 +63,12 @@ class RoutingUnit
     void addOutDirection(PortDirection outport_dirn, int outport);
 
     // Routing for Mesh
-    int outportComputeXY(
-        RouteInfo route, int inport, PortDirection inport_dirn);
+    int outportComputeXY(RouteInfo route, int inport,
+                         PortDirection inport_dirn);
 
     // Custom Routing Algorithm using Port Directions
-    int outportComputeCustom(
-        RouteInfo route, int inport, PortDirection inport_dirn);
+    int outportComputeCustom(RouteInfo route, int inport,
+                             PortDirection inport_dirn);
 
     // Returns true if vnet is present in the vector
     // of vnets or if the vector supports all vnets.

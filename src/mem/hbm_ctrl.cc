@@ -41,23 +41,23 @@ namespace gem5
 {
 namespace memory
 {
-HBMCtrl::HBMCtrl(const HBMCtrlParams &p) :
-    MemCtrl(p),
-    retryRdReqPC1(false),
-    retryWrReqPC1(false),
-    nextReqEventPC1(
-        [this] {
-            processNextReqEvent(pc1Int, respQueuePC1, respondEventPC1,
-                nextReqEventPC1, retryWrReqPC1);
-        },
-        name()),
-    respondEventPC1(
-        [this] {
-            processRespondEvent(
-                pc1Int, respQueuePC1, respondEventPC1, retryRdReqPC1);
-        },
-        name()),
-    pc1Int(p.dram_2)
+HBMCtrl::HBMCtrl(const HBMCtrlParams &p)
+    : MemCtrl(p),
+      retryRdReqPC1(false),
+      retryWrReqPC1(false),
+      nextReqEventPC1(
+          [this] {
+              processNextReqEvent(pc1Int, respQueuePC1, respondEventPC1,
+                                  nextReqEventPC1, retryWrReqPC1);
+          },
+          name()),
+      respondEventPC1(
+          [this] {
+              processRespondEvent(pc1Int, respQueuePC1, respondEventPC1,
+                                  retryRdReqPC1);
+          },
+          name()),
+      pc1Int(p.dram_2)
 {
     DPRINTF(MemCtrl, "Setting up HBM controller\n");
 
@@ -147,8 +147,8 @@ HBMCtrl::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 }
 
 void
-HBMCtrl::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+HBMCtrl::recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor)
 {
     auto &range = req.range();
     if (pc0Int && pc0Int->getAddrRange().isSubset(range)) {
@@ -164,7 +164,7 @@ bool
 HBMCtrl::writeQueueFullPC0(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl, "Write queue limit %d, PC0 size %d, entries needed %d\n",
-        writeBufferSize / 2, pc0Int->writeQueueSize, neededEntries);
+            writeBufferSize / 2, pc0Int->writeQueueSize, neededEntries);
 
     unsigned int wrsize_new = (pc0Int->writeQueueSize + neededEntries);
     return wrsize_new > (writeBufferSize / 2);
@@ -174,7 +174,7 @@ bool
 HBMCtrl::writeQueueFullPC1(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl, "Write queue limit %d, PC1 size %d, entries needed %d\n",
-        writeBufferSize / 2, pc1Int->writeQueueSize, neededEntries);
+            writeBufferSize / 2, pc1Int->writeQueueSize, neededEntries);
 
     unsigned int wrsize_new = (pc1Int->writeQueueSize + neededEntries);
     return wrsize_new > (writeBufferSize / 2);
@@ -184,8 +184,8 @@ bool
 HBMCtrl::readQueueFullPC0(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl, "Read queue limit %d, PC0 size %d, entries needed %d\n",
-        readBufferSize / 2, pc0Int->readQueueSize + respQueue.size(),
-        neededEntries);
+            readBufferSize / 2, pc0Int->readQueueSize + respQueue.size(),
+            neededEntries);
 
     unsigned int rdsize_new =
         pc0Int->readQueueSize + respQueue.size() + neededEntries;
@@ -196,8 +196,8 @@ bool
 HBMCtrl::readQueueFullPC1(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl, "Read queue limit %d, PC1 size %d, entries needed %d\n",
-        readBufferSize / 2, pc1Int->readQueueSize + respQueuePC1.size(),
-        neededEntries);
+            readBufferSize / 2, pc1Int->readQueueSize + respQueuePC1.size(),
+            neededEntries);
 
     unsigned int rdsize_new =
         pc1Int->readQueueSize + respQueuePC1.size() + neededEntries;
@@ -209,13 +209,13 @@ HBMCtrl::recvTimingReq(PacketPtr pkt)
 {
     // This is where we enter from the outside world
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
-        pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
                                      "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "Should only see read and writes at memory controller\n");
+             "Should only see read and writes at memory controller\n");
 
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -373,7 +373,7 @@ HBMCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd)
     if (row_cmd) {
         while (rowBurstTicks.count(burst_tick) >= max_cmds_per_burst) {
             DPRINTF(MemCtrl, "Contention found on row command bus at %d\n",
-                burst_tick);
+                    burst_tick);
             burst_tick += commandWindow;
             cmd_at = burst_tick;
         }
@@ -383,7 +383,7 @@ HBMCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd)
     } else {
         while (colBurstTicks.count(burst_tick) >= max_cmds_per_burst) {
             DPRINTF(MemCtrl, "Contention found on col command bus at %d\n",
-                burst_tick);
+                    burst_tick);
             burst_tick += commandWindow;
             cmd_at = burst_tick;
         }
@@ -394,8 +394,8 @@ HBMCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd)
 }
 
 Tick
-HBMCtrl::verifyMultiCmd(
-    Tick cmd_tick, Tick max_cmds_per_burst, Tick max_multi_cmd_split)
+HBMCtrl::verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                        Tick max_multi_cmd_split)
 {
     // start with assumption that there is no contention on command bus
     Tick cmd_at = cmd_tick;
@@ -432,7 +432,7 @@ HBMCtrl::verifyMultiCmd(
 
         if (!second_can_issue) {
             DPRINTF(MemCtrl, "Contention (cmd2) found on command bus at %d\n",
-                burst_tick);
+                    burst_tick);
             burst_tick += commandWindow;
             cmd_at = burst_tick;
         }
@@ -441,11 +441,11 @@ HBMCtrl::verifyMultiCmd(
         // If commands initially were issued in same burst, they are
         // now in consecutive bursts and can still issue B2B
         bool gap_violated = !same_burst && ((burst_tick - first_cmd_tick) >
-                                               max_multi_cmd_split);
+                                            max_multi_cmd_split);
 
         if (!first_can_issue || (!second_can_issue && gap_violated)) {
             DPRINTF(MemCtrl, "Contention (cmd1) found on command bus at %d\n",
-                first_cmd_tick);
+                    first_cmd_tick);
             first_cmd_tick += commandWindow;
         }
     }

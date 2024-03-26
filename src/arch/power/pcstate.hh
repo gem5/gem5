@@ -45,9 +45,9 @@ class PCState : public GenericISA::SimplePCState<4>
   public:
     using GenericISA::SimplePCState<4>::SimplePCState;
 
-    PCState(const PCState &other) :
-        GenericISA::SimplePCState<4>(other),
-        guestByteOrder(other.guestByteOrder)
+    PCState(const PCState &other)
+        : GenericISA::SimplePCState<4>(other),
+          guestByteOrder(other.guestByteOrder)
     {}
     PCState &operator=(const PCState &other) = default;
 

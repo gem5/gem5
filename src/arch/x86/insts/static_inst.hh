@@ -99,11 +99,11 @@ class X86StaticInst : public StaticInst
 {
   public:
     static void printMnemonic(std::ostream &os, const char *mnemonic);
-    static void printMnemonic(
-        std::ostream &os, const char *instMnemonic, const char *mnemonic);
+    static void printMnemonic(std::ostream &os, const char *instMnemonic,
+                              const char *mnemonic);
     static void printMem(std::ostream &os, uint8_t segment, uint8_t scale,
-        RegIndex index, RegIndex base, uint64_t disp, uint8_t addressSize,
-        bool rip);
+                         RegIndex index, RegIndex base, uint64_t disp,
+                         uint8_t addressSize, bool rip);
 
     static void printSegment(std::ostream &os, int segment);
 
@@ -117,15 +117,16 @@ class X86StaticInst : public StaticInst
 
   protected:
     // Constructor.
-    X86StaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        StaticInst(mnem, __opClass), machInst(_machInst)
+    X86StaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : StaticInst(mnem, __opClass), machInst(_machInst)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     static void divideStep(uint64_t divident, uint64_t divisor,
-        uint64_t &quotient, uint64_t &remainder);
+                           uint64_t &quotient, uint64_t &remainder);
 
     static inline uint64_t
     merge(uint64_t into, RegIndex index, uint64_t val, int size)
@@ -213,8 +214,8 @@ class X86StaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(
-        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
+    buildRetPC(const PCStateBase &cur_pc,
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         ret_pc_ptr->as<PCState>().uEnd();

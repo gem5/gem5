@@ -109,8 +109,8 @@ class OperatingSystem
         int64_t ru_nivcsw;   //!< involuntary "
     };
 
-    static int openSpecialFile(
-        std::string path, Process *process, ThreadContext *tc);
+    static int openSpecialFile(std::string path, Process *process,
+                               ThreadContext *tc);
 
 }; // class OperatingSystem
 

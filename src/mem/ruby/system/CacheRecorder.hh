@@ -75,10 +75,11 @@ class CacheRecorder
     ~CacheRecorder();
 
     CacheRecorder(uint8_t *uncompressed_trace,
-        uint64_t uncompressed_trace_size,
-        std::vector<RubyPort *> &ruby_port_map, uint64_t block_size_bytes);
+                  uint64_t uncompressed_trace_size,
+                  std::vector<RubyPort *> &ruby_port_map,
+                  uint64_t block_size_bytes);
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
-        RubyRequestType type, Tick time, DataBlock &data);
+                   RubyRequestType type, Tick time, DataBlock &data);
 
     uint64_t aggregateRecords(uint8_t **data, uint64_t size);
 

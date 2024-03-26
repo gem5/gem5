@@ -85,12 +85,12 @@ class Port
 
     struct Binding
     {
-        explicit Binding(::sc_core::sc_interface *interface) :
-            interface(interface), port(nullptr)
+        explicit Binding(::sc_core::sc_interface *interface)
+            : interface(interface), port(nullptr)
         {}
 
-        explicit Binding(::sc_core::sc_port_base *port) :
-            interface(nullptr), port(port)
+        explicit Binding(::sc_core::sc_port_base *port)
+            : interface(nullptr), port(port)
         {}
 
         ::sc_core::sc_interface *interface;
@@ -102,8 +102,8 @@ class Port
         Sensitivity(StaticSensitivityPort *port) : port(port), finder(nullptr)
         {}
 
-        Sensitivity(StaticSensitivityFinder *finder) :
-            port(nullptr), finder(finder)
+        Sensitivity(StaticSensitivityFinder *finder)
+            : port(nullptr), finder(finder)
         {}
 
         StaticSensitivityPort *port;
@@ -127,12 +127,12 @@ class Port
         return portBase;
     }
 
-    Port(::sc_core::sc_port_base *port_base, int max) :
-        portBase(port_base),
-        finalized(false),
-        _maxSize(max),
-        _size(0),
-        regPortNeeded(true)
+    Port(::sc_core::sc_port_base *port_base, int max)
+        : portBase(port_base),
+          finalized(false),
+          _maxSize(max),
+          _size(0),
+          regPortNeeded(true)
     {
         allPorts.push_front(this);
     }

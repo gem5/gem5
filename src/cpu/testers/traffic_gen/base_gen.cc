@@ -44,13 +44,13 @@
 
 namespace gem5
 {
-BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration) :
-    _name(obj.name()), requestorId(requestor_id), duration(_duration)
+BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
+    : _name(obj.name()), requestorId(requestor_id), duration(_duration)
 {}
 
 PacketPtr
-BaseGen::getPacket(
-    Addr addr, unsigned size, const MemCmd &cmd, Request::FlagsType flags)
+BaseGen::getPacket(Addr addr, unsigned size, const MemCmd &cmd,
+                   Request::FlagsType flags)
 {
     // Create new request
     RequestPtr req = std::make_shared<Request>(addr, size, flags, requestorId);
@@ -72,23 +72,24 @@ BaseGen::getPacket(
 }
 
 StochasticGen::StochasticGen(SimObject &obj, RequestorID requestor_id,
-    Tick _duration, Addr start_addr, Addr end_addr, Addr _blocksize,
-    Addr cacheline_size, Tick min_period, Tick max_period,
-    uint8_t read_percent, Addr data_limit) :
-    BaseGen(obj, requestor_id, _duration),
-    startAddr(start_addr),
-    endAddr(end_addr),
-    blocksize(_blocksize),
-    cacheLineSize(cacheline_size),
-    minPeriod(min_period),
-    maxPeriod(max_period),
-    readPercent(read_percent),
-    dataLimit(data_limit)
+                             Tick _duration, Addr start_addr, Addr end_addr,
+                             Addr _blocksize, Addr cacheline_size,
+                             Tick min_period, Tick max_period,
+                             uint8_t read_percent, Addr data_limit)
+    : BaseGen(obj, requestor_id, _duration),
+      startAddr(start_addr),
+      endAddr(end_addr),
+      blocksize(_blocksize),
+      cacheLineSize(cacheline_size),
+      minPeriod(min_period),
+      maxPeriod(max_period),
+      readPercent(read_percent),
+      dataLimit(data_limit)
 {
     if (blocksize > cacheLineSize)
         fatal("TrafficGen %s block size (%d) is larger than "
               "cache line size (%d)\n",
-            name(), blocksize, cacheLineSize);
+              name(), blocksize, cacheLineSize);
 
     if (read_percent > 100)
         fatal("%s cannot have more than 100% reads", name());

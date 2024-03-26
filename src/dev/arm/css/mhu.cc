@@ -47,24 +47,24 @@
 
 namespace gem5
 {
-Scp2ApDoorbell::Scp2ApDoorbell(const Scp2ApDoorbellParams &p) :
-    MhuDoorbell(p), interrupt(p.interrupt->get())
+Scp2ApDoorbell::Scp2ApDoorbell(const Scp2ApDoorbellParams &p)
+    : MhuDoorbell(p), interrupt(p.interrupt->get())
 {}
 
 Ap2ScpDoorbell::Ap2ScpDoorbell(const Ap2ScpDoorbellParams &p) : MhuDoorbell(p)
 {}
 
-MHU::MHU(const MHUParams &p) :
-    BasicPioDevice(p, p.pio_size),
-    scpLow(p.lowp_scp2ap),
-    scpHigh(p.highp_scp2ap),
-    scpSec(p.sec_scp2ap),
-    apLow(p.lowp_ap2scp),
-    apHigh(p.highp_ap2scp),
-    apSec(p.sec_ap2scp),
-    pid{0x98, 0xb0, 0x1b, 0x0, 0x4},
-    compid{0x0d, 0xf0, 0x05, 0xb1},
-    scfg(0)
+MHU::MHU(const MHUParams &p)
+    : BasicPioDevice(p, p.pio_size),
+      scpLow(p.lowp_scp2ap),
+      scpHigh(p.highp_scp2ap),
+      scpSec(p.sec_scp2ap),
+      apLow(p.lowp_ap2scp),
+      apHigh(p.highp_ap2scp),
+      apSec(p.sec_ap2scp),
+      pid{0x98, 0xb0, 0x1b, 0x0, 0x4},
+      compid{0x0d, 0xf0, 0x05, 0xb1},
+      scfg(0)
 {
     apLow->setScp(p.scp);
     apHigh->setScp(p.scp);

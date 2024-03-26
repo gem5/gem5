@@ -56,12 +56,12 @@ class WeightBased : public BaseRoutingUnit
     WeightBased(const Params &p);
 
     void addOutPort(LinkID link_id,
-        const std::vector<MessageBuffer *> &m_out_buffer,
-        const NetDest &routing_table_entry, const PortDirection &direction,
-        int link_weight) override;
+                    const std::vector<MessageBuffer *> &m_out_buffer,
+                    const NetDest &routing_table_entry,
+                    const PortDirection &direction, int link_weight) override;
 
     void route(const Message &msg, int vnet, bool deterministic,
-        std::vector<RouteInfo> &out_links) override;
+               std::vector<RouteInfo> &out_links) override;
 
   private:
     struct LinkInfo
@@ -75,20 +75,20 @@ class WeightBased : public BaseRoutingUnit
 
     std::vector<std::unique_ptr<LinkInfo>> m_links;
 
-    void findRoute(
-        const Message &msg, std::vector<RouteInfo> &out_links) const;
+    void findRoute(const Message &msg,
+                   std::vector<RouteInfo> &out_links) const;
 
     void
     sortLinks()
     {
-        std::sort(
-            m_links.begin(), m_links.end(), [](const auto &a, const auto &b) {
-                auto tup = [](const auto &li) {
-                    return std::make_tuple(
-                        li->m_order, li->m_weight, li->m_link_id);
-                };
-                return tup(a) < tup(b);
-            });
+        std::sort(m_links.begin(), m_links.end(),
+                  [](const auto &a, const auto &b) {
+                      auto tup = [](const auto &li) {
+                          return std::make_tuple(li->m_order, li->m_weight,
+                                                 li->m_link_id);
+                      };
+                      return tup(a) < tup(b);
+                  });
     }
 };
 

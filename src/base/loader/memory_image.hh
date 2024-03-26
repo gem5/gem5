@@ -53,25 +53,25 @@ class MemoryImage
     struct Segment
     {
         Segment(const std::string &_name, Addr _base, const uint8_t *_data,
-            size_t _size) :
-            name(_name), base(_base), data(_data), size(_size)
+                size_t _size)
+            : name(_name), base(_base), data(_data), size(_size)
         {}
 
-        Segment(const std::string &_name, Addr _base, size_t _size) :
-            name(_name), base(_base), size(_size)
+        Segment(const std::string &_name, Addr _base, size_t _size)
+            : name(_name), base(_base), size(_size)
         {}
 
         Segment(const std::string &_name, Addr _base,
-            const ImageFileDataPtr &_ifd, Addr offset, size_t _size) :
-            ifd(_ifd), name(_name), base(_base), size(_size)
+                const ImageFileDataPtr &_ifd, Addr offset, size_t _size)
+            : ifd(_ifd), name(_name), base(_base), size(_size)
         {
             panic_if(offset + size > ifd->len(),
-                "Segment outside the bounds of the image data");
+                     "Segment outside the bounds of the image data");
             data = ifd->data() + offset;
         }
 
-        Segment(const std::string &_name, const ImageFileDataPtr &_ifd) :
-            Segment(_name, 0, _ifd, 0, _ifd->len())
+        Segment(const std::string &_name, const ImageFileDataPtr &_ifd)
+            : Segment(_name, 0, _ifd, 0, _ifd->len())
         {}
 
         ImageFileDataPtr ifd;

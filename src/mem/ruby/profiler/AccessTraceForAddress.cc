@@ -64,7 +64,7 @@ AccessTraceForAddress::print(std::ostream &out) const
 
 void
 AccessTraceForAddress::update(RubyRequestType type, RubyAccessMode access_mode,
-    NodeID cpu, bool sharing_miss)
+                              NodeID cpu, bool sharing_miss)
 {
     m_touched_by.add(cpu);
     m_total++;

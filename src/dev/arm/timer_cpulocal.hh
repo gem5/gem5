@@ -140,7 +140,7 @@ class CpuLocalTimer : public BasicPioDevice
         void restartWatchdogCounter(uint32_t val);
 
         Timer(const std::string &name, CpuLocalTimer *_parent,
-            ArmInterruptPin *int_timer, ArmInterruptPin *int_watchdog);
+              ArmInterruptPin *int_timer, ArmInterruptPin *int_watchdog);
 
         std::string
         name() const

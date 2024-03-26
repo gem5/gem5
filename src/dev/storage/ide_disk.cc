@@ -62,17 +62,17 @@
 
 namespace gem5
 {
-IdeDisk::IdeDisk(const Params &p) :
-    SimObject(p),
-    image(p.image),
-    diskDelay(p.delay),
-    ideDiskStats(this),
-    dmaTransferEvent([this] { doDmaTransfer(); }, name()),
-    dmaReadWaitEvent([this] { doDmaRead(); }, name()),
-    dmaWriteWaitEvent([this] { doDmaWrite(); }, name()),
-    dmaPrdReadEvent([this] { dmaPrdReadDone(); }, name()),
-    dmaReadEvent([this] { dmaReadDone(); }, name()),
-    dmaWriteEvent([this] { dmaWriteDone(); }, name())
+IdeDisk::IdeDisk(const Params &p)
+    : SimObject(p),
+      image(p.image),
+      diskDelay(p.delay),
+      ideDiskStats(this),
+      dmaTransferEvent([this] { doDmaTransfer(); }, name()),
+      dmaReadWaitEvent([this] { doDmaRead(); }, name()),
+      dmaWriteWaitEvent([this] { doDmaWrite(); }, name()),
+      dmaPrdReadEvent([this] { dmaPrdReadDone(); }, name()),
+      dmaReadEvent([this] { dmaReadDone(); }, name()),
+      dmaWriteEvent([this] { dmaWriteDone(); }, name())
 {
     // Reset the device state
     reset(p.driveID);
@@ -108,7 +108,7 @@ IdeDisk::IdeDisk(const Params &p) :
 
     // Setup the model name
     strncpy((char *)driveID.atap_model, "5MI EDD si k",
-        sizeof(driveID.atap_model));
+            sizeof(driveID.atap_model));
     // Set the maximum multisector transfer size
     driveID.atap_multi = MAX_MULTSECT;
     // IORDY supported, IORDY disabled, LBA enabled, DMA enabled
@@ -305,7 +305,7 @@ IdeDisk::writeCommand(const Addr offset, int size, const uint8_t *data)
         panic("Invalid IDE command register offset: %#x\n", offset);
     }
     DPRINTF(IdeDisk, "Write to disk at offset: %#x data %#x\n", offset,
-        (uint32_t)*data);
+            (uint32_t)*data);
 }
 
 void
@@ -325,7 +325,7 @@ IdeDisk::writeControl(const Addr offset, int size, const uint8_t *data)
     nIENBit = *data & CONTROL_IEN_BIT;
 
     DPRINTF(IdeDisk, "Write to disk at offset: %#x data %#x\n", offset,
-        (uint32_t)*data);
+            (uint32_t)*data);
 }
 
 ////
@@ -343,7 +343,7 @@ IdeDisk::doDmaTransfer()
 
     if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma) {
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
-            dmaState, devState);
+              dmaState, devState);
     }
 
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
@@ -351,7 +351,7 @@ IdeDisk::doDmaTransfer()
         return;
     } else {
         ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
-            (uint8_t *)&curPrd.entry);
+                      (uint8_t *)&curPrd.entry);
     }
 }
 
@@ -365,10 +365,10 @@ IdeDisk::dmaPrdReadDone()
     }
 
     DPRINTF(IdeDisk,
-        "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
-        curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
-        curPrd.getByteCount(), (cmdBytesLeft / SectorSize), curPrd.getEOT(),
-        curSector);
+            "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
+            curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
+            curPrd.getByteCount(), (cmdBytesLeft / SectorSize),
+            curPrd.getEOT(), curSector);
 
     // the prd pointer has already been translated, so just do an increment
     curPrdAddr = curPrdAddr + sizeof(PrdEntry_t);
@@ -386,25 +386,25 @@ IdeDisk::doDmaDataRead()
     Tick totalDiskDelay = diskDelay + (curPrd.getByteCount() / SectorSize);
 
     DPRINTF(IdeDisk, "doDmaRead, diskDelay: %d totalDiskDelay: %d\n",
-        diskDelay, totalDiskDelay);
+            diskDelay, totalDiskDelay);
 
     schedule(dmaReadWaitEvent, curTick() + totalDiskDelay);
 }
 
-IdeDisk::IdeDiskStats::IdeDiskStats(statistics::Group *parent) :
-    statistics::Group(parent, "IdeDisk"),
-    ADD_STAT(dmaReadFullPages, statistics::units::Count::get(),
-        "Number of full page size DMA reads (not PRD)."),
-    ADD_STAT(dmaReadBytes, statistics::units::Byte::get(),
-        "Number of bytes transfered via DMA reads (not PRD)."),
-    ADD_STAT(dmaReadTxs, statistics::units::Count::get(),
-        "Number of DMA read transactions (not PRD)."),
-    ADD_STAT(dmaWriteFullPages, statistics::units::Count::get(),
-        "Number of full page size DMA writes."),
-    ADD_STAT(dmaWriteBytes, statistics::units::Byte::get(),
-        "Number of bytes transfered via DMA writes."),
-    ADD_STAT(dmaWriteTxs, statistics::units::Count::get(),
-        "Number of DMA write transactions.")
+IdeDisk::IdeDiskStats::IdeDiskStats(statistics::Group *parent)
+    : statistics::Group(parent, "IdeDisk"),
+      ADD_STAT(dmaReadFullPages, statistics::units::Count::get(),
+               "Number of full page size DMA reads (not PRD)."),
+      ADD_STAT(dmaReadBytes, statistics::units::Byte::get(),
+               "Number of bytes transfered via DMA reads (not PRD)."),
+      ADD_STAT(dmaReadTxs, statistics::units::Count::get(),
+               "Number of DMA read transactions (not PRD)."),
+      ADD_STAT(dmaWriteFullPages, statistics::units::Count::get(),
+               "Number of full page size DMA writes."),
+      ADD_STAT(dmaWriteBytes, statistics::units::Byte::get(),
+               "Number of bytes transfered via DMA writes."),
+      ADD_STAT(dmaWriteTxs, statistics::units::Count::get(),
+               "Number of DMA write transactions.")
 {}
 
 void
@@ -422,8 +422,8 @@ IdeDisk::doDmaRead()
     if (!dmaReadCG) {
         // clear out the data buffer
         memset(dataBuffer, 0, MAX_DMA_SIZE);
-        dmaReadCG = new ChunkGenerator(
-            curPrd.getBaseAddr(), curPrd.getByteCount(), chunkBytes);
+        dmaReadCG = new ChunkGenerator(curPrd.getBaseAddr(),
+                                       curPrd.getByteCount(), chunkBytes);
     }
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
         schedule(dmaReadWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
@@ -431,7 +431,7 @@ IdeDisk::doDmaRead()
     } else if (!dmaReadCG->done()) {
         assert(dmaReadCG->complete() < MAX_DMA_SIZE);
         ctrl->dmaRead(pciToDma(dmaReadCG->addr()), dmaReadCG->size(),
-            &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
+                      &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
         ideDiskStats.dmaReadBytes += dmaReadCG->size();
         ideDiskStats.dmaReadTxs++;
         if (dmaReadCG->size() == chunkBytes)
@@ -475,7 +475,7 @@ IdeDisk::doDmaDataWrite()
     uint32_t bytesRead = 0;
 
     DPRINTF(IdeDisk, "doDmaWrite, diskDelay: %d totalDiskDelay: %d\n",
-        diskDelay, totalDiskDelay);
+            diskDelay, totalDiskDelay);
 
     memset(dataBuffer, 0, MAX_DMA_SIZE);
     assert(cmdBytesLeft <= MAX_DMA_SIZE);
@@ -485,7 +485,7 @@ IdeDisk::doDmaDataWrite()
         cmdBytesLeft -= SectorSize;
     }
     DPRINTF(IdeDisk, "doDmaWrite, bytesRead: %d cmdBytesLeft: %d\n", bytesRead,
-        cmdBytesLeft);
+            cmdBytesLeft);
 
     schedule(dmaWriteWaitEvent, curTick() + totalDiskDelay);
 }
@@ -503,8 +503,8 @@ IdeDisk::doDmaWrite()
     }
     if (!dmaWriteCG) {
         // clear out the data buffer
-        dmaWriteCG = new ChunkGenerator(
-            curPrd.getBaseAddr(), curPrd.getByteCount(), chunkBytes);
+        dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
+                                        curPrd.getByteCount(), chunkBytes);
     }
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
         schedule(dmaWriteWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
@@ -513,10 +513,11 @@ IdeDisk::doDmaWrite()
     } else if (!dmaWriteCG->done()) {
         assert(dmaWriteCG->complete() < MAX_DMA_SIZE);
         ctrl->dmaWrite(pciToDma(dmaWriteCG->addr()), dmaWriteCG->size(),
-            &dmaWriteWaitEvent, dataBuffer + dmaWriteCG->complete());
+                       &dmaWriteWaitEvent,
+                       dataBuffer + dmaWriteCG->complete());
         DPRINTF(IdeDisk,
-            "doDmaWrite: not done curPrd byte count %d, eot %#x\n",
-            curPrd.getByteCount(), curPrd.getEOT());
+                "doDmaWrite: not done curPrd byte count %d, eot %#x\n",
+                curPrd.getByteCount(), curPrd.getEOT());
         ideDiskStats.dmaWriteBytes += dmaWriteCG->size();
         ideDiskStats.dmaWriteTxs++;
         if (dmaWriteCG->size() == chunkBytes)
@@ -524,7 +525,7 @@ IdeDisk::doDmaWrite()
         dmaWriteCG->next();
     } else {
         DPRINTF(IdeDisk, "doDmaWrite: done curPrd byte count %d, eot %#x\n",
-            curPrd.getByteCount(), curPrd.getEOT());
+                curPrd.getByteCount(), curPrd.getEOT());
         assert(dmaWriteCG->done());
         delete dmaWriteCG;
         dmaWriteCG = NULL;
@@ -536,8 +537,8 @@ void
 IdeDisk::dmaWriteDone()
 {
     DPRINTF(IdeDisk,
-        "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
-        curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
+            "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
+            curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
     // check for the EOT
     if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
@@ -558,8 +559,8 @@ IdeDisk::readDisk(uint32_t sector, uint8_t *data)
     uint32_t bytesRead = image->read(data, sector);
 
     panic_if(bytesRead != SectorSize,
-        "Can't read from %s. Only %d of %d read. errno=%d", name(), bytesRead,
-        SectorSize, errno);
+             "Can't read from %s. Only %d of %d read. errno=%d", name(),
+             bytesRead, SectorSize, errno);
 }
 
 void
@@ -568,8 +569,8 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
     uint32_t bytesWritten = image->write(data, sector);
 
     panic_if(bytesWritten != SectorSize,
-        "Can't write to %s. Only %d of %d written. errno=%d", name(),
-        bytesWritten, SectorSize, errno);
+             "Can't write to %s. Only %d of %d written. errno=%d", name(),
+             bytesWritten, SectorSize, errno);
 }
 
 ////
@@ -580,10 +581,10 @@ void
 IdeDisk::startDma(const uint32_t &prdTableBase)
 {
     panic_if(dmaState != Dma_Start,
-        "Inconsistent DMA state, should be in Dma_Start!");
+             "Inconsistent DMA state, should be in Dma_Start!");
 
     panic_if(devState != Transfer_Data_Dma,
-        "Inconsistent device state for DMA start!");
+             "Inconsistent device state for DMA start!");
 
     // PRD base address is given by bits 31:2
     curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
@@ -598,10 +599,10 @@ void
 IdeDisk::abortDma()
 {
     panic_if(dmaState == Dma_Idle,
-        "Inconsistent DMA state, should be Start or Transfer!");
+             "Inconsistent DMA state, should be Start or Transfer!");
 
     panic_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
-        "Inconsistent device state, should be Transfer or Prepare!");
+             "Inconsistent device state, should be Transfer or Prepare!");
 
     updateState(ACT_CMD_ERROR);
 }
@@ -662,7 +663,7 @@ IdeDisk::startCommand()
     case WDCC_READMULTI:
     case WDCC_READ:
         panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
-            "Attempt to perform CHS access, only supports LBA");
+                 "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -680,7 +681,7 @@ IdeDisk::startCommand()
     case WDCC_WRITEMULTI:
     case WDCC_WRITE:
         panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
-            "Attempt to perform CHS access, only supports LBA");
+                 "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -699,14 +700,14 @@ IdeDisk::startCommand()
         [[fallthrough]];
     case WDCC_READDMA:
         panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
-            "Attempt to perform CHS access, only supports LBA");
+                 "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
             cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
-        DPRINTF(
-            IdeDisk, "Setting cmdBytesLeft to %d in readdma\n", cmdBytesLeft);
+        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n",
+                cmdBytesLeft);
 
         curSector = getLBABase();
 
@@ -738,8 +739,8 @@ void
 IdeDisk::postInterrupt()
 {
     DPRINTF(IdeDisk, "Posting Interrupt\n");
-    panic_if(
-        pendingInterrupt, "Attempt to post an interrupt with one pending");
+    panic_if(pendingInterrupt,
+             "Attempt to post an interrupt with one pending");
 
     pendingInterrupt = true;
 
@@ -853,7 +854,7 @@ IdeDisk::updateState(DevAction_t action)
                 drqBytesLeft = sizeof(struct ataparams);
 
                 memcpy((void *)dataBuffer, (void *)&driveID,
-                    sizeof(struct ataparams));
+                       sizeof(struct ataparams));
             } else {
                 // Reset the drqBytes for this block
                 drqBytesLeft = SectorSize;
@@ -891,8 +892,8 @@ IdeDisk::updateState(DevAction_t action)
                 // copy next short into data registers
                 if (drqBytesLeft)
                     memcpy((void *)&cmdReg.data,
-                        (void *)&dataBuffer[SectorSize - drqBytesLeft],
-                        sizeof(uint16_t));
+                           (void *)&dataBuffer[SectorSize - drqBytesLeft],
+                           sizeof(uint16_t));
             }
 
             if (drqBytesLeft == 0) {
@@ -961,7 +962,7 @@ IdeDisk::updateState(DevAction_t action)
             } else {
                 // copy the latest short into the data buffer
                 memcpy((void *)&dataBuffer[SectorSize - drqBytesLeft],
-                    (void *)&cmdReg.data, sizeof(uint16_t));
+                       (void *)&cmdReg.data, sizeof(uint16_t));
 
                 drqBytesLeft -= 2;
                 cmdBytesLeft -= 2;
@@ -1050,8 +1051,8 @@ IdeDisk::updateState(DevAction_t action)
                 devState = Device_Idle_S;
             }
         } else {
-            DPRINTF(
-                IdeDisk, "Disk still busy aborting previous DMA command\n");
+            DPRINTF(IdeDisk,
+                    "Disk still busy aborting previous DMA command\n");
         }
         break;
 

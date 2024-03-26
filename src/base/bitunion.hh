@@ -179,8 +179,8 @@ namespace bitfield_backend
 template <class Storage, int first, int last>
 class Unsigned
 {
-    static_assert(
-        first >= last, "Bitfield ranges must be specified as <msb, lsb>");
+    static_assert(first >= last,
+                  "Bitfield ranges must be specified as <msb, lsb>");
 
   protected:
     uint64_t
@@ -199,8 +199,8 @@ class Unsigned
 template <class Storage, int first, int last>
 class Signed
 {
-    static_assert(
-        first >= last, "Bitfield ranges must be specified as <msb, lsb>");
+    static_assert(first >= last,
+                  "Bitfield ranges must be specified as <msb, lsb>");
 
   protected:
     int64_t
@@ -248,7 +248,7 @@ template <class Base>
 class BitUnionOperators : public Base
 {
     static_assert(sizeof(Base) == sizeof(typename Base::__StorageType),
-        "BitUnion larger than its storage type.");
+                  "BitUnion larger than its storage type.");
 
   public:
     BitUnionOperators(typename Base::__StorageType const &val)
@@ -399,21 +399,21 @@ class BitUnionOperators : public Base
 // above, these is overlayed the __storage member in its entirety by each of
 // the bitfields which are defined in the union, creating shared storage with
 // no overhead.
-#define __BitUnion(type, name) \
-    class BitfieldUnderlyingClasses##name : \
-        public gem5::bitfield_backend::BitfieldTypes<type> \
-    { \
-      protected: \
-        typedef type __StorageType; \
-        friend gem5::bitfield_backend::BitUnionBaseType< \
-            gem5::bitfield_backend::BitUnionOperators< \
-                BitfieldUnderlyingClasses##name>>; \
-        friend gem5::bitfield_backend::BitUnionBaseType< \
-            BitfieldUnderlyingClasses##name>; \
-\
-      public: \
-        union \
-        { \
+#define __BitUnion(type, name)                                                \
+    class BitfieldUnderlyingClasses##name :                                   \
+        public gem5::bitfield_backend::BitfieldTypes<type>                    \
+    {                                                                         \
+      protected:                                                              \
+        typedef type __StorageType;                                           \
+        friend gem5::bitfield_backend::BitUnionBaseType<                      \
+            gem5::bitfield_backend::BitUnionOperators<                        \
+                BitfieldUnderlyingClasses##name>>;                            \
+        friend gem5::bitfield_backend::BitUnionBaseType<                      \
+            BitfieldUnderlyingClasses##name>;                                 \
+                                                                              \
+      public:                                                                 \
+        union                                                                 \
+        {                                                                     \
             type __storage;
 
 /**
@@ -424,13 +424,13 @@ class BitUnionOperators : public Base
  *
  * @ingroup api_bitunion
  */
-#define EndBitUnion(name) \
-    } \
-    ; \
-    } \
-    ; \
-    typedef gem5::bitfield_backend::BitUnionOperators< \
-        BitfieldUnderlyingClasses##name> \
+#define EndBitUnion(name)                                                     \
+    }                                                                         \
+    ;                                                                         \
+    }                                                                         \
+    ;                                                                         \
+    typedef gem5::bitfield_backend::BitUnionOperators<                        \
+        BitfieldUnderlyingClasses##name>                                      \
         name;
 
 // This sets up a bitfield which has other bitfields nested inside of it. The
@@ -438,12 +438,12 @@ class BitUnionOperators : public Base
 // BitUnion. Like everything else, it overlays with the top level storage, so
 // making it a regular bitfield type makes the entire thing function as a
 // regular bitfield when referred to by itself.
-#define __SubBitUnion(name, fieldType, ...) \
-    class \
-    { \
-      public: \
-        union \
-        { \
+#define __SubBitUnion(name, fieldType, ...)                                   \
+    class                                                                     \
+    {                                                                         \
+      public:                                                                 \
+        union                                                                 \
+        {                                                                     \
             fieldType<__VA_ARGS__> __storage;
 
 /**
@@ -455,16 +455,16 @@ class BitUnionOperators : public Base
  *
  * @ingroup api_bitunion
  */
-#define EndSubBitUnion(name) \
-    } \
-    ; \
-    inline operator __StorageType() const { return __storage; } \
-\
-    inline __StorageType operator=(const __StorageType &_storage) \
-    { \
-        return __storage = _storage; \
-    } \
-    } \
+#define EndSubBitUnion(name)                                                  \
+    }                                                                         \
+    ;                                                                         \
+    inline operator __StorageType() const { return __storage; }               \
+                                                                              \
+    inline __StorageType operator=(const __StorageType &_storage)             \
+    {                                                                         \
+        return __storage = _storage;                                          \
+    }                                                                         \
+    }                                                                         \
     name;
 
 /**
@@ -473,7 +473,7 @@ class BitUnionOperators : public Base
  *
  * @ingroup api_bitunion
  */
-#define SubBitUnion(name, first, last) \
+#define SubBitUnion(name, first, last)                                        \
     __SubBitUnion(name, Bitfield, first, last)
 
 /**
@@ -482,7 +482,7 @@ class BitUnionOperators : public Base
  *
  * @ingroup api_bitunion
  */
-#define SignedSubBitUnion(name, first, last) \
+#define SignedSubBitUnion(name, first, last)                                  \
     __SubBitUnion(name, SignedBitfield, first, last)
 
 /**
@@ -584,8 +584,8 @@ template <typename T>
 std::ostream &
 operator<<(std::ostream &os, const BitUnionType<T> &bu)
 {
-    return bitfield_backend::bitfieldBackendPrinter(
-        os, (BitUnionBaseType<T>)bu);
+    return bitfield_backend::bitfieldBackendPrinter(os,
+                                                    (BitUnionBaseType<T>)bu);
 }
 
 // Specialization for BitUnion types.

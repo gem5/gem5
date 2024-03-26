@@ -327,7 +327,8 @@ class RegisterBankBase
 {
   public:
     class RegisterBaseBase
-    {};
+    {
+    };
 };
 
 template <ByteOrder BankByteOrder>
@@ -357,8 +358,8 @@ class RegisterBank : public RegisterBankBase
         size_t _size = 0;
 
       public:
-        constexpr RegisterBase(const std::string &new_name, size_t new_size) :
-            _name(new_name), _size(new_size)
+        constexpr RegisterBase(const std::string &new_name, size_t new_size)
+            : _name(new_name), _size(new_size)
         {}
         virtual ~RegisterBase() {}
 
@@ -396,9 +397,8 @@ class RegisterBank : public RegisterBankBase
     class RegisterRoFill : public RegisterBase
     {
       protected:
-        constexpr RegisterRoFill(
-            const std::string &new_name, size_t new_size) :
-            RegisterBase(new_name, new_size)
+        constexpr RegisterRoFill(const std::string &new_name, size_t new_size)
+            : RegisterBase(new_name, new_size)
         {}
 
         virtual void fill(void *buf, off_t offset, size_t bytes) = 0;
@@ -450,8 +450,8 @@ class RegisterBank : public RegisterBankBase
         }
 
       public:
-        RegisterRaz(const std::string &new_name, size_t new_size) :
-            RegisterRoFill(new_name, new_size)
+        RegisterRaz(const std::string &new_name, size_t new_size)
+            : RegisterRoFill(new_name, new_size)
         {}
     };
 
@@ -466,8 +466,8 @@ class RegisterBank : public RegisterBankBase
         }
 
       public:
-        RegisterRao(const std::string &new_name, size_t new_size) :
-            RegisterRoFill(new_name, new_size)
+        RegisterRao(const std::string &new_name, size_t new_size)
+            : RegisterRoFill(new_name, new_size)
         {}
     };
 
@@ -478,8 +478,8 @@ class RegisterBank : public RegisterBankBase
         void *_ptr = nullptr;
 
       public:
-        RegisterBuf(const std::string &new_name, void *ptr, size_t bytes) :
-            RegisterBase(new_name, bytes), _ptr(ptr)
+        RegisterBuf(const std::string &new_name, void *ptr, size_t bytes)
+            : RegisterBase(new_name, bytes), _ptr(ptr)
         {}
 
         void
@@ -545,8 +545,8 @@ class RegisterBank : public RegisterBankBase
       public:
         std::array<uint8_t, BufBytes> buffer;
 
-        RegisterLBuf(const std::string &new_name) :
-            RegisterBuf(new_name, nullptr, BufBytes)
+        RegisterLBuf(const std::string &new_name)
+            : RegisterBuf(new_name, nullptr, BufBytes)
         {
             this->setBuffer(buffer.data());
         }
@@ -574,7 +574,7 @@ class RegisterBank : public RegisterBankBase
 
             if (tokens.size() != BufBytes) {
                 warn("Size mismatch unserialing %s, expected %d, got %d",
-                    this->name(), BufBytes, tokens.size());
+                     this->name(), BufBytes, tokens.size());
                 return false;
             }
 
@@ -641,8 +641,8 @@ class RegisterBank : public RegisterBankBase
         static void
         defaultPartialWriter(This &reg, const Data &value, int first, int last)
         {
-            reg._writer(reg, writeWithMask<Data>(
-                                 reg._reader(reg), value, mask(first, last)));
+            reg._writer(reg, writeWithMask<Data>(reg._reader(reg), value,
+                                                 mask(first, last)));
         }
 
         static void
@@ -683,21 +683,20 @@ class RegisterBank : public RegisterBankBase
          */
 
         // Constructor which lets data default initialize itself.
-        constexpr Register(const std::string &new_name) :
-            RegisterBase(new_name, sizeof(Data))
+        constexpr Register(const std::string &new_name)
+            : RegisterBase(new_name, sizeof(Data))
         {}
 
         // Constructor and move constructor with an initial data value.
-        constexpr Register(const std::string &new_name, const Data &new_data) :
-            RegisterBase(new_name, sizeof(Data)),
-            _data(new_data),
-            _resetData(new_data)
+        constexpr Register(const std::string &new_name, const Data &new_data)
+            : RegisterBase(new_name, sizeof(Data)),
+              _data(new_data),
+              _resetData(new_data)
         {}
-        constexpr Register(
-            const std::string &new_name, const Data &&new_data) :
-            RegisterBase(new_name, sizeof(Data)),
-            _data(new_data),
-            _resetData(new_data)
+        constexpr Register(const std::string &new_name, const Data &&new_data)
+            : RegisterBase(new_name, sizeof(Data)),
+              _data(new_data),
+              _resetData(new_data)
         {}
 
         // Set which bits of the register are writeable.
@@ -980,8 +979,8 @@ class RegisterBank : public RegisterBankBase
     using Register64LE = Register<uint64_t, ByteOrder::little>;
     using Register64BE = Register<uint64_t, ByteOrder::big>;
 
-    constexpr RegisterBank(const std::string &new_name, Addr new_base) :
-        _base(new_base), _name(new_name)
+    constexpr RegisterBank(const std::string &new_name, Addr new_base)
+        : _base(new_base), _name(new_name)
     {}
 
     virtual ~RegisterBank() {}
@@ -996,8 +995,8 @@ class RegisterBank : public RegisterBankBase
         // Nothing special to do for this register.
         RegisterAdder(RegisterBase &new_reg) : reg(&new_reg) {}
         // Ensure that this register is added at a particular offset.
-        RegisterAdder(Addr new_offset, RegisterBase &new_reg) :
-            offset(new_offset), reg(&new_reg)
+        RegisterAdder(Addr new_offset, RegisterBase &new_reg)
+            : offset(new_offset), reg(&new_reg)
         {}
         // No register, just check that the offset is what we expect.
         RegisterAdder(Addr new_offset) : offset(new_offset) {}
@@ -1009,7 +1008,7 @@ class RegisterBank : public RegisterBankBase
     addRegisters(std::initializer_list<RegisterAdder> adders)
     {
         panic_if(std::empty(adders),
-            "Adding an empty list of registers to %s?", name());
+                 "Adding an empty list of registers to %s?", name());
         for (auto &adder : adders) {
             const Addr offset = _base + _size;
 
@@ -1025,7 +1024,7 @@ class RegisterBank : public RegisterBankBase
             } else if (adder.offset) {
                 if (adder.offset.value() != offset) {
                     panic("Expected current offset of %s to be %#x, is %#x.",
-                        name(), adder.offset.value(), offset);
+                          name(), adder.offset.value(), offset);
                 }
             }
         }
@@ -1060,7 +1059,8 @@ class RegisterBank : public RegisterBankBase
         // Number of bytes we've transferred.
         Addr done = 0;
 
-        panic_if(addr - base() + bytes > size(),
+        panic_if(
+            addr - base() + bytes > size(),
             "Out of bounds read in register bank %s, address %#x, size %d.",
             name(), addr, bytes);
 
@@ -1078,7 +1078,7 @@ class RegisterBank : public RegisterBankBase
             if (reg_bytes != reg.size()) {
                 if (_debug_flag) {
                     ccprintf(ss, "Read register %s, byte offset %d, size %d\n",
-                        reg.name(), reg_off, reg_bytes);
+                             reg.name(), reg_off, reg_bytes);
                 }
                 reg.read(ptr + done, reg_off, reg_bytes);
             } else {
@@ -1106,7 +1106,8 @@ class RegisterBank : public RegisterBankBase
         // Number of bytes we've transferred.
         Addr done = 0;
 
-        panic_if(addr - base() + bytes > size(),
+        panic_if(
+            addr - base() + bytes > size(),
             "Out of bounds write in register bank %s, address %#x, size %d.",
             name(), addr, bytes);
 
@@ -1124,8 +1125,8 @@ class RegisterBank : public RegisterBankBase
             if (reg_bytes != reg.size()) {
                 if (_debug_flag) {
                     ccprintf(ss,
-                        "Write register %s, byte offset %d, size %d\n",
-                        reg.name(), reg_off, reg_size);
+                             "Write register %s, byte offset %d, size %d\n",
+                             reg.name(), reg_off, reg_size);
                 }
                 reg.write(ptr + done, reg_off, reg_bytes);
             } else {

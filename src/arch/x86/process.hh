@@ -71,8 +71,8 @@ class X86Process : public Process
     X86Process(const ProcessParams &params, loader::ObjectFile *objFile);
 
     template <class IntType>
-    void argsInit(
-        int pageSize, std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs);
+    void argsInit(int pageSize,
+                  std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs);
 
   public:
     Addr
@@ -87,7 +87,7 @@ class X86Process : public Process
     }
 
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
-        RegVal flags) override;
+               RegVal flags) override;
 
     X86Process &
     operator=(const X86Process &in)
@@ -136,7 +136,7 @@ class X86_64Process : public X86Process
     void initState() override;
 
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
-        RegVal flags) override;
+               RegVal flags) override;
 };
 
 class I386Process : public X86Process
@@ -179,7 +179,7 @@ class I386Process : public X86Process
     void initState() override;
 
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
-        RegVal flags) override;
+               RegVal flags) override;
 };
 
 } // namespace X86ISA

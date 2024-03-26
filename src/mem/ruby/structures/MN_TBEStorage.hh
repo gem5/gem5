@@ -63,8 +63,8 @@ class MN_TBEStorage
 {
   public:
     MN_TBEStorage(statistics::Group *parent,
-        std::initializer_list<TBEStorage *> _partitions) :
-        m_stats(parent), partitions(_partitions)
+                  std::initializer_list<TBEStorage *> _partitions)
+        : m_stats(parent), partitions(_partitions)
     {}
 
     // Returns the current number of slots allocated
@@ -228,11 +228,11 @@ class MN_TBEStorage
   private:
     struct MN_TBEStorageStats : public statistics::Group
     {
-        MN_TBEStorageStats(statistics::Group *parent) :
-            statistics::Group(parent),
-            ADD_STAT(avg_size, "Avg. number of slots allocated"),
-            ADD_STAT(avg_util, "Avg. utilization"),
-            ADD_STAT(avg_reserved, "Avg. number of slots reserved")
+        MN_TBEStorageStats(statistics::Group *parent)
+            : statistics::Group(parent),
+              ADD_STAT(avg_size, "Avg. number of slots allocated"),
+              ADD_STAT(avg_util, "Avg. utilization"),
+              ADD_STAT(avg_reserved, "Avg. number of slots reserved")
         {}
 
         // Statistical variables

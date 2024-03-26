@@ -137,11 +137,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-        BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder);
+                 BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-        Process *_process, BaseMMU *_mmu, BaseISA *_isa,
-        InstDecoder *_decoder);
+                 Process *_process, BaseMMU *_mmu, BaseISA *_isa,
+                 InstDecoder *_decoder);
 
     virtual ~SimpleThread() {}
 
@@ -416,7 +416,7 @@ class SimpleThread : public ThreadState, public ThreadContext
 
         RegVal val = reg_file.reg(idx);
         DPRINTFV(reg_class.debug(), "Reading %s reg %s (%d) as %#x.\n",
-            reg.className(), reg_class.regName(arch_reg), idx, val);
+                 reg.className(), reg_class.regName(arch_reg), idx, val);
         return val;
     }
 
@@ -432,8 +432,8 @@ class SimpleThread : public ThreadState, public ThreadContext
 
         reg_file.get(idx, val);
         DPRINTFV(reg_class.debug(), "Reading %s register %s (%d) as %s.\n",
-            reg.className(), reg_class.regName(arch_reg), idx,
-            reg_class.valString(val));
+                 reg.className(), reg_class.regName(arch_reg), idx,
+                 reg_class.valString(val));
     }
 
     void *
@@ -460,7 +460,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         const auto &reg_class = reg_file.regClass;
 
         DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %#x.\n",
-            reg.className(), reg_class.regName(arch_reg), idx, val);
+                 reg.className(), reg_class.regName(arch_reg), idx, val);
         reg_file.reg(idx) = val;
     }
 
@@ -475,14 +475,14 @@ class SimpleThread : public ThreadState, public ThreadContext
         const auto &reg_class = reg_file.regClass;
 
         DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %s.\n",
-            reg.className(), reg_class.regName(arch_reg), idx,
-            reg_class.valString(val));
+                 reg.className(), reg_class.regName(arch_reg), idx,
+                 reg_class.valString(val));
         reg_file.set(idx, val);
     }
 
     // hardware transactional memory
-    void htmAbortTransaction(
-        uint64_t htm_uid, HtmFailureFaultCause cause) override;
+    void htmAbortTransaction(uint64_t htm_uid,
+                             HtmFailureFaultCause cause) override;
 
     BaseHTMCheckpointPtr &getHtmCheckpointPtr() override;
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;

@@ -281,7 +281,7 @@ Decoder::doVex2Of3State(uint8_t nextByte)
         emi.opcode.type = OneByteOpcode;
         emi.opcode.op = 0xC4;
         return processOpcode(ImmediateTypeOneByte, UsesModRMOneByte,
-            nextByte >= 0xA0 && nextByte <= 0xA3);
+                             nextByte >= 0xA0 && nextByte <= 0xA3);
     }
 
     consumeByte();
@@ -322,7 +322,7 @@ Decoder::doVex3Of3State(uint8_t nextByte)
         emi.opcode.type = OneByteOpcode;
         emi.opcode.op = 0xC5;
         return processOpcode(ImmediateTypeOneByte, UsesModRMOneByte,
-            nextByte >= 0xA0 && nextByte <= 0xA3);
+                             nextByte >= 0xA0 && nextByte <= 0xA3);
     }
 
     consumeByte();
@@ -362,11 +362,11 @@ Decoder::doVexOpcodeState(uint8_t nextByte)
     case TwoByteOpcode:
         return processOpcode(ImmediateTypeTwoByte, UsesModRMTwoByte);
     case ThreeByte0F38Opcode:
-        return processOpcode(
-            ImmediateTypeThreeByte0F38, UsesModRMThreeByte0F38);
+        return processOpcode(ImmediateTypeThreeByte0F38,
+                             UsesModRMThreeByte0F38);
     case ThreeByte0F3AOpcode:
-        return processOpcode(
-            ImmediateTypeThreeByte0F3A, UsesModRMThreeByte0F3A);
+        return processOpcode(ImmediateTypeThreeByte0F3A,
+                             UsesModRMThreeByte0F3A);
     default:
         panic("Unrecognized opcode type %d.\n", emi.opcode.type);
     }
@@ -389,7 +389,7 @@ Decoder::doOneByteOpcodeState(uint8_t nextByte)
         emi.opcode.op = nextByte;
 
         nextState = processOpcode(ImmediateTypeOneByte, UsesModRMOneByte,
-            nextByte >= 0xA0 && nextByte <= 0xA3);
+                                  nextByte >= 0xA0 && nextByte <= 0xA3);
     }
     return nextState;
 }
@@ -448,8 +448,8 @@ Decoder::doThreeByte0F3AOpcodeState(uint8_t nextByte)
 // Generic opcode processing which determines the immediate size, and whether
 // or not there's a modrm byte.
 Decoder::State
-Decoder::processOpcode(
-    ByteTable &immTable, ByteTable &modrmTable, bool addrSizedImm)
+Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
+                       bool addrSizedImm)
 {
     State nextState = ErrorState;
     const uint8_t opcode = emi.opcode.op;
@@ -590,7 +590,7 @@ Decoder::doDisplacementState()
     getImmediate(immediateCollected, emi.displacement, displacementSize);
 
     DPRINTF(Decoder, "Collecting %d byte displacement, got %d bytes.\n",
-        displacementSize, immediateCollected);
+            displacementSize, immediateCollected);
 
     if (displacementSize == immediateCollected) {
         // Reset this for other immediates.
@@ -632,7 +632,7 @@ Decoder::doImmediateState()
     getImmediate(immediateCollected, emi.immediate, immediateSize);
 
     DPRINTF(Decoder, "Collecting %d byte immediate, got %d bytes.\n",
-        immediateSize, immediateCollected);
+            immediateSize, immediateCollected);
 
     if (immediateSize == immediateCollected) {
         // Reset this for other immediates.
@@ -682,7 +682,7 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
     si->size(basePC + offset - origPC);
 
     DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
-        mach_inst);
+            mach_inst);
     return si;
 }
 

@@ -54,14 +54,14 @@ namespace gem5
  * 4KB - see e.g.
  * http://infocenter.arm.com/help/topic/com.arm.doc.dui0440b/Bbajihec.html
  */
-I2CBus::I2CBus(const I2CBusParams &p) :
-    BasicPioDevice(p, 0x1000),
-    scl(1),
-    sda(1),
-    state(IDLE),
-    currBit(7),
-    i2cAddr(0x00),
-    message(0x00)
+I2CBus::I2CBus(const I2CBusParams &p)
+    : BasicPioDevice(p, 0x1000),
+      scl(1),
+      sda(1),
+      state(IDLE),
+      currBit(7),
+      i2cAddr(0x00),
+      message(0x00)
 {
     vector<I2CDevice *> devs = p.devices;
 

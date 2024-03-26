@@ -49,17 +49,18 @@ namespace gem5
 class HWScheduler
 {
   public:
-    HWScheduler(HSAPacketProcessor *hsa_pp, Tick wakeup_delay) :
-        hsaPP(hsa_pp),
-        nextALId(0),
-        nextRLId(0),
-        wakeupDelay(wakeup_delay),
-        schedWakeupEvent(this)
+    HWScheduler(HSAPacketProcessor *hsa_pp, Tick wakeup_delay)
+        : hsaPP(hsa_pp),
+          nextALId(0),
+          nextRLId(0),
+          wakeupDelay(wakeup_delay),
+          schedWakeupEvent(this)
     {}
     void write(Addr db_addr, uint64_t doorbell_reg);
     void registerNewQueue(uint64_t hostReadIndexPointer, uint64_t basePointer,
-        uint64_t queue_id, uint32_t size, int doorbellSize,
-        GfxVersion gfxVersion, Addr offset = 0, uint64_t rd_idx = 0);
+                          uint64_t queue_id, uint32_t size, int doorbellSize,
+                          GfxVersion gfxVersion, Addr offset = 0,
+                          uint64_t rd_idx = 0);
     void unregisterQueue(uint64_t queue_id, int doorbellSize);
     void wakeup();
     void schedWakeup();
@@ -79,10 +80,10 @@ class HWScheduler
     bool unmapQFromRQ();
     bool contextSwitchQ();
     bool findEmptyHWQ();
-    bool mapQIfSlotAvlbl(
-        uint32_t al_idx, AQLRingBuffer *aql_buf, HSAQueueDescriptor *q_desc);
-    void addQCntxt(
-        uint32_t al_idx, AQLRingBuffer *aql_buf, HSAQueueDescriptor *q_desc);
+    bool mapQIfSlotAvlbl(uint32_t al_idx, AQLRingBuffer *aql_buf,
+                         HSAQueueDescriptor *q_desc);
+    void addQCntxt(uint32_t al_idx, AQLRingBuffer *aql_buf,
+                   HSAQueueDescriptor *q_desc);
     void removeQCntxt();
     void scheduleAndWakeupMappedQ();
     void updateRRVars(uint32_t al_idx, uint32_t rl_idx);

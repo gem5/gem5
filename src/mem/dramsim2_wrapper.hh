@@ -80,8 +80,8 @@ class DRAMSim2Wrapper
     unsigned int _burstSize;
 
     template <typename T>
-    T extractConfig(
-        const std::string &field_name, const std::string &file_name) const;
+    T extractConfig(const std::string &field_name,
+                    const std::string &file_name) const;
 
   public:
     /**
@@ -96,9 +96,10 @@ class DRAMSim2Wrapper
      * @param enable_debug Enable debug output
      */
     DRAMSim2Wrapper(const std::string &config_file,
-        const std::string &system_file, const std::string &working_dir,
-        const std::string &trace_file, unsigned int memory_size_mb,
-        bool enable_debug);
+                    const std::string &system_file,
+                    const std::string &working_dir,
+                    const std::string &trace_file, unsigned int memory_size_mb,
+                    bool enable_debug);
     ~DRAMSim2Wrapper();
 
     /**
@@ -113,7 +114,7 @@ class DRAMSim2Wrapper
      * @param write_callback Callback used for write completions
      */
     void setCallbacks(DRAMSim::TransactionCompleteCB *read_callback,
-        DRAMSim::TransactionCompleteCB *write_callback);
+                      DRAMSim::TransactionCompleteCB *write_callback);
 
     /**
      * Determine if the controller can accept a new packet or not.

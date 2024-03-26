@@ -293,7 +293,7 @@ AMDGPUVM::AGPTranslationGen::translate(Range &range) const
     range.paddr = range.vaddr - vm->getAGPBot() + vm->getAGPBase();
 
     DPRINTF(AMDGPUDevice, "AMDGPUVM: AGP translation %#lx -> %#lx\n",
-        range.vaddr, range.paddr);
+            range.vaddr, range.paddr);
 }
 
 void
@@ -329,7 +329,7 @@ AMDGPUVM::GARTTranslationGen::translate(Range &range) const
     }
 
     DPRINTF(AMDGPUDevice, "AMDGPUVM: GART translation %#lx -> %#lx\n",
-        range.vaddr, range.paddr);
+            range.vaddr, range.paddr);
 }
 
 void
@@ -345,7 +345,7 @@ AMDGPUVM::MMHUBTranslationGen::translate(Range &range) const
     range.paddr = range.vaddr - vm->getMMHUBBase();
 
     DPRINTF(AMDGPUDevice, "AMDGPUVM: MMHUB translation %#lx -> %#lx\n",
-        range.vaddr, range.paddr);
+            range.vaddr, range.paddr);
 }
 
 void
@@ -355,13 +355,13 @@ AMDGPUVM::UserTranslationGen::translate(Range &range) const
     Addr base = vm->getPageTableBase(vmid);
     Addr start = vm->getPageTableStart(vmid);
     DPRINTF(AMDGPUDevice, "User tl base %#lx start %#lx walker %p\n", base,
-        start, walker);
+            start, walker);
 
     bool system_bit;
     unsigned logBytes;
     Addr paddr = range.vaddr;
-    Fault fault = walker->startFunctional(
-        base, paddr, logBytes, BaseMMU::Mode::Read, system_bit);
+    Fault fault = walker->startFunctional(base, paddr, logBytes,
+                                          BaseMMU::Mode::Read, system_bit);
     if (fault != NoFault) {
         fatal("User translation fault");
     }

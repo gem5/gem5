@@ -93,11 +93,11 @@ class Decode : public Named
     {
         DecodeThreadInfo() {}
 
-        DecodeThreadInfo(const DecodeThreadInfo &other) :
-            inputIndex(other.inputIndex),
-            inMacroop(other.inMacroop),
-            execSeqNum(other.execSeqNum),
-            blocked(other.blocked)
+        DecodeThreadInfo(const DecodeThreadInfo &other)
+            : inputIndex(other.inputIndex),
+              inMacroop(other.inMacroop),
+              execSeqNum(other.execSeqNum),
+              blocked(other.blocked)
         {
             set(microopPC, other.microopPC);
         }
@@ -137,9 +137,10 @@ class Decode : public Named
 
   public:
     Decode(const std::string &name, MinorCPU &cpu_,
-        const BaseMinorCPUParams &params, Latch<ForwardInstData>::Output inp_,
-        Latch<ForwardInstData>::Input out_,
-        std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
+           const BaseMinorCPUParams &params,
+           Latch<ForwardInstData>::Output inp_,
+           Latch<ForwardInstData>::Input out_,
+           std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
 
   public:
     /** Pass on input/buffer data to the output if you can */

@@ -163,7 +163,7 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
     if (sys->threads.size() <= cpuid) {
         warn("pseudo_inst::wakeCPU(%i), cpuid greater than number of contexts"
              "(%i)\n",
-            cpuid, sys->threads.size());
+             cpuid, sys->threads.size());
         return;
     }
 
@@ -185,10 +185,10 @@ m5exit(ThreadContext *tc, Tick delay)
 // m5sum is for sanity checking the gem5 op interface.
 uint64_t
 m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c, uint64_t d,
-    uint64_t e, uint64_t f)
+      uint64_t e, uint64_t f)
 {
     DPRINTF(PseudoInst, "pseudo_inst::m5sum(%#x, %#x, %#x, %#x, %#x, %#x)\n",
-        a, b, c, d, e, f);
+            a, b, c, d, e, f);
     return a + b + c + d + e + f;
 }
 
@@ -243,7 +243,7 @@ loadsymbol(ThreadContext *tc)
 
         if (!tc->getSystemPtr()->workload->insertSymbol(
                 {loader::Symbol::Binding::Global,
-                    loader::Symbol::SymbolType::Function, symbol, addr})) {
+                 loader::Symbol::SymbolType::Function, symbol, addr})) {
             continue;
         }
 
@@ -255,8 +255,8 @@ loadsymbol(ThreadContext *tc)
 void
 addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 {
-    DPRINTF(
-        PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n", addr, symbolAddr);
+    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n", addr,
+            symbolAddr);
 
     std::string symbol;
     TranslatingPortProxy fs_proxy(tc);
@@ -269,16 +269,17 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 
     tc->getSystemPtr()->workload->insertSymbol(
         {loader::Symbol::Binding::Global, loader::Symbol::SymbolType::Function,
-            symbol, addr});
+         symbol, addr});
     loader::debugSymbolTable.insert({loader::Symbol::Binding::Global,
-        loader::Symbol::SymbolType::Function, symbol, addr});
+                                     loader::Symbol::SymbolType::Function,
+                                     symbol, addr});
 }
 
 uint64_t
 initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 {
     DPRINTF(PseudoInst, "pseudo_inst::initParam() key:%s%s\n",
-        (char *)&key_str1, (char *)&key_str2);
+            (char *)&key_str1, (char *)&key_str2);
 
     // The key parameter string is passed in via two 64-bit registers. We copy
     // out the characters from the 64-bit integer variables here, and
@@ -332,8 +333,8 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
 void
 dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    DPRINTF(
-        PseudoInst, "pseudo_inst::dumpresetstats(%i, %i)\n", delay, period);
+    DPRINTF(PseudoInst, "pseudo_inst::dumpresetstats(%i, %i)\n", delay,
+            period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
 
@@ -361,7 +362,7 @@ uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {
     DPRINTF(PseudoInst, "pseudo_inst::readfile(0x%x, 0x%x, 0x%x)\n", vaddr,
-        len, offset);
+            len, offset);
 
     const std::string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
@@ -401,10 +402,10 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 
 uint64_t
 writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
-    Addr filename_addr)
+          Addr filename_addr)
 {
     DPRINTF(PseudoInst, "pseudo_inst::writefile(0x%x, 0x%x, 0x%x, 0x%x)\n",
-        vaddr, len, offset, filename_addr);
+            vaddr, len, offset, filename_addr);
 
     // copy out target filename
     std::string filename;
@@ -495,8 +496,8 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
         return;
     }
 
-    DPRINTF(
-        WorkItems, "Work Begin workid: %d, threadid %d\n", workid, threadid);
+    DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid,
+            threadid);
     tc->getCpuPtr()->workItemBegin();
     sys->workItemBegin(threadid, workid);
 

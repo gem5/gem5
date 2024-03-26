@@ -913,11 +913,11 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
     if (mismatchOnPcOrOpcode && (parent.exitOnDiff || parent.exitOnInsnDiff))
         exitSimLoop("a mismatch with the TARMAC trace has been detected "
                     "on PC or opcode",
-            1);
+                    1);
     if (mismatch && parent.exitOnDiff)
         exitSimLoop("a mismatch with the TARMAC trace has been detected "
                     "on data value",
-            1);
+                    1);
 }
 
 const char *
@@ -927,8 +927,8 @@ TarmacParserRecord::TarmacParserRecordEvent::description() const
 }
 
 void
-TarmacParserRecord::printMismatchHeader(
-    const StaticInstPtr staticInst, const PCStateBase &pc)
+TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
+                                        const PCStateBase &pc)
 {
     std::ostream &outs = trace::output();
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
@@ -941,13 +941,15 @@ TarmacParserRecord::printMismatchHeader(
 }
 
 TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
-    const StaticInstPtr _staticInst, const PCStateBase &_pc,
-    TarmacParser &_parent, const StaticInstPtr _macroStaticInst) :
-    TarmacBaseRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
-    parsingStarted(false),
-    mismatch(false),
-    mismatchOnPcOrOpcode(false),
-    parent(_parent)
+                                       const StaticInstPtr _staticInst,
+                                       const PCStateBase &_pc,
+                                       TarmacParser &_parent,
+                                       const StaticInstPtr _macroStaticInst)
+    : TarmacBaseRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
+      parsingStarted(false),
+      mismatch(false),
+      mismatchOnPcOrOpcode(false),
+      parent(_parent)
 {
     memReq = std::make_shared<Request>();
     if (maxVectorLength == 0) {
@@ -1021,7 +1023,7 @@ TarmacParserRecord::dump()
 
             case TARMAC_MEM:
                 if (!readMemNoEffect(memRecord.addr, (uint8_t *)&written_data,
-                        memRecord.size, mem_flags))
+                                     memRecord.size, mem_flags))
                     break;
                 if (written_data != memRecord.data) {
                     if (!mismatch)
@@ -1044,13 +1046,13 @@ TarmacParserRecord::dump()
         if (destRegRecords.size()) {
             TarmacParserRecordEvent *event =
                 new TarmacParserRecordEvent(parent, thread, staticInst, *pc,
-                    mismatch, mismatchOnPcOrOpcode);
+                                            mismatch, mismatchOnPcOrOpcode);
             mainEventQueue[0]->schedule(event, curTick());
         } else if (mismatchOnPcOrOpcode &&
                    (parent.exitOnDiff || parent.exitOnInsnDiff)) {
             exitSimLoop("a mismatch with the TARMAC trace has been detected "
                         "on PC or opcode",
-                1);
+                        1);
         }
     } else {
         parent.macroopInProgress = true;
@@ -1105,7 +1107,7 @@ TarmacParserRecord::advanceTrace()
             break;
         default:
             warn("Invalid TARMAC trace record (seq_num: %lld)",
-                instRecord.seq_num);
+                 instRecord.seq_num);
             instRecord.isetstate = ISET_UNSUPPORTED;
             currRecordType = TARMAC_UNSUPPORTED;
             break;
@@ -1179,8 +1181,8 @@ TarmacParserRecord::advanceTrace()
         } else {
             // Try match with upper case name (misc. register)
             std::string reg_name = buf;
-            std::transform(
-                reg_name.begin(), reg_name.end(), reg_name.begin(), ::tolower);
+            std::transform(reg_name.begin(), reg_name.end(), reg_name.begin(),
+                           ::tolower);
             if (miscRegMap.count(reg_name.c_str())) {
                 regRecord.type = REG_MISC;
                 regRecord.index = miscRegMap[reg_name.c_str()];
@@ -1262,14 +1264,14 @@ TarmacParserRecord::advanceTrace()
 }
 
 bool
-TarmacParserRecord::readMemNoEffect(
-    Addr addr, uint8_t *data, unsigned size, unsigned flags)
+TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
+                                    unsigned flags)
 {
     const RequestPtr &req = memReq;
     auto mmu = static_cast<MMU *>(thread->getMMUPtr());
 
     req->setVirt(addr, size, flags, thread->pcState().instAddr(),
-        Request::funcRequestorId);
+                 Request::funcRequestorId);
 
     // Translate to physical address
     Fault fault = mmu->translateAtomic(req, thread, BaseMMU::Read);

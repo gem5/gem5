@@ -57,14 +57,17 @@ namespace gem5
 namespace memory
 {
 DRAMSim2Wrapper::DRAMSim2Wrapper(const std::string &config_file,
-    const std::string &system_file, const std::string &working_dir,
-    const std::string &trace_file, unsigned int memory_size_mb,
-    bool enable_debug) :
-    dramsim(new DRAMSim::MultiChannelMemorySystem(config_file, system_file,
-        working_dir, trace_file, memory_size_mb, NULL, NULL)),
-    _clockPeriod(0.0),
-    _queueSize(0),
-    _burstSize(0)
+                                 const std::string &system_file,
+                                 const std::string &working_dir,
+                                 const std::string &trace_file,
+                                 unsigned int memory_size_mb,
+                                 bool enable_debug)
+    : dramsim(new DRAMSim::MultiChannelMemorySystem(
+          config_file, system_file, working_dir, trace_file, memory_size_mb,
+          NULL, NULL)),
+      _clockPeriod(0.0),
+      _queueSize(0),
+      _burstSize(0)
 {
     // tell DRAMSim2 to ignore its internal notion of a CPU frequency
     dramsim->setCPUClockSpeed(0);
@@ -83,8 +86,8 @@ DRAMSim2Wrapper::DRAMSim2Wrapper(const std::string &config_file,
 
     // we also need to know what transaction queue size DRAMSim2 is
     // using so we can stall when responses are blocked
-    _queueSize = extractConfig<unsigned int>(
-        "TRANS_QUEUE_DEPTH=", working_dir + '/' + system_file);
+    _queueSize = extractConfig<unsigned int>("TRANS_QUEUE_DEPTH=",
+                                             working_dir + '/' + system_file);
 
     if (!_queueSize)
         fatal("DRAMSim2 wrapper failed to get queue size\n");
@@ -106,8 +109,8 @@ DRAMSim2Wrapper::~DRAMSim2Wrapper() { delete dramsim; }
 
 template <typename T>
 T
-DRAMSim2Wrapper::extractConfig(
-    const std::string &field_name, const std::string &file_name) const
+DRAMSim2Wrapper::extractConfig(const std::string &field_name,
+                               const std::string &file_name) const
 {
     std::ifstream file_stream(file_name.c_str(), ios::in);
 
@@ -130,7 +133,7 @@ DRAMSim2Wrapper::extractConfig(
 
     if (!found)
         fatal("DRAMSim2 wrapper could not find %s in %s\n", field_name,
-            file_name);
+              file_name);
 
     return res;
 }
@@ -143,7 +146,7 @@ DRAMSim2Wrapper::printStats()
 
 void
 DRAMSim2Wrapper::setCallbacks(DRAMSim::TransactionCompleteCB *read_callback,
-    DRAMSim::TransactionCompleteCB *write_callback)
+                              DRAMSim::TransactionCompleteCB *write_callback)
 {
     // simply pass it on, for now we ignore the power callback
     dramsim->RegisterCallbacks(read_callback, write_callback, NULL);

@@ -51,8 +51,8 @@ namespace gem5
 {
 namespace ps2
 {
-PS2Mouse::PS2Mouse(const PS2MouseParams &p) :
-    Device(p), status(0), resolution(4), sampleRate(100)
+PS2Mouse::PS2Mouse(const PS2MouseParams &p)
+    : Device(p), status(0), resolution(4), sampleRate(100)
 {}
 
 bool
@@ -130,9 +130,9 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
             return false;
         } else {
             DPRINTF(PS2,
-                "Mouse sample rate %d samples "
-                "per second.\n",
-                data[1]);
+                    "Mouse sample rate %d samples "
+                    "per second.\n",
+                    data[1]);
             sampleRate = data[1];
             sendAck();
             return true;

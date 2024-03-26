@@ -98,10 +98,10 @@ class SignaturePath : public Queued
         std::vector<PatternStrideEntry> strideEntries;
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
-        PatternEntry(size_t num_strides, unsigned counter_bits) :
-            TaggedEntry(),
-            strideEntries(num_strides, counter_bits),
-            counter(counter_bits)
+        PatternEntry(size_t num_strides, unsigned counter_bits)
+            : TaggedEntry(),
+              strideEntries(num_strides, counter_bits),
+              counter(counter_bits)
         {}
 
         /** Reset the entries to their initial values */
@@ -176,8 +176,8 @@ class SignaturePath : public Queued
      * @param addresses addresses to prefetch will be added to this vector
      */
     void addPrefetch(Addr ppn, stride_t last_block, stride_t delta,
-        double path_confidence, signature_t signature, bool is_secure,
-        std::vector<AddrPriority> &addresses);
+                     double path_confidence, signature_t signature,
+                     bool is_secure, std::vector<AddrPriority> &addresses);
 
     /**
      * Obtains the SignatureEntry of the given page, if the page is not found,
@@ -193,7 +193,8 @@ class SignaturePath : public Queued
      * @result a reference to the SignatureEntry
      */
     SignatureEntry &getSignatureEntry(Addr ppn, bool is_secure, stride_t block,
-        bool &miss, stride_t &stride, double &initial_confidence);
+                                      bool &miss, stride_t &stride,
+                                      double &initial_confidence);
     /**
      * Obtains the PatternEntry of the given signature, if the signature is
      * not found, it allocates a new one, replacing an existing entry if needed
@@ -216,8 +217,9 @@ class SignaturePath : public Queued
      * @param lookahead PatternStrideEntry within the provided PatternEntry
      * @return the computed confidence factor
      */
-    virtual double calculateLookaheadConfidence(
-        PatternEntry const &sig, PatternStrideEntry const &lookahead) const;
+    virtual double
+    calculateLookaheadConfidence(PatternEntry const &sig,
+                                 PatternStrideEntry const &lookahead) const;
 
     /**
      * Computes the prefetch confidence of the provided pattern entry
@@ -225,16 +227,18 @@ class SignaturePath : public Queued
      * @param entry PatternStrideEntry within the provided PatternEntry
      * @return the computed confidence factor
      */
-    virtual double calculatePrefetchConfidence(
-        PatternEntry const &sig, PatternStrideEntry const &entry) const;
+    virtual double
+    calculatePrefetchConfidence(PatternEntry const &sig,
+                                PatternStrideEntry const &entry) const;
 
     /**
      * Increases the counter of a given PatternEntry/PatternStrideEntry
      * @param pattern_entry the corresponding PatternEntry
      * @param pstride_entry the PatternStrideEntry within the PatternEntry
      */
-    virtual void increasePatternEntryCounter(
-        PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry);
+    virtual void
+    increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                PatternStrideEntry &pstride_entry);
 
     /**
      * Whenever a new SignatureEntry is allocated, it computes the new
@@ -247,7 +251,9 @@ class SignaturePath : public Queued
      * @param new_stride the resulting current stride
      */
     virtual void handleSignatureTableMiss(stride_t current_block,
-        signature_t &new_signature, double &new_conf, stride_t &new_stride);
+                                          signature_t &new_signature,
+                                          double &new_conf,
+                                          stride_t &new_stride);
 
     /**
      * Auxiliar prefetch mechanism used at the end of calculatePrefetch.
@@ -261,7 +267,8 @@ class SignaturePath : public Queued
      *        their filter has been updated, if this call updates a new entry
      */
     virtual void auxiliaryPrefetcher(Addr ppn, stride_t current_block,
-        bool is_secure, std::vector<AddrPriority> &addresses);
+                                     bool is_secure,
+                                     std::vector<AddrPriority> &addresses);
 
     /**
      * Handles the situation when the lookahead process has crossed the
@@ -277,7 +284,7 @@ class SignaturePath : public Queued
      */
     virtual void
     handlePageCrossingLookahead(signature_t signature, stride_t last_offset,
-        stride_t delta, double path_confidence)
+                                stride_t delta, double path_confidence)
     {}
 
   public:
@@ -285,8 +292,8 @@ class SignaturePath : public Queued
     ~SignaturePath() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

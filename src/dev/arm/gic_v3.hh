@@ -57,30 +57,32 @@ class Gicv3Registers
 {
   public:
     virtual uint32_t readDistributor(Addr daddr) = 0;
-    virtual uint32_t readRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr) = 0;
-    virtual RegVal readCpu(
-        const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg) = 0;
+    virtual uint32_t readRedistributor(const ArmISA::Affinity &aff,
+                                       Addr daddr) = 0;
+    virtual RegVal readCpu(const ArmISA::Affinity &aff,
+                           ArmISA::MiscRegIndex misc_reg) = 0;
 
     virtual void writeDistributor(Addr daddr, uint32_t data) = 0;
-    virtual void writeRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr, uint32_t data) = 0;
+    virtual void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                                    uint32_t data) = 0;
     virtual void writeCpu(const ArmISA::Affinity &aff,
-        ArmISA::MiscRegIndex misc_reg, RegVal data) = 0;
+                          ArmISA::MiscRegIndex misc_reg, RegVal data) = 0;
 
   protected:
-    static void copyDistRegister(
-        Gicv3Registers *from, Gicv3Registers *to, Addr daddr);
+    static void copyDistRegister(Gicv3Registers *from, Gicv3Registers *to,
+                                 Addr daddr);
     static void copyRedistRegister(Gicv3Registers *from, Gicv3Registers *to,
-        const ArmISA::Affinity &aff, Addr daddr);
+                                   const ArmISA::Affinity &aff, Addr daddr);
     static void copyCpuRegister(Gicv3Registers *from, Gicv3Registers *to,
-        const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg);
-    static void clearRedistRegister(
-        Gicv3Registers *to, const ArmISA::Affinity &aff, Addr daddr);
+                                const ArmISA::Affinity &aff,
+                                ArmISA::MiscRegIndex misc_reg);
+    static void clearRedistRegister(Gicv3Registers *to,
+                                    const ArmISA::Affinity &aff, Addr daddr);
     static void copyRedistRange(Gicv3Registers *from, Gicv3Registers *to,
-        const ArmISA::Affinity &aff, Addr daddr, size_t size);
-    static void copyDistRange(
-        Gicv3Registers *from, Gicv3Registers *to, Addr daddr, size_t size);
+                                const ArmISA::Affinity &aff, Addr daddr,
+                                size_t size);
+    static void copyDistRange(Gicv3Registers *from, Gicv3Registers *to,
+                              Addr daddr, size_t size);
     static void clearDistRange(Gicv3Registers *to, Addr daddr, size_t size);
 };
 
@@ -190,16 +192,16 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     inline Gicv3Redistributor *
     getRedistributor(ContextID context_id) const
     {
-        assert(
-            context_id < redistributors.size() and redistributors[context_id]);
+        assert(context_id < redistributors.size() and
+               redistributors[context_id]);
         return redistributors[context_id];
     }
 
-    Gicv3CPUInterface *getCPUInterfaceByAffinity(
-        const ArmISA::Affinity &aff) const;
+    Gicv3CPUInterface *
+    getCPUInterfaceByAffinity(const ArmISA::Affinity &aff) const;
 
-    Gicv3Redistributor *getRedistributorByAffinity(
-        const ArmISA::Affinity &aff) const;
+    Gicv3Redistributor *
+    getRedistributorByAffinity(const ArmISA::Affinity &aff) const;
 
     Gicv3Redistributor *getRedistributorByAddr(Addr address) const;
 
@@ -212,16 +214,16 @@ class Gicv3 : public BaseGic, public Gicv3Registers
 
   public: // Gicv3Registers
     uint32_t readDistributor(Addr daddr) override;
-    uint32_t readRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr) override;
-    RegVal readCpu(
-        const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg) override;
+    uint32_t readRedistributor(const ArmISA::Affinity &aff,
+                               Addr daddr) override;
+    RegVal readCpu(const ArmISA::Affinity &aff,
+                   ArmISA::MiscRegIndex misc_reg) override;
 
     void writeDistributor(Addr daddr, uint32_t data) override;
-    void writeRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr, uint32_t data) override;
+    void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                            uint32_t data) override;
     void writeCpu(const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg,
-        RegVal data) override;
+                  RegVal data) override;
 };
 
 } // namespace gem5

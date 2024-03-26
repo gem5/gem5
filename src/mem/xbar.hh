@@ -244,9 +244,8 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        ReqLayer(
-            RequestPort &_port, BaseXBar &_xbar, const std::string &_name) :
-            Layer(_port, _xbar, _name)
+        ReqLayer(RequestPort &_port, BaseXBar &_xbar, const std::string &_name)
+            : Layer(_port, _xbar, _name)
         {}
 
       protected:
@@ -267,9 +266,9 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        RespLayer(
-            ResponsePort &_port, BaseXBar &_xbar, const std::string &_name) :
-            Layer(_port, _xbar, _name)
+        RespLayer(ResponsePort &_port, BaseXBar &_xbar,
+                  const std::string &_name)
+            : Layer(_port, _xbar, _name)
         {}
 
       protected:
@@ -290,9 +289,9 @@ class BaseXBar : public ClockedObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        SnoopRespLayer(
-            RequestPort &_port, BaseXBar &_xbar, const std::string &_name) :
-            Layer(_port, _xbar, _name)
+        SnoopRespLayer(RequestPort &_port, BaseXBar &_xbar,
+                       const std::string &_name)
+            : Layer(_port, _xbar, _name)
         {}
 
       protected:
@@ -413,8 +412,8 @@ class BaseXBar : public ClockedObject
     virtual ~BaseXBar();
 
     /** A function used to return the port associated with this object. */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void regStats() override;
 };

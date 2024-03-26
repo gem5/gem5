@@ -44,10 +44,10 @@ namespace gem5
 {
 namespace ArmISA
 {
-const GrainSize GrainMap_tg0[] = {
-    Grain4KB, Grain64KB, Grain16KB, ReservedGrain};
-const GrainSize GrainMap_tg1[] = {
-    ReservedGrain, Grain16KB, Grain4KB, Grain64KB};
+const GrainSize GrainMap_tg0[] = {Grain4KB, Grain64KB, Grain16KB,
+                                  ReservedGrain};
+const GrainSize GrainMap_tg1[] = {ReservedGrain, Grain16KB, Grain4KB,
+                                  Grain64KB};
 
 Addr
 PageTableOps::walkMask(unsigned level) const

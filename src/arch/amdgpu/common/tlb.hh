@@ -94,7 +94,7 @@ class GpuTLB : public ClockedObject
          * this function. Once it's called the object is no longer valid.
          */
         virtual void finish(Fault fault, const RequestPtr &req,
-            ThreadContext *tc, Mode mode) = 0;
+                            ThreadContext *tc, Mode mode) = 0;
     };
 
     void dumpAll();
@@ -160,8 +160,8 @@ class GpuTLB : public ClockedObject
     Fault translateInt(bool read, const RequestPtr &req, ThreadContext *tc);
 
     Fault translate(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, bool &delayedResponse,
-        bool timing, int &latency);
+                    Translation *translation, Mode mode, bool &delayedResponse,
+                    bool timing, int &latency);
 
   public:
     // latencies for a TLB hit, miss and page fault
@@ -172,11 +172,11 @@ class GpuTLB : public ClockedObject
     void updatePageFootprint(Addr virt_page_addr);
     void printAccessPattern();
 
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, Mode mode, int &latency);
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
+                          int &latency);
 
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, int &latency);
+                         Translation *translation, Mode mode, int &latency);
 
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
@@ -194,18 +194,18 @@ class GpuTLB : public ClockedObject
         PAGE_WALK,
         MISS_RETURN
     };
-    bool tlbLookup(
-        const RequestPtr &req, ThreadContext *tc, bool update_stats);
+    bool tlbLookup(const RequestPtr &req, ThreadContext *tc,
+                   bool update_stats);
 
     void handleTranslationReturn(Addr addr, tlbOutcome outcome, PacketPtr pkt);
 
     void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
-    void pagingProtectionChecks(
-        ThreadContext *tc, PacketPtr pkt, TlbEntry *tlb_entry, Mode mode);
+    void pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
+                                TlbEntry *tlb_entry, Mode mode);
 
-    void updatePhysAddresses(
-        Addr virt_page_addr, TlbEntry *tlb_entry, Addr phys_page_addr);
+    void updatePhysAddresses(Addr virt_page_addr, TlbEntry *tlb_entry,
+                             Addr phys_page_addr);
 
     void issueTLBLookup(PacketPtr pkt);
 
@@ -213,8 +213,8 @@ class GpuTLB : public ClockedObject
     class CpuSidePort : public ResponsePort
     {
       public:
-        CpuSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index) :
-            ResponsePort(_name), tlb(gpu_TLB), index(_index)
+        CpuSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : ResponsePort(_name), tlb(gpu_TLB), index(_index)
         {}
 
       protected:
@@ -250,8 +250,8 @@ class GpuTLB : public ClockedObject
     class MemSidePort : public RequestPort
     {
       public:
-        MemSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index) :
-            RequestPort(_name), tlb(gpu_TLB), index(_index)
+        MemSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : RequestPort(_name), tlb(gpu_TLB), index(_index)
         {}
 
         std::deque<PacketPtr> retries;
@@ -280,8 +280,8 @@ class GpuTLB : public ClockedObject
     // TLB ports on the memory side
     std::vector<MemSidePort *> memSidePort;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     // maximum number of permitted coalesced requests per cycle
     int maxCoalescedReqs;
@@ -297,8 +297,8 @@ class GpuTLB : public ClockedObject
      *  send request to lower level TLB on a miss,
      *  or start a page walk if this was the last-level TLB).
      */
-    void translationReturn(
-        Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt);
+    void translationReturn(Addr virtPageAddr, tlbOutcome outcome,
+                           PacketPtr pkt);
 
     class TLBEvent : public Event
     {

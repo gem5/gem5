@@ -155,9 +155,12 @@ instance_specific_extension_container::create()
     return instance_specific_extension_container_pool::instance().create();
 }
 
-instance_specific_extension_container::
-    instance_specific_extension_container() :
-    use_count(0), m_txn(NULL), m_release_fn(NULL), m_carrier(NULL), next(NULL)
+instance_specific_extension_container::instance_specific_extension_container()
+    : use_count(0),
+      m_txn(NULL),
+      m_release_fn(NULL),
+      m_carrier(NULL),
+      next(NULL)
 {
     resize();
 }
@@ -218,8 +221,8 @@ instance_specific_extension_container::get_accessor(unsigned int idx)
 
 // non-templatized version with manual index:
 ispex_base *
-instance_specific_extensions_per_accessor::set_extension(
-    unsigned int index, ispex_base *ext)
+instance_specific_extensions_per_accessor::set_extension(unsigned int index,
+                                                         ispex_base *ext)
 {
     resize_extensions();
     ispex_base *tmp = m_extensions[index];
@@ -254,8 +257,8 @@ instance_specific_extensions_per_accessor::resize_extensions()
 
 // ----------------------------------------------------------------------------
 
-instance_specific_extension_accessor::instance_specific_extension_accessor() :
-    m_index(max_num_ispex_accessors(true) - 1)
+instance_specific_extension_accessor::instance_specific_extension_accessor()
+    : m_index(max_num_ispex_accessors(true) - 1)
 {}
 
 } // namespace tlm_utils

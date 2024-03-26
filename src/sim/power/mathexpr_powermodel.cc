@@ -47,8 +47,8 @@
 
 namespace gem5
 {
-MathExprPowerModel::MathExprPowerModel(const Params &p) :
-    PowerModelState(p), dyn_expr(p.dyn), st_expr(p.st)
+MathExprPowerModel::MathExprPowerModel(const Params &p)
+    : PowerModelState(p), dyn_expr(p.dyn), st_expr(p.st)
 {}
 
 void
@@ -65,7 +65,7 @@ MathExprPowerModel::startup()
 
             auto *info = statistics::resolve(var);
             fatal_if(!info, "Failed to evaluate %s in expression:\n%s\n", var,
-                expr.toStr());
+                     expr.toStr());
             statsMap[var] = info;
         }
     }
@@ -74,8 +74,8 @@ MathExprPowerModel::startup()
 double
 MathExprPowerModel::eval(const MathExpr &expr) const
 {
-    return expr.eval(std::bind(
-        &MathExprPowerModel::getStatValue, this, std::placeholders::_1));
+    return expr.eval(std::bind(&MathExprPowerModel::getStatValue, this,
+                               std::placeholders::_1));
 }
 
 double

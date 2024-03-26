@@ -55,10 +55,10 @@ class BackdoorManager
 {
   public:
     explicit BackdoorManager(const std::vector<AddrRange> &original_ranges,
-        const std::vector<AddrRange> &remapped_ranges);
+                             const std::vector<AddrRange> &remapped_ranges);
 
-    MemBackdoorPtr getRevertedBackdoor(
-        MemBackdoorPtr backdoor, const AddrRange &pkt_range);
+    MemBackdoorPtr getRevertedBackdoor(MemBackdoorPtr backdoor,
+                                       const AddrRange &pkt_range);
 
   protected:
     /**
@@ -66,8 +66,8 @@ class BackdoorManager
      * original request address. The address range is in initiator address
      * view, and shouldn't exceed the original address range.
      */
-    MemBackdoorPtr createRevertedBackdoor(
-        MemBackdoorPtr backdoor, const AddrRange &pkt_range);
+    MemBackdoorPtr createRevertedBackdoor(MemBackdoorPtr backdoor,
+                                          const AddrRange &pkt_range);
     /**
      * This function returns a created backdoor that fulfills the request, or
      * returns nullptr if there's no.

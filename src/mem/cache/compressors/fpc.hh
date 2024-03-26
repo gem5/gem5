@@ -112,18 +112,20 @@ class FPC : public DictionaryCompressor<uint32_t>
             {SIGN_EXTENDED_HALFWORD, "SignExtendedHalfword"},
             {ZERO_PADDED_HALFWORD, "ZeroPaddedHalfword"},
             {SIGN_EXTENDED_TWO_HALFWORDS, "SignExtendedTwoHalfwords"},
-            {REP_BYTES, "RepBytes"}, {UNCOMPRESSED, "Uncompressed"}};
+            {REP_BYTES, "RepBytes"},
+            {UNCOMPRESSED, "Uncompressed"}};
 
         return patternNames[number];
     };
 
     std::unique_ptr<Pattern>
     getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
-        const int match_location) const override
+               const int match_location) const override
     {
-        using PatternFactory = Factory<ZeroRun, SignExtended4Bits,
-            SignExtended1Byte, SignExtendedHalfword, ZeroPaddedHalfword,
-            SignExtendedTwoHalfwords, RepBytes, Uncompressed>;
+        using PatternFactory =
+            Factory<ZeroRun, SignExtended4Bits, SignExtended1Byte,
+                    SignExtendedHalfword, ZeroPaddedHalfword,
+                    SignExtendedTwoHalfwords, RepBytes, Uncompressed>;
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
 
@@ -171,11 +173,11 @@ class FPC::ZeroRun : public MaskedValuePattern<0, 0xFFFFFFFF>
     int _realSize;
 
   public:
-    ZeroRun(const DictionaryEntry bytes, const int match_location) :
-        MaskedValuePattern<0, 0xFFFFFFFF>(
-            ZERO_RUN, ZERO_RUN, 3, -1, bytes, false),
-        _runLength(0),
-        _realSize(0)
+    ZeroRun(const DictionaryEntry bytes, const int match_location)
+        : MaskedValuePattern<0, 0xFFFFFFFF>(ZERO_RUN, ZERO_RUN, 3, -1, bytes,
+                                            false),
+          _runLength(0),
+          _realSize(0)
     {}
 
     std::size_t
@@ -224,37 +226,36 @@ class FPC::ZeroRun : public MaskedValuePattern<0, 0xFFFFFFFF>
 class FPC::SignExtended4Bits : public SignExtendedPattern<4>
 {
   public:
-    SignExtended4Bits(const DictionaryEntry bytes, const int match_location) :
-        SignExtendedPattern<4>(
-            SIGN_EXTENDED_4_BITS, SIGN_EXTENDED_4_BITS, 3, bytes)
+    SignExtended4Bits(const DictionaryEntry bytes, const int match_location)
+        : SignExtendedPattern<4>(SIGN_EXTENDED_4_BITS, SIGN_EXTENDED_4_BITS, 3,
+                                 bytes)
     {}
 };
 
 class FPC::SignExtended1Byte : public SignExtendedPattern<8>
 {
   public:
-    SignExtended1Byte(const DictionaryEntry bytes, const int match_location) :
-        SignExtendedPattern<8>(
-            SIGN_EXTENDED_1_BYTE, SIGN_EXTENDED_1_BYTE, 3, bytes)
+    SignExtended1Byte(const DictionaryEntry bytes, const int match_location)
+        : SignExtendedPattern<8>(SIGN_EXTENDED_1_BYTE, SIGN_EXTENDED_1_BYTE, 3,
+                                 bytes)
     {}
 };
 
 class FPC::SignExtendedHalfword : public SignExtendedPattern<16>
 {
   public:
-    SignExtendedHalfword(
-        const DictionaryEntry bytes, const int match_location) :
-        SignExtendedPattern<16>(
-            SIGN_EXTENDED_HALFWORD, SIGN_EXTENDED_HALFWORD, 3, bytes)
+    SignExtendedHalfword(const DictionaryEntry bytes, const int match_location)
+        : SignExtendedPattern<16>(SIGN_EXTENDED_HALFWORD,
+                                  SIGN_EXTENDED_HALFWORD, 3, bytes)
     {}
 };
 
 class FPC::ZeroPaddedHalfword : public MaskedValuePattern<0, 0x0000FFFF>
 {
   public:
-    ZeroPaddedHalfword(const DictionaryEntry bytes, const int match_location) :
-        MaskedValuePattern<0, 0x0000FFFF>(
-            ZERO_PADDED_HALFWORD, ZERO_PADDED_HALFWORD, 3, -1, bytes, false)
+    ZeroPaddedHalfword(const DictionaryEntry bytes, const int match_location)
+        : MaskedValuePattern<0, 0x0000FFFF>(
+              ZERO_PADDED_HALFWORD, ZERO_PADDED_HALFWORD, 3, -1, bytes, false)
     {}
 };
 
@@ -265,21 +266,21 @@ class FPC::SignExtendedTwoHalfwords : public Pattern
     const int8_t extendedBytes[2];
 
   public:
-    SignExtendedTwoHalfwords(
-        const DictionaryEntry bytes, const int match_location) :
-        Pattern(SIGN_EXTENDED_TWO_HALFWORDS, SIGN_EXTENDED_TWO_HALFWORDS, 3,
-            16, -1, false),
-        extendedBytes{int8_t(fromDictionaryEntry(bytes) & mask(8)),
-            int8_t((fromDictionaryEntry(bytes) >> 16) & mask(8))}
+    SignExtendedTwoHalfwords(const DictionaryEntry bytes,
+                             const int match_location)
+        : Pattern(SIGN_EXTENDED_TWO_HALFWORDS, SIGN_EXTENDED_TWO_HALFWORDS, 3,
+                  16, -1, false),
+          extendedBytes{int8_t(fromDictionaryEntry(bytes) & mask(8)),
+                        int8_t((fromDictionaryEntry(bytes) >> 16) & mask(8))}
     {}
 
     static bool
     isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
-        const int match_location)
+              const int match_location)
     {
         const uint32_t data = fromDictionaryEntry(bytes);
-        const int16_t halfwords[2] = {
-            int16_t(data & mask(16)), int16_t((data >> 16) & mask(16))};
+        const int16_t halfwords[2] = {int16_t(data & mask(16)),
+                                      int16_t((data >> 16) & mask(16))};
         return (halfwords[0] == (uint16_t)szext<8>(halfwords[0])) &&
                (halfwords[1] == (uint16_t)szext<8>(halfwords[1]));
     }
@@ -288,7 +289,7 @@ class FPC::SignExtendedTwoHalfwords : public Pattern
     decompress(const DictionaryEntry dict_bytes) const override
     {
         uint16_t halfwords[2] = {(uint16_t)szext<8>(extendedBytes[0]),
-            (uint16_t)szext<8>(extendedBytes[1])};
+                                 (uint16_t)szext<8>(extendedBytes[1])};
         return toDictionaryEntry((halfwords[1] << 16) | halfwords[0]);
     }
 };
@@ -296,17 +297,17 @@ class FPC::SignExtendedTwoHalfwords : public Pattern
 class FPC::RepBytes : public RepeatedValuePattern<uint8_t>
 {
   public:
-    RepBytes(const DictionaryEntry bytes, const int match_location) :
-        RepeatedValuePattern<uint8_t>(
-            REP_BYTES, REP_BYTES, 3, -1, bytes, false)
+    RepBytes(const DictionaryEntry bytes, const int match_location)
+        : RepeatedValuePattern<uint8_t>(REP_BYTES, REP_BYTES, 3, -1, bytes,
+                                        false)
     {}
 };
 
 class FPC::Uncompressed : public UncompressedPattern
 {
   public:
-    Uncompressed(const DictionaryEntry bytes, const int match_location) :
-        UncompressedPattern(UNCOMPRESSED, UNCOMPRESSED, 3, -1, bytes)
+    Uncompressed(const DictionaryEntry bytes, const int match_location)
+        : UncompressedPattern(UNCOMPRESSED, UNCOMPRESSED, 3, -1, bytes)
     {}
 };
 

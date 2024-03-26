@@ -79,8 +79,8 @@ class AbstractNVM : public SimObject
      * @param sector_size size of one sector in bytes; value is defined in
      * disk_image.hh
      */
-    virtual void initializeMemory(
-        uint64_t disk_size, uint32_t sector_size) = 0;
+    virtual void initializeMemory(uint64_t disk_size,
+                                  uint32_t sector_size) = 0;
 
     /**
      * Access functions
@@ -100,9 +100,9 @@ class AbstractNVM : public SimObject
      * data transfer between the disk and the disk controller.
      */
     virtual void readMemory(uint64_t address, uint32_t amount,
-        const std::function<void()> &event) = 0;
+                            const std::function<void()> &event) = 0;
     virtual void writeMemory(uint64_t address, uint32_t amount,
-        const std::function<void()> &event) = 0;
+                             const std::function<void()> &event) = 0;
 };
 
 } // namespace gem5

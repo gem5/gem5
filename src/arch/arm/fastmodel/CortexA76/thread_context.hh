@@ -49,8 +49,8 @@ class CortexA76TC : public Iris::ThreadContext
 
   public:
     CortexA76TC(gem5::BaseCPU *cpu, int id, System *system, gem5::BaseMMU *mmu,
-        gem5::BaseISA *isa, iris::IrisConnectionInterface *iris_if,
-        const std::string &iris_path);
+                gem5::BaseISA *isa, iris::IrisConnectionInterface *iris_if,
+                const std::string &iris_path);
 
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 

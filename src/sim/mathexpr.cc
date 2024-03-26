@@ -46,21 +46,21 @@
 
 namespace gem5
 {
-MathExpr::MathExpr(std::string expr) :
-    ops(std::array<OpSearch, uNeg + 1>{
-        {OpSearch{
-             true, bAdd, 0, '+', [](double a, double b) { return a + b; }},
-            OpSearch{
-                true, bSub, 0, '-', [](double a, double b) { return a - b; }},
-            OpSearch{
-                true, bMul, 1, '*', [](double a, double b) { return a * b; }},
-            OpSearch{
-                true, bDiv, 1, '/', [](double a, double b) { return a / b; }},
-            OpSearch{
-                false, uNeg, 2, '-', [](double a, double b) { return -b; }},
-            OpSearch{true, bPow, 3, '^',
-                [](double a, double b) { return std::pow(a, b); }}},
-    })
+MathExpr::MathExpr(std::string expr)
+    : ops(std::array<OpSearch, uNeg + 1>{
+          {OpSearch{true, bAdd, 0, '+',
+                    [](double a, double b) { return a + b; }},
+           OpSearch{true, bSub, 0, '-',
+                    [](double a, double b) { return a - b; }},
+           OpSearch{true, bMul, 1, '*',
+                    [](double a, double b) { return a * b; }},
+           OpSearch{true, bDiv, 1, '/',
+                    [](double a, double b) { return a / b; }},
+           OpSearch{false, uNeg, 2, '-',
+                    [](double a, double b) { return -b; }},
+           OpSearch{true, bPow, 3, '^',
+                    [](double a, double b) { return std::pow(a, b); }}},
+      })
 {
     // Cleanup
     expr.erase(remove_if(expr.begin(), expr.end(), isspace), expr.end());
@@ -141,8 +141,8 @@ MathExpr::parse(std::string expr)
             contains_non_alpha =
                 contains_non_alpha or
                 !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                    (c >= '0' && c <= '9') || c == '$' || c == '\\' ||
-                    c == '.' || c == '_');
+                  (c >= '0' && c <= '9') || c == '$' || c == '\\' ||
+                  c == '.' || c == '_');
 
         if (!contains_non_alpha) {
             Node *n = new Node();
@@ -186,8 +186,8 @@ MathExpr::toStr(Node *n, std::string prefix) const
 }
 
 void
-MathExpr::getVariables(
-    const Node *n, std::vector<std::string> &variables) const
+MathExpr::getVariables(const Node *n,
+                       std::vector<std::string> &variables) const
 {
     if (!n || n->op == sValue || n->op == nInvalid) {
         return;

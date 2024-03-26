@@ -39,8 +39,8 @@ namespace Gcn3ISA
 {
 // --- Inst_SOP2 base class methods ---
 
-Inst_SOP2::Inst_SOP2(InFmt_SOP2 *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SOP2::Inst_SOP2(InFmt_SOP2 *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
 
@@ -64,17 +64,17 @@ Inst_SOP2::initOperandInfo()
     // Needed because can't take addr of bitfield
     int reg = instData.SSRC0;
     srcOps.emplace_back(reg, getOperandSize(opNum), true,
-        isScalarReg(instData.SSRC0), false, false);
+                        isScalarReg(instData.SSRC0), false, false);
     opNum++;
 
     reg = instData.SSRC1;
     srcOps.emplace_back(reg, getOperandSize(opNum), true,
-        isScalarReg(instData.SSRC1), false, false);
+                        isScalarReg(instData.SSRC1), false, false);
     opNum++;
 
     reg = instData.SDST;
     dstOps.emplace_back(reg, getOperandSize(opNum), false,
-        isScalarReg(instData.SDST), false, false);
+                        isScalarReg(instData.SDST), false, false);
 
     assert(srcOps.size() == numSrcRegOperands());
     assert(dstOps.size() == numDstRegOperands());
@@ -124,8 +124,8 @@ Inst_SOP2::generateDisassembly()
 
 // --- Inst_SOPK base class methods ---
 
-Inst_SOPK::Inst_SOPK(InFmt_SOPK *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SOPK::Inst_SOPK(InFmt_SOPK *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
 
@@ -151,8 +151,8 @@ Inst_SOPK::initOperandInfo()
     // Needed because can't take addr of bitfield
     int reg = instData.SDST;
     if (numSrcRegOperands() == getNumOperands()) {
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                            false, false);
         opNum++;
     }
 
@@ -162,8 +162,8 @@ Inst_SOPK::initOperandInfo()
 
     if (numDstRegOperands()) {
         reg = instData.SDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, isScalarReg(reg), false, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                            isScalarReg(reg), false, false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -215,8 +215,8 @@ Inst_SOPK::generateDisassembly()
 
 // --- Inst_SOP1 base class methods ---
 
-Inst_SOP1::Inst_SOP1(InFmt_SOP1 *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SOP1::Inst_SOP1(InFmt_SOP1 *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
 
@@ -243,13 +243,13 @@ Inst_SOP1::initOperandInfo()
     int reg = instData.SSRC0;
     if (instData.OP != 0x1C) {
         srcOps.emplace_back(reg, getOperandSize(opNum), true,
-            isScalarReg(instData.SSRC0), false, false);
+                            isScalarReg(instData.SSRC0), false, false);
         opNum++;
     }
 
     reg = instData.SDST;
     dstOps.emplace_back(reg, getOperandSize(opNum), false,
-        isScalarReg(instData.SDST), false, false);
+                        isScalarReg(instData.SDST), false, false);
 
     assert(srcOps.size() == numSrcRegOperands());
     assert(dstOps.size() == numDstRegOperands());
@@ -289,8 +289,8 @@ Inst_SOP1::generateDisassembly()
 
 // --- Inst_SOPC base class methods ---
 
-Inst_SOPC::Inst_SOPC(InFmt_SOPC *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SOPC::Inst_SOPC(InFmt_SOPC *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
 
@@ -316,12 +316,12 @@ Inst_SOPC::initOperandInfo()
     // Needed because can't take addr of bitfield
     int reg = instData.SSRC0;
     srcOps.emplace_back(reg, getOperandSize(opNum), true,
-        isScalarReg(instData.SSRC0), false, false);
+                        isScalarReg(instData.SSRC0), false, false);
     opNum++;
 
     reg = instData.SSRC1;
     srcOps.emplace_back(reg, getOperandSize(opNum), true,
-        isScalarReg(instData.SSRC1), false, false);
+                        isScalarReg(instData.SSRC1), false, false);
 }
 
 int
@@ -367,8 +367,8 @@ Inst_SOPC::generateDisassembly()
 
 // --- Inst_SOPP base class methods ---
 
-Inst_SOPP::Inst_SOPP(InFmt_SOPP *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SOPP::Inst_SOPP(InFmt_SOPP *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
 
@@ -386,14 +386,14 @@ Inst_SOPP::initOperandInfo()
     if (numSrcRegOperands()) {
         // Needed because can't take addr of bitfield
         int reg = instData.SIMM16;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, false, false, true);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, false, false,
+                            true);
 
         opNum++;
 
         if (readsVCC()) {
-            srcOps.emplace_back(
-                REG_VCC_LO, getOperandSize(opNum), true, true, false, false);
+            srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true, true,
+                                false, false);
             opNum++;
         }
     }
@@ -459,8 +459,8 @@ Inst_SOPP::generateDisassembly()
 
 // --- Inst_SMEM base class methods ---
 
-Inst_SMEM::Inst_SMEM(InFmt_SMEM *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_SMEM::Inst_SMEM(InFmt_SMEM *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Scalar);
     setFlag(GlobalSegment);
@@ -493,30 +493,30 @@ Inst_SMEM::initOperandInfo()
         reg = instData.SDATA;
         if (numSrcRegOperands() == getNumOperands()) {
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                isScalarReg(reg), false, false);
+                                isScalarReg(reg), false, false);
             opNum++;
         }
 
         reg = instData.SBASE;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, true, false, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, true, false,
+                            false);
         opNum++;
 
         reg = extData.OFFSET;
         if (instData.IMM) {
-            srcOps.emplace_back(
-                reg, getOperandSize(opNum), true, false, false, true);
+            srcOps.emplace_back(reg, getOperandSize(opNum), true, false, false,
+                                true);
         } else {
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                isScalarReg(reg), false, false);
+                                isScalarReg(reg), false, false);
         }
         opNum++;
     }
 
     if (numDstRegOperands()) {
         reg = instData.SDATA;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, isScalarReg(reg), false, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                            isScalarReg(reg), false, false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -567,8 +567,8 @@ Inst_SMEM::generateDisassembly()
 
 // --- Inst_VOP2 base class methods ---
 
-Inst_VOP2::Inst_VOP2(InFmt_VOP2 *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_VOP2::Inst_VOP2(InFmt_VOP2 *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -597,7 +597,7 @@ Inst_VOP2::initOperandInfo()
     // Needed because can't take addr of bitfield
     int reg = instData.SRC0;
     srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
-        isVectorReg(reg), false);
+                        isVectorReg(reg), false);
     opNum++;
 
     reg = instData.VSRC1;
@@ -606,8 +606,8 @@ Inst_VOP2::initOperandInfo()
 
     // VCC read
     if (readsVCC()) {
-        srcOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), true, true, false, false);
+        srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true, true,
+                            false, false);
         opNum++;
     }
 
@@ -618,8 +618,8 @@ Inst_VOP2::initOperandInfo()
 
     // VCC write
     if (writesVCC()) {
-        dstOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), false, true, false, false);
+        dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false, true,
+                            false, false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -697,8 +697,8 @@ Inst_VOP2::generateDisassembly()
 
 // --- Inst_VOP1 base class methods ---
 
-Inst_VOP1::Inst_VOP1(InFmt_VOP1 *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_VOP1::Inst_VOP1(InFmt_VOP1 *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -728,14 +728,14 @@ Inst_VOP1::initOperandInfo()
 
     if (numSrcRegOperands()) {
         srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
-            isVectorReg(reg), false);
+                            isVectorReg(reg), false);
         opNum++;
     }
 
     if (numDstRegOperands()) {
         reg = instData.VDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -787,8 +787,8 @@ Inst_VOP1::generateDisassembly()
 
 // --- Inst_VOPC base class methods ---
 
-Inst_VOPC::Inst_VOPC(InFmt_VOPC *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_VOPC::Inst_VOPC(InFmt_VOPC *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(WritesVCC);
     // copy first instruction DWORD
@@ -818,7 +818,7 @@ Inst_VOPC::initOperandInfo()
     // Needed because can't take addr of bitfield
     int reg = instData.SRC0;
     srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
-        isVectorReg(reg), false);
+                        isVectorReg(reg), false);
     opNum++;
 
     reg = instData.VSRC1;
@@ -826,8 +826,8 @@ Inst_VOPC::initOperandInfo()
     opNum++;
 
     assert(writesVCC());
-    dstOps.emplace_back(
-        REG_VCC_LO, getOperandSize(opNum), false, true, false, false);
+    dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false, true, false,
+                        false);
 
     assert(srcOps.size() == numSrcRegOperands());
     assert(dstOps.size() == numDstRegOperands());
@@ -872,8 +872,8 @@ Inst_VOPC::generateDisassembly()
 
 // --- Inst_VINTRP base class methods ---
 
-Inst_VINTRP::Inst_VINTRP(InFmt_VINTRP *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_VINTRP::Inst_VINTRP(InFmt_VINTRP *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -889,9 +889,9 @@ Inst_VINTRP::instSize() const
 
 // --- Inst_VOP3 base class methods ---
 
-Inst_VOP3::Inst_VOP3(
-    InFmt_VOP3 *iFmt, const std::string &opcode, bool sgpr_dst) :
-    GCN3GPUStaticInst(opcode), sgprDst(sgpr_dst)
+Inst_VOP3::Inst_VOP3(InFmt_VOP3 *iFmt, const std::string &opcode,
+                     bool sgpr_dst)
+    : GCN3GPUStaticInst(opcode), sgprDst(sgpr_dst)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -915,26 +915,27 @@ Inst_VOP3::initOperandInfo()
 
     for (opNum = 0; opNum < numSrc; opNum++) {
         srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
-            isScalarReg(srcs[opNum]), isVectorReg(srcs[opNum]), false);
+                            isScalarReg(srcs[opNum]), isVectorReg(srcs[opNum]),
+                            false);
     }
 
     if (readsVCC()) {
-        srcOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), true, true, false, false);
+        srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true, true,
+                            false, false);
         opNum++;
     }
 
     if (numDst) {
         // Needed because can't take addr of bitfield
         int reg = instData.VDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, sgprDst, !sgprDst, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, sgprDst,
+                            !sgprDst, false);
         opNum++;
     }
 
     if (writesVCC()) {
-        dstOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), false, true, false, false);
+        dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false, true,
+                            false, false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1003,9 +1004,9 @@ Inst_VOP3::generateDisassembly()
 
 // --- Inst_VOP3_SDST_ENC base class methods ---
 
-Inst_VOP3_SDST_ENC::Inst_VOP3_SDST_ENC(
-    InFmt_VOP3_SDST_ENC *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_VOP3_SDST_ENC::Inst_VOP3_SDST_ENC(InFmt_VOP3_SDST_ENC *iFmt,
+                                       const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -1029,26 +1030,27 @@ Inst_VOP3_SDST_ENC::initOperandInfo()
 
     for (opNum = 0; opNum < numSrc; opNum++) {
         srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
-            isScalarReg(srcs[opNum]), isVectorReg(srcs[opNum]), false);
+                            isScalarReg(srcs[opNum]), isVectorReg(srcs[opNum]),
+                            false);
     }
 
     if (readsVCC()) {
-        srcOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), true, true, false, false);
+        srcOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), true, true,
+                            false, false);
         opNum++;
     }
 
     if (numDst) {
         // Needed because can't take addr of bitfield
         int reg = instData.VDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
         opNum++;
     }
 
     if (writesVCC()) {
-        dstOps.emplace_back(
-            REG_VCC_LO, getOperandSize(opNum), false, true, false, false);
+        dstOps.emplace_back(REG_VCC_LO, getOperandSize(opNum), false, true,
+                            false, false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1106,8 +1108,8 @@ Inst_VOP3_SDST_ENC::generateDisassembly()
 
 // --- Inst_DS base class methods ---
 
-Inst_DS::Inst_DS(InFmt_DS *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_DS::Inst_DS(InFmt_DS *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(GroupSegment);
 
@@ -1128,15 +1130,15 @@ Inst_DS::initOperandInfo()
     int opIdx = 0;
 
     for (opIdx = 0; opIdx < numSrcRegOperands(); opIdx++) {
-        srcOps.emplace_back(
-            srcs[opIdx], getOperandSize(opIdx), true, false, true, false);
+        srcOps.emplace_back(srcs[opIdx], getOperandSize(opIdx), true, false,
+                            true, false);
     }
 
     if (numDstRegOperands()) {
         // Needed because can't take addr of bitfield
         int reg = extData.VDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opIdx), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opIdx), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1184,8 +1186,8 @@ Inst_DS::generateDisassembly()
 
 // --- Inst_MUBUF base class methods ---
 
-Inst_MUBUF::Inst_MUBUF(InFmt_MUBUF *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_MUBUF::Inst_MUBUF(InFmt_MUBUF *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -1217,32 +1219,32 @@ Inst_MUBUF::initOperandInfo()
     if (numSrcRegOperands()) {
         if (numSrcRegOperands() == getNumOperands()) {
             reg = extData.VDATA;
-            srcOps.emplace_back(
-                reg, getOperandSize(opNum), true, false, true, false);
+            srcOps.emplace_back(reg, getOperandSize(opNum), true, false, true,
+                                false);
             opNum++;
         }
 
         reg = extData.VADDR;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, false, true, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, false, true,
+                            false);
         opNum++;
 
         reg = extData.SRSRC;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                            false, false);
         opNum++;
 
         reg = extData.SOFFSET;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                            false, false);
         opNum++;
     }
 
     // extData.VDATA moves in the reg list depending on the instruction
     if (numDstRegOperands()) {
         reg = extData.VDATA;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1274,8 +1276,8 @@ Inst_MUBUF::generateDisassembly()
 
 // --- Inst_MTBUF base class methods ---
 
-Inst_MTBUF::Inst_MTBUF(InFmt_MTBUF *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_MTBUF::Inst_MTBUF(InFmt_MTBUF *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -1305,8 +1307,8 @@ Inst_MTBUF::initOperandInfo()
 
     if (numSrcRegOperands() == getNumOperands()) {
         reg = extData.VDATA;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, false, true, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, false, true,
+                            false);
         opNum++;
     }
 
@@ -1315,20 +1317,20 @@ Inst_MTBUF::initOperandInfo()
     opNum++;
 
     reg = extData.SRSRC;
-    srcOps.emplace_back(
-        reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+    srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                        false, false);
     opNum++;
 
     reg = extData.SOFFSET;
-    srcOps.emplace_back(
-        reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+    srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                        false, false);
     opNum++;
 
     // extData.VDATA moves in the reg list depending on the instruction
     if (numDstRegOperands()) {
         reg = extData.VDATA;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1343,8 +1345,8 @@ Inst_MTBUF::instSize() const
 
 // --- Inst_MIMG base class methods ---
 
-Inst_MIMG::Inst_MIMG(InFmt_MIMG *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_MIMG::Inst_MIMG(InFmt_MIMG *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -1375,8 +1377,8 @@ Inst_MIMG::initOperandInfo()
 
     if (numSrcRegOperands() == getNumOperands()) {
         reg = extData.VDATA;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, false, true, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, false, true,
+                            false);
         opNum++;
     }
 
@@ -1385,22 +1387,22 @@ Inst_MIMG::initOperandInfo()
     opNum++;
 
     reg = extData.SRSRC;
-    srcOps.emplace_back(
-        reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+    srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                        false, false);
     opNum++;
 
     if (getNumOperands() == 4) {
         reg = extData.SSAMP;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, isScalarReg(reg), false, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, isScalarReg(reg),
+                            false, false);
         opNum++;
     }
 
     // extData.VDATA moves in the reg list depending on the instruction
     if (numDstRegOperands()) {
         reg = extData.VDATA;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());
@@ -1415,8 +1417,8 @@ Inst_MIMG::instSize() const
 
 // --- Inst_EXP base class methods ---
 
-Inst_EXP::Inst_EXP(InFmt_EXP *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_EXP::Inst_EXP(InFmt_EXP *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     // copy first instruction DWORD
     instData = iFmt[0];
@@ -1434,12 +1436,12 @@ Inst_EXP::initOperandInfo()
     int opNum = 0;
 
     // Avoids taking addr of bitfield
-    unsigned int srcs[4] = {
-        extData.VSRC0, extData.VSRC1, extData.VSRC2, extData.VSRC3};
+    unsigned int srcs[4] = {extData.VSRC0, extData.VSRC1, extData.VSRC2,
+                            extData.VSRC3};
 
     for (opNum = 0; opNum < 4; opNum++) {
-        srcOps.emplace_back(
-            srcs[opNum], getOperandSize(opNum), true, false, true, false);
+        srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true, false,
+                            true, false);
     }
 
     // TODO: Add the dst operand, don't know what it is right now
@@ -1453,8 +1455,8 @@ Inst_EXP::instSize() const
 
 // --- Inst_FLAT base class methods ---
 
-Inst_FLAT::Inst_FLAT(InFmt_FLAT *iFmt, const std::string &opcode) :
-    GCN3GPUStaticInst(opcode)
+Inst_FLAT::Inst_FLAT(InFmt_FLAT *iFmt, const std::string &opcode)
+    : GCN3GPUStaticInst(opcode)
 {
     setFlag(Flat);
     // copy first instruction DWORD
@@ -1493,15 +1495,15 @@ Inst_FLAT::initOperandInfo()
 
     if (numSrcRegOperands() == 2) {
         reg = extData.DATA;
-        srcOps.emplace_back(
-            reg, getOperandSize(opNum), true, false, true, false);
+        srcOps.emplace_back(reg, getOperandSize(opNum), true, false, true,
+                            false);
         opNum++;
     }
 
     if (numDstRegOperands()) {
         reg = extData.VDST;
-        dstOps.emplace_back(
-            reg, getOperandSize(opNum), false, false, true, false);
+        dstOps.emplace_back(reg, getOperandSize(opNum), false, false, true,
+                            false);
     }
 
     assert(srcOps.size() == numSrcRegOperands());

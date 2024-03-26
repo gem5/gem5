@@ -47,11 +47,12 @@ void registerExitCallback(const std::function<void()> &);
 /// and exit_code parameters are saved in the SimLoopExitEvent to
 /// indicate why the exit occurred.
 void exitSimLoop(const std::string &message, int exit_code = 0,
-    Tick when = curTick(), Tick repeat = 0, bool serialize = false);
+                 Tick when = curTick(), Tick repeat = 0,
+                 bool serialize = false);
 /// Schedule an event as above, but make it high priority so it runs before
 /// any normal events which are schedule at the current time.
 void exitSimLoopNow(const std::string &message, int exit_code = 0,
-    Tick repeat = 0, bool serialize = false);
+                    Tick repeat = 0, bool serialize = false);
 
 } // namespace gem5
 

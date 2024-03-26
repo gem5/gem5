@@ -46,14 +46,14 @@ FsLinux::initState()
 
     if (params().dtb_filename != "") {
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-            params().dtb_addr);
+               params().dtb_addr);
 
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
-        if (!dtb_file->addBootCmdLine(
-                commandLine.c_str(), commandLine.size())) {
+        if (!dtb_file->addBootCmdLine(commandLine.c_str(),
+                                      commandLine.size())) {
             warn("couldn't append bootargs to DTB file: %s\n",
-                params().dtb_filename);
+                 params().dtb_filename);
         }
 
         dtb_file->buildImage()
@@ -115,7 +115,7 @@ BootloaderKernelWorkload::loadBootloader()
         delete bootloader;
 
         inform("Loaded bootloader \'%s\' at 0x%llx\n",
-            params().bootloader_filename, bootloader_addr_offset);
+               params().bootloader_filename, bootloader_addr_offset);
     } else {
         inform("Bootloader is not specified.\n");
     }
@@ -132,7 +132,7 @@ BootloaderKernelWorkload::loadKernel()
         delete kernel;
 
         inform("Loaded kernel \'%s\' at 0x%llx\n", params().object_file,
-            kernel_paddr_offset);
+               kernel_paddr_offset);
     } else {
         inform("Kernel is not specified.\n");
     }
@@ -150,7 +150,7 @@ BootloaderKernelWorkload::loadDtb()
         delete dtb_file;
 
         inform("Loaded DTB \'%s\' at 0x%llx\n", params().dtb_filename,
-            params().dtb_addr);
+               params().dtb_addr);
 
         for (auto *tc : system->threads) {
             tc->setReg(int_reg::A1, params().dtb_addr);

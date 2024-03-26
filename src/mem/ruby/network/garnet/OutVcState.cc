@@ -37,9 +37,9 @@ namespace ruby
 {
 namespace garnet
 {
-OutVcState::OutVcState(
-    int id, GarnetNetwork *network_ptr, uint32_t consumerVcs) :
-    m_time(0)
+OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
+                       uint32_t consumerVcs)
+    : m_time(0)
 {
     m_id = id;
     m_vc_state = IDLE_;

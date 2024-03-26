@@ -107,8 +107,8 @@ class MemChecker : public SimObject
     {
       public:
         Transaction(Serial _serial, Tick _start, Tick _complete,
-            uint8_t _data = DATA_INITIAL) :
-            serial(_serial), start(_start), complete(_complete), data(_data)
+                    uint8_t _data = DATA_INITIAL)
+            : serial(_serial), start(_start), complete(_complete), data(_data)
         {}
 
       public:
@@ -141,11 +141,11 @@ class MemChecker : public SimObject
     class WriteCluster
     {
       public:
-        WriteCluster() :
-            start(TICK_FUTURE),
-            complete(TICK_FUTURE),
-            completeMax(TICK_INITIAL),
-            numIncomplete(0)
+        WriteCluster()
+            : start(TICK_FUTURE),
+              complete(TICK_FUTURE),
+              completeMax(TICK_INITIAL),
+              numIncomplete(0)
         {}
 
         /**
@@ -209,9 +209,9 @@ class MemChecker : public SimObject
     class ByteTracker : public Named
     {
       public:
-        ByteTracker(Addr addr = 0, const MemChecker *parent = NULL) :
-            Named((parent != NULL ? parent->name() : "") +
-                  csprintf(".ByteTracker@%#llx", addr))
+        ByteTracker(Addr addr = 0, const MemChecker *parent = NULL)
+            : Named((parent != NULL ? parent->name() : "") +
+                    csprintf(".ByteTracker@%#llx", addr))
         {
             // The initial transaction has start == complete == TICK_INITIAL,
             // indicating that there has been no real write to this location;
@@ -378,8 +378,8 @@ class MemChecker : public SimObject
     };
 
   public:
-    MemChecker(const MemCheckerParams &p) :
-        SimObject(p), nextSerial(SERIAL_INITIAL)
+    MemChecker(const MemCheckerParams &p)
+        : SimObject(p), nextSerial(SERIAL_INITIAL)
     {}
 
     virtual ~MemChecker() {}
@@ -421,8 +421,8 @@ class MemChecker : public SimObject
      * @return True if the data we received is in the expected set, false
      *         otherwise.
      */
-    bool completeRead(
-        Serial serial, Tick complete, Addr addr, size_t size, uint8_t *data);
+    bool completeRead(Serial serial, Tick complete, Addr addr, size_t size,
+                      uint8_t *data);
 
     /**
      * Completes a previously started write transaction.
@@ -532,9 +532,9 @@ inline MemChecker::Serial
 MemChecker::startRead(Tick start, Addr addr, size_t size)
 {
     DPRINTF(MemChecker,
-        "starting read: serial = %d, start = %d, addr = %#llx, "
-        "size = %d\n",
-        nextSerial, start, addr, size);
+            "starting read: serial = %d, start = %d, addr = %#llx, "
+            "size = %d\n",
+            nextSerial, start, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->startRead(nextSerial, start);
@@ -547,9 +547,9 @@ inline MemChecker::Serial
 MemChecker::startWrite(Tick start, Addr addr, size_t size, const uint8_t *data)
 {
     DPRINTF(MemChecker,
-        "starting write: serial = %d, start = %d, addr = %#llx, "
-        "size = %d\n",
-        nextSerial, start, addr, size);
+            "starting write: serial = %d, start = %d, addr = %#llx, "
+            "size = %d\n",
+            nextSerial, start, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->startWrite(nextSerial, start, data[i]);
@@ -559,13 +559,13 @@ MemChecker::startWrite(Tick start, Addr addr, size_t size, const uint8_t *data)
 }
 
 inline void
-MemChecker::completeWrite(
-    MemChecker::Serial serial, Tick complete, Addr addr, size_t size)
+MemChecker::completeWrite(MemChecker::Serial serial, Tick complete, Addr addr,
+                          size_t size)
 {
     DPRINTF(MemChecker,
-        "completing write: serial = %d, complete = %d, "
-        "addr = %#llx, size = %d\n",
-        serial, complete, addr, size);
+            "completing write: serial = %d, complete = %d, "
+            "addr = %#llx, size = %d\n",
+            serial, complete, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->completeWrite(serial, complete);
@@ -576,8 +576,8 @@ inline void
 MemChecker::abortWrite(MemChecker::Serial serial, Addr addr, size_t size)
 {
     DPRINTF(MemChecker,
-        "aborting write: serial = %d, addr = %#llx, size = %d\n", serial, addr,
-        size);
+            "aborting write: serial = %d, addr = %#llx, size = %d\n", serial,
+            addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->abortWrite(serial);

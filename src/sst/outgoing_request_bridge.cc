@@ -35,19 +35,19 @@
 namespace gem5
 {
 OutgoingRequestBridge::OutgoingRequestBridge(
-    const OutgoingRequestBridgeParams &params) :
-    SimObject(params),
-    outgoingPort(std::string(name()), this),
-    sstResponder(nullptr),
-    physicalAddressRanges(params.physical_address_ranges.begin(),
-        params.physical_address_ranges.end())
+    const OutgoingRequestBridgeParams &params)
+    : SimObject(params),
+      outgoingPort(std::string(name()), this),
+      sstResponder(nullptr),
+      physicalAddressRanges(params.physical_address_ranges.begin(),
+                            params.physical_address_ranges.end())
 {}
 
 OutgoingRequestBridge::~OutgoingRequestBridge() {}
 
 OutgoingRequestBridge::OutgoingRequestPort::OutgoingRequestPort(
-    const std::string &name_, OutgoingRequestBridge *owner_) :
-    ResponsePort(name_)
+    const std::string &name_, OutgoingRequestBridge *owner_)
+    : ResponsePort(name_)
 {
     owner = owner_;
 }

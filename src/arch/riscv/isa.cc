@@ -244,21 +244,21 @@ namespace
 {
 /* Not applicable to RISCV */
 RegClass vecElemClass(VecElemClass, VecElemClassName, 0, debug::IntRegs);
-RegClass vecPredRegClass(
-    VecPredRegClass, VecPredRegClassName, 0, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 0,
+                         debug::IntRegs);
 RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) :
-    BaseISA(p),
-    _rvType(p.riscv_type),
-    checkAlignment(p.check_alignment),
-    enableRvv(p.enable_rvv),
-    vlen(p.vlen),
-    elen(p.elen),
-    _privilegeModeSet(p.privilege_mode_set)
+ISA::ISA(const Params &p)
+    : BaseISA(p),
+      _rvType(p.riscv_type),
+      checkAlignment(p.check_alignment),
+      enableRvv(p.enable_rvv),
+      vlen(p.vlen),
+      elen(p.elen),
+      _privilegeModeSet(p.privilege_mode_set)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -270,7 +270,7 @@ ISA::ISA(const Params &p) :
     _regClasses.push_back(&miscRegClass);
 
     fatal_if(p.vlen < p.elen, "VLEN should be greater or equal",
-        "than ELEN. Ch. 2RISC-V vector spec.");
+             "than ELEN. Ch. 2RISC-V vector spec.");
 
     inform("RVV enabled, VLEN = %d bits, ELEN = %d bits", p.vlen, p.elen);
 
@@ -411,7 +411,7 @@ ISA::readMiscRegNoEffect(RegIndex idx) const
     // Illegal CSR
     panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Reading MiscReg %s (%d): %#x.\n", MiscRegNames[idx],
-        idx, miscRegFile[idx]);
+            idx, miscRegFile[idx]);
     return miscRegFile[idx];
 }
 
@@ -424,7 +424,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_CYCLE:
         if (hpmCounterEnabled(MISCREG_CYCLE)) {
             DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
-                tc->getCpuPtr()->curCycle());
+                    tc->getCpuPtr()->curCycle());
             return static_cast<RegVal>(tc->getCpuPtr()->curCycle());
         } else {
             warn("Cycle counter disabled.\n");
@@ -433,7 +433,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_CYCLEH:
         if (hpmCounterEnabled(MISCREG_CYCLEH)) {
             DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
-                tc->getCpuPtr()->curCycle());
+                    tc->getCpuPtr()->curCycle());
             return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
         } else {
             warn("Cycle counter disabled.\n");
@@ -442,7 +442,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_TIME:
         if (hpmCounterEnabled(MISCREG_TIME)) {
             DPRINTF(RiscvMisc, "Wall-clock counter at: %llu.\n",
-                std::time(nullptr));
+                    std::time(nullptr));
             return readMiscRegNoEffect(MISCREG_TIME);
         } else {
             warn("Wall clock disabled.\n");
@@ -451,7 +451,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_TIMEH:
         if (hpmCounterEnabled(MISCREG_TIMEH)) {
             DPRINTF(RiscvMisc, "Wall-clock counter at: %llu.\n",
-                std::time(nullptr));
+                    std::time(nullptr));
             return readMiscRegNoEffect(MISCREG_TIMEH);
         } else {
             warn("Wall clock disabled.\n");
@@ -460,7 +460,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_INSTRET:
         if (hpmCounterEnabled(MISCREG_INSTRET)) {
             DPRINTF(RiscvMisc, "Instruction counter at: %llu.\n",
-                tc->getCpuPtr()->totalInsts());
+                    tc->getCpuPtr()->totalInsts());
             return static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
         } else {
             warn("Instruction counter disabled.\n");
@@ -469,7 +469,7 @@ ISA::readMiscReg(RegIndex idx)
     case MISCREG_INSTRETH:
         if (hpmCounterEnabled(MISCREG_INSTRETH)) {
             DPRINTF(RiscvMisc, "Instruction counter at: %llu.\n",
-                tc->getCpuPtr()->totalInsts());
+                    tc->getCpuPtr()->totalInsts());
             return bits<RegVal>(tc->getCpuPtr()->totalInsts(), 63, 32);
         } else {
             warn("Instruction counter disabled.\n");
@@ -568,7 +568,7 @@ ISA::readMiscReg(RegIndex idx)
         if (idx >= MISCREG_HPMCOUNTER03 && idx <= MISCREG_HPMCOUNTER31) {
             if (hpmCounterEnabled(idx)) {
                 DPRINTF(RiscvMisc, "HPM counter %d: %llu.\n",
-                    idx - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
+                        idx - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
                 return tc->getCpuPtr()->curCycle();
             } else {
                 warn("HPM counter %d disabled.\n", idx - MISCREG_CYCLE);
@@ -578,7 +578,7 @@ ISA::readMiscReg(RegIndex idx)
                    idx <= MISCREG_HPMCOUNTER31H) {
             if (hpmCounterEnabled(idx)) {
                 DPRINTF(RiscvMisc, "HPM counter %d: %llu.\n",
-                    idx - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
+                        idx - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
                 return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
             } else {
                 warn("HPM counter %d disabled.\n", idx - MISCREG_CYCLE);
@@ -595,7 +595,7 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
     // Illegal CSR
     panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Setting MiscReg %s (%d) to %#x.\n", MiscRegNames[idx],
-        idx, val);
+            idx, val);
     miscRegFile[idx] = val;
 }
 
@@ -773,7 +773,7 @@ ISA::handleLockedRead(const RequestPtr &req)
 
     load_reservation_addr = req->getPaddr();
     DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n", req->contextId(),
-        req->getPaddr());
+            req->getPaddr());
 }
 
 bool
@@ -788,12 +788,12 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
     // be switched in the instruction's implementation)
 
     DPRINTF(LLSC, "[cid:%d]: load_reservation_addrs empty? %s.\n",
-        req->contextId(), lr_addr_empty ? "yes" : "no");
+            req->contextId(), lr_addr_empty ? "yes" : "no");
     if (!lr_addr_empty) {
         DPRINTF(LLSC, "[cid:%d]: addr = %x.\n", req->contextId(),
-            req->getPaddr() & cacheBlockMask);
+                req->getPaddr() & cacheBlockMask);
         DPRINTF(LLSC, "[cid:%d]: last locked addr = %x.\n", req->contextId(),
-            load_reservation_addr & cacheBlockMask);
+                load_reservation_addr & cacheBlockMask);
     }
     if (lr_addr_empty || (load_reservation_addr & cacheBlockMask) !=
                              ((req->getPaddr() & cacheBlockMask))) {
@@ -802,7 +802,7 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
         tc->setStCondFailures(++stCondFailures);
         if (stCondFailures % WARN_FAILURE == 0) {
             warn("%i: context %d: %d consecutive SC failures.\n", curTick(),
-                tc->contextId(), stCondFailures);
+                 tc->contextId(), stCondFailures);
         }
 
         // Must clear any reservations
@@ -818,7 +818,7 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
     load_reservation_addr = INVALID_RESERVATION_ADDR;
 
     DPRINTF(LLSC, "[cid:%d]: SC success! Current locked addr = %x.\n",
-        req->contextId(), load_reservation_addr & cacheBlockMask);
+            req->contextId(), load_reservation_addr & cacheBlockMask);
     return true;
 }
 

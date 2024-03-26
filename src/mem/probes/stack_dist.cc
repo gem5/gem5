@@ -42,32 +42,32 @@
 
 namespace gem5
 {
-StackDistProbe::StackDistProbe(const StackDistProbeParams &p) :
-    BaseMemProbe(p),
-    lineSize(p.line_size),
-    disableLinearHists(p.disable_linear_hists),
-    disableLogHists(p.disable_log_hists),
-    calc(p.verify),
-    stats(this)
+StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
+    : BaseMemProbe(p),
+      lineSize(p.line_size),
+      disableLinearHists(p.disable_linear_hists),
+      disableLogHists(p.disable_log_hists),
+      calc(p.verify),
+      stats(this)
 {
     fatal_if(p.system->cacheLineSize() > p.line_size,
-        "The stack distance probe must use a cache line size that is "
-        "larger or equal to the system's cahce line size.");
+             "The stack distance probe must use a cache line size that is "
+             "larger or equal to the system's cahce line size.");
 }
 
 StackDistProbe::StackDistProbeStats::StackDistProbeStats(
-    StackDistProbe *parent) :
-    statistics::Group(parent),
-    ADD_STAT(readLinearHist, statistics::units::Count::get(),
-        "Reads linear distribution"),
-    ADD_STAT(readLogHist, statistics::units::Ratio::get(),
-        "Reads logarithmic distribution"),
-    ADD_STAT(writeLinearHist, statistics::units::Count::get(),
-        "Writes linear distribution"),
-    ADD_STAT(writeLogHist, statistics::units::Ratio::get(),
-        "Writes logarithmic distribution"),
-    ADD_STAT(infiniteSD, statistics::units::Count::get(),
-        "Number of requests with infinite stack distance")
+    StackDistProbe *parent)
+    : statistics::Group(parent),
+      ADD_STAT(readLinearHist, statistics::units::Count::get(),
+               "Reads linear distribution"),
+      ADD_STAT(readLogHist, statistics::units::Ratio::get(),
+               "Reads logarithmic distribution"),
+      ADD_STAT(writeLinearHist, statistics::units::Count::get(),
+               "Writes linear distribution"),
+      ADD_STAT(writeLogHist, statistics::units::Ratio::get(),
+               "Writes logarithmic distribution"),
+      ADD_STAT(infiniteSD, statistics::units::Count::get(),
+               "Number of requests with infinite stack distance")
 {
     using namespace statistics;
 

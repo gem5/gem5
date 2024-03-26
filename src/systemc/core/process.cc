@@ -120,8 +120,8 @@ Process::disable(bool inc_kids)
         timeoutEvent.scheduled()) {
         std::string message("attempt to disable a thread with timeout wait: ");
         message += name();
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_, message.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_,
+                        message.c_str());
     }
 
     if (!_terminated)
@@ -142,8 +142,8 @@ void
 Process::kill(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_, name());
+        SC_REPORT_ERROR(sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_,
+                        name());
     }
 
     // Propogate the kill to our children no matter what happens to us.
@@ -170,8 +170,8 @@ void
 Process::reset(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_, name());
+        SC_REPORT_ERROR(sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_,
+                        name());
     }
 
     // Propogate the reset to our children no matter what happens to us.
@@ -380,27 +380,27 @@ Process::lastReport() const
     return _lastReport.get();
 }
 
-Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
-    ::sc_core::sc_process_b(name),
-    excWrapper(nullptr),
-    timeoutEvent([this]() { this->timeout(); }),
-    func(func),
-    _internal(internal),
-    _timedOut(false),
-    _dontInitialize(false),
-    _needsStart(true),
-    _isUnwinding(false),
-    _terminated(false),
-    _scheduled(false),
-    _suspended(false),
-    _disabled(false),
-    _syncReset(false),
-    syncResetCount(0),
-    asyncResetCount(0),
-    _waitCount(0),
-    refCount(0),
-    stackSize(gem5::Fiber::DefaultStackSize),
-    dynamicSensitivity(nullptr)
+Process::Process(const char *name, ProcessFuncWrapper *func, bool internal)
+    : ::sc_core::sc_process_b(name),
+      excWrapper(nullptr),
+      timeoutEvent([this]() { this->timeout(); }),
+      func(func),
+      _internal(internal),
+      _timedOut(false),
+      _dontInitialize(false),
+      _needsStart(true),
+      _isUnwinding(false),
+      _terminated(false),
+      _scheduled(false),
+      _suspended(false),
+      _disabled(false),
+      _syncReset(false),
+      syncResetCount(0),
+      asyncResetCount(0),
+      _waitCount(0),
+      refCount(0),
+      stackSize(gem5::Fiber::DefaultStackSize),
+      dynamicSensitivity(nullptr)
 {
     _dynamic =
         (::sc_core::sc_get_status() > ::sc_core::SC_BEFORE_END_OF_ELABORATION);

@@ -112,12 +112,12 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     // port
     if (!reqLayers[mem_side_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x BUSY\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
     DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x\n",
-        src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -146,14 +146,14 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     if (!success) {
         DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // restore the header delay as it is additive
         pkt->headerDelay = old_header_delay;
 
         // occupy until the header is sent
-        reqLayers[mem_side_port_id]->failedTiming(
-            src_port, clockEdge(Cycles(1)));
+        reqLayers[mem_side_port_id]->failedTiming(src_port,
+                                                  clockEdge(Cycles(1)));
 
         return false;
     }
@@ -191,12 +191,12 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID mem_side_port_id)
     // port
     if (!respLayers[cpu_side_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x BUSY\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+                src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
     DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x\n",
-        src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -241,12 +241,12 @@ NoncoherentXBar::recvReqRetry(PortID mem_side_port_id)
 }
 
 Tick
-NoncoherentXBar::recvAtomicBackdoor(
-    PacketPtr pkt, PortID cpu_side_port_id, MemBackdoorPtr *backdoor)
+NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
+                                    MemBackdoorPtr *backdoor)
 {
     DPRINTF(NoncoherentXBar, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
-        cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
-        pkt->cmdString());
+            cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
+            pkt->cmdString());
 
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
@@ -282,8 +282,8 @@ NoncoherentXBar::recvAtomicBackdoor(
 }
 
 void
-NoncoherentXBar::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+NoncoherentXBar::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                    MemBackdoorPtr &backdoor)
 {
     PortID dest_id = findPort(req.range());
     memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
@@ -295,9 +295,9 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
     if (!pkt->isPrint()) {
         // don't do DPRINTFs on PrintReq as it clutters up the output
         DPRINTF(NoncoherentXBar,
-            "recvFunctional: packet src %s addr 0x%x cmd %s\n",
-            cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
-            pkt->cmdString());
+                "recvFunctional: packet src %s addr 0x%x cmd %s\n",
+                cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
+                pkt->cmdString());
     }
 
     // since our CPU-side ports are queued ports we need to check them as well

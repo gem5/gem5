@@ -142,8 +142,8 @@ class PacketQueue : public Drainable
      *        on the size of the transmitList. The check is enabled by default.
      */
     PacketQueue(EventManager &_em, const std::string &_label,
-        const std::string &_sendEventName, bool force_order = false,
-        bool disable_sanity_check = false);
+                const std::string &_sendEventName, bool force_order = false,
+                bool disable_sanity_check = false);
 
     /**
      * Virtual desctructor since the class may be used as a base class.
@@ -255,7 +255,7 @@ class ReqPacketQueue : public PacketQueue
      * @param _label Label to push on the label stack for print request packets
      */
     ReqPacketQueue(EventManager &_em, RequestPort &_mem_side_port,
-        const std::string _label = "ReqPacketQueue");
+                   const std::string _label = "ReqPacketQueue");
 
     virtual ~ReqPacketQueue() {}
 
@@ -293,8 +293,8 @@ class SnoopRespPacketQueue : public PacketQueue
      * @param _label Label to push on the label stack for print request packets
      */
     SnoopRespPacketQueue(EventManager &_em, RequestPort &_mem_side_port,
-        bool force_order = false,
-        const std::string _label = "SnoopRespPacketQueue");
+                         bool force_order = false,
+                         const std::string _label = "SnoopRespPacketQueue");
 
     virtual ~SnoopRespPacketQueue() {}
 
@@ -332,8 +332,8 @@ class RespPacketQueue : public PacketQueue
      * @param _label Label to push on the label stack for print request packets
      */
     RespPacketQueue(EventManager &_em, ResponsePort &_cpu_side_port,
-        bool force_order = false,
-        const std::string _label = "RespPacketQueue");
+                    bool force_order = false,
+                    const std::string _label = "RespPacketQueue");
 
     virtual ~RespPacketQueue() {}
 

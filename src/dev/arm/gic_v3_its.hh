@@ -92,8 +92,8 @@ class Gicv3Its : public BasicPioDevice
         Gicv3Its &its;
 
       public:
-        DataPort(const std::string &_name, Gicv3Its &_its) :
-            RequestPort(_name), its(_its)
+        DataPort(const std::string &_name, Gicv3Its &_its)
+            : RequestPort(_name), its(_its)
         {}
 
         virtual ~DataPort() {}
@@ -381,16 +381,16 @@ class ItsProcess : public Packet::SenderState
 
     void writeDeviceTable(Yield &yield, uint32_t device_id, DTE dte);
 
-    void writeIrqTranslationTable(
-        Yield &yield, const Addr itt_base, uint32_t event_id, ITTE itte);
+    void writeIrqTranslationTable(Yield &yield, const Addr itt_base,
+                                  uint32_t event_id, ITTE itte);
 
-    void writeIrqCollectionTable(
-        Yield &yield, uint32_t collection_id, CTE cte);
+    void writeIrqCollectionTable(Yield &yield, uint32_t collection_id,
+                                 CTE cte);
 
     uint64_t readDeviceTable(Yield &yield, uint32_t device_id);
 
-    uint64_t readIrqTranslationTable(
-        Yield &yield, const Addr itt_base, uint32_t event_id);
+    uint64_t readIrqTranslationTable(Yield &yield, const Addr itt_base,
+                                     uint32_t event_id);
 
     uint64_t readIrqCollectionTable(Yield &yield, uint32_t collection_id);
 
@@ -420,8 +420,8 @@ class ItsTranslation : public ItsProcess
   protected:
     void main(Yield &yield) override;
 
-    std::pair<uint32_t, Gicv3Redistributor *> translateLPI(
-        Yield &yield, uint32_t device_id, uint32_t event_id);
+    std::pair<uint32_t, Gicv3Redistributor *>
+    translateLPI(Yield &yield, uint32_t device_id, uint32_t event_id);
 };
 
 /**
@@ -484,8 +484,8 @@ class ItsCommand : public ItsProcess
         using ExecFn =
             std::function<void(ItsCommand *, Yield &, CommandEntry &)>;
 
-        DispatchEntry(std::string _name, ExecFn _exec) :
-            name(_name), exec(_exec)
+        DispatchEntry(std::string _name, ExecFn _exec)
+            : name(_name), exec(_exec)
         {}
 
         std::string name;
@@ -494,7 +494,7 @@ class ItsCommand : public ItsProcess
 
     using DispatchTable =
         std::unordered_map<std::underlying_type<enum CommandType>::type,
-            DispatchEntry>;
+                           DispatchEntry>;
 
     static DispatchTable cmdDispatcher;
 

@@ -45,8 +45,8 @@
 
 namespace gem5
 {
-StackDistCalc::StackDistCalc(bool verify_stack) :
-    index(0), verifyStack(verify_stack)
+StackDistCalc::StackDistCalc(bool verify_stack)
+    : index(0), verifyStack(verify_stack)
 {
     // Instantiate a new root and leaf layer
     // Map type variable, representing a layer in the tree
@@ -97,7 +97,8 @@ StackDistCalc::~StackDistCalc()
 // are not used anymore.
 uint64_t
 StackDistCalc::updateSum(Node *node, bool from_left, uint64_t sum_from_below,
-    uint64_t level, uint64_t stack_dist, bool discard_node)
+                         uint64_t level, uint64_t stack_dist,
+                         bool discard_node)
 {
     ++level;
 
@@ -120,14 +121,14 @@ StackDistCalc::updateSum(Node *node, bool from_left, uint64_t sum_from_below,
         // have 8 leaves (4 to the left and 4 to the right)
         // thus left_sum and right_sum should be <= 4
         panic_if(node_sum_l > (1 << (level - 1)),
-            "Error in sum left of level %ul, node index %ull, "
-            "Sum =  %ull \n",
-            level, node_n_index, node_sum_l);
+                 "Error in sum left of level %ul, node index %ull, "
+                 "Sum =  %ull \n",
+                 level, node_n_index, node_sum_l);
 
         panic_if(node_sum_r > (1 << (level - 1)),
-            "Error in sum right of level %ul, node index %ull, "
-            "Sum =  %ull \n",
-            level, node_n_index, node_sum_r);
+                 "Error in sum right of level %ul, node index %ull, "
+                 "Sum =  %ull \n",
+                 level, node_n_index, node_sum_r);
     }
 
     // Update the left sum or the right sum depending on the
@@ -173,8 +174,9 @@ StackDistCalc::updateSum(Node *node, bool from_left, uint64_t sum_from_below,
     // Recursively call the updateSum operation till the
     // root node is reached
     if (node_parent_ptr) {
-        stack_dist = updateSum(node_parent_ptr, node_left,
-            node_sum_l + node_sum_r, level, stack_dist, discard_node);
+        stack_dist =
+            updateSum(node_parent_ptr, node_left, node_sum_l + node_sum_r,
+                      level, stack_dist, discard_node);
     }
 
     return stack_dist;
@@ -192,14 +194,14 @@ StackDistCalc::updateSumsLeavesToRoot(Node *node, bool is_new_leaf)
 
     if (is_new_leaf) {
         node->sumLeft = 1;
-        updateSum(
-            node->parent, node->isLeftNode, node->sumLeft, level, 0, false);
+        updateSum(node->parent, node->isLeftNode, node->sumLeft, level, 0,
+                  false);
 
         stack_dist = Infinity;
     } else {
         node->sumLeft = 0;
-        stack_dist = updateSum(
-            node->parent, node->isLeftNode, 0, level, stack_dist, true);
+        stack_dist = updateSum(node->parent, node->isLeftNode, 0, level,
+                               stack_dist, true);
     }
 
     return stack_dist;
@@ -209,7 +211,7 @@ StackDistCalc::updateSumsLeavesToRoot(Node *node, bool is_new_leaf)
 // the node sums till the root.
 uint64_t
 StackDistCalc::getSum(Node *node, bool from_left, uint64_t sum_from_below,
-    uint64_t stack_dist, uint64_t level) const
+                      uint64_t stack_dist, uint64_t level) const
 {
     ++level;
     // Variable stack_dist is updated only
@@ -222,7 +224,7 @@ StackDistCalc::getSum(Node *node, bool from_left, uint64_t sum_from_below,
     // root node is reached
     if (node->parent) {
         stack_dist = getSum(node->parent, node->isLeftNode,
-            node->sumLeft + node->sumRight, stack_dist, level);
+                            node->sumLeft + node->sumRight, stack_dist, level);
     }
 
     return stack_dist;
@@ -437,9 +439,9 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
             // Push the same element in debug stack, and check
             uint64_t verify_stack_dist = verifyStackDist(r_address, true);
             panic_if(verify_stack_dist != stack_dist,
-                "Expected stack-distance for address \
+                     "Expected stack-distance for address \
                              %#lx is %#lx but found %#lx",
-                r_address, verify_stack_dist, stack_dist);
+                     r_address, verify_stack_dist, stack_dist);
             printStack();
         }
 
@@ -495,9 +497,9 @@ StackDistCalc::calcStackDist(const Addr r_address, bool mark)
         // Calculate the SD of the same address in the debug stack
         uint64_t verify_stack_dist = verifyStackDist(r_address);
         panic_if(verify_stack_dist != stack_dist,
-            "Expected stack-distance for address \
+                 "Expected stack-distance for address \
                              %#lx is %#lx but found %#lx",
-            r_address, verify_stack_dist, stack_dist);
+                 r_address, verify_stack_dist, stack_dist);
 
         printStack();
     }
@@ -514,13 +516,13 @@ StackDistCalc::sanityCheckTree(const Node *node, uint64_t level) const
 
     for (uint64_t i = level + 1; i < getTreeDepth() - level; ++i) {
         next_up = next_up->parent;
-        panic_if(
-            !next_up, "Sanity check failed for node %ull \n", node->nodeIndex);
+        panic_if(!next_up, "Sanity check failed for node %ull \n",
+                 node->nodeIndex);
     }
 
     // At the root layer the parent_ptr should be null
     panic_if(next_up->parent, "Sanity check failed for node %ull \n",
-        node->nodeIndex);
+             node->nodeIndex);
 }
 
 // This method can be called to compute the stack distance in a naive
@@ -576,7 +578,7 @@ StackDistCalc::printStack(int n) const
         for (auto ai = aiMap.rbegin(); ai != aiMap.rend(); ++ai) {
             if (ai->second == r_index) {
                 DPRINTF(StackDist, "Tree leaves, Rightmost-[%d] = %#lx\n",
-                    count, ai->first);
+                        count, ai->first);
                 break;
             }
         }

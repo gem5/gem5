@@ -38,20 +38,20 @@ namespace gem5
 {
 namespace prefetch
 {
-PIF::PIF(const PIFPrefetcherParams &p) :
-    Queued(p),
-    precSize(p.prec_spatial_region_bits),
-    succSize(p.succ_spatial_region_bits),
-    maxCompactorEntries(p.compactor_entries),
-    historyBuffer(p.history_buffer_size),
-    index(p.index_assoc, p.index_entries, p.index_indexing_policy,
-        p.index_replacement_policy),
-    streamAddressBuffer(p.stream_address_buffer_entries),
-    listenersPC()
+PIF::PIF(const PIFPrefetcherParams &p)
+    : Queued(p),
+      precSize(p.prec_spatial_region_bits),
+      succSize(p.succ_spatial_region_bits),
+      maxCompactorEntries(p.compactor_entries),
+      historyBuffer(p.history_buffer_size),
+      index(p.index_assoc, p.index_entries, p.index_indexing_policy,
+            p.index_replacement_policy),
+      streamAddressBuffer(p.stream_address_buffer_entries),
+      listenersPC()
 {}
 
-PIF::CompactorEntry::CompactorEntry(
-    Addr addr, unsigned int prec_size, unsigned int succ_size)
+PIF::CompactorEntry::CompactorEntry(Addr addr, unsigned int prec_size,
+                                    unsigned int succ_size)
 {
     trigger = addr;
     prec.resize(prec_size, false);
@@ -59,8 +59,8 @@ PIF::CompactorEntry::CompactorEntry(
 }
 
 Addr
-PIF::CompactorEntry::distanceFromTrigger(
-    Addr target, unsigned int log_blk_size) const
+PIF::CompactorEntry::distanceFromTrigger(Addr target,
+                                         unsigned int log_blk_size) const
 {
     const Addr target_blk = target >> log_blk_size;
     const Addr trigger_blk = trigger >> log_blk_size;
@@ -70,8 +70,8 @@ PIF::CompactorEntry::distanceFromTrigger(
 }
 
 bool
-PIF::CompactorEntry::inSameSpatialRegion(
-    Addr pc, unsigned int log_blk_size, bool update)
+PIF::CompactorEntry::inSameSpatialRegion(Addr pc, unsigned int log_blk_size,
+                                         bool update)
 {
     Addr blk_distance = distanceFromTrigger(pc, log_blk_size);
 
@@ -178,8 +178,8 @@ PIF::notifyRetiredInst(const Addr pc)
                 } else {
                     idx_entry = index.findVictim(spatialCompactor.trigger);
                     assert(idx_entry != nullptr);
-                    index.insertEntry(
-                        spatialCompactor.trigger, false, idx_entry);
+                    index.insertEntry(spatialCompactor.trigger, false,
+                                      idx_entry);
                 }
                 idx_entry->historyIt =
                     historyBuffer.getIterator(historyBuffer.tail());
@@ -193,7 +193,8 @@ PIF::notifyRetiredInst(const Addr pc)
 
 void
 PIF::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                       std::vector<AddrPriority> &addresses,
+                       const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         return;

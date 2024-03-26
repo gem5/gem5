@@ -72,8 +72,8 @@ class MemTest : public ClockedObject
     typedef MemTestParams Params;
     MemTest(const Params &p);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   protected:
     void tick();
@@ -93,8 +93,8 @@ class MemTest : public ClockedObject
         MemTest &memtest;
 
       public:
-        CpuPort(const std::string &_name, MemTest &_memtest) :
-            RequestPort(_name), memtest(_memtest)
+        CpuPort(const std::string &_name, MemTest &_memtest)
+            : RequestPort(_name), memtest(_memtest)
         {}
 
       protected:

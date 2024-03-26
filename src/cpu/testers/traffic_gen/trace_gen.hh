@@ -154,12 +154,12 @@ class TraceGen : public BaseGen
      * @param addr_offset Positive offset to add to trace address
      */
     TraceGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-        const std::string &trace_file, Addr addr_offset) :
-        BaseGen(obj, requestor_id, _duration),
-        trace(trace_file),
-        tickOffset(0),
-        addrOffset(addr_offset),
-        traceComplete(false)
+             const std::string &trace_file, Addr addr_offset)
+        : BaseGen(obj, requestor_id, _duration),
+          trace(trace_file),
+          tickOffset(0),
+          addrOffset(addr_offset),
+          traceComplete(false)
     {}
 
     void enter();

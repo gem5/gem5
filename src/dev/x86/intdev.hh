@@ -59,9 +59,8 @@ class IntResponsePort : public SimpleTimingPort
     Device *device;
 
   public:
-    IntResponsePort(
-        const std::string &_name, SimObject *_parent, Device *dev) :
-        SimpleTimingPort(_name, _parent), device(dev)
+    IntResponsePort(const std::string &_name, SimObject *_parent, Device *dev)
+        : SimpleTimingPort(_name, _parent), device(dev)
     {}
 
     AddrRangeList
@@ -74,8 +73,8 @@ class IntResponsePort : public SimpleTimingPort
     recvAtomic(PacketPtr pkt)
     {
         panic_if(pkt->cmd != MemCmd::WriteReq,
-            "%s received unexpected command %s from %s.\n", name(),
-            pkt->cmd.toString(), getPeer());
+                 "%s received unexpected command %s from %s.\n", name(),
+                 pkt->cmd.toString(), getPeer());
         pkt->headerDelay = pkt->payloadDelay = 0;
         return device->recvMessage(pkt);
     }
@@ -118,12 +117,12 @@ class IntRequestPort : public QueuedRequestPort
 
   public:
     IntRequestPort(const std::string &_name, SimObject *_parent, Device *dev,
-        Tick _latency) :
-        QueuedRequestPort(_name, reqQueue, snoopRespQueue),
-        reqQueue(*_parent, *this),
-        snoopRespQueue(*_parent, *this),
-        device(dev),
-        latency(_latency)
+                   Tick _latency)
+        : QueuedRequestPort(_name, reqQueue, snoopRespQueue),
+          reqQueue(*_parent, *this),
+          snoopRespQueue(*_parent, *this),
+          device(dev),
+          latency(_latency)
     {}
 
     bool
@@ -138,7 +137,7 @@ class IntRequestPort : public QueuedRequestPort
 
     void
     sendMessage(PacketPtr pkt, bool timing,
-        OnCompletionFunc func = defaultOnCompletion)
+                OnCompletionFunc func = defaultOnCompletion)
     {
         if (timing) {
             pkt->pushSenderState(new OnCompletion(func));

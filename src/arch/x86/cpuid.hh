@@ -79,8 +79,8 @@ struct CpuidResult
 
     // These are not in alphebetical order on purpose. The order reflects
     // how the CPUID orders the registers when it returns results.
-    CpuidResult(uint64_t _rax, uint64_t _rbx, uint64_t _rdx, uint64_t _rcx) :
-        rax(_rax), rbx(_rbx), rcx(_rcx), rdx(_rdx)
+    CpuidResult(uint64_t _rax, uint64_t _rbx, uint64_t _rdx, uint64_t _rcx)
+        : rax(_rax), rbx(_rbx), rcx(_rcx), rdx(_rdx)
     {}
 
     CpuidResult() {}
@@ -95,7 +95,7 @@ class X86CPUID
     void addExtendedFunc(uint32_t func, std::vector<uint32_t> values);
 
     bool doCpuid(ThreadContext *tc, uint32_t function, uint32_t index,
-        CpuidResult &result);
+                 CpuidResult &result);
     bool hasSignificantIndex(uint32_t function);
 
   private:

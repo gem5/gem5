@@ -68,11 +68,11 @@ class WaitClass
   public:
     WaitClass() : nxtAvail(0), lookAheadAvail(0), clockedObject(nullptr) {}
 
-    WaitClass(ClockedObject *_clockedObject, uint64_t _numStages = 0) :
-        nxtAvail(0),
-        lookAheadAvail(0),
-        clockedObject(_clockedObject),
-        numStages(_numStages)
+    WaitClass(ClockedObject *_clockedObject, uint64_t _numStages = 0)
+        : nxtAvail(0),
+          lookAheadAvail(0),
+          clockedObject(_clockedObject),
+          numStages(_numStages)
     {}
 
     void
@@ -86,7 +86,7 @@ class WaitClass
     set(uint64_t i)
     {
         fatal_if(nxtAvail > clockedObject->clockEdge(),
-            "Can't allocate resource because it is busy!!!");
+                 "Can't allocate resource because it is busy!!!");
         nxtAvail = clockedObject->clockEdge() + i;
     }
     void

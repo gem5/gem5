@@ -37,9 +37,10 @@ namespace gem5
 namespace fastmodel
 {
 CortexR52TC::CortexR52TC(gem5::BaseCPU *cpu, int id, System *system,
-    gem5::BaseMMU *mmu, gem5::BaseISA *isa,
-    iris::IrisConnectionInterface *iris_if, const std::string &iris_path) :
-    ThreadContext(cpu, id, system, mmu, isa, iris_if, iris_path)
+                         gem5::BaseMMU *mmu, gem5::BaseISA *isa,
+                         iris::IrisConnectionInterface *iris_if,
+                         const std::string &iris_path)
+    : ThreadContext(cpu, id, system, mmu, isa, iris_if, iris_path)
 {}
 
 bool
@@ -142,13 +143,14 @@ CortexR52TC::getBpSpaceIds() const
                 bpSpaceIds.push_back(id);
         }
         panic_if(bpSpaceIds.empty(),
-            "Unable to find address space(s) for breakpoints.");
+                 "Unable to find address space(s) for breakpoints.");
     }
     return bpSpaceIds;
 }
 
 Iris::ThreadContext::IdxNameMap CortexR52TC::miscRegIdxNameMap({
-    {ArmISA::MISCREG_CPSR, "CPSR"}, {ArmISA::MISCREG_SPSR, "SPSR"},
+    {ArmISA::MISCREG_CPSR, "CPSR"},
+    {ArmISA::MISCREG_SPSR, "SPSR"},
     // ArmISA::MISCREG_SPSR_FIQ?
     // ArmISA::MISCREG_SPSR_IRQ?
     // ArmISA::MISCREG_SPSR_SVC?
@@ -782,15 +784,23 @@ Iris::ThreadContext::IdxNameMap CortexR52TC::miscRegIdxNameMap({
     // ArmISA::MISCREG_VDISR_EL2?
 });
 
-Iris::ThreadContext::IdxNameMap CortexR52TC::intReg32IdxNameMap(
-    {{ArmISA::int_reg::R0, "R0"}, {ArmISA::int_reg::R1, "R1"},
-        {ArmISA::int_reg::R2, "R2"}, {ArmISA::int_reg::R3, "R3"},
-        {ArmISA::int_reg::R4, "R4"}, {ArmISA::int_reg::R5, "R5"},
-        {ArmISA::int_reg::R6, "R6"}, {ArmISA::int_reg::R7, "R7"},
-        {ArmISA::int_reg::R8, "R8"}, {ArmISA::int_reg::R9, "R9"},
-        {ArmISA::int_reg::R10, "R10"}, {ArmISA::int_reg::R11, "R11"},
-        {ArmISA::int_reg::R12, "R12"}, {ArmISA::int_reg::R13, "R13"},
-        {ArmISA::int_reg::R14, "R14"}, {ArmISA::int_reg::R15, "R15"}});
+Iris::ThreadContext::IdxNameMap
+    CortexR52TC::intReg32IdxNameMap({{ArmISA::int_reg::R0, "R0"},
+                                     {ArmISA::int_reg::R1, "R1"},
+                                     {ArmISA::int_reg::R2, "R2"},
+                                     {ArmISA::int_reg::R3, "R3"},
+                                     {ArmISA::int_reg::R4, "R4"},
+                                     {ArmISA::int_reg::R5, "R5"},
+                                     {ArmISA::int_reg::R6, "R6"},
+                                     {ArmISA::int_reg::R7, "R7"},
+                                     {ArmISA::int_reg::R8, "R8"},
+                                     {ArmISA::int_reg::R9, "R9"},
+                                     {ArmISA::int_reg::R10, "R10"},
+                                     {ArmISA::int_reg::R11, "R11"},
+                                     {ArmISA::int_reg::R12, "R12"},
+                                     {ArmISA::int_reg::R13, "R13"},
+                                     {ArmISA::int_reg::R14, "R14"},
+                                     {ArmISA::int_reg::R15, "R15"}});
 
 Iris::ThreadContext::IdxNameMap CortexR52TC::ccRegIdxNameMap({
     {ArmISA::cc_reg::Nz, "CPSR"},

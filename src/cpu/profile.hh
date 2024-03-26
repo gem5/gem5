@@ -110,15 +110,15 @@ class BaseStackTrace
     //
     // It should return whether addr was recognized and symbol has been set to
     // something.
-    virtual bool tryGetSymbol(
-        std::string &symbol, Addr addr, const loader::SymbolTable *symtab);
+    virtual bool tryGetSymbol(std::string &symbol, Addr addr,
+                              const loader::SymbolTable *symtab);
 
     void
-    getSymbol(
-        std::string &symbol, Addr addr, const loader::SymbolTable *symtab)
+    getSymbol(std::string &symbol, Addr addr,
+              const loader::SymbolTable *symtab)
     {
         panic_if(!tryGetSymbol(symbol, addr, symtab),
-            "Could not find symbol for address %#x\n", addr);
+                 "Could not find symbol for address %#x\n", addr);
     }
 };
 
@@ -135,7 +135,7 @@ class ProfileNode
 
   public:
     void dump(const std::string &symbol, uint64_t id,
-        const FunctionProfile &prof, std::ostream &os) const;
+              const FunctionProfile &prof, std::ostream &os) const;
     void clear();
 };
 
@@ -151,7 +151,7 @@ class FunctionProfile
 
   public:
     FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
-        const loader::SymbolTable &symtab);
+                    const loader::SymbolTable &symtab);
 
     ProfileNode *consume(ThreadContext *tc, const StaticInstPtr &inst);
     ProfileNode *consume(const std::vector<Addr> &stack);

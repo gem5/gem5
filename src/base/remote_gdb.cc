@@ -176,8 +176,8 @@ class HardBreakpoint : public PCEvent
     int refcount;
 
   public:
-    HardBreakpoint(BaseRemoteGDB *_gdb, PCEventScope *s, Addr pc) :
-        PCEvent(s, "HardBreakpoint Event", pc), gdb(_gdb), refcount(0)
+    HardBreakpoint(BaseRemoteGDB *_gdb, PCEventScope *s, Addr pc)
+        : PCEvent(s, "HardBreakpoint Event", pc), gdb(_gdb), refcount(0)
     {
         DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
     }
@@ -216,7 +216,8 @@ struct CmdError
 
 // Exception to throw when something isn't supported.
 class Unsupported
-{};
+{
+};
 
 // Convert a hex digit into an integer.
 // This returns -1 if the argument passed is no valid hex digit.
@@ -397,16 +398,16 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 } // namespace
 
-BaseRemoteGDB::BaseRemoteGDB(
-    System *_system, ListenSocketConfig _listen_config) :
-    incomingConnectionEvent(nullptr),
-    incomingDataEvent(nullptr),
-    fd(-1),
-    sys(_system),
-    connectEvent(*this),
-    disconnectEvent(*this),
-    trapEvent(this),
-    singleStepEvent(*this)
+BaseRemoteGDB::BaseRemoteGDB(System *_system,
+                             ListenSocketConfig _listen_config)
+    : incomingConnectionEvent(nullptr),
+      incomingDataEvent(nullptr),
+      fd(-1),
+      sys(_system),
+      connectEvent(*this),
+      disconnectEvent(*this),
+      trapEvent(this),
+      singleStepEvent(*this)
 {
     listener = _listen_config.build(name());
 }
@@ -442,7 +443,7 @@ void
 BaseRemoteGDB::connect()
 {
     panic_if(!listener->islistening(),
-        "Can't accept GDB connections without any threads!");
+             "Can't accept GDB connections without any threads!");
 
     pollQueue.remove(incomingConnectionEvent);
 
@@ -460,7 +461,7 @@ const ListenSocket &
 BaseRemoteGDB::hostSocket() const
 {
     panic_if(!listener->islistening(),
-        "Remote GDB socket is unknown until listen() has been called.");
+             "Remote GDB socket is unknown until listen() has been called.");
     return *listener;
 }
 
@@ -532,8 +533,8 @@ void
 BaseRemoteGDB::replaceThreadContext(ThreadContext *_tc)
 {
     auto it = threads.find(_tc->contextId());
-    panic_if(
-        it == threads.end(), "No context with ID %d found.", _tc->contextId());
+    panic_if(it == threads.end(), "No context with ID %d found.",
+             _tc->contextId());
     it->second = _tc;
 }
 
@@ -668,7 +669,7 @@ BaseRemoteGDB::try_getbyte(uint8_t *c, int timeout_ms)
             retval = ::select(fd + 1, &rfds, NULL, NULL, tv_ptr);
             if (retval < 0 && errno != EINTR) { // error
                 DPRINTF(GDBMisc, "getbyte failed errno=%i retval=%i\n", errno,
-                    retval);
+                        retval);
                 throw BadClient("Couldn't read data from debugger.");
             }
             // a EINTR error means that the select call was interrupted
@@ -802,7 +803,7 @@ BaseRemoteGDB::processCommands(GDBSignal sig)
             auto cmd_it = commandMap.find(cmd_ctx.cmdByte);
             if (cmd_it == commandMap.end()) {
                 DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n", cmd_ctx.cmdByte,
-                    cmd_ctx.cmdByte);
+                        cmd_ctx.cmdByte);
                 throw Unsupported();
             }
             cmd_ctx.cmd = &(cmd_it->second);
@@ -964,12 +965,12 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t kind)
 }
 
 void
-BaseRemoteGDB::sendTPacket(
-    GDBSignal sig, ContextID id, const std::string &stopReason)
+BaseRemoteGDB::sendTPacket(GDBSignal sig, ContextID id,
+                           const std::string &stopReason)
 {
     if (!stopReason.empty()) {
         send("T%02xcore:%x;thread:%x;%s;", (uint8_t)sig, id + 1, id + 1,
-            stopReason);
+             stopReason);
     } else {
         send("T%02xcore:%x;thread:%x;", (uint8_t)sig, id + 1, id + 1);
     }
@@ -986,8 +987,8 @@ BaseRemoteGDB::sendOPacket(const std::string message)
 }
 
 void
-BaseRemoteGDB::scheduleTrapEvent(
-    ContextID id, GDBSignal sig, int delta, std::string stopReason)
+BaseRemoteGDB::scheduleTrapEvent(ContextID id, GDBSignal sig, int delta,
+                                 std::string stopReason)
 {
     ThreadContext *_tc = threads[id];
     panic_if(_tc == nullptr, "Unknown context id :%i", id);
@@ -999,8 +1000,8 @@ BaseRemoteGDB::scheduleTrapEvent(
 }
 
 void
-BaseRemoteGDB::scheduleInstCommitEvent(
-    Event *ev, int delta, ThreadContext *_tc)
+BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta,
+                                       ThreadContext *_tc)
 {
     if (delta == 0 && _tc->status() != ThreadContext::Active) {
         // If delta is zero, we're just trying to wait for an instruction
@@ -1296,7 +1297,7 @@ BaseRemoteGDB::cmdMultiLetter(GdbCommand::Context &ctx)
 std::map<std::string, BaseRemoteGDB::GdbMultiLetterCommand>
     BaseRemoteGDB::multiLetterMap = {
         {"MustReplyEmpty",
-            {"KGDB_REPLY_EMPTY", &BaseRemoteGDB::cmdReplyEmpty}},
+         {"KGDB_REPLY_EMPTY", &BaseRemoteGDB::cmdReplyEmpty}},
         {"Kill", {"KGDB_VKILL", &BaseRemoteGDB::cmdVKill}},
 };
 
@@ -1332,8 +1333,8 @@ splitAt(std::string str, const char *const delim)
     if (pos == std::string::npos)
         return std::pair<std::string, std::string>(str, "");
     else
-        return std::pair<std::string, std::string>(
-            str.substr(0, pos), str.substr(pos + 1));
+        return std::pair<std::string, std::string>(str.substr(0, pos),
+                                                   str.substr(pos + 1));
 }
 
 } // anonymous namespace
@@ -1439,8 +1440,8 @@ class MonitorCallEvent : public GlobalSimLoopExitEvent
 
   public:
     MonitorCallEvent(BaseRemoteGDB &gdb, ContextID id,
-        const std::string &_cause, int code) :
-        GlobalSimLoopExitEvent(_cause, code), gdb(gdb), id(id){};
+                     const std::string &_cause, int code)
+        : GlobalSimLoopExitEvent(_cause, code), gdb(gdb), id(id){};
     void
     process() override
     {
@@ -1535,15 +1536,15 @@ BaseRemoteGDB::availableFeatures() const
 };
 
 bool
-BaseRemoteGDB::getXferFeaturesRead(
-    const std::string &annex, std::string &output)
+BaseRemoteGDB::getXferFeaturesRead(const std::string &annex,
+                                   std::string &output)
 {
     return false;
 }
 
 void
-BaseRemoteGDB::encodeBinaryData(
-    const std::string &unencoded, std::string &encoded) const
+BaseRemoteGDB::encodeBinaryData(const std::string &unencoded,
+                                std::string &encoded) const
 {
     for (const char &c : unencoded) {
         if (c == '$' || c == '#' || c == '}' || c == '*') {
@@ -1557,7 +1558,8 @@ BaseRemoteGDB::encodeBinaryData(
 
 void
 BaseRemoteGDB::encodeXferResponse(const std::string &unencoded,
-    std::string &encoded, size_t offset, size_t unencoded_length) const
+                                  std::string &encoded, size_t offset,
+                                  size_t unencoded_length) const
 {
     if (offset + unencoded_length < unencoded.length())
         encoded += 'm';
@@ -1611,7 +1613,7 @@ BaseRemoteGDB::cmdClrHwBkpt(GdbCommand::Context &ctx)
     size_t kind = hex2i(&p);
 
     DPRINTF(GDBMisc, "clear %s, addr=%#x, kind=%d\n", breakType(sub_cmd), addr,
-        kind);
+            kind);
 
     switch (sub_cmd) {
     case GdbSoftBp:
@@ -1644,7 +1646,7 @@ BaseRemoteGDB::cmdSetHwBkpt(GdbCommand::Context &ctx)
     size_t kind = hex2i(&p);
 
     DPRINTF(GDBMisc, "set %s, addr=%#x, kind=%d\n", breakType(sub_cmd), addr,
-        kind);
+            kind);
 
     switch (sub_cmd) {
     case GdbSoftBp:

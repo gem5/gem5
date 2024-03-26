@@ -83,21 +83,21 @@ LrgQueuePolicy::selectPacket(PacketQueue *q)
         // Get Request RequestorID
         RequestorID requestor_id = pkt->req->requestorId();
         DPRINTF(QOS,
-            "QoSQPolicy::lrg checking packet "
-            "from queue with id %d\n",
-            requestor_id);
+                "QoSQPolicy::lrg checking packet "
+                "from queue with id %d\n",
+                requestor_id);
 
         // Check if this is a known requestor.
         panic_if(memCtrl->hasRequestor(requestor_id),
-            "%s: Unrecognized Requestor\n", __func__);
+                 "%s: Unrecognized Requestor\n", __func__);
 
         panic_if(toServe.size() > 0, "%s: toServe list is empty\n", __func__);
 
         if (toServe.front() == requestor_id) {
             DPRINTF(QOS,
-                "QoSQPolicy::lrg matched to served "
-                "requestor id %d\n",
-                requestor_id);
+                    "QoSQPolicy::lrg matched to served "
+                    "requestor id %d\n",
+                    requestor_id);
             // This packet matches the RequestorID to be served next
             // move toServe front to back
             toServe.push_back(requestor_id);
@@ -114,9 +114,9 @@ LrgQueuePolicy::selectPacket(PacketQueue *q)
         if (track.find(requestor_id) == track.end()) {
             track[requestor_id] = pkt_it;
             DPRINTF(QOS,
-                "QoSQPolicy::lrg tracking a packet for "
-                "requestor id %d\n",
-                requestor_id);
+                    "QoSQPolicy::lrg tracking a packet for "
+                    "requestor id %d\n",
+                    requestor_id);
         }
     }
 
@@ -124,16 +124,16 @@ LrgQueuePolicy::selectPacket(PacketQueue *q)
     // packet in the queue: look for the next requestor in the list.
     for (const auto &requestorId : toServe) {
         DPRINTF(QOS,
-            "QoSQPolicy::lrg evaluating alternative "
-            "requestor id %d\n",
-            requestorId);
+                "QoSQPolicy::lrg evaluating alternative "
+                "requestor id %d\n",
+                requestorId);
 
         if (track.find(requestorId) != track.end()) {
             ret = track[requestorId];
             DPRINTF(QOS,
-                "QoSQPolicy::lrg requestor id "
-                "%d selected for service\n",
-                requestorId);
+                    "QoSQPolicy::lrg requestor id "
+                    "%d selected for service\n",
+                    requestorId);
 
             return ret;
         }

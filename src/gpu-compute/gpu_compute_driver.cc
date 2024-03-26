@@ -56,15 +56,15 @@
 
 namespace gem5
 {
-GPUComputeDriver::GPUComputeDriver(const Params &p) :
-    EmulatedDriver(p),
-    device(p.device),
-    queueId(0),
-    isdGPU(p.isdGPU),
-    gfxVersion(p.gfxVersion),
-    dGPUPoolID(p.dGPUPoolID),
-    eventPage(0),
-    eventSlotIndex(0)
+GPUComputeDriver::GPUComputeDriver(const Params &p)
+    : EmulatedDriver(p),
+      device(p.device),
+      queueId(0),
+      isdGPU(p.isdGPU),
+      gfxVersion(p.gfxVersion),
+      dGPUPoolID(p.dGPUPoolID),
+      eventPage(0),
+      eventSlotIndex(0)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
@@ -110,7 +110,7 @@ GPUComputeDriver::open(ThreadContext *tc, int mode, int flags)
  */
 Addr
 GPUComputeDriver::mmap(ThreadContext *tc, Addr start, uint64_t length,
-    int prot, int tgt_flags, int tgt_fd, off_t offset)
+                       int prot, int tgt_flags, int tgt_fd, off_t offset)
 {
     auto process = tc->getProcessPtr();
     auto mem_state = process->memState;
@@ -118,24 +118,24 @@ GPUComputeDriver::mmap(ThreadContext *tc, Addr start, uint64_t length,
     Addr pg_off = offset >> PAGE_SHIFT;
     Addr mmap_type = pg_off & KFD_MMAP_TYPE_MASK;
     DPRINTF(GPUDriver,
-        "amdkfd mmap (start: %p, length: 0x%x,"
-        "offset: 0x%x)\n",
-        start, length, offset);
+            "amdkfd mmap (start: %p, length: 0x%x,"
+            "offset: 0x%x)\n",
+            start, length, offset);
 
     switch (mmap_type) {
     case KFD_MMAP_TYPE_DOORBELL:
         DPRINTF(GPUDriver, "amdkfd mmap type DOORBELL offset\n");
         start = mem_state->extendMmap(length);
-        process->pTable->map(
-            start, device->hsaPacketProc().pioAddr, length, false);
+        process->pTable->map(start, device->hsaPacketProc().pioAddr, length,
+                             false);
         break;
     case KFD_MMAP_TYPE_EVENTS:
         DPRINTF(GPUDriver, "amdkfd mmap type EVENTS offset\n");
         panic_if(start != 0, "Start address should be provided by KFD\n");
         panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
-            "Requested length %d, expected length %d; length "
-            "mismatch\n",
-            length, 8 * KFD_SIGNAL_EVENT_LIMIT);
+                 "Requested length %d, expected length %d; length "
+                 "mismatch\n",
+                 length, 8 * KFD_SIGNAL_EVENT_LIMIT);
         /**
          * We don't actually access these pages.  We just need to reserve
          * some VA space.  See commit id 5ce8abce for details on how
@@ -181,8 +181,8 @@ GPUComputeDriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
     args->queue_id = queueId++;
     auto &hsa_pp = device->hsaPacketProc();
     hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
-        args->ring_base_address, args->queue_id, args->ring_size,
-        doorbellSize(), gfxVersion);
+                              args->ring_base_address, args->queue_id,
+                              args->ring_size, doorbellSize(), gfxVersion);
     args.copyOut(mem_proxy);
 }
 
@@ -197,7 +197,7 @@ void
 GPUComputeDriver::signalWakeupEvent(uint32_t event_id)
 {
     panic_if(event_id >= eventSlotIndex,
-        "Trying wakeup on an event that is not yet created\n");
+             "Trying wakeup on an event that is not yet created\n");
     if (ETable[event_id].threadWaiting) {
         panic_if(!ETable[event_id].tc, "No thread context to wake up\n");
         ThreadContext *tc = ETable[event_id].tc;
@@ -258,11 +258,11 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         TypedBufferArg<kfd_ioctl_destroy_queue_args> args(ioc_buf);
         args.copyIn(virt_proxy);
         DPRINTF(GPUDriver,
-            "ioctl: AMDKFD_IOC_DESTROY_QUEUE;"
-            "queue offset %d\n",
-            args->queue_id);
-        device->hsaPacketProc().unsetDeviceQueueDesc(
-            args->queue_id, doorbellSize());
+                "ioctl: AMDKFD_IOC_DESTROY_QUEUE;"
+                "queue offset %d\n",
+                args->queue_id);
+        device->hsaPacketProc().unsetDeviceQueueDesc(args->queue_id,
+                                                     doorbellSize());
     } break;
     case AMDKFD_IOC_SET_MEMORY_POLICY: {
         /**
@@ -394,19 +394,19 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             }
 
             DPRINTF(GPUDriver, "GPUVM base for node[%i] = %#x\n", i,
-                args->process_apertures[i].gpuvm_base);
+                    args->process_apertures[i].gpuvm_base);
             DPRINTF(GPUDriver, "GPUVM limit for node[%i] = %#x\n", i,
-                args->process_apertures[i].gpuvm_limit);
+                    args->process_apertures[i].gpuvm_limit);
 
             DPRINTF(GPUDriver, "LDS base for node[%i] = %#x\n", i,
-                args->process_apertures[i].lds_base);
+                    args->process_apertures[i].lds_base);
             DPRINTF(GPUDriver, "LDS limit for node[%i] = %#x\n", i,
-                args->process_apertures[i].lds_limit);
+                    args->process_apertures[i].lds_limit);
 
             DPRINTF(GPUDriver, "Scratch base for node[%i] = %#x\n", i,
-                args->process_apertures[i].scratch_base);
+                    args->process_apertures[i].scratch_base);
             DPRINTF(GPUDriver, "Scratch limit for node[%i] = %#x\n", i,
-                args->process_apertures[i].scratch_limit);
+                    args->process_apertures[i].scratch_limit);
 
             /**
              * The CPU's 64b address space can only use the
@@ -415,21 +415,21 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
              * fall in the CPU's address space.
              */
             assert(bits<Addr>(args->process_apertures[i].scratch_base, 63,
-                       47) != 0x1ffff);
-            assert(bits<Addr>(
-                       args->process_apertures[i].scratch_base, 63, 47) != 0);
+                              47) != 0x1ffff);
+            assert(bits<Addr>(args->process_apertures[i].scratch_base, 63,
+                              47) != 0);
             assert(bits<Addr>(args->process_apertures[i].scratch_limit, 63,
-                       47) != 0x1ffff);
-            assert(bits<Addr>(
-                       args->process_apertures[i].scratch_limit, 63, 47) != 0);
+                              47) != 0x1ffff);
+            assert(bits<Addr>(args->process_apertures[i].scratch_limit, 63,
+                              47) != 0);
             assert(bits<Addr>(args->process_apertures[i].lds_base, 63, 47) !=
                    0x1ffff);
-            assert(
-                bits<Addr>(args->process_apertures[i].lds_base, 63, 47) != 0);
+            assert(bits<Addr>(args->process_apertures[i].lds_base, 63, 47) !=
+                   0);
             assert(bits<Addr>(args->process_apertures[i].lds_limit, 63, 47) !=
                    0x1ffff);
-            assert(
-                bits<Addr>(args->process_apertures[i].lds_limit, 63, 47) != 0);
+            assert(bits<Addr>(args->process_apertures[i].lds_limit, 63, 47) !=
+                   0);
         }
 
         args.copyOut(virt_proxy);
@@ -458,9 +458,9 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         args->event_id = eventSlotIndex++;
         args->event_trigger_data = args->event_id;
         DPRINTF(GPUDriver,
-            "amdkfd create events"
-            "(event_id: 0x%x, offset: 0x%x)\n",
-            args->event_id, args->event_page_offset);
+                "amdkfd create events"
+                "(event_id: 0x%x, offset: 0x%x)\n",
+                args->event_id, args->event_page_offset);
         // Since eventSlotIndex is increased everytime a new event is
         // created ETable at eventSlotIndex(event_id) is guaranteed to be
         // empty. In a future implementation that reuses deleted event_ids,
@@ -476,7 +476,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         args.copyIn(virt_proxy);
         DPRINTF(GPUDriver, "amdkfd destroying event %d\n", args->event_id);
         fatal_if(ETable.count(args->event_id) == 0,
-            "Event ID invalid, cannot destroy this event\n");
+                 "Event ID invalid, cannot destroy this event\n");
         ETable.erase(args->event_id);
     } break;
     case AMDKFD_IOC_SET_EVENT: {
@@ -485,7 +485,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         args.copyIn(virt_proxy);
         DPRINTF(GPUDriver, "amdkfd set event %d\n", args->event_id);
         fatal_if(ETable.count(args->event_id) == 0,
-            "Event ID invlaid, cannot set this event\n");
+                 "Event ID invlaid, cannot set this event\n");
         ETable[args->event_id].setEvent = true;
         signalWakeupEvent(args->event_id);
     } break;
@@ -498,36 +498,36 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         args.copyIn(virt_proxy);
         kfd_event_data *events = (kfd_event_data *)args->events_ptr;
         DPRINTF(GPUDriver,
-            "amdkfd wait for events"
-            "(wait on all: %d, timeout : %d, num_events: %s)\n",
-            args->wait_for_all, args->timeout, args->num_events);
+                "amdkfd wait for events"
+                "(wait on all: %d, timeout : %d, num_events: %s)\n",
+                args->wait_for_all, args->timeout, args->num_events);
         panic_if(args->wait_for_all != 0 && args->num_events > 1,
-            "Wait for all events not supported\n");
+                 "Wait for all events not supported\n");
         bool should_sleep = true;
         if (TCEvents.count(tc) == 0) {
             // This thread context trying to wait on an event for the first
             // time, initialize it.
             TCEvents.emplace(std::piecewise_construct, std::make_tuple(tc),
-                std::make_tuple(this, tc));
+                             std::make_tuple(this, tc));
             DPRINTF(GPUDriver,
-                "\tamdkfd creating event list"
-                " for thread  %d\n",
-                tc->cpuId());
+                    "\tamdkfd creating event list"
+                    " for thread  %d\n",
+                    tc->cpuId());
         }
         panic_if(TCEvents[tc].signalEvents.size() != 0,
-            "There are %d events that put this thread to sleep,"
-            " this thread should not be running\n",
-            TCEvents[tc].signalEvents.size());
+                 "There are %d events that put this thread to sleep,"
+                 " this thread should not be running\n",
+                 TCEvents[tc].signalEvents.size());
         for (int i = 0; i < args->num_events; i++) {
             panic_if(!events, "Event pointer invalid\n");
             Addr eventDataAddr = (Addr)(events + i);
-            TypedBufferArg<kfd_event_data> EventData(
-                eventDataAddr, sizeof(kfd_event_data));
+            TypedBufferArg<kfd_event_data> EventData(eventDataAddr,
+                                                     sizeof(kfd_event_data));
             EventData.copyIn(virt_proxy);
             DPRINTF(GPUDriver, "\tamdkfd wait for event %d\n",
-                EventData->event_id);
+                    EventData->event_id);
             panic_if(ETable.count(EventData->event_id) == 0,
-                "Event ID invalid, cannot set this event\n");
+                     "Event ID invalid, cannot set this event\n");
             if (ETable[EventData->event_id].threadWaiting)
                 warn("Multiple threads waiting on the same event\n");
             if (ETable[EventData->event_id].setEvent) {
@@ -729,9 +729,9 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             cacheable = false;
 
             DPRINTF(GPUDriver,
-                "Mapping VA %p to framebuffer PA %p size "
-                "%d\n",
-                args->va_addr, pa_addr, args->size);
+                    "Mapping VA %p to framebuffer PA %p size "
+                    "%d\n",
+                    args->va_addr, pa_addr, args->size);
 
         } else if (KFD_IOC_ALLOC_MEM_FLAGS_USERPTR & args->flags) {
             DPRINTF(GPUDriver, "amdkfd allocation type: USERPTR\n");
@@ -741,9 +741,9 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             pa_addr = process->seWorkload->allocPhysPages(npages);
 
             DPRINTF(GPUDriver,
-                "Mapping VA %p to framebuffer PA %p size "
-                "%d\n",
-                args->va_addr, pa_addr, args->size);
+                    "Mapping VA %p to framebuffer PA %p size "
+                    "%d\n",
+                    args->va_addr, pa_addr, args->size);
 
             // If the HSA runtime requests system coherent memory, than we
             // need to explicity mark this region as uncacheable from the
@@ -764,9 +764,9 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             pa_addr = process->seWorkload->allocPhysPages(npages);
 
             DPRINTF(GPUDriver,
-                "Mapping VA %p to framebuffer PA %p size "
-                "%d\n",
-                args->va_addr, pa_addr, args->size);
+                    "Mapping VA %p to framebuffer PA %p size "
+                    "%d\n",
+                    args->va_addr, pa_addr, args->size);
 
             // If the HSA runtime requests system coherent memory, than we
             // need to explicity mark this region as uncacheable from the
@@ -789,9 +789,9 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
         }
 
         DPRINTF(GPUDriver,
-            "amdkfd allocation arguments: va_addr %p "
-            "size %lu, mmap_offset %p, gpu_id %d\n",
-            args->va_addr, args->size, mmap_offset, args->gpu_id);
+                "amdkfd allocation arguments: va_addr %p "
+                "size %lu, mmap_offset %p, gpu_id %d\n",
+                args->va_addr, args->size, mmap_offset, args->gpu_id);
 
         // Bind selected physical memory to provided virtual address range
         // in X86 page tables.
@@ -935,15 +935,15 @@ GPUComputeDriver::ldsApeLimit(Addr apeBase) const
 }
 
 void
-GPUComputeDriver::allocateGpuVma(
-    Request::CacheCoherenceFlags mtype, Addr start, Addr length)
+GPUComputeDriver::allocateGpuVma(Request::CacheCoherenceFlags mtype,
+                                 Addr start, Addr length)
 {
     AddrRange range = AddrRange(start, start + length);
     DPRINTF(GPUDriver, "Registering [%p - %p] with MTYPE %d\n", range.start(),
-        range.end(), mtype);
+            range.end(), mtype);
     fatal_if(gpuVmas.insert(range, mtype) == gpuVmas.end(),
-        "Attempted to double register Mtypes for [%p - %p]\n", range.start(),
-        range.end());
+             "Attempted to double register Mtypes for [%p - %p]\n",
+             range.start(), range.end());
 }
 
 Addr
@@ -954,7 +954,7 @@ GPUComputeDriver::deallocateGpuVma(Addr start)
     assert((vma->first.start() == start));
     Addr size = vma->first.size();
     DPRINTF(GPUDriver, "Unregistering [%p - %p]\n", vma->first.start(),
-        vma->first.end());
+            vma->first.end());
     gpuVmas.erase(vma);
     return size;
 }
@@ -969,9 +969,9 @@ GPUComputeDriver::setMtype(RequestPtr req)
         auto vma = gpuVmas.contains(range);
         assert(vma != gpuVmas.end());
         DPRINTF(GPUShader,
-            "Setting req from [%p - %p] MTYPE %d\n"
-            "%d\n",
-            range.start(), range.end(), vma->second);
+                "Setting req from [%p - %p] MTYPE %d\n"
+                "%d\n",
+                range.start(), range.end(), vma->second);
         req->setCacheCoherenceFlags(vma->second);
         // APUs always get the default MTYPE
     } else {

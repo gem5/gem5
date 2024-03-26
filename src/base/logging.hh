@@ -150,9 +150,9 @@ class Logger
     const char *prefix;
 };
 
-#define base_message(logger, ...) \
-    [&log = logger](const auto &... args) { \
-        log.print(::gem5::Logger::Loc(__FILE__, __LINE__), args...); \
+#define base_message(logger, ...)                                             \
+    [&log = logger](const auto &... args) {                                   \
+        log.print(::gem5::Logger::Loc(__FILE__, __LINE__), args...);          \
     }(__VA_ARGS__)
 
 /*
@@ -163,13 +163,13 @@ class Logger
  * would have resulted in a different message thoes messages would be
  * supressed.
  */
-#define base_message_once(logger, ...) \
-    [&log = logger](const auto &... args) { \
-        static bool once{false}; \
-        if (GEM5_UNLIKELY(!once)) { \
-            once = true; \
-            base_message(log, args...); \
-        } \
+#define base_message_once(logger, ...)                                        \
+    [&log = logger](const auto &... args) {                                   \
+        static bool once{false};                                              \
+        if (GEM5_UNLIKELY(!once)) {                                           \
+            once = true;                                                      \
+            base_message(log, args...);                                       \
+        }                                                                     \
     }(__VA_ARGS__)
 
 /*
@@ -179,10 +179,10 @@ class Logger
  * value, which is inconvenient if not impossible.
  */
 
-#define exit_message(logger, ...) \
-    ([&log = logger](const auto &... args) { base_message(log, args...); }( \
-         __VA_ARGS__), \
-        logger.exit_helper())
+#define exit_message(logger, ...)                                             \
+    ([&log = logger](const auto &... args) { base_message(log, args...); }(   \
+         __VA_ARGS__),                                                        \
+     logger.exit_helper())
 
 /**
  * This implements a cprintf based panic() function.  panic() should
@@ -220,11 +220,11 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define panic_if(cond, ...) \
-    (GEM5_UNLIKELY(static_cast<bool>(cond)) ? \
-            panic("panic condition " #cond " occurred: %s", \
-                ::gem5::csprintf(__VA_ARGS__)) : \
-            void(0))
+#define panic_if(cond, ...)                                                   \
+    (GEM5_UNLIKELY(static_cast<bool>(cond)) ?                                 \
+         panic("panic condition " #cond " occurred: %s",                      \
+               ::gem5::csprintf(__VA_ARGS__)) :                               \
+         void(0))
 
 /**
  * Conditional fatal macro that checks the supplied condition and only causes a
@@ -239,11 +239,11 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define fatal_if(cond, ...) \
-    (GEM5_UNLIKELY(static_cast<bool>(cond)) ? \
-            fatal("fatal condition " #cond " occurred: %s", \
-                ::gem5::csprintf(__VA_ARGS__)) : \
-            void(0))
+#define fatal_if(cond, ...)                                                   \
+    (GEM5_UNLIKELY(static_cast<bool>(cond)) ?                                 \
+         fatal("fatal condition " #cond " occurred: %s",                      \
+               ::gem5::csprintf(__VA_ARGS__)) :                               \
+         void(0))
 
 /**
  * \def warn(...)
@@ -260,11 +260,11 @@ class Logger
 #define inform(...) base_message(::gem5::Logger::getInfo(), __VA_ARGS__)
 #define hack(...) base_message(::gem5::Logger::getHack(), __VA_ARGS__)
 
-#define warn_once(...) \
+#define warn_once(...)                                                        \
     base_message_once(::gem5::Logger::getWarn(), __VA_ARGS__)
-#define inform_once(...) \
+#define inform_once(...)                                                      \
     base_message_once(::gem5::Logger::getInfo(), __VA_ARGS__)
-#define hack_once(...) \
+#define hack_once(...)                                                        \
     base_message_once(::gem5::Logger::getHack(), __VA_ARGS__)
 /** @} */ // end of api_logger
 
@@ -283,18 +283,18 @@ class Logger
  * @ingroup api_logger
  * @{
  */
-#define warn_if(cond, ...) \
+#define warn_if(cond, ...)                                                    \
     (static_cast<bool>(cond) ? warn(__VA_ARGS__) : void(0))
 
-#define warn_if_once(cond, ...) \
+#define warn_if_once(cond, ...)                                               \
     (static_cast<bool>(cond) ? warn_once(__VA_ARGS__) : void(0))
 
 /** @} */ // end of api_logger
 
 #ifdef NDEBUG
-#    define NDEBUG_DEFINED 1
+#define NDEBUG_DEFINED 1
 #else
-#    define NDEBUG_DEFINED 0
+#define NDEBUG_DEFINED 0
 #endif
 
 /**
@@ -309,24 +309,24 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define gem5_assert(cond, ...) \
-    (GEM5_UNLIKELY(NDEBUG_DEFINED || static_cast<bool>(cond)) ? \
-            void(0) : \
-            [](const auto &... args) { \
-                auto msg = [&] { \
-                    if constexpr (sizeof...(args) == 0) \
-                        return ""; \
-                    else \
-                        return std::string(": ") + csprintf(args...); \
-                }; \
-                panic("assert(" #cond ") failed%s", msg()); \
-            }(__VA_ARGS__))
+#define gem5_assert(cond, ...)                                                \
+    (GEM5_UNLIKELY(NDEBUG_DEFINED || static_cast<bool>(cond)) ?               \
+         void(0) :                                                            \
+         [](const auto &... args) {                                           \
+             auto msg = [&] {                                                 \
+                 if constexpr (sizeof...(args) == 0)                          \
+                     return "";                                               \
+                 else                                                         \
+                     return std::string(": ") + csprintf(args...);            \
+             };                                                               \
+             panic("assert(" #cond ") failed%s", msg());                      \
+         }(__VA_ARGS__))
 
 /** @} */ // end of api_logger
 
-#define chatty_assert(...) \
-    (gem5_assert(args...), \
-        GEM5_DEPRECATED_MACRO(chatty_assert, {}, "Please use gem5_assert()"))
+#define chatty_assert(...)                                                    \
+    (gem5_assert(args...),                                                    \
+     GEM5_DEPRECATED_MACRO(chatty_assert, {}, "Please use gem5_assert()"))
 
 } // namespace gem5
 #endif // __BASE_LOGGING_HH__

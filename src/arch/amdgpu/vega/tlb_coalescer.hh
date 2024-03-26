@@ -135,8 +135,8 @@ class VegaTLBCoalescer : public ClockedObject
     {
       public:
         CpuSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
-            PortID _index) :
-            ResponsePort(_name), coalescer(tlb_coalescer), index(_index)
+                    PortID _index)
+            : ResponsePort(_name), coalescer(tlb_coalescer), index(_index)
         {}
 
       protected:
@@ -169,8 +169,8 @@ class VegaTLBCoalescer : public ClockedObject
     {
       public:
         MemSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
-            PortID _index) :
-            RequestPort(_name), coalescer(tlb_coalescer), index(_index)
+                    PortID _index)
+            : RequestPort(_name), coalescer(tlb_coalescer), index(_index)
         {}
 
         std::deque<PacketPtr> retries;
@@ -203,8 +203,8 @@ class VegaTLBCoalescer : public ClockedObject
     // Coalescer request ports on the memory side
     std::vector<MemSidePort *> memSidePort;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void processProbeTLBEvent();
     /// This event issues the TLB probes

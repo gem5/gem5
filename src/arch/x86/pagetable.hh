@@ -92,8 +92,8 @@ struct TlbEntry : public Serializable
 
     TlbEntryTrie::Handle trieHandle;
 
-    TlbEntry(
-        Addr asn, Addr _vaddr, Addr _paddr, bool uncacheable, bool read_only);
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, bool uncacheable,
+             bool read_only);
     TlbEntry();
 
     void
@@ -209,7 +209,7 @@ class LongModePTE
 
     void
     reset(Addr _paddr, bool _present = true, bool _uncacheable = false,
-        bool _readonly = false)
+          bool _readonly = false)
     {
         pte = 0;
         pte.u = 1;

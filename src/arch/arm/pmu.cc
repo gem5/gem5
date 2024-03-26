@@ -54,32 +54,32 @@ namespace ArmISA
 {
 const RegVal PMU::reg_pmcr_wr_mask = 0x39;
 
-PMU::PMU(const ArmPMUParams &p) :
-    SimObject(p),
-    BaseISADevice(),
-    use64bitCounters(p.use64bitCounters),
-    reg_pmcnten(0),
-    reg_pmcr(0),
-    reg_pmselr(0),
-    reg_pminten(0),
-    reg_pmovsr(0),
-    reg_pmceid0(0),
-    reg_pmceid1(0),
-    clock_remainder(0),
-    maximumCounterCount(p.eventCounters),
-    cycleCounter(*this, maximumCounterCount, p.use64bitCounters),
-    cycleCounterEventId(p.cycleEventId),
-    swIncrementEvent(nullptr),
-    reg_pmcr_conf(0),
-    interrupt(nullptr),
-    exitOnPMUControl(p.exitOnPMUControl),
-    exitOnPMUInterrupt(p.exitOnPMUInterrupt)
+PMU::PMU(const ArmPMUParams &p)
+    : SimObject(p),
+      BaseISADevice(),
+      use64bitCounters(p.use64bitCounters),
+      reg_pmcnten(0),
+      reg_pmcr(0),
+      reg_pmselr(0),
+      reg_pminten(0),
+      reg_pmovsr(0),
+      reg_pmceid0(0),
+      reg_pmceid1(0),
+      clock_remainder(0),
+      maximumCounterCount(p.eventCounters),
+      cycleCounter(*this, maximumCounterCount, p.use64bitCounters),
+      cycleCounterEventId(p.cycleEventId),
+      swIncrementEvent(nullptr),
+      reg_pmcr_conf(0),
+      interrupt(nullptr),
+      exitOnPMUControl(p.exitOnPMUControl),
+      exitOnPMUInterrupt(p.exitOnPMUInterrupt)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
     if (maximumCounterCount > 31) {
         fatal("The PMU can only accept 31 counters, %d counters requested.\n",
-            maximumCounterCount);
+              maximumCounterCount);
     }
 
     warn_if(!p.interrupt, "ARM PMU: No interrupt specified, interrupt "
@@ -116,15 +116,15 @@ PMU::addSoftwareIncrementEvent(unsigned int id)
     if (swIncrementEvent) {
         fatal_if(old_event == eventMap.end() ||
                      old_event->second != swIncrementEvent,
-            "Trying to add a software increment event with multiple"
-            "IDs. This is not supported.\n");
+                 "Trying to add a software increment event with multiple"
+                 "IDs. This is not supported.\n");
         return;
     }
 
     fatal_if(old_event != eventMap.end(),
-        "An event with id %d has "
-        "been previously defined\n",
-        id);
+             "An event with id %d has "
+             "been previously defined\n",
+             id);
 
     swIncrementEvent = std::make_shared<SWIncrementEvent>();
     eventMap[id] = swIncrementEvent;
@@ -135,9 +135,9 @@ void
 PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
 {
     DPRINTF(PMUVerbose,
-        "PMU: Adding Probe Driven event with id '0x%x'"
-        "as probe %s:%s\n",
-        id, obj->name(), probe_name);
+            "PMU: Adding Probe Driven event with id '0x%x'"
+            "as probe %s:%s\n",
+            id, obj->name(), probe_name);
 
     std::shared_ptr<RegularEvent> event;
     auto event_entry = eventMap.find(id);
@@ -195,7 +195,7 @@ void
 PMU::setMiscReg(int misc_reg, RegVal val)
 {
     DPRINTF(PMUVerbose, "setMiscReg(%s, 0x%x)\n",
-        miscRegName[unflattenMiscReg(misc_reg)], val);
+            miscRegName[unflattenMiscReg(misc_reg)], val);
 
     switch (unflattenMiscReg(misc_reg)) {
     case MISCREG_PMCR_EL0:
@@ -258,9 +258,9 @@ PMU::setMiscReg(int misc_reg, RegVal val)
     case MISCREG_PMXEVTYPER_EL0:
     case MISCREG_PMXEVTYPER:
         DPRINTF(PMUVerbose,
-            "Setting counter type: "
-            "[PMSELR: 0x%x, PMSELER.sel: 0x%x, EVTYPER: 0x%x]\n",
-            reg_pmselr, reg_pmselr.sel, val);
+                "Setting counter type: "
+                "[PMSELR: 0x%x, PMSELER.sel: 0x%x, EVTYPER: 0x%x]\n",
+                reg_pmselr, reg_pmselr.sel, val);
         setCounterTypeRegister(reg_pmselr.sel, val);
         return;
 
@@ -297,8 +297,8 @@ PMU::setMiscReg(int misc_reg, RegVal val)
         panic("Unexpected PMU register: %i\n", miscRegName[misc_reg]);
     }
 
-    warn(
-        "Not doing anything for write to miscreg %s\n", miscRegName[misc_reg]);
+    warn("Not doing anything for write to miscreg %s\n",
+         miscRegName[misc_reg]);
 }
 
 RegVal
@@ -306,7 +306,7 @@ PMU::readMiscReg(int misc_reg)
 {
     RegVal val(readMiscRegInt(misc_reg));
     DPRINTF(PMUVerbose, "readMiscReg(%s): 0x%x\n",
-        miscRegName[unflattenMiscReg(misc_reg)], val);
+            miscRegName[unflattenMiscReg(misc_reg)], val);
     return val;
 }
 
@@ -394,7 +394,7 @@ PMU::readMiscRegInt(int misc_reg)
     }
 
     warn("Not doing anything for read from miscreg %s\n",
-        miscRegName[misc_reg]);
+         miscRegName[misc_reg]);
     return 0;
 }
 
@@ -587,18 +587,18 @@ PMU::updateCounter(CounterState &ctr)
 {
     if (!ctr.enabled) {
         DPRINTF(PMUVerbose, "updateCounter(%i): Disabling counter\n",
-            ctr.getCounterId());
+                ctr.getCounterId());
         ctr.detach();
 
     } else {
         DPRINTF(PMUVerbose, "updateCounter(%i): Enable event id 0x%x\n",
-            ctr.getCounterId(), ctr.eventId);
+                ctr.getCounterId(), ctr.eventId);
 
         auto sourceEvent = eventMap.find(ctr.eventId);
         if (sourceEvent == eventMap.end()) {
             warn("Can't enable PMU counter of type '0x%x': "
                  "No such event type.\n",
-                ctr.eventId);
+                 ctr.eventId);
         } else {
             ctr.attach(sourceEvent->second);
         }
@@ -616,8 +616,8 @@ void
 PMU::setCounterValue(CounterId id, uint64_t val)
 {
     if (!isValidCounter(id)) {
-        warn_once(
-            "Can't change counter value: Counter %i does not exist.\n", id);
+        warn_once("Can't change counter value: Counter %i does not exist.\n",
+                  id);
         return;
     }
 
@@ -644,8 +644,8 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
 {
     DPRINTF(PMUVerbose, "Set Event [%d] = 0x%08x\n", id, val);
     if (!isValidCounter(id)) {
-        warn_once(
-            "Can't change counter type: Counter %i does not exist.\n", id);
+        warn_once("Can't change counter type: Counter %i does not exist.\n",
+                  id);
         return;
     }
 

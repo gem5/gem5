@@ -61,8 +61,8 @@ GpuWavefront::issueLoadOps()
         if (location >= 0) {
             Addr address = addrManager->getAddress(location);
             DPRINTF(ProtocolTest, "%s Episode %d: Issuing Load - Addr %s\n",
-                this->getName(), curEpisode->getEpisodeId(),
-                ruby::printAddress(address));
+                    this->getName(), curEpisode->getEpisodeId(),
+                    ruby::printAddress(address));
 
             int load_size = sizeof(Value);
 
@@ -70,7 +70,8 @@ GpuWavefront::issueLoadOps()
             assert(address % load_size == 0);
 
             auto req = std::make_shared<Request>(address, load_size, 0,
-                tester->requestorId(), 0, threadId, nullptr);
+                                                 tester->requestorId(), 0,
+                                                 threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
             // set protocol-specific flags
@@ -117,13 +118,14 @@ GpuWavefront::issueStoreOps()
             assert(address % sizeof(Value) == 0);
 
             DPRINTF(ProtocolTest,
-                "%s Episode %d: Issuing Store - Addr %s - "
-                "Value %d\n",
-                this->getName(), curEpisode->getEpisodeId(),
-                ruby::printAddress(address), new_value);
+                    "%s Episode %d: Issuing Store - Addr %s - "
+                    "Value %d\n",
+                    this->getName(), curEpisode->getEpisodeId(),
+                    ruby::printAddress(address), new_value);
 
             auto req = std::make_shared<Request>(address, sizeof(Value), 0,
-                tester->requestorId(), 0, threadId, nullptr);
+                                                 tester->requestorId(), 0,
+                                                 threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
             // set protocol-specific flags
@@ -145,8 +147,8 @@ GpuWavefront::issueStoreOps()
             }
 
             // add an outstanding store
-            addOutstandingReqs(
-                outstandingStores, address, lane, location, new_value);
+            addOutstandingReqs(outstandingStores, address, lane, location,
+                               new_value);
         }
     }
 }
@@ -171,14 +173,15 @@ GpuWavefront::issueAtomicOps()
         Addr address = addrManager->getAddress(location);
 
         DPRINTF(ProtocolTest, "%s Episode %d: Issuing Atomic_Inc - Addr %s\n",
-            this->getName(), curEpisode->getEpisodeId(),
-            ruby::printAddress(address));
+                this->getName(), curEpisode->getEpisodeId(),
+                ruby::printAddress(address));
 
         // must be aligned with store size
         assert(address % sizeof(Value) == 0);
         AtomicOpFunctor *amo_op = new AtomicOpInc<Value>();
-        auto req = std::make_shared<Request>(address, sizeof(Value), flags,
-            tester->requestorId(), 0, threadId, AtomicOpFunctorPtr(amo_op));
+        auto req = std::make_shared<Request>(
+            address, sizeof(Value), flags, tester->requestorId(), 0, threadId,
+            AtomicOpFunctorPtr(amo_op));
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
         // set protocol-specific flags
@@ -205,7 +208,7 @@ void
 GpuWavefront::issueAcquireOp()
 {
     DPRINTF(ProtocolTest, "%s Episode %d: Issuing Acquire\n", this->getName(),
-        curEpisode->getEpisodeId());
+            curEpisode->getEpisodeId());
 
     assert(curAction);
     assert(curAction->getType() == Episode::Action::Type::ACQUIRE);
@@ -214,8 +217,8 @@ GpuWavefront::issueAcquireOp()
     assert(pendingLdStCount == 0);
     assert(pendingAtomicCount == 0);
 
-    auto acq_req = std::make_shared<Request>(
-        0, 0, 0, tester->requestorId(), 0, threadId, nullptr);
+    auto acq_req = std::make_shared<Request>(0, 0, 0, tester->requestorId(), 0,
+                                             threadId, nullptr);
     acq_req->setPaddr(0);
     acq_req->setReqInstSeqNum(tester->getActionSeqNum());
     acq_req->setCacheCoherenceFlags(Request::INV_L1);
@@ -237,7 +240,7 @@ void
 GpuWavefront::issueReleaseOp()
 {
     DPRINTF(ProtocolTest, "%s Episode %d: Issuing Release\n", this->getName(),
-        curEpisode->getEpisodeId());
+            curEpisode->getEpisodeId());
 
     // A release fence simply waits for all previous stores to complete. All
     // previous loads and stores were done before this release operation is
@@ -257,10 +260,10 @@ GpuWavefront::hitCallback(PacketPtr pkt)
     Addr addr = (resp_cmd == MemCmd::WriteCompleteResp) ? 0 : pkt->getAddr();
 
     DPRINTF(ProtocolTest,
-        "%s Episode %d: hitCallback - Command %s - "
-        "Addr %s\n",
-        this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
-        ruby::printAddress(addr));
+            "%s Episode %d: hitCallback - Command %s - "
+            "Addr %s\n",
+            this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
+            ruby::printAddress(addr));
 
     // whether the transaction is done after this hitCallback
     bool isTransactionDone = true;
@@ -302,7 +305,8 @@ GpuWavefront::hitCallback(PacketPtr pkt)
 
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
-            curEpisode->getEpisodeId(), req.storedValue, curTick(), cuId);
+                                    curEpisode->getEpisodeId(),
+                                    req.storedValue, curTick(), cuId);
 
         // the transaction is not done yet. Waiting for write completion ack
         isTransactionDone = false;
@@ -321,7 +325,8 @@ GpuWavefront::hitCallback(PacketPtr pkt)
 
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
-            curEpisode->getEpisodeId(), value, curTick(), cuId);
+                                    curEpisode->getEpisodeId(), value,
+                                    curTick(), cuId);
 
         // this Atomic is done
         pendingAtomicCount--;

@@ -73,7 +73,7 @@ class RealViewCtrl : public BasicPioDevice
     {
       public:
         Device(RealViewCtrl &parent, DeviceFunc func, uint8_t site,
-            uint8_t pos, uint8_t dcc, uint16_t dev)
+               uint8_t pos, uint8_t dcc, uint16_t dev)
         {
             parent.registerDevice(func, site, pos, dcc, dev, this);
         }
@@ -184,7 +184,7 @@ class RealViewCtrl : public BasicPioDevice
 
   public:
     void registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
-        uint8_t dcc, uint16_t dev, Device *handler);
+                        uint8_t dcc, uint16_t dev, Device *handler);
 
   protected:
     std::map<uint32_t, Device *> devices;
@@ -225,11 +225,11 @@ class RealViewOsc : public ClockDomain, RealViewCtrl::Device
 class RealViewTemperatureSensor : public SimObject, RealViewCtrl::Device
 {
   public:
-    RealViewTemperatureSensor(const RealViewTemperatureSensorParams &p) :
-        SimObject(p),
-        RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP, p.site,
-            p.position, p.dcc, p.device),
-        system(p.system)
+    RealViewTemperatureSensor(const RealViewTemperatureSensorParams &p)
+        : SimObject(p),
+          RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP, p.site,
+                               p.position, p.dcc, p.device),
+          system(p.system)
     {}
     virtual ~RealViewTemperatureSensor(){};
 

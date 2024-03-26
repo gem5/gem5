@@ -201,7 +201,8 @@ class NVMInterface : public MemInterface
     void setupRank(const uint8_t rank, const bool is_read) override;
 
     MemPacket *decodePacket(const PacketPtr pkt, Addr pkt_addr,
-        unsigned int size, bool is_read, uint8_t pseudo_channel = 0) override;
+                            unsigned int size, bool is_read,
+                            uint8_t pseudo_channel = 0) override;
 
     /**
      * Check drain state of NVM interface
@@ -255,8 +256,8 @@ class NVMInterface : public MemInterface
      * @return an iterator to the selected packet, else queue.end()
      * @return the tick when the packet selected will issue
      */
-    std::pair<MemPacketQueue::iterator, Tick> chooseNextFRFCFS(
-        MemPacketQueue &queue, Tick min_col_at) const override;
+    std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const override;
 
     /**
      *  Add rank to rank delay to bus timing to all NVM banks in alli ranks
@@ -313,8 +314,9 @@ class NVMInterface : public MemInterface
      * @return pair, tick when current burst is issued and
      *               tick when next burst can issue
      */
-    std::pair<Tick, Tick> doBurstAccess(MemPacket *pkt, Tick next_burst_at,
-        const std::vector<MemPacketQueue> &queue) override;
+    std::pair<Tick, Tick>
+    doBurstAccess(MemPacket *pkt, Tick next_burst_at,
+                  const std::vector<MemPacketQueue> &queue) override;
 
     /**
      * The next three functions are DRAM-specific and will be ignored by NVM.

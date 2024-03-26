@@ -65,7 +65,7 @@ TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage) {}
 // PREDICTOR UPDATE
 void
 TAGE::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-    bool squashed, const StaticInstPtr &inst, Addr target)
+             bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
 
@@ -81,11 +81,11 @@ TAGE::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
 
     int nrand = random_mt.random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
-        DPRINTF(
-            Tage, "Updating tables for branch:%lx; taken?:%d\n", pc, taken);
+        DPRINTF(Tage, "Updating tables for branch:%lx; taken?:%d\n", pc,
+                taken);
         tage->updateStats(taken, bi->tageBranchInfo);
         tage->condBranchUpdate(tid, pc, taken, tage_bi, nrand, target,
-            bi->tageBranchInfo->tagePred);
+                               bi->tageBranchInfo->tagePred);
     }
 
     // optional non speculative update of the histories
@@ -123,7 +123,7 @@ TAGE::lookup(ThreadID tid, Addr pc, void *&bp_history)
 
 void
 TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-    Addr target, void *&bp_history)
+                      Addr target, void *&bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {

@@ -80,7 +80,7 @@ fpConvert(ConvertType cvt_type, double fp_val)
     default:
         panic("Invalid Floating Point Conversion Type (%d). See \"types.hh\" "
               "for List of Conversions\n",
-            cvt_type);
+              cvt_type);
         return 0;
     }
 }

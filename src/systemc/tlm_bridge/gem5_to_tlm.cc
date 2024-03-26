@@ -214,8 +214,8 @@ setPacketResponse(PacketPtr pkt, tlm::tlm_generic_payload &trans)
 
 template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge<BITWIDTH>::pec(
-    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
+Gem5ToTlmBridge<BITWIDTH>::pec(tlm::tlm_generic_payload &trans,
+                               const tlm::tlm_phase &phase)
 {
     sc_core::sc_time delay;
 
@@ -302,7 +302,7 @@ Tick
 Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
-        "Should not see packets where cache is responding");
+             "Should not see packets where cache is responding");
 
     // Prepare the transaction.
     auto *trans = packet2payload(packet);
@@ -324,11 +324,11 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
 
 template <unsigned int BITWIDTH>
 Tick
-Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(
-    PacketPtr packet, MemBackdoorPtr &backdoor)
+Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(PacketPtr packet,
+                                              MemBackdoorPtr &backdoor)
 {
     panic_if(packet->cacheResponding(),
-        "Should not see packets where cache is responding");
+             "Should not see packets where cache is responding");
 
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
@@ -361,8 +361,8 @@ void
 Gem5ToTlmBridge<BITWIDTH>::recvFunctionalSnoop(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
-    SC_REPORT_FATAL(
-        "Gem5ToTlmBridge", "unimplemented func.: recvFunctionalSnoop");
+    SC_REPORT_FATAL("Gem5ToTlmBridge",
+                    "unimplemented func.: recvFunctionalSnoop");
 }
 
 // Similar to TLM's non-blocking transport (AT).
@@ -371,7 +371,7 @@ bool
 Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
-        "Should not see packets where cache is responding");
+             "Should not see packets where cache is responding");
 
     // We should never get a second request after noting that a retry is
     // required.
@@ -442,8 +442,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
         blockingRequest = trans;
         packetMap.emplace(trans, packet);
         auto cb = [this, trans, phase]() { pec(*trans, phase); };
-        auto event = new EventFunctionWrapper(
-            cb, "pec", true, getPriorityOfTlmPhase(phase));
+        auto event = new EventFunctionWrapper(cb, "pec", true,
+                                              getPriorityOfTlmPhase(phase));
         system->schedule(event, curTick() + delay.value());
     } else if (status == tlm::TLM_COMPLETED) {
         // Transaction is over nothing has do be done.
@@ -459,8 +459,8 @@ bool
 Gem5ToTlmBridge<BITWIDTH>::recvTimingSnoopResp(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
-    SC_REPORT_FATAL(
-        "Gem5ToTlmBridge", "unimplemented func.: recvTimingSnoopResp");
+    SC_REPORT_FATAL("Gem5ToTlmBridge",
+                    "unimplemented func.: recvTimingSnoopResp");
     return false;
 }
 
@@ -507,8 +507,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
     /* Execute Debug Transport: */
     unsigned int bytes = socket->transport_dbg(*trans);
     if (bytes != trans->get_data_length()) {
-        SC_REPORT_FATAL(
-            "Gem5ToTlmBridge", "debug transport was not completed");
+        SC_REPORT_FATAL("Gem5ToTlmBridge",
+                        "debug transport was not completed");
     }
 
     trans->release();
@@ -516,8 +516,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
 
 template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                              MemBackdoorPtr &backdoor)
 {
     // Create a transaction to send along to TLM's get_direct_mem_ptr.
     tlm::tlm_generic_payload *trans = mm.allocate();
@@ -542,19 +542,20 @@ Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(
 template <unsigned int BITWIDTH>
 tlm::tlm_sync_enum
 Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
-    tlm::tlm_phase &phase, sc_core::sc_time &delay)
+                                           tlm::tlm_phase &phase,
+                                           sc_core::sc_time &delay)
 {
     auto cb = [this, &trans, phase]() { pec(trans, phase); };
-    auto event = new EventFunctionWrapper(
-        cb, "pec", true, getPriorityOfTlmPhase(phase));
+    auto event = new EventFunctionWrapper(cb, "pec", true,
+                                          getPriorityOfTlmPhase(phase));
     system->schedule(event, curTick() + delay.value());
     return tlm::TLM_ACCEPTED;
 }
 
 template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
-    sc_dt::uint64 start_range, sc_dt::uint64 end_range)
+Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
+                                                     sc_dt::uint64 end_range)
 {
     AddrRange r(start_range, end_range);
 
@@ -570,17 +571,17 @@ Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
 }
 
 template <unsigned int BITWIDTH>
-Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(
-    const Params &params, const sc_core::sc_module_name &mn) :
-    Gem5ToTlmBridgeBase(mn),
-    bridgeResponsePort(std::string(name()) + ".gem5", *this),
-    socket("tlm_socket"),
-    wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
-    system(params.system),
-    blockingRequest(nullptr),
-    needToSendRequestRetry(false),
-    blockingResponse(nullptr),
-    addrRanges(params.addr_ranges.begin(), params.addr_ranges.end())
+Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(const Params &params,
+                                           const sc_core::sc_module_name &mn)
+    : Gem5ToTlmBridgeBase(mn),
+      bridgeResponsePort(std::string(name()) + ".gem5", *this),
+      socket("tlm_socket"),
+      wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
+      system(params.system),
+      blockingRequest(nullptr),
+      needToSendRequestRetry(false),
+      blockingResponse(nullptr),
+      addrRanges(params.addr_ranges.begin(), params.addr_ranges.end())
 {}
 
 template <unsigned int BITWIDTH>

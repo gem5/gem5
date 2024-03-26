@@ -53,8 +53,8 @@ class NopStaticInst : public StaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }

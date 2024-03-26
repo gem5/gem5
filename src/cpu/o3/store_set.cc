@@ -37,12 +37,12 @@ namespace gem5
 {
 namespace o3
 {
-StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size) :
-    clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
+StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
+    : clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
 {
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n", SSITSize,
-        LFSTSize);
+            LFSTSize);
 
     if (!isPowerOf2(SSITSize)) {
         fatal("Invalid SSIT size!\n");
@@ -86,7 +86,7 @@ StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
 
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n", SSITSize,
-        LFSTSize);
+            LFSTSize);
 
     SSIT.resize(SSITSize);
 
@@ -137,9 +137,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         assert(new_set < LFSTSize);
 
         DPRINTF(StoreSet,
-            "StoreSet: Neither load nor store had a valid "
-            "storeset, creating a new one: %i for load %#x, store %#x\n",
-            new_set, load_PC, store_PC);
+                "StoreSet: Neither load nor store had a valid "
+                "storeset, creating a new one: %i for load %#x, store %#x\n",
+                new_set, load_PC, store_PC);
     } else if (valid_load_SSID && !valid_store_SSID) {
         SSID load_SSID = SSIT[load_index];
 
@@ -150,9 +150,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         assert(load_SSID < LFSTSize);
 
         DPRINTF(StoreSet,
-            "StoreSet: Load had a valid store set.  Adding "
-            "store to that set: %i for load %#x, store %#x\n",
-            load_SSID, load_PC, store_PC);
+                "StoreSet: Load had a valid store set.  Adding "
+                "store to that set: %i for load %#x, store %#x\n",
+                load_SSID, load_PC, store_PC);
     } else if (!valid_load_SSID && valid_store_SSID) {
         SSID store_SSID = SSIT[store_index];
 
@@ -161,9 +161,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         SSIT[load_index] = store_SSID;
 
         DPRINTF(StoreSet,
-            "StoreSet: Store had a valid store set: %i for "
-            "load %#x, store %#x\n",
-            store_SSID, load_PC, store_PC);
+                "StoreSet: Store had a valid store set: %i for "
+                "load %#x, store %#x\n",
+                store_SSID, load_PC, store_PC);
     } else {
         SSID load_SSID = SSIT[load_index];
         SSID store_SSID = SSIT[store_index];
@@ -175,16 +175,16 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
             SSIT[store_index] = load_SSID;
 
             DPRINTF(StoreSet,
-                "StoreSet: Load had smaller store set: %i; "
-                "for load %#x, store %#x\n",
-                load_SSID, load_PC, store_PC);
+                    "StoreSet: Load had smaller store set: %i; "
+                    "for load %#x, store %#x\n",
+                    load_SSID, load_PC, store_PC);
         } else {
             SSIT[load_index] = store_SSID;
 
             DPRINTF(StoreSet,
-                "StoreSet: Store had smaller store set: %i; "
-                "for load %#x, store %#x\n",
-                store_SSID, load_PC, store_PC);
+                    "StoreSet: Store had smaller store set: %i; "
+                    "for load %#x, store %#x\n",
+                    store_SSID, load_PC, store_PC);
         }
     }
 }
@@ -195,7 +195,7 @@ StoreSet::checkClear()
     memOpsPred++;
     if (memOpsPred > clearPeriod) {
         DPRINTF(StoreSet, "Wiping predictor state beacuse %d ld/st executed\n",
-            clearPeriod);
+                clearPeriod);
         memOpsPred = 0;
         clear();
     }
@@ -235,7 +235,7 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
         storeList[store_seq_num] = store_SSID;
 
         DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n", store_PC,
-            store_SSID);
+                store_SSID);
     }
 }
 
@@ -260,16 +260,16 @@ StoreSet::checkInst(Addr PC)
 
         if (!validLFST[inst_SSID]) {
             DPRINTF(StoreSet,
-                "Inst %#x with index %i and SSID %i had no "
-                "dependency\n",
-                PC, index, inst_SSID);
+                    "Inst %#x with index %i and SSID %i had no "
+                    "dependency\n",
+                    PC, index, inst_SSID);
 
             return 0;
         } else {
             DPRINTF(StoreSet,
-                "Inst %#x with index %i and SSID %i had LFST "
-                "inum of %i\n",
-                PC, index, inst_SSID, LFST[inst_SSID]);
+                    "Inst %#x with index %i and SSID %i had LFST "
+                    "inum of %i\n",
+                    PC, index, inst_SSID, LFST[inst_SSID]);
 
             return LFST[inst_SSID];
         }
@@ -366,7 +366,7 @@ StoreSet::dump()
 
     while (store_list_it != storeList.end()) {
         cprintf("%i: [sn:%lli] SSID:%i\n", num, (*store_list_it).first,
-            (*store_list_it).second);
+                (*store_list_it).second);
         num++;
         store_list_it++;
     }

@@ -43,8 +43,8 @@
 namespace gem5
 {
 void
-MemChecker::WriteCluster::startWrite(
-    MemChecker::Serial serial, Tick _start, uint8_t data)
+MemChecker::WriteCluster::startWrite(MemChecker::Serial serial, Tick _start,
+                                     uint8_t data)
 {
     assert(!isComplete());
 
@@ -70,15 +70,15 @@ MemChecker::WriteCluster::startWrite(
 }
 
 void
-MemChecker::WriteCluster::completeWrite(
-    MemChecker::Serial serial, Tick _complete)
+MemChecker::WriteCluster::completeWrite(MemChecker::Serial serial,
+                                        Tick _complete)
 {
     auto it = writes.find(serial);
 
     if (it == writes.end()) {
         warn("Could not locate write transaction: serial = %d, "
              "complete = %d\n",
-            serial, _complete);
+             serial, _complete);
         return;
     }
 
@@ -129,8 +129,8 @@ MemChecker::ByteTracker::startRead(MemChecker::Serial serial, Tick start)
 }
 
 bool
-MemChecker::ByteTracker::inExpectedData(
-    Tick start, Tick complete, uint8_t data)
+MemChecker::ByteTracker::inExpectedData(Tick start, Tick complete,
+                                        uint8_t data)
 {
     _lastExpectedData.clear();
 
@@ -216,24 +216,24 @@ MemChecker::ByteTracker::inExpectedData(
         // We have not found any possible (non-matching data). Can happen in
         // initial system state
         DPRINTF(MemChecker,
-            "no last observation nor write! start = %d, "
-            "complete = %d, data = %#x\n",
-            start, complete, data);
+                "no last observation nor write! start = %d, "
+                "complete = %d, data = %#x\n",
+                start, complete, data);
         return true;
     }
     return false;
 }
 
 bool
-MemChecker::ByteTracker::completeRead(
-    MemChecker::Serial serial, Tick complete, uint8_t data)
+MemChecker::ByteTracker::completeRead(MemChecker::Serial serial, Tick complete,
+                                      uint8_t data)
 {
     auto it = outstandingReads.find(serial);
 
     if (it == outstandingReads.end()) {
         // Can happen if concurrent with reset_address_range
         warn("Could not locate read transaction: serial = %d, complete = %d\n",
-            serial, complete);
+             serial, complete);
         return true;
     }
 
@@ -260,15 +260,15 @@ MemChecker::ByteTracker::getIncompleteWriteCluster()
 }
 
 void
-MemChecker::ByteTracker::startWrite(
-    MemChecker::Serial serial, Tick start, uint8_t data)
+MemChecker::ByteTracker::startWrite(MemChecker::Serial serial, Tick start,
+                                    uint8_t data)
 {
     getIncompleteWriteCluster()->startWrite(serial, start, data);
 }
 
 void
-MemChecker::ByteTracker::completeWrite(
-    MemChecker::Serial serial, Tick complete)
+MemChecker::ByteTracker::completeWrite(MemChecker::Serial serial,
+                                       Tick complete)
 {
     getIncompleteWriteCluster()->completeWrite(serial, complete);
     pruneTransactions();
@@ -291,26 +291,27 @@ MemChecker::ByteTracker::pruneTransactions()
                             outstandingReads.begin()->second.start;
 
     // Pruning of readObservations
-    readObservations.erase(readObservations.begin(),
+    readObservations.erase(
+        readObservations.begin(),
         lastCompletedTransaction(&readObservations, before));
 
     // Pruning of writeClusters
     if (!writeClusters.empty()) {
         writeClusters.erase(writeClusters.begin(),
-            lastCompletedTransaction(&writeClusters, before));
+                            lastCompletedTransaction(&writeClusters, before));
     }
 }
 
 bool
 MemChecker::completeRead(MemChecker::Serial serial, Tick complete, Addr addr,
-    size_t size, uint8_t *data)
+                         size_t size, uint8_t *data)
 {
     bool result = true;
 
     DPRINTF(MemChecker,
-        "completing read: serial = %d, complete = %d, "
-        "addr = %#llx, size = %d\n",
-        serial, complete, addr, size);
+            "completing read: serial = %d, complete = %d, "
+            "addr = %#llx, size = %d\n",
+            serial, complete, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         ByteTracker *tracker = getByteTracker(addr + i);
@@ -327,11 +328,11 @@ MemChecker::completeRead(MemChecker::Serial serial, Tick complete, Addr addr,
 
             errorMessage += csprintf("  Read transaction for address %#llx "
                                      "failed: received %#x, expected ",
-                (unsigned long long)(addr + i), data[i]);
+                                     (unsigned long long)(addr + i), data[i]);
 
             for (size_t j = 0; j < tracker->lastExpectedData().size(); ++j) {
-                errorMessage += csprintf("%#x%s",
-                    tracker->lastExpectedData()[j],
+                errorMessage += csprintf(
+                    "%#x%s", tracker->lastExpectedData()[j],
                     (j == tracker->lastExpectedData().size() - 1) ? "" : "|");
             }
         }
@@ -339,7 +340,7 @@ MemChecker::completeRead(MemChecker::Serial serial, Tick complete, Addr addr,
 
     if (!result) {
         DPRINTF(MemChecker, "read of %#llx @ cycle %d failed:\n%s\n", addr,
-            complete, errorMessage);
+                complete, errorMessage);
     }
 
     return result;

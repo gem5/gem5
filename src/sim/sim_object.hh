@@ -273,8 +273,8 @@ class SimObject :
      *
      * @ingroup api_simobject
      */
-    virtual Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID);
+    virtual Port &getPort(const std::string &if_name,
+                          PortID idx = InvalidPortID);
 
     /**
      * startup() is the final initialization call before simulation.
@@ -373,11 +373,11 @@ class SimObject :
  * related by inheritance, but since the target type may be
  * incomplete, the compiler does not know the relation.
  */
-#define PARAMS(type) \
-    using Params = type##Params; \
-    const Params &params() const \
-    { \
-        return reinterpret_cast<const Params &>(_params); \
+#define PARAMS(type)                                                          \
+    using Params = type##Params;                                              \
+    const Params &params() const                                              \
+    {                                                                         \
+        return reinterpret_cast<const Params &>(_params);                     \
     }
 
 /**

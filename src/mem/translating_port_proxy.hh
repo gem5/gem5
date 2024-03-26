@@ -68,8 +68,9 @@ class TranslatingPortProxy : public PortProxy
         return false;
     }
 
-    bool tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
-        std::function<void(const TranslationGen::Range &)> func) const;
+    bool
+    tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
+              std::function<void(const TranslationGen::Range &)> func) const;
 
   public:
     TranslatingPortProxy(ThreadContext *tc, Request::Flags _flags = 0);

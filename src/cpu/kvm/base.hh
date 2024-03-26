@@ -646,8 +646,8 @@ class BaseKvmCPU : public BaseCPU
     class KVMCpuPort : public RequestPort
     {
       public:
-        KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu) :
-            RequestPort(_name), cpu(_cpu), activeMMIOReqs(0)
+        KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu)
+            : RequestPort(_name), cpu(_cpu), activeMMIOReqs(0)
         {}
         /**
          * Interface to send Atomic or Timing IO request.  Assumes that the pkt

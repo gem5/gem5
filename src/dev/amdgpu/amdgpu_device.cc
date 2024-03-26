@@ -51,16 +51,16 @@
 
 namespace gem5
 {
-AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p) :
-    PciDevice(p),
-    gpuMemMgr(p.memory_manager),
-    deviceIH(p.device_ih),
-    pm4PktProc(p.pm4_pkt_proc),
-    cp(p.cp),
-    checkpoint_before_mmios(p.checkpoint_before_mmios),
-    init_interrupt_count(0),
-    _lastVMID(0),
-    deviceMem(name() + ".deviceMem", p.memories, false, "", false)
+AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
+    : PciDevice(p),
+      gpuMemMgr(p.memory_manager),
+      deviceIH(p.device_ih),
+      pm4PktProc(p.pm4_pkt_proc),
+      cp(p.cp),
+      checkpoint_before_mmios(p.checkpoint_before_mmios),
+      init_interrupt_count(0),
+      _lastVMID(0),
+      deviceMem(name() + ".deviceMem", p.memories, false, "", false)
 {
     // Loading the rom binary dumped from hardware.
     std::ifstream romBin;
@@ -96,7 +96,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p) :
         sdmaMmios.insert(
             {sdma_id, RangeSize(s->getMmioBase(), s->getMmioSize())});
         DPRINTF(AMDGPUDevice, "SDMA%d has MMIO range %s\n", sdma_id,
-            sdmaMmios[sdma_id].to_string().c_str());
+                sdmaMmios[sdma_id].to_string().c_str());
         sdma_id++;
     }
 
@@ -180,7 +180,7 @@ AMDGPUDevice::readROM(PacketPtr pkt)
     pkt->setUintX(rom_data, ByteOrder::little);
 
     DPRINTF(AMDGPUDevice, "Read from addr %#x on ROM offset %#x data: %#x\n",
-        pkt->getAddr(), rom_offset, rom_data);
+            pkt->getAddr(), rom_offset, rom_data);
 }
 
 void
@@ -194,7 +194,7 @@ AMDGPUDevice::writeROM(PacketPtr pkt)
     memcpy(rom.data() + rom_offset, &rom_data, pkt->getSize());
 
     DPRINTF(AMDGPUDevice, "Write to addr %#x on ROM offset %#x data: %#x\n",
-        pkt->getAddr(), rom_offset, rom_data);
+            pkt->getAddr(), rom_offset, rom_data);
 }
 
 AddrRangeList
@@ -231,30 +231,30 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
             case sizeof(uint8_t):
                 pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
                 DPRINTF(AMDGPUDevice,
-                    "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
-                    "= %#x\n",
-                    _busAddr.dev, _busAddr.func, pxcap_offset,
-                    (uint32_t)pkt->getLE<uint8_t>());
+                        "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint8_t>());
                 break;
             case sizeof(uint16_t):
                 pkt->setLE<uint16_t>(*(uint16_t *)&pxcap.data[pxcap_offset]);
                 DPRINTF(AMDGPUDevice,
-                    "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
-                    "= %#x\n",
-                    _busAddr.dev, _busAddr.func, pxcap_offset,
-                    (uint32_t)pkt->getLE<uint16_t>());
+                        "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint16_t>());
                 break;
             case sizeof(uint32_t):
                 pkt->setLE<uint32_t>(*(uint32_t *)&pxcap.data[pxcap_offset]);
                 DPRINTF(AMDGPUDevice,
-                    "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
-                    "= %#x\n",
-                    _busAddr.dev, _busAddr.func, pxcap_offset,
-                    (uint32_t)pkt->getLE<uint32_t>());
+                        "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint32_t>());
                 break;
             default:
                 panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
-                    pkt->getSize(), pxcap_offset);
+                      pkt->getSize(), pxcap_offset);
             }
             pkt->makeAtomicResponse();
         } else {
@@ -286,9 +286,9 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
 {
     [[maybe_unused]] int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     DPRINTF(AMDGPUDevice,
-        "Write Config: from offset: %#x size: %#x "
-        "data: %#x\n",
-        offset, pkt->getSize(), pkt->getUintX(ByteOrder::little));
+            "Write Config: from offset: %#x size: %#x "
+            "data: %#x\n",
+            offset, pkt->getSize(), pkt->getUintX(ByteOrder::little));
 
     if (offset < PCI_DEVICE_SPECIFIC)
         return PciDevice::writeConfig(pkt);
@@ -298,10 +298,10 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
         int pxcap_offset = offset - PXCAP_BASE;
 
         DPRINTF(AMDGPUDevice, "Writing PXCAP offset %d size %d\n",
-            pxcap_offset, pkt->getSize());
+                pxcap_offset, pkt->getSize());
 
         memcpy(pxcap_data + pxcap_offset, pkt->getConstPtr<void>(),
-            pkt->getSize());
+               pkt->getSize());
     }
 
     pkt->makeAtomicResponse();
@@ -313,8 +313,8 @@ void
 AMDGPUDevice::dispatchAccess(PacketPtr pkt, bool read)
 {
     DPRINTF(AMDGPUDevice, "%s from addr %#x size: %#x data: %#x\n",
-        read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(),
-        pkt->getUintX(ByteOrder::little));
+            read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(),
+            pkt->getUintX(ByteOrder::little));
 
     pkt->makeAtomicResponse();
 }
@@ -338,8 +338,8 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
      * because this method is called by the PCIDevice::read method which
      * is a non-timing read.
      */
-    RequestPtr req = std::make_shared<Request>(
-        offset, pkt->getSize(), 0, vramRequestorId());
+    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                               vramRequestorId());
     PacketPtr readPkt = Packet::createRead(req);
     uint8_t *dataPtr = new uint8_t[pkt->getSize()];
     readPkt->dataDynamic(dataPtr);
@@ -371,8 +371,8 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 
     if (regs.find(offset) != regs.end()) {
         uint64_t value = regs[offset];
-        DPRINTF(
-            AMDGPUDevice, "Reading what kernel wrote before: %#x\n", value);
+        DPRINTF(AMDGPUDevice, "Reading what kernel wrote before: %#x\n",
+                value);
         pkt->setUintX(value, ByteOrder::little);
     }
 
@@ -406,7 +406,7 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     if (aperture == gpuvm.gartBase()) {
         gpuvm.gartTable[aperture_offset] = pkt->getUintX(ByteOrder::little);
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
-            gpuvm.gartTable[aperture_offset]);
+                gpuvm.gartTable[aperture_offset]);
     }
 
     nbio.writeFrame(pkt, offset);
@@ -416,12 +416,12 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
      * because this method is called by the PCIDevice::write method which
      * is a non-timing write.
      */
-    RequestPtr req = std::make_shared<Request>(
-        offset, pkt->getSize(), 0, vramRequestorId());
+    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                               vramRequestorId());
     PacketPtr writePkt = Packet::createWrite(req);
     uint8_t *dataPtr = new uint8_t[pkt->getSize()];
-    std::memcpy(
-        dataPtr, pkt->getPtr<uint8_t>(), pkt->getSize() * sizeof(uint8_t));
+    std::memcpy(dataPtr, pkt->getPtr<uint8_t>(),
+                pkt->getSize() * sizeof(uint8_t));
     writePkt->dataDynamic(dataPtr);
 
     auto system = cp->shader()->gpuCmdProc.system();
@@ -435,16 +435,16 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 
     if (doorbells.find(offset) != doorbells.end()) {
         QueueType q_type = doorbells[offset];
-        DPRINTF(
-            AMDGPUDevice, "Doorbell offset %p queue: %d\n", offset, q_type);
+        DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n", offset,
+                q_type);
         switch (q_type) {
         case Compute:
-            pm4PktProc->process(
-                pm4PktProc->getQueue(offset), pkt->getLE<uint64_t>());
+            pm4PktProc->process(pm4PktProc->getQueue(offset),
+                                pkt->getLE<uint64_t>());
             break;
         case Gfx:
-            pm4PktProc->process(
-                pm4PktProc->getQueue(offset, true), pkt->getLE<uint64_t>());
+            pm4PktProc->process(pm4PktProc->getQueue(offset, true),
+                                pkt->getLE<uint64_t>());
             break;
         case SDMAGfx: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
@@ -471,7 +471,7 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
         }
     } else {
         warn("Unknown doorbell offset: %lx. Saving to pending doorbells.\n",
-            offset);
+             offset);
 
         // We have to ACK the PCI packet immediately, so create a copy of the
         // packet here to send again.
@@ -498,12 +498,12 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
             Addr sdma_offset = (offset - sdmaMmios[idx].start()) >> 2;
             if (sdmaFunc.count(sdma_offset)) {
                 DPRINTF(AMDGPUDevice, "Calling SDMA%d MMIO function %lx\n",
-                    idx, sdma_offset);
+                        idx, sdma_offset);
                 sdmaFuncPtr mptr = sdmaFunc[sdma_offset];
                 (getSDMAById(idx)->*mptr)(pkt->getLE<uint32_t>());
             } else {
                 DPRINTF(AMDGPUDevice, "Unknown SDMA%d MMIO: %#lx\n", idx,
-                    sdma_offset);
+                        sdma_offset);
             }
 
             return;
@@ -595,8 +595,8 @@ AMDGPUDevice::write(PacketPtr pkt)
     // Reads return 0 by default.
     uint64_t data = pkt->getUintX(ByteOrder::little);
 
-    DPRINTF(
-        AMDGPUDevice, "PCI Write to %#lx data %#lx\n", pkt->getAddr(), data);
+    DPRINTF(AMDGPUDevice, "PCI Write to %#lx data %#lx\n", pkt->getAddr(),
+            data);
 
     dispatchAccess(pkt, false);
 
@@ -725,8 +725,8 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
         used_vmids[idx] = it.first;
         used_queue_id_sizes[idx] = it.second.size();
         std::vector<int> set_vector(it.second.begin(), it.second.end());
-        used_vmid_sets.insert(
-            used_vmid_sets.end(), set_vector.begin(), set_vector.end());
+        used_vmid_sets.insert(used_vmid_sets.end(), set_vector.begin(),
+                              set_vector.end());
         ++idx;
     }
 
@@ -737,17 +737,17 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs) / sizeof(reg_addrs[0]));
     SERIALIZE_ARRAY(reg_values, sizeof(reg_values) / sizeof(reg_values[0]));
     SERIALIZE_ARRAY(doorbells_offset,
-        sizeof(doorbells_offset) / sizeof(doorbells_offset[0]));
+                    sizeof(doorbells_offset) / sizeof(doorbells_offset[0]));
     SERIALIZE_ARRAY(doorbells_queues,
-        sizeof(doorbells_queues) / sizeof(doorbells_queues[0]));
+                    sizeof(doorbells_queues) / sizeof(doorbells_queues[0]));
     SERIALIZE_ARRAY(sdma_engs_offset,
-        sizeof(sdma_engs_offset) / sizeof(sdma_engs_offset[0]));
+                    sizeof(sdma_engs_offset) / sizeof(sdma_engs_offset[0]));
     SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs) / sizeof(sdma_engs[0]));
     // Save the vmids used in an array
     SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids) / sizeof(used_vmids[0]));
     // Save the size of the set of queue ids mapped to each vmid
-    SERIALIZE_ARRAY(used_queue_id_sizes,
-        sizeof(used_queue_id_sizes) / sizeof(used_queue_id_sizes[0]));
+    SERIALIZE_ARRAY(used_queue_id_sizes, sizeof(used_queue_id_sizes) /
+                                             sizeof(used_queue_id_sizes[0]));
     // Save all the queue ids used for all the vmids
     SERIALIZE_ARRAY(vmid_array, num_queue_id);
     // Save the total number of queue idsused
@@ -781,8 +781,8 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         uint64_t reg_values[regs_size];
 
         UNSERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs) / sizeof(reg_addrs[0]));
-        UNSERIALIZE_ARRAY(
-            reg_values, sizeof(reg_values) / sizeof(reg_values[0]));
+        UNSERIALIZE_ARRAY(reg_values,
+                          sizeof(reg_values) / sizeof(reg_values[0]));
 
         for (int idx = 0; idx < regs_size; ++idx) {
             regs.insert(std::make_pair(reg_addrs[idx], reg_values[idx]));
@@ -793,10 +793,10 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         uint32_t doorbells_offset[doorbells_size];
         QueueType doorbells_queues[doorbells_size];
 
-        UNSERIALIZE_ARRAY(doorbells_offset,
-            sizeof(doorbells_offset) / sizeof(doorbells_offset[0]));
-        UNSERIALIZE_ARRAY(doorbells_queues,
-            sizeof(doorbells_queues) / sizeof(doorbells_queues[0]));
+        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset) /
+                                                sizeof(doorbells_offset[0]));
+        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues) /
+                                                sizeof(doorbells_queues[0]));
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
             regs.insert(
@@ -809,8 +809,8 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         uint32_t sdma_engs_offset[sdma_engs_size];
         int sdma_engs[sdma_engs_size];
 
-        UNSERIALIZE_ARRAY(sdma_engs_offset,
-            sizeof(sdma_engs_offset) / sizeof(sdma_engs_offset[0]));
+        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset) /
+                                                sizeof(sdma_engs_offset[0]));
         UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs) / sizeof(sdma_engs[0]));
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {

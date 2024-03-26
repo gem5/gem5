@@ -55,8 +55,8 @@ class SMMUCommandExecProcess : public SMMUProcess
     virtual void main(Yield &yield);
 
   public:
-    SMMUCommandExecProcess(const std::string &name, SMMUv3 &_smmu) :
-        SMMUProcess(name, _smmu), busy(false)
+    SMMUCommandExecProcess(const std::string &name, SMMUv3 &_smmu)
+        : SMMUProcess(name, _smmu), busy(false)
     {
         reinit();
     }

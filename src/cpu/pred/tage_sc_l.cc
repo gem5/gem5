@@ -74,8 +74,8 @@ TAGE_SC_L_LoopPredictor::optionalAgeInc() const
     return (random_mt.random<int>() & 7) == 0;
 }
 
-TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams &p) :
-    LTAGE(p), statisticalCorrector(p.statistical_corrector)
+TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams &p)
+    : LTAGE(p), statisticalCorrector(p.statistical_corrector)
 {}
 
 TAGEBase::BranchInfo *
@@ -96,8 +96,8 @@ TAGE_SC_L_TAGE::calculateParameters()
     for (int i = 2; i <= numHistLengths; i++) {
         histLengths[i] =
             (int)(((double)minHist *
-                      pow((double)(maxHist) / (double)minHist,
-                          (double)(i - 1) / (double)((numHistLengths - 1)))) +
+                   pow((double)(maxHist) / (double)minHist,
+                       (double)(i - 1) / (double)((numHistLengths - 1)))) +
                   0.5);
     }
 
@@ -108,8 +108,8 @@ TAGE_SC_L_TAGE::calculateParameters()
     }
 
     for (int i = 1; i <= nHistoryTables; i++) {
-        tagTableTagWidths.push_back(
-            (i < firstLongTagTable) ? shortTagsSize : longTagsSize);
+        tagTableTagWidths.push_back((i < firstLongTagTable) ? shortTagsSize :
+                                                              longTagsSize);
 
         logTagTableSizes.push_back(logTagTableSize);
     }
@@ -133,8 +133,8 @@ TAGE_SC_L_TAGE::buildTageTables()
 }
 
 void
-TAGE_SC_L_TAGE::calculateIndicesAndTags(
-    ThreadID tid, Addr pc, TAGEBase::BranchInfo *bi)
+TAGE_SC_L_TAGE::calculateIndicesAndTags(ThreadID tid, Addr pc,
+                                        TAGEBase::BranchInfo *bi)
 {
     // computes the table addresses and the partial tags
 
@@ -151,7 +151,7 @@ TAGE_SC_L_TAGE::calculateIndicesAndTags(
     }
 
     Addr t = (pc ^ (threadHistory[tid].pathHist &
-                       ((1 << histLengths[firstLongTagTable]) - 1))) %
+                    ((1 << histLengths[firstLongTagTable]) - 1))) %
              longTagsTageFactor;
 
     for (int i = firstLongTagTable; i <= nHistoryTables; i++) {
@@ -232,13 +232,14 @@ TAGE_SC_L_TAGE::F(int a, int size, int bank) const
 int
 TAGE_SC_L_TAGE::bindex(Addr pc) const
 {
-    return (
-        (pc ^ (pc >> instShiftAmt)) & ((1ULL << (logTagTableSizes[0])) - 1));
+    return ((pc ^ (pc >> instShiftAmt)) &
+            ((1ULL << (logTagTableSizes[0])) - 1));
 }
 
 void
-TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
-    ThreadHistory &tHist, int brtype, bool taken, Addr branch_pc, Addr target)
+TAGE_SC_L_TAGE::updatePathAndGlobalHistory(ThreadHistory &tHist, int brtype,
+                                           bool taken, Addr branch_pc,
+                                           Addr target)
 {
     // TAGE update
     int tmp = ((branch_pc ^ (branch_pc >> instShiftAmt))) ^ taken;
@@ -274,8 +275,8 @@ TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
 
 void
 TAGE_SC_L_TAGE::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-    TAGEBase::BranchInfo *b, bool speculative, const StaticInstPtr &inst,
-    Addr target)
+                                TAGEBase::BranchInfo *b, bool speculative,
+                                const StaticInstPtr &inst, Addr target)
 {
     if (speculative != speculativeHistUpdate) {
         return;
@@ -292,14 +293,14 @@ TAGE_SC_L_TAGE::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
     updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
 
     DPRINTF(TageSCL,
-        "Updating global histories with branch:%lx; taken?:%d, "
-        "path Hist: %x; pointer:%d\n",
-        branch_pc, taken, tHist.pathHist, tHist.ptGhist);
+            "Updating global histories with branch:%lx; taken?:%d, "
+            "path Hist: %x; pointer:%d\n",
+            branch_pc, taken, tHist.pathHist, tHist.ptGhist);
 }
 
 void
-TAGE_SC_L_TAGE::squash(
-    ThreadID tid, bool taken, TAGEBase::BranchInfo *bi, Addr target)
+TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
+                       Addr target)
 {
     fatal("Speculation is not implemented");
 }
@@ -320,8 +321,8 @@ TAGE_SC_L_TAGE::calcDep(TAGEBase::BranchInfo *bi)
     if ((random_mt.random<int>() & 127) < 32) {
         a = 2;
     }
-    return (
-        (((bi->hitBank - 1 + 2 * a) & 0xffe)) ^ (random_mt.random<int>() & 1));
+    return ((((bi->hitBank - 1 + 2 * a) & 0xffe)) ^
+            (random_mt.random<int>() & 1));
 }
 
 void
@@ -402,14 +403,14 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void *&b)
 
     bool use_tage_ctr = bi->tageBranchInfo->hitBank > 0;
     int8_t tage_ctr = use_tage_ctr ? tage->getCtr(tage_scl_bi->hitBank,
-                                         tage_scl_bi->hitBankIndex) :
+                                                  tage_scl_bi->hitBankIndex) :
                                      0;
     bool bias =
         (bi->tageBranchInfo->longestMatchPred != bi->tageBranchInfo->altTaken);
 
-    pred_taken = statisticalCorrector->scPredict(tid, pc, cond_branch,
-        bi->scBranchInfo, pred_taken, bias, use_tage_ctr, tage_ctr,
-        tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
+    pred_taken = statisticalCorrector->scPredict(
+        tid, pc, cond_branch, bi->scBranchInfo, pred_taken, bias, use_tage_ctr,
+        tage_ctr, tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
         bi->tageBranchInfo->altBank, tage->getPathHist(tid));
 
     if (bi->scBranchInfo->usedScPred) {
@@ -424,7 +425,7 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void *&b)
 
 void
 TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-    bool squashed, const StaticInstPtr &inst, Addr target)
+                  bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
 
@@ -446,8 +447,8 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
 
     int nrand = random_mt.random<int>() & 3;
     if (tage_bi->condBranch) {
-        DPRINTF(
-            TageSCL, "Updating tables for branch:%lx; taken?:%d\n", pc, taken);
+        DPRINTF(TageSCL, "Updating tables for branch:%lx; taken?:%d\n", pc,
+                taken);
         tage->updateStats(taken, bi->tageBranchInfo);
 
         loopPredictor->updateStats(taken, bi->lpBranchInfo);
@@ -456,23 +457,25 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
 
         bool bias = (bi->tageBranchInfo->longestMatchPred !=
                      bi->tageBranchInfo->altTaken);
-        statisticalCorrector->condBranchUpdate(tid, pc, taken,
-            bi->scBranchInfo, target, bias, bi->tageBranchInfo->hitBank,
-            bi->tageBranchInfo->altBank, tage->getPathHist(tid));
+        statisticalCorrector->condBranchUpdate(
+            tid, pc, taken, bi->scBranchInfo, target, bias,
+            bi->tageBranchInfo->hitBank, bi->tageBranchInfo->altBank,
+            tage->getPathHist(tid));
 
         loopPredictor->condBranchUpdate(tid, pc, taken,
-            bi->tageBranchInfo->tagePred, bi->lpBranchInfo, instShiftAmt);
+                                        bi->tageBranchInfo->tagePred,
+                                        bi->lpBranchInfo, instShiftAmt);
 
         tage->condBranchUpdate(tid, pc, taken, bi->tageBranchInfo, nrand,
-            target, bi->lpBranchInfo->predTaken);
+                               target, bi->lpBranchInfo->predTaken);
     }
 
     if (!tage->isSpeculativeUpdateEnabled()) {
-        statisticalCorrector->scHistoryUpdate(
-            pc, inst, taken, bi->scBranchInfo, target);
+        statisticalCorrector->scHistoryUpdate(pc, inst, taken,
+                                              bi->scBranchInfo, target);
 
-        tage->updateHistories(
-            tid, pc, taken, bi->tageBranchInfo, false, inst, target);
+        tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, false, inst,
+                              target);
     }
 
     delete bi;

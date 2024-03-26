@@ -43,10 +43,10 @@ namespace gem5
 {
 namespace prefetch
 {
-Multi::Multi(const MultiPrefetcherParams &p) :
-    Base(p),
-    prefetchers(p.prefetchers.begin(), p.prefetchers.end()),
-    lastChosenPf(0)
+Multi::Multi(const MultiPrefetcherParams &p)
+    : Base(p),
+      prefetchers(p.prefetchers.begin(), p.prefetchers.end()),
+      lastChosenPf(0)
 {}
 
 void

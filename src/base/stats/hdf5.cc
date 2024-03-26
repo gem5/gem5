@@ -60,13 +60,13 @@ emptyStrings(const T &labels)
 
 namespace statistics
 {
-Hdf5::Hdf5(
-    const std::string &file, unsigned chunking, bool desc, bool formulas) :
-    fname(file),
-    timeChunk(chunking),
-    enableDescriptions(desc),
-    enableFormula(formulas),
-    dumpCount(0)
+Hdf5::Hdf5(const std::string &file, unsigned chunking, bool desc,
+           bool formulas)
+    : fname(file),
+      timeChunk(chunking),
+      enableDescriptions(desc),
+      enableFormula(formulas),
+      dumpCount(0)
 {
     // Tell the library not to print exceptions by default. There are
     // cases where we rely on exceptions to determine if we need to
@@ -80,8 +80,8 @@ void
 Hdf5::begin()
 {
     h5File = H5::H5File(fname,
-        // Truncate the file if this is the first dump
-        dumpCount > 0 ? H5F_ACC_RDWR : H5F_ACC_TRUNC);
+                        // Truncate the file if this is the first dump
+                        dumpCount > 0 ? H5F_ACC_RDWR : H5F_ACC_TRUNC);
     path.push(h5File.openGroup("/"));
 }
 
@@ -256,7 +256,7 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
         fspace = H5::DataSpace(rank, dims, max_dims.data());
         try {
             DPRINTF(Stats, "Creating dataset %s in group %s\n", info.name,
-                group.getObjnameByIdx(group.getId()));
+                    group.getObjnameByIdx(group.getId()));
             data_set = group.createDataSet(
                 info.name, H5::PredType::NATIVE_DOUBLE, fspace, props);
         } catch (const H5::Exception &e) {
@@ -286,7 +286,7 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
 
 void
 Hdf5::addMetaData(H5::DataSet &loc, const char *name,
-    const std::vector<const char *> &values)
+                  const std::vector<const char *> &values)
 {
     H5::StrType type(H5::PredType::C_S1, H5T_VARIABLE);
     hsize_t dims[1] = {
@@ -298,8 +298,8 @@ Hdf5::addMetaData(H5::DataSet &loc, const char *name,
 }
 
 void
-Hdf5::addMetaData(
-    H5::DataSet &loc, const char *name, const std::vector<std::string> &values)
+Hdf5::addMetaData(H5::DataSet &loc, const char *name,
+                  const std::vector<std::string> &values)
 {
     std::vector<const char *> cstrs(values.size());
     for (int i = 0; i < values.size(); ++i)
@@ -333,8 +333,8 @@ Hdf5::addMetaData(H5::DataSet &loc, const char *name, double value)
 }
 
 std::unique_ptr<Output>
-initHDF5(
-    const std::string &filename, unsigned chunking, bool desc, bool formulas)
+initHDF5(const std::string &filename, unsigned chunking, bool desc,
+         bool formulas)
 {
     return std::unique_ptr<Output>(
         new Hdf5(simout.resolve(filename), chunking, desc, formulas));

@@ -56,7 +56,7 @@ class UnimplementedOpcodeFault : public PowerFault
     UnimplementedOpcodeFault() : PowerFault("Unimplemented Opcode") {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class MachineCheckFault : public PowerFault
@@ -74,7 +74,7 @@ class AlignmentFault : public PowerFault
     AlignmentFault(Addr va) : PowerFault("Alignment"), vaddr(va) {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class TrapFault : public PowerFault
@@ -83,7 +83,7 @@ class TrapFault : public PowerFault
     TrapFault() : PowerFault("Trap") {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 } // namespace PowerISA

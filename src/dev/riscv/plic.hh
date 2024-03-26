@@ -215,8 +215,8 @@ class Plic : public PlicBase
         std::vector<RegisterRaz> claim_holes;
         std::vector<RegisterRaz> reserved;
 
-        PlicRegisters(const std::string &name, Addr base, Plic *plic) :
-            RegisterBankLE(name, base), plic(plic)
+        PlicRegisters(const std::string &name, Addr base, Plic *plic)
+            : RegisterBankLE(name, base), plic(plic)
         {}
 
         Plic *plic;
@@ -230,19 +230,19 @@ class Plic : public PlicBase
     /**
      * Register read / write callbacks
      */
-    void writePriority(
-        Register32 &reg, const uint32_t &data, const int src_id);
+    void writePriority(Register32 &reg, const uint32_t &data,
+                       const int src_id);
 
     void writeEnable(Register32 &reg, const uint32_t &data, const int src32_id,
-        const int context_id);
+                     const int context_id);
 
-    void writeThreshold(
-        Register32 &reg, const uint32_t &data, const int context_id);
+    void writeThreshold(Register32 &reg, const uint32_t &data,
+                        const int context_id);
 
     uint32_t readClaim(Register32 &reg, const int context_id);
 
-    void writeClaim(
-        Register32 &reg, const uint32_t &data, const int context_id);
+    void writeClaim(Register32 &reg, const uint32_t &data,
+                    const int context_id);
 
     // Latency Model
   private:

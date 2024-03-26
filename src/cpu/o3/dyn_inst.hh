@@ -74,7 +74,7 @@ class DynInst : public ExecContext, public RefCounted
 {
   private:
     DynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop,
-        InstSeqNum seq_num, CPU *cpu);
+            InstSeqNum seq_num, CPU *cpu);
 
   public:
     // The list of instructions iterator type.
@@ -97,15 +97,15 @@ class DynInst : public ExecContext, public RefCounted
 
     /** BaseDynInst constructor given a binary instruction. */
     DynInst(const Arrays &arrays, const StaticInstPtr &staticInst,
-        const StaticInstPtr &macroop, InstSeqNum seq_num, CPU *cpu);
+            const StaticInstPtr &macroop, InstSeqNum seq_num, CPU *cpu);
 
     DynInst(const Arrays &arrays, const StaticInstPtr &staticInst,
-        const StaticInstPtr &macroop, const PCStateBase &pc,
-        const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *cpu);
+            const StaticInstPtr &macroop, const PCStateBase &pc,
+            const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     DynInst(const Arrays &arrays, const StaticInstPtr &_staticInst,
-        const StaticInstPtr &_macroop);
+            const StaticInstPtr &_macroop);
 
     ~DynInst();
 
@@ -431,16 +431,16 @@ class DynInst : public ExecContext, public RefCounted
     }
 
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-        const std::vector<bool> &byte_enable) override;
+                          const std::vector<bool> &byte_enable) override;
 
     Fault initiateMemMgmtCmd(Request::Flags flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-        Request::Flags flags, uint64_t *res,
-        const std::vector<bool> &byte_enable) override;
+                   Request::Flags flags, uint64_t *res,
+                   const std::vector<bool> &byte_enable) override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-        AtomicOpFunctorPtr amo_op) override;
+                         AtomicOpFunctorPtr amo_op) override;
 
     /** True if the DTB address translation has started. */
     bool
@@ -516,8 +516,8 @@ class DynInst : public ExecContext, public RefCounted
      *  the previous physical register that the logical register mapped to.
      */
     void
-    renameDestReg(
-        int idx, PhysRegIdPtr renamed_dest, PhysRegIdPtr previous_rename)
+    renameDestReg(int idx, PhysRegIdPtr renamed_dest,
+                  PhysRegIdPtr previous_rename)
     {
         renamedDestIdx(idx, renamed_dest);
         prevDestIdx(idx, previous_rename);
@@ -866,8 +866,8 @@ class DynInst : public ExecContext, public RefCounted
     {
         if (inHtmTransactionalState()) {
             DPRINTF(HtmCpu,
-                "clearing instuction's transactional state htmUid=%u\n",
-                getHtmTransactionUid());
+                    "clearing instuction's transactional state htmUid=%u\n",
+                    getHtmTransactionUid());
 
             instFlags.reset(HtmFromTransaction);
             htmUid = -1;
@@ -1552,8 +1552,8 @@ class DynInst : public ExecContext, public RefCounted
         thread->noSquashFromTC = true;
 
         for (int i = 0; i < _destMiscRegIdx.size(); i++)
-            cpu->setMiscReg(
-                _destMiscRegIdx[i], _destMiscRegVal[i], threadNumber);
+            cpu->setMiscReg(_destMiscRegIdx[i], _destMiscRegVal[i],
+                            threadNumber);
 
         thread->noSquashFromTC = no_squash_from_TC;
     }
@@ -1572,7 +1572,7 @@ class DynInst : public ExecContext, public RefCounted
 
             if (bytes == sizeof(RegVal)) {
                 setRegOperand(staticInst.get(), idx,
-                    cpu->getReg(prev_phys_reg, threadNumber));
+                              cpu->getReg(prev_phys_reg, threadNumber));
             } else {
                 uint8_t val[original_dest_reg.regClass().regBytes()];
                 cpu->getReg(prev_phys_reg, val, threadNumber);

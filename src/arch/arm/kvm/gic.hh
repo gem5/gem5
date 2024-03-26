@@ -177,8 +177,8 @@ class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
      * @param offset register offset
      * @param value value to set register to
      */
-    void setGicReg(
-        unsigned group, unsigned vcpu, unsigned offset, unsigned value);
+    void setGicReg(unsigned group, unsigned vcpu, unsigned offset,
+                   unsigned value);
 
   private:
     /** Address range for the CPU interfaces */
@@ -205,16 +205,16 @@ class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
 
   public: // Gicv3Registers
     uint32_t readDistributor(Addr daddr) override;
-    uint32_t readRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr) override;
-    RegVal readCpu(
-        const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg) override;
+    uint32_t readRedistributor(const ArmISA::Affinity &aff,
+                               Addr daddr) override;
+    RegVal readCpu(const ArmISA::Affinity &aff,
+                   ArmISA::MiscRegIndex misc_reg) override;
 
     void writeDistributor(Addr daddr, uint32_t data) override;
-    void writeRedistributor(
-        const ArmISA::Affinity &aff, Addr daddr, uint32_t data) override;
+    void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                            uint32_t data) override;
     void writeCpu(const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg,
-        RegVal data) override;
+                  RegVal data) override;
 
   protected:
     /**

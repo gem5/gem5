@@ -68,9 +68,9 @@ Kernel::status(sc_core::sc_status s)
     _status = s;
 }
 
-Kernel::Kernel(const Params &params, int) :
-    gem5::SimObject(params),
-    t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
+Kernel::Kernel(const Params &params, int)
+    : gem5::SimObject(params),
+      t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
     ::sc_gem5::scheduler.setEventQueue(eventQueue());
@@ -203,8 +203,8 @@ sc_gem5::Kernel *
 gem5::SystemC_KernelParams::create() const
 {
     using namespace gem5;
-    panic_if(
-        sc_gem5::kernel, "Only one systemc kernel object may be defined.\n");
+    panic_if(sc_gem5::kernel,
+             "Only one systemc kernel object may be defined.\n");
     sc_gem5::kernel = new sc_gem5::Kernel(*this, 0);
     return sc_gem5::kernel;
 }

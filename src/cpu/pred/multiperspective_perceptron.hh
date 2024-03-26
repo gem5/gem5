@@ -131,14 +131,14 @@ class MultiperspectivePerceptron : public BPredUnit
         /** Score of the perceptron */
         int yout;
 
-        MPPBranchInfo(Addr _pc, int pcshift, bool cb) :
-            pc((unsigned int)_pc),
-            pc2(pc >> 2),
-            hpc(hashPC(pc, pcshift)),
-            condBranch(cb),
-            filtered(false),
-            prediction(false),
-            yout(0)
+        MPPBranchInfo(Addr _pc, int pcshift, bool cb)
+            : pc((unsigned int)_pc),
+              pc2(pc >> 2),
+              hpc(hashPC(pc, pcshift)),
+              condBranch(cb),
+              filtered(false),
+              prediction(false),
+              yout(0)
         {}
 
         unsigned int
@@ -219,8 +219,8 @@ class MultiperspectivePerceptron : public BPredUnit
         }
 
       public:
-        LocalHistories(int nlocal_histories, int histo_len) :
-            localHistories(nlocal_histories), localHistoryLength(histo_len)
+        LocalHistories(int nlocal_histories, int histo_len)
+            : localHistories(nlocal_histories), localHistoryLength(histo_len)
         {}
 
         /** Obtains the local history entry of a given branch */
@@ -277,14 +277,14 @@ class MultiperspectivePerceptron : public BPredUnit
         MultiperspectivePerceptron &mpp;
 
         HistorySpec(int _p1, int _p2, int _p3, double _coeff, int _size,
-            int _width, MultiperspectivePerceptron &_mpp) :
-            p1(_p1),
-            p2(_p2),
-            p3(_p3),
-            coeff(_coeff),
-            size(_size),
-            width(_width),
-            mpp(_mpp)
+                    int _width, MultiperspectivePerceptron &_mpp)
+            : p1(_p1),
+              p2(_p2),
+              p3(_p3),
+              coeff(_coeff),
+              size(_size),
+              width(_width),
+              mpp(_mpp)
         {}
 
         /**
@@ -296,8 +296,8 @@ class MultiperspectivePerceptron : public BPredUnit
          * @param t integer index of the table
          * @result resulting hash value that will be used to index the table
          */
-        virtual unsigned int getHash(
-            ThreadID tid, Addr pc, Addr pc2, int t) const = 0;
+        virtual unsigned int getHash(ThreadID tid, Addr pc, Addr pc2,
+                                     int t) const = 0;
         /**
          * Sets the size requirements of the table, used when initializing
          * to set the proper size of the tables
@@ -341,9 +341,9 @@ class MultiperspectivePerceptron : public BPredUnit
     /** History data is kept for each thread */
     struct ThreadData
     {
-        ThreadData(int num_filter, int n_local_histories,
-            int local_history_length, int assoc,
-            const std::vector<std::vector<int>> &blurrypath_bits,
+        ThreadData(
+            int num_filter, int n_local_histories, int local_history_length,
+            int assoc, const std::vector<std::vector<int>> &blurrypath_bits,
             int path_length, int ghist_length, int block_size,
             const std::vector<std::vector<std::vector<bool>>> &acyclic_bits,
             const std::vector<int> &modhist_indices,
@@ -483,7 +483,7 @@ class MultiperspectivePerceptron : public BPredUnit
      * @param ignore_path_size ignore the path length storage
      */
     void computeBits(int num_filter_entries, int nlocal_histories,
-        int local_history_length, bool ignore_path_size);
+                     int local_history_length, bool ignore_path_size);
 
     /**
      * Creates the tables of the predictor
@@ -499,7 +499,7 @@ class MultiperspectivePerceptron : public BPredUnit
      * @result index to access the predictor table
      */
     unsigned int getIndex(ThreadID tid, const MPPBranchInfo &bi,
-        const HistorySpec &spec, int index) const;
+                          const HistorySpec &spec, int index) const;
     /**
      * Finds the best subset of features to use in case of a low-confidence
      * branch, returns the result as an ordered vector of the indices to the
@@ -549,20 +549,20 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         GHIST(int p1, int p2, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, 0, coeff, size, width, mpp)
+              MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
         getHash(ThreadID tid, Addr pc, Addr pc2, int t) const override
         {
-            return hash(
-                mpp.threadData[tid]->ghist_words, mpp.blockSize, p1, p2);
+            return hash(mpp.threadData[tid]->ghist_words, mpp.blockSize, p1,
+                        p2);
         }
 
         static unsigned int
         hash(const std::vector<unsigned int> &ghist_words, int block_size,
-            int start_pos, int end_pos)
+             int start_pos, int end_pos)
         {
             int a = start_pos;
             int b = end_pos;
@@ -604,8 +604,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         ACYCLIC(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -654,8 +654,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         MODHIST(int p1, int p2, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, 0, coeff, size, width, mpp)
+                MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -685,8 +685,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         BIAS(double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(0, 0, 0, coeff, size, width, mpp)
+             MultiperspectivePerceptron &mpp)
+            : HistorySpec(0, 0, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -700,8 +700,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         RECENCY(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -744,8 +744,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         IMLI(int p1, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, 0, 0, coeff, size, width, mpp)
+             MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, 0, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -767,8 +767,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         PATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+             MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -815,8 +815,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         LOCAL(int p1, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, 0, 0, coeff, size, width, mpp)
+              MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, 0, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -839,8 +839,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         MODPATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -868,8 +868,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         GHISTPATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                  MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -942,8 +942,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         GHISTMODPATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                     MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -976,8 +976,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         BLURRYPATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                   MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -1024,21 +1024,21 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         RECENCYPOS(int p1, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, 0, 0, coeff, size, width, mpp)
+                   MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, 0, 0, coeff, size, width, mpp)
         {}
 
         unsigned int
         getHash(ThreadID tid, Addr pc, Addr pc2, int t) const override
         {
             return hash(mpp.threadData[tid]->recency_stack, mpp.table_sizes,
-                pc2, p1, t);
+                        pc2, p1, t);
         }
 
         static unsigned int
         hash(const std::vector<unsigned int short> &recency_stack,
-            const std::vector<int> &table_sizes, unsigned short int pc, int l,
-            int t)
+             const std::vector<int> &table_sizes, unsigned short int pc, int l,
+             int t)
         {
             // search for the PC
 
@@ -1067,8 +1067,8 @@ class MultiperspectivePerceptron : public BPredUnit
     {
       public:
         SGHISTPATH(int p1, int p2, int p3, double coeff, int size, int width,
-            MultiperspectivePerceptron &mpp) :
-            HistorySpec(p1, p2, p3, coeff, size, width, mpp)
+                   MultiperspectivePerceptron &mpp)
+            : HistorySpec(p1, p2, p3, coeff, size, width, mpp)
         {}
 
         unsigned int
@@ -1118,9 +1118,10 @@ class MultiperspectivePerceptron : public BPredUnit
     // Base class methods.
     bool lookup(ThreadID tid, Addr branch_addr, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-        Addr target, void *&bp_history) override;
+                         Addr target, void *&bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-        bool squashed, const StaticInstPtr &inst, Addr target) override;
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
     void squash(ThreadID tid, void *&bp_history) override;
 };
 

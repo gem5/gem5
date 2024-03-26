@@ -56,8 +56,8 @@ namespace ArmISA
 {
 // Shift Rm by an immediate value
 int32_t
-ArmStaticInst::shift_rm_imm(
-    uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                            uint32_t cfval) const
 {
     assert(shamt < 32);
     ArmShiftType shiftType;
@@ -90,8 +90,8 @@ ArmStaticInst::shift_rm_imm(
 }
 
 int64_t
-ArmStaticInst::shiftReg64(
-    uint64_t base, uint64_t shiftAmt, ArmShiftType type, uint8_t width) const
+ArmStaticInst::shiftReg64(uint64_t base, uint64_t shiftAmt, ArmShiftType type,
+                          uint8_t width) const
 {
     shiftAmt = shiftAmt % width;
     ArmShiftType shiftType;
@@ -128,8 +128,8 @@ ArmStaticInst::shiftReg64(
 }
 
 int64_t
-ArmStaticInst::extendReg64(
-    uint64_t base, ArmExtendType type, uint64_t shiftAmt, uint8_t width) const
+ArmStaticInst::extendReg64(uint64_t base, ArmExtendType type,
+                           uint64_t shiftAmt, uint8_t width) const
 {
     bool sign_extend = false;
     int len = 0;
@@ -174,8 +174,8 @@ ArmStaticInst::extendReg64(
 
 // Shift Rm by Rs
 int32_t
-ArmStaticInst::shift_rm_rs(
-    uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                           uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType)type;
@@ -212,8 +212,8 @@ ArmStaticInst::shift_rm_rs(
 
 // Generate C for a shift by immediate
 bool
-ArmStaticInst::shift_carry_imm(
-    uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                               uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType)type;
@@ -250,8 +250,8 @@ ArmStaticInst::shift_carry_imm(
 
 // Generate C for a shift by Rs
 bool
-ArmStaticInst::shift_carry_rs(
-    uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                              uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType)type;
@@ -288,8 +288,8 @@ ArmStaticInst::shift_carry_rs(
 }
 
 void
-ArmStaticInst::printIntReg(
-    std::ostream &os, RegIndex reg_idx, uint8_t opWidth) const
+ArmStaticInst::printIntReg(std::ostream &os, RegIndex reg_idx,
+                           uint8_t opWidth) const
 {
     if (opWidth == 0)
         opWidth = intWidth;
@@ -331,7 +331,7 @@ ArmStaticInst::printPFflags(std::ostream &os, int flag) const
     const char *flagtopolicy[] = {"KEEP", "STRM"};
 
     ccprintf(os, "%s%s%s", flagtoprfop[(flag >> 3) & 3],
-        flagtotarget[(flag >> 1) & 3], flagtopolicy[flag & 1]);
+             flagtotarget[(flag >> 1) & 3], flagtopolicy[flag & 1]);
 }
 
 void
@@ -341,8 +341,8 @@ ArmStaticInst::printFloatReg(std::ostream &os, RegIndex reg_idx) const
 }
 
 void
-ArmStaticInst::printVecReg(
-    std::ostream &os, RegIndex reg_idx, bool isSveVecReg) const
+ArmStaticInst::printVecReg(std::ostream &os, RegIndex reg_idx,
+                           bool isSveVecReg) const
 {
     ccprintf(os, "%s%d", isSveVecReg ? "z" : "v", reg_idx);
 }
@@ -368,7 +368,8 @@ ArmStaticInst::printMiscReg(std::ostream &os, RegIndex reg_idx) const
 
 void
 ArmStaticInst::printMnemonic(std::ostream &os, const std::string &suffix,
-    bool withPred, bool withCond64, ConditionCode cond64) const
+                             bool withPred, bool withCond64,
+                             ConditionCode cond64) const
 {
     os << "  " << mnemonic;
     if (withPred && !aarch64) {
@@ -385,8 +386,8 @@ ArmStaticInst::printMnemonic(std::ostream &os, const std::string &suffix,
 }
 
 void
-ArmStaticInst::printTarget(
-    std::ostream &os, Addr target, const loader::SymbolTable *symtab) const
+ArmStaticInst::printTarget(std::ostream &os, Addr target,
+                           const loader::SymbolTable *symtab) const
 {
     if (symtab) {
         auto it = symtab->findNearest(target);
@@ -404,8 +405,8 @@ ArmStaticInst::printTarget(
 }
 
 void
-ArmStaticInst::printCondition(
-    std::ostream &os, unsigned code, bool noImplicit) const
+ArmStaticInst::printCondition(std::ostream &os, unsigned code,
+                              bool noImplicit) const
 {
     switch (code) {
     case COND_EQ:
@@ -467,8 +468,9 @@ ArmStaticInst::printCondition(
 
 void
 ArmStaticInst::printMemSymbol(std::ostream &os,
-    const loader::SymbolTable *symtab, const std::string &prefix,
-    const Addr addr, const std::string &suffix) const
+                              const loader::SymbolTable *symtab,
+                              const std::string &prefix, const Addr addr,
+                              const std::string &suffix) const
 {
     if (symtab) {
         auto it = symtab->findNearest(addr);
@@ -483,7 +485,8 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
 
 void
 ArmStaticInst::printShiftOperand(std::ostream &os, RegIndex rm, bool immShift,
-    uint32_t shiftAmt, RegIndex rs, ArmShiftType type) const
+                                 uint32_t shiftAmt, RegIndex rs,
+                                 ArmShiftType type) const
 {
     bool firstOp = false;
 
@@ -543,7 +546,8 @@ ArmStaticInst::printShiftOperand(std::ostream &os, RegIndex rm, bool immShift,
 
 void
 ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
-    RegIndex rm, ArmExtendType type, int64_t shiftAmt) const
+                                  RegIndex rm, ArmExtendType type,
+                                  int64_t shiftAmt) const
 {
     if (!firstOperand)
         ccprintf(os, ", ");
@@ -582,8 +586,9 @@ ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
 
 void
 ArmStaticInst::printDataInst(std::ostream &os, bool withImm, bool immShift,
-    bool s, RegIndex rd, RegIndex rn, RegIndex rm, RegIndex rs,
-    uint32_t shiftAmt, ArmShiftType type, uint64_t imm) const
+                             bool s, RegIndex rd, RegIndex rn, RegIndex rm,
+                             RegIndex rs, uint32_t shiftAmt, ArmShiftType type,
+                             uint64_t imm) const
 {
     printMnemonic(os, s ? "s" : "");
     bool firstOp = true;
@@ -612,8 +617,8 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm, bool immShift,
 }
 
 std::string
-ArmStaticInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+ArmStaticInst::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -632,8 +637,8 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
         return std::make_shared<SoftwareBreakpoint>(machInst, imm);
     } else {
         // Execute AArch32 Software Breakpoint
-        return std::make_shared<PrefetchAbort>(readPC(xc),
-            ArmFault::DebugEvent, false, ArmFault::UnknownTran,
+        return std::make_shared<PrefetchAbort>(
+            readPC(xc), ArmFault::DebugEvent, false, ArmFault::UnknownTran,
             ArmFault::BRKPOINT);
     }
 }
@@ -697,12 +702,12 @@ ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
 }
 
 Fault
-ArmStaticInst::checkFPAdvSIMDEnabled64(
-    ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
+ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc, CPSR cpsr,
+                                       CPACR cpacr) const
 {
     const ExceptionLevel el = currEL(tc);
     if (((el == EL0 && cpacr.fpen != 0x3) ||
-            (el == EL1 && !(cpacr.fpen & 0x1))) &&
+         (el == EL1 && !(cpacr.fpen & 0x1))) &&
         !ELIsInHost(tc, el))
         return advSIMDFPAccessTrap64(EL1);
 
@@ -711,8 +716,8 @@ ArmStaticInst::checkFPAdvSIMDEnabled64(
 
 Fault
 ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc, CPSR cpsr,
-    CPACR cpacr, NSACR nsacr, FPEXC fpexc, bool fpexc_check,
-    bool advsimd) const
+                                         CPACR cpacr, NSACR nsacr, FPEXC fpexc,
+                                         bool fpexc_check, bool advsimd) const
 {
     const bool have_virtualization = ArmSystem::haveEL(tc, EL2);
     const bool have_security = ArmSystem::haveEL(tc, EL3);
@@ -783,8 +788,8 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc, CPSR cpsr,
 }
 
 inline bool
-ArmStaticInst::isWFxTrapping(
-    ThreadContext *tc, ExceptionLevel tgtEl, bool isWfe) const
+ArmStaticInst::isWFxTrapping(ThreadContext *tc, ExceptionLevel tgtEl,
+                             bool isWfe) const
 {
     bool trap = false;
     SCTLR sctlr = ((SCTLR)tc->readMiscReg(MISCREG_SCTLR_EL1));
@@ -809,8 +814,8 @@ ArmStaticInst::isWFxTrapping(
 }
 
 Fault
-ArmStaticInst::checkForWFxTrap32(
-    ThreadContext *tc, ExceptionLevel targetEL, bool isWfe) const
+ArmStaticInst::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
+                                 bool isWfe) const
 {
     // Check if target exception level is implemented.
     assert(ArmSystem::haveEL(tc, targetEL));
@@ -847,8 +852,8 @@ ArmStaticInst::checkForWFxTrap32(
 }
 
 Fault
-ArmStaticInst::checkForWFxTrap64(
-    ThreadContext *tc, ExceptionLevel targetEL, bool isWfe) const
+ArmStaticInst::checkForWFxTrap64(ThreadContext *tc, ExceptionLevel targetEL,
+                                 bool isWfe) const
 {
     // Check if target exception level is implemented.
     assert(ArmSystem::haveEL(tc, targetEL));
@@ -930,8 +935,8 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
 }
 
 Fault
-ArmStaticInst::undefinedFault32(
-    ThreadContext *tc, ExceptionLevel pstateEL) const
+ArmStaticInst::undefinedFault32(ThreadContext *tc,
+                                ExceptionLevel pstateEL) const
 {
     // Even if we are running in aarch32, the fault might be dealt with in
     // aarch64 ISA.
@@ -948,20 +953,20 @@ ArmStaticInst::undefinedFault32(
 }
 
 Fault
-ArmStaticInst::undefinedFault64(
-    ThreadContext *tc, ExceptionLevel pstateEL) const
+ArmStaticInst::undefinedFault64(ThreadContext *tc,
+                                ExceptionLevel pstateEL) const
 {
     switch (pstateEL) {
     case EL0:
     case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
+        return std::make_shared<SupervisorTrap>(machInst, 0,
+                                                ExceptionClass::UNKNOWN);
     case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
+        return std::make_shared<HypervisorTrap>(machInst, 0,
+                                                ExceptionClass::UNKNOWN);
     case EL3:
-        return std::make_shared<SecureMonitorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
+        return std::make_shared<SecureMonitorTrap>(machInst, 0,
+                                                   ExceptionClass::UNKNOWN);
     default:
         panic("Unrecognized Exception Level: %d\n", pstateEL);
         break;
@@ -975,11 +980,11 @@ ArmStaticInst::sveAccessTrap(ExceptionLevel el) const
 {
     switch (el) {
     case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, 0, ExceptionClass::TRAPPED_SVE);
+        return std::make_shared<SupervisorTrap>(machInst, 0,
+                                                ExceptionClass::TRAPPED_SVE);
     case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, 0, ExceptionClass::TRAPPED_SVE);
+        return std::make_shared<HypervisorTrap>(machInst, 0,
+                                                ExceptionClass::TRAPPED_SVE);
     case EL3:
         return std::make_shared<SecureMonitorTrap>(
             machInst, 0, ExceptionClass::TRAPPED_SVE);
@@ -1047,11 +1052,11 @@ ArmStaticInst::smeAccessTrap(ExceptionLevel el, uint32_t iss) const
 {
     switch (el) {
     case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, iss, ExceptionClass::TRAPPED_SME);
+        return std::make_shared<SupervisorTrap>(machInst, iss,
+                                                ExceptionClass::TRAPPED_SME);
     case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, iss, ExceptionClass::TRAPPED_SME);
+        return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                ExceptionClass::TRAPPED_SME);
     case EL3:
         return std::make_shared<SecureMonitorTrap>(
             machInst, iss, ExceptionClass::TRAPPED_SME);
@@ -1144,8 +1149,8 @@ ArmStaticInst::checkSmeAccess(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 }
 
 Fault
-ArmStaticInst::checkSveSmeEnabled(
-    ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
+ArmStaticInst::checkSveSmeEnabled(ThreadContext *tc, CPSR cpsr,
+                                  CPACR cpacr) const
 {
     // If we are not in streaming mode, check the SVE traps, else check the SME
     // traps.
@@ -1297,8 +1302,8 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
 }
 
 bool
-ArmStaticInst::generalExceptionsToAArch64(
-    ThreadContext *tc, ExceptionLevel pstateEL) const
+ArmStaticInst::generalExceptionsToAArch64(ThreadContext *tc,
+                                          ExceptionLevel pstateEL) const
 {
     // Returns TRUE if exceptions normally routed to EL1 are being handled
     // at an Exception level using AArch64, because either EL1 is using
@@ -1306,7 +1311,7 @@ ArmStaticInst::generalExceptionsToAArch64(
     HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
     return (pstateEL == EL0 && !ELIs32(tc, EL1)) ||
            (ArmSystem::haveEL(tc, EL2) && !isSecure(tc) && !ELIs32(tc, EL2) &&
-               hcr.tge);
+            hcr.tge);
 }
 
 unsigned

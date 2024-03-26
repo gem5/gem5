@@ -59,8 +59,8 @@ class OutgoingRequestBridge : public SimObject
         OutgoingRequestBridge *owner;
 
       public:
-        OutgoingRequestPort(
-            const std::string &name_, OutgoingRequestBridge *owner_);
+        OutgoingRequestPort(const std::string &name_,
+                            OutgoingRequestBridge *owner_);
         ~OutgoingRequestPort();
         Tick recvAtomic(PacketPtr pkt);
         void recvFunctional(PacketPtr pkt);

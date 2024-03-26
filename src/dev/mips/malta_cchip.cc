@@ -50,8 +50,8 @@
 
 namespace gem5
 {
-MaltaCChip::MaltaCChip(const Params &p) :
-    BasicPioDevice(p, 0xfffffff), malta(p.malta)
+MaltaCChip::MaltaCChip(const Params &p)
+    : BasicPioDevice(p, 0xfffffff), malta(p.malta)
 {
     warn("MaltaCCHIP::MaltaCChip() not implemented.");
 
@@ -109,7 +109,7 @@ MaltaCChip::postIntr(uint32_t interrupt)
         auto tc = sys->threads[i];
         tc->getCpuPtr()->postInterrupt(tc->threadId(), interrupt, 0);
         DPRINTF(Malta, "posting  interrupt to cpu %d, interrupt %d\n", i,
-            interrupt);
+                interrupt);
     }
 }
 
@@ -125,7 +125,7 @@ MaltaCChip::clearIntr(uint32_t interrupt)
         auto tc = sys->threads[i];
         tc->getCpuPtr()->clearInterrupt(tc->threadId(), interrupt, 0);
         DPRINTF(Malta, "clearing interrupt to cpu %d, interrupt %d\n", i,
-            interrupt);
+                interrupt);
     }
 }
 

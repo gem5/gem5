@@ -45,8 +45,8 @@ namespace VegaISA
 {
 // --- Inst_SOP2__S_ADD_U32 class methods ---
 
-Inst_SOP2__S_ADD_U32::Inst_SOP2__S_ADD_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_add_u32")
+Inst_SOP2__S_ADD_U32::Inst_SOP2__S_ADD_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_add_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ADD_U32
@@ -79,8 +79,8 @@ Inst_SOP2__S_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_SUB_U32 class methods ---
 
-Inst_SOP2__S_SUB_U32::Inst_SOP2__S_SUB_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_sub_u32")
+Inst_SOP2__S_SUB_U32::Inst_SOP2__S_SUB_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_sub_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_SUB_U32
@@ -110,8 +110,8 @@ Inst_SOP2__S_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ADD_I32 class methods ---
 
-Inst_SOP2__S_ADD_I32::Inst_SOP2__S_ADD_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_add_i32")
+Inst_SOP2__S_ADD_I32::Inst_SOP2__S_ADD_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_add_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ADD_I32
@@ -137,7 +137,7 @@ Inst_SOP2__S_ADD_I32::execute(GPUDynInstPtr gpuDynInst)
 
     sdst = src0.rawData() + src1.rawData();
     scc = (bits(src0.rawData(), 31) == bits(src1.rawData(), 31) &&
-              bits(src0.rawData(), 31) != bits(sdst.rawData(), 31)) ?
+           bits(src0.rawData(), 31) != bits(sdst.rawData(), 31)) ?
               1 :
               0;
 
@@ -146,8 +146,8 @@ Inst_SOP2__S_ADD_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_SUB_I32 class methods ---
 
-Inst_SOP2__S_SUB_I32::Inst_SOP2__S_SUB_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_sub_i32")
+Inst_SOP2__S_SUB_I32::Inst_SOP2__S_SUB_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_sub_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_SUB_I32
@@ -175,7 +175,7 @@ Inst_SOP2__S_SUB_I32::execute(GPUDynInstPtr gpuDynInst)
 
     sdst = src0.rawData() - src1.rawData();
     scc = (bits(src0.rawData(), 31) != bits(src1.rawData(), 31) &&
-              bits(src0.rawData(), 31) != bits(sdst.rawData(), 31)) ?
+           bits(src0.rawData(), 31) != bits(sdst.rawData(), 31)) ?
               1 :
               0;
 
@@ -184,8 +184,8 @@ Inst_SOP2__S_SUB_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ADDC_U32 class methods ---
 
-Inst_SOP2__S_ADDC_U32::Inst_SOP2__S_ADDC_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_addc_u32")
+Inst_SOP2__S_ADDC_U32::Inst_SOP2__S_ADDC_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_addc_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ADDC_U32
@@ -210,7 +210,7 @@ Inst_SOP2__S_ADDC_U32::execute(GPUDynInstPtr gpuDynInst)
 
     sdst = src0.rawData() + src1.rawData() + scc.rawData();
     scc = ((ScalarRegU64)src0.rawData() + (ScalarRegU64)src1.rawData() +
-              (ScalarRegU64)scc.rawData()) >= 0x100000000ULL ?
+           (ScalarRegU64)scc.rawData()) >= 0x100000000ULL ?
               1 :
               0;
 
@@ -219,8 +219,8 @@ Inst_SOP2__S_ADDC_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_SUBB_U32 class methods ---
 
-Inst_SOP2__S_SUBB_U32::Inst_SOP2__S_SUBB_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_subb_u32")
+Inst_SOP2__S_SUBB_U32::Inst_SOP2__S_SUBB_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_subb_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_SUBB_U32
@@ -250,8 +250,8 @@ Inst_SOP2__S_SUBB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MIN_I32 class methods ---
 
-Inst_SOP2__S_MIN_I32::Inst_SOP2__S_MIN_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_min_i32")
+Inst_SOP2__S_MIN_I32::Inst_SOP2__S_MIN_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_min_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MIN_I32
@@ -280,8 +280,8 @@ Inst_SOP2__S_MIN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MIN_U32 class methods ---
 
-Inst_SOP2__S_MIN_U32::Inst_SOP2__S_MIN_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_min_u32")
+Inst_SOP2__S_MIN_U32::Inst_SOP2__S_MIN_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_min_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MIN_U32
@@ -310,8 +310,8 @@ Inst_SOP2__S_MIN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MAX_I32 class methods ---
 
-Inst_SOP2__S_MAX_I32::Inst_SOP2__S_MAX_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_max_i32")
+Inst_SOP2__S_MAX_I32::Inst_SOP2__S_MAX_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_max_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MAX_I32
@@ -340,8 +340,8 @@ Inst_SOP2__S_MAX_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MAX_U32 class methods ---
 
-Inst_SOP2__S_MAX_U32::Inst_SOP2__S_MAX_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_max_u32")
+Inst_SOP2__S_MAX_U32::Inst_SOP2__S_MAX_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_max_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MAX_U32
@@ -370,8 +370,8 @@ Inst_SOP2__S_MAX_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_CSELECT_B32 class methods ---
 
-Inst_SOP2__S_CSELECT_B32::Inst_SOP2__S_CSELECT_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_cselect_b32")
+Inst_SOP2__S_CSELECT_B32::Inst_SOP2__S_CSELECT_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_cselect_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_CSELECT_B32
@@ -399,8 +399,8 @@ Inst_SOP2__S_CSELECT_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_CSELECT_B64 class methods ---
 
-Inst_SOP2__S_CSELECT_B64::Inst_SOP2__S_CSELECT_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_cselect_b64")
+Inst_SOP2__S_CSELECT_B64::Inst_SOP2__S_CSELECT_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_cselect_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_CSELECT_B64
@@ -428,8 +428,8 @@ Inst_SOP2__S_CSELECT_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_AND_B32 class methods ---
 
-Inst_SOP2__S_AND_B32::Inst_SOP2__S_AND_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_and_b32")
+Inst_SOP2__S_AND_B32::Inst_SOP2__S_AND_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_and_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_AND_B32
@@ -458,8 +458,8 @@ Inst_SOP2__S_AND_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_AND_B64 class methods ---
 
-Inst_SOP2__S_AND_B64::Inst_SOP2__S_AND_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_and_b64")
+Inst_SOP2__S_AND_B64::Inst_SOP2__S_AND_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_and_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_AND_B64
@@ -488,8 +488,8 @@ Inst_SOP2__S_AND_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_OR_B32 class methods ---
 
-Inst_SOP2__S_OR_B32::Inst_SOP2__S_OR_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_or_b32")
+Inst_SOP2__S_OR_B32::Inst_SOP2__S_OR_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_or_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_OR_B32
@@ -518,8 +518,8 @@ Inst_SOP2__S_OR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_OR_B64 class methods ---
 
-Inst_SOP2__S_OR_B64::Inst_SOP2__S_OR_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_or_b64")
+Inst_SOP2__S_OR_B64::Inst_SOP2__S_OR_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_or_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_OR_B64
@@ -548,8 +548,8 @@ Inst_SOP2__S_OR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_XOR_B32 class methods ---
 
-Inst_SOP2__S_XOR_B32::Inst_SOP2__S_XOR_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_xor_b32")
+Inst_SOP2__S_XOR_B32::Inst_SOP2__S_XOR_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_xor_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_XOR_B32
@@ -578,8 +578,8 @@ Inst_SOP2__S_XOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_XOR_B64 class methods ---
 
-Inst_SOP2__S_XOR_B64::Inst_SOP2__S_XOR_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_xor_b64")
+Inst_SOP2__S_XOR_B64::Inst_SOP2__S_XOR_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_xor_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_XOR_B64
@@ -608,8 +608,8 @@ Inst_SOP2__S_XOR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ANDN2_B32 class methods ---
 
-Inst_SOP2__S_ANDN2_B32::Inst_SOP2__S_ANDN2_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_andn2_b32")
+Inst_SOP2__S_ANDN2_B32::Inst_SOP2__S_ANDN2_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_andn2_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ANDN2_B32
@@ -638,8 +638,8 @@ Inst_SOP2__S_ANDN2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ANDN2_B64 class methods ---
 
-Inst_SOP2__S_ANDN2_B64::Inst_SOP2__S_ANDN2_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_andn2_b64")
+Inst_SOP2__S_ANDN2_B64::Inst_SOP2__S_ANDN2_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_andn2_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ANDN2_B64
@@ -668,8 +668,8 @@ Inst_SOP2__S_ANDN2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ORN2_B32 class methods ---
 
-Inst_SOP2__S_ORN2_B32::Inst_SOP2__S_ORN2_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_orn2_b32")
+Inst_SOP2__S_ORN2_B32::Inst_SOP2__S_ORN2_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_orn2_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ORN2_B32
@@ -698,8 +698,8 @@ Inst_SOP2__S_ORN2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ORN2_B64 class methods ---
 
-Inst_SOP2__S_ORN2_B64::Inst_SOP2__S_ORN2_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_orn2_b64")
+Inst_SOP2__S_ORN2_B64::Inst_SOP2__S_ORN2_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_orn2_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ORN2_B64
@@ -728,8 +728,8 @@ Inst_SOP2__S_ORN2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_NAND_B32 class methods ---
 
-Inst_SOP2__S_NAND_B32::Inst_SOP2__S_NAND_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_nand_b32")
+Inst_SOP2__S_NAND_B32::Inst_SOP2__S_NAND_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_nand_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_NAND_B32
@@ -758,8 +758,8 @@ Inst_SOP2__S_NAND_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_NAND_B64 class methods ---
 
-Inst_SOP2__S_NAND_B64::Inst_SOP2__S_NAND_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_nand_b64")
+Inst_SOP2__S_NAND_B64::Inst_SOP2__S_NAND_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_nand_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_NAND_B64
@@ -788,8 +788,8 @@ Inst_SOP2__S_NAND_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_NOR_B32 class methods ---
 
-Inst_SOP2__S_NOR_B32::Inst_SOP2__S_NOR_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_nor_b32")
+Inst_SOP2__S_NOR_B32::Inst_SOP2__S_NOR_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_nor_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_NOR_B32
@@ -818,8 +818,8 @@ Inst_SOP2__S_NOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_NOR_B64 class methods ---
 
-Inst_SOP2__S_NOR_B64::Inst_SOP2__S_NOR_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_nor_b64")
+Inst_SOP2__S_NOR_B64::Inst_SOP2__S_NOR_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_nor_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_NOR_B64
@@ -848,8 +848,8 @@ Inst_SOP2__S_NOR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_XNOR_B32 class methods ---
 
-Inst_SOP2__S_XNOR_B32::Inst_SOP2__S_XNOR_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_xnor_b32")
+Inst_SOP2__S_XNOR_B32::Inst_SOP2__S_XNOR_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_xnor_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_XNOR_B32
@@ -878,8 +878,8 @@ Inst_SOP2__S_XNOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_XNOR_B64 class methods ---
 
-Inst_SOP2__S_XNOR_B64::Inst_SOP2__S_XNOR_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_xnor_b64")
+Inst_SOP2__S_XNOR_B64::Inst_SOP2__S_XNOR_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_xnor_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_XNOR_B64
@@ -908,8 +908,8 @@ Inst_SOP2__S_XNOR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_LSHL_B32 class methods ---
 
-Inst_SOP2__S_LSHL_B32::Inst_SOP2__S_LSHL_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_lshl_b32")
+Inst_SOP2__S_LSHL_B32::Inst_SOP2__S_LSHL_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_lshl_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_LSHL_B32
@@ -938,8 +938,8 @@ Inst_SOP2__S_LSHL_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_LSHL_B64 class methods ---
 
-Inst_SOP2__S_LSHL_B64::Inst_SOP2__S_LSHL_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_lshl_b64")
+Inst_SOP2__S_LSHL_B64::Inst_SOP2__S_LSHL_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_lshl_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_LSHL_B64
@@ -968,8 +968,8 @@ Inst_SOP2__S_LSHL_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_LSHR_B32 class methods ---
 
-Inst_SOP2__S_LSHR_B32::Inst_SOP2__S_LSHR_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_lshr_b32")
+Inst_SOP2__S_LSHR_B32::Inst_SOP2__S_LSHR_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_lshr_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_LSHR_B32
@@ -999,8 +999,8 @@ Inst_SOP2__S_LSHR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_LSHR_B64 class methods ---
 
-Inst_SOP2__S_LSHR_B64::Inst_SOP2__S_LSHR_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_lshr_b64")
+Inst_SOP2__S_LSHR_B64::Inst_SOP2__S_LSHR_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_lshr_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_LSHR_B64
@@ -1030,8 +1030,8 @@ Inst_SOP2__S_LSHR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ASHR_I32 class methods ---
 
-Inst_SOP2__S_ASHR_I32::Inst_SOP2__S_ASHR_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_ashr_i32")
+Inst_SOP2__S_ASHR_I32::Inst_SOP2__S_ASHR_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_ashr_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ASHR_I32
@@ -1061,8 +1061,8 @@ Inst_SOP2__S_ASHR_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ASHR_I64 class methods ---
 
-Inst_SOP2__S_ASHR_I64::Inst_SOP2__S_ASHR_I64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_ashr_i64")
+Inst_SOP2__S_ASHR_I64::Inst_SOP2__S_ASHR_I64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_ashr_i64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ASHR_I64
@@ -1092,8 +1092,8 @@ Inst_SOP2__S_ASHR_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFM_B32 class methods ---
 
-Inst_SOP2__S_BFM_B32::Inst_SOP2__S_BFM_B32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfm_b32")
+Inst_SOP2__S_BFM_B32::Inst_SOP2__S_BFM_B32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfm_b32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFM_B32
@@ -1119,8 +1119,8 @@ Inst_SOP2__S_BFM_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFM_B64 class methods ---
 
-Inst_SOP2__S_BFM_B64::Inst_SOP2__S_BFM_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfm_b64")
+Inst_SOP2__S_BFM_B64::Inst_SOP2__S_BFM_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfm_b64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFM_B64
@@ -1146,8 +1146,8 @@ Inst_SOP2__S_BFM_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MUL_I32 class methods ---
 
-Inst_SOP2__S_MUL_I32::Inst_SOP2__S_MUL_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_mul_i32")
+Inst_SOP2__S_MUL_I32::Inst_SOP2__S_MUL_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_mul_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MUL_I32
@@ -1172,8 +1172,8 @@ Inst_SOP2__S_MUL_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFE_U32 class methods ---
 
-Inst_SOP2__S_BFE_U32::Inst_SOP2__S_BFE_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfe_u32")
+Inst_SOP2__S_BFE_U32::Inst_SOP2__S_BFE_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfe_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFE_U32
@@ -1205,8 +1205,8 @@ Inst_SOP2__S_BFE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFE_I32 class methods ---
 
-Inst_SOP2__S_BFE_I32::Inst_SOP2__S_BFE_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfe_i32")
+Inst_SOP2__S_BFE_I32::Inst_SOP2__S_BFE_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfe_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFE_I32
@@ -1253,8 +1253,8 @@ Inst_SOP2__S_BFE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFE_U64 class methods ---
 
-Inst_SOP2__S_BFE_U64::Inst_SOP2__S_BFE_U64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfe_u64")
+Inst_SOP2__S_BFE_U64::Inst_SOP2__S_BFE_U64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfe_u64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFE_U64
@@ -1286,8 +1286,8 @@ Inst_SOP2__S_BFE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_BFE_I64 class methods ---
 
-Inst_SOP2__S_BFE_I64::Inst_SOP2__S_BFE_I64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_bfe_i64")
+Inst_SOP2__S_BFE_I64::Inst_SOP2__S_BFE_I64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_bfe_i64")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_BFE_I64
@@ -1328,8 +1328,8 @@ Inst_SOP2__S_BFE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_CBRANCH_G_FORK class methods ---
 
-Inst_SOP2__S_CBRANCH_G_FORK::Inst_SOP2__S_CBRANCH_G_FORK(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_cbranch_g_fork")
+Inst_SOP2__S_CBRANCH_G_FORK::Inst_SOP2__S_CBRANCH_G_FORK(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_cbranch_g_fork")
 {
     setFlag(Branch);
 } // Inst_SOP2__S_CBRANCH_G_FORK
@@ -1366,8 +1366,8 @@ Inst_SOP2__S_CBRANCH_G_FORK::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_ABSDIFF_I32 class methods ---
 
-Inst_SOP2__S_ABSDIFF_I32::Inst_SOP2__S_ABSDIFF_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_absdiff_i32")
+Inst_SOP2__S_ABSDIFF_I32::Inst_SOP2__S_ABSDIFF_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_absdiff_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_ABSDIFF_I32
@@ -1396,8 +1396,8 @@ Inst_SOP2__S_ABSDIFF_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_RFE_RESTORE_B64 class methods ---
 
-Inst_SOP2__S_RFE_RESTORE_B64::Inst_SOP2__S_RFE_RESTORE_B64(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_rfe_restore_b64")
+Inst_SOP2__S_RFE_RESTORE_B64::Inst_SOP2__S_RFE_RESTORE_B64(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_rfe_restore_b64")
 {} // Inst_SOP2__S_RFE_RESTORE_B64
 
 Inst_SOP2__S_RFE_RESTORE_B64::~Inst_SOP2__S_RFE_RESTORE_B64() {
@@ -1419,8 +1419,8 @@ Inst_SOP2__S_RFE_RESTORE_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MUL_HI_U32 class methods ---
 
-Inst_SOP2__S_MUL_HI_U32::Inst_SOP2__S_MUL_HI_U32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_mul_hi_u32")
+Inst_SOP2__S_MUL_HI_U32::Inst_SOP2__S_MUL_HI_U32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_mul_hi_u32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MUL_HI_U32
@@ -1448,8 +1448,8 @@ Inst_SOP2__S_MUL_HI_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP2__S_MUL_HI_I32 class methods ---
 
-Inst_SOP2__S_MUL_HI_I32::Inst_SOP2__S_MUL_HI_I32(InFmt_SOP2 *iFmt) :
-    Inst_SOP2(iFmt, "s_mul_hi_i32")
+Inst_SOP2__S_MUL_HI_I32::Inst_SOP2__S_MUL_HI_I32(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_mul_hi_i32")
 {
     setFlag(ALU);
 } // Inst_SOP2__S_MUL_HI_I32
@@ -1479,8 +1479,8 @@ Inst_SOP2__S_MUL_HI_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_MOVK_I32 class methods ---
 
-Inst_SOPK__S_MOVK_I32::Inst_SOPK__S_MOVK_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_movk_i32")
+Inst_SOPK__S_MOVK_I32::Inst_SOPK__S_MOVK_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_movk_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_MOVK_I32
@@ -1501,8 +1501,8 @@ Inst_SOPK__S_MOVK_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMOVK_I32 class methods ---
 
-Inst_SOPK__S_CMOVK_I32::Inst_SOPK__S_CMOVK_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmovk_i32")
+Inst_SOPK__S_CMOVK_I32::Inst_SOPK__S_CMOVK_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmovk_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMOVK_I32
@@ -1529,8 +1529,8 @@ Inst_SOPK__S_CMOVK_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_EQ_I32 class methods ---
 
-Inst_SOPK__S_CMPK_EQ_I32::Inst_SOPK__S_CMPK_EQ_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_eq_i32")
+Inst_SOPK__S_CMPK_EQ_I32::Inst_SOPK__S_CMPK_EQ_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_eq_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_EQ_I32
@@ -1555,8 +1555,8 @@ Inst_SOPK__S_CMPK_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LG_I32 class methods ---
 
-Inst_SOPK__S_CMPK_LG_I32::Inst_SOPK__S_CMPK_LG_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_lg_i32")
+Inst_SOPK__S_CMPK_LG_I32::Inst_SOPK__S_CMPK_LG_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_lg_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LG_I32
@@ -1581,8 +1581,8 @@ Inst_SOPK__S_CMPK_LG_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_GT_I32 class methods ---
 
-Inst_SOPK__S_CMPK_GT_I32::Inst_SOPK__S_CMPK_GT_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_gt_i32")
+Inst_SOPK__S_CMPK_GT_I32::Inst_SOPK__S_CMPK_GT_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_gt_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_GT_I32
@@ -1607,8 +1607,8 @@ Inst_SOPK__S_CMPK_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_GE_I32 class methods ---
 
-Inst_SOPK__S_CMPK_GE_I32::Inst_SOPK__S_CMPK_GE_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_ge_i32")
+Inst_SOPK__S_CMPK_GE_I32::Inst_SOPK__S_CMPK_GE_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_ge_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_GE_I32
@@ -1633,8 +1633,8 @@ Inst_SOPK__S_CMPK_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LT_I32 class methods ---
 
-Inst_SOPK__S_CMPK_LT_I32::Inst_SOPK__S_CMPK_LT_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_lt_i32")
+Inst_SOPK__S_CMPK_LT_I32::Inst_SOPK__S_CMPK_LT_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_lt_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LT_I32
@@ -1659,8 +1659,8 @@ Inst_SOPK__S_CMPK_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LE_I32 class methods ---
 
-Inst_SOPK__S_CMPK_LE_I32::Inst_SOPK__S_CMPK_LE_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_le_i32")
+Inst_SOPK__S_CMPK_LE_I32::Inst_SOPK__S_CMPK_LE_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_le_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LE_I32
@@ -1685,8 +1685,8 @@ Inst_SOPK__S_CMPK_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_EQ_U32 class methods ---
 
-Inst_SOPK__S_CMPK_EQ_U32::Inst_SOPK__S_CMPK_EQ_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_eq_u32")
+Inst_SOPK__S_CMPK_EQ_U32::Inst_SOPK__S_CMPK_EQ_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_eq_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_EQ_U32
@@ -1711,8 +1711,8 @@ Inst_SOPK__S_CMPK_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LG_U32 class methods ---
 
-Inst_SOPK__S_CMPK_LG_U32::Inst_SOPK__S_CMPK_LG_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_lg_u32")
+Inst_SOPK__S_CMPK_LG_U32::Inst_SOPK__S_CMPK_LG_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_lg_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LG_U32
@@ -1737,8 +1737,8 @@ Inst_SOPK__S_CMPK_LG_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_GT_U32 class methods ---
 
-Inst_SOPK__S_CMPK_GT_U32::Inst_SOPK__S_CMPK_GT_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_gt_u32")
+Inst_SOPK__S_CMPK_GT_U32::Inst_SOPK__S_CMPK_GT_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_gt_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_GT_U32
@@ -1763,8 +1763,8 @@ Inst_SOPK__S_CMPK_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_GE_U32 class methods ---
 
-Inst_SOPK__S_CMPK_GE_U32::Inst_SOPK__S_CMPK_GE_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_ge_u32")
+Inst_SOPK__S_CMPK_GE_U32::Inst_SOPK__S_CMPK_GE_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_ge_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_GE_U32
@@ -1789,8 +1789,8 @@ Inst_SOPK__S_CMPK_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LT_U32 class methods ---
 
-Inst_SOPK__S_CMPK_LT_U32::Inst_SOPK__S_CMPK_LT_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_lt_u32")
+Inst_SOPK__S_CMPK_LT_U32::Inst_SOPK__S_CMPK_LT_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_lt_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LT_U32
@@ -1815,8 +1815,8 @@ Inst_SOPK__S_CMPK_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CMPK_LE_U32 class methods ---
 
-Inst_SOPK__S_CMPK_LE_U32::Inst_SOPK__S_CMPK_LE_U32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cmpk_le_u32")
+Inst_SOPK__S_CMPK_LE_U32::Inst_SOPK__S_CMPK_LE_U32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cmpk_le_u32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_CMPK_LE_U32
@@ -1841,8 +1841,8 @@ Inst_SOPK__S_CMPK_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_ADDK_I32 class methods ---
 
-Inst_SOPK__S_ADDK_I32::Inst_SOPK__S_ADDK_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_addk_i32")
+Inst_SOPK__S_ADDK_I32::Inst_SOPK__S_ADDK_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_addk_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_ADDK_I32
@@ -1864,7 +1864,7 @@ Inst_SOPK__S_ADDK_I32::execute(GPUDynInstPtr gpuDynInst)
 
     sdst = src.rawData() + (ScalarRegI32)sext<16>(simm16);
     scc = (bits(src.rawData(), 31) == bits(simm16, 15) &&
-              bits(src.rawData(), 31) != bits(sdst.rawData(), 31)) ?
+           bits(src.rawData(), 31) != bits(sdst.rawData(), 31)) ?
               1 :
               0;
 
@@ -1873,8 +1873,8 @@ Inst_SOPK__S_ADDK_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_MULK_I32 class methods ---
 
-Inst_SOPK__S_MULK_I32::Inst_SOPK__S_MULK_I32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_mulk_i32")
+Inst_SOPK__S_MULK_I32::Inst_SOPK__S_MULK_I32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_mulk_i32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_MULK_I32
@@ -1898,8 +1898,8 @@ Inst_SOPK__S_MULK_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_CBRANCH_I_FORK class methods ---
 
-Inst_SOPK__S_CBRANCH_I_FORK::Inst_SOPK__S_CBRANCH_I_FORK(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_cbranch_i_fork")
+Inst_SOPK__S_CBRANCH_I_FORK::Inst_SOPK__S_CBRANCH_I_FORK(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_cbranch_i_fork")
 {
     setFlag(Branch);
 } // Inst_SOPK__S_CBRANCH_I_FORK
@@ -1937,8 +1937,8 @@ Inst_SOPK__S_CBRANCH_I_FORK::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_GETREG_B32 class methods ---
 
-Inst_SOPK__S_GETREG_B32::Inst_SOPK__S_GETREG_B32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_getreg_b32")
+Inst_SOPK__S_GETREG_B32::Inst_SOPK__S_GETREG_B32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_getreg_b32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_GETREG_B32
@@ -1970,8 +1970,8 @@ Inst_SOPK__S_GETREG_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_SETREG_B32 class methods ---
 
-Inst_SOPK__S_SETREG_B32::Inst_SOPK__S_SETREG_B32(InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_setreg_b32")
+Inst_SOPK__S_SETREG_B32::Inst_SOPK__S_SETREG_B32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_setreg_b32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_SETREG_B32
@@ -2006,7 +2006,7 @@ Inst_SOPK__S_SETREG_B32::execute(GPUDynInstPtr gpuDynInst)
     if (hwregId == 1 && size == 2 && (offset == 4 || offset == 0)) {
         warn_once("Be cautious that s_setreg_b32 has no real effect "
                   "on FP modes: %s\n",
-            gpuDynInst->disassemble());
+                  gpuDynInst->disassemble());
         return;
     }
 
@@ -2015,9 +2015,8 @@ Inst_SOPK__S_SETREG_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPK__S_SETREG_IMM32_B32 class methods ---
 
-Inst_SOPK__S_SETREG_IMM32_B32::Inst_SOPK__S_SETREG_IMM32_B32(
-    InFmt_SOPK *iFmt) :
-    Inst_SOPK(iFmt, "s_setreg_imm32_b32")
+Inst_SOPK__S_SETREG_IMM32_B32::Inst_SOPK__S_SETREG_IMM32_B32(InFmt_SOPK *iFmt)
+    : Inst_SOPK(iFmt, "s_setreg_imm32_b32")
 {
     setFlag(ALU);
 } // Inst_SOPK__S_SETREG_IMM32_B32
@@ -2051,7 +2050,7 @@ Inst_SOPK__S_SETREG_IMM32_B32::execute(GPUDynInstPtr gpuDynInst)
     if (hwregId == HW_REG_MODE && size == 2 && (offset == 4 || offset == 0)) {
         warn_once("Be cautious that s_setreg_imm32_b32 has no real effect "
                   "on FP modes: %s\n",
-            gpuDynInst->disassemble());
+                  gpuDynInst->disassemble());
         return;
     }
 
@@ -2060,8 +2059,8 @@ Inst_SOPK__S_SETREG_IMM32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOV_B32 class methods ---
 
-Inst_SOP1__S_MOV_B32::Inst_SOP1__S_MOV_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_mov_b32")
+Inst_SOP1__S_MOV_B32::Inst_SOP1__S_MOV_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_mov_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOV_B32
@@ -2084,8 +2083,8 @@ Inst_SOP1__S_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOV_B64 class methods ---
 
-Inst_SOP1__S_MOV_B64::Inst_SOP1__S_MOV_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_mov_b64")
+Inst_SOP1__S_MOV_B64::Inst_SOP1__S_MOV_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_mov_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOV_B64
@@ -2108,8 +2107,8 @@ Inst_SOP1__S_MOV_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_CMOV_B32 class methods ---
 
-Inst_SOP1__S_CMOV_B32::Inst_SOP1__S_CMOV_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_cmov_b32")
+Inst_SOP1__S_CMOV_B32::Inst_SOP1__S_CMOV_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_cmov_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_CMOV_B32
@@ -2137,8 +2136,8 @@ Inst_SOP1__S_CMOV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_CMOV_B64 class methods ---
 
-Inst_SOP1__S_CMOV_B64::Inst_SOP1__S_CMOV_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_cmov_b64")
+Inst_SOP1__S_CMOV_B64::Inst_SOP1__S_CMOV_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_cmov_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_CMOV_B64
@@ -2166,8 +2165,8 @@ Inst_SOP1__S_CMOV_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_NOT_B32 class methods ---
 
-Inst_SOP1__S_NOT_B32::Inst_SOP1__S_NOT_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_not_b32")
+Inst_SOP1__S_NOT_B32::Inst_SOP1__S_NOT_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_not_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_NOT_B32
@@ -2196,8 +2195,8 @@ Inst_SOP1__S_NOT_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_NOT_B64 class methods ---
 
-Inst_SOP1__S_NOT_B64::Inst_SOP1__S_NOT_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_not_b64")
+Inst_SOP1__S_NOT_B64::Inst_SOP1__S_NOT_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_not_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_NOT_B64
@@ -2225,8 +2224,8 @@ Inst_SOP1__S_NOT_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_WQM_B32 class methods ---
 
-Inst_SOP1__S_WQM_B32::Inst_SOP1__S_WQM_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_wqm_b32")
+Inst_SOP1__S_WQM_B32::Inst_SOP1__S_WQM_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_wqm_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_WQM_B32
@@ -2254,8 +2253,8 @@ Inst_SOP1__S_WQM_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_WQM_B64 class methods ---
 
-Inst_SOP1__S_WQM_B64::Inst_SOP1__S_WQM_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_wqm_b64")
+Inst_SOP1__S_WQM_B64::Inst_SOP1__S_WQM_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_wqm_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_WQM_B64
@@ -2283,8 +2282,8 @@ Inst_SOP1__S_WQM_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BREV_B32 class methods ---
 
-Inst_SOP1__S_BREV_B32::Inst_SOP1__S_BREV_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_brev_b32")
+Inst_SOP1__S_BREV_B32::Inst_SOP1__S_BREV_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_brev_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BREV_B32
@@ -2307,8 +2306,8 @@ Inst_SOP1__S_BREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BREV_B64 class methods ---
 
-Inst_SOP1__S_BREV_B64::Inst_SOP1__S_BREV_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_brev_b64")
+Inst_SOP1__S_BREV_B64::Inst_SOP1__S_BREV_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_brev_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BREV_B64
@@ -2331,8 +2330,8 @@ Inst_SOP1__S_BREV_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BCNT0_I32_B32 class methods ---
 
-Inst_SOP1__S_BCNT0_I32_B32::Inst_SOP1__S_BCNT0_I32_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bcnt0_i32_b32")
+Inst_SOP1__S_BCNT0_I32_B32::Inst_SOP1__S_BCNT0_I32_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bcnt0_i32_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BCNT0_I32_B32
@@ -2360,8 +2359,8 @@ Inst_SOP1__S_BCNT0_I32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BCNT0_I32_B64 class methods ---
 
-Inst_SOP1__S_BCNT0_I32_B64::Inst_SOP1__S_BCNT0_I32_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bcnt0_i32_b64")
+Inst_SOP1__S_BCNT0_I32_B64::Inst_SOP1__S_BCNT0_I32_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bcnt0_i32_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BCNT0_I32_B64
@@ -2389,8 +2388,8 @@ Inst_SOP1__S_BCNT0_I32_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BCNT1_I32_B32 class methods ---
 
-Inst_SOP1__S_BCNT1_I32_B32::Inst_SOP1__S_BCNT1_I32_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bcnt1_i32_b32")
+Inst_SOP1__S_BCNT1_I32_B32::Inst_SOP1__S_BCNT1_I32_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bcnt1_i32_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BCNT1_I32_B32
@@ -2418,8 +2417,8 @@ Inst_SOP1__S_BCNT1_I32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BCNT1_I32_B64 class methods ---
 
-Inst_SOP1__S_BCNT1_I32_B64::Inst_SOP1__S_BCNT1_I32_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bcnt1_i32_b64")
+Inst_SOP1__S_BCNT1_I32_B64::Inst_SOP1__S_BCNT1_I32_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bcnt1_i32_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BCNT1_I32_B64
@@ -2447,8 +2446,8 @@ Inst_SOP1__S_BCNT1_I32_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FF0_I32_B32 class methods ---
 
-Inst_SOP1__S_FF0_I32_B32::Inst_SOP1__S_FF0_I32_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_ff0_i32_b32")
+Inst_SOP1__S_FF0_I32_B32::Inst_SOP1__S_FF0_I32_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_ff0_i32_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FF0_I32_B32
@@ -2474,8 +2473,8 @@ Inst_SOP1__S_FF0_I32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FF0_I32_B64 class methods ---
 
-Inst_SOP1__S_FF0_I32_B64::Inst_SOP1__S_FF0_I32_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_ff0_i32_b64")
+Inst_SOP1__S_FF0_I32_B64::Inst_SOP1__S_FF0_I32_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_ff0_i32_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FF0_I32_B64
@@ -2501,8 +2500,8 @@ Inst_SOP1__S_FF0_I32_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FF1_I32_B32 class methods ---
 
-Inst_SOP1__S_FF1_I32_B32::Inst_SOP1__S_FF1_I32_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_ff1_i32_b32")
+Inst_SOP1__S_FF1_I32_B32::Inst_SOP1__S_FF1_I32_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_ff1_i32_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FF1_I32_B32
@@ -2528,8 +2527,8 @@ Inst_SOP1__S_FF1_I32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FF1_I32_B64 class methods ---
 
-Inst_SOP1__S_FF1_I32_B64::Inst_SOP1__S_FF1_I32_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_ff1_i32_b64")
+Inst_SOP1__S_FF1_I32_B64::Inst_SOP1__S_FF1_I32_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_ff1_i32_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FF1_I32_B64
@@ -2555,8 +2554,8 @@ Inst_SOP1__S_FF1_I32_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FLBIT_I32_B32 class methods ---
 
-Inst_SOP1__S_FLBIT_I32_B32::Inst_SOP1__S_FLBIT_I32_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_flbit_i32_b32")
+Inst_SOP1__S_FLBIT_I32_B32::Inst_SOP1__S_FLBIT_I32_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_flbit_i32_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FLBIT_I32_B32
@@ -2582,8 +2581,8 @@ Inst_SOP1__S_FLBIT_I32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FLBIT_I32_B64 class methods ---
 
-Inst_SOP1__S_FLBIT_I32_B64::Inst_SOP1__S_FLBIT_I32_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_flbit_i32_b64")
+Inst_SOP1__S_FLBIT_I32_B64::Inst_SOP1__S_FLBIT_I32_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_flbit_i32_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FLBIT_I32_B64
@@ -2609,8 +2608,8 @@ Inst_SOP1__S_FLBIT_I32_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FLBIT_I32 class methods ---
 
-Inst_SOP1__S_FLBIT_I32::Inst_SOP1__S_FLBIT_I32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_flbit_i32")
+Inst_SOP1__S_FLBIT_I32::Inst_SOP1__S_FLBIT_I32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_flbit_i32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FLBIT_I32
@@ -2636,8 +2635,8 @@ Inst_SOP1__S_FLBIT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_FLBIT_I32_I64 class methods ---
 
-Inst_SOP1__S_FLBIT_I32_I64::Inst_SOP1__S_FLBIT_I32_I64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_flbit_i32_i64")
+Inst_SOP1__S_FLBIT_I32_I64::Inst_SOP1__S_FLBIT_I32_I64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_flbit_i32_i64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_FLBIT_I32_I64
@@ -2664,8 +2663,8 @@ Inst_SOP1__S_FLBIT_I32_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_SEXT_I32_I8 class methods ---
 
-Inst_SOP1__S_SEXT_I32_I8::Inst_SOP1__S_SEXT_I32_I8(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_sext_i32_i8")
+Inst_SOP1__S_SEXT_I32_I8::Inst_SOP1__S_SEXT_I32_I8(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_sext_i32_i8")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_SEXT_I32_I8
@@ -2690,8 +2689,8 @@ Inst_SOP1__S_SEXT_I32_I8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_SEXT_I32_I16 class methods ---
 
-Inst_SOP1__S_SEXT_I32_I16::Inst_SOP1__S_SEXT_I32_I16(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_sext_i32_i16")
+Inst_SOP1__S_SEXT_I32_I16::Inst_SOP1__S_SEXT_I32_I16(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_sext_i32_i16")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_SEXT_I32_I16
@@ -2716,8 +2715,8 @@ Inst_SOP1__S_SEXT_I32_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BITSET0_B32 class methods ---
 
-Inst_SOP1__S_BITSET0_B32::Inst_SOP1__S_BITSET0_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bitset0_b32")
+Inst_SOP1__S_BITSET0_B32::Inst_SOP1__S_BITSET0_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bitset0_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BITSET0_B32
@@ -2741,8 +2740,8 @@ Inst_SOP1__S_BITSET0_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BITSET0_B64 class methods ---
 
-Inst_SOP1__S_BITSET0_B64::Inst_SOP1__S_BITSET0_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bitset0_b64")
+Inst_SOP1__S_BITSET0_B64::Inst_SOP1__S_BITSET0_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bitset0_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BITSET0_B64
@@ -2766,8 +2765,8 @@ Inst_SOP1__S_BITSET0_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BITSET1_B32 class methods ---
 
-Inst_SOP1__S_BITSET1_B32::Inst_SOP1__S_BITSET1_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bitset1_b32")
+Inst_SOP1__S_BITSET1_B32::Inst_SOP1__S_BITSET1_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bitset1_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BITSET1_B32
@@ -2791,8 +2790,8 @@ Inst_SOP1__S_BITSET1_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_BITSET1_B64 class methods ---
 
-Inst_SOP1__S_BITSET1_B64::Inst_SOP1__S_BITSET1_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_bitset1_b64")
+Inst_SOP1__S_BITSET1_B64::Inst_SOP1__S_BITSET1_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_bitset1_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_BITSET1_B64
@@ -2816,8 +2815,8 @@ Inst_SOP1__S_BITSET1_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_GETPC_B64 class methods ---
 
-Inst_SOP1__S_GETPC_B64::Inst_SOP1__S_GETPC_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_getpc_b64")
+Inst_SOP1__S_GETPC_B64::Inst_SOP1__S_GETPC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_getpc_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_GETPC_B64
@@ -2839,8 +2838,8 @@ Inst_SOP1__S_GETPC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_SETPC_B64 class methods ---
 
-Inst_SOP1__S_SETPC_B64::Inst_SOP1__S_SETPC_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_setpc_b64")
+Inst_SOP1__S_SETPC_B64::Inst_SOP1__S_SETPC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_setpc_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_SETPC_B64
@@ -2862,8 +2861,8 @@ Inst_SOP1__S_SETPC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_SWAPPC_B64 class methods ---
 
-Inst_SOP1__S_SWAPPC_B64::Inst_SOP1__S_SWAPPC_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_swappc_b64")
+Inst_SOP1__S_SWAPPC_B64::Inst_SOP1__S_SWAPPC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_swappc_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_SWAPPC_B64
@@ -2891,8 +2890,8 @@ Inst_SOP1__S_SWAPPC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_RFE_B64 class methods ---
 
-Inst_SOP1__S_RFE_B64::Inst_SOP1__S_RFE_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_rfe_b64")
+Inst_SOP1__S_RFE_B64::Inst_SOP1__S_RFE_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_rfe_b64")
 {} // Inst_SOP1__S_RFE_B64
 
 Inst_SOP1__S_RFE_B64::~Inst_SOP1__S_RFE_B64() {} // ~Inst_SOP1__S_RFE_B64
@@ -2909,9 +2908,8 @@ Inst_SOP1__S_RFE_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_AND_SAVEEXEC_B64 class methods ---
 
-Inst_SOP1__S_AND_SAVEEXEC_B64::Inst_SOP1__S_AND_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_and_saveexec_b64")
+Inst_SOP1__S_AND_SAVEEXEC_B64::Inst_SOP1__S_AND_SAVEEXEC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_and_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -2944,8 +2942,8 @@ Inst_SOP1__S_AND_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_OR_SAVEEXEC_B64 class methods ---
 
-Inst_SOP1__S_OR_SAVEEXEC_B64::Inst_SOP1__S_OR_SAVEEXEC_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_or_saveexec_b64")
+Inst_SOP1__S_OR_SAVEEXEC_B64::Inst_SOP1__S_OR_SAVEEXEC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_or_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -2978,9 +2976,8 @@ Inst_SOP1__S_OR_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_XOR_SAVEEXEC_B64 class methods ---
 
-Inst_SOP1__S_XOR_SAVEEXEC_B64::Inst_SOP1__S_XOR_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_xor_saveexec_b64")
+Inst_SOP1__S_XOR_SAVEEXEC_B64::Inst_SOP1__S_XOR_SAVEEXEC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_xor_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3014,8 +3011,8 @@ Inst_SOP1__S_XOR_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOP1__S_ANDN2_SAVEEXEC_B64 class methods ---
 
 Inst_SOP1__S_ANDN2_SAVEEXEC_B64::Inst_SOP1__S_ANDN2_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_andn2_saveexec_b64")
+    InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_andn2_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3049,8 +3046,8 @@ Inst_SOP1__S_ANDN2_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOP1__S_ORN2_SAVEEXEC_B64 class methods ---
 
 Inst_SOP1__S_ORN2_SAVEEXEC_B64::Inst_SOP1__S_ORN2_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_orn2_saveexec_b64")
+    InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_orn2_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3084,8 +3081,8 @@ Inst_SOP1__S_ORN2_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOP1__S_NAND_SAVEEXEC_B64 class methods ---
 
 Inst_SOP1__S_NAND_SAVEEXEC_B64::Inst_SOP1__S_NAND_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_nand_saveexec_b64")
+    InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_nand_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3118,9 +3115,8 @@ Inst_SOP1__S_NAND_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_NOR_SAVEEXEC_B64 class methods ---
 
-Inst_SOP1__S_NOR_SAVEEXEC_B64::Inst_SOP1__S_NOR_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_nor_saveexec_b64")
+Inst_SOP1__S_NOR_SAVEEXEC_B64::Inst_SOP1__S_NOR_SAVEEXEC_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_nor_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3154,8 +3150,8 @@ Inst_SOP1__S_NOR_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOP1__S_XNOR_SAVEEXEC_B64 class methods ---
 
 Inst_SOP1__S_XNOR_SAVEEXEC_B64::Inst_SOP1__S_XNOR_SAVEEXEC_B64(
-    InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_xnor_saveexec_b64")
+    InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_xnor_saveexec_b64")
 {
     setFlag(ALU);
     setFlag(ReadsEXEC);
@@ -3188,8 +3184,8 @@ Inst_SOP1__S_XNOR_SAVEEXEC_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_QUADMASK_B32 class methods ---
 
-Inst_SOP1__S_QUADMASK_B32::Inst_SOP1__S_QUADMASK_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_quadmask_b32")
+Inst_SOP1__S_QUADMASK_B32::Inst_SOP1__S_QUADMASK_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_quadmask_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_QUADMASK_B32
@@ -3218,8 +3214,8 @@ Inst_SOP1__S_QUADMASK_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_QUADMASK_B64 class methods ---
 
-Inst_SOP1__S_QUADMASK_B64::Inst_SOP1__S_QUADMASK_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_quadmask_b64")
+Inst_SOP1__S_QUADMASK_B64::Inst_SOP1__S_QUADMASK_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_quadmask_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_QUADMASK_B64
@@ -3248,8 +3244,8 @@ Inst_SOP1__S_QUADMASK_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOVRELS_B32 class methods ---
 
-Inst_SOP1__S_MOVRELS_B32::Inst_SOP1__S_MOVRELS_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_movrels_b32")
+Inst_SOP1__S_MOVRELS_B32::Inst_SOP1__S_MOVRELS_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_movrels_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOVRELS_B32
@@ -3275,8 +3271,8 @@ Inst_SOP1__S_MOVRELS_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOVRELS_B64 class methods ---
 
-Inst_SOP1__S_MOVRELS_B64::Inst_SOP1__S_MOVRELS_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_movrels_b64")
+Inst_SOP1__S_MOVRELS_B64::Inst_SOP1__S_MOVRELS_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_movrels_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOVRELS_B64
@@ -3303,8 +3299,8 @@ Inst_SOP1__S_MOVRELS_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOVRELD_B32 class methods ---
 
-Inst_SOP1__S_MOVRELD_B32::Inst_SOP1__S_MOVRELD_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_movreld_b32")
+Inst_SOP1__S_MOVRELD_B32::Inst_SOP1__S_MOVRELD_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_movreld_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOVRELD_B32
@@ -3330,8 +3326,8 @@ Inst_SOP1__S_MOVRELD_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOVRELD_B64 class methods ---
 
-Inst_SOP1__S_MOVRELD_B64::Inst_SOP1__S_MOVRELD_B64(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_movreld_b64")
+Inst_SOP1__S_MOVRELD_B64::Inst_SOP1__S_MOVRELD_B64(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_movreld_b64")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOVRELD_B64
@@ -3358,8 +3354,8 @@ Inst_SOP1__S_MOVRELD_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_CBRANCH_JOIN class methods ---
 
-Inst_SOP1__S_CBRANCH_JOIN::Inst_SOP1__S_CBRANCH_JOIN(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_cbranch_join")
+Inst_SOP1__S_CBRANCH_JOIN::Inst_SOP1__S_CBRANCH_JOIN(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_cbranch_join")
 {
     setFlag(Branch);
     setFlag(WritesEXEC);
@@ -3387,8 +3383,8 @@ Inst_SOP1__S_CBRANCH_JOIN::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_ABS_I32 class methods ---
 
-Inst_SOP1__S_ABS_I32::Inst_SOP1__S_ABS_I32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_abs_i32")
+Inst_SOP1__S_ABS_I32::Inst_SOP1__S_ABS_I32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_abs_i32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_ABS_I32
@@ -3418,8 +3414,8 @@ Inst_SOP1__S_ABS_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_MOV_FED_B32 class methods ---
 
-Inst_SOP1__S_MOV_FED_B32::Inst_SOP1__S_MOV_FED_B32(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_mov_fed_b32")
+Inst_SOP1__S_MOV_FED_B32::Inst_SOP1__S_MOV_FED_B32(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_mov_fed_b32")
 {
     setFlag(ALU);
 } // Inst_SOP1__S_MOV_FED_B32
@@ -3437,8 +3433,8 @@ Inst_SOP1__S_MOV_FED_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOP1__S_SET_GPR_IDX_IDX class methods ---
 
-Inst_SOP1__S_SET_GPR_IDX_IDX::Inst_SOP1__S_SET_GPR_IDX_IDX(InFmt_SOP1 *iFmt) :
-    Inst_SOP1(iFmt, "s_set_gpr_idx_idx")
+Inst_SOP1__S_SET_GPR_IDX_IDX::Inst_SOP1__S_SET_GPR_IDX_IDX(InFmt_SOP1 *iFmt)
+    : Inst_SOP1(iFmt, "s_set_gpr_idx_idx")
 {} // Inst_SOP1__S_SET_GPR_IDX_IDX
 
 Inst_SOP1__S_SET_GPR_IDX_IDX::~Inst_SOP1__S_SET_GPR_IDX_IDX() {
@@ -3454,8 +3450,8 @@ Inst_SOP1__S_SET_GPR_IDX_IDX::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_EQ_I32 class methods ---
 
-Inst_SOPC__S_CMP_EQ_I32::Inst_SOPC__S_CMP_EQ_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_eq_i32")
+Inst_SOPC__S_CMP_EQ_I32::Inst_SOPC__S_CMP_EQ_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_eq_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_EQ_I32
@@ -3481,8 +3477,8 @@ Inst_SOPC__S_CMP_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LG_I32 class methods ---
 
-Inst_SOPC__S_CMP_LG_I32::Inst_SOPC__S_CMP_LG_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_lg_i32")
+Inst_SOPC__S_CMP_LG_I32::Inst_SOPC__S_CMP_LG_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_lg_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LG_I32
@@ -3508,8 +3504,8 @@ Inst_SOPC__S_CMP_LG_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_GT_I32 class methods ---
 
-Inst_SOPC__S_CMP_GT_I32::Inst_SOPC__S_CMP_GT_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_gt_i32")
+Inst_SOPC__S_CMP_GT_I32::Inst_SOPC__S_CMP_GT_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_gt_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_GT_I32
@@ -3535,8 +3531,8 @@ Inst_SOPC__S_CMP_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_GE_I32 class methods ---
 
-Inst_SOPC__S_CMP_GE_I32::Inst_SOPC__S_CMP_GE_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_ge_i32")
+Inst_SOPC__S_CMP_GE_I32::Inst_SOPC__S_CMP_GE_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_ge_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_GE_I32
@@ -3562,8 +3558,8 @@ Inst_SOPC__S_CMP_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LT_I32 class methods ---
 
-Inst_SOPC__S_CMP_LT_I32::Inst_SOPC__S_CMP_LT_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_lt_i32")
+Inst_SOPC__S_CMP_LT_I32::Inst_SOPC__S_CMP_LT_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_lt_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LT_I32
@@ -3589,8 +3585,8 @@ Inst_SOPC__S_CMP_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LE_I32 class methods ---
 
-Inst_SOPC__S_CMP_LE_I32::Inst_SOPC__S_CMP_LE_I32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_le_i32")
+Inst_SOPC__S_CMP_LE_I32::Inst_SOPC__S_CMP_LE_I32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_le_i32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LE_I32
@@ -3616,8 +3612,8 @@ Inst_SOPC__S_CMP_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_EQ_U32 class methods ---
 
-Inst_SOPC__S_CMP_EQ_U32::Inst_SOPC__S_CMP_EQ_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_eq_u32")
+Inst_SOPC__S_CMP_EQ_U32::Inst_SOPC__S_CMP_EQ_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_eq_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_EQ_U32
@@ -3643,8 +3639,8 @@ Inst_SOPC__S_CMP_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LG_U32 class methods ---
 
-Inst_SOPC__S_CMP_LG_U32::Inst_SOPC__S_CMP_LG_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_lg_u32")
+Inst_SOPC__S_CMP_LG_U32::Inst_SOPC__S_CMP_LG_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_lg_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LG_U32
@@ -3670,8 +3666,8 @@ Inst_SOPC__S_CMP_LG_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_GT_U32 class methods ---
 
-Inst_SOPC__S_CMP_GT_U32::Inst_SOPC__S_CMP_GT_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_gt_u32")
+Inst_SOPC__S_CMP_GT_U32::Inst_SOPC__S_CMP_GT_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_gt_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_GT_U32
@@ -3697,8 +3693,8 @@ Inst_SOPC__S_CMP_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_GE_U32 class methods ---
 
-Inst_SOPC__S_CMP_GE_U32::Inst_SOPC__S_CMP_GE_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_ge_u32")
+Inst_SOPC__S_CMP_GE_U32::Inst_SOPC__S_CMP_GE_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_ge_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_GE_U32
@@ -3724,8 +3720,8 @@ Inst_SOPC__S_CMP_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LT_U32 class methods ---
 
-Inst_SOPC__S_CMP_LT_U32::Inst_SOPC__S_CMP_LT_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_lt_u32")
+Inst_SOPC__S_CMP_LT_U32::Inst_SOPC__S_CMP_LT_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_lt_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LT_U32
@@ -3751,8 +3747,8 @@ Inst_SOPC__S_CMP_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LE_U32 class methods ---
 
-Inst_SOPC__S_CMP_LE_U32::Inst_SOPC__S_CMP_LE_U32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_le_u32")
+Inst_SOPC__S_CMP_LE_U32::Inst_SOPC__S_CMP_LE_U32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_le_u32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LE_U32
@@ -3778,8 +3774,8 @@ Inst_SOPC__S_CMP_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_BITCMP0_B32 class methods ---
 
-Inst_SOPC__S_BITCMP0_B32::Inst_SOPC__S_BITCMP0_B32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_bitcmp0_b32")
+Inst_SOPC__S_BITCMP0_B32::Inst_SOPC__S_BITCMP0_B32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_bitcmp0_b32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_BITCMP0_B32
@@ -3805,8 +3801,8 @@ Inst_SOPC__S_BITCMP0_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_BITCMP1_B32 class methods ---
 
-Inst_SOPC__S_BITCMP1_B32::Inst_SOPC__S_BITCMP1_B32(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_bitcmp1_b32")
+Inst_SOPC__S_BITCMP1_B32::Inst_SOPC__S_BITCMP1_B32(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_bitcmp1_b32")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_BITCMP1_B32
@@ -3832,8 +3828,8 @@ Inst_SOPC__S_BITCMP1_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_BITCMP0_B64 class methods ---
 
-Inst_SOPC__S_BITCMP0_B64::Inst_SOPC__S_BITCMP0_B64(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_bitcmp0_b64")
+Inst_SOPC__S_BITCMP0_B64::Inst_SOPC__S_BITCMP0_B64(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_bitcmp0_b64")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_BITCMP0_B64
@@ -3859,8 +3855,8 @@ Inst_SOPC__S_BITCMP0_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_BITCMP1_B64 class methods ---
 
-Inst_SOPC__S_BITCMP1_B64::Inst_SOPC__S_BITCMP1_B64(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_bitcmp1_b64")
+Inst_SOPC__S_BITCMP1_B64::Inst_SOPC__S_BITCMP1_B64(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_bitcmp1_b64")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_BITCMP1_B64
@@ -3886,8 +3882,8 @@ Inst_SOPC__S_BITCMP1_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_SETVSKIP class methods ---
 
-Inst_SOPC__S_SETVSKIP::Inst_SOPC__S_SETVSKIP(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_setvskip")
+Inst_SOPC__S_SETVSKIP::Inst_SOPC__S_SETVSKIP(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_setvskip")
 {} // Inst_SOPC__S_SETVSKIP
 
 Inst_SOPC__S_SETVSKIP::~Inst_SOPC__S_SETVSKIP() {} // ~Inst_SOPC__S_SETVSKIP
@@ -3911,8 +3907,8 @@ Inst_SOPC__S_SETVSKIP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_SET_GPR_IDX_ON class methods ---
 
-Inst_SOPC__S_SET_GPR_IDX_ON::Inst_SOPC__S_SET_GPR_IDX_ON(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_set_gpr_idx_on")
+Inst_SOPC__S_SET_GPR_IDX_ON::Inst_SOPC__S_SET_GPR_IDX_ON(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_set_gpr_idx_on")
 {} // Inst_SOPC__S_SET_GPR_IDX_ON
 
 Inst_SOPC__S_SET_GPR_IDX_ON::~Inst_SOPC__S_SET_GPR_IDX_ON() {
@@ -3936,8 +3932,8 @@ Inst_SOPC__S_SET_GPR_IDX_ON::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_EQ_U64 class methods ---
 
-Inst_SOPC__S_CMP_EQ_U64::Inst_SOPC__S_CMP_EQ_U64(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_eq_u64")
+Inst_SOPC__S_CMP_EQ_U64::Inst_SOPC__S_CMP_EQ_U64(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_eq_u64")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_EQ_U64
@@ -3963,8 +3959,8 @@ Inst_SOPC__S_CMP_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPC__S_CMP_LG_U64 class methods ---
 
-Inst_SOPC__S_CMP_LG_U64::Inst_SOPC__S_CMP_LG_U64(InFmt_SOPC *iFmt) :
-    Inst_SOPC(iFmt, "s_cmp_lg_u64")
+Inst_SOPC__S_CMP_LG_U64::Inst_SOPC__S_CMP_LG_U64(InFmt_SOPC *iFmt)
+    : Inst_SOPC(iFmt, "s_cmp_lg_u64")
 {
     setFlag(ALU);
 } // Inst_SOPC__S_CMP_LG_U64
@@ -4008,8 +4004,8 @@ Inst_SOPP__S_NOP::execute(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_SOPP__S_ENDPGM class methods ---
 
-Inst_SOPP__S_ENDPGM::Inst_SOPP__S_ENDPGM(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_endpgm")
+Inst_SOPP__S_ENDPGM::Inst_SOPP__S_ENDPGM(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_endpgm")
 {
     setFlag(EndOfKernel);
 } // Inst_SOPP__S_ENDPGM
@@ -4028,8 +4024,8 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
     ComputeUnit *cu = gpuDynInst->computeUnit();
 
     // delete extra instructions fetched for completed work-items
-    wf->instructionBuffer.erase(
-        wf->instructionBuffer.begin() + 1, wf->instructionBuffer.end());
+    wf->instructionBuffer.erase(wf->instructionBuffer.begin() + 1,
+                                wf->instructionBuffer.end());
 
     if (wf->pendingFetch) {
         wf->dropFetch = true;
@@ -4054,27 +4050,27 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
         wf->releaseBarrier();
         cu->decMaxBarrierCnt(bar_id);
         DPRINTF(GPUSync,
-            "CU[%d] WF[%d][%d] Wave[%d] - Exiting the "
-            "program and decrementing max barrier count for "
-            "barrier Id%d. New max count: %d.\n",
-            cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId, bar_id,
-            cu->maxBarrierCnt(bar_id));
+                "CU[%d] WF[%d][%d] Wave[%d] - Exiting the "
+                "program and decrementing max barrier count for "
+                "barrier Id%d. New max count: %d.\n",
+                cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId, bar_id,
+                cu->maxBarrierCnt(bar_id));
     }
 
     DPRINTF(GPUExec, "CU%d: decrease ref ctr WG[%d] to [%d]\n",
-        wf->computeUnit->cu_id, wf->wgId, refCount);
+            wf->computeUnit->cu_id, wf->wgId, refCount);
 
     wf->computeUnit->registerManager->freeRegisters(wf);
     wf->computeUnit->stats.completedWfs++;
     wf->computeUnit->activeWaves--;
 
     panic_if(wf->computeUnit->activeWaves < 0,
-        "CU[%d] Active waves less "
-        "than zero\n",
-        wf->computeUnit->cu_id);
+             "CU[%d] Active waves less "
+             "than zero\n",
+             wf->computeUnit->cu_id);
 
     DPRINTF(GPUExec, "Doing return for CU%d: WF[%d][%d][%d]\n",
-        wf->computeUnit->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId);
+            wf->computeUnit->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId);
 
     for (int i = 0; i < wf->vecReads.size(); i++) {
         if (wf->rawDist.find(i) != wf->rawDist.end()) {
@@ -4094,10 +4090,10 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
          */
         if (bar_id != WFBarrier::InvalidID) {
             DPRINTF(GPUSync,
-                "CU[%d] WF[%d][%d] Wave[%d] - All waves are "
-                "now complete. Releasing barrier Id%d.\n",
-                cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId,
-                wf->barrierId());
+                    "CU[%d] WF[%d][%d] Wave[%d] - All waves are "
+                    "now complete. Releasing barrier Id%d.\n",
+                    cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId,
+                    wf->barrierId());
             cu->releaseBarrier(bar_id);
         }
 
@@ -4142,9 +4138,9 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
         gpuDynInst->wfDynId = wf->wfDynId;
 
         DPRINTF(GPUExec,
-            "inject global memory fence for CU%d: "
-            "WF[%d][%d][%d]\n",
-            wf->computeUnit->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId);
+                "inject global memory fence for CU%d: "
+                "WF[%d][%d][%d]\n",
+                wf->computeUnit->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId);
 
         // call shader to prepare the flush operations
         wf->computeUnit->shader->prepareFlush(gpuDynInst);
@@ -4157,8 +4153,8 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
 
 // --- Inst_SOPP__S_BRANCH class methods ---
 
-Inst_SOPP__S_BRANCH::Inst_SOPP__S_BRANCH(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_branch")
+Inst_SOPP__S_BRANCH::Inst_SOPP__S_BRANCH(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_branch")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_BRANCH
@@ -4181,8 +4177,8 @@ Inst_SOPP__S_BRANCH::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_WAKEUP class methods ---
 
-Inst_SOPP__S_WAKEUP::Inst_SOPP__S_WAKEUP(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_wakeup")
+Inst_SOPP__S_WAKEUP::Inst_SOPP__S_WAKEUP(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_wakeup")
 {} // Inst_SOPP__S_WAKEUP
 
 Inst_SOPP__S_WAKEUP::~Inst_SOPP__S_WAKEUP() {} // ~Inst_SOPP__S_WAKEUP
@@ -4206,8 +4202,8 @@ Inst_SOPP__S_WAKEUP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_SCC0 class methods ---
 
-Inst_SOPP__S_CBRANCH_SCC0::Inst_SOPP__S_CBRANCH_SCC0(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_scc0")
+Inst_SOPP__S_CBRANCH_SCC0::Inst_SOPP__S_CBRANCH_SCC0(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_scc0")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_SCC0
@@ -4236,8 +4232,8 @@ Inst_SOPP__S_CBRANCH_SCC0::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_SCC1 class methods ---
 
-Inst_SOPP__S_CBRANCH_SCC1::Inst_SOPP__S_CBRANCH_SCC1(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_scc1")
+Inst_SOPP__S_CBRANCH_SCC1::Inst_SOPP__S_CBRANCH_SCC1(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_scc1")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_SCC1
@@ -4266,8 +4262,8 @@ Inst_SOPP__S_CBRANCH_SCC1::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_VCCZ class methods ---
 
-Inst_SOPP__S_CBRANCH_VCCZ::Inst_SOPP__S_CBRANCH_VCCZ(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_vccz")
+Inst_SOPP__S_CBRANCH_VCCZ::Inst_SOPP__S_CBRANCH_VCCZ(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_vccz")
 {
     setFlag(Branch);
     setFlag(ReadsVCC);
@@ -4297,8 +4293,8 @@ Inst_SOPP__S_CBRANCH_VCCZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_VCCNZ class methods ---
 
-Inst_SOPP__S_CBRANCH_VCCNZ::Inst_SOPP__S_CBRANCH_VCCNZ(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_vccnz")
+Inst_SOPP__S_CBRANCH_VCCNZ::Inst_SOPP__S_CBRANCH_VCCNZ(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_vccnz")
 {
     setFlag(Branch);
     setFlag(ReadsVCC);
@@ -4327,8 +4323,8 @@ Inst_SOPP__S_CBRANCH_VCCNZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_EXECZ class methods ---
 
-Inst_SOPP__S_CBRANCH_EXECZ::Inst_SOPP__S_CBRANCH_EXECZ(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_execz")
+Inst_SOPP__S_CBRANCH_EXECZ::Inst_SOPP__S_CBRANCH_EXECZ(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_execz")
 {
     setFlag(Branch);
     setFlag(ReadsEXEC);
@@ -4354,8 +4350,8 @@ Inst_SOPP__S_CBRANCH_EXECZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_EXECNZ class methods ---
 
-Inst_SOPP__S_CBRANCH_EXECNZ::Inst_SOPP__S_CBRANCH_EXECNZ(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_execnz")
+Inst_SOPP__S_CBRANCH_EXECNZ::Inst_SOPP__S_CBRANCH_EXECNZ(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_execnz")
 {
     setFlag(Branch);
     setFlag(ReadsEXEC);
@@ -4381,8 +4377,8 @@ Inst_SOPP__S_CBRANCH_EXECNZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_BARRIER class methods ---
 
-Inst_SOPP__S_BARRIER::Inst_SOPP__S_BARRIER(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_barrier")
+Inst_SOPP__S_BARRIER::Inst_SOPP__S_BARRIER(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_barrier")
 {
     setFlag(MemBarrier);
 } // Inst_SOPP__S_BARRIER
@@ -4407,17 +4403,17 @@ Inst_SOPP__S_BARRIER::execute(GPUDynInstPtr gpuDynInst)
         assert(wf->getStatus() == Wavefront::S_BARRIER);
         cu->incNumAtBarrier(bar_id);
         DPRINTF(GPUSync,
-            "CU[%d] WF[%d][%d] Wave[%d] - Stalling at "
-            "barrier Id%d. %d waves now at barrier, %d waves "
-            "remain.\n",
-            cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId, bar_id,
-            cu->numAtBarrier(bar_id), cu->numYetToReachBarrier(bar_id));
+                "CU[%d] WF[%d][%d] Wave[%d] - Stalling at "
+                "barrier Id%d. %d waves now at barrier, %d waves "
+                "remain.\n",
+                cu->cu_id, wf->simdId, wf->wfSlotId, wf->wfDynId, bar_id,
+                cu->numAtBarrier(bar_id), cu->numYetToReachBarrier(bar_id));
     }
 } // execute
 // --- Inst_SOPP__S_SETKILL class methods ---
 
-Inst_SOPP__S_SETKILL::Inst_SOPP__S_SETKILL(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_setkill")
+Inst_SOPP__S_SETKILL::Inst_SOPP__S_SETKILL(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_setkill")
 {} // Inst_SOPP__S_SETKILL
 
 Inst_SOPP__S_SETKILL::~Inst_SOPP__S_SETKILL() {} // ~Inst_SOPP__S_SETKILL
@@ -4432,8 +4428,8 @@ Inst_SOPP__S_SETKILL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_WAITCNT class methods ---
 
-Inst_SOPP__S_WAITCNT::Inst_SOPP__S_WAITCNT(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_waitcnt")
+Inst_SOPP__S_WAITCNT::Inst_SOPP__S_WAITCNT(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_waitcnt")
 {
     setFlag(ALU);
     setFlag(Waitcnt);
@@ -4461,8 +4457,8 @@ Inst_SOPP__S_WAITCNT::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SETHALT class methods ---
 
-Inst_SOPP__S_SETHALT::Inst_SOPP__S_SETHALT(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_sethalt")
+Inst_SOPP__S_SETHALT::Inst_SOPP__S_SETHALT(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_sethalt")
 {} // Inst_SOPP__S_SETHALT
 
 Inst_SOPP__S_SETHALT::~Inst_SOPP__S_SETHALT() {} // ~Inst_SOPP__S_SETHALT
@@ -4479,8 +4475,8 @@ Inst_SOPP__S_SETHALT::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SLEEP class methods ---
 
-Inst_SOPP__S_SLEEP::Inst_SOPP__S_SLEEP(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_sleep")
+Inst_SOPP__S_SLEEP::Inst_SOPP__S_SLEEP(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_sleep")
 {
     setFlag(ALU);
     setFlag(Sleep);
@@ -4501,8 +4497,8 @@ Inst_SOPP__S_SLEEP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SETPRIO class methods ---
 
-Inst_SOPP__S_SETPRIO::Inst_SOPP__S_SETPRIO(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_setprio")
+Inst_SOPP__S_SETPRIO::Inst_SOPP__S_SETPRIO(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_setprio")
 {
     setFlag(ALU);
 } // Inst_SOPP__S_SETPRIO
@@ -4524,8 +4520,8 @@ Inst_SOPP__S_SETPRIO::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SENDMSG class methods ---
 
-Inst_SOPP__S_SENDMSG::Inst_SOPP__S_SENDMSG(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_sendmsg")
+Inst_SOPP__S_SENDMSG::Inst_SOPP__S_SENDMSG(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_sendmsg")
 {} // Inst_SOPP__S_SENDMSG
 
 Inst_SOPP__S_SENDMSG::~Inst_SOPP__S_SENDMSG() {} // ~Inst_SOPP__S_SENDMSG
@@ -4541,8 +4537,8 @@ Inst_SOPP__S_SENDMSG::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SENDMSGHALT class methods ---
 
-Inst_SOPP__S_SENDMSGHALT::Inst_SOPP__S_SENDMSGHALT(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_sendmsghalt")
+Inst_SOPP__S_SENDMSGHALT::Inst_SOPP__S_SENDMSGHALT(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_sendmsghalt")
 {} // Inst_SOPP__S_SENDMSGHALT
 
 Inst_SOPP__S_SENDMSGHALT::~Inst_SOPP__S_SENDMSGHALT() {
@@ -4557,8 +4553,8 @@ Inst_SOPP__S_SENDMSGHALT::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_TRAP class methods ---
 
-Inst_SOPP__S_TRAP::Inst_SOPP__S_TRAP(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_trap")
+Inst_SOPP__S_TRAP::Inst_SOPP__S_TRAP(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_trap")
 {} // Inst_SOPP__S_TRAP
 
 Inst_SOPP__S_TRAP::~Inst_SOPP__S_TRAP() {} // ~Inst_SOPP__S_TRAP
@@ -4581,8 +4577,8 @@ Inst_SOPP__S_TRAP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_ICACHE_INV class methods ---
 
-Inst_SOPP__S_ICACHE_INV::Inst_SOPP__S_ICACHE_INV(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_icache_inv")
+Inst_SOPP__S_ICACHE_INV::Inst_SOPP__S_ICACHE_INV(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_icache_inv")
 {} // Inst_SOPP__S_ICACHE_INV
 
 Inst_SOPP__S_ICACHE_INV::~Inst_SOPP__S_ICACHE_INV() {
@@ -4600,8 +4596,8 @@ Inst_SOPP__S_ICACHE_INV::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_INCPERFLEVEL class methods ---
 
-Inst_SOPP__S_INCPERFLEVEL::Inst_SOPP__S_INCPERFLEVEL(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_incperflevel")
+Inst_SOPP__S_INCPERFLEVEL::Inst_SOPP__S_INCPERFLEVEL(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_incperflevel")
 {} // Inst_SOPP__S_INCPERFLEVEL
 
 Inst_SOPP__S_INCPERFLEVEL::~Inst_SOPP__S_INCPERFLEVEL() {
@@ -4616,8 +4612,8 @@ Inst_SOPP__S_INCPERFLEVEL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_DECPERFLEVEL class methods ---
 
-Inst_SOPP__S_DECPERFLEVEL::Inst_SOPP__S_DECPERFLEVEL(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_decperflevel")
+Inst_SOPP__S_DECPERFLEVEL::Inst_SOPP__S_DECPERFLEVEL(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_decperflevel")
 {} // Inst_SOPP__S_DECPERFLEVEL
 
 Inst_SOPP__S_DECPERFLEVEL::~Inst_SOPP__S_DECPERFLEVEL() {
@@ -4632,8 +4628,8 @@ Inst_SOPP__S_DECPERFLEVEL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_TTRACEDATA class methods ---
 
-Inst_SOPP__S_TTRACEDATA::Inst_SOPP__S_TTRACEDATA(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_ttracedata")
+Inst_SOPP__S_TTRACEDATA::Inst_SOPP__S_TTRACEDATA(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_ttracedata")
 {} // Inst_SOPP__S_TTRACEDATA
 
 Inst_SOPP__S_TTRACEDATA::~Inst_SOPP__S_TTRACEDATA() {
@@ -4648,8 +4644,8 @@ Inst_SOPP__S_TTRACEDATA::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_CDBGSYS class methods ---
 
-Inst_SOPP__S_CBRANCH_CDBGSYS::Inst_SOPP__S_CBRANCH_CDBGSYS(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_cdbgsys")
+Inst_SOPP__S_CBRANCH_CDBGSYS::Inst_SOPP__S_CBRANCH_CDBGSYS(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_cdbgsys")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_CDBGSYS
@@ -4668,9 +4664,8 @@ Inst_SOPP__S_CBRANCH_CDBGSYS::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_CBRANCH_CDBGUSER class methods ---
 
-Inst_SOPP__S_CBRANCH_CDBGUSER::Inst_SOPP__S_CBRANCH_CDBGUSER(
-    InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_cdbguser")
+Inst_SOPP__S_CBRANCH_CDBGUSER::Inst_SOPP__S_CBRANCH_CDBGUSER(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_cdbguser")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_CDBGUSER
@@ -4689,8 +4684,8 @@ Inst_SOPP__S_CBRANCH_CDBGUSER::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOPP__S_CBRANCH_CDBGSYS_OR_USER class methods ---
 
 Inst_SOPP__S_CBRANCH_CDBGSYS_OR_USER::Inst_SOPP__S_CBRANCH_CDBGSYS_OR_USER(
-    InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_cdbgsys_or_user")
+    InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_cdbgsys_or_user")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_CDBGSYS_OR_USER
@@ -4710,8 +4705,8 @@ Inst_SOPP__S_CBRANCH_CDBGSYS_OR_USER::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_SOPP__S_CBRANCH_CDBGSYS_AND_USER class methods ---
 
 Inst_SOPP__S_CBRANCH_CDBGSYS_AND_USER::Inst_SOPP__S_CBRANCH_CDBGSYS_AND_USER(
-    InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_cbranch_cdbgsys_and_user")
+    InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_cbranch_cdbgsys_and_user")
 {
     setFlag(Branch);
 } // Inst_SOPP__S_CBRANCH_CDBGSYS_AND_USER
@@ -4730,8 +4725,8 @@ Inst_SOPP__S_CBRANCH_CDBGSYS_AND_USER::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_ENDPGM_SAVED class methods ---
 
-Inst_SOPP__S_ENDPGM_SAVED::Inst_SOPP__S_ENDPGM_SAVED(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_endpgm_saved")
+Inst_SOPP__S_ENDPGM_SAVED::Inst_SOPP__S_ENDPGM_SAVED(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_endpgm_saved")
 {} // Inst_SOPP__S_ENDPGM_SAVED
 
 Inst_SOPP__S_ENDPGM_SAVED::~Inst_SOPP__S_ENDPGM_SAVED() {
@@ -4751,8 +4746,8 @@ Inst_SOPP__S_ENDPGM_SAVED::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SET_GPR_IDX_OFF class methods ---
 
-Inst_SOPP__S_SET_GPR_IDX_OFF::Inst_SOPP__S_SET_GPR_IDX_OFF(InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_set_gpr_idx_off")
+Inst_SOPP__S_SET_GPR_IDX_OFF::Inst_SOPP__S_SET_GPR_IDX_OFF(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_set_gpr_idx_off")
 {} // Inst_SOPP__S_SET_GPR_IDX_OFF
 
 Inst_SOPP__S_SET_GPR_IDX_OFF::~Inst_SOPP__S_SET_GPR_IDX_OFF() {
@@ -4770,9 +4765,8 @@ Inst_SOPP__S_SET_GPR_IDX_OFF::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SOPP__S_SET_GPR_IDX_MODE class methods ---
 
-Inst_SOPP__S_SET_GPR_IDX_MODE::Inst_SOPP__S_SET_GPR_IDX_MODE(
-    InFmt_SOPP *iFmt) :
-    Inst_SOPP(iFmt, "s_set_gpr_idx_mode")
+Inst_SOPP__S_SET_GPR_IDX_MODE::Inst_SOPP__S_SET_GPR_IDX_MODE(InFmt_SOPP *iFmt)
+    : Inst_SOPP(iFmt, "s_set_gpr_idx_mode")
 {} // Inst_SOPP__S_SET_GPR_IDX_MODE
 
 Inst_SOPP__S_SET_GPR_IDX_MODE::~Inst_SOPP__S_SET_GPR_IDX_MODE() {
@@ -4791,8 +4785,8 @@ Inst_SOPP__S_SET_GPR_IDX_MODE::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_LOAD_DWORD class methods ---
 
-Inst_SMEM__S_LOAD_DWORD::Inst_SMEM__S_LOAD_DWORD(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_load_dword")
+Inst_SMEM__S_LOAD_DWORD::Inst_SMEM__S_LOAD_DWORD(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_load_dword")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -4846,8 +4840,8 @@ Inst_SMEM__S_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_SMEM__S_LOAD_DWORDX2 class methods ---
 
-Inst_SMEM__S_LOAD_DWORDX2::Inst_SMEM__S_LOAD_DWORDX2(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_load_dwordx2")
+Inst_SMEM__S_LOAD_DWORDX2::Inst_SMEM__S_LOAD_DWORDX2(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_load_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -4899,8 +4893,8 @@ Inst_SMEM__S_LOAD_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_SMEM__S_LOAD_DWORDX4 class methods ---
 
-Inst_SMEM__S_LOAD_DWORDX4::Inst_SMEM__S_LOAD_DWORDX4(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_load_dwordx4")
+Inst_SMEM__S_LOAD_DWORDX4::Inst_SMEM__S_LOAD_DWORDX4(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_load_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -4951,8 +4945,8 @@ Inst_SMEM__S_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_SMEM__S_LOAD_DWORDX8 class methods ---
 
-Inst_SMEM__S_LOAD_DWORDX8::Inst_SMEM__S_LOAD_DWORDX8(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_load_dwordx8")
+Inst_SMEM__S_LOAD_DWORDX8::Inst_SMEM__S_LOAD_DWORDX8(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_load_dwordx8")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5003,8 +4997,8 @@ Inst_SMEM__S_LOAD_DWORDX8::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_SMEM__S_LOAD_DWORDX16 class methods ---
 
-Inst_SMEM__S_LOAD_DWORDX16::Inst_SMEM__S_LOAD_DWORDX16(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_load_dwordx16")
+Inst_SMEM__S_LOAD_DWORDX16::Inst_SMEM__S_LOAD_DWORDX16(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_load_dwordx16")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5056,8 +5050,8 @@ Inst_SMEM__S_LOAD_DWORDX16::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_LOAD_DWORD class methods ---
 
 Inst_SMEM__S_BUFFER_LOAD_DWORD::Inst_SMEM__S_BUFFER_LOAD_DWORD(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_load_dword")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_load_dword")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5110,8 +5104,8 @@ Inst_SMEM__S_BUFFER_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_LOAD_DWORDX2 class methods ---
 
 Inst_SMEM__S_BUFFER_LOAD_DWORDX2::Inst_SMEM__S_BUFFER_LOAD_DWORDX2(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_load_dwordx2")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_load_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5164,8 +5158,8 @@ Inst_SMEM__S_BUFFER_LOAD_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_LOAD_DWORDX4 class methods ---
 
 Inst_SMEM__S_BUFFER_LOAD_DWORDX4::Inst_SMEM__S_BUFFER_LOAD_DWORDX4(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_load_dwordx4")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_load_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5218,8 +5212,8 @@ Inst_SMEM__S_BUFFER_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_LOAD_DWORDX8 class methods ---
 
 Inst_SMEM__S_BUFFER_LOAD_DWORDX8::Inst_SMEM__S_BUFFER_LOAD_DWORDX8(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_load_dwordx8")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_load_dwordx8")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5272,8 +5266,8 @@ Inst_SMEM__S_BUFFER_LOAD_DWORDX8::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_LOAD_DWORDX16 class methods ---
 
 Inst_SMEM__S_BUFFER_LOAD_DWORDX16::Inst_SMEM__S_BUFFER_LOAD_DWORDX16(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_load_dwordx16")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_load_dwordx16")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -5325,8 +5319,8 @@ Inst_SMEM__S_BUFFER_LOAD_DWORDX16::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_SMEM__S_STORE_DWORD class methods ---
 
-Inst_SMEM__S_STORE_DWORD::Inst_SMEM__S_STORE_DWORD(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_store_dword")
+Inst_SMEM__S_STORE_DWORD::Inst_SMEM__S_STORE_DWORD(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_store_dword")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5356,7 +5350,7 @@ Inst_SMEM__S_STORE_DWORD::execute(GPUDynInstPtr gpuDynInst)
     sdata.read();
 
     std::memcpy((void *)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-        sizeof(ScalarRegU32));
+                sizeof(ScalarRegU32));
 
     if (instData.IMM) {
         offset = extData.OFFSET;
@@ -5382,8 +5376,8 @@ Inst_SMEM__S_STORE_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_SMEM__S_STORE_DWORDX2 class methods ---
 
-Inst_SMEM__S_STORE_DWORDX2::Inst_SMEM__S_STORE_DWORDX2(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_store_dwordx2")
+Inst_SMEM__S_STORE_DWORDX2::Inst_SMEM__S_STORE_DWORDX2(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_store_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5410,7 +5404,7 @@ Inst_SMEM__S_STORE_DWORDX2::execute(GPUDynInstPtr gpuDynInst)
     sdata.read();
 
     std::memcpy((void *)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-        sizeof(ScalarRegU64));
+                sizeof(ScalarRegU64));
 
     if (instData.IMM) {
         offset = extData.OFFSET;
@@ -5436,8 +5430,8 @@ Inst_SMEM__S_STORE_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_SMEM__S_STORE_DWORDX4 class methods ---
 
-Inst_SMEM__S_STORE_DWORDX4::Inst_SMEM__S_STORE_DWORDX4(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_store_dwordx4")
+Inst_SMEM__S_STORE_DWORDX4::Inst_SMEM__S_STORE_DWORDX4(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_store_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5464,7 +5458,7 @@ Inst_SMEM__S_STORE_DWORDX4::execute(GPUDynInstPtr gpuDynInst)
     sdata.read();
 
     std::memcpy((void *)gpuDynInst->scalar_data, sdata.rawDataPtr(),
-        sizeof(gpuDynInst->scalar_data));
+                sizeof(gpuDynInst->scalar_data));
 
     if (instData.IMM) {
         offset = extData.OFFSET;
@@ -5491,8 +5485,8 @@ Inst_SMEM__S_STORE_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_STORE_DWORD class methods ---
 
 Inst_SMEM__S_BUFFER_STORE_DWORD::Inst_SMEM__S_BUFFER_STORE_DWORD(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_store_dword")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_store_dword")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5520,8 +5514,8 @@ Inst_SMEM__S_BUFFER_STORE_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_STORE_DWORDX2 class methods ---
 
 Inst_SMEM__S_BUFFER_STORE_DWORDX2::Inst_SMEM__S_BUFFER_STORE_DWORDX2(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_store_dwordx2")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_store_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5549,8 +5543,8 @@ Inst_SMEM__S_BUFFER_STORE_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_SMEM__S_BUFFER_STORE_DWORDX4 class methods ---
 
 Inst_SMEM__S_BUFFER_STORE_DWORDX4::Inst_SMEM__S_BUFFER_STORE_DWORDX4(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_buffer_store_dwordx4")
+    InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_buffer_store_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -5577,8 +5571,8 @@ Inst_SMEM__S_BUFFER_STORE_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_SMEM__S_DCACHE_INV class methods ---
 
-Inst_SMEM__S_DCACHE_INV::Inst_SMEM__S_DCACHE_INV(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_dcache_inv")
+Inst_SMEM__S_DCACHE_INV::Inst_SMEM__S_DCACHE_INV(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_dcache_inv")
 {} // Inst_SMEM__S_DCACHE_INV
 
 Inst_SMEM__S_DCACHE_INV::~Inst_SMEM__S_DCACHE_INV() {
@@ -5593,8 +5587,8 @@ Inst_SMEM__S_DCACHE_INV::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_DCACHE_WB class methods ---
 
-Inst_SMEM__S_DCACHE_WB::Inst_SMEM__S_DCACHE_WB(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_dcache_wb")
+Inst_SMEM__S_DCACHE_WB::Inst_SMEM__S_DCACHE_WB(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_dcache_wb")
 {} // Inst_SMEM__S_DCACHE_WB
 
 Inst_SMEM__S_DCACHE_WB::~Inst_SMEM__S_DCACHE_WB() {} // ~Inst_SMEM__S_DCACHE_WB
@@ -5608,8 +5602,8 @@ Inst_SMEM__S_DCACHE_WB::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_DCACHE_INV_VOL class methods ---
 
-Inst_SMEM__S_DCACHE_INV_VOL::Inst_SMEM__S_DCACHE_INV_VOL(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_dcache_inv_vol")
+Inst_SMEM__S_DCACHE_INV_VOL::Inst_SMEM__S_DCACHE_INV_VOL(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_dcache_inv_vol")
 {} // Inst_SMEM__S_DCACHE_INV_VOL
 
 Inst_SMEM__S_DCACHE_INV_VOL::~Inst_SMEM__S_DCACHE_INV_VOL() {
@@ -5624,8 +5618,8 @@ Inst_SMEM__S_DCACHE_INV_VOL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_DCACHE_WB_VOL class methods ---
 
-Inst_SMEM__S_DCACHE_WB_VOL::Inst_SMEM__S_DCACHE_WB_VOL(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_dcache_wb_vol")
+Inst_SMEM__S_DCACHE_WB_VOL::Inst_SMEM__S_DCACHE_WB_VOL(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_dcache_wb_vol")
 {} // Inst_SMEM__S_DCACHE_WB_VOL
 
 Inst_SMEM__S_DCACHE_WB_VOL::~Inst_SMEM__S_DCACHE_WB_VOL() {
@@ -5640,8 +5634,8 @@ Inst_SMEM__S_DCACHE_WB_VOL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_MEMTIME class methods ---
 
-Inst_SMEM__S_MEMTIME::Inst_SMEM__S_MEMTIME(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_memtime")
+Inst_SMEM__S_MEMTIME::Inst_SMEM__S_MEMTIME(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_memtime")
 {
     // s_memtime does not issue a memory request
     setFlag(ALU);
@@ -5660,8 +5654,8 @@ Inst_SMEM__S_MEMTIME::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_MEMREALTIME class methods ---
 
-Inst_SMEM__S_MEMREALTIME::Inst_SMEM__S_MEMREALTIME(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_memrealtime")
+Inst_SMEM__S_MEMREALTIME::Inst_SMEM__S_MEMREALTIME(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_memrealtime")
 {} // Inst_SMEM__S_MEMREALTIME
 
 Inst_SMEM__S_MEMREALTIME::~Inst_SMEM__S_MEMREALTIME() {
@@ -5676,8 +5670,8 @@ Inst_SMEM__S_MEMREALTIME::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_ATC_PROBE class methods ---
 
-Inst_SMEM__S_ATC_PROBE::Inst_SMEM__S_ATC_PROBE(InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_atc_probe")
+Inst_SMEM__S_ATC_PROBE::Inst_SMEM__S_ATC_PROBE(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_atc_probe")
 {} // Inst_SMEM__S_ATC_PROBE
 
 Inst_SMEM__S_ATC_PROBE::~Inst_SMEM__S_ATC_PROBE() {} // ~Inst_SMEM__S_ATC_PROBE
@@ -5691,9 +5685,8 @@ Inst_SMEM__S_ATC_PROBE::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_SMEM__S_ATC_PROBE_BUFFER class methods ---
 
-Inst_SMEM__S_ATC_PROBE_BUFFER::Inst_SMEM__S_ATC_PROBE_BUFFER(
-    InFmt_SMEM *iFmt) :
-    Inst_SMEM(iFmt, "s_atc_probe_buffer")
+Inst_SMEM__S_ATC_PROBE_BUFFER::Inst_SMEM__S_ATC_PROBE_BUFFER(InFmt_SMEM *iFmt)
+    : Inst_SMEM(iFmt, "s_atc_probe_buffer")
 {} // Inst_SMEM__S_ATC_PROBE_BUFFER
 
 Inst_SMEM__S_ATC_PROBE_BUFFER::~Inst_SMEM__S_ATC_PROBE_BUFFER() {
@@ -5708,8 +5701,8 @@ Inst_SMEM__S_ATC_PROBE_BUFFER::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_CNDMASK_B32 class methods ---
 
-Inst_VOP2__V_CNDMASK_B32::Inst_VOP2__V_CNDMASK_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_cndmask_b32")
+Inst_VOP2__V_CNDMASK_B32::Inst_VOP2__V_CNDMASK_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_cndmask_b32")
 {
     setFlag(ALU);
     setFlag(ReadsVCC);
@@ -5744,8 +5737,8 @@ Inst_VOP2__V_CNDMASK_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADD_F32 class methods ---
 
-Inst_VOP2__V_ADD_F32::Inst_VOP2__V_ADD_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_add_f32")
+Inst_VOP2__V_ADD_F32::Inst_VOP2__V_ADD_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_add_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -5771,15 +5764,15 @@ Inst_VOP2__V_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
         src0_dpp.read();
 
         DPRINTF(VEGA,
-            "Handling V_ADD_F32 SRC DPP. SRC0: register v[%d], "
-            "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-            "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
-            "BANK_MASK: %d, ROW_MASK: %d\n",
-            extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
-            extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
-            extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
-            extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
-            extData.iFmt_VOP_DPP.ROW_MASK);
+                "Handling V_ADD_F32 SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
+                "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
+                "BANK_MASK: %d, ROW_MASK: %d\n",
+                extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
+                extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
+                extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
+                extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
+                extData.iFmt_VOP_DPP.ROW_MASK);
 
         processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
 
@@ -5800,8 +5793,8 @@ Inst_VOP2__V_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUB_F32 class methods ---
 
-Inst_VOP2__V_SUB_F32::Inst_VOP2__V_SUB_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_sub_f32")
+Inst_VOP2__V_SUB_F32::Inst_VOP2__V_SUB_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_sub_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -5833,8 +5826,8 @@ Inst_VOP2__V_SUB_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBREV_F32 class methods ---
 
-Inst_VOP2__V_SUBREV_F32::Inst_VOP2__V_SUBREV_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subrev_f32")
+Inst_VOP2__V_SUBREV_F32::Inst_VOP2__V_SUBREV_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subrev_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -5867,8 +5860,8 @@ Inst_VOP2__V_SUBREV_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_LEGACY_F32 class methods ---
 
-Inst_VOP2__V_MUL_LEGACY_F32::Inst_VOP2__V_MUL_LEGACY_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_legacy_f32")
+Inst_VOP2__V_MUL_LEGACY_F32::Inst_VOP2__V_MUL_LEGACY_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_legacy_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -5900,8 +5893,8 @@ Inst_VOP2__V_MUL_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_F32 class methods ---
 
-Inst_VOP2__V_MUL_F32::Inst_VOP2__V_MUL_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_f32")
+Inst_VOP2__V_MUL_F32::Inst_VOP2__V_MUL_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -5927,7 +5920,7 @@ Inst_VOP2__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
             if (std::isnan(src0[lane]) || std::isnan(src1[lane])) {
                 vdst[lane] = NAN;
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        !std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -5937,7 +5930,7 @@ Inst_VOP2__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
                     vdst[lane] = -0.0;
                 }
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -5974,8 +5967,8 @@ Inst_VOP2__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_I32_I24 class methods ---
 
-Inst_VOP2__V_MUL_I32_I24::Inst_VOP2__V_MUL_I32_I24(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_i32_i24")
+Inst_VOP2__V_MUL_I32_I24::Inst_VOP2__V_MUL_I32_I24(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_i32_i24")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MUL_I32_I24
@@ -6007,8 +6000,8 @@ Inst_VOP2__V_MUL_I32_I24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_HI_I32_I24 class methods ---
 
-Inst_VOP2__V_MUL_HI_I32_I24::Inst_VOP2__V_MUL_HI_I32_I24(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_hi_i32_i24")
+Inst_VOP2__V_MUL_HI_I32_I24::Inst_VOP2__V_MUL_HI_I32_I24(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_hi_i32_i24")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MUL_HI_I32_I24
@@ -6044,8 +6037,8 @@ Inst_VOP2__V_MUL_HI_I32_I24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_U32_U24 class methods ---
 
-Inst_VOP2__V_MUL_U32_U24::Inst_VOP2__V_MUL_U32_U24(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_u32_u24")
+Inst_VOP2__V_MUL_U32_U24::Inst_VOP2__V_MUL_U32_U24(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_u32_u24")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MUL_U32_U24
@@ -6059,7 +6052,7 @@ void
 Inst_VOP2__V_MUL_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 {
     auto opImpl = [](VecOperandU32 &src0, VecOperandU32 &src1,
-                      VecOperandU32 &vdst, Wavefront *wf) {
+                     VecOperandU32 &vdst, Wavefront *wf) {
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = bits(src0[lane], 23, 0) * bits(src1[lane], 23, 0);
@@ -6071,8 +6064,8 @@ Inst_VOP2__V_MUL_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_HI_U32_U24 class methods ---
 
-Inst_VOP2__V_MUL_HI_U32_U24::Inst_VOP2__V_MUL_HI_U32_U24(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_hi_u32_u24")
+Inst_VOP2__V_MUL_HI_U32_U24::Inst_VOP2__V_MUL_HI_U32_U24(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_hi_u32_u24")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MUL_HI_U32_U24
@@ -6105,8 +6098,8 @@ Inst_VOP2__V_MUL_HI_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_F32 class methods ---
 
-Inst_VOP2__V_MIN_F32::Inst_VOP2__V_MIN_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_f32")
+Inst_VOP2__V_MIN_F32::Inst_VOP2__V_MIN_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -6137,8 +6130,8 @@ Inst_VOP2__V_MIN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_F32 class methods ---
 
-Inst_VOP2__V_MAX_F32::Inst_VOP2__V_MAX_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_f32")
+Inst_VOP2__V_MAX_F32::Inst_VOP2__V_MAX_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -6169,8 +6162,8 @@ Inst_VOP2__V_MAX_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_I32 class methods ---
 
-Inst_VOP2__V_MIN_I32::Inst_VOP2__V_MIN_I32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_i32")
+Inst_VOP2__V_MIN_I32::Inst_VOP2__V_MIN_I32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_i32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MIN_I32
@@ -6200,8 +6193,8 @@ Inst_VOP2__V_MIN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_I32 class methods ---
 
-Inst_VOP2__V_MAX_I32::Inst_VOP2__V_MAX_I32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_i32")
+Inst_VOP2__V_MAX_I32::Inst_VOP2__V_MAX_I32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_i32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MAX_I32
@@ -6231,8 +6224,8 @@ Inst_VOP2__V_MAX_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_U32 class methods ---
 
-Inst_VOP2__V_MIN_U32::Inst_VOP2__V_MIN_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_u32")
+Inst_VOP2__V_MIN_U32::Inst_VOP2__V_MIN_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_u32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MIN_U32
@@ -6262,8 +6255,8 @@ Inst_VOP2__V_MIN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_U32 class methods ---
 
-Inst_VOP2__V_MAX_U32::Inst_VOP2__V_MAX_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_u32")
+Inst_VOP2__V_MAX_U32::Inst_VOP2__V_MAX_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_u32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MAX_U32
@@ -6293,8 +6286,8 @@ Inst_VOP2__V_MAX_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_LSHRREV_B32 class methods ---
 
-Inst_VOP2__V_LSHRREV_B32::Inst_VOP2__V_LSHRREV_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_lshrrev_b32")
+Inst_VOP2__V_LSHRREV_B32::Inst_VOP2__V_LSHRREV_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_lshrrev_b32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_LSHRREV_B32
@@ -6327,8 +6320,8 @@ Inst_VOP2__V_LSHRREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ASHRREV_I32 class methods ---
 
-Inst_VOP2__V_ASHRREV_I32::Inst_VOP2__V_ASHRREV_I32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_ashrrev_i32")
+Inst_VOP2__V_ASHRREV_I32::Inst_VOP2__V_ASHRREV_I32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_ashrrev_i32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_ASHRREV_I32
@@ -6361,8 +6354,8 @@ Inst_VOP2__V_ASHRREV_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_LSHLREV_B32 class methods ---
 
-Inst_VOP2__V_LSHLREV_B32::Inst_VOP2__V_LSHLREV_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_lshlrev_b32")
+Inst_VOP2__V_LSHLREV_B32::Inst_VOP2__V_LSHLREV_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_lshlrev_b32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_LSHLREV_B32
@@ -6395,7 +6388,8 @@ Inst_VOP2__V_LSHLREV_B32::execute(GPUDynInstPtr gpuDynInst)
         origSrc0_sdwa.read();
         origSrc1.read();
 
-        DPRINTF(VEGA,
+        DPRINTF(
+            VEGA,
             "Handling V_LSHLREV_B32 SRC SDWA. SRC0: register "
             "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: "
             "%d, SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: "
@@ -6407,8 +6401,8 @@ Inst_VOP2__V_LSHLREV_B32::execute(GPUDynInstPtr gpuDynInst)
             extData.iFmt_VOP_SDWA.SRC1_SEL, extData.iFmt_VOP_SDWA.SRC1_SEXT,
             extData.iFmt_VOP_SDWA.SRC1_NEG, extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-        processSDWA_src(
-            extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1, origSrc1);
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6430,8 +6424,8 @@ Inst_VOP2__V_LSHLREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_AND_B32 class methods ---
 
-Inst_VOP2__V_AND_B32::Inst_VOP2__V_AND_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_and_b32")
+Inst_VOP2__V_AND_B32::Inst_VOP2__V_AND_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_and_b32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_AND_B32
@@ -6457,15 +6451,15 @@ Inst_VOP2__V_AND_B32::execute(GPUDynInstPtr gpuDynInst)
         src0_dpp.read();
 
         DPRINTF(VEGA,
-            "Handling V_AND_B32 SRC DPP. SRC0: register v[%d], "
-            "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-            "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
-            "BANK_MASK: %d, ROW_MASK: %d\n",
-            extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
-            extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
-            extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
-            extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
-            extData.iFmt_VOP_DPP.ROW_MASK);
+                "Handling V_AND_B32 SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
+                "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
+                "BANK_MASK: %d, ROW_MASK: %d\n",
+                extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
+                extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
+                extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
+                extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
+                extData.iFmt_VOP_DPP.ROW_MASK);
 
         processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
 
@@ -6486,8 +6480,8 @@ Inst_VOP2__V_AND_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_OR_B32 class methods ---
 
-Inst_VOP2__V_OR_B32::Inst_VOP2__V_OR_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_or_b32")
+Inst_VOP2__V_OR_B32::Inst_VOP2__V_OR_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_or_b32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_OR_B32
@@ -6519,7 +6513,8 @@ Inst_VOP2__V_OR_B32::execute(GPUDynInstPtr gpuDynInst)
         origSrc0_sdwa.read();
         origSrc1.read();
 
-        DPRINTF(VEGA,
+        DPRINTF(
+            VEGA,
             "Handling V_OR_B32 SRC SDWA. SRC0: register v[%d], "
             "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
             "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
@@ -6531,8 +6526,8 @@ Inst_VOP2__V_OR_B32::execute(GPUDynInstPtr gpuDynInst)
             extData.iFmt_VOP_SDWA.SRC1_SEL, extData.iFmt_VOP_SDWA.SRC1_SEXT,
             extData.iFmt_VOP_SDWA.SRC1_NEG, extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-        processSDWA_src(
-            extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1, origSrc1);
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6554,8 +6549,8 @@ Inst_VOP2__V_OR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_XOR_B32 class methods ---
 
-Inst_VOP2__V_XOR_B32::Inst_VOP2__V_XOR_B32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_xor_b32")
+Inst_VOP2__V_XOR_B32::Inst_VOP2__V_XOR_B32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_xor_b32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_XOR_B32
@@ -6586,8 +6581,8 @@ Inst_VOP2__V_XOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAC_F32 class methods ---
 
-Inst_VOP2__V_MAC_F32::Inst_VOP2__V_MAC_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mac_f32")
+Inst_VOP2__V_MAC_F32::Inst_VOP2__V_MAC_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mac_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -6616,15 +6611,15 @@ Inst_VOP2__V_MAC_F32::execute(GPUDynInstPtr gpuDynInst)
         src0_dpp.read();
 
         DPRINTF(VEGA,
-            "Handling V_MAC_F32 SRC DPP. SRC0: register v[%d], "
-            "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-            "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
-            "BANK_MASK: %d, ROW_MASK: %d\n",
-            extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
-            extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
-            extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
-            extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
-            extData.iFmt_VOP_DPP.ROW_MASK);
+                "Handling V_MAC_F32 SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
+                "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
+                "BANK_MASK: %d, ROW_MASK: %d\n",
+                extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
+                extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
+                extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
+                extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
+                extData.iFmt_VOP_DPP.ROW_MASK);
 
         processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
 
@@ -6645,8 +6640,8 @@ Inst_VOP2__V_MAC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MADMK_F32 class methods ---
 
-Inst_VOP2__V_MADMK_F32::Inst_VOP2__V_MADMK_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_madmk_f32")
+Inst_VOP2__V_MADMK_F32::Inst_VOP2__V_MADMK_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_madmk_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -6682,8 +6677,8 @@ Inst_VOP2__V_MADMK_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MADAK_F32 class methods ---
 
-Inst_VOP2__V_MADAK_F32::Inst_VOP2__V_MADAK_F32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_madak_f32")
+Inst_VOP2__V_MADAK_F32::Inst_VOP2__V_MADAK_F32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_madak_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -6719,8 +6714,8 @@ Inst_VOP2__V_MADAK_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADD_CO_U32 class methods ---
 
-Inst_VOP2__V_ADD_CO_U32::Inst_VOP2__V_ADD_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_add_co_u32")
+Inst_VOP2__V_ADD_CO_U32::Inst_VOP2__V_ADD_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_add_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -6757,7 +6752,8 @@ Inst_VOP2__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
         origSrc0_sdwa.read();
         origSrc1.read();
 
-        DPRINTF(VEGA,
+        DPRINTF(
+            VEGA,
             "Handling V_ADD_CO_U32 SRC SDWA. SRC0: register "
             "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
             "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
@@ -6769,18 +6765,18 @@ Inst_VOP2__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
             extData.iFmt_VOP_SDWA.SRC1_SEL, extData.iFmt_VOP_SDWA.SRC1_SEXT,
             extData.iFmt_VOP_SDWA.SRC1_NEG, extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-        processSDWA_src(
-            extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1, origSrc1);
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = src0_sdwa[lane] + src1[lane];
                 origVdst[lane] = vdst[lane]; // keep copy consistent
-                vcc.setBit(lane,
-                    ((VecElemU64)src0_sdwa[lane] + (VecElemU64)src1[lane] >=
-                        0x100000000ULL) ?
-                        1 :
-                        0);
+                vcc.setBit(lane, ((VecElemU64)src0_sdwa[lane] +
+                                      (VecElemU64)src1[lane] >=
+                                  0x100000000ULL) ?
+                                     1 :
+                                     0);
             }
         }
 
@@ -6789,11 +6785,11 @@ Inst_VOP2__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = src0[lane] + src1[lane];
-                vcc.setBit(
-                    lane, ((VecElemU64)src0[lane] + (VecElemU64)src1[lane] >=
-                              0x100000000ULL) ?
-                              1 :
-                              0);
+                vcc.setBit(lane,
+                           ((VecElemU64)src0[lane] + (VecElemU64)src1[lane] >=
+                            0x100000000ULL) ?
+                               1 :
+                               0);
             }
         }
     }
@@ -6803,8 +6799,8 @@ Inst_VOP2__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUB_CO_U32 class methods ---
 
-Inst_VOP2__V_SUB_CO_U32::Inst_VOP2__V_SUB_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_sub_co_u32")
+Inst_VOP2__V_SUB_CO_U32::Inst_VOP2__V_SUB_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_sub_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -6842,8 +6838,8 @@ Inst_VOP2__V_SUB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBREV_CO_U32 class methods ---
 
-Inst_VOP2__V_SUBREV_CO_U32::Inst_VOP2__V_SUBREV_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subrev_co_u32")
+Inst_VOP2__V_SUBREV_CO_U32::Inst_VOP2__V_SUBREV_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subrev_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -6881,8 +6877,8 @@ Inst_VOP2__V_SUBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADDC_CO_U32 class methods ---
 
-Inst_VOP2__V_ADDC_CO_U32::Inst_VOP2__V_ADDC_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_addc_co_u32")
+Inst_VOP2__V_ADDC_CO_U32::Inst_VOP2__V_ADDC_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_addc_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -6915,8 +6911,8 @@ Inst_VOP2__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
         if (wf->execMask(lane)) {
             vdst[lane] = src0[lane] + src1[lane] + bits(vcc.rawData(), lane);
             vcc.setBit(lane, ((VecElemU64)src0[lane] + (VecElemU64)src1[lane] +
-                                 (VecElemU64)bits(vcc.rawData(), lane,
-                                     lane)) >= 0x100000000 ?
+                              (VecElemU64)bits(vcc.rawData(), lane, lane)) >=
+                                     0x100000000 ?
                                  1 :
                                  0);
         }
@@ -6927,8 +6923,8 @@ Inst_VOP2__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBB_CO_U32 class methods ---
 
-Inst_VOP2__V_SUBB_CO_U32::Inst_VOP2__V_SUBB_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subb_co_u32")
+Inst_VOP2__V_SUBB_CO_U32::Inst_VOP2__V_SUBB_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subb_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -6960,7 +6956,8 @@ Inst_VOP2__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vdst[lane] = src0[lane] - src1[lane] - bits(vcc.rawData(), lane);
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src1[lane] + bits(vcc.rawData(), lane)) > src0[lane] ? 1 : 0);
         }
     }
@@ -6970,8 +6967,8 @@ Inst_VOP2__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBBREV_CO_U32 class methods ---
 
-Inst_VOP2__V_SUBBREV_CO_U32::Inst_VOP2__V_SUBBREV_CO_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subbrev_co_u32")
+Inst_VOP2__V_SUBBREV_CO_U32::Inst_VOP2__V_SUBBREV_CO_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subbrev_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -7004,7 +7001,8 @@ Inst_VOP2__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vdst[lane] = src1[lane] - src0[lane] - bits(vcc.rawData(), lane);
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src0[lane] + bits(vcc.rawData(), lane)) > src1[lane] ? 1 : 0);
         }
     }
@@ -7014,8 +7012,8 @@ Inst_VOP2__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADD_F16 class methods ---
 
-Inst_VOP2__V_ADD_F16::Inst_VOP2__V_ADD_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_add_f16")
+Inst_VOP2__V_ADD_F16::Inst_VOP2__V_ADD_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_add_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7033,8 +7031,8 @@ Inst_VOP2__V_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUB_F16 class methods ---
 
-Inst_VOP2__V_SUB_F16::Inst_VOP2__V_SUB_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_sub_f16")
+Inst_VOP2__V_SUB_F16::Inst_VOP2__V_SUB_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_sub_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7053,8 +7051,8 @@ Inst_VOP2__V_SUB_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBREV_F16 class methods ---
 
-Inst_VOP2__V_SUBREV_F16::Inst_VOP2__V_SUBREV_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subrev_f16")
+Inst_VOP2__V_SUBREV_F16::Inst_VOP2__V_SUBREV_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subrev_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7074,8 +7072,8 @@ Inst_VOP2__V_SUBREV_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_F16 class methods ---
 
-Inst_VOP2__V_MUL_F16::Inst_VOP2__V_MUL_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_f16")
+Inst_VOP2__V_MUL_F16::Inst_VOP2__V_MUL_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7093,8 +7091,8 @@ Inst_VOP2__V_MUL_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAC_F16 class methods ---
 
-Inst_VOP2__V_MAC_F16::Inst_VOP2__V_MAC_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mac_f16")
+Inst_VOP2__V_MAC_F16::Inst_VOP2__V_MAC_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mac_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7114,8 +7112,8 @@ Inst_VOP2__V_MAC_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MADMK_F16 class methods ---
 
-Inst_VOP2__V_MADMK_F16::Inst_VOP2__V_MADMK_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_madmk_f16")
+Inst_VOP2__V_MADMK_F16::Inst_VOP2__V_MADMK_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_madmk_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7137,8 +7135,8 @@ Inst_VOP2__V_MADMK_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MADAK_F16 class methods ---
 
-Inst_VOP2__V_MADAK_F16::Inst_VOP2__V_MADAK_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_madak_f16")
+Inst_VOP2__V_MADAK_F16::Inst_VOP2__V_MADAK_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_madak_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7160,8 +7158,8 @@ Inst_VOP2__V_MADAK_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADD_U16 class methods ---
 
-Inst_VOP2__V_ADD_U16::Inst_VOP2__V_ADD_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_add_u16")
+Inst_VOP2__V_ADD_U16::Inst_VOP2__V_ADD_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_add_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_ADD_U16
@@ -7192,8 +7190,8 @@ Inst_VOP2__V_ADD_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUB_U16 class methods ---
 
-Inst_VOP2__V_SUB_U16::Inst_VOP2__V_SUB_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_sub_u16")
+Inst_VOP2__V_SUB_U16::Inst_VOP2__V_SUB_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_sub_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_SUB_U16
@@ -7224,8 +7222,8 @@ Inst_VOP2__V_SUB_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBREV_U16 class methods ---
 
-Inst_VOP2__V_SUBREV_U16::Inst_VOP2__V_SUBREV_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subrev_u16")
+Inst_VOP2__V_SUBREV_U16::Inst_VOP2__V_SUBREV_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subrev_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_SUBREV_U16
@@ -7258,8 +7256,8 @@ Inst_VOP2__V_SUBREV_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MUL_LO_U16 class methods ---
 
-Inst_VOP2__V_MUL_LO_U16::Inst_VOP2__V_MUL_LO_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_mul_lo_u16")
+Inst_VOP2__V_MUL_LO_U16::Inst_VOP2__V_MUL_LO_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_mul_lo_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MUL_LO_U16
@@ -7291,8 +7289,8 @@ Inst_VOP2__V_MUL_LO_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_LSHLREV_B16 class methods ---
 
-Inst_VOP2__V_LSHLREV_B16::Inst_VOP2__V_LSHLREV_B16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_lshlrev_b16")
+Inst_VOP2__V_LSHLREV_B16::Inst_VOP2__V_LSHLREV_B16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_lshlrev_b16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_LSHLREV_B16
@@ -7324,8 +7322,8 @@ Inst_VOP2__V_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_LSHRREV_B16 class methods ---
 
-Inst_VOP2__V_LSHRREV_B16::Inst_VOP2__V_LSHRREV_B16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_lshrrev_b16")
+Inst_VOP2__V_LSHRREV_B16::Inst_VOP2__V_LSHRREV_B16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_lshrrev_b16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_LSHRREV_B16
@@ -7358,8 +7356,8 @@ Inst_VOP2__V_LSHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ASHRREV_I16 class methods ---
 
-Inst_VOP2__V_ASHRREV_I16::Inst_VOP2__V_ASHRREV_I16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_ashrrev_i16")
+Inst_VOP2__V_ASHRREV_I16::Inst_VOP2__V_ASHRREV_I16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_ashrrev_i16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_ASHRREV_I16
@@ -7392,8 +7390,8 @@ Inst_VOP2__V_ASHRREV_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_F16 class methods ---
 
-Inst_VOP2__V_MAX_F16::Inst_VOP2__V_MAX_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_f16")
+Inst_VOP2__V_MAX_F16::Inst_VOP2__V_MAX_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7412,8 +7410,8 @@ Inst_VOP2__V_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_F16 class methods ---
 
-Inst_VOP2__V_MIN_F16::Inst_VOP2__V_MIN_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_f16")
+Inst_VOP2__V_MIN_F16::Inst_VOP2__V_MIN_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7432,8 +7430,8 @@ Inst_VOP2__V_MIN_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_U16 class methods ---
 
-Inst_VOP2__V_MAX_U16::Inst_VOP2__V_MAX_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_u16")
+Inst_VOP2__V_MAX_U16::Inst_VOP2__V_MAX_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MAX_U16
@@ -7463,8 +7461,8 @@ Inst_VOP2__V_MAX_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MAX_I16 class methods ---
 
-Inst_VOP2__V_MAX_I16::Inst_VOP2__V_MAX_I16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_max_i16")
+Inst_VOP2__V_MAX_I16::Inst_VOP2__V_MAX_I16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_max_i16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MAX_I16
@@ -7494,8 +7492,8 @@ Inst_VOP2__V_MAX_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_U16 class methods ---
 
-Inst_VOP2__V_MIN_U16::Inst_VOP2__V_MIN_U16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_u16")
+Inst_VOP2__V_MIN_U16::Inst_VOP2__V_MIN_U16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_u16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MIN_U16
@@ -7525,8 +7523,8 @@ Inst_VOP2__V_MIN_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_MIN_I16 class methods ---
 
-Inst_VOP2__V_MIN_I16::Inst_VOP2__V_MIN_I16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_min_i16")
+Inst_VOP2__V_MIN_I16::Inst_VOP2__V_MIN_I16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_min_i16")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_MIN_I16
@@ -7556,8 +7554,8 @@ Inst_VOP2__V_MIN_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_LDEXP_F16 class methods ---
 
-Inst_VOP2__V_LDEXP_F16::Inst_VOP2__V_LDEXP_F16(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_ldexp_f16")
+Inst_VOP2__V_LDEXP_F16::Inst_VOP2__V_LDEXP_F16(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_ldexp_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -7574,8 +7572,8 @@ Inst_VOP2__V_LDEXP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_ADD_U32 class methods ---
 
-Inst_VOP2__V_ADD_U32::Inst_VOP2__V_ADD_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_add_u32")
+Inst_VOP2__V_ADD_U32::Inst_VOP2__V_ADD_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_add_u32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_ADD_U32
@@ -7606,7 +7604,8 @@ Inst_VOP2__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
         origSrc0_sdwa.read();
         origSrc1.read();
 
-        DPRINTF(VEGA,
+        DPRINTF(
+            VEGA,
             "Handling V_ADD_U32 SRC SDWA. SRC0: register v[%d], "
             "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
             "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
@@ -7618,8 +7617,8 @@ Inst_VOP2__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
             extData.iFmt_VOP_SDWA.SRC1_SEL, extData.iFmt_VOP_SDWA.SRC1_SEXT,
             extData.iFmt_VOP_SDWA.SRC1_NEG, extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-        processSDWA_src(
-            extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1, origSrc1);
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -7641,8 +7640,8 @@ Inst_VOP2__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUB_U32 class methods ---
 
-Inst_VOP2__V_SUB_U32::Inst_VOP2__V_SUB_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_sub_u32")
+Inst_VOP2__V_SUB_U32::Inst_VOP2__V_SUB_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_sub_u32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_SUB_U32
@@ -7672,8 +7671,8 @@ Inst_VOP2__V_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP2__V_SUBREV_U32 class methods ---
 
-Inst_VOP2__V_SUBREV_U32::Inst_VOP2__V_SUBREV_U32(InFmt_VOP2 *iFmt) :
-    Inst_VOP2(iFmt, "v_subrev_u32")
+Inst_VOP2__V_SUBREV_U32::Inst_VOP2__V_SUBREV_U32(InFmt_VOP2 *iFmt)
+    : Inst_VOP2(iFmt, "v_subrev_u32")
 {
     setFlag(ALU);
 } // Inst_VOP2__V_SUBREV_U32
@@ -7719,8 +7718,8 @@ Inst_VOP1__V_NOP::execute(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_VOP1__V_MOV_B32 class methods ---
 
-Inst_VOP1__V_MOV_B32::Inst_VOP1__V_MOV_B32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_mov_b32")
+Inst_VOP1__V_MOV_B32::Inst_VOP1__V_MOV_B32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_mov_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_MOV_B32
@@ -7744,15 +7743,15 @@ Inst_VOP1__V_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
         src_dpp.read();
 
         DPRINTF(VEGA,
-            "Handling V_MOV_B32 SRC DPP. SRC0: register v[%d], "
-            "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-            "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
-            "BANK_MASK: %d, ROW_MASK: %d\n",
-            extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
-            extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
-            extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
-            extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
-            extData.iFmt_VOP_DPP.ROW_MASK);
+                "Handling V_MOV_B32 SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
+                "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
+                "BANK_MASK: %d, ROW_MASK: %d\n",
+                extData.iFmt_VOP_DPP.SRC0, extData.iFmt_VOP_DPP.DPP_CTRL,
+                extData.iFmt_VOP_DPP.SRC0_ABS, extData.iFmt_VOP_DPP.SRC0_NEG,
+                extData.iFmt_VOP_DPP.SRC1_ABS, extData.iFmt_VOP_DPP.SRC1_NEG,
+                extData.iFmt_VOP_DPP.BC, extData.iFmt_VOP_DPP.BANK_MASK,
+                extData.iFmt_VOP_DPP.ROW_MASK);
 
         // NOTE: For VOP1, there is no SRC1, so make sure we're not trying
         // to negate it or take the absolute value of it
@@ -7778,8 +7777,8 @@ Inst_VOP1__V_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP1__V_READFIRSTLANE_B32 class methods ---
 
 Inst_VOP1__V_READFIRSTLANE_B32::Inst_VOP1__V_READFIRSTLANE_B32(
-    InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_readfirstlane_b32")
+    InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_readfirstlane_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_READFIRSTLANE_B32
@@ -7814,8 +7813,8 @@ Inst_VOP1__V_READFIRSTLANE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_I32_F64 class methods ---
 
-Inst_VOP1__V_CVT_I32_F64::Inst_VOP1__V_CVT_I32_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_i32_f64")
+Inst_VOP1__V_CVT_I32_F64::Inst_VOP1__V_CVT_I32_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_i32_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -7859,8 +7858,8 @@ Inst_VOP1__V_CVT_I32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F64_I32 class methods ---
 
-Inst_VOP1__V_CVT_F64_I32::Inst_VOP1__V_CVT_F64_I32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f64_i32")
+Inst_VOP1__V_CVT_F64_I32::Inst_VOP1__V_CVT_F64_I32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f64_i32")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -7890,8 +7889,8 @@ Inst_VOP1__V_CVT_F64_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_I32 class methods ---
 
-Inst_VOP1__V_CVT_F32_I32::Inst_VOP1__V_CVT_F32_I32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_i32")
+Inst_VOP1__V_CVT_F32_I32::Inst_VOP1__V_CVT_F32_I32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_i32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -7921,8 +7920,8 @@ Inst_VOP1__V_CVT_F32_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_U32 class methods ---
 
-Inst_VOP1__V_CVT_F32_U32::Inst_VOP1__V_CVT_F32_U32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_u32")
+Inst_VOP1__V_CVT_F32_U32::Inst_VOP1__V_CVT_F32_U32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_u32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -7952,8 +7951,8 @@ Inst_VOP1__V_CVT_F32_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_U32_F32 class methods ---
 
-Inst_VOP1__V_CVT_U32_F32::Inst_VOP1__V_CVT_U32_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_u32_f32")
+Inst_VOP1__V_CVT_U32_F32::Inst_VOP1__V_CVT_U32_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_u32_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -7999,8 +7998,8 @@ Inst_VOP1__V_CVT_U32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_I32_F32 class methods ---
 
-Inst_VOP1__V_CVT_I32_F32::Inst_VOP1__V_CVT_I32_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_i32_f32")
+Inst_VOP1__V_CVT_I32_F32::Inst_VOP1__V_CVT_I32_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_i32_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8044,8 +8043,8 @@ Inst_VOP1__V_CVT_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_MOV_FED_B32 class methods ---
 
-Inst_VOP1__V_MOV_FED_B32::Inst_VOP1__V_MOV_FED_B32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_mov_fed_b32")
+Inst_VOP1__V_MOV_FED_B32::Inst_VOP1__V_MOV_FED_B32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_mov_fed_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_MOV_FED_B32
@@ -8065,8 +8064,8 @@ Inst_VOP1__V_MOV_FED_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F16_F32 class methods ---
 
-Inst_VOP1__V_CVT_F16_F32::Inst_VOP1__V_CVT_F16_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f16_f32")
+Inst_VOP1__V_CVT_F16_F32::Inst_VOP1__V_CVT_F16_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f16_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8085,8 +8084,8 @@ Inst_VOP1__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_F16 class methods ---
 
-Inst_VOP1__V_CVT_F32_F16::Inst_VOP1__V_CVT_F32_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_f16")
+Inst_VOP1__V_CVT_F32_F16::Inst_VOP1__V_CVT_F32_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_f16")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8105,8 +8104,8 @@ Inst_VOP1__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_RPI_I32_F32 class methods ---
 
-Inst_VOP1__V_CVT_RPI_I32_F32::Inst_VOP1__V_CVT_RPI_I32_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_rpi_i32_f32")
+Inst_VOP1__V_CVT_RPI_I32_F32::Inst_VOP1__V_CVT_RPI_I32_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_rpi_i32_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8136,8 +8135,8 @@ Inst_VOP1__V_CVT_RPI_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_FLR_I32_F32 class methods ---
 
-Inst_VOP1__V_CVT_FLR_I32_F32::Inst_VOP1__V_CVT_FLR_I32_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_flr_i32_f32")
+Inst_VOP1__V_CVT_FLR_I32_F32::Inst_VOP1__V_CVT_FLR_I32_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_flr_i32_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8167,8 +8166,8 @@ Inst_VOP1__V_CVT_FLR_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_OFF_F32_I4 class methods ---
 
-Inst_VOP1__V_CVT_OFF_F32_I4::Inst_VOP1__V_CVT_OFF_F32_I4(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_off_f32_i4")
+Inst_VOP1__V_CVT_OFF_F32_I4::Inst_VOP1__V_CVT_OFF_F32_I4(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_off_f32_i4")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8187,8 +8186,8 @@ Inst_VOP1__V_CVT_OFF_F32_I4::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_F64 class methods ---
 
-Inst_VOP1__V_CVT_F32_F64::Inst_VOP1__V_CVT_F32_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_f64")
+Inst_VOP1__V_CVT_F32_F64::Inst_VOP1__V_CVT_F32_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8218,8 +8217,8 @@ Inst_VOP1__V_CVT_F32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F64_F32 class methods ---
 
-Inst_VOP1__V_CVT_F64_F32::Inst_VOP1__V_CVT_F64_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f64_f32")
+Inst_VOP1__V_CVT_F64_F32::Inst_VOP1__V_CVT_F64_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f64_f32")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8249,8 +8248,8 @@ Inst_VOP1__V_CVT_F64_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_UBYTE0 class methods ---
 
-Inst_VOP1__V_CVT_F32_UBYTE0::Inst_VOP1__V_CVT_F32_UBYTE0(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_ubyte0")
+Inst_VOP1__V_CVT_F32_UBYTE0::Inst_VOP1__V_CVT_F32_UBYTE0(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_ubyte0")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8280,8 +8279,8 @@ Inst_VOP1__V_CVT_F32_UBYTE0::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_UBYTE1 class methods ---
 
-Inst_VOP1__V_CVT_F32_UBYTE1::Inst_VOP1__V_CVT_F32_UBYTE1(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_ubyte1")
+Inst_VOP1__V_CVT_F32_UBYTE1::Inst_VOP1__V_CVT_F32_UBYTE1(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_ubyte1")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8311,8 +8310,8 @@ Inst_VOP1__V_CVT_F32_UBYTE1::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_UBYTE2 class methods ---
 
-Inst_VOP1__V_CVT_F32_UBYTE2::Inst_VOP1__V_CVT_F32_UBYTE2(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_ubyte2")
+Inst_VOP1__V_CVT_F32_UBYTE2::Inst_VOP1__V_CVT_F32_UBYTE2(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_ubyte2")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8342,8 +8341,8 @@ Inst_VOP1__V_CVT_F32_UBYTE2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F32_UBYTE3 class methods ---
 
-Inst_VOP1__V_CVT_F32_UBYTE3::Inst_VOP1__V_CVT_F32_UBYTE3(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f32_ubyte3")
+Inst_VOP1__V_CVT_F32_UBYTE3::Inst_VOP1__V_CVT_F32_UBYTE3(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f32_ubyte3")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8373,8 +8372,8 @@ Inst_VOP1__V_CVT_F32_UBYTE3::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_U32_F64 class methods ---
 
-Inst_VOP1__V_CVT_U32_F64::Inst_VOP1__V_CVT_U32_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_u32_f64")
+Inst_VOP1__V_CVT_U32_F64::Inst_VOP1__V_CVT_U32_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_u32_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8420,8 +8419,8 @@ Inst_VOP1__V_CVT_U32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F64_U32 class methods ---
 
-Inst_VOP1__V_CVT_F64_U32::Inst_VOP1__V_CVT_F64_U32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f64_u32")
+Inst_VOP1__V_CVT_F64_U32::Inst_VOP1__V_CVT_F64_U32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f64_u32")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8451,8 +8450,8 @@ Inst_VOP1__V_CVT_F64_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_TRUNC_F64 class methods ---
 
-Inst_VOP1__V_TRUNC_F64::Inst_VOP1__V_TRUNC_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_trunc_f64")
+Inst_VOP1__V_TRUNC_F64::Inst_VOP1__V_TRUNC_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_trunc_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8481,8 +8480,8 @@ Inst_VOP1__V_TRUNC_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CEIL_F64 class methods ---
 
-Inst_VOP1__V_CEIL_F64::Inst_VOP1__V_CEIL_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ceil_f64")
+Inst_VOP1__V_CEIL_F64::Inst_VOP1__V_CEIL_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ceil_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8512,8 +8511,8 @@ Inst_VOP1__V_CEIL_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RNDNE_F64 class methods ---
 
-Inst_VOP1__V_RNDNE_F64::Inst_VOP1__V_RNDNE_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rndne_f64")
+Inst_VOP1__V_RNDNE_F64::Inst_VOP1__V_RNDNE_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rndne_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8542,8 +8541,8 @@ Inst_VOP1__V_RNDNE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FLOOR_F64 class methods ---
 
-Inst_VOP1__V_FLOOR_F64::Inst_VOP1__V_FLOOR_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_floor_f64")
+Inst_VOP1__V_FLOOR_F64::Inst_VOP1__V_FLOOR_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_floor_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8573,8 +8572,8 @@ Inst_VOP1__V_FLOOR_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FRACT_F32 class methods ---
 
-Inst_VOP1__V_FRACT_F32::Inst_VOP1__V_FRACT_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_fract_f32")
+Inst_VOP1__V_FRACT_F32::Inst_VOP1__V_FRACT_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_fract_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8604,8 +8603,8 @@ Inst_VOP1__V_FRACT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_TRUNC_F32 class methods ---
 
-Inst_VOP1__V_TRUNC_F32::Inst_VOP1__V_TRUNC_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_trunc_f32")
+Inst_VOP1__V_TRUNC_F32::Inst_VOP1__V_TRUNC_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_trunc_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8634,8 +8633,8 @@ Inst_VOP1__V_TRUNC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CEIL_F32 class methods ---
 
-Inst_VOP1__V_CEIL_F32::Inst_VOP1__V_CEIL_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ceil_f32")
+Inst_VOP1__V_CEIL_F32::Inst_VOP1__V_CEIL_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ceil_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8665,8 +8664,8 @@ Inst_VOP1__V_CEIL_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RNDNE_F32 class methods ---
 
-Inst_VOP1__V_RNDNE_F32::Inst_VOP1__V_RNDNE_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rndne_f32")
+Inst_VOP1__V_RNDNE_F32::Inst_VOP1__V_RNDNE_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rndne_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8695,8 +8694,8 @@ Inst_VOP1__V_RNDNE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FLOOR_F32 class methods ---
 
-Inst_VOP1__V_FLOOR_F32::Inst_VOP1__V_FLOOR_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_floor_f32")
+Inst_VOP1__V_FLOOR_F32::Inst_VOP1__V_FLOOR_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_floor_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8726,8 +8725,8 @@ Inst_VOP1__V_FLOOR_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_EXP_F32 class methods ---
 
-Inst_VOP1__V_EXP_F32::Inst_VOP1__V_EXP_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_exp_f32")
+Inst_VOP1__V_EXP_F32::Inst_VOP1__V_EXP_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_exp_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8756,8 +8755,8 @@ Inst_VOP1__V_EXP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_LOG_F32 class methods ---
 
-Inst_VOP1__V_LOG_F32::Inst_VOP1__V_LOG_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_log_f32")
+Inst_VOP1__V_LOG_F32::Inst_VOP1__V_LOG_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_log_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8786,8 +8785,8 @@ Inst_VOP1__V_LOG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RCP_F32 class methods ---
 
-Inst_VOP1__V_RCP_F32::Inst_VOP1__V_RCP_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rcp_f32")
+Inst_VOP1__V_RCP_F32::Inst_VOP1__V_RCP_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rcp_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8816,8 +8815,8 @@ Inst_VOP1__V_RCP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RCP_IFLAG_F32 class methods ---
 
-Inst_VOP1__V_RCP_IFLAG_F32::Inst_VOP1__V_RCP_IFLAG_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rcp_iflag_f32")
+Inst_VOP1__V_RCP_IFLAG_F32::Inst_VOP1__V_RCP_IFLAG_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rcp_iflag_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8849,8 +8848,8 @@ Inst_VOP1__V_RCP_IFLAG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RSQ_F32 class methods ---
 
-Inst_VOP1__V_RSQ_F32::Inst_VOP1__V_RSQ_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rsq_f32")
+Inst_VOP1__V_RSQ_F32::Inst_VOP1__V_RSQ_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rsq_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8879,8 +8878,8 @@ Inst_VOP1__V_RSQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RCP_F64 class methods ---
 
-Inst_VOP1__V_RCP_F64::Inst_VOP1__V_RCP_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rcp_f64")
+Inst_VOP1__V_RCP_F64::Inst_VOP1__V_RCP_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rcp_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8921,8 +8920,8 @@ Inst_VOP1__V_RCP_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RSQ_F64 class methods ---
 
-Inst_VOP1__V_RSQ_F64::Inst_VOP1__V_RSQ_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rsq_f64")
+Inst_VOP1__V_RSQ_F64::Inst_VOP1__V_RSQ_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rsq_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -8961,8 +8960,8 @@ Inst_VOP1__V_RSQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_SQRT_F32 class methods ---
 
-Inst_VOP1__V_SQRT_F32::Inst_VOP1__V_SQRT_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_sqrt_f32")
+Inst_VOP1__V_SQRT_F32::Inst_VOP1__V_SQRT_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_sqrt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -8991,8 +8990,8 @@ Inst_VOP1__V_SQRT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_SQRT_F64 class methods ---
 
-Inst_VOP1__V_SQRT_F64::Inst_VOP1__V_SQRT_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_sqrt_f64")
+Inst_VOP1__V_SQRT_F64::Inst_VOP1__V_SQRT_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_sqrt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -9021,8 +9020,8 @@ Inst_VOP1__V_SQRT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_SIN_F32 class methods ---
 
-Inst_VOP1__V_SIN_F32::Inst_VOP1__V_SIN_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_sin_f32")
+Inst_VOP1__V_SIN_F32::Inst_VOP1__V_SIN_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_sin_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9059,8 +9058,8 @@ Inst_VOP1__V_SIN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_COS_F32 class methods ---
 
-Inst_VOP1__V_COS_F32::Inst_VOP1__V_COS_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cos_f32")
+Inst_VOP1__V_COS_F32::Inst_VOP1__V_COS_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cos_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9097,8 +9096,8 @@ Inst_VOP1__V_COS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_NOT_B32 class methods ---
 
-Inst_VOP1__V_NOT_B32::Inst_VOP1__V_NOT_B32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_not_b32")
+Inst_VOP1__V_NOT_B32::Inst_VOP1__V_NOT_B32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_not_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_NOT_B32
@@ -9127,8 +9126,8 @@ Inst_VOP1__V_NOT_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_BFREV_B32 class methods ---
 
-Inst_VOP1__V_BFREV_B32::Inst_VOP1__V_BFREV_B32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_bfrev_b32")
+Inst_VOP1__V_BFREV_B32::Inst_VOP1__V_BFREV_B32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_bfrev_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_BFREV_B32
@@ -9157,8 +9156,8 @@ Inst_VOP1__V_BFREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FFBH_U32 class methods ---
 
-Inst_VOP1__V_FFBH_U32::Inst_VOP1__V_FFBH_U32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ffbh_u32")
+Inst_VOP1__V_FFBH_U32::Inst_VOP1__V_FFBH_U32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ffbh_u32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_FFBH_U32
@@ -9187,8 +9186,8 @@ Inst_VOP1__V_FFBH_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FFBL_B32 class methods ---
 
-Inst_VOP1__V_FFBL_B32::Inst_VOP1__V_FFBL_B32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ffbl_b32")
+Inst_VOP1__V_FFBL_B32::Inst_VOP1__V_FFBL_B32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ffbl_b32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_FFBL_B32
@@ -9217,8 +9216,8 @@ Inst_VOP1__V_FFBL_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FFBH_I32 class methods ---
 
-Inst_VOP1__V_FFBH_I32::Inst_VOP1__V_FFBH_I32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ffbh_i32")
+Inst_VOP1__V_FFBH_I32::Inst_VOP1__V_FFBH_I32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ffbh_i32")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_FFBH_I32
@@ -9248,8 +9247,8 @@ Inst_VOP1__V_FFBH_I32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP1__V_FREXP_EXP_I32_F64 class methods ---
 
 Inst_VOP1__V_FREXP_EXP_I32_F64::Inst_VOP1__V_FREXP_EXP_I32_F64(
-    InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_exp_i32_f64")
+    InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_exp_i32_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -9285,8 +9284,8 @@ Inst_VOP1__V_FREXP_EXP_I32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FREXP_MANT_F64 class methods ---
 
-Inst_VOP1__V_FREXP_MANT_F64::Inst_VOP1__V_FREXP_MANT_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_mant_f64")
+Inst_VOP1__V_FREXP_MANT_F64::Inst_VOP1__V_FREXP_MANT_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_mant_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -9321,8 +9320,8 @@ Inst_VOP1__V_FREXP_MANT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FRACT_F64 class methods ---
 
-Inst_VOP1__V_FRACT_F64::Inst_VOP1__V_FRACT_F64(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_fract_f64")
+Inst_VOP1__V_FRACT_F64::Inst_VOP1__V_FRACT_F64(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_fract_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -9353,8 +9352,8 @@ Inst_VOP1__V_FRACT_F64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP1__V_FREXP_EXP_I32_F32 class methods ---
 
 Inst_VOP1__V_FREXP_EXP_I32_F32::Inst_VOP1__V_FREXP_EXP_I32_F32(
-    InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_exp_i32_f32")
+    InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_exp_i32_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9394,8 +9393,8 @@ Inst_VOP1__V_FREXP_EXP_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FREXP_MANT_F32 class methods ---
 
-Inst_VOP1__V_FREXP_MANT_F32::Inst_VOP1__V_FREXP_MANT_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_mant_f32")
+Inst_VOP1__V_FREXP_MANT_F32::Inst_VOP1__V_FREXP_MANT_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_mant_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9435,8 +9434,8 @@ Inst_VOP1__V_FREXP_MANT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CLREXCP class methods ---
 
-Inst_VOP1__V_CLREXCP::Inst_VOP1__V_CLREXCP(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_clrexcp")
+Inst_VOP1__V_CLREXCP::Inst_VOP1__V_CLREXCP(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_clrexcp")
 {
     setFlag(ALU);
 } // Inst_VOP1__V_CLREXCP
@@ -9452,8 +9451,8 @@ Inst_VOP1__V_CLREXCP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F16_U16 class methods ---
 
-Inst_VOP1__V_CVT_F16_U16::Inst_VOP1__V_CVT_F16_U16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f16_u16")
+Inst_VOP1__V_CVT_F16_U16::Inst_VOP1__V_CVT_F16_U16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f16_u16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9472,8 +9471,8 @@ Inst_VOP1__V_CVT_F16_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_F16_I16 class methods ---
 
-Inst_VOP1__V_CVT_F16_I16::Inst_VOP1__V_CVT_F16_I16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_f16_i16")
+Inst_VOP1__V_CVT_F16_I16::Inst_VOP1__V_CVT_F16_I16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_f16_i16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9492,8 +9491,8 @@ Inst_VOP1__V_CVT_F16_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_U16_F16 class methods ---
 
-Inst_VOP1__V_CVT_U16_F16::Inst_VOP1__V_CVT_U16_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_u16_f16")
+Inst_VOP1__V_CVT_U16_F16::Inst_VOP1__V_CVT_U16_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_u16_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9512,8 +9511,8 @@ Inst_VOP1__V_CVT_U16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CVT_I16_F16 class methods ---
 
-Inst_VOP1__V_CVT_I16_F16::Inst_VOP1__V_CVT_I16_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cvt_i16_f16")
+Inst_VOP1__V_CVT_I16_F16::Inst_VOP1__V_CVT_I16_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cvt_i16_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9532,8 +9531,8 @@ Inst_VOP1__V_CVT_I16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RCP_F16 class methods ---
 
-Inst_VOP1__V_RCP_F16::Inst_VOP1__V_RCP_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rcp_f16")
+Inst_VOP1__V_RCP_F16::Inst_VOP1__V_RCP_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rcp_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9553,8 +9552,8 @@ Inst_VOP1__V_RCP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_SQRT_F16 class methods ---
 
-Inst_VOP1__V_SQRT_F16::Inst_VOP1__V_SQRT_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_sqrt_f16")
+Inst_VOP1__V_SQRT_F16::Inst_VOP1__V_SQRT_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_sqrt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9574,8 +9573,8 @@ Inst_VOP1__V_SQRT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RSQ_F16 class methods ---
 
-Inst_VOP1__V_RSQ_F16::Inst_VOP1__V_RSQ_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rsq_f16")
+Inst_VOP1__V_RSQ_F16::Inst_VOP1__V_RSQ_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rsq_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9595,8 +9594,8 @@ Inst_VOP1__V_RSQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_LOG_F16 class methods ---
 
-Inst_VOP1__V_LOG_F16::Inst_VOP1__V_LOG_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_log_f16")
+Inst_VOP1__V_LOG_F16::Inst_VOP1__V_LOG_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_log_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9616,8 +9615,8 @@ Inst_VOP1__V_LOG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_EXP_F16 class methods ---
 
-Inst_VOP1__V_EXP_F16::Inst_VOP1__V_EXP_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_exp_f16")
+Inst_VOP1__V_EXP_F16::Inst_VOP1__V_EXP_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_exp_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9637,8 +9636,8 @@ Inst_VOP1__V_EXP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FREXP_MANT_F16 class methods ---
 
-Inst_VOP1__V_FREXP_MANT_F16::Inst_VOP1__V_FREXP_MANT_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_mant_f16")
+Inst_VOP1__V_FREXP_MANT_F16::Inst_VOP1__V_FREXP_MANT_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_mant_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9664,8 +9663,8 @@ Inst_VOP1__V_FREXP_MANT_F16::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP1__V_FREXP_EXP_I16_F16 class methods ---
 
 Inst_VOP1__V_FREXP_EXP_I16_F16::Inst_VOP1__V_FREXP_EXP_I16_F16(
-    InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_frexp_exp_i16_f16")
+    InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_frexp_exp_i16_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9689,8 +9688,8 @@ Inst_VOP1__V_FREXP_EXP_I16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FLOOR_F16 class methods ---
 
-Inst_VOP1__V_FLOOR_F16::Inst_VOP1__V_FLOOR_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_floor_f16")
+Inst_VOP1__V_FLOOR_F16::Inst_VOP1__V_FLOOR_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_floor_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9708,8 +9707,8 @@ Inst_VOP1__V_FLOOR_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_CEIL_F16 class methods ---
 
-Inst_VOP1__V_CEIL_F16::Inst_VOP1__V_CEIL_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_ceil_f16")
+Inst_VOP1__V_CEIL_F16::Inst_VOP1__V_CEIL_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_ceil_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9727,8 +9726,8 @@ Inst_VOP1__V_CEIL_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_TRUNC_F16 class methods ---
 
-Inst_VOP1__V_TRUNC_F16::Inst_VOP1__V_TRUNC_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_trunc_f16")
+Inst_VOP1__V_TRUNC_F16::Inst_VOP1__V_TRUNC_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_trunc_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9746,8 +9745,8 @@ Inst_VOP1__V_TRUNC_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_RNDNE_F16 class methods ---
 
-Inst_VOP1__V_RNDNE_F16::Inst_VOP1__V_RNDNE_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_rndne_f16")
+Inst_VOP1__V_RNDNE_F16::Inst_VOP1__V_RNDNE_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_rndne_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9766,8 +9765,8 @@ Inst_VOP1__V_RNDNE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_FRACT_F16 class methods ---
 
-Inst_VOP1__V_FRACT_F16::Inst_VOP1__V_FRACT_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_fract_f16")
+Inst_VOP1__V_FRACT_F16::Inst_VOP1__V_FRACT_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_fract_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9784,8 +9783,8 @@ Inst_VOP1__V_FRACT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_SIN_F16 class methods ---
 
-Inst_VOP1__V_SIN_F16::Inst_VOP1__V_SIN_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_sin_f16")
+Inst_VOP1__V_SIN_F16::Inst_VOP1__V_SIN_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_sin_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9802,8 +9801,8 @@ Inst_VOP1__V_SIN_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_COS_F16 class methods ---
 
-Inst_VOP1__V_COS_F16::Inst_VOP1__V_COS_F16(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_cos_f16")
+Inst_VOP1__V_COS_F16::Inst_VOP1__V_COS_F16(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_cos_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -9820,8 +9819,8 @@ Inst_VOP1__V_COS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_EXP_LEGACY_F32 class methods ---
 
-Inst_VOP1__V_EXP_LEGACY_F32::Inst_VOP1__V_EXP_LEGACY_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_exp_legacy_f32")
+Inst_VOP1__V_EXP_LEGACY_F32::Inst_VOP1__V_EXP_LEGACY_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_exp_legacy_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9851,8 +9850,8 @@ Inst_VOP1__V_EXP_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP1__V_LOG_LEGACY_F32 class methods ---
 
-Inst_VOP1__V_LOG_LEGACY_F32::Inst_VOP1__V_LOG_LEGACY_F32(InFmt_VOP1 *iFmt) :
-    Inst_VOP1(iFmt, "v_log_legacy_f32")
+Inst_VOP1__V_LOG_LEGACY_F32::Inst_VOP1__V_LOG_LEGACY_F32(InFmt_VOP1 *iFmt)
+    : Inst_VOP1(iFmt, "v_log_legacy_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9882,8 +9881,8 @@ Inst_VOP1__V_LOG_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_CLASS_F32 class methods ---
 
-Inst_VOPC__V_CMP_CLASS_F32::Inst_VOPC__V_CMP_CLASS_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_class_f32")
+Inst_VOPC__V_CMP_CLASS_F32::Inst_VOPC__V_CMP_CLASS_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_class_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -9993,8 +9992,8 @@ Inst_VOPC__V_CMP_CLASS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_CLASS_F32 class methods ---
 
-Inst_VOPC__V_CMPX_CLASS_F32::Inst_VOPC__V_CMPX_CLASS_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_class_f32")
+Inst_VOPC__V_CMPX_CLASS_F32::Inst_VOPC__V_CMPX_CLASS_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_class_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -10106,8 +10105,8 @@ Inst_VOPC__V_CMPX_CLASS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_CLASS_F64 class methods ---
 
-Inst_VOPC__V_CMP_CLASS_F64::Inst_VOPC__V_CMP_CLASS_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_class_f64")
+Inst_VOPC__V_CMP_CLASS_F64::Inst_VOPC__V_CMP_CLASS_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_class_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -10217,8 +10216,8 @@ Inst_VOPC__V_CMP_CLASS_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_CLASS_F64 class methods ---
 
-Inst_VOPC__V_CMPX_CLASS_F64::Inst_VOPC__V_CMPX_CLASS_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_class_f64")
+Inst_VOPC__V_CMPX_CLASS_F64::Inst_VOPC__V_CMPX_CLASS_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_class_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -10330,8 +10329,8 @@ Inst_VOPC__V_CMPX_CLASS_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_CLASS_F16 class methods ---
 
-Inst_VOPC__V_CMP_CLASS_F16::Inst_VOPC__V_CMP_CLASS_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_class_f16")
+Inst_VOPC__V_CMP_CLASS_F16::Inst_VOPC__V_CMP_CLASS_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_class_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10361,8 +10360,8 @@ Inst_VOPC__V_CMP_CLASS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_CLASS_F16 class methods ---
 
-Inst_VOPC__V_CMPX_CLASS_F16::Inst_VOPC__V_CMPX_CLASS_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_class_f16")
+Inst_VOPC__V_CMPX_CLASS_F16::Inst_VOPC__V_CMPX_CLASS_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_class_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10394,8 +10393,8 @@ Inst_VOPC__V_CMPX_CLASS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_F16 class methods ---
 
-Inst_VOPC__V_CMP_F_F16::Inst_VOPC__V_CMP_F_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_f16")
+Inst_VOPC__V_CMP_F_F16::Inst_VOPC__V_CMP_F_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10412,8 +10411,8 @@ Inst_VOPC__V_CMP_F_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_F16 class methods ---
 
-Inst_VOPC__V_CMP_LT_F16::Inst_VOPC__V_CMP_LT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_f16")
+Inst_VOPC__V_CMP_LT_F16::Inst_VOPC__V_CMP_LT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10431,8 +10430,8 @@ Inst_VOPC__V_CMP_LT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_F16 class methods ---
 
-Inst_VOPC__V_CMP_EQ_F16::Inst_VOPC__V_CMP_EQ_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_f16")
+Inst_VOPC__V_CMP_EQ_F16::Inst_VOPC__V_CMP_EQ_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10450,8 +10449,8 @@ Inst_VOPC__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_F16 class methods ---
 
-Inst_VOPC__V_CMP_LE_F16::Inst_VOPC__V_CMP_LE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_f16")
+Inst_VOPC__V_CMP_LE_F16::Inst_VOPC__V_CMP_LE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10469,8 +10468,8 @@ Inst_VOPC__V_CMP_LE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_F16 class methods ---
 
-Inst_VOPC__V_CMP_GT_F16::Inst_VOPC__V_CMP_GT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_f16")
+Inst_VOPC__V_CMP_GT_F16::Inst_VOPC__V_CMP_GT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10488,8 +10487,8 @@ Inst_VOPC__V_CMP_GT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LG_F16 class methods ---
 
-Inst_VOPC__V_CMP_LG_F16::Inst_VOPC__V_CMP_LG_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lg_f16")
+Inst_VOPC__V_CMP_LG_F16::Inst_VOPC__V_CMP_LG_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lg_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10507,8 +10506,8 @@ Inst_VOPC__V_CMP_LG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_F16 class methods ---
 
-Inst_VOPC__V_CMP_GE_F16::Inst_VOPC__V_CMP_GE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_f16")
+Inst_VOPC__V_CMP_GE_F16::Inst_VOPC__V_CMP_GE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10526,8 +10525,8 @@ Inst_VOPC__V_CMP_GE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_O_F16 class methods ---
 
-Inst_VOPC__V_CMP_O_F16::Inst_VOPC__V_CMP_O_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_o_f16")
+Inst_VOPC__V_CMP_O_F16::Inst_VOPC__V_CMP_O_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_o_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10544,8 +10543,8 @@ Inst_VOPC__V_CMP_O_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_U_F16 class methods ---
 
-Inst_VOPC__V_CMP_U_F16::Inst_VOPC__V_CMP_U_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_u_f16")
+Inst_VOPC__V_CMP_U_F16::Inst_VOPC__V_CMP_U_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_u_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10562,8 +10561,8 @@ Inst_VOPC__V_CMP_U_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGE_F16 class methods ---
 
-Inst_VOPC__V_CMP_NGE_F16::Inst_VOPC__V_CMP_NGE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nge_f16")
+Inst_VOPC__V_CMP_NGE_F16::Inst_VOPC__V_CMP_NGE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nge_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10581,8 +10580,8 @@ Inst_VOPC__V_CMP_NGE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLG_F16 class methods ---
 
-Inst_VOPC__V_CMP_NLG_F16::Inst_VOPC__V_CMP_NLG_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlg_f16")
+Inst_VOPC__V_CMP_NLG_F16::Inst_VOPC__V_CMP_NLG_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlg_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10600,8 +10599,8 @@ Inst_VOPC__V_CMP_NLG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGT_F16 class methods ---
 
-Inst_VOPC__V_CMP_NGT_F16::Inst_VOPC__V_CMP_NGT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ngt_f16")
+Inst_VOPC__V_CMP_NGT_F16::Inst_VOPC__V_CMP_NGT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ngt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10619,8 +10618,8 @@ Inst_VOPC__V_CMP_NGT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLE_F16 class methods ---
 
-Inst_VOPC__V_CMP_NLE_F16::Inst_VOPC__V_CMP_NLE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nle_f16")
+Inst_VOPC__V_CMP_NLE_F16::Inst_VOPC__V_CMP_NLE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nle_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10638,8 +10637,8 @@ Inst_VOPC__V_CMP_NLE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NEQ_F16 class methods ---
 
-Inst_VOPC__V_CMP_NEQ_F16::Inst_VOPC__V_CMP_NEQ_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_neq_f16")
+Inst_VOPC__V_CMP_NEQ_F16::Inst_VOPC__V_CMP_NEQ_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_neq_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10657,8 +10656,8 @@ Inst_VOPC__V_CMP_NEQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLT_F16 class methods ---
 
-Inst_VOPC__V_CMP_NLT_F16::Inst_VOPC__V_CMP_NLT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlt_f16")
+Inst_VOPC__V_CMP_NLT_F16::Inst_VOPC__V_CMP_NLT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10676,8 +10675,8 @@ Inst_VOPC__V_CMP_NLT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_TRU_F16 class methods ---
 
-Inst_VOPC__V_CMP_TRU_F16::Inst_VOPC__V_CMP_TRU_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_tru_f16")
+Inst_VOPC__V_CMP_TRU_F16::Inst_VOPC__V_CMP_TRU_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_tru_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10695,8 +10694,8 @@ Inst_VOPC__V_CMP_TRU_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_F16 class methods ---
 
-Inst_VOPC__V_CMPX_F_F16::Inst_VOPC__V_CMPX_F_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_f16")
+Inst_VOPC__V_CMPX_F_F16::Inst_VOPC__V_CMPX_F_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10715,8 +10714,8 @@ Inst_VOPC__V_CMPX_F_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_F16 class methods ---
 
-Inst_VOPC__V_CMPX_LT_F16::Inst_VOPC__V_CMPX_LT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_f16")
+Inst_VOPC__V_CMPX_LT_F16::Inst_VOPC__V_CMPX_LT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10735,8 +10734,8 @@ Inst_VOPC__V_CMPX_LT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_F16 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_F16::Inst_VOPC__V_CMPX_EQ_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_f16")
+Inst_VOPC__V_CMPX_EQ_F16::Inst_VOPC__V_CMPX_EQ_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10755,8 +10754,8 @@ Inst_VOPC__V_CMPX_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_F16 class methods ---
 
-Inst_VOPC__V_CMPX_LE_F16::Inst_VOPC__V_CMPX_LE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_f16")
+Inst_VOPC__V_CMPX_LE_F16::Inst_VOPC__V_CMPX_LE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10775,8 +10774,8 @@ Inst_VOPC__V_CMPX_LE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_F16 class methods ---
 
-Inst_VOPC__V_CMPX_GT_F16::Inst_VOPC__V_CMPX_GT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_f16")
+Inst_VOPC__V_CMPX_GT_F16::Inst_VOPC__V_CMPX_GT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10795,8 +10794,8 @@ Inst_VOPC__V_CMPX_GT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LG_F16 class methods ---
 
-Inst_VOPC__V_CMPX_LG_F16::Inst_VOPC__V_CMPX_LG_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lg_f16")
+Inst_VOPC__V_CMPX_LG_F16::Inst_VOPC__V_CMPX_LG_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lg_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10815,8 +10814,8 @@ Inst_VOPC__V_CMPX_LG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_F16 class methods ---
 
-Inst_VOPC__V_CMPX_GE_F16::Inst_VOPC__V_CMPX_GE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_f16")
+Inst_VOPC__V_CMPX_GE_F16::Inst_VOPC__V_CMPX_GE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10835,8 +10834,8 @@ Inst_VOPC__V_CMPX_GE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_O_F16 class methods ---
 
-Inst_VOPC__V_CMPX_O_F16::Inst_VOPC__V_CMPX_O_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_o_f16")
+Inst_VOPC__V_CMPX_O_F16::Inst_VOPC__V_CMPX_O_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_o_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10856,8 +10855,8 @@ Inst_VOPC__V_CMPX_O_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_U_F16 class methods ---
 
-Inst_VOPC__V_CMPX_U_F16::Inst_VOPC__V_CMPX_U_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_u_f16")
+Inst_VOPC__V_CMPX_U_F16::Inst_VOPC__V_CMPX_U_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_u_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10877,8 +10876,8 @@ Inst_VOPC__V_CMPX_U_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGE_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NGE_F16::Inst_VOPC__V_CMPX_NGE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nge_f16")
+Inst_VOPC__V_CMPX_NGE_F16::Inst_VOPC__V_CMPX_NGE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nge_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10897,8 +10896,8 @@ Inst_VOPC__V_CMPX_NGE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLG_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NLG_F16::Inst_VOPC__V_CMPX_NLG_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlg_f16")
+Inst_VOPC__V_CMPX_NLG_F16::Inst_VOPC__V_CMPX_NLG_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlg_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10917,8 +10916,8 @@ Inst_VOPC__V_CMPX_NLG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGT_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NGT_F16::Inst_VOPC__V_CMPX_NGT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ngt_f16")
+Inst_VOPC__V_CMPX_NGT_F16::Inst_VOPC__V_CMPX_NGT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ngt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10937,8 +10936,8 @@ Inst_VOPC__V_CMPX_NGT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLE_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NLE_F16::Inst_VOPC__V_CMPX_NLE_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nle_f16")
+Inst_VOPC__V_CMPX_NLE_F16::Inst_VOPC__V_CMPX_NLE_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nle_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10957,8 +10956,8 @@ Inst_VOPC__V_CMPX_NLE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NEQ_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NEQ_F16::Inst_VOPC__V_CMPX_NEQ_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_neq_f16")
+Inst_VOPC__V_CMPX_NEQ_F16::Inst_VOPC__V_CMPX_NEQ_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_neq_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10977,8 +10976,8 @@ Inst_VOPC__V_CMPX_NEQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLT_F16 class methods ---
 
-Inst_VOPC__V_CMPX_NLT_F16::Inst_VOPC__V_CMPX_NLT_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlt_f16")
+Inst_VOPC__V_CMPX_NLT_F16::Inst_VOPC__V_CMPX_NLT_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlt_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -10997,8 +10996,8 @@ Inst_VOPC__V_CMPX_NLT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_TRU_F16 class methods ---
 
-Inst_VOPC__V_CMPX_TRU_F16::Inst_VOPC__V_CMPX_TRU_F16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_tru_f16")
+Inst_VOPC__V_CMPX_TRU_F16::Inst_VOPC__V_CMPX_TRU_F16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_tru_f16")
 {
     setFlag(ALU);
     setFlag(F16);
@@ -11017,8 +11016,8 @@ Inst_VOPC__V_CMPX_TRU_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_F32 class methods ---
 
-Inst_VOPC__V_CMP_F_F32::Inst_VOPC__V_CMP_F_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_f32")
+Inst_VOPC__V_CMP_F_F32::Inst_VOPC__V_CMP_F_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11044,8 +11043,8 @@ Inst_VOPC__V_CMP_F_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_F32 class methods ---
 
-Inst_VOPC__V_CMP_LT_F32::Inst_VOPC__V_CMP_LT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_f32")
+Inst_VOPC__V_CMP_LT_F32::Inst_VOPC__V_CMP_LT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11077,8 +11076,8 @@ Inst_VOPC__V_CMP_LT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_F32 class methods ---
 
-Inst_VOPC__V_CMP_EQ_F32::Inst_VOPC__V_CMP_EQ_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_f32")
+Inst_VOPC__V_CMP_EQ_F32::Inst_VOPC__V_CMP_EQ_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11110,8 +11109,8 @@ Inst_VOPC__V_CMP_EQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_F32 class methods ---
 
-Inst_VOPC__V_CMP_LE_F32::Inst_VOPC__V_CMP_LE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_f32")
+Inst_VOPC__V_CMP_LE_F32::Inst_VOPC__V_CMP_LE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11143,8 +11142,8 @@ Inst_VOPC__V_CMP_LE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_F32 class methods ---
 
-Inst_VOPC__V_CMP_GT_F32::Inst_VOPC__V_CMP_GT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_f32")
+Inst_VOPC__V_CMP_GT_F32::Inst_VOPC__V_CMP_GT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11176,8 +11175,8 @@ Inst_VOPC__V_CMP_GT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LG_F32 class methods ---
 
-Inst_VOPC__V_CMP_LG_F32::Inst_VOPC__V_CMP_LG_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lg_f32")
+Inst_VOPC__V_CMP_LG_F32::Inst_VOPC__V_CMP_LG_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lg_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11201,7 +11200,8 @@ Inst_VOPC__V_CMP_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -11210,8 +11210,8 @@ Inst_VOPC__V_CMP_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_F32 class methods ---
 
-Inst_VOPC__V_CMP_GE_F32::Inst_VOPC__V_CMP_GE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_f32")
+Inst_VOPC__V_CMP_GE_F32::Inst_VOPC__V_CMP_GE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11243,8 +11243,8 @@ Inst_VOPC__V_CMP_GE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_O_F32 class methods ---
 
-Inst_VOPC__V_CMP_O_F32::Inst_VOPC__V_CMP_O_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_o_f32")
+Inst_VOPC__V_CMP_O_F32::Inst_VOPC__V_CMP_O_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_o_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11267,7 +11267,8 @@ Inst_VOPC__V_CMP_O_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -11276,8 +11277,8 @@ Inst_VOPC__V_CMP_O_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_U_F32 class methods ---
 
-Inst_VOPC__V_CMP_U_F32::Inst_VOPC__V_CMP_U_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_u_f32")
+Inst_VOPC__V_CMP_U_F32::Inst_VOPC__V_CMP_U_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_u_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11301,7 +11302,8 @@ Inst_VOPC__V_CMP_U_F32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vcc.setBit(lane,
-                (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
+                       (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 :
+                                                                            0);
         }
     }
 
@@ -11309,8 +11311,8 @@ Inst_VOPC__V_CMP_U_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGE_F32 class methods ---
 
-Inst_VOPC__V_CMP_NGE_F32::Inst_VOPC__V_CMP_NGE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nge_f32")
+Inst_VOPC__V_CMP_NGE_F32::Inst_VOPC__V_CMP_NGE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nge_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11342,8 +11344,8 @@ Inst_VOPC__V_CMP_NGE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLG_F32 class methods ---
 
-Inst_VOPC__V_CMP_NLG_F32::Inst_VOPC__V_CMP_NLG_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlg_f32")
+Inst_VOPC__V_CMP_NLG_F32::Inst_VOPC__V_CMP_NLG_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlg_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11367,7 +11369,8 @@ Inst_VOPC__V_CMP_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -11376,8 +11379,8 @@ Inst_VOPC__V_CMP_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGT_F32 class methods ---
 
-Inst_VOPC__V_CMP_NGT_F32::Inst_VOPC__V_CMP_NGT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ngt_f32")
+Inst_VOPC__V_CMP_NGT_F32::Inst_VOPC__V_CMP_NGT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ngt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11409,8 +11412,8 @@ Inst_VOPC__V_CMP_NGT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLE_F32 class methods ---
 
-Inst_VOPC__V_CMP_NLE_F32::Inst_VOPC__V_CMP_NLE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nle_f32")
+Inst_VOPC__V_CMP_NLE_F32::Inst_VOPC__V_CMP_NLE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nle_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11442,8 +11445,8 @@ Inst_VOPC__V_CMP_NLE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NEQ_F32 class methods ---
 
-Inst_VOPC__V_CMP_NEQ_F32::Inst_VOPC__V_CMP_NEQ_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_neq_f32")
+Inst_VOPC__V_CMP_NEQ_F32::Inst_VOPC__V_CMP_NEQ_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_neq_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11475,8 +11478,8 @@ Inst_VOPC__V_CMP_NEQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLT_F32 class methods ---
 
-Inst_VOPC__V_CMP_NLT_F32::Inst_VOPC__V_CMP_NLT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlt_f32")
+Inst_VOPC__V_CMP_NLT_F32::Inst_VOPC__V_CMP_NLT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11508,8 +11511,8 @@ Inst_VOPC__V_CMP_NLT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_TRU_F32 class methods ---
 
-Inst_VOPC__V_CMP_TRU_F32::Inst_VOPC__V_CMP_TRU_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_tru_f32")
+Inst_VOPC__V_CMP_TRU_F32::Inst_VOPC__V_CMP_TRU_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_tru_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11536,8 +11539,8 @@ Inst_VOPC__V_CMP_TRU_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_F32 class methods ---
 
-Inst_VOPC__V_CMPX_F_F32::Inst_VOPC__V_CMPX_F_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_f32")
+Inst_VOPC__V_CMPX_F_F32::Inst_VOPC__V_CMPX_F_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11566,8 +11569,8 @@ Inst_VOPC__V_CMPX_F_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_F32 class methods ---
 
-Inst_VOPC__V_CMPX_LT_F32::Inst_VOPC__V_CMPX_LT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_f32")
+Inst_VOPC__V_CMPX_LT_F32::Inst_VOPC__V_CMPX_LT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11601,8 +11604,8 @@ Inst_VOPC__V_CMPX_LT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_F32 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_F32::Inst_VOPC__V_CMPX_EQ_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_f32")
+Inst_VOPC__V_CMPX_EQ_F32::Inst_VOPC__V_CMPX_EQ_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11636,8 +11639,8 @@ Inst_VOPC__V_CMPX_EQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_F32 class methods ---
 
-Inst_VOPC__V_CMPX_LE_F32::Inst_VOPC__V_CMPX_LE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_f32")
+Inst_VOPC__V_CMPX_LE_F32::Inst_VOPC__V_CMPX_LE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11671,8 +11674,8 @@ Inst_VOPC__V_CMPX_LE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_F32 class methods ---
 
-Inst_VOPC__V_CMPX_GT_F32::Inst_VOPC__V_CMPX_GT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_f32")
+Inst_VOPC__V_CMPX_GT_F32::Inst_VOPC__V_CMPX_GT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11706,8 +11709,8 @@ Inst_VOPC__V_CMPX_GT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LG_F32 class methods ---
 
-Inst_VOPC__V_CMPX_LG_F32::Inst_VOPC__V_CMPX_LG_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lg_f32")
+Inst_VOPC__V_CMPX_LG_F32::Inst_VOPC__V_CMPX_LG_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lg_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11732,7 +11735,8 @@ Inst_VOPC__V_CMPX_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -11742,8 +11746,8 @@ Inst_VOPC__V_CMPX_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_F32 class methods ---
 
-Inst_VOPC__V_CMPX_GE_F32::Inst_VOPC__V_CMPX_GE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_f32")
+Inst_VOPC__V_CMPX_GE_F32::Inst_VOPC__V_CMPX_GE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11777,8 +11781,8 @@ Inst_VOPC__V_CMPX_GE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_O_F32 class methods ---
 
-Inst_VOPC__V_CMPX_O_F32::Inst_VOPC__V_CMPX_O_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_o_f32")
+Inst_VOPC__V_CMPX_O_F32::Inst_VOPC__V_CMPX_O_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_o_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11804,7 +11808,8 @@ Inst_VOPC__V_CMPX_O_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -11814,8 +11819,8 @@ Inst_VOPC__V_CMPX_O_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_U_F32 class methods ---
 
-Inst_VOPC__V_CMPX_U_F32::Inst_VOPC__V_CMPX_U_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_u_f32")
+Inst_VOPC__V_CMPX_U_F32::Inst_VOPC__V_CMPX_U_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_u_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11842,7 +11847,8 @@ Inst_VOPC__V_CMPX_U_F32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vcc.setBit(lane,
-                (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
+                       (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 :
+                                                                            0);
         }
     }
 
@@ -11851,8 +11857,8 @@ Inst_VOPC__V_CMPX_U_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGE_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NGE_F32::Inst_VOPC__V_CMPX_NGE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nge_f32")
+Inst_VOPC__V_CMPX_NGE_F32::Inst_VOPC__V_CMPX_NGE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nge_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11886,8 +11892,8 @@ Inst_VOPC__V_CMPX_NGE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLG_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NLG_F32::Inst_VOPC__V_CMPX_NLG_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlg_f32")
+Inst_VOPC__V_CMPX_NLG_F32::Inst_VOPC__V_CMPX_NLG_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlg_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11912,7 +11918,8 @@ Inst_VOPC__V_CMPX_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -11922,8 +11929,8 @@ Inst_VOPC__V_CMPX_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGT_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NGT_F32::Inst_VOPC__V_CMPX_NGT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ngt_f32")
+Inst_VOPC__V_CMPX_NGT_F32::Inst_VOPC__V_CMPX_NGT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ngt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11957,8 +11964,8 @@ Inst_VOPC__V_CMPX_NGT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLE_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NLE_F32::Inst_VOPC__V_CMPX_NLE_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nle_f32")
+Inst_VOPC__V_CMPX_NLE_F32::Inst_VOPC__V_CMPX_NLE_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nle_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -11992,8 +11999,8 @@ Inst_VOPC__V_CMPX_NLE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NEQ_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NEQ_F32::Inst_VOPC__V_CMPX_NEQ_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_neq_f32")
+Inst_VOPC__V_CMPX_NEQ_F32::Inst_VOPC__V_CMPX_NEQ_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_neq_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -12027,8 +12034,8 @@ Inst_VOPC__V_CMPX_NEQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLT_F32 class methods ---
 
-Inst_VOPC__V_CMPX_NLT_F32::Inst_VOPC__V_CMPX_NLT_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlt_f32")
+Inst_VOPC__V_CMPX_NLT_F32::Inst_VOPC__V_CMPX_NLT_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlt_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -12062,8 +12069,8 @@ Inst_VOPC__V_CMPX_NLT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_TRU_F32 class methods ---
 
-Inst_VOPC__V_CMPX_TRU_F32::Inst_VOPC__V_CMPX_TRU_F32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_tru_f32")
+Inst_VOPC__V_CMPX_TRU_F32::Inst_VOPC__V_CMPX_TRU_F32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_tru_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -12092,8 +12099,8 @@ Inst_VOPC__V_CMPX_TRU_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_F64 class methods ---
 
-Inst_VOPC__V_CMP_F_F64::Inst_VOPC__V_CMP_F_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_f64")
+Inst_VOPC__V_CMP_F_F64::Inst_VOPC__V_CMP_F_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12119,8 +12126,8 @@ Inst_VOPC__V_CMP_F_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_F64 class methods ---
 
-Inst_VOPC__V_CMP_LT_F64::Inst_VOPC__V_CMP_LT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_f64")
+Inst_VOPC__V_CMP_LT_F64::Inst_VOPC__V_CMP_LT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12152,8 +12159,8 @@ Inst_VOPC__V_CMP_LT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_F64 class methods ---
 
-Inst_VOPC__V_CMP_EQ_F64::Inst_VOPC__V_CMP_EQ_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_f64")
+Inst_VOPC__V_CMP_EQ_F64::Inst_VOPC__V_CMP_EQ_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12185,8 +12192,8 @@ Inst_VOPC__V_CMP_EQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_F64 class methods ---
 
-Inst_VOPC__V_CMP_LE_F64::Inst_VOPC__V_CMP_LE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_f64")
+Inst_VOPC__V_CMP_LE_F64::Inst_VOPC__V_CMP_LE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12218,8 +12225,8 @@ Inst_VOPC__V_CMP_LE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_F64 class methods ---
 
-Inst_VOPC__V_CMP_GT_F64::Inst_VOPC__V_CMP_GT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_f64")
+Inst_VOPC__V_CMP_GT_F64::Inst_VOPC__V_CMP_GT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12251,8 +12258,8 @@ Inst_VOPC__V_CMP_GT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LG_F64 class methods ---
 
-Inst_VOPC__V_CMP_LG_F64::Inst_VOPC__V_CMP_LG_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lg_f64")
+Inst_VOPC__V_CMP_LG_F64::Inst_VOPC__V_CMP_LG_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lg_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12276,7 +12283,8 @@ Inst_VOPC__V_CMP_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -12285,8 +12293,8 @@ Inst_VOPC__V_CMP_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_F64 class methods ---
 
-Inst_VOPC__V_CMP_GE_F64::Inst_VOPC__V_CMP_GE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_f64")
+Inst_VOPC__V_CMP_GE_F64::Inst_VOPC__V_CMP_GE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12318,8 +12326,8 @@ Inst_VOPC__V_CMP_GE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_O_F64 class methods ---
 
-Inst_VOPC__V_CMP_O_F64::Inst_VOPC__V_CMP_O_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_o_f64")
+Inst_VOPC__V_CMP_O_F64::Inst_VOPC__V_CMP_O_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_o_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12342,7 +12350,8 @@ Inst_VOPC__V_CMP_O_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -12351,8 +12360,8 @@ Inst_VOPC__V_CMP_O_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_U_F64 class methods ---
 
-Inst_VOPC__V_CMP_U_F64::Inst_VOPC__V_CMP_U_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_u_f64")
+Inst_VOPC__V_CMP_U_F64::Inst_VOPC__V_CMP_U_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_u_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12376,7 +12385,8 @@ Inst_VOPC__V_CMP_U_F64::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vcc.setBit(lane,
-                (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
+                       (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 :
+                                                                            0);
         }
     }
 
@@ -12384,8 +12394,8 @@ Inst_VOPC__V_CMP_U_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGE_F64 class methods ---
 
-Inst_VOPC__V_CMP_NGE_F64::Inst_VOPC__V_CMP_NGE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nge_f64")
+Inst_VOPC__V_CMP_NGE_F64::Inst_VOPC__V_CMP_NGE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nge_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12417,8 +12427,8 @@ Inst_VOPC__V_CMP_NGE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLG_F64 class methods ---
 
-Inst_VOPC__V_CMP_NLG_F64::Inst_VOPC__V_CMP_NLG_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlg_f64")
+Inst_VOPC__V_CMP_NLG_F64::Inst_VOPC__V_CMP_NLG_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlg_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12442,7 +12452,8 @@ Inst_VOPC__V_CMP_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -12451,8 +12462,8 @@ Inst_VOPC__V_CMP_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NGT_F64 class methods ---
 
-Inst_VOPC__V_CMP_NGT_F64::Inst_VOPC__V_CMP_NGT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ngt_f64")
+Inst_VOPC__V_CMP_NGT_F64::Inst_VOPC__V_CMP_NGT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ngt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12484,8 +12495,8 @@ Inst_VOPC__V_CMP_NGT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLE_F64 class methods ---
 
-Inst_VOPC__V_CMP_NLE_F64::Inst_VOPC__V_CMP_NLE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nle_f64")
+Inst_VOPC__V_CMP_NLE_F64::Inst_VOPC__V_CMP_NLE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nle_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12517,8 +12528,8 @@ Inst_VOPC__V_CMP_NLE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NEQ_F64 class methods ---
 
-Inst_VOPC__V_CMP_NEQ_F64::Inst_VOPC__V_CMP_NEQ_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_neq_f64")
+Inst_VOPC__V_CMP_NEQ_F64::Inst_VOPC__V_CMP_NEQ_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_neq_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12550,8 +12561,8 @@ Inst_VOPC__V_CMP_NEQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NLT_F64 class methods ---
 
-Inst_VOPC__V_CMP_NLT_F64::Inst_VOPC__V_CMP_NLT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_nlt_f64")
+Inst_VOPC__V_CMP_NLT_F64::Inst_VOPC__V_CMP_NLT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_nlt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12583,8 +12594,8 @@ Inst_VOPC__V_CMP_NLT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_TRU_F64 class methods ---
 
-Inst_VOPC__V_CMP_TRU_F64::Inst_VOPC__V_CMP_TRU_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_tru_f64")
+Inst_VOPC__V_CMP_TRU_F64::Inst_VOPC__V_CMP_TRU_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_tru_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12611,8 +12622,8 @@ Inst_VOPC__V_CMP_TRU_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_F64 class methods ---
 
-Inst_VOPC__V_CMPX_F_F64::Inst_VOPC__V_CMPX_F_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_f64")
+Inst_VOPC__V_CMPX_F_F64::Inst_VOPC__V_CMPX_F_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12641,8 +12652,8 @@ Inst_VOPC__V_CMPX_F_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_F64 class methods ---
 
-Inst_VOPC__V_CMPX_LT_F64::Inst_VOPC__V_CMPX_LT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_f64")
+Inst_VOPC__V_CMPX_LT_F64::Inst_VOPC__V_CMPX_LT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12676,8 +12687,8 @@ Inst_VOPC__V_CMPX_LT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_F64 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_F64::Inst_VOPC__V_CMPX_EQ_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_f64")
+Inst_VOPC__V_CMPX_EQ_F64::Inst_VOPC__V_CMPX_EQ_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12711,8 +12722,8 @@ Inst_VOPC__V_CMPX_EQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_F64 class methods ---
 
-Inst_VOPC__V_CMPX_LE_F64::Inst_VOPC__V_CMPX_LE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_f64")
+Inst_VOPC__V_CMPX_LE_F64::Inst_VOPC__V_CMPX_LE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12746,8 +12757,8 @@ Inst_VOPC__V_CMPX_LE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_F64 class methods ---
 
-Inst_VOPC__V_CMPX_GT_F64::Inst_VOPC__V_CMPX_GT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_f64")
+Inst_VOPC__V_CMPX_GT_F64::Inst_VOPC__V_CMPX_GT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12781,8 +12792,8 @@ Inst_VOPC__V_CMPX_GT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LG_F64 class methods ---
 
-Inst_VOPC__V_CMPX_LG_F64::Inst_VOPC__V_CMPX_LG_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lg_f64")
+Inst_VOPC__V_CMPX_LG_F64::Inst_VOPC__V_CMPX_LG_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lg_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12807,7 +12818,8 @@ Inst_VOPC__V_CMPX_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -12817,8 +12829,8 @@ Inst_VOPC__V_CMPX_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_F64 class methods ---
 
-Inst_VOPC__V_CMPX_GE_F64::Inst_VOPC__V_CMPX_GE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_f64")
+Inst_VOPC__V_CMPX_GE_F64::Inst_VOPC__V_CMPX_GE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12852,8 +12864,8 @@ Inst_VOPC__V_CMPX_GE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_O_F64 class methods ---
 
-Inst_VOPC__V_CMPX_O_F64::Inst_VOPC__V_CMPX_O_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_o_f64")
+Inst_VOPC__V_CMPX_O_F64::Inst_VOPC__V_CMPX_O_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_o_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12879,7 +12891,8 @@ Inst_VOPC__V_CMPX_O_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -12889,8 +12902,8 @@ Inst_VOPC__V_CMPX_O_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_U_F64 class methods ---
 
-Inst_VOPC__V_CMPX_U_F64::Inst_VOPC__V_CMPX_U_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_u_f64")
+Inst_VOPC__V_CMPX_U_F64::Inst_VOPC__V_CMPX_U_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_u_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12917,7 +12930,8 @@ Inst_VOPC__V_CMPX_U_F64::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vcc.setBit(lane,
-                (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
+                       (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 :
+                                                                            0);
         }
     }
 
@@ -12926,8 +12940,8 @@ Inst_VOPC__V_CMPX_U_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGE_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NGE_F64::Inst_VOPC__V_CMPX_NGE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nge_f64")
+Inst_VOPC__V_CMPX_NGE_F64::Inst_VOPC__V_CMPX_NGE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nge_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12961,8 +12975,8 @@ Inst_VOPC__V_CMPX_NGE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLG_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NLG_F64::Inst_VOPC__V_CMPX_NLG_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlg_f64")
+Inst_VOPC__V_CMPX_NLG_F64::Inst_VOPC__V_CMPX_NLG_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlg_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -12987,7 +13001,8 @@ Inst_VOPC__V_CMPX_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(lane,
+            vcc.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -12997,8 +13012,8 @@ Inst_VOPC__V_CMPX_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NGT_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NGT_F64::Inst_VOPC__V_CMPX_NGT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ngt_f64")
+Inst_VOPC__V_CMPX_NGT_F64::Inst_VOPC__V_CMPX_NGT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ngt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -13032,8 +13047,8 @@ Inst_VOPC__V_CMPX_NGT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLE_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NLE_F64::Inst_VOPC__V_CMPX_NLE_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nle_f64")
+Inst_VOPC__V_CMPX_NLE_F64::Inst_VOPC__V_CMPX_NLE_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nle_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -13067,8 +13082,8 @@ Inst_VOPC__V_CMPX_NLE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NEQ_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NEQ_F64::Inst_VOPC__V_CMPX_NEQ_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_neq_f64")
+Inst_VOPC__V_CMPX_NEQ_F64::Inst_VOPC__V_CMPX_NEQ_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_neq_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -13102,8 +13117,8 @@ Inst_VOPC__V_CMPX_NEQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NLT_F64 class methods ---
 
-Inst_VOPC__V_CMPX_NLT_F64::Inst_VOPC__V_CMPX_NLT_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_nlt_f64")
+Inst_VOPC__V_CMPX_NLT_F64::Inst_VOPC__V_CMPX_NLT_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_nlt_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -13137,8 +13152,8 @@ Inst_VOPC__V_CMPX_NLT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_TRU_F64 class methods ---
 
-Inst_VOPC__V_CMPX_TRU_F64::Inst_VOPC__V_CMPX_TRU_F64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_tru_f64")
+Inst_VOPC__V_CMPX_TRU_F64::Inst_VOPC__V_CMPX_TRU_F64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_tru_f64")
 {
     setFlag(ALU);
     setFlag(F64);
@@ -13167,8 +13182,8 @@ Inst_VOPC__V_CMPX_TRU_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_I16 class methods ---
 
-Inst_VOPC__V_CMP_F_I16::Inst_VOPC__V_CMP_F_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_i16")
+Inst_VOPC__V_CMP_F_I16::Inst_VOPC__V_CMP_F_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_I16
@@ -13193,8 +13208,8 @@ Inst_VOPC__V_CMP_F_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_I16 class methods ---
 
-Inst_VOPC__V_CMP_LT_I16::Inst_VOPC__V_CMP_LT_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_i16")
+Inst_VOPC__V_CMP_LT_I16::Inst_VOPC__V_CMP_LT_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_I16
@@ -13225,8 +13240,8 @@ Inst_VOPC__V_CMP_LT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_I16 class methods ---
 
-Inst_VOPC__V_CMP_EQ_I16::Inst_VOPC__V_CMP_EQ_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_i16")
+Inst_VOPC__V_CMP_EQ_I16::Inst_VOPC__V_CMP_EQ_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_I16
@@ -13257,8 +13272,8 @@ Inst_VOPC__V_CMP_EQ_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_I16 class methods ---
 
-Inst_VOPC__V_CMP_LE_I16::Inst_VOPC__V_CMP_LE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_i16")
+Inst_VOPC__V_CMP_LE_I16::Inst_VOPC__V_CMP_LE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_I16
@@ -13289,8 +13304,8 @@ Inst_VOPC__V_CMP_LE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_I16 class methods ---
 
-Inst_VOPC__V_CMP_GT_I16::Inst_VOPC__V_CMP_GT_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_i16")
+Inst_VOPC__V_CMP_GT_I16::Inst_VOPC__V_CMP_GT_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_I16
@@ -13321,8 +13336,8 @@ Inst_VOPC__V_CMP_GT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_I16 class methods ---
 
-Inst_VOPC__V_CMP_NE_I16::Inst_VOPC__V_CMP_NE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_i16")
+Inst_VOPC__V_CMP_NE_I16::Inst_VOPC__V_CMP_NE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_I16
@@ -13353,8 +13368,8 @@ Inst_VOPC__V_CMP_NE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_I16 class methods ---
 
-Inst_VOPC__V_CMP_GE_I16::Inst_VOPC__V_CMP_GE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_i16")
+Inst_VOPC__V_CMP_GE_I16::Inst_VOPC__V_CMP_GE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_I16
@@ -13385,8 +13400,8 @@ Inst_VOPC__V_CMP_GE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_I16 class methods ---
 
-Inst_VOPC__V_CMP_T_I16::Inst_VOPC__V_CMP_T_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_i16")
+Inst_VOPC__V_CMP_T_I16::Inst_VOPC__V_CMP_T_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_i16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_I16
@@ -13411,8 +13426,8 @@ Inst_VOPC__V_CMP_T_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_U16 class methods ---
 
-Inst_VOPC__V_CMP_F_U16::Inst_VOPC__V_CMP_F_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_u16")
+Inst_VOPC__V_CMP_F_U16::Inst_VOPC__V_CMP_F_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_U16
@@ -13437,8 +13452,8 @@ Inst_VOPC__V_CMP_F_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_U16 class methods ---
 
-Inst_VOPC__V_CMP_LT_U16::Inst_VOPC__V_CMP_LT_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_u16")
+Inst_VOPC__V_CMP_LT_U16::Inst_VOPC__V_CMP_LT_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_U16
@@ -13469,8 +13484,8 @@ Inst_VOPC__V_CMP_LT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_U16 class methods ---
 
-Inst_VOPC__V_CMP_EQ_U16::Inst_VOPC__V_CMP_EQ_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_u16")
+Inst_VOPC__V_CMP_EQ_U16::Inst_VOPC__V_CMP_EQ_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_U16
@@ -13501,8 +13516,8 @@ Inst_VOPC__V_CMP_EQ_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_U16 class methods ---
 
-Inst_VOPC__V_CMP_LE_U16::Inst_VOPC__V_CMP_LE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_u16")
+Inst_VOPC__V_CMP_LE_U16::Inst_VOPC__V_CMP_LE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_U16
@@ -13533,8 +13548,8 @@ Inst_VOPC__V_CMP_LE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_U16 class methods ---
 
-Inst_VOPC__V_CMP_GT_U16::Inst_VOPC__V_CMP_GT_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_u16")
+Inst_VOPC__V_CMP_GT_U16::Inst_VOPC__V_CMP_GT_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_U16
@@ -13565,8 +13580,8 @@ Inst_VOPC__V_CMP_GT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_U16 class methods ---
 
-Inst_VOPC__V_CMP_NE_U16::Inst_VOPC__V_CMP_NE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_u16")
+Inst_VOPC__V_CMP_NE_U16::Inst_VOPC__V_CMP_NE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_U16
@@ -13597,8 +13612,8 @@ Inst_VOPC__V_CMP_NE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_U16 class methods ---
 
-Inst_VOPC__V_CMP_GE_U16::Inst_VOPC__V_CMP_GE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_u16")
+Inst_VOPC__V_CMP_GE_U16::Inst_VOPC__V_CMP_GE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_U16
@@ -13629,8 +13644,8 @@ Inst_VOPC__V_CMP_GE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_U16 class methods ---
 
-Inst_VOPC__V_CMP_T_U16::Inst_VOPC__V_CMP_T_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_u16")
+Inst_VOPC__V_CMP_T_U16::Inst_VOPC__V_CMP_T_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_u16")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_U16
@@ -13655,8 +13670,8 @@ Inst_VOPC__V_CMP_T_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_I16 class methods ---
 
-Inst_VOPC__V_CMPX_F_I16::Inst_VOPC__V_CMPX_F_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_i16")
+Inst_VOPC__V_CMPX_F_I16::Inst_VOPC__V_CMPX_F_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13684,8 +13699,8 @@ Inst_VOPC__V_CMPX_F_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_I16 class methods ---
 
-Inst_VOPC__V_CMPX_LT_I16::Inst_VOPC__V_CMPX_LT_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_i16")
+Inst_VOPC__V_CMPX_LT_I16::Inst_VOPC__V_CMPX_LT_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13718,8 +13733,8 @@ Inst_VOPC__V_CMPX_LT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_I16 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_I16::Inst_VOPC__V_CMPX_EQ_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_i16")
+Inst_VOPC__V_CMPX_EQ_I16::Inst_VOPC__V_CMPX_EQ_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13752,8 +13767,8 @@ Inst_VOPC__V_CMPX_EQ_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_I16 class methods ---
 
-Inst_VOPC__V_CMPX_LE_I16::Inst_VOPC__V_CMPX_LE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_i16")
+Inst_VOPC__V_CMPX_LE_I16::Inst_VOPC__V_CMPX_LE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13786,8 +13801,8 @@ Inst_VOPC__V_CMPX_LE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_I16 class methods ---
 
-Inst_VOPC__V_CMPX_GT_I16::Inst_VOPC__V_CMPX_GT_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_i16")
+Inst_VOPC__V_CMPX_GT_I16::Inst_VOPC__V_CMPX_GT_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13820,8 +13835,8 @@ Inst_VOPC__V_CMPX_GT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_I16 class methods ---
 
-Inst_VOPC__V_CMPX_NE_I16::Inst_VOPC__V_CMPX_NE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_i16")
+Inst_VOPC__V_CMPX_NE_I16::Inst_VOPC__V_CMPX_NE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13854,8 +13869,8 @@ Inst_VOPC__V_CMPX_NE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_I16 class methods ---
 
-Inst_VOPC__V_CMPX_GE_I16::Inst_VOPC__V_CMPX_GE_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_i16")
+Inst_VOPC__V_CMPX_GE_I16::Inst_VOPC__V_CMPX_GE_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13888,8 +13903,8 @@ Inst_VOPC__V_CMPX_GE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_I16 class methods ---
 
-Inst_VOPC__V_CMPX_T_I16::Inst_VOPC__V_CMPX_T_I16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_i16")
+Inst_VOPC__V_CMPX_T_I16::Inst_VOPC__V_CMPX_T_I16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_i16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13917,8 +13932,8 @@ Inst_VOPC__V_CMPX_T_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_U16 class methods ---
 
-Inst_VOPC__V_CMPX_F_U16::Inst_VOPC__V_CMPX_F_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_u16")
+Inst_VOPC__V_CMPX_F_U16::Inst_VOPC__V_CMPX_F_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13946,8 +13961,8 @@ Inst_VOPC__V_CMPX_F_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_U16 class methods ---
 
-Inst_VOPC__V_CMPX_LT_U16::Inst_VOPC__V_CMPX_LT_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_u16")
+Inst_VOPC__V_CMPX_LT_U16::Inst_VOPC__V_CMPX_LT_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -13980,8 +13995,8 @@ Inst_VOPC__V_CMPX_LT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_U16 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_U16::Inst_VOPC__V_CMPX_EQ_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_u16")
+Inst_VOPC__V_CMPX_EQ_U16::Inst_VOPC__V_CMPX_EQ_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14014,8 +14029,8 @@ Inst_VOPC__V_CMPX_EQ_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_U16 class methods ---
 
-Inst_VOPC__V_CMPX_LE_U16::Inst_VOPC__V_CMPX_LE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_u16")
+Inst_VOPC__V_CMPX_LE_U16::Inst_VOPC__V_CMPX_LE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14048,8 +14063,8 @@ Inst_VOPC__V_CMPX_LE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_U16 class methods ---
 
-Inst_VOPC__V_CMPX_GT_U16::Inst_VOPC__V_CMPX_GT_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_u16")
+Inst_VOPC__V_CMPX_GT_U16::Inst_VOPC__V_CMPX_GT_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14082,8 +14097,8 @@ Inst_VOPC__V_CMPX_GT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_U16 class methods ---
 
-Inst_VOPC__V_CMPX_NE_U16::Inst_VOPC__V_CMPX_NE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_u16")
+Inst_VOPC__V_CMPX_NE_U16::Inst_VOPC__V_CMPX_NE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14116,8 +14131,8 @@ Inst_VOPC__V_CMPX_NE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_U16 class methods ---
 
-Inst_VOPC__V_CMPX_GE_U16::Inst_VOPC__V_CMPX_GE_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_u16")
+Inst_VOPC__V_CMPX_GE_U16::Inst_VOPC__V_CMPX_GE_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14150,8 +14165,8 @@ Inst_VOPC__V_CMPX_GE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_U16 class methods ---
 
-Inst_VOPC__V_CMPX_T_U16::Inst_VOPC__V_CMPX_T_U16(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_u16")
+Inst_VOPC__V_CMPX_T_U16::Inst_VOPC__V_CMPX_T_U16(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_u16")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14179,8 +14194,8 @@ Inst_VOPC__V_CMPX_T_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_I32 class methods ---
 
-Inst_VOPC__V_CMP_F_I32::Inst_VOPC__V_CMP_F_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_i32")
+Inst_VOPC__V_CMP_F_I32::Inst_VOPC__V_CMP_F_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_I32
@@ -14205,8 +14220,8 @@ Inst_VOPC__V_CMP_F_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_I32 class methods ---
 
-Inst_VOPC__V_CMP_LT_I32::Inst_VOPC__V_CMP_LT_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_i32")
+Inst_VOPC__V_CMP_LT_I32::Inst_VOPC__V_CMP_LT_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_I32
@@ -14237,8 +14252,8 @@ Inst_VOPC__V_CMP_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_I32 class methods ---
 
-Inst_VOPC__V_CMP_EQ_I32::Inst_VOPC__V_CMP_EQ_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_i32")
+Inst_VOPC__V_CMP_EQ_I32::Inst_VOPC__V_CMP_EQ_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_I32
@@ -14269,8 +14284,8 @@ Inst_VOPC__V_CMP_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_I32 class methods ---
 
-Inst_VOPC__V_CMP_LE_I32::Inst_VOPC__V_CMP_LE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_i32")
+Inst_VOPC__V_CMP_LE_I32::Inst_VOPC__V_CMP_LE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_I32
@@ -14301,8 +14316,8 @@ Inst_VOPC__V_CMP_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_I32 class methods ---
 
-Inst_VOPC__V_CMP_GT_I32::Inst_VOPC__V_CMP_GT_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_i32")
+Inst_VOPC__V_CMP_GT_I32::Inst_VOPC__V_CMP_GT_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_I32
@@ -14333,8 +14348,8 @@ Inst_VOPC__V_CMP_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_I32 class methods ---
 
-Inst_VOPC__V_CMP_NE_I32::Inst_VOPC__V_CMP_NE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_i32")
+Inst_VOPC__V_CMP_NE_I32::Inst_VOPC__V_CMP_NE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_I32
@@ -14365,8 +14380,8 @@ Inst_VOPC__V_CMP_NE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_I32 class methods ---
 
-Inst_VOPC__V_CMP_GE_I32::Inst_VOPC__V_CMP_GE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_i32")
+Inst_VOPC__V_CMP_GE_I32::Inst_VOPC__V_CMP_GE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_I32
@@ -14397,8 +14412,8 @@ Inst_VOPC__V_CMP_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_I32 class methods ---
 
-Inst_VOPC__V_CMP_T_I32::Inst_VOPC__V_CMP_T_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_i32")
+Inst_VOPC__V_CMP_T_I32::Inst_VOPC__V_CMP_T_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_i32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_I32
@@ -14423,8 +14438,8 @@ Inst_VOPC__V_CMP_T_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_U32 class methods ---
 
-Inst_VOPC__V_CMP_F_U32::Inst_VOPC__V_CMP_F_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_u32")
+Inst_VOPC__V_CMP_F_U32::Inst_VOPC__V_CMP_F_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_U32
@@ -14449,8 +14464,8 @@ Inst_VOPC__V_CMP_F_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_U32 class methods ---
 
-Inst_VOPC__V_CMP_LT_U32::Inst_VOPC__V_CMP_LT_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_u32")
+Inst_VOPC__V_CMP_LT_U32::Inst_VOPC__V_CMP_LT_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_U32
@@ -14481,8 +14496,8 @@ Inst_VOPC__V_CMP_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_U32 class methods ---
 
-Inst_VOPC__V_CMP_EQ_U32::Inst_VOPC__V_CMP_EQ_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_u32")
+Inst_VOPC__V_CMP_EQ_U32::Inst_VOPC__V_CMP_EQ_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_U32
@@ -14513,8 +14528,8 @@ Inst_VOPC__V_CMP_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_U32 class methods ---
 
-Inst_VOPC__V_CMP_LE_U32::Inst_VOPC__V_CMP_LE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_u32")
+Inst_VOPC__V_CMP_LE_U32::Inst_VOPC__V_CMP_LE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_U32
@@ -14545,8 +14560,8 @@ Inst_VOPC__V_CMP_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_U32 class methods ---
 
-Inst_VOPC__V_CMP_GT_U32::Inst_VOPC__V_CMP_GT_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_u32")
+Inst_VOPC__V_CMP_GT_U32::Inst_VOPC__V_CMP_GT_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_U32
@@ -14577,8 +14592,8 @@ Inst_VOPC__V_CMP_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_U32 class methods ---
 
-Inst_VOPC__V_CMP_NE_U32::Inst_VOPC__V_CMP_NE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_u32")
+Inst_VOPC__V_CMP_NE_U32::Inst_VOPC__V_CMP_NE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_U32
@@ -14609,8 +14624,8 @@ Inst_VOPC__V_CMP_NE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_U32 class methods ---
 
-Inst_VOPC__V_CMP_GE_U32::Inst_VOPC__V_CMP_GE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_u32")
+Inst_VOPC__V_CMP_GE_U32::Inst_VOPC__V_CMP_GE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_U32
@@ -14641,8 +14656,8 @@ Inst_VOPC__V_CMP_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_U32 class methods ---
 
-Inst_VOPC__V_CMP_T_U32::Inst_VOPC__V_CMP_T_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_u32")
+Inst_VOPC__V_CMP_T_U32::Inst_VOPC__V_CMP_T_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_u32")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_U32
@@ -14667,8 +14682,8 @@ Inst_VOPC__V_CMP_T_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_I32 class methods ---
 
-Inst_VOPC__V_CMPX_F_I32::Inst_VOPC__V_CMPX_F_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_i32")
+Inst_VOPC__V_CMPX_F_I32::Inst_VOPC__V_CMPX_F_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14696,8 +14711,8 @@ Inst_VOPC__V_CMPX_F_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_I32 class methods ---
 
-Inst_VOPC__V_CMPX_LT_I32::Inst_VOPC__V_CMPX_LT_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_i32")
+Inst_VOPC__V_CMPX_LT_I32::Inst_VOPC__V_CMPX_LT_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14730,8 +14745,8 @@ Inst_VOPC__V_CMPX_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_I32 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_I32::Inst_VOPC__V_CMPX_EQ_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_i32")
+Inst_VOPC__V_CMPX_EQ_I32::Inst_VOPC__V_CMPX_EQ_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14764,8 +14779,8 @@ Inst_VOPC__V_CMPX_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_I32 class methods ---
 
-Inst_VOPC__V_CMPX_LE_I32::Inst_VOPC__V_CMPX_LE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_i32")
+Inst_VOPC__V_CMPX_LE_I32::Inst_VOPC__V_CMPX_LE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14798,8 +14813,8 @@ Inst_VOPC__V_CMPX_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_I32 class methods ---
 
-Inst_VOPC__V_CMPX_GT_I32::Inst_VOPC__V_CMPX_GT_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_i32")
+Inst_VOPC__V_CMPX_GT_I32::Inst_VOPC__V_CMPX_GT_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14832,8 +14847,8 @@ Inst_VOPC__V_CMPX_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_I32 class methods ---
 
-Inst_VOPC__V_CMPX_NE_I32::Inst_VOPC__V_CMPX_NE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_i32")
+Inst_VOPC__V_CMPX_NE_I32::Inst_VOPC__V_CMPX_NE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14866,8 +14881,8 @@ Inst_VOPC__V_CMPX_NE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_I32 class methods ---
 
-Inst_VOPC__V_CMPX_GE_I32::Inst_VOPC__V_CMPX_GE_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_i32")
+Inst_VOPC__V_CMPX_GE_I32::Inst_VOPC__V_CMPX_GE_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14900,8 +14915,8 @@ Inst_VOPC__V_CMPX_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_I32 class methods ---
 
-Inst_VOPC__V_CMPX_T_I32::Inst_VOPC__V_CMPX_T_I32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_i32")
+Inst_VOPC__V_CMPX_T_I32::Inst_VOPC__V_CMPX_T_I32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_i32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14929,8 +14944,8 @@ Inst_VOPC__V_CMPX_T_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_U32 class methods ---
 
-Inst_VOPC__V_CMPX_F_U32::Inst_VOPC__V_CMPX_F_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_u32")
+Inst_VOPC__V_CMPX_F_U32::Inst_VOPC__V_CMPX_F_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14958,8 +14973,8 @@ Inst_VOPC__V_CMPX_F_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_U32 class methods ---
 
-Inst_VOPC__V_CMPX_LT_U32::Inst_VOPC__V_CMPX_LT_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_u32")
+Inst_VOPC__V_CMPX_LT_U32::Inst_VOPC__V_CMPX_LT_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -14992,8 +15007,8 @@ Inst_VOPC__V_CMPX_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_U32 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_U32::Inst_VOPC__V_CMPX_EQ_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_u32")
+Inst_VOPC__V_CMPX_EQ_U32::Inst_VOPC__V_CMPX_EQ_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15026,8 +15041,8 @@ Inst_VOPC__V_CMPX_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_U32 class methods ---
 
-Inst_VOPC__V_CMPX_LE_U32::Inst_VOPC__V_CMPX_LE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_u32")
+Inst_VOPC__V_CMPX_LE_U32::Inst_VOPC__V_CMPX_LE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15060,8 +15075,8 @@ Inst_VOPC__V_CMPX_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_U32 class methods ---
 
-Inst_VOPC__V_CMPX_GT_U32::Inst_VOPC__V_CMPX_GT_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_u32")
+Inst_VOPC__V_CMPX_GT_U32::Inst_VOPC__V_CMPX_GT_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15094,8 +15109,8 @@ Inst_VOPC__V_CMPX_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_U32 class methods ---
 
-Inst_VOPC__V_CMPX_NE_U32::Inst_VOPC__V_CMPX_NE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_u32")
+Inst_VOPC__V_CMPX_NE_U32::Inst_VOPC__V_CMPX_NE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15128,8 +15143,8 @@ Inst_VOPC__V_CMPX_NE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_U32 class methods ---
 
-Inst_VOPC__V_CMPX_GE_U32::Inst_VOPC__V_CMPX_GE_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_u32")
+Inst_VOPC__V_CMPX_GE_U32::Inst_VOPC__V_CMPX_GE_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15162,8 +15177,8 @@ Inst_VOPC__V_CMPX_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_U32 class methods ---
 
-Inst_VOPC__V_CMPX_T_U32::Inst_VOPC__V_CMPX_T_U32(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_u32")
+Inst_VOPC__V_CMPX_T_U32::Inst_VOPC__V_CMPX_T_U32(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_u32")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15191,8 +15206,8 @@ Inst_VOPC__V_CMPX_T_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_I64 class methods ---
 
-Inst_VOPC__V_CMP_F_I64::Inst_VOPC__V_CMP_F_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_i64")
+Inst_VOPC__V_CMP_F_I64::Inst_VOPC__V_CMP_F_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_I64
@@ -15217,8 +15232,8 @@ Inst_VOPC__V_CMP_F_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_I64 class methods ---
 
-Inst_VOPC__V_CMP_LT_I64::Inst_VOPC__V_CMP_LT_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_i64")
+Inst_VOPC__V_CMP_LT_I64::Inst_VOPC__V_CMP_LT_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_I64
@@ -15249,8 +15264,8 @@ Inst_VOPC__V_CMP_LT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_I64 class methods ---
 
-Inst_VOPC__V_CMP_EQ_I64::Inst_VOPC__V_CMP_EQ_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_i64")
+Inst_VOPC__V_CMP_EQ_I64::Inst_VOPC__V_CMP_EQ_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_I64
@@ -15281,8 +15296,8 @@ Inst_VOPC__V_CMP_EQ_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_I64 class methods ---
 
-Inst_VOPC__V_CMP_LE_I64::Inst_VOPC__V_CMP_LE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_i64")
+Inst_VOPC__V_CMP_LE_I64::Inst_VOPC__V_CMP_LE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_I64
@@ -15313,8 +15328,8 @@ Inst_VOPC__V_CMP_LE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_I64 class methods ---
 
-Inst_VOPC__V_CMP_GT_I64::Inst_VOPC__V_CMP_GT_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_i64")
+Inst_VOPC__V_CMP_GT_I64::Inst_VOPC__V_CMP_GT_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_I64
@@ -15345,8 +15360,8 @@ Inst_VOPC__V_CMP_GT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_I64 class methods ---
 
-Inst_VOPC__V_CMP_NE_I64::Inst_VOPC__V_CMP_NE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_i64")
+Inst_VOPC__V_CMP_NE_I64::Inst_VOPC__V_CMP_NE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_I64
@@ -15377,8 +15392,8 @@ Inst_VOPC__V_CMP_NE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_I64 class methods ---
 
-Inst_VOPC__V_CMP_GE_I64::Inst_VOPC__V_CMP_GE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_i64")
+Inst_VOPC__V_CMP_GE_I64::Inst_VOPC__V_CMP_GE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_I64
@@ -15409,8 +15424,8 @@ Inst_VOPC__V_CMP_GE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_I64 class methods ---
 
-Inst_VOPC__V_CMP_T_I64::Inst_VOPC__V_CMP_T_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_i64")
+Inst_VOPC__V_CMP_T_I64::Inst_VOPC__V_CMP_T_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_i64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_I64
@@ -15435,8 +15450,8 @@ Inst_VOPC__V_CMP_T_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_F_U64 class methods ---
 
-Inst_VOPC__V_CMP_F_U64::Inst_VOPC__V_CMP_F_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_f_u64")
+Inst_VOPC__V_CMP_F_U64::Inst_VOPC__V_CMP_F_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_f_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_F_U64
@@ -15461,8 +15476,8 @@ Inst_VOPC__V_CMP_F_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LT_U64 class methods ---
 
-Inst_VOPC__V_CMP_LT_U64::Inst_VOPC__V_CMP_LT_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_lt_u64")
+Inst_VOPC__V_CMP_LT_U64::Inst_VOPC__V_CMP_LT_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_lt_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LT_U64
@@ -15493,8 +15508,8 @@ Inst_VOPC__V_CMP_LT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_EQ_U64 class methods ---
 
-Inst_VOPC__V_CMP_EQ_U64::Inst_VOPC__V_CMP_EQ_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_eq_u64")
+Inst_VOPC__V_CMP_EQ_U64::Inst_VOPC__V_CMP_EQ_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_eq_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_EQ_U64
@@ -15525,8 +15540,8 @@ Inst_VOPC__V_CMP_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_LE_U64 class methods ---
 
-Inst_VOPC__V_CMP_LE_U64::Inst_VOPC__V_CMP_LE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_le_u64")
+Inst_VOPC__V_CMP_LE_U64::Inst_VOPC__V_CMP_LE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_le_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_LE_U64
@@ -15557,8 +15572,8 @@ Inst_VOPC__V_CMP_LE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GT_U64 class methods ---
 
-Inst_VOPC__V_CMP_GT_U64::Inst_VOPC__V_CMP_GT_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_gt_u64")
+Inst_VOPC__V_CMP_GT_U64::Inst_VOPC__V_CMP_GT_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_gt_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GT_U64
@@ -15589,8 +15604,8 @@ Inst_VOPC__V_CMP_GT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_NE_U64 class methods ---
 
-Inst_VOPC__V_CMP_NE_U64::Inst_VOPC__V_CMP_NE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ne_u64")
+Inst_VOPC__V_CMP_NE_U64::Inst_VOPC__V_CMP_NE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ne_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_NE_U64
@@ -15621,8 +15636,8 @@ Inst_VOPC__V_CMP_NE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_GE_U64 class methods ---
 
-Inst_VOPC__V_CMP_GE_U64::Inst_VOPC__V_CMP_GE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_ge_u64")
+Inst_VOPC__V_CMP_GE_U64::Inst_VOPC__V_CMP_GE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_ge_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_GE_U64
@@ -15653,8 +15668,8 @@ Inst_VOPC__V_CMP_GE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMP_T_U64 class methods ---
 
-Inst_VOPC__V_CMP_T_U64::Inst_VOPC__V_CMP_T_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmp_t_u64")
+Inst_VOPC__V_CMP_T_U64::Inst_VOPC__V_CMP_T_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmp_t_u64")
 {
     setFlag(ALU);
 } // Inst_VOPC__V_CMP_T_U64
@@ -15679,8 +15694,8 @@ Inst_VOPC__V_CMP_T_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_I64 class methods ---
 
-Inst_VOPC__V_CMPX_F_I64::Inst_VOPC__V_CMPX_F_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_i64")
+Inst_VOPC__V_CMPX_F_I64::Inst_VOPC__V_CMPX_F_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15708,8 +15723,8 @@ Inst_VOPC__V_CMPX_F_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_I64 class methods ---
 
-Inst_VOPC__V_CMPX_LT_I64::Inst_VOPC__V_CMPX_LT_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_i64")
+Inst_VOPC__V_CMPX_LT_I64::Inst_VOPC__V_CMPX_LT_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15742,8 +15757,8 @@ Inst_VOPC__V_CMPX_LT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_I64 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_I64::Inst_VOPC__V_CMPX_EQ_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_i64")
+Inst_VOPC__V_CMPX_EQ_I64::Inst_VOPC__V_CMPX_EQ_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15776,8 +15791,8 @@ Inst_VOPC__V_CMPX_EQ_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_I64 class methods ---
 
-Inst_VOPC__V_CMPX_LE_I64::Inst_VOPC__V_CMPX_LE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_i64")
+Inst_VOPC__V_CMPX_LE_I64::Inst_VOPC__V_CMPX_LE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15810,8 +15825,8 @@ Inst_VOPC__V_CMPX_LE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_I64 class methods ---
 
-Inst_VOPC__V_CMPX_GT_I64::Inst_VOPC__V_CMPX_GT_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_i64")
+Inst_VOPC__V_CMPX_GT_I64::Inst_VOPC__V_CMPX_GT_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15844,8 +15859,8 @@ Inst_VOPC__V_CMPX_GT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_I64 class methods ---
 
-Inst_VOPC__V_CMPX_NE_I64::Inst_VOPC__V_CMPX_NE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_i64")
+Inst_VOPC__V_CMPX_NE_I64::Inst_VOPC__V_CMPX_NE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15878,8 +15893,8 @@ Inst_VOPC__V_CMPX_NE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_I64 class methods ---
 
-Inst_VOPC__V_CMPX_GE_I64::Inst_VOPC__V_CMPX_GE_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_i64")
+Inst_VOPC__V_CMPX_GE_I64::Inst_VOPC__V_CMPX_GE_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15912,8 +15927,8 @@ Inst_VOPC__V_CMPX_GE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_I64 class methods ---
 
-Inst_VOPC__V_CMPX_T_I64::Inst_VOPC__V_CMPX_T_I64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_i64")
+Inst_VOPC__V_CMPX_T_I64::Inst_VOPC__V_CMPX_T_I64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_i64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15941,8 +15956,8 @@ Inst_VOPC__V_CMPX_T_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_F_U64 class methods ---
 
-Inst_VOPC__V_CMPX_F_U64::Inst_VOPC__V_CMPX_F_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_f_u64")
+Inst_VOPC__V_CMPX_F_U64::Inst_VOPC__V_CMPX_F_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_f_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -15970,8 +15985,8 @@ Inst_VOPC__V_CMPX_F_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LT_U64 class methods ---
 
-Inst_VOPC__V_CMPX_LT_U64::Inst_VOPC__V_CMPX_LT_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_lt_u64")
+Inst_VOPC__V_CMPX_LT_U64::Inst_VOPC__V_CMPX_LT_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_lt_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16004,8 +16019,8 @@ Inst_VOPC__V_CMPX_LT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_EQ_U64 class methods ---
 
-Inst_VOPC__V_CMPX_EQ_U64::Inst_VOPC__V_CMPX_EQ_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_eq_u64")
+Inst_VOPC__V_CMPX_EQ_U64::Inst_VOPC__V_CMPX_EQ_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_eq_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16038,8 +16053,8 @@ Inst_VOPC__V_CMPX_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_LE_U64 class methods ---
 
-Inst_VOPC__V_CMPX_LE_U64::Inst_VOPC__V_CMPX_LE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_le_u64")
+Inst_VOPC__V_CMPX_LE_U64::Inst_VOPC__V_CMPX_LE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_le_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16072,8 +16087,8 @@ Inst_VOPC__V_CMPX_LE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GT_U64 class methods ---
 
-Inst_VOPC__V_CMPX_GT_U64::Inst_VOPC__V_CMPX_GT_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_gt_u64")
+Inst_VOPC__V_CMPX_GT_U64::Inst_VOPC__V_CMPX_GT_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_gt_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16106,8 +16121,8 @@ Inst_VOPC__V_CMPX_GT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_NE_U64 class methods ---
 
-Inst_VOPC__V_CMPX_NE_U64::Inst_VOPC__V_CMPX_NE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ne_u64")
+Inst_VOPC__V_CMPX_NE_U64::Inst_VOPC__V_CMPX_NE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ne_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16140,8 +16155,8 @@ Inst_VOPC__V_CMPX_NE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_GE_U64 class methods ---
 
-Inst_VOPC__V_CMPX_GE_U64::Inst_VOPC__V_CMPX_GE_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_ge_u64")
+Inst_VOPC__V_CMPX_GE_U64::Inst_VOPC__V_CMPX_GE_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_ge_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16174,8 +16189,8 @@ Inst_VOPC__V_CMPX_GE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOPC__V_CMPX_T_U64 class methods ---
 
-Inst_VOPC__V_CMPX_T_U64::Inst_VOPC__V_CMPX_T_U64(InFmt_VOPC *iFmt) :
-    Inst_VOPC(iFmt, "v_cmpx_t_u64")
+Inst_VOPC__V_CMPX_T_U64::Inst_VOPC__V_CMPX_T_U64(InFmt_VOPC *iFmt)
+    : Inst_VOPC(iFmt, "v_cmpx_t_u64")
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -16203,9 +16218,8 @@ Inst_VOPC__V_CMPX_T_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VINTRP__V_INTERP_P1_F32 class methods ---
 
-Inst_VINTRP__V_INTERP_P1_F32::Inst_VINTRP__V_INTERP_P1_F32(
-    InFmt_VINTRP *iFmt) :
-    Inst_VINTRP(iFmt, "v_interp_p1_f32")
+Inst_VINTRP__V_INTERP_P1_F32::Inst_VINTRP__V_INTERP_P1_F32(InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_p1_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -16230,9 +16244,8 @@ Inst_VINTRP__V_INTERP_P1_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VINTRP__V_INTERP_P2_F32 class methods ---
 
-Inst_VINTRP__V_INTERP_P2_F32::Inst_VINTRP__V_INTERP_P2_F32(
-    InFmt_VINTRP *iFmt) :
-    Inst_VINTRP(iFmt, "v_interp_p2_f32")
+Inst_VINTRP__V_INTERP_P2_F32::Inst_VINTRP__V_INTERP_P2_F32(InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_p2_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -16256,8 +16269,8 @@ Inst_VINTRP__V_INTERP_P2_F32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VINTRP__V_INTERP_MOV_F32 class methods ---
 
 Inst_VINTRP__V_INTERP_MOV_F32::Inst_VINTRP__V_INTERP_MOV_F32(
-    InFmt_VINTRP *iFmt) :
-    Inst_VINTRP(iFmt, "v_interp_mov_f32")
+    InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_mov_f32")
 {
     setFlag(ALU);
     setFlag(F32);
@@ -16275,8 +16288,8 @@ Inst_VINTRP__V_INTERP_MOV_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_CLASS_F32 class methods ---
 
-Inst_VOP3__V_CMP_CLASS_F32::Inst_VOP3__V_CMP_CLASS_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_class_f32", true)
+Inst_VOP3__V_CMP_CLASS_F32::Inst_VOP3__V_CMP_CLASS_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_class_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -16386,8 +16399,8 @@ Inst_VOP3__V_CMP_CLASS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_CLASS_F32 class methods ---
 
-Inst_VOP3__V_CMPX_CLASS_F32::Inst_VOP3__V_CMPX_CLASS_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_class_f32", true)
+Inst_VOP3__V_CMPX_CLASS_F32::Inst_VOP3__V_CMPX_CLASS_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_class_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -16500,8 +16513,8 @@ Inst_VOP3__V_CMPX_CLASS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_CLASS_F64 class methods ---
 
-Inst_VOP3__V_CMP_CLASS_F64::Inst_VOP3__V_CMP_CLASS_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_class_f64", true)
+Inst_VOP3__V_CMP_CLASS_F64::Inst_VOP3__V_CMP_CLASS_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_class_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -16611,8 +16624,8 @@ Inst_VOP3__V_CMP_CLASS_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_CLASS_F64 class methods ---
 
-Inst_VOP3__V_CMPX_CLASS_F64::Inst_VOP3__V_CMPX_CLASS_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_class_f64", true)
+Inst_VOP3__V_CMPX_CLASS_F64::Inst_VOP3__V_CMPX_CLASS_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_class_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -16725,8 +16738,8 @@ Inst_VOP3__V_CMPX_CLASS_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_CLASS_F16 class methods ---
 
-Inst_VOP3__V_CMP_CLASS_F16::Inst_VOP3__V_CMP_CLASS_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_class_f16", true)
+Inst_VOP3__V_CMP_CLASS_F16::Inst_VOP3__V_CMP_CLASS_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_class_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16756,8 +16769,8 @@ Inst_VOP3__V_CMP_CLASS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_CLASS_F16 class methods ---
 
-Inst_VOP3__V_CMPX_CLASS_F16::Inst_VOP3__V_CMPX_CLASS_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_class_f16", true)
+Inst_VOP3__V_CMPX_CLASS_F16::Inst_VOP3__V_CMPX_CLASS_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_class_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16789,8 +16802,8 @@ Inst_VOP3__V_CMPX_CLASS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_F16 class methods ---
 
-Inst_VOP3__V_CMP_F_F16::Inst_VOP3__V_CMP_F_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_f16", true)
+Inst_VOP3__V_CMP_F_F16::Inst_VOP3__V_CMP_F_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16807,8 +16820,8 @@ Inst_VOP3__V_CMP_F_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_F16 class methods ---
 
-Inst_VOP3__V_CMP_LT_F16::Inst_VOP3__V_CMP_LT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_f16", true)
+Inst_VOP3__V_CMP_LT_F16::Inst_VOP3__V_CMP_LT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16826,8 +16839,8 @@ Inst_VOP3__V_CMP_LT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_F16 class methods ---
 
-Inst_VOP3__V_CMP_EQ_F16::Inst_VOP3__V_CMP_EQ_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_f16", true)
+Inst_VOP3__V_CMP_EQ_F16::Inst_VOP3__V_CMP_EQ_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16845,8 +16858,8 @@ Inst_VOP3__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_F16 class methods ---
 
-Inst_VOP3__V_CMP_LE_F16::Inst_VOP3__V_CMP_LE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_f16", true)
+Inst_VOP3__V_CMP_LE_F16::Inst_VOP3__V_CMP_LE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16864,8 +16877,8 @@ Inst_VOP3__V_CMP_LE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_F16 class methods ---
 
-Inst_VOP3__V_CMP_GT_F16::Inst_VOP3__V_CMP_GT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_f16", true)
+Inst_VOP3__V_CMP_GT_F16::Inst_VOP3__V_CMP_GT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16883,8 +16896,8 @@ Inst_VOP3__V_CMP_GT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LG_F16 class methods ---
 
-Inst_VOP3__V_CMP_LG_F16::Inst_VOP3__V_CMP_LG_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lg_f16", true)
+Inst_VOP3__V_CMP_LG_F16::Inst_VOP3__V_CMP_LG_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lg_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16902,8 +16915,8 @@ Inst_VOP3__V_CMP_LG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_F16 class methods ---
 
-Inst_VOP3__V_CMP_GE_F16::Inst_VOP3__V_CMP_GE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_f16", true)
+Inst_VOP3__V_CMP_GE_F16::Inst_VOP3__V_CMP_GE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16921,8 +16934,8 @@ Inst_VOP3__V_CMP_GE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_O_F16 class methods ---
 
-Inst_VOP3__V_CMP_O_F16::Inst_VOP3__V_CMP_O_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_o_f16", true)
+Inst_VOP3__V_CMP_O_F16::Inst_VOP3__V_CMP_O_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_o_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16939,8 +16952,8 @@ Inst_VOP3__V_CMP_O_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_U_F16 class methods ---
 
-Inst_VOP3__V_CMP_U_F16::Inst_VOP3__V_CMP_U_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_u_f16", true)
+Inst_VOP3__V_CMP_U_F16::Inst_VOP3__V_CMP_U_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_u_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16957,8 +16970,8 @@ Inst_VOP3__V_CMP_U_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGE_F16 class methods ---
 
-Inst_VOP3__V_CMP_NGE_F16::Inst_VOP3__V_CMP_NGE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nge_f16", true)
+Inst_VOP3__V_CMP_NGE_F16::Inst_VOP3__V_CMP_NGE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nge_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16976,8 +16989,8 @@ Inst_VOP3__V_CMP_NGE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLG_F16 class methods ---
 
-Inst_VOP3__V_CMP_NLG_F16::Inst_VOP3__V_CMP_NLG_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlg_f16", true)
+Inst_VOP3__V_CMP_NLG_F16::Inst_VOP3__V_CMP_NLG_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlg_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -16995,8 +17008,8 @@ Inst_VOP3__V_CMP_NLG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGT_F16 class methods ---
 
-Inst_VOP3__V_CMP_NGT_F16::Inst_VOP3__V_CMP_NGT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ngt_f16", true)
+Inst_VOP3__V_CMP_NGT_F16::Inst_VOP3__V_CMP_NGT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ngt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17014,8 +17027,8 @@ Inst_VOP3__V_CMP_NGT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLE_F16 class methods ---
 
-Inst_VOP3__V_CMP_NLE_F16::Inst_VOP3__V_CMP_NLE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nle_f16", true)
+Inst_VOP3__V_CMP_NLE_F16::Inst_VOP3__V_CMP_NLE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nle_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17033,8 +17046,8 @@ Inst_VOP3__V_CMP_NLE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NEQ_F16 class methods ---
 
-Inst_VOP3__V_CMP_NEQ_F16::Inst_VOP3__V_CMP_NEQ_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_neq_f16", true)
+Inst_VOP3__V_CMP_NEQ_F16::Inst_VOP3__V_CMP_NEQ_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_neq_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17052,8 +17065,8 @@ Inst_VOP3__V_CMP_NEQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLT_F16 class methods ---
 
-Inst_VOP3__V_CMP_NLT_F16::Inst_VOP3__V_CMP_NLT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlt_f16", true)
+Inst_VOP3__V_CMP_NLT_F16::Inst_VOP3__V_CMP_NLT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17071,8 +17084,8 @@ Inst_VOP3__V_CMP_NLT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_TRU_F16 class methods ---
 
-Inst_VOP3__V_CMP_TRU_F16::Inst_VOP3__V_CMP_TRU_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_tru_f16", true)
+Inst_VOP3__V_CMP_TRU_F16::Inst_VOP3__V_CMP_TRU_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_tru_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17099,8 +17112,8 @@ Inst_VOP3__V_CMP_TRU_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_F16 class methods ---
 
-Inst_VOP3__V_CMPX_F_F16::Inst_VOP3__V_CMPX_F_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_f16", true)
+Inst_VOP3__V_CMPX_F_F16::Inst_VOP3__V_CMPX_F_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_f16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -17128,8 +17141,8 @@ Inst_VOP3__V_CMPX_F_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_F16 class methods ---
 
-Inst_VOP3__V_CMPX_LT_F16::Inst_VOP3__V_CMPX_LT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_f16", true)
+Inst_VOP3__V_CMPX_LT_F16::Inst_VOP3__V_CMPX_LT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17148,8 +17161,8 @@ Inst_VOP3__V_CMPX_LT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_F16 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_F16::Inst_VOP3__V_CMPX_EQ_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_f16", true)
+Inst_VOP3__V_CMPX_EQ_F16::Inst_VOP3__V_CMPX_EQ_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17168,8 +17181,8 @@ Inst_VOP3__V_CMPX_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_F16 class methods ---
 
-Inst_VOP3__V_CMPX_LE_F16::Inst_VOP3__V_CMPX_LE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_f16", true)
+Inst_VOP3__V_CMPX_LE_F16::Inst_VOP3__V_CMPX_LE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17188,8 +17201,8 @@ Inst_VOP3__V_CMPX_LE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_F16 class methods ---
 
-Inst_VOP3__V_CMPX_GT_F16::Inst_VOP3__V_CMPX_GT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_f16", true)
+Inst_VOP3__V_CMPX_GT_F16::Inst_VOP3__V_CMPX_GT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17208,8 +17221,8 @@ Inst_VOP3__V_CMPX_GT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LG_F16 class methods ---
 
-Inst_VOP3__V_CMPX_LG_F16::Inst_VOP3__V_CMPX_LG_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lg_f16", true)
+Inst_VOP3__V_CMPX_LG_F16::Inst_VOP3__V_CMPX_LG_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lg_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17228,8 +17241,8 @@ Inst_VOP3__V_CMPX_LG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_F16 class methods ---
 
-Inst_VOP3__V_CMPX_GE_F16::Inst_VOP3__V_CMPX_GE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_f16", true)
+Inst_VOP3__V_CMPX_GE_F16::Inst_VOP3__V_CMPX_GE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17248,8 +17261,8 @@ Inst_VOP3__V_CMPX_GE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_O_F16 class methods ---
 
-Inst_VOP3__V_CMPX_O_F16::Inst_VOP3__V_CMPX_O_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_o_f16", true)
+Inst_VOP3__V_CMPX_O_F16::Inst_VOP3__V_CMPX_O_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_o_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17269,8 +17282,8 @@ Inst_VOP3__V_CMPX_O_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_U_F16 class methods ---
 
-Inst_VOP3__V_CMPX_U_F16::Inst_VOP3__V_CMPX_U_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_u_f16", true)
+Inst_VOP3__V_CMPX_U_F16::Inst_VOP3__V_CMPX_U_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_u_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17290,8 +17303,8 @@ Inst_VOP3__V_CMPX_U_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGE_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NGE_F16::Inst_VOP3__V_CMPX_NGE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nge_f16", true)
+Inst_VOP3__V_CMPX_NGE_F16::Inst_VOP3__V_CMPX_NGE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nge_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17310,8 +17323,8 @@ Inst_VOP3__V_CMPX_NGE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLG_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NLG_F16::Inst_VOP3__V_CMPX_NLG_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlg_f16", true)
+Inst_VOP3__V_CMPX_NLG_F16::Inst_VOP3__V_CMPX_NLG_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlg_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17330,8 +17343,8 @@ Inst_VOP3__V_CMPX_NLG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGT_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NGT_F16::Inst_VOP3__V_CMPX_NGT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ngt_f16", true)
+Inst_VOP3__V_CMPX_NGT_F16::Inst_VOP3__V_CMPX_NGT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ngt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17350,8 +17363,8 @@ Inst_VOP3__V_CMPX_NGT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLE_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NLE_F16::Inst_VOP3__V_CMPX_NLE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nle_f16", true)
+Inst_VOP3__V_CMPX_NLE_F16::Inst_VOP3__V_CMPX_NLE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nle_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17370,8 +17383,8 @@ Inst_VOP3__V_CMPX_NLE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NEQ_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NEQ_F16::Inst_VOP3__V_CMPX_NEQ_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_neq_f16", true)
+Inst_VOP3__V_CMPX_NEQ_F16::Inst_VOP3__V_CMPX_NEQ_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_neq_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17390,8 +17403,8 @@ Inst_VOP3__V_CMPX_NEQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLT_F16 class methods ---
 
-Inst_VOP3__V_CMPX_NLT_F16::Inst_VOP3__V_CMPX_NLT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlt_f16", true)
+Inst_VOP3__V_CMPX_NLT_F16::Inst_VOP3__V_CMPX_NLT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlt_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17410,8 +17423,8 @@ Inst_VOP3__V_CMPX_NLT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_TRU_F16 class methods ---
 
-Inst_VOP3__V_CMPX_TRU_F16::Inst_VOP3__V_CMPX_TRU_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_tru_f16", true)
+Inst_VOP3__V_CMPX_TRU_F16::Inst_VOP3__V_CMPX_TRU_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_tru_f16", true)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -17440,8 +17453,8 @@ Inst_VOP3__V_CMPX_TRU_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_F32 class methods ---
 
-Inst_VOP3__V_CMP_F_F32::Inst_VOP3__V_CMP_F_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_f32", true)
+Inst_VOP3__V_CMP_F_F32::Inst_VOP3__V_CMP_F_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17467,8 +17480,8 @@ Inst_VOP3__V_CMP_F_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_F32 class methods ---
 
-Inst_VOP3__V_CMP_LT_F32::Inst_VOP3__V_CMP_LT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_f32", true)
+Inst_VOP3__V_CMP_LT_F32::Inst_VOP3__V_CMP_LT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17500,8 +17513,8 @@ Inst_VOP3__V_CMP_LT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_F32 class methods ---
 
-Inst_VOP3__V_CMP_EQ_F32::Inst_VOP3__V_CMP_EQ_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_f32", true)
+Inst_VOP3__V_CMP_EQ_F32::Inst_VOP3__V_CMP_EQ_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17533,8 +17546,8 @@ Inst_VOP3__V_CMP_EQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_F32 class methods ---
 
-Inst_VOP3__V_CMP_LE_F32::Inst_VOP3__V_CMP_LE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_f32", true)
+Inst_VOP3__V_CMP_LE_F32::Inst_VOP3__V_CMP_LE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17566,8 +17579,8 @@ Inst_VOP3__V_CMP_LE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_F32 class methods ---
 
-Inst_VOP3__V_CMP_GT_F32::Inst_VOP3__V_CMP_GT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_f32", true)
+Inst_VOP3__V_CMP_GT_F32::Inst_VOP3__V_CMP_GT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17599,8 +17612,8 @@ Inst_VOP3__V_CMP_GT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LG_F32 class methods ---
 
-Inst_VOP3__V_CMP_LG_F32::Inst_VOP3__V_CMP_LG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lg_f32", true)
+Inst_VOP3__V_CMP_LG_F32::Inst_VOP3__V_CMP_LG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lg_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17632,8 +17645,8 @@ Inst_VOP3__V_CMP_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_F32 class methods ---
 
-Inst_VOP3__V_CMP_GE_F32::Inst_VOP3__V_CMP_GE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_f32", true)
+Inst_VOP3__V_CMP_GE_F32::Inst_VOP3__V_CMP_GE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17665,8 +17678,8 @@ Inst_VOP3__V_CMP_GE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_O_F32 class methods ---
 
-Inst_VOP3__V_CMP_O_F32::Inst_VOP3__V_CMP_O_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_o_f32", true)
+Inst_VOP3__V_CMP_O_F32::Inst_VOP3__V_CMP_O_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_o_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17689,7 +17702,8 @@ Inst_VOP3__V_CMP_O_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -17698,8 +17712,8 @@ Inst_VOP3__V_CMP_O_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_U_F32 class methods ---
 
-Inst_VOP3__V_CMP_U_F32::Inst_VOP3__V_CMP_U_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_u_f32", true)
+Inst_VOP3__V_CMP_U_F32::Inst_VOP3__V_CMP_U_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_u_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17722,7 +17736,8 @@ Inst_VOP3__V_CMP_U_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -17731,8 +17746,8 @@ Inst_VOP3__V_CMP_U_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGE_F32 class methods ---
 
-Inst_VOP3__V_CMP_NGE_F32::Inst_VOP3__V_CMP_NGE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nge_f32", true)
+Inst_VOP3__V_CMP_NGE_F32::Inst_VOP3__V_CMP_NGE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nge_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17764,8 +17779,8 @@ Inst_VOP3__V_CMP_NGE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLG_F32 class methods ---
 
-Inst_VOP3__V_CMP_NLG_F32::Inst_VOP3__V_CMP_NLG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlg_f32", true)
+Inst_VOP3__V_CMP_NLG_F32::Inst_VOP3__V_CMP_NLG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlg_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17789,7 +17804,8 @@ Inst_VOP3__V_CMP_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -17798,8 +17814,8 @@ Inst_VOP3__V_CMP_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGT_F32 class methods ---
 
-Inst_VOP3__V_CMP_NGT_F32::Inst_VOP3__V_CMP_NGT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ngt_f32", true)
+Inst_VOP3__V_CMP_NGT_F32::Inst_VOP3__V_CMP_NGT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ngt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17831,8 +17847,8 @@ Inst_VOP3__V_CMP_NGT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLE_F32 class methods ---
 
-Inst_VOP3__V_CMP_NLE_F32::Inst_VOP3__V_CMP_NLE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nle_f32", true)
+Inst_VOP3__V_CMP_NLE_F32::Inst_VOP3__V_CMP_NLE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nle_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17864,8 +17880,8 @@ Inst_VOP3__V_CMP_NLE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NEQ_F32 class methods ---
 
-Inst_VOP3__V_CMP_NEQ_F32::Inst_VOP3__V_CMP_NEQ_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_neq_f32", true)
+Inst_VOP3__V_CMP_NEQ_F32::Inst_VOP3__V_CMP_NEQ_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_neq_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17897,8 +17913,8 @@ Inst_VOP3__V_CMP_NEQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLT_F32 class methods ---
 
-Inst_VOP3__V_CMP_NLT_F32::Inst_VOP3__V_CMP_NLT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlt_f32", true)
+Inst_VOP3__V_CMP_NLT_F32::Inst_VOP3__V_CMP_NLT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17930,8 +17946,8 @@ Inst_VOP3__V_CMP_NLT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_TRU_F32 class methods ---
 
-Inst_VOP3__V_CMP_TRU_F32::Inst_VOP3__V_CMP_TRU_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_tru_f32", true)
+Inst_VOP3__V_CMP_TRU_F32::Inst_VOP3__V_CMP_TRU_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_tru_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17958,8 +17974,8 @@ Inst_VOP3__V_CMP_TRU_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_F32 class methods ---
 
-Inst_VOP3__V_CMPX_F_F32::Inst_VOP3__V_CMPX_F_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_f32", true)
+Inst_VOP3__V_CMPX_F_F32::Inst_VOP3__V_CMPX_F_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -17988,8 +18004,8 @@ Inst_VOP3__V_CMPX_F_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_F32 class methods ---
 
-Inst_VOP3__V_CMPX_LT_F32::Inst_VOP3__V_CMPX_LT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_f32", true)
+Inst_VOP3__V_CMPX_LT_F32::Inst_VOP3__V_CMPX_LT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18023,8 +18039,8 @@ Inst_VOP3__V_CMPX_LT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_F32 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_F32::Inst_VOP3__V_CMPX_EQ_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_f32", true)
+Inst_VOP3__V_CMPX_EQ_F32::Inst_VOP3__V_CMPX_EQ_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18058,8 +18074,8 @@ Inst_VOP3__V_CMPX_EQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_F32 class methods ---
 
-Inst_VOP3__V_CMPX_LE_F32::Inst_VOP3__V_CMPX_LE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_f32", true)
+Inst_VOP3__V_CMPX_LE_F32::Inst_VOP3__V_CMPX_LE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18093,8 +18109,8 @@ Inst_VOP3__V_CMPX_LE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_F32 class methods ---
 
-Inst_VOP3__V_CMPX_GT_F32::Inst_VOP3__V_CMPX_GT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_f32", true)
+Inst_VOP3__V_CMPX_GT_F32::Inst_VOP3__V_CMPX_GT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18128,8 +18144,8 @@ Inst_VOP3__V_CMPX_GT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LG_F32 class methods ---
 
-Inst_VOP3__V_CMPX_LG_F32::Inst_VOP3__V_CMPX_LG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lg_f32", true)
+Inst_VOP3__V_CMPX_LG_F32::Inst_VOP3__V_CMPX_LG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lg_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18154,7 +18170,8 @@ Inst_VOP3__V_CMPX_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -18164,8 +18181,8 @@ Inst_VOP3__V_CMPX_LG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_F32 class methods ---
 
-Inst_VOP3__V_CMPX_GE_F32::Inst_VOP3__V_CMPX_GE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_f32", true)
+Inst_VOP3__V_CMPX_GE_F32::Inst_VOP3__V_CMPX_GE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18199,8 +18216,8 @@ Inst_VOP3__V_CMPX_GE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_O_F32 class methods ---
 
-Inst_VOP3__V_CMPX_O_F32::Inst_VOP3__V_CMPX_O_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_o_f32", true)
+Inst_VOP3__V_CMPX_O_F32::Inst_VOP3__V_CMPX_O_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_o_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18226,7 +18243,8 @@ Inst_VOP3__V_CMPX_O_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -18236,8 +18254,8 @@ Inst_VOP3__V_CMPX_O_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_U_F32 class methods ---
 
-Inst_VOP3__V_CMPX_U_F32::Inst_VOP3__V_CMPX_U_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_u_f32", true)
+Inst_VOP3__V_CMPX_U_F32::Inst_VOP3__V_CMPX_U_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_u_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18263,7 +18281,8 @@ Inst_VOP3__V_CMPX_U_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -18273,8 +18292,8 @@ Inst_VOP3__V_CMPX_U_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGE_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NGE_F32::Inst_VOP3__V_CMPX_NGE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nge_f32", true)
+Inst_VOP3__V_CMPX_NGE_F32::Inst_VOP3__V_CMPX_NGE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nge_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18308,8 +18327,8 @@ Inst_VOP3__V_CMPX_NGE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLG_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NLG_F32::Inst_VOP3__V_CMPX_NLG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlg_f32", true)
+Inst_VOP3__V_CMPX_NLG_F32::Inst_VOP3__V_CMPX_NLG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlg_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18334,7 +18353,8 @@ Inst_VOP3__V_CMPX_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -18344,8 +18364,8 @@ Inst_VOP3__V_CMPX_NLG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGT_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NGT_F32::Inst_VOP3__V_CMPX_NGT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ngt_f32", true)
+Inst_VOP3__V_CMPX_NGT_F32::Inst_VOP3__V_CMPX_NGT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ngt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18379,8 +18399,8 @@ Inst_VOP3__V_CMPX_NGT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLE_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NLE_F32::Inst_VOP3__V_CMPX_NLE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nle_f32", true)
+Inst_VOP3__V_CMPX_NLE_F32::Inst_VOP3__V_CMPX_NLE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nle_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18414,8 +18434,8 @@ Inst_VOP3__V_CMPX_NLE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NEQ_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NEQ_F32::Inst_VOP3__V_CMPX_NEQ_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_neq_f32", true)
+Inst_VOP3__V_CMPX_NEQ_F32::Inst_VOP3__V_CMPX_NEQ_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_neq_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18449,8 +18469,8 @@ Inst_VOP3__V_CMPX_NEQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLT_F32 class methods ---
 
-Inst_VOP3__V_CMPX_NLT_F32::Inst_VOP3__V_CMPX_NLT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlt_f32", true)
+Inst_VOP3__V_CMPX_NLT_F32::Inst_VOP3__V_CMPX_NLT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlt_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18484,8 +18504,8 @@ Inst_VOP3__V_CMPX_NLT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_TRU_F32 class methods ---
 
-Inst_VOP3__V_CMPX_TRU_F32::Inst_VOP3__V_CMPX_TRU_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_tru_f32", true)
+Inst_VOP3__V_CMPX_TRU_F32::Inst_VOP3__V_CMPX_TRU_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_tru_f32", true)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -18514,8 +18534,8 @@ Inst_VOP3__V_CMPX_TRU_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_F64 class methods ---
 
-Inst_VOP3__V_CMP_F_F64::Inst_VOP3__V_CMP_F_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_f64", true)
+Inst_VOP3__V_CMP_F_F64::Inst_VOP3__V_CMP_F_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18541,8 +18561,8 @@ Inst_VOP3__V_CMP_F_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_F64 class methods ---
 
-Inst_VOP3__V_CMP_LT_F64::Inst_VOP3__V_CMP_LT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_f64", true)
+Inst_VOP3__V_CMP_LT_F64::Inst_VOP3__V_CMP_LT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18596,8 +18616,8 @@ Inst_VOP3__V_CMP_LT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_F64 class methods ---
 
-Inst_VOP3__V_CMP_EQ_F64::Inst_VOP3__V_CMP_EQ_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_f64", true)
+Inst_VOP3__V_CMP_EQ_F64::Inst_VOP3__V_CMP_EQ_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18651,8 +18671,8 @@ Inst_VOP3__V_CMP_EQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_F64 class methods ---
 
-Inst_VOP3__V_CMP_LE_F64::Inst_VOP3__V_CMP_LE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_f64", true)
+Inst_VOP3__V_CMP_LE_F64::Inst_VOP3__V_CMP_LE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18706,8 +18726,8 @@ Inst_VOP3__V_CMP_LE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_F64 class methods ---
 
-Inst_VOP3__V_CMP_GT_F64::Inst_VOP3__V_CMP_GT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_f64", true)
+Inst_VOP3__V_CMP_GT_F64::Inst_VOP3__V_CMP_GT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18761,8 +18781,8 @@ Inst_VOP3__V_CMP_GT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LG_F64 class methods ---
 
-Inst_VOP3__V_CMP_LG_F64::Inst_VOP3__V_CMP_LG_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lg_f64", true)
+Inst_VOP3__V_CMP_LG_F64::Inst_VOP3__V_CMP_LG_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lg_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18808,7 +18828,8 @@ Inst_VOP3__V_CMP_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -18817,8 +18838,8 @@ Inst_VOP3__V_CMP_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_F64 class methods ---
 
-Inst_VOP3__V_CMP_GE_F64::Inst_VOP3__V_CMP_GE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_f64", true)
+Inst_VOP3__V_CMP_GE_F64::Inst_VOP3__V_CMP_GE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18872,8 +18893,8 @@ Inst_VOP3__V_CMP_GE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_O_F64 class methods ---
 
-Inst_VOP3__V_CMP_O_F64::Inst_VOP3__V_CMP_O_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_o_f64", true)
+Inst_VOP3__V_CMP_O_F64::Inst_VOP3__V_CMP_O_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_o_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18918,7 +18939,8 @@ Inst_VOP3__V_CMP_O_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -18927,8 +18949,8 @@ Inst_VOP3__V_CMP_O_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_U_F64 class methods ---
 
-Inst_VOP3__V_CMP_U_F64::Inst_VOP3__V_CMP_U_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_u_f64", true)
+Inst_VOP3__V_CMP_U_F64::Inst_VOP3__V_CMP_U_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_u_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -18973,7 +18995,8 @@ Inst_VOP3__V_CMP_U_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -18982,8 +19005,8 @@ Inst_VOP3__V_CMP_U_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGE_F64 class methods ---
 
-Inst_VOP3__V_CMP_NGE_F64::Inst_VOP3__V_CMP_NGE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nge_f64", true)
+Inst_VOP3__V_CMP_NGE_F64::Inst_VOP3__V_CMP_NGE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nge_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19037,8 +19060,8 @@ Inst_VOP3__V_CMP_NGE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLG_F64 class methods ---
 
-Inst_VOP3__V_CMP_NLG_F64::Inst_VOP3__V_CMP_NLG_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlg_f64", true)
+Inst_VOP3__V_CMP_NLG_F64::Inst_VOP3__V_CMP_NLG_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlg_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19084,7 +19107,8 @@ Inst_VOP3__V_CMP_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -19093,8 +19117,8 @@ Inst_VOP3__V_CMP_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NGT_F64 class methods ---
 
-Inst_VOP3__V_CMP_NGT_F64::Inst_VOP3__V_CMP_NGT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ngt_f64", true)
+Inst_VOP3__V_CMP_NGT_F64::Inst_VOP3__V_CMP_NGT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ngt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19148,8 +19172,8 @@ Inst_VOP3__V_CMP_NGT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLE_F64 class methods ---
 
-Inst_VOP3__V_CMP_NLE_F64::Inst_VOP3__V_CMP_NLE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nle_f64", true)
+Inst_VOP3__V_CMP_NLE_F64::Inst_VOP3__V_CMP_NLE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nle_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19203,8 +19227,8 @@ Inst_VOP3__V_CMP_NLE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NEQ_F64 class methods ---
 
-Inst_VOP3__V_CMP_NEQ_F64::Inst_VOP3__V_CMP_NEQ_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_neq_f64", true)
+Inst_VOP3__V_CMP_NEQ_F64::Inst_VOP3__V_CMP_NEQ_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_neq_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19258,8 +19282,8 @@ Inst_VOP3__V_CMP_NEQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NLT_F64 class methods ---
 
-Inst_VOP3__V_CMP_NLT_F64::Inst_VOP3__V_CMP_NLT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_nlt_f64", true)
+Inst_VOP3__V_CMP_NLT_F64::Inst_VOP3__V_CMP_NLT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_nlt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19313,8 +19337,8 @@ Inst_VOP3__V_CMP_NLT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_TRU_F64 class methods ---
 
-Inst_VOP3__V_CMP_TRU_F64::Inst_VOP3__V_CMP_TRU_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_tru_f64", true)
+Inst_VOP3__V_CMP_TRU_F64::Inst_VOP3__V_CMP_TRU_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_tru_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19341,8 +19365,8 @@ Inst_VOP3__V_CMP_TRU_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_F64 class methods ---
 
-Inst_VOP3__V_CMPX_F_F64::Inst_VOP3__V_CMPX_F_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_f64", true)
+Inst_VOP3__V_CMPX_F_F64::Inst_VOP3__V_CMPX_F_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19371,8 +19395,8 @@ Inst_VOP3__V_CMPX_F_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_F64 class methods ---
 
-Inst_VOP3__V_CMPX_LT_F64::Inst_VOP3__V_CMPX_LT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_f64", true)
+Inst_VOP3__V_CMPX_LT_F64::Inst_VOP3__V_CMPX_LT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19428,8 +19452,8 @@ Inst_VOP3__V_CMPX_LT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_F64 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_F64::Inst_VOP3__V_CMPX_EQ_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_f64", true)
+Inst_VOP3__V_CMPX_EQ_F64::Inst_VOP3__V_CMPX_EQ_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19485,8 +19509,8 @@ Inst_VOP3__V_CMPX_EQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_F64 class methods ---
 
-Inst_VOP3__V_CMPX_LE_F64::Inst_VOP3__V_CMPX_LE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_f64", true)
+Inst_VOP3__V_CMPX_LE_F64::Inst_VOP3__V_CMPX_LE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19542,8 +19566,8 @@ Inst_VOP3__V_CMPX_LE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_F64 class methods ---
 
-Inst_VOP3__V_CMPX_GT_F64::Inst_VOP3__V_CMPX_GT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_f64", true)
+Inst_VOP3__V_CMPX_GT_F64::Inst_VOP3__V_CMPX_GT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19599,8 +19623,8 @@ Inst_VOP3__V_CMPX_GT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LG_F64 class methods ---
 
-Inst_VOP3__V_CMPX_LG_F64::Inst_VOP3__V_CMPX_LG_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lg_f64", true)
+Inst_VOP3__V_CMPX_LG_F64::Inst_VOP3__V_CMPX_LG_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lg_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19647,7 +19671,8 @@ Inst_VOP3__V_CMPX_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -19657,8 +19682,8 @@ Inst_VOP3__V_CMPX_LG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_F64 class methods ---
 
-Inst_VOP3__V_CMPX_GE_F64::Inst_VOP3__V_CMPX_GE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_f64", true)
+Inst_VOP3__V_CMPX_GE_F64::Inst_VOP3__V_CMPX_GE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19714,8 +19739,8 @@ Inst_VOP3__V_CMPX_GE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_O_F64 class methods ---
 
-Inst_VOP3__V_CMPX_O_F64::Inst_VOP3__V_CMPX_O_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_o_f64", true)
+Inst_VOP3__V_CMPX_O_F64::Inst_VOP3__V_CMPX_O_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_o_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19763,7 +19788,8 @@ Inst_VOP3__V_CMPX_O_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (!std::isnan(src0[lane]) && !std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -19773,8 +19799,8 @@ Inst_VOP3__V_CMPX_O_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_U_F64 class methods ---
 
-Inst_VOP3__V_CMPX_U_F64::Inst_VOP3__V_CMPX_U_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_u_f64", true)
+Inst_VOP3__V_CMPX_U_F64::Inst_VOP3__V_CMPX_U_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_u_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19822,7 +19848,8 @@ Inst_VOP3__V_CMPX_U_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (std::isnan(src0[lane]) || std::isnan(src1[lane])) ? 1 : 0);
         }
     }
@@ -19832,8 +19859,8 @@ Inst_VOP3__V_CMPX_U_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGE_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NGE_F64::Inst_VOP3__V_CMPX_NGE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nge_f64", true)
+Inst_VOP3__V_CMPX_NGE_F64::Inst_VOP3__V_CMPX_NGE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nge_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19889,8 +19916,8 @@ Inst_VOP3__V_CMPX_NGE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLG_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NLG_F64::Inst_VOP3__V_CMPX_NLG_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlg_f64", true)
+Inst_VOP3__V_CMPX_NLG_F64::Inst_VOP3__V_CMPX_NLG_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlg_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -19937,7 +19964,8 @@ Inst_VOP3__V_CMPX_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 !(src0[lane] < src1[lane] || src0[lane] > src1[lane]) ? 1 : 0);
         }
     }
@@ -19947,8 +19975,8 @@ Inst_VOP3__V_CMPX_NLG_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NGT_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NGT_F64::Inst_VOP3__V_CMPX_NGT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ngt_f64", true)
+Inst_VOP3__V_CMPX_NGT_F64::Inst_VOP3__V_CMPX_NGT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ngt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -20004,8 +20032,8 @@ Inst_VOP3__V_CMPX_NGT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLE_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NLE_F64::Inst_VOP3__V_CMPX_NLE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nle_f64", true)
+Inst_VOP3__V_CMPX_NLE_F64::Inst_VOP3__V_CMPX_NLE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nle_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -20061,8 +20089,8 @@ Inst_VOP3__V_CMPX_NLE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NEQ_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NEQ_F64::Inst_VOP3__V_CMPX_NEQ_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_neq_f64", true)
+Inst_VOP3__V_CMPX_NEQ_F64::Inst_VOP3__V_CMPX_NEQ_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_neq_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -20118,8 +20146,8 @@ Inst_VOP3__V_CMPX_NEQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NLT_F64 class methods ---
 
-Inst_VOP3__V_CMPX_NLT_F64::Inst_VOP3__V_CMPX_NLT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_nlt_f64", true)
+Inst_VOP3__V_CMPX_NLT_F64::Inst_VOP3__V_CMPX_NLT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_nlt_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -20175,8 +20203,8 @@ Inst_VOP3__V_CMPX_NLT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_TRU_F64 class methods ---
 
-Inst_VOP3__V_CMPX_TRU_F64::Inst_VOP3__V_CMPX_TRU_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_tru_f64", true)
+Inst_VOP3__V_CMPX_TRU_F64::Inst_VOP3__V_CMPX_TRU_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_tru_f64", true)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -20205,8 +20233,8 @@ Inst_VOP3__V_CMPX_TRU_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_I16 class methods ---
 
-Inst_VOP3__V_CMP_F_I16::Inst_VOP3__V_CMP_F_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_i16", true)
+Inst_VOP3__V_CMP_F_I16::Inst_VOP3__V_CMP_F_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_I16
@@ -20231,8 +20259,8 @@ Inst_VOP3__V_CMP_F_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_I16 class methods ---
 
-Inst_VOP3__V_CMP_LT_I16::Inst_VOP3__V_CMP_LT_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_i16", true)
+Inst_VOP3__V_CMP_LT_I16::Inst_VOP3__V_CMP_LT_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_I16
@@ -20273,8 +20301,8 @@ Inst_VOP3__V_CMP_LT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_I16 class methods ---
 
-Inst_VOP3__V_CMP_EQ_I16::Inst_VOP3__V_CMP_EQ_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_i16", true)
+Inst_VOP3__V_CMP_EQ_I16::Inst_VOP3__V_CMP_EQ_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_I16
@@ -20315,8 +20343,8 @@ Inst_VOP3__V_CMP_EQ_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_I16 class methods ---
 
-Inst_VOP3__V_CMP_LE_I16::Inst_VOP3__V_CMP_LE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_i16", true)
+Inst_VOP3__V_CMP_LE_I16::Inst_VOP3__V_CMP_LE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_I16
@@ -20357,8 +20385,8 @@ Inst_VOP3__V_CMP_LE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_I16 class methods ---
 
-Inst_VOP3__V_CMP_GT_I16::Inst_VOP3__V_CMP_GT_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_i16", true)
+Inst_VOP3__V_CMP_GT_I16::Inst_VOP3__V_CMP_GT_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_I16
@@ -20399,8 +20427,8 @@ Inst_VOP3__V_CMP_GT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_I16 class methods ---
 
-Inst_VOP3__V_CMP_NE_I16::Inst_VOP3__V_CMP_NE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_i16", true)
+Inst_VOP3__V_CMP_NE_I16::Inst_VOP3__V_CMP_NE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_I16
@@ -20441,8 +20469,8 @@ Inst_VOP3__V_CMP_NE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_I16 class methods ---
 
-Inst_VOP3__V_CMP_GE_I16::Inst_VOP3__V_CMP_GE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_i16", true)
+Inst_VOP3__V_CMP_GE_I16::Inst_VOP3__V_CMP_GE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_I16
@@ -20483,8 +20511,8 @@ Inst_VOP3__V_CMP_GE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_I16 class methods ---
 
-Inst_VOP3__V_CMP_T_I16::Inst_VOP3__V_CMP_T_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_i16", true)
+Inst_VOP3__V_CMP_T_I16::Inst_VOP3__V_CMP_T_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_i16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_I16
@@ -20509,8 +20537,8 @@ Inst_VOP3__V_CMP_T_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_U16 class methods ---
 
-Inst_VOP3__V_CMP_F_U16::Inst_VOP3__V_CMP_F_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_u16", true)
+Inst_VOP3__V_CMP_F_U16::Inst_VOP3__V_CMP_F_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_U16
@@ -20535,8 +20563,8 @@ Inst_VOP3__V_CMP_F_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_U16 class methods ---
 
-Inst_VOP3__V_CMP_LT_U16::Inst_VOP3__V_CMP_LT_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_u16", true)
+Inst_VOP3__V_CMP_LT_U16::Inst_VOP3__V_CMP_LT_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_U16
@@ -20577,8 +20605,8 @@ Inst_VOP3__V_CMP_LT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_U16 class methods ---
 
-Inst_VOP3__V_CMP_EQ_U16::Inst_VOP3__V_CMP_EQ_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_u16", true)
+Inst_VOP3__V_CMP_EQ_U16::Inst_VOP3__V_CMP_EQ_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_U16
@@ -20619,8 +20647,8 @@ Inst_VOP3__V_CMP_EQ_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_U16 class methods ---
 
-Inst_VOP3__V_CMP_LE_U16::Inst_VOP3__V_CMP_LE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_u16", true)
+Inst_VOP3__V_CMP_LE_U16::Inst_VOP3__V_CMP_LE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_U16
@@ -20661,8 +20689,8 @@ Inst_VOP3__V_CMP_LE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_U16 class methods ---
 
-Inst_VOP3__V_CMP_GT_U16::Inst_VOP3__V_CMP_GT_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_u16", true)
+Inst_VOP3__V_CMP_GT_U16::Inst_VOP3__V_CMP_GT_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_U16
@@ -20703,8 +20731,8 @@ Inst_VOP3__V_CMP_GT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_U16 class methods ---
 
-Inst_VOP3__V_CMP_NE_U16::Inst_VOP3__V_CMP_NE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_u16", true)
+Inst_VOP3__V_CMP_NE_U16::Inst_VOP3__V_CMP_NE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_U16
@@ -20745,8 +20773,8 @@ Inst_VOP3__V_CMP_NE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_U16 class methods ---
 
-Inst_VOP3__V_CMP_GE_U16::Inst_VOP3__V_CMP_GE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_u16", true)
+Inst_VOP3__V_CMP_GE_U16::Inst_VOP3__V_CMP_GE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_U16
@@ -20787,8 +20815,8 @@ Inst_VOP3__V_CMP_GE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_U16 class methods ---
 
-Inst_VOP3__V_CMP_T_U16::Inst_VOP3__V_CMP_T_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_u16", true)
+Inst_VOP3__V_CMP_T_U16::Inst_VOP3__V_CMP_T_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_u16", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_U16
@@ -20813,8 +20841,8 @@ Inst_VOP3__V_CMP_T_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_I16 class methods ---
 
-Inst_VOP3__V_CMPX_F_I16::Inst_VOP3__V_CMPX_F_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_i16", true)
+Inst_VOP3__V_CMPX_F_I16::Inst_VOP3__V_CMPX_F_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -20842,8 +20870,8 @@ Inst_VOP3__V_CMPX_F_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_I16 class methods ---
 
-Inst_VOP3__V_CMPX_LT_I16::Inst_VOP3__V_CMPX_LT_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_i16", true)
+Inst_VOP3__V_CMPX_LT_I16::Inst_VOP3__V_CMPX_LT_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -20886,8 +20914,8 @@ Inst_VOP3__V_CMPX_LT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_I16 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_I16::Inst_VOP3__V_CMPX_EQ_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_i16", true)
+Inst_VOP3__V_CMPX_EQ_I16::Inst_VOP3__V_CMPX_EQ_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -20930,8 +20958,8 @@ Inst_VOP3__V_CMPX_EQ_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_I16 class methods ---
 
-Inst_VOP3__V_CMPX_LE_I16::Inst_VOP3__V_CMPX_LE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_i16", true)
+Inst_VOP3__V_CMPX_LE_I16::Inst_VOP3__V_CMPX_LE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -20974,8 +21002,8 @@ Inst_VOP3__V_CMPX_LE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_I16 class methods ---
 
-Inst_VOP3__V_CMPX_GT_I16::Inst_VOP3__V_CMPX_GT_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_i16", true)
+Inst_VOP3__V_CMPX_GT_I16::Inst_VOP3__V_CMPX_GT_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21018,8 +21046,8 @@ Inst_VOP3__V_CMPX_GT_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_I16 class methods ---
 
-Inst_VOP3__V_CMPX_NE_I16::Inst_VOP3__V_CMPX_NE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_i16", true)
+Inst_VOP3__V_CMPX_NE_I16::Inst_VOP3__V_CMPX_NE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21062,8 +21090,8 @@ Inst_VOP3__V_CMPX_NE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_I16 class methods ---
 
-Inst_VOP3__V_CMPX_GE_I16::Inst_VOP3__V_CMPX_GE_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_i16", true)
+Inst_VOP3__V_CMPX_GE_I16::Inst_VOP3__V_CMPX_GE_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21106,8 +21134,8 @@ Inst_VOP3__V_CMPX_GE_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_I16 class methods ---
 
-Inst_VOP3__V_CMPX_T_I16::Inst_VOP3__V_CMPX_T_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_i16", true)
+Inst_VOP3__V_CMPX_T_I16::Inst_VOP3__V_CMPX_T_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_i16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21135,8 +21163,8 @@ Inst_VOP3__V_CMPX_T_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_U16 class methods ---
 
-Inst_VOP3__V_CMPX_F_U16::Inst_VOP3__V_CMPX_F_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_u16", true)
+Inst_VOP3__V_CMPX_F_U16::Inst_VOP3__V_CMPX_F_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21164,8 +21192,8 @@ Inst_VOP3__V_CMPX_F_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_U16 class methods ---
 
-Inst_VOP3__V_CMPX_LT_U16::Inst_VOP3__V_CMPX_LT_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_u16", true)
+Inst_VOP3__V_CMPX_LT_U16::Inst_VOP3__V_CMPX_LT_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21208,8 +21236,8 @@ Inst_VOP3__V_CMPX_LT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_U16 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_U16::Inst_VOP3__V_CMPX_EQ_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_u16", true)
+Inst_VOP3__V_CMPX_EQ_U16::Inst_VOP3__V_CMPX_EQ_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21252,8 +21280,8 @@ Inst_VOP3__V_CMPX_EQ_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_U16 class methods ---
 
-Inst_VOP3__V_CMPX_LE_U16::Inst_VOP3__V_CMPX_LE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_u16", true)
+Inst_VOP3__V_CMPX_LE_U16::Inst_VOP3__V_CMPX_LE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21296,8 +21324,8 @@ Inst_VOP3__V_CMPX_LE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_U16 class methods ---
 
-Inst_VOP3__V_CMPX_GT_U16::Inst_VOP3__V_CMPX_GT_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_u16", true)
+Inst_VOP3__V_CMPX_GT_U16::Inst_VOP3__V_CMPX_GT_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21340,8 +21368,8 @@ Inst_VOP3__V_CMPX_GT_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_U16 class methods ---
 
-Inst_VOP3__V_CMPX_NE_U16::Inst_VOP3__V_CMPX_NE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_u16", true)
+Inst_VOP3__V_CMPX_NE_U16::Inst_VOP3__V_CMPX_NE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21384,8 +21412,8 @@ Inst_VOP3__V_CMPX_NE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_U16 class methods ---
 
-Inst_VOP3__V_CMPX_GE_U16::Inst_VOP3__V_CMPX_GE_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_u16", true)
+Inst_VOP3__V_CMPX_GE_U16::Inst_VOP3__V_CMPX_GE_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21428,8 +21456,8 @@ Inst_VOP3__V_CMPX_GE_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_U16 class methods ---
 
-Inst_VOP3__V_CMPX_T_U16::Inst_VOP3__V_CMPX_T_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_u16", true)
+Inst_VOP3__V_CMPX_T_U16::Inst_VOP3__V_CMPX_T_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_u16", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -21457,8 +21485,8 @@ Inst_VOP3__V_CMPX_T_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_I32 class methods ---
 
-Inst_VOP3__V_CMP_F_I32::Inst_VOP3__V_CMP_F_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_i32", true)
+Inst_VOP3__V_CMP_F_I32::Inst_VOP3__V_CMP_F_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_I32
@@ -21483,8 +21511,8 @@ Inst_VOP3__V_CMP_F_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_I32 class methods ---
 
-Inst_VOP3__V_CMP_LT_I32::Inst_VOP3__V_CMP_LT_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_i32", true)
+Inst_VOP3__V_CMP_LT_I32::Inst_VOP3__V_CMP_LT_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_I32
@@ -21525,8 +21553,8 @@ Inst_VOP3__V_CMP_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_I32 class methods ---
 
-Inst_VOP3__V_CMP_EQ_I32::Inst_VOP3__V_CMP_EQ_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_i32", true)
+Inst_VOP3__V_CMP_EQ_I32::Inst_VOP3__V_CMP_EQ_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_I32
@@ -21567,8 +21595,8 @@ Inst_VOP3__V_CMP_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_I32 class methods ---
 
-Inst_VOP3__V_CMP_LE_I32::Inst_VOP3__V_CMP_LE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_i32", true)
+Inst_VOP3__V_CMP_LE_I32::Inst_VOP3__V_CMP_LE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_I32
@@ -21609,8 +21637,8 @@ Inst_VOP3__V_CMP_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_I32 class methods ---
 
-Inst_VOP3__V_CMP_GT_I32::Inst_VOP3__V_CMP_GT_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_i32", true)
+Inst_VOP3__V_CMP_GT_I32::Inst_VOP3__V_CMP_GT_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_I32
@@ -21651,8 +21679,8 @@ Inst_VOP3__V_CMP_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_I32 class methods ---
 
-Inst_VOP3__V_CMP_NE_I32::Inst_VOP3__V_CMP_NE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_i32", true)
+Inst_VOP3__V_CMP_NE_I32::Inst_VOP3__V_CMP_NE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_I32
@@ -21693,8 +21721,8 @@ Inst_VOP3__V_CMP_NE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_I32 class methods ---
 
-Inst_VOP3__V_CMP_GE_I32::Inst_VOP3__V_CMP_GE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_i32", true)
+Inst_VOP3__V_CMP_GE_I32::Inst_VOP3__V_CMP_GE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_I32
@@ -21735,8 +21763,8 @@ Inst_VOP3__V_CMP_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_I32 class methods ---
 
-Inst_VOP3__V_CMP_T_I32::Inst_VOP3__V_CMP_T_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_i32", true)
+Inst_VOP3__V_CMP_T_I32::Inst_VOP3__V_CMP_T_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_i32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_I32
@@ -21761,8 +21789,8 @@ Inst_VOP3__V_CMP_T_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_U32 class methods ---
 
-Inst_VOP3__V_CMP_F_U32::Inst_VOP3__V_CMP_F_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_u32", true)
+Inst_VOP3__V_CMP_F_U32::Inst_VOP3__V_CMP_F_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_U32
@@ -21787,8 +21815,8 @@ Inst_VOP3__V_CMP_F_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_U32 class methods ---
 
-Inst_VOP3__V_CMP_LT_U32::Inst_VOP3__V_CMP_LT_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_u32", true)
+Inst_VOP3__V_CMP_LT_U32::Inst_VOP3__V_CMP_LT_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_U32
@@ -21829,8 +21857,8 @@ Inst_VOP3__V_CMP_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_U32 class methods ---
 
-Inst_VOP3__V_CMP_EQ_U32::Inst_VOP3__V_CMP_EQ_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_u32", true)
+Inst_VOP3__V_CMP_EQ_U32::Inst_VOP3__V_CMP_EQ_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_U32
@@ -21871,8 +21899,8 @@ Inst_VOP3__V_CMP_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_U32 class methods ---
 
-Inst_VOP3__V_CMP_LE_U32::Inst_VOP3__V_CMP_LE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_u32", true)
+Inst_VOP3__V_CMP_LE_U32::Inst_VOP3__V_CMP_LE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_U32
@@ -21913,8 +21941,8 @@ Inst_VOP3__V_CMP_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_U32 class methods ---
 
-Inst_VOP3__V_CMP_GT_U32::Inst_VOP3__V_CMP_GT_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_u32", true)
+Inst_VOP3__V_CMP_GT_U32::Inst_VOP3__V_CMP_GT_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_U32
@@ -21955,8 +21983,8 @@ Inst_VOP3__V_CMP_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_U32 class methods ---
 
-Inst_VOP3__V_CMP_NE_U32::Inst_VOP3__V_CMP_NE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_u32", true)
+Inst_VOP3__V_CMP_NE_U32::Inst_VOP3__V_CMP_NE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_U32
@@ -21997,8 +22025,8 @@ Inst_VOP3__V_CMP_NE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_U32 class methods ---
 
-Inst_VOP3__V_CMP_GE_U32::Inst_VOP3__V_CMP_GE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_u32", true)
+Inst_VOP3__V_CMP_GE_U32::Inst_VOP3__V_CMP_GE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_U32
@@ -22039,8 +22067,8 @@ Inst_VOP3__V_CMP_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_U32 class methods ---
 
-Inst_VOP3__V_CMP_T_U32::Inst_VOP3__V_CMP_T_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_u32", true)
+Inst_VOP3__V_CMP_T_U32::Inst_VOP3__V_CMP_T_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_u32", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_U32
@@ -22065,8 +22093,8 @@ Inst_VOP3__V_CMP_T_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_I32 class methods ---
 
-Inst_VOP3__V_CMPX_F_I32::Inst_VOP3__V_CMPX_F_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_i32", true)
+Inst_VOP3__V_CMPX_F_I32::Inst_VOP3__V_CMPX_F_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22094,8 +22122,8 @@ Inst_VOP3__V_CMPX_F_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_I32 class methods ---
 
-Inst_VOP3__V_CMPX_LT_I32::Inst_VOP3__V_CMPX_LT_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_i32", true)
+Inst_VOP3__V_CMPX_LT_I32::Inst_VOP3__V_CMPX_LT_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22138,8 +22166,8 @@ Inst_VOP3__V_CMPX_LT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_I32 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_I32::Inst_VOP3__V_CMPX_EQ_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_i32", true)
+Inst_VOP3__V_CMPX_EQ_I32::Inst_VOP3__V_CMPX_EQ_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22182,8 +22210,8 @@ Inst_VOP3__V_CMPX_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_I32 class methods ---
 
-Inst_VOP3__V_CMPX_LE_I32::Inst_VOP3__V_CMPX_LE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_i32", true)
+Inst_VOP3__V_CMPX_LE_I32::Inst_VOP3__V_CMPX_LE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22226,8 +22254,8 @@ Inst_VOP3__V_CMPX_LE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_I32 class methods ---
 
-Inst_VOP3__V_CMPX_GT_I32::Inst_VOP3__V_CMPX_GT_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_i32", true)
+Inst_VOP3__V_CMPX_GT_I32::Inst_VOP3__V_CMPX_GT_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22270,8 +22298,8 @@ Inst_VOP3__V_CMPX_GT_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_I32 class methods ---
 
-Inst_VOP3__V_CMPX_NE_I32::Inst_VOP3__V_CMPX_NE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_i32", true)
+Inst_VOP3__V_CMPX_NE_I32::Inst_VOP3__V_CMPX_NE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22314,8 +22342,8 @@ Inst_VOP3__V_CMPX_NE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_I32 class methods ---
 
-Inst_VOP3__V_CMPX_GE_I32::Inst_VOP3__V_CMPX_GE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_i32", true)
+Inst_VOP3__V_CMPX_GE_I32::Inst_VOP3__V_CMPX_GE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22358,8 +22386,8 @@ Inst_VOP3__V_CMPX_GE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_I32 class methods ---
 
-Inst_VOP3__V_CMPX_T_I32::Inst_VOP3__V_CMPX_T_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_i32", true)
+Inst_VOP3__V_CMPX_T_I32::Inst_VOP3__V_CMPX_T_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_i32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22387,8 +22415,8 @@ Inst_VOP3__V_CMPX_T_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_U32 class methods ---
 
-Inst_VOP3__V_CMPX_F_U32::Inst_VOP3__V_CMPX_F_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_u32", true)
+Inst_VOP3__V_CMPX_F_U32::Inst_VOP3__V_CMPX_F_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22416,8 +22444,8 @@ Inst_VOP3__V_CMPX_F_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_U32 class methods ---
 
-Inst_VOP3__V_CMPX_LT_U32::Inst_VOP3__V_CMPX_LT_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_u32", true)
+Inst_VOP3__V_CMPX_LT_U32::Inst_VOP3__V_CMPX_LT_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22460,8 +22488,8 @@ Inst_VOP3__V_CMPX_LT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_U32 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_U32::Inst_VOP3__V_CMPX_EQ_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_u32", true)
+Inst_VOP3__V_CMPX_EQ_U32::Inst_VOP3__V_CMPX_EQ_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22504,8 +22532,8 @@ Inst_VOP3__V_CMPX_EQ_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_U32 class methods ---
 
-Inst_VOP3__V_CMPX_LE_U32::Inst_VOP3__V_CMPX_LE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_u32", true)
+Inst_VOP3__V_CMPX_LE_U32::Inst_VOP3__V_CMPX_LE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22548,8 +22576,8 @@ Inst_VOP3__V_CMPX_LE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_U32 class methods ---
 
-Inst_VOP3__V_CMPX_GT_U32::Inst_VOP3__V_CMPX_GT_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_u32", true)
+Inst_VOP3__V_CMPX_GT_U32::Inst_VOP3__V_CMPX_GT_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22592,8 +22620,8 @@ Inst_VOP3__V_CMPX_GT_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_U32 class methods ---
 
-Inst_VOP3__V_CMPX_NE_U32::Inst_VOP3__V_CMPX_NE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_u32", true)
+Inst_VOP3__V_CMPX_NE_U32::Inst_VOP3__V_CMPX_NE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22636,8 +22664,8 @@ Inst_VOP3__V_CMPX_NE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_U32 class methods ---
 
-Inst_VOP3__V_CMPX_GE_U32::Inst_VOP3__V_CMPX_GE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_u32", true)
+Inst_VOP3__V_CMPX_GE_U32::Inst_VOP3__V_CMPX_GE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22680,8 +22708,8 @@ Inst_VOP3__V_CMPX_GE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_U32 class methods ---
 
-Inst_VOP3__V_CMPX_T_U32::Inst_VOP3__V_CMPX_T_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_u32", true)
+Inst_VOP3__V_CMPX_T_U32::Inst_VOP3__V_CMPX_T_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_u32", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -22709,8 +22737,8 @@ Inst_VOP3__V_CMPX_T_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_I64 class methods ---
 
-Inst_VOP3__V_CMP_F_I64::Inst_VOP3__V_CMP_F_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_i64", true)
+Inst_VOP3__V_CMP_F_I64::Inst_VOP3__V_CMP_F_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_I64
@@ -22735,8 +22763,8 @@ Inst_VOP3__V_CMP_F_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_I64 class methods ---
 
-Inst_VOP3__V_CMP_LT_I64::Inst_VOP3__V_CMP_LT_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_i64", true)
+Inst_VOP3__V_CMP_LT_I64::Inst_VOP3__V_CMP_LT_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_I64
@@ -22777,8 +22805,8 @@ Inst_VOP3__V_CMP_LT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_I64 class methods ---
 
-Inst_VOP3__V_CMP_EQ_I64::Inst_VOP3__V_CMP_EQ_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_i64", true)
+Inst_VOP3__V_CMP_EQ_I64::Inst_VOP3__V_CMP_EQ_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_I64
@@ -22819,8 +22847,8 @@ Inst_VOP3__V_CMP_EQ_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_I64 class methods ---
 
-Inst_VOP3__V_CMP_LE_I64::Inst_VOP3__V_CMP_LE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_i64", true)
+Inst_VOP3__V_CMP_LE_I64::Inst_VOP3__V_CMP_LE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_I64
@@ -22861,8 +22889,8 @@ Inst_VOP3__V_CMP_LE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_I64 class methods ---
 
-Inst_VOP3__V_CMP_GT_I64::Inst_VOP3__V_CMP_GT_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_i64", true)
+Inst_VOP3__V_CMP_GT_I64::Inst_VOP3__V_CMP_GT_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_I64
@@ -22903,8 +22931,8 @@ Inst_VOP3__V_CMP_GT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_I64 class methods ---
 
-Inst_VOP3__V_CMP_NE_I64::Inst_VOP3__V_CMP_NE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_i64", true)
+Inst_VOP3__V_CMP_NE_I64::Inst_VOP3__V_CMP_NE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_I64
@@ -22945,8 +22973,8 @@ Inst_VOP3__V_CMP_NE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_I64 class methods ---
 
-Inst_VOP3__V_CMP_GE_I64::Inst_VOP3__V_CMP_GE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_i64", true)
+Inst_VOP3__V_CMP_GE_I64::Inst_VOP3__V_CMP_GE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_I64
@@ -22987,8 +23015,8 @@ Inst_VOP3__V_CMP_GE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_I64 class methods ---
 
-Inst_VOP3__V_CMP_T_I64::Inst_VOP3__V_CMP_T_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_i64", true)
+Inst_VOP3__V_CMP_T_I64::Inst_VOP3__V_CMP_T_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_i64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_I64
@@ -23013,8 +23041,8 @@ Inst_VOP3__V_CMP_T_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_F_U64 class methods ---
 
-Inst_VOP3__V_CMP_F_U64::Inst_VOP3__V_CMP_F_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_f_u64", true)
+Inst_VOP3__V_CMP_F_U64::Inst_VOP3__V_CMP_F_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_f_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_F_U64
@@ -23039,8 +23067,8 @@ Inst_VOP3__V_CMP_F_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LT_U64 class methods ---
 
-Inst_VOP3__V_CMP_LT_U64::Inst_VOP3__V_CMP_LT_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_lt_u64", true)
+Inst_VOP3__V_CMP_LT_U64::Inst_VOP3__V_CMP_LT_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_lt_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LT_U64
@@ -23081,8 +23109,8 @@ Inst_VOP3__V_CMP_LT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_EQ_U64 class methods ---
 
-Inst_VOP3__V_CMP_EQ_U64::Inst_VOP3__V_CMP_EQ_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_eq_u64", true)
+Inst_VOP3__V_CMP_EQ_U64::Inst_VOP3__V_CMP_EQ_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_eq_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_EQ_U64
@@ -23123,8 +23151,8 @@ Inst_VOP3__V_CMP_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_LE_U64 class methods ---
 
-Inst_VOP3__V_CMP_LE_U64::Inst_VOP3__V_CMP_LE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_le_u64", true)
+Inst_VOP3__V_CMP_LE_U64::Inst_VOP3__V_CMP_LE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_le_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_LE_U64
@@ -23165,8 +23193,8 @@ Inst_VOP3__V_CMP_LE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GT_U64 class methods ---
 
-Inst_VOP3__V_CMP_GT_U64::Inst_VOP3__V_CMP_GT_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_gt_u64", true)
+Inst_VOP3__V_CMP_GT_U64::Inst_VOP3__V_CMP_GT_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_gt_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GT_U64
@@ -23207,8 +23235,8 @@ Inst_VOP3__V_CMP_GT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_NE_U64 class methods ---
 
-Inst_VOP3__V_CMP_NE_U64::Inst_VOP3__V_CMP_NE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ne_u64", true)
+Inst_VOP3__V_CMP_NE_U64::Inst_VOP3__V_CMP_NE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ne_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_NE_U64
@@ -23249,8 +23277,8 @@ Inst_VOP3__V_CMP_NE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_GE_U64 class methods ---
 
-Inst_VOP3__V_CMP_GE_U64::Inst_VOP3__V_CMP_GE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_ge_u64", true)
+Inst_VOP3__V_CMP_GE_U64::Inst_VOP3__V_CMP_GE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_ge_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_GE_U64
@@ -23291,8 +23319,8 @@ Inst_VOP3__V_CMP_GE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMP_T_U64 class methods ---
 
-Inst_VOP3__V_CMP_T_U64::Inst_VOP3__V_CMP_T_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmp_t_u64", true)
+Inst_VOP3__V_CMP_T_U64::Inst_VOP3__V_CMP_T_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmp_t_u64", true)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CMP_T_U64
@@ -23317,8 +23345,8 @@ Inst_VOP3__V_CMP_T_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_I64 class methods ---
 
-Inst_VOP3__V_CMPX_F_I64::Inst_VOP3__V_CMPX_F_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_i64", true)
+Inst_VOP3__V_CMPX_F_I64::Inst_VOP3__V_CMPX_F_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23346,8 +23374,8 @@ Inst_VOP3__V_CMPX_F_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_I64 class methods ---
 
-Inst_VOP3__V_CMPX_LT_I64::Inst_VOP3__V_CMPX_LT_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_i64", true)
+Inst_VOP3__V_CMPX_LT_I64::Inst_VOP3__V_CMPX_LT_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23390,8 +23418,8 @@ Inst_VOP3__V_CMPX_LT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_I64 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_I64::Inst_VOP3__V_CMPX_EQ_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_i64", true)
+Inst_VOP3__V_CMPX_EQ_I64::Inst_VOP3__V_CMPX_EQ_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23434,8 +23462,8 @@ Inst_VOP3__V_CMPX_EQ_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_I64 class methods ---
 
-Inst_VOP3__V_CMPX_LE_I64::Inst_VOP3__V_CMPX_LE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_i64", true)
+Inst_VOP3__V_CMPX_LE_I64::Inst_VOP3__V_CMPX_LE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23478,8 +23506,8 @@ Inst_VOP3__V_CMPX_LE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_I64 class methods ---
 
-Inst_VOP3__V_CMPX_GT_I64::Inst_VOP3__V_CMPX_GT_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_i64", true)
+Inst_VOP3__V_CMPX_GT_I64::Inst_VOP3__V_CMPX_GT_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23522,8 +23550,8 @@ Inst_VOP3__V_CMPX_GT_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_I64 class methods ---
 
-Inst_VOP3__V_CMPX_NE_I64::Inst_VOP3__V_CMPX_NE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_i64", true)
+Inst_VOP3__V_CMPX_NE_I64::Inst_VOP3__V_CMPX_NE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23566,8 +23594,8 @@ Inst_VOP3__V_CMPX_NE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_I64 class methods ---
 
-Inst_VOP3__V_CMPX_GE_I64::Inst_VOP3__V_CMPX_GE_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_i64", true)
+Inst_VOP3__V_CMPX_GE_I64::Inst_VOP3__V_CMPX_GE_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23610,8 +23638,8 @@ Inst_VOP3__V_CMPX_GE_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_I64 class methods ---
 
-Inst_VOP3__V_CMPX_T_I64::Inst_VOP3__V_CMPX_T_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_i64", true)
+Inst_VOP3__V_CMPX_T_I64::Inst_VOP3__V_CMPX_T_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_i64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23639,8 +23667,8 @@ Inst_VOP3__V_CMPX_T_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_F_U64 class methods ---
 
-Inst_VOP3__V_CMPX_F_U64::Inst_VOP3__V_CMPX_F_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_f_u64", true)
+Inst_VOP3__V_CMPX_F_U64::Inst_VOP3__V_CMPX_F_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_f_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23668,8 +23696,8 @@ Inst_VOP3__V_CMPX_F_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LT_U64 class methods ---
 
-Inst_VOP3__V_CMPX_LT_U64::Inst_VOP3__V_CMPX_LT_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_lt_u64", true)
+Inst_VOP3__V_CMPX_LT_U64::Inst_VOP3__V_CMPX_LT_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_lt_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23712,8 +23740,8 @@ Inst_VOP3__V_CMPX_LT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_EQ_U64 class methods ---
 
-Inst_VOP3__V_CMPX_EQ_U64::Inst_VOP3__V_CMPX_EQ_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_eq_u64", true)
+Inst_VOP3__V_CMPX_EQ_U64::Inst_VOP3__V_CMPX_EQ_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_eq_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23756,8 +23784,8 @@ Inst_VOP3__V_CMPX_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_LE_U64 class methods ---
 
-Inst_VOP3__V_CMPX_LE_U64::Inst_VOP3__V_CMPX_LE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_le_u64", true)
+Inst_VOP3__V_CMPX_LE_U64::Inst_VOP3__V_CMPX_LE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_le_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23800,8 +23828,8 @@ Inst_VOP3__V_CMPX_LE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GT_U64 class methods ---
 
-Inst_VOP3__V_CMPX_GT_U64::Inst_VOP3__V_CMPX_GT_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_gt_u64", true)
+Inst_VOP3__V_CMPX_GT_U64::Inst_VOP3__V_CMPX_GT_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_gt_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23844,8 +23872,8 @@ Inst_VOP3__V_CMPX_GT_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_NE_U64 class methods ---
 
-Inst_VOP3__V_CMPX_NE_U64::Inst_VOP3__V_CMPX_NE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ne_u64", true)
+Inst_VOP3__V_CMPX_NE_U64::Inst_VOP3__V_CMPX_NE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ne_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23888,8 +23916,8 @@ Inst_VOP3__V_CMPX_NE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_GE_U64 class methods ---
 
-Inst_VOP3__V_CMPX_GE_U64::Inst_VOP3__V_CMPX_GE_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_ge_u64", true)
+Inst_VOP3__V_CMPX_GE_U64::Inst_VOP3__V_CMPX_GE_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_ge_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23932,8 +23960,8 @@ Inst_VOP3__V_CMPX_GE_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CMPX_T_U64 class methods ---
 
-Inst_VOP3__V_CMPX_T_U64::Inst_VOP3__V_CMPX_T_U64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cmpx_t_u64", true)
+Inst_VOP3__V_CMPX_T_U64::Inst_VOP3__V_CMPX_T_U64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cmpx_t_u64", true)
 {
     setFlag(ALU);
     setFlag(WritesEXEC);
@@ -23971,8 +23999,8 @@ Inst_VOP3__V_CMPX_T_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CNDMASK_B32 class methods ---
 
-Inst_VOP3__V_CNDMASK_B32::Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cndmask_b32", false)
+Inst_VOP3__V_CNDMASK_B32::Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cndmask_b32", false)
 {
     setFlag(ALU);
     setFlag(ReadsVCC);
@@ -24017,8 +24045,8 @@ Inst_VOP3__V_CNDMASK_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_F32 class methods ---
 
-Inst_VOP3__V_ADD_F32::Inst_VOP3__V_ADD_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_f32", false)
+Inst_VOP3__V_ADD_F32::Inst_VOP3__V_ADD_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24071,8 +24099,8 @@ Inst_VOP3__V_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUB_F32 class methods ---
 
-Inst_VOP3__V_SUB_F32::Inst_VOP3__V_SUB_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sub_f32", false)
+Inst_VOP3__V_SUB_F32::Inst_VOP3__V_SUB_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sub_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24126,8 +24154,8 @@ Inst_VOP3__V_SUB_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBREV_F32 class methods ---
 
-Inst_VOP3__V_SUBREV_F32::Inst_VOP3__V_SUBREV_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_subrev_f32", false)
+Inst_VOP3__V_SUBREV_F32::Inst_VOP3__V_SUBREV_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_subrev_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24182,8 +24210,8 @@ Inst_VOP3__V_SUBREV_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_LEGACY_F32 class methods ---
 
-Inst_VOP3__V_MUL_LEGACY_F32::Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_legacy_f32", false)
+Inst_VOP3__V_MUL_LEGACY_F32::Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_legacy_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24232,7 +24260,7 @@ Inst_VOP3__V_MUL_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
             if (std::isnan(src0[lane]) || std::isnan(src1[lane])) {
                 vdst[lane] = NAN;
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        !std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -24242,7 +24270,7 @@ Inst_VOP3__V_MUL_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
                     vdst[lane] = -0.0;
                 }
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -24279,8 +24307,8 @@ Inst_VOP3__V_MUL_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_F32 class methods ---
 
-Inst_VOP3__V_MUL_F32::Inst_VOP3__V_MUL_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_f32", false)
+Inst_VOP3__V_MUL_F32::Inst_VOP3__V_MUL_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24328,7 +24356,7 @@ Inst_VOP3__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
             if (std::isnan(src0[lane]) || std::isnan(src1[lane])) {
                 vdst[lane] = NAN;
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        !std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -24338,7 +24366,7 @@ Inst_VOP3__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
                     vdst[lane] = -0.0;
                 }
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -24375,8 +24403,8 @@ Inst_VOP3__V_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_I32_I24 class methods ---
 
-Inst_VOP3__V_MUL_I32_I24::Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_i32_i24", false)
+Inst_VOP3__V_MUL_I32_I24::Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_i32_i24", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_I32_I24
@@ -24418,8 +24446,8 @@ Inst_VOP3__V_MUL_I32_I24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_HI_I32_I24 class methods ---
 
-Inst_VOP3__V_MUL_HI_I32_I24::Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_hi_i32_i24", false)
+Inst_VOP3__V_MUL_HI_I32_I24::Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_hi_i32_i24", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_HI_I32_I24
@@ -24465,8 +24493,8 @@ Inst_VOP3__V_MUL_HI_I32_I24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_U32_U24 class methods ---
 
-Inst_VOP3__V_MUL_U32_U24::Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_u32_u24", false)
+Inst_VOP3__V_MUL_U32_U24::Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_u32_u24", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_U32_U24
@@ -24507,8 +24535,8 @@ Inst_VOP3__V_MUL_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_HI_U32_U24 class methods ---
 
-Inst_VOP3__V_MUL_HI_U32_U24::Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_hi_u32_u24", false)
+Inst_VOP3__V_MUL_HI_U32_U24::Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_hi_u32_u24", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_HI_U32_U24
@@ -24551,8 +24579,8 @@ Inst_VOP3__V_MUL_HI_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_F32 class methods ---
 
-Inst_VOP3__V_MIN_F32::Inst_VOP3__V_MIN_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_f32", false)
+Inst_VOP3__V_MIN_F32::Inst_VOP3__V_MIN_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24605,8 +24633,8 @@ Inst_VOP3__V_MIN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_F32 class methods ---
 
-Inst_VOP3__V_MAX_F32::Inst_VOP3__V_MAX_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_f32", false)
+Inst_VOP3__V_MAX_F32::Inst_VOP3__V_MAX_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -24659,8 +24687,8 @@ Inst_VOP3__V_MAX_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_I32 class methods ---
 
-Inst_VOP3__V_MIN_I32::Inst_VOP3__V_MIN_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_i32", false)
+Inst_VOP3__V_MIN_I32::Inst_VOP3__V_MIN_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN_I32
@@ -24700,8 +24728,8 @@ Inst_VOP3__V_MIN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_I32 class methods ---
 
-Inst_VOP3__V_MAX_I32::Inst_VOP3__V_MAX_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_i32", false)
+Inst_VOP3__V_MAX_I32::Inst_VOP3__V_MAX_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX_I32
@@ -24741,8 +24769,8 @@ Inst_VOP3__V_MAX_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_U32 class methods ---
 
-Inst_VOP3__V_MIN_U32::Inst_VOP3__V_MIN_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_u32", false)
+Inst_VOP3__V_MIN_U32::Inst_VOP3__V_MIN_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN_U32
@@ -24782,8 +24810,8 @@ Inst_VOP3__V_MIN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_U32 class methods ---
 
-Inst_VOP3__V_MAX_U32::Inst_VOP3__V_MAX_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_u32", false)
+Inst_VOP3__V_MAX_U32::Inst_VOP3__V_MAX_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX_U32
@@ -24823,8 +24851,8 @@ Inst_VOP3__V_MAX_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHRREV_B32 class methods ---
 
-Inst_VOP3__V_LSHRREV_B32::Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshrrev_b32", false)
+Inst_VOP3__V_LSHRREV_B32::Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshrrev_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHRREV_B32
@@ -24867,8 +24895,8 @@ Inst_VOP3__V_LSHRREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ASHRREV_I32 class methods ---
 
-Inst_VOP3__V_ASHRREV_I32::Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ashrrev_i32", false)
+Inst_VOP3__V_ASHRREV_I32::Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ashrrev_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ASHRREV_I32
@@ -24911,8 +24939,8 @@ Inst_VOP3__V_ASHRREV_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHLREV_B32 class methods ---
 
-Inst_VOP3__V_LSHLREV_B32::Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshlrev_b32", false)
+Inst_VOP3__V_LSHLREV_B32::Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshlrev_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHLREV_B32
@@ -24954,8 +24982,8 @@ Inst_VOP3__V_LSHLREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_AND_B32 class methods ---
 
-Inst_VOP3__V_AND_B32::Inst_VOP3__V_AND_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_and_b32", false)
+Inst_VOP3__V_AND_B32::Inst_VOP3__V_AND_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_and_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_AND_B32
@@ -24996,8 +25024,8 @@ Inst_VOP3__V_AND_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_OR_B32 class methods ---
 
-Inst_VOP3__V_OR_B32::Inst_VOP3__V_OR_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_or_b32", false)
+Inst_VOP3__V_OR_B32::Inst_VOP3__V_OR_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_or_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_OR_B32
@@ -25038,8 +25066,8 @@ Inst_VOP3__V_OR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_OR3_B32 class methods ---
 
-Inst_VOP3__V_OR3_B32::Inst_VOP3__V_OR3_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_or3_b32", false)
+Inst_VOP3__V_OR3_B32::Inst_VOP3__V_OR3_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_or3_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_OR3_B32
@@ -25082,8 +25110,8 @@ Inst_VOP3__V_OR3_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_XOR_B32 class methods ---
 
-Inst_VOP3__V_XOR_B32::Inst_VOP3__V_XOR_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_xor_b32", false)
+Inst_VOP3__V_XOR_B32::Inst_VOP3__V_XOR_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_xor_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_XOR_B32
@@ -25124,8 +25152,8 @@ Inst_VOP3__V_XOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAC_F32 class methods ---
 
-Inst_VOP3__V_MAC_F32::Inst_VOP3__V_MAC_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mac_f32", false)
+Inst_VOP3__V_MAC_F32::Inst_VOP3__V_MAC_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mac_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -25181,8 +25209,8 @@ Inst_VOP3__V_MAC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_CO_U32 class methods ---
 
-Inst_VOP3__V_ADD_CO_U32::Inst_VOP3__V_ADD_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_add_co_u32")
+Inst_VOP3__V_ADD_CO_U32::Inst_VOP3__V_ADD_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_add_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25219,7 +25247,7 @@ Inst_VOP3__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
         if (wf->execMask(lane)) {
             vdst[lane] = src0[lane] + src1[lane];
             vcc.setBit(lane, ((VecElemU64)src0[lane] +
-                                 (VecElemU64)src1[lane]) >= 0x100000000ULL ?
+                              (VecElemU64)src1[lane]) >= 0x100000000ULL ?
                                  1 :
                                  0);
         }
@@ -25230,8 +25258,8 @@ Inst_VOP3__V_ADD_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUB_CO_U32 class methods ---
 
-Inst_VOP3__V_SUB_CO_U32::Inst_VOP3__V_SUB_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_sub_co_u32")
+Inst_VOP3__V_SUB_CO_U32::Inst_VOP3__V_SUB_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_sub_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25276,8 +25304,8 @@ Inst_VOP3__V_SUB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBREV_CO_U32 class methods ---
 
-Inst_VOP3__V_SUBREV_CO_U32::Inst_VOP3__V_SUBREV_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_subrev_co_u32")
+Inst_VOP3__V_SUBREV_CO_U32::Inst_VOP3__V_SUBREV_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_subrev_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25323,8 +25351,8 @@ Inst_VOP3__V_SUBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADDC_CO_U32 class methods ---
 
-Inst_VOP3__V_ADDC_CO_U32::Inst_VOP3__V_ADDC_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_addc_co_u32")
+Inst_VOP3__V_ADDC_CO_U32::Inst_VOP3__V_ADDC_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_addc_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25364,11 +25392,11 @@ Inst_VOP3__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vdst[lane] = src0[lane] + src1[lane] + bits(vcc.rawData(), lane);
-            sdst.setBit(lane,
-                ((VecElemU64)src0[lane] + (VecElemU64)src1[lane] +
-                    (VecElemU64)bits(vcc.rawData(), lane)) >= 0x100000000 ?
-                    1 :
-                    0);
+            sdst.setBit(
+                lane, ((VecElemU64)src0[lane] + (VecElemU64)src1[lane] +
+                       (VecElemU64)bits(vcc.rawData(), lane)) >= 0x100000000 ?
+                          1 :
+                          0);
         }
     }
 
@@ -25377,8 +25405,8 @@ Inst_VOP3__V_ADDC_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBB_CO_U32 class methods ---
 
-Inst_VOP3__V_SUBB_CO_U32::Inst_VOP3__V_SUBB_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_subb_co_u32")
+Inst_VOP3__V_SUBB_CO_U32::Inst_VOP3__V_SUBB_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_subb_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25418,7 +25446,8 @@ Inst_VOP3__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vdst[lane] = src0[lane] - src1[lane] - bits(vcc.rawData(), lane);
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (src1[lane] + bits(vcc.rawData(), lane)) > src0[lane] ? 1 : 0);
         }
     }
@@ -25428,8 +25457,8 @@ Inst_VOP3__V_SUBB_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBBREV_CO_U32 class methods ---
 
-Inst_VOP3__V_SUBBREV_CO_U32::Inst_VOP3__V_SUBBREV_CO_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_subbrev_co_u32")
+Inst_VOP3__V_SUBBREV_CO_U32::Inst_VOP3__V_SUBBREV_CO_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_subbrev_co_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -25469,7 +25498,8 @@ Inst_VOP3__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
             vdst[lane] = src1[lane] - src0[lane] - bits(vcc.rawData(), lane);
-            sdst.setBit(lane,
+            sdst.setBit(
+                lane,
                 (src1[lane] + bits(vcc.rawData(), lane)) > src0[lane] ? 1 : 0);
         }
     }
@@ -25479,8 +25509,8 @@ Inst_VOP3__V_SUBBREV_CO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_F16 class methods ---
 
-Inst_VOP3__V_ADD_F16::Inst_VOP3__V_ADD_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_f16", false)
+Inst_VOP3__V_ADD_F16::Inst_VOP3__V_ADD_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25498,8 +25528,8 @@ Inst_VOP3__V_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUB_F16 class methods ---
 
-Inst_VOP3__V_SUB_F16::Inst_VOP3__V_SUB_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sub_f16", false)
+Inst_VOP3__V_SUB_F16::Inst_VOP3__V_SUB_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sub_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25518,8 +25548,8 @@ Inst_VOP3__V_SUB_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBREV_F16 class methods ---
 
-Inst_VOP3__V_SUBREV_F16::Inst_VOP3__V_SUBREV_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_subrev_f16", false)
+Inst_VOP3__V_SUBREV_F16::Inst_VOP3__V_SUBREV_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_subrev_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25539,8 +25569,8 @@ Inst_VOP3__V_SUBREV_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_F16 class methods ---
 
-Inst_VOP3__V_MUL_F16::Inst_VOP3__V_MUL_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_f16", false)
+Inst_VOP3__V_MUL_F16::Inst_VOP3__V_MUL_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25558,8 +25588,8 @@ Inst_VOP3__V_MUL_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAC_F16 class methods ---
 
-Inst_VOP3__V_MAC_F16::Inst_VOP3__V_MAC_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mac_f16", false)
+Inst_VOP3__V_MAC_F16::Inst_VOP3__V_MAC_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mac_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25579,8 +25609,8 @@ Inst_VOP3__V_MAC_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_U16 class methods ---
 
-Inst_VOP3__V_ADD_U16::Inst_VOP3__V_ADD_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_u16", false)
+Inst_VOP3__V_ADD_U16::Inst_VOP3__V_ADD_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ADD_U16
@@ -25621,8 +25651,8 @@ Inst_VOP3__V_ADD_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUB_U16 class methods ---
 
-Inst_VOP3__V_SUB_U16::Inst_VOP3__V_SUB_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sub_u16", false)
+Inst_VOP3__V_SUB_U16::Inst_VOP3__V_SUB_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sub_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SUB_U16
@@ -25663,8 +25693,8 @@ Inst_VOP3__V_SUB_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBREV_U16 class methods ---
 
-Inst_VOP3__V_SUBREV_U16::Inst_VOP3__V_SUBREV_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_subrev_u16", false)
+Inst_VOP3__V_SUBREV_U16::Inst_VOP3__V_SUBREV_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_subrev_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SUBREV_U16
@@ -25707,8 +25737,8 @@ Inst_VOP3__V_SUBREV_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_LO_U16 class methods ---
 
-Inst_VOP3__V_MUL_LO_U16::Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_lo_u16", false)
+Inst_VOP3__V_MUL_LO_U16::Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_lo_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_LO_U16
@@ -25750,8 +25780,8 @@ Inst_VOP3__V_MUL_LO_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHLREV_B16 class methods ---
 
-Inst_VOP3__V_LSHLREV_B16::Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshlrev_b16", false)
+Inst_VOP3__V_LSHLREV_B16::Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshlrev_b16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHLREV_B16
@@ -25793,8 +25823,8 @@ Inst_VOP3__V_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHRREV_B16 class methods ---
 
-Inst_VOP3__V_LSHRREV_B16::Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshrrev_b16", false)
+Inst_VOP3__V_LSHRREV_B16::Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshrrev_b16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHRREV_B16
@@ -25843,8 +25873,8 @@ Inst_VOP3__V_LSHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ASHRREV_I16 class methods ---
 
-Inst_VOP3__V_ASHRREV_I16::Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ashrrev_i16", false)
+Inst_VOP3__V_ASHRREV_I16::Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ashrrev_i16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ASHRREV_I16
@@ -25887,8 +25917,8 @@ Inst_VOP3__V_ASHRREV_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_F16 class methods ---
 
-Inst_VOP3__V_MAX_F16::Inst_VOP3__V_MAX_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_f16", false)
+Inst_VOP3__V_MAX_F16::Inst_VOP3__V_MAX_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25907,8 +25937,8 @@ Inst_VOP3__V_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_F16 class methods ---
 
-Inst_VOP3__V_MIN_F16::Inst_VOP3__V_MIN_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_f16", false)
+Inst_VOP3__V_MIN_F16::Inst_VOP3__V_MIN_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -25927,8 +25957,8 @@ Inst_VOP3__V_MIN_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_U16 class methods ---
 
-Inst_VOP3__V_MAX_U16::Inst_VOP3__V_MAX_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_u16", false)
+Inst_VOP3__V_MAX_U16::Inst_VOP3__V_MAX_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX_U16
@@ -25974,8 +26004,8 @@ Inst_VOP3__V_MAX_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_I16 class methods ---
 
-Inst_VOP3__V_MAX_I16::Inst_VOP3__V_MAX_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_i16", false)
+Inst_VOP3__V_MAX_I16::Inst_VOP3__V_MAX_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_i16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX_I16
@@ -26021,8 +26051,8 @@ Inst_VOP3__V_MAX_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_U16 class methods ---
 
-Inst_VOP3__V_MIN_U16::Inst_VOP3__V_MIN_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_u16", false)
+Inst_VOP3__V_MIN_U16::Inst_VOP3__V_MIN_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN_U16
@@ -26068,8 +26098,8 @@ Inst_VOP3__V_MIN_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_I16 class methods ---
 
-Inst_VOP3__V_MIN_I16::Inst_VOP3__V_MIN_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_i16", false)
+Inst_VOP3__V_MIN_I16::Inst_VOP3__V_MIN_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_i16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN_I16
@@ -26115,8 +26145,8 @@ Inst_VOP3__V_MIN_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LDEXP_F16 class methods ---
 
-Inst_VOP3__V_LDEXP_F16::Inst_VOP3__V_LDEXP_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ldexp_f16", false)
+Inst_VOP3__V_LDEXP_F16::Inst_VOP3__V_LDEXP_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ldexp_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -26133,8 +26163,8 @@ Inst_VOP3__V_LDEXP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_U32 class methods ---
 
-Inst_VOP3__V_ADD_U32::Inst_VOP3__V_ADD_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_u32", false)
+Inst_VOP3__V_ADD_U32::Inst_VOP3__V_ADD_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ADD_U32
@@ -26174,8 +26204,8 @@ Inst_VOP3__V_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUB_U32 class methods ---
 
-Inst_VOP3__V_SUB_U32::Inst_VOP3__V_SUB_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sub_u32", false)
+Inst_VOP3__V_SUB_U32::Inst_VOP3__V_SUB_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sub_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SUB_U32
@@ -26215,8 +26245,8 @@ Inst_VOP3__V_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SUBREV_U32 class methods ---
 
-Inst_VOP3__V_SUBREV_U32::Inst_VOP3__V_SUBREV_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_subrev_u32", false)
+Inst_VOP3__V_SUBREV_U32::Inst_VOP3__V_SUBREV_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_subrev_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SUBREV_U32
@@ -26257,8 +26287,8 @@ Inst_VOP3__V_SUBREV_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_NOP class methods ---
 
-Inst_VOP3__V_NOP::Inst_VOP3__V_NOP(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_nop", false)
+Inst_VOP3__V_NOP::Inst_VOP3__V_NOP(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_nop", false)
 {
     setFlag(Nop);
     setFlag(ALU);
@@ -26273,8 +26303,8 @@ Inst_VOP3__V_NOP::execute(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_VOP3__V_MOV_B32 class methods ---
 
-Inst_VOP3__V_MOV_B32::Inst_VOP3__V_MOV_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mov_b32", false)
+Inst_VOP3__V_MOV_B32::Inst_VOP3__V_MOV_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mov_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MOV_B32
@@ -26303,8 +26333,8 @@ Inst_VOP3__V_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_I32_F64 class methods ---
 
-Inst_VOP3__V_CVT_I32_F64::Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_i32_f64", false)
+Inst_VOP3__V_CVT_I32_F64::Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_i32_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -26356,8 +26386,8 @@ Inst_VOP3__V_CVT_I32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F64_I32 class methods ---
 
-Inst_VOP3__V_CVT_F64_I32::Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f64_i32", false)
+Inst_VOP3__V_CVT_F64_I32::Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f64_i32", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -26395,8 +26425,8 @@ Inst_VOP3__V_CVT_F64_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_I32 class methods ---
 
-Inst_VOP3__V_CVT_F32_I32::Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_i32", false)
+Inst_VOP3__V_CVT_F32_I32::Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_i32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26436,8 +26466,8 @@ Inst_VOP3__V_CVT_F32_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_U32 class methods ---
 
-Inst_VOP3__V_CVT_F32_U32::Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_u32", false)
+Inst_VOP3__V_CVT_F32_U32::Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_u32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26475,8 +26505,8 @@ Inst_VOP3__V_CVT_F32_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_U32_F32 class methods ---
 
-Inst_VOP3__V_CVT_U32_F32::Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_u32_f32", false)
+Inst_VOP3__V_CVT_U32_F32::Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_u32_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26530,8 +26560,8 @@ Inst_VOP3__V_CVT_U32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_I32_F32 class methods ---
 
-Inst_VOP3__V_CVT_I32_F32::Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_i32_f32", false)
+Inst_VOP3__V_CVT_I32_F32::Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_i32_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26591,8 +26621,8 @@ Inst_VOP3__V_CVT_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MOV_FED_B32 class methods ---
 
-Inst_VOP3__V_MOV_FED_B32::Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mov_fed_b32", false)
+Inst_VOP3__V_MOV_FED_B32::Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mov_fed_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MOV_FED_B32
@@ -26612,8 +26642,8 @@ Inst_VOP3__V_MOV_FED_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F16_F32 class methods ---
 
-Inst_VOP3__V_CVT_F16_F32::Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f16_f32", false)
+Inst_VOP3__V_CVT_F16_F32::Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f16_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26632,8 +26662,8 @@ Inst_VOP3__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_F16 class methods ---
 
-Inst_VOP3__V_CVT_F32_F16::Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_f16", false)
+Inst_VOP3__V_CVT_F32_F16::Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_f16", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26652,8 +26682,8 @@ Inst_VOP3__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_RPI_I32_F32 class methods ---
 
-Inst_VOP3__V_CVT_RPI_I32_F32::Inst_VOP3__V_CVT_RPI_I32_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_rpi_i32_f32", false)
+Inst_VOP3__V_CVT_RPI_I32_F32::Inst_VOP3__V_CVT_RPI_I32_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_rpi_i32_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26691,8 +26721,8 @@ Inst_VOP3__V_CVT_RPI_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_FLR_I32_F32 class methods ---
 
-Inst_VOP3__V_CVT_FLR_I32_F32::Inst_VOP3__V_CVT_FLR_I32_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_flr_i32_f32", false)
+Inst_VOP3__V_CVT_FLR_I32_F32::Inst_VOP3__V_CVT_FLR_I32_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_flr_i32_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26730,8 +26760,8 @@ Inst_VOP3__V_CVT_FLR_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_OFF_F32_I4 class methods ---
 
-Inst_VOP3__V_CVT_OFF_F32_I4::Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_off_f32_i4", false)
+Inst_VOP3__V_CVT_OFF_F32_I4::Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_off_f32_i4", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26750,8 +26780,8 @@ Inst_VOP3__V_CVT_OFF_F32_I4::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_F64 class methods ---
 
-Inst_VOP3__V_CVT_F32_F64::Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_f64", false)
+Inst_VOP3__V_CVT_F32_F64::Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -26797,8 +26827,8 @@ Inst_VOP3__V_CVT_F32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F64_F32 class methods ---
 
-Inst_VOP3__V_CVT_F64_F32::Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f64_f32", false)
+Inst_VOP3__V_CVT_F64_F32::Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f64_f32", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -26844,8 +26874,8 @@ Inst_VOP3__V_CVT_F64_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_UBYTE0 class methods ---
 
-Inst_VOP3__V_CVT_F32_UBYTE0::Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_ubyte0", false)
+Inst_VOP3__V_CVT_F32_UBYTE0::Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte0", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26883,8 +26913,8 @@ Inst_VOP3__V_CVT_F32_UBYTE0::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_UBYTE1 class methods ---
 
-Inst_VOP3__V_CVT_F32_UBYTE1::Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_ubyte1", false)
+Inst_VOP3__V_CVT_F32_UBYTE1::Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte1", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26922,8 +26952,8 @@ Inst_VOP3__V_CVT_F32_UBYTE1::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_UBYTE2 class methods ---
 
-Inst_VOP3__V_CVT_F32_UBYTE2::Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_ubyte2", false)
+Inst_VOP3__V_CVT_F32_UBYTE2::Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte2", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -26961,8 +26991,8 @@ Inst_VOP3__V_CVT_F32_UBYTE2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F32_UBYTE3 class methods ---
 
-Inst_VOP3__V_CVT_F32_UBYTE3::Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f32_ubyte3", false)
+Inst_VOP3__V_CVT_F32_UBYTE3::Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte3", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27000,8 +27030,8 @@ Inst_VOP3__V_CVT_F32_UBYTE3::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_U32_F64 class methods ---
 
-Inst_VOP3__V_CVT_U32_F64::Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_u32_f64", false)
+Inst_VOP3__V_CVT_U32_F64::Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_u32_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27055,8 +27085,8 @@ Inst_VOP3__V_CVT_U32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F64_U32 class methods ---
 
-Inst_VOP3__V_CVT_F64_U32::Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f64_u32", false)
+Inst_VOP3__V_CVT_F64_U32::Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f64_u32", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27094,8 +27124,8 @@ Inst_VOP3__V_CVT_F64_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_TRUNC_F64 class methods ---
 
-Inst_VOP3__V_TRUNC_F64::Inst_VOP3__V_TRUNC_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_trunc_f64", false)
+Inst_VOP3__V_TRUNC_F64::Inst_VOP3__V_TRUNC_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_trunc_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27132,8 +27162,8 @@ Inst_VOP3__V_TRUNC_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CEIL_F64 class methods ---
 
-Inst_VOP3__V_CEIL_F64::Inst_VOP3__V_CEIL_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ceil_f64", false)
+Inst_VOP3__V_CEIL_F64::Inst_VOP3__V_CEIL_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ceil_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27171,8 +27201,8 @@ Inst_VOP3__V_CEIL_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RNDNE_F64 class methods ---
 
-Inst_VOP3__V_RNDNE_F64::Inst_VOP3__V_RNDNE_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rndne_f64", false)
+Inst_VOP3__V_RNDNE_F64::Inst_VOP3__V_RNDNE_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rndne_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27209,8 +27239,8 @@ Inst_VOP3__V_RNDNE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FLOOR_F64 class methods ---
 
-Inst_VOP3__V_FLOOR_F64::Inst_VOP3__V_FLOOR_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_floor_f64", false)
+Inst_VOP3__V_FLOOR_F64::Inst_VOP3__V_FLOOR_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_floor_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27248,8 +27278,8 @@ Inst_VOP3__V_FLOOR_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FRACT_F32 class methods ---
 
-Inst_VOP3__V_FRACT_F32::Inst_VOP3__V_FRACT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fract_f32", false)
+Inst_VOP3__V_FRACT_F32::Inst_VOP3__V_FRACT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fract_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27287,8 +27317,8 @@ Inst_VOP3__V_FRACT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_TRUNC_F32 class methods ---
 
-Inst_VOP3__V_TRUNC_F32::Inst_VOP3__V_TRUNC_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_trunc_f32", false)
+Inst_VOP3__V_TRUNC_F32::Inst_VOP3__V_TRUNC_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_trunc_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27325,8 +27355,8 @@ Inst_VOP3__V_TRUNC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CEIL_F32 class methods ---
 
-Inst_VOP3__V_CEIL_F32::Inst_VOP3__V_CEIL_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ceil_f32", false)
+Inst_VOP3__V_CEIL_F32::Inst_VOP3__V_CEIL_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ceil_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27364,8 +27394,8 @@ Inst_VOP3__V_CEIL_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RNDNE_F32 class methods ---
 
-Inst_VOP3__V_RNDNE_F32::Inst_VOP3__V_RNDNE_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rndne_f32", false)
+Inst_VOP3__V_RNDNE_F32::Inst_VOP3__V_RNDNE_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rndne_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27402,8 +27432,8 @@ Inst_VOP3__V_RNDNE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FLOOR_F32 class methods ---
 
-Inst_VOP3__V_FLOOR_F32::Inst_VOP3__V_FLOOR_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_floor_f32", false)
+Inst_VOP3__V_FLOOR_F32::Inst_VOP3__V_FLOOR_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_floor_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27441,8 +27471,8 @@ Inst_VOP3__V_FLOOR_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_EXP_F32 class methods ---
 
-Inst_VOP3__V_EXP_F32::Inst_VOP3__V_EXP_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_exp_f32", false)
+Inst_VOP3__V_EXP_F32::Inst_VOP3__V_EXP_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_exp_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27479,8 +27509,8 @@ Inst_VOP3__V_EXP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LOG_F32 class methods ---
 
-Inst_VOP3__V_LOG_F32::Inst_VOP3__V_LOG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_log_f32", false)
+Inst_VOP3__V_LOG_F32::Inst_VOP3__V_LOG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_log_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27525,8 +27555,8 @@ Inst_VOP3__V_LOG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RCP_F32 class methods ---
 
-Inst_VOP3__V_RCP_F32::Inst_VOP3__V_RCP_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rcp_f32", false)
+Inst_VOP3__V_RCP_F32::Inst_VOP3__V_RCP_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rcp_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27563,8 +27593,8 @@ Inst_VOP3__V_RCP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RCP_IFLAG_F32 class methods ---
 
-Inst_VOP3__V_RCP_IFLAG_F32::Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rcp_iflag_f32", false)
+Inst_VOP3__V_RCP_IFLAG_F32::Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rcp_iflag_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27604,8 +27634,8 @@ Inst_VOP3__V_RCP_IFLAG_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RSQ_F32 class methods ---
 
-Inst_VOP3__V_RSQ_F32::Inst_VOP3__V_RSQ_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rsq_f32", false)
+Inst_VOP3__V_RSQ_F32::Inst_VOP3__V_RSQ_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rsq_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27642,8 +27672,8 @@ Inst_VOP3__V_RSQ_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RCP_F64 class methods ---
 
-Inst_VOP3__V_RCP_F64::Inst_VOP3__V_RCP_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rcp_f64", false)
+Inst_VOP3__V_RCP_F64::Inst_VOP3__V_RCP_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rcp_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27692,8 +27722,8 @@ Inst_VOP3__V_RCP_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RSQ_F64 class methods ---
 
-Inst_VOP3__V_RSQ_F64::Inst_VOP3__V_RSQ_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rsq_f64", false)
+Inst_VOP3__V_RSQ_F64::Inst_VOP3__V_RSQ_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rsq_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27740,8 +27770,8 @@ Inst_VOP3__V_RSQ_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SQRT_F32 class methods ---
 
-Inst_VOP3__V_SQRT_F32::Inst_VOP3__V_SQRT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sqrt_f32", false)
+Inst_VOP3__V_SQRT_F32::Inst_VOP3__V_SQRT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sqrt_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27778,8 +27808,8 @@ Inst_VOP3__V_SQRT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SQRT_F64 class methods ---
 
-Inst_VOP3__V_SQRT_F64::Inst_VOP3__V_SQRT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sqrt_f64", false)
+Inst_VOP3__V_SQRT_F64::Inst_VOP3__V_SQRT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sqrt_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -27816,8 +27846,8 @@ Inst_VOP3__V_SQRT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SIN_F32 class methods ---
 
-Inst_VOP3__V_SIN_F32::Inst_VOP3__V_SIN_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sin_f32", false)
+Inst_VOP3__V_SIN_F32::Inst_VOP3__V_SIN_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sin_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27858,8 +27888,8 @@ Inst_VOP3__V_SIN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_COS_F32 class methods ---
 
-Inst_VOP3__V_COS_F32::Inst_VOP3__V_COS_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cos_f32", false)
+Inst_VOP3__V_COS_F32::Inst_VOP3__V_COS_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cos_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -27900,8 +27930,8 @@ Inst_VOP3__V_COS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_NOT_B32 class methods ---
 
-Inst_VOP3__V_NOT_B32::Inst_VOP3__V_NOT_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_not_b32", false)
+Inst_VOP3__V_NOT_B32::Inst_VOP3__V_NOT_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_not_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_NOT_B32
@@ -27938,8 +27968,8 @@ Inst_VOP3__V_NOT_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BFREV_B32 class methods ---
 
-Inst_VOP3__V_BFREV_B32::Inst_VOP3__V_BFREV_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bfrev_b32", false)
+Inst_VOP3__V_BFREV_B32::Inst_VOP3__V_BFREV_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bfrev_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BFREV_B32
@@ -27968,8 +27998,8 @@ Inst_VOP3__V_BFREV_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FFBH_U32 class methods ---
 
-Inst_VOP3__V_FFBH_U32::Inst_VOP3__V_FFBH_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ffbh_u32", false)
+Inst_VOP3__V_FFBH_U32::Inst_VOP3__V_FFBH_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ffbh_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_FFBH_U32
@@ -28006,8 +28036,8 @@ Inst_VOP3__V_FFBH_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FFBL_B32 class methods ---
 
-Inst_VOP3__V_FFBL_B32::Inst_VOP3__V_FFBL_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ffbl_b32", false)
+Inst_VOP3__V_FFBL_B32::Inst_VOP3__V_FFBL_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ffbl_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_FFBL_B32
@@ -28044,8 +28074,8 @@ Inst_VOP3__V_FFBL_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FFBH_I32 class methods ---
 
-Inst_VOP3__V_FFBH_I32::Inst_VOP3__V_FFBH_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ffbh_i32", false)
+Inst_VOP3__V_FFBH_I32::Inst_VOP3__V_FFBH_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ffbh_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_FFBH_I32
@@ -28083,8 +28113,8 @@ Inst_VOP3__V_FFBH_I32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_FREXP_EXP_I32_F64 class methods ---
 
 Inst_VOP3__V_FREXP_EXP_I32_F64::Inst_VOP3__V_FREXP_EXP_I32_F64(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_exp_i32_f64", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_exp_i32_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -28128,8 +28158,8 @@ Inst_VOP3__V_FREXP_EXP_I32_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FREXP_MANT_F64 class methods ---
 
-Inst_VOP3__V_FREXP_MANT_F64::Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_mant_f64", false)
+Inst_VOP3__V_FREXP_MANT_F64::Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_mant_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -28168,8 +28198,8 @@ Inst_VOP3__V_FREXP_MANT_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FRACT_F64 class methods ---
 
-Inst_VOP3__V_FRACT_F64::Inst_VOP3__V_FRACT_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fract_f64", false)
+Inst_VOP3__V_FRACT_F64::Inst_VOP3__V_FRACT_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fract_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -28208,8 +28238,8 @@ Inst_VOP3__V_FRACT_F64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_FREXP_EXP_I32_F32 class methods ---
 
 Inst_VOP3__V_FREXP_EXP_I32_F32::Inst_VOP3__V_FREXP_EXP_I32_F32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_exp_i32_f32", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_exp_i32_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28257,8 +28287,8 @@ Inst_VOP3__V_FREXP_EXP_I32_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FREXP_MANT_F32 class methods ---
 
-Inst_VOP3__V_FREXP_MANT_F32::Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_mant_f32", false)
+Inst_VOP3__V_FREXP_MANT_F32::Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_mant_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28306,8 +28336,8 @@ Inst_VOP3__V_FREXP_MANT_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CLREXCP class methods ---
 
-Inst_VOP3__V_CLREXCP::Inst_VOP3__V_CLREXCP(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_clrexcp", false)
+Inst_VOP3__V_CLREXCP::Inst_VOP3__V_CLREXCP(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_clrexcp", false)
 {} // Inst_VOP3__V_CLREXCP
 
 Inst_VOP3__V_CLREXCP::~Inst_VOP3__V_CLREXCP() {} // ~Inst_VOP3__V_CLREXCP
@@ -28321,8 +28351,8 @@ Inst_VOP3__V_CLREXCP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F16_U16 class methods ---
 
-Inst_VOP3__V_CVT_F16_U16::Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f16_u16", false)
+Inst_VOP3__V_CVT_F16_U16::Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f16_u16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28341,8 +28371,8 @@ Inst_VOP3__V_CVT_F16_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_F16_I16 class methods ---
 
-Inst_VOP3__V_CVT_F16_I16::Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_f16_i16", false)
+Inst_VOP3__V_CVT_F16_I16::Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_f16_i16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28361,8 +28391,8 @@ Inst_VOP3__V_CVT_F16_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_U16_F16 class methods ---
 
-Inst_VOP3__V_CVT_U16_F16::Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_u16_f16", false)
+Inst_VOP3__V_CVT_U16_F16::Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_u16_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28381,8 +28411,8 @@ Inst_VOP3__V_CVT_U16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_I16_F16 class methods ---
 
-Inst_VOP3__V_CVT_I16_F16::Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_i16_f16", false)
+Inst_VOP3__V_CVT_I16_F16::Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_i16_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28401,8 +28431,8 @@ Inst_VOP3__V_CVT_I16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RCP_F16 class methods ---
 
-Inst_VOP3__V_RCP_F16::Inst_VOP3__V_RCP_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rcp_f16", false)
+Inst_VOP3__V_RCP_F16::Inst_VOP3__V_RCP_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rcp_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28422,8 +28452,8 @@ Inst_VOP3__V_RCP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SQRT_F16 class methods ---
 
-Inst_VOP3__V_SQRT_F16::Inst_VOP3__V_SQRT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sqrt_f16", false)
+Inst_VOP3__V_SQRT_F16::Inst_VOP3__V_SQRT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sqrt_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28443,8 +28473,8 @@ Inst_VOP3__V_SQRT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RSQ_F16 class methods ---
 
-Inst_VOP3__V_RSQ_F16::Inst_VOP3__V_RSQ_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rsq_f16", false)
+Inst_VOP3__V_RSQ_F16::Inst_VOP3__V_RSQ_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rsq_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28464,8 +28494,8 @@ Inst_VOP3__V_RSQ_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LOG_F16 class methods ---
 
-Inst_VOP3__V_LOG_F16::Inst_VOP3__V_LOG_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_log_f16", false)
+Inst_VOP3__V_LOG_F16::Inst_VOP3__V_LOG_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_log_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28485,8 +28515,8 @@ Inst_VOP3__V_LOG_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_EXP_F16 class methods ---
 
-Inst_VOP3__V_EXP_F16::Inst_VOP3__V_EXP_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_exp_f16", false)
+Inst_VOP3__V_EXP_F16::Inst_VOP3__V_EXP_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_exp_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28506,8 +28536,8 @@ Inst_VOP3__V_EXP_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FREXP_MANT_F16 class methods ---
 
-Inst_VOP3__V_FREXP_MANT_F16::Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_mant_f16", false)
+Inst_VOP3__V_FREXP_MANT_F16::Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_mant_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28533,8 +28563,8 @@ Inst_VOP3__V_FREXP_MANT_F16::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_FREXP_EXP_I16_F16 class methods ---
 
 Inst_VOP3__V_FREXP_EXP_I16_F16::Inst_VOP3__V_FREXP_EXP_I16_F16(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_frexp_exp_i16_f16", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_frexp_exp_i16_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28558,8 +28588,8 @@ Inst_VOP3__V_FREXP_EXP_I16_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FLOOR_F16 class methods ---
 
-Inst_VOP3__V_FLOOR_F16::Inst_VOP3__V_FLOOR_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_floor_f16", false)
+Inst_VOP3__V_FLOOR_F16::Inst_VOP3__V_FLOOR_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_floor_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28577,8 +28607,8 @@ Inst_VOP3__V_FLOOR_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CEIL_F16 class methods ---
 
-Inst_VOP3__V_CEIL_F16::Inst_VOP3__V_CEIL_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ceil_f16", false)
+Inst_VOP3__V_CEIL_F16::Inst_VOP3__V_CEIL_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ceil_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28596,8 +28626,8 @@ Inst_VOP3__V_CEIL_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_TRUNC_F16 class methods ---
 
-Inst_VOP3__V_TRUNC_F16::Inst_VOP3__V_TRUNC_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_trunc_f16", false)
+Inst_VOP3__V_TRUNC_F16::Inst_VOP3__V_TRUNC_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_trunc_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28615,8 +28645,8 @@ Inst_VOP3__V_TRUNC_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_RNDNE_F16 class methods ---
 
-Inst_VOP3__V_RNDNE_F16::Inst_VOP3__V_RNDNE_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_rndne_f16", false)
+Inst_VOP3__V_RNDNE_F16::Inst_VOP3__V_RNDNE_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_rndne_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28635,8 +28665,8 @@ Inst_VOP3__V_RNDNE_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FRACT_F16 class methods ---
 
-Inst_VOP3__V_FRACT_F16::Inst_VOP3__V_FRACT_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fract_f16", false)
+Inst_VOP3__V_FRACT_F16::Inst_VOP3__V_FRACT_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fract_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28653,8 +28683,8 @@ Inst_VOP3__V_FRACT_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SIN_F16 class methods ---
 
-Inst_VOP3__V_SIN_F16::Inst_VOP3__V_SIN_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sin_f16", false)
+Inst_VOP3__V_SIN_F16::Inst_VOP3__V_SIN_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sin_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28671,8 +28701,8 @@ Inst_VOP3__V_SIN_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_COS_F16 class methods ---
 
-Inst_VOP3__V_COS_F16::Inst_VOP3__V_COS_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cos_f16", false)
+Inst_VOP3__V_COS_F16::Inst_VOP3__V_COS_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cos_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -28689,8 +28719,8 @@ Inst_VOP3__V_COS_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_EXP_LEGACY_F32 class methods ---
 
-Inst_VOP3__V_EXP_LEGACY_F32::Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_exp_legacy_f32", false)
+Inst_VOP3__V_EXP_LEGACY_F32::Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_exp_legacy_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28736,8 +28766,8 @@ Inst_VOP3__V_EXP_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LOG_LEGACY_F32 class methods ---
 
-Inst_VOP3__V_LOG_LEGACY_F32::Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_log_legacy_f32", false)
+Inst_VOP3__V_LOG_LEGACY_F32::Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_log_legacy_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28767,8 +28797,8 @@ Inst_VOP3__V_LOG_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_LEGACY_F32 class methods ---
 
-Inst_VOP3__V_MAD_LEGACY_F32::Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_legacy_f32", false)
+Inst_VOP3__V_MAD_LEGACY_F32::Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_legacy_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28827,8 +28857,8 @@ Inst_VOP3__V_MAD_LEGACY_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_F32 class methods ---
 
-Inst_VOP3__V_MAD_F32::Inst_VOP3__V_MAD_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_f32", false)
+Inst_VOP3__V_MAD_F32::Inst_VOP3__V_MAD_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28886,8 +28916,8 @@ Inst_VOP3__V_MAD_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_I32_I24 class methods ---
 
-Inst_VOP3__V_MAD_I32_I24::Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_i32_i24", false)
+Inst_VOP3__V_MAD_I32_I24::Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_i32_i24", false)
 {
     setFlag(ALU);
     setFlag(MAD);
@@ -28933,8 +28963,8 @@ Inst_VOP3__V_MAD_I32_I24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_U32_U24 class methods ---
 
-Inst_VOP3__V_MAD_U32_U24::Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_u32_u24", false)
+Inst_VOP3__V_MAD_U32_U24::Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_u32_u24", false)
 {
     setFlag(ALU);
     setFlag(MAD);
@@ -28979,8 +29009,8 @@ Inst_VOP3__V_MAD_U32_U24::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CUBEID_F32 class methods ---
 
-Inst_VOP3__V_CUBEID_F32::Inst_VOP3__V_CUBEID_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cubeid_f32", false)
+Inst_VOP3__V_CUBEID_F32::Inst_VOP3__V_CUBEID_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cubeid_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -28999,8 +29029,8 @@ Inst_VOP3__V_CUBEID_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CUBESC_F32 class methods ---
 
-Inst_VOP3__V_CUBESC_F32::Inst_VOP3__V_CUBESC_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cubesc_f32", false)
+Inst_VOP3__V_CUBESC_F32::Inst_VOP3__V_CUBESC_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cubesc_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29019,8 +29049,8 @@ Inst_VOP3__V_CUBESC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CUBETC_F32 class methods ---
 
-Inst_VOP3__V_CUBETC_F32::Inst_VOP3__V_CUBETC_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cubetc_f32", false)
+Inst_VOP3__V_CUBETC_F32::Inst_VOP3__V_CUBETC_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cubetc_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29039,8 +29069,8 @@ Inst_VOP3__V_CUBETC_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CUBEMA_F32 class methods ---
 
-Inst_VOP3__V_CUBEMA_F32::Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cubema_f32", false)
+Inst_VOP3__V_CUBEMA_F32::Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cubema_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29059,8 +29089,8 @@ Inst_VOP3__V_CUBEMA_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BFE_U32 class methods ---
 
-Inst_VOP3__V_BFE_U32::Inst_VOP3__V_BFE_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bfe_u32", false)
+Inst_VOP3__V_BFE_U32::Inst_VOP3__V_BFE_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bfe_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BFE_U32
@@ -29104,8 +29134,8 @@ Inst_VOP3__V_BFE_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BFE_I32 class methods ---
 
-Inst_VOP3__V_BFE_I32::Inst_VOP3__V_BFE_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bfe_i32", false)
+Inst_VOP3__V_BFE_I32::Inst_VOP3__V_BFE_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bfe_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BFE_I32
@@ -29156,8 +29186,8 @@ Inst_VOP3__V_BFE_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BFI_B32 class methods ---
 
-Inst_VOP3__V_BFI_B32::Inst_VOP3__V_BFI_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bfi_b32", false)
+Inst_VOP3__V_BFI_B32::Inst_VOP3__V_BFI_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bfi_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BFI_B32
@@ -29200,8 +29230,8 @@ Inst_VOP3__V_BFI_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FMA_F32 class methods ---
 
-Inst_VOP3__V_FMA_F32::Inst_VOP3__V_FMA_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fma_f32", false)
+Inst_VOP3__V_FMA_F32::Inst_VOP3__V_FMA_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fma_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29259,8 +29289,8 @@ Inst_VOP3__V_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FMA_F64 class methods ---
 
-Inst_VOP3__V_FMA_F64::Inst_VOP3__V_FMA_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fma_f64", false)
+Inst_VOP3__V_FMA_F64::Inst_VOP3__V_FMA_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fma_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -29318,8 +29348,8 @@ Inst_VOP3__V_FMA_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LERP_U8 class methods ---
 
-Inst_VOP3__V_LERP_U8::Inst_VOP3__V_LERP_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lerp_u8", false)
+Inst_VOP3__V_LERP_U8::Inst_VOP3__V_LERP_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lerp_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LERP_U8
@@ -29359,22 +29389,20 @@ Inst_VOP3__V_LERP_U8::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vdst[lane] =
-                ((bits(src0[lane], 31, 24) + bits(src1[lane], 31, 24) +
-                     bits(src2[lane], 24)) >>
-                    1)
-                << 24;
-            vdst[lane] +=
-                ((bits(src0[lane], 23, 16) + bits(src1[lane], 23, 16) +
-                     bits(src2[lane], 16)) >>
-                    1)
-                << 16;
+            vdst[lane] = ((bits(src0[lane], 31, 24) +
+                           bits(src1[lane], 31, 24) + bits(src2[lane], 24)) >>
+                          1)
+                         << 24;
+            vdst[lane] += ((bits(src0[lane], 23, 16) +
+                            bits(src1[lane], 23, 16) + bits(src2[lane], 16)) >>
+                           1)
+                          << 16;
             vdst[lane] += ((bits(src0[lane], 15, 8) + bits(src1[lane], 15, 8) +
-                               bits(src2[lane], 8)) >>
-                              1)
+                            bits(src2[lane], 8)) >>
+                           1)
                           << 8;
             vdst[lane] += ((bits(src0[lane], 7, 0) + bits(src1[lane], 7, 0) +
-                               bits(src2[lane], 0)) >>
+                            bits(src2[lane], 0)) >>
                            1);
         }
     }
@@ -29383,8 +29411,8 @@ Inst_VOP3__V_LERP_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ALIGNBIT_B32 class methods ---
 
-Inst_VOP3__V_ALIGNBIT_B32::Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_alignbit_b32", false)
+Inst_VOP3__V_ALIGNBIT_B32::Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_alignbit_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ALIGNBIT_B32
@@ -29430,8 +29458,8 @@ Inst_VOP3__V_ALIGNBIT_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ALIGNBYTE_B32 class methods ---
 
-Inst_VOP3__V_ALIGNBYTE_B32::Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_alignbyte_b32", false)
+Inst_VOP3__V_ALIGNBYTE_B32::Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_alignbyte_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ALIGNBYTE_B32
@@ -29478,8 +29506,8 @@ Inst_VOP3__V_ALIGNBYTE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN3_F32 class methods ---
 
-Inst_VOP3__V_MIN3_F32::Inst_VOP3__V_MIN3_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min3_f32", false)
+Inst_VOP3__V_MIN3_F32::Inst_VOP3__V_MIN3_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min3_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29537,8 +29565,8 @@ Inst_VOP3__V_MIN3_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN3_I32 class methods ---
 
-Inst_VOP3__V_MIN3_I32::Inst_VOP3__V_MIN3_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min3_i32", false)
+Inst_VOP3__V_MIN3_I32::Inst_VOP3__V_MIN3_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min3_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN3_I32
@@ -29581,8 +29609,8 @@ Inst_VOP3__V_MIN3_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN3_U32 class methods ---
 
-Inst_VOP3__V_MIN3_U32::Inst_VOP3__V_MIN3_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min3_u32", false)
+Inst_VOP3__V_MIN3_U32::Inst_VOP3__V_MIN3_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min3_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MIN3_U32
@@ -29625,8 +29653,8 @@ Inst_VOP3__V_MIN3_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX3_F32 class methods ---
 
-Inst_VOP3__V_MAX3_F32::Inst_VOP3__V_MAX3_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max3_f32", false)
+Inst_VOP3__V_MAX3_F32::Inst_VOP3__V_MAX3_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max3_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29684,8 +29712,8 @@ Inst_VOP3__V_MAX3_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX3_I32 class methods ---
 
-Inst_VOP3__V_MAX3_I32::Inst_VOP3__V_MAX3_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max3_i32", false)
+Inst_VOP3__V_MAX3_I32::Inst_VOP3__V_MAX3_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max3_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX3_I32
@@ -29728,8 +29756,8 @@ Inst_VOP3__V_MAX3_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX3_U32 class methods ---
 
-Inst_VOP3__V_MAX3_U32::Inst_VOP3__V_MAX3_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max3_u32", false)
+Inst_VOP3__V_MAX3_U32::Inst_VOP3__V_MAX3_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max3_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MAX3_U32
@@ -29772,8 +29800,8 @@ Inst_VOP3__V_MAX3_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MED3_F32 class methods ---
 
-Inst_VOP3__V_MED3_F32::Inst_VOP3__V_MED3_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_med3_f32", false)
+Inst_VOP3__V_MED3_F32::Inst_VOP3__V_MED3_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_med3_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -29830,8 +29858,8 @@ Inst_VOP3__V_MED3_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MED3_I32 class methods ---
 
-Inst_VOP3__V_MED3_I32::Inst_VOP3__V_MED3_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_med3_i32", false)
+Inst_VOP3__V_MED3_I32::Inst_VOP3__V_MED3_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_med3_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MED3_I32
@@ -29873,8 +29901,8 @@ Inst_VOP3__V_MED3_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MED3_U32 class methods ---
 
-Inst_VOP3__V_MED3_U32::Inst_VOP3__V_MED3_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_med3_u32", false)
+Inst_VOP3__V_MED3_U32::Inst_VOP3__V_MED3_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_med3_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MED3_U32
@@ -29916,8 +29944,8 @@ Inst_VOP3__V_MED3_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SAD_U8 class methods ---
 
-Inst_VOP3__V_SAD_U8::Inst_VOP3__V_SAD_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sad_u8", false)
+Inst_VOP3__V_SAD_U8::Inst_VOP3__V_SAD_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sad_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SAD_U8
@@ -29967,8 +29995,8 @@ Inst_VOP3__V_SAD_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SAD_HI_U8 class methods ---
 
-Inst_VOP3__V_SAD_HI_U8::Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sad_hi_u8", false)
+Inst_VOP3__V_SAD_HI_U8::Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sad_hi_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SAD_HI_U8
@@ -30005,10 +30033,10 @@ Inst_VOP3__V_SAD_HI_U8::execute(GPUDynInstPtr gpuDynInst)
         if (wf->execMask(lane)) {
             vdst[lane] =
                 (((bits(src0[lane], 31, 24) - bits(src1[lane], 31, 24)) +
-                     (bits(src0[lane], 23, 16) - bits(src1[lane], 23, 16)) +
-                     (bits(src0[lane], 15, 8) - bits(src1[lane], 15, 8)) +
-                     (bits(src0[lane], 7, 0) - bits(src1[lane], 7, 0)))
-                    << 16) +
+                  (bits(src0[lane], 23, 16) - bits(src1[lane], 23, 16)) +
+                  (bits(src0[lane], 15, 8) - bits(src1[lane], 15, 8)) +
+                  (bits(src0[lane], 7, 0) - bits(src1[lane], 7, 0)))
+                 << 16) +
                 src2[lane];
         }
     }
@@ -30017,8 +30045,8 @@ Inst_VOP3__V_SAD_HI_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SAD_U16 class methods ---
 
-Inst_VOP3__V_SAD_U16::Inst_VOP3__V_SAD_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sad_u16", false)
+Inst_VOP3__V_SAD_U16::Inst_VOP3__V_SAD_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sad_u16", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SAD_U16
@@ -30065,8 +30093,8 @@ Inst_VOP3__V_SAD_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_SAD_U32 class methods ---
 
-Inst_VOP3__V_SAD_U32::Inst_VOP3__V_SAD_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_sad_u32", false)
+Inst_VOP3__V_SAD_U32::Inst_VOP3__V_SAD_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sad_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_SAD_U32
@@ -30109,8 +30137,8 @@ Inst_VOP3__V_SAD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_PK_U8_F32 class methods ---
 
-Inst_VOP3__V_CVT_PK_U8_F32::Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pk_u8_f32", false)
+Inst_VOP3__V_CVT_PK_U8_F32::Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pk_u8_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -30157,7 +30185,7 @@ Inst_VOP3__V_CVT_PK_U8_F32::execute(GPUDynInstPtr gpuDynInst)
         if (wf->execMask(lane)) {
             vdst[lane] =
                 (((VecElemU8)src0[lane] & 0xff)
-                    << (8 * bits(src1[lane], 1, 0))) |
+                 << (8 * bits(src1[lane], 1, 0))) |
                 (src2[lane] & ~(0xff << (8 * bits(src1[lane], 1, 0))));
         }
     }
@@ -30166,8 +30194,8 @@ Inst_VOP3__V_CVT_PK_U8_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_FIXUP_F32 class methods ---
 
-Inst_VOP3__V_DIV_FIXUP_F32::Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_div_fixup_f32", false)
+Inst_VOP3__V_DIV_FIXUP_F32::Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_div_fixup_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -30243,8 +30271,8 @@ Inst_VOP3__V_DIV_FIXUP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_FIXUP_F64 class methods ---
 
-Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_div_fixup_f64", false)
+Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_div_fixup_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -30330,8 +30358,8 @@ Inst_VOP3__V_DIV_FIXUP_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_SCALE_F32 class methods ---
 
-Inst_VOP3__V_DIV_SCALE_F32::Inst_VOP3__V_DIV_SCALE_F32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_div_scale_f32")
+Inst_VOP3__V_DIV_SCALE_F32::Inst_VOP3__V_DIV_SCALE_F32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_div_scale_f32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -30385,8 +30413,8 @@ Inst_VOP3__V_DIV_SCALE_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_SCALE_F64 class methods ---
 
-Inst_VOP3__V_DIV_SCALE_F64::Inst_VOP3__V_DIV_SCALE_F64(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_div_scale_f64")
+Inst_VOP3__V_DIV_SCALE_F64::Inst_VOP3__V_DIV_SCALE_F64(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_div_scale_f64")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -30472,8 +30500,8 @@ Inst_VOP3__V_DIV_SCALE_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_FMAS_F32 class methods ---
 
-Inst_VOP3__V_DIV_FMAS_F32::Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_div_fmas_f32", false)
+Inst_VOP3__V_DIV_FMAS_F32::Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_div_fmas_f32", false)
 {
     setFlag(ALU);
     setFlag(ReadsVCC);
@@ -30534,8 +30562,8 @@ Inst_VOP3__V_DIV_FMAS_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_FMAS_F64 class methods ---
 
-Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_div_fmas_f64", false)
+Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_div_fmas_f64", false)
 {
     setFlag(ALU);
     setFlag(ReadsVCC);
@@ -30603,8 +30631,8 @@ Inst_VOP3__V_DIV_FMAS_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MSAD_U8 class methods ---
 
-Inst_VOP3__V_MSAD_U8::Inst_VOP3__V_MSAD_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_msad_u8", false)
+Inst_VOP3__V_MSAD_U8::Inst_VOP3__V_MSAD_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_msad_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MSAD_U8
@@ -30620,8 +30648,8 @@ Inst_VOP3__V_MSAD_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_QSAD_PK_U16_U8 class methods ---
 
-Inst_VOP3__V_QSAD_PK_U16_U8::Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_qsad_pk_u16_u8", false)
+Inst_VOP3__V_QSAD_PK_U16_U8::Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_qsad_pk_u16_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_QSAD_PK_U16_U8
@@ -30639,8 +30667,8 @@ Inst_VOP3__V_QSAD_PK_U16_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MQSAD_PK_U16_U8 class methods ---
 
-Inst_VOP3__V_MQSAD_PK_U16_U8::Inst_VOP3__V_MQSAD_PK_U16_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mqsad_pk_u16_u8", false)
+Inst_VOP3__V_MQSAD_PK_U16_U8::Inst_VOP3__V_MQSAD_PK_U16_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mqsad_pk_u16_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MQSAD_PK_U16_U8
@@ -30658,8 +30686,8 @@ Inst_VOP3__V_MQSAD_PK_U16_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MQSAD_U32_U8 class methods ---
 
-Inst_VOP3__V_MQSAD_U32_U8::Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mqsad_u32_u8", false)
+Inst_VOP3__V_MQSAD_U32_U8::Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mqsad_u32_u8", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MQSAD_U32_U8
@@ -30677,8 +30705,8 @@ Inst_VOP3__V_MQSAD_U32_U8::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_U64_U32 class methods ---
 
-Inst_VOP3__V_MAD_U64_U32::Inst_VOP3__V_MAD_U64_U32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_mad_u64_u32")
+Inst_VOP3__V_MAD_U64_U32::Inst_VOP3__V_MAD_U64_U32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_mad_u64_u32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -30714,8 +30742,8 @@ Inst_VOP3__V_MAD_U64_U32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(
-                lane, muladd(vdst[lane], src0[lane], src1[lane], src2[lane]));
+            vcc.setBit(lane,
+                       muladd(vdst[lane], src0[lane], src1[lane], src2[lane]));
         }
     }
 
@@ -30724,8 +30752,8 @@ Inst_VOP3__V_MAD_U64_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_I64_I32 class methods ---
 
-Inst_VOP3__V_MAD_I64_I32::Inst_VOP3__V_MAD_I64_I32(InFmt_VOP3B *iFmt) :
-    Inst_VOP3B(iFmt, "v_mad_i64_i32")
+Inst_VOP3__V_MAD_I64_I32::Inst_VOP3__V_MAD_I64_I32(InFmt_VOP3B *iFmt)
+    : Inst_VOP3B(iFmt, "v_mad_i64_i32")
 {
     setFlag(ALU);
     setFlag(WritesVCC);
@@ -30760,8 +30788,8 @@ Inst_VOP3__V_MAD_I64_I32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vcc.setBit(
-                lane, muladd(vdst[lane], src0[lane], src1[lane], src2[lane]));
+            vcc.setBit(lane,
+                       muladd(vdst[lane], src0[lane], src1[lane], src2[lane]));
         }
     }
 
@@ -30770,8 +30798,8 @@ Inst_VOP3__V_MAD_I64_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_XAD_U32 class methods ---
 
-Inst_VOP3__V_XAD_U32::Inst_VOP3__V_XAD_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_xad_u32", false)
+Inst_VOP3__V_XAD_U32::Inst_VOP3__V_XAD_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_xad_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_XAD_U32
@@ -30813,8 +30841,8 @@ Inst_VOP3__V_XAD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHL_ADD_U32 class methods ---
 
-Inst_VOP3__V_LSHL_ADD_U32::Inst_VOP3__V_LSHL_ADD_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshl_add_u32", false)
+Inst_VOP3__V_LSHL_ADD_U32::Inst_VOP3__V_LSHL_ADD_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshl_add_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHL_ADD_U32
@@ -30857,8 +30885,8 @@ Inst_VOP3__V_LSHL_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_LSHL_U32 class methods ---
 
-Inst_VOP3__V_ADD_LSHL_U32::Inst_VOP3__V_ADD_LSHL_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_lshl_u32", false)
+Inst_VOP3__V_ADD_LSHL_U32::Inst_VOP3__V_ADD_LSHL_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_lshl_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ADD_LSHL_U32
@@ -30901,8 +30929,8 @@ Inst_VOP3__V_ADD_LSHL_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD3_U32 class methods ---
 
-Inst_VOP3__V_ADD3_U32::Inst_VOP3__V_ADD3_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add3_u32", false)
+Inst_VOP3__V_ADD3_U32::Inst_VOP3__V_ADD3_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add3_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ADD3_U32
@@ -30944,8 +30972,8 @@ Inst_VOP3__V_ADD3_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHL_OR_B32 class methods ---
 
-Inst_VOP3__V_LSHL_OR_B32::Inst_VOP3__V_LSHL_OR_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshl_or_b32", false)
+Inst_VOP3__V_LSHL_OR_B32::Inst_VOP3__V_LSHL_OR_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshl_or_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHL_OR_B32
@@ -30988,8 +31016,8 @@ Inst_VOP3__V_LSHL_OR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_AND_OR_B32 class methods ---
 
-Inst_VOP3__V_AND_OR_B32::Inst_VOP3__V_AND_OR_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_and_or_b32", false)
+Inst_VOP3__V_AND_OR_B32::Inst_VOP3__V_AND_OR_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_and_or_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_AND_OR_B32
@@ -31033,8 +31061,8 @@ Inst_VOP3__V_AND_OR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_F16 class methods ---
 
-Inst_VOP3__V_MAD_F16::Inst_VOP3__V_MAD_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_f16", false)
+Inst_VOP3__V_MAD_F16::Inst_VOP3__V_MAD_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31053,8 +31081,8 @@ Inst_VOP3__V_MAD_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_U16 class methods ---
 
-Inst_VOP3__V_MAD_U16::Inst_VOP3__V_MAD_U16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_u16", false)
+Inst_VOP3__V_MAD_U16::Inst_VOP3__V_MAD_U16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_u16", false)
 {
     setFlag(ALU);
     setFlag(MAD);
@@ -31098,8 +31126,8 @@ Inst_VOP3__V_MAD_U16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAD_I16 class methods ---
 
-Inst_VOP3__V_MAD_I16::Inst_VOP3__V_MAD_I16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mad_i16", false)
+Inst_VOP3__V_MAD_I16::Inst_VOP3__V_MAD_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mad_i16", false)
 {
     setFlag(ALU);
     setFlag(MAD);
@@ -31143,8 +31171,8 @@ Inst_VOP3__V_MAD_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_PERM_B32 class methods ---
 
-Inst_VOP3__V_PERM_B32::Inst_VOP3__V_PERM_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_perm_b32", false)
+Inst_VOP3__V_PERM_B32::Inst_VOP3__V_PERM_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_perm_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_PERM_B32
@@ -31186,9 +31214,9 @@ Inst_VOP3__V_PERM_B32::execute(GPUDynInstPtr gpuDynInst)
             vdst[lane] = 0;
 
             DPRINTF(VEGA,
-                "Executing v_perm_b32 src_0 0x%08x, src_1 "
-                "0x%08x, src_2 0x%08x, vdst 0x%08x\n",
-                src0[lane], src1[lane], src2[lane], vdst[lane]);
+                    "Executing v_perm_b32 src_0 0x%08x, src_1 "
+                    "0x%08x, src_2 0x%08x, vdst 0x%08x\n",
+                    src0[lane], src1[lane], src2[lane], vdst[lane]);
             DPRINTF(VEGA, "Selector: 0x%08x \n", selector);
 
             for (int i = 0; i < 4; ++i) {
@@ -31205,8 +31233,8 @@ Inst_VOP3__V_PERM_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_FMA_F16 class methods ---
 
-Inst_VOP3__V_FMA_F16::Inst_VOP3__V_FMA_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_fma_f16", false)
+Inst_VOP3__V_FMA_F16::Inst_VOP3__V_FMA_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_fma_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31225,8 +31253,8 @@ Inst_VOP3__V_FMA_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_DIV_FIXUP_F16 class methods ---
 
-Inst_VOP3__V_DIV_FIXUP_F16::Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_div_fixup_f16", false)
+Inst_VOP3__V_DIV_FIXUP_F16::Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_div_fixup_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31273,8 +31301,8 @@ Inst_VOP3__V_DIV_FIXUP_F16::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_CVT_PKACCUM_U8_F32 class methods ---
 
 Inst_VOP3__V_CVT_PKACCUM_U8_F32::Inst_VOP3__V_CVT_PKACCUM_U8_F32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pkaccum_u8_f32", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pkaccum_u8_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -31296,8 +31324,8 @@ Inst_VOP3__V_CVT_PKACCUM_U8_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_P1_F32 class methods ---
 
-Inst_VOP3__V_INTERP_P1_F32::Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_p1_f32", false)
+Inst_VOP3__V_INTERP_P1_F32::Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_p1_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -31322,8 +31350,8 @@ Inst_VOP3__V_INTERP_P1_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_P2_F32 class methods ---
 
-Inst_VOP3__V_INTERP_P2_F32::Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_p2_f32", false)
+Inst_VOP3__V_INTERP_P2_F32::Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_p2_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -31346,8 +31374,8 @@ Inst_VOP3__V_INTERP_P2_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_MOV_F32 class methods ---
 
-Inst_VOP3__V_INTERP_MOV_F32::Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_mov_f32", false)
+Inst_VOP3__V_INTERP_MOV_F32::Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_mov_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -31365,8 +31393,8 @@ Inst_VOP3__V_INTERP_MOV_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_P1LL_F16 class methods ---
 
-Inst_VOP3__V_INTERP_P1LL_F16::Inst_VOP3__V_INTERP_P1LL_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_p1ll_f16", false)
+Inst_VOP3__V_INTERP_P1LL_F16::Inst_VOP3__V_INTERP_P1LL_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_p1ll_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31392,8 +31420,8 @@ Inst_VOP3__V_INTERP_P1LL_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_P1LV_F16 class methods ---
 
-Inst_VOP3__V_INTERP_P1LV_F16::Inst_VOP3__V_INTERP_P1LV_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_p1lv_f16", false)
+Inst_VOP3__V_INTERP_P1LV_F16::Inst_VOP3__V_INTERP_P1LV_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_p1lv_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31420,8 +31448,8 @@ Inst_VOP3__V_INTERP_P1LV_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_INTERP_P2_F16 class methods ---
 
-Inst_VOP3__V_INTERP_P2_F16::Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_interp_p2_f16", false)
+Inst_VOP3__V_INTERP_P2_F16::Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_interp_p2_f16", false)
 {
     setFlag(ALU);
     setFlag(F16);
@@ -31446,8 +31474,8 @@ Inst_VOP3__V_INTERP_P2_F16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ADD_F64 class methods ---
 
-Inst_VOP3__V_ADD_F64::Inst_VOP3__V_ADD_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_add_f64", false)
+Inst_VOP3__V_ADD_F64::Inst_VOP3__V_ADD_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -31538,8 +31566,8 @@ Inst_VOP3__V_ADD_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_F64 class methods ---
 
-Inst_VOP3__V_MUL_F64::Inst_VOP3__V_MUL_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_f64", false)
+Inst_VOP3__V_MUL_F64::Inst_VOP3__V_MUL_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -31587,7 +31615,7 @@ Inst_VOP3__V_MUL_F64::execute(GPUDynInstPtr gpuDynInst)
             if (std::isnan(src0[lane]) || std::isnan(src1[lane])) {
                 vdst[lane] = NAN;
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        !std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -31597,7 +31625,7 @@ Inst_VOP3__V_MUL_F64::execute(GPUDynInstPtr gpuDynInst)
                     vdst[lane] = -0.0;
                 }
             } else if ((std::fpclassify(src0[lane]) == FP_SUBNORMAL ||
-                           std::fpclassify(src0[lane]) == FP_ZERO) &&
+                        std::fpclassify(src0[lane]) == FP_ZERO) &&
                        std::signbit(src0[lane])) {
                 if (std::isinf(src1[lane])) {
                     vdst[lane] = NAN;
@@ -31634,8 +31662,8 @@ Inst_VOP3__V_MUL_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MIN_F64 class methods ---
 
-Inst_VOP3__V_MIN_F64::Inst_VOP3__V_MIN_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_min_f64", false)
+Inst_VOP3__V_MIN_F64::Inst_VOP3__V_MIN_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_min_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -31688,8 +31716,8 @@ Inst_VOP3__V_MIN_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MAX_F64 class methods ---
 
-Inst_VOP3__V_MAX_F64::Inst_VOP3__V_MAX_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_max_f64", false)
+Inst_VOP3__V_MAX_F64::Inst_VOP3__V_MAX_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_max_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -31742,8 +31770,8 @@ Inst_VOP3__V_MAX_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LDEXP_F64 class methods ---
 
-Inst_VOP3__V_LDEXP_F64::Inst_VOP3__V_LDEXP_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ldexp_f64", false)
+Inst_VOP3__V_LDEXP_F64::Inst_VOP3__V_LDEXP_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ldexp_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -31801,8 +31829,8 @@ Inst_VOP3__V_LDEXP_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_LO_U32 class methods ---
 
-Inst_VOP3__V_MUL_LO_U32::Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_lo_u32", false)
+Inst_VOP3__V_MUL_LO_U32::Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_lo_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_LO_U32
@@ -31845,8 +31873,8 @@ Inst_VOP3__V_MUL_LO_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_HI_U32 class methods ---
 
-Inst_VOP3__V_MUL_HI_U32::Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_hi_u32", false)
+Inst_VOP3__V_MUL_HI_U32::Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_hi_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_HI_U32
@@ -31889,8 +31917,8 @@ Inst_VOP3__V_MUL_HI_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MUL_HI_I32 class methods ---
 
-Inst_VOP3__V_MUL_HI_I32::Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mul_hi_i32", false)
+Inst_VOP3__V_MUL_HI_I32::Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mul_hi_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MUL_HI_I32
@@ -31933,8 +31961,8 @@ Inst_VOP3__V_MUL_HI_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LDEXP_F32 class methods ---
 
-Inst_VOP3__V_LDEXP_F32::Inst_VOP3__V_LDEXP_F32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ldexp_f32", false)
+Inst_VOP3__V_LDEXP_F32::Inst_VOP3__V_LDEXP_F32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ldexp_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -31973,8 +32001,8 @@ Inst_VOP3__V_LDEXP_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_READLANE_B32 class methods ---
 
-Inst_VOP3__V_READLANE_B32::Inst_VOP3__V_READLANE_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_readlane_b32", true)
+Inst_VOP3__V_READLANE_B32::Inst_VOP3__V_READLANE_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_readlane_b32", true)
 {
     setFlag(ALU);
     setFlag(IgnoreExec);
@@ -32013,8 +32041,8 @@ Inst_VOP3__V_READLANE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_WRITELANE_B32 class methods ---
 
-Inst_VOP3__V_WRITELANE_B32::Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_writelane_b32", false)
+Inst_VOP3__V_WRITELANE_B32::Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_writelane_b32", false)
 {
     setFlag(ALU);
     setFlag(IgnoreExec);
@@ -32056,8 +32084,8 @@ Inst_VOP3__V_WRITELANE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BCNT_U32_B32 class methods ---
 
-Inst_VOP3__V_BCNT_U32_B32::Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bcnt_u32_b32", false)
+Inst_VOP3__V_BCNT_U32_B32::Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bcnt_u32_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BCNT_U32_B32
@@ -32098,9 +32126,8 @@ Inst_VOP3__V_BCNT_U32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MBCNT_LO_U32_B32 class methods ---
 
-Inst_VOP3__V_MBCNT_LO_U32_B32::Inst_VOP3__V_MBCNT_LO_U32_B32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mbcnt_lo_u32_b32", false)
+Inst_VOP3__V_MBCNT_LO_U32_B32::Inst_VOP3__V_MBCNT_LO_U32_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mbcnt_lo_u32_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MBCNT_LO_U32_B32
@@ -32147,9 +32174,8 @@ Inst_VOP3__V_MBCNT_LO_U32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_MBCNT_HI_U32_B32 class methods ---
 
-Inst_VOP3__V_MBCNT_HI_U32_B32::Inst_VOP3__V_MBCNT_HI_U32_B32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_mbcnt_hi_u32_b32", false)
+Inst_VOP3__V_MBCNT_HI_U32_B32::Inst_VOP3__V_MBCNT_HI_U32_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_mbcnt_hi_u32_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_MBCNT_HI_U32_B32
@@ -32196,8 +32222,8 @@ Inst_VOP3__V_MBCNT_HI_U32_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHLREV_B64 class methods ---
 
-Inst_VOP3__V_LSHLREV_B64::Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshlrev_b64", false)
+Inst_VOP3__V_LSHLREV_B64::Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshlrev_b64", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHLREV_B64
@@ -32239,8 +32265,8 @@ Inst_VOP3__V_LSHLREV_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_LSHRREV_B64 class methods ---
 
-Inst_VOP3__V_LSHRREV_B64::Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_lshrrev_b64", false)
+Inst_VOP3__V_LSHRREV_B64::Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_lshrrev_b64", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_LSHRREV_B64
@@ -32283,8 +32309,8 @@ Inst_VOP3__V_LSHRREV_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_ASHRREV_I64 class methods ---
 
-Inst_VOP3__V_ASHRREV_I64::Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_ashrrev_i64", false)
+Inst_VOP3__V_ASHRREV_I64::Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_ashrrev_i64", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_ASHRREV_I64
@@ -32327,8 +32353,8 @@ Inst_VOP3__V_ASHRREV_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_TRIG_PREOP_F64 class methods ---
 
-Inst_VOP3__V_TRIG_PREOP_F64::Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_trig_preop_f64", false)
+Inst_VOP3__V_TRIG_PREOP_F64::Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_trig_preop_f64", false)
 {
     setFlag(ALU);
     setFlag(F64);
@@ -32351,8 +32377,8 @@ Inst_VOP3__V_TRIG_PREOP_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_BFM_B32 class methods ---
 
-Inst_VOP3__V_BFM_B32::Inst_VOP3__V_BFM_B32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_bfm_b32", false)
+Inst_VOP3__V_BFM_B32::Inst_VOP3__V_BFM_B32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_bfm_b32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_BFM_B32
@@ -32395,8 +32421,8 @@ Inst_VOP3__V_BFM_B32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_CVT_PKNORM_I16_F32 class methods ---
 
 Inst_VOP3__V_CVT_PKNORM_I16_F32::Inst_VOP3__V_CVT_PKNORM_I16_F32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pknorm_i16_f32", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pknorm_i16_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -32415,8 +32441,8 @@ Inst_VOP3__V_CVT_PKNORM_I16_F32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_CVT_PKNORM_U16_F32 class methods ---
 
 Inst_VOP3__V_CVT_PKNORM_U16_F32::Inst_VOP3__V_CVT_PKNORM_U16_F32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pknorm_u16_f32", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pknorm_u16_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -32435,8 +32461,8 @@ Inst_VOP3__V_CVT_PKNORM_U16_F32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_VOP3__V_CVT_PKRTZ_F16_F32 class methods ---
 
 Inst_VOP3__V_CVT_PKRTZ_F16_F32::Inst_VOP3__V_CVT_PKRTZ_F16_F32(
-    InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pkrtz_f16_f32", false)
+    InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pkrtz_f16_f32", false)
 {
     setFlag(ALU);
     setFlag(F32);
@@ -32457,8 +32483,8 @@ Inst_VOP3__V_CVT_PKRTZ_F16_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_PK_U16_U32 class methods ---
 
-Inst_VOP3__V_CVT_PK_U16_U32::Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pk_u16_u32", false)
+Inst_VOP3__V_CVT_PK_U16_U32::Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pk_u16_u32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CVT_PK_U16_U32
@@ -32475,8 +32501,8 @@ Inst_VOP3__V_CVT_PK_U16_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_VOP3__V_CVT_PK_I16_I32 class methods ---
 
-Inst_VOP3__V_CVT_PK_I16_I32::Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3A *iFmt) :
-    Inst_VOP3A(iFmt, "v_cvt_pk_i16_i32", false)
+Inst_VOP3__V_CVT_PK_I16_I32::Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_cvt_pk_i16_i32", false)
 {
     setFlag(ALU);
 } // Inst_VOP3__V_CVT_PK_I16_I32
@@ -32493,8 +32519,8 @@ Inst_VOP3__V_CVT_PK_I16_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_U32 class methods ---
 
-Inst_DS__DS_ADD_U32::Inst_DS__DS_ADD_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_u32")
+Inst_DS__DS_ADD_U32::Inst_DS__DS_ADD_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_u32")
 {
     setFlag(MemoryRef);
     setFlag(GroupSegment);
@@ -32554,8 +32580,8 @@ Inst_DS__DS_ADD_U32::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_SUB_U32 class methods ---
 
-Inst_DS__DS_SUB_U32::Inst_DS__DS_SUB_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_u32")
+Inst_DS__DS_SUB_U32::Inst_DS__DS_SUB_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_u32")
 {} // Inst_DS__DS_SUB_U32
 
 Inst_DS__DS_SUB_U32::~Inst_DS__DS_SUB_U32() {} // ~Inst_DS__DS_SUB_U32
@@ -32572,8 +32598,8 @@ Inst_DS__DS_SUB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_U32 class methods ---
 
-Inst_DS__DS_RSUB_U32::Inst_DS__DS_RSUB_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_u32")
+Inst_DS__DS_RSUB_U32::Inst_DS__DS_RSUB_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_u32")
 {} // Inst_DS__DS_RSUB_U32
 
 Inst_DS__DS_RSUB_U32::~Inst_DS__DS_RSUB_U32() {} // ~Inst_DS__DS_RSUB_U32
@@ -32591,8 +32617,8 @@ Inst_DS__DS_RSUB_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_U32 class methods ---
 
-Inst_DS__DS_INC_U32::Inst_DS__DS_INC_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_u32")
+Inst_DS__DS_INC_U32::Inst_DS__DS_INC_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_u32")
 {} // Inst_DS__DS_INC_U32
 
 Inst_DS__DS_INC_U32::~Inst_DS__DS_INC_U32() {} // ~Inst_DS__DS_INC_U32
@@ -32609,8 +32635,8 @@ Inst_DS__DS_INC_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_U32 class methods ---
 
-Inst_DS__DS_DEC_U32::Inst_DS__DS_DEC_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_u32")
+Inst_DS__DS_DEC_U32::Inst_DS__DS_DEC_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_u32")
 {} // Inst_DS__DS_DEC_U32
 
 Inst_DS__DS_DEC_U32::~Inst_DS__DS_DEC_U32() {} // ~Inst_DS__DS_DEC_U32
@@ -32627,8 +32653,8 @@ Inst_DS__DS_DEC_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_I32 class methods ---
 
-Inst_DS__DS_MIN_I32::Inst_DS__DS_MIN_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_i32")
+Inst_DS__DS_MIN_I32::Inst_DS__DS_MIN_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_i32")
 {} // Inst_DS__DS_MIN_I32
 
 Inst_DS__DS_MIN_I32::~Inst_DS__DS_MIN_I32() {} // ~Inst_DS__DS_MIN_I32
@@ -32645,8 +32671,8 @@ Inst_DS__DS_MIN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_I32 class methods ---
 
-Inst_DS__DS_MAX_I32::Inst_DS__DS_MAX_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_i32")
+Inst_DS__DS_MAX_I32::Inst_DS__DS_MAX_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_i32")
 {} // Inst_DS__DS_MAX_I32
 
 Inst_DS__DS_MAX_I32::~Inst_DS__DS_MAX_I32() {} // ~Inst_DS__DS_MAX_I32
@@ -32663,8 +32689,8 @@ Inst_DS__DS_MAX_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_U32 class methods ---
 
-Inst_DS__DS_MIN_U32::Inst_DS__DS_MIN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_u32")
+Inst_DS__DS_MIN_U32::Inst_DS__DS_MIN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_u32")
 {} // Inst_DS__DS_MIN_U32
 
 Inst_DS__DS_MIN_U32::~Inst_DS__DS_MIN_U32() {} // ~Inst_DS__DS_MIN_U32
@@ -32681,8 +32707,8 @@ Inst_DS__DS_MIN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_U32 class methods ---
 
-Inst_DS__DS_MAX_U32::Inst_DS__DS_MAX_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_u32")
+Inst_DS__DS_MAX_U32::Inst_DS__DS_MAX_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_u32")
 {} // Inst_DS__DS_MAX_U32
 
 Inst_DS__DS_MAX_U32::~Inst_DS__DS_MAX_U32() {} // ~Inst_DS__DS_MAX_U32
@@ -32699,8 +32725,8 @@ Inst_DS__DS_MAX_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_B32 class methods ---
 
-Inst_DS__DS_AND_B32::Inst_DS__DS_AND_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_b32")
+Inst_DS__DS_AND_B32::Inst_DS__DS_AND_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_b32")
 {} // Inst_DS__DS_AND_B32
 
 Inst_DS__DS_AND_B32::~Inst_DS__DS_AND_B32() {} // ~Inst_DS__DS_AND_B32
@@ -32717,8 +32743,8 @@ Inst_DS__DS_AND_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_B32 class methods ---
 
-Inst_DS__DS_OR_B32::Inst_DS__DS_OR_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_b32")
+Inst_DS__DS_OR_B32::Inst_DS__DS_OR_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_b32")
 {
     setFlag(MemoryRef);
     setFlag(GroupSegment);
@@ -32779,8 +32805,8 @@ Inst_DS__DS_OR_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 
 // --- Inst_DS__DS_XOR_B32 class methods ---
 
-Inst_DS__DS_XOR_B32::Inst_DS__DS_XOR_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_b32")
+Inst_DS__DS_XOR_B32::Inst_DS__DS_XOR_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_b32")
 {} // Inst_DS__DS_XOR_B32
 
 Inst_DS__DS_XOR_B32::~Inst_DS__DS_XOR_B32() {} // ~Inst_DS__DS_XOR_B32
@@ -32797,8 +32823,8 @@ Inst_DS__DS_XOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MSKOR_B32 class methods ---
 
-Inst_DS__DS_MSKOR_B32::Inst_DS__DS_MSKOR_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_mskor_b32")
+Inst_DS__DS_MSKOR_B32::Inst_DS__DS_MSKOR_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_mskor_b32")
 {} // Inst_DS__DS_MSKOR_B32
 
 Inst_DS__DS_MSKOR_B32::~Inst_DS__DS_MSKOR_B32() {} // ~Inst_DS__DS_MSKOR_B32
@@ -32816,8 +32842,8 @@ Inst_DS__DS_MSKOR_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRITE_B32 class methods ---
 
-Inst_DS__DS_WRITE_B32::Inst_DS__DS_WRITE_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b32")
+Inst_DS__DS_WRITE_B32::Inst_DS__DS_WRITE_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b32")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -32876,8 +32902,8 @@ Inst_DS__DS_WRITE_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE2_B32 class methods ---
 
-Inst_DS__DS_WRITE2_B32::Inst_DS__DS_WRITE2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write2_b32")
+Inst_DS__DS_WRITE2_B32::Inst_DS__DS_WRITE2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write2_b32")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -32940,8 +32966,8 @@ Inst_DS__DS_WRITE2_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 {}
 // --- Inst_DS__DS_WRITE2ST64_B32 class methods ---
 
-Inst_DS__DS_WRITE2ST64_B32::Inst_DS__DS_WRITE2ST64_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write2st64_b32")
+Inst_DS__DS_WRITE2ST64_B32::Inst_DS__DS_WRITE2ST64_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write2st64_b32")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -33005,8 +33031,8 @@ Inst_DS__DS_WRITE2ST64_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 {}
 // --- Inst_DS__DS_CMPST_B32 class methods ---
 
-Inst_DS__DS_CMPST_B32::Inst_DS__DS_CMPST_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_b32")
+Inst_DS__DS_CMPST_B32::Inst_DS__DS_CMPST_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_b32")
 {} // Inst_DS__DS_CMPST_B32
 
 Inst_DS__DS_CMPST_B32::~Inst_DS__DS_CMPST_B32() {} // ~Inst_DS__DS_CMPST_B32
@@ -33028,8 +33054,8 @@ Inst_DS__DS_CMPST_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_F32 class methods ---
 
-Inst_DS__DS_CMPST_F32::Inst_DS__DS_CMPST_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_f32")
+Inst_DS__DS_CMPST_F32::Inst_DS__DS_CMPST_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_CMPST_F32
@@ -33053,8 +33079,8 @@ Inst_DS__DS_CMPST_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_F32 class methods ---
 
-Inst_DS__DS_MIN_F32::Inst_DS__DS_MIN_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_f32")
+Inst_DS__DS_MIN_F32::Inst_DS__DS_MIN_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MIN_F32
@@ -33077,8 +33103,8 @@ Inst_DS__DS_MIN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_F32 class methods ---
 
-Inst_DS__DS_MAX_F32::Inst_DS__DS_MAX_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_f32")
+Inst_DS__DS_MAX_F32::Inst_DS__DS_MAX_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MAX_F32
@@ -33117,8 +33143,8 @@ Inst_DS__DS_NOP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_F32 class methods ---
 
-Inst_DS__DS_ADD_F32::Inst_DS__DS_ADD_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_f32")
+Inst_DS__DS_ADD_F32::Inst_DS__DS_ADD_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_f32")
 {
     setFlag(F32);
     setFlag(MemoryRef);
@@ -33180,8 +33206,8 @@ Inst_DS__DS_ADD_F32::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE_B8 class methods ---
 
-Inst_DS__DS_WRITE_B8::Inst_DS__DS_WRITE_B8(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b8")
+Inst_DS__DS_WRITE_B8::Inst_DS__DS_WRITE_B8(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b8")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -33239,8 +33265,8 @@ Inst_DS__DS_WRITE_B8::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE_B8_D16_HI class methods ---
 
-Inst_DS__DS_WRITE_B8_D16_HI::Inst_DS__DS_WRITE_B8_D16_HI(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b8_d16_hi")
+Inst_DS__DS_WRITE_B8_D16_HI::Inst_DS__DS_WRITE_B8_D16_HI(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b8_d16_hi")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -33299,8 +33325,8 @@ Inst_DS__DS_WRITE_B8_D16_HI::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE_B16 class methods ---
 
-Inst_DS__DS_WRITE_B16::Inst_DS__DS_WRITE_B16(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b16")
+Inst_DS__DS_WRITE_B16::Inst_DS__DS_WRITE_B16(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b16")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -33358,8 +33384,8 @@ Inst_DS__DS_WRITE_B16::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_ADD_RTN_U32 class methods ---
 
-Inst_DS__DS_ADD_RTN_U32::Inst_DS__DS_ADD_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_rtn_u32")
+Inst_DS__DS_ADD_RTN_U32::Inst_DS__DS_ADD_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_rtn_u32")
 {} // Inst_DS__DS_ADD_RTN_U32
 
 Inst_DS__DS_ADD_RTN_U32::~Inst_DS__DS_ADD_RTN_U32() {
@@ -33377,8 +33403,8 @@ Inst_DS__DS_ADD_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_SUB_RTN_U32 class methods ---
 
-Inst_DS__DS_SUB_RTN_U32::Inst_DS__DS_SUB_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_rtn_u32")
+Inst_DS__DS_SUB_RTN_U32::Inst_DS__DS_SUB_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_rtn_u32")
 {} // Inst_DS__DS_SUB_RTN_U32
 
 Inst_DS__DS_SUB_RTN_U32::~Inst_DS__DS_SUB_RTN_U32() {
@@ -33396,8 +33422,8 @@ Inst_DS__DS_SUB_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_RTN_U32 class methods ---
 
-Inst_DS__DS_RSUB_RTN_U32::Inst_DS__DS_RSUB_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_rtn_u32")
+Inst_DS__DS_RSUB_RTN_U32::Inst_DS__DS_RSUB_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_rtn_u32")
 {} // Inst_DS__DS_RSUB_RTN_U32
 
 Inst_DS__DS_RSUB_RTN_U32::~Inst_DS__DS_RSUB_RTN_U32() {
@@ -33416,8 +33442,8 @@ Inst_DS__DS_RSUB_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_RTN_U32 class methods ---
 
-Inst_DS__DS_INC_RTN_U32::Inst_DS__DS_INC_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_rtn_u32")
+Inst_DS__DS_INC_RTN_U32::Inst_DS__DS_INC_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_rtn_u32")
 {} // Inst_DS__DS_INC_RTN_U32
 
 Inst_DS__DS_INC_RTN_U32::~Inst_DS__DS_INC_RTN_U32() {
@@ -33435,8 +33461,8 @@ Inst_DS__DS_INC_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_RTN_U32 class methods ---
 
-Inst_DS__DS_DEC_RTN_U32::Inst_DS__DS_DEC_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_rtn_u32")
+Inst_DS__DS_DEC_RTN_U32::Inst_DS__DS_DEC_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_rtn_u32")
 {} // Inst_DS__DS_DEC_RTN_U32
 
 Inst_DS__DS_DEC_RTN_U32::~Inst_DS__DS_DEC_RTN_U32() {
@@ -33454,8 +33480,8 @@ Inst_DS__DS_DEC_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_I32 class methods ---
 
-Inst_DS__DS_MIN_RTN_I32::Inst_DS__DS_MIN_RTN_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_i32")
+Inst_DS__DS_MIN_RTN_I32::Inst_DS__DS_MIN_RTN_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_i32")
 {} // Inst_DS__DS_MIN_RTN_I32
 
 Inst_DS__DS_MIN_RTN_I32::~Inst_DS__DS_MIN_RTN_I32() {
@@ -33473,8 +33499,8 @@ Inst_DS__DS_MIN_RTN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_I32 class methods ---
 
-Inst_DS__DS_MAX_RTN_I32::Inst_DS__DS_MAX_RTN_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_i32")
+Inst_DS__DS_MAX_RTN_I32::Inst_DS__DS_MAX_RTN_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_i32")
 {} // Inst_DS__DS_MAX_RTN_I32
 
 Inst_DS__DS_MAX_RTN_I32::~Inst_DS__DS_MAX_RTN_I32() {
@@ -33492,8 +33518,8 @@ Inst_DS__DS_MAX_RTN_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_U32 class methods ---
 
-Inst_DS__DS_MIN_RTN_U32::Inst_DS__DS_MIN_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_u32")
+Inst_DS__DS_MIN_RTN_U32::Inst_DS__DS_MIN_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_u32")
 {} // Inst_DS__DS_MIN_RTN_U32
 
 Inst_DS__DS_MIN_RTN_U32::~Inst_DS__DS_MIN_RTN_U32() {
@@ -33511,8 +33537,8 @@ Inst_DS__DS_MIN_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_U32 class methods ---
 
-Inst_DS__DS_MAX_RTN_U32::Inst_DS__DS_MAX_RTN_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_u32")
+Inst_DS__DS_MAX_RTN_U32::Inst_DS__DS_MAX_RTN_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_u32")
 {} // Inst_DS__DS_MAX_RTN_U32
 
 Inst_DS__DS_MAX_RTN_U32::~Inst_DS__DS_MAX_RTN_U32() {
@@ -33530,8 +33556,8 @@ Inst_DS__DS_MAX_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_RTN_B32 class methods ---
 
-Inst_DS__DS_AND_RTN_B32::Inst_DS__DS_AND_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_rtn_b32")
+Inst_DS__DS_AND_RTN_B32::Inst_DS__DS_AND_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_rtn_b32")
 {} // Inst_DS__DS_AND_RTN_B32
 
 Inst_DS__DS_AND_RTN_B32::~Inst_DS__DS_AND_RTN_B32() {
@@ -33549,8 +33575,8 @@ Inst_DS__DS_AND_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_RTN_B32 class methods ---
 
-Inst_DS__DS_OR_RTN_B32::Inst_DS__DS_OR_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_rtn_b32")
+Inst_DS__DS_OR_RTN_B32::Inst_DS__DS_OR_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_rtn_b32")
 {} // Inst_DS__DS_OR_RTN_B32
 
 Inst_DS__DS_OR_RTN_B32::~Inst_DS__DS_OR_RTN_B32() {} // ~Inst_DS__DS_OR_RTN_B32
@@ -33567,8 +33593,8 @@ Inst_DS__DS_OR_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_XOR_RTN_B32 class methods ---
 
-Inst_DS__DS_XOR_RTN_B32::Inst_DS__DS_XOR_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_rtn_b32")
+Inst_DS__DS_XOR_RTN_B32::Inst_DS__DS_XOR_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_rtn_b32")
 {} // Inst_DS__DS_XOR_RTN_B32
 
 Inst_DS__DS_XOR_RTN_B32::~Inst_DS__DS_XOR_RTN_B32() {
@@ -33586,8 +33612,8 @@ Inst_DS__DS_XOR_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MSKOR_RTN_B32 class methods ---
 
-Inst_DS__DS_MSKOR_RTN_B32::Inst_DS__DS_MSKOR_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_mskor_rtn_b32")
+Inst_DS__DS_MSKOR_RTN_B32::Inst_DS__DS_MSKOR_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_mskor_rtn_b32")
 {} // Inst_DS__DS_MSKOR_RTN_B32
 
 Inst_DS__DS_MSKOR_RTN_B32::~Inst_DS__DS_MSKOR_RTN_B32() {
@@ -33606,8 +33632,8 @@ Inst_DS__DS_MSKOR_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRXCHG_RTN_B32 class methods ---
 
-Inst_DS__DS_WRXCHG_RTN_B32::Inst_DS__DS_WRXCHG_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg_rtn_b32")
+Inst_DS__DS_WRXCHG_RTN_B32::Inst_DS__DS_WRXCHG_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg_rtn_b32")
 {} // Inst_DS__DS_WRXCHG_RTN_B32
 
 Inst_DS__DS_WRXCHG_RTN_B32::~Inst_DS__DS_WRXCHG_RTN_B32() {
@@ -33625,8 +33651,8 @@ Inst_DS__DS_WRXCHG_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRXCHG2_RTN_B32 class methods ---
 
-Inst_DS__DS_WRXCHG2_RTN_B32::Inst_DS__DS_WRXCHG2_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg2_rtn_b32")
+Inst_DS__DS_WRXCHG2_RTN_B32::Inst_DS__DS_WRXCHG2_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg2_rtn_b32")
 {} // Inst_DS__DS_WRXCHG2_RTN_B32
 
 Inst_DS__DS_WRXCHG2_RTN_B32::~Inst_DS__DS_WRXCHG2_RTN_B32() {
@@ -33642,8 +33668,8 @@ Inst_DS__DS_WRXCHG2_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_DS__DS_WRXCHG2ST64_RTN_B32 class methods ---
 
 Inst_DS__DS_WRXCHG2ST64_RTN_B32::Inst_DS__DS_WRXCHG2ST64_RTN_B32(
-    InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg2st64_rtn_b32")
+    InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg2st64_rtn_b32")
 {} // Inst_DS__DS_WRXCHG2ST64_RTN_B32
 
 Inst_DS__DS_WRXCHG2ST64_RTN_B32::~Inst_DS__DS_WRXCHG2ST64_RTN_B32() {
@@ -33658,8 +33684,8 @@ Inst_DS__DS_WRXCHG2ST64_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_RTN_B32 class methods ---
 
-Inst_DS__DS_CMPST_RTN_B32::Inst_DS__DS_CMPST_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_rtn_b32")
+Inst_DS__DS_CMPST_RTN_B32::Inst_DS__DS_CMPST_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_rtn_b32")
 {} // Inst_DS__DS_CMPST_RTN_B32
 
 Inst_DS__DS_CMPST_RTN_B32::~Inst_DS__DS_CMPST_RTN_B32() {
@@ -33682,8 +33708,8 @@ Inst_DS__DS_CMPST_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_RTN_F32 class methods ---
 
-Inst_DS__DS_CMPST_RTN_F32::Inst_DS__DS_CMPST_RTN_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_rtn_f32")
+Inst_DS__DS_CMPST_RTN_F32::Inst_DS__DS_CMPST_RTN_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_rtn_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_CMPST_RTN_F32
@@ -33708,8 +33734,8 @@ Inst_DS__DS_CMPST_RTN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_F32 class methods ---
 
-Inst_DS__DS_MIN_RTN_F32::Inst_DS__DS_MIN_RTN_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_f32")
+Inst_DS__DS_MIN_RTN_F32::Inst_DS__DS_MIN_RTN_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MIN_RTN_F32
@@ -33733,8 +33759,8 @@ Inst_DS__DS_MIN_RTN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_F32 class methods ---
 
-Inst_DS__DS_MAX_RTN_F32::Inst_DS__DS_MAX_RTN_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_f32")
+Inst_DS__DS_MAX_RTN_F32::Inst_DS__DS_MAX_RTN_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MAX_RTN_F32
@@ -33758,8 +33784,8 @@ Inst_DS__DS_MAX_RTN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRAP_RTN_B32 class methods ---
 
-Inst_DS__DS_WRAP_RTN_B32::Inst_DS__DS_WRAP_RTN_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrap_rtn_b32")
+Inst_DS__DS_WRAP_RTN_B32::Inst_DS__DS_WRAP_RTN_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrap_rtn_b32")
 {} // Inst_DS__DS_WRAP_RTN_B32
 
 Inst_DS__DS_WRAP_RTN_B32::~Inst_DS__DS_WRAP_RTN_B32() {
@@ -33776,8 +33802,8 @@ Inst_DS__DS_WRAP_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_RTN_F32 class methods ---
 
-Inst_DS__DS_ADD_RTN_F32::Inst_DS__DS_ADD_RTN_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_rtn_f32")
+Inst_DS__DS_ADD_RTN_F32::Inst_DS__DS_ADD_RTN_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_rtn_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_ADD_RTN_F32
@@ -33798,8 +33824,8 @@ Inst_DS__DS_ADD_RTN_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_READ_B32 class methods ---
 
-Inst_DS__DS_READ_B32::Inst_DS__DS_READ_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_b32")
+Inst_DS__DS_READ_B32::Inst_DS__DS_READ_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_b32")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -33859,8 +33885,8 @@ Inst_DS__DS_READ_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ2_B32 class methods ---
 
-Inst_DS__DS_READ2_B32::Inst_DS__DS_READ2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read2_b32")
+Inst_DS__DS_READ2_B32::Inst_DS__DS_READ2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read2_b32")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -33924,8 +33950,8 @@ Inst_DS__DS_READ2_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ2ST64_B32 class methods ---
 
-Inst_DS__DS_READ2ST64_B32::Inst_DS__DS_READ2ST64_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read2st64_b32")
+Inst_DS__DS_READ2ST64_B32::Inst_DS__DS_READ2ST64_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read2st64_b32")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -33990,8 +34016,8 @@ Inst_DS__DS_READ2ST64_B32::completeAcc(GPUDynInstPtr gpuDynInst)
 }
 // --- Inst_DS__DS_READ_I8 class methods ---
 
-Inst_DS__DS_READ_I8::Inst_DS__DS_READ_I8(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_i8")
+Inst_DS__DS_READ_I8::Inst_DS__DS_READ_I8(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_i8")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -34051,8 +34077,8 @@ Inst_DS__DS_READ_I8::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ_U8 class methods ---
 
-Inst_DS__DS_READ_U8::Inst_DS__DS_READ_U8(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_u8")
+Inst_DS__DS_READ_U8::Inst_DS__DS_READ_U8(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_u8")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -34112,8 +34138,8 @@ Inst_DS__DS_READ_U8::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ_I16 class methods ---
 
-Inst_DS__DS_READ_I16::Inst_DS__DS_READ_I16(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_i16")
+Inst_DS__DS_READ_I16::Inst_DS__DS_READ_I16(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_i16")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -34131,8 +34157,8 @@ Inst_DS__DS_READ_I16::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_READ_U16 class methods ---
 
-Inst_DS__DS_READ_U16::Inst_DS__DS_READ_U16(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_u16")
+Inst_DS__DS_READ_U16::Inst_DS__DS_READ_U16(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_u16")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -34191,8 +34217,8 @@ Inst_DS__DS_READ_U16::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_SWIZZLE_B32 class methods ---
 
-Inst_DS__DS_SWIZZLE_B32::Inst_DS__DS_SWIZZLE_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_swizzle_b32")
+Inst_DS__DS_SWIZZLE_B32::Inst_DS__DS_SWIZZLE_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_swizzle_b32")
 {
     /**
      * While this operation doesn't actually use DS storage we classify
@@ -34258,35 +34284,35 @@ Inst_DS__DS_SWIZZLE_B32::execute(GPUDynInstPtr gpuDynInst)
             if (gpuDynInst->exec_mask[lane]) {
                 int index0 = lane + bits(ds_pattern, 1, 0);
                 panic_if(index0 >= NumVecElemPerVecReg,
-                    "%s: index0 (%d) "
-                    "is out of bounds.\n",
-                    gpuDynInst->disassemble(), index0);
+                         "%s: index0 (%d) "
+                         "is out of bounds.\n",
+                         gpuDynInst->disassemble(), index0);
                 vdst[lane] = gpuDynInst->exec_mask[index0] ? data[index0] : 0;
             }
             if (gpuDynInst->exec_mask[lane + 1]) {
                 int index1 = lane + bits(ds_pattern, 3, 2);
                 panic_if(index1 >= NumVecElemPerVecReg,
-                    "%s: index1 (%d) "
-                    "is out of bounds.\n",
-                    gpuDynInst->disassemble(), index1);
+                         "%s: index1 (%d) "
+                         "is out of bounds.\n",
+                         gpuDynInst->disassemble(), index1);
                 vdst[lane + 1] =
                     gpuDynInst->exec_mask[index1] ? data[index1] : 0;
             }
             if (gpuDynInst->exec_mask[lane + 2]) {
                 int index2 = lane + bits(ds_pattern, 5, 4);
                 panic_if(index2 >= NumVecElemPerVecReg,
-                    "%s: index2 (%d) "
-                    "is out of bounds.\n",
-                    gpuDynInst->disassemble(), index2);
+                         "%s: index2 (%d) "
+                         "is out of bounds.\n",
+                         gpuDynInst->disassemble(), index2);
                 vdst[lane + 2] =
                     gpuDynInst->exec_mask[index2] ? data[index2] : 0;
             }
             if (gpuDynInst->exec_mask[lane + 3]) {
                 int index3 = lane + bits(ds_pattern, 7, 6);
                 panic_if(index3 >= NumVecElemPerVecReg,
-                    "%s: index3 (%d) "
-                    "is out of bounds.\n",
-                    gpuDynInst->disassemble(), index3);
+                         "%s: index3 (%d) "
+                         "is out of bounds.\n",
+                         gpuDynInst->disassemble(), index3);
                 vdst[lane + 3] =
                     gpuDynInst->exec_mask[index3] ? data[index3] : 0;
             }
@@ -34304,9 +34330,9 @@ Inst_DS__DS_SWIZZLE_B32::execute(GPUDynInstPtr gpuDynInst)
                     index += 32;
                 }
                 panic_if(index >= NumVecElemPerVecReg,
-                    "%s: index (%d) is "
-                    "out of bounds.\n",
-                    gpuDynInst->disassemble(), index);
+                         "%s: index (%d) is "
+                         "out of bounds.\n",
+                         gpuDynInst->disassemble(), index);
                 vdst[lane] = gpuDynInst->exec_mask[index] ? data[index] : 0;
             }
         }
@@ -34330,8 +34356,8 @@ Inst_DS__DS_SWIZZLE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_PERMUTE_B32 class methods ---
 
-Inst_DS__DS_PERMUTE_B32::Inst_DS__DS_PERMUTE_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_permute_b32")
+Inst_DS__DS_PERMUTE_B32::Inst_DS__DS_PERMUTE_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_permute_b32")
 {
     setFlag(MemoryRef);
     /**
@@ -34385,9 +34411,9 @@ Inst_DS__DS_PERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
              */
             int index = bits(addr[lane] + instData.OFFSET0, 7, 2);
             panic_if(index >= NumVecElemPerVecReg,
-                "%s: index (%d) is out "
-                "of bounds.\n",
-                gpuDynInst->disassemble(), index);
+                     "%s: index (%d) is out "
+                     "of bounds.\n",
+                     gpuDynInst->disassemble(), index);
             /**
              * If the shuffled index corresponds to a lane that is
              * inactive then this instruction writes a 0 to the active
@@ -34419,8 +34445,8 @@ Inst_DS__DS_PERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_BPERMUTE_B32 class methods ---
 
-Inst_DS__DS_BPERMUTE_B32::Inst_DS__DS_BPERMUTE_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_bpermute_b32")
+Inst_DS__DS_BPERMUTE_B32::Inst_DS__DS_BPERMUTE_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_bpermute_b32")
 {
     setFlag(MemoryRef);
     /**
@@ -34474,9 +34500,9 @@ Inst_DS__DS_BPERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
              */
             int index = bits(addr[lane] + instData.OFFSET0, 7, 2);
             panic_if(index >= NumVecElemPerVecReg,
-                "%s: index (%d) is out "
-                "of bounds.\n",
-                gpuDynInst->disassemble(), index);
+                     "%s: index (%d) is out "
+                     "of bounds.\n",
+                     gpuDynInst->disassemble(), index);
             /**
              * If the shuffled index corresponds to a lane that is
              * inactive then this instruction writes a 0 to the active
@@ -34509,8 +34535,8 @@ Inst_DS__DS_BPERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
 
 // --- Inst_DS__DS_ADD_U64 class methods ---
 
-Inst_DS__DS_ADD_U64::Inst_DS__DS_ADD_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_u64")
+Inst_DS__DS_ADD_U64::Inst_DS__DS_ADD_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_u64")
 {
     setFlag(MemoryRef);
     setFlag(GroupSegment);
@@ -34570,8 +34596,8 @@ Inst_DS__DS_ADD_U64::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_SUB_U64 class methods ---
 
-Inst_DS__DS_SUB_U64::Inst_DS__DS_SUB_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_u64")
+Inst_DS__DS_SUB_U64::Inst_DS__DS_SUB_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_u64")
 {} // Inst_DS__DS_SUB_U64
 
 Inst_DS__DS_SUB_U64::~Inst_DS__DS_SUB_U64() {} // ~Inst_DS__DS_SUB_U64
@@ -34588,8 +34614,8 @@ Inst_DS__DS_SUB_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_U64 class methods ---
 
-Inst_DS__DS_RSUB_U64::Inst_DS__DS_RSUB_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_u64")
+Inst_DS__DS_RSUB_U64::Inst_DS__DS_RSUB_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_u64")
 {} // Inst_DS__DS_RSUB_U64
 
 Inst_DS__DS_RSUB_U64::~Inst_DS__DS_RSUB_U64() {} // ~Inst_DS__DS_RSUB_U64
@@ -34607,8 +34633,8 @@ Inst_DS__DS_RSUB_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_U64 class methods ---
 
-Inst_DS__DS_INC_U64::Inst_DS__DS_INC_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_u64")
+Inst_DS__DS_INC_U64::Inst_DS__DS_INC_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_u64")
 {} // Inst_DS__DS_INC_U64
 
 Inst_DS__DS_INC_U64::~Inst_DS__DS_INC_U64() {} // ~Inst_DS__DS_INC_U64
@@ -34625,8 +34651,8 @@ Inst_DS__DS_INC_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_U64 class methods ---
 
-Inst_DS__DS_DEC_U64::Inst_DS__DS_DEC_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_u64")
+Inst_DS__DS_DEC_U64::Inst_DS__DS_DEC_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_u64")
 {} // Inst_DS__DS_DEC_U64
 
 Inst_DS__DS_DEC_U64::~Inst_DS__DS_DEC_U64() {} // ~Inst_DS__DS_DEC_U64
@@ -34644,8 +34670,8 @@ Inst_DS__DS_DEC_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_I64 class methods ---
 
-Inst_DS__DS_MIN_I64::Inst_DS__DS_MIN_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_i64")
+Inst_DS__DS_MIN_I64::Inst_DS__DS_MIN_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_i64")
 {} // Inst_DS__DS_MIN_I64
 
 Inst_DS__DS_MIN_I64::~Inst_DS__DS_MIN_I64() {} // ~Inst_DS__DS_MIN_I64
@@ -34662,8 +34688,8 @@ Inst_DS__DS_MIN_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_I64 class methods ---
 
-Inst_DS__DS_MAX_I64::Inst_DS__DS_MAX_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_i64")
+Inst_DS__DS_MAX_I64::Inst_DS__DS_MAX_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_i64")
 {} // Inst_DS__DS_MAX_I64
 
 Inst_DS__DS_MAX_I64::~Inst_DS__DS_MAX_I64() {} // ~Inst_DS__DS_MAX_I64
@@ -34680,8 +34706,8 @@ Inst_DS__DS_MAX_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_U64 class methods ---
 
-Inst_DS__DS_MIN_U64::Inst_DS__DS_MIN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_u64")
+Inst_DS__DS_MIN_U64::Inst_DS__DS_MIN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_u64")
 {} // Inst_DS__DS_MIN_U64
 
 Inst_DS__DS_MIN_U64::~Inst_DS__DS_MIN_U64() {} // ~Inst_DS__DS_MIN_U64
@@ -34698,8 +34724,8 @@ Inst_DS__DS_MIN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_U64 class methods ---
 
-Inst_DS__DS_MAX_U64::Inst_DS__DS_MAX_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_u64")
+Inst_DS__DS_MAX_U64::Inst_DS__DS_MAX_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_u64")
 {} // Inst_DS__DS_MAX_U64
 
 Inst_DS__DS_MAX_U64::~Inst_DS__DS_MAX_U64() {} // ~Inst_DS__DS_MAX_U64
@@ -34716,8 +34742,8 @@ Inst_DS__DS_MAX_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_B64 class methods ---
 
-Inst_DS__DS_AND_B64::Inst_DS__DS_AND_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_b64")
+Inst_DS__DS_AND_B64::Inst_DS__DS_AND_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_b64")
 {} // Inst_DS__DS_AND_B64
 
 Inst_DS__DS_AND_B64::~Inst_DS__DS_AND_B64() {} // ~Inst_DS__DS_AND_B64
@@ -34734,8 +34760,8 @@ Inst_DS__DS_AND_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_B64 class methods ---
 
-Inst_DS__DS_OR_B64::Inst_DS__DS_OR_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_b64")
+Inst_DS__DS_OR_B64::Inst_DS__DS_OR_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_b64")
 {} // Inst_DS__DS_OR_B64
 
 Inst_DS__DS_OR_B64::~Inst_DS__DS_OR_B64() {} // ~Inst_DS__DS_OR_B64
@@ -34752,8 +34778,8 @@ Inst_DS__DS_OR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_XOR_B64 class methods ---
 
-Inst_DS__DS_XOR_B64::Inst_DS__DS_XOR_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_b64")
+Inst_DS__DS_XOR_B64::Inst_DS__DS_XOR_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_b64")
 {} // Inst_DS__DS_XOR_B64
 
 Inst_DS__DS_XOR_B64::~Inst_DS__DS_XOR_B64() {} // ~Inst_DS__DS_XOR_B64
@@ -34770,8 +34796,8 @@ Inst_DS__DS_XOR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MSKOR_B64 class methods ---
 
-Inst_DS__DS_MSKOR_B64::Inst_DS__DS_MSKOR_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_mskor_b64")
+Inst_DS__DS_MSKOR_B64::Inst_DS__DS_MSKOR_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_mskor_b64")
 {} // Inst_DS__DS_MSKOR_B64
 
 Inst_DS__DS_MSKOR_B64::~Inst_DS__DS_MSKOR_B64() {} // ~Inst_DS__DS_MSKOR_B64
@@ -34789,8 +34815,8 @@ Inst_DS__DS_MSKOR_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRITE_B64 class methods ---
 
-Inst_DS__DS_WRITE_B64::Inst_DS__DS_WRITE_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b64")
+Inst_DS__DS_WRITE_B64::Inst_DS__DS_WRITE_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b64")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -34849,8 +34875,8 @@ Inst_DS__DS_WRITE_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE2_B64 class methods ---
 
-Inst_DS__DS_WRITE2_B64::Inst_DS__DS_WRITE2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write2_b64")
+Inst_DS__DS_WRITE2_B64::Inst_DS__DS_WRITE2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write2_b64")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -34913,8 +34939,8 @@ Inst_DS__DS_WRITE2_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 {}
 // --- Inst_DS__DS_WRITE2ST64_B64 class methods ---
 
-Inst_DS__DS_WRITE2ST64_B64::Inst_DS__DS_WRITE2ST64_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write2st64_b64")
+Inst_DS__DS_WRITE2ST64_B64::Inst_DS__DS_WRITE2ST64_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write2st64_b64")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -34978,8 +35004,8 @@ Inst_DS__DS_WRITE2ST64_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 {}
 // --- Inst_DS__DS_CMPST_B64 class methods ---
 
-Inst_DS__DS_CMPST_B64::Inst_DS__DS_CMPST_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_b64")
+Inst_DS__DS_CMPST_B64::Inst_DS__DS_CMPST_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_b64")
 {} // Inst_DS__DS_CMPST_B64
 
 Inst_DS__DS_CMPST_B64::~Inst_DS__DS_CMPST_B64() {} // ~Inst_DS__DS_CMPST_B64
@@ -35001,8 +35027,8 @@ Inst_DS__DS_CMPST_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_F64 class methods ---
 
-Inst_DS__DS_CMPST_F64::Inst_DS__DS_CMPST_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_f64")
+Inst_DS__DS_CMPST_F64::Inst_DS__DS_CMPST_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_CMPST_F64
@@ -35026,8 +35052,8 @@ Inst_DS__DS_CMPST_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_F64 class methods ---
 
-Inst_DS__DS_MIN_F64::Inst_DS__DS_MIN_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_f64")
+Inst_DS__DS_MIN_F64::Inst_DS__DS_MIN_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MIN_F64
@@ -35050,8 +35076,8 @@ Inst_DS__DS_MIN_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_F64 class methods ---
 
-Inst_DS__DS_MAX_F64::Inst_DS__DS_MAX_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_f64")
+Inst_DS__DS_MAX_F64::Inst_DS__DS_MAX_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MAX_F64
@@ -35074,8 +35100,8 @@ Inst_DS__DS_MAX_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_RTN_U64 class methods ---
 
-Inst_DS__DS_ADD_RTN_U64::Inst_DS__DS_ADD_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_rtn_u64")
+Inst_DS__DS_ADD_RTN_U64::Inst_DS__DS_ADD_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_rtn_u64")
 {} // Inst_DS__DS_ADD_RTN_U64
 
 Inst_DS__DS_ADD_RTN_U64::~Inst_DS__DS_ADD_RTN_U64() {
@@ -35093,8 +35119,8 @@ Inst_DS__DS_ADD_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_SUB_RTN_U64 class methods ---
 
-Inst_DS__DS_SUB_RTN_U64::Inst_DS__DS_SUB_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_rtn_u64")
+Inst_DS__DS_SUB_RTN_U64::Inst_DS__DS_SUB_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_rtn_u64")
 {} // Inst_DS__DS_SUB_RTN_U64
 
 Inst_DS__DS_SUB_RTN_U64::~Inst_DS__DS_SUB_RTN_U64() {
@@ -35112,8 +35138,8 @@ Inst_DS__DS_SUB_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_RTN_U64 class methods ---
 
-Inst_DS__DS_RSUB_RTN_U64::Inst_DS__DS_RSUB_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_rtn_u64")
+Inst_DS__DS_RSUB_RTN_U64::Inst_DS__DS_RSUB_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_rtn_u64")
 {} // Inst_DS__DS_RSUB_RTN_U64
 
 Inst_DS__DS_RSUB_RTN_U64::~Inst_DS__DS_RSUB_RTN_U64() {
@@ -35132,8 +35158,8 @@ Inst_DS__DS_RSUB_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_RTN_U64 class methods ---
 
-Inst_DS__DS_INC_RTN_U64::Inst_DS__DS_INC_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_rtn_u64")
+Inst_DS__DS_INC_RTN_U64::Inst_DS__DS_INC_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_rtn_u64")
 {} // Inst_DS__DS_INC_RTN_U64
 
 Inst_DS__DS_INC_RTN_U64::~Inst_DS__DS_INC_RTN_U64() {
@@ -35151,8 +35177,8 @@ Inst_DS__DS_INC_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_RTN_U64 class methods ---
 
-Inst_DS__DS_DEC_RTN_U64::Inst_DS__DS_DEC_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_rtn_u64")
+Inst_DS__DS_DEC_RTN_U64::Inst_DS__DS_DEC_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_rtn_u64")
 {} // Inst_DS__DS_DEC_RTN_U64
 
 Inst_DS__DS_DEC_RTN_U64::~Inst_DS__DS_DEC_RTN_U64() {
@@ -35171,8 +35197,8 @@ Inst_DS__DS_DEC_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_I64 class methods ---
 
-Inst_DS__DS_MIN_RTN_I64::Inst_DS__DS_MIN_RTN_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_i64")
+Inst_DS__DS_MIN_RTN_I64::Inst_DS__DS_MIN_RTN_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_i64")
 {} // Inst_DS__DS_MIN_RTN_I64
 
 Inst_DS__DS_MIN_RTN_I64::~Inst_DS__DS_MIN_RTN_I64() {
@@ -35190,8 +35216,8 @@ Inst_DS__DS_MIN_RTN_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_I64 class methods ---
 
-Inst_DS__DS_MAX_RTN_I64::Inst_DS__DS_MAX_RTN_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_i64")
+Inst_DS__DS_MAX_RTN_I64::Inst_DS__DS_MAX_RTN_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_i64")
 {} // Inst_DS__DS_MAX_RTN_I64
 
 Inst_DS__DS_MAX_RTN_I64::~Inst_DS__DS_MAX_RTN_I64() {
@@ -35209,8 +35235,8 @@ Inst_DS__DS_MAX_RTN_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_U64 class methods ---
 
-Inst_DS__DS_MIN_RTN_U64::Inst_DS__DS_MIN_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_u64")
+Inst_DS__DS_MIN_RTN_U64::Inst_DS__DS_MIN_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_u64")
 {} // Inst_DS__DS_MIN_RTN_U64
 
 Inst_DS__DS_MIN_RTN_U64::~Inst_DS__DS_MIN_RTN_U64() {
@@ -35228,8 +35254,8 @@ Inst_DS__DS_MIN_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_U64 class methods ---
 
-Inst_DS__DS_MAX_RTN_U64::Inst_DS__DS_MAX_RTN_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_u64")
+Inst_DS__DS_MAX_RTN_U64::Inst_DS__DS_MAX_RTN_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_u64")
 {} // Inst_DS__DS_MAX_RTN_U64
 
 Inst_DS__DS_MAX_RTN_U64::~Inst_DS__DS_MAX_RTN_U64() {
@@ -35247,8 +35273,8 @@ Inst_DS__DS_MAX_RTN_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_RTN_B64 class methods ---
 
-Inst_DS__DS_AND_RTN_B64::Inst_DS__DS_AND_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_rtn_b64")
+Inst_DS__DS_AND_RTN_B64::Inst_DS__DS_AND_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_rtn_b64")
 {} // Inst_DS__DS_AND_RTN_B64
 
 Inst_DS__DS_AND_RTN_B64::~Inst_DS__DS_AND_RTN_B64() {
@@ -35266,8 +35292,8 @@ Inst_DS__DS_AND_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_RTN_B64 class methods ---
 
-Inst_DS__DS_OR_RTN_B64::Inst_DS__DS_OR_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_rtn_b64")
+Inst_DS__DS_OR_RTN_B64::Inst_DS__DS_OR_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_rtn_b64")
 {} // Inst_DS__DS_OR_RTN_B64
 
 Inst_DS__DS_OR_RTN_B64::~Inst_DS__DS_OR_RTN_B64() {} // ~Inst_DS__DS_OR_RTN_B64
@@ -35284,8 +35310,8 @@ Inst_DS__DS_OR_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_XOR_RTN_B64 class methods ---
 
-Inst_DS__DS_XOR_RTN_B64::Inst_DS__DS_XOR_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_rtn_b64")
+Inst_DS__DS_XOR_RTN_B64::Inst_DS__DS_XOR_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_rtn_b64")
 {} // Inst_DS__DS_XOR_RTN_B64
 
 Inst_DS__DS_XOR_RTN_B64::~Inst_DS__DS_XOR_RTN_B64() {
@@ -35303,8 +35329,8 @@ Inst_DS__DS_XOR_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MSKOR_RTN_B64 class methods ---
 
-Inst_DS__DS_MSKOR_RTN_B64::Inst_DS__DS_MSKOR_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_mskor_rtn_b64")
+Inst_DS__DS_MSKOR_RTN_B64::Inst_DS__DS_MSKOR_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_mskor_rtn_b64")
 {} // Inst_DS__DS_MSKOR_RTN_B64
 
 Inst_DS__DS_MSKOR_RTN_B64::~Inst_DS__DS_MSKOR_RTN_B64() {
@@ -35323,8 +35349,8 @@ Inst_DS__DS_MSKOR_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRXCHG_RTN_B64 class methods ---
 
-Inst_DS__DS_WRXCHG_RTN_B64::Inst_DS__DS_WRXCHG_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg_rtn_b64")
+Inst_DS__DS_WRXCHG_RTN_B64::Inst_DS__DS_WRXCHG_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg_rtn_b64")
 {} // Inst_DS__DS_WRXCHG_RTN_B64
 
 Inst_DS__DS_WRXCHG_RTN_B64::~Inst_DS__DS_WRXCHG_RTN_B64() {
@@ -35342,8 +35368,8 @@ Inst_DS__DS_WRXCHG_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRXCHG2_RTN_B64 class methods ---
 
-Inst_DS__DS_WRXCHG2_RTN_B64::Inst_DS__DS_WRXCHG2_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg2_rtn_b64")
+Inst_DS__DS_WRXCHG2_RTN_B64::Inst_DS__DS_WRXCHG2_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg2_rtn_b64")
 {} // Inst_DS__DS_WRXCHG2_RTN_B64
 
 Inst_DS__DS_WRXCHG2_RTN_B64::~Inst_DS__DS_WRXCHG2_RTN_B64() {
@@ -35359,8 +35385,8 @@ Inst_DS__DS_WRXCHG2_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_DS__DS_WRXCHG2ST64_RTN_B64 class methods ---
 
 Inst_DS__DS_WRXCHG2ST64_RTN_B64::Inst_DS__DS_WRXCHG2ST64_RTN_B64(
-    InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_wrxchg2st64_rtn_b64")
+    InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_wrxchg2st64_rtn_b64")
 {} // Inst_DS__DS_WRXCHG2ST64_RTN_B64
 
 Inst_DS__DS_WRXCHG2ST64_RTN_B64::~Inst_DS__DS_WRXCHG2ST64_RTN_B64() {
@@ -35375,8 +35401,8 @@ Inst_DS__DS_WRXCHG2ST64_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_RTN_B64 class methods ---
 
-Inst_DS__DS_CMPST_RTN_B64::Inst_DS__DS_CMPST_RTN_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_rtn_b64")
+Inst_DS__DS_CMPST_RTN_B64::Inst_DS__DS_CMPST_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_rtn_b64")
 {} // Inst_DS__DS_CMPST_RTN_B64
 
 Inst_DS__DS_CMPST_RTN_B64::~Inst_DS__DS_CMPST_RTN_B64() {
@@ -35399,8 +35425,8 @@ Inst_DS__DS_CMPST_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CMPST_RTN_F64 class methods ---
 
-Inst_DS__DS_CMPST_RTN_F64::Inst_DS__DS_CMPST_RTN_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_cmpst_rtn_f64")
+Inst_DS__DS_CMPST_RTN_F64::Inst_DS__DS_CMPST_RTN_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_cmpst_rtn_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_CMPST_RTN_F64
@@ -35425,8 +35451,8 @@ Inst_DS__DS_CMPST_RTN_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_RTN_F64 class methods ---
 
-Inst_DS__DS_MIN_RTN_F64::Inst_DS__DS_MIN_RTN_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_rtn_f64")
+Inst_DS__DS_MIN_RTN_F64::Inst_DS__DS_MIN_RTN_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_rtn_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MIN_RTN_F64
@@ -35450,8 +35476,8 @@ Inst_DS__DS_MIN_RTN_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_RTN_F64 class methods ---
 
-Inst_DS__DS_MAX_RTN_F64::Inst_DS__DS_MAX_RTN_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_rtn_f64")
+Inst_DS__DS_MAX_RTN_F64::Inst_DS__DS_MAX_RTN_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_rtn_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MAX_RTN_F64
@@ -35475,8 +35501,8 @@ Inst_DS__DS_MAX_RTN_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_READ_B64 class methods ---
 
-Inst_DS__DS_READ_B64::Inst_DS__DS_READ_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_b64")
+Inst_DS__DS_READ_B64::Inst_DS__DS_READ_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_b64")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -35536,8 +35562,8 @@ Inst_DS__DS_READ_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ2_B64 class methods ---
 
-Inst_DS__DS_READ2_B64::Inst_DS__DS_READ2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read2_b64")
+Inst_DS__DS_READ2_B64::Inst_DS__DS_READ2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read2_b64")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -35601,8 +35627,8 @@ Inst_DS__DS_READ2_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_DS__DS_READ2ST64_B64 class methods ---
 
-Inst_DS__DS_READ2ST64_B64::Inst_DS__DS_READ2ST64_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read2st64_b64")
+Inst_DS__DS_READ2ST64_B64::Inst_DS__DS_READ2ST64_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read2st64_b64")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -35667,9 +35693,8 @@ Inst_DS__DS_READ2ST64_B64::completeAcc(GPUDynInstPtr gpuDynInst)
 }
 // --- Inst_DS__DS_CONDXCHG32_RTN_B64 class methods ---
 
-Inst_DS__DS_CONDXCHG32_RTN_B64::Inst_DS__DS_CONDXCHG32_RTN_B64(
-    InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_condxchg32_rtn_b64")
+Inst_DS__DS_CONDXCHG32_RTN_B64::Inst_DS__DS_CONDXCHG32_RTN_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_condxchg32_rtn_b64")
 {} // Inst_DS__DS_CONDXCHG32_RTN_B64
 
 Inst_DS__DS_CONDXCHG32_RTN_B64::~Inst_DS__DS_CONDXCHG32_RTN_B64() {
@@ -35684,8 +35709,8 @@ Inst_DS__DS_CONDXCHG32_RTN_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_SRC2_U32 class methods ---
 
-Inst_DS__DS_ADD_SRC2_U32::Inst_DS__DS_ADD_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_src2_u32")
+Inst_DS__DS_ADD_SRC2_U32::Inst_DS__DS_ADD_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_src2_u32")
 {} // Inst_DS__DS_ADD_SRC2_U32
 
 Inst_DS__DS_ADD_SRC2_U32::~Inst_DS__DS_ADD_SRC2_U32() {
@@ -35704,8 +35729,8 @@ Inst_DS__DS_ADD_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_SUB_SRC2_U32 class methods ---
 
-Inst_DS__DS_SUB_SRC2_U32::Inst_DS__DS_SUB_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_src2_u32")
+Inst_DS__DS_SUB_SRC2_U32::Inst_DS__DS_SUB_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_src2_u32")
 {} // Inst_DS__DS_SUB_SRC2_U32
 
 Inst_DS__DS_SUB_SRC2_U32::~Inst_DS__DS_SUB_SRC2_U32() {
@@ -35724,8 +35749,8 @@ Inst_DS__DS_SUB_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_SRC2_U32 class methods ---
 
-Inst_DS__DS_RSUB_SRC2_U32::Inst_DS__DS_RSUB_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_src2_u32")
+Inst_DS__DS_RSUB_SRC2_U32::Inst_DS__DS_RSUB_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_src2_u32")
 {} // Inst_DS__DS_RSUB_SRC2_U32
 
 Inst_DS__DS_RSUB_SRC2_U32::~Inst_DS__DS_RSUB_SRC2_U32() {
@@ -35744,8 +35769,8 @@ Inst_DS__DS_RSUB_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_SRC2_U32 class methods ---
 
-Inst_DS__DS_INC_SRC2_U32::Inst_DS__DS_INC_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_src2_u32")
+Inst_DS__DS_INC_SRC2_U32::Inst_DS__DS_INC_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_src2_u32")
 {} // Inst_DS__DS_INC_SRC2_U32
 
 Inst_DS__DS_INC_SRC2_U32::~Inst_DS__DS_INC_SRC2_U32() {
@@ -35764,8 +35789,8 @@ Inst_DS__DS_INC_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_SRC2_U32 class methods ---
 
-Inst_DS__DS_DEC_SRC2_U32::Inst_DS__DS_DEC_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_src2_u32")
+Inst_DS__DS_DEC_SRC2_U32::Inst_DS__DS_DEC_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_src2_u32")
 {} // Inst_DS__DS_DEC_SRC2_U32
 
 Inst_DS__DS_DEC_SRC2_U32::~Inst_DS__DS_DEC_SRC2_U32() {
@@ -35785,8 +35810,8 @@ Inst_DS__DS_DEC_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_I32 class methods ---
 
-Inst_DS__DS_MIN_SRC2_I32::Inst_DS__DS_MIN_SRC2_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_i32")
+Inst_DS__DS_MIN_SRC2_I32::Inst_DS__DS_MIN_SRC2_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_i32")
 {} // Inst_DS__DS_MIN_SRC2_I32
 
 Inst_DS__DS_MIN_SRC2_I32::~Inst_DS__DS_MIN_SRC2_I32() {
@@ -35805,8 +35830,8 @@ Inst_DS__DS_MIN_SRC2_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_I32 class methods ---
 
-Inst_DS__DS_MAX_SRC2_I32::Inst_DS__DS_MAX_SRC2_I32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_i32")
+Inst_DS__DS_MAX_SRC2_I32::Inst_DS__DS_MAX_SRC2_I32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_i32")
 {} // Inst_DS__DS_MAX_SRC2_I32
 
 Inst_DS__DS_MAX_SRC2_I32::~Inst_DS__DS_MAX_SRC2_I32() {
@@ -35825,8 +35850,8 @@ Inst_DS__DS_MAX_SRC2_I32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_U32 class methods ---
 
-Inst_DS__DS_MIN_SRC2_U32::Inst_DS__DS_MIN_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_u32")
+Inst_DS__DS_MIN_SRC2_U32::Inst_DS__DS_MIN_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_u32")
 {} // Inst_DS__DS_MIN_SRC2_U32
 
 Inst_DS__DS_MIN_SRC2_U32::~Inst_DS__DS_MIN_SRC2_U32() {
@@ -35845,8 +35870,8 @@ Inst_DS__DS_MIN_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_U32 class methods ---
 
-Inst_DS__DS_MAX_SRC2_U32::Inst_DS__DS_MAX_SRC2_U32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_u32")
+Inst_DS__DS_MAX_SRC2_U32::Inst_DS__DS_MAX_SRC2_U32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_u32")
 {} // Inst_DS__DS_MAX_SRC2_U32
 
 Inst_DS__DS_MAX_SRC2_U32::~Inst_DS__DS_MAX_SRC2_U32() {
@@ -35865,8 +35890,8 @@ Inst_DS__DS_MAX_SRC2_U32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_SRC2_B32 class methods ---
 
-Inst_DS__DS_AND_SRC2_B32::Inst_DS__DS_AND_SRC2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_src2_b32")
+Inst_DS__DS_AND_SRC2_B32::Inst_DS__DS_AND_SRC2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_src2_b32")
 {} // Inst_DS__DS_AND_SRC2_B32
 
 Inst_DS__DS_AND_SRC2_B32::~Inst_DS__DS_AND_SRC2_B32() {
@@ -35885,8 +35910,8 @@ Inst_DS__DS_AND_SRC2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_SRC2_B32 class methods ---
 
-Inst_DS__DS_OR_SRC2_B32::Inst_DS__DS_OR_SRC2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_src2_b32")
+Inst_DS__DS_OR_SRC2_B32::Inst_DS__DS_OR_SRC2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_src2_b32")
 {} // Inst_DS__DS_OR_SRC2_B32
 
 Inst_DS__DS_OR_SRC2_B32::~Inst_DS__DS_OR_SRC2_B32() {
@@ -35905,8 +35930,8 @@ Inst_DS__DS_OR_SRC2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_XOR_SRC2_B32 class methods ---
 
-Inst_DS__DS_XOR_SRC2_B32::Inst_DS__DS_XOR_SRC2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_src2_b32")
+Inst_DS__DS_XOR_SRC2_B32::Inst_DS__DS_XOR_SRC2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_src2_b32")
 {} // Inst_DS__DS_XOR_SRC2_B32
 
 Inst_DS__DS_XOR_SRC2_B32::~Inst_DS__DS_XOR_SRC2_B32() {
@@ -35925,8 +35950,8 @@ Inst_DS__DS_XOR_SRC2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRITE_SRC2_B32 class methods ---
 
-Inst_DS__DS_WRITE_SRC2_B32::Inst_DS__DS_WRITE_SRC2_B32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_src2_b32")
+Inst_DS__DS_WRITE_SRC2_B32::Inst_DS__DS_WRITE_SRC2_B32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_src2_b32")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -35949,8 +35974,8 @@ Inst_DS__DS_WRITE_SRC2_B32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_F32 class methods ---
 
-Inst_DS__DS_MIN_SRC2_F32::Inst_DS__DS_MIN_SRC2_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_f32")
+Inst_DS__DS_MIN_SRC2_F32::Inst_DS__DS_MIN_SRC2_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MIN_SRC2_F32
@@ -35972,8 +35997,8 @@ Inst_DS__DS_MIN_SRC2_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_F32 class methods ---
 
-Inst_DS__DS_MAX_SRC2_F32::Inst_DS__DS_MAX_SRC2_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_f32")
+Inst_DS__DS_MAX_SRC2_F32::Inst_DS__DS_MAX_SRC2_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_MAX_SRC2_F32
@@ -35995,8 +36020,8 @@ Inst_DS__DS_MAX_SRC2_F32::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_SRC2_F32 class methods ---
 
-Inst_DS__DS_ADD_SRC2_F32::Inst_DS__DS_ADD_SRC2_F32(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_src2_f32")
+Inst_DS__DS_ADD_SRC2_F32::Inst_DS__DS_ADD_SRC2_F32(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_src2_f32")
 {
     setFlag(F32);
 } // Inst_DS__DS_ADD_SRC2_F32
@@ -36019,8 +36044,8 @@ Inst_DS__DS_ADD_SRC2_F32::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_DS__DS_GWS_SEMA_RELEASE_ALL class methods ---
 
 Inst_DS__DS_GWS_SEMA_RELEASE_ALL::Inst_DS__DS_GWS_SEMA_RELEASE_ALL(
-    InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_sema_release_all")
+    InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_sema_release_all")
 {} // Inst_DS__DS_GWS_SEMA_RELEASE_ALL
 
 Inst_DS__DS_GWS_SEMA_RELEASE_ALL::~Inst_DS__DS_GWS_SEMA_RELEASE_ALL() {
@@ -36044,8 +36069,8 @@ Inst_DS__DS_GWS_SEMA_RELEASE_ALL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_GWS_INIT class methods ---
 
-Inst_DS__DS_GWS_INIT::Inst_DS__DS_GWS_INIT(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_init")
+Inst_DS__DS_GWS_INIT::Inst_DS__DS_GWS_INIT(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_init")
 {} // Inst_DS__DS_GWS_INIT
 
 Inst_DS__DS_GWS_INIT::~Inst_DS__DS_GWS_INIT() {} // ~Inst_DS__DS_GWS_INIT
@@ -36068,8 +36093,8 @@ Inst_DS__DS_GWS_INIT::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_GWS_SEMA_V class methods ---
 
-Inst_DS__DS_GWS_SEMA_V::Inst_DS__DS_GWS_SEMA_V(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_sema_v")
+Inst_DS__DS_GWS_SEMA_V::Inst_DS__DS_GWS_SEMA_V(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_sema_v")
 {} // Inst_DS__DS_GWS_SEMA_V
 
 Inst_DS__DS_GWS_SEMA_V::~Inst_DS__DS_GWS_SEMA_V() {} // ~Inst_DS__DS_GWS_SEMA_V
@@ -36091,8 +36116,8 @@ Inst_DS__DS_GWS_SEMA_V::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_GWS_SEMA_BR class methods ---
 
-Inst_DS__DS_GWS_SEMA_BR::Inst_DS__DS_GWS_SEMA_BR(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_sema_br")
+Inst_DS__DS_GWS_SEMA_BR::Inst_DS__DS_GWS_SEMA_BR(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_sema_br")
 {} // Inst_DS__DS_GWS_SEMA_BR
 
 Inst_DS__DS_GWS_SEMA_BR::~Inst_DS__DS_GWS_SEMA_BR() {
@@ -36119,8 +36144,8 @@ Inst_DS__DS_GWS_SEMA_BR::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_GWS_SEMA_P class methods ---
 
-Inst_DS__DS_GWS_SEMA_P::Inst_DS__DS_GWS_SEMA_P(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_sema_p")
+Inst_DS__DS_GWS_SEMA_P::Inst_DS__DS_GWS_SEMA_P(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_sema_p")
 {} // Inst_DS__DS_GWS_SEMA_P
 
 Inst_DS__DS_GWS_SEMA_P::~Inst_DS__DS_GWS_SEMA_P() {} // ~Inst_DS__DS_GWS_SEMA_P
@@ -36142,8 +36167,8 @@ Inst_DS__DS_GWS_SEMA_P::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_GWS_BARRIER class methods ---
 
-Inst_DS__DS_GWS_BARRIER::Inst_DS__DS_GWS_BARRIER(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_gws_barrier")
+Inst_DS__DS_GWS_BARRIER::Inst_DS__DS_GWS_BARRIER(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_gws_barrier")
 {} // Inst_DS__DS_GWS_BARRIER
 
 Inst_DS__DS_GWS_BARRIER::~Inst_DS__DS_GWS_BARRIER() {
@@ -36185,8 +36210,8 @@ Inst_DS__DS_GWS_BARRIER::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_CONSUME class methods ---
 
-Inst_DS__DS_CONSUME::Inst_DS__DS_CONSUME(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_consume")
+Inst_DS__DS_CONSUME::Inst_DS__DS_CONSUME(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_consume")
 {} // Inst_DS__DS_CONSUME
 
 Inst_DS__DS_CONSUME::~Inst_DS__DS_CONSUME() {} // ~Inst_DS__DS_CONSUME
@@ -36202,8 +36227,8 @@ Inst_DS__DS_CONSUME::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_APPEND class methods ---
 
-Inst_DS__DS_APPEND::Inst_DS__DS_APPEND(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_append")
+Inst_DS__DS_APPEND::Inst_DS__DS_APPEND(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_append")
 {} // Inst_DS__DS_APPEND
 
 Inst_DS__DS_APPEND::~Inst_DS__DS_APPEND() {} // ~Inst_DS__DS_APPEND
@@ -36218,8 +36243,8 @@ Inst_DS__DS_APPEND::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ORDERED_COUNT class methods ---
 
-Inst_DS__DS_ORDERED_COUNT::Inst_DS__DS_ORDERED_COUNT(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_ordered_count")
+Inst_DS__DS_ORDERED_COUNT::Inst_DS__DS_ORDERED_COUNT(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_ordered_count")
 {} // Inst_DS__DS_ORDERED_COUNT
 
 Inst_DS__DS_ORDERED_COUNT::~Inst_DS__DS_ORDERED_COUNT() {
@@ -36236,8 +36261,8 @@ Inst_DS__DS_ORDERED_COUNT::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_ADD_SRC2_U64 class methods ---
 
-Inst_DS__DS_ADD_SRC2_U64::Inst_DS__DS_ADD_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_add_src2_u64")
+Inst_DS__DS_ADD_SRC2_U64::Inst_DS__DS_ADD_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_add_src2_u64")
 {} // Inst_DS__DS_ADD_SRC2_U64
 
 Inst_DS__DS_ADD_SRC2_U64::~Inst_DS__DS_ADD_SRC2_U64() {
@@ -36256,8 +36281,8 @@ Inst_DS__DS_ADD_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_SUB_SRC2_U64 class methods ---
 
-Inst_DS__DS_SUB_SRC2_U64::Inst_DS__DS_SUB_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_sub_src2_u64")
+Inst_DS__DS_SUB_SRC2_U64::Inst_DS__DS_SUB_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_sub_src2_u64")
 {} // Inst_DS__DS_SUB_SRC2_U64
 
 Inst_DS__DS_SUB_SRC2_U64::~Inst_DS__DS_SUB_SRC2_U64() {
@@ -36276,8 +36301,8 @@ Inst_DS__DS_SUB_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_RSUB_SRC2_U64 class methods ---
 
-Inst_DS__DS_RSUB_SRC2_U64::Inst_DS__DS_RSUB_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_rsub_src2_u64")
+Inst_DS__DS_RSUB_SRC2_U64::Inst_DS__DS_RSUB_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_rsub_src2_u64")
 {} // Inst_DS__DS_RSUB_SRC2_U64
 
 Inst_DS__DS_RSUB_SRC2_U64::~Inst_DS__DS_RSUB_SRC2_U64() {
@@ -36296,8 +36321,8 @@ Inst_DS__DS_RSUB_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_INC_SRC2_U64 class methods ---
 
-Inst_DS__DS_INC_SRC2_U64::Inst_DS__DS_INC_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_inc_src2_u64")
+Inst_DS__DS_INC_SRC2_U64::Inst_DS__DS_INC_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_inc_src2_u64")
 {} // Inst_DS__DS_INC_SRC2_U64
 
 Inst_DS__DS_INC_SRC2_U64::~Inst_DS__DS_INC_SRC2_U64() {
@@ -36316,8 +36341,8 @@ Inst_DS__DS_INC_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_DEC_SRC2_U64 class methods ---
 
-Inst_DS__DS_DEC_SRC2_U64::Inst_DS__DS_DEC_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_dec_src2_u64")
+Inst_DS__DS_DEC_SRC2_U64::Inst_DS__DS_DEC_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_dec_src2_u64")
 {} // Inst_DS__DS_DEC_SRC2_U64
 
 Inst_DS__DS_DEC_SRC2_U64::~Inst_DS__DS_DEC_SRC2_U64() {
@@ -36337,8 +36362,8 @@ Inst_DS__DS_DEC_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_I64 class methods ---
 
-Inst_DS__DS_MIN_SRC2_I64::Inst_DS__DS_MIN_SRC2_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_i64")
+Inst_DS__DS_MIN_SRC2_I64::Inst_DS__DS_MIN_SRC2_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_i64")
 {} // Inst_DS__DS_MIN_SRC2_I64
 
 Inst_DS__DS_MIN_SRC2_I64::~Inst_DS__DS_MIN_SRC2_I64() {
@@ -36357,8 +36382,8 @@ Inst_DS__DS_MIN_SRC2_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_I64 class methods ---
 
-Inst_DS__DS_MAX_SRC2_I64::Inst_DS__DS_MAX_SRC2_I64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_i64")
+Inst_DS__DS_MAX_SRC2_I64::Inst_DS__DS_MAX_SRC2_I64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_i64")
 {} // Inst_DS__DS_MAX_SRC2_I64
 
 Inst_DS__DS_MAX_SRC2_I64::~Inst_DS__DS_MAX_SRC2_I64() {
@@ -36377,8 +36402,8 @@ Inst_DS__DS_MAX_SRC2_I64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_U64 class methods ---
 
-Inst_DS__DS_MIN_SRC2_U64::Inst_DS__DS_MIN_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_u64")
+Inst_DS__DS_MIN_SRC2_U64::Inst_DS__DS_MIN_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_u64")
 {} // Inst_DS__DS_MIN_SRC2_U64
 
 Inst_DS__DS_MIN_SRC2_U64::~Inst_DS__DS_MIN_SRC2_U64() {
@@ -36397,8 +36422,8 @@ Inst_DS__DS_MIN_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_U64 class methods ---
 
-Inst_DS__DS_MAX_SRC2_U64::Inst_DS__DS_MAX_SRC2_U64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_u64")
+Inst_DS__DS_MAX_SRC2_U64::Inst_DS__DS_MAX_SRC2_U64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_u64")
 {} // Inst_DS__DS_MAX_SRC2_U64
 
 Inst_DS__DS_MAX_SRC2_U64::~Inst_DS__DS_MAX_SRC2_U64() {
@@ -36417,8 +36442,8 @@ Inst_DS__DS_MAX_SRC2_U64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_AND_SRC2_B64 class methods ---
 
-Inst_DS__DS_AND_SRC2_B64::Inst_DS__DS_AND_SRC2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_and_src2_b64")
+Inst_DS__DS_AND_SRC2_B64::Inst_DS__DS_AND_SRC2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_and_src2_b64")
 {} // Inst_DS__DS_AND_SRC2_B64
 
 Inst_DS__DS_AND_SRC2_B64::~Inst_DS__DS_AND_SRC2_B64() {
@@ -36437,8 +36462,8 @@ Inst_DS__DS_AND_SRC2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_OR_SRC2_B64 class methods ---
 
-Inst_DS__DS_OR_SRC2_B64::Inst_DS__DS_OR_SRC2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_or_src2_b64")
+Inst_DS__DS_OR_SRC2_B64::Inst_DS__DS_OR_SRC2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_or_src2_b64")
 {} // Inst_DS__DS_OR_SRC2_B64
 
 Inst_DS__DS_OR_SRC2_B64::~Inst_DS__DS_OR_SRC2_B64() {
@@ -36457,8 +36482,8 @@ Inst_DS__DS_OR_SRC2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_XOR_SRC2_B64 class methods ---
 
-Inst_DS__DS_XOR_SRC2_B64::Inst_DS__DS_XOR_SRC2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_xor_src2_b64")
+Inst_DS__DS_XOR_SRC2_B64::Inst_DS__DS_XOR_SRC2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_xor_src2_b64")
 {} // Inst_DS__DS_XOR_SRC2_B64
 
 Inst_DS__DS_XOR_SRC2_B64::~Inst_DS__DS_XOR_SRC2_B64() {
@@ -36477,8 +36502,8 @@ Inst_DS__DS_XOR_SRC2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRITE_SRC2_B64 class methods ---
 
-Inst_DS__DS_WRITE_SRC2_B64::Inst_DS__DS_WRITE_SRC2_B64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_src2_b64")
+Inst_DS__DS_WRITE_SRC2_B64::Inst_DS__DS_WRITE_SRC2_B64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_src2_b64")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -36501,8 +36526,8 @@ Inst_DS__DS_WRITE_SRC2_B64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MIN_SRC2_F64 class methods ---
 
-Inst_DS__DS_MIN_SRC2_F64::Inst_DS__DS_MIN_SRC2_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_min_src2_f64")
+Inst_DS__DS_MIN_SRC2_F64::Inst_DS__DS_MIN_SRC2_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_min_src2_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MIN_SRC2_F64
@@ -36524,8 +36549,8 @@ Inst_DS__DS_MIN_SRC2_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_MAX_SRC2_F64 class methods ---
 
-Inst_DS__DS_MAX_SRC2_F64::Inst_DS__DS_MAX_SRC2_F64(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_max_src2_f64")
+Inst_DS__DS_MAX_SRC2_F64::Inst_DS__DS_MAX_SRC2_F64(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_max_src2_f64")
 {
     setFlag(F64);
 } // Inst_DS__DS_MAX_SRC2_F64
@@ -36547,8 +36572,8 @@ Inst_DS__DS_MAX_SRC2_F64::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_DS__DS_WRITE_B96 class methods ---
 
-Inst_DS__DS_WRITE_B96::Inst_DS__DS_WRITE_B96(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b96")
+Inst_DS__DS_WRITE_B96::Inst_DS__DS_WRITE_B96(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b96")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -36608,8 +36633,8 @@ Inst_DS__DS_WRITE_B96::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_WRITE_B128 class methods ---
 
-Inst_DS__DS_WRITE_B128::Inst_DS__DS_WRITE_B128(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_write_b128")
+Inst_DS__DS_WRITE_B128::Inst_DS__DS_WRITE_B128(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_write_b128")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -36673,8 +36698,8 @@ Inst_DS__DS_WRITE_B128::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_DS__DS_READ_B96 class methods ---
 
-Inst_DS__DS_READ_B96::Inst_DS__DS_READ_B96(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_b96")
+Inst_DS__DS_READ_B96::Inst_DS__DS_READ_B96(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_b96")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36735,8 +36760,8 @@ Inst_DS__DS_READ_B96::completeAcc(GPUDynInstPtr gpuDynInst)
 }
 // --- Inst_DS__DS_READ_B128 class methods ---
 
-Inst_DS__DS_READ_B128::Inst_DS__DS_READ_B128(InFmt_DS *iFmt) :
-    Inst_DS(iFmt, "ds_read_b128")
+Inst_DS__DS_READ_B128::Inst_DS__DS_READ_B128(InFmt_DS *iFmt)
+    : Inst_DS(iFmt, "ds_read_b128")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36802,8 +36827,8 @@ Inst_DS__DS_READ_B128::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_X class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_X ::Inst_MUBUF__BUFFER_LOAD_FORMAT_X(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_x")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_x")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36831,8 +36856,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_XY class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_XY ::Inst_MUBUF__BUFFER_LOAD_FORMAT_XY(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_xy")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_xy")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36860,8 +36885,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZ class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZ ::Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZ(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_xyz")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36889,8 +36914,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZW class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZW ::Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZW(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_xyzw")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -36918,8 +36943,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_X class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_X ::Inst_MUBUF__BUFFER_STORE_FORMAT_X(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_x")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_x")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -36947,8 +36972,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_XY class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_XY ::Inst_MUBUF__BUFFER_STORE_FORMAT_XY(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_xy")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_xy")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -36976,8 +37001,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_XYZ class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_XYZ ::Inst_MUBUF__BUFFER_STORE_FORMAT_XYZ(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_xyz")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37005,8 +37030,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_XYZW class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_XYZW ::Inst_MUBUF__BUFFER_STORE_FORMAT_XYZW(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_xyzw")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37034,8 +37059,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_X class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_X ::Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_X(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_d16_x")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_d16_x")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37063,8 +37088,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XY class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XY ::Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XY(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_d16_xy")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_d16_xy")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37093,8 +37118,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZ class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZ ::
-    Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZ(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_d16_xyz")
+    Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZ(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_d16_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37123,8 +37148,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZW class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZW ::
-    Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZW(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_format_d16_xyzw")
+    Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZW(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_format_d16_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37153,8 +37178,8 @@ Inst_MUBUF__BUFFER_LOAD_FORMAT_D16_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_D16_X class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_D16_X ::Inst_MUBUF__BUFFER_STORE_FORMAT_D16_X(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_d16_x")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_d16_x")
 {
     setFlag(Store);
 } // Inst_MUBUF__BUFFER_STORE_FORMAT_D16_X
@@ -37181,8 +37206,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_D16_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XY class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XY ::
-    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XY(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_d16_xy")
+    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XY(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_d16_xy")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37211,8 +37236,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZ class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZ ::
-    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZ(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_d16_xyz")
+    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZ(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_d16_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37241,8 +37266,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZW class methods ---
 
 Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZW ::
-    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZW(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_format_d16_xyzw")
+    Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZW(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_format_d16_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37271,8 +37296,8 @@ Inst_MUBUF__BUFFER_STORE_FORMAT_D16_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_UBYTE class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_UBYTE ::Inst_MUBUF__BUFFER_LOAD_UBYTE(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_ubyte")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_ubyte")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37314,23 +37339,23 @@ Inst_MUBUF__BUFFER_LOAD_UBYTE::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37365,8 +37390,8 @@ Inst_MUBUF__BUFFER_LOAD_UBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_SBYTE class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_SBYTE ::Inst_MUBUF__BUFFER_LOAD_SBYTE(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_sbyte")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_sbyte")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37394,8 +37419,8 @@ Inst_MUBUF__BUFFER_LOAD_SBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_USHORT class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_USHORT ::Inst_MUBUF__BUFFER_LOAD_USHORT(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_ushort")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_ushort")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37437,23 +37462,23 @@ Inst_MUBUF__BUFFER_LOAD_USHORT::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37488,8 +37513,8 @@ Inst_MUBUF__BUFFER_LOAD_USHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_SSHORT class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_SSHORT ::Inst_MUBUF__BUFFER_LOAD_SSHORT(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_sshort")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_sshort")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37517,8 +37542,8 @@ Inst_MUBUF__BUFFER_LOAD_SSHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_DWORD class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_DWORD ::Inst_MUBUF__BUFFER_LOAD_DWORD(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_dword")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_dword")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37560,23 +37585,23 @@ Inst_MUBUF__BUFFER_LOAD_DWORD::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37610,8 +37635,8 @@ Inst_MUBUF__BUFFER_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_DWORDX2 class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_DWORDX2 ::Inst_MUBUF__BUFFER_LOAD_DWORDX2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_dwordx2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37653,23 +37678,23 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX2::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37708,8 +37733,8 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_DWORDX3 class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_DWORDX3 ::Inst_MUBUF__BUFFER_LOAD_DWORDX3(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_dwordx3")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_dwordx3")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37751,23 +37776,23 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX3::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37811,8 +37836,8 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_LOAD_DWORDX4 class methods ---
 
 Inst_MUBUF__BUFFER_LOAD_DWORDX4 ::Inst_MUBUF__BUFFER_LOAD_DWORDX4(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_load_dwordx4")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_load_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -37854,23 +37879,23 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX4::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -37919,8 +37944,8 @@ Inst_MUBUF__BUFFER_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_BYTE class methods ---
 
 Inst_MUBUF__BUFFER_STORE_BYTE ::Inst_MUBUF__BUFFER_STORE_BYTE(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_byte")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_byte")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -37965,23 +37990,23 @@ Inst_MUBUF__BUFFER_STORE_BYTE::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38007,8 +38032,8 @@ Inst_MUBUF__BUFFER_STORE_BYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_SHORT class methods ---
 
 Inst_MUBUF__BUFFER_STORE_SHORT ::Inst_MUBUF__BUFFER_STORE_SHORT(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_short")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_short")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -38053,23 +38078,23 @@ Inst_MUBUF__BUFFER_STORE_SHORT::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38095,8 +38120,8 @@ Inst_MUBUF__BUFFER_STORE_SHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_DWORD class methods ---
 
 Inst_MUBUF__BUFFER_STORE_DWORD::Inst_MUBUF__BUFFER_STORE_DWORD(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_dword")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_dword")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -38141,23 +38166,23 @@ Inst_MUBUF__BUFFER_STORE_DWORD::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38183,8 +38208,8 @@ Inst_MUBUF__BUFFER_STORE_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_DWORDX2 class methods ---
 
 Inst_MUBUF__BUFFER_STORE_DWORDX2 ::Inst_MUBUF__BUFFER_STORE_DWORDX2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_dwordx2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -38231,23 +38256,23 @@ Inst_MUBUF__BUFFER_STORE_DWORDX2::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38275,8 +38300,8 @@ Inst_MUBUF__BUFFER_STORE_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_DWORDX3 class methods ---
 
 Inst_MUBUF__BUFFER_STORE_DWORDX3 ::Inst_MUBUF__BUFFER_STORE_DWORDX3(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_dwordx3")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_dwordx3")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -38325,23 +38350,23 @@ Inst_MUBUF__BUFFER_STORE_DWORDX3::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38371,8 +38396,8 @@ Inst_MUBUF__BUFFER_STORE_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_DWORDX4 class methods ---
 
 Inst_MUBUF__BUFFER_STORE_DWORDX4 ::Inst_MUBUF__BUFFER_STORE_DWORDX4(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_dwordx4")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -38423,23 +38448,23 @@ Inst_MUBUF__BUFFER_STORE_DWORDX4::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38471,8 +38496,8 @@ Inst_MUBUF__BUFFER_STORE_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_STORE_LDS_DWORD class methods ---
 
 Inst_MUBUF__BUFFER_STORE_LDS_DWORD ::Inst_MUBUF__BUFFER_STORE_LDS_DWORD(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_store_lds_dword")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_store_lds_dword")
 {
     setFlag(Store);
     setFlag(GlobalSegment);
@@ -38491,8 +38516,8 @@ Inst_MUBUF__BUFFER_STORE_LDS_DWORD::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MUBUF__BUFFER_WBINVL1 class methods ---
 
-Inst_MUBUF__BUFFER_WBINVL1::Inst_MUBUF__BUFFER_WBINVL1(InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_wbinvl1")
+Inst_MUBUF__BUFFER_WBINVL1::Inst_MUBUF__BUFFER_WBINVL1(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_wbinvl1")
 {
     setFlag(MemoryRef);
     setFlag(GPUStaticInst::MemSync);
@@ -38542,8 +38567,8 @@ Inst_MUBUF__BUFFER_WBINVL1::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_WBINVL1_VOL class methods ---
 
 Inst_MUBUF__BUFFER_WBINVL1_VOL ::Inst_MUBUF__BUFFER_WBINVL1_VOL(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_wbinvl1_vol")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_wbinvl1_vol")
 {
     // This instruction is same as buffer_wbinvl1 instruction except this
     // instruction only invalidate L1 shader line with MTYPE SC and GC.
@@ -38594,8 +38619,8 @@ Inst_MUBUF__BUFFER_WBINVL1_VOL::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SWAP class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SWAP ::Inst_MUBUF__BUFFER_ATOMIC_SWAP(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_swap")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_swap")
 {
     setFlag(AtomicExch);
     if (instData.GLC) {
@@ -38623,8 +38648,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SWAP::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP ::Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_cmpswap")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_cmpswap")
 {
     setFlag(AtomicCAS);
     if (instData.GLC) {
@@ -38676,23 +38701,23 @@ Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP::execute(GPUDynInstPtr gpuDynInst)
 
     if (!instData.IDXEN && !instData.OFFEN) {
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (!instData.IDXEN && instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr0, addr1, rsrcDesc, offset, inst_offset);
     } else if (instData.IDXEN && !instData.OFFEN) {
         addr0.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     } else {
         addr0.read();
         addr1.read();
         calcAddr<ConstVecOperandU32, ConstVecOperandU32,
-            ConstScalarOperandU128, ConstScalarOperandU32>(
+                 ConstScalarOperandU128, ConstScalarOperandU32>(
             gpuDynInst, addr1, addr0, rsrcDesc, offset, inst_offset);
     }
 
@@ -38733,8 +38758,8 @@ Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_ADD class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_ADD ::Inst_MUBUF__BUFFER_ATOMIC_ADD(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_add")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_add")
 {
     setFlag(AtomicAdd);
     if (instData.GLC) {
@@ -38762,8 +38787,8 @@ Inst_MUBUF__BUFFER_ATOMIC_ADD::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SUB class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SUB ::Inst_MUBUF__BUFFER_ATOMIC_SUB(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_sub")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_sub")
 {
     setFlag(AtomicSub);
     if (instData.GLC) {
@@ -38791,8 +38816,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SMIN class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SMIN ::Inst_MUBUF__BUFFER_ATOMIC_SMIN(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_smin")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_smin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -38820,8 +38845,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SMIN::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_UMIN class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_UMIN ::Inst_MUBUF__BUFFER_ATOMIC_UMIN(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_umin")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_umin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -38849,8 +38874,8 @@ Inst_MUBUF__BUFFER_ATOMIC_UMIN::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SMAX class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SMAX ::Inst_MUBUF__BUFFER_ATOMIC_SMAX(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_smax")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_smax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -38878,8 +38903,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SMAX::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_UMAX class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_UMAX ::Inst_MUBUF__BUFFER_ATOMIC_UMAX(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_umax")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_umax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -38907,8 +38932,8 @@ Inst_MUBUF__BUFFER_ATOMIC_UMAX::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_AND class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_AND ::Inst_MUBUF__BUFFER_ATOMIC_AND(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_and")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_and")
 {
     setFlag(AtomicAnd);
     if (instData.GLC) {
@@ -38935,9 +38960,8 @@ Inst_MUBUF__BUFFER_ATOMIC_AND::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MUBUF__BUFFER_ATOMIC_OR class methods ---
 
-Inst_MUBUF__BUFFER_ATOMIC_OR ::Inst_MUBUF__BUFFER_ATOMIC_OR(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_or")
+Inst_MUBUF__BUFFER_ATOMIC_OR ::Inst_MUBUF__BUFFER_ATOMIC_OR(InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_or")
 {
     setFlag(AtomicOr);
     if (instData.GLC) {
@@ -38965,8 +38989,8 @@ Inst_MUBUF__BUFFER_ATOMIC_OR::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_XOR class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_XOR ::Inst_MUBUF__BUFFER_ATOMIC_XOR(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_xor")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_xor")
 {
     setFlag(AtomicXor);
     if (instData.GLC) {
@@ -38994,8 +39018,8 @@ Inst_MUBUF__BUFFER_ATOMIC_XOR::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_INC class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_INC ::Inst_MUBUF__BUFFER_ATOMIC_INC(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_inc")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_inc")
 {
     setFlag(AtomicInc);
     if (instData.GLC) {
@@ -39023,8 +39047,8 @@ Inst_MUBUF__BUFFER_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_DEC class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_DEC ::Inst_MUBUF__BUFFER_ATOMIC_DEC(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_dec")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_dec")
 {
     setFlag(AtomicDec);
     if (instData.GLC) {
@@ -39052,8 +39076,8 @@ Inst_MUBUF__BUFFER_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2 ::Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_swap_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_swap_x2")
 {
     setFlag(AtomicExch);
     if (instData.GLC) {
@@ -39081,8 +39105,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP_X2 ::Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_cmpswap_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_cmpswap_x2")
 {
     setFlag(AtomicCAS);
     if (instData.GLC) {
@@ -39112,8 +39136,8 @@ Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_ADD_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_ADD_X2 ::Inst_MUBUF__BUFFER_ATOMIC_ADD_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_add_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_add_x2")
 {
     setFlag(AtomicAdd);
     if (instData.GLC) {
@@ -39141,8 +39165,8 @@ Inst_MUBUF__BUFFER_ATOMIC_ADD_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SUB_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SUB_X2 ::Inst_MUBUF__BUFFER_ATOMIC_SUB_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_sub_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_sub_x2")
 {
     setFlag(AtomicSub);
     if (instData.GLC) {
@@ -39170,8 +39194,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SUB_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SMIN_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SMIN_X2 ::Inst_MUBUF__BUFFER_ATOMIC_SMIN_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_smin_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_smin_x2")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -39199,8 +39223,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SMIN_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_UMIN_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_UMIN_X2 ::Inst_MUBUF__BUFFER_ATOMIC_UMIN_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_umin_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_umin_x2")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -39228,8 +39252,8 @@ Inst_MUBUF__BUFFER_ATOMIC_UMIN_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_SMAX_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_SMAX_X2 ::Inst_MUBUF__BUFFER_ATOMIC_SMAX_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_smax_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_smax_x2")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -39257,8 +39281,8 @@ Inst_MUBUF__BUFFER_ATOMIC_SMAX_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_UMAX_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_UMAX_X2 ::Inst_MUBUF__BUFFER_ATOMIC_UMAX_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_umax_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_umax_x2")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -39286,8 +39310,8 @@ Inst_MUBUF__BUFFER_ATOMIC_UMAX_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_AND_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_AND_X2 ::Inst_MUBUF__BUFFER_ATOMIC_AND_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_and_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_and_x2")
 {
     setFlag(AtomicAnd);
     if (instData.GLC) {
@@ -39315,8 +39339,8 @@ Inst_MUBUF__BUFFER_ATOMIC_AND_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_OR_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_OR_X2 ::Inst_MUBUF__BUFFER_ATOMIC_OR_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_or_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_or_x2")
 {
     setFlag(AtomicOr);
     if (instData.GLC) {
@@ -39342,8 +39366,8 @@ Inst_MUBUF__BUFFER_ATOMIC_OR_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_XOR_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_XOR_X2 ::Inst_MUBUF__BUFFER_ATOMIC_XOR_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_xor_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_xor_x2")
 {
     setFlag(AtomicXor);
     if (instData.GLC) {
@@ -39371,8 +39395,8 @@ Inst_MUBUF__BUFFER_ATOMIC_XOR_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_INC_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_INC_X2 ::Inst_MUBUF__BUFFER_ATOMIC_INC_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_inc_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_inc_x2")
 {
     setFlag(AtomicInc);
     if (instData.GLC) {
@@ -39400,8 +39424,8 @@ Inst_MUBUF__BUFFER_ATOMIC_INC_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MUBUF__BUFFER_ATOMIC_DEC_X2 class methods ---
 
 Inst_MUBUF__BUFFER_ATOMIC_DEC_X2 ::Inst_MUBUF__BUFFER_ATOMIC_DEC_X2(
-    InFmt_MUBUF *iFmt) :
-    Inst_MUBUF(iFmt, "buffer_atomic_dec_x2")
+    InFmt_MUBUF *iFmt)
+    : Inst_MUBUF(iFmt, "buffer_atomic_dec_x2")
 {
     setFlag(AtomicDec);
     if (instData.GLC) {
@@ -39430,8 +39454,8 @@ Inst_MUBUF__BUFFER_ATOMIC_DEC_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_X class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_X ::Inst_MTBUF__TBUFFER_LOAD_FORMAT_X(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_x")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_x")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39459,8 +39483,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_XY class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_XY ::Inst_MTBUF__TBUFFER_LOAD_FORMAT_XY(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_xy")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_xy")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39488,8 +39512,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZ class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZ ::Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZ(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_xyz")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39517,8 +39541,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZW class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZW ::Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZW(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_xyzw")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39546,8 +39570,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_X class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_X ::Inst_MTBUF__TBUFFER_STORE_FORMAT_X(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_x")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_x")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39575,8 +39599,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_XY class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_XY ::Inst_MTBUF__TBUFFER_STORE_FORMAT_XY(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_xy")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_xy")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39604,8 +39628,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZ class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZ ::Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZ(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_xyz")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39633,8 +39657,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZW class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZW ::Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZW(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_xyzw")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39663,8 +39687,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_X class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_X ::Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_X(
-    InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_d16_x")
+    InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_d16_x")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39692,8 +39716,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XY class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XY ::
-    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XY(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xy")
+    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XY(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xy")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39722,8 +39746,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZ class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZ ::
-    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZ(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xyz")
+    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZ(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39752,8 +39776,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZW class methods ---
 
 Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZW ::
-    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZW(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xyzw")
+    Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZW(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_load_format_d16_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39782,8 +39806,8 @@ Inst_MTBUF__TBUFFER_LOAD_FORMAT_D16_XYZW::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_X class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_X ::
-    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_X(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_d16_x")
+    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_X(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_d16_x")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39812,8 +39836,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_X::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XY class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XY ::
-    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XY(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xy")
+    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XY(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xy")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39842,8 +39866,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XY::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZ class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZ ::
-    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZ(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xyz")
+    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZ(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xyz")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39872,8 +39896,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZ::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW class methods ---
 
 Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW ::
-    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW(InFmt_MTBUF *iFmt) :
-    Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xyzw")
+    Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW(InFmt_MTBUF *iFmt)
+    : Inst_MTBUF(iFmt, "tbuffer_store_format_d16_xyzw")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -39903,8 +39927,8 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW::completeAcc(
 {} // execute
 // --- Inst_MIMG__IMAGE_LOAD class methods ---
 
-Inst_MIMG__IMAGE_LOAD::Inst_MIMG__IMAGE_LOAD(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load")
+Inst_MIMG__IMAGE_LOAD::Inst_MIMG__IMAGE_LOAD(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39930,8 +39954,8 @@ Inst_MIMG__IMAGE_LOAD::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_LOAD_MIP class methods ---
 
-Inst_MIMG__IMAGE_LOAD_MIP::Inst_MIMG__IMAGE_LOAD_MIP(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load_mip")
+Inst_MIMG__IMAGE_LOAD_MIP::Inst_MIMG__IMAGE_LOAD_MIP(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load_mip")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39958,8 +39982,8 @@ Inst_MIMG__IMAGE_LOAD_MIP::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_LOAD_PCK class methods ---
 
-Inst_MIMG__IMAGE_LOAD_PCK::Inst_MIMG__IMAGE_LOAD_PCK(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load_pck")
+Inst_MIMG__IMAGE_LOAD_PCK::Inst_MIMG__IMAGE_LOAD_PCK(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load_pck")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -39986,9 +40010,8 @@ Inst_MIMG__IMAGE_LOAD_PCK::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_LOAD_PCK_SGN class methods ---
 
-Inst_MIMG__IMAGE_LOAD_PCK_SGN::Inst_MIMG__IMAGE_LOAD_PCK_SGN(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load_pck_sgn")
+Inst_MIMG__IMAGE_LOAD_PCK_SGN::Inst_MIMG__IMAGE_LOAD_PCK_SGN(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load_pck_sgn")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -40016,9 +40039,8 @@ Inst_MIMG__IMAGE_LOAD_PCK_SGN::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_LOAD_MIP_PCK class methods ---
 
-Inst_MIMG__IMAGE_LOAD_MIP_PCK::Inst_MIMG__IMAGE_LOAD_MIP_PCK(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load_mip_pck")
+Inst_MIMG__IMAGE_LOAD_MIP_PCK::Inst_MIMG__IMAGE_LOAD_MIP_PCK(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load_mip_pck")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -40047,8 +40069,8 @@ Inst_MIMG__IMAGE_LOAD_MIP_PCK::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_LOAD_MIP_PCK_SGN class methods ---
 
 Inst_MIMG__IMAGE_LOAD_MIP_PCK_SGN::Inst_MIMG__IMAGE_LOAD_MIP_PCK_SGN(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_load_mip_pck_sgn")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_load_mip_pck_sgn")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -40076,8 +40098,8 @@ Inst_MIMG__IMAGE_LOAD_MIP_PCK_SGN::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_STORE class methods ---
 
-Inst_MIMG__IMAGE_STORE::Inst_MIMG__IMAGE_STORE(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_store")
+Inst_MIMG__IMAGE_STORE::Inst_MIMG__IMAGE_STORE(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_store")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -40103,8 +40125,8 @@ Inst_MIMG__IMAGE_STORE::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_STORE_MIP class methods ---
 
-Inst_MIMG__IMAGE_STORE_MIP::Inst_MIMG__IMAGE_STORE_MIP(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_store_mip")
+Inst_MIMG__IMAGE_STORE_MIP::Inst_MIMG__IMAGE_STORE_MIP(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_store_mip")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -40132,8 +40154,8 @@ Inst_MIMG__IMAGE_STORE_MIP::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_STORE_PCK class methods ---
 
-Inst_MIMG__IMAGE_STORE_PCK::Inst_MIMG__IMAGE_STORE_PCK(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_store_pck")
+Inst_MIMG__IMAGE_STORE_PCK::Inst_MIMG__IMAGE_STORE_PCK(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_store_pck")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -40161,8 +40183,8 @@ Inst_MIMG__IMAGE_STORE_PCK::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_STORE_MIP_PCK class methods ---
 
 Inst_MIMG__IMAGE_STORE_MIP_PCK::Inst_MIMG__IMAGE_STORE_MIP_PCK(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_store_mip_pck")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_store_mip_pck")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -40190,8 +40212,8 @@ Inst_MIMG__IMAGE_STORE_MIP_PCK::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_MIMG__IMAGE_GET_RESINFO class methods ---
 
-Inst_MIMG__IMAGE_GET_RESINFO::Inst_MIMG__IMAGE_GET_RESINFO(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_get_resinfo")
+Inst_MIMG__IMAGE_GET_RESINFO::Inst_MIMG__IMAGE_GET_RESINFO(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_get_resinfo")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GET_RESINFO
@@ -40210,8 +40232,8 @@ Inst_MIMG__IMAGE_GET_RESINFO::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_SWAP class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_SWAP::Inst_MIMG__IMAGE_ATOMIC_SWAP(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_swap")
+Inst_MIMG__IMAGE_ATOMIC_SWAP::Inst_MIMG__IMAGE_ATOMIC_SWAP(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_swap")
 {
     setFlag(AtomicExch);
     if (instData.GLC) {
@@ -40239,8 +40261,8 @@ Inst_MIMG__IMAGE_ATOMIC_SWAP::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_ATOMIC_CMPSWAP class methods ---
 
 Inst_MIMG__IMAGE_ATOMIC_CMPSWAP::Inst_MIMG__IMAGE_ATOMIC_CMPSWAP(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_cmpswap")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_cmpswap")
 {
     setFlag(AtomicCAS);
     if (instData.GLC) {
@@ -40269,8 +40291,8 @@ Inst_MIMG__IMAGE_ATOMIC_CMPSWAP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_ADD class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_ADD::Inst_MIMG__IMAGE_ATOMIC_ADD(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_add")
+Inst_MIMG__IMAGE_ATOMIC_ADD::Inst_MIMG__IMAGE_ATOMIC_ADD(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_add")
 {
     setFlag(AtomicAdd);
     if (instData.GLC) {
@@ -40297,8 +40319,8 @@ Inst_MIMG__IMAGE_ATOMIC_ADD::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_SUB class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_SUB::Inst_MIMG__IMAGE_ATOMIC_SUB(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_sub")
+Inst_MIMG__IMAGE_ATOMIC_SUB::Inst_MIMG__IMAGE_ATOMIC_SUB(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_sub")
 {
     setFlag(AtomicSub);
     if (instData.GLC) {
@@ -40325,8 +40347,8 @@ Inst_MIMG__IMAGE_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_SMIN class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_SMIN::Inst_MIMG__IMAGE_ATOMIC_SMIN(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_smin")
+Inst_MIMG__IMAGE_ATOMIC_SMIN::Inst_MIMG__IMAGE_ATOMIC_SMIN(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_smin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -40353,8 +40375,8 @@ Inst_MIMG__IMAGE_ATOMIC_SMIN::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_UMIN class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_UMIN::Inst_MIMG__IMAGE_ATOMIC_UMIN(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_umin")
+Inst_MIMG__IMAGE_ATOMIC_UMIN::Inst_MIMG__IMAGE_ATOMIC_UMIN(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_umin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -40381,8 +40403,8 @@ Inst_MIMG__IMAGE_ATOMIC_UMIN::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_SMAX class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_SMAX::Inst_MIMG__IMAGE_ATOMIC_SMAX(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_smax")
+Inst_MIMG__IMAGE_ATOMIC_SMAX::Inst_MIMG__IMAGE_ATOMIC_SMAX(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_smax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -40409,8 +40431,8 @@ Inst_MIMG__IMAGE_ATOMIC_SMAX::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_UMAX class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_UMAX::Inst_MIMG__IMAGE_ATOMIC_UMAX(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_umax")
+Inst_MIMG__IMAGE_ATOMIC_UMAX::Inst_MIMG__IMAGE_ATOMIC_UMAX(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_umax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -40437,8 +40459,8 @@ Inst_MIMG__IMAGE_ATOMIC_UMAX::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_AND class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_AND::Inst_MIMG__IMAGE_ATOMIC_AND(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_and")
+Inst_MIMG__IMAGE_ATOMIC_AND::Inst_MIMG__IMAGE_ATOMIC_AND(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_and")
 {
     setFlag(AtomicAnd);
     if (instData.GLC) {
@@ -40465,8 +40487,8 @@ Inst_MIMG__IMAGE_ATOMIC_AND::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_OR class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_OR::Inst_MIMG__IMAGE_ATOMIC_OR(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_or")
+Inst_MIMG__IMAGE_ATOMIC_OR::Inst_MIMG__IMAGE_ATOMIC_OR(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_or")
 {
     setFlag(AtomicOr);
     if (instData.GLC) {
@@ -40493,8 +40515,8 @@ Inst_MIMG__IMAGE_ATOMIC_OR::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_XOR class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_XOR::Inst_MIMG__IMAGE_ATOMIC_XOR(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_xor")
+Inst_MIMG__IMAGE_ATOMIC_XOR::Inst_MIMG__IMAGE_ATOMIC_XOR(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_xor")
 {
     setFlag(AtomicXor);
     if (instData.GLC) {
@@ -40521,8 +40543,8 @@ Inst_MIMG__IMAGE_ATOMIC_XOR::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_INC class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_INC::Inst_MIMG__IMAGE_ATOMIC_INC(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_inc")
+Inst_MIMG__IMAGE_ATOMIC_INC::Inst_MIMG__IMAGE_ATOMIC_INC(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_inc")
 {
     setFlag(AtomicInc);
     if (instData.GLC) {
@@ -40549,8 +40571,8 @@ Inst_MIMG__IMAGE_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_ATOMIC_DEC class methods ---
 
-Inst_MIMG__IMAGE_ATOMIC_DEC::Inst_MIMG__IMAGE_ATOMIC_DEC(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_atomic_dec")
+Inst_MIMG__IMAGE_ATOMIC_DEC::Inst_MIMG__IMAGE_ATOMIC_DEC(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_atomic_dec")
 {
     setFlag(AtomicDec);
     if (instData.GLC) {
@@ -40577,8 +40599,8 @@ Inst_MIMG__IMAGE_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE::Inst_MIMG__IMAGE_SAMPLE(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample")
+Inst_MIMG__IMAGE_SAMPLE::Inst_MIMG__IMAGE_SAMPLE(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample")
 {} // Inst_MIMG__IMAGE_SAMPLE
 
 Inst_MIMG__IMAGE_SAMPLE::~Inst_MIMG__IMAGE_SAMPLE() {
@@ -40593,8 +40615,8 @@ Inst_MIMG__IMAGE_SAMPLE::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_CL class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_CL::Inst_MIMG__IMAGE_SAMPLE_CL(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cl")
+Inst_MIMG__IMAGE_SAMPLE_CL::Inst_MIMG__IMAGE_SAMPLE_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CL
@@ -40611,8 +40633,8 @@ Inst_MIMG__IMAGE_SAMPLE_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_D class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_D::Inst_MIMG__IMAGE_SAMPLE_D(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_d")
+Inst_MIMG__IMAGE_SAMPLE_D::Inst_MIMG__IMAGE_SAMPLE_D(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_d")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_D
@@ -40629,8 +40651,8 @@ Inst_MIMG__IMAGE_SAMPLE_D::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_D_CL class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_D_CL::Inst_MIMG__IMAGE_SAMPLE_D_CL(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_d_cl")
+Inst_MIMG__IMAGE_SAMPLE_D_CL::Inst_MIMG__IMAGE_SAMPLE_D_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_d_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_D_CL
@@ -40648,8 +40670,8 @@ Inst_MIMG__IMAGE_SAMPLE_D_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_L class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_L::Inst_MIMG__IMAGE_SAMPLE_L(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_l")
+Inst_MIMG__IMAGE_SAMPLE_L::Inst_MIMG__IMAGE_SAMPLE_L(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_l")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_L
@@ -40666,8 +40688,8 @@ Inst_MIMG__IMAGE_SAMPLE_L::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_B class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_B::Inst_MIMG__IMAGE_SAMPLE_B(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_b")
+Inst_MIMG__IMAGE_SAMPLE_B::Inst_MIMG__IMAGE_SAMPLE_B(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_b")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_B
@@ -40684,8 +40706,8 @@ Inst_MIMG__IMAGE_SAMPLE_B::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_B_CL class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_B_CL::Inst_MIMG__IMAGE_SAMPLE_B_CL(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_b_cl")
+Inst_MIMG__IMAGE_SAMPLE_B_CL::Inst_MIMG__IMAGE_SAMPLE_B_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_b_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_B_CL
@@ -40702,8 +40724,8 @@ Inst_MIMG__IMAGE_SAMPLE_B_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_LZ class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_LZ::Inst_MIMG__IMAGE_SAMPLE_LZ(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_lz")
+Inst_MIMG__IMAGE_SAMPLE_LZ::Inst_MIMG__IMAGE_SAMPLE_LZ(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_lz")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_LZ
@@ -40720,8 +40742,8 @@ Inst_MIMG__IMAGE_SAMPLE_LZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C::Inst_MIMG__IMAGE_SAMPLE_C(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c")
+Inst_MIMG__IMAGE_SAMPLE_C::Inst_MIMG__IMAGE_SAMPLE_C(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C
@@ -40738,8 +40760,8 @@ Inst_MIMG__IMAGE_SAMPLE_C::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CL class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_CL::Inst_MIMG__IMAGE_SAMPLE_C_CL(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cl")
+Inst_MIMG__IMAGE_SAMPLE_C_CL::Inst_MIMG__IMAGE_SAMPLE_C_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CL
@@ -40756,8 +40778,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_D class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_D::Inst_MIMG__IMAGE_SAMPLE_C_D(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_d")
+Inst_MIMG__IMAGE_SAMPLE_C_D::Inst_MIMG__IMAGE_SAMPLE_C_D(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_d")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_D
@@ -40775,8 +40797,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_D::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_D_CL class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_D_CL::Inst_MIMG__IMAGE_SAMPLE_C_D_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_d_cl")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_d_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_D_CL
@@ -40793,8 +40815,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_D_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_L class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_L::Inst_MIMG__IMAGE_SAMPLE_C_L(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_l")
+Inst_MIMG__IMAGE_SAMPLE_C_L::Inst_MIMG__IMAGE_SAMPLE_C_L(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_l")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_L
@@ -40811,8 +40833,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_L::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_B class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_B::Inst_MIMG__IMAGE_SAMPLE_C_B(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_b")
+Inst_MIMG__IMAGE_SAMPLE_C_B::Inst_MIMG__IMAGE_SAMPLE_C_B(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_b")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_B
@@ -40830,8 +40852,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_B::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_B_CL class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_B_CL::Inst_MIMG__IMAGE_SAMPLE_C_B_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_b_cl")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_b_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_B_CL
@@ -40848,8 +40870,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_B_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_LZ class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_LZ::Inst_MIMG__IMAGE_SAMPLE_C_LZ(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_lz")
+Inst_MIMG__IMAGE_SAMPLE_C_LZ::Inst_MIMG__IMAGE_SAMPLE_C_LZ(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_lz")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_LZ
@@ -40866,8 +40888,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_LZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_O::Inst_MIMG__IMAGE_SAMPLE_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_o")
+Inst_MIMG__IMAGE_SAMPLE_O::Inst_MIMG__IMAGE_SAMPLE_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_O
@@ -40884,8 +40906,8 @@ Inst_MIMG__IMAGE_SAMPLE_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_CL_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_CL_O::Inst_MIMG__IMAGE_SAMPLE_CL_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cl_o")
+Inst_MIMG__IMAGE_SAMPLE_CL_O::Inst_MIMG__IMAGE_SAMPLE_CL_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CL_O
@@ -40902,8 +40924,8 @@ Inst_MIMG__IMAGE_SAMPLE_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_D_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_D_O::Inst_MIMG__IMAGE_SAMPLE_D_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_d_o")
+Inst_MIMG__IMAGE_SAMPLE_D_O::Inst_MIMG__IMAGE_SAMPLE_D_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_d_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_D_O
@@ -40921,8 +40943,8 @@ Inst_MIMG__IMAGE_SAMPLE_D_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_D_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_D_CL_O::Inst_MIMG__IMAGE_SAMPLE_D_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_d_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_d_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_D_CL_O
@@ -40939,8 +40961,8 @@ Inst_MIMG__IMAGE_SAMPLE_D_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_L_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_L_O::Inst_MIMG__IMAGE_SAMPLE_L_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_l_o")
+Inst_MIMG__IMAGE_SAMPLE_L_O::Inst_MIMG__IMAGE_SAMPLE_L_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_l_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_L_O
@@ -40957,8 +40979,8 @@ Inst_MIMG__IMAGE_SAMPLE_L_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_B_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_B_O::Inst_MIMG__IMAGE_SAMPLE_B_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_b_o")
+Inst_MIMG__IMAGE_SAMPLE_B_O::Inst_MIMG__IMAGE_SAMPLE_B_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_b_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_B_O
@@ -40976,8 +40998,8 @@ Inst_MIMG__IMAGE_SAMPLE_B_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_B_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_B_CL_O::Inst_MIMG__IMAGE_SAMPLE_B_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_b_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_b_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_B_CL_O
@@ -40994,8 +41016,8 @@ Inst_MIMG__IMAGE_SAMPLE_B_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_LZ_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_LZ_O::Inst_MIMG__IMAGE_SAMPLE_LZ_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_lz_o")
+Inst_MIMG__IMAGE_SAMPLE_LZ_O::Inst_MIMG__IMAGE_SAMPLE_LZ_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_lz_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_LZ_O
@@ -41012,8 +41034,8 @@ Inst_MIMG__IMAGE_SAMPLE_LZ_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_O::Inst_MIMG__IMAGE_SAMPLE_C_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_o")
+Inst_MIMG__IMAGE_SAMPLE_C_O::Inst_MIMG__IMAGE_SAMPLE_C_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_O
@@ -41031,8 +41053,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_CL_O::Inst_MIMG__IMAGE_SAMPLE_C_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CL_O
@@ -41049,9 +41071,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_D_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_D_O::Inst_MIMG__IMAGE_SAMPLE_C_D_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_d_o")
+Inst_MIMG__IMAGE_SAMPLE_C_D_O::Inst_MIMG__IMAGE_SAMPLE_C_D_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_d_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_D_O
@@ -41069,8 +41090,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_D_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_D_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_D_CL_O::Inst_MIMG__IMAGE_SAMPLE_C_D_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_d_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_d_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_D_CL_O
@@ -41087,9 +41108,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_D_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_L_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_L_O::Inst_MIMG__IMAGE_SAMPLE_C_L_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_l_o")
+Inst_MIMG__IMAGE_SAMPLE_C_L_O::Inst_MIMG__IMAGE_SAMPLE_C_L_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_l_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_L_O
@@ -41106,9 +41126,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_L_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_B_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_B_O::Inst_MIMG__IMAGE_SAMPLE_C_B_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_b_o")
+Inst_MIMG__IMAGE_SAMPLE_C_B_O::Inst_MIMG__IMAGE_SAMPLE_C_B_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_b_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_B_O
@@ -41126,8 +41145,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_B_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_B_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_B_CL_O::Inst_MIMG__IMAGE_SAMPLE_C_B_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_b_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_b_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_B_CL_O
@@ -41145,8 +41164,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_B_CL_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_LZ_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_LZ_O::Inst_MIMG__IMAGE_SAMPLE_C_LZ_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_lz_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_lz_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_LZ_O
@@ -41163,8 +41182,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_LZ_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4 class methods ---
 
-Inst_MIMG__IMAGE_GATHER4::Inst_MIMG__IMAGE_GATHER4(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4")
+Inst_MIMG__IMAGE_GATHER4::Inst_MIMG__IMAGE_GATHER4(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4
@@ -41181,8 +41200,8 @@ Inst_MIMG__IMAGE_GATHER4::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_CL class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_CL::Inst_MIMG__IMAGE_GATHER4_CL(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_cl")
+Inst_MIMG__IMAGE_GATHER4_CL::Inst_MIMG__IMAGE_GATHER4_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_CL
@@ -41199,8 +41218,8 @@ Inst_MIMG__IMAGE_GATHER4_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_L class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_L::Inst_MIMG__IMAGE_GATHER4_L(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_l")
+Inst_MIMG__IMAGE_GATHER4_L::Inst_MIMG__IMAGE_GATHER4_L(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_l")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_L
@@ -41217,8 +41236,8 @@ Inst_MIMG__IMAGE_GATHER4_L::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_B class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_B::Inst_MIMG__IMAGE_GATHER4_B(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_b")
+Inst_MIMG__IMAGE_GATHER4_B::Inst_MIMG__IMAGE_GATHER4_B(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_b")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_B
@@ -41235,9 +41254,8 @@ Inst_MIMG__IMAGE_GATHER4_B::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_B_CL class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_B_CL::Inst_MIMG__IMAGE_GATHER4_B_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_b_cl")
+Inst_MIMG__IMAGE_GATHER4_B_CL::Inst_MIMG__IMAGE_GATHER4_B_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_b_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_B_CL
@@ -41254,8 +41272,8 @@ Inst_MIMG__IMAGE_GATHER4_B_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_LZ class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_LZ::Inst_MIMG__IMAGE_GATHER4_LZ(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_lz")
+Inst_MIMG__IMAGE_GATHER4_LZ::Inst_MIMG__IMAGE_GATHER4_LZ(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_lz")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_LZ
@@ -41272,8 +41290,8 @@ Inst_MIMG__IMAGE_GATHER4_LZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C::Inst_MIMG__IMAGE_GATHER4_C(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c")
+Inst_MIMG__IMAGE_GATHER4_C::Inst_MIMG__IMAGE_GATHER4_C(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C
@@ -41290,9 +41308,8 @@ Inst_MIMG__IMAGE_GATHER4_C::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C_CL class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C_CL::Inst_MIMG__IMAGE_GATHER4_C_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_cl")
+Inst_MIMG__IMAGE_GATHER4_C_CL::Inst_MIMG__IMAGE_GATHER4_C_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_CL
@@ -41309,8 +41326,8 @@ Inst_MIMG__IMAGE_GATHER4_C_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C_L class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C_L::Inst_MIMG__IMAGE_GATHER4_C_L(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_l")
+Inst_MIMG__IMAGE_GATHER4_C_L::Inst_MIMG__IMAGE_GATHER4_C_L(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_l")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_L
@@ -41327,8 +41344,8 @@ Inst_MIMG__IMAGE_GATHER4_C_L::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C_B class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C_B::Inst_MIMG__IMAGE_GATHER4_C_B(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_b")
+Inst_MIMG__IMAGE_GATHER4_C_B::Inst_MIMG__IMAGE_GATHER4_C_B(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_b")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_B
@@ -41346,8 +41363,8 @@ Inst_MIMG__IMAGE_GATHER4_C_B::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_B_CL class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_B_CL::Inst_MIMG__IMAGE_GATHER4_C_B_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_b_cl")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_b_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_B_CL
@@ -41364,9 +41381,8 @@ Inst_MIMG__IMAGE_GATHER4_C_B_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C_LZ class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C_LZ::Inst_MIMG__IMAGE_GATHER4_C_LZ(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_lz")
+Inst_MIMG__IMAGE_GATHER4_C_LZ::Inst_MIMG__IMAGE_GATHER4_C_LZ(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_lz")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_LZ
@@ -41383,8 +41399,8 @@ Inst_MIMG__IMAGE_GATHER4_C_LZ::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_O::Inst_MIMG__IMAGE_GATHER4_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_o")
+Inst_MIMG__IMAGE_GATHER4_O::Inst_MIMG__IMAGE_GATHER4_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_O
@@ -41401,9 +41417,8 @@ Inst_MIMG__IMAGE_GATHER4_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_CL_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_CL_O::Inst_MIMG__IMAGE_GATHER4_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_cl_o")
+Inst_MIMG__IMAGE_GATHER4_CL_O::Inst_MIMG__IMAGE_GATHER4_CL_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_CL_O
@@ -41420,8 +41435,8 @@ Inst_MIMG__IMAGE_GATHER4_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_L_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_L_O::Inst_MIMG__IMAGE_GATHER4_L_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_l_o")
+Inst_MIMG__IMAGE_GATHER4_L_O::Inst_MIMG__IMAGE_GATHER4_L_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_l_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_L_O
@@ -41438,8 +41453,8 @@ Inst_MIMG__IMAGE_GATHER4_L_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_B_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_B_O::Inst_MIMG__IMAGE_GATHER4_B_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_b_o")
+Inst_MIMG__IMAGE_GATHER4_B_O::Inst_MIMG__IMAGE_GATHER4_B_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_b_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_B_O
@@ -41457,8 +41472,8 @@ Inst_MIMG__IMAGE_GATHER4_B_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_B_CL_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_B_CL_O::Inst_MIMG__IMAGE_GATHER4_B_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_b_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_b_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_B_CL_O
@@ -41475,9 +41490,8 @@ Inst_MIMG__IMAGE_GATHER4_B_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_LZ_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_LZ_O::Inst_MIMG__IMAGE_GATHER4_LZ_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_lz_o")
+Inst_MIMG__IMAGE_GATHER4_LZ_O::Inst_MIMG__IMAGE_GATHER4_LZ_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_lz_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_LZ_O
@@ -41494,8 +41508,8 @@ Inst_MIMG__IMAGE_GATHER4_LZ_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GATHER4_C_O class methods ---
 
-Inst_MIMG__IMAGE_GATHER4_C_O::Inst_MIMG__IMAGE_GATHER4_C_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_o")
+Inst_MIMG__IMAGE_GATHER4_C_O::Inst_MIMG__IMAGE_GATHER4_C_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_O
@@ -41513,8 +41527,8 @@ Inst_MIMG__IMAGE_GATHER4_C_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_CL_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_CL_O::Inst_MIMG__IMAGE_GATHER4_C_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_CL_O
@@ -41532,8 +41546,8 @@ Inst_MIMG__IMAGE_GATHER4_C_CL_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_L_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_L_O::Inst_MIMG__IMAGE_GATHER4_C_L_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_l_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_l_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_L_O
@@ -41551,8 +41565,8 @@ Inst_MIMG__IMAGE_GATHER4_C_L_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_B_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_B_O::Inst_MIMG__IMAGE_GATHER4_C_B_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_b_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_b_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_B_O
@@ -41570,8 +41584,8 @@ Inst_MIMG__IMAGE_GATHER4_C_B_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_B_CL_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_B_CL_O::Inst_MIMG__IMAGE_GATHER4_C_B_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_b_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_b_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_B_CL_O
@@ -41589,8 +41603,8 @@ Inst_MIMG__IMAGE_GATHER4_C_B_CL_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_GATHER4_C_LZ_O class methods ---
 
 Inst_MIMG__IMAGE_GATHER4_C_LZ_O::Inst_MIMG__IMAGE_GATHER4_C_LZ_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_gather4_c_lz_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_gather4_c_lz_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GATHER4_C_LZ_O
@@ -41607,8 +41621,8 @@ Inst_MIMG__IMAGE_GATHER4_C_LZ_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_GET_LOD class methods ---
 
-Inst_MIMG__IMAGE_GET_LOD::Inst_MIMG__IMAGE_GET_LOD(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_get_lod")
+Inst_MIMG__IMAGE_GET_LOD::Inst_MIMG__IMAGE_GET_LOD(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_get_lod")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_GET_LOD
@@ -41626,8 +41640,8 @@ Inst_MIMG__IMAGE_GET_LOD::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_CD class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_CD::Inst_MIMG__IMAGE_SAMPLE_CD(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cd")
+Inst_MIMG__IMAGE_SAMPLE_CD::Inst_MIMG__IMAGE_SAMPLE_CD(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cd")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CD
@@ -41644,9 +41658,8 @@ Inst_MIMG__IMAGE_SAMPLE_CD::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_CD_CL class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_CD_CL::Inst_MIMG__IMAGE_SAMPLE_CD_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cd_cl")
+Inst_MIMG__IMAGE_SAMPLE_CD_CL::Inst_MIMG__IMAGE_SAMPLE_CD_CL(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cd_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CD_CL
@@ -41664,8 +41677,8 @@ Inst_MIMG__IMAGE_SAMPLE_CD_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CD class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_C_CD::Inst_MIMG__IMAGE_SAMPLE_C_CD(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cd")
+Inst_MIMG__IMAGE_SAMPLE_C_CD::Inst_MIMG__IMAGE_SAMPLE_C_CD(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cd")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CD
@@ -41683,8 +41696,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CD::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CD_CL class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_CD_CL::Inst_MIMG__IMAGE_SAMPLE_C_CD_CL(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cd_cl")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cd_cl")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CD_CL
@@ -41702,8 +41715,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CD_CL::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_MIMG__IMAGE_SAMPLE_CD_O class methods ---
 
-Inst_MIMG__IMAGE_SAMPLE_CD_O::Inst_MIMG__IMAGE_SAMPLE_CD_O(InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cd_o")
+Inst_MIMG__IMAGE_SAMPLE_CD_O::Inst_MIMG__IMAGE_SAMPLE_CD_O(InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cd_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CD_O
@@ -41721,8 +41734,8 @@ Inst_MIMG__IMAGE_SAMPLE_CD_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_CD_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_CD_CL_O::Inst_MIMG__IMAGE_SAMPLE_CD_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_cd_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_cd_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_CD_CL_O
@@ -41741,8 +41754,8 @@ Inst_MIMG__IMAGE_SAMPLE_CD_CL_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CD_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_CD_O::Inst_MIMG__IMAGE_SAMPLE_C_CD_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cd_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cd_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CD_O
@@ -41760,8 +41773,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CD_O::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_MIMG__IMAGE_SAMPLE_C_CD_CL_O class methods ---
 
 Inst_MIMG__IMAGE_SAMPLE_C_CD_CL_O::Inst_MIMG__IMAGE_SAMPLE_C_CD_CL_O(
-    InFmt_MIMG *iFmt) :
-    Inst_MIMG(iFmt, "image_sample_c_cd_cl_o")
+    InFmt_MIMG *iFmt)
+    : Inst_MIMG(iFmt, "image_sample_c_cd_cl_o")
 {
     setFlag(GlobalSegment);
 } // Inst_MIMG__IMAGE_SAMPLE_C_CD_CL_O
@@ -41779,8 +41792,8 @@ Inst_MIMG__IMAGE_SAMPLE_C_CD_CL_O::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_EXP__EXP class methods ---
 
-Inst_EXP__EXP::Inst_EXP__EXP(InFmt_EXP *iFmt) :
-    Inst_EXP(iFmt, "exp") {} // Inst_EXP__EXP
+Inst_EXP__EXP::Inst_EXP__EXP(InFmt_EXP *iFmt)
+    : Inst_EXP(iFmt, "exp") {} // Inst_EXP__EXP
 
 Inst_EXP__EXP::~Inst_EXP__EXP() {} // ~Inst_EXP__EXP
 
@@ -41793,8 +41806,8 @@ Inst_EXP__EXP::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_LOAD_UBYTE class methods ---
 
-Inst_FLAT__FLAT_LOAD_UBYTE::Inst_FLAT__FLAT_LOAD_UBYTE(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_ubyte")
+Inst_FLAT__FLAT_LOAD_UBYTE::Inst_FLAT__FLAT_LOAD_UBYTE(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_ubyte")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -41848,8 +41861,8 @@ Inst_FLAT__FLAT_LOAD_UBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_LOAD_SBYTE class methods ---
 
-Inst_FLAT__FLAT_LOAD_SBYTE::Inst_FLAT__FLAT_LOAD_SBYTE(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_sbyte")
+Inst_FLAT__FLAT_LOAD_SBYTE::Inst_FLAT__FLAT_LOAD_SBYTE(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_sbyte")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -41875,8 +41888,8 @@ Inst_FLAT__FLAT_LOAD_SBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_FLAT__FLAT_LOAD_USHORT class methods ---
 
-Inst_FLAT__FLAT_LOAD_USHORT::Inst_FLAT__FLAT_LOAD_USHORT(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_ushort")
+Inst_FLAT__FLAT_LOAD_USHORT::Inst_FLAT__FLAT_LOAD_USHORT(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_ushort")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -41931,8 +41944,8 @@ Inst_FLAT__FLAT_LOAD_USHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 
 // --- Inst_FLAT__FLAT_LOAD_SSHORT class methods ---
 
-Inst_FLAT__FLAT_LOAD_SSHORT::Inst_FLAT__FLAT_LOAD_SSHORT(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_sshort")
+Inst_FLAT__FLAT_LOAD_SSHORT::Inst_FLAT__FLAT_LOAD_SSHORT(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_sshort")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -41958,8 +41971,8 @@ Inst_FLAT__FLAT_LOAD_SSHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_FLAT__FLAT_LOAD_DWORD class methods ---
 
-Inst_FLAT__FLAT_LOAD_DWORD::Inst_FLAT__FLAT_LOAD_DWORD(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_dword")
+Inst_FLAT__FLAT_LOAD_DWORD::Inst_FLAT__FLAT_LOAD_DWORD(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_dword")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -42013,8 +42026,8 @@ Inst_FLAT__FLAT_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_LOAD_DWORDX2 class methods ---
 
-Inst_FLAT__FLAT_LOAD_DWORDX2::Inst_FLAT__FLAT_LOAD_DWORDX2(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_dwordx2")
+Inst_FLAT__FLAT_LOAD_DWORDX2::Inst_FLAT__FLAT_LOAD_DWORDX2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -42068,8 +42081,8 @@ Inst_FLAT__FLAT_LOAD_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_LOAD_DWORDX3 class methods ---
 
-Inst_FLAT__FLAT_LOAD_DWORDX3::Inst_FLAT__FLAT_LOAD_DWORDX3(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_dwordx3")
+Inst_FLAT__FLAT_LOAD_DWORDX3::Inst_FLAT__FLAT_LOAD_DWORDX3(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_dwordx3")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -42132,8 +42145,8 @@ Inst_FLAT__FLAT_LOAD_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_LOAD_DWORDX4 class methods ---
 
-Inst_FLAT__FLAT_LOAD_DWORDX4::Inst_FLAT__FLAT_LOAD_DWORDX4(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_load_dwordx4")
+Inst_FLAT__FLAT_LOAD_DWORDX4::Inst_FLAT__FLAT_LOAD_DWORDX4(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_load_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Load);
@@ -42200,8 +42213,8 @@ Inst_FLAT__FLAT_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_STORE_BYTE class methods ---
 
-Inst_FLAT__FLAT_STORE_BYTE::Inst_FLAT__FLAT_STORE_BYTE(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_byte")
+Inst_FLAT__FLAT_STORE_BYTE::Inst_FLAT__FLAT_STORE_BYTE(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_byte")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42257,8 +42270,8 @@ Inst_FLAT__FLAT_STORE_BYTE::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // execute
 // --- Inst_FLAT__FLAT_STORE_SHORT class methods ---
 
-Inst_FLAT__FLAT_STORE_SHORT::Inst_FLAT__FLAT_STORE_SHORT(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_short")
+Inst_FLAT__FLAT_STORE_SHORT::Inst_FLAT__FLAT_STORE_SHORT(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_short")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42314,8 +42327,8 @@ Inst_FLAT__FLAT_STORE_SHORT::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_FLAT__FLAT_STORE_DWORD class methods ---
 
-Inst_FLAT__FLAT_STORE_DWORD::Inst_FLAT__FLAT_STORE_DWORD(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_dword")
+Inst_FLAT__FLAT_STORE_DWORD::Inst_FLAT__FLAT_STORE_DWORD(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_dword")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42371,9 +42384,8 @@ Inst_FLAT__FLAT_STORE_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_FLAT__FLAT_STORE_DWORDX2 class methods ---
 
-Inst_FLAT__FLAT_STORE_DWORDX2::Inst_FLAT__FLAT_STORE_DWORDX2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_dwordx2")
+Inst_FLAT__FLAT_STORE_DWORDX2::Inst_FLAT__FLAT_STORE_DWORDX2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_dwordx2")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42429,9 +42441,8 @@ Inst_FLAT__FLAT_STORE_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_FLAT__FLAT_STORE_DWORDX3 class methods ---
 
-Inst_FLAT__FLAT_STORE_DWORDX3::Inst_FLAT__FLAT_STORE_DWORDX3(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_dwordx3")
+Inst_FLAT__FLAT_STORE_DWORDX3::Inst_FLAT__FLAT_STORE_DWORDX3(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_dwordx3")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42495,9 +42506,8 @@ Inst_FLAT__FLAT_STORE_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_FLAT__FLAT_STORE_DWORDX4 class methods ---
 
-Inst_FLAT__FLAT_STORE_DWORDX4::Inst_FLAT__FLAT_STORE_DWORDX4(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_store_dwordx4")
+Inst_FLAT__FLAT_STORE_DWORDX4::Inst_FLAT__FLAT_STORE_DWORDX4(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_store_dwordx4")
 {
     setFlag(MemoryRef);
     setFlag(Store);
@@ -42565,8 +42575,8 @@ Inst_FLAT__FLAT_STORE_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
 {} // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_SWAP class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_SWAP::Inst_FLAT__FLAT_ATOMIC_SWAP(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_swap")
+Inst_FLAT__FLAT_ATOMIC_SWAP::Inst_FLAT__FLAT_ATOMIC_SWAP(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_swap")
 {
     setFlag(AtomicExch);
     if (instData.GLC) {
@@ -42644,8 +42654,8 @@ Inst_FLAT__FLAT_ATOMIC_SWAP::completeAcc(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_CMPSWAP ::Inst_FLAT__FLAT_ATOMIC_CMPSWAP(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_cmpswap")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_cmpswap")
 {
     setFlag(AtomicCAS);
     if (instData.GLC) {
@@ -42727,8 +42737,8 @@ Inst_FLAT__FLAT_ATOMIC_CMPSWAP::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_ADD class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_ADD::Inst_FLAT__FLAT_ATOMIC_ADD(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_add")
+Inst_FLAT__FLAT_ATOMIC_ADD::Inst_FLAT__FLAT_ATOMIC_ADD(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_add")
 {
     setFlag(AtomicAdd);
     if (instData.GLC) {
@@ -42804,8 +42814,8 @@ Inst_FLAT__FLAT_ATOMIC_ADD::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_SUB class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_SUB::Inst_FLAT__FLAT_ATOMIC_SUB(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_sub")
+Inst_FLAT__FLAT_ATOMIC_SUB::Inst_FLAT__FLAT_ATOMIC_SUB(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_sub")
 {
     setFlag(AtomicSub);
     if (instData.GLC) {
@@ -42831,8 +42841,8 @@ Inst_FLAT__FLAT_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_SMIN class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_SMIN::Inst_FLAT__FLAT_ATOMIC_SMIN(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_smin")
+Inst_FLAT__FLAT_ATOMIC_SMIN::Inst_FLAT__FLAT_ATOMIC_SMIN(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_smin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -42906,8 +42916,8 @@ Inst_FLAT__FLAT_ATOMIC_SMIN::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_UMIN class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_UMIN::Inst_FLAT__FLAT_ATOMIC_UMIN(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_umin")
+Inst_FLAT__FLAT_ATOMIC_UMIN::Inst_FLAT__FLAT_ATOMIC_UMIN(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_umin")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -42933,8 +42943,8 @@ Inst_FLAT__FLAT_ATOMIC_UMIN::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_SMAX class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_SMAX::Inst_FLAT__FLAT_ATOMIC_SMAX(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_smax")
+Inst_FLAT__FLAT_ATOMIC_SMAX::Inst_FLAT__FLAT_ATOMIC_SMAX(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_smax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -43008,8 +43018,8 @@ Inst_FLAT__FLAT_ATOMIC_SMAX::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_UMAX class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_UMAX::Inst_FLAT__FLAT_ATOMIC_UMAX(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_umax")
+Inst_FLAT__FLAT_ATOMIC_UMAX::Inst_FLAT__FLAT_ATOMIC_UMAX(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_umax")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -43035,8 +43045,8 @@ Inst_FLAT__FLAT_ATOMIC_UMAX::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_AND class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_AND::Inst_FLAT__FLAT_ATOMIC_AND(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_and")
+Inst_FLAT__FLAT_ATOMIC_AND::Inst_FLAT__FLAT_ATOMIC_AND(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_and")
 {
     setFlag(AtomicAnd);
     if (instData.GLC) {
@@ -43062,8 +43072,8 @@ Inst_FLAT__FLAT_ATOMIC_AND::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_OR class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_OR::Inst_FLAT__FLAT_ATOMIC_OR(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_or")
+Inst_FLAT__FLAT_ATOMIC_OR::Inst_FLAT__FLAT_ATOMIC_OR(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_or")
 {
     setFlag(AtomicOr);
     if (instData.GLC) {
@@ -43138,8 +43148,8 @@ Inst_FLAT__FLAT_ATOMIC_OR::completeAcc(GPUDynInstPtr gpuDynInst)
 
 // --- Inst_FLAT__FLAT_ATOMIC_XOR class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_XOR::Inst_FLAT__FLAT_ATOMIC_XOR(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_xor")
+Inst_FLAT__FLAT_ATOMIC_XOR::Inst_FLAT__FLAT_ATOMIC_XOR(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_xor")
 {
     setFlag(AtomicXor);
     if (instData.GLC) {
@@ -43165,8 +43175,8 @@ Inst_FLAT__FLAT_ATOMIC_XOR::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_INC class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_INC::Inst_FLAT__FLAT_ATOMIC_INC(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_inc")
+Inst_FLAT__FLAT_ATOMIC_INC::Inst_FLAT__FLAT_ATOMIC_INC(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_inc")
 {
     setFlag(AtomicInc);
     if (instData.GLC) {
@@ -43192,8 +43202,8 @@ Inst_FLAT__FLAT_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_DEC class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_DEC::Inst_FLAT__FLAT_ATOMIC_DEC(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_dec")
+Inst_FLAT__FLAT_ATOMIC_DEC::Inst_FLAT__FLAT_ATOMIC_DEC(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_dec")
 {
     setFlag(AtomicDec);
     if (instData.GLC) {
@@ -43220,8 +43230,8 @@ Inst_FLAT__FLAT_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_SWAP_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_SWAP_X2::Inst_FLAT__FLAT_ATOMIC_SWAP_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_swap_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_swap_x2")
 {
     setFlag(AtomicExch);
     if (instData.GLC) {
@@ -43248,8 +43258,8 @@ Inst_FLAT__FLAT_ATOMIC_SWAP_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_cmpswap_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_cmpswap_x2")
 {
     setFlag(AtomicCAS);
     if (instData.GLC) {
@@ -43331,9 +43341,8 @@ Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_ADD_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_ADD_X2::Inst_FLAT__FLAT_ATOMIC_ADD_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_add_x2")
+Inst_FLAT__FLAT_ATOMIC_ADD_X2::Inst_FLAT__FLAT_ATOMIC_ADD_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_add_x2")
 {
     setFlag(AtomicAdd);
     if (instData.GLC) {
@@ -43409,9 +43418,8 @@ Inst_FLAT__FLAT_ATOMIC_ADD_X2::completeAcc(GPUDynInstPtr gpuDynInst)
 } // completeAcc
 // --- Inst_FLAT__FLAT_ATOMIC_SUB_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_SUB_X2::Inst_FLAT__FLAT_ATOMIC_SUB_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_sub_x2")
+Inst_FLAT__FLAT_ATOMIC_SUB_X2::Inst_FLAT__FLAT_ATOMIC_SUB_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_sub_x2")
 {
     setFlag(AtomicSub);
     if (instData.GLC) {
@@ -43438,8 +43446,8 @@ Inst_FLAT__FLAT_ATOMIC_SUB_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_SMIN_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_SMIN_X2::Inst_FLAT__FLAT_ATOMIC_SMIN_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_smin_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_smin_x2")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -43466,8 +43474,8 @@ Inst_FLAT__FLAT_ATOMIC_SMIN_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_UMIN_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_UMIN_X2::Inst_FLAT__FLAT_ATOMIC_UMIN_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_umin_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_umin_x2")
 {
     setFlag(AtomicMin);
     if (instData.GLC) {
@@ -43494,8 +43502,8 @@ Inst_FLAT__FLAT_ATOMIC_UMIN_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_SMAX_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_SMAX_X2::Inst_FLAT__FLAT_ATOMIC_SMAX_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_smax_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_smax_x2")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -43522,8 +43530,8 @@ Inst_FLAT__FLAT_ATOMIC_SMAX_X2::execute(GPUDynInstPtr gpuDynInst)
 // --- Inst_FLAT__FLAT_ATOMIC_UMAX_X2 class methods ---
 
 Inst_FLAT__FLAT_ATOMIC_UMAX_X2::Inst_FLAT__FLAT_ATOMIC_UMAX_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_umax_x2")
+    InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_umax_x2")
 {
     setFlag(AtomicMax);
     if (instData.GLC) {
@@ -43549,9 +43557,8 @@ Inst_FLAT__FLAT_ATOMIC_UMAX_X2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_AND_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_AND_X2::Inst_FLAT__FLAT_ATOMIC_AND_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_and_x2")
+Inst_FLAT__FLAT_ATOMIC_AND_X2::Inst_FLAT__FLAT_ATOMIC_AND_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_and_x2")
 {
     setFlag(AtomicAnd);
     if (instData.GLC) {
@@ -43577,8 +43584,8 @@ Inst_FLAT__FLAT_ATOMIC_AND_X2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_OR_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_OR_X2::Inst_FLAT__FLAT_ATOMIC_OR_X2(InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_or_x2")
+Inst_FLAT__FLAT_ATOMIC_OR_X2::Inst_FLAT__FLAT_ATOMIC_OR_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_or_x2")
 {
     setFlag(AtomicOr);
     if (instData.GLC) {
@@ -43604,9 +43611,8 @@ Inst_FLAT__FLAT_ATOMIC_OR_X2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_XOR_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_XOR_X2::Inst_FLAT__FLAT_ATOMIC_XOR_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_xor_x2")
+Inst_FLAT__FLAT_ATOMIC_XOR_X2::Inst_FLAT__FLAT_ATOMIC_XOR_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_xor_x2")
 {
     setFlag(AtomicXor);
     if (instData.GLC) {
@@ -43632,9 +43638,8 @@ Inst_FLAT__FLAT_ATOMIC_XOR_X2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_INC_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_INC_X2::Inst_FLAT__FLAT_ATOMIC_INC_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_inc_x2")
+Inst_FLAT__FLAT_ATOMIC_INC_X2::Inst_FLAT__FLAT_ATOMIC_INC_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_inc_x2")
 {
     setFlag(AtomicInc);
     if (instData.GLC) {
@@ -43660,9 +43665,8 @@ Inst_FLAT__FLAT_ATOMIC_INC_X2::execute(GPUDynInstPtr gpuDynInst)
 } // execute
 // --- Inst_FLAT__FLAT_ATOMIC_DEC_X2 class methods ---
 
-Inst_FLAT__FLAT_ATOMIC_DEC_X2::Inst_FLAT__FLAT_ATOMIC_DEC_X2(
-    InFmt_FLAT *iFmt) :
-    Inst_FLAT(iFmt, "flat_atomic_dec_x2")
+Inst_FLAT__FLAT_ATOMIC_DEC_X2::Inst_FLAT__FLAT_ATOMIC_DEC_X2(InFmt_FLAT *iFmt)
+    : Inst_FLAT(iFmt, "flat_atomic_dec_x2")
 {
     setFlag(AtomicDec);
     if (instData.GLC) {

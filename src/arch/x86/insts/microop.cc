@@ -124,7 +124,7 @@ X86MicroopBase::branchTarget(const PCStateBase &branch_pc) const
 {
     PCStateBase *pcs = branch_pc.clone();
     DPRINTF(X86, "branchTarget PC info: %s, Immediate: %lx\n", *pcs,
-        (int64_t)machInst.immediate);
+            (int64_t)machInst.immediate);
     auto &xpc = pcs->as<PCState>();
     xpc.npc(xpc.npc() + (int64_t)machInst.immediate);
     xpc.uEnd();

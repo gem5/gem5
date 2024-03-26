@@ -142,7 +142,8 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     outs << std::endl;
 
     trace::getDebugLogger()->dprintf_flag(when, thread->getCpuPtr()->name(),
-        "ExecEnable", "%s", outs.str().c_str());
+                                          "ExecEnable", "%s",
+                                          outs.str().c_str());
 }
 
 void
@@ -158,9 +159,9 @@ ExeTracerRecord::dump()
      */
     if (debug::ExecMacro && staticInst->isMicroop() &&
         ((debug::ExecMicro && macroStaticInst &&
-             staticInst->isFirstMicroop()) ||
-            (!debug::ExecMicro && macroStaticInst &&
-                staticInst->isLastMicroop()))) {
+          staticInst->isFirstMicroop()) ||
+         (!debug::ExecMicro && macroStaticInst &&
+          staticInst->isLastMicroop()))) {
         traceInst(macroStaticInst, false);
     }
     if (debug::ExecMicro || !staticInst->isMicroop()) {

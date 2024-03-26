@@ -82,8 +82,8 @@ Tstart64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 Fault
-Tstart64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                      trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;
@@ -180,8 +180,8 @@ Tcancel64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 Fault
-Tcancel64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                       trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;
@@ -206,8 +206,8 @@ Tcancel64::completeAcc(
 }
 
 Fault
-MicroTcommit64::initiateAcc(
-    ExecContext *xc, trace::InstRecord *traceData) const
+MicroTcommit64::initiateAcc(ExecContext *xc,
+                            trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     const uint64_t htm_depth = xc->getHtmTransactionalDepth();
@@ -235,8 +235,8 @@ MicroTcommit64::initiateAcc(
 }
 
 Fault
-MicroTcommit64::completeAcc(
-    PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
+MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
+                            trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;

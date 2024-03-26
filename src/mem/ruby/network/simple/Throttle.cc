@@ -64,14 +64,14 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 static int network_message_to_size(Message *net_msg_ptr);
 
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-    int endpoint_bandwidth, Switch *em) :
-    Consumer(em, Switch::THROTTLE_EV_PRI),
-    m_switch_id(sID),
-    m_switch(em),
-    m_node(node),
-    m_physical_vnets(false),
-    m_ruby_system(rs),
-    throttleStats(em, node)
+                   int endpoint_bandwidth, Switch *em)
+    : Consumer(em, Switch::THROTTLE_EV_PRI),
+      m_switch_id(sID),
+      m_switch(em),
+      m_node(node),
+      m_physical_vnets(false),
+      m_ruby_system(rs),
+      throttleStats(em, node)
 {
     m_vnets = 0;
 
@@ -82,18 +82,19 @@ Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
 }
 
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-    int link_bandwidth_multiplier, int endpoint_bandwidth, Switch *em) :
-    Throttle(sID, rs, node, link_latency, endpoint_bandwidth, em)
+                   int link_bandwidth_multiplier, int endpoint_bandwidth,
+                   Switch *em)
+    : Throttle(sID, rs, node, link_latency, endpoint_bandwidth, em)
 {
     gem5_assert(link_bandwidth_multiplier > 0);
     m_link_bandwidth_multiplier.push_back(link_bandwidth_multiplier);
 }
 
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-    const std::vector<int> &vnet_channels,
-    const std::vector<int> &vnet_bandwidth_multiplier, int endpoint_bandwidth,
-    Switch *em) :
-    Throttle(sID, rs, node, link_latency, endpoint_bandwidth, em)
+                   const std::vector<int> &vnet_channels,
+                   const std::vector<int> &vnet_bandwidth_multiplier,
+                   int endpoint_bandwidth, Switch *em)
+    : Throttle(sID, rs, node, link_latency, endpoint_bandwidth, em)
 {
     m_physical_vnets = true;
     for (auto link_bandwidth_multiplier : vnet_bandwidth_multiplier) {
@@ -109,7 +110,7 @@ Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
 
 void
 Throttle::addLinks(const std::vector<MessageBuffer *> &in_vec,
-    const std::vector<MessageBuffer *> &out_vec)
+                   const std::vector<MessageBuffer *> &out_vec)
 {
     assert(in_vec.size() == out_vec.size());
 
@@ -163,8 +164,8 @@ Throttle::getChannelCnt(int vnet) const
 
 void
 Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
-    bool &bw_saturated, bool &output_blocked, MessageBuffer *in,
-    MessageBuffer *out)
+                      bool &bw_saturated, bool &output_blocked,
+                      MessageBuffer *in, MessageBuffer *out)
 {
     if (out == nullptr || in == nullptr) {
         return;
@@ -193,19 +194,19 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
             units_remaining = network_message_to_size(net_msg_ptr);
 
             DPRINTF(RubyNetwork,
-                "throttle: %d my bw %d bw spent "
-                "enqueueing net msg %d time: %lld.\n",
-                m_node, getLinkBandwidth(vnet), units_remaining,
-                m_ruby_system->curCycle());
+                    "throttle: %d my bw %d bw spent "
+                    "enqueueing net msg %d time: %lld.\n",
+                    m_node, getLinkBandwidth(vnet), units_remaining,
+                    m_ruby_system->curCycle());
 
             // Move the message
             in->dequeue(current_time);
             out->enqueue(msg_ptr, current_time,
-                m_switch->cyclesToTicks(m_link_latency));
+                         m_switch->cyclesToTicks(m_link_latency));
 
             // Count the message
             (*(throttleStats
-                    .msg_counts[net_msg_ptr->getMessageSize()]))[vnet]++;
+                   .msg_counts[net_msg_ptr->getMessageSize()]))[vnet]++;
             throttleStats.total_msg_count += 1;
             uint32_t total_size =
                 Network::MessageSizeType_to_int(net_msg_ptr->getMessageSize());
@@ -233,8 +234,8 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
     //  - we ran out of bandwith and still have stuff to do
     //  - we had something to do but output queue was unavailable
     if (hasPendingWork()) {
-        gem5_assert(
-            (bw_remaining == 0) || !out->areNSlotsAvailable(1, current_time));
+        gem5_assert((bw_remaining == 0) ||
+                    !out->areNSlotsAvailable(1, current_time));
         bw_saturated = bw_saturated || (bw_remaining == 0);
         output_blocked =
             output_blocked || !out->areNSlotsAvailable(1, current_time);
@@ -265,14 +266,14 @@ Throttle::wakeup()
         for (int vnet = 0; vnet < m_vnets; ++vnet) {
             for (int channel = 0; channel < getChannelCnt(vnet); ++channel) {
                 operateVnet(vnet, channel, bw_remaining, bw_saturated,
-                    output_blocked, m_in[vnet], m_out[vnet]);
+                            output_blocked, m_in[vnet], m_out[vnet]);
             }
         }
     } else {
         for (int vnet = m_vnets - 1; vnet >= 0; --vnet) {
             for (int channel = 0; channel < getChannelCnt(vnet); ++channel) {
                 operateVnet(vnet, channel, bw_remaining, bw_saturated,
-                    output_blocked, m_in[vnet], m_out[vnet]);
+                            output_blocked, m_in[vnet], m_out[vnet]);
             }
         }
     }
@@ -329,30 +330,30 @@ network_message_to_size(Message *net_msg_ptr)
     return size;
 }
 
-Throttle::ThrottleStats::ThrottleStats(Switch *parent, const NodeID &nodeID) :
-    statistics::Group(parent, csprintf("throttle%02i", nodeID).c_str()),
-    ADD_STAT(acc_link_utilization, statistics::units::Count::get(),
-        "Accumulated link utilization"),
-    ADD_STAT(link_utilization, statistics::units::Ratio::get(),
-        "Average link utilization"),
-    ADD_STAT(total_msg_count, statistics::units::Count::get(),
-        "Total number of messages forwarded by this switch"),
-    ADD_STAT(total_msg_bytes, statistics::units::Byte::get(),
-        "Total number of bytes forwarded by this switch"),
-    ADD_STAT(total_data_msg_bytes, statistics::units::Byte::get(),
-        "Total number of data bytes forwarded by this switch"),
-    ADD_STAT(total_msg_wait_time, statistics::units::Tick::get(),
-        "Total time spend forwarding messages"),
-    ADD_STAT(total_stall_cy, statistics::units::Cycle::get(),
-        "Total time spent blocked on any output link"),
-    ADD_STAT(total_bw_sat_cy, statistics::units::Cycle::get(),
-        "Total time bandwidth was saturated on any output link"),
-    ADD_STAT(avg_msg_wait_time, statistics::units::Ratio::get(),
-        "Average time a message took to be forwarded"),
-    ADD_STAT(avg_bandwidth, statistics::units::Ratio::get(),
-        "Average bandwidth (GB/s)"),
-    ADD_STAT(avg_useful_bandwidth, statistics::units::Ratio::get(),
-        "Average usefull (only data) bandwidth (GB/s)")
+Throttle::ThrottleStats::ThrottleStats(Switch *parent, const NodeID &nodeID)
+    : statistics::Group(parent, csprintf("throttle%02i", nodeID).c_str()),
+      ADD_STAT(acc_link_utilization, statistics::units::Count::get(),
+               "Accumulated link utilization"),
+      ADD_STAT(link_utilization, statistics::units::Ratio::get(),
+               "Average link utilization"),
+      ADD_STAT(total_msg_count, statistics::units::Count::get(),
+               "Total number of messages forwarded by this switch"),
+      ADD_STAT(total_msg_bytes, statistics::units::Byte::get(),
+               "Total number of bytes forwarded by this switch"),
+      ADD_STAT(total_data_msg_bytes, statistics::units::Byte::get(),
+               "Total number of data bytes forwarded by this switch"),
+      ADD_STAT(total_msg_wait_time, statistics::units::Tick::get(),
+               "Total time spend forwarding messages"),
+      ADD_STAT(total_stall_cy, statistics::units::Cycle::get(),
+               "Total time spent blocked on any output link"),
+      ADD_STAT(total_bw_sat_cy, statistics::units::Cycle::get(),
+               "Total time bandwidth was saturated on any output link"),
+      ADD_STAT(avg_msg_wait_time, statistics::units::Ratio::get(),
+               "Average time a message took to be forwarded"),
+      ADD_STAT(avg_bandwidth, statistics::units::Ratio::get(),
+               "Average bandwidth (GB/s)"),
+      ADD_STAT(avg_useful_bandwidth, statistics::units::Ratio::get(),
+               "Average usefull (only data) bandwidth (GB/s)")
 {
     link_utilization =
         100 * acc_link_utilization / (simTicks / parent->clockPeriod());
@@ -369,13 +370,15 @@ Throttle::ThrottleStats::ThrottleStats(Switch *parent, const NodeID &nodeID) :
 
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        msg_counts[(unsigned int)type] = new statistics::Vector(this,
+        msg_counts[(unsigned int)type] = new statistics::Vector(
+            this,
             csprintf("msg_count.%s", MessageSizeType_to_string(type)).c_str());
         msg_counts[(unsigned int)type]
             ->init(Network::getNumberOfVirtualNetworks())
             .flags(statistics::nozero);
 
-        msg_bytes[(unsigned int)type] = new statistics::Formula(this,
+        msg_bytes[(unsigned int)type] = new statistics::Formula(
+            this,
             csprintf("msg_bytes.%s", MessageSizeType_to_string(type)).c_str());
         msg_bytes[(unsigned int)type]->flags(statistics::nozero);
 

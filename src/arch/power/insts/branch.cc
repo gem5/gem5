@@ -39,8 +39,8 @@ namespace gem5
 using namespace PowerISA;
 
 const std::string &
-PCDependentDisassembly::disassemble(
-    Addr pc, const loader::SymbolTable *symtab) const
+PCDependentDisassembly::disassemble(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     if (!cachedDisassembly || pc != cachedPC || symtab != cachedSymtab) {
         if (!cachedDisassembly)
@@ -65,8 +65,8 @@ BranchOp::branchTarget(ThreadContext *tc) const
     else
         addr = tc->pcState().instAddr() + li;
 
-    return std::make_unique<PowerISA::PCState>(
-        msr.sf ? addr : addr & UINT32_MAX);
+    return std::make_unique<PowerISA::PCState>(msr.sf ? addr :
+                                                        addr & UINT32_MAX);
 }
 
 std::string
@@ -111,13 +111,13 @@ BranchDispCondOp::branchTarget(ThreadContext *tc) const
     else
         addr = tc->pcState().instAddr() + bd;
 
-    return std::make_unique<PowerISA::PCState>(
-        msr.sf ? addr : addr & UINT32_MAX);
+    return std::make_unique<PowerISA::PCState>(msr.sf ? addr :
+                                                        addr & UINT32_MAX);
 }
 
 std::string
-BranchDispCondOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+BranchDispCondOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     Addr target;
@@ -155,13 +155,13 @@ BranchRegCondOp::branchTarget(ThreadContext *tc) const
 {
     Msr msr = tc->getReg(int_reg::Msr);
     Addr addr = tc->getReg(srcRegIdx(_numSrcRegs - 1)) & -4ULL;
-    return std::make_unique<PowerISA::PCState>(
-        msr.sf ? addr : addr & UINT32_MAX);
+    return std::make_unique<PowerISA::PCState>(msr.sf ? addr :
+                                                        addr & UINT32_MAX);
 }
 
 std::string
-BranchRegCondOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+BranchRegCondOp::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -58,8 +58,8 @@ SCMasterPort::generatePacket(tlm::tlm_generic_payload &trans)
         cmd = gem5::MemCmd::WriteReq;
         break;
     default:
-        SC_REPORT_FATAL(
-            "SCMasterPort", "received transaction with unsupported command");
+        SC_REPORT_FATAL("SCMasterPort",
+                        "received transaction with unsupported command");
     }
 
     /*
@@ -79,17 +79,18 @@ SCMasterPort::destroyPacket(gem5::PacketPtr pkt)
 }
 
 SCMasterPort::SCMasterPort(const std::string &name_,
-    const std::string &systemc_name, gem5::ExternalMaster &owner_,
-    Gem5SimControl &simControl) :
-    gem5::ExternalMaster::ExternalPort(name_, owner_),
-    peq(this, &SCMasterPort::peq_cb),
-    waitForRetry(false),
-    pendingRequest(nullptr),
-    pendingPacket(nullptr),
-    needToSendRetry(false),
-    responseInProgress(false),
-    transactor(nullptr),
-    simControl(simControl)
+                           const std::string &systemc_name,
+                           gem5::ExternalMaster &owner_,
+                           Gem5SimControl &simControl)
+    : gem5::ExternalMaster::ExternalPort(name_, owner_),
+      peq(this, &SCMasterPort::peq_cb),
+      waitForRetry(false),
+      pendingRequest(nullptr),
+      pendingPacket(nullptr),
+      needToSendRetry(false),
+      responseInProgress(false),
+      transactor(nullptr),
+      simControl(simControl)
 {
     system = dynamic_cast<const gem5::ExternalMasterParams &>(owner_.params())
                  .system;
@@ -116,14 +117,14 @@ SCMasterPort::bindToTransactor(Gem5MasterTransactor *transactor)
             this, &SCMasterPort::nb_transport_fw);
     } else if (system->isAtomicMode()) {
         SC_REPORT_INFO("SCMasterPort", "register blocking interface");
-        transactor->socket.register_b_transport(
-            this, &SCMasterPort::b_transport);
+        transactor->socket.register_b_transport(this,
+                                                &SCMasterPort::b_transport);
     } else {
         panic("gem5 operates neither in Timing nor in Atomic mode");
     }
 
-    transactor->socket.register_transport_dbg(
-        this, &SCMasterPort::transport_dbg);
+    transactor->socket.register_transport_dbg(this,
+                                              &SCMasterPort::transport_dbg);
 }
 
 void
@@ -139,7 +140,7 @@ SCMasterPort::checkTransaction(tlm::tlm_generic_payload &trans)
 
 tlm::tlm_sync_enum
 SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload &trans,
-    tlm::tlm_phase &phase, sc_core::sc_time &delay)
+                              tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
     uint64_t adr = trans.get_address();
     unsigned len = trans.get_data_length();
@@ -163,8 +164,8 @@ SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload &trans,
 }
 
 void
-SCMasterPort::peq_cb(
-    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
+SCMasterPort::peq_cb(tlm::tlm_generic_payload &trans,
+                     const tlm::tlm_phase &phase)
 {
     // catch up with SystemC time
     simControl.catchup();
@@ -245,7 +246,7 @@ SCMasterPort::sendEndReq(tlm::tlm_generic_payload &trans)
 
     auto status = transactor->socket->nb_transport_bw(trans, phase, delay);
     panic_if(status != tlm::TLM_ACCEPTED,
-        "Unexpected status after sending END_REQ");
+             "Unexpected status after sending END_REQ");
 }
 
 void
@@ -268,7 +269,7 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload &trans, sc_core::sc_time &t)
 
     // send an atomic request to gem5
     panic_if(pkt->needsResponse() && !pkt->isResponse(),
-        "Packet sending failed!\n");
+             "Packet sending failed!\n");
 
     // one tick is a pico second
     auto delay = sc_core::sc_time(
@@ -303,8 +304,8 @@ SCMasterPort::transport_dbg(tlm::tlm_generic_payload &trans)
 }
 
 bool
-SCMasterPort::get_direct_mem_ptr(
-    tlm::tlm_generic_payload &trans, tlm::tlm_dmi &dmi_data)
+SCMasterPort::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
+                                 tlm::tlm_dmi &dmi_data)
 {
     return false;
 }
@@ -356,8 +357,8 @@ SCMasterPort::recvTimingResp(gem5::PacketPtr pkt)
 }
 
 void
-SCMasterPort::sendBeginResp(
-    tlm::tlm_generic_payload &trans, sc_core::sc_time &delay)
+SCMasterPort::sendBeginResp(tlm::tlm_generic_payload &trans,
+                            sc_core::sc_time &delay)
 {
     tlm::tlm_phase phase = tlm::BEGIN_RESP;
 
@@ -399,13 +400,14 @@ SCMasterPort::recvReqRetry()
 void
 SCMasterPort::recvRangeChange()
 {
-    SC_REPORT_WARNING(
-        "SCMasterPort", "received address range change but ignored it");
+    SC_REPORT_WARNING("SCMasterPort",
+                      "received address range change but ignored it");
 }
 
 gem5::ExternalMaster::ExternalPort *
 SCMasterPortHandler::getExternalPort(const std::string &name,
-    gem5::ExternalMaster &owner, const std::string &port_data)
+                                     gem5::ExternalMaster &owner,
+                                     const std::string &port_data)
 {
     // Create and register a new SystemC master port
     auto *port = new SCMasterPort(name, port_data, owner, control);

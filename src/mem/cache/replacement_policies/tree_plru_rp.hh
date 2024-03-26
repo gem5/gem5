@@ -191,8 +191,8 @@ class TreePLRU : public Base
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry *getVictim(
-        const ReplacementCandidates &candidates) const override;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const override;
 
     /**
      * Instantiate a replacement data entry. Consecutive calls to this

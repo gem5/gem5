@@ -126,8 +126,8 @@ EndBitUnion(Ps2MouseMovement)
  * @param cur_shift if device has already sent a shift
  * @param keys list of keys command to send to emulate the x11 key symbol
  */
-void keySymToPs2(
-    uint32_t key, bool down, bool &cur_shift, std::list<uint8_t> &keys);
+void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
+                 std::list<uint8_t> &keys);
 
 } // namespace ps2
 } // namespace gem5

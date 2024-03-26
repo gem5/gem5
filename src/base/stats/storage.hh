@@ -59,7 +59,8 @@ class StatStor
 
   public:
     struct Params : public StorageParams
-    {};
+    {
+    };
 
     /**
      * Builds this storage element and calls the base constructor of the
@@ -164,13 +165,14 @@ class AvgStor
 
   public:
     struct Params : public StorageParams
-    {};
+    {
+    };
 
     /**
      * Build and initializes this stat storage.
      */
-    AvgStor(const StorageParams *const storage_params) :
-        current(0), lastReset(0), total(0), last(0)
+    AvgStor(const StorageParams *const storage_params)
+        : current(0), lastReset(0), total(0), last(0)
     {}
 
     /**
@@ -312,17 +314,19 @@ class DistStor
         /** The number of buckets. Equal to (max-min)/bucket_size. */
         size_type buckets;
 
-        Params(Counter _min, Counter _max, Counter _bucket_size) :
-            DistParams(Dist),
-            min(_min),
-            max(_max),
-            bucket_size(_bucket_size),
-            buckets(0)
+        Params(Counter _min, Counter _max, Counter _bucket_size)
+            : DistParams(Dist),
+              min(_min),
+              max(_max),
+              bucket_size(_bucket_size),
+              buckets(0)
         {
             fatal_if(bucket_size <= 0,
-                "Bucket size (%f) must be greater than zero", bucket_size);
-            warn_if(std::floor((max - min + 1.0) / bucket_size) !=
-                        std::ceil((max - min + 1.0) / bucket_size),
+                     "Bucket size (%f) must be greater than zero",
+                     bucket_size);
+            warn_if(
+                std::floor((max - min + 1.0) / bucket_size) !=
+                    std::ceil((max - min + 1.0) / bucket_size),
                 "Bucket size (%f) does not divide range [%f:%f] into equal-"
                 "sized buckets. Rounding up.",
                 bucket_size, min + 1.0, max);
@@ -331,8 +335,8 @@ class DistStor
         }
     };
 
-    DistStor(const StorageParams *const storage_params) :
-        cvec(safe_cast<const Params *>(storage_params)->buckets)
+    DistStor(const StorageParams *const storage_params)
+        : cvec(safe_cast<const Params *>(storage_params)->buckets)
     {
         reset(storage_params);
     }
@@ -515,13 +519,13 @@ class HistStor
         Params(size_type _buckets) : DistParams(Hist)
         {
             fatal_if(_buckets < 2,
-                "There must be at least two buckets in a histogram");
+                     "There must be at least two buckets in a histogram");
             buckets = _buckets;
         }
     };
 
-    HistStor(const StorageParams *const storage_params) :
-        cvec(safe_cast<const Params *>(storage_params)->buckets)
+    HistStor(const StorageParams *const storage_params)
+        : cvec(safe_cast<const Params *>(storage_params)->buckets)
     {
         reset(storage_params);
     }
@@ -629,8 +633,8 @@ class SampleStor
     /**
      * Create and initialize this storage.
      */
-    SampleStor(const StorageParams *const storage_params) :
-        sum(Counter()), squares(Counter()), samples(Counter())
+    SampleStor(const StorageParams *const storage_params)
+        : sum(Counter()), squares(Counter()), samples(Counter())
     {}
 
     /**
@@ -713,8 +717,8 @@ class AvgSampleStor
     /**
      * Create and initialize this storage.
      */
-    AvgSampleStor(const StorageParams *const storage_params) :
-        sum(Counter()), squares(Counter())
+    AvgSampleStor(const StorageParams *const storage_params)
+        : sum(Counter()), squares(Counter())
     {}
 
     /**

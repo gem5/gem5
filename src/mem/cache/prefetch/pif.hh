@@ -90,8 +90,8 @@ class PIF : public Queued
          * @return TRUE if they are in the same spatial region, FALSE
          *   otherwise
          */
-        bool inSameSpatialRegion(
-            Addr addr, unsigned int log_blk_size, bool update);
+        bool inSameSpatialRegion(Addr addr, unsigned int log_blk_size,
+                                 bool update);
         /**
          * Checks if the provided address is contained in this spatial
          * region and if its corresponding bit vector entry is set
@@ -109,7 +109,7 @@ class PIF : public Queued
          * addresses
          */
         void getPredictedAddresses(unsigned int log_blk_size,
-            std::vector<AddrPriority> &addresses) const;
+                                   std::vector<AddrPriority> &addresses) const;
 
       private:
         /**
@@ -162,9 +162,9 @@ class PIF : public Queued
     class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
     {
       public:
-        PrefetchListenerPC(
-            PIF &_parent, ProbeManager *pm, const std::string &name) :
-            ProbeListenerArgBase(pm, name), parent(_parent)
+        PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
+                           const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
         {}
         void notify(const Addr &pc) override;
 
@@ -180,7 +180,8 @@ class PIF : public Queued
     ~PIF() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses, const CacheAccessor &cache);
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache);
 
     /**
      * Add a SimObject and a probe name to monitor the retired instructions

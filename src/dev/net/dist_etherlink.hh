@@ -88,14 +88,13 @@ class DistEtherLink : public SimObject
         EthPacketPtr packet;
 
       public:
-        Link(const std::string &name, DistEtherLink *p, EtherDump *d,
-            Event *e) :
-            objName(name),
-            parent(p),
-            localIface(nullptr),
-            dump(d),
-            distIface(nullptr),
-            event(e)
+        Link(const std::string &name, DistEtherLink *p, EtherDump *d, Event *e)
+            : objName(name),
+              parent(p),
+              localIface(nullptr),
+              dump(d),
+              distIface(nullptr),
+              event(e)
         {}
 
         ~Link() {}
@@ -144,11 +143,11 @@ class DistEtherLink : public SimObject
 
       public:
         TxLink(const std::string &name, DistEtherLink *p, double invBW,
-            Tick delay_var, EtherDump *d) :
-            Link(name, p, d, &doneEvent),
-            ticksPerByte(invBW),
-            delayVar(delay_var),
-            doneEvent([this] { txDone(); }, name)
+               Tick delay_var, EtherDump *d)
+            : Link(name, p, d, &doneEvent),
+              ticksPerByte(invBW),
+              delayVar(delay_var),
+              doneEvent([this] { txDone(); }, name)
         {}
         ~TxLink() {}
 
@@ -190,10 +189,10 @@ class DistEtherLink : public SimObject
 
       public:
         RxLink(const std::string &name, DistEtherLink *p, Tick delay,
-            EtherDump *d) :
-            Link(name, p, d, &_doneEvent),
-            linkDelay(delay),
-            _doneEvent([this] { rxDone(); }, name)
+               EtherDump *d)
+            : Link(name, p, d, &_doneEvent),
+              linkDelay(delay),
+              _doneEvent([this] { rxDone(); }, name)
         {}
         ~RxLink() {}
 
@@ -220,8 +219,8 @@ class DistEtherLink : public SimObject
         TxLink *txLink;
 
       public:
-        LocalIface(
-            const std::string &name, TxLink *tx, RxLink *rx, DistIface *m);
+        LocalIface(const std::string &name, TxLink *tx, RxLink *rx,
+                   DistIface *m);
 
         bool
         recvPacket(EthPacketPtr pkt)
@@ -262,8 +261,8 @@ class DistEtherLink : public SimObject
     DistEtherLink(const Params &p);
     ~DistEtherLink();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;

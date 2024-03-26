@@ -51,15 +51,14 @@ namespace gem5
 {
 using namespace ArmISA;
 
-#define INTERRUPT_ID(type, vcpu, irq) \
-    (((type) << KVM_ARM_IRQ_TYPE_SHIFT) | \
-        ((vcpu) << KVM_ARM_IRQ_VCPU_SHIFT) | \
-        ((irq) << KVM_ARM_IRQ_NUM_SHIFT))
+#define INTERRUPT_ID(type, vcpu, irq)                                         \
+    (((type) << KVM_ARM_IRQ_TYPE_SHIFT) |                                     \
+     ((vcpu) << KVM_ARM_IRQ_VCPU_SHIFT) | ((irq) << KVM_ARM_IRQ_NUM_SHIFT))
 
-#define INTERRUPT_VCPU_IRQ(vcpu) \
+#define INTERRUPT_VCPU_IRQ(vcpu)                                              \
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_IRQ)
 
-#define INTERRUPT_VCPU_FIQ(vcpu) \
+#define INTERRUPT_VCPU_FIQ(vcpu)                                              \
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_FIQ)
 
 namespace
@@ -78,12 +77,12 @@ UncontendedMutex vtime_mutex;
 
 } // namespace
 
-BaseArmKvmCPU::BaseArmKvmCPU(const BaseArmKvmCPUParams &params) :
-    BaseKvmCPU(params),
-    irqAsserted(false),
-    fiqAsserted(false),
-    virtTimerPin(nullptr),
-    prevDeviceIRQLevel(0)
+BaseArmKvmCPU::BaseArmKvmCPU(const BaseArmKvmCPUParams &params)
+    : BaseKvmCPU(params),
+      irqAsserted(false),
+      fiqAsserted(false),
+      virtTimerPin(nullptr),
+      prevDeviceIRQLevel(0)
 {}
 
 BaseArmKvmCPU::~BaseArmKvmCPU() {}
@@ -131,12 +130,12 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
         }
     } else {
         warn_if(simFIQ && !fiqAsserted,
-            "FIQ raised by the simulated interrupt controller "
-            "despite in-kernel GIC emulation. This is probably a bug.");
+                "FIQ raised by the simulated interrupt controller "
+                "despite in-kernel GIC emulation. This is probably a bug.");
 
         warn_if(simIRQ && !irqAsserted,
-            "IRQ raised by the simulated interrupt controller "
-            "despite in-kernel GIC emulation. This is probably a bug.");
+                "IRQ raised by the simulated interrupt controller "
+                "despite in-kernel GIC emulation. This is probably a bug.");
     }
 
     irqAsserted = simIRQ;
@@ -200,8 +199,8 @@ BaseArmKvmCPU::getRegList() const
         // register we need to allocate space for.
         std::unique_ptr<kvm_reg_list, void (*)(void *p)> regs(
             nullptr, [](void *p) { operator delete(p); });
-        const size_t size(
-            sizeof(kvm_reg_list) + regs_probe.n * sizeof(uint64_t));
+        const size_t size(sizeof(kvm_reg_list) +
+                          regs_probe.n * sizeof(uint64_t));
         regs.reset((kvm_reg_list *)operator new(size));
         regs->n = regs_probe.n;
         if (!getRegList(*regs))
@@ -218,7 +217,7 @@ BaseArmKvmCPU::kvmArmVCpuInit(const struct kvm_vcpu_init &init)
 {
     if (ioctl(KVM_ARM_VCPU_INIT, (void *)&init) == -1)
         panic("KVM: Failed to initialize vCPU; errno %d (%s)\n", errno,
-            strerror(errno));
+              strerror(errno));
 }
 
 bool
@@ -228,8 +227,8 @@ BaseArmKvmCPU::getRegList(kvm_reg_list &regs) const
         if (errno == E2BIG) {
             return false;
         } else {
-            panic(
-                "KVM: Failed to get vCPU register list (errno: %i)\n", errno);
+            panic("KVM: Failed to get vCPU register list (errno: %i)\n",
+                  errno);
         }
     } else {
         return true;

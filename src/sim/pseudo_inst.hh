@@ -68,10 +68,10 @@ void quiesceSkip(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);
-uint64_t readfile(
-    ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset);
+uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
+                  uint64_t offset);
 uint64_t writefile(ThreadContext *tc, Addr vaddr, uint64_t len,
-    uint64_t offset, Addr filenameAddr);
+                   uint64_t offset, Addr filenameAddr);
 void loadsymbol(ThreadContext *xc);
 void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
 uint64_t initParam(ThreadContext *xc, uint64_t key_str1, uint64_t key_str2);
@@ -80,7 +80,7 @@ void wakeCPU(ThreadContext *tc, uint64_t cpuid);
 void m5exit(ThreadContext *tc, Tick delay);
 void m5fail(ThreadContext *tc, Tick delay, uint64_t code);
 uint64_t m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
-    uint64_t d, uint64_t e, uint64_t f);
+               uint64_t d, uint64_t e, uint64_t f);
 void resetstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);

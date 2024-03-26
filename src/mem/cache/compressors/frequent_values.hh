@@ -71,8 +71,8 @@ class FrequentValues : public Base
 
       public:
         FrequentValuesListener(FrequentValues &_parent, ProbeManager *pm,
-            const std::string &name) :
-            ProbeListenerArgBase(pm, name), parent(_parent)
+                               const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
         {}
         void notify(const DataUpdate &data_update) override;
     };
@@ -131,8 +131,8 @@ class FrequentValues : public Base
          */
         SatCounter32 counter;
 
-        VFTEntry(std::size_t num_bits) :
-            TaggedEntry(), value(0), counter(num_bits)
+        VFTEntry(std::size_t num_bits)
+            : TaggedEntry(), value(0), counter(num_bits)
         {}
 
         void
@@ -171,9 +171,9 @@ class FrequentValues : public Base
     /** End sampling phase and start the code generation. */
     void generateCodes();
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Chunk> &chunks, Cycles &comp_lat,
-        Cycles &decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
     void decompress(const CompressionData *comp_data, uint64_t *data) override;
 
@@ -210,8 +210,8 @@ class FrequentValues::CompData : public CompressionData
          */
         uint64_t value;
 
-        CompressedValue(encoder::Code _code, uint64_t _value) :
-            code(_code), value(_value)
+        CompressedValue(encoder::Code _code, uint64_t _value)
+            : code(_code), value(_value)
         {}
     };
 

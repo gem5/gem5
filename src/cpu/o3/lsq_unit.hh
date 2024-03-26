@@ -291,7 +291,7 @@ class LSQUnit
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
-        LSQ *lsq_ptr, unsigned id);
+              LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -318,8 +318,8 @@ class LSQUnit
      * @param load_idx index to start checking at
      * @param inst the instruction to check
      */
-    Fault checkViolations(
-        typename LoadQueue::iterator &loadIt, const DynInstPtr &inst);
+    Fault checkViolations(typename LoadQueue::iterator &loadIt,
+                          const DynInstPtr &inst);
 
     /** Check if an incoming invalidate hits in the lsq on a load
      * that might have issued out of order wrt another load beacuse
@@ -543,8 +543,8 @@ class LSQUnit
     {
       public:
         /** Constructs a writeback event. */
-        WritebackEvent(
-            const DynInstPtr &_inst, PacketPtr pkt, LSQUnit *lsq_ptr);
+        WritebackEvent(const DynInstPtr &_inst, PacketPtr pkt,
+                       LSQUnit *lsq_ptr);
 
         /** Processes the writeback event. */
         void process();

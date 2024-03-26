@@ -75,22 +75,24 @@ namespace gem5
  * Constructor and destructor functions of UFSHCM device
  */
 UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams &p,
-    uint32_t lun_id, const Callback &transfer_cb, const Callback &read_cb) :
-    SimObject(p),
-    flashDisk(p.image[lun_id]),
-    flashDevice(p.internalflash[lun_id]),
-    blkSize(p.img_blk_size),
-    lunAvail(p.image.size()),
-    diskSize(flashDisk->size()),
-    capacityLower((diskSize - 1) & 0xffffffff),
-    capacityUpper((diskSize - SectorSize) >> 32),
-    lunID(lun_id),
-    transferCompleted(false),
-    readCompleted(false),
-    totalRead(0),
-    totalWrite(0),
-    amountOfWriteTransfers(0),
-    amountOfReadTransfers(0)
+                                            uint32_t lun_id,
+                                            const Callback &transfer_cb,
+                                            const Callback &read_cb)
+    : SimObject(p),
+      flashDisk(p.image[lun_id]),
+      flashDevice(p.internalflash[lun_id]),
+      blkSize(p.img_blk_size),
+      lunAvail(p.image.size()),
+      diskSize(flashDisk->size()),
+      capacityLower((diskSize - 1) & 0xffffffff),
+      capacityUpper((diskSize - SectorSize) >> 32),
+      lunID(lun_id),
+      transferCompleted(false),
+      readCompleted(false),
+      totalRead(0),
+      totalWrite(0),
+      amountOfWriteTransfers(0),
+      amountOfReadTransfers(0)
 {
     /**
      * These callbacks are used to communicate the events that are
@@ -118,11 +120,11 @@ UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams &p,
     lunInfo.productRevision = 0x01000000; // 0x01
 
     DPRINTF(UFSHostDevice,
-        "Logic unit %d assumes that %d logic units are"
-        " present in the system\n",
-        lunID, lunAvail);
+            "Logic unit %d assumes that %d logic units are"
+            " present in the system\n",
+            lunID, lunAvail);
     DPRINTF(UFSHostDevice, "The disksize of lun: %d should be %d blocks\n",
-        lunID, diskSize);
+            lunID, diskSize);
     flashDevice->initializeMemory(diskSize, SectorSize);
 }
 
@@ -210,7 +212,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Read6 offset: 0x%8x, for %d blocks\n",
-            read_offset, read_size);
+                read_offset, read_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -242,7 +244,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Read10 offset: 0x%8x, for %d blocks\n",
-            read_offset, read_size);
+                read_offset, read_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -277,7 +279,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Read16 offset: 0x%8x, for %d blocks\n",
-            read_offset, read_size);
+                read_offset, read_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -395,7 +397,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Write6 offset: 0x%8x, for %d blocks\n",
-            write_offset, write_size);
+                write_offset, write_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -425,7 +427,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Write10 offset: 0x%8x, for %d blocks\n",
-            write_offset, write_size);
+                write_offset, write_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -458,7 +460,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
             scsi_out.status = SCSIIllegalRequest;
 
         DPRINTF(UFSHostDevice, "Write16 offset: 0x%8x, for %d blocks\n",
-            write_offset, write_size);
+                write_offset, write_size);
 
         /**
          * Renew status check, for the request may have been illegal
@@ -540,8 +542,8 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
 
             scsi_out.message.dataMsg.resize(
                 ((sizeof(controlPage) + sizeof(recoveryPage) +
-                     sizeof(cachingPage)) >>
-                    2) +
+                  sizeof(cachingPage)) >>
+                 2) +
                 2);
             scsi_out.message.dataMsg[0] = 0x00003200; // all page code
             scsi_out.message.dataMsg[1] = 0x00000000; // See JEDEC220 ch8
@@ -662,8 +664,8 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
  */
 
 void
-UFSHostDevice::UFSSCSIDevice::statusCheck(
-    uint8_t status, uint8_t *sensecodelist)
+UFSHostDevice::UFSSCSIDevice::statusCheck(uint8_t status,
+                                          uint8_t *sensecodelist)
 {
     for (uint8_t count = 0; count < 19; count++)
         sensecodelist[count] = 0;
@@ -679,13 +681,13 @@ UFSHostDevice::UFSSCSIDevice::statusCheck(
  */
 
 void
-UFSHostDevice::UFSSCSIDevice::readFlash(
-    uint8_t *readaddr, uint64_t offset, uint32_t size)
+UFSHostDevice::UFSSCSIDevice::readFlash(uint8_t *readaddr, uint64_t offset,
+                                        uint32_t size)
 {
     /** read from image, and get to memory */
     for (int count = 0; count < (size / SectorSize); count++)
-        flashDisk->read(
-            &(readaddr[SectorSize * count]), (offset / SectorSize) + count);
+        flashDisk->read(&(readaddr[SectorSize * count]),
+                        (offset / SectorSize) + count);
 }
 
 /**
@@ -693,42 +695,42 @@ UFSHostDevice::UFSSCSIDevice::readFlash(
  */
 
 void
-UFSHostDevice::UFSSCSIDevice::writeFlash(
-    uint8_t *writeaddr, uint64_t offset, uint32_t size)
+UFSHostDevice::UFSSCSIDevice::writeFlash(uint8_t *writeaddr, uint64_t offset,
+                                         uint32_t size)
 {
     /** Get from fifo and write to image*/
     for (int count = 0; count < (size / SectorSize); count++)
-        flashDisk->write(
-            &(writeaddr[SectorSize * count]), (offset / SectorSize) + count);
+        flashDisk->write(&(writeaddr[SectorSize * count]),
+                         (offset / SectorSize) + count);
 }
 
 /**
  * Constructor for the UFS Host device
  */
 
-UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
-    DmaDevice(p),
-    pioAddr(p.pio_addr),
-    pioSize(0x0FFF),
-    pioDelay(p.pio_latency),
-    intNum(p.int_num),
-    gic(p.gic),
-    lunAvail(p.image.size()),
-    UFSSlots(p.ufs_slots - 1),
-    readPendingNum(0),
-    writePendingNum(0),
-    activeDoorbells(0),
-    pendingDoorbells(0),
-    countInt(0),
-    transferTrack(0),
-    taskCommandTrack(0),
-    idlePhaseStart(0),
-    stats(this),
-    SCSIResumeEvent([this] { SCSIStart(); }, name()),
-    UTPEvent([this] { finalUTP(); }, name())
+UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p)
+    : DmaDevice(p),
+      pioAddr(p.pio_addr),
+      pioSize(0x0FFF),
+      pioDelay(p.pio_latency),
+      intNum(p.int_num),
+      gic(p.gic),
+      lunAvail(p.image.size()),
+      UFSSlots(p.ufs_slots - 1),
+      readPendingNum(0),
+      writePendingNum(0),
+      activeDoorbells(0),
+      pendingDoorbells(0),
+      countInt(0),
+      transferTrack(0),
+      taskCommandTrack(0),
+      idlePhaseStart(0),
+      stats(this),
+      SCSIResumeEvent([this] { SCSIStart(); }, name()),
+      UTPEvent([this] { finalUTP(); }, name())
 {
-    DPRINTF(
-        UFSHostDevice, "The hostcontroller hosts %d Logic units\n", lunAvail);
+    DPRINTF(UFSHostDevice, "The hostcontroller hosts %d Logic units\n",
+            lunAvail);
     UFSDevice.resize(lunAvail);
 
     for (int count = 0; count < lunAvail; count++) {
@@ -738,7 +740,7 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
 
     if (UFSSlots > 31)
         warn("UFSSlots = %d, this will results in %d command slots", UFSSlots,
-            (UFSSlots & 0x1F));
+             (UFSSlots & 0x1F));
 
     if ((UFSSlots & 0x1F) == 0)
         fatal("Number of UFS command slots should be between 1 and 32.");
@@ -746,62 +748,63 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
     setValues();
 }
 
-UFSHostDevice::UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent) :
-    statistics::Group(parent, "UFSDiskHost"),
-    ADD_STAT(currentSCSIQueue, statistics::units::Count::get(),
-        "Most up to date length of the command queue"),
-    ADD_STAT(currentReadSSDQueue, statistics::units::Count::get(),
-        "Most up to date length of the read SSD queue"),
-    ADD_STAT(currentWriteSSDQueue, statistics::units::Count::get(),
-        "Most up to date length of the write SSD queue"),
-    /** Amount of data read/written */
-    ADD_STAT(totalReadSSD, statistics::units::Byte::get(),
-        "Number of bytes read from SSD"),
-    ADD_STAT(totalWrittenSSD, statistics::units::Byte::get(),
-        "Number of bytes written to SSD"),
-    ADD_STAT(totalReadDiskTransactions, statistics::units::Count::get(),
-        "Number of transactions from disk"),
-    ADD_STAT(totalWriteDiskTransactions, statistics::units::Count::get(),
-        "Number of transactions to disk"),
-    ADD_STAT(totalReadUFSTransactions, statistics::units::Count::get(),
-        "Number of transactions from device"),
-    ADD_STAT(totalWriteUFSTransactions, statistics::units::Count::get(),
-        "Number of transactions to device"),
-    /** Average bandwidth for reads and writes */
-    ADD_STAT(averageReadSSDBW,
-        statistics::units::Rate<statistics::units::Byte,
-            statistics::units::Second>::get(),
-        "Average read bandwidth", totalReadSSD / simSeconds),
-    ADD_STAT(averageWriteSSDBW,
-        statistics::units::Rate<statistics::units::Byte,
-            statistics::units::Second>::get(),
-        "Average write bandwidth", totalWrittenSSD / simSeconds),
-    ADD_STAT(averageSCSIQueue,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Tick>::get(),
-        "Average command queue length"),
-    ADD_STAT(averageReadSSDQueue,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Tick>::get(),
-        "Average read queue length"),
-    ADD_STAT(averageWriteSSDQueue,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Tick>::get(),
-        "Average write queue length"),
-    /** Number of doorbells rung*/
-    ADD_STAT(curDoorbell, statistics::units::Count::get(),
-        "Most up to date number of doorbells used", parent->activeDoorbells),
-    ADD_STAT(maxDoorbell, statistics::units::Count::get(),
-        "Maximum number of doorbells utilized"),
-    ADD_STAT(averageDoorbell,
-        statistics::units::Rate<statistics::units::Count,
-            statistics::units::Tick>::get(),
-        "Average number of Doorbells used"),
-    /** Latency*/
-    ADD_STAT(transactionLatency, statistics::units::Tick::get(),
-        "Histogram of transaction times"),
-    ADD_STAT(
-        idleTimes, statistics::units::Tick::get(), "Histogram of idle times")
+UFSHostDevice::UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
+    : statistics::Group(parent, "UFSDiskHost"),
+      ADD_STAT(currentSCSIQueue, statistics::units::Count::get(),
+               "Most up to date length of the command queue"),
+      ADD_STAT(currentReadSSDQueue, statistics::units::Count::get(),
+               "Most up to date length of the read SSD queue"),
+      ADD_STAT(currentWriteSSDQueue, statistics::units::Count::get(),
+               "Most up to date length of the write SSD queue"),
+      /** Amount of data read/written */
+      ADD_STAT(totalReadSSD, statistics::units::Byte::get(),
+               "Number of bytes read from SSD"),
+      ADD_STAT(totalWrittenSSD, statistics::units::Byte::get(),
+               "Number of bytes written to SSD"),
+      ADD_STAT(totalReadDiskTransactions, statistics::units::Count::get(),
+               "Number of transactions from disk"),
+      ADD_STAT(totalWriteDiskTransactions, statistics::units::Count::get(),
+               "Number of transactions to disk"),
+      ADD_STAT(totalReadUFSTransactions, statistics::units::Count::get(),
+               "Number of transactions from device"),
+      ADD_STAT(totalWriteUFSTransactions, statistics::units::Count::get(),
+               "Number of transactions to device"),
+      /** Average bandwidth for reads and writes */
+      ADD_STAT(averageReadSSDBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average read bandwidth", totalReadSSD / simSeconds),
+      ADD_STAT(averageWriteSSDBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average write bandwidth", totalWrittenSSD / simSeconds),
+      ADD_STAT(averageSCSIQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
+               "Average command queue length"),
+      ADD_STAT(averageReadSSDQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
+               "Average read queue length"),
+      ADD_STAT(averageWriteSSDQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
+               "Average write queue length"),
+      /** Number of doorbells rung*/
+      ADD_STAT(curDoorbell, statistics::units::Count::get(),
+               "Most up to date number of doorbells used",
+               parent->activeDoorbells),
+      ADD_STAT(maxDoorbell, statistics::units::Count::get(),
+               "Maximum number of doorbells utilized"),
+      ADD_STAT(averageDoorbell,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
+               "Average number of Doorbells used"),
+      /** Latency*/
+      ADD_STAT(transactionLatency, statistics::units::Tick::get(),
+               "Histogram of transaction times"),
+      ADD_STAT(idleTimes, statistics::units::Tick::get(),
+               "Histogram of idle times")
 {
     using namespace statistics;
 
@@ -1220,7 +1223,8 @@ UFSHostDevice::requestHandler()
             taskInfo.push_back(task_info);
             taskEventQueue.push_back(
                 EventFunctionWrapper([this] { taskStart(); }, name()));
-            writeDevice(&taskEventQueue.back(), false, address, size,
+            writeDevice(
+                &taskEventQueue.back(), false, address, size,
                 reinterpret_cast<uint8_t *>(&taskInfo.back().destination), 0,
                 0);
 
@@ -1239,9 +1243,9 @@ UFSHostDevice::requestHandler()
 
             transferTrack |= mask << count;
             DPRINTF(UFSHostDevice,
-                "Doorbell register: 0x%8x select #:"
-                " 0x%8x completion info: 0x%8x\n",
-                UFSHCIMem.TRUTRLDBR, count, transferstart_info.done);
+                    "Doorbell register: 0x%8x select #:"
+                    " 0x%8x completion info: 0x%8x\n",
+                    UFSHCIMem.TRUTRLDBR, count, transferstart_info.done);
 
             transferstart_info.done = UFSHCIMem.TRUTRLDBR;
 
@@ -1268,15 +1272,15 @@ UFSHostDevice::requestHandler()
             transferStartInfo.back().destination =
                 new struct UTPTransferReqDesc;
             DPRINTF(UFSHostDevice, "Initial transfer start: 0x%8x\n",
-                transferstart_info.done);
+                    transferstart_info.done);
             transferEventQueue.push_back(
                 EventFunctionWrapper([this] { transferStart(); }, name()));
 
             if (transferEventQueue.size() < 2) {
                 writeDevice(&transferEventQueue.front(), false, address, size,
-                    reinterpret_cast<uint8_t *>(
-                        transferStartInfo.front().destination),
-                    0, 0);
+                            reinterpret_cast<uint8_t *>(
+                                transferStartInfo.front().destination),
+                            0, 0);
                 DPRINTF(UFSHostDevice, "Transfer scheduled\n");
             }
         }
@@ -1292,7 +1296,7 @@ UFSHostDevice::taskStart()
 {
     DPRINTF(UFSHostDevice, "Task start");
     taskHandler(&taskInfo.front().destination, taskInfo.front().mask,
-        taskInfo.front().address, taskInfo.front().size);
+                taskInfo.front().address, taskInfo.front().size);
     taskInfo.pop_front();
     taskEventQueue.pop_front();
 }
@@ -1305,15 +1309,16 @@ void
 UFSHostDevice::transferStart()
 {
     DPRINTF(UFSHostDevice, "Enter transfer event\n");
-    transferHandler(transferStartInfo.front().destination,
-        transferStartInfo.front().mask, transferStartInfo.front().address,
-        transferStartInfo.front().size, transferStartInfo.front().done);
+    transferHandler(
+        transferStartInfo.front().destination, transferStartInfo.front().mask,
+        transferStartInfo.front().address, transferStartInfo.front().size,
+        transferStartInfo.front().done);
 
     transferStartInfo.pop_front();
     DPRINTF(UFSHostDevice,
-        "Transfer queue size at end of event: "
-        "0x%8x\n",
-        transferEventQueue.size());
+            "Transfer queue size at end of event: "
+            "0x%8x\n",
+            transferEventQueue.size());
 }
 
 /**
@@ -1336,7 +1341,7 @@ UFSHostDevice::commandHandler()
 
 void
 UFSHostDevice::taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
-    Addr finaladdress, uint32_t finalsize)
+                           Addr finaladdress, uint32_t finalsize)
 {
     /**
      * For now, just unpack and acknowledge the task without doing anything.
@@ -1354,7 +1359,7 @@ UFSHostDevice::taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
     UFSHCIMem.ORInterruptStatus |= UTPTaskREQCOMPL;
 
     readDevice(true, finaladdress, finalsize,
-        reinterpret_cast<uint8_t *>(request_in), true, NULL);
+               reinterpret_cast<uint8_t *>(request_in), true, NULL);
 }
 
 /**
@@ -1370,7 +1375,8 @@ UFSHostDevice::taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
 
 void
 UFSHostDevice::transferHandler(struct UTPTransferReqDesc *request_in,
-    int req_pos, Addr finaladdress, uint32_t finalsize, uint32_t done)
+                               int req_pos, Addr finaladdress,
+                               uint32_t finalsize, uint32_t done)
 {
     Addr cmd_desc_addr = 0x00;
 
@@ -1381,9 +1387,9 @@ UFSHostDevice::transferHandler(struct UTPTransferReqDesc *request_in,
     SCSIInfo.reqPos = req_pos;
     SCSIInfo.finalAddress = finaladdress;
     SCSIInfo.finalSize = finalsize;
-    SCSIInfo.destination.resize(
-        request_in->PRDTableOffset * 4 +
-        request_in->PRDTableLength * sizeof(UFSHCDSGEntry));
+    SCSIInfo.destination.resize(request_in->PRDTableOffset * 4 +
+                                request_in->PRDTableLength *
+                                    sizeof(UFSHCDSGEntry));
     SCSIInfo.done = done;
 
     assert(!SCSIResumeEvent.scheduled());
@@ -1395,7 +1401,7 @@ UFSHostDevice::transferHandler(struct UTPTransferReqDesc *request_in,
                     (request_in->commandDescBaseAddrLo & 0xffffffff);
 
     writeDevice(&SCSIResumeEvent, false, cmd_desc_addr,
-        SCSIInfo.destination.size(), &SCSIInfo.destination[0], 0, 0);
+                SCSIInfo.destination.size(), &SCSIInfo.destination[0], 0, 0);
 
     DPRINTF(UFSHostDevice, "SCSI scheduled\n");
 
@@ -1417,7 +1423,7 @@ UFSHostDevice::SCSIStart()
     UFSDevice[LUN]->SCSIInfoQueue.push_back(SCSIInfo);
 
     DPRINTF(UFSHostDevice, "SCSI queue %d has %d elements\n", LUN,
-        UFSDevice[LUN]->SCSIInfoQueue.size());
+            UFSDevice[LUN]->SCSIInfoQueue.size());
 
     /**There are 32 doorbells, so at max there can be 32 transactions*/
     if (UFSDevice[LUN]->SCSIInfoQueue.size() < 2) // LUN is available
@@ -1425,7 +1431,7 @@ UFSHostDevice::SCSIStart()
 
     else if (UFSDevice[LUN]->SCSIInfoQueue.size() > 32)
         panic("SCSI queue is getting too big %d\n",
-            UFSDevice[LUN]->SCSIInfoQueue.size());
+              UFSDevice[LUN]->SCSIInfoQueue.size());
 
     /**
      * First transfer is done, fetch the next;
@@ -1436,7 +1442,8 @@ UFSHostDevice::SCSIStart()
          * loading next data packet in case Another LUN
          * is approached in the mean time
          */
-        writeDevice(&transferEventQueue.front(), false,
+        writeDevice(
+            &transferEventQueue.front(), false,
             transferStartInfo.front().address, transferStartInfo.front().size,
             reinterpret_cast<uint8_t *>(transferStartInfo.front().destination),
             0, 0);
@@ -1459,7 +1466,7 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
     DPRINTF(UFSHostDevice, "SCSIresume\n");
     if (UFSDevice[lun_id]->SCSIInfoQueue.empty())
         panic("No SCSI message scheduled lun:%d Doorbell: 0x%8x", lun_id,
-            UFSHCIMem.TRUTRLDBR);
+              UFSHCIMem.TRUTRLDBR);
 
     /**old info, lets form it such that we can understand it*/
     struct UTPTransferReqDesc *request_in =
@@ -1521,8 +1528,8 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
     Addr response_addr = request_in->commandDescBaseAddrHi;
     response_addr =
         (response_addr << 32) | ((request_in->commandDescBaseAddrLo +
-                                     (request_in->responseUPIULength << 2)) &
-                                    0xffffffff);
+                                  (request_in->responseUPIULength << 2)) &
+                                 0xffffffff);
 
     /**transferdone information packet filling*/
     UFSDevice[lun_id]->transferInfo.responseStartAddr = response_addr;
@@ -1541,20 +1548,20 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
      */
     if (request_out_datain.expectMore == 0x01) {
         /**write transfer*/
-        manageWriteTransfer(
-            request_out_datain.LUN, request_out_datain.offset, length, sglist);
+        manageWriteTransfer(request_out_datain.LUN, request_out_datain.offset,
+                            length, sglist);
 
     } else if (request_out_datain.expectMore == 0x02) {
         /**read transfer*/
         manageReadTransfer(request_out_datain.msgSize, request_out_datain.LUN,
-            request_out_datain.offset, length, sglist);
+                           request_out_datain.offset, length, sglist);
 
     } else {
         /**not disk related transfer, SCSI maintanance*/
         uint32_t count = 0;
         uint32_t size_accum = 0;
         DPRINTF(UFSHostDevice, "Data DMA size: 0x%8x\n",
-            request_out_datain.msgSize);
+                request_out_datain.msgSize);
 
         /**Transport the SCSI reponse data according to the SG list*/
         while ((length > count) &&
@@ -1565,7 +1572,7 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
                 (SCSI_start << 32) | (sglist[count].baseAddr & 0xFFFFFFFF);
             DPRINTF(UFSHostDevice, "Data DMA start: 0x%8x\n", SCSI_start);
             DPRINTF(UFSHostDevice, "Data DMA size: 0x%8x\n",
-                (sglist[count].size + 1));
+                    (sglist[count].size + 1));
             /**
              * safetynet; it has been shown that sg list may be optimistic in
              * the amount of data allocated, which can potentially lead to
@@ -1579,15 +1586,15 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
                 size_to_send = request_out_datain.msgSize - size_accum;
 
             readDevice(false, SCSI_start, size_to_send,
-                reinterpret_cast<uint8_t *>(
-                    &(request_out_datain.message.dataMsg[size_accum])),
-                false, NULL);
+                       reinterpret_cast<uint8_t *>(
+                           &(request_out_datain.message.dataMsg[size_accum])),
+                       false, NULL);
 
             size_accum += size_to_send;
             DPRINTF(UFSHostDevice,
-                "Total remaining: 0x%8x,accumulated so far"
-                " : 0x%8x\n",
-                (request_out_datain.msgSize - size_accum), size_accum);
+                    "Total remaining: 0x%8x,accumulated so far"
+                    " : 0x%8x\n",
+                    (request_out_datain.msgSize - size_accum), size_accum);
 
             ++count;
             DPRINTF(UFSHostDevice, "Transfer #: %d\n", count);
@@ -1595,9 +1602,9 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
 
         /**Go to the next stage of the answering process*/
         transferDone(response_addr, req_pos,
-            UFSDevice[lun_id]->transferInfo.requestOut, finalsize,
-            finaladdress, reinterpret_cast<uint8_t *>(request_in), true,
-            lun_id);
+                     UFSDevice[lun_id]->transferInfo.requestOut, finalsize,
+                     finaladdress, reinterpret_cast<uint8_t *>(request_in),
+                     true, lun_id);
     }
 
     DPRINTF(UFSHostDevice, "SCSI resume done\n");
@@ -1622,13 +1629,13 @@ UFSHostDevice::LUNSignal()
         UFSDevice[this_lun]->clearSignal();
         // found it; call transferDone
         transferDone(UFSDevice[this_lun]->transferInfo.responseStartAddr,
-            UFSDevice[this_lun]->transferInfo.reqPos,
-            UFSDevice[this_lun]->transferInfo.requestOut,
-            UFSDevice[this_lun]->transferInfo.size,
-            UFSDevice[this_lun]->transferInfo.address,
-            UFSDevice[this_lun]->transferInfo.destination,
-            UFSDevice[this_lun]->transferInfo.finished,
-            UFSDevice[this_lun]->transferInfo.lunID);
+                     UFSDevice[this_lun]->transferInfo.reqPos,
+                     UFSDevice[this_lun]->transferInfo.requestOut,
+                     UFSDevice[this_lun]->transferInfo.size,
+                     UFSDevice[this_lun]->transferInfo.address,
+                     UFSDevice[this_lun]->transferInfo.destination,
+                     UFSDevice[this_lun]->transferInfo.finished,
+                     UFSDevice[this_lun]->transferInfo.lunID);
     }
 
     else
@@ -1642,16 +1649,17 @@ UFSHostDevice::LUNSignal()
 
 void
 UFSHostDevice::transferDone(Addr responseStartAddr, uint32_t req_pos,
-    struct UTPUPIURSP request_out, uint32_t size, Addr address,
-    uint8_t *destination, bool finished, uint32_t lun_id)
+                            struct UTPUPIURSP request_out, uint32_t size,
+                            Addr address, uint8_t *destination, bool finished,
+                            uint32_t lun_id)
 {
     /**Test whether SCSI queue hasn't popped prematurely*/
     if (UFSDevice[lun_id]->SCSIInfoQueue.empty())
         panic("No SCSI message scheduled lun:%d Doorbell: 0x%8x", lun_id,
-            UFSHCIMem.TRUTRLDBR);
+              UFSHCIMem.TRUTRLDBR);
 
     DPRINTF(UFSHostDevice, "DMA start: 0x%8x; DMA size: 0x%8x\n",
-        responseStartAddr, sizeof(request_out));
+            responseStartAddr, sizeof(request_out));
 
     struct transferStart lastinfo;
     lastinfo.mask = req_pos;
@@ -1666,9 +1674,9 @@ UFSHostDevice::transferDone(Addr responseStartAddr, uint32_t req_pos,
     DPRINTF(UFSHostDevice, "Transfer done start\n");
 
     readDevice(false, responseStartAddr, sizeof(request_out),
-        reinterpret_cast<uint8_t *>(
-            &(UFSDevice[lun_id]->transferInfo.requestOut)),
-        true, &UTPEvent);
+               reinterpret_cast<uint8_t *>(
+                   &(UFSDevice[lun_id]->transferInfo.requestOut)),
+               true, &UTPEvent);
 }
 
 /**
@@ -1684,7 +1692,7 @@ UFSHostDevice::finalUTP()
 
     UFSDevice[lun_id]->SCSIInfoQueue.pop_front();
     DPRINTF(UFSHostDevice, "SCSIInfoQueue size: %d, lun: %d\n",
-        UFSDevice[lun_id]->SCSIInfoQueue.size(), lun_id);
+            UFSDevice[lun_id]->SCSIInfoQueue.size(), lun_id);
 
     /**stats**/
     if (UFSHCIMem.TRUTRLDBR & transferEnd.front().mask) {
@@ -1696,8 +1704,8 @@ UFSHostDevice::finalUTP()
 
     /**Last message that will be transfered*/
     readDevice(true, transferEnd.front().address, transferEnd.front().size,
-        reinterpret_cast<uint8_t *>(transferEnd.front().destination), true,
-        NULL);
+               reinterpret_cast<uint8_t *>(transferEnd.front().destination),
+               true, NULL);
 
     /**clean and ensure that the tracker is updated*/
     transferTrack &= ~(transferEnd.front().mask);
@@ -1711,10 +1719,10 @@ UFSHostDevice::finalUTP()
     stats.averageDoorbell = stats.maxDoorbell.value();
 
     DPRINTF(UFSHostDevice,
-        "activeDoorbells: %d, pendingDoorbells: %d,"
-        " garbage: %d, TransferEvent: %d\n",
-        activeDoorbells, pendingDoorbells, garbage.size(),
-        transferEventQueue.size());
+            "activeDoorbells: %d, pendingDoorbells: %d,"
+            " garbage: %d, TransferEvent: %d\n",
+            activeDoorbells, pendingDoorbells, garbage.size(),
+            transferEventQueue.size());
 
     /**This is the moment that the device is available again*/
     if (!UFSDevice[lun_id]->SCSIInfoQueue.empty())
@@ -1812,10 +1820,11 @@ UFSHostDevice::clearInterrupt()
 
 void
 UFSHostDevice::writeDevice(Event *additional_action, bool toDisk, Addr start,
-    int size, uint8_t *destination, uint64_t SCSIDiskOffset, uint32_t lun_id)
+                           int size, uint8_t *destination,
+                           uint64_t SCSIDiskOffset, uint32_t lun_id)
 {
     DPRINTF(UFSHostDevice, "Write transaction Start: 0x%8x; Size: %d\n", start,
-        size);
+            size);
 
     /**check whether transfer is all the way to the flash*/
     if (toDisk) {
@@ -1842,14 +1851,14 @@ UFSHostDevice::writeDevice(Event *additional_action, bool toDisk, Addr start,
 
         /**transaction*/
         dmaPort.dmaAction(MemCmd::ReadReq, start, size, &writeDoneEvent.back(),
-            &SSDWriteinfo.back().buffer[0], 0);
+                          &SSDWriteinfo.back().buffer[0], 0);
         // yes, a readreq at a write device function is correct.
         DPRINTF(UFSHostDevice, "Write to disk scheduled\n");
 
     } else {
         assert(!additional_action->scheduled());
-        dmaPort.dmaAction(
-            MemCmd::ReadReq, start, size, additional_action, destination, 0);
+        dmaPort.dmaAction(MemCmd::ReadReq, start, size, additional_action,
+                          destination, 0);
         DPRINTF(UFSHostDevice, "Write scheduled\n");
     }
 }
@@ -1861,7 +1870,8 @@ UFSHostDevice::writeDevice(Event *additional_action, bool toDisk, Addr start,
 
 void
 UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset,
-    uint32_t sg_table_length, struct UFSHCDSGEntry *sglist)
+                                   uint32_t sg_table_length,
+                                   struct UFSHCDSGEntry *sglist)
 {
     struct writeToDiskBurst next_packet;
 
@@ -1878,10 +1888,10 @@ UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset,
         next_packet.start =
             (next_packet.start << 32) | (sglist[count].baseAddr & 0xFFFFFFFF);
         next_packet.LUN = LUN;
-        DPRINTF(
-            UFSHostDevice, "Write data DMA start: 0x%8x\n", next_packet.start);
+        DPRINTF(UFSHostDevice, "Write data DMA start: 0x%8x\n",
+                next_packet.start);
         DPRINTF(UFSHostDevice, "Write data DMA size: 0x%8x\n",
-            (sglist[count].size + 1));
+                (sglist[count].size + 1));
         assert(sglist[count].size > 0);
 
         if (count != 0)
@@ -1893,14 +1903,14 @@ UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset,
         /**If the queue is empty, the transaction should be initiated*/
         if (dmaWriteInfo.empty())
             writeDevice(NULL, true, next_packet.start, next_packet.size, NULL,
-                next_packet.SCSIDiskOffset, next_packet.LUN);
+                        next_packet.SCSIDiskOffset, next_packet.LUN);
         else
             DPRINTF(UFSHostDevice, "Write not initiated queue: %d\n",
-                dmaWriteInfo.size());
+                    dmaWriteInfo.size());
 
         dmaWriteInfo.push_back(next_packet);
         DPRINTF(UFSHostDevice, "Write Location: 0x%8x\n",
-            next_packet.SCSIDiskOffset);
+                next_packet.SCSIDiskOffset);
 
         DPRINTF(UFSHostDevice, "Write transfer #: 0x%8x\n", count + 1);
 
@@ -1928,10 +1938,11 @@ UFSHostDevice::writeDone()
 
     /**If there is nothing on the way, we need to start the events*/
     DPRINTF(UFSHostDevice, "Write done entered, queue: %d\n",
-        UFSDevice[lun]->SSDWriteDoneInfo.size());
+            UFSDevice[lun]->SSDWriteDoneInfo.size());
     /**Write the disk*/
     UFSDevice[lun]->writeFlash(&SSDWriteinfo.front().buffer[0],
-        SSDWriteinfo.front().offset, SSDWriteinfo.front().size);
+                               SSDWriteinfo.front().offset,
+                               SSDWriteinfo.front().size);
 
     /**
      * Move to the second queue, enter the logic unit
@@ -1953,8 +1964,9 @@ UFSHostDevice::writeDone()
     /**initiate the next dma action (if any)*/
     if (!dmaWriteInfo.empty())
         writeDevice(NULL, true, dmaWriteInfo.front().start,
-            dmaWriteInfo.front().size, NULL,
-            dmaWriteInfo.front().SCSIDiskOffset, dmaWriteInfo.front().LUN);
+                    dmaWriteInfo.front().size, NULL,
+                    dmaWriteInfo.front().SCSIDiskOffset,
+                    dmaWriteInfo.front().LUN);
     DPRINTF(UFSHostDevice, "Write done end\n");
 }
 
@@ -1966,12 +1978,12 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteStart()
 {
     assert(SSDWriteDoneInfo.size() > 0);
     flashDevice->writeMemory(SSDWriteDoneInfo.front().offset,
-        SSDWriteDoneInfo.front().size, memWriteCallback);
+                             SSDWriteDoneInfo.front().size, memWriteCallback);
 
     SSDWriteDoneInfo.pop_front();
 
     DPRINTF(UFSHostDevice, "Write is started; left in queue: %d\n",
-        SSDWriteDoneInfo.size());
+            SSDWriteDoneInfo.size());
 }
 
 /**
@@ -1982,7 +1994,7 @@ void
 UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
 {
     DPRINTF(UFSHostDevice, "Write disk, aiming for %d messages, %d so far\n",
-        totalWrite, amountOfWriteTransfers);
+            totalWrite, amountOfWriteTransfers);
 
     // we have done one extra transfer
     ++amountOfWriteTransfers;
@@ -2009,10 +2021,11 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
 
 void
 UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
-    uint8_t *destination, bool no_cache, Event *additional_action)
+                          uint8_t *destination, bool no_cache,
+                          Event *additional_action)
 {
     DPRINTF(UFSHostDevice, "Read start: 0x%8x; Size: %d, data[0]: 0x%8x\n",
-        start, size, (reinterpret_cast<uint32_t *>(destination))[0]);
+            start, size, (reinterpret_cast<uint32_t *>(destination))[0]);
 
     /** check wether interrupt is needed */
     if (lastTransfer) {
@@ -2021,15 +2034,15 @@ UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
             EventFunctionWrapper([this] { readDone(); }, name()));
         assert(!readDoneEvent.back().scheduled());
         dmaPort.dmaAction(MemCmd::WriteReq, start, size, &readDoneEvent.back(),
-            destination, 0);
+                          destination, 0);
         // yes, a writereq at a read device function is correct.
 
     } else {
         if (additional_action != NULL)
             assert(!additional_action->scheduled());
 
-        dmaPort.dmaAction(
-            MemCmd::WriteReq, start, size, additional_action, destination, 0);
+        dmaPort.dmaAction(MemCmd::WriteReq, start, size, additional_action,
+                          destination, 0);
     }
 }
 
@@ -2040,7 +2053,8 @@ UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
 
 void
 UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
-    uint32_t sg_table_length, struct UFSHCDSGEntry *sglist)
+                                  uint32_t sg_table_length,
+                                  struct UFSHCDSGEntry *sglist)
 {
     uint32_t size_accum = 0;
 
@@ -2060,11 +2074,11 @@ UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
         new_transfer.lunID = LUN;
 
         DPRINTF(UFSHostDevice, "Data READ start: 0x%8x; size: %d\n",
-            new_transfer.offset, new_transfer.size);
+                new_transfer.offset, new_transfer.size);
 
         UFSDevice[LUN]->SSDReadInfo.push_back(new_transfer);
-        UFSDevice[LUN]->SSDReadInfo.back().buffer.resize(
-            sglist[count].size + 1);
+        UFSDevice[LUN]->SSDReadInfo.back().buffer.resize(sglist[count].size +
+                                                         1);
 
         /**
          * The disk image is read here; but the action is simultated later
@@ -2078,9 +2092,9 @@ UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
         size_accum += (sglist[count].size + 1);
 
         DPRINTF(UFSHostDevice,
-            "Transfer %d; Remaining: 0x%8x, Accumulated:"
-            " 0x%8x\n",
-            (count + 1), (size - size_accum), size_accum);
+                "Transfer %d; Remaining: 0x%8x, Accumulated:"
+                " 0x%8x\n",
+                (count + 1), (size - size_accum), size_accum);
 
         /** stats **/
         stats.totalReadSSD += (sglist[count].size + 1);
@@ -2111,7 +2125,7 @@ UFSHostDevice::UFSSCSIDevice::SSDReadStart(uint32_t total_read)
          * It will call back when done.
          */
         flashDevice->readMemory(SSDReadInfo.front().filePointer,
-            SSDReadInfo.front().size, memReadCallback);
+                                SSDReadInfo.front().size, memReadCallback);
     }
 }
 
@@ -2123,9 +2137,9 @@ void
 UFSHostDevice::UFSSCSIDevice::SSDReadDone()
 {
     DPRINTF(UFSHostDevice,
-        "SSD read done at lun %d, Aiming for %d messages,"
-        " %d so far\n",
-        lunID, totalRead, amountOfReadTransfers);
+            "SSD read done at lun %d, Aiming for %d messages,"
+            " %d so far\n",
+            lunID, totalRead, amountOfReadTransfers);
 
     if (totalRead == amountOfReadTransfers) {
         totalRead = 0;
@@ -2172,7 +2186,7 @@ UFSHostDevice::readCallback()
         ++this_lun;
 
     DPRINTF(UFSHostDevice, "Found LUN %d messages pending for clean: %d\n",
-        this_lun, SSDReadPending.size());
+            this_lun, SSDReadPending.size());
 
     if (this_lun < lunAvail) {
         // Clear signal.
@@ -2184,8 +2198,9 @@ UFSHostDevice::readCallback()
 
         // make sure the queue is popped a the end of the dma transaction
         readDevice(false, SSDReadPending.front().offset,
-            SSDReadPending.front().size, &SSDReadPending.front().buffer[0],
-            false, &readGarbageEventQueue.back());
+                   SSDReadPending.front().size,
+                   &SSDReadPending.front().buffer[0], false,
+                   &readGarbageEventQueue.back());
 
         /**stats*/
         ++stats.totalReadDiskTransactions;
@@ -2266,9 +2281,9 @@ UFSHostDevice::checkDrain()
 
     if (UFSHCIMem.TRUTRLDBR) {
         DPRINTF(UFSHostDevice,
-            "UFSDevice is still draining; with %d active"
-            " doorbells\n",
-            activeDoorbells);
+                "UFSDevice is still draining; with %d active"
+                " doorbells\n",
+                activeDoorbells);
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice is done draining\n");
         signalDrainDone();

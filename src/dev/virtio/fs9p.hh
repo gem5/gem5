@@ -162,8 +162,8 @@ class VirtIO9PBase : public VirtIODeviceBase
     {
       public:
         FSQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-            VirtIO9PBase &_parent) :
-            VirtQueue(proxy, bo, size), parent(_parent)
+                VirtIO9PBase &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
         {}
         virtual ~FSQueue() {}
 
@@ -189,8 +189,8 @@ class VirtIO9PBase : public VirtIODeviceBase
      * @param data Pointer to data in message.
      * @param size Size of data (excluding header)
      */
-    virtual void recvTMsg(
-        const P9MsgHeader &header, const uint8_t *data, size_t size) = 0;
+    virtual void recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                          size_t size) = 0;
     /**
      * Send a 9p RPC message reply.
      *
@@ -241,8 +241,8 @@ class VirtIO9PProxy : public VirtIO9PBase
     void unserialize(CheckpointIn &cp) override;
 
   protected:
-    void recvTMsg(
-        const P9MsgHeader &header, const uint8_t *data, size_t size) override;
+    void recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                  size_t size) override;
 
     /** Notification of pending data from server */
     void serverDataReady();
@@ -333,8 +333,8 @@ class VirtIO9PDiod : public VirtIO9PProxy
     class DiodDataEvent : public PollEvent
     {
       public:
-        DiodDataEvent(VirtIO9PDiod &_parent, int fd, int event) :
-            PollEvent(fd, event), parent(_parent)
+        DiodDataEvent(VirtIO9PDiod &_parent, int fd, int event)
+            : PollEvent(fd, event), parent(_parent)
         {}
 
         virtual ~DiodDataEvent(){};
@@ -387,8 +387,8 @@ class VirtIO9PSocket : public VirtIO9PProxy
     class SocketDataEvent : public PollEvent
     {
       public:
-        SocketDataEvent(VirtIO9PSocket &_parent, int fd, int event) :
-            PollEvent(fd, event), parent(_parent)
+        SocketDataEvent(VirtIO9PSocket &_parent, int fd, int event)
+            : PollEvent(fd, event), parent(_parent)
         {}
 
         virtual ~SocketDataEvent(){};

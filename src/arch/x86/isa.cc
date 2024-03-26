@@ -46,8 +46,8 @@ namespace gem5
 namespace X86ISA
 {
 void
-ISA::updateHandyM5Reg(
-    Efer efer, CR0 cr0, SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
+ISA::updateHandyM5Reg(Efer efer, CR0 cr0, SegAttr csAttr, SegAttr ssAttr,
+                      RFLAGS rflags)
 {
     HandyM5Reg m5reg = 0;
     if (efer.lma) {
@@ -142,22 +142,22 @@ namespace
 /* Not applicable to X86 */
 RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
 RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
-RegClass vecPredRegClass(
-    VecPredRegClass, VecPredRegClassName, 1, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+                         debug::IntRegs);
 RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const X86ISAParams &p) :
-    BaseISA(p), cpuid(new X86CPUID(p.vendor_string, p.name_string))
+ISA::ISA(const X86ISAParams &p)
+    : BaseISA(p), cpuid(new X86CPUID(p.vendor_string, p.name_string))
 {
     cpuid->addStandardFunc(FamilyModelStepping, p.FamilyModelStepping);
     cpuid->addStandardFunc(CacheParams, p.CacheParams);
     cpuid->addStandardFunc(ExtendedFeatures, p.ExtendedFeatures);
     cpuid->addStandardFunc(ExtendedState, p.ExtendedState);
 
-    cpuid->addExtendedFunc(
-        FamilyModelSteppingBrandFeatures, p.FamilyModelSteppingBrandFeatures);
+    cpuid->addExtendedFunc(FamilyModelSteppingBrandFeatures,
+                           p.FamilyModelSteppingBrandFeatures);
     cpuid->addExtendedFunc(L1CacheAndTLB, p.L1CacheAndTLB);
     cpuid->addExtendedFunc(L2L3CacheAndL2TLB, p.L2L3CacheAndL2TLB);
     cpuid->addExtendedFunc(APMInfo, p.APMInfo);
@@ -313,8 +313,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         newCR0.et = 1;
         newVal = newCR0;
         updateHandyM5Reg(regVal[misc_reg::Efer], newCR0,
-            regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
-            regVal[misc_reg::Rflags]);
+                         regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
+                         regVal[misc_reg::Rflags]);
     } break;
     case misc_reg::Cr2:
         break;
@@ -351,11 +351,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             }
         }
         updateHandyM5Reg(regVal[misc_reg::Efer], regVal[misc_reg::Cr0],
-            newCSAttr, regVal[misc_reg::SsAttr], regVal[misc_reg::Rflags]);
+                         newCSAttr, regVal[misc_reg::SsAttr],
+                         regVal[misc_reg::Rflags]);
     } break;
     case misc_reg::SsAttr:
         updateHandyM5Reg(regVal[misc_reg::Efer], regVal[misc_reg::Cr0],
-            regVal[misc_reg::CsAttr], val, regVal[misc_reg::Rflags]);
+                         regVal[misc_reg::CsAttr], val,
+                         regVal[misc_reg::Rflags]);
         break;
     // These segments always actually use their bases, or in other words
     // their effective bases must stay equal to their actual bases.
@@ -452,8 +454,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         // based on the current values of the relevant registers. The actual
         // value written is discarded.
         updateHandyM5Reg(regVal[misc_reg::Efer], regVal[misc_reg::Cr0],
-            regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
-            regVal[misc_reg::Rflags]);
+                         regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
+                         regVal[misc_reg::Rflags]);
         return;
     default:
         break;
@@ -472,8 +474,8 @@ ISA::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
     updateHandyM5Reg(regVal[misc_reg::Efer], regVal[misc_reg::Cr0],
-        regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
-        regVal[misc_reg::Rflags]);
+                     regVal[misc_reg::CsAttr], regVal[misc_reg::SsAttr],
+                     regVal[misc_reg::Rflags]);
 }
 
 void

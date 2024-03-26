@@ -154,7 +154,7 @@ class DVFSHandler : public SimObject
 
         warn("DVFSHandler %s reads illegal frequency level %u from "
              "SrcClockDomain %s. Returning 0\n",
-            name(), perf_level, d->name());
+             name(), perf_level, d->name());
         return Tick(0);
     }
 
@@ -220,7 +220,7 @@ class DVFSHandler : public SimObject
     {
         auto it = domains.find(domain_id);
         panic_if(it == domains.end(),
-            "DVFS: Could not find a domain for ID %d.\n", domain_id);
+                 "DVFS: Could not find a domain for ID %d.\n", domain_id);
         return domains.find(domain_id)->second;
     }
 
@@ -242,8 +242,8 @@ class DVFSHandler : public SimObject
      */
     struct UpdateEvent : public Event
     {
-        UpdateEvent() :
-            Event(DVFS_Update_Pri), domainIDToSet(0), perfLevelToSet(0)
+        UpdateEvent()
+            : Event(DVFS_Update_Pri), domainIDToSet(0), perfLevelToSet(0)
         {}
 
         /**

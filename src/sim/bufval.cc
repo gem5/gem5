@@ -96,7 +96,7 @@ printUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 
 std::string
 printByteBuf(const void *buf, std::size_t bytes, ByteOrder endian,
-    std::size_t chunk_size)
+             std::size_t chunk_size)
 {
     assert(buf);
 

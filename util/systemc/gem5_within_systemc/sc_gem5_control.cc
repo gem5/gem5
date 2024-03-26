@@ -68,8 +68,8 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
   public:
     SC_HAS_PROCESS(Gem5TopLevelModule);
 
-    Gem5TopLevelModule(
-        sc_core::sc_module_name name, const std::string &config_filename);
+    Gem5TopLevelModule(sc_core::sc_module_name name,
+                       const std::string &config_filename);
     ~Gem5TopLevelModule();
 
     /** gem5 simulate.  @todo for more interesting simulation control,
@@ -88,8 +88,9 @@ class Gem5TopLevelModule : public Gem5SystemC::Module
 };
 
 Gem5System::Gem5System(gem5::CxxConfigManager *manager_,
-    const std::string &system_name, const std::string &instance_name) :
-    manager(manager_), systemName(system_name), instanceName(instance_name)
+                       const std::string &system_name,
+                       const std::string &instance_name)
+    : manager(manager_), systemName(system_name), instanceName(instance_name)
 {
     manager->addRenaming(
         gem5::CxxConfigManager::Renaming(system_name, instance_name));
@@ -99,19 +100,19 @@ Gem5System::~Gem5System() { delete manager; }
 
 void
 Gem5System::setParam(const std::string &object, const std::string &param_name,
-    const std::string &param_value)
+                     const std::string &param_value)
 {
     manager->setParam(systemName + (object != "" ? "." + object : ""),
-        param_name, param_value);
+                      param_name, param_value);
 }
 
 void
 Gem5System::setParamVector(const std::string &object,
-    const std::string &param_name,
-    const std::vector<std::string> &param_values)
+                           const std::string &param_name,
+                           const std::vector<std::string> &param_values)
 {
     manager->setParamVector(systemName + (object != "" ? "." + object : ""),
-        param_name, param_values);
+                            param_name, param_values);
 }
 
 void
@@ -166,12 +167,12 @@ Gem5Control::clearDebugFlag(const char *flag)
 }
 
 Gem5System *
-Gem5Control::makeSystem(
-    const std::string &system_name, const std::string &instance_name)
+Gem5Control::makeSystem(const std::string &system_name,
+                        const std::string &instance_name)
 {
     Gem5System *ret =
         new Gem5System(new gem5::CxxConfigManager(*(module->config_file)),
-            system_name, instance_name);
+                       system_name, instance_name);
 
     return ret;
 }
@@ -191,9 +192,9 @@ Gem5Control::setVersion(const std::string &new_version)
     version = new_version;
 }
 
-Gem5TopLevelModule::Gem5TopLevelModule(
-    sc_core::sc_module_name name, const std::string &config_filename) :
-    Gem5SystemC::Module(name), config_file(NULL), root_manager(NULL)
+Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
+                                       const std::string &config_filename)
+    : Gem5SystemC::Module(name), config_file(NULL), root_manager(NULL)
 {
     SC_THREAD(run);
 
@@ -217,16 +218,16 @@ Gem5TopLevelModule::Gem5TopLevelModule(
 
     /* Enable stats */
     gem5::statistics::initSimStats();
-    gem5::statistics::registerHandlers(
-        CxxConfig::statsReset, CxxConfig::statsDump);
+    gem5::statistics::registerHandlers(CxxConfig::statsReset,
+                                       CxxConfig::statsDump);
 
     gem5::trace::enable();
 
     config_file = new gem5::CxxIniFile();
 
     if (!config_file->load(config_filename)) {
-        fatal(
-            "Gem5TopLevelModule: Can't open config file: %s", config_filename);
+        fatal("Gem5TopLevelModule: Can't open config file: %s",
+              config_filename);
     }
 
     root_manager = new gem5::CxxConfigManager(*config_file);
@@ -244,8 +245,8 @@ Gem5TopLevelModule::Gem5TopLevelModule(
         root_manager->initState();
         root_manager->startup();
     } catch (gem5::CxxConfigManager::Exception &e) {
-        fatal(
-            "Config problem in Gem5TopLevelModule: %s: %s", e.name, e.message);
+        fatal("Config problem in Gem5TopLevelModule: %s: %s", e.name,
+              e.message);
     }
 }
 

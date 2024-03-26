@@ -78,7 +78,7 @@ initializeState(const ThreadContext *tc)
  * stored.
  */
 template <typename ABI, template <class...> class Role, typename Type,
-    typename Enabled = void>
+          typename Enabled = void>
 struct Preparer
 {
     static void
@@ -110,8 +110,8 @@ prepareForResult(ThreadContext *tc, typename ABI::State &state)
 
 template <typename ABI, typename... Args>
 static inline void
-prepareForArguments(
-    [[maybe_unused]] ThreadContext *tc, typename ABI::State &state)
+prepareForArguments([[maybe_unused]] ThreadContext *tc,
+                    typename ABI::State &state)
 {
     GEM5_FOR_EACH_IN_PACK (Preparer<ABI, Argument, Args>::prepare(tc, state))
         ;
@@ -141,7 +141,8 @@ struct ResultStorer
 };
 
 template <typename ABI, typename Ret>
-struct ResultStorer<ABI, Ret,
+struct ResultStorer<
+    ABI, Ret,
     typename std::enable_if_t<std::is_same_v<
         void (*)(ThreadContext *, const Ret &, typename ABI::State &),
         decltype(&Result<ABI, Ret>::store)>>>

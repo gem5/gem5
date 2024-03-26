@@ -36,15 +36,14 @@ namespace gem5
 {
 namespace fastmodel
 {
-PL330::PL330(
-    const FastModelPL330Params &params, sc_core::sc_module_name _name) :
-    scx_evs_PL330(_name),
-    clockPeriod(params.clock),
-    dma(amba_m, params.name + ".dma", -1),
-    pioS(amba_s, params.name + ".pio_s", -1),
-    pioNs(amba_s_ns, params.name + ".pio_ns", -1),
-    irqAbortReceiver("irq_abort_receiver"),
-    resetIn("reset_in", 0)
+PL330::PL330(const FastModelPL330Params &params, sc_core::sc_module_name _name)
+    : scx_evs_PL330(_name),
+      clockPeriod(params.clock),
+      dma(amba_m, params.name + ".dma", -1),
+      pioS(amba_s, params.name + ".pio_s", -1),
+      pioNs(amba_s_ns, params.name + ".pio_ns", -1),
+      irqAbortReceiver("irq_abort_receiver"),
+      resetIn("reset_in", 0)
 {
     set_parameter("pl330.fifo_size", params.fifo_size);
     set_parameter("pl330.max_transfer", params.max_transfer);
@@ -55,10 +54,10 @@ PL330::PL330(
     set_parameter("pl330.p_buffer_depth", params.buffer_depth);
     set_parameter("pl330.p_lsq_read_size", params.lsq_read_size);
     set_parameter("pl330.p_lsq_write_size", params.lsq_write_size);
-    set_parameter(
-        "pl330.p_read_issuing_capability", params.read_issuing_capability);
-    set_parameter(
-        "pl330.p_write_issuing_capability", params.write_issuing_capability);
+    set_parameter("pl330.p_read_issuing_capability",
+                  params.read_issuing_capability);
+    set_parameter("pl330.p_write_issuing_capability",
+                  params.write_issuing_capability);
     set_parameter("pl330.p_axi_bus_width_param", params.axi_bus_width);
     set_parameter("pl330.p_cache_line_words", params.cache_line_words);
     set_parameter("pl330.p_cache_lines", params.cache_lines);
@@ -70,69 +69,69 @@ PL330::PL330(
     set_parameter("pl330.p_reset_pc", params.reset_pc);
     set_parameter("pl330.p_max_periph", params.max_periph);
     set_parameter("pl330.p_perip_request_acceptance_0",
-        params.perip_request_acceptance_0);
+                  params.perip_request_acceptance_0);
     set_parameter("pl330.p_perip_request_acceptance_1",
-        params.perip_request_acceptance_1);
+                  params.perip_request_acceptance_1);
     set_parameter("pl330.p_perip_request_acceptance_2",
-        params.perip_request_acceptance_2);
+                  params.perip_request_acceptance_2);
     set_parameter("pl330.p_perip_request_acceptance_3",
-        params.perip_request_acceptance_3);
+                  params.perip_request_acceptance_3);
     set_parameter("pl330.p_perip_request_acceptance_4",
-        params.perip_request_acceptance_4);
+                  params.perip_request_acceptance_4);
     set_parameter("pl330.p_perip_request_acceptance_5",
-        params.perip_request_acceptance_5);
+                  params.perip_request_acceptance_5);
     set_parameter("pl330.p_perip_request_acceptance_6",
-        params.perip_request_acceptance_6);
+                  params.perip_request_acceptance_6);
     set_parameter("pl330.p_perip_request_acceptance_7",
-        params.perip_request_acceptance_7);
+                  params.perip_request_acceptance_7);
     set_parameter("pl330.p_perip_request_acceptance_8",
-        params.perip_request_acceptance_8);
+                  params.perip_request_acceptance_8);
     set_parameter("pl330.p_perip_request_acceptance_9",
-        params.perip_request_acceptance_9);
+                  params.perip_request_acceptance_9);
     set_parameter("pl330.p_perip_request_acceptance_10",
-        params.perip_request_acceptance_10);
+                  params.perip_request_acceptance_10);
     set_parameter("pl330.p_perip_request_acceptance_11",
-        params.perip_request_acceptance_11);
+                  params.perip_request_acceptance_11);
     set_parameter("pl330.p_perip_request_acceptance_12",
-        params.perip_request_acceptance_12);
+                  params.perip_request_acceptance_12);
     set_parameter("pl330.p_perip_request_acceptance_13",
-        params.perip_request_acceptance_13);
+                  params.perip_request_acceptance_13);
     set_parameter("pl330.p_perip_request_acceptance_14",
-        params.perip_request_acceptance_14);
+                  params.perip_request_acceptance_14);
     set_parameter("pl330.p_perip_request_acceptance_15",
-        params.perip_request_acceptance_15);
+                  params.perip_request_acceptance_15);
     set_parameter("pl330.p_perip_request_acceptance_16",
-        params.perip_request_acceptance_16);
+                  params.perip_request_acceptance_16);
     set_parameter("pl330.p_perip_request_acceptance_17",
-        params.perip_request_acceptance_17);
+                  params.perip_request_acceptance_17);
     set_parameter("pl330.p_perip_request_acceptance_18",
-        params.perip_request_acceptance_18);
+                  params.perip_request_acceptance_18);
     set_parameter("pl330.p_perip_request_acceptance_19",
-        params.perip_request_acceptance_19);
+                  params.perip_request_acceptance_19);
     set_parameter("pl330.p_perip_request_acceptance_20",
-        params.perip_request_acceptance_20);
+                  params.perip_request_acceptance_20);
     set_parameter("pl330.p_perip_request_acceptance_21",
-        params.perip_request_acceptance_21);
+                  params.perip_request_acceptance_21);
     set_parameter("pl330.p_perip_request_acceptance_22",
-        params.perip_request_acceptance_22);
+                  params.perip_request_acceptance_22);
     set_parameter("pl330.p_perip_request_acceptance_23",
-        params.perip_request_acceptance_23);
+                  params.perip_request_acceptance_23);
     set_parameter("pl330.p_perip_request_acceptance_24",
-        params.perip_request_acceptance_24);
+                  params.perip_request_acceptance_24);
     set_parameter("pl330.p_perip_request_acceptance_25",
-        params.perip_request_acceptance_25);
+                  params.perip_request_acceptance_25);
     set_parameter("pl330.p_perip_request_acceptance_26",
-        params.perip_request_acceptance_26);
+                  params.perip_request_acceptance_26);
     set_parameter("pl330.p_perip_request_acceptance_27",
-        params.perip_request_acceptance_27);
+                  params.perip_request_acceptance_27);
     set_parameter("pl330.p_perip_request_acceptance_28",
-        params.perip_request_acceptance_28);
+                  params.perip_request_acceptance_28);
     set_parameter("pl330.p_perip_request_acceptance_29",
-        params.perip_request_acceptance_29);
+                  params.perip_request_acceptance_29);
     set_parameter("pl330.p_perip_request_acceptance_30",
-        params.perip_request_acceptance_30);
+                  params.perip_request_acceptance_30);
     set_parameter("pl330.p_perip_request_acceptance_31",
-        params.perip_request_acceptance_31);
+                  params.perip_request_acceptance_31);
 
     // Plumb up the mechanism which lets us set the clock rate inside the EVS.
     clockRateControl.bind(this->clock_rate_s);

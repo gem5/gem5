@@ -61,10 +61,11 @@ class HeteroMemCtrl : public MemCtrl
      */
     NVMInterface *nvm;
     MemPacketQueue::iterator chooseNext(MemPacketQueue &queue,
-        Tick extra_col_delay, MemInterface *mem_int) override;
-    virtual std::pair<MemPacketQueue::iterator, Tick> chooseNextFRFCFS(
-        MemPacketQueue &queue, Tick extra_col_delay,
-        MemInterface *mem_intr) override;
+                                        Tick extra_col_delay,
+                                        MemInterface *mem_int) override;
+    virtual std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick extra_col_delay,
+                     MemInterface *mem_intr) override;
     Tick doBurstAccess(MemPacket *mem_pkt, MemInterface *mem_int) override;
     Tick minReadToWriteDataGap() override;
     Tick minWriteToReadDataGap() override;
@@ -88,12 +89,13 @@ class HeteroMemCtrl : public MemCtrl
      * @return a boolean indicating if the mem pkt size is less than
      * the burst size of the related mem interface
      */
-    virtual bool pktSizeCheck(
-        MemPacket *mem_pkt, MemInterface *mem_intr) const override;
+    virtual bool pktSizeCheck(MemPacket *mem_pkt,
+                              MemInterface *mem_intr) const override;
 
     virtual void processRespondEvent(MemInterface *mem_intr,
-        MemPacketQueue &queue, EventFunctionWrapper &resp_event,
-        bool &retry_rd_req) override;
+                                     MemPacketQueue &queue,
+                                     EventFunctionWrapper &resp_event,
+                                     bool &retry_rd_req) override;
 
     /**
      * Checks if the memory interface is already busy

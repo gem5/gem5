@@ -52,8 +52,8 @@ namespace gem5
 {
 namespace ruby
 {
-VIPERCoalescer::VIPERCoalescer(const Params &p) :
-    GPUCoalescer(p), m_cache_inv_pkt(nullptr), m_num_pending_invs(0)
+VIPERCoalescer::VIPERCoalescer(const Params &p)
+    : GPUCoalescer(p), m_cache_inv_pkt(nullptr), m_num_pending_invs(0)
 {}
 
 VIPERCoalescer::~VIPERCoalescer() {}
@@ -144,16 +144,17 @@ VIPERCoalescer::issueRequest(CoalescedRequest *crequest)
     }
     std::shared_ptr<RubyRequest> msg;
     if (pkt->isAtomicOp()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-            pkt->getSize(), pc, crequest->getRubyType(),
-            RubyAccessMode_Supervisor, pkt, PrefetchBit_No, proc_id, 100,
-            blockSize, accessMask, dataBlock, atomicOps,
-            crequest->getSeqNum());
+        msg = std::make_shared<RubyRequest>(
+            clockEdge(), pkt->getAddr(), pkt->getSize(), pc,
+            crequest->getRubyType(), RubyAccessMode_Supervisor, pkt,
+            PrefetchBit_No, proc_id, 100, blockSize, accessMask, dataBlock,
+            atomicOps, crequest->getSeqNum());
     } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-            pkt->getSize(), pc, crequest->getRubyType(),
-            RubyAccessMode_Supervisor, pkt, PrefetchBit_No, proc_id, 100,
-            blockSize, accessMask, dataBlock, crequest->getSeqNum());
+        msg = std::make_shared<RubyRequest>(
+            clockEdge(), pkt->getAddr(), pkt->getSize(), pc,
+            crequest->getRubyType(), RubyAccessMode_Supervisor, pkt,
+            PrefetchBit_No, proc_id, 100, blockSize, accessMask, dataBlock,
+            crequest->getSeqNum());
     }
 
     if (pkt->cmd == MemCmd::WriteReq) {
@@ -161,16 +162,16 @@ VIPERCoalescer::issueRequest(CoalescedRequest *crequest)
     }
 
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n", curTick(),
-        m_version, "Coal", "Begin", "", "",
-        printAddress(msg->getPhysicalAddress()),
-        RubyRequestType_to_string(crequest->getRubyType()));
+             m_version, "Coal", "Begin", "", "",
+             printAddress(msg->getPhysicalAddress()),
+             RubyRequestType_to_string(crequest->getRubyType()));
 
     fatal_if(crequest->getRubyType() == RubyRequestType_IFETCH,
-        "there should not be any I-Fetch requests in the GPU Coalescer");
+             "there should not be any I-Fetch requests in the GPU Coalescer");
 
     if (!deadlockCheckEvent.scheduled()) {
         schedule(deadlockCheckEvent,
-            m_deadlock_threshold * clockPeriod() + curTick());
+                 m_deadlock_threshold * clockPeriod() + curTick());
     }
 
     assert(m_mandatory_q_ptr);
@@ -211,7 +212,7 @@ void
 VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
 {
     DPRINTF(GPUCoalescer, "writeCompleteCallback: instSeqNum %d addr 0x%x\n",
-        instSeqNum, addr);
+            instSeqNum, addr);
 
     auto key = instSeqNum;
     assert(m_writeCompletePktMap.count(key) == 1 &&
@@ -219,22 +220,23 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
 
     m_writeCompletePktMap[key].erase(
         std::remove_if(m_writeCompletePktMap[key].begin(),
-            m_writeCompletePktMap[key].end(),
-            [addr](PacketPtr writeCompletePkt) -> bool {
-                if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
-                    RubyPort::SenderState *ss =
-                        safe_cast<RubyPort::SenderState *>(
-                            writeCompletePkt->senderState);
-                    MemResponsePort *port = ss->port;
-                    assert(port != NULL);
+                       m_writeCompletePktMap[key].end(),
+                       [addr](PacketPtr writeCompletePkt) -> bool {
+                           if (makeLineAddress(writeCompletePkt->getAddr()) ==
+                               addr) {
+                               RubyPort::SenderState *ss =
+                                   safe_cast<RubyPort::SenderState *>(
+                                       writeCompletePkt->senderState);
+                               MemResponsePort *port = ss->port;
+                               assert(port != NULL);
 
-                    writeCompletePkt->senderState = ss->predecessor;
-                    delete ss;
-                    port->hitCallback(writeCompletePkt);
-                    return true;
-                }
-                return false;
-            }),
+                               writeCompletePkt->senderState = ss->predecessor;
+                               delete ss;
+                               port->hitCallback(writeCompletePkt);
+                               return true;
+                           }
+                           return false;
+                       }),
         m_writeCompletePktMap[key].end());
 
     trySendRetries();
@@ -265,16 +267,16 @@ VIPERCoalescer::invTCP()
 {
     int size = m_dataCache_ptr->getNumBlocks();
     DPRINTF(GPUCoalescer,
-        "There are %d Invalidations outstanding before Cache Walk\n",
-        m_num_pending_invs);
+            "There are %d Invalidations outstanding before Cache Walk\n",
+            m_num_pending_invs);
     // Walk the cache
     for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
-        std::shared_ptr<RubyRequest> msg =
-            std::make_shared<RubyRequest>(clockEdge(), addr, 0, 0,
-                request_type, RubyAccessMode_Supervisor, nullptr);
+        std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
+            clockEdge(), addr, 0, 0, request_type, RubyAccessMode_Supervisor,
+            nullptr);
         DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);
         assert(m_mandatory_q_ptr != NULL);
         Tick latency =
@@ -283,8 +285,8 @@ VIPERCoalescer::invTCP()
         m_num_pending_invs++;
     }
     DPRINTF(GPUCoalescer,
-        "There are %d Invalidatons outstanding after Cache Walk\n",
-        m_num_pending_invs);
+            "There are %d Invalidatons outstanding after Cache Walk\n",
+            m_num_pending_invs);
 }
 
 } // namespace ruby

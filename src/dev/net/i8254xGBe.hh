@@ -98,7 +98,7 @@ class IGbE : public EtherDevice
     {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
-            "Posting RXT interrupt because RDTR timer expired\n");
+                "Posting RXT interrupt because RDTR timer expired\n");
         postInterrupt(igbreg::IT_RXT);
     }
 
@@ -110,7 +110,7 @@ class IGbE : public EtherDevice
     {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
-            "Posting RXT interrupt because RADV timer expired\n");
+                "Posting RXT interrupt because RADV timer expired\n");
         postInterrupt(igbreg::IT_RXT);
     }
 
@@ -122,7 +122,7 @@ class IGbE : public EtherDevice
     {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
-            "Posting TXDW interrupt because TADV timer expired\n");
+                "Posting TXDW interrupt because TADV timer expired\n");
         postInterrupt(igbreg::IT_TXDW);
     }
 
@@ -134,7 +134,7 @@ class IGbE : public EtherDevice
     {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
-            "Posting TXDW interrupt because TIDV timer expired\n");
+                "Posting TXDW interrupt because TIDV timer expired\n");
         postInterrupt(igbreg::IT_TXDW);
     }
     EventFunctionWrapper tidvEvent;
@@ -531,7 +531,8 @@ class IGbE : public EtherDevice
         completionWriteback(Addr a, bool enabled)
         {
             DPRINTF(EthernetDesc,
-                "Completion writeback Addr: %#x enabled: %d\n", a, enabled);
+                    "Completion writeback Addr: %#x enabled: %d\n", a,
+                    enabled);
             completionAddress = a;
             completionEnabled = enabled;
         }
@@ -560,8 +561,8 @@ class IGbE : public EtherDevice
     ~IGbE();
     void init() override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     Tick lastInterrupt;
 

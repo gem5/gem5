@@ -35,22 +35,22 @@ namespace gem5
 {
 namespace prefetch
 {
-BOP::BOP(const BOPPrefetcherParams &p) :
-    Queued(p),
-    scoreMax(p.score_max),
-    roundMax(p.round_max),
-    badScore(p.bad_score),
-    rrEntries(p.rr_size),
-    tagMask((1 << p.tag_bits) - 1),
-    delayQueueEnabled(p.delay_queue_enable),
-    delayQueueSize(p.delay_queue_size),
-    delayTicks(cyclesToTicks(p.delay_queue_cycles)),
-    delayQueueEvent([this] { delayQueueEventWrapper(); }, name()),
-    issuePrefetchRequests(false),
-    bestOffset(1),
-    phaseBestOffset(0),
-    bestScore(0),
-    round(0)
+BOP::BOP(const BOPPrefetcherParams &p)
+    : Queued(p),
+      scoreMax(p.score_max),
+      roundMax(p.round_max),
+      badScore(p.bad_score),
+      rrEntries(p.rr_size),
+      tagMask((1 << p.tag_bits) - 1),
+      delayQueueEnabled(p.delay_queue_enable),
+      delayQueueSize(p.delay_queue_size),
+      delayTicks(cyclesToTicks(p.delay_queue_cycles)),
+      delayQueueEvent([this] { delayQueueEventWrapper(); }, name()),
+      issuePrefetchRequests(false),
+      bestOffset(1),
+      phaseBestOffset(0),
+      bestScore(0),
+      round(0)
 {
     if (!isPowerOf2(rrEntries)) {
         fatal("%s: number of RR entries is not power of 2\n", name());
@@ -60,7 +60,7 @@ BOP::BOP(const BOPPrefetcherParams &p) :
     }
     if (!(p.negative_offsets_enable && (p.offset_list_size % 2 == 0))) {
         fatal("%s: negative offsets enabled with odd offset list size\n",
-            name());
+              name());
     }
 
     rrLeft.resize(rrEntries);
@@ -101,8 +101,8 @@ BOP::BOP(const BOPPrefetcherParams &p) :
 void
 BOP::delayQueueEventWrapper()
 {
-    while (
-        !delayQueue.empty() && delayQueue.front().processTick <= curTick()) {
+    while (!delayQueue.empty() &&
+           delayQueue.front().processTick <= curTick()) {
         Addr addr_x = delayQueue.front().baseAddr;
         insertIntoRR(addr_x, RRWay::Left);
         delayQueue.pop_front();
@@ -228,7 +228,8 @@ BOP::bestOffsetLearning(Addr x)
 
 void
 BOP::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                       std::vector<AddrPriority> &addresses,
+                       const CacheAccessor &cache)
 {
     Addr addr = pfi.getAddr();
     Addr tag_x = tag(addr);

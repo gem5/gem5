@@ -35,10 +35,10 @@ namespace gem5
 {
 namespace Iris
 {
-BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs) :
-    gem5::BaseCPU::BaseCPU(params),
-    evs(_evs),
-    evs_base_cpu(dynamic_cast<Iris::BaseCpuEvs *>(_evs))
+BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs)
+    : gem5::BaseCPU::BaseCPU(params),
+      evs(_evs),
+      evs_base_cpu(dynamic_cast<Iris::BaseCpuEvs *>(_evs))
 {
     panic_if(!evs_base_cpu, "EVS should be of type BaseCpuEvs");
 

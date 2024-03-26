@@ -114,8 +114,8 @@ class ProxyPtrBuffer
         return ptr;
     }
 
-    ProxyPtrBuffer(std::shared_ptr<Proxy> _proxy, Addr _ptr, size_t _size) :
-        proxy(_proxy), ptr(_ptr), size(_size), data(new uint8_t[_size])
+    ProxyPtrBuffer(std::shared_ptr<Proxy> _proxy, Addr _ptr, size_t _size)
+        : proxy(_proxy), ptr(_ptr), size(_size), data(new uint8_t[_size])
     {
         load();
     }
@@ -159,26 +159,26 @@ class ConstProxyPtr
     using Type = T;
 
     template <typename... Args,
-        typename std::enable_if_t<std::is_constructible_v<Proxy, Args &&...>,
-            int> = 0>
-    explicit ConstProxyPtr(Addr _ptr, Args &&... args) :
-        proxy(std::make_shared<Proxy>(args...))
+              typename std::enable_if_t<
+                  std::is_constructible_v<Proxy, Args &&...>, int> = 0>
+    explicit ConstProxyPtr(Addr _ptr, Args &&... args)
+        : proxy(std::make_shared<Proxy>(args...))
     {
         setAddr(_ptr);
     }
     template <typename... Args,
-        typename std::enable_if_t<std::is_constructible_v<Proxy, Args &&...>,
-            int> = 0>
-    explicit ConstProxyPtr(Args &&... args) :
-        proxy(std::make_shared<Proxy>(args...))
+              typename std::enable_if_t<
+                  std::is_constructible_v<Proxy, Args &&...>, int> = 0>
+    explicit ConstProxyPtr(Args &&... args)
+        : proxy(std::make_shared<Proxy>(args...))
     {
         setAddr(0);
     }
 
     template <typename O, typename Enabled = typename std::enable_if_t<
                               std::is_assignable_v<T *, O *>>>
-    ConstProxyPtr(const ConstProxyPtr<O, Proxy> &other) :
-        proxy(other.proxy), buffer(other.buffer)
+    ConstProxyPtr(const ConstProxyPtr<O, Proxy> &other)
+        : proxy(other.proxy), buffer(other.buffer)
     {}
 
     ConstProxyPtr(const CPP &other) : proxy(other.proxy), buffer(other.buffer)
@@ -270,19 +270,19 @@ class ProxyPtr : public ConstProxyPtr<T, Proxy>
 
   public:
     template <typename... Args,
-        typename std::enable_if_t<std::is_constructible_v<Proxy, Args &&...>,
-            int> = 0>
+              typename std::enable_if_t<
+                  std::is_constructible_v<Proxy, Args &&...>, int> = 0>
     explicit ProxyPtr(Addr _ptr, Args &&... args) : CPP(_ptr, args...)
     {}
     template <typename... Args,
-        typename std::enable_if_t<std::is_constructible_v<Proxy, Args &&...>,
-            int> = 0>
+              typename std::enable_if_t<
+                  std::is_constructible_v<Proxy, Args &&...>, int> = 0>
     explicit ProxyPtr(Args &&... args) : CPP(0, args...)
     {}
 
     template <typename O,
-        typename Enabled = typename std::enable_if_t<
-            std::is_assignable_v<T *, O *> && !std::is_same_v<O, void>>>
+              typename Enabled = typename std::enable_if_t<
+                  std::is_assignable_v<T *, O *> && !std::is_same_v<O, void>>>
     ProxyPtr(const ProxyPtr<O, Proxy> &other) : CPP(other)
     {}
 

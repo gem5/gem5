@@ -56,8 +56,8 @@ namespace gem5
 void
 FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic_if(
-        !FullSystem, "fault (%s) detected @ PC %s", name(), tc->pcState());
+    panic_if(!FullSystem, "fault (%s) detected @ PC %s", name(),
+             tc->pcState());
     DPRINTF(Faults, "Fault %s at PC: %s\n", name(), tc->pcState());
 }
 
@@ -98,16 +98,16 @@ GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
     }
-    panic_if(!handled && !tc->getSystemPtr()->trapToGdb(
-                             GDBSignal::SEGV, tc->contextId()),
-        "Page table fault when accessing virtual address %#x\n", vaddr);
+    panic_if(!handled && !tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV,
+                                                        tc->contextId()),
+             "Page table fault when accessing virtual address %#x\n", vaddr);
 }
 
 void
 GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic_if(!tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV, tc->contextId()),
-        "Alignment fault when accessing virtual address %#x\n", vaddr);
+             "Alignment fault when accessing virtual address %#x\n", vaddr);
 }
 
 void

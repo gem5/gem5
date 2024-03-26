@@ -123,10 +123,10 @@ const uint64_t FIXED_L_UMAX = 0xffffffffffffffffULL;
 const uint64_t FIXED_W_UMAX = 0x00000000ffffffffULL;
 const uint64_t FIXED_H_UMAX = 0x000000000000ffffULL;
 const uint64_t FIXED_B_UMAX = 0x00000000000000ffULL;
-const uint64_t FIXED_SMAX[SIMD_NUM_FMTS] = {
-    FIXED_L_SMAX, FIXED_W_SMAX, FIXED_H_SMAX, FIXED_B_SMAX};
-const uint64_t FIXED_UMAX[SIMD_NUM_FMTS] = {
-    FIXED_L_UMAX, FIXED_W_UMAX, FIXED_H_UMAX, FIXED_B_UMAX};
+const uint64_t FIXED_SMAX[SIMD_NUM_FMTS] = {FIXED_L_SMAX, FIXED_W_SMAX,
+                                            FIXED_H_SMAX, FIXED_B_SMAX};
+const uint64_t FIXED_UMAX[SIMD_NUM_FMTS] = {FIXED_L_UMAX, FIXED_W_UMAX,
+                                            FIXED_H_UMAX, FIXED_B_UMAX};
 
 // DSP minimum values
 const uint64_t FIXED_L_SMIN = 0x8000000000000000ULL;
@@ -137,67 +137,69 @@ const uint64_t FIXED_L_UMIN = 0x0000000000000000ULL;
 const uint64_t FIXED_W_UMIN = 0x0000000000000000ULL;
 const uint64_t FIXED_H_UMIN = 0x0000000000000000ULL;
 const uint64_t FIXED_B_UMIN = 0x0000000000000000ULL;
-const uint64_t FIXED_SMIN[SIMD_NUM_FMTS] = {
-    FIXED_L_SMIN, FIXED_W_SMIN, FIXED_H_SMIN, FIXED_B_SMIN};
-const uint64_t FIXED_UMIN[SIMD_NUM_FMTS] = {
-    FIXED_L_UMIN, FIXED_W_UMIN, FIXED_H_UMIN, FIXED_B_UMIN};
+const uint64_t FIXED_SMIN[SIMD_NUM_FMTS] = {FIXED_L_SMIN, FIXED_W_SMIN,
+                                            FIXED_H_SMIN, FIXED_B_SMIN};
+const uint64_t FIXED_UMIN[SIMD_NUM_FMTS] = {FIXED_L_UMIN, FIXED_W_UMIN,
+                                            FIXED_H_UMIN, FIXED_B_UMIN};
 
 // DSP utility functions
 int32_t bitrev(int32_t value);
-uint64_t dspSaturate(
-    uint64_t value, int32_t fmt, int32_t sign, uint32_t *overflow);
-uint64_t checkOverflow(
-    uint64_t value, int32_t fmt, int32_t sign, uint32_t *overflow);
+uint64_t dspSaturate(uint64_t value, int32_t fmt, int32_t sign,
+                     uint32_t *overflow);
+uint64_t checkOverflow(uint64_t value, int32_t fmt, int32_t sign,
+                       uint32_t *overflow);
 uint64_t signExtend(uint64_t value, int32_t signpos);
 uint64_t addHalfLsb(uint64_t value, int32_t lsbpos);
 int32_t dspAbs(int32_t a, int32_t fmt, uint32_t *dspctl);
 int32_t dspAdd(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
-    int32_t sign, uint32_t *dspctl);
-int32_t dspAddh(
-    int32_t a, int32_t b, int32_t fmt, int32_t round, int32_t sign);
+               int32_t sign, uint32_t *dspctl);
+int32_t dspAddh(int32_t a, int32_t b, int32_t fmt, int32_t round,
+                int32_t sign);
 int32_t dspSub(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
-    int32_t sign, uint32_t *dspctl);
-int32_t dspSubh(
-    int32_t a, int32_t b, int32_t fmt, int32_t round, int32_t sign);
+               int32_t sign, uint32_t *dspctl);
+int32_t dspSubh(int32_t a, int32_t b, int32_t fmt, int32_t round,
+                int32_t sign);
 int32_t dspShll(int32_t a, uint32_t sa, int32_t fmt, int32_t saturate,
-    int32_t sign, uint32_t *dspctl);
+                int32_t sign, uint32_t *dspctl);
 int32_t dspShrl(int32_t a, uint32_t sa, int32_t fmt, int32_t sign);
 int32_t dspShra(int32_t a, uint32_t sa, int32_t fmt, int32_t round,
-    int32_t sign, uint32_t *dspctl);
-int32_t dspMul(
-    int32_t a, int32_t b, int32_t fmt, int32_t saturate, uint32_t *dspctl);
+                int32_t sign, uint32_t *dspctl);
+int32_t dspMul(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
+               uint32_t *dspctl);
 int32_t dspMulq(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
-    int32_t round, uint32_t *dspctl);
+                int32_t round, uint32_t *dspctl);
 int32_t dspMuleu(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl);
 int32_t dspMuleq(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl);
 int64_t dspDpaq(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t infmt,
-    int32_t outfmt, int32_t postsat, int32_t mode, uint32_t *dspctl);
+                int32_t outfmt, int32_t postsat, int32_t mode,
+                uint32_t *dspctl);
 int64_t dspDpsq(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t infmt,
-    int32_t outfmt, int32_t postsat, int32_t mode, uint32_t *dspctl);
+                int32_t outfmt, int32_t postsat, int32_t mode,
+                uint32_t *dspctl);
 int64_t dspDpa(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt,
-    int32_t sign, int32_t mode);
+               int32_t sign, int32_t mode);
 int64_t dspDps(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt,
-    int32_t sign, int32_t mode);
+               int32_t sign, int32_t mode);
 int64_t dspMaq(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt,
-    int32_t mode, int32_t saturate, uint32_t *dspctl);
+               int32_t mode, int32_t saturate, uint32_t *dspctl);
 int64_t dspMulsa(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt);
 int64_t dspMulsaq(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt,
-    uint32_t *dspctl);
+                  uint32_t *dspctl);
 void dspCmp(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
-    uint32_t *dspctl);
+            uint32_t *dspctl);
 int32_t dspCmpg(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op);
 int32_t dspCmpgd(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
-    uint32_t *dspctl);
+                 uint32_t *dspctl);
 int32_t dspPrece(int32_t a, int32_t infmt, int32_t insign, int32_t outfmt,
-    int32_t outsign, int32_t mode);
+                 int32_t outsign, int32_t mode);
 int32_t dspPrecrqu(int32_t a, int32_t b, uint32_t *dspctl);
 int32_t dspPrecrq(int32_t a, int32_t b, int32_t fmt, uint32_t *dspctl);
-int32_t dspPrecrSra(
-    int32_t a, int32_t b, int32_t sa, int32_t fmt, int32_t round);
+int32_t dspPrecrSra(int32_t a, int32_t b, int32_t sa, int32_t fmt,
+                    int32_t round);
 int32_t dspPick(int32_t a, int32_t b, int32_t fmt, uint32_t *dspctl);
 int32_t dspPack(int32_t a, int32_t b, int32_t fmt);
 int32_t dspExtr(int64_t dspac, int32_t fmt, int32_t sa, int32_t round,
-    int32_t saturate, uint32_t *dspctl);
+                int32_t saturate, uint32_t *dspctl);
 int32_t dspExtp(int64_t dspac, int32_t size, uint32_t *dspctl);
 int32_t dspExtpd(int64_t dspac, int32_t size, uint32_t *dspctl);
 

@@ -38,8 +38,8 @@ namespace SparcISA
 //
 
 bool
-IntOp::printPseudoOps(
-    std::ostream &os, Addr pc, const loader::SymbolTable *symbab) const
+IntOp::printPseudoOps(std::ostream &os, Addr pc,
+                      const loader::SymbolTable *symbab) const
 {
     if (!std::strcmp(mnemonic, "or") && srcRegIdx(0).index() == 0) {
         printMnemonic(os, "mov");
@@ -52,8 +52,8 @@ IntOp::printPseudoOps(
 }
 
 bool
-IntOpImm::printPseudoOps(
-    std::ostream &os, Addr pc, const loader::SymbolTable *symbab) const
+IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
+                         const loader::SymbolTable *symbab) const
 {
     if (!std::strcmp(mnemonic, "or")) {
         if (_numSrcRegs > 0 && srcRegIdx(0).index() == 0) {

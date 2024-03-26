@@ -42,11 +42,11 @@
 
 namespace gem5
 {
-LupioTMR::LupioTMR(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    nThread(params.num_threads),
-    intType(params.int_type)
+LupioTMR::LupioTMR(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      nThread(params.num_threads),
+      intType(params.int_type)
 {
     timers.resize(nThread);
 
@@ -95,7 +95,7 @@ LupioTMR::lupioTMRSet(int cpu)
     if (!timers[cpu].tmrEvent->scheduled()) {
         // Convert the reload value to ticks from nanoseconds
         schedule(*(timers[cpu].tmrEvent),
-            (timers[cpu].reload * sim_clock::as_int::ns) + curTick());
+                 (timers[cpu].reload * sim_clock::as_int::ns) + curTick());
     }
 }
 
@@ -143,8 +143,8 @@ LupioTMR::lupioTMRRead(uint8_t addr, int size)
         break;
 
     default:
-        panic(
-            "Unexpected read to the LupioTMR device at address %#llx!", addr);
+        panic("Unexpected read to the LupioTMR device at address %#llx!",
+              addr);
         break;
     }
     return r;
@@ -183,8 +183,8 @@ LupioTMR::lupioTMRWrite(uint8_t addr, uint64_t val64, int size)
         break;
 
     default:
-        panic(
-            "Unexpected write to the LupioTMR device at address %#llx!", addr);
+        panic("Unexpected write to the LupioTMR device at address %#llx!",
+              addr);
         break;
     }
 }
@@ -195,7 +195,7 @@ LupioTMR::read(PacketPtr pkt)
     Addr tmr_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioTMR, "Read request - addr: %#x, size: %#x\n", tmr_addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t read_val = lupioTMRRead(tmr_addr, pkt->getSize());
     DPRINTF(LupioTMR, "Packet Read: %#x\n", read_val);
@@ -211,7 +211,7 @@ LupioTMR::write(PacketPtr pkt)
     Addr tmr_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioTMR, "Write register %#x value %#x\n", tmr_addr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioTMRWrite(tmr_addr, pkt->getUintX(byteOrder), pkt->getSize());
     DPRINTF(LupioTMR, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

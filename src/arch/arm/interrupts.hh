@@ -146,9 +146,9 @@ class Interrupts : public BaseInterrupts
                 (interrupts[INT_FIQ] && takeInt(INT_FIQ)) ||
                 (interrupts[INT_ABT] && takeInt(INT_ABT)) ||
                 ((interrupts[INT_VIRT_IRQ] || hcr.vi) &&
-                    takeVirtualInt(INT_VIRT_IRQ)) ||
+                 takeVirtualInt(INT_VIRT_IRQ)) ||
                 ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
-                    takeVirtualInt(INT_VIRT_FIQ)) ||
+                 takeVirtualInt(INT_VIRT_FIQ)) ||
                 (hcr.va && takeVirtualInt(INT_VIRT_ABT)) ||
                 (interrupts[INT_RST]) || (interrupts[INT_SEV]));
     }
@@ -228,8 +228,8 @@ class Interrupts : public BaseInterrupts
         if (interrupts[INT_ABT] && takeInt(INT_ABT))
             return std::make_shared<SystemError>();
         if (hcr.va && takeVirtualInt(INT_VIRT_ABT))
-            return std::make_shared<VirtualDataAbort>(0,
-                TlbEntry::DomainType::NoAccess, false,
+            return std::make_shared<VirtualDataAbort>(
+                0, TlbEntry::DomainType::NoAccess, false,
                 ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
             return std::make_shared<Reset>();

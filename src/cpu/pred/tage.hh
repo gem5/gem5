@@ -86,8 +86,8 @@ class TAGE : public BPredUnit
         virtual ~TageBranchInfo() { delete tageBranchInfo; }
     };
 
-    virtual bool predict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, void *&b);
+    virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                         void *&b);
 
   public:
     TAGE(const TAGEParams &params);
@@ -95,9 +95,10 @@ class TAGE : public BPredUnit
     // Base class methods.
     bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-        Addr target, void *&bp_history) override;
+                         Addr target, void *&bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
-        bool squashed, const StaticInstPtr &inst, Addr target) override;
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
     virtual void squash(ThreadID tid, void *&bp_history) override;
 };
 

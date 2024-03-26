@@ -90,15 +90,15 @@ class GPUCommandProcessor : public DmaVirtDevice
         Steal = 1
     };
 
-    void submitAgentDispatchPkt(
-        void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr);
-    void submitDispatchPkt(
-        void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr);
+    void submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
+                                Addr host_pkt_addr);
+    void submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
+                           Addr host_pkt_addr);
     void submitVendorPkt(void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr);
     void attachDriver(GPUComputeDriver *driver);
 
     void dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
-        uint32_t queue_id, Addr host_pkt_addr);
+                              uint32_t queue_id, Addr host_pkt_addr);
     void dispatchPkt(HSAQueueEntry *task);
     void signalWakeupEvent(uint32_t event_id);
 
@@ -120,8 +120,8 @@ class GPUCommandProcessor : public DmaVirtDevice
         Addr signal_handle, uint64_t signal_value,
         HsaSignalCallbackFunction function = [](const uint64_t &) {});
     void updateHsaSignalAsync(Addr signal_handle, int64_t diff);
-    void updateHsaSignalData(
-        Addr value_addr, int64_t diff, uint64_t *prev_value);
+    void updateHsaSignalData(Addr value_addr, int64_t diff,
+                             uint64_t *prev_value);
     void updateHsaSignalDone(uint64_t *signal_value);
     void updateHsaMailboxData(Addr signal_handle, uint64_t *mailbox_value);
     void updateHsaEventData(Addr signal_handle, uint64_t *event_value);
@@ -179,8 +179,8 @@ class GPUCommandProcessor : public DmaVirtDevice
      * ID.
      */
     void
-    ReadDispIdOffsetDmaEvent(
-        HSAQueueEntry *task, const uint32_t &readDispIdOffset)
+    ReadDispIdOffsetDmaEvent(HSAQueueEntry *task,
+                             const uint32_t &readDispIdOffset)
     {
         /**
          * Now that the read pointer's offset from the base of
@@ -201,7 +201,7 @@ class GPUCommandProcessor : public DmaVirtDevice
             new DmaVirtCallback<int>([=](const int &) { MQDDmaEvent(task); });
 
         dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), mqdDmaEvent,
-            &task->amdQueue);
+                    &task->amdQueue);
     }
 
     /**
@@ -235,31 +235,31 @@ class GPUCommandProcessor : public DmaVirtDevice
             // there are any in-flight kernels and tell the user that this
             // feature still needs to be implemented.
             fatal_if(hsaPP->inFlightPkts(task->queueId()) > 1,
-                "Needed more scratch, but kernels are in flight for "
-                "this queue and it is unsafe to reallocate scratch. "
-                "We need to implement additional intelligence in the "
-                "hardware scheduling logic to support CP-driven "
-                "queue draining and scheduling.");
+                     "Needed more scratch, but kernels are in flight for "
+                     "this queue and it is unsafe to reallocate scratch. "
+                     "We need to implement additional intelligence in the "
+                     "hardware scheduling logic to support CP-driven "
+                     "queue draining and scheduling.");
             DPRINTF(GPUCommandProc,
-                "Not enough scratch space to launch "
-                "kernel (%x available, %x requested bytes per "
-                "workitem). Asking host runtime to allocate more "
-                "space.\n",
-                task->amdQueue.compute_tmpring_size_wavesize * 1024,
-                task->privMemPerItem());
+                    "Not enough scratch space to launch "
+                    "kernel (%x available, %x requested bytes per "
+                    "workitem). Asking host runtime to allocate more "
+                    "space.\n",
+                    task->amdQueue.compute_tmpring_size_wavesize * 1024,
+                    task->privMemPerItem());
 
             updateHsaSignal(task->amdQueue.queue_inactive_signal.handle, 1,
-                [=](const uint64_t &dma_buffer) {
-                    WaitScratchDmaEvent(task, dma_buffer);
-                });
+                            [=](const uint64_t &dma_buffer) {
+                                WaitScratchDmaEvent(task, dma_buffer);
+                            });
 
         } else {
             DPRINTF(GPUCommandProc,
-                "Sufficient scratch space, launching "
-                "kernel (%x available, %x requested bytes per "
-                "workitem).\n",
-                task->amdQueue.compute_tmpring_size_wavesize * 1024,
-                task->privMemPerItem());
+                    "Sufficient scratch space, launching "
+                    "kernel (%x available, %x requested bytes per "
+                    "workitem).\n",
+                    task->amdQueue.compute_tmpring_size_wavesize * 1024,
+                    task->privMemPerItem());
             dispatchPkt(task);
         }
     }
@@ -286,7 +286,7 @@ class GPUCommandProcessor : public DmaVirtDevice
                 [=](const int &) { MQDDmaEvent(task); });
 
             dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), cb,
-                &task->amdQueue);
+                        &task->amdQueue);
         } else {
             /**
              * Poll until runtime signals us that scratch space has been
@@ -295,9 +295,9 @@ class GPUCommandProcessor : public DmaVirtDevice
             Addr value_addr = getHsaSignalValueAddr(
                 task->amdQueue.queue_inactive_signal.handle);
             DPRINTF(GPUCommandProc,
-                "Polling queue inactive signal at "
-                "%p.\n",
-                value_addr);
+                    "Polling queue inactive signal at "
+                    "%p.\n",
+                    value_addr);
             auto cb =
                 new DmaVirtCallback<uint64_t>([=](const uint64_t &dma_buffer) {
                     WaitScratchDmaEvent(task, dma_buffer);

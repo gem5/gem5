@@ -133,8 +133,9 @@ FaultModel::fault_type_to_string(int ft)
 
 int
 FaultModel::declare_router(int number_of_inputs, int number_of_outputs,
-    int number_of_vcs_per_input, int number_of_buff_per_data_vc,
-    int number_of_buff_per_ctrl_vc)
+                           int number_of_vcs_per_input,
+                           int number_of_buff_per_data_vc,
+                           int number_of_buff_per_ctrl_vc)
 {
     // check inputs (are they legal?)
     if (number_of_inputs <= 0 || number_of_outputs <= 0 ||
@@ -171,8 +172,8 @@ FaultModel::declare_router(int number_of_inputs, int number_of_outputs,
 }
 
 bool
-FaultModel::fault_vector(
-    int routerID, int temperature_input, float fault_vector[])
+FaultModel::fault_vector(int routerID, int temperature_input,
+                         float fault_vector[])
 {
     bool ok = true;
 
@@ -205,8 +206,8 @@ FaultModel::fault_vector(
 }
 
 bool
-FaultModel::fault_prob(
-    int routerID, int temperature_input, float *aggregate_fault_prob)
+FaultModel::fault_prob(int routerID, int temperature_input,
+                       float *aggregate_fault_prob)
 {
     *aggregate_fault_prob = 1.0;
     bool ok = true;
@@ -236,7 +237,7 @@ FaultModel::fault_prob(
         *aggregate_fault_prob =
             *aggregate_fault_prob *
             (1.0 - (routers[routerID].fault_type[i] *
-                       ((float)temperature_weights[temperature])));
+                    ((float)temperature_weights[temperature])));
     }
     *aggregate_fault_prob = 1.0 - *aggregate_fault_prob;
     return ok;

@@ -58,8 +58,8 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
 
     ComputeUnit *computeUnit;
 
-    AtomicOpCAS(T _c, T _s, ComputeUnit *compute_unit) :
-        c(_c), s(_s), computeUnit(compute_unit)
+    AtomicOpCAS(T _c, T _s, ComputeUnit *compute_unit)
+        : c(_c), s(_s), computeUnit(compute_unit)
     {}
 
     void
@@ -85,12 +85,12 @@ class RegisterOperandInfo
   public:
     RegisterOperandInfo() = delete;
     RegisterOperandInfo(int op_idx, int num_dwords,
-        const std::vector<int> &virt_indices,
-        const std::vector<int> &phys_indices) :
-        opIdx(op_idx),
-        numDWORDs(num_dwords),
-        virtIndices(virt_indices),
-        physIndices(phys_indices)
+                        const std::vector<int> &virt_indices,
+                        const std::vector<int> &phys_indices)
+        : opIdx(op_idx),
+          numDWORDs(num_dwords),
+          virtIndices(virt_indices),
+          physIndices(phys_indices)
     {}
 
     /**
@@ -134,7 +134,7 @@ class GPUDynInst : public GPUExecContext
 {
   public:
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
-        uint64_t instSeqNum);
+               uint64_t instSeqNum);
     ~GPUDynInst();
     void execute(GPUDynInstPtr gpuDynInst);
 
@@ -170,8 +170,8 @@ class GPUDynInst : public GPUExecContext
     // returns true if the string "opcodeStr" is found in the
     // opcode of the instruction
     bool isOpcode(const std::string &opcodeStr) const;
-    bool isOpcode(
-        const std::string &opcodeStr, const std::string &extStr) const;
+    bool isOpcode(const std::string &opcodeStr,
+                  const std::string &extStr) const;
 
     const std::string &disassemble() const;
 
@@ -443,19 +443,19 @@ class GPUDynInst : public GPUExecContext
             // if any lane still has pending requests, return false
             if (statusVector[lane] > 0) {
                 DPRINTF(GPUMem,
-                    "CU%d: WF[%d][%d]: lane: %d has %d pending "
-                    "request(s) for %#x\n",
-                    cu_id, simdId, wfSlotId, lane, statusVector[lane],
-                    addr[lane]);
+                        "CU%d: WF[%d][%d]: lane: %d has %d pending "
+                        "request(s) for %#x\n",
+                        cu_id, simdId, wfSlotId, lane, statusVector[lane],
+                        addr[lane]);
                 allZero = false;
             }
         }
 
         if (allZero) {
             DPRINTF(GPUMem,
-                "CU%d: WF[%d][%d]: all lanes have no pending"
-                " requests for %#x\n",
-                cu_id, simdId, wfSlotId, addr[0]);
+                    "CU%d: WF[%d][%d]: all lanes have no pending"
+                    " requests for %#x\n",
+                    cu_id, simdId, wfSlotId, addr[0]);
         }
         return allZero;
     }

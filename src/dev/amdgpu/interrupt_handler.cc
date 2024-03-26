@@ -50,8 +50,8 @@
 namespace gem5
 {
 AMDGPUInterruptHandler::AMDGPUInterruptHandler(
-    const AMDGPUInterruptHandlerParams &p) :
-    DmaDevice(p)
+    const AMDGPUInterruptHandlerParams &p)
+    : DmaDevice(p)
 {
     memset(&regs, 0, sizeof(AMDGPUIHRegs));
 }
@@ -72,7 +72,9 @@ AMDGPUInterruptHandler::intrPost()
 
 void
 AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
-    uint32_t ring_id, uint32_t client_id, uint32_t source_id)
+                                               uint32_t ring_id,
+                                               uint32_t client_id,
+                                               uint32_t source_id)
 {
     assert(client_id == SOC15_IH_CLIENTID_RLC ||
            client_id == SOC15_IH_CLIENTID_SDMA0 ||
@@ -151,7 +153,7 @@ AMDGPUInterruptHandler::submitInterruptCookie()
     Addr paddr = regs.baseAddr + regs.IH_Wptr;
 
     DPRINTF(AMDGPUDevice, "InterruptHandler rptr: 0x%x wptr: 0x%x\n",
-        regs.IH_Rptr, regs.IH_Wptr);
+            regs.IH_Rptr, regs.IH_Wptr);
     dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 1);
     dmaWrite(paddr, cookieSize, dmaEvent, dataPtr);
 
@@ -186,8 +188,8 @@ AMDGPUInterruptHandler::writeMMIO(PacketPtr pkt, Addr mmio_offset)
     case mmIH_DOORBELL_RPTR:
         setDoorbellOffset(pkt->getLE<uint32_t>());
         if (bits(pkt->getLE<uint32_t>(), 28, 28)) {
-            gpuDevice->setDoorbellType(
-                getDoorbellOffset() << 2, InterruptHandler);
+            gpuDevice->setDoorbellType(getDoorbellOffset() << 2,
+                                       InterruptHandler);
         }
         break;
     default:

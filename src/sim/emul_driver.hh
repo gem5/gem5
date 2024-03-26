@@ -60,8 +60,8 @@ class EmulatedDriver : public SimObject
     const std::string &filename;
 
   public:
-    EmulatedDriver(const EmulatedDriverParams &p) :
-        SimObject(p), filename(p.filename)
+    EmulatedDriver(const EmulatedDriverParams &p)
+        : SimObject(p), filename(p.filename)
     {}
 
     /**
@@ -99,7 +99,7 @@ class EmulatedDriver : public SimObject
      */
     virtual Addr
     mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
-        int tgtFlags, int tgtFd, off_t offset)
+         int tgtFlags, int tgtFd, off_t offset)
     {
         return -EBADF;
     }

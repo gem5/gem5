@@ -118,7 +118,7 @@ class CircleBuf
     peek(OutputIterator out, off_t offset, size_t len) const
     {
         panic_if(offset + len > used,
-            "Trying to read past end of circular buffer.");
+                 "Trying to read past end of circular buffer.");
 
         if (!len)
             return;
@@ -278,8 +278,8 @@ class Fifo
 
 template <typename T>
 void
-arrayParamOut(
-    CheckpointOut &cp, const std::string &name, const CircleBuf<T> &param)
+arrayParamOut(CheckpointOut &cp, const std::string &name,
+              const CircleBuf<T> &param)
 {
     std::vector<T> temp(param.size());
     param.peek(temp.begin(), temp.size());
@@ -314,7 +314,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, Fifo<T> &param)
     arrayParamIn(cp, name, temp);
 
     fatal_if(param.capacity() < temp.size(),
-        "Trying to unserialize data into too small FIFO");
+             "Trying to unserialize data into too small FIFO");
 
     param.flush();
     param.write(temp.cbegin(), temp.size());

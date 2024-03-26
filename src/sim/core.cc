@@ -118,7 +118,7 @@ void
 setClockFrequency(Tick tps)
 {
     panic_if(_clockFrequencyFixed,
-        "Global frequency already fixed at %f ticks/s.", _ticksPerSecond);
+             "Global frequency already fixed at %f ticks/s.", _ticksPerSecond);
     _ticksPerSecond = tps;
 }
 Tick

@@ -61,7 +61,7 @@ class Checker : public gem5::Checker<DynInstPtr>
         // sense.
         fatal_if(p.max_insts_any_thread || p.max_insts_all_threads ||
                      p.progress_interval,
-            "Invalid checker parameters");
+                 "Invalid checker parameters");
     }
 };
 

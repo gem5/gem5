@@ -73,13 +73,13 @@ class EmulationPageTable : public Serializable
     const std::string _name;
 
   public:
-    EmulationPageTable(
-        const std::string &__name, uint64_t _pid, Addr _pageSize) :
-        _pageSize(_pageSize),
-        offsetMask(mask(floorLog2(_pageSize))),
-        _pid(_pid),
-        _name(__name),
-        shared(false)
+    EmulationPageTable(const std::string &__name, uint64_t _pid,
+                       Addr _pageSize)
+        : _pageSize(_pageSize),
+          offsetMask(mask(floorLog2(_pageSize))),
+          _pid(_pid),
+          _name(__name),
+          shared(false)
     {
         assert(isPowerOf2(_pageSize));
     }
@@ -190,9 +190,8 @@ class EmulationPageTable : public Serializable
         void translate(Range &range) const override;
 
       public:
-        PageTableTranslationGen(
-            EmulationPageTable *_pt, Addr vaddr, Addr size) :
-            TranslationGen(vaddr, size), pt(_pt)
+        PageTableTranslationGen(EmulationPageTable *_pt, Addr vaddr, Addr size)
+            : TranslationGen(vaddr, size), pt(_pt)
         {}
     };
 

@@ -59,8 +59,8 @@ IniFile::Entry::getValue() const
 }
 
 void
-IniFile::Section::addEntry(
-    const std::string &entryName, const std::string &value, bool append)
+IniFile::Section::addEntry(const std::string &entryName,
+                           const std::string &value, bool append)
 {
     EntryTable::iterator ei = table.find(entryName);
 
@@ -194,7 +194,7 @@ IniFile::load(std::istream &f)
 
 bool
 IniFile::find(const std::string &sectionName, const std::string &entryName,
-    std::string &value) const
+              std::string &value) const
 {
     auto *section = findSection(sectionName);
     if (section == NULL)
@@ -210,8 +210,8 @@ IniFile::find(const std::string &sectionName, const std::string &entryName,
 }
 
 bool
-IniFile::entryExists(
-    const std::string &sectionName, const std::string &entryName) const
+IniFile::entryExists(const std::string &sectionName,
+                     const std::string &entryName) const
 {
     auto *section = findSection(sectionName);
 
@@ -254,7 +254,7 @@ IniFile::Section::printUnreferenced(const std::string &sectionName) const
         if (!entry->isReferenced()) {
             if (search_unref_entries &&
                 (std::find(unref_ok_entries.begin(), unref_ok_entries.end(),
-                     entryName) != unref_ok_entries.end())) {
+                           entryName) != unref_ok_entries.end())) {
                 continue;
             }
 
@@ -330,8 +330,8 @@ IniFile::Section::end() const
 }
 
 void
-IniFile::visitSection(
-    const std::string &sectionName, IniFile::VisitSectionCallback cb)
+IniFile::visitSection(const std::string &sectionName,
+                      IniFile::VisitSectionCallback cb)
 {
     const auto &section = table.at(sectionName);
     for (const auto &pair : section) {

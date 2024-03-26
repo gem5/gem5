@@ -36,12 +36,12 @@
 
 namespace Gem5SystemC
 {
-Gem5SlaveTransactor::Gem5SlaveTransactor(
-    sc_core::sc_module_name name, const std::string &portName) :
-    sc_core::sc_module(name),
-    socket(portName.c_str()),
-    sim_control("sim_control"),
-    portName(portName)
+Gem5SlaveTransactor::Gem5SlaveTransactor(sc_core::sc_module_name name,
+                                         const std::string &portName)
+    : sc_core::sc_module(name),
+      socket(portName.c_str()),
+      sim_control("sim_control"),
+      portName(portName)
 {
     if (portName.empty()) {
         SC_REPORT_ERROR(name, "No port name specified!\n");

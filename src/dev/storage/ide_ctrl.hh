@@ -69,15 +69,15 @@ class IdeController : public PciDevice
     class ConfigSpaceRegs : public RegisterBankLE
     {
       public:
-        ConfigSpaceRegs(const std::string &name) :
-            RegisterBankLE(name, PCI_DEVICE_SPECIFIC)
+        ConfigSpaceRegs(const std::string &name)
+            : RegisterBankLE(name, PCI_DEVICE_SPECIFIC)
         {
             // None of these registers are actually hooked up to control
             // anything, so they have no specially defined behaviors. They
             // just store values for now, but should presumably do something
             // in a more accurate model.
             addRegisters({primaryTiming, secondaryTiming, deviceTiming, raz0,
-                udmaControl, raz1, udmaTiming, raz2});
+                          udmaControl, raz1, udmaTiming, raz2});
         }
 
         enum
@@ -86,8 +86,8 @@ class IdeController : public PciDevice
         };
 
         /* Offset in config space */
-        /* 0x40-0x41 */ Register16 primaryTiming = {
-            "primary timing", TimeRegWithDecodeEnabled};
+        /* 0x40-0x41 */ Register16 primaryTiming = {"primary timing",
+                                                    TimeRegWithDecodeEnabled};
         /* 0x42-0x43 */ Register16 secondaryTiming = {
             "secondary timing", TimeRegWithDecodeEnabled};
         /* 0x44      */ Register8 deviceTiming = {"device timing"};
@@ -195,8 +195,8 @@ class IdeController : public PciDevice
         void postInterrupt();
         void clearInterrupt();
 
-        Channel(
-            std::string new_name, IdeController *new_ctrl, bool new_primary);
+        Channel(std::string new_name, IdeController *new_ctrl,
+                bool new_primary);
 
         void serialize(const std::string &base, std::ostream &os) const;
         void unserialize(const std::string &base, CheckpointIn &cp);

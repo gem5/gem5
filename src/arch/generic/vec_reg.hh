@@ -122,10 +122,10 @@ template <size_t SIZE>
 class VecRegContainer
 {
   private:
-    static_assert(
-        SIZE > 0, "Cannot create Vector Register Container of zero size");
-    static_assert(
-        SIZE <= MaxVecRegLenInBytes, "Vector Register size limit exceeded");
+    static_assert(SIZE > 0,
+                  "Cannot create Vector Register Container of zero size");
+    static_assert(SIZE <= MaxVecRegLenInBytes,
+                  "Vector Register size limit exceeded");
 
   public:
     static constexpr inline size_t
@@ -198,7 +198,7 @@ class VecRegContainer
     as()
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
-            "VecElem does not evenly divide the register size");
+                      "VecElem does not evenly divide the register size");
         return (VecElem *)container.data();
     }
 
@@ -207,7 +207,7 @@ class VecRegContainer
     as() const
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
-            "VecElem does not evenly divide the register size");
+                      "VecElem does not evenly divide the register size");
         return (VecElem *)container.data();
     }
 
@@ -245,7 +245,7 @@ struct ParseParam<VecRegContainer<Sz>>
     parse(const std::string &str, VecRegContainer<Sz> &value)
     {
         fatal_if(str.size() > 2 * Sz,
-            "Vector register value overflow at unserialize");
+                 "Vector register value overflow at unserialize");
 
         for (int i = 0; i < Sz; i++) {
             uint8_t b = 0;

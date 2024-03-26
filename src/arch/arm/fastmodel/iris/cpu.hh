@@ -120,8 +120,8 @@ class CPU : public Iris::BaseCPU
 {
   public:
     CPU(const IrisBaseCPUParams &params,
-        iris::IrisConnectionInterface *iris_if) :
-        BaseCPU(params, params.evs)
+        iris::IrisConnectionInterface *iris_if)
+        : BaseCPU(params, params.evs)
     {
         const std::string parent_path = evs->name();
         System *sys = params.system;
@@ -130,8 +130,8 @@ class CPU : public Iris::BaseCPU
         for (const std::string &sub_path : params.thread_paths) {
             std::string path = parent_path + "." + sub_path;
             auto id = thread_id++;
-            auto *tc = new TC(
-                this, id, sys, params.mmu, params.isa[id], iris_if, path);
+            auto *tc = new TC(this, id, sys, params.mmu, params.isa[id],
+                              iris_if, path);
             threadContexts.push_back(tc);
         }
     }

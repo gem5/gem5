@@ -48,8 +48,8 @@ class EtherDevice : public PciDevice
 {
   public:
     using Params = EtherDeviceParams;
-    EtherDevice(const Params &params) :
-        PciDevice(params), etherDeviceStats(this)
+    EtherDevice(const Params &params)
+        : PciDevice(params), etherDeviceStats(this)
     {}
 
   protected:

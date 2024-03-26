@@ -217,8 +217,8 @@ template <class Arg>
 class ProbeListenerArgBase : public ProbeListener
 {
   public:
-    ProbeListenerArgBase(ProbeManager *pm, const std::string &name) :
-        ProbeListener(pm, name)
+    ProbeListenerArgBase(ProbeManager *pm, const std::string &name)
+        : ProbeListener(pm, name)
     {}
     virtual void notify(const Arg &val) = 0;
 };
@@ -243,11 +243,11 @@ class ProbeListenerArg : public ProbeListenerArgBase<Arg>
      * @param name the name of the ProbePoint to add this listener to.
      * @param func a pointer to the function on obj (called on notify).
      */
-    ProbeListenerArg(
-        T *obj, const std::string &name, void (T::*func)(const Arg &)) :
-        ProbeListenerArgBase<Arg>(obj->getProbeManager(), name),
-        object(obj),
-        function(func)
+    ProbeListenerArg(T *obj, const std::string &name,
+                     void (T::*func)(const Arg &))
+        : ProbeListenerArgBase<Arg>(obj->getProbeManager(), name),
+          object(obj),
+          function(func)
     {}
 
     /**
@@ -276,8 +276,8 @@ class ProbePointArg : public ProbePoint
     std::vector<ProbeListenerArgBase<Arg> *> listeners;
 
   public:
-    ProbePointArg(ProbeManager *manager, std::string name) :
-        ProbePoint(manager, name)
+    ProbePointArg(ProbeManager *manager, std::string name)
+        : ProbePoint(manager, name)
     {}
 
     /**
@@ -315,7 +315,7 @@ class ProbePointArg : public ProbePoint
     removeListener(ProbeListener *l) override
     {
         listeners.erase(std::remove(listeners.begin(), listeners.end(), l),
-            listeners.end());
+                        listeners.end());
     }
 
     /**
@@ -358,8 +358,8 @@ class ProbeListenerArgFunc : public ProbeListenerArgBase<Arg>
      * @param func a pointer to the function on obj (called on notify).
      */
     ProbeListenerArgFunc(ProbeManager *pm, const std::string &name,
-        const NotifyFunction &func) :
-        ProbeListenerArgBase<Arg>(pm, name), function(func)
+                         const NotifyFunction &func)
+        : ProbeListenerArgBase<Arg>(pm, name), function(func)
     {}
 
     /**

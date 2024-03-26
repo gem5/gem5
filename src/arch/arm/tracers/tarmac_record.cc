@@ -109,16 +109,18 @@ opModeToStr(OperatingMode opMode)
 
 // TarmacTracerRecord ctor
 TarmacTracerRecord::TarmacTracerRecord(Tick _when, ThreadContext *_thread,
-    const StaticInstPtr _staticInst, const PCStateBase &_pc,
-    TarmacTracer &_tracer, const StaticInstPtr _macroStaticInst) :
-    TarmacBaseRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
-    tracer(_tracer)
+                                       const StaticInstPtr _staticInst,
+                                       const PCStateBase &_pc,
+                                       TarmacTracer &_tracer,
+                                       const StaticInstPtr _macroStaticInst)
+    : TarmacBaseRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
+      tracer(_tracer)
 {}
 
 TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
-    const TarmacContext &tarmCtx, bool predicate) :
-    InstEntry(tarmCtx.thread, *tarmCtx.pc, tarmCtx.staticInst, predicate),
-    disassemble(tarmCtx.tracer.disassemble(tarmCtx.staticInst, *tarmCtx.pc))
+    const TarmacContext &tarmCtx, bool predicate)
+    : InstEntry(tarmCtx.thread, *tarmCtx.pc, tarmCtx.staticInst, predicate),
+      disassemble(tarmCtx.tracer.disassemble(tarmCtx.staticInst, *tarmCtx.pc))
 {
     secureMode = isSecure(tarmCtx.thread);
 
@@ -137,21 +139,22 @@ TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
     // In Tarmac, instruction names are printed in capital
     // letters.
     std::for_each(disassemble.begin(), disassemble.end(),
-        [](char &c) { c = toupper(c); });
+                  [](char &c) { c = toupper(c); });
 
     // Update the instruction count: number of executed
     // instructions.
     instCount++;
 }
 
-TarmacTracerRecord::TraceMemEntry::TraceMemEntry(
-    const TarmacContext &tarmCtx, uint8_t _size, Addr _addr, uint64_t _data) :
-    MemEntry(_size, _addr, _data), loadAccess(tarmCtx.staticInst->isLoad())
+TarmacTracerRecord::TraceMemEntry::TraceMemEntry(const TarmacContext &tarmCtx,
+                                                 uint8_t _size, Addr _addr,
+                                                 uint64_t _data)
+    : MemEntry(_size, _addr, _data), loadAccess(tarmCtx.staticInst->isLoad())
 {}
 
-TarmacTracerRecord::TraceRegEntry::TraceRegEntry(
-    const TarmacContext &tarmCtx, const RegId &reg) :
-    RegEntry(*tarmCtx.pc), regValid(false), regId(reg)
+TarmacTracerRecord::TraceRegEntry::TraceRegEntry(const TarmacContext &tarmCtx,
+                                                 const RegId &reg)
+    : RegEntry(*tarmCtx.pc), regValid(false), regId(reg)
 {}
 
 void
@@ -265,8 +268,8 @@ TarmacTracerRecord::TraceRegEntry::updateInt(const TarmacContext &tarmCtx)
 }
 
 void
-TarmacTracerRecord::addInstEntry(
-    std::vector<InstPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecord::addInstEntry(std::vector<InstPtr> &queue,
+                                 const TarmacContext &tarmCtx)
 {
     // Generate an instruction entry in the record and
     // add it to the Instruction Queue
@@ -274,21 +277,22 @@ TarmacTracerRecord::addInstEntry(
 }
 
 void
-TarmacTracerRecord::addMemEntry(
-    std::vector<MemPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecord::addMemEntry(std::vector<MemPtr> &queue,
+                                const TarmacContext &tarmCtx)
 {
     // Generate a memory entry in the record if the record
     // implies a valid memory access, and add it to the
     // Memory Queue
     if (getMemValid()) {
-        queue.push_back(std::make_unique<TraceMemEntry>(tarmCtx,
-            static_cast<uint8_t>(getSize()), getAddr(), getIntData()));
+        queue.push_back(std::make_unique<TraceMemEntry>(
+            tarmCtx, static_cast<uint8_t>(getSize()), getAddr(),
+            getIntData()));
     }
 }
 
 void
-TarmacTracerRecord::addRegEntry(
-    std::vector<RegPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecord::addRegEntry(std::vector<RegPtr> &queue,
+                                const TarmacContext &tarmCtx)
 {
     // Generate an entry for every ARM register being
     // written by the current instruction
@@ -317,8 +321,9 @@ TarmacTracerRecord::dump()
     auto &memQueue = tracer.memQueue;
     auto &regQueue = tracer.regQueue;
 
-    const TarmacContext tarmCtx(tracer, thread,
-        staticInst->isMicroop() ? macroStaticInst : staticInst, *pc);
+    const TarmacContext tarmCtx(
+        tracer, thread, staticInst->isMicroop() ? macroStaticInst : staticInst,
+        *pc);
 
     if (!staticInst->isMicroop()) {
         // Current instruction is NOT a micro-instruction:
@@ -375,8 +380,8 @@ TarmacTracerRecord::flushQueues(Queue &queue, Args &... args)
 }
 
 void
-TarmacTracerRecord::TraceInstEntry::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecord::TraceInstEntry::print(std::ostream &outs, int verbosity,
+                                          const std::string &prefix) const
 {
     // Pad the opcode
     std::string opcode_str = csprintf("%0*x", instSize >> 2, opcode);
@@ -384,41 +389,41 @@ TarmacTracerRecord::TraceInstEntry::print(
     // Print the instruction record formatted according
     // to the Tarmac specification
     ccprintf(outs, "%s clk %s (%u) %08x %s %s %s_%s : %s\n",
-        curTick(),                 /* Tick time */
-        taken ? "IT" : "IS",       /* Instruction taken/skipped */
-        instCount,                 /* Instruction count */
-        addr,                      /* Instruction address */
-        opcode_str,                /* Instruction opcode */
-        iSetStateToStr(isetstate), /* Instruction Set */
-        opModeToStr(mode),         /* Exception level */
-        secureMode ? "s" : "ns",   /* Security */
-        disassemble);              /* Instruction disass */
+             curTick(),                 /* Tick time */
+             taken ? "IT" : "IS",       /* Instruction taken/skipped */
+             instCount,                 /* Instruction count */
+             addr,                      /* Instruction address */
+             opcode_str,                /* Instruction opcode */
+             iSetStateToStr(isetstate), /* Instruction Set */
+             opModeToStr(mode),         /* Exception level */
+             secureMode ? "s" : "ns",   /* Security */
+             disassemble);              /* Instruction disass */
 }
 
 void
-TarmacTracerRecord::TraceMemEntry::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecord::TraceMemEntry::print(std::ostream &outs, int verbosity,
+                                         const std::string &prefix) const
 {
     // Print the memory record formatted according
     // to the Tarmac specification
     ccprintf(outs, "%s clk M%s%d %08x %0*x\n", curTick(), /* Tick time */
-        loadAccess ? "R" : "W",                           /* Access type */
-        size,                                             /* Access size */
-        addr,                                             /* Memory address */
-        size * 2, /* Padding with access size */
-        data);    /* Memory data */
+             loadAccess ? "R" : "W",                      /* Access type */
+             size,                                        /* Access size */
+             addr,                                        /* Memory address */
+             size * 2, /* Padding with access size */
+             data);    /* Memory data */
 }
 
 void
-TarmacTracerRecord::TraceRegEntry::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecord::TraceRegEntry::print(std::ostream &outs, int verbosity,
+                                         const std::string &prefix) const
 {
     // Print the register record formatted according
     // to the Tarmac specification
     if (regValid)
         ccprintf(outs, "%s clk R %s %08x\n", curTick(), /* Tick time */
-            regName,                                    /* Register name */
-            values[Lo]);                                /* Register value */
+                 regName,                               /* Register name */
+                 values[Lo]);                           /* Register value */
 }
 
 } // namespace trace

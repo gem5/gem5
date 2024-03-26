@@ -41,10 +41,10 @@
 
 namespace gem5
 {
-X86ISA::I82094AA::I82094AA(const Params &p) :
-    BasicPioDevice(p, 20),
-    lowestPriorityOffset(0),
-    intRequestPort(name() + ".int_request", this, this, p.int_latency)
+X86ISA::I82094AA::I82094AA(const Params &p)
+    : BasicPioDevice(p, 20),
+      lowestPriorityOffset(0),
+      intRequestPort(name() + ".int_request", this, this, p.int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
     // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
@@ -74,8 +74,8 @@ X86ISA::I82094AA::init()
     BasicPioDevice::init();
 
     // If the request port isn't connected, we can't send interrupts anywhere.
-    panic_if(
-        !intRequestPort.isConnected(), "Int port not connected to anything!");
+    panic_if(!intRequestPort.isConnected(),
+             "Int port not connected to anything!");
 }
 
 Port &
@@ -171,8 +171,8 @@ X86ISA::I82094AA::readReg(uint8_t offset)
     } else {
         warn("Access to undefined I/O APIC register %#x.\n", offset);
     }
-    DPRINTF(
-        I82094AA, "Read %#x from I/O APIC register %#x.\n", result, offset);
+    DPRINTF(I82094AA, "Read %#x from I/O APIC register %#x.\n", result,
+            offset);
     return result;
 }
 

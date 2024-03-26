@@ -47,8 +47,11 @@
 
 namespace gem5
 {
-MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p) :
-    BaseMemProbe(p), traceStream(nullptr), system(p.system), withPC(p.with_pc)
+MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p)
+    : BaseMemProbe(p),
+      traceStream(nullptr),
+      system(p.system),
+      withPC(p.with_pc)
 {
     std::string filename;
     if (p.trace_file != "") {
@@ -60,8 +63,8 @@ MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p) :
         // If trace_compress has been set, check the suffix. Append
         // accordingly.
         if (p.trace_compress &&
-            filename.compare(
-                filename.size() - suffix.size(), suffix.size(), suffix) != 0)
+            filename.compare(filename.size() - suffix.size(), suffix.size(),
+                             suffix) != 0)
             filename = filename + suffix;
     } else {
         // Generate a filename from the name of the SimObject. Append .trc

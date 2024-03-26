@@ -45,11 +45,11 @@ class VMA
 
   public:
     VMA(AddrRange r, Addr page_bytes, const std::string &vma_name = "anon",
-        int fd = -1, off_t off = 0) :
-        _addrRange(r), _pageBytes(page_bytes), _vmaName(vma_name)
+        int fd = -1, off_t off = 0)
+        : _addrRange(r), _pageBytes(page_bytes), _vmaName(vma_name)
     {
         DPRINTF(Vma, "Creating vma start %#x len %llu end %#x\n", r.start(),
-            r.size(), r.end());
+                r.size(), r.end());
 
         if (fd != -1) {
             _origHostBuf =
@@ -70,7 +70,7 @@ class VMA
         _addrRange = AddrRange(new_start, new_start + _addrRange.size());
 
         DPRINTF(Vma, "Remapping vma start %#x end %#x\n", _addrRange.start(),
-            _addrRange.end());
+                _addrRange.end());
 
         sanityCheck();
     }

@@ -65,16 +65,16 @@ class MemCheckerMonitor : public SimObject
     /** Destructor */
     ~MemCheckerMonitor();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
 
   private:
     struct MemCheckerMonitorSenderState : public Packet::SenderState
     {
-        MemCheckerMonitorSenderState(MemChecker::Serial _serial) :
-            serial(_serial)
+        MemCheckerMonitorSenderState(MemChecker::Serial _serial)
+            : serial(_serial)
         {}
 
         MemChecker::Serial serial;
@@ -89,8 +89,8 @@ class MemCheckerMonitor : public SimObject
     class MonitorRequestPort : public RequestPort
     {
       public:
-        MonitorRequestPort(const std::string &_name, MemCheckerMonitor &_mon) :
-            RequestPort(_name), mon(_mon)
+        MonitorRequestPort(const std::string &_name, MemCheckerMonitor &_mon)
+            : RequestPort(_name), mon(_mon)
         {}
 
       protected:
@@ -152,9 +152,8 @@ class MemCheckerMonitor : public SimObject
     class MonitorResponsePort : public ResponsePort
     {
       public:
-        MonitorResponsePort(
-            const std::string &_name, MemCheckerMonitor &_mon) :
-            ResponsePort(_name), mon(_mon)
+        MonitorResponsePort(const std::string &_name, MemCheckerMonitor &_mon)
+            : ResponsePort(_name), mon(_mon)
         {}
 
       protected:

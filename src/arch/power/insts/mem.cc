@@ -42,8 +42,8 @@ MemOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-MemDispOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MemDispOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -100,8 +100,8 @@ MemDispOp::generateDisassembly(
 }
 
 std::string
-MemDispShiftOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MemDispShiftOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -158,8 +158,8 @@ MemDispShiftOp::generateDisassembly(
 }
 
 std::string
-MemIndexOp::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MemIndexOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

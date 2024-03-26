@@ -59,8 +59,8 @@ class DRAMPower
      * Transform the architechture parameters defined in
      * DRAMInterfaceParams to the memSpec of DRAMPower
      */
-    static Data::MemArchitectureSpec getArchParams(
-        const DRAMInterfaceParams &p);
+    static Data::MemArchitectureSpec
+    getArchParams(const DRAMInterfaceParams &p);
 
     /**
      * Transforms the timing parameters defined in DRAMInterfaceParams to

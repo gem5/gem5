@@ -58,8 +58,8 @@ struct CacheAccessor
     virtual bool hasBeenPrefetched(Addr addr, bool is_secure) const = 0;
 
     /** Determine if address has been prefetched by the requestor */
-    virtual bool hasBeenPrefetched(
-        Addr addr, bool is_secure, RequestorID requestor) const = 0;
+    virtual bool hasBeenPrefetched(Addr addr, bool is_secure,
+                                   RequestorID requestor) const = 0;
 
     /** Determine if address is in cache miss queue */
     virtual bool inMissQueue(Addr addr, bool is_secure) const = 0;
@@ -80,8 +80,8 @@ class CacheAccessProbeArg
     /** Accessor for the cache */
     CacheAccessor &cache;
 
-    CacheAccessProbeArg(PacketPtr _pkt, CacheAccessor &_cache) :
-        pkt(_pkt), cache(_cache)
+    CacheAccessProbeArg(PacketPtr _pkt, CacheAccessor &_cache)
+        : pkt(_pkt), cache(_cache)
     {}
 };
 
@@ -109,13 +109,13 @@ struct CacheDataUpdateProbeArg
     CacheAccessor &accessor;
 
     CacheDataUpdateProbeArg(Addr _addr, bool is_secure,
-        RequestorID _requestorID, CacheAccessor &_accessor) :
-        addr(_addr),
-        isSecure(is_secure),
-        requestorID(_requestorID),
-        oldData(),
-        newData(),
-        accessor(_accessor)
+                            RequestorID _requestorID, CacheAccessor &_accessor)
+        : addr(_addr),
+          isSecure(is_secure),
+          requestorID(_requestorID),
+          oldData(),
+          newData(),
+          accessor(_accessor)
     {}
 };
 

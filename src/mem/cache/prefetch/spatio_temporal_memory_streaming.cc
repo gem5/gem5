@@ -36,27 +36,27 @@ namespace gem5
 {
 namespace prefetch
 {
-STeMS::STeMS(const STeMSPrefetcherParams &p) :
-    Queued(p),
-    spatialRegionSize(p.spatial_region_size),
-    spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
-    reconstructionEntries(p.reconstruction_entries),
-    activeGenerationTable(p.active_generation_table_assoc,
-        p.active_generation_table_entries,
-        p.active_generation_table_indexing_policy,
-        p.active_generation_table_replacement_policy,
-        ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
-    patternSequenceTable(p.pattern_sequence_table_assoc,
-        p.pattern_sequence_table_entries,
-        p.pattern_sequence_table_indexing_policy,
-        p.pattern_sequence_table_replacement_policy,
-        ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
-    rmob(p.region_miss_order_buffer_entries),
-    addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
-    lastTriggerCounter(0)
+STeMS::STeMS(const STeMSPrefetcherParams &p)
+    : Queued(p),
+      spatialRegionSize(p.spatial_region_size),
+      spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
+      reconstructionEntries(p.reconstruction_entries),
+      activeGenerationTable(
+          p.active_generation_table_assoc, p.active_generation_table_entries,
+          p.active_generation_table_indexing_policy,
+          p.active_generation_table_replacement_policy,
+          ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
+      patternSequenceTable(
+          p.pattern_sequence_table_assoc, p.pattern_sequence_table_entries,
+          p.pattern_sequence_table_indexing_policy,
+          p.pattern_sequence_table_replacement_policy,
+          ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
+      rmob(p.region_miss_order_buffer_entries),
+      addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
+      lastTriggerCounter(0)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
-        "The spatial region size must be a power of 2.");
+             "The spatial region size must be a power of 2.");
 }
 
 void
@@ -130,7 +130,8 @@ STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 
 void
 STeMS::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                         std::vector<AddrPriority> &addresses,
+                         const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");

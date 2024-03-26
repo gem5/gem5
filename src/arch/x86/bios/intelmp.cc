@@ -91,7 +91,7 @@ writeOutString(PortProxy &proxy, Addr addr, std::string str, int length)
         memcpy(cleanedString, str.c_str(), length);
         warn("Intel MP configuration table string \"%s\" "
              "will be truncated to \"%s\".\n",
-            str, (char *)&cleanedString);
+             str, (char *)&cleanedString);
     } else {
         memcpy(cleanedString, str.c_str(), str.length());
         memset(cleanedString + str.length(), 0, length - str.length());
@@ -145,31 +145,31 @@ X86ISA::intelmp::FloatingPointer::writeOut(PortProxy &proxy, Addr addr)
     return 16;
 }
 
-X86ISA::intelmp::FloatingPointer::FloatingPointer(const Params &p) :
-    SimObject(p),
-    tableAddr(0),
-    specRev(p.spec_rev),
-    defaultConfig(p.default_config),
-    imcrPresent(p.imcr_present)
+X86ISA::intelmp::FloatingPointer::FloatingPointer(const Params &p)
+    : SimObject(p),
+      tableAddr(0),
+      specRev(p.spec_rev),
+      defaultConfig(p.default_config),
+      imcrPresent(p.imcr_present)
 {}
 
 Addr
-X86ISA::intelmp::BaseConfigEntry::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::BaseConfigEntry::writeOut(PortProxy &proxy, Addr addr,
+                                           uint8_t &checkSum)
 {
     proxy.writeBlob(addr, &type, 1);
     checkSum += type;
     return 1;
 }
 
-X86ISA::intelmp::BaseConfigEntry::BaseConfigEntry(
-    const Params &p, uint8_t _type) :
-    SimObject(p), type(_type)
+X86ISA::intelmp::BaseConfigEntry::BaseConfigEntry(const Params &p,
+                                                  uint8_t _type)
+    : SimObject(p), type(_type)
 {}
 
 Addr
-X86ISA::intelmp::ExtConfigEntry::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::ExtConfigEntry::writeOut(PortProxy &proxy, Addr addr,
+                                          uint8_t &checkSum)
 {
     proxy.writeBlob(addr, &type, 1);
     checkSum += type;
@@ -178,9 +178,9 @@ X86ISA::intelmp::ExtConfigEntry::writeOut(
     return 1;
 }
 
-X86ISA::intelmp::ExtConfigEntry::ExtConfigEntry(
-    const Params &p, uint8_t _type, uint8_t _length) :
-    SimObject(p), type(_type), length(_length)
+X86ISA::intelmp::ExtConfigEntry::ExtConfigEntry(const Params &p, uint8_t _type,
+                                                uint8_t _length)
+    : SimObject(p), type(_type), length(_length)
 {}
 
 const char X86ISA::intelmp::ConfigTable::signature[] = "PCMP";
@@ -242,21 +242,21 @@ X86ISA::intelmp::ConfigTable::writeOut(PortProxy &proxy, Addr addr)
     return offset + extOffset;
 };
 
-X86ISA::intelmp::ConfigTable::ConfigTable(const Params &p) :
-    SimObject(p),
-    specRev(p.spec_rev),
-    oemID(p.oem_id),
-    productID(p.product_id),
-    oemTableAddr(p.oem_table_addr),
-    oemTableSize(p.oem_table_size),
-    localApic(p.local_apic),
-    baseEntries(p.base_entries),
-    extEntries(p.ext_entries)
+X86ISA::intelmp::ConfigTable::ConfigTable(const Params &p)
+    : SimObject(p),
+      specRev(p.spec_rev),
+      oemID(p.oem_id),
+      productID(p.product_id),
+      oemTableAddr(p.oem_table_addr),
+      oemTableSize(p.oem_table_size),
+      localApic(p.local_apic),
+      baseEntries(p.base_entries),
+      extEntries(p.ext_entries)
 {}
 
 Addr
-X86ISA::intelmp::Processor::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::Processor::writeOut(PortProxy &proxy, Addr addr,
+                                     uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, localApicID);
@@ -271,13 +271,13 @@ X86ISA::intelmp::Processor::writeOut(
     return 20;
 }
 
-X86ISA::intelmp::Processor::Processor(const Params &p) :
-    BaseConfigEntry(p, 0),
-    localApicID(p.local_apic_id),
-    localApicVersion(p.local_apic_version),
-    cpuFlags(0),
-    cpuSignature(0),
-    featureFlags(p.feature_flags)
+X86ISA::intelmp::Processor::Processor(const Params &p)
+    : BaseConfigEntry(p, 0),
+      localApicID(p.local_apic_id),
+      localApicVersion(p.local_apic_version),
+      cpuFlags(0),
+      cpuSignature(0),
+      featureFlags(p.feature_flags)
 {
     if (p.enable)
         cpuFlags |= (1 << 0);
@@ -298,13 +298,13 @@ X86ISA::intelmp::Bus::writeOut(PortProxy &proxy, Addr addr, uint8_t &checkSum)
     return 8;
 }
 
-X86ISA::intelmp::Bus::Bus(const Params &p) :
-    BaseConfigEntry(p, 1), busID(p.bus_id), busType(p.bus_type)
+X86ISA::intelmp::Bus::Bus(const Params &p)
+    : BaseConfigEntry(p, 1), busID(p.bus_id), busType(p.bus_type)
 {}
 
 Addr
-X86ISA::intelmp::IOAPIC::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::IOAPIC::writeOut(PortProxy &proxy, Addr addr,
+                                  uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, id);
@@ -314,20 +314,20 @@ X86ISA::intelmp::IOAPIC::writeOut(
     return 8;
 }
 
-X86ISA::intelmp::IOAPIC::IOAPIC(const Params &p) :
-    BaseConfigEntry(p, 2),
-    id(p.id),
-    version(p.version),
-    flags(0),
-    address(p.address)
+X86ISA::intelmp::IOAPIC::IOAPIC(const Params &p)
+    : BaseConfigEntry(p, 2),
+      id(p.id),
+      version(p.version),
+      flags(0),
+      address(p.address)
 {
     if (p.enable)
         flags |= 1;
 }
 
 Addr
-X86ISA::intelmp::IntAssignment::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::IntAssignment::writeOut(PortProxy &proxy, Addr addr,
+                                         uint8_t &checkSum)
 {
     BaseConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 1, interruptType);
@@ -339,21 +339,21 @@ X86ISA::intelmp::IntAssignment::writeOut(
     return 8;
 }
 
-X86ISA::intelmp::IOIntAssignment::IOIntAssignment(const Params &p) :
-    IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 3,
-        p.source_bus_id, p.source_bus_irq, p.dest_io_apic_id,
-        p.dest_io_apic_intin)
+X86ISA::intelmp::IOIntAssignment::IOIntAssignment(const Params &p)
+    : IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 3,
+                    p.source_bus_id, p.source_bus_irq, p.dest_io_apic_id,
+                    p.dest_io_apic_intin)
 {}
 
-X86ISA::intelmp::LocalIntAssignment::LocalIntAssignment(const Params &p) :
-    IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 4,
-        p.source_bus_id, p.source_bus_irq, p.dest_local_apic_id,
-        p.dest_local_apic_intin)
+X86ISA::intelmp::LocalIntAssignment::LocalIntAssignment(const Params &p)
+    : IntAssignment(p, p.interrupt_type, p.polarity, p.trigger, 4,
+                    p.source_bus_id, p.source_bus_irq, p.dest_local_apic_id,
+                    p.dest_local_apic_intin)
 {}
 
 Addr
-X86ISA::intelmp::AddrSpaceMapping::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::AddrSpaceMapping::writeOut(PortProxy &proxy, Addr addr,
+                                            uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);
@@ -363,17 +363,17 @@ X86ISA::intelmp::AddrSpaceMapping::writeOut(
     return length;
 }
 
-X86ISA::intelmp::AddrSpaceMapping::AddrSpaceMapping(const Params &p) :
-    ExtConfigEntry(p, 128, 20),
-    busID(p.bus_id),
-    addrType(p.address_type),
-    addr(p.address),
-    addrLength(p.length)
+X86ISA::intelmp::AddrSpaceMapping::AddrSpaceMapping(const Params &p)
+    : ExtConfigEntry(p, 128, 20),
+      busID(p.bus_id),
+      addrType(p.address_type),
+      addr(p.address),
+      addrLength(p.length)
 {}
 
 Addr
-X86ISA::intelmp::BusHierarchy::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::BusHierarchy::writeOut(PortProxy &proxy, Addr addr,
+                                        uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);
@@ -386,19 +386,19 @@ X86ISA::intelmp::BusHierarchy::writeOut(
     return length;
 }
 
-X86ISA::intelmp::BusHierarchy::BusHierarchy(const Params &p) :
-    ExtConfigEntry(p, 129, 8),
-    busID(p.bus_id),
-    info(0),
-    parentBus(p.parent_bus)
+X86ISA::intelmp::BusHierarchy::BusHierarchy(const Params &p)
+    : ExtConfigEntry(p, 129, 8),
+      busID(p.bus_id),
+      info(0),
+      parentBus(p.parent_bus)
 {
     if (p.subtractive_decode)
         info |= 1;
 }
 
 Addr
-X86ISA::intelmp::CompatAddrSpaceMod::writeOut(
-    PortProxy &proxy, Addr addr, uint8_t &checkSum)
+X86ISA::intelmp::CompatAddrSpaceMod::writeOut(PortProxy &proxy, Addr addr,
+                                              uint8_t &checkSum)
 {
     ExtConfigEntry::writeOut(proxy, addr, checkSum);
     checkSum += writeOutField(proxy, addr + 2, busID);
@@ -407,8 +407,11 @@ X86ISA::intelmp::CompatAddrSpaceMod::writeOut(
     return length;
 }
 
-X86ISA::intelmp::CompatAddrSpaceMod::CompatAddrSpaceMod(const Params &p) :
-    ExtConfigEntry(p, 130, 8), busID(p.bus_id), mod(0), rangeList(p.range_list)
+X86ISA::intelmp::CompatAddrSpaceMod::CompatAddrSpaceMod(const Params &p)
+    : ExtConfigEntry(p, 130, 8),
+      busID(p.bus_id),
+      mod(0),
+      rangeList(p.range_list)
 {
     if (p.add)
         mod |= 1;

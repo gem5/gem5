@@ -151,8 +151,8 @@ class CompoundFlag : public Flag
   public:
     template <typename... Args>
     CompoundFlag(const char *name, const char *desc,
-        std::initializer_list<Flag *> flags) :
-        Flag(name, desc), _kids(flags)
+                 std::initializer_list<Flag *> flags)
+        : Flag(name, desc), _kids(flags)
     {}
 
     const std::vector<Flag *> &
@@ -204,7 +204,7 @@ void dumpDebugFlags(std::ostream &os = std::cout);
  * @ingroup api_trace
  * @{
  */
-#define DTRACE(x) \
+#define DTRACE(x)                                                             \
     GEM5_DEPRECATED_MACRO(DTRACE, debug::x, "Replace DTRACE(x) with debug::x.")
 /** @} */ // end of api_trace
 

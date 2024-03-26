@@ -56,26 +56,26 @@
 
 namespace gem5
 {
-BaseXBar::BaseXBar(const BaseXBarParams &p) :
-    ClockedObject(p),
-    frontendLatency(p.frontend_latency),
-    forwardLatency(p.forward_latency),
-    responseLatency(p.response_latency),
-    headerLatency(p.header_latency),
-    width(p.width),
-    gotAddrRanges(p.port_default_connection_count +
-                      p.port_mem_side_ports_connection_count,
-        false),
-    gotAllAddrRanges(false),
-    defaultPortID(InvalidPortID),
-    useDefaultRange(p.use_default_range),
+BaseXBar::BaseXBar(const BaseXBarParams &p)
+    : ClockedObject(p),
+      frontendLatency(p.frontend_latency),
+      forwardLatency(p.forward_latency),
+      responseLatency(p.response_latency),
+      headerLatency(p.header_latency),
+      width(p.width),
+      gotAddrRanges(p.port_default_connection_count +
+                        p.port_mem_side_ports_connection_count,
+                    false),
+      gotAllAddrRanges(false),
+      defaultPortID(InvalidPortID),
+      useDefaultRange(p.use_default_range),
 
-    ADD_STAT(transDist, statistics::units::Count::get(),
-        "Transaction distribution"),
-    ADD_STAT(pktCount, statistics::units::Count::get(),
-        "Packet count per connected requestor and responder"),
-    ADD_STAT(pktSize, statistics::units::Byte::get(),
-        "Cumulative packet size per connected requestor and responder")
+      ADD_STAT(transDist, statistics::units::Count::get(),
+               "Transaction distribution"),
+      ADD_STAT(pktCount, statistics::units::Count::get(),
+               "Packet count per connected requestor and responder"),
+      ADD_STAT(pktSize, statistics::units::Byte::get(),
+               "Cumulative packet size per connected requestor and responder")
 {}
 
 BaseXBar::~BaseXBar()
@@ -124,7 +124,7 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
     // ignored, note that this specific value may cause problems for
     // slower interconnects
     panic_if(pkt->headerDelay > sim_clock::as_int::us,
-        "Encountered header delay exceeding 1 us\n");
+             "Encountered header delay exceeding 1 us\n");
 
     if (pkt->hasData()) {
         // the payloadDelay takes into account the relative time to
@@ -142,18 +142,19 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 }
 
 template <typename SrcType, typename DstType>
-BaseXBar::Layer<SrcType, DstType>::Layer(
-    DstType &_port, BaseXBar &_xbar, const std::string &_name) :
-    statistics::Group(&_xbar, _name.c_str()),
-    port(_port),
-    xbar(_xbar),
-    _name(xbar.name() + "." + _name),
-    state(IDLE),
-    waitingForPeer(NULL),
-    releaseEvent([this] { releaseLayer(); }, name()),
-    ADD_STAT(
-        occupancy, statistics::units::Tick::get(), "Layer occupancy (ticks)"),
-    ADD_STAT(utilization, statistics::units::Ratio::get(), "Layer utilization")
+BaseXBar::Layer<SrcType, DstType>::Layer(DstType &_port, BaseXBar &_xbar,
+                                         const std::string &_name)
+    : statistics::Group(&_xbar, _name.c_str()),
+      port(_port),
+      xbar(_xbar),
+      _name(xbar.name() + "." + _name),
+      state(IDLE),
+      waitingForPeer(NULL),
+      releaseEvent([this] { releaseLayer(); }, name()),
+      ADD_STAT(occupancy, statistics::units::Tick::get(),
+               "Layer occupancy (ticks)"),
+      ADD_STAT(utilization, statistics::units::Ratio::get(),
+               "Layer utilization")
 {
     occupancy.flags(statistics::nozero);
 
@@ -180,7 +181,7 @@ BaseXBar::Layer<SrcType, DstType>::occupyLayer(Tick until)
     occupancy += until - curTick();
 
     DPRINTF(BaseXBar, "The crossbar layer is now busy from tick %d to %d\n",
-        curTick(), until);
+            curTick(), until);
 }
 
 template <typename SrcType, typename DstType>
@@ -199,7 +200,7 @@ BaseXBar::Layer<SrcType, DstType>::tryTiming(SrcType *src_port)
     if (state == BUSY || waitingForPeer != NULL) {
         // the port should not be waiting already
         assert(std::find(waitingForLayer.begin(), waitingForLayer.end(),
-                   src_port) == waitingForLayer.end());
+                         src_port) == waitingForLayer.end());
 
         // put the port at the end of the retry list waiting for the
         // layer to be freed up (and in the case of a busy peer, for
@@ -228,8 +229,8 @@ BaseXBar::Layer<SrcType, DstType>::succeededTiming(Tick busy_time)
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType, DstType>::failedTiming(
-    SrcType *src_port, Tick busy_time)
+BaseXBar::Layer<SrcType, DstType>::failedTiming(SrcType *src_port,
+                                                Tick busy_time)
 {
     // ensure no one got in between and tried to send something to
     // this port
@@ -350,14 +351,14 @@ BaseXBar::findPort(AddrRange addr_range, PacketPtr pkt)
     if (useDefaultRange) {
         if (addr_range.isSubset(defaultRange)) {
             DPRINTF(AddrRanges, "  found addr %s on default\n",
-                addr_range.to_string());
+                    addr_range.to_string());
             return defaultPortID;
         }
     } else if (defaultPortID != InvalidPortID) {
         DPRINTF(AddrRanges,
-            "Unable to find destination for %s, "
-            "will use default port\n",
-            addr_range.to_string());
+                "Unable to find destination for %s, "
+                "will use default port\n",
+                addr_range.to_string());
         return defaultPortID;
     }
 
@@ -372,7 +373,7 @@ BaseXBar::findPort(AddrRange addr_range, PacketPtr pkt)
                            "of the packet.";
     }
     fatal("Unable to find destination for %s on %s\n%s\n",
-        addr_range.to_string(), name(), port_trace);
+          addr_range.to_string(), name(), port_trace);
 }
 
 /** Function called by the port when the crossbar is receiving a range
@@ -381,7 +382,7 @@ void
 BaseXBar::recvRangeChange(PortID mem_side_port_id)
 {
     DPRINTF(AddrRanges, "Received range change from cpu_side_ports %s\n",
-        memSidePorts[mem_side_port_id]->getPeer());
+            memSidePorts[mem_side_port_id]->getPeer());
 
     // remember that we got a range from this memory-side port and thus the
     // connected CPU-side-port module
@@ -414,7 +415,7 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
 
             if (ranges.size() != 1)
                 fatal("Crossbar %s may only have a single default range",
-                    name());
+                      name());
 
             defaultRange = ranges.front();
         }
@@ -436,14 +437,14 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
 
         for (const auto &r : ranges) {
             DPRINTF(AddrRanges, "Adding range %s for id %d\n", r.to_string(),
-                mem_side_port_id);
+                    mem_side_port_id);
             if (portMap.insert(r, mem_side_port_id) == portMap.end()) {
                 PortID conflict_id = portMap.intersects(r)->second;
                 fatal("%s has two ports responding within range "
                       "%s:\n\t%s\n\t%s\n",
-                    name(), r.to_string(),
-                    memSidePorts[mem_side_port_id]->getPeer(),
-                    memSidePorts[conflict_id]->getPeer());
+                      name(), r.to_string(),
+                      memSidePorts[mem_side_port_id]->getPeer(),
+                      memSidePorts[conflict_id]->getPeer());
             }
         }
     }
@@ -459,11 +460,11 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
         if (useDefaultRange) {
             if (!gotAddrRanges[defaultPortID])
                 fatal("Crossbar %s uses default range, but none provided",
-                    name());
+                      name());
 
             xbarRanges.push_back(defaultRange);
             DPRINTF(AddrRanges, "-- Adding default %s\n",
-                defaultRange.to_string());
+                    defaultRange.to_string());
         }
 
         // merge all interleaved ranges and add any range that is not
@@ -478,14 +479,14 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
                 if (!intlv_ranges.empty() &&
                     !intlv_ranges.back().mergesWith(r.first)) {
                     DPRINTF(AddrRanges, "-- Merging range from %d ranges\n",
-                        intlv_ranges.size());
+                            intlv_ranges.size());
                     AddrRange merged_range(intlv_ranges);
                     // next decide if we keep the merged range or not
                     if (!(useDefaultRange &&
-                            merged_range.isSubset(defaultRange))) {
+                          merged_range.isSubset(defaultRange))) {
                         xbarRanges.push_back(merged_range);
                         DPRINTF(AddrRanges, "-- Adding merged range %s\n",
-                            merged_range.to_string());
+                                merged_range.to_string());
                     }
                     intlv_ranges.clear();
                 }
@@ -495,7 +496,7 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
                 if (!(useDefaultRange && r.first.isSubset(defaultRange))) {
                     xbarRanges.push_back(r.first);
                     DPRINTF(AddrRanges, "-- Adding range %s\n",
-                        r.first.to_string());
+                            r.first.to_string());
                 }
             }
         }
@@ -504,12 +505,12 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
         // go ahead and do it
         if (!intlv_ranges.empty()) {
             DPRINTF(AddrRanges, "-- Merging range from %d ranges\n",
-                intlv_ranges.size());
+                    intlv_ranges.size());
             AddrRange merged_range(intlv_ranges);
             if (!(useDefaultRange && merged_range.isSubset(defaultRange))) {
                 xbarRanges.push_back(merged_range);
                 DPRINTF(AddrRanges, "-- Adding merged range %s\n",
-                    merged_range.to_string());
+                        merged_range.to_string());
             }
         }
 
@@ -525,7 +526,7 @@ BaseXBar::recvRangeChange(PortID mem_side_port_id)
                     fatal("Range %s intersects the "
                           "default range of %s but is not a "
                           "subset\n",
-                        r.to_string(), name());
+                          r.to_string(), name());
             }
         }
 

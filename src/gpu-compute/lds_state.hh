@@ -171,8 +171,8 @@ class LdsState : public ClockedObject
     class CuSidePort : public ResponsePort
     {
       public:
-        CuSidePort(const std::string &_name, LdsState *_ownerLds) :
-            ResponsePort(_name), ownerLds(_ownerLds)
+        CuSidePort(const std::string &_name, LdsState *_ownerLds)
+            : ResponsePort(_name), ownerLds(_ownerLds)
         {}
 
       protected:
@@ -251,8 +251,8 @@ class LdsState : public ClockedObject
 
     unsigned countBankConflicts(PacketPtr packet, unsigned *bankAccesses);
 
-    unsigned countBankConflicts(
-        GPUDynInstPtr gpuDynInst, unsigned *numBankAccesses);
+    unsigned countBankConflicts(GPUDynInstPtr gpuDynInst,
+                                unsigned *numBankAccesses);
 
   public:
     using Params = LdsStateParams;
@@ -300,8 +300,8 @@ class LdsState : public ClockedObject
         int refCount = getRefCounter(dispatchId, wgId);
 
         fatal_if(refCount <= 0,
-            "reference count should not be below zero or at zero to"
-            "decrement");
+                 "reference count should not be below zero or at zero to"
+                 "decrement");
 
         refCounter[dispatchId][wgId]--;
 
@@ -321,13 +321,13 @@ class LdsState : public ClockedObject
     {
         auto dispatchIter = chunkMap.find(dispatchId);
         fatal_if(dispatchIter == chunkMap.end(),
-            "could not locate this dispatch id [%d]", dispatchId);
+                 "could not locate this dispatch id [%d]", dispatchId);
 
         auto workgroup = dispatchIter->second.find(wgId);
         fatal_if(workgroup == dispatchIter->second.end(),
-            "could not find this workgroup id within this dispatch id"
-            " did[%d] wgid[%d]",
-            dispatchId, wgId);
+                 "could not find this workgroup id within this dispatch id"
+                 " did[%d] wgid[%d]",
+                 dispatchId, wgId);
 
         auto refCountIter = refCounter.find(dispatchId);
         if (refCountIter == refCounter.end()) {
@@ -353,15 +353,15 @@ class LdsState : public ClockedObject
      * for this wgid
      */
     LdsChunk *
-    reserveSpace(
-        const uint32_t dispatchId, const uint32_t wgId, const uint32_t size)
+    reserveSpace(const uint32_t dispatchId, const uint32_t wgId,
+                 const uint32_t size)
     {
         if (chunkMap.find(dispatchId) != chunkMap.end()) {
-            panic_if(
-                chunkMap[dispatchId].find(wgId) != chunkMap[dispatchId].end(),
-                "duplicate workgroup ID asking for space in the LDS "
-                "did[%d] wgid[%d]",
-                dispatchId, wgId);
+            panic_if(chunkMap[dispatchId].find(wgId) !=
+                         chunkMap[dispatchId].end(),
+                     "duplicate workgroup ID asking for space in the LDS "
+                     "did[%d] wgid[%d]",
+                     dispatchId, wgId);
         }
 
         if (bytesAllocated + size > maximumSize) {
@@ -386,9 +386,10 @@ class LdsState : public ClockedObject
     getLdsChunk(const uint32_t dispatchId, const uint32_t wgId)
     {
         fatal_if(chunkMap.find(dispatchId) == chunkMap.end(),
-            "fetch for unknown dispatch ID did[%d]", dispatchId);
+                 "fetch for unknown dispatch ID did[%d]", dispatchId);
 
-        fatal_if(chunkMap[dispatchId].find(wgId) == chunkMap[dispatchId].end(),
+        fatal_if(
+            chunkMap[dispatchId].find(wgId) == chunkMap[dispatchId].end(),
             "fetch for unknown workgroup ID wgid[%d] in dispatch ID did[%d]",
             wgId, dispatchId);
 
@@ -487,12 +488,12 @@ class LdsState : public ClockedObject
             auto workgroupIter = dispatchIter->second.find(x_wgId);
             if (workgroupIter == dispatchIter->second.end()) {
                 fatal("workgroup id [%d] not found in dispatch id [%d]",
-                    x_wgId, x_dispatchId);
+                      x_wgId, x_dispatchId);
             }
         }
 
         fatal_if(bytesAllocated < chunkMap[x_dispatchId][x_wgId].size(),
-            "releasing more space than was allocated");
+                 "releasing more space than was allocated");
 
         bytesAllocated -= chunkMap[x_dispatchId][x_wgId].size();
         chunkMap[x_dispatchId].erase(chunkMap[x_dispatchId].find(x_wgId));

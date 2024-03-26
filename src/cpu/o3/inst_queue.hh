@@ -119,8 +119,8 @@ class InstructionQueue
 
       public:
         /** Construct a FU completion event. */
-        FUCompletion(
-            const DynInstPtr &_inst, int fu_idx, InstructionQueue *iq_ptr);
+        FUCompletion(const DynInstPtr &_inst, int fu_idx,
+                     InstructionQueue *iq_ptr);
 
         virtual void process();
         virtual const char *description() const;
@@ -132,8 +132,8 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(
-        CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params);
+    InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
+                     const BaseO3CPUParams &params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();

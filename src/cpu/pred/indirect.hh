@@ -71,8 +71,8 @@ class IndirectPredictor : public SimObject
      * @return For a hit the predictor returns a pointer to the target PCState
      *         otherwise a nullptr is returned.
      */
-    virtual const PCStateBase *lookup(
-        ThreadID tid, InstSeqNum sn, Addr pc, void *&i_history) = 0;
+    virtual const PCStateBase *lookup(ThreadID tid, InstSeqNum sn, Addr pc,
+                                      void *&i_history) = 0;
 
     /**
      * Updates the indirect predictor with history information of a branch.
@@ -91,8 +91,8 @@ class IndirectPredictor : public SimObject
      * @param i_history The pointer to the history object.
      */
     virtual void update(ThreadID tid, InstSeqNum sn, Addr pc, bool squash,
-        bool taken, const PCStateBase &target, BranchType br_type,
-        void *&i_history) = 0;
+                        bool taken, const PCStateBase &target,
+                        BranchType br_type, void *&i_history) = 0;
 
     /**
      * Squashes a branch. If the branch modified the history

@@ -36,16 +36,16 @@ using namespace sc_core;
 using namespace std;
 
 Target::Target(sc_core::sc_module_name name, bool debug,
-    unsigned long long int size, unsigned int offset) :
-    socket("socket"),
-    transaction_in_progress(0),
-    response_in_progress(false),
-    next_response_pending(0),
-    end_req_pending(0),
-    m_peq(this, &Target::peq_cb),
-    debug(debug),
-    size(size),
-    offset(offset)
+               unsigned long long int size, unsigned int offset)
+    : socket("socket"),
+      transaction_in_progress(0),
+      response_in_progress(false),
+      next_response_pending(0),
+      end_req_pending(0),
+      m_peq(this, &Target::peq_cb),
+      debug(debug),
+      size(size),
+      offset(offset)
 {
     /* Register tlm transport functions */
     socket.register_b_transport(this, &Target::b_transport);
@@ -105,8 +105,8 @@ Target::transport_dbg(tlm::tlm_generic_payload &trans)
 
 /* TLM-2 non-blocking transport method */
 tlm::tlm_sync_enum
-Target::nb_transport_fw(
-    tlm::tlm_generic_payload &trans, tlm::tlm_phase &phase, sc_time &delay)
+Target::nb_transport_fw(tlm::tlm_generic_payload &trans, tlm::tlm_phase &phase,
+                        sc_time &delay)
 {
     /* Queue the transaction until the annotated time has elapsed */
     m_peq.notify(trans, phase, delay);

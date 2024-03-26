@@ -72,33 +72,33 @@ namespace gem5
 using namespace X86ISA;
 
 template class MultiLevelPageTable<LongModePTE<47, 39>, LongModePTE<38, 30>,
-    LongModePTE<29, 21>, LongModePTE<20, 12>>;
+                                   LongModePTE<29, 21>, LongModePTE<20, 12>>;
 typedef MultiLevelPageTable<LongModePTE<47, 39>, LongModePTE<38, 30>,
-    LongModePTE<29, 21>, LongModePTE<20, 12>>
+                            LongModePTE<29, 21>, LongModePTE<20, 12>>
     ArchPageTable;
 
-X86Process::X86Process(
-    const ProcessParams &params, loader::ObjectFile *objFile) :
-    Process(params,
-        params.useArchPT ?
-            static_cast<EmulationPageTable *>(new ArchPageTable(
-                params.name, params.pid, params.system, PageBytes)) :
-            new EmulationPageTable(params.name, params.pid, PageBytes),
-        objFile)
+X86Process::X86Process(const ProcessParams &params,
+                       loader::ObjectFile *objFile)
+    : Process(params,
+              params.useArchPT ?
+                  static_cast<EmulationPageTable *>(new ArchPageTable(
+                      params.name, params.pid, params.system, PageBytes)) :
+                  new EmulationPageTable(params.name, params.pid, PageBytes),
+              objFile)
 {}
 
 void
-X86Process::clone(
-    ThreadContext *old_tc, ThreadContext *new_tc, Process *p, RegVal flags)
+X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                  RegVal flags)
 {
     Process::clone(old_tc, new_tc, p, flags);
     X86Process *process = (X86Process *)p;
     *process = *this;
 }
 
-X86_64Process::X86_64Process(
-    const ProcessParams &params, loader::ObjectFile *objFile) :
-    X86Process(params, objFile)
+X86_64Process::X86_64Process(const ProcessParams &params,
+                             loader::ObjectFile *objFile)
+    : X86Process(params, objFile)
 {
     vsyscallPage.base = 0xffffffffff600000ULL;
     vsyscallPage.size = PageBytes;
@@ -111,13 +111,14 @@ X86_64Process::X86_64Process(
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
-    memState = std::make_shared<MemState>(this, brk_point, stack_base,
-        max_stack_size, next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
-I386Process::I386Process(
-    const ProcessParams &params, loader::ObjectFile *objFile) :
-    X86Process(params, objFile)
+I386Process::I386Process(const ProcessParams &params,
+                         loader::ObjectFile *objFile)
+    : X86Process(params, objFile)
 {
     if (kvmInSE)
         panic("KVM CPU model does not support 32 bit processes");
@@ -136,8 +137,9 @@ I386Process::I386Process(
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0xB7FFF000ULL;
 
-    memState = std::make_shared<MemState>(this, brk_point, stack_base,
-        max_stack_size, next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -158,16 +160,16 @@ X86_64Process::initState()
         0xc3                                      // retq
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
-        vtimeBlob, sizeof(vtimeBlob));
+                           vtimeBlob, sizeof(vtimeBlob));
 
     uint8_t vgettimeofdayBlob[] = {
         0x48, 0xc7, 0xc0, 0x60, 0x00, 0x00, 0x00, // mov    $0x60,%rax
         0x0f, 0x05,                               // syscall
         0xc3                                      // retq
     };
-    initVirtMem->writeBlob(
-        vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
-        vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
+    initVirtMem->writeBlob(vsyscallPage.base +
+                               vsyscallPage.vgettimeofdayOffset,
+                           vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
 
     if (kvmInSE) {
         PortProxy physProxy = system->physProxy;
@@ -184,8 +186,8 @@ X86_64Process::initState()
          */
         uint8_t numGDTEntries = 0;
         uint64_t nullDescriptor = 0;
-        physProxy.writeBlob(
-            gdtPhysAddr + numGDTEntries * 8, &nullDescriptor, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &nullDescriptor,
+                            8);
         numGDTEntries++;
 
         SegDescriptor initDesc = 0;
@@ -206,8 +208,8 @@ X86_64Process::initState()
         csLowPLDesc.type.codeOrData = 1;
         csLowPLDesc.dpl = 0;
         uint64_t csLowPLDescVal = csLowPLDesc;
-        physProxy.writeBlob(
-            gdtPhysAddr + numGDTEntries * 8, &csLowPLDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &csLowPLDescVal,
+                            8);
 
         numGDTEntries++;
 
@@ -220,8 +222,8 @@ X86_64Process::initState()
         dsLowPLDesc.type.codeOrData = 0;
         dsLowPLDesc.dpl = 0;
         uint64_t dsLowPLDescVal = dsLowPLDesc;
-        physProxy.writeBlob(
-            gdtPhysAddr + numGDTEntries * 8, &dsLowPLDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &dsLowPLDescVal,
+                            8);
 
         numGDTEntries++;
 
@@ -280,8 +282,8 @@ X86_64Process::initState()
             uint64_t high;
         } tssDescVal = {TSSDescLow, TSSDescHigh};
 
-        physProxy.writeBlob(
-            gdtPhysAddr + numGDTEntries * 8, &tssDescVal, sizeof(tssDescVal));
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &tssDescVal,
+                            sizeof(tssDescVal));
 
         numGDTEntries++;
 
@@ -482,7 +484,8 @@ X86_64Process::initState()
         // intermediate GPR (%rax, in this case). We save/restore the
         // value of %rax in the scratch region syscallDataBuf.
         const Addr syscallDataBuf = syscallCodeVirtAddr + 0x100;
-        uint8_t syscallBlob[] = {// mov    %rax, (0xffffc90000007000)
+        uint8_t syscallBlob[] = {
+            // mov    %rax, (0xffffc90000007000)
             0x48, 0xa3, 0x00, 0x70, 0x00, 0x00, 0x00, 0xc9, 0xff, 0xff,
             // mov    %rax, (syscallDataBuf)
             0x48, 0xa3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -498,22 +501,23 @@ X86_64Process::initState()
         std::memcpy(&syscallBlob[12], &syscallDataBuf, sizeof syscallDataBuf);
         std::memcpy(&syscallBlob[28], &syscallDataBuf, sizeof syscallDataBuf);
 
-        physProxy.writeBlob(
-            syscallCodePhysAddr, syscallBlob, sizeof(syscallBlob));
+        physProxy.writeBlob(syscallCodePhysAddr, syscallBlob,
+                            sizeof(syscallBlob));
 
         /** Page fault handler */
         uint8_t faultBlob[] = {// mov    %rax, (0xffffc90000007000)
-            0x48, 0xa3, 0x00, 0x70, 0x00, 0x00, 0x00, 0xc9, 0xff, 0xff,
-            // add    $0x8, %rsp # skip error
-            0x48, 0x83, 0xc4, 0x08,
-            // iretq
-            0x48, 0xcf};
+                               0x48, 0xa3, 0x00, 0x70, 0x00, 0x00, 0x00, 0xc9,
+                               0xff, 0xff,
+                               // add    $0x8, %rsp # skip error
+                               0x48, 0x83, 0xc4, 0x08,
+                               // iretq
+                               0x48, 0xcf};
 
         physProxy.writeBlob(pfHandlerPhysAddr, faultBlob, sizeof(faultBlob));
 
         /* Syscall handler */
-        pTable->map(
-            syscallCodeVirtAddr, syscallCodePhysAddr, PageBytes, false);
+        pTable->map(syscallCodeVirtAddr, syscallCodePhysAddr, PageBytes,
+                    false);
         /* GDT */
         pTable->map(GDTVirtAddr, gdtPhysAddr, PageBytes, false);
         /* IDT */
@@ -528,7 +532,7 @@ X86_64Process::initState()
         auto m5op_range = system->m5opRange();
         if (m5op_range.size()) {
             pTable->map(MMIORegionVirtAddr, m5op_range.start(),
-                m5op_range.size(), false);
+                        m5op_range.size(), false);
         }
     } else {
         for (int i = 0; i < contextIds.size(); i++) {
@@ -644,7 +648,7 @@ I386Process::initState()
         0x0f, 0x34  // sysenter
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsyscallOffset,
-        vsyscallBlob, sizeof(vsyscallBlob));
+                           vsyscallBlob, sizeof(vsyscallBlob));
 
     uint8_t vsysexitBlob[] = {
         0x5d, // pop %ebp
@@ -653,7 +657,7 @@ I386Process::initState()
         0xc3  // ret
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsysexitOffset,
-        vsysexitBlob, sizeof(vsysexitBlob));
+                           vsysexitBlob, sizeof(vsysexitBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext *tc = system->threads[contextIds[i]];
@@ -740,8 +744,8 @@ I386Process::initState()
 
 template <class IntType>
 void
-X86Process::argsInit(
-    int pageSize, std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs)
+X86Process::argsInit(int pageSize,
+                     std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs)
 {
     int intSize = sizeof(IntType);
 
@@ -986,10 +990,10 @@ X86Process::argsInit(
 
     initVirtMem->writeString(aux_data_base + numRandomBytes, platform.c_str());
 
-    copyStringArray(
-        envp, envp_array_base, env_data_base, ByteOrder::little, *initVirtMem);
-    copyStringArray(
-        argv, argv_array_base, arg_data_base, ByteOrder::little, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::little,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::little,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
@@ -1018,23 +1022,23 @@ I386Process::argsInit(int pageSize)
 {
     std::vector<gem5::auxv::AuxVector<uint32_t>> extraAuxvs;
     // Tell the binary where the vsyscall part of the vsyscall page is.
-    extraAuxvs.emplace_back(
-        auxv::Sysinfo, vsyscallPage.base + vsyscallPage.vsyscallOffset);
+    extraAuxvs.emplace_back(auxv::Sysinfo,
+                            vsyscallPage.base + vsyscallPage.vsyscallOffset);
     extraAuxvs.emplace_back(auxv::SysinfoEhdr, vsyscallPage.base);
     X86Process::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 
 void
-X86_64Process::clone(
-    ThreadContext *old_tc, ThreadContext *new_tc, Process *p, RegVal flags)
+X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                     RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
     ((X86_64Process *)p)->vsyscallPage = vsyscallPage;
 }
 
 void
-I386Process::clone(
-    ThreadContext *old_tc, ThreadContext *new_tc, Process *p, RegVal flags)
+I386Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                   RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
     ((I386Process *)p)->vsyscallPage = vsyscallPage;

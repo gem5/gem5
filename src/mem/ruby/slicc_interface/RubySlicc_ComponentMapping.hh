@@ -51,8 +51,8 @@ broadcast(MachineType type)
 }
 
 inline MachineID
-mapAddressToRange(
-    Addr addr, MachineType type, int low_bit, int num_bits, int cluster_id = 0)
+mapAddressToRange(Addr addr, MachineType type, int low_bit, int num_bits,
+                  int cluster_id = 0)
 {
     MachineID mach = {type, 0};
     if (num_bits == 0)

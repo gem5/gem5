@@ -170,7 +170,7 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
 {
     if (isFault()) {
         minorInst(named_object, "id=F;%s addr=0x%x fault=\"%s\"\n", id,
-            pc ? pc->instAddr() : 0, fault->name());
+                  pc ? pc->instAddr() : 0, fault->name());
     } else {
         unsigned int num_src_regs = staticInst->numSrcRegs();
         unsigned int num_dest_regs = staticInst->numDestRegs();
@@ -209,14 +209,14 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
         staticInst->printFlags(flags, " ");
 
         minorInst(named_object,
-            "id=%s addr=0x%x inst=\"%s\" class=%s"
-            " flags=\"%s\"%s%s\n",
-            id, pc ? pc->instAddr() : 0,
-            (staticInst->opClass() == No_OpClass ?
-                    "(invalid)" :
-                    staticInst->disassemble(0, NULL)),
-            enums::OpClassStrings[staticInst->opClass()], flags.str(),
-            regs_str.str(), (predictedTaken ? " predictedTaken" : ""));
+                  "id=%s addr=0x%x inst=\"%s\" class=%s"
+                  " flags=\"%s\"%s%s\n",
+                  id, pc ? pc->instAddr() : 0,
+                  (staticInst->opClass() == No_OpClass ?
+                       "(invalid)" :
+                       staticInst->disassemble(0, NULL)),
+                  enums::OpClassStrings[staticInst->opClass()], flags.str(),
+                  regs_str.str(), (predictedTaken ? " predictedTaken" : ""));
     }
 }
 

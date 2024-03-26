@@ -47,25 +47,25 @@
 
 namespace gem5
 {
-SectorTags::SectorTags(const SectorTagsParams &p) :
-    BaseTags(p),
-    allocAssoc(p.assoc),
-    sequentialAccess(p.sequential_access),
-    replacementPolicy(p.replacement_policy),
-    numBlocksPerSector(p.num_blocks_per_sector),
-    numSectors(numBlocks / numBlocksPerSector),
-    sectorShift(floorLog2(blkSize)),
-    sectorMask(numBlocksPerSector - 1),
-    sectorStats(stats, *this)
+SectorTags::SectorTags(const SectorTagsParams &p)
+    : BaseTags(p),
+      allocAssoc(p.assoc),
+      sequentialAccess(p.sequential_access),
+      replacementPolicy(p.replacement_policy),
+      numBlocksPerSector(p.num_blocks_per_sector),
+      numSectors(numBlocks / numBlocksPerSector),
+      sectorShift(floorLog2(blkSize)),
+      sectorMask(numBlocksPerSector - 1),
+      sectorStats(stats, *this)
 {
     // There must be a indexing policy
     fatal_if(!p.indexing_policy, "An indexing policy is required");
 
     // Check parameters
     fatal_if(blkSize < 4 || !isPowerOf2(blkSize),
-        "Block size must be at least 4 and a power of 2");
+             "Block size must be at least 4 and a power of 2");
     fatal_if(!isPowerOf2(numBlocksPerSector),
-        "# of blocks per sector must be non-zero and a power of 2");
+             "# of blocks per sector must be non-zero and a power of 2");
 }
 
 void
@@ -274,7 +274,7 @@ SectorTags::findBlock(Addr addr, bool is_secure) const
 
 CacheBlk *
 SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
-    std::vector<CacheBlk *> &evict_blks)
+                       std::vector<CacheBlk *> &evict_blks)
 {
     // Get possible entries to be victimized
     const std::vector<ReplaceableEntry *> sector_entries =
@@ -338,12 +338,12 @@ SectorTags::regenerateBlkAddr(const CacheBlk *blk) const
     return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
 }
 
-SectorTags::SectorTagsStats::SectorTagsStats(
-    BaseTagStats &base_group, SectorTags &_tags) :
-    statistics::Group(&base_group),
-    tags(_tags),
-    ADD_STAT(evictionsReplacement, statistics::units::Count::get(),
-        "Number of blocks evicted due to a replacement")
+SectorTags::SectorTagsStats::SectorTagsStats(BaseTagStats &base_group,
+                                             SectorTags &_tags)
+    : statistics::Group(&base_group),
+      tags(_tags),
+      ADD_STAT(evictionsReplacement, statistics::units::Count::get(),
+               "Number of blocks evicted due to a replacement")
 {}
 
 void

@@ -85,8 +85,8 @@ class SharedMemoryClient
     std::string server_path_;
 };
 
-inline SharedMemoryClient::SharedMemoryClient(const std::string &server_path) :
-    server_path_(server_path)
+inline SharedMemoryClient::SharedMemoryClient(const std::string &server_path)
+    : server_path_(server_path)
 {}
 
 inline void *
@@ -161,14 +161,14 @@ SharedMemoryClient::GetConnection()
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sun_family = AF_UNIX;
     strncpy(serv_addr.sun_path, server_path_.c_str(),
-        sizeof(serv_addr.sun_path) - 1);
+            sizeof(serv_addr.sun_path) - 1);
     if (strlen(serv_addr.sun_path) != server_path_.size()) {
         warnx("server address truncated");
         close(sock_fd);
         return -1;
     }
     if (connect(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),
-            sizeof(serv_addr)) < 0) {
+                sizeof(serv_addr)) < 0) {
         warn("connect failed");
         close(sock_fd);
         return -1;
@@ -177,8 +177,8 @@ SharedMemoryClient::GetConnection()
 }
 
 inline bool
-SharedMemoryClient::SendGetPhysRangeRequest(
-    int sock_fd, uint64_t start, uint64_t end)
+SharedMemoryClient::SendGetPhysRangeRequest(int sock_fd, uint64_t start,
+                                            uint64_t end)
 {
     int req_type = RequestType::kGetPhysRange;
     struct
@@ -191,8 +191,8 @@ SharedMemoryClient::SendGetPhysRangeRequest(
 }
 
 inline bool
-SharedMemoryClient::RecvGetPhysRangeResponse(
-    int sock_fd, int *ptr_fd, off_t *ptr_offset)
+SharedMemoryClient::RecvGetPhysRangeResponse(int sock_fd, int *ptr_fd,
+                                             off_t *ptr_offset)
 {
     if (!ptr_fd || !ptr_offset) {
         return false;
@@ -232,8 +232,8 @@ SharedMemoryClient::RecvGetPhysRangeResponse(
 inline void *
 SharedMemoryClient::DoMap(int shm_fd, off_t shm_offset, size_t size)
 {
-    void *mem = mmap(
-        nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, shm_offset);
+    void *mem = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd,
+                     shm_offset);
     if (mem == MAP_FAILED) {
         warn("mmap failed");
         return nullptr;

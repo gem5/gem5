@@ -53,8 +53,8 @@ class ISA : public BaseISA
 {
   private:
     RegVal regVal[misc_reg::NumRegs];
-    void updateHandyM5Reg(
-        Efer efer, CR0 cr0, SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
+    void updateHandyM5Reg(Efer efer, CR0 cr0, SegAttr csAttr, SegAttr ssAttr,
+                          RFLAGS rflags);
 
     std::string vendorString;
 

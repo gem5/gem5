@@ -44,16 +44,16 @@ namespace gem5
 const DisplayTimings DisplayTimings::vga(640, 480, 48, 96, 16, 33, 2, 10);
 
 DisplayTimings::DisplayTimings(unsigned _width, unsigned _height, unsigned hbp,
-    unsigned h_sync, unsigned hfp, unsigned vbp, unsigned v_sync,
-    unsigned vfp) :
-    width(_width),
-    height(_height),
-    hBackPorch(hbp),
-    hFrontPorch(hfp),
-    hSync(h_sync),
-    vBackPorch(vbp),
-    vFrontPorch(vfp),
-    vSync(v_sync)
+                               unsigned h_sync, unsigned hfp, unsigned vbp,
+                               unsigned v_sync, unsigned vfp)
+    : width(_width),
+      height(_height),
+      hBackPorch(hbp),
+      hFrontPorch(hfp),
+      hSync(h_sync),
+      vBackPorch(vbp),
+      vFrontPorch(vfp),
+      vSync(v_sync)
 {}
 
 void
@@ -86,23 +86,23 @@ DisplayTimings::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(vSync);
 }
 
-BasePixelPump::BasePixelPump(
-    EventManager &em, ClockDomain &pxl_clk, unsigned pixel_chunk) :
-    EventManager(em),
-    Clocked(pxl_clk),
-    Serializable(),
-    pixelChunk(pixel_chunk),
-    pixelEvents(),
-    evVSyncBegin("evVSyncBegin", this, &BasePixelPump::onVSyncBegin),
-    evVSyncEnd("evVSyncEnd", this, &BasePixelPump::onVSyncEnd),
-    evHSyncBegin("evHSyncBegin", this, &BasePixelPump::onHSyncBegin),
-    evHSyncEnd("evHSyncEnd", this, &BasePixelPump::onHSyncEnd),
-    evBeginLine("evBeginLine", this, &BasePixelPump::beginLine),
-    evRenderPixels("evRenderPixels", this, &BasePixelPump::renderPixels),
-    _timings(DisplayTimings::vga),
-    line(0),
-    _posX(0),
-    _underrun(false)
+BasePixelPump::BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
+                             unsigned pixel_chunk)
+    : EventManager(em),
+      Clocked(pxl_clk),
+      Serializable(),
+      pixelChunk(pixel_chunk),
+      pixelEvents(),
+      evVSyncBegin("evVSyncBegin", this, &BasePixelPump::onVSyncBegin),
+      evVSyncEnd("evVSyncEnd", this, &BasePixelPump::onVSyncEnd),
+      evHSyncBegin("evHSyncBegin", this, &BasePixelPump::onHSyncBegin),
+      evHSyncEnd("evHSyncEnd", this, &BasePixelPump::onHSyncEnd),
+      evBeginLine("evBeginLine", this, &BasePixelPump::beginLine),
+      evRenderPixels("evRenderPixels", this, &BasePixelPump::renderPixels),
+      _timings(DisplayTimings::vga),
+      line(0),
+      _posX(0),
+      _underrun(false)
 {}
 
 BasePixelPump::~BasePixelPump() {}
@@ -226,7 +226,7 @@ BasePixelPump::renderPixels()
     for (; _posX < x_end && !_underrun; ++_posX) {
         if (!nextPixel(pixel)) {
             warn("Input buffer underrun in BasePixelPump (%u, %u)\n", _posX,
-                pos_y);
+                 pos_y);
             _underrun = true;
             onUnderrun(_posX, pos_y);
             pixel = underrun_pixel;
@@ -286,18 +286,18 @@ BasePixelPump::renderLine()
 
     auto pixel_it = fb.pixels.begin() + _width * pos_y;
     panic_if(nextLine(pixel_it, _width) != _width,
-        "Unexpected underrun in BasePixelPump (%u, %u)", _width, pos_y);
+             "Unexpected underrun in BasePixelPump (%u, %u)", _width, pos_y);
 }
 
-BasePixelPump::PixelEvent::PixelEvent(
-    const char *name, BasePixelPump *_parent, CallbackType _func) :
-    Event(),
-    Drainable(),
-    _name(name),
-    parent(*_parent),
-    func(_func),
-    suspended(false),
-    relativeTick(0)
+BasePixelPump::PixelEvent::PixelEvent(const char *name, BasePixelPump *_parent,
+                                      CallbackType _func)
+    : Event(),
+      Drainable(),
+      _name(name),
+      parent(*_parent),
+      func(_func),
+      suspended(false),
+      relativeTick(0)
 {
     parent.pixelEvents.push_back(this);
 }

@@ -69,15 +69,15 @@ class SDMAEngine : public DmaVirtDevice
         Addr _mqd_addr = 0;
 
       public:
-        SDMAQueue() :
-            _rptr(0),
-            _wptr(0),
-            _valid(false),
-            _processing(false),
-            _parent(nullptr),
-            _ib(nullptr),
-            _type(SDMAGfx),
-            _mqd(nullptr)
+        SDMAQueue()
+            : _rptr(0),
+              _wptr(0),
+              _valid(false),
+              _processing(false),
+              _parent(nullptr),
+              _ib(nullptr),
+              _type(SDMAGfx),
+              _mqd(nullptr)
         {}
 
         Addr
@@ -359,20 +359,20 @@ class SDMAEngine : public DmaVirtDevice
     void fence(SDMAQueue *q, sdmaFence *pkt);
     void fenceDone(SDMAQueue *q, sdmaFence *pkt);
     void trap(SDMAQueue *q, sdmaTrap *pkt);
-    void srbmWrite(
-        SDMAQueue *q, sdmaSRBMWriteHeader *header, sdmaSRBMWrite *pkt);
-    void pollRegMem(
-        SDMAQueue *q, sdmaPollRegMemHeader *header, sdmaPollRegMem *pkt);
+    void srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
+                   sdmaSRBMWrite *pkt);
+    void pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
+                    sdmaPollRegMem *pkt);
     void pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
-        sdmaPollRegMem *pkt, uint32_t dma_buffer, int count);
+                        sdmaPollRegMem *pkt, uint32_t dma_buffer, int count);
     bool pollRegMemFunc(uint32_t value, uint32_t reference, uint32_t func);
     void ptePde(SDMAQueue *q, sdmaPtePde *pkt);
     void ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer);
     void atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt);
     void atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
-        uint64_t *dmaBuffer);
+                    uint64_t *dmaBuffer);
     void atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
-        uint64_t *dmaBuffer);
+                    uint64_t *dmaBuffer);
     void constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header);
     void constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data);
 

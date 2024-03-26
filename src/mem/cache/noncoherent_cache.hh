@@ -68,10 +68,10 @@ class NoncoherentCache : public BaseCache
 {
   protected:
     bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-        PacketList &writebacks) override;
+                PacketList &writebacks) override;
 
     void handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
-        Tick request_time) override;
+                             Tick request_time) override;
 
     void recvTimingReq(PacketPtr pkt) override;
 
@@ -79,8 +79,8 @@ class NoncoherentCache : public BaseCache
 
     void doWritebacksAtomic(PacketList &writebacks) override;
 
-    void serviceMSHRTargets(
-        MSHR *mshr, const PacketPtr pkt, CacheBlk *blk) override;
+    void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
+                            CacheBlk *blk) override;
 
     void recvTimingResp(PacketPtr pkt) override;
 
@@ -96,8 +96,8 @@ class NoncoherentCache : public BaseCache
         panic("Unexpected timing snoop response %s", pkt->print());
     }
 
-    Cycles handleAtomicReqMiss(
-        PacketPtr pkt, CacheBlk *&blk, PacketList &writebacks) override;
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
+                               PacketList &writebacks) override;
 
     Tick recvAtomic(PacketPtr pkt) override;
 
@@ -110,8 +110,8 @@ class NoncoherentCache : public BaseCache
     void functionalAccess(PacketPtr pkt, bool from_cpu_side) override;
 
     void satisfyRequest(PacketPtr pkt, CacheBlk *blk,
-        bool deferred_response = false,
-        bool pending_downgrade = false) override;
+                        bool deferred_response = false,
+                        bool pending_downgrade = false) override;
 
     /*
      * Creates a new packet with the request to be send to the memory
@@ -120,7 +120,8 @@ class NoncoherentCache : public BaseCache
      * needs_writeble parameter is ignored.
      */
     PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-        bool needs_writable, bool is_whole_line_write) const override;
+                               bool needs_writable,
+                               bool is_whole_line_write) const override;
 
     [[nodiscard]] PacketPtr evictBlock(CacheBlk *blk) override;
 

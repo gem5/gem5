@@ -47,31 +47,34 @@
 namespace gem5
 {
 DramGen::DramGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-    Addr start_addr, Addr end_addr, Addr _blocksize, Addr cacheline_size,
-    Tick min_period, Tick max_period, uint8_t read_percent, Addr data_limit,
-    unsigned int num_seq_pkts, unsigned int page_size,
-    unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-    enums::AddrMap addr_mapping, unsigned int nbr_of_ranks) :
-    RandomGen(obj, requestor_id, _duration, start_addr, end_addr, _blocksize,
-        cacheline_size, min_period, max_period, read_percent, data_limit),
-    numSeqPkts(num_seq_pkts),
-    countNumSeqPkts(0),
-    addr(0),
-    isRead(true),
-    pageSize(page_size),
-    pageBits(floorLog2(page_size / _blocksize)),
-    bankBits(floorLog2(nbr_of_banks_DRAM)),
-    blockBits(floorLog2(_blocksize)),
-    nbrOfBanksDRAM(nbr_of_banks_DRAM),
-    nbrOfBanksUtil(nbr_of_banks_util),
-    addrMapping(addr_mapping),
-    rankBits(floorLog2(nbr_of_ranks)),
-    nbrOfRanks(nbr_of_ranks)
+                 Addr start_addr, Addr end_addr, Addr _blocksize,
+                 Addr cacheline_size, Tick min_period, Tick max_period,
+                 uint8_t read_percent, Addr data_limit,
+                 unsigned int num_seq_pkts, unsigned int page_size,
+                 unsigned int nbr_of_banks_DRAM,
+                 unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
+                 unsigned int nbr_of_ranks)
+    : RandomGen(obj, requestor_id, _duration, start_addr, end_addr, _blocksize,
+                cacheline_size, min_period, max_period, read_percent,
+                data_limit),
+      numSeqPkts(num_seq_pkts),
+      countNumSeqPkts(0),
+      addr(0),
+      isRead(true),
+      pageSize(page_size),
+      pageBits(floorLog2(page_size / _blocksize)),
+      bankBits(floorLog2(nbr_of_banks_DRAM)),
+      blockBits(floorLog2(_blocksize)),
+      nbrOfBanksDRAM(nbr_of_banks_DRAM),
+      nbrOfBanksUtil(nbr_of_banks_util),
+      addrMapping(addr_mapping),
+      rankBits(floorLog2(nbr_of_ranks)),
+      nbrOfRanks(nbr_of_ranks)
 {
     if (nbr_of_banks_util > nbr_of_banks_DRAM)
         fatal("Attempting to use more banks (%d) than "
               "what is available (%d)\n",
-            nbr_of_banks_util, nbr_of_banks_DRAM);
+              nbr_of_banks_util, nbr_of_banks_DRAM);
 }
 
 PacketPtr
@@ -83,9 +86,8 @@ DramGen::getNextPacket()
         countNumSeqPkts = numSeqPkts;
 
         // choose if we generate a read or a write here
-        isRead =
-            readPercent != 0 &&
-            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+        isRead = readPercent != 0 && (readPercent == 100 ||
+                                      random_mt.random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
                (readPercent == 100 && isRead) || readPercent != 100);
@@ -115,21 +117,21 @@ DramGen::getNextPacket()
             // Explicity increment the column bits
             unsigned int new_col =
                 ((addr / blocksize / nbrOfBanksDRAM / nbrOfRanks) %
-                    (pageSize / blocksize)) +
+                 (pageSize / blocksize)) +
                 1;
             replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
-                blockBits + bankBits + rankBits, new_col);
+                        blockBits + bankBits + rankBits, new_col);
         }
     }
 
     DPRINTF(TrafficGen,
-        "DramGen::getNextPacket: %c to addr %x, "
-        "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
-        isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
+            "DramGen::getNextPacket: %c to addr %x, "
+            "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
+            isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 
     // create a new request packet
-    PacketPtr pkt = getPacket(
-        addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    PacketPtr pkt = getPacket(addr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // add the amount of data manipulated to the total
     dataManipulated += blocksize;
@@ -171,20 +173,20 @@ DramGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     if (addrMapping == enums::RoRaBaCoCh || addrMapping == enums::RoRaBaChCo) {
         // Block bits, then page bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + pageBits + bankBits - 1,
-            blockBits + pageBits, new_bank);
+                    blockBits + pageBits, new_bank);
         replaceBits(addr, blockBits + pageBits - 1, blockBits, new_col);
         if (rankBits != 0) {
             replaceBits(addr, blockBits + pageBits + bankBits + rankBits - 1,
-                blockBits + pageBits + bankBits, new_rank);
+                        blockBits + pageBits + bankBits, new_rank);
         }
     } else if (addrMapping == enums::RoCoRaBaCh) {
         // Block bits, then bank bits, then rank bits, then page bits
         replaceBits(addr, blockBits + bankBits - 1, blockBits, new_bank);
         replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
-            blockBits + bankBits + rankBits, new_col);
+                    blockBits + bankBits + rankBits, new_col);
         if (rankBits != 0) {
             replaceBits(addr, blockBits + bankBits + rankBits - 1,
-                blockBits + bankBits, new_rank);
+                        blockBits + bankBits, new_rank);
         }
     }
 }

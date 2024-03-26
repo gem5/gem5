@@ -30,51 +30,50 @@
 #define __GEM5_M5OP_H__
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stdint.h>
 
 #include <gem5/asm/generic/m5ops.h>
 
-    void m5_arm(uint64_t address);
-    void m5_quiesce(void);
-    void m5_quiesce_ns(uint64_t ns);
-    void m5_quiesce_cycle(uint64_t cycles);
-    uint64_t m5_quiesce_time(void);
-    uint64_t m5_rpns();
-    void m5_wake_cpu(uint64_t cpuid);
+void m5_arm(uint64_t address);
+void m5_quiesce(void);
+void m5_quiesce_ns(uint64_t ns);
+void m5_quiesce_cycle(uint64_t cycles);
+uint64_t m5_quiesce_time(void);
+uint64_t m5_rpns();
+void m5_wake_cpu(uint64_t cpuid);
 
-    void m5_exit(uint64_t ns_delay);
-    void m5_fail(uint64_t ns_delay, uint64_t code);
-    // m5_sum is for sanity checking the gem5 op interface.
-    unsigned m5_sum(unsigned a, unsigned b, unsigned c, unsigned d, unsigned e,
-        unsigned f);
-    uint64_t m5_init_param(uint64_t key_str1, uint64_t key_str2);
-    void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
-    void m5_reset_stats(uint64_t ns_delay, uint64_t ns_period);
-    void m5_dump_stats(uint64_t ns_delay, uint64_t ns_period);
-    void m5_dump_reset_stats(uint64_t ns_delay, uint64_t ns_period);
-    uint64_t m5_read_file(void *buffer, uint64_t len, uint64_t offset);
-    uint64_t m5_write_file(
-        void *buffer, uint64_t len, uint64_t offset, const char *filename);
-    void m5_debug_break(void);
-    void m5_switch_cpu(void);
-    void m5_dist_toggle_sync(void);
-    void m5_add_symbol(uint64_t addr, const char *symbol);
-    void m5_load_symbol();
-    void m5_panic(void);
-    void m5_work_begin(uint64_t workid, uint64_t threadid);
-    void m5_work_end(uint64_t workid, uint64_t threadid);
+void m5_exit(uint64_t ns_delay);
+void m5_fail(uint64_t ns_delay, uint64_t code);
+// m5_sum is for sanity checking the gem5 op interface.
+unsigned m5_sum(unsigned a, unsigned b, unsigned c, unsigned d, unsigned e,
+                unsigned f);
+uint64_t m5_init_param(uint64_t key_str1, uint64_t key_str2);
+void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
+void m5_reset_stats(uint64_t ns_delay, uint64_t ns_period);
+void m5_dump_stats(uint64_t ns_delay, uint64_t ns_period);
+void m5_dump_reset_stats(uint64_t ns_delay, uint64_t ns_period);
+uint64_t m5_read_file(void *buffer, uint64_t len, uint64_t offset);
+uint64_t m5_write_file(void *buffer, uint64_t len, uint64_t offset,
+                       const char *filename);
+void m5_debug_break(void);
+void m5_switch_cpu(void);
+void m5_dist_toggle_sync(void);
+void m5_add_symbol(uint64_t addr, const char *symbol);
+void m5_load_symbol();
+void m5_panic(void);
+void m5_work_begin(uint64_t workid, uint64_t threadid);
+void m5_work_end(uint64_t workid, uint64_t threadid);
 
-    /*
-     * Send a very generic poke to the workload so it can do something. It's up
-     * to the workload to know what information to look for to interpret an
-     * event, such as what PC it came from, what register values are, or the
-     * context of the workload itself (is this SE mode? which OS is running?).
-     */
-    void m5_workload();
+/*
+ * Send a very generic poke to the workload so it can do something. It's up
+ * to the workload to know what information to look for to interpret an
+ * event, such as what PC it came from, what register values are, or the
+ * context of the workload itself (is this SE mode? which OS is running?).
+ */
+void m5_workload();
 
 /*
  * Create _addr and _semi versions all declarations, e.g. m5_exit_addr and
@@ -85,10 +84,10 @@ extern "C"
  * does not have _semi, but we felt that ifdefing them out could cause more
  * trouble tham leaving them in.
  */
-#define M5OP(name, func) \
-    __typeof__(name) M5OP_MERGE_TOKENS(name, _addr); \
+#define M5OP(name, func)                                                      \
+    __typeof__(name) M5OP_MERGE_TOKENS(name, _addr);                          \
     __typeof__(name) M5OP_MERGE_TOKENS(name, _semi);
-    M5OP_FOREACH
+M5OP_FOREACH
 #undef M5OP
 
 #ifdef __cplusplus

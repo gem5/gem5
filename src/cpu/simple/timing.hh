@@ -90,8 +90,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class SplitFragmentSenderState : public Packet::SenderState
     {
       public:
-        SplitFragmentSenderState(PacketPtr _bigPkt, int _index) :
-            bigPkt(_bigPkt), index(_index)
+        SplitFragmentSenderState(PacketPtr _bigPkt, int _index)
+            : bigPkt(_bigPkt), index(_index)
         {}
         PacketPtr bigPkt;
         int index;
@@ -122,7 +122,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         void
         finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Mode mode)
+               BaseMMU::Mode mode)
         {
             cpu->sendFetch(fault, req, tc);
         }
@@ -130,17 +130,17 @@ class TimingSimpleCPU : public BaseSimpleCPU
     FetchTranslation fetchTranslation;
 
     void threadSnoop(PacketPtr pkt, ThreadID sender);
-    void sendData(
-        const RequestPtr &req, uint8_t *data, uint64_t *res, bool read);
+    void sendData(const RequestPtr &req, uint8_t *data, uint64_t *res,
+                  bool read);
     void sendSplitData(const RequestPtr &req1, const RequestPtr &req2,
-        const RequestPtr &req, uint8_t *data, bool read);
+                       const RequestPtr &req, uint8_t *data, bool read);
 
     void translationFault(const Fault &fault);
 
     PacketPtr buildPacket(const RequestPtr &req, bool read);
     void buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
-        const RequestPtr &req1, const RequestPtr &req2, const RequestPtr &req,
-        uint8_t *data, bool read);
+                          const RequestPtr &req1, const RequestPtr &req2,
+                          const RequestPtr &req, uint8_t *data, bool read);
 
     bool handleReadPacket(PacketPtr pkt);
     // This function always implicitly uses dcache_pkt.
@@ -155,10 +155,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class TimingCPUPort : public RequestPort
     {
       public:
-        TimingCPUPort(const std::string &_name, TimingSimpleCPU *_cpu) :
-            RequestPort(_name),
-            cpu(_cpu),
-            retryRespEvent([this] { sendRetryResp(); }, name())
+        TimingCPUPort(const std::string &_name, TimingSimpleCPU *_cpu)
+            : RequestPort(_name),
+              cpu(_cpu),
+              retryRespEvent([this] { sendRetryResp(); }, name())
         {}
 
       protected:
@@ -184,8 +184,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class IcachePort : public TimingCPUPort
     {
       public:
-        IcachePort(TimingSimpleCPU *_cpu) :
-            TimingCPUPort(_cpu->name() + ".icache_port", _cpu), tickEvent(_cpu)
+        IcachePort(TimingSimpleCPU *_cpu)
+            : TimingCPUPort(_cpu->name() + ".icache_port", _cpu),
+              tickEvent(_cpu)
         {}
 
       protected:
@@ -210,8 +211,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class DcachePort : public TimingCPUPort
     {
       public:
-        DcachePort(TimingSimpleCPU *_cpu) :
-            TimingCPUPort(_cpu->name() + ".dcache_port", _cpu), tickEvent(_cpu)
+        DcachePort(TimingSimpleCPU *_cpu)
+            : TimingCPUPort(_cpu->name() + ".dcache_port", _cpu),
+              tickEvent(_cpu)
         {
             cacheBlockMask = ~(cpu->cacheLineSize() - 1);
         }
@@ -286,19 +288,21 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
+    Fault initiateMemRead(
+        Addr addr, unsigned size, Request::Flags flags,
         const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
-    Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-        Request::Flags flags, uint64_t *res,
+    Fault writeMem(
+        uint8_t *data, unsigned size, Addr addr, Request::Flags flags,
+        uint64_t *res,
         const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-        AtomicOpFunctorPtr amo_op) override;
+                         AtomicOpFunctorPtr amo_op) override;
 
     void fetch();
-    void sendFetch(
-        const Fault &fault, const RequestPtr &req, ThreadContext *tc);
+    void sendFetch(const Fault &fault, const RequestPtr &req,
+                   ThreadContext *tc);
     void completeIfetch(PacketPtr);
     void completeDataAccess(PacketPtr pkt);
     void advanceInst(const Fault &fault);
@@ -330,8 +334,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     /** hardware transactional memory & TLBI operations **/
     Fault initiateMemMgmtCmd(Request::Flags flags) override;
 
-    void htmSendAbortSignal(
-        ThreadID tid, uint64_t htm_uid, HtmFailureFaultCause) override;
+    void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                            HtmFailureFaultCause) override;
 
   private:
     EventFunctionWrapper fetchEvent;

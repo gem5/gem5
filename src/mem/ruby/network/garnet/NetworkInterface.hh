@@ -64,12 +64,12 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
-        SwitchID router_id, uint32_t consumerVcs);
+                    SwitchID router_id, uint32_t consumerVcs);
 
     void dequeueCallback();
     void wakeup();
     void addNode(std::vector<MessageBuffer *> &inNode,
-        std::vector<MessageBuffer *> &outNode);
+                 std::vector<MessageBuffer *> &outNode);
 
     void print(std::ostream &out) const;
     int get_vnet(int vc);

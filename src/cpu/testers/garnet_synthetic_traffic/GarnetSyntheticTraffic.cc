@@ -71,26 +71,26 @@ GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
     numPacketsSent++;
 }
 
-GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p) :
-    ClockedObject(p),
-    tickEvent([this] { tick(); }, "GarnetSyntheticTraffic tick", false,
-        Event::CPU_Tick_Pri),
-    cachePort("GarnetSyntheticTraffic", this),
-    retryPkt(NULL),
-    size(p.memory_size),
-    blockSizeBits(p.block_offset),
-    numDestinations(p.num_dest),
-    simCycles(p.sim_cycles),
-    numPacketsMax(p.num_packets_max),
-    numPacketsSent(0),
-    singleSender(p.single_sender),
-    singleDest(p.single_dest),
-    trafficType(p.traffic_type),
-    injRate(p.inj_rate),
-    injVnet(p.inj_vnet),
-    precision(p.precision),
-    responseLimit(p.response_limit),
-    requestorId(p.system->getRequestorId(this))
+GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p)
+    : ClockedObject(p),
+      tickEvent([this] { tick(); }, "GarnetSyntheticTraffic tick", false,
+                Event::CPU_Tick_Pri),
+      cachePort("GarnetSyntheticTraffic", this),
+      retryPkt(NULL),
+      size(p.memory_size),
+      blockSizeBits(p.block_offset),
+      numDestinations(p.num_dest),
+      simCycles(p.sim_cycles),
+      numPacketsMax(p.num_packets_max),
+      numPacketsSent(0),
+      singleSender(p.single_sender),
+      singleDest(p.single_dest),
+      trafficType(p.traffic_type),
+      injRate(p.inj_rate),
+      injVnet(p.inj_vnet),
+      precision(p.precision),
+      responseLimit(p.response_limit),
+      requestorId(p.system->getRequestorId(this))
 {
     // set up counters
     noResponseCycles = 0;
@@ -104,7 +104,7 @@ GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p) :
 
     id = TESTER_NETWORK++;
     DPRINTF(GarnetSyntheticTraffic,
-        "Config Created: Name = %s , and id = %d\n", name(), id);
+            "Config Created: Name = %s , and id = %d\n", name(), id);
 }
 
 Port &
@@ -126,8 +126,8 @@ void
 GarnetSyntheticTraffic::completeRequest(PacketPtr pkt)
 {
     DPRINTF(GarnetSyntheticTraffic,
-        "Completed injection of %s packet for address %x\n",
-        pkt->isWrite() ? "write" : "read\n", pkt->req->getPaddr());
+            "Completed injection of %s packet for address %x\n",
+            pkt->isWrite() ? "write" : "read\n", pkt->req->getPaddr());
 
     assert(pkt->isResponse());
     noResponseCycles = 0;
@@ -289,8 +289,8 @@ GarnetSyntheticTraffic::generatePkt()
         // generate packet for virtual network 1
         requestType = MemCmd::ReadReq;
         flags.set(Request::INST_FETCH);
-        req = std::make_shared<Request>(
-            0x0, access_size, flags, requestorId, 0x0, 0);
+        req = std::make_shared<Request>(0x0, access_size, flags, requestorId,
+                                        0x0, 0);
         req->setPaddr(paddr);
     } else { // if (injReqType == 2)
         // generate packet for virtual network 2
@@ -305,8 +305,8 @@ GarnetSyntheticTraffic::generatePkt()
     // We just do timing simulation of the network
 
     DPRINTF(GarnetSyntheticTraffic,
-        "Generated packet with destination %d, embedded in address %x\n",
-        destination, req->getPaddr());
+            "Generated packet with destination %d, embedded in address %x\n",
+            destination, req->getPaddr());
 
     PacketPtr pkt = new Packet(req, requestType);
     pkt->dataDynamic(new uint8_t[req->getSize()]);

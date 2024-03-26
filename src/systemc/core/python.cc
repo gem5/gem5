@@ -58,8 +58,8 @@ gem5::EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 } // anonymous namespace
 
-PythonInitFunc::PythonInitFunc(Callback run) :
-    callback(run), next(firstInitFunc())
+PythonInitFunc::PythonInitFunc(Callback run)
+    : callback(run), next(firstInitFunc())
 {
     firstInitFunc() = this;
 

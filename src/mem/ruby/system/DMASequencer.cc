@@ -53,20 +53,21 @@ namespace gem5
 namespace ruby
 {
 DMARequest::DMARequest(uint64_t start_paddr, int len, bool write,
-    int bytes_completed, int bytes_issued, uint8_t *data, PacketPtr pkt) :
-    start_paddr(start_paddr),
-    len(len),
-    write(write),
-    bytes_completed(bytes_completed),
-    bytes_issued(bytes_issued),
-    data(data),
-    pkt(pkt)
+                       int bytes_completed, int bytes_issued, uint8_t *data,
+                       PacketPtr pkt)
+    : start_paddr(start_paddr),
+      len(len),
+      write(write),
+      bytes_completed(bytes_completed),
+      bytes_issued(bytes_issued),
+      data(data),
+      pkt(pkt)
 {}
 
-DMASequencer::DMASequencer(const Params &p) :
-    RubyPort(p),
-    m_outstanding_count(0),
-    m_max_outstanding_requests(p.max_outstanding_requests)
+DMASequencer::DMASequencer(const Params &p)
+    : RubyPort(p),
+      m_outstanding_count(0),
+      m_max_outstanding_requests(p.max_outstanding_requests)
 {}
 
 void
@@ -93,8 +94,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
 
     assert(m_outstanding_count < m_max_outstanding_requests);
     Addr line_addr = makeLineAddress(paddr);
-    auto emplace_pair = m_RequestTable.emplace(std::piecewise_construct,
-        std::forward_as_tuple(line_addr),
+    auto emplace_pair = m_RequestTable.emplace(
+        std::piecewise_construct, std::forward_as_tuple(line_addr),
         std::forward_as_tuple(paddr, len, write, 0, 0, data, pkt));
     DMARequest &active_request = emplace_pair.first->second;
 
@@ -129,8 +130,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
         }
 
         std::vector<std::pair<int, AtomicOpFunctor *>> atomic_ops;
-        std::pair<int, AtomicOpFunctor *> atomic_op(
-            atomic_offset, pkt->getAtomicOp());
+        std::pair<int, AtomicOpFunctor *> atomic_op(atomic_offset,
+                                                    pkt->getAtomicOp());
 
         atomic_ops.emplace_back(atomic_op);
         msg->getwriteMask().setAtomicOps(atomic_ops);
@@ -174,7 +175,7 @@ DMASequencer::issueNext(const Addr &address)
     active_request.bytes_completed = active_request.bytes_issued;
     if (active_request.len == active_request.bytes_completed) {
         DPRINTF(RubyDma, "DMA request completed: addr %p, size %d\n", address,
-            active_request.len);
+                active_request.len);
         m_outstanding_count--;
         PacketPtr pkt = active_request.pkt;
         m_RequestTable.erase(i);
@@ -208,9 +209,9 @@ DMASequencer::issueNext(const Addr &address)
     m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
     active_request.bytes_issued += msg->getLen();
     DPRINTF(RubyDma,
-        "DMA request bytes issued %d, bytes completed %d, total len %d\n",
-        active_request.bytes_issued, active_request.bytes_completed,
-        active_request.len);
+            "DMA request bytes issued %d, bytes completed %d, total len %d\n",
+            active_request.bytes_issued, active_request.bytes_completed,
+            active_request.len);
 }
 
 void
@@ -227,7 +228,7 @@ DMASequencer::dataCallback(const DataBlock &dblk, const Addr &address)
     assert(!active_request.write);
     if (active_request.data != NULL) {
         memcpy(&active_request.data[active_request.bytes_completed],
-            dblk.getData(offset, len), len);
+               dblk.getData(offset, len), len);
     }
     issueNext(address);
 }
@@ -250,7 +251,7 @@ DMASequencer::atomicCallback(const DataBlock &dblk, const Addr &address)
 
     int offset = active_request.start_paddr & m_data_block_mask;
     memcpy(pkt->getPtr<uint8_t>(), dblk.getData(offset, pkt->getSize()),
-        pkt->getSize());
+           pkt->getSize());
 
     ruby_hit_callback(pkt);
 
@@ -262,7 +263,7 @@ void
 DMASequencer::recordRequestType(DMASequencerRequestType requestType)
 {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
-        DMASequencerRequestType_to_string(requestType));
+            DMASequencerRequestType_to_string(requestType));
 }
 
 } // namespace ruby

@@ -522,7 +522,7 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         return it->second;
     } else {
         warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]", crn,
-            opc1, crm, opc2);
+             opc1, crm, opc2);
         return MISCREG_UNKNOWN;
     }
 }
@@ -676,7 +676,7 @@ snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
     int reg_as_int = static_cast<int>(reg);
     if (lookUpMiscReg[reg].info[MISCREG_BANKED]) {
         reg_as_int += (ArmSystem::haveEL(tc, EL3) &&
-                          !ArmSystem::highestELIs64(tc) && !ns) ?
+                       !ArmSystem::highestELIs64(tc) && !ns) ?
                           2 :
                           1;
     }
@@ -724,8 +724,8 @@ unflattenMiscReg(int reg)
 }
 
 Fault
-checkFaultAccessAArch64SysReg(
-    MiscRegIndex reg, CPSR cpsr, ThreadContext *tc, const MiscRegOp64 &inst)
+checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr, ThreadContext *tc,
+                              const MiscRegOp64 &inst)
 {
     return lookUpMiscReg[reg].checkFault(tc, inst, currEL(cpsr));
 }
@@ -1303,8 +1303,8 @@ fgtRegister(ThreadContext *tc)
  */
 template <bool read, auto r_bitfield>
 Fault
-faultFgtEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFgtEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool in_host = EL2Enabled(tc) && hcr.e2h && hcr.tge;
@@ -1323,8 +1323,8 @@ faultFgtEL0(
  */
 template <bool read, auto r_bitfield>
 Fault
-faultFgtEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFgtEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     if (fgtEnabled(tc) && fgtRegister<read>(tc).*r_bitfield) {
         return inst.generateTrap(EL2);
@@ -1340,8 +1340,8 @@ faultFgtEL1(
  */
 template <auto r_bitfield>
 Fault
-faultFgtInstEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFgtInstEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     if (fgtEnabled(tc) &&
         static_cast<HFGITR>(tc->readMiscReg(MISCREG_HFGITR_EL2)).*r_bitfield) {
@@ -1358,8 +1358,8 @@ faultFgtInstEL1(
  */
 template <auto g_bitfield>
 Fault
-faultHcrEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultHcrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     if (EL2Enabled(tc) && hcr.*g_bitfield) {
@@ -1378,8 +1378,8 @@ faultHcrEL1(
  */
 template <bool read, auto g_bitfield, auto r_bitfield>
 Fault
-faultHcrFgtEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultHcrFgtEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool in_host = EL2Enabled(tc) && hcr.e2h && hcr.tge;
@@ -1403,8 +1403,8 @@ faultHcrFgtEL0(
  */
 template <bool read, auto g_bitfield, auto r_bitfield>
 Fault
-faultHcrFgtEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultHcrFgtEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
@@ -1426,8 +1426,8 @@ faultHcrFgtEL1(
  */
 template <auto g_bitfield, auto r_bitfield>
 Fault
-faultHcrFgtInstEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultHcrFgtInstEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                   const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
@@ -1442,8 +1442,8 @@ faultHcrFgtInstEL1(
 }
 
 Fault
-faultSpEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSpEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+           const MiscRegOp64 &inst)
 {
     if (tc->readMiscReg(MISCREG_SPSEL) == 0)
         return inst.undefined();
@@ -1452,8 +1452,8 @@ faultSpEL0(
 }
 
 Fault
-faultDaif(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultDaif(const MiscRegLUTEntry &entry, ThreadContext *tc,
+          const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -1470,8 +1470,8 @@ faultDaif(
 }
 
 Fault
-faultDczvaEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultDczvaEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     if (!FullSystem)
         return NoFault;
@@ -1498,8 +1498,8 @@ faultDczvaEL0(
 }
 
 Fault
-faultCvacEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCvacEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
     const SCTLR sctlr2 = tc->readMiscReg(MISCREG_SCTLR_EL2);
@@ -1523,8 +1523,8 @@ faultCvacEL0(
 }
 
 Fault
-faultFpcrEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFpcrEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
@@ -1537,29 +1537,29 @@ faultFpcrEL0(
         if (el2_enabled && hcr.tge) {
             return inst.generateTrap(EL2, ExceptionClass::UNKNOWN, inst.iss());
         } else {
-            return inst.generateTrap(
-                EL1, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+            return inst.generateTrap(EL1, ExceptionClass::TRAPPED_SIMD_FP,
+                                     0x1E00000);
         }
     } else if (el2_enabled && in_host && cptr_el2.fpen != 0b11) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (el2_enabled && hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (el2_enabled && !hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(
-            EL3, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else {
         return NoFault;
     }
 }
 
 Fault
-faultFpcrEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFpcrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
@@ -1568,60 +1568,60 @@ faultFpcrEL1(
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
     if ((cpacr.fpen & 0b1) == 0b0) {
-        return inst.generateTrap(
-            EL1, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL1, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (el2_enabled && !hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (el2_enabled && hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(
-            EL3, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else {
         return NoFault;
     }
 }
 
 Fault
-faultFpcrEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFpcrEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
 
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     if (!hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(
-            EL2, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(
-            EL3, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else {
         return NoFault;
     }
 }
 
 Fault
-faultFpcrEL3(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFpcrEL3(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (cptr_el3.tfp) {
-        return inst.generateTrap(
-            EL3, ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SIMD_FP,
+                                 0x1E00000);
     } else {
         return NoFault;
     }
 }
 
 Fault
-faultPouEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultPouEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
     const SCTLR sctlr2 = tc->readMiscReg(MISCREG_SCTLR_EL2);
@@ -1649,8 +1649,8 @@ faultPouEL0(
 
 template <auto bitfield>
 Fault
-faultPouEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultPouEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
@@ -1669,8 +1669,8 @@ faultPouEL1(
 
 template <auto bitfield>
 Fault
-faultPouIsEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultPouIsEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
@@ -1688,8 +1688,8 @@ faultPouIsEL1(
 }
 
 Fault
-faultCtrEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCtrEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
     const SCTLR sctlr2 = tc->readMiscReg(MISCREG_SCTLR_EL2);
@@ -1715,8 +1715,8 @@ faultCtrEL0(
 }
 
 Fault
-faultMdccsrEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultMdccsrEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const DBGDS32 mdscr = tc->readMiscReg(MISCREG_MDSCR_EL1);
     const HDCR mdcr_el2 = tc->readMiscReg(MISCREG_MDCR_EL2);
@@ -1742,8 +1742,8 @@ faultMdccsrEL0(
 }
 
 Fault
-faultMdccsrEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultMdccsrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HDCR mdcr_el2 = tc->readMiscReg(MISCREG_MDCR_EL2);
     const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
@@ -1761,8 +1761,8 @@ faultMdccsrEL1(
 }
 
 Fault
-faultMdccsrEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultMdccsrEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && (mdcr_el3.tdcc || mdcr_el3.tda)) {
@@ -1773,8 +1773,8 @@ faultMdccsrEL2(
 }
 
 Fault
-faultDebugEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultDebugEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const HDCR mdcr_el2 = tc->readMiscReg(MISCREG_MDCR_EL2);
     const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
@@ -1790,8 +1790,8 @@ faultDebugEL1(
 }
 
 Fault
-faultDebugEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultDebugEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && mdcr_el3.tda) {
@@ -1802,8 +1802,8 @@ faultDebugEL2(
 }
 
 Fault
-faultHcrxEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultHcrxEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && !scr.hxen) {
@@ -1814,8 +1814,8 @@ faultHcrxEL2(
 }
 
 Fault
-faultZcrEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultZcrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const CPACR cpacr_el1 = tc->readMiscReg(MISCREG_CPACR_EL1);
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
@@ -1837,8 +1837,8 @@ faultZcrEL1(
 }
 
 Fault
-faultZcrEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultZcrEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
@@ -1856,8 +1856,8 @@ faultZcrEL2(
 }
 
 Fault
-faultZcrEL3(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultZcrEL3(const MiscRegLUTEntry &entry, ThreadContext *tc,
+            const MiscRegOp64 &inst)
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (!cptr_el3.ez) {
@@ -1868,8 +1868,8 @@ faultZcrEL3(
 }
 
 Fault
-faultGicv3(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultGicv3(const MiscRegLUTEntry &entry, ThreadContext *tc,
+           const MiscRegOp64 &inst)
 {
     auto gic = static_cast<ArmSystem *>(tc->getSystemPtr())->getGIC();
     if (!gic->supportsVersion(BaseGic::GicVersion::GIC_V3)) {
@@ -1880,8 +1880,8 @@ faultGicv3(
 }
 
 Fault
-faultIccSgiEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultIccSgiEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     if (auto fault = faultGicv3(entry, tc, inst); fault != NoFault) {
         return fault;
@@ -1901,8 +1901,8 @@ faultIccSgiEL1(
 }
 
 Fault
-faultIccSgiEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultIccSgiEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     if (auto fault = faultGicv3(entry, tc, inst); fault != NoFault) {
         return fault;
@@ -1918,8 +1918,8 @@ faultIccSgiEL2(
 
 template <bool read, auto g_bitfield>
 Fault
-faultSctlr2EL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSctlr2EL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -1942,8 +1942,8 @@ faultSctlr2EL1(
 }
 
 Fault
-faultSctlr2EL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSctlr2EL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -1958,8 +1958,8 @@ faultSctlr2EL2(
 }
 
 Fault
-faultSctlr2VheEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSctlr2VheEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                  const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
         const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -1980,8 +1980,8 @@ faultSctlr2VheEL2(
 
 template <bool read, auto g_bitfield>
 Fault
-faultTcr2EL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTcr2EL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -2003,8 +2003,8 @@ faultTcr2EL1(
 }
 
 Fault
-faultTcr2EL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTcr2EL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -2019,8 +2019,8 @@ faultTcr2EL2(
 }
 
 Fault
-faultTcr2VheEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTcr2VheEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
         const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -2040,8 +2040,8 @@ faultTcr2VheEL2(
 }
 
 Fault
-faultTcr2VheEL3(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTcr2VheEL3(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
         const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -2058,8 +2058,8 @@ faultTcr2VheEL3(
 
 template <bool read, auto r_bitfield>
 Fault
-faultCpacrEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCpacrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
@@ -2078,8 +2078,8 @@ faultCpacrEL1(
 }
 
 Fault
-faultCpacrEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCpacrEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tcpac) {
@@ -2090,8 +2090,8 @@ faultCpacrEL2(
 }
 
 Fault
-faultCpacrVheEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCpacrVheEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                 const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     if (hcr.e2h) {
@@ -2103,8 +2103,8 @@ faultCpacrVheEL2(
 
 template <auto bitfield>
 Fault
-faultTlbiOsEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTlbiOsEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
@@ -2123,8 +2123,8 @@ faultTlbiOsEL1(
 
 template <auto bitfield>
 Fault
-faultTlbiIsEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTlbiIsEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
@@ -2143,8 +2143,8 @@ faultTlbiIsEL1(
 
 template <bool read, auto r_bitfield>
 Fault
-faultCacheEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCacheEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
@@ -2163,8 +2163,8 @@ faultCacheEL1(
 
 template <bool read, auto r_bitfield>
 Fault
-faultPauthEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultPauthEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -2183,8 +2183,8 @@ faultPauthEL1(
 }
 
 Fault
-faultPauthEL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultPauthEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+              const MiscRegOp64 &inst)
 {
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && !scr.apk) {
@@ -2195,8 +2195,8 @@ faultPauthEL2(
 }
 
 Fault
-faultGenericTimerEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultGenericTimerEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                     const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2216,8 +2216,8 @@ faultGenericTimerEL0(
 }
 
 Fault
-faultCntpctEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntpctEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2243,8 +2243,8 @@ faultCntpctEL0(
 }
 
 Fault
-faultCntpctEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntpctEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2261,8 +2261,8 @@ faultCntpctEL1(
 }
 
 Fault
-faultCntvctEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntvctEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2284,8 +2284,8 @@ faultCntvctEL0(
 }
 
 Fault
-faultCntvctEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntvctEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+               const MiscRegOp64 &inst)
 {
     const CNTHCTL cnthctl_el2 = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
     if (EL2Enabled(tc) && cnthctl_el2.el1tvct) {
@@ -2297,8 +2297,8 @@ faultCntvctEL1(
 
 // TODO: See faultCntpctEL0
 Fault
-faultCntpCtlEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntpCtlEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2324,8 +2324,8 @@ faultCntpCtlEL0(
 }
 
 Fault
-faultCntpCtlEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntpCtlEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2343,8 +2343,8 @@ faultCntpCtlEL1(
 
 //  TODO: see faultCntvctEL0
 Fault
-faultCntvCtlEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntvCtlEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2366,8 +2366,8 @@ faultCntvCtlEL0(
 }
 
 Fault
-faultCntvCtlEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntvCtlEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                const MiscRegOp64 &inst)
 {
     const CNTHCTL cnthctl_el2 = tc->readMiscReg(MISCREG_CNTHCTL_EL2);
     if (EL2Enabled(tc) && cnthctl_el2.el1tvt) {
@@ -2378,8 +2378,8 @@ faultCntvCtlEL1(
 }
 
 Fault
-faultCntpsCtlEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultCntpsCtlEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                 const MiscRegOp64 &inst)
 {
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && !scr.ns) {
@@ -2395,8 +2395,8 @@ faultCntpsCtlEL1(
 }
 
 Fault
-faultUnimplemented(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultUnimplemented(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                   const MiscRegOp64 &inst)
 {
     if (entry.info[MISCREG_WARN_NOT_FAIL]) {
         return NoFault;
@@ -2406,8 +2406,8 @@ faultUnimplemented(
 }
 
 Fault
-faultImpdefUnimplEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultImpdefUnimplEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                     const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     if (EL2Enabled(tc) && hcr.tidcp) {
@@ -2418,8 +2418,8 @@ faultImpdefUnimplEL1(
 }
 
 Fault
-faultEsm(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultEsm(const MiscRegLUTEntry &entry, ThreadContext *tc,
+         const MiscRegOp64 &inst)
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && !cptr_el3.esm) {
@@ -2430,8 +2430,8 @@ faultEsm(
 }
 
 Fault
-faultTsmSmen(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultTsmSmen(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const HCR hcr_el2 = tc->readMiscReg(MISCREG_HCR_EL2);
     const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
@@ -2446,8 +2446,8 @@ faultTsmSmen(
 }
 
 Fault
-faultSmenEL1(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSmenEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
     if (!(cpacr.smen & 0b1)) {
@@ -2458,8 +2458,8 @@ faultSmenEL1(
 }
 
 Fault
-faultSmenEL0(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultSmenEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
+             const MiscRegOp64 &inst)
 {
     const bool el2_enabled = EL2Enabled(tc);
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -2480,8 +2480,8 @@ faultSmenEL0(
 }
 
 Fault
-faultRng(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultRng(const MiscRegLUTEntry &entry, ThreadContext *tc,
+         const MiscRegOp64 &inst)
 {
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (HaveExt(tc, ArmExtension::FEAT_RNG_TRAP) && scr.trndr) {
@@ -2494,8 +2494,8 @@ faultRng(
 }
 
 Fault
-faultFgtCtrlRegs(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultFgtCtrlRegs(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                 const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_FGT)) {
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -2510,8 +2510,8 @@ faultFgtCtrlRegs(
 }
 
 Fault
-faultIdst(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+faultIdst(const MiscRegLUTEntry &entry, ThreadContext *tc,
+          const MiscRegOp64 &inst)
 {
     if (HaveExt(tc, ArmExtension::FEAT_IDST)) {
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2528,8 +2528,8 @@ faultIdst(
 } // namespace
 
 MiscRegIndex
-decodeAArch64SysReg(
-    unsigned op0, unsigned op1, unsigned crn, unsigned crm, unsigned op2)
+decodeAArch64SysReg(unsigned op0, unsigned op1, unsigned crn, unsigned crm,
+                    unsigned op2)
 {
     MiscRegNum64 sys_reg(op0, op1, crn, crm, op2);
     return decodeAArch64SysReg(sys_reg);
@@ -2564,8 +2564,8 @@ encodeAArch64SysReg(MiscRegIndex misc_reg)
 }
 
 Fault
-MiscRegLUTEntry::checkFault(
-    ThreadContext *tc, const MiscRegOp64 &inst, ExceptionLevel el)
+MiscRegLUTEntry::checkFault(ThreadContext *tc, const MiscRegOp64 &inst,
+                            ExceptionLevel el)
 {
     return !inst.miscRead() ? faultWrite[el](*this, tc, inst) :
                               faultRead[el](*this, tc, inst);
@@ -2573,8 +2573,8 @@ MiscRegLUTEntry::checkFault(
 
 template <MiscRegInfo Sec, MiscRegInfo NonSec>
 Fault
-MiscRegLUTEntry::defaultFault(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+MiscRegLUTEntry::defaultFault(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                              const MiscRegOp64 &inst)
 {
     if (isSecureBelowEL3(tc) ? entry.info[Sec] : entry.info[NonSec]) {
         return NoFault;
@@ -2584,8 +2584,8 @@ MiscRegLUTEntry::defaultFault(
 }
 
 static Fault
-defaultFaultE2H_EL2(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+defaultFaultE2H_EL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                    const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     if (hcr.e2h) {
@@ -2596,8 +2596,8 @@ defaultFaultE2H_EL2(
 }
 
 static Fault
-defaultFaultE2H_EL3(
-    const MiscRegLUTEntry &entry, ThreadContext *tc, const MiscRegOp64 &inst)
+defaultFaultE2H_EL3(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                    const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const bool el2_host = EL2Enabled(tc) && hcr.e2h;
@@ -5139,29 +5139,29 @@ ISA::initializeMiscRegMetadata()
         .fault(EL3, defaultFaultE2H_EL3)
         .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
-        .reset(
-            FullSystem && system->highestEL() == EL1 ? system->resetAddr() : 0)
+        .reset(FullSystem && system->highestEL() == EL1 ? system->resetAddr() :
+                                                          0)
         .privRead(FullSystem && system->highestEL() == EL1);
     InitReg(MISCREG_ISR_EL1).allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_VBAR_EL2).hyp().mon().res0(0x7ff).mapsTo(MISCREG_HVBAR);
     InitReg(MISCREG_RVBAR_EL2)
-        .reset(
-            FullSystem && system->highestEL() == EL2 ? system->resetAddr() : 0)
+        .reset(FullSystem && system->highestEL() == EL2 ? system->resetAddr() :
+                                                          0)
         .hypRead(FullSystem && system->highestEL() == EL2);
     InitReg(MISCREG_VBAR_EL3).mon();
     InitReg(MISCREG_RVBAR_EL3)
-        .reset(
-            FullSystem && system->highestEL() == EL3 ? system->resetAddr() : 0)
+        .reset(FullSystem && system->highestEL() == EL3 ? system->resetAddr() :
+                                                          0)
         .mon()
         .writes(0);
     InitReg(MISCREG_RMR_EL3).mon();
     InitReg(MISCREG_CONTEXTIDR_EL1)
         .allPrivileges()
         .exceptUserMode()
-        .faultRead(
-            EL1, faultHcrFgtEL1<true, &HCR::trvm, &HFGTR::contextidrEL1>)
-        .faultWrite(
-            EL1, faultHcrFgtEL1<false, &HCR::tvm, &HFGTR::contextidrEL1>)
+        .faultRead(EL1,
+                   faultHcrFgtEL1<true, &HCR::trvm, &HFGTR::contextidrEL1>)
+        .faultWrite(EL1,
+                    faultHcrFgtEL1<false, &HCR::tvm, &HFGTR::contextidrEL1>)
         .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_CONTEXTIDR_EL12)
         .fault(EL2, defaultFaultE2H_EL2)

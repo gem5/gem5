@@ -48,13 +48,14 @@ class Trap : public SparcStaticInst
 {
   protected:
     // Constructor
-    Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        SparcStaticInst(mnem, _machInst, __opClass),
-        trapNum(bits(_machInst, 7, 0))
+    Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : SparcStaticInst(mnem, _machInst, __opClass),
+          trapNum(bits(_machInst, 7, 0))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     int trapNum;
 };
@@ -65,8 +66,8 @@ class FpUnimpl : public SparcStaticInst
     using SparcStaticInst::SparcStaticInst;
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }

@@ -64,15 +64,15 @@ PerfKvmCounterConfig::PerfKvmCounterConfig(uint32_t type, uint64_t config)
 
 PerfKvmCounterConfig::~PerfKvmCounterConfig() {}
 
-PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid) :
-    fd(-1), ringBuffer(NULL), pageSize(-1)
+PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid)
+    : fd(-1), ringBuffer(NULL), pageSize(-1)
 {
     attach(config, tid, -1);
 }
 
-PerfKvmCounter::PerfKvmCounter(
-    PerfKvmCounterConfig &config, pid_t tid, const PerfKvmCounter &parent) :
-    fd(-1), ringBuffer(NULL), pageSize(-1)
+PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid,
+                               const PerfKvmCounter &parent)
+    : fd(-1), ringBuffer(NULL), pageSize(-1)
 {
     attach(config, tid, parent);
 }
@@ -116,8 +116,8 @@ void
 PerfKvmCounter::period(uint64_t period)
 {
     if (ioctl(PERF_EVENT_IOC_PERIOD, &period) == -1)
-        panic(
-            "KVM: Failed to set period of performance counter (%i)\n", errno);
+        panic("KVM: Failed to set period of performance counter (%i)\n",
+              errno);
 }
 
 void
@@ -147,7 +147,7 @@ PerfKvmCounter::enableSignals(pid_t tid, int signal)
     if (fcntl(F_SETOWN_EX, &sigowner) == -1 || fcntl(F_SETSIG, signal) == -1 ||
         fcntl(F_SETFL, O_ASYNC) == -1)
         panic("PerfKvmCounter: Failed to enable signals for counter (%i)\n",
-            errno);
+              errno);
 }
 
 void
@@ -156,9 +156,9 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config, pid_t tid, int group_fd)
     assert(!attached());
 
     fd = syscall(__NR_perf_event_open, &config.attr, tid,
-        -1, // CPU (-1 => Any CPU that the task happens to run on)
-        group_fd,
-        0); // Flags
+                 -1, // CPU (-1 => Any CPU that the task happens to run on)
+                 group_fd,
+                 0); // Flags
     if (fd == -1) {
         if (errno == EACCES) {
             panic(
@@ -201,8 +201,8 @@ PerfKvmCounter::mmapPerf(int pages)
     if (pageSize == -1) {
         pageSize = sysconf(_SC_PAGE_SIZE);
         if (pageSize == -1)
-            panic(
-                "PerfKvmCounter: Failed to determine page size (%i)\n", errno);
+            panic("PerfKvmCounter: Failed to determine page size (%i)\n",
+                  errno);
     }
 
     ringNumPages = pages + 1;

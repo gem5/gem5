@@ -53,10 +53,10 @@ class MMU : public BaseMMU
 
     TranslationGenPtr
     translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
-        Request::Flags flags) override
+                        Request::Flags flags) override
     {
-        return TranslationGenPtr(new MMUTranslationGen(
-            PageBytes, start, size, tc, this, mode, flags));
+        return TranslationGenPtr(new MMUTranslationGen(PageBytes, start, size,
+                                                       tc, this, mode, flags));
     }
 };
 

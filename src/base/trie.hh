@@ -71,8 +71,8 @@ class Trie
         Node *parent;
         std::unique_ptr<Node> kids[2];
 
-        Node(Key _key, Key _mask, Value *_val) :
-            key(_key & _mask), mask(_mask), value(_val), parent(NULL)
+        Node(Key _key, Key _mask, Value *_val)
+            : key(_key & _mask), mask(_mask), value(_val), parent(NULL)
         {
             kids[0] = NULL;
             kids[1] = NULL;
@@ -96,7 +96,7 @@ class Trie
             else
                 ccprintf(os, "+ ");
             ccprintf(os, "(%p, %p, %#X, %#X, %p)\n", parent, this, key, mask,
-                value);
+                     value);
             if (kids[0])
                 kids[0]->dump(os, level + 1);
             if (kids[1])

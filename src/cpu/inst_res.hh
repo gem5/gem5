@@ -119,8 +119,8 @@ class InstResult
         set(val);
     }
 
-    InstResult(const RegClass &reg_class, const void *val) :
-        _regClass(&reg_class)
+    InstResult(const RegClass &reg_class, const void *val)
+        : _regClass(&reg_class)
     {
         set(val);
     }
@@ -153,8 +153,8 @@ class InstResult
                 return false;
 
             // Check the contents of the blobs, not their addresses.
-            return std::memcmp(
-                       getBlob(), that.getBlob(), _regClass->regBytes()) == 0;
+            return std::memcmp(getBlob(), that.getBlob(),
+                               _regClass->regBytes()) == 0;
         } else {
             return getRegVal() == that.getRegVal();
         }

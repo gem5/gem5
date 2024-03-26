@@ -96,7 +96,7 @@ TLB::lookup(Addr vpn, uint8_t asn) const
     }
 
     DPRINTF(TLB, "lookup %#x, asn %#x -> %s ppn %#x\n", vpn, (int)asn,
-        retval ? "hit" : "miss", retval ? retval->PFN1 : 0);
+            retval ? "hit" : "miss", retval ? retval->PFN1 : 0);
     return retval;
 }
 
@@ -152,7 +152,7 @@ TLB::insertAt(PowerISA::PTE &pte, unsigned Index, int _smallPages)
     smallPages = _smallPages;
     if (Index > size) {
         warn("Attempted to write at index (%d) beyond TLB size (%d)", Index,
-            size);
+             size);
     } else {
         // Update TLB
         if (table[Index].V0 || table[Index].V1) {
@@ -216,8 +216,8 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 
     // Instruction accesses must be word-aligned
     if (vaddr & 0x3) {
-        DPRINTF(
-            TLB, "Alignment Fault on %#x, size = %d\n", vaddr, req->getSize());
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", vaddr,
+                req->getSize());
         return std::make_shared<AlignmentFault>(vaddr);
     }
 
@@ -231,11 +231,11 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 }
 
 Fault
-TLB::translateAtomic(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                     BaseMMU::Mode mode)
 {
-    panic_if(
-        FullSystem, "translateAtomic not yet implemented for full system.");
+    panic_if(FullSystem,
+             "translateAtomic not yet implemented for full system.");
 
     if (mode == BaseMMU::Execute)
         return translateInst(req, tc);
@@ -244,25 +244,25 @@ TLB::translateAtomic(
 }
 
 Fault
-TLB::translateFunctional(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
 {
-    panic_if(
-        FullSystem, "translateFunctional not implemented for full system.");
+    panic_if(FullSystem,
+             "translateFunctional not implemented for full system.");
     return tc->getProcessPtr()->pTable->translate(req);
 }
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    BaseMMU::Translation *translation, BaseMMU::Mode mode)
+                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
 Fault
-TLB::finalizePhysical(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }

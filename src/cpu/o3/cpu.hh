@@ -560,13 +560,13 @@ class CPU : public BaseCPU
     /** CPU pushRequest function, forwards request to LSQ. */
     Fault
     pushRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
-        AtomicOpFunctorPtr amo_op = nullptr,
-        const std::vector<bool> &byte_enable = std::vector<bool>())
+                unsigned int size, Addr addr, Request::Flags flags,
+                uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
+                const std::vector<bool> &byte_enable = std::vector<bool>())
 
     {
         return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr, flags,
-            res, std::move(amo_op), byte_enable);
+                                         res, std::move(amo_op), byte_enable);
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
@@ -598,8 +598,8 @@ class CPU : public BaseCPU
 
   public:
     // hardware transactional memory
-    void htmSendAbortSignal(
-        ThreadID tid, uint64_t htm_uid, HtmFailureFaultCause cause) override;
+    void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                            HtmFailureFaultCause cause) override;
 };
 
 } // namespace o3

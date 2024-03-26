@@ -109,8 +109,8 @@ TEST(AtomicioTest, AtomicWrite)
     std::string file_contents = "This is just some test data to ensure that we"
                                 " can write correctly to a file.";
 
-    ssize_t size = atomic_write(
-        fileno(file), file_contents.c_str(), file_contents.size());
+    ssize_t size = atomic_write(fileno(file), file_contents.c_str(),
+                                file_contents.size());
     fflush(file);
     rewind(file);
 

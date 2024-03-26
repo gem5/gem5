@@ -56,8 +56,8 @@ class Gem5SlaveTransactor : public sc_core::sc_module
   public:
     SC_HAS_PROCESS(Gem5SlaveTransactor);
 
-    Gem5SlaveTransactor(
-        sc_core::sc_module_name name, const std::string &portName);
+    Gem5SlaveTransactor(sc_core::sc_module_name name,
+                        const std::string &portName);
 
     void before_end_of_elaboration();
 };

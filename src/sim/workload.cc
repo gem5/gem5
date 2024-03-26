@@ -58,8 +58,8 @@ Workload::replaceThreadContext(ThreadContext *tc)
         std::set<ThreadContext *>::iterator it;
         bool success;
         std::tie(it, success) = threads.insert(tc);
-        panic_if(
-            !success, "Failed to insert replacement thread context %d.", id);
+        panic_if(!success, "Failed to insert replacement thread context %d.",
+                 id);
 
         if (gdb)
             gdb->replaceThreadContext(tc);
@@ -96,7 +96,7 @@ Workload::startup()
     // requested.
     if (gdb && waitForRemoteGDB) {
         inform("%s: Waiting for a remote GDB connection on %s.", name(),
-            gdb->hostSocket());
+               gdb->hostSocket());
         gdb->connect();
     }
 }

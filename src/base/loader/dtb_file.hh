@@ -64,7 +64,7 @@ class DtbFile : public ImageFile
      * @return returns true on success, false otherwise
      */
     bool addBootData(const char *_cmdline, size_t cmdline_len,
-        off_t initrd_addr, size_t initrd_len);
+                     off_t initrd_addr, size_t initrd_len);
 
     /** Adds the passed in Command Line options for the kernel
      * to the proper location in the device tree.

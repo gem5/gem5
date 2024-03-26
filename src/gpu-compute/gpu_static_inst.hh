@@ -386,8 +386,8 @@ class GPUStaticInst : public GPUStaticInstFlags
     {
         return _flags[MemoryRef] &&
                (_flags[GlobalSegment] || _flags[PrivateSegment] ||
-                   _flags[ReadOnlySegment] || _flags[SpillSegment] ||
-                   _flags[FlatGlobal]);
+                _flags[ReadOnlySegment] || _flags[SpillSegment] ||
+                _flags[FlatGlobal]);
     }
 
     bool

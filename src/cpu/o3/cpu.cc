@@ -67,54 +67,54 @@ struct BaseCPUParams;
 
 namespace o3
 {
-CPU::CPU(const BaseO3CPUParams &params) :
-    BaseCPU(params),
-    mmu(params.mmu),
-    tickEvent([this] { tick(); }, "O3CPU tick", false, Event::CPU_Tick_Pri),
-    threadExitEvent([this] { exitThreads(); }, "O3CPU exit threads", false,
-        Event::CPU_Exit_Pri),
+CPU::CPU(const BaseO3CPUParams &params)
+    : BaseCPU(params),
+      mmu(params.mmu),
+      tickEvent([this] { tick(); }, "O3CPU tick", false, Event::CPU_Tick_Pri),
+      threadExitEvent([this] { exitThreads(); }, "O3CPU exit threads", false,
+                      Event::CPU_Exit_Pri),
 #ifndef NDEBUG
-    instcount(0),
+      instcount(0),
 #endif
-    removeInstsThisCycle(false),
-    fetch(this, params),
-    decode(this, params),
-    rename(this, params),
-    iew(this, params),
-    commit(this, params),
+      removeInstsThisCycle(false),
+      fetch(this, params),
+      decode(this, params),
+      rename(this, params),
+      iew(this, params),
+      commit(this, params),
 
-    regFile(params.numPhysIntRegs, params.numPhysFloatRegs,
-        params.numPhysVecRegs, params.numPhysVecPredRegs,
-        params.numPhysMatRegs, params.numPhysCCRegs,
-        params.isa[0]->regClasses()),
+      regFile(params.numPhysIntRegs, params.numPhysFloatRegs,
+              params.numPhysVecRegs, params.numPhysVecPredRegs,
+              params.numPhysMatRegs, params.numPhysCCRegs,
+              params.isa[0]->regClasses()),
 
-    freeList(name() + ".freelist", &regFile),
+      freeList(name() + ".freelist", &regFile),
 
-    rob(this, params),
+      rob(this, params),
 
-    scoreboard(name() + ".scoreboard", regFile.totalNumPhysRegs()),
+      scoreboard(name() + ".scoreboard", regFile.totalNumPhysRegs()),
 
-    isa(numThreads, NULL),
+      isa(numThreads, NULL),
 
-    timeBuffer(params.backComSize, params.forwardComSize),
-    fetchQueue(params.backComSize, params.forwardComSize),
-    decodeQueue(params.backComSize, params.forwardComSize),
-    renameQueue(params.backComSize, params.forwardComSize),
-    iewQueue(params.backComSize, params.forwardComSize),
-    activityRec(name(), NumStages, params.backComSize + params.forwardComSize,
-        params.activity),
+      timeBuffer(params.backComSize, params.forwardComSize),
+      fetchQueue(params.backComSize, params.forwardComSize),
+      decodeQueue(params.backComSize, params.forwardComSize),
+      renameQueue(params.backComSize, params.forwardComSize),
+      iewQueue(params.backComSize, params.forwardComSize),
+      activityRec(name(), NumStages,
+                  params.backComSize + params.forwardComSize, params.activity),
 
-    globalSeqNum(1),
-    system(params.system),
-    lastRunningCycle(curCycle()),
-    cpuStats(this)
+      globalSeqNum(1),
+      system(params.system),
+      lastRunningCycle(curCycle()),
+      cpuStats(this)
 {
     fatal_if(FullSystem && params.numThreads > 1,
-        "SMT is not supported in O3 in full system mode currently.");
+             "SMT is not supported in O3 in full system mode currently.");
 
     fatal_if(!FullSystem && params.numThreads < params.workload.size(),
-        "More workload items (%d) than threads (%d) on CPU %s.",
-        params.workload.size(), params.numThreads, name());
+             "More workload items (%d) than threads (%d) on CPU %s.",
+             params.workload.size(), params.numThreads, name());
 
     if (!params.switched_out) {
         _status = Running;
@@ -201,10 +201,10 @@ CPU::CPU(const BaseO3CPUParams &params) :
 
     // Just make this a warning and go ahead anyway, to keep from having to
     // add checks everywhere.
-    warn_if(
-        regClasses.at(CCRegClass)->numRegs() == 0 && params.numPhysCCRegs != 0,
-        "Non-zero number of physical CC regs specified, even though\n"
-        "    ISA does not use them.");
+    warn_if(regClasses.at(CCRegClass)->numRegs() == 0 &&
+                params.numPhysCCRegs != 0,
+            "Non-zero number of physical CC regs specified, even though\n"
+            "    ISA does not use them.");
 
     rename.setScoreboard(&scoreboard);
     iew.setScoreboard(&scoreboard);
@@ -252,8 +252,8 @@ CPU::CPU(const BaseO3CPUParams &params) :
             thread[tid] = new ThreadState(this, 0, NULL);
         } else {
             if (tid < params.workload.size()) {
-                DPRINTF(
-                    O3CPU, "Workload[%i] process is %#x", tid, thread[tid]);
+                DPRINTF(O3CPU, "Workload[%i] process is %#x", tid,
+                        thread[tid]);
                 thread[tid] = new ThreadState(this, tid, params.workload[tid]);
             } else {
                 // Allocate Empty thread so M5 can use later
@@ -291,7 +291,7 @@ CPU::CPU(const BaseO3CPUParams &params) :
     if (!params.switched_out && interrupts.empty()) {
         fatal("O3CPU %s has no interrupt controller.\n"
               "Ensure createInterruptController() is called.\n",
-            name());
+              name());
     }
 }
 
@@ -311,17 +311,17 @@ CPU::regProbePoints()
     commit.regProbePoints();
 }
 
-CPU::CPUStats::CPUStats(CPU *cpu) :
-    statistics::Group(cpu),
-    ADD_STAT(timesIdled, statistics::units::Count::get(),
-        "Number of times that the entire CPU went into an idle state "
-        "and unscheduled itself"),
-    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-        "Total number of cycles that the CPU has spent unscheduled due "
-        "to idling"),
-    ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
-        "Total number of cycles that CPU has spent quiesced or waiting "
-        "for an interrupt")
+CPU::CPUStats::CPUStats(CPU *cpu)
+    : statistics::Group(cpu),
+      ADD_STAT(timesIdled, statistics::units::Count::get(),
+               "Number of times that the entire CPU went into an idle state "
+               "and unscheduled itself"),
+      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
+               "Total number of cycles that the CPU has spent unscheduled due "
+               "to idling"),
+      ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
+               "Total number of cycles that CPU has spent quiesced or waiting "
+               "for an interrupt")
 {
     // Register any of the O3CPU's stats here.
     timesIdled.prereq(timesIdled);
@@ -719,7 +719,7 @@ CPU::drain()
         for (auto t : threadContexts) {
             if (t->status() == gem5::ThreadContext::Suspended) {
                 DPRINTF(Drain, "Currently suspended so activate %i \n",
-                    t->threadId());
+                        t->threadId());
                 t->activate();
                 // As the thread is now active, change the power state as well
                 activateContext(t->threadId());
@@ -1133,9 +1133,9 @@ void
 CPU::removeFrontInst(const DynInstPtr &inst)
 {
     DPRINTF(O3CPU,
-        "Removing committed instruction [tid:%i] PC %s "
-        "[sn:%lli]\n",
-        inst->threadNumber, inst->pcState(), inst->seqNum);
+            "Removing committed instruction [tid:%i] PC %s "
+            "[sn:%lli]\n",
+            inst->threadNumber, inst->pcState(), inst->seqNum);
 
     removeInstsThisCycle = true;
 
@@ -1147,9 +1147,9 @@ void
 CPU::removeInstsNotInROB(ThreadID tid)
 {
     DPRINTF(O3CPU,
-        "Thread %i: Deleting instructions from instruction"
-        " list.\n",
-        tid);
+            "Thread %i: Deleting instructions from instruction"
+            " list.\n",
+            tid);
 
     ListIt end_it;
 
@@ -1201,9 +1201,9 @@ CPU::removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid)
     inst_iter--;
 
     DPRINTF(O3CPU,
-        "Deleting instructions from instruction "
-        "list that are from [tid:%i] and above [sn:%lli] (end=%lli).\n",
-        tid, seq_num, (*inst_iter)->seqNum);
+            "Deleting instructions from instruction "
+            "list that are from [tid:%i] and above [sn:%lli] (end=%lli).\n",
+            tid, seq_num, (*inst_iter)->seqNum);
 
     while ((*inst_iter)->seqNum > seq_num) {
         bool break_loop = (inst_iter == instList.begin());
@@ -1222,9 +1222,10 @@ CPU::squashInstIt(const ListIt &instIt, ThreadID tid)
 {
     if ((*instIt)->threadNumber == tid) {
         DPRINTF(O3CPU,
-            "Squashing instruction, "
-            "[tid:%i] [sn:%lli] PC %s\n",
-            (*instIt)->threadNumber, (*instIt)->seqNum, (*instIt)->pcState());
+                "Squashing instruction, "
+                "[tid:%i] [sn:%lli] PC %s\n",
+                (*instIt)->threadNumber, (*instIt)->seqNum,
+                (*instIt)->pcState());
 
         // Mark it as squashed.
         (*instIt)->setSquashed();
@@ -1241,10 +1242,11 @@ CPU::cleanUpRemovedInsts()
 {
     while (!removeList.empty()) {
         DPRINTF(O3CPU,
-            "Removing instruction, "
-            "[tid:%i] [sn:%lli] PC %s\n",
-            (*removeList.front())->threadNumber, (*removeList.front())->seqNum,
-            (*removeList.front())->pcState());
+                "Removing instruction, "
+                "[tid:%i] [sn:%lli] PC %s\n",
+                (*removeList.front())->threadNumber,
+                (*removeList.front())->seqNum,
+                (*removeList.front())->pcState());
 
         instList.erase(removeList.front());
 
@@ -1272,9 +1274,9 @@ CPU::dumpInsts()
     while (inst_list_it != instList.end()) {
         cprintf("Instruction:%i\nPC:%#x\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
                 "Squashed:%i\n\n",
-            num, (*inst_list_it)->pcState().instAddr(),
-            (*inst_list_it)->threadNumber, (*inst_list_it)->seqNum,
-            (*inst_list_it)->isIssued(), (*inst_list_it)->isSquashed());
+                num, (*inst_list_it)->pcState().instAddr(),
+                (*inst_list_it)->threadNumber, (*inst_list_it)->seqNum,
+                (*inst_list_it)->isIssued(), (*inst_list_it)->isSquashed());
         inst_list_it++;
         ++num;
     }
@@ -1417,8 +1419,8 @@ CPU::exitThreads()
 }
 
 void
-CPU::htmSendAbortSignal(
-    ThreadID tid, uint64_t htm_uid, HtmFailureFaultCause cause)
+CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                        HtmFailureFaultCause cause)
 {
     const Addr addr = 0x0ul;
     const int size = 8;

@@ -55,19 +55,19 @@ namespace guest_abi
  */
 
 template <typename ABI, typename Ret, bool store_ret, typename Target,
-    typename State, typename Args, std::size_t... I>
+          typename State, typename Args, std::size_t... I>
 static inline typename std::enable_if_t<!store_ret, Ret>
 callFromHelper(Target &target, ThreadContext *tc, State &state, Args &&args,
-    std::index_sequence<I...>)
+               std::index_sequence<I...>)
 {
     return target(tc, std::get<I>(args)...);
 }
 
 template <typename ABI, typename Ret, bool store_ret, typename Target,
-    typename State, typename Args, std::size_t... I>
+          typename State, typename Args, std::size_t... I>
 static inline typename std::enable_if_t<store_ret, Ret>
 callFromHelper(Target &target, ThreadContext *tc, State &state, Args &&args,
-    std::index_sequence<I...>)
+               std::index_sequence<I...>)
 {
     Ret ret = target(tc, std::get<I>(args)...);
     storeResult<ABI, Ret>(tc, ret, state);
@@ -77,15 +77,16 @@ callFromHelper(Target &target, ThreadContext *tc, State &state, Args &&args,
 template <typename ABI, typename Ret, bool store_ret, typename... Args>
 static inline Ret
 callFrom(ThreadContext *tc, typename ABI::State &state,
-    std::function<Ret(ThreadContext *, Args...)> target)
+         std::function<Ret(ThreadContext *, Args...)> target)
 {
     // Extract all the arguments from the thread context. Braced initializers
     // are evaluated from left to right.
     auto args = std::tuple<Args...>{getArgument<ABI, Args>(tc, state)...};
 
     // Call the wrapper which will call target.
-    return callFromHelper<ABI, Ret, store_ret>(target, tc, state,
-        std::move(args), std::make_index_sequence<sizeof...(Args)>{});
+    return callFromHelper<ABI, Ret, store_ret>(
+        target, tc, state, std::move(args),
+        std::make_index_sequence<sizeof...(Args)>{});
 }
 
 /*
@@ -96,13 +97,13 @@ callFrom(ThreadContext *tc, typename ABI::State &state,
 template <typename ABI, typename Ret, typename... Args>
 static void
 dumpArgsFrom(std::ostream &os, [[maybe_unused]] ThreadContext *tc,
-    typename ABI::State &state)
+             typename ABI::State &state)
 {
     int count = 0;
     // Extract all the arguments from the thread context and print them,
     // prefixed with either a ( or a , as appropriate.
-    GEM5_FOR_EACH_IN_PACK (
-        os << (count++ ? ", " : "("), os << getArgument<ABI, Args>(tc, state))
+    GEM5_FOR_EACH_IN_PACK (os << (count++ ? ", " : "("),
+                           os << getArgument<ABI, Args>(tc, state))
         ;
     os << ")";
 }

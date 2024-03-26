@@ -45,14 +45,15 @@
 
 namespace gem5
 {
-SETranslatingPortProxy::SETranslatingPortProxy(
-    ThreadContext *tc, AllocType alloc, Request::Flags _flags) :
-    TranslatingPortProxy(tc, _flags), allocating(alloc)
+SETranslatingPortProxy::SETranslatingPortProxy(ThreadContext *tc,
+                                               AllocType alloc,
+                                               Request::Flags _flags)
+    : TranslatingPortProxy(tc, _flags), allocating(alloc)
 {}
 
 bool
-SETranslatingPortProxy::fixupRange(
-    const TranslationGen::Range &range, BaseMMU::Mode mode) const
+SETranslatingPortProxy::fixupRange(const TranslationGen::Range &range,
+                                   BaseMMU::Mode mode) const
 {
     auto *process = _tc->getProcessPtr();
 

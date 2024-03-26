@@ -46,21 +46,21 @@ class ThreadContext;
 
 template <typename ABI, bool store_ret, typename Ret, typename... Args>
 Ret
-invokeSimcall(
-    ThreadContext *tc, std::function<Ret(ThreadContext *, Args...)> target)
+invokeSimcall(ThreadContext *tc,
+              std::function<Ret(ThreadContext *, Args...)> target)
 {
     // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
     auto state = guest_abi::initializeState<ABI>(tc);
     guest_abi::prepareForFunction<ABI, Ret, Args...>(tc, state);
-    return guest_abi::callFrom<ABI, Ret, store_ret, Args...>(
-        tc, state, target);
+    return guest_abi::callFrom<ABI, Ret, store_ret, Args...>(tc, state,
+                                                             target);
 }
 
 template <typename ABI, typename Ret, typename... Args>
 Ret
-invokeSimcall(
-    ThreadContext *tc, std::function<Ret(ThreadContext *, Args...)> target)
+invokeSimcall(ThreadContext *tc,
+              std::function<Ret(ThreadContext *, Args...)> target)
 {
     return invokeSimcall<ABI, true>(tc, target);
 }
@@ -82,8 +82,8 @@ invokeSimcall(ThreadContext *tc, Ret (*target)(ThreadContext *, Args...))
 
 template <typename ABI, typename... Args>
 void
-invokeSimcall(
-    ThreadContext *tc, std::function<void(ThreadContext *, Args...)> target)
+invokeSimcall(ThreadContext *tc,
+              std::function<void(ThreadContext *, Args...)> target)
 {
     // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
@@ -96,8 +96,8 @@ template <typename ABI, typename... Args>
 void
 invokeSimcall(ThreadContext *tc, void (*target)(ThreadContext *, Args...))
 {
-    invokeSimcall<ABI>(
-        tc, std::function<void(ThreadContext *, Args...)>(target));
+    invokeSimcall<ABI>(tc,
+                       std::function<void(ThreadContext *, Args...)>(target));
 }
 
 // These functions also wrap a simulator level function. Instead of running the
@@ -107,8 +107,8 @@ invokeSimcall(ThreadContext *tc, void (*target)(ThreadContext *, Args...))
 template <typename ABI, typename Ret, typename... Args>
 std::string
 dumpSimcall(std::string name, ThreadContext *tc,
-    std::function<Ret(ThreadContext *, Args...)> target =
-        std::function<Ret(ThreadContext *, Args...)>())
+            std::function<Ret(ThreadContext *, Args...)> target =
+                std::function<Ret(ThreadContext *, Args...)>())
 {
     auto state = guest_abi::initializeState<ABI>(tc);
     std::ostringstream ss;
@@ -122,7 +122,7 @@ dumpSimcall(std::string name, ThreadContext *tc,
 template <typename ABI, typename Ret, typename... Args>
 std::string
 dumpSimcall(std::string name, ThreadContext *tc,
-    Ret (*target)(ThreadContext *, Args...))
+            Ret (*target)(ThreadContext *, Args...))
 {
     return dumpSimcall<ABI>(
         name, tc, std::function<Ret(ThreadContext *, Args...)>(target));

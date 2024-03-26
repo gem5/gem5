@@ -136,10 +136,10 @@ class ResponsePortWrapper : public ResponsePort
 
     void setGetAddrRangesCallback(GetAddrRangesCallback);
     void setTimingCallbacks(RecvTimingReqCallback, RecvRespRetryCallback);
-    void setAtomicCallbacks(
-        RecvAtomicCallback, RecvAtomicBackdoorCallback = nullptr);
-    void setFunctionalCallbacks(
-        RecvFunctionalCallback, RecvMemBackdoorReqCallback = nullptr);
+    void setAtomicCallbacks(RecvAtomicCallback,
+                            RecvAtomicBackdoorCallback = nullptr);
+    void setFunctionalCallbacks(RecvFunctionalCallback,
+                                RecvMemBackdoorReqCallback = nullptr);
 
   private:
     GetAddrRangesCallback getAddrRangesCb = nullptr;

@@ -43,8 +43,8 @@ class PcCountPair
 
   public:
     /** Explicit constructor assigning the pc and count values */
-    explicit constexpr PcCountPair(Addr _pc, int _count) :
-        pc(_pc), count(_count)
+    explicit constexpr PcCountPair(Addr _pc, int _count)
+        : pc(_pc), count(_count)
     {}
 
     /** Default constructor for parameter classes */

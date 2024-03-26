@@ -41,9 +41,8 @@ class IntSinkPinBase : public SignalSinkPort<bool>
 
   public:
     template <class Device>
-    IntSinkPinBase(
-        const std::string &_name, PortID _id, Device *dev, int num) :
-        SignalSinkPort(_name, _id), _number(num)
+    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev, int num)
+        : SignalSinkPort(_name, _id), _number(num)
     {
         onChange([dev, num](const bool &new_val) {
             if (new_val)
@@ -54,16 +53,16 @@ class IntSinkPinBase : public SignalSinkPort<bool>
     }
 
     template <class Device>
-    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev) :
-        IntSinkPinBase(_name, _id, dev, _id)
+    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev)
+        : IntSinkPinBase(_name, _id, dev, _id)
     {}
 
-    IntSinkPinBase(const std::string &_name, PortID _id, int num) :
-        SignalSinkPort(_name, _id), _number(num)
+    IntSinkPinBase(const std::string &_name, PortID _id, int num)
+        : SignalSinkPort(_name, _id), _number(num)
     {}
 
-    IntSinkPinBase(const std::string &_name, PortID _id) :
-        IntSinkPinBase(_name, _id, _id)
+    IntSinkPinBase(const std::string &_name, PortID _id)
+        : IntSinkPinBase(_name, _id, _id)
     {}
 
     int
@@ -80,12 +79,12 @@ class IntSourcePinBase : public SignalSourcePort<bool>
 {
   public:
     template <class Device>
-    IntSourcePinBase(const std::string &_name, PortID _id, Device *owner) :
-        SignalSourcePort(_name, _id)
+    IntSourcePinBase(const std::string &_name, PortID _id, Device *owner)
+        : SignalSourcePort(_name, _id)
     {}
 
-    IntSourcePinBase(const std::string &_name, PortID _id) :
-        SignalSourcePort(_name, _id)
+    IntSourcePinBase(const std::string &_name, PortID _id)
+        : SignalSourcePort(_name, _id)
     {}
 
     void

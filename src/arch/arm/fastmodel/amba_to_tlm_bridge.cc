@@ -70,13 +70,13 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
 namespace fastmodel
 {
 AmbaToTlmBridge64::AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params,
-    const sc_core::sc_module_name &name) :
-    amba_pv::amba_pv_to_tlm_bridge<64>(name),
-    targetProxy("target_proxy"),
-    initiatorProxy("initiator_proxy"),
-    tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
-    ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1),
-    setStreamId(params.set_stream_id)
+                                     const sc_core::sc_module_name &name)
+    : amba_pv::amba_pv_to_tlm_bridge<64>(name),
+      targetProxy("target_proxy"),
+      initiatorProxy("initiator_proxy"),
+      tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
+      ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1),
+      setStreamId(params.set_stream_id)
 {
     targetProxy.register_b_transport(this, &AmbaToTlmBridge64::bTransport);
     targetProxy.register_get_direct_mem_ptr(
@@ -99,8 +99,8 @@ AmbaToTlmBridge64::gem5_getPort(const std::string &if_name, int idx)
 }
 
 void
-AmbaToTlmBridge64::bTransport(
-    amba_pv::amba_pv_transaction &trans, sc_core::sc_time &t)
+AmbaToTlmBridge64::bTransport(amba_pv::amba_pv_transaction &trans,
+                              sc_core::sc_time &t)
 {
     maybeSetupAtomicExtension(trans);
     setupControlExtension(trans);
@@ -108,8 +108,8 @@ AmbaToTlmBridge64::bTransport(
 }
 
 bool
-AmbaToTlmBridge64::getDirectMemPtr(
-    amba_pv::amba_pv_transaction &trans, tlm::tlm_dmi &dmi_data)
+AmbaToTlmBridge64::getDirectMemPtr(amba_pv::amba_pv_transaction &trans,
+                                   tlm::tlm_dmi &dmi_data)
 {
     return initiatorProxy->get_direct_mem_ptr(trans, dmi_data);
 }
@@ -121,8 +121,8 @@ AmbaToTlmBridge64::transportDbg(amba_pv::amba_pv_transaction &trans)
 }
 
 void
-AmbaToTlmBridge64::invalidateDirectMemPtr(
-    sc_dt::uint64 start_range, sc_dt::uint64 end_range)
+AmbaToTlmBridge64::invalidateDirectMemPtr(sc_dt::uint64 start_range,
+                                          sc_dt::uint64 end_range)
 {
     targetProxy->invalidate_direct_mem_ptr(start_range, end_range);
 }
@@ -153,8 +153,8 @@ AmbaToTlmBridge64::maybeSetupAtomicExtension(
     // Correct the request size manually and give it a dummy buffer preventing
     // from segmentation fault.
     fatal_if(fa->getDataValueSizeInBytes() > sizeof(dummy_buffer),
-        "atomic operation(%d) is larger than dummy buffer(%d)",
-        fa->getDataValueSizeInBytes(), sizeof(dummy_buffer));
+             "atomic operation(%d) is larger than dummy buffer(%d)",
+             fa->getDataValueSizeInBytes(), sizeof(dummy_buffer));
     trans.set_data_length(fa->getDataValueSizeInBytes());
     trans.set_data_ptr(dummy_buffer);
 

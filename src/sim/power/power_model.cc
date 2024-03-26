@@ -45,32 +45,32 @@
 
 namespace gem5
 {
-PowerModelState::PowerModelState(const Params &p) :
-    SimObject(p),
-    _temp(0),
-    clocked_object(NULL),
-    ADD_STAT(dynamicPower, statistics::units::Watt::get(),
-        "Dynamic power for this object (Watts)"),
-    ADD_STAT(staticPower, statistics::units::Watt::get(),
-        "Static power for this object (Watts)")
+PowerModelState::PowerModelState(const Params &p)
+    : SimObject(p),
+      _temp(0),
+      clocked_object(NULL),
+      ADD_STAT(dynamicPower, statistics::units::Watt::get(),
+               "Dynamic power for this object (Watts)"),
+      ADD_STAT(staticPower, statistics::units::Watt::get(),
+               "Static power for this object (Watts)")
 {
     dynamicPower.method(this, &PowerModelState::getDynamicPower);
     staticPower.method(this, &PowerModelState::getStaticPower);
 }
 
-PowerModel::PowerModel(const Params &p) :
-    SimObject(p),
-    states_pm(p.pm),
-    subsystem(p.subsystem),
-    clocked_object(NULL),
-    power_model_type(p.pm_type),
-    ADD_STAT(dynamicPower, statistics::units::Watt::get(),
-        "Dynamic power for this power state"),
-    ADD_STAT(staticPower, statistics::units::Watt::get(),
-        "Static power for this power state")
+PowerModel::PowerModel(const Params &p)
+    : SimObject(p),
+      states_pm(p.pm),
+      subsystem(p.subsystem),
+      clocked_object(NULL),
+      power_model_type(p.pm_type),
+      ADD_STAT(dynamicPower, statistics::units::Watt::get(),
+               "Dynamic power for this power state"),
+      ADD_STAT(staticPower, statistics::units::Watt::get(),
+               "Static power for this power state")
 {
     panic_if(subsystem == NULL,
-        "Subsystem is NULL! This is not acceptable for a PowerModel!\n");
+             "Subsystem is NULL! This is not acceptable for a PowerModel!\n");
     subsystem->registerPowerProducer(this);
     // The temperature passed here will be overwritten, if there is
     // a thermal model present
@@ -120,7 +120,8 @@ PowerModel::getDynamicPower() const
     assert(w.size() - 1 == states_pm.size());
 
     // Make sure we have no UNDEFINED state
-    warn_if(w[enums::PwrState::UNDEFINED] > 0,
+    warn_if(
+        w[enums::PwrState::UNDEFINED] > 0,
         "SimObject in UNDEFINED power state! Power figures might be wrong!\n");
 
     double power = 0;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #ifdef M5
-#    include <gem5/m5ops.h>
+#include <gem5/m5ops.h>
 
 // If you need to define this, you should have removed the -DM5OP_ADDR
 // when compiling the m5op_x86.o

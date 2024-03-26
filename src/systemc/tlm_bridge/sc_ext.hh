@@ -58,10 +58,10 @@ class Gem5Extension : public tlm::tlm_extension<Gem5Extension>
     tlm_extension_base *clone() const override;
     void copy_from(const tlm_extension_base &ext) override;
 
-    static Gem5Extension &getExtension(
-        const tlm::tlm_generic_payload *payload);
-    static Gem5Extension &getExtension(
-        const tlm::tlm_generic_payload &payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload *payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload &payload);
     gem5::PacketPtr getPacket();
 
   private:
@@ -76,10 +76,10 @@ class AtomicExtension : public tlm::tlm_extension<AtomicExtension>
     tlm_extension_base *clone() const override;
     void copy_from(const tlm_extension_base &ext) override;
 
-    static AtomicExtension &getExtension(
-        const tlm::tlm_generic_payload *payload);
-    static AtomicExtension &getExtension(
-        const tlm::tlm_generic_payload &payload);
+    static AtomicExtension &
+    getExtension(const tlm::tlm_generic_payload *payload);
+    static AtomicExtension &
+    getExtension(const tlm::tlm_generic_payload &payload);
 
     bool isReturnRequired() const;
     gem5::AtomicOpFunctor *getAtomicOpFunctor() const;
@@ -97,10 +97,10 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     tlm_extension_base *clone() const override;
     void copy_from(const tlm_extension_base &ext) override;
 
-    static ControlExtension &getExtension(
-        const tlm::tlm_generic_payload *payload);
-    static ControlExtension &getExtension(
-        const tlm::tlm_generic_payload &payload);
+    static ControlExtension &
+    getExtension(const tlm::tlm_generic_payload *payload);
+    static ControlExtension &
+    getExtension(const tlm::tlm_generic_payload &payload);
 
     /* Secure and privileged access */
     bool isPrivileged() const;

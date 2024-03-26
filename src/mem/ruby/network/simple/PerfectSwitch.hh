@@ -79,8 +79,9 @@ class PerfectSwitch : public Consumer
     void init(SimpleNetwork *);
     void addInPort(const std::vector<MessageBuffer *> &in);
     void addOutPort(const std::vector<MessageBuffer *> &out,
-        const NetDest &routing_table_entry, const PortDirection &dst_inport,
-        Tick routing_latency, int link_weight);
+                    const NetDest &routing_table_entry,
+                    const PortDirection &dst_inport, Tick routing_latency,
+                    int link_weight);
 
     int
     getInLinks() const

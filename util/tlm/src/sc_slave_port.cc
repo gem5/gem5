@@ -87,7 +87,7 @@ SCSlavePort::recvAtomic(gem5::PacketPtr packet)
                                         "is responding");
 
     panic_if(!(packet->isRead() || packet->isWrite()),
-        "Should only see read and writes at TLM memory\n");
+             "Should only see read and writes at TLM memory\n");
 
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
@@ -173,7 +173,7 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
                                         "is responding");
 
     panic_if(!(packet->isRead() || packet->isWrite()),
-        "Should only see read and writes at TLM memory\n");
+             "Should only see read and writes at TLM memory\n");
 
     /* We should never get a second request after noting that a retry is
      * required */
@@ -259,7 +259,7 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
 
 void
 SCSlavePort::pec(PayloadEvent<SCSlavePort> *pe,
-    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
+                 tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     sc_time delay;
 
@@ -336,7 +336,7 @@ SCSlavePort::recvRespRetry()
 
 tlm::tlm_sync_enum
 SCSlavePort::nb_transport_bw(tlm::tlm_generic_payload &trans,
-    tlm::tlm_phase &phase, sc_core::sc_time &delay)
+                             tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
     PayloadEvent<SCSlavePort> *pe;
     pe = new PayloadEvent<SCSlavePort>(*this, &SCSlavePort::pec, "PE");
@@ -345,12 +345,13 @@ SCSlavePort::nb_transport_bw(tlm::tlm_generic_payload &trans,
 }
 
 SCSlavePort::SCSlavePort(const std::string &name_,
-    const std::string &systemc_name, gem5::ExternalSlave &owner_) :
-    gem5::ExternalSlave::ExternalPort(name_, owner_),
-    blockingRequest(NULL),
-    needToSendRequestRetry(false),
-    blockingResponse(NULL),
-    transactor(nullptr)
+                         const std::string &systemc_name,
+                         gem5::ExternalSlave &owner_)
+    : gem5::ExternalSlave::ExternalPort(name_, owner_),
+      blockingRequest(NULL),
+      needToSendRequestRetry(false),
+      blockingResponse(NULL),
+      transactor(nullptr)
 {}
 
 void
@@ -360,13 +361,14 @@ SCSlavePort::bindToTransactor(Gem5SlaveTransactor *transactor)
 
     this->transactor = transactor;
 
-    transactor->socket.register_nb_transport_bw(
-        this, &SCSlavePort::nb_transport_bw);
+    transactor->socket.register_nb_transport_bw(this,
+                                                &SCSlavePort::nb_transport_bw);
 }
 
 gem5::ExternalSlave::ExternalPort *
 SCSlavePortHandler::getExternalPort(const std::string &name,
-    gem5::ExternalSlave &owner, const std::string &port_data)
+                                    gem5::ExternalSlave &owner,
+                                    const std::string &port_data)
 {
     // Create and register a new SystemC slave port
     auto *port = new SCSlavePort(name, port_data, owner);

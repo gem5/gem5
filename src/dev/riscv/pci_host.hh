@@ -55,8 +55,8 @@ class GenericRiscvPciHost : public GenericPciHost
     GenericRiscvPciHost(const GenericRiscvPciHostParams &p);
 
   protected:
-    uint32_t mapPciInterrupt(
-        const PciBusAddr &addr, PciIntPin pin) const override;
+    uint32_t mapPciInterrupt(const PciBusAddr &addr,
+                             PciIntPin pin) const override;
 };
 
 } // namespace gem5

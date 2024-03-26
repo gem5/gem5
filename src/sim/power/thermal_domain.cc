@@ -50,13 +50,13 @@
 
 namespace gem5
 {
-ThermalDomain::ThermalDomain(const Params &p) :
-    SimObject(p),
-    _initTemperature(p.initial_temperature),
-    node(NULL),
-    subsystem(NULL),
-    ADD_STAT(
-        currentTemp, statistics::units::DegreeCelsius::get(), "Temperature")
+ThermalDomain::ThermalDomain(const Params &p)
+    : SimObject(p),
+      _initTemperature(p.initial_temperature),
+      node(NULL),
+      subsystem(NULL),
+      ADD_STAT(currentTemp, statistics::units::DegreeCelsius::get(),
+               "Temperature")
 {
     currentTemp.functor([this]() { return currentTemperature().toCelsius(); });
 }

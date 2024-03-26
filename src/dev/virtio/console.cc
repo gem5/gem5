@@ -43,11 +43,11 @@
 
 namespace gem5
 {
-VirtIOConsole::VirtIOConsole(const Params &params) :
-    VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
-    qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
-    qTrans(params.system->physProxy, byteOrder, params.qTransSize, *this),
-    device(*params.device)
+VirtIOConsole::VirtIOConsole(const Params &params)
+    : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
+      qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
+      qTrans(params.system->physProxy, byteOrder, params.qTransSize, *this),
+      device(*params.device)
 {
     registerQueue(qRecv);
     registerQueue(qTrans);

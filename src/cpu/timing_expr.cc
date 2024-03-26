@@ -41,9 +41,10 @@
 
 namespace gem5
 {
-TimingExprEvalContext::TimingExprEvalContext(
-    const StaticInstPtr &inst_, ThreadContext *thread_, TimingExprLet *let_) :
-    inst(inst_), thread(thread_), let(let_)
+TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
+                                             ThreadContext *thread_,
+                                             TimingExprLet *let_)
+    : inst(inst_), thread(thread_), let(let_)
 {
     /* Reserve space to hold the results of evaluating the
      *  let expressions */

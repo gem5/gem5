@@ -239,8 +239,8 @@ class ThreadContext : public PCEventScope
     static void compare(ThreadContext *one, ThreadContext *two);
 
     // hardware transactional memory
-    virtual void htmAbortTransaction(
-        uint64_t htm_uid, HtmFailureFaultCause cause) = 0;
+    virtual void htmAbortTransaction(uint64_t htm_uid,
+                                     HtmFailureFaultCause cause) = 0;
     virtual BaseHTMCheckpointPtr &getHtmCheckpointPtr() = 0;
     virtual void setHtmCheckpointPtr(BaseHTMCheckpointPtr cpt) = 0;
 };

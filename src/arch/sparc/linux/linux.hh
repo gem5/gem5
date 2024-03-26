@@ -214,7 +214,7 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
         ctc->setReg(SparcISA::int_reg::Otherwin, (RegVal)0);

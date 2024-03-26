@@ -50,7 +50,7 @@ class Printable
     virtual ~Printable() {}
 
     virtual void print(std::ostream &os, int verbosity = 0,
-        const std::string &prefix = "") const = 0;
+                       const std::string &prefix = "") const = 0;
 };
 
 } // namespace gem5

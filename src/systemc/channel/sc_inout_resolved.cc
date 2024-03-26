@@ -35,8 +35,8 @@ namespace sc_core
 {
 sc_inout_resolved::sc_inout_resolved() : sc_inout<sc_dt::sc_logic>() {}
 
-sc_inout_resolved::sc_inout_resolved(const char *name) :
-    sc_inout<sc_dt::sc_logic>(name)
+sc_inout_resolved::sc_inout_resolved(const char *name)
+    : sc_inout<sc_dt::sc_logic>(name)
 {}
 
 sc_inout_resolved::~sc_inout_resolved() {}

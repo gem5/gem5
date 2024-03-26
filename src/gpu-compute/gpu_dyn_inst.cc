@@ -41,16 +41,16 @@
 namespace gem5
 {
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
-    GPUStaticInst *static_inst, InstSeqNum instSeqNum) :
-    GPUExecContext(_cu, _wf),
-    scalarAddr(0),
-    addr(computeUnit()->wfSize(), (Addr)0),
-    numScalarReqs(0),
-    isSaveRestore(false),
-    _staticInst(static_inst),
-    _seqNum(instSeqNum),
-    maxSrcVecRegOpSize(-1),
-    maxSrcScalarRegOpSize(-1)
+                       GPUStaticInst *static_inst, InstSeqNum instSeqNum)
+    : GPUExecContext(_cu, _wf),
+      scalarAddr(0),
+      addr(computeUnit()->wfSize(), (Addr)0),
+      numScalarReqs(0),
+      isSaveRestore(false),
+      _staticInst(static_inst),
+      _seqNum(instSeqNum),
+      maxSrcVecRegOpSize(-1),
+      maxSrcScalarRegOpSize(-1)
 {
     _staticInst->initOperandInfo();
     statusVector.assign(TheGpuISA::NumVecElemPerVecReg, 0);
@@ -90,7 +90,7 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
     }
 
     DPRINTF(GPUInst, "%s: generating operand info for %d operands\n",
-        disassemble(), getNumOperands());
+            disassemble(), getNumOperands());
 
     _staticInst->initDynOperandInfo(wavefront(), computeUnit());
 }
@@ -259,8 +259,8 @@ GPUDynInst::hasDestinationSgpr() const
 }
 
 bool
-GPUDynInst::isOpcode(
-    const std::string &opcodeStr, const std::string &extStr) const
+GPUDynInst::isOpcode(const std::string &opcodeStr,
+                     const std::string &extStr) const
 {
     return _staticInst->opcode().find(opcodeStr) != std::string::npos &&
            _staticInst->opcode().find(extStr) != std::string::npos;
@@ -307,7 +307,7 @@ void
 GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)
 {
     DPRINTF(GPUMem, "CU%d: WF[%d][%d]: mempacket status bitvector=%#x\n",
-        cu->cu_id, simdId, wfSlotId, exec_mask);
+            cu->cu_id, simdId, wfSlotId, exec_mask);
 
     _staticInst->initiateAcc(gpuDynInst);
 }
@@ -316,9 +316,9 @@ void
 GPUDynInst::completeAcc(GPUDynInstPtr gpuDynInst)
 {
     DPRINTF(GPUMem,
-        "CU%d: WF[%d][%d]: mempacket status bitvector="
-        "%#x\n complete",
-        cu->cu_id, simdId, wfSlotId, exec_mask);
+            "CU%d: WF[%d][%d]: mempacket status bitvector="
+            "%#x\n complete",
+            cu->cu_id, simdId, wfSlotId, exec_mask);
 
     _staticInst->completeAcc(gpuDynInst);
 }
@@ -789,7 +789,7 @@ GPUDynInst::doApertureCheck(const VectorMask &mask)
                        bits(addr[lane], 63, 47)) {
                 // we are in the "hole", this is a memory violation
                 fatal("flat access at addr %#x has a memory violation\n",
-                    addr[lane]);
+                      addr[lane]);
             } else {
                 // global memory segment
                 staticInstruction()->executed_as = enums::SC_GLOBAL;
@@ -916,8 +916,8 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
 
         uint32_t numSgprs = wavefront()->maxSgprs;
         uint32_t physSgprIdx =
-            wavefront()->computeUnit->registerManager->mapSgpr(
-                wavefront(), numSgprs - 4);
+            wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
+                                                               numSgprs - 4);
         uint32_t offset =
             wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
         physSgprIdx = wavefront()->computeUnit->registerManager->mapSgpr(
@@ -948,7 +948,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
             if (mask[lane]) {
                 panic("flat addr %#llx maps to bad segment %d\n", addr[lane],
-                    executedAs());
+                      executedAs());
             }
         }
     }

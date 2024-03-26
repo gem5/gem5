@@ -43,18 +43,18 @@
 
 namespace gem5
 {
-PMP::PMP(const Params &params) :
-    SimObject(params),
-    pmpEntries(params.pmp_entries),
-    numRules(0),
-    hasLockEntry(false)
+PMP::PMP(const Params &params)
+    : SimObject(params),
+      pmpEntries(params.pmp_entries),
+      numRules(0),
+      hasLockEntry(false)
 {
     pmpTable.resize(pmpEntries);
 }
 
 Fault
 PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-    RiscvISA::PrivilegeMode pmode, ThreadContext *tc, Addr vaddr)
+              RiscvISA::PrivilegeMode pmode, ThreadContext *tc, Addr vaddr)
 {
     // First determine if pmp table should be consulted
     if (!shouldCheckPMP(pmode, tc))
@@ -62,10 +62,10 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
 
     if (req->hasVaddr()) {
         DPRINTF(PMP, "Checking pmp permissions for va: %#x , pa: %#x\n",
-            req->getVaddr(), req->getPaddr());
+                req->getVaddr(), req->getPaddr());
     } else { // this access is corresponding to a page table walk
-        DPRINTF(
-            PMP, "Checking pmp permissions for pa: %#x\n", req->getPaddr());
+        DPRINTF(PMP, "Checking pmp permissions for pa: %#x\n",
+                req->getPaddr());
     }
 
     // match_index will be used to identify the pmp entry
@@ -147,17 +147,17 @@ PMP::pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg)
 {
     if (pmp_index >= pmpEntries) {
         DPRINTF(PMP,
-            "Can't update pmp entry config %u"
-            " because the index exceed the size of pmp entries %u",
-            pmp_index, pmpEntries);
+                "Can't update pmp entry config %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
         return false;
     }
 
     DPRINTF(PMP, "Update pmp config with %u for pmp entry: %u \n",
-        (unsigned)this_cfg, pmp_index);
+            (unsigned)this_cfg, pmp_index);
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
         DPRINTF(PMP, "Update pmp entry config %u failed because it locked\n",
-            pmp_index);
+                pmp_index);
         return false;
     }
     pmpTable[pmp_index].pmpCfg = this_cfg;
@@ -234,26 +234,26 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 {
     if (pmp_index >= pmpEntries) {
         DPRINTF(PMP,
-            "Can't update pmp entry address %u"
-            " because the index exceed the size of pmp entries %u",
-            pmp_index, pmpEntries);
+                "Can't update pmp entry address %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
         return false;
     }
 
     DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n", (this_addr << 2),
-        pmp_index);
+            pmp_index);
 
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
         DPRINTF(PMP, "Update pmp entry %u failed because the lock bit set\n",
-            pmp_index);
+                pmp_index);
         return false;
     } else if (pmp_index < pmpTable.size() - 1 &&
                ((pmpTable[pmp_index + 1].pmpCfg & PMP_LOCK) != 0) &&
                pmpGetAField(pmpTable[pmp_index + 1].pmpCfg) == PMP_TOR) {
         DPRINTF(PMP,
-            "Update pmp entry %u failed because the entry %u lock bit"
-            " set and A field is TOR\n",
-            pmp_index, pmp_index + 1);
+                "Update pmp entry %u failed because the entry %u lock bit"
+                " set and A field is TOR\n",
+                pmp_index, pmp_index + 1);
         return false;
     }
 

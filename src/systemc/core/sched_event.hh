@@ -69,8 +69,8 @@ class ScEvent
     }
 
   public:
-    ScEvent(std::function<void()> work) :
-        work(work), _when(gem5::MaxTick), _events(nullptr)
+    ScEvent(std::function<void()> work)
+        : work(work), _when(gem5::MaxTick), _events(nullptr)
     {}
 
     ~ScEvent();

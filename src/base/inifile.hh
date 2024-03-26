@@ -123,7 +123,7 @@ class IniFile
         /// the new value will be appended to the existing entry.  If
         /// false, the new value will replace the existing entry.
         void addEntry(const std::string &entryName, const std::string &value,
-            bool append);
+                      bool append);
 
         /// Add an entry to the table given a string assigment.
         /// Assignment should be of the form "param=value" or
@@ -194,13 +194,13 @@ class IniFile
     /// Value is returned by reference in 'value' param.
     /// @retval True if found, false if not.
     bool find(const std::string &section, const std::string &entry,
-        std::string &value) const;
+              std::string &value) const;
 
     /// Determine whether the entry exists within named section exists
     /// in the .ini file.
     /// @return True if the section exists.
-    bool entryExists(
-        const std::string &section, const std::string &entry) const;
+    bool entryExists(const std::string &section,
+                     const std::string &entry) const;
 
     /// Determine whether the named section exists in the .ini file.
     /// Note that the 'Section' class is (intentionally) not public,

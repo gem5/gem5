@@ -63,22 +63,23 @@ namespace gem5
 {
 using namespace ArmISA;
 
-SystemCounter::SystemCounter(const SystemCounterParams &p) :
-    SimObject(p),
-    _enabled(true),
-    _value(0),
-    _increment(1),
-    _freqTable(p.freqs),
-    _activeFreqEntry(0),
-    _updateTick(0),
-    _freqUpdateEvent([this] { freqUpdateCallback(); }, name()),
-    _nextFreqEntry(0)
+SystemCounter::SystemCounter(const SystemCounterParams &p)
+    : SimObject(p),
+      _enabled(true),
+      _value(0),
+      _increment(1),
+      _freqTable(p.freqs),
+      _activeFreqEntry(0),
+      _updateTick(0),
+      _freqUpdateEvent([this] { freqUpdateCallback(); }, name()),
+      _nextFreqEntry(0)
 {
     fatal_if(_freqTable.empty(), "SystemCounter::SystemCounter: Base "
                                  "frequency not provided\n");
     // Store the table end marker as a 32-bit zero word
     _freqTable.push_back(0);
-    fatal_if(_freqTable.size() > MAX_FREQ_ENTRIES,
+    fatal_if(
+        _freqTable.size() > MAX_FREQ_ENTRIES,
         "SystemCounter::SystemCounter: Architecture states a maximum of 1004 "
         "frequency table entries, limit surpassed\n");
     // Set the active frequency to be the base
@@ -257,15 +258,15 @@ SystemCounter::unserialize(CheckpointIn &cp)
 }
 
 ArchTimer::ArchTimer(const std::string &name, SimObject &parent,
-    SystemCounter &sysctr, ArmInterruptPin *interrupt) :
-    _name(name),
-    _parent(parent),
-    _systemCounter(sysctr),
-    _interrupt(interrupt),
-    _control(0),
-    _counterLimit(0),
-    _offset(0),
-    _counterLimitReachedEvent([this] { counterLimitReached(); }, name)
+                     SystemCounter &sysctr, ArmInterruptPin *interrupt)
+    : _name(name),
+      _parent(parent),
+      _systemCounter(sysctr),
+      _interrupt(interrupt),
+      _control(0),
+      _counterLimit(0),
+      _offset(0),
+      _counterLimitReachedEvent([this] { counterLimitReached(); }, name)
 {
     _systemCounter.registerListener(this);
 }
@@ -305,8 +306,8 @@ ArchTimer::updateCounter()
         _control.istatus = 0;
 
         if (scheduleEvents()) {
-            _parent.schedule(
-                _counterLimitReachedEvent, whenValue(_counterLimit));
+            _parent.schedule(_counterLimitReachedEvent,
+                             whenValue(_counterLimit));
         }
     }
 }
@@ -419,8 +420,8 @@ ArchTimerKvm::scheduleEvents()
     }
 }
 
-GenericTimer::GenericTimer(const GenericTimerParams &p) :
-    SimObject(p), systemCounter(*p.counter), system(*p.system)
+GenericTimer::GenericTimer(const GenericTimerParams &p)
+    : SimObject(p), systemCounter(*p.counter), system(*p.system)
 {
     SystemCounter::validateCounterRef(p.counter);
     fatal_if(!p.system, "GenericTimer::GenericTimer: No system specified, "
@@ -449,7 +450,7 @@ GenericTimer::unserialize(CheckpointIn &cp)
     unsigned cpu_count;
     if (!UNSERIALIZE_OPT_SCALAR(cpu_count)) {
         warn("Checkpoint does not contain CPU count, assuming %i CPUs\n",
-            OLD_CPU_MAX);
+             OLD_CPU_MAX);
         cpu_count = OLD_CPU_MAX;
     }
 
@@ -461,7 +462,7 @@ GenericTimer::unserialize(CheckpointIn &cp)
         fatal("The simulated system has been initialized with %d CPUs, "
               "but the Generic Timer checkpoint expects %d CPUs. Consider "
               "restoring the checkpoint specifying %d CPUs.",
-            system.threads.size(), cpu_count, cpu_count);
+              system.threads.size(), cpu_count, cpu_count);
     }
 
     for (int i = 0; i < cpu_count; ++i) {
@@ -490,17 +491,18 @@ GenericTimer::createTimers(unsigned cpus)
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
         ThreadContext *tc = system.threads[i];
 
-        timers[i].reset(
-            new CoreTimers(*this, system, i, p.int_el3_phys->get(tc),
-                p.int_el1_phys->get(tc), p.int_el1_virt->get(tc),
-                p.int_el2_ns_phys->get(tc), p.int_el2_ns_virt->get(tc),
-                p.int_el2_s_phys->get(tc), p.int_el2_s_virt->get(tc)));
+        timers[i].reset(new CoreTimers(
+            *this, system, i, p.int_el3_phys->get(tc), p.int_el1_phys->get(tc),
+            p.int_el1_virt->get(tc), p.int_el2_ns_phys->get(tc),
+            p.int_el2_ns_virt->get(tc), p.int_el2_s_phys->get(tc),
+            p.int_el2_s_virt->get(tc)));
     }
 }
 
 void
 GenericTimer::handleStream(CoreTimers::EventStream *ev_stream,
-    ArchTimer *timer, RegVal old_cnt_ctl, RegVal cnt_ctl)
+                           ArchTimer *timer, RegVal old_cnt_ctl,
+                           RegVal cnt_ctl)
 {
     uint64_t evnten = bits(cnt_ctl, 2);
     uint64_t old_evnten = bits(old_cnt_ctl, 2);
@@ -512,7 +514,7 @@ GenericTimer::handleStream(CoreTimers::EventStream *ev_stream,
     // configuration
     if (evnten &&
         ((old_evnten != evnten) || (old_trans_to != ev_stream->transitionTo) ||
-            (old_trans_bit != ev_stream->transitionBit))) {
+         (old_trans_bit != ev_stream->transitionBit))) {
         Tick when =
             timer->whenValue(ev_stream->eventTargetValue(timer->value()));
         reschedule(ev_stream->event, when, true);
@@ -533,8 +535,8 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
     case MISCREG_CNTFRQ_EL0:
         core.cntfrq = val;
         warn_if(core.cntfrq != systemCounter.freq(),
-            "CNTFRQ configured freq "
-            "does not match the system counter freq\n");
+                "CNTFRQ configured freq "
+                "does not match the system counter freq\n");
         return;
     case MISCREG_CNTKCTL:
     case MISCREG_CNTKCTL_EL1: {
@@ -580,7 +582,7 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
     case MISCREG_CNTVCT:
     case MISCREG_CNTVCT_EL0:
         warn("Ignoring write to read only count register: %s\n",
-            miscRegName[reg]);
+             miscRegName[reg]);
         return;
 
     // EL1 virtual timer
@@ -796,43 +798,46 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
     }
 }
 
-GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent, ArmSystem &system,
-    unsigned cpu, ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
+GenericTimer::CoreTimers::CoreTimers(
+    GenericTimer &_parent, ArmSystem &system, unsigned cpu,
+    ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
     ArmInterruptPin *irq_el1_virt, ArmInterruptPin *irq_el2_ns_phys,
     ArmInterruptPin *irq_el2_ns_virt, ArmInterruptPin *irq_el2_s_phys,
-    ArmInterruptPin *irq_el2_s_virt) :
-    parent(_parent),
-    cntfrq(parent.params().cntfrq),
-    cntkctl(0),
-    cnthctl(0),
-    threadContext(system.threads[cpu]),
-    irqPhysEL3(irq_el3_phys),
-    irqPhysEL1(irq_el1_phys),
-    irqVirtEL1(irq_el1_virt),
-    irqPhysNsEL2(irq_el2_ns_phys),
-    irqVirtNsEL2(irq_el2_ns_virt),
-    irqPhysSEL2(irq_el2_s_phys),
-    irqVirtSEL2(irq_el2_s_virt),
-    physEL3(csprintf("%s.el3_phys_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el3_phys),
-    physEL1(csprintf("%s.el1_phys_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el1_phys),
-    virtEL1(csprintf("%s.el1_virt_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el1_virt),
-    physNsEL2(csprintf("%s.el2_ns_phys_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el2_ns_phys),
-    virtNsEL2(csprintf("%s.el2_ns_virt_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el2_ns_virt),
-    physSEL2(csprintf("%s.el2_s_phys_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el2_s_phys),
-    virtSEL2(csprintf("%s.el2_s_virt_timer%d", parent.name(), cpu), system,
-        parent, parent.systemCounter, irq_el2_s_virt),
-    physEvStream{EventFunctionWrapper([this] { physEventStreamCallback(); },
-                     csprintf("%s.phys_event_gen%d", parent.name(), cpu)),
-        0, 0},
-    virtEvStream{EventFunctionWrapper([this] { virtEventStreamCallback(); },
-                     csprintf("%s.virt_event_gen%d", parent.name(), cpu)),
-        0, 0}
+    ArmInterruptPin *irq_el2_s_virt)
+    : parent(_parent),
+      cntfrq(parent.params().cntfrq),
+      cntkctl(0),
+      cnthctl(0),
+      threadContext(system.threads[cpu]),
+      irqPhysEL3(irq_el3_phys),
+      irqPhysEL1(irq_el1_phys),
+      irqVirtEL1(irq_el1_virt),
+      irqPhysNsEL2(irq_el2_ns_phys),
+      irqVirtNsEL2(irq_el2_ns_virt),
+      irqPhysSEL2(irq_el2_s_phys),
+      irqVirtSEL2(irq_el2_s_virt),
+      physEL3(csprintf("%s.el3_phys_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el3_phys),
+      physEL1(csprintf("%s.el1_phys_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el1_phys),
+      virtEL1(csprintf("%s.el1_virt_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el1_virt),
+      physNsEL2(csprintf("%s.el2_ns_phys_timer%d", parent.name(), cpu), system,
+                parent, parent.systemCounter, irq_el2_ns_phys),
+      virtNsEL2(csprintf("%s.el2_ns_virt_timer%d", parent.name(), cpu), system,
+                parent, parent.systemCounter, irq_el2_ns_virt),
+      physSEL2(csprintf("%s.el2_s_phys_timer%d", parent.name(), cpu), system,
+               parent, parent.systemCounter, irq_el2_s_phys),
+      virtSEL2(csprintf("%s.el2_s_virt_timer%d", parent.name(), cpu), system,
+               parent, parent.systemCounter, irq_el2_s_virt),
+      physEvStream{EventFunctionWrapper(
+                       [this] { physEventStreamCallback(); },
+                       csprintf("%s.phys_event_gen%d", parent.name(), cpu)),
+                   0, 0},
+      virtEvStream{EventFunctionWrapper(
+                       [this] { virtEventStreamCallback(); },
+                       csprintf("%s.virt_event_gen%d", parent.name(), cpu)),
+                   0, 0}
 {}
 
 void
@@ -857,10 +862,11 @@ GenericTimer::CoreTimers::eventStreamCallback() const
 }
 
 void
-GenericTimer::CoreTimers::schedNextEvent(
-    EventStream &ev_stream, ArchTimer &timer)
+GenericTimer::CoreTimers::schedNextEvent(EventStream &ev_stream,
+                                         ArchTimer &timer)
 {
-    parent.reschedule(ev_stream.event,
+    parent.reschedule(
+        ev_stream.event,
         timer.whenValue(ev_stream.eventTargetValue(timer.value())), true);
 }
 
@@ -956,17 +962,17 @@ GenericTimerISA::readMiscReg(int reg)
     return value;
 }
 
-GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p) :
-    PioDevice(p),
-    timerRange(RangeSize(p.cnt_base, ArmSystem::PageBytes)),
-    addrRanges({timerRange}),
-    systemCounter(*p.counter),
-    physTimer(csprintf("%s.phys_timer", name()), *this, systemCounter,
-        p.int_phys->get()),
-    virtTimer(csprintf("%s.virt_timer", name()), *this, systemCounter,
-        p.int_virt->get()),
-    accessBits(0x3f),
-    system(*dynamic_cast<ArmSystem *>(sys))
+GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p)
+    : PioDevice(p),
+      timerRange(RangeSize(p.cnt_base, ArmSystem::PageBytes)),
+      addrRanges({timerRange}),
+      systemCounter(*p.counter),
+      physTimer(csprintf("%s.phys_timer", name()), *this, systemCounter,
+                p.int_phys->get()),
+      virtTimer(csprintf("%s.virt_timer", name()), *this, systemCounter,
+                p.int_virt->get()),
+      accessBits(0x3f),
+      system(*dynamic_cast<ArmSystem *>(sys))
 {
     SystemCounter::validateCounterRef(p.counter);
     // Expose optional CNTEL0Base register frame
@@ -1064,7 +1070,7 @@ GenericTimerFrame::read(PacketPtr pkt)
     const size_t size = pkt->getSize();
     const bool is_sec = pkt->isSecure();
     panic_if(size != 4 && size != 8,
-        "GenericTimerFrame::read: Invalid size %i\n", size);
+             "GenericTimerFrame::read: Invalid size %i\n", size);
 
     bool to_el0 = false;
     uint64_t resp = 0;
@@ -1081,7 +1087,7 @@ GenericTimerFrame::read(PacketPtr pkt)
     resp = timerRead(offset, size, is_sec, to_el0);
 
     DPRINTF(Timer, "GenericTimerFrame::read: 0x%x<-0x%x(%i) [S = %u]\n", resp,
-        addr, size, is_sec);
+            addr, size, is_sec);
 
     pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
@@ -1095,7 +1101,7 @@ GenericTimerFrame::write(PacketPtr pkt)
     const size_t size = pkt->getSize();
     const bool is_sec = pkt->isSecure();
     panic_if(size != 4 && size != 8,
-        "GenericTimerFrame::write: Invalid size %i\n", size);
+             "GenericTimerFrame::write: Invalid size %i\n", size);
 
     bool to_el0 = false;
     const uint64_t data = pkt->getUintX(ByteOrder::little);
@@ -1112,15 +1118,15 @@ GenericTimerFrame::write(PacketPtr pkt)
     timerWrite(offset, size, data, is_sec, to_el0);
 
     DPRINTF(Timer, "GenericTimerFrame::write: 0x%x->0x%x(%i) [S = %u]\n", data,
-        addr, size, is_sec);
+            addr, size, is_sec);
 
     pkt->makeResponse();
     return 0;
 }
 
 uint64_t
-GenericTimerFrame::timerRead(
-    Addr addr, size_t size, bool is_sec, bool to_el0) const
+GenericTimerFrame::timerRead(Addr addr, size_t size, bool is_sec,
+                             bool to_el0) const
 {
     if (!GenericTimerMem::validateAccessPerm(system, is_sec) &&
         !nonSecureAccess)
@@ -1226,14 +1232,14 @@ GenericTimerFrame::timerRead(
     default:
         warn("GenericTimerFrame::timerRead: Unexpected address (0x%x:%i), "
              "assuming RAZ\n",
-            addr, size);
+             addr, size);
         return 0;
     }
 }
 
 void
-GenericTimerFrame::timerWrite(
-    Addr addr, size_t size, uint64_t data, bool is_sec, bool to_el0)
+GenericTimerFrame::timerWrite(Addr addr, size_t size, uint64_t data,
+                              bool is_sec, bool to_el0)
 {
     if (!GenericTimerMem::validateAccessPerm(system, is_sec) &&
         !nonSecureAccess)
@@ -1320,25 +1326,26 @@ GenericTimerFrame::timerWrite(
     default:
         warn("GenericTimerFrame::timerWrite: Unexpected address (0x%x:%i), "
              "assuming WI\n",
-            addr, size);
+             addr, size);
     }
 }
 
-GenericTimerMem::GenericTimerMem(const GenericTimerMemParams &p) :
-    PioDevice(p),
-    counterCtrlRange(RangeSize(p.cnt_control_base, ArmSystem::PageBytes)),
-    counterStatusRange(RangeSize(p.cnt_read_base, ArmSystem::PageBytes)),
-    timerCtrlRange(RangeSize(p.cnt_ctl_base, ArmSystem::PageBytes)),
-    cnttidr(0x0),
-    addrRanges{counterCtrlRange, counterStatusRange, timerCtrlRange},
-    systemCounter(*p.counter),
-    frames(p.frames),
-    system(*dynamic_cast<ArmSystem *>(sys))
+GenericTimerMem::GenericTimerMem(const GenericTimerMemParams &p)
+    : PioDevice(p),
+      counterCtrlRange(RangeSize(p.cnt_control_base, ArmSystem::PageBytes)),
+      counterStatusRange(RangeSize(p.cnt_read_base, ArmSystem::PageBytes)),
+      timerCtrlRange(RangeSize(p.cnt_ctl_base, ArmSystem::PageBytes)),
+      cnttidr(0x0),
+      addrRanges{counterCtrlRange, counterStatusRange, timerCtrlRange},
+      systemCounter(*p.counter),
+      frames(p.frames),
+      system(*dynamic_cast<ArmSystem *>(sys))
 {
     SystemCounter::validateCounterRef(p.counter);
     for (auto &range : addrRanges)
         GenericTimerMem::validateFrameRange(range);
-    fatal_if(frames.size() > MAX_TIMER_FRAMES,
+    fatal_if(
+        frames.size() > MAX_TIMER_FRAMES,
         "GenericTimerMem::GenericTimerMem: Architecture states a maximum of "
         "8 memory-mapped timer frames, limit surpassed\n");
     // Initialize CNTTIDR with each frame's features
@@ -1356,9 +1363,9 @@ void
 GenericTimerMem::validateFrameRange(const AddrRange &range)
 {
     fatal_if(range.start() % ArmSystem::PageBytes,
-        "GenericTimerMem::validateFrameRange: Architecture states each "
-        "register frame should be in a separate memory page, specified "
-        "range base address [0x%x] is not compliant\n");
+             "GenericTimerMem::validateFrameRange: Architecture states each "
+             "register frame should be in a separate memory page, specified "
+             "range base address [0x%x] is not compliant\n");
 }
 
 bool
@@ -1380,7 +1387,7 @@ GenericTimerMem::read(PacketPtr pkt)
     const size_t size = pkt->getSize();
     const bool is_sec = pkt->isSecure();
     panic_if(size != 4 && size != 8,
-        "GenericTimerMem::read: Invalid size %i\n", size);
+             "GenericTimerMem::read: Invalid size %i\n", size);
 
     uint64_t resp = 0;
     if (counterCtrlRange.contains(addr))
@@ -1393,7 +1400,7 @@ GenericTimerMem::read(PacketPtr pkt)
         panic("GenericTimerMem::read: Invalid address: 0x%x\n", addr);
 
     DPRINTF(Timer, "GenericTimerMem::read: 0x%x<-0x%x(%i) [S = %u]\n", resp,
-        addr, size, is_sec);
+            addr, size, is_sec);
 
     pkt->setUintX(resp, ByteOrder::little);
     pkt->makeResponse();
@@ -1407,7 +1414,7 @@ GenericTimerMem::write(PacketPtr pkt)
     const size_t size = pkt->getSize();
     const bool is_sec = pkt->isSecure();
     panic_if(size != 4 && size != 8,
-        "GenericTimerMem::write: Invalid size %i\n", size);
+             "GenericTimerMem::write: Invalid size %i\n", size);
 
     const uint64_t data = pkt->getUintX(ByteOrder::little);
     if (counterCtrlRange.contains(addr))
@@ -1420,7 +1427,7 @@ GenericTimerMem::write(PacketPtr pkt)
         panic("GenericTimerMem::write: Invalid address: 0x%x\n", addr);
 
     DPRINTF(Timer, "GenericTimerMem::write: 0x%x->0x%x(%i) [S = %u]\n", data,
-        addr, size, is_sec);
+            addr, size, is_sec);
 
     pkt->makeResponse();
     return 0;
@@ -1460,15 +1467,15 @@ GenericTimerMem::counterCtrlRead(Addr addr, size_t size, bool is_sec) const
         }
         warn("GenericTimerMem::counterCtrlRead: Unexpected address "
              "(0x%x:%i), assuming RAZ\n",
-            addr, size);
+             addr, size);
         return 0;
     }
     }
 }
 
 void
-GenericTimerMem::counterCtrlWrite(
-    Addr addr, size_t size, uint64_t data, bool is_sec)
+GenericTimerMem::counterCtrlWrite(Addr addr, size_t size, uint64_t data,
+                                  bool is_sec)
 {
     if (!GenericTimerMem::validateAccessPerm(system, is_sec))
         return;
@@ -1494,7 +1501,7 @@ GenericTimerMem::counterCtrlWrite(
 
     case COUNTER_CTRL_CNTSR:
         warn("GenericTimerMem::counterCtrlWrite: RO reg (0x%x) [CNTSR]\n",
-            addr);
+             addr);
         return;
 
     case COUNTER_CTRL_CNTCV_LO:
@@ -1513,7 +1520,7 @@ GenericTimerMem::counterCtrlWrite(
 
     case COUNTER_CTRL_CNTID:
         warn("GenericTimerMem::counterCtrlWrite: RO reg (0x%x) [CNTID]\n",
-            addr);
+             addr);
         return;
 
     default: {
@@ -1534,7 +1541,7 @@ GenericTimerMem::counterCtrlWrite(
         }
         warn("GenericTimerMem::counterCtrlWrite: Unexpected address "
              "(0x%x:%i), assuming WI\n",
-            addr, size);
+             addr, size);
     }
     }
 }
@@ -1550,7 +1557,7 @@ GenericTimerMem::counterStatusRead(Addr addr, size_t size) const
     default:
         warn("GenericTimerMem::counterStatusRead: Unexpected address "
              "(0x%x:%i), assuming RAZ\n",
-            addr, size);
+             addr, size);
         return 0;
     }
 }
@@ -1561,12 +1568,12 @@ GenericTimerMem::counterStatusWrite(Addr addr, size_t size, uint64_t data)
     switch (addr) {
     case COUNTER_STATUS_CNTCV_LO ... COUNTER_STATUS_CNTCV_HI:
         warn("GenericTimerMem::counterStatusWrite: RO reg (0x%x) [CNTCV]\n",
-            addr);
+             addr);
         return;
     default:
         warn("GenericTimerMem::counterStatusWrite: Unexpected address "
              "(0x%x:%i), assuming WI\n",
-            addr, size);
+             addr, size);
     }
 }
 
@@ -1614,22 +1621,22 @@ GenericTimerMem::timerCtrlRead(Addr addr, size_t size, bool is_sec) const
         }
         warn("GenericTimerMem::timerCtrlRead: Unexpected address (0x%x:%i), "
              "assuming RAZ\n",
-            addr, size);
+             addr, size);
         return 0;
     }
 }
 
 void
-GenericTimerMem::timerCtrlWrite(
-    Addr addr, size_t size, uint64_t data, bool is_sec)
+GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
+                                bool is_sec)
 {
     switch (addr) {
     case TIMER_CTRL_CNTFRQ:
         if (!GenericTimerMem::validateAccessPerm(system, is_sec))
             return;
         warn_if(data != systemCounter.freq(),
-            "GenericTimerMem::timerCtrlWrite: CNTFRQ configured freq "
-            "does not match the counter freq, ignoring\n");
+                "GenericTimerMem::timerCtrlWrite: CNTFRQ configured freq "
+                "does not match the counter freq, ignoring\n");
         return;
     case TIMER_CTRL_CNTNSAR:
         if (!GenericTimerMem::validateAccessPerm(system, is_sec))
@@ -1642,7 +1649,7 @@ GenericTimerMem::timerCtrlWrite(
         return;
     case TIMER_CTRL_CNTTIDR:
         warn("GenericTimerMem::timerCtrlWrite: RO reg (0x%x) [CNTTIDR]\n",
-            addr);
+             addr);
         return;
     default:
         for (int i = 0; i < frames.size(); i++) {
@@ -1665,7 +1672,7 @@ GenericTimerMem::timerCtrlWrite(
             if (addr == cntvoff_lo_off || addr == cntvoff_hi_off) {
                 if (addr == cntvoff_lo_off)
                     data = size == 4 ? insertBits(frames[i]->getVirtOffset(),
-                                           31, 0, data) :
+                                                  31, 0, data) :
                                        data;
                 else
                     data =
@@ -1676,7 +1683,7 @@ GenericTimerMem::timerCtrlWrite(
         }
         warn("GenericTimerMem::timerCtrlWrite: Unexpected address "
              "(0x%x:%i), assuming WI\n",
-            addr, size);
+             addr, size);
     }
 }
 

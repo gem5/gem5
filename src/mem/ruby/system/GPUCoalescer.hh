@@ -107,8 +107,8 @@ class UncoalescedTable
 class CoalescedRequest
 {
   public:
-    CoalescedRequest(uint64_t _seqNum) :
-        seqNum(_seqNum), issueTime(Cycles(0)), rubyType(RubyRequestType_NULL)
+    CoalescedRequest(uint64_t _seqNum)
+        : seqNum(_seqNum), issueTime(Cycles(0)), rubyType(RubyRequestType_NULL)
     {}
     ~CoalescedRequest() {}
 
@@ -173,15 +173,15 @@ class CoalescedRequest
 class PendingWriteInst
 {
   public:
-    PendingWriteInst() :
-        numPendingStores(0), originalPort(nullptr), gpuDynInstPtr(nullptr)
+    PendingWriteInst()
+        : numPendingStores(0), originalPort(nullptr), gpuDynInstPtr(nullptr)
     {}
 
     ~PendingWriteInst() {}
 
     void
     addPendingReq(RubyPort::MemResponsePort *port, GPUDynInstPtr inst,
-        bool usingRubyTester)
+                  bool usingRubyTester)
     {
         assert(port);
         originalPort = port;
@@ -215,8 +215,8 @@ class PendingWriteInst
         if (!usingRubyTester) {
             assert(gpuDynInstPtr);
             ComputeUnit::DataPort::SenderState *ss =
-                new ComputeUnit::DataPort::SenderState(
-                    gpuDynInstPtr, 0, nullptr);
+                new ComputeUnit::DataPort::SenderState(gpuDynInstPtr, 0,
+                                                       nullptr);
             pkt->senderState = ss;
         }
 
@@ -250,8 +250,8 @@ class GPUCoalescer : public RubyPort
     class GMTokenPort : public TokenResponsePort
     {
       public:
-        GMTokenPort(const std::string &name, PortID id = InvalidPortID) :
-            TokenResponsePort(name, id)
+        GMTokenPort(const std::string &name, PortID id = InvalidPortID)
+            : TokenResponsePort(name, id)
         {}
         ~GMTokenPort() {}
 
@@ -271,8 +271,8 @@ class GPUCoalescer : public RubyPort
     GPUCoalescer(const Params &);
     ~GPUCoalescer();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     // Public Methods
     void wakeup(); // Used only for deadlock detection
@@ -298,32 +298,32 @@ class GPUCoalescer : public RubyPort
     void writeCallback(Addr address, MachineType mach, DataBlock &data);
 
     void writeCallback(Addr address, MachineType mach, DataBlock &data,
-        Cycles initialRequestTime, Cycles forwardRequestTime,
-        Cycles firstResponseTime, bool isRegion);
+                       Cycles initialRequestTime, Cycles forwardRequestTime,
+                       Cycles firstResponseTime, bool isRegion);
 
     void writeCallback(Addr address, MachineType mach, DataBlock &data,
-        Cycles initialRequestTime, Cycles forwardRequestTime,
-        Cycles firstResponseTime);
+                       Cycles initialRequestTime, Cycles forwardRequestTime,
+                       Cycles firstResponseTime);
 
-    void writeCompleteCallback(
-        Addr address, uint64_t instSeqNum, MachineType mach);
+    void writeCompleteCallback(Addr address, uint64_t instSeqNum,
+                               MachineType mach);
 
     void readCallback(Addr address, DataBlock &data);
 
     void readCallback(Addr address, MachineType mach, DataBlock &data);
 
     void readCallback(Addr address, MachineType mach, DataBlock &data,
-        Cycles initialRequestTime, Cycles forwardRequestTime,
-        Cycles firstResponseTime);
+                      Cycles initialRequestTime, Cycles forwardRequestTime,
+                      Cycles firstResponseTime);
 
     void readCallback(Addr address, MachineType mach, DataBlock &data,
-        Cycles initialRequestTime, Cycles forwardRequestTime,
-        Cycles firstResponseTime, bool isRegion);
+                      Cycles initialRequestTime, Cycles forwardRequestTime,
+                      Cycles firstResponseTime, bool isRegion);
 
     /* atomics need their own callback because the data
        might be const coming from SLICC */
-    virtual void atomicCallback(
-        Addr address, MachineType mach, const DataBlock &data);
+    virtual void atomicCallback(Addr address, MachineType mach,
+                                const DataBlock &data);
 
     RequestStatus makeRequest(PacketPtr pkt) override;
     int
@@ -425,7 +425,8 @@ class GPUCoalescer : public RubyPort
 
   protected:
     bool tryCacheAccess(Addr addr, RubyRequestType type, Addr pc,
-        RubyAccessMode access_mode, int size, DataBlock *&data_ptr);
+                        RubyAccessMode access_mode, int size,
+                        DataBlock *&data_ptr);
 
     // since the two following issue functions are protocol-specific,
     // they must be implemented in a derived coalescer
@@ -437,11 +438,13 @@ class GPUCoalescer : public RubyPort
     void kernelCallback(int wavefront_id);
 
     void hitCallback(CoalescedRequest *crequest, MachineType mach,
-        DataBlock &data, bool success, Cycles initialRequestTime,
-        Cycles forwardRequestTime, Cycles firstResponseTime, bool isRegion);
+                     DataBlock &data, bool success, Cycles initialRequestTime,
+                     Cycles forwardRequestTime, Cycles firstResponseTime,
+                     bool isRegion);
     void recordMissLatency(CoalescedRequest *crequest, MachineType mach,
-        Cycles initialRequestTime, Cycles forwardRequestTime,
-        Cycles firstResponseTime, bool success, bool isRegion);
+                           Cycles initialRequestTime,
+                           Cycles forwardRequestTime, Cycles firstResponseTime,
+                           bool success, bool isRegion);
     void completeHitCallback(std::vector<PacketPtr> &mylist);
 
     virtual RubyRequestType getRequestType(PacketPtr pkt);

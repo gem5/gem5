@@ -41,8 +41,7 @@
 
 #include "base/pngwriter.hh"
 
-extern "C"
-{
+extern "C" {
 #include <png.h>
 }
 
@@ -147,8 +146,8 @@ PngWriter::write(std::ostream &png) const
     png_set_write_fn(pngPtr, (png_voidp)&png, writePng, NULL);
 
     png_set_IHDR(pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGB,
-        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-        PNG_FILTER_TYPE_DEFAULT);
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
 
     png_write_info(pngPtr, infoPtr);
 

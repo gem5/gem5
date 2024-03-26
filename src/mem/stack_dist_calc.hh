@@ -194,7 +194,7 @@ class StackDistCalc
      *
      */
     uint64_t getSum(Node *node, bool from_left, uint64_t sum_from_below,
-        uint64_t stack_dist, uint64_t level) const;
+                    uint64_t stack_dist, uint64_t level) const;
 
     /**
      * Gets the sum from the leaf node specified. This function
@@ -222,7 +222,7 @@ class StackDistCalc
      *
      */
     uint64_t updateSum(Node *node, bool from_left, uint64_t sum_from_below,
-        uint64_t level, uint64_t stack_dist, bool discard_node);
+                       uint64_t level, uint64_t stack_dist, bool discard_node);
 
     /**
      * Updates the leaf nodes and nodes above. This function is
@@ -327,8 +327,8 @@ class StackDistCalc
      * @param mark set the mark flag for the address.
      * @return The stack distance of the current address and the mark flag.
      */
-    std::pair<uint64_t, bool> calcStackDist(
-        const Addr r_address, bool mark = false);
+    std::pair<uint64_t, bool> calcStackDist(const Addr r_address,
+                                            bool mark = false);
 
     /**
      * Process the given address:
@@ -342,8 +342,8 @@ class StackDistCalc
      * @param addNewNode If true, a new node is added to the tree
      * @return The stack distance of the current address and the mark flag.
      */
-    std::pair<uint64_t, bool> calcStackDistAndUpdate(
-        const Addr r_address, bool addNewNode = true);
+    std::pair<uint64_t, bool> calcStackDistAndUpdate(const Addr r_address,
+                                                     bool addNewNode = true);
 
   private:
     /**
@@ -382,15 +382,15 @@ class StackDistCalc
          * The discard flags are false by default they become true if
          * the node is reached again in a future lookup.
          */
-        Node() :
-            sumLeft(0),
-            sumRight(0),
-            discardLeft(false),
-            discardRight(false),
-            nodeIndex(0),
-            parent(nullptr),
-            isLeftNode(true),
-            isMarked(false)
+        Node()
+            : sumLeft(0),
+              sumRight(0),
+              discardLeft(false),
+              discardRight(false),
+              nodeIndex(0),
+              parent(nullptr),
+              isLeftNode(true),
+              isMarked(false)
         {}
     };
 

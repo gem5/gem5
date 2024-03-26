@@ -52,7 +52,8 @@ class sc_join;
 namespace sc_gem5
 {
 class ScHalt
-{};
+{
+};
 
 class Process;
 class Reset;
@@ -312,8 +313,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 class Reset
 {
   public:
-    Reset(Process *p, bool s, bool v) :
-        _process(p), _signal(nullptr), _sync(s), _value(v)
+    Reset(Process *p, bool s, bool v)
+        : _process(p), _signal(nullptr), _sync(s), _value(v)
     {}
 
     bool
@@ -364,8 +365,8 @@ class Reset
 };
 
 void newReset(const sc_core::sc_port_base *pb, Process *p, bool s, bool v);
-void newReset(
-    const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool s, bool v);
+void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool s,
+              bool v);
 
 } // namespace sc_gem5
 

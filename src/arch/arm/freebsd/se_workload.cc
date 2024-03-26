@@ -35,7 +35,7 @@
 
 #include <sys/syscall.h>
 #if !defined(__GNU_LIBRARY__) && (defined(__FreeBSD__) || defined(__APPLE__))
-#    include <sys/sysctl.h>
+#include <sys/sysctl.h>
 #endif
 
 #include "arch/arm/process.hh"
@@ -88,7 +88,7 @@ issetugidFunc(SyscallDesc *desc, ThreadContext *tc)
 #if !defined(__GNU_LIBRARY__)
 static SyscallReturn
 sysctlFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> namep, size_t nameLen,
-    VPtr<> oldp, VPtr<> oldlenp, VPtr<> newp, size_t newlen)
+           VPtr<> oldp, VPtr<> oldlenp, VPtr<> newp, size_t newlen)
 {
     uint64_t ret;
 
@@ -128,8 +128,10 @@ sysctlFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> namep, size_t nameLen,
 static SyscallDescTable<EmuFreebsd::SyscallABI32> syscallDescs32({});
 
 static SyscallDescTable<EmuFreebsd::SyscallABI64> syscallDescs64 = {
-    {1, "exit", exitFunc}, {3, "read", readFunc<ArmFreebsd64>},
-    {4, "write", writeFunc<ArmFreebsd64>}, {17, "obreak", brkFunc},
+    {1, "exit", exitFunc},
+    {3, "read", readFunc<ArmFreebsd64>},
+    {4, "write", writeFunc<ArmFreebsd64>},
+    {17, "obreak", brkFunc},
     {54, "ioctl", ioctlFunc<ArmFreebsd64>},
     {58, "readlink", readlinkFunc<ArmFreebsd64>},
     {117, "getrusage", getrusageFunc<ArmFreebsd64>},
@@ -139,7 +141,8 @@ static SyscallDescTable<EmuFreebsd::SyscallABI64> syscallDescs64 = {
 #else
     {202, "sysctl"},
 #endif
-    {253, "issetugid", issetugidFunc}, {477, "mmap", mmapFunc<ArmFreebsd64>}};
+    {253, "issetugid", issetugidFunc},
+    {477, "mmap", mmapFunc<ArmFreebsd64>}};
 
 void
 EmuFreebsd::syscall(ThreadContext *tc)

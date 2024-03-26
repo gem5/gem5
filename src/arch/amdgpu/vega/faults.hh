@@ -55,8 +55,8 @@ class VegaFault : public FaultBase
     const bool _interrupt;
     ExceptionCode _code;
 
-    VegaFault(FaultName n, bool i, ExceptionCode c) :
-        _name(n), _interrupt(i), _code(c)
+    VegaFault(FaultName n, bool i, ExceptionCode c)
+        : _name(n), _interrupt(i), _code(c)
     {}
 
     FaultName
@@ -90,8 +90,8 @@ class PageFault : public VegaFault
 
   public:
     PageFault(Addr _addr, ExceptionCode code, bool present, BaseMMU::Mode mode,
-        bool user) :
-        VegaFault("PageFault", false, code), addr(_addr)
+              bool user)
+        : VegaFault("PageFault", false, code), addr(_addr)
     {}
 
     RegVal

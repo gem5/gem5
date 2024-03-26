@@ -56,11 +56,11 @@ namespace gem5
 {
 namespace ruby
 {
-SimpleNetwork::SimpleNetwork(const Params &p) :
-    Network(p),
-    m_buffer_size(p.buffer_size),
-    m_endpoint_bandwidth(p.endpoint_bandwidth),
-    networkStats(this)
+SimpleNetwork::SimpleNetwork(const Params &p)
+    : Network(p),
+      m_buffer_size(p.buffer_size),
+      m_endpoint_bandwidth(p.endpoint_bandwidth),
+      networkStats(this)
 {
     // record the routers
     for (std::vector<BasicRouter *>::const_iterator i = p.routers.begin();
@@ -78,15 +78,16 @@ SimpleNetwork::SimpleNetwork(const Params &p) :
     bool physical_vnets = physical_vnets_channels.size() > 0;
     int vnets = p.number_of_virtual_networks;
 
-    fatal_if(physical_vnets && (physical_vnets_channels.size() != vnets),
+    fatal_if(
+        physical_vnets && (physical_vnets_channels.size() != vnets),
         "physical_vnets_channels must provide channel count for all vnets");
 
     fatal_if(!physical_vnets && (physical_vnets_bandwidth.size() != 0),
-        "physical_vnets_bandwidth also requires physical_vnets_channels");
+             "physical_vnets_bandwidth also requires physical_vnets_channels");
 
     fatal_if((physical_vnets_bandwidth.size() != vnets) &&
                  (physical_vnets_bandwidth.size() != 0),
-        "physical_vnets_bandwidth must provide BW for all vnets");
+             "physical_vnets_bandwidth must provide BW for all vnets");
 }
 
 void
@@ -103,7 +104,8 @@ SimpleNetwork::init()
 // From a switch to an endpoint node
 void
 SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
-    BasicLink *link, std::vector<NetDest> &routing_table_entry)
+                              BasicLink *link,
+                              std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
@@ -118,14 +120,14 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
     m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
-        routing_table_entry[0], simple_link->m_latency, 0,
-        simple_link->m_bw_multiplier, true);
+                                routing_table_entry[0], simple_link->m_latency,
+                                0, simple_link->m_bw_multiplier, true);
 }
 
 // From an endpoint node to a switch
 void
 SimpleNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink *link,
-    std::vector<NetDest> &routing_table_entry)
+                             std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_src = getLocalNodeID(global_src);
     assert(local_src < m_nodes);
@@ -135,19 +137,22 @@ SimpleNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink *link,
 // From a switch to a switch
 void
 SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
-    std::vector<NetDest> &routing_table_entry, PortDirection src_outport,
-    PortDirection dst_inport)
+                                std::vector<NetDest> &routing_table_entry,
+                                PortDirection src_outport,
+                                PortDirection dst_inport)
 {
     // Connect it to the two switches
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink *>(link);
 
     m_switches[dest]->addInPort(simple_link->m_buffers);
     m_switches[src]->addOutPort(simple_link->m_buffers, routing_table_entry[0],
-        simple_link->m_latency, simple_link->m_weight,
-        simple_link->m_bw_multiplier, false, dst_inport);
+                                simple_link->m_latency, simple_link->m_weight,
+                                simple_link->m_bw_multiplier, false,
+                                dst_inport);
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),
-        simple_link->m_buffers.begin(), simple_link->m_buffers.end());
+                              simple_link->m_buffers.begin(),
+                              simple_link->m_buffers.end());
 }
 
 void
@@ -246,8 +251,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-SimpleNetwork::NetworkStats::NetworkStats(statistics::Group *parent) :
-    statistics::Group(parent)
+SimpleNetwork::NetworkStats::NetworkStats(statistics::Group *parent)
+    : statistics::Group(parent)
 {}
 
 } // namespace ruby

@@ -69,8 +69,8 @@ class MemDelay : public ClockedObject
     void init() override;
 
   protected: // Port interface
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     class RequestPort : public QueuedRequestPort
     {

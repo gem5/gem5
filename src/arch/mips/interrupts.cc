@@ -148,7 +148,7 @@ Interrupts::getInterrupt()
         tc->readMiscRegNoEffect(misc_reg::Status);
     [[maybe_unused]] CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
     DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
-        (unsigned)status.im, (unsigned)cause.ip);
+            (unsigned)status.im, (unsigned)cause.ip);
 
     return std::make_shared<InterruptFault>();
 }

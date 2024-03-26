@@ -91,8 +91,8 @@ class LockedAddr
         return (contextId == req->contextId());
     }
 
-    LockedAddr(const RequestPtr &req) :
-        addr(mask(req->getPaddr())), contextId(req->contextId())
+    LockedAddr(const RequestPtr &req)
+        : addr(mask(req->getPaddr())), contextId(req->contextId())
     {}
 
     // constructor for unserialization use

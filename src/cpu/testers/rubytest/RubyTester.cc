@@ -51,21 +51,21 @@
 
 namespace gem5
 {
-RubyTester::RubyTester(const Params &p) :
-    ClockedObject(p),
-    checkStartEvent(
-        [this] { wakeup(); }, "RubyTester tick", false, Event::CPU_Tick_Pri),
-    _requestorId(p.system->getRequestorId(this)),
-    m_checkTable_ptr(nullptr),
-    m_num_cpus(p.num_cpus),
-    m_checks_to_complete(p.checks_to_complete),
-    m_deadlock_threshold(p.deadlock_threshold),
-    m_num_writers(0),
-    m_num_readers(0),
-    m_wakeup_frequency(p.wakeup_frequency),
-    m_check_flush(p.check_flush),
-    m_num_inst_only_ports(p.port_cpuInstPort_connection_count),
-    m_num_inst_data_ports(p.port_cpuInstDataPort_connection_count)
+RubyTester::RubyTester(const Params &p)
+    : ClockedObject(p),
+      checkStartEvent([this] { wakeup(); }, "RubyTester tick", false,
+                      Event::CPU_Tick_Pri),
+      _requestorId(p.system->getRequestorId(this)),
+      m_checkTable_ptr(nullptr),
+      m_num_cpus(p.num_cpus),
+      m_checks_to_complete(p.checks_to_complete),
+      m_deadlock_threshold(p.deadlock_threshold),
+      m_num_writers(0),
+      m_num_readers(0),
+      m_wakeup_frequency(p.wakeup_frequency),
+      m_check_flush(p.check_flush),
+      m_num_inst_only_ports(p.port_cpuInstPort_connection_count),
+      m_num_inst_data_ports(p.port_cpuInstDataPort_connection_count)
 {
     m_checks_completed = 0;
 
@@ -87,8 +87,8 @@ RubyTester::RubyTester(const Params &p) :
         idx++;
     }
     for (int i = 0; i < p.port_cpuInstDataPort_connection_count; ++i) {
-        CpuPort *port = new CpuPort(
-            csprintf("%s-instDataPort%d", name(), i), this, i, idx);
+        CpuPort *port = new CpuPort(csprintf("%s-instDataPort%d", name(), i),
+                                    this, i, idx);
         readPorts.push_back(port);
         writePorts.push_back(port);
         idx++;
@@ -161,7 +161,7 @@ RubyTester::getPort(const std::string &if_name, PortID idx)
             // data only ports map to the final readPort elements
             //
             if (idx > (static_cast<int>(readPorts.size()) -
-                          (m_num_inst_only_ports + m_num_inst_data_ports))) {
+                       (m_num_inst_only_ports + m_num_inst_data_ports))) {
                 panic("RubyTester::getPort: unknown data port %d\n", idx);
             }
             int read_idx = idx + m_num_inst_only_ports + m_num_inst_data_ports;
@@ -226,7 +226,7 @@ RubyTester::hitCallback(ruby::NodeID proc, ruby::SubBlock *data)
 
     DPRINTF(RubyTest, "completed request for proc: %d", proc);
     DPRINTFR(RubyTest, " addr: 0x%x, size: %d, data: ", data->getAddress(),
-        data->getSize());
+             data->getSize());
     for (int byte = 0; byte < data->getSize(); byte++) {
         DPRINTFR(RubyTest, "%d ", data->getByte(byte));
     }
@@ -266,8 +266,8 @@ RubyTester::checkForDeadlock()
             m_deadlock_threshold) {
             panic("Deadlock detected: current_time: %d last_progress_time: %d "
                   "difference:  %d processor: %d\n",
-                current_time, m_last_progress_vector[processor],
-                current_time - m_last_progress_vector[processor], processor);
+                  current_time, m_last_progress_vector[processor],
+                  current_time - m_last_progress_vector[processor], processor);
         }
     }
 }

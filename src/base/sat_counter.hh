@@ -73,14 +73,14 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    explicit GenericSatCounter(unsigned bits, T initial_val = 0) :
-        initialVal(initial_val),
-        maxVal((1ULL << bits) - 1),
-        counter(initial_val)
+    explicit GenericSatCounter(unsigned bits, T initial_val = 0)
+        : initialVal(initial_val),
+          maxVal((1ULL << bits) - 1),
+          counter(initial_val)
     {
         fatal_if(bits > 8 * sizeof(T), "Number of bits exceeds counter size");
         fatal_if(initial_val > maxVal,
-            "Saturating counter's initial value exceeds max value.");
+                 "Saturating counter's initial value exceeds max value.");
     }
 
     /**
@@ -88,10 +88,10 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter(const GenericSatCounter &other) :
-        initialVal(other.initialVal),
-        maxVal(other.maxVal),
-        counter(other.counter)
+    GenericSatCounter(const GenericSatCounter &other)
+        : initialVal(other.initialVal),
+          maxVal(other.maxVal),
+          counter(other.counter)
     {}
 
     /**

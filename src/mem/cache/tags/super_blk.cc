@@ -41,8 +41,8 @@
 
 namespace gem5
 {
-CompressionBlk::CompressionBlk() :
-    SectorSubBlk(), _size(0), _decompressionLatency(0), _compressed(false)
+CompressionBlk::CompressionBlk()
+    : SectorSubBlk(), _size(0), _decompressionLatency(0), _compressed(false)
 {}
 
 CacheBlk &
@@ -163,8 +163,8 @@ std::string
 CompressionBlk::print() const
 {
     return csprintf("%s compressed: %d size: %llu decompression latency: %d",
-        SectorSubBlk::print(), isCompressed(), getSizeBits(),
-        getDecompressionLatency());
+                    SectorSubBlk::print(), isCompressed(), getSizeBits(),
+                    getDecompressionLatency());
 }
 
 SuperBlk::SuperBlk() : SectorBlk(), blkSize(0), compressionFactor(1) {}
@@ -216,9 +216,9 @@ SuperBlk::calculateCompressionFactor(const std::size_t size) const
     const std::size_t compression_factor =
         (size > blk_size_bits) ?
             1 :
-            ((size == 0) ? blk_size_bits :
-                           alignToPowerOfTwo(
-                               std::floor(double(blk_size_bits) / size)));
+            ((size == 0) ?
+                 blk_size_bits :
+                 alignToPowerOfTwo(std::floor(double(blk_size_bits) / size)));
     return std::min(compression_factor, blks.size());
 }
 

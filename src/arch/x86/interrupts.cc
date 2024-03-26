@@ -197,8 +197,8 @@ X86ISA::Interrupts::read(PacketPtr pkt)
     ApicRegIndex reg = decodeAddr(offset);
     uint32_t val = htole(readReg(reg));
     DPRINTF(LocalApic,
-        "Reading Local APIC register %d at offset %#x as %#x.\n", reg, offset,
-        val);
+            "Reading Local APIC register %d at offset %#x as %#x.\n", reg,
+            offset, val);
     pkt->setData(((uint8_t *)&val) + (offset & mask(3)));
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -215,15 +215,15 @@ X86ISA::Interrupts::write(PacketPtr pkt)
     uint32_t val = regs[reg];
     pkt->writeData(((uint8_t *)&val) + (offset & mask(3)));
     DPRINTF(LocalApic,
-        "Writing Local APIC register %d at offset %#x as %#x.\n", reg, offset,
-        letoh(val));
+            "Writing Local APIC register %d at offset %#x as %#x.\n", reg,
+            offset, letoh(val));
     setReg(reg, letoh(val));
     pkt->makeAtomicResponse();
     return pioDelay;
 }
 void
-X86ISA::Interrupts::requestInterrupt(
-    uint8_t vector, uint8_t deliveryMode, bool level)
+X86ISA::Interrupts::requestInterrupt(uint8_t vector, uint8_t deliveryMode,
+                                     bool level)
 {
     /*
      * Fixed and lowest-priority delivery mode interrupts are handled
@@ -233,7 +233,7 @@ X86ISA::Interrupts::requestInterrupt(
     if (deliveryMode == delivery_mode::Fixed ||
         deliveryMode == delivery_mode::LowestPriority) {
         DPRINTF(LocalApic, "Interrupt is an %s.\n",
-            delivery_mode::names[deliveryMode]);
+                delivery_mode::names[deliveryMode]);
         // Queue up the interrupt in the IRR.
         if (vector > IRRV)
             IRRV = vector;
@@ -247,7 +247,7 @@ X86ISA::Interrupts::requestInterrupt(
         }
     } else if (!delivery_mode::isReserved(deliveryMode)) {
         DPRINTF(LocalApic, "Interrupt is an %s.\n",
-            delivery_mode::names[deliveryMode]);
+                delivery_mode::names[deliveryMode]);
         if (deliveryMode == delivery_mode::SMI && !pendingSmi) {
             pendingUnmaskableInt = pendingSmi = true;
             smiVector = vector;
@@ -274,7 +274,7 @@ void
 X86ISA::Interrupts::raiseInterruptPin(int number)
 {
     panic_if(number < 0 || number > 1,
-        "Asked to raise unrecognized int pin %d.", number);
+             "Asked to raise unrecognized int pin %d.", number);
     DPRINTF(LocalApic, "Raised wired interrupt pin LINT%d.\n", number);
 
     const LVTEntry entry =
@@ -287,7 +287,7 @@ X86ISA::Interrupts::raiseInterruptPin(int number)
 
     PacketPtr pkt = buildIntAcknowledgePacket();
     auto on_completion = [this, dm = entry.deliveryMode,
-                             trigger = entry.trigger](PacketPtr pkt) {
+                          trigger = entry.trigger](PacketPtr pkt) {
         requestInterrupt(pkt->getLE<uint8_t>(), dm, trigger);
         delete pkt;
     };
@@ -298,7 +298,7 @@ void
 X86ISA::Interrupts::lowerInterruptPin(int number)
 {
     panic_if(number < 0 || number > 1,
-        "Asked to lower unrecognized int pin %d.", number);
+             "Asked to lower unrecognized int pin %d.", number);
     DPRINTF(LocalApic, "Lowered wired interrupt pin LINT%d.\n", number);
 }
 
@@ -307,7 +307,7 @@ X86ISA::Interrupts::setThreadContext(ThreadContext *_tc)
 {
     assert(_tc);
     panic_if(tc != NULL && tc->cpuId() != _tc->cpuId(),
-        "Local APICs can't be moved between CPUs with different IDs.");
+             "Local APICs can't be moved between CPUs with different IDs.");
 
     BaseInterrupts::setThreadContext(_tc);
 
@@ -320,10 +320,10 @@ X86ISA::Interrupts::setThreadContext(ThreadContext *_tc)
 void
 X86ISA::Interrupts::init()
 {
-    panic_if(
-        !intRequestPort.isConnected(), "Int port not connected to anything!");
+    panic_if(!intRequestPort.isConnected(),
+             "Int port not connected to anything!");
     panic_if(!pioPort.isConnected(),
-        "Pio port of %s not connected to anything!", name());
+             "Pio port of %s not connected to anything!", name());
 
     intResponsePort.sendRangeChange();
     pioPort.sendRangeChange();
@@ -338,14 +338,14 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
     case 0: {
         TriggerIntMessage message = pkt->getRaw<TriggerIntMessage>();
         DPRINTF(LocalApic, "Got Trigger Interrupt message with vector %#x.\n",
-            message.vector);
+                message.vector);
 
-        requestInterrupt(
-            message.vector, message.deliveryMode, message.trigger);
+        requestInterrupt(message.vector, message.deliveryMode,
+                         message.trigger);
     } break;
     default:
         panic("Local apic got unknown interrupt message at offset %#x.\n",
-            offset);
+              offset);
         break;
     }
     pkt->makeAtomicResponse();
@@ -379,7 +379,8 @@ X86ISA::Interrupts::getIntAddrRange() const
 {
     AddrRangeList ranges;
     ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
-        x86InterruptAddress(initialApicId, 0) + PhysAddrAPICRangeSize));
+                             x86InterruptAddress(initialApicId, 0) +
+                                 PhysAddrAPICRangeSize));
     return ranges;
 }
 
@@ -515,7 +516,8 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                     for (int i = 0; i < numContexts; i++) {
                         if (i == initialApicId) {
                             requestInterrupt(message.vector,
-                                message.deliveryMode, message.trigger);
+                                             message.deliveryMode,
+                                             message.trigger);
                         } else {
                             apics.push_back(i);
                         }
@@ -523,7 +525,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 } else {
                     if (message.destination == initialApicId) {
                         requestInterrupt(message.vector, message.deliveryMode,
-                            message.trigger);
+                                         message.trigger);
                     } else {
                         apics.push_back(message.destination);
                     }
@@ -532,12 +534,12 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             break;
         case 1:
             newVal = val;
-            requestInterrupt(
-                message.vector, message.deliveryMode, message.trigger);
+            requestInterrupt(message.vector, message.deliveryMode,
+                             message.trigger);
             break;
         case 2:
-            requestInterrupt(
-                message.vector, message.deliveryMode, message.trigger);
+            requestInterrupt(message.vector, message.deliveryMode,
+                             message.trigger);
             // Fall through
         case 3: {
             for (int i = 0; i < numContexts; i++) {
@@ -555,7 +557,8 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         regs[APIC_INTERRUPT_COMMAND_LOW] = low;
         for (auto id : apics) {
             PacketPtr pkt = buildIntTriggerPacket(id, message);
-            intRequestPort.sendMessage(pkt, sys->isTimingMode(),
+            intRequestPort.sendMessage(
+                pkt, sys->isTimingMode(),
                 [this](PacketPtr pkt) { completeIPI(pkt); });
         }
         newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
@@ -578,11 +581,12 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         Tick offset = curTick() % clockPeriod();
         if (offset) {
             reschedule(apicTimerEvent,
-                curTick() + (newCount + 1) * clockPeriod() - offset, true);
+                       curTick() + (newCount + 1) * clockPeriod() - offset,
+                       true);
         } else {
             if (newCount)
                 reschedule(apicTimerEvent,
-                    curTick() + newCount * clockPeriod(), true);
+                           curTick() + newCount * clockPeriod(), true);
         }
     } break;
     case APIC_CURRENT_COUNT:
@@ -598,17 +602,17 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
     return;
 }
 
-X86ISA::Interrupts::Interrupts(const Params &p) :
-    BaseInterrupts(p),
-    sys(p.system),
-    clockDomain(*p.clk_domain),
-    apicTimerEvent([this] { processApicTimerEvent(); }, name()),
-    intResponsePort(name() + ".int_responder", this, this),
-    intRequestPort(name() + ".int_requestor", this, this, p.int_latency),
-    lint0Pin(name() + ".lint0", 0, this, 0),
-    lint1Pin(name() + ".lint1", 0, this, 1),
-    pioPort(this),
-    pioDelay(p.pio_latency)
+X86ISA::Interrupts::Interrupts(const Params &p)
+    : BaseInterrupts(p),
+      sys(p.system),
+      clockDomain(*p.clk_domain),
+      apicTimerEvent([this] { processApicTimerEvent(); }, name()),
+      intResponsePort(name() + ".int_responder", this, this),
+      intRequestPort(name() + ".int_requestor", this, this, p.int_latency),
+      lint0Pin(name() + ".lint0", 0, this, 0),
+      lint1Pin(name() + ".lint1", 0, this, 1),
+      pioPort(this),
+      pioDelay(p.pio_latency)
 {
     memset(regs, 0, sizeof(regs));
     // Set the local apic DFR to the flat model.
@@ -657,7 +661,7 @@ X86ISA::Interrupts::checkInterruptsRaw() const
 {
     return pendingUnmaskableInt || pendingExtInt ||
            (IRRV > ISRV &&
-               bits(IRRV, 7, 4) > bits(regs[APIC_TASK_PRIORITY], 7, 4));
+            bits(IRRV, 7, 4) > bits(regs[APIC_TASK_PRIORITY], 7, 4));
 }
 
 Fault

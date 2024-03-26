@@ -121,8 +121,8 @@ class PM4PacketProcessor : public DmaVirtDevice
      * This method creates a new PM4Queue based on a queue descriptor and an
      * offset.
      */
-    void newQueue(
-        QueueDesc *q, Addr offset, PM4MapQueues *pkt = nullptr, int id = -1);
+    void newQueue(QueueDesc *q, Addr offset, PM4MapQueues *pkt = nullptr,
+                  int id = -1);
 
     /**
      * This method start processing a PM4Queue from the current read pointer
@@ -158,9 +158,9 @@ class PM4PacketProcessor : public DmaVirtDevice
     void mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt);
     void mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt);
     void processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr, QueueDesc *mqd,
-        uint16_t vmid);
+                    uint16_t vmid);
     void processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
-        SDMAQueueDesc *mqd, uint16_t vmid);
+                        SDMAQueueDesc *mqd, uint16_t vmid);
     void releaseMem(PM4Queue *q, PM4ReleaseMem *pkt);
     void releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr);
     void runList(PM4Queue *q, PM4RunList *pkt);

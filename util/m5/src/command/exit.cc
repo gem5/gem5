@@ -45,7 +45,7 @@ do_exit(const DispatchTable &dt, Args &args)
 }
 
 Command exit_cmd = {"exit", 0, 1, do_exit,
-    "[delay]\n"
-    "        Exit after delay, or immediately"};
+                    "[delay]\n"
+                    "        Exit after delay, or immediately"};
 
 } // anonymous namespace

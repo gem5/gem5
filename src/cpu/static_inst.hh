@@ -459,23 +459,23 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /**
      * Internal function to generate disassembly string.
      */
-    virtual std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const = 0;
+    virtual std::string
+    generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const = 0;
 
     /// Constructor.
     /// It's important to initialize everything here to a sane
     /// default, since the decoder generally only overrides
     /// the fields that are meaningful for the particular
     /// instruction.
-    StaticInst(const char *_mnemonic, OpClass op_class) :
-        _opClass(op_class), mnemonic(_mnemonic)
+    StaticInst(const char *_mnemonic, OpClass op_class)
+        : _opClass(op_class), mnemonic(_mnemonic)
     {}
 
   public:
     virtual ~StaticInst(){};
 
-    virtual Fault execute(
-        ExecContext *xc, trace::InstRecord *traceData) const = 0;
+    virtual Fault execute(ExecContext *xc,
+                          trace::InstRecord *traceData) const = 0;
 
     virtual Fault
     initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
@@ -484,8 +484,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
     }
 
     virtual Fault
-    completeAcc(
-        Packet *pkt, ExecContext *xc, trace::InstRecord *trace_data) const
+    completeAcc(Packet *pkt, ExecContext *xc,
+                trace::InstRecord *trace_data) const
     {
         panic("completeAcc not defined!");
     }
@@ -530,8 +530,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * Invalid if not a PC-relative branch (i.e. isDirectCtrl()
      * should be true).
      */
-    virtual std::unique_ptr<PCStateBase> branchTarget(
-        const PCStateBase &pc) const;
+    virtual std::unique_ptr<PCStateBase>
+    branchTarget(const PCStateBase &pc) const;
 
     /**
      * Return the target address for an indirect branch (jump).  The
@@ -549,8 +549,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
      * then cache it in #cachedDisassembly.  If the disassembly
      * should not be cached, this function should be overridden directly.
      */
-    virtual const std::string &disassemble(
-        Addr pc, const loader::SymbolTable *symtab = nullptr) const;
+    virtual const std::string &
+    disassemble(Addr pc, const loader::SymbolTable *symtab = nullptr) const;
 
     /**
      * Print a separator separated list of this instruction's set flag

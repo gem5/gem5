@@ -42,8 +42,8 @@
 
 namespace gem5
 {
-ClockedObject::ClockedObject(const ClockedObjectParams &p) :
-    SimObject(p), Clocked(*p.clk_domain), powerState(p.power_state)
+ClockedObject::ClockedObject(const ClockedObjectParams &p)
+    : SimObject(p), Clocked(*p.clk_domain), powerState(p.power_state)
 {
     // Register the power_model with the object
     // Slightly counter-intuitively, power models need to to register with the

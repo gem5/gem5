@@ -39,7 +39,8 @@ namespace gem5
 // which lets it be exported into systemc.
 
 struct ClockRateControlDummyProtocolType
-{};
+{
+};
 
 class ClockRateControlFwIf : public virtual sc_core::sc_interface
 {
@@ -62,14 +63,14 @@ class ClockRateControlSlaveBase : public ClockRateControlFwIf
 
 class ClockRateControlInitiatorSocket :
     public tlm::tlm_base_initiator_socket<64, ClockRateControlFwIf,
-        ClockRateControlBwIf>
+                                          ClockRateControlBwIf>
 {
   private:
     ClockRateControlBwIf dummyBwIf;
 
   public:
     typedef tlm::tlm_base_initiator_socket<64, ClockRateControlFwIf,
-        ClockRateControlBwIf>
+                                           ClockRateControlBwIf>
         Base;
 
     using Base::bind;
@@ -99,11 +100,11 @@ class ClockRateControlInitiatorSocket :
 
 class ClockRateControlTargetSocket :
     public tlm::tlm_base_target_socket<64, ClockRateControlFwIf,
-        ClockRateControlBwIf>
+                                       ClockRateControlBwIf>
 {
   public:
     typedef tlm::tlm_base_target_socket<64, ClockRateControlFwIf,
-        ClockRateControlBwIf>
+                                        ClockRateControlBwIf>
         Base;
 
     using Base::bind;

@@ -63,14 +63,14 @@ FALRUBlk::print() const
     return csprintf("%s inCachesMask: %#x", CacheBlk::print(), inCachesMask);
 }
 
-FALRU::FALRU(const Params &p) :
-    BaseTags(p),
+FALRU::FALRU(const Params &p)
+    : BaseTags(p),
 
-    cacheTracking(p.min_tracked_cache_size, size, blkSize, this)
+      cacheTracking(p.min_tracked_cache_size, size, blkSize, this)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
-            blkSize);
+              blkSize);
     if (!isPowerOf2(size))
         fatal("Cache Size must be power of 2 for now");
 
@@ -133,8 +133,8 @@ FALRU::accessBlock(const PacketPtr pkt, Cycles &lat)
 }
 
 CacheBlk *
-FALRU::accessBlock(
-    const PacketPtr pkt, Cycles &lat, CachesMask *in_caches_mask)
+FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
+                   CachesMask *in_caches_mask)
 {
     CachesMask mask = 0;
     FALRUBlk *blk =
@@ -187,7 +187,7 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 
 CacheBlk *
 FALRU::findVictim(Addr addr, const bool is_secure, const std::size_t size,
-    std::vector<CacheBlk *> &evict_blks)
+                  std::vector<CacheBlk *> &evict_blks)
 {
     // The victim is always stored on the tail for the FALRU
     FALRUBlk *victim = tail;
@@ -292,25 +292,26 @@ printSize(std::ostream &stream, size_t size)
 }
 
 FALRU::CacheTracking::CacheTracking(unsigned min_size, unsigned max_size,
-    unsigned block_size, statistics::Group *parent) :
-    statistics::Group(parent),
-    blkSize(block_size),
-    minTrackedSize(min_size),
-    numTrackedCaches(
-        max_size > min_size ? floorLog2(max_size) - floorLog2(min_size) : 0),
-    inAllCachesMask(mask(numTrackedCaches)),
-    boundaries(numTrackedCaches),
-    ADD_STAT(hits, statistics::units::Count::get(),
-        "The number of hits in each cache size."),
-    ADD_STAT(misses, statistics::units::Count::get(),
-        "The number of misses in each cache size."),
-    ADD_STAT(accesses, statistics::units::Count::get(),
-        "The number of accesses to the FA LRU cache.")
+                                    unsigned block_size,
+                                    statistics::Group *parent)
+    : statistics::Group(parent),
+      blkSize(block_size),
+      minTrackedSize(min_size),
+      numTrackedCaches(
+          max_size > min_size ? floorLog2(max_size) - floorLog2(min_size) : 0),
+      inAllCachesMask(mask(numTrackedCaches)),
+      boundaries(numTrackedCaches),
+      ADD_STAT(hits, statistics::units::Count::get(),
+               "The number of hits in each cache size."),
+      ADD_STAT(misses, statistics::units::Count::get(),
+               "The number of misses in each cache size."),
+      ADD_STAT(accesses, statistics::units::Count::get(),
+               "The number of accesses to the FA LRU cache.")
 {
     fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,
-        "Not enough bits (%s) in type CachesMask type to keep "
-        "track of %d caches\n",
-        sizeof(CachesMask), numTrackedCaches);
+             "Not enough bits (%s) in type CachesMask type to keep "
+             "track of %d caches\n",
+             sizeof(CachesMask), numTrackedCaches);
 
     hits.init(numTrackedCaches + 1);
     misses.init(numTrackedCaches + 1);
@@ -337,16 +338,16 @@ FALRU::CacheTracking::check(const FALRUBlk *head, const FALRUBlk *tail) const
 
     while (blk) {
         panic_if(blk->inCachesMask != in_caches_mask,
-            "Expected cache mask "
-            "%x found %x",
-            blk->inCachesMask, in_caches_mask);
+                 "Expected cache mask "
+                 "%x found %x",
+                 blk->inCachesMask, in_caches_mask);
 
         curr_size += blkSize;
         if (curr_size == tracked_cache_size && blk != tail) {
             panic_if(boundaries[j] != blk,
-                "Unexpected boundary for the %d-th "
-                "cache",
-                j);
+                     "Unexpected boundary for the %d-th "
+                     "cache",
+                     j);
             tracked_cache_size <<= 1;
             // from this point, blocks fit only in the larger caches
             in_caches_mask &= ~(1U << j);

@@ -75,32 +75,32 @@ struct DmaDesc
     uint64_t user2;
 };
 
-#define ADD_FIELD8(NAME, OFFSET, BITS) \
-    inline uint8_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
-    inline void NAME(uint8_t d) \
-    { \
-        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d); \
+#define ADD_FIELD8(NAME, OFFSET, BITS)                                        \
+    inline uint8_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); }  \
+    inline void NAME(uint8_t d)                                               \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
     }
 
-#define ADD_FIELD16(NAME, OFFSET, BITS) \
+#define ADD_FIELD16(NAME, OFFSET, BITS)                                       \
     inline uint16_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
-    inline void NAME(uint16_t d) \
-    { \
-        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d); \
+    inline void NAME(uint16_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
     }
 
-#define ADD_FIELD32(NAME, OFFSET, BITS) \
+#define ADD_FIELD32(NAME, OFFSET, BITS)                                       \
     inline uint32_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
-    inline void NAME(uint32_t d) \
-    { \
-        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d); \
+    inline void NAME(uint32_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
     }
 
-#define ADD_FIELD64(NAME, OFFSET, BITS) \
+#define ADD_FIELD64(NAME, OFFSET, BITS)                                       \
     inline uint64_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
-    inline void NAME(uint64_t d) \
-    { \
-        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d); \
+    inline void NAME(uint64_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
     }
 
 template <class T>

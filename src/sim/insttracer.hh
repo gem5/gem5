@@ -157,13 +157,13 @@ class InstRecord
 
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        const StaticInstPtr _macroStaticInst = nullptr) :
-        when(_when),
-        thread(_thread),
-        staticInst(_staticInst),
-        pc(_pc.clone()),
-        macroStaticInst(_macroStaticInst)
+               const StaticInstPtr _staticInst, const PCStateBase &_pc,
+               const StaticInstPtr _macroStaticInst = nullptr)
+        : when(_when),
+          thread(_thread),
+          staticInst(_staticInst),
+          pc(_pc.clone()),
+          macroStaticInst(_macroStaticInst)
     {}
 
     virtual ~InstRecord()
@@ -194,7 +194,7 @@ class InstRecord
         dataStatus = (DataStatus)sizeof(T);
         static_assert(sizeof(T) == DataInt8 || sizeof(T) == DataInt16 ||
                           sizeof(T) == DataInt32 || sizeof(T) == DataInt64,
-            "Type T has an unrecognized size.");
+                      "Type T has an unrecognized size.");
     }
 
     void
@@ -400,7 +400,7 @@ class InstDisassembler : public SimObject
 
     virtual std::string
     disassemble(StaticInstPtr inst, const PCStateBase &pc,
-        const loader::SymbolTable *symtab) const
+                const loader::SymbolTable *symtab) const
     {
         return inst->disassemble(pc.instAddr(), symtab);
     }
@@ -414,13 +414,14 @@ class InstTracer : public SimObject
 
     virtual ~InstTracer() {}
 
-    virtual InstRecord *getInstRecord(Tick when, ThreadContext *tc,
-        const StaticInstPtr staticInst, const PCStateBase &pc,
-        const StaticInstPtr macroStaticInst = nullptr) = 0;
+    virtual InstRecord *
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) = 0;
 
     std::string
     disassemble(StaticInstPtr inst, const PCStateBase &pc,
-        const loader::SymbolTable *symtab = nullptr) const
+                const loader::SymbolTable *symtab = nullptr) const
     {
         return disassembler->disassemble(inst, pc, symtab);
     }

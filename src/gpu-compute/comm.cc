@@ -130,15 +130,16 @@ ScheduleToExecute::readyInst(int func_unit_id)
 
 void
 ScheduleToExecute::dispatchTransition(const GPUDynInstPtr &gpu_dyn_inst,
-    int func_unit_id, DISPATCH_STATUS disp_status)
+                                      int func_unit_id,
+                                      DISPATCH_STATUS disp_status)
 {
     _readyInsts[func_unit_id] = gpu_dyn_inst;
     _dispatchStatus[func_unit_id] = disp_status;
 }
 
 void
-ScheduleToExecute::dispatchTransition(
-    int func_unit_id, DISPATCH_STATUS disp_status)
+ScheduleToExecute::dispatchTransition(int func_unit_id,
+                                      DISPATCH_STATUS disp_status)
 {
     _readyInsts[func_unit_id] = nullptr;
     _dispatchStatus[func_unit_id] = disp_status;

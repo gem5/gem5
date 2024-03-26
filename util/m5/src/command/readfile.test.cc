@@ -205,5 +205,5 @@ TEST(ReadfileDeathTest, BadFile)
     test_read_file_size = 16;
     test_max_buf_size = 0;
     EXPECT_EXIT(run({"readfile"}, true), ::testing::ExitedWithCode(2),
-        "Failed to write file");
+                "Failed to write file");
 }

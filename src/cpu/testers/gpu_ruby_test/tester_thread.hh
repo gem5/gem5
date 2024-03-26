@@ -60,8 +60,8 @@ class TesterThread : public ClockedObject
     void checkDeadlock();
     void scheduleDeadlockCheckEvent();
 
-    void attachTesterThreadToPorts(ProtocolTester *_tester,
-        ProtocolTester::SeqPort *_port,
+    void attachTesterThreadToPorts(
+        ProtocolTester *_tester, ProtocolTester::SeqPort *_port,
         ProtocolTester::GMTokenPort *_tokenPort = nullptr,
         ProtocolTester::SeqPort *_sqcPort = nullptr,
         ProtocolTester::SeqPort *_scalarPort = nullptr);
@@ -98,8 +98,8 @@ class TesterThread : public ClockedObject
         std::string desc;
 
       public:
-        TesterThreadEvent(TesterThread *_thread, std::string _description) :
-            Event(CPU_Tick_Pri), thread(_thread), desc(_description)
+        TesterThreadEvent(TesterThread *_thread, std::string _description)
+            : Event(CPU_Tick_Pri), thread(_thread), desc(_description)
         {}
         void
         setDesc(std::string _description)
@@ -126,8 +126,8 @@ class TesterThread : public ClockedObject
         TesterThread *thread;
 
       public:
-        DeadlockCheckEvent(TesterThread *_thread) :
-            Event(CPU_Tick_Pri), thread(_thread)
+        DeadlockCheckEvent(TesterThread *_thread)
+            : Event(CPU_Tick_Pri), thread(_thread)
         {}
         void
         process() override
@@ -151,8 +151,8 @@ class TesterThread : public ClockedObject
         Value storedValue;
         Cycles issueCycle;
 
-        OutstandingReq(int _lane, Location _loc, Value _val, Cycles _cycle) :
-            lane(_lane), origLoc(_loc), storedValue(_val), issueCycle(_cycle)
+        OutstandingReq(int _lane, Location _loc, Value _val, Cycles _cycle)
+            : lane(_lane), origLoc(_loc), storedValue(_val), issueCycle(_cycle)
         {}
 
         ~OutstandingReq() {}
@@ -216,20 +216,20 @@ class TesterThread : public ClockedObject
 
     // add an outstanding request to its corresponding table
     void addOutstandingReqs(OutstandingReqTable &req_table, Addr addr,
-        int lane, Location loc,
-        Value stored_val = AddressManager::INVALID_VALUE);
+                            int lane, Location loc,
+                            Value stored_val = AddressManager::INVALID_VALUE);
 
     // pop an outstanding request from the input table
-    OutstandingReq popOutstandingReq(
-        OutstandingReqTable &req_table, Addr address);
+    OutstandingReq popOutstandingReq(OutstandingReqTable &req_table,
+                                     Addr address);
 
     // validate all atomic responses
     void validateAtomicResp(Location loc, int lane, Value ret_val);
     // validate all Load responses
     void validateLoadResp(Location loc, int lane, Value ret_val);
 
-    void printOutstandingReqs(
-        const OutstandingReqTable &table, std::stringstream &ss) const;
+    void printOutstandingReqs(const OutstandingReqTable &table,
+                              std::stringstream &ss) const;
 };
 
 } // namespace gem5

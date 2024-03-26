@@ -191,8 +191,8 @@ PerfectCacheMemory<ENTRY>::getPermission(Addr address) const
 
 template <class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::changePermission(
-    Addr address, AccessPermission new_perm)
+PerfectCacheMemory<ENTRY>::changePermission(Addr address,
+                                            AccessPermission new_perm)
 {
     Addr line_address = makeLineAddress(address);
     PerfectCacheLineState<ENTRY> &line_state = m_map[line_address];

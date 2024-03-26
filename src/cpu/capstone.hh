@@ -75,7 +75,7 @@ class CapstoneDisassembler : public InstDisassembler
     CapstoneDisassembler(const Params &p);
 
     std::string disassemble(StaticInstPtr inst, const PCStateBase &pc,
-        const loader::SymbolTable *symtab) const override;
+                            const loader::SymbolTable *symtab) const override;
 
   protected:
     /**

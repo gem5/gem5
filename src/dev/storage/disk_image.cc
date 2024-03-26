@@ -163,8 +163,8 @@ RawDiskImage::write(const uint8_t *data, std::streampos offset)
 const uint32_t CowDiskImage::VersionMajor = 1;
 const uint32_t CowDiskImage::VersionMinor = 0;
 
-CowDiskImage::CowDiskImage(const Params &p) :
-    DiskImage(p), filename(p.image_file), child(p.child), table(NULL)
+CowDiskImage::CowDiskImage(const Params &p)
+    : DiskImage(p), filename(p.image_file), child(p.child), table(NULL)
 {
     if (filename.empty()) {
         initSectorTable(p.table_size);
@@ -252,7 +252,7 @@ CowDiskImage::open(const std::string &file)
 
     if (major_version != VersionMajor && minor_version != VersionMinor)
         panic("Could not open %s: invalid version %d.%d != %d.%d", file,
-            major_version, minor_version, VersionMajor, VersionMinor);
+              major_version, minor_version, VersionMajor, VersionMinor);
 
     uint64_t sector_count;
     SafeReadSwap(stream, sector_count);

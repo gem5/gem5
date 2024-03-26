@@ -102,8 +102,8 @@ CfiMemory::ProgramBuffer::setup(ssize_t buffer_size)
 }
 
 bool
-CfiMemory::ProgramBuffer::write(
-    Addr flash_address, void *data_ptr, ssize_t size)
+CfiMemory::ProgramBuffer::write(Addr flash_address, void *data_ptr,
+                                ssize_t size)
 {
     if (bytesWritten >= buffer.size())
         return true;
@@ -130,7 +130,7 @@ CfiMemory::ProgramBuffer::writeback()
         return false;
     } else {
         std::memcpy(parent.toHostAddr(parent.start() + blockPointer),
-            buffer.data(), bytesWritten);
+                    buffer.data(), bytesWritten);
         return true;
     }
 }
@@ -151,83 +151,83 @@ CfiMemory::ProgramBuffer::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(blockPointer);
 }
 
-CfiMemory::CfiMemory(const CfiMemoryParams &p) :
-    AbstractMemory(p),
-    port(name() + ".port", *this),
-    latency(p.latency),
-    latency_var(p.latency_var),
-    bandwidth(p.bandwidth),
-    isBusy(false),
-    retryReq(false),
-    retryResp(false),
-    releaseEvent([this] { release(); }, name()),
-    dequeueEvent([this] { dequeue(); }, name()),
-    numberOfChips(2),
-    vendorID(p.vendor_id),
-    deviceID(p.device_id),
-    bankWidth(p.bank_width),
-    readState(CfiCommand::READ_ARRAY),
-    writeState(CfiCommand::NO_CMD),
-    statusRegister(STATUS_READY),
-    blocks(*this, size() / p.blk_size, p.blk_size),
-    programBuffer(*this),
-    cfiQueryTable{
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        /* Query-unique ASCII string */
-        'Q', 'R', 'Y',
-        /* Primary Algorithm Command Set and Control = Intel/Sharp */
-        0x01, 0x00,
-        /* Address for Primary Algorithm extended Query */
-        0x31, 0x00,
-        /* Alternative Algorithm Command Set and Control Interface */
-        0x00, 0x00,
-        /* Address for Alternative Algorithm extended Query */
-        0x00, 0x00,
-        /* Vcc Minimum Program/Erase or Write voltage ([7:4].[3-0]V) */
-        0x45,
-        /* Vcc Maximum Program/Erase or Write voltage ([7:4].[3-0]V) */
-        0x55,
-        /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
-        0x00,
-        /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
-        0x00,
-        /* Typical timeout per single byte/word/D-word program: (2^N us) */
-        0x01,
-        /* Typical timeout for maximum-size multi-byte program: (2^N us) */
-        0x01,
-        /* Typical timeout per individual block erase: (2^N ms) */
-        0x01,
-        /* Typical timeout for full chip erase: (2^N ms) */
-        0x00,
-        /* Maximum timeout for byte/word/D-word program (2^N typical) */
-        0x00,
-        /* Maximum timeout for multi-byte program (2^N typical) */
-        0x00,
-        /* Maximum timeout per individual block erase (2^N typical) */
-        0x00,
-        /* Maximum timeout for chip erase (2^N typical) */
-        0x00,
-        /* Device Size in number of bytes (2^N) */
-        static_cast<uint8_t>(log2(size())),
-        /* Flash Device Interface Code description */
-        0x05, 0x00,
-        /* Maximum number of bytes in multi-byte program (2^N) */
-        static_cast<uint8_t>(
-            bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 7, 0)),
-        static_cast<uint8_t>(
-            bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 15, 8)),
-        /* Number of Erase Block Regions within device */
-        0x01,
-        /* Erase Block Region Information */
-        static_cast<uint8_t>(bits(blocks.number(), 7, 0)),
-        static_cast<uint8_t>(bits(blocks.number(), 15, 8)),
-        static_cast<uint8_t>(bits(blocks.size(), 7, 0)),
-        static_cast<uint8_t>(bits(blocks.size(), 15, 8)), 0x00, 0x00, 0x00,
-        0x00,                   // empty Block region 2 info
-        0x00, 0x00, 0x00, 0x00, // empty Block region 3 info
-        0x00, 0x00, 0x00, 0x00  // empty Block region 4 info
-    }
+CfiMemory::CfiMemory(const CfiMemoryParams &p)
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      latency(p.latency),
+      latency_var(p.latency_var),
+      bandwidth(p.bandwidth),
+      isBusy(false),
+      retryReq(false),
+      retryResp(false),
+      releaseEvent([this] { release(); }, name()),
+      dequeueEvent([this] { dequeue(); }, name()),
+      numberOfChips(2),
+      vendorID(p.vendor_id),
+      deviceID(p.device_id),
+      bankWidth(p.bank_width),
+      readState(CfiCommand::READ_ARRAY),
+      writeState(CfiCommand::NO_CMD),
+      statusRegister(STATUS_READY),
+      blocks(*this, size() / p.blk_size, p.blk_size),
+      programBuffer(*this),
+      cfiQueryTable{
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00,
+          /* Query-unique ASCII string */
+          'Q', 'R', 'Y',
+          /* Primary Algorithm Command Set and Control = Intel/Sharp */
+          0x01, 0x00,
+          /* Address for Primary Algorithm extended Query */
+          0x31, 0x00,
+          /* Alternative Algorithm Command Set and Control Interface */
+          0x00, 0x00,
+          /* Address for Alternative Algorithm extended Query */
+          0x00, 0x00,
+          /* Vcc Minimum Program/Erase or Write voltage ([7:4].[3-0]V) */
+          0x45,
+          /* Vcc Maximum Program/Erase or Write voltage ([7:4].[3-0]V) */
+          0x55,
+          /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
+          0x00,
+          /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
+          0x00,
+          /* Typical timeout per single byte/word/D-word program: (2^N us) */
+          0x01,
+          /* Typical timeout for maximum-size multi-byte program: (2^N us) */
+          0x01,
+          /* Typical timeout per individual block erase: (2^N ms) */
+          0x01,
+          /* Typical timeout for full chip erase: (2^N ms) */
+          0x00,
+          /* Maximum timeout for byte/word/D-word program (2^N typical) */
+          0x00,
+          /* Maximum timeout for multi-byte program (2^N typical) */
+          0x00,
+          /* Maximum timeout per individual block erase (2^N typical) */
+          0x00,
+          /* Maximum timeout for chip erase (2^N typical) */
+          0x00,
+          /* Device Size in number of bytes (2^N) */
+          static_cast<uint8_t>(log2(size())),
+          /* Flash Device Interface Code description */
+          0x05, 0x00,
+          /* Maximum number of bytes in multi-byte program (2^N) */
+          static_cast<uint8_t>(
+              bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 7, 0)),
+          static_cast<uint8_t>(
+              bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 15, 8)),
+          /* Number of Erase Block Regions within device */
+          0x01,
+          /* Erase Block Region Information */
+          static_cast<uint8_t>(bits(blocks.number(), 7, 0)),
+          static_cast<uint8_t>(bits(blocks.number(), 15, 8)),
+          static_cast<uint8_t>(bits(blocks.size(), 7, 0)),
+          static_cast<uint8_t>(bits(blocks.size(), 15, 8)), 0x00, 0x00, 0x00,
+          0x00,                   // empty Block region 2 info
+          0x00, 0x00, 0x00, 0x00, // empty Block region 3 info
+          0x00, 0x00, 0x00, 0x00  // empty Block region 4 info
+      }
 {}
 
 void
@@ -281,8 +281,8 @@ CfiMemory::recvFunctional(PacketPtr pkt)
 }
 
 void
-CfiMemory::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &_backdoor)
+CfiMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
+                              MemBackdoorPtr &_backdoor)
 {
     if (backdoor.ptr())
         _backdoor = &backdoor;
@@ -295,9 +295,9 @@ CfiMemory::recvTimingReq(PacketPtr pkt)
                                      "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-        "Should only see read and writes at memory controller, "
-        "saw %s to %#llx\n",
-        pkt->cmdString(), pkt->getAddr());
+             "Should only see read and writes at memory controller, "
+             "saw %s to %#llx\n",
+             pkt->cmdString(), pkt->getAddr());
 
     // we should not get a new request after committing to retry the
     // current one, but unfortunately the CPU violates this rule, so
@@ -400,7 +400,7 @@ CfiMemory::dequeue()
             // if there were packets that got in-between then we
             // already have an event scheduled, so use re-schedule
             reschedule(dequeueEvent,
-                std::max(packetQueue.front().tick, curTick()), true);
+                       std::max(packetQueue.front().tick, curTick()), true);
         } else if (drainState() == DrainState::Draining) {
             DPRINTF(Drain, "Draining of CfiMemory complete\n");
             signalDrainDone();
@@ -468,9 +468,8 @@ CfiMemory::unserialize(CheckpointIn &cp)
     UNSERIALIZE_OBJ(programBuffer);
 }
 
-CfiMemory::MemoryPort::MemoryPort(
-    const std::string &_name, CfiMemory &_memory) :
-    ResponsePort(_name), mem(_memory)
+CfiMemory::MemoryPort::MemoryPort(const std::string &_name, CfiMemory &_memory)
+    : ResponsePort(_name), mem(_memory)
 {}
 
 AddrRangeList
@@ -488,8 +487,8 @@ CfiMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 }
 
 Tick
-CfiMemory::MemoryPort::recvAtomicBackdoor(
-    PacketPtr pkt, MemBackdoorPtr &_backdoor)
+CfiMemory::MemoryPort::recvAtomicBackdoor(PacketPtr pkt,
+                                          MemBackdoorPtr &_backdoor)
 {
     return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
@@ -501,8 +500,8 @@ CfiMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-CfiMemory::MemoryPort::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &_backdoor)
+CfiMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                          MemBackdoorPtr &_backdoor)
 {
     mem.recvMemBackdoorReq(req, _backdoor);
 }
@@ -533,7 +532,7 @@ void
 CfiMemory::write(PacketPtr pkt)
 {
     DPRINTF(CFI, "write, address: %#x, val: %#x\n", pkt->getAddr(),
-        pkt->getUintX(ByteOrder::little));
+            pkt->getUintX(ByteOrder::little));
 
     const Addr flash_address = pkt->getAddr() - start();
 
@@ -664,7 +663,7 @@ CfiMemory::read(PacketPtr pkt)
     pkt->makeResponse();
 
     DPRINTF(CFI, "read, address: %#x, val: %#x\n", pkt->getAddr(),
-        pkt->getUintX(ByteOrder::little));
+            pkt->getUintX(ByteOrder::little));
 }
 
 uint64_t
@@ -737,7 +736,7 @@ CfiMemory::handleCommand(CfiCommand new_cmd)
         break;
     default:
         panic("Don't know what to do with %#x\n",
-            static_cast<uint16_t>(new_cmd));
+              static_cast<uint16_t>(new_cmd));
     }
 }
 
@@ -747,7 +746,8 @@ CfiMemory::cfiQuery(Addr flash_address)
     flash_address /= bankWidth;
 
     panic_if(flash_address >= sizeof(cfiQueryTable),
-        "Acessing invalid entry in CFI query table (addr=%#x)", flash_address);
+             "Acessing invalid entry in CFI query table (addr=%#x)",
+             flash_address);
 
     return cfiQueryTable[flash_address];
 }

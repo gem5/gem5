@@ -48,8 +48,8 @@ namespace memory
 {
 namespace qos
 {
-TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params &p) :
-    TurnaroundPolicy(p)
+TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params &p)
+    : TurnaroundPolicy(p)
 {}
 
 TurnaroundPolicyIdeal::~TurnaroundPolicyIdeal() {}
@@ -88,12 +88,13 @@ TurnaroundPolicyIdeal::selectBusState()
         }
 
         DPRINTF(QOS,
-            "QoSMemoryTurnaround::QoSTurnaroundPolicyIdeal - "
-            "QoS priority %d queues %d, %d triggering bus %s "
-            "in state %s\n",
-            queue_idx, readq_size, writeq_size,
-            (bus_state != memCtrl->getBusState()) ? "turnaround" : "staying",
-            (bus_state == MemCtrl::READ) ? "READ" : "WRITE");
+                "QoSMemoryTurnaround::QoSTurnaroundPolicyIdeal - "
+                "QoS priority %d queues %d, %d triggering bus %s "
+                "in state %s\n",
+                queue_idx, readq_size, writeq_size,
+                (bus_state != memCtrl->getBusState()) ? "turnaround" :
+                                                        "staying",
+                (bus_state == MemCtrl::READ) ? "READ" : "WRITE");
         // State selected - exit loop
         break;
     }

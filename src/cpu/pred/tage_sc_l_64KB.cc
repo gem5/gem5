@@ -46,22 +46,22 @@ namespace gem5
 namespace branch_prediction
 {
 TAGE_SC_L_64KB_StatisticalCorrector::TAGE_SC_L_64KB_StatisticalCorrector(
-    const TAGE_SC_L_64KB_StatisticalCorrectorParams &p) :
-    StatisticalCorrector(p),
-    numEntriesSecondLocalHistories(p.numEntriesSecondLocalHistories),
-    numEntriesThirdLocalHistories(p.numEntriesThirdLocalHistories),
-    pnb(p.pnb),
-    logPnb(p.logPnb),
-    pm(p.pm),
-    snb(p.snb),
-    logSnb(p.logSnb),
-    sm(p.sm),
-    tnb(p.tnb),
-    logTnb(p.logTnb),
-    tm(p.tm),
-    imnb(p.imnb),
-    logImnb(p.logImnb),
-    imm(p.imm)
+    const TAGE_SC_L_64KB_StatisticalCorrectorParams &p)
+    : StatisticalCorrector(p),
+      numEntriesSecondLocalHistories(p.numEntriesSecondLocalHistories),
+      numEntriesThirdLocalHistories(p.numEntriesThirdLocalHistories),
+      pnb(p.pnb),
+      logPnb(p.logPnb),
+      pm(p.pm),
+      snb(p.snb),
+      logSnb(p.logSnb),
+      sm(p.sm),
+      tnb(p.tnb),
+      logTnb(p.logTnb),
+      tm(p.tm),
+      imnb(p.imnb),
+      logImnb(p.logImnb),
+      imm(p.imm)
 {
     initGEHLTable(pnb, pm, pgehl, logPnb, wp, 7);
     initGEHLTable(snb, sm, sgehl, logSnb, ws, 7);
@@ -84,50 +84,53 @@ TAGE_SC_L_64KB_StatisticalCorrector::makeThreadHistory()
 }
 
 unsigned
-TAGE_SC_L_64KB_StatisticalCorrector::getIndBiasBank(
-    Addr branch_pc, BranchInfo *bi, int hitBank, int altBank) const
+TAGE_SC_L_64KB_StatisticalCorrector::getIndBiasBank(Addr branch_pc,
+                                                    BranchInfo *bi,
+                                                    int hitBank,
+                                                    int altBank) const
 {
     return (bi->predBeforeSC + (((hitBank + 1) / 4) << 4) +
-               (bi->highConf << 1) + (bi->lowConf << 2) +
-               ((altBank != 0) << 3) + ((branch_pc ^ (branch_pc >> 2)) << 7)) &
+            (bi->highConf << 1) + (bi->lowConf << 2) + ((altBank != 0) << 3) +
+            ((branch_pc ^ (branch_pc >> 2)) << 7)) &
            ((1 << logBias) - 1);
 }
 
 int
-TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(
-    ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum, int64_t pathHist)
+TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
+                                                  BranchInfo *bi, int &lsum,
+                                                  int64_t pathHist)
 {
     SC_64KB_ThreadHistory *sh =
         static_cast<SC_64KB_ThreadHistory *>(scHistory);
 
     lsum += gPredict((branch_pc << 1) + bi->predBeforeSC, sh->bwHist, bwm,
-        bwgehl, bwnb, logBwnb, wbw);
+                     bwgehl, bwnb, logBwnb, wbw);
 
     lsum += gPredict(branch_pc, pathHist, pm, pgehl, pnb, logPnb, wp);
 
     lsum += gPredict(branch_pc, sh->getLocalHistory(1, branch_pc), lm, lgehl,
-        lnb, logLnb, wl);
+                     lnb, logLnb, wl);
 
     lsum += gPredict(branch_pc, sh->getLocalHistory(2, branch_pc), sm, sgehl,
-        snb, logSnb, ws);
+                     snb, logSnb, ws);
 
     lsum += gPredict(branch_pc, sh->getLocalHistory(3, branch_pc), tm, tgehl,
-        tnb, logTnb, wt);
+                     tnb, logTnb, wt);
 
     lsum += gPredict(branch_pc, sh->imHist[scHistory->imliCount], imm, imgehl,
-        imnb, logImnb, wim);
+                     imnb, logImnb, wim);
 
     lsum += gPredict(branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
 
     int thres = (updateThreshold >> 3) +
                 pUpdateThreshold[getIndUpd(branch_pc)] +
                 12 * ((wb[getIndUpds(branch_pc)] >= 0) +
-                         (wp[getIndUpds(branch_pc)] >= 0) +
-                         (ws[getIndUpds(branch_pc)] >= 0) +
-                         (wt[getIndUpds(branch_pc)] >= 0) +
-                         (wl[getIndUpds(branch_pc)] >= 0) +
-                         (wbw[getIndUpds(branch_pc)] >= 0) +
-                         (wi[getIndUpds(branch_pc)] >= 0));
+                      (wp[getIndUpds(branch_pc)] >= 0) +
+                      (ws[getIndUpds(branch_pc)] >= 0) +
+                      (wt[getIndUpds(branch_pc)] >= 0) +
+                      (wl[getIndUpds(branch_pc)] >= 0) +
+                      (wbw[getIndUpds(branch_pc)] >= 0) +
+                      (wi[getIndUpds(branch_pc)] >= 0));
 
     return thres;
 }
@@ -140,8 +143,10 @@ TAGE_SC_L_64KB_StatisticalCorrector::gIndexLogsSubstr(int nbr, int i)
 
 void
 TAGE_SC_L_64KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
-    const StaticInstPtr &inst, bool taken, BranchInfo *tage_bi,
-    Addr corrTarget)
+                                                     const StaticInstPtr &inst,
+                                                     bool taken,
+                                                     BranchInfo *tage_bi,
+                                                     Addr corrTarget)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (!inst->isUncondCtrl()) {
@@ -157,33 +162,34 @@ TAGE_SC_L_64KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
         sh->updateLocalHistory(3, branch_pc, taken);
     }
 
-    StatisticalCorrector::scHistoryUpdate(
-        branch_pc, inst, taken, tage_bi, corrTarget);
+    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken, tage_bi,
+                                          corrTarget);
 }
 
 void
-TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(
-    ThreadID tid, Addr pc, bool taken, BranchInfo *bi, int64_t phist)
+TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc,
+                                              bool taken, BranchInfo *bi,
+                                              int64_t phist)
 {
     SC_64KB_ThreadHistory *sh =
         static_cast<SC_64KB_ThreadHistory *>(scHistory);
 
     gUpdate((pc << 1) + bi->predBeforeSC, taken, sh->bwHist, bwm, bwgehl, bwnb,
-        logBwnb, wbw, bi);
+            logBwnb, wbw, bi);
 
     gUpdate(pc, taken, phist, pm, pgehl, pnb, logPnb, wp, bi);
 
-    gUpdate(
-        pc, taken, sh->getLocalHistory(1, pc), lm, lgehl, lnb, logLnb, wl, bi);
+    gUpdate(pc, taken, sh->getLocalHistory(1, pc), lm, lgehl, lnb, logLnb, wl,
+            bi);
 
-    gUpdate(
-        pc, taken, sh->getLocalHistory(2, pc), sm, sgehl, snb, logSnb, ws, bi);
+    gUpdate(pc, taken, sh->getLocalHistory(2, pc), sm, sgehl, snb, logSnb, ws,
+            bi);
 
-    gUpdate(
-        pc, taken, sh->getLocalHistory(3, pc), tm, tgehl, tnb, logTnb, wt, bi);
+    gUpdate(pc, taken, sh->getLocalHistory(3, pc), tm, tgehl, tnb, logTnb, wt,
+            bi);
 
     gUpdate(pc, taken, sh->imHist[scHistory->imliCount], imm, imgehl, imnb,
-        logImnb, wim, bi);
+            logImnb, wim, bi);
 
     gUpdate(pc, taken, sh->imliCount, im, igehl, inb, logInb, wi, bi);
 }
@@ -205,8 +211,8 @@ TAGE_SC_L_TAGE_64KB::gtag(ThreadID tid, Addr pc, int bank) const
 }
 
 void
-TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
-    bool alloc, bool taken, TAGEBase::BranchInfo *bi, int nrand)
+TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(bool alloc, bool taken,
+                                          TAGEBase::BranchInfo *bi, int nrand)
 {
     if (!alloc) {
         return;
@@ -253,8 +259,8 @@ TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
 }
 
 void
-TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(
-    Addr branch_pc, bool taken, TAGEBase::BranchInfo *bi)
+TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(Addr branch_pc, bool taken,
+                                      TAGEBase::BranchInfo *bi)
 {
     if (bi->hitBank > 0) {
         if (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
@@ -262,7 +268,7 @@ TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(
                 // acts as a protection
                 if (bi->altBank > 0) {
                     ctrUpdate(gtable[bi->altBank][bi->altBankIndex].ctr, taken,
-                        tagTableCounterBits);
+                              tagTableCounterBits);
                 }
                 if (bi->altBank == 0) {
                     baseUpdate(branch_pc, taken, bi);
@@ -271,7 +277,7 @@ TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(
         }
 
         ctrUpdate(gtable[bi->hitBank][bi->hitBankIndex].ctr, taken,
-            tagTableCounterBits);
+                  tagTableCounterBits);
 
         // sign changes: no way it can have been useful
         if (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
@@ -301,8 +307,8 @@ TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(
     }
 }
 
-TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params) :
-    TAGE_SC_L(params)
+TAGE_SC_L_64KB::TAGE_SC_L_64KB(const TAGE_SC_L_64KBParams &params)
+    : TAGE_SC_L(params)
 {}
 
 } // namespace branch_prediction

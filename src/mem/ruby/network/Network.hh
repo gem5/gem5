@@ -100,20 +100,22 @@ class Network : public ClockedObject
 
     // returns the queue requested for the given component
     void setToNetQueue(NodeID global_id, bool ordered, int netNumber,
-        std::string vnet_type, MessageBuffer *b);
+                       std::string vnet_type, MessageBuffer *b);
     virtual void setFromNetQueue(NodeID global_id, bool ordered, int netNumber,
-        std::string vnet_type, MessageBuffer *b);
+                                 std::string vnet_type, MessageBuffer *b);
 
-    virtual void checkNetworkAllocation(
-        NodeID local_id, bool ordered, int network_num, std::string vnet_type);
+    virtual void checkNetworkAllocation(NodeID local_id, bool ordered,
+                                        int network_num,
+                                        std::string vnet_type);
 
     virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry) = 0;
+                                std::vector<NetDest> &routing_table_entry) = 0;
     virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry) = 0;
+                               std::vector<NetDest> &routing_table_entry) = 0;
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry, PortDirection src_outport,
-        PortDirection dst_inport) = 0;
+                                  std::vector<NetDest> &routing_table_entry,
+                                  PortDirection src_outport,
+                                  PortDirection dst_inport) = 0;
 
     virtual void collateStats() = 0;
     virtual void print(std::ostream &out) const = 0;

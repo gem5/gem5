@@ -196,7 +196,7 @@ class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (flags & TGT_CLONE_SETTLS)
@@ -363,7 +363,7 @@ class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
 
     static void
     archClone(uint64_t flags, Process *pp, Process *cp, ThreadContext *ptc,
-        ThreadContext *ctc, uint64_t stack, uint64_t tls)
+              ThreadContext *ctc, uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (flags & TGT_CLONE_SETTLS)

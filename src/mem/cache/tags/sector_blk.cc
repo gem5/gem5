@@ -87,7 +87,7 @@ SectorSubBlk::insert(const Addr tag, const bool is_secure)
     // Make sure it is not overwriting another sector
     panic_if(_sectorBlk && _sectorBlk->isValid() &&
                  !_sectorBlk->matchTag(tag, is_secure),
-        "Overwriting valid sector!");
+             "Overwriting valid sector!");
 
     // If the sector is not valid, insert the new tag. The sector block
     // handles its own tag's invalidation, so do not attempt to insert MaxAddr.
@@ -107,8 +107,8 @@ SectorSubBlk::invalidate()
 std::string
 SectorSubBlk::print() const
 {
-    return csprintf(
-        "%s sector offset: %#x", CacheBlk::print(), getSectorOffset());
+    return csprintf("%s sector offset: %#x", CacheBlk::print(),
+                    getSectorOffset());
 }
 
 SectorBlk::SectorBlk() : TaggedEntry(), _validCounter(0) {}
@@ -161,7 +161,7 @@ SectorBlk::print() const
         }
     }
     return csprintf("%s valid sub-blks (%d):\n%s", TaggedEntry::print(),
-        getNumValid(), sub_blk_print);
+                    getNumValid(), sub_blk_print);
 }
 
 } // namespace gem5

@@ -42,13 +42,13 @@ namespace gem5
 {
 namespace compression
 {
-Perfect::Perfect(const Params &p) :
-    Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
+Perfect::Perfect(const Params &p)
+    : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
 {}
 
 std::unique_ptr<Base::CompressionData>
-Perfect::compress(
-    const std::vector<Chunk> &chunks, Cycles &comp_lat, Cycles &decomp_lat)
+Perfect::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                  Cycles &decomp_lat)
 {
     // Compress every word sequentially
     std::unique_ptr<Base::CompressionData> comp_data(new CompData(chunks));

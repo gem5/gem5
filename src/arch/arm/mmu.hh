@@ -88,10 +88,10 @@ class MMU : public BaseMMU
   public:
     TranslationGenPtr
     translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
-        Request::Flags flags) override
+                        Request::Flags flags) override
     {
-        return TranslationGenPtr(new MMUTranslationGen(
-            PageBytes, start, size, tc, this, mode, flags));
+        return TranslationGenPtr(new MMUTranslationGen(PageBytes, start, size,
+                                                       tc, this, mode, flags));
     }
 
     enum ArmFlags
@@ -132,8 +132,10 @@ class MMU : public BaseMMU
 
     struct CachedState
     {
-        CachedState(MMU *_mmu, bool stage2) :
-            mmu(_mmu), isStage2(stage2), computeAddrTop(ArmISA::computeAddrTop)
+        CachedState(MMU *_mmu, bool stage2)
+            : mmu(_mmu),
+              isStage2(stage2),
+              computeAddrTop(ArmISA::computeAddrTop)
         {}
 
         CachedState &
@@ -226,64 +228,71 @@ class MMU : public BaseMMU
      */
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
 
     /**
      * Do a functional lookup on the TLB (for checker cpu) that
      * behaves like a normal lookup without modifying any page table state.
      */
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode, ArmTranslationType tran_type);
+                              BaseMMU::Mode mode,
+                              ArmTranslationType tran_type);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode, ArmTranslationType tran_type, bool stage2);
+                              BaseMMU::Mode mode, ArmTranslationType tran_type,
+                              bool stage2);
 
     Fault
-    translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, Mode mode) override
+    translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                    Mode mode) override
     {
         return translateAtomic(req, tc, mode, NormalTran);
     }
     Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode, ArmTranslationType tran_type, bool stage2);
+                          BaseMMU::Mode mode, ArmTranslationType tran_type,
+                          bool stage2);
     Fault translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
-        ArmTranslationType tran_type);
+                          ArmTranslationType tran_type);
 
     void
     translateTiming(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode) override
+                    Translation *translation, Mode mode) override
     {
         translateTiming(req, tc, translation, mode, NormalTran, false);
     }
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool stage2);
+                         BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                         bool stage2);
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, ArmTranslationType tran_type,
-        bool stage2);
+                         Translation *translation, Mode mode,
+                         ArmTranslationType tran_type, bool stage2);
 
     Fault translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
-        ArmTranslationType tran_type, Addr vaddr, bool long_desc_format,
-        CachedState &state);
+                          ArmTranslationType tran_type, Addr vaddr,
+                          bool long_desc_format, CachedState &state);
     Fault translateMmuOn(ThreadContext *tc, const RequestPtr &req, Mode mode,
-        Translation *translation, bool &delay, bool timing, bool functional,
-        Addr vaddr, ArmFault::TranMethod tranMethod, CachedState &state);
+                         Translation *translation, bool &delay, bool timing,
+                         bool functional, Addr vaddr,
+                         ArmFault::TranMethod tranMethod, CachedState &state);
 
     Fault translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
-        Translation *translation, bool &delay, bool timing,
-        ArmTranslationType tran_type, bool functional, CachedState &state);
+                      Translation *translation, bool &delay, bool timing,
+                      ArmTranslationType tran_type, bool functional,
+                      CachedState &state);
     Fault translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
-        Translation *translation, bool &delay, bool timing,
-        CachedState &state);
+                      Translation *translation, bool &delay, bool timing,
+                      CachedState &state);
 
     Fault translateComplete(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, ArmTranslationType tran_type,
-        bool call_from_s2);
+                            Translation *translation, Mode mode,
+                            ArmTranslationType tran_type, bool call_from_s2);
     Fault translateComplete(const RequestPtr &req, ThreadContext *tc,
-        Translation *translation, Mode mode, ArmTranslationType tran_type,
-        bool call_from_s2, CachedState &state);
-    Fault finalizePhysical(
-        const RequestPtr &req, ThreadContext *tc, Mode mode) const override;
+                            Translation *translation, Mode mode,
+                            ArmTranslationType tran_type, bool call_from_s2,
+                            CachedState &state);
+    Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                           Mode mode) const override;
 
     void drainResume() override;
 
@@ -409,49 +418,54 @@ class MMU : public BaseMMU
      * @return pointer to TLB entry if it exists
      */
     TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
-        bool secure, bool functional, bool ignore_asn,
-        ExceptionLevel target_el, bool in_host, bool stage2,
-        BaseMMU::Mode mode);
+                     bool secure, bool functional, bool ignore_asn,
+                     ExceptionLevel target_el, bool in_host, bool stage2,
+                     BaseMMU::Mode mode);
 
     Fault getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc,
-        Mode mode, Translation *translation, bool timing, bool functional,
-        bool is_secure, ArmTranslationType tran_type, bool stage2);
+                Mode mode, Translation *translation, bool timing,
+                bool functional, bool is_secure, ArmTranslationType tran_type,
+                bool stage2);
     Fault getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc,
-        Mode mode, Translation *translation, bool timing, bool functional,
-        bool is_secure, ArmTranslationType tran_type, CachedState &state);
+                Mode mode, Translation *translation, bool timing,
+                bool functional, bool is_secure, ArmTranslationType tran_type,
+                CachedState &state);
 
     Fault getResultTe(TlbEntry **te, const RequestPtr &req, ThreadContext *tc,
-        Mode mode, Translation *translation, bool timing, bool functional,
-        TlbEntry *mergeTe, CachedState &state);
+                      Mode mode, Translation *translation, bool timing,
+                      bool functional, TlbEntry *mergeTe, CachedState &state);
 
-    Fault checkPermissions(
-        TlbEntry *te, const RequestPtr &req, Mode mode, bool stage2);
-    Fault checkPermissions(
-        TlbEntry *te, const RequestPtr &req, Mode mode, CachedState &state);
+    Fault checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
+                           bool stage2);
+    Fault checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
+                           CachedState &state);
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
-        ThreadContext *tc, bool stage2);
+                             ThreadContext *tc, bool stage2);
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
-        ThreadContext *tc, CachedState &state);
+                             ThreadContext *tc, CachedState &state);
 
   protected:
     Addr purifyTaggedAddr(Addr vaddr_tainted, ThreadContext *tc,
-        ExceptionLevel el, TCR tcr, bool is_inst, CachedState &state);
+                          ExceptionLevel el, TCR tcr, bool is_inst,
+                          CachedState &state);
 
     bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-        Mode mode, const bool is_priv, CachedState &state);
+                  Mode mode, const bool is_priv, CachedState &state);
 
     bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-        Mode mode, const bool is_priv, CachedState &state);
+                  Mode mode, const bool is_priv, CachedState &state);
 
     bool hasUnprivRegime(ExceptionLevel el, CachedState &state);
 
     std::pair<bool, bool> s1PermBits64(TlbEntry *te, const RequestPtr &req,
-        Mode mode, ThreadContext *tc, CachedState &state, bool r, bool w,
-        bool x);
+                                       Mode mode, ThreadContext *tc,
+                                       CachedState &state, bool r, bool w,
+                                       bool x);
 
     std::pair<bool, bool> s2PermBits64(TlbEntry *te, const RequestPtr &req,
-        Mode mode, ThreadContext *tc, CachedState &state, bool r, bool w,
-        bool x);
+                                       Mode mode, ThreadContext *tc,
+                                       CachedState &state, bool r, bool w,
+                                       bool x);
 
   public: /* Testing */
     TlbTestInterface *test;
@@ -459,20 +473,21 @@ class MMU : public BaseMMU
     void setTestInterface(SimObject *ti);
 
     Fault testTranslation(const RequestPtr &req, Mode mode,
-        TlbEntry::DomainType domain, CachedState &state);
+                          TlbEntry::DomainType domain, CachedState &state);
     Fault testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-        TlbEntry::DomainType domain, LookupLevel lookup_level, bool stage2);
+                   TlbEntry::DomainType domain, LookupLevel lookup_level,
+                   bool stage2);
     Fault testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-        TlbEntry::DomainType domain, LookupLevel lookup_level,
-        CachedState &state);
+                   TlbEntry::DomainType domain, LookupLevel lookup_level,
+                   CachedState &state);
 
   protected:
     bool checkWalkCache() const;
 
     bool isCompleteTranslation(TlbEntry *te) const;
 
-    CachedState &updateMiscReg(
-        ThreadContext *tc, ArmTranslationType tran_type, bool stage2);
+    CachedState &updateMiscReg(ThreadContext *tc, ArmTranslationType tran_type,
+                               bool stage2);
 
   protected:
     ContextID miscRegContext;

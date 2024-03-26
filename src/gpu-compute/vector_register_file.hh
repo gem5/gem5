@@ -52,10 +52,10 @@ class VectorRegisterFile : public RegisterFile
     ~VectorRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
-    virtual void scheduleWriteOperands(
-        Wavefront *w, GPUDynInstPtr ii) override;
-    virtual void scheduleWriteOperandsFromLoad(
-        Wavefront *w, GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperands(Wavefront *w,
+                                       GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperandsFromLoad(Wavefront *w,
+                                               GPUDynInstPtr ii) override;
     virtual void waveExecuteInst(Wavefront *w, GPUDynInstPtr ii) override;
 
     void
@@ -95,8 +95,8 @@ class VectorRegisterFile : public RegisterFile
         for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 DPRINTF(GPUVRF, "WF[%d][%d]: WV[%d] v[%d][%d] = %#x\n",
-                    wf->simdId, wf->wfSlotId, wf->wfDynId, regIdx, lane,
-                    vgpr[lane]);
+                        wf->simdId, wf->wfSlotId, wf->wfDynId, regIdx, lane,
+                        vgpr[lane]);
             }
         }
 #endif

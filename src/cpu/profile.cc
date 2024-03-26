@@ -56,8 +56,8 @@ BaseStackTrace::dump()
 }
 
 bool
-BaseStackTrace::tryGetSymbol(
-    std::string &symbol, Addr addr, const loader::SymbolTable *symtab)
+BaseStackTrace::tryGetSymbol(std::string &symbol, Addr addr,
+                             const loader::SymbolTable *symtab)
 {
     const auto it = symtab->find(addr);
     if (it == symtab->end())
@@ -68,7 +68,7 @@ BaseStackTrace::tryGetSymbol(
 
 void
 ProfileNode::dump(const std::string &symbol, uint64_t id,
-    const FunctionProfile &prof, std::ostream &os) const
+                  const FunctionProfile &prof, std::ostream &os) const
 {
     ccprintf(os, "%#x %s %d ", id, symbol, count);
     for (const auto &p : children)
@@ -96,8 +96,8 @@ ProfileNode::clear()
 }
 
 FunctionProfile::FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
-    const loader::SymbolTable &_symtab) :
-    symtab(_symtab), trace(std::move(_trace))
+                                 const loader::SymbolTable &_symtab)
+    : symtab(_symtab), trace(std::move(_trace))
 {
     statistics::registerResetCallback([this]() { clear(); });
 }

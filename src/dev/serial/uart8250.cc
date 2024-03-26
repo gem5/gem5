@@ -75,27 +75,27 @@ Uart8250::scheduleIntr(Event *event)
 {
     static const Tick interval = 225 * sim_clock::as_int::ns;
     DPRINTF(Uart, "Scheduling IER interrupt for %s, at cycle %lld\n",
-        event->name(), curTick() + interval);
+            event->name(), curTick() + interval);
     if (!event->scheduled())
         schedule(event, curTick() + interval);
     else
         reschedule(event, curTick() + interval);
 }
 
-Uart8250::Uart8250(const Params &p) :
-    Uart(p, p.pio_size),
-    registers(this, name() + ".registers"),
-    lastTxInt(0),
-    txIntrEvent([this] { processIntrEvent(TX_INT); }, "TX"),
-    rxIntrEvent([this] { processIntrEvent(RX_INT); }, "RX")
+Uart8250::Uart8250(const Params &p)
+    : Uart(p, p.pio_size),
+      registers(this, name() + ".registers"),
+      lastTxInt(0),
+      txIntrEvent([this] { processIntrEvent(TX_INT); }, "TX"),
+      rxIntrEvent([this] { processIntrEvent(RX_INT); }, "RX")
 {}
 
-Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name) :
-    RegisterBankLE(new_name, 0),
-    rbrThr(rbr, thr),
-    rbrThrDll(rbrThr, dll),
-    ierDlh(ier, dlh),
-    iirFcr(iir, fcr)
+Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name)
+    : RegisterBankLE(new_name, 0),
+      rbrThr(rbr, thr),
+      rbrThrDll(rbrThr, dll),
+      ierDlh(ier, dlh),
+      iirFcr(iir, fcr)
 {
     rbr.reader(uart, &Uart8250::readRbr);
     thr.writer(uart, &Uart8250::writeThr);
@@ -183,11 +183,11 @@ Uart8250::writeIer(Register<Ier> &reg, const Ier &ier)
         DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
         if (curTick() - lastTxInt > 225 * sim_clock::as_int::ns) {
             DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n", curTick(),
-                lastTxInt);
+                    lastTxInt);
             txIntrEvent.process();
         } else {
             DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n", curTick(),
-                lastTxInt);
+                    lastTxInt);
             scheduleIntr(&txIntrEvent);
         }
     } else {
@@ -230,8 +230,8 @@ Uart8250::write(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(
-        Uart, "Write register %#x value %#x\n", daddr, pkt->getRaw<uint8_t>());
+    DPRINTF(Uart, "Write register %#x value %#x\n", daddr,
+            pkt->getRaw<uint8_t>());
 
     registers.write(daddr, pkt->getPtr<void>(), pkt->getSize());
 

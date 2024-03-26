@@ -40,8 +40,8 @@ namespace gem5
 {
 namespace Gcn3ISA
 {
-GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode) :
-    GPUStaticInst(opcode), _srcLiteral(0)
+GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode)
+    : GPUStaticInst(opcode), _srcLiteral(0)
 {}
 
 GCN3GPUStaticInst::~GCN3GPUStaticInst() {}

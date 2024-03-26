@@ -144,7 +144,7 @@ class Extensible
     setExtension(std::shared_ptr<T> ext)
     {
         static_assert(std::is_base_of<ExtensionBase, T>::value,
-            "Extension should inherit from ExtensionBase.");
+                      "Extension should inherit from ExtensionBase.");
         assert(ext.get() != nullptr);
 
         auto it = findExtension<T>();
@@ -169,7 +169,7 @@ class Extensible
     removeExtension(void)
     {
         static_assert(std::is_base_of<ExtensionBase, T>::value,
-            "Extension should inherit from ExtensionBase.");
+                      "Extension should inherit from ExtensionBase.");
 
         auto it = findExtension<T>();
         if (it != extensions.end())
@@ -184,7 +184,7 @@ class Extensible
     getExtension()
     {
         static_assert(std::is_base_of<ExtensionBase, T>::value,
-            "Extension should inherit from ExtensionBase.");
+                      "Extension should inherit from ExtensionBase.");
         auto it = findExtension<T>();
         if (it == extensions.end())
             return nullptr;

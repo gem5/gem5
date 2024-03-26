@@ -203,8 +203,10 @@ class MemCmd
         const std::string str;
 
         CommandInfo(std::initializer_list<Attribute> attrs, Command _response,
-            const std::string &_str) :
-            attributes(buildAttributes(attrs)), response(_response), str(_str)
+                    const std::string &_str)
+            : attributes(buildAttributes(attrs)),
+              response(_response),
+              str(_str)
         {}
     };
 
@@ -610,8 +612,8 @@ class Packet : public Printable, public Extensible<Packet>
          * prefix string onto the current prefix.  Labels will only be
          * printed if an object within the label's scope is printed.
          */
-        void pushLabel(
-            const std::string &lbl, const std::string &prefix = "  ");
+        void pushLabel(const std::string &lbl,
+                       const std::string &prefix = "  ");
 
         /**
          * Pop a label off the label stack.
@@ -942,8 +944,8 @@ class Packet : public Printable, public Extensible<Packet>
     void
     setWriteThrough()
     {
-        assert(
-            cmd.isWrite() && (cmd.isEviction() || cmd == MemCmd::WriteClean));
+        assert(cmd.isWrite() &&
+               (cmd.isEviction() || cmd == MemCmd::WriteClean));
         flags.set(WRITE_THROUGH);
     }
     void
@@ -1157,21 +1159,21 @@ class Packet : public Printable, public Extensible<Packet>
      * first, but the Requests's physical address and size fields need
      * not be valid. The command must be supplied.
      */
-    Packet(const RequestPtr &_req, MemCmd _cmd) :
-        cmd(_cmd),
-        id((PacketId)_req.get()),
-        req(_req),
-        data(nullptr),
-        addr(0),
-        _isSecure(false),
-        size(0),
-        _qosValue(0),
-        htmReturnReason(HtmCacheFailure::NO_FAIL),
-        htmTransactionUid(0),
-        headerDelay(0),
-        snoopDelay(0),
-        payloadDelay(0),
-        senderState(NULL)
+    Packet(const RequestPtr &_req, MemCmd _cmd)
+        : cmd(_cmd),
+          id((PacketId)_req.get()),
+          req(_req),
+          data(nullptr),
+          addr(0),
+          _isSecure(false),
+          size(0),
+          _qosValue(0),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(0),
+          snoopDelay(0),
+          payloadDelay(0),
+          senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -1205,21 +1207,20 @@ class Packet : public Printable, public Extensible<Packet>
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(
-        const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0) :
-        cmd(_cmd),
-        id(_id ? _id : (PacketId)_req.get()),
-        req(_req),
-        data(nullptr),
-        addr(0),
-        _isSecure(false),
-        _qosValue(0),
-        htmReturnReason(HtmCacheFailure::NO_FAIL),
-        htmTransactionUid(0),
-        headerDelay(0),
-        snoopDelay(0),
-        payloadDelay(0),
-        senderState(NULL)
+    Packet(const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
+        : cmd(_cmd),
+          id(_id ? _id : (PacketId)_req.get()),
+          req(_req),
+          data(nullptr),
+          addr(0),
+          _isSecure(false),
+          _qosValue(0),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(0),
+          snoopDelay(0),
+          payloadDelay(0),
+          senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -1238,23 +1239,23 @@ class Packet : public Printable, public Extensible<Packet>
      * less than that of the original packet.  In this case the new
      * packet should allocate its own data.
      */
-    Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data) :
-        Extensible<Packet>(*pkt),
-        cmd(pkt->cmd),
-        id(pkt->id),
-        req(pkt->req),
-        data(nullptr),
-        addr(pkt->addr),
-        _isSecure(pkt->_isSecure),
-        size(pkt->size),
-        bytesValid(pkt->bytesValid),
-        _qosValue(pkt->qosValue()),
-        htmReturnReason(HtmCacheFailure::NO_FAIL),
-        htmTransactionUid(0),
-        headerDelay(pkt->headerDelay),
-        snoopDelay(0),
-        payloadDelay(pkt->payloadDelay),
-        senderState(pkt->senderState)
+    Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data)
+        : Extensible<Packet>(*pkt),
+          cmd(pkt->cmd),
+          id(pkt->id),
+          req(pkt->req),
+          data(nullptr),
+          addr(pkt->addr),
+          _isSecure(pkt->_isSecure),
+          size(pkt->size),
+          bytesValid(pkt->bytesValid),
+          _qosValue(pkt->qosValue()),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(pkt->headerDelay),
+          snoopDelay(0),
+          payloadDelay(pkt->payloadDelay),
+          senderState(pkt->senderState)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
@@ -1427,8 +1428,8 @@ class Packet : public Printable, public Extensible<Packet>
      * @param blk_size Block size in bytes.
      * @return Whether packet matches description.
      */
-    bool matchBlockAddr(
-        const Addr addr, const bool is_secure, const int blk_size) const;
+    bool matchBlockAddr(const Addr addr, const bool is_secure,
+                        const int blk_size) const;
 
     /**
      * Check if this packet refers to the same block-aligned address and
@@ -1710,14 +1711,14 @@ class Packet : public Printable, public Extensible<Packet>
                 other->getAddr() <= (getAddr() + getSize() - 1)) {
                 warn("Trying to check against a masked write, skipping."
                      " (addr: 0x%x, other addr: 0x%x)",
-                    getAddr(), other->getAddr());
+                     getAddr(), other->getAddr());
             }
             return false;
         }
         // all packets that are carrying a payload should have a valid
         // data pointer
-        return trySatisfyFunctional(other, other->getAddr(), other->isSecure(),
-            other->getSize(),
+        return trySatisfyFunctional(
+            other, other->getAddr(), other->isSecure(), other->getSize(),
             other->hasData() ? other->getPtr<uint8_t>() : NULL);
     }
 
@@ -1763,8 +1764,8 @@ class Packet : public Printable, public Extensible<Packet>
      * value. If the current packet is a write, it may update the
      * memory value.
      */
-    bool trySatisfyFunctional(
-        Printable *obj, Addr base, bool is_secure, int size, uint8_t *_data);
+    bool trySatisfyFunctional(Printable *obj, Addr base, bool is_secure,
+                              int size, uint8_t *_data);
 
     /**
      * Push label for PrintReq (safe to call unconditionally).
@@ -1787,7 +1788,7 @@ class Packet : public Printable, public Extensible<Packet>
     }
 
     void print(std::ostream &o, int verbosity = 0,
-        const std::string &prefix = "") const;
+               const std::string &prefix = "") const;
 
     /**
      * A no-args wrapper of print(std::ostream...)

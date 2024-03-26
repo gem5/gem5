@@ -63,7 +63,7 @@ main()
     while (!stop) {
         std::stringstream result;
         gem5::ccprintf(result, "this is a %s of %d iterations %3.2f %p\n",
-            "test", iterations, 51.934, &result);
+                       "test", iterations, 51.934, &result);
 
         iterations += 1;
     }
@@ -77,7 +77,7 @@ main()
         char result[1024];
         int dummy;
         sprintf(result, "this is a %s of %d iterations %3.2f %p\n", "test",
-            iterations, 51.934, &dummy);
+                iterations, 51.934, &dummy);
 
         iterations += 1;
     }

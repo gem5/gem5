@@ -44,12 +44,13 @@
 
 namespace gem5
 {
-ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
-    ComputeUnit &cu, ScoreboardCheckToSchedule &to_schedule) :
-    computeUnit(cu),
-    toSchedule(to_schedule),
-    _name(cu.name() + ".ScoreboardCheckStage"),
-    stats(&cu)
+ScoreboardCheckStage::ScoreboardCheckStage(
+    const ComputeUnitParams &p, ComputeUnit &cu,
+    ScoreboardCheckToSchedule &to_schedule)
+    : computeUnit(cu),
+      toSchedule(to_schedule),
+      _name(cu.name() + ".ScoreboardCheckStage"),
+      stats(&cu)
 {}
 
 ScoreboardCheckStage::~ScoreboardCheckStage() {}
@@ -58,7 +59,7 @@ void
 ScoreboardCheckStage::collectStatistics(nonrdytype_e rdyStatus)
 {
     panic_if(rdyStatus == NRDY_ILLEGAL || rdyStatus >= NRDY_CONDITIONS,
-        "Instruction ready status %d is illegal!!!", rdyStatus);
+             "Instruction ready status %d is illegal!!!", rdyStatus);
     stats.stallCycles[rdyStatus]++;
 }
 
@@ -68,8 +69,8 @@ ScoreboardCheckStage::collectStatistics(nonrdytype_e rdyStatus)
 // ready. Finally it sets the execution resource type (in exesResType)
 // of the instruction, only if it ready.
 bool
-ScoreboardCheckStage::ready(
-    Wavefront *w, nonrdytype_e *rdyStatus, int *exeResType, int wfSlot)
+ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
+                            int *exeResType, int wfSlot)
 {
     /**
      * The waitCnt checks have to be done BEFORE checking for Instruction
@@ -106,18 +107,19 @@ ScoreboardCheckStage::ready(
         int bar_id = w->barrierId();
         if (!computeUnit.allAtBarrier(bar_id)) {
             DPRINTF(GPUSync,
-                "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
-                "barrier Id%d. %d waves remain.\n",
-                w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId,
-                bar_id, w->computeUnit->numYetToReachBarrier(bar_id));
+                    "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
+                    "barrier Id%d. %d waves remain.\n",
+                    w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId,
+                    bar_id, w->computeUnit->numYetToReachBarrier(bar_id));
             // Are all threads at barrier?
             *rdyStatus = NRDY_BARRIER_WAIT;
             return false;
         }
         DPRINTF(GPUSync,
-            "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
-            "Id%d. Resetting barrier resources.\n",
-            w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId, bar_id);
+                "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
+                "Id%d. Resetting barrier resources.\n",
+                w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId,
+                bar_id);
         computeUnit.resetBarrier(bar_id);
         computeUnit.releaseWFsFromBarrier(bar_id);
     }
@@ -150,15 +152,15 @@ ScoreboardCheckStage::ready(
     // make sure that we do not silently let an instruction type slip
     // through this logic and always return not ready.
     if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
-            ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
-            ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
-            ii->isFlatGlobal() || ii->isFlatScratch() || ii->isSleep() ||
-            ii->isLocalMem())) {
+          ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
+          ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
+          ii->isFlatGlobal() || ii->isFlatScratch() || ii->isSleep() ||
+          ii->isLocalMem())) {
         panic("next instruction: %s is of unknown type\n", ii->disassemble());
     }
 
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Ready for Inst : %s\n",
-        computeUnit.cu_id, w->simdId, w->wfSlotId, ii->disassemble());
+            computeUnit.cu_id, w->simdId, w->wfSlotId, ii->disassemble());
 
     // Non-scalar (i.e., vector) instructions may use VGPRs
     if (!ii->isScalar()) {
@@ -195,7 +197,7 @@ ScoreboardCheckStage::ready(
         }
     }
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit.cu_id,
-        w->simdId, w->wfSlotId, ii->disassemble());
+            w->simdId, w->wfSlotId, ii->disassemble());
     *exeResType = mapWaveToExeUnit(w);
     *rdyStatus = INST_RDY;
     return true;
@@ -260,10 +262,10 @@ ScoreboardCheckStage::exec()
             if (ready(curWave, &rdyStatus, &exeResType, wfSlot)) {
                 assert(curWave->simdId == simdId);
                 DPRINTF(GPUSched,
-                    "Adding to readyList[%d]: SIMD[%d] WV[%d]: %d: %s\n",
-                    exeResType, curWave->simdId, curWave->wfDynId,
-                    curWave->nextInstr()->seqNum(),
-                    curWave->nextInstr()->disassemble());
+                        "Adding to readyList[%d]: SIMD[%d] WV[%d]: %d: %s\n",
+                        exeResType, curWave->simdId, curWave->wfDynId,
+                        curWave->nextInstr()->seqNum(),
+                        curWave->nextInstr()->disassemble());
                 toSchedule.markWFReady(curWave, exeResType);
             }
             collectStatistics(rdyStatus);
@@ -272,9 +274,9 @@ ScoreboardCheckStage::exec()
 }
 
 ScoreboardCheckStage::ScoreboardCheckStageStats::ScoreboardCheckStageStats(
-    statistics::Group *parent) :
-    statistics::Group(parent, "ScoreboardCheckStage"),
-    ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
+    statistics::Group *parent)
+    : statistics::Group(parent, "ScoreboardCheckStage"),
+      ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
 {
     stallCycles.init(NRDY_CONDITIONS);
 

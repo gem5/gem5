@@ -50,8 +50,8 @@ class DynPoolManager : public PoolManager
         _totRegSpaceAvailable = p.pool_size;
     }
 
-    uint32_t allocateRegion(
-        const uint32_t size, uint32_t *reservedPoolSize) override;
+    uint32_t allocateRegion(const uint32_t size,
+                            uint32_t *reservedPoolSize) override;
     bool canAllocate(uint32_t numRegions, uint32_t size) override;
     void freeRegion(uint32_t firstIdx, uint32_t lastIdx) override;
     uint32_t minAllocatedElements(uint32_t size);

@@ -38,24 +38,24 @@
 
 namespace gem5
 {
-TesterThread::TesterThread(const Params &p) :
-    ClockedObject(p),
-    threadEvent(this, "TesterThread tick"),
-    deadlockCheckEvent(this),
-    threadId(p.thread_id),
-    numLanes(p.num_lanes),
-    tester(nullptr),
-    addrManager(nullptr),
-    port(nullptr),
-    scalarPort(nullptr),
-    sqcPort(nullptr),
-    curEpisode(nullptr),
-    curAction(nullptr),
-    pendingLdStCount(0),
-    pendingFenceCount(0),
-    pendingAtomicCount(0),
-    lastActiveCycle(Cycles(0)),
-    deadlockThreshold(p.deadlock_threshold)
+TesterThread::TesterThread(const Params &p)
+    : ClockedObject(p),
+      threadEvent(this, "TesterThread tick"),
+      deadlockCheckEvent(this),
+      threadId(p.thread_id),
+      numLanes(p.num_lanes),
+      tester(nullptr),
+      addrManager(nullptr),
+      port(nullptr),
+      scalarPort(nullptr),
+      sqcPort(nullptr),
+      curEpisode(nullptr),
+      curAction(nullptr),
+      pendingLdStCount(0),
+      pendingFenceCount(0),
+      pendingAtomicCount(0),
+      lastActiveCycle(Cycles(0)),
+      deadlockThreshold(p.deadlock_threshold)
 {}
 
 TesterThread::~TesterThread()
@@ -127,8 +127,9 @@ TesterThread::scheduleDeadlockCheckEvent()
 }
 
 void
-TesterThread::attachTesterThreadToPorts(ProtocolTester *_tester,
-    ProtocolTester::SeqPort *_port, ProtocolTester::GMTokenPort *_tokenPort,
+TesterThread::attachTesterThreadToPorts(
+    ProtocolTester *_tester, ProtocolTester::SeqPort *_port,
+    ProtocolTester::GMTokenPort *_tokenPort,
     ProtocolTester::SeqPort *_scalarPort, ProtocolTester::SeqPort *_sqcPort)
 {
     tester = _tester;
@@ -327,7 +328,7 @@ TesterThread::issueNextAction()
 
 void
 TesterThread::addOutstandingReqs(OutstandingReqTable &req_table, Addr address,
-    int lane, Location loc, Value stored_val)
+                                 int lane, Location loc, Value stored_val)
 {
     OutstandingReqTable::iterator it = req_table.find(address);
     OutstandingReq req(lane, loc, stored_val, curCycle());
@@ -450,14 +451,14 @@ TesterThread::checkDeadlock()
     } else if (!tester->checkExit()) {
         // schedule a future deadlock check event
         assert(!deadlockCheckEvent.scheduled());
-        schedule(
-            deadlockCheckEvent, deadlockThreshold * clockPeriod() + curTick());
+        schedule(deadlockCheckEvent,
+                 deadlockThreshold * clockPeriod() + curTick());
     }
 }
 
 void
-TesterThread::printOutstandingReqs(
-    const OutstandingReqTable &table, std::stringstream &ss) const
+TesterThread::printOutstandingReqs(const OutstandingReqTable &table,
+                                   std::stringstream &ss) const
 {
     Cycles cur_cycle = curCycle();
 

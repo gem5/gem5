@@ -36,12 +36,12 @@
 namespace gem5
 {
 ActivityRecorder::ActivityRecorder(const std::string &name, int num_stages,
-    int longest_latency, int activity) :
-    _name(name),
-    activityBuffer(longest_latency, 0),
-    longestLatency(longest_latency),
-    activityCount(activity),
-    numStages(num_stages)
+                                   int longest_latency, int activity)
+    : _name(name),
+      activityBuffer(longest_latency, 0),
+      longestLatency(longest_latency),
+      activityCount(activity),
+      numStages(num_stages)
 {
     stageActive = new bool[numStages];
     std::memset(stageActive, 0, numStages);

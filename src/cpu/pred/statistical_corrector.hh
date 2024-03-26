@@ -110,8 +110,8 @@ class StatisticalCorrector : public SimObject
         }
 
         void
-        updateLocalHistory(
-            int ordinal, Addr branch_pc, bool taken, Addr extraXor = 0)
+        updateLocalHistory(int ordinal, Addr branch_pc, bool taken,
+                           Addr extraXor = 0)
         {
             assert((ordinal >= 1) && (ordinal <= numOrdinalHistories));
             unsigned idx = ordinal - 1;
@@ -206,16 +206,16 @@ class StatisticalCorrector : public SimObject
   public:
     struct BranchInfo
     {
-        BranchInfo() :
-            lowConf(false),
-            highConf(false),
-            altConf(false),
-            medConf(false),
-            scPred(false),
-            lsum(0),
-            thres(0),
-            predBeforeSC(false),
-            usedScPred(false)
+        BranchInfo()
+            : lowConf(false),
+              highConf(false),
+              altConf(false),
+              medConf(false),
+              scPred(false),
+              lsum(0),
+              thres(0),
+              predBeforeSC(false),
+              usedScPred(false)
         {}
 
         // confidences calculated on tage and used on the statistical
@@ -240,50 +240,55 @@ class StatisticalCorrector : public SimObject
     virtual void initBias();
 
     virtual bool scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-        BranchInfo *bi, bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
-        int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
-        int64_t phist, int init_lsum = 0);
+                           BranchInfo *bi, bool prev_pred_taken, bool bias_bit,
+                           bool use_conf_ctr, int8_t conf_ctr,
+                           unsigned conf_bits, int hitBank, int altBank,
+                           int64_t phist, int init_lsum = 0);
 
     virtual unsigned getIndBias(Addr branch_pc, BranchInfo *bi, bool b) const;
 
     virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo *bi) const;
 
-    virtual unsigned getIndBiasBank(
-        Addr branch_pc, BranchInfo *bi, int hitBank, int altBank) const = 0;
+    virtual unsigned getIndBiasBank(Addr branch_pc, BranchInfo *bi,
+                                    int hitBank, int altBank) const = 0;
 
     virtual unsigned getIndUpd(Addr branch_pc) const;
     unsigned getIndUpds(Addr branch_pc) const;
 
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo *bi,
-        int &lsum, int64_t phist) = 0;
+                             int &lsum, int64_t phist) = 0;
 
     int64_t gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr, int i);
 
     virtual int gIndexLogsSubstr(int nbr, int i) = 0;
 
     int gPredict(Addr branch_pc, int64_t hist, std::vector<int> &length,
-        std::vector<int8_t> *tab, int nbr, int logs, std::vector<int8_t> &w);
+                 std::vector<int8_t> *tab, int nbr, int logs,
+                 std::vector<int8_t> &w);
 
     virtual void gUpdate(Addr branch_pc, bool taken, int64_t hist,
-        std::vector<int> &length, std::vector<int8_t> *tab, int nbr, int logs,
-        std::vector<int8_t> &w, BranchInfo *bi);
+                         std::vector<int> &length, std::vector<int8_t> *tab,
+                         int nbr, int logs, std::vector<int8_t> &w,
+                         BranchInfo *bi);
 
     void initGEHLTable(unsigned numLenghts, std::vector<int> lengths,
-        std::vector<int8_t> *&table, unsigned logNumEntries,
-        std::vector<int8_t> &w, int8_t wInitValue);
+                       std::vector<int8_t> *&table, unsigned logNumEntries,
+                       std::vector<int8_t> &w, int8_t wInitValue);
 
     virtual void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst,
-        bool taken, BranchInfo *tage_bi, Addr corrTarget);
+                                 bool taken, BranchInfo *tage_bi,
+                                 Addr corrTarget);
 
-    virtual void gUpdates(
-        ThreadID tid, Addr pc, bool taken, BranchInfo *bi, int64_t phist) = 0;
+    virtual void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo *bi,
+                          int64_t phist) = 0;
 
     void init() override;
     void updateStats(bool taken, BranchInfo *bi);
 
     virtual void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-        BranchInfo *bi, Addr corrTarget, bool bias_bit, int hitBank,
-        int altBank, int64_t phist);
+                                  BranchInfo *bi, Addr corrTarget,
+                                  bool bias_bit, int hitBank, int altBank,
+                                  int64_t phist);
 
     virtual size_t getSizeInBits() const;
 };

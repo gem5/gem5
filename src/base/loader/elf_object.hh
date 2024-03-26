@@ -95,8 +95,8 @@ class ElfObject : public ObjectFile
     Addr ldMax = MaxAddr;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
-    bool loadSomeSymbols(
-        SymbolTable *symtab, int binding, Addr mask, Addr base, Addr offset);
+    bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
+                         Addr base, Addr offset);
 
     void getSections();
     bool sectionExists(std::string sec);

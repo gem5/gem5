@@ -35,8 +35,8 @@
 
 namespace gem5
 {
-LupioSYS::LupioSYS(const Params &params) :
-    BasicPioDevice(params, params.pio_size)
+LupioSYS::LupioSYS(const Params &params)
+    : BasicPioDevice(params, params.pio_size)
 {
     DPRINTF(LupioSYS, "LupioSYS initalized\n");
 }
@@ -72,7 +72,7 @@ LupioSYS::read(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioSYS, "Read request - addr: %#x, size: %#x\n", daddr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t sys_read = lupioSYSRead(daddr);
     DPRINTF(LupioSYS, "Packet Read: %#x\n", sys_read);
@@ -88,7 +88,7 @@ LupioSYS::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioSYS, "Write register %#x value %#x\n", daddr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioSYSWrite(daddr, pkt->getUintX(byteOrder));
     DPRINTF(LupioSYS, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

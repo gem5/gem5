@@ -92,8 +92,8 @@ class AccessMapPatternMatching : public ClockedObject
         /** vector containing the state of the cachelines in this zone */
         std::vector<AccessMapState> states;
 
-        AccessMapEntry(size_t num_entries) :
-            TaggedEntry(), states(num_entries, AM_INIT)
+        AccessMapEntry(size_t num_entries)
+            : TaggedEntry(), states(num_entries, AM_INIT)
         {}
 
         void
@@ -144,15 +144,14 @@ class AccessMapPatternMatching : public ClockedObject
      */
     inline bool
     checkCandidate(std::vector<AccessMapState> const &states, Addr current,
-        int stride) const
+                   int stride) const
     {
         enum AccessMapState tgt = states[current - stride];
         enum AccessMapState s = states[current + stride];
         enum AccessMapState s2 = states[current + 2 * stride];
         enum AccessMapState s2_p1 = states[current + 2 * stride + 1];
-        return (
-            tgt != AM_INVALID && ((s == AM_ACCESS && s2 == AM_ACCESS) ||
-                                     (s == AM_ACCESS && s2_p1 == AM_ACCESS)));
+        return (tgt != AM_INVALID && ((s == AM_ACCESS && s2 == AM_ACCESS) ||
+                                      (s == AM_ACCESS && s2_p1 == AM_ACCESS)));
     }
 
     /**
@@ -171,8 +170,8 @@ class AccessMapPatternMatching : public ClockedObject
      * @param block cacheline within the hot zone
      * @param state new state
      */
-    void setEntryState(
-        AccessMapEntry &entry, Addr block, enum AccessMapState state);
+    void setEntryState(AccessMapEntry &entry, Addr block,
+                       enum AccessMapState state);
 
     /**
      * This event constitues the epoch of the statistics that keep track of
@@ -188,8 +187,8 @@ class AccessMapPatternMatching : public ClockedObject
 
     void startup() override;
     void calculatePrefetch(const Base::PrefetchInfo &pfi,
-        std::vector<Queued::AddrPriority> &addresses,
-        const CacheAccessor &cache);
+                           std::vector<Queued::AddrPriority> &addresses,
+                           const CacheAccessor &cache);
 };
 
 class AMPM : public Queued
@@ -201,8 +200,8 @@ class AMPM : public Queued
     ~AMPM() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

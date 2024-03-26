@@ -52,8 +52,8 @@ X86StaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
 }
 
 void
-X86StaticInst::printMnemonic(
-    std::ostream &os, const char *instMnemonic, const char *mnemonic)
+X86StaticInst::printMnemonic(std::ostream &os, const char *instMnemonic,
+                             const char *mnemonic)
 {
     ccprintf(os, "  %s : %s   ", instMnemonic, mnemonic);
 }
@@ -108,7 +108,7 @@ X86StaticInst::printSegment(std::ostream &os, int segment)
 
 void
 X86StaticInst::divideStep(uint64_t dividend, uint64_t divisor,
-    uint64_t &quotient, uint64_t &remainder)
+                          uint64_t &quotient, uint64_t &remainder)
 {
     // Check for divide by zero.
     assert(divisor != 0);
@@ -140,14 +140,14 @@ void
 X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
 {
     assert(size == 1 || size == 2 || size == 4 || size == 8);
-    static const char *abcdFormats[9] = {
-        "", "%s", "%sx", "", "e%sx", "", "", "", "r%sx"};
-    static const char *piFormats[9] = {
-        "", "%s", "%s", "", "e%s", "", "", "", "r%s"};
-    static const char *longFormats[9] = {
-        "", "r%sb", "r%sw", "", "r%sd", "", "", "", "r%s"};
-    static const char *microFormats[9] = {
-        "", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
+    static const char *abcdFormats[9] = {"", "%s", "%sx", "",    "e%sx",
+                                         "", "",   "",    "r%sx"};
+    static const char *piFormats[9] = {"", "%s", "%s", "",   "e%s",
+                                       "", "",   "",   "r%s"};
+    static const char *longFormats[9] = {"", "r%sb", "r%sw", "",   "r%sd",
+                                         "", "",     "",     "r%s"};
+    static const char *microFormats[9] = {"", "t%db", "t%dw", "",   "t%dd",
+                                          "", "",     "",     "t%d"};
 
     RegIndex reg_idx = reg.index();
 
@@ -223,8 +223,8 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
         }
         reg_idx -= NumMMXRegs;
         if (reg_idx < NumXMMRegs * 2) {
-            ccprintf(
-                os, "%%xmm%d_%s", reg_idx / 2, (reg_idx % 2) ? "high" : "low");
+            ccprintf(os, "%%xmm%d_%s", reg_idx / 2,
+                     (reg_idx % 2) ? "high" : "low");
             return;
         }
         reg_idx -= NumXMMRegs * 2;
@@ -251,8 +251,8 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
 
 void
 X86StaticInst::printMem(std::ostream &os, uint8_t segment, uint8_t scale,
-    RegIndex index, RegIndex base, uint64_t disp, uint8_t addressSize,
-    bool rip)
+                        RegIndex index, RegIndex base, uint64_t disp,
+                        uint8_t addressSize, bool rip)
 {
     bool someAddr = false;
     printSegment(os, segment);
@@ -286,8 +286,8 @@ X86StaticInst::printMem(std::ostream &os, uint8_t segment, uint8_t scale,
 }
 
 std::string
-X86StaticInst::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+X86StaticInst::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

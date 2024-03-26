@@ -91,8 +91,8 @@ const int VECREG_UREG0 = 32;
 const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
 
-static inline VecElemRegClassOps<RegVal> vecRegElemClassOps(
-    NumVecElemPerVecReg);
+static inline VecElemRegClassOps<RegVal>
+    vecRegElemClassOps(NumVecElemPerVecReg);
 static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
 static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
 
@@ -100,12 +100,13 @@ inline constexpr RegClass vecRegClass =
     RegClass(VecRegClass, VecRegClassName, NumVecRegs, debug::VecRegs)
         .ops(vecRegClassOps)
         .regType<VecRegContainer>();
-inline constexpr RegClass vecElemClass = RegClass(VecElemClass,
-    VecElemClassName, NumVecRegs *NumVecElemPerVecReg, debug::VecRegs)
-                                             .ops(vecRegElemClassOps);
+inline constexpr RegClass vecElemClass =
+    RegClass(VecElemClass, VecElemClassName, NumVecRegs *NumVecElemPerVecReg,
+             debug::VecRegs)
+        .ops(vecRegElemClassOps);
 inline constexpr RegClass vecPredRegClass =
     RegClass(VecPredRegClass, VecPredRegClassName, NumVecPredRegs,
-        debug::VecPredRegs)
+             debug::VecPredRegs)
         .ops(vecPredRegClassOps)
         .regType<VecPredRegContainer>();
 

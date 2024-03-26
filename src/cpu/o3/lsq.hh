@@ -278,10 +278,11 @@ class LSQ
         }
         LSQRequest(LSQUnit *port, const DynInstPtr &inst, bool isLoad);
         LSQRequest(LSQUnit *port, const DynInstPtr &inst, bool isLoad,
-            const Addr &addr, const uint32_t &size,
-            const Request::Flags &flags_, PacketDataPtr data = nullptr,
-            uint64_t *res = nullptr, AtomicOpFunctorPtr amo_op = nullptr,
-            bool stale_translation = false);
+                   const Addr &addr, const uint32_t &size,
+                   const Request::Flags &flags_, PacketDataPtr data = nullptr,
+                   uint64_t *res = nullptr,
+                   AtomicOpFunctorPtr amo_op = nullptr,
+                   bool stale_translation = false);
 
         bool
         isLoad() const
@@ -326,8 +327,8 @@ class LSQ
          * The request is only added if there is at least one active
          * element in the mask.
          */
-        void addReq(
-            Addr addr, unsigned size, const std::vector<bool> &byte_enable);
+        void addReq(Addr addr, unsigned size,
+                    const std::vector<bool> &byte_enable);
 
         /** Destructor.
          * The LSQRequest owns the request. If the packet has already been
@@ -364,7 +365,7 @@ class LSQ
          */
         void
         setVirt(Addr vaddr, unsigned size, Request::Flags flags_,
-            RequestorID requestor_id, Addr pc)
+                RequestorID requestor_id, Addr pc)
         {
             req()->setVirt(vaddr, size, flags_, requestor_id, pc);
         }
@@ -432,7 +433,7 @@ class LSQ
             return numInTranslationFragments > 0 ||
                    _numOutstandingPackets > 0 ||
                    (flags.isSet(Flag::WritebackScheduled) &&
-                       !flags.isSet(Flag::WritebackDone));
+                    !flags.isSet(Flag::WritebackDone));
         }
 
         /**
@@ -466,8 +467,8 @@ class LSQ
         /**
          * Memory mapped IPR accesses
          */
-        virtual Cycles handleLocalAccess(
-            gem5::ThreadContext *thread, PacketPtr pkt) = 0;
+        virtual Cycles handleLocalAccess(gem5::ThreadContext *thread,
+                                         PacketPtr pkt) = 0;
 
         /**
          * Test if the request accesses a particular cache line.
@@ -533,8 +534,8 @@ class LSQ
         bool
         isMemAccessRequired()
         {
-            return (
-                _state == State::Request || (isPartialFault() && isLoad()));
+            return (_state == State::Request ||
+                    (isPartialFault() && isLoad()));
         }
 
         void
@@ -615,23 +616,25 @@ class LSQ
     {
       public:
         SingleDataRequest(LSQUnit *port, const DynInstPtr &inst, bool isLoad,
-            const Addr &addr, const uint32_t &size,
-            const Request::Flags &flags_, PacketDataPtr data = nullptr,
-            uint64_t *res = nullptr, AtomicOpFunctorPtr amo_op = nullptr) :
-            LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
-                std::move(amo_op))
+                          const Addr &addr, const uint32_t &size,
+                          const Request::Flags &flags_,
+                          PacketDataPtr data = nullptr,
+                          uint64_t *res = nullptr,
+                          AtomicOpFunctorPtr amo_op = nullptr)
+            : LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
+                         std::move(amo_op))
         {}
 
         virtual ~SingleDataRequest() {}
         virtual void markAsStaleTranslation();
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-            gem5::ThreadContext *tc, BaseMMU::Mode mode);
+                            gem5::ThreadContext *tc, BaseMMU::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void sendPacketToCache();
         virtual void buildPackets();
-        virtual Cycles handleLocalAccess(
-            gem5::ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(gem5::ThreadContext *thread,
+                                         PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
         virtual std::string
         name() const
@@ -648,12 +651,12 @@ class LSQ
     {
       public:
         UnsquashableDirectRequest(LSQUnit *port, const DynInstPtr &inst,
-            const Request::Flags &flags_);
+                                  const Request::Flags &flags_);
         inline virtual ~UnsquashableDirectRequest() {}
         virtual void initiateTranslation();
         virtual void markAsStaleTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-            gem5::ThreadContext *tc, BaseMMU::Mode mode);
+                            gem5::ThreadContext *tc, BaseMMU::Mode mode);
         virtual std::string
         name() const
         {
@@ -671,15 +674,15 @@ class LSQ
 
       public:
         SplitDataRequest(LSQUnit *port, const DynInstPtr &inst, bool isLoad,
-            const Addr &addr, const uint32_t &size,
-            const Request::Flags &flags_, PacketDataPtr data = nullptr,
-            uint64_t *res = nullptr) :
-            LSQRequest(
-                port, inst, isLoad, addr, size, flags_, data, res, nullptr),
-            numFragments(0),
-            numReceivedPackets(0),
-            _mainReq(nullptr),
-            _mainPacket(nullptr)
+                         const Addr &addr, const uint32_t &size,
+                         const Request::Flags &flags_,
+                         PacketDataPtr data = nullptr, uint64_t *res = nullptr)
+            : LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
+                         nullptr),
+              numFragments(0),
+              numReceivedPackets(0),
+              _mainReq(nullptr),
+              _mainPacket(nullptr)
         {
             flags.set(Flag::IsSplit);
         }
@@ -695,14 +698,14 @@ class LSQ
         }
         virtual void markAsStaleTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
-            gem5::ThreadContext *tc, BaseMMU::Mode mode);
+                            gem5::ThreadContext *tc, BaseMMU::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual void initiateTranslation();
         virtual void sendPacketToCache();
         virtual void buildPackets();
 
-        virtual Cycles handleLocalAccess(
-            gem5::ThreadContext *thread, PacketPtr pkt);
+        virtual Cycles handleLocalAccess(gem5::ThreadContext *thread,
+                                         PacketPtr pkt);
         virtual bool isCacheBlockHit(Addr blockAddr, Addr cacheBlockMask);
 
         virtual RequestPtr mainReq();
@@ -923,8 +926,9 @@ class LSQ
     void recvTimingSnoopReq(PacketPtr pkt);
 
     Fault pushRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
-        AtomicOpFunctorPtr amo_op, const std::vector<bool> &byte_enable);
+                      unsigned int size, Addr addr, Request::Flags flags,
+                      uint64_t *res, AtomicOpFunctorPtr amo_op,
+                      const std::vector<bool> &byte_enable);
 
     /** The CPU pointer. */
     CPU *cpu;
@@ -974,7 +978,7 @@ class LSQ
      */
     static uint32_t
     maxLSQAllocation(SMTQueuePolicy pol, uint32_t entries, uint32_t numThreads,
-        uint32_t SMTThreshold)
+                     uint32_t SMTThreshold)
     {
         if (pol == SMTQueuePolicy::Dynamic) {
             return entries;

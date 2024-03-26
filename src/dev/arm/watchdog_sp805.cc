@@ -44,16 +44,16 @@
 
 namespace gem5
 {
-Sp805::Sp805(const Sp805Params &params) :
-    AmbaIntDevice(params, 0x1000),
-    timeoutInterval(0xffffffff),
-    timeoutStartTick(MaxTick),
-    persistedValue(timeoutInterval),
-    enabled(false),
-    resetEnabled(false),
-    writeAccessEnabled(true),
-    integrationTestEnabled(false),
-    timeoutEvent([this] { timeoutExpired(); }, name())
+Sp805::Sp805(const Sp805Params &params)
+    : AmbaIntDevice(params, 0x1000),
+      timeoutInterval(0xffffffff),
+      timeoutStartTick(MaxTick),
+      persistedValue(timeoutInterval),
+      enabled(false),
+      resetEnabled(false),
+      writeAccessEnabled(true),
+      integrationTestEnabled(false),
+      timeoutEvent([this] { timeoutExpired(); }, name())
 {}
 
 Tick
@@ -97,7 +97,7 @@ Sp805::read(PacketPtr pkt)
             resp = pkt->getUintX(ByteOrder::little);
         else
             warn("Sp805::read: Unexpected address (0x%x:%i), assuming RAZ\n",
-                addr, size);
+                 addr, size);
     }
 
     DPRINTF(Sp805, "Sp805::read: 0x%x<-0x%x(%i)\n", resp, addr, size);
@@ -165,7 +165,7 @@ Sp805::write(PacketPtr pkt)
         break;
     default:
         warn("Sp805::write: Unexpected address (0x%x:%i), assuming WI\n", addr,
-            size);
+             size);
     }
 
     DPRINTF(Sp805, "Sp805::write: 0x%x->0x%x(%i)\n", data, addr, size);

@@ -77,12 +77,12 @@ RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) :
-    BaseISA(p),
-    system(NULL),
-    _decoderFlavor(p.decoderFlavor),
-    pmu(p.pmu),
-    impdefAsNop(p.impdef_nop)
+ISA::ISA(const Params &p)
+    : BaseISA(p),
+      system(NULL),
+      _decoderFlavor(p.decoderFlavor),
+      pmu(p.pmu),
+      impdefAsNop(p.impdef_nop)
 {
     _regClasses.push_back(&flatIntRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -390,11 +390,11 @@ ISA::readMiscRegNoEffect(RegIndex idx) const
                    ((miscRegs[lower] & mask(32)) | (miscRegs[upper] << 32));
     if (val & reg.res0()) {
         DPRINTF(MiscRegs, "Reading MiscReg %s with set res0 bits: %#x\n",
-            miscRegName[idx], val & reg.res0());
+                miscRegName[idx], val & reg.res0());
     }
     if ((val & reg.res1()) != reg.res1()) {
         DPRINTF(MiscRegs, "Reading MiscReg %s with clear res1 bits: %#x\n",
-            miscRegName[idx], (val & reg.res1()) ^ reg.res1());
+                miscRegName[idx], (val & reg.res1()) ^ reg.res1());
     }
     return (val & ~reg.raz()) | reg.rao(); // enforce raz/rao
 }
@@ -418,8 +418,8 @@ ISA::readMiscReg(RegIndex idx)
         if (miscreg_info[MISCREG_WARN_NOT_FAIL])
             warn("Unimplemented system register %s read.\n", miscRegName[idx]);
         else
-            panic(
-                "Unimplemented system register %s read.\n", miscRegName[idx]);
+            panic("Unimplemented system register %s read.\n",
+                  miscRegName[idx]);
     }
 #endif
     idx = redirectRegVHE(idx);
@@ -564,8 +564,8 @@ ISA::readMiscReg(RegIndex idx)
         auto ic = dynamic_cast<ArmISA::Interrupts *>(
             tc->getCpuPtr()->getInterruptController(tc->threadId()));
         return ic->getISR(readMiscRegNoEffect(MISCREG_HCR_EL2),
-            readMiscRegNoEffect(MISCREG_CPSR),
-            readMiscRegNoEffect(MISCREG_SCR_EL3));
+                          readMiscRegNoEffect(MISCREG_CPSR),
+                          readMiscRegNoEffect(MISCREG_SCR_EL3));
     }
     case MISCREG_HCPTR: {
         HCPTR val = readMiscRegNoEffect(idx);
@@ -630,11 +630,11 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
         miscRegs[lower] = bits(v, 31, 0);
         miscRegs[upper] = bits(v, 63, 32);
         DPRINTF(MiscRegs, "Writing MiscReg %s (%d %d:%d) : %#x\n",
-            miscRegName[idx], idx, lower, upper, v);
+                miscRegName[idx], idx, lower, upper, v);
     } else {
         miscRegs[lower] = v;
         DPRINTF(MiscRegs, "Writing MiscReg %s (%d %d) : %#x\n",
-            miscRegName[idx], idx, lower, v);
+                miscRegName[idx], idx, lower, v);
     }
 }
 
@@ -656,7 +656,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         }
 
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
-            miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
+                miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         PCState pc = tc->pcState().as<PCState>();
         pc.nextThumb(cpsr.t);
         pc.illegalExec(cpsr.il == 1);
@@ -699,10 +699,10 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         if (!miscreg_info[MISCREG_IMPLEMENTED]) {
             if (miscreg_info[MISCREG_WARN_NOT_FAIL])
                 warn("Unimplemented system register %s write with %#x.\n",
-                    miscRegName[idx], val);
+                     miscRegName[idx], val);
             else
                 panic("Unimplemented system register %s write with %#x.\n",
-                    miscRegName[idx], val);
+                      miscRegName[idx], val);
         }
 #endif
         idx = redirectRegVHE(idx);
@@ -735,7 +735,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             newVal &= cpacrMask;
             newVal |= old_val & ~cpacrMask;
             DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n", miscRegName[idx],
-                newVal);
+                    newVal);
         } break;
         case MISCREG_CPACR_EL1: {
             const uint32_t ones = (uint32_t)(-1);
@@ -750,7 +750,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             }
             newVal &= cpacrMask;
             DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n", miscRegName[idx],
-                newVal);
+                    newVal);
         } break;
         case MISCREG_CPTR_EL2: {
             const HCR hcr = readMiscRegNoEffect(MISCREG_HCR_EL2);
@@ -781,7 +781,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             cptrMask.res1_9_el2 = ones;
             newVal |= cptrMask;
             DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n", miscRegName[idx],
-                newVal);
+                    newVal);
         } break;
         case MISCREG_CPTR_EL3: {
             const uint32_t ones = (uint32_t)(-1);
@@ -797,7 +797,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             }
             newVal &= cptrMask;
             DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n", miscRegName[idx],
-                newVal);
+                    newVal);
         } break;
         case MISCREG_CSSELR:
             warn_once("The csselr register isn't implemented.\n");
@@ -1030,12 +1030,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             addressTranslation(MMU::S1CTran, BaseMMU::Write, 0, val);
             return;
         case MISCREG_ATS1CUR:
-            addressTranslation(
-                MMU::S1CTran, BaseMMU::Read, MMU::UserMode, val);
+            addressTranslation(MMU::S1CTran, BaseMMU::Read, MMU::UserMode,
+                               val);
             return;
         case MISCREG_ATS1CUW:
-            addressTranslation(
-                MMU::S1CTran, BaseMMU::Write, MMU::UserMode, val);
+            addressTranslation(MMU::S1CTran, BaseMMU::Write, MMU::UserMode,
+                               val);
             return;
         case MISCREG_ATS12NSOPR:
             if (!release->has(ArmExtension::SECURITY))
@@ -1050,14 +1050,14 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         case MISCREG_ATS12NSOUR:
             if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOUR");
-            addressTranslation(
-                MMU::S1S2NsTran, BaseMMU::Read, MMU::UserMode, val);
+            addressTranslation(MMU::S1S2NsTran, BaseMMU::Read, MMU::UserMode,
+                               val);
             return;
         case MISCREG_ATS12NSOUW:
             if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOUW");
-            addressTranslation(
-                MMU::S1S2NsTran, BaseMMU::Write, MMU::UserMode, val);
+            addressTranslation(MMU::S1S2NsTran, BaseMMU::Write, MMU::UserMode,
+                               val);
             return;
         case MISCREG_ATS1HR:
             addressTranslation(MMU::HypMode, BaseMMU::Read, 0, val);
@@ -1201,12 +1201,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             addressTranslation64(MMU::S1E1Tran, BaseMMU::Write, 0, val);
             return;
         case MISCREG_AT_S1E0R_Xt:
-            addressTranslation64(
-                MMU::S1E0Tran, BaseMMU::Read, MMU::UserMode, val);
+            addressTranslation64(MMU::S1E0Tran, BaseMMU::Read, MMU::UserMode,
+                                 val);
             return;
         case MISCREG_AT_S1E0W_Xt:
-            addressTranslation64(
-                MMU::S1E0Tran, BaseMMU::Write, MMU::UserMode, val);
+            addressTranslation64(MMU::S1E0Tran, BaseMMU::Write, MMU::UserMode,
+                                 val);
             return;
         case MISCREG_AT_S1E2R_Xt:
             addressTranslation64(MMU::S1E2Tran, BaseMMU::Read, 0, val);
@@ -1221,12 +1221,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             addressTranslation64(MMU::S12E1Tran, BaseMMU::Write, 0, val);
             return;
         case MISCREG_AT_S12E0R_Xt:
-            addressTranslation64(
-                MMU::S12E0Tran, BaseMMU::Read, MMU::UserMode, val);
+            addressTranslation64(MMU::S12E0Tran, BaseMMU::Read, MMU::UserMode,
+                                 val);
             return;
         case MISCREG_AT_S12E0W_Xt:
-            addressTranslation64(
-                MMU::S12E0Tran, BaseMMU::Write, MMU::UserMode, val);
+            addressTranslation64(MMU::S12E0Tran, BaseMMU::Write, MMU::UserMode,
+                                 val);
             return;
         case MISCREG_AT_S1E3R_Xt:
             addressTranslation64(MMU::S1E3Tran, BaseMMU::Read, 0, val);
@@ -1236,7 +1236,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             return;
         case MISCREG_L2CTLR:
             warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
-                miscRegName[idx], uint32_t(val));
+                 miscRegName[idx], uint32_t(val));
             break;
 
         // Generic Timer registers
@@ -1381,8 +1381,8 @@ ISA::getCurSveVecLenInBits() const
     }
 
     panic_if(!tc,
-        "A ThreadContext is needed to determine the SVE vector length "
-        "in full-system mode");
+             "A ThreadContext is needed to determine the SVE vector length "
+             "in full-system mode");
 
     CPSR cpsr = miscRegs[MISCREG_CPSR];
     ExceptionLevel el = (ExceptionLevel)(uint8_t)cpsr.el;
@@ -1397,17 +1397,17 @@ ISA::getCurSveVecLenInBits() const
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len;
     } else if (release->has(ArmExtension::VIRTUALIZATION) && !isSecure(tc) &&
                (el == EL0 || el == EL1)) {
-        len = std::min(
-            len, static_cast<unsigned>(
-                     static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len));
+        len = std::min(len,
+                       static_cast<unsigned>(
+                           static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len));
     }
 
     if (el == EL3) {
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL3]).len;
     } else if (release->has(ArmExtension::SECURITY)) {
-        len = std::min(
-            len, static_cast<unsigned>(
-                     static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL3]).len));
+        len = std::min(len,
+                       static_cast<unsigned>(
+                           static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL3]).len));
     }
 
     len = std::min(len, sveVL - 1);
@@ -1423,8 +1423,8 @@ ISA::getCurSmeVecLenInBits() const
     }
 
     panic_if(!tc,
-        "A ThreadContext is needed to determine the SME vector length "
-        "in full-system mode");
+             "A ThreadContext is needed to determine the SME vector length "
+             "in full-system mode");
 
     CPSR cpsr = miscRegs[MISCREG_CPSR];
     ExceptionLevel el = (ExceptionLevel)(uint8_t)cpsr.el;
@@ -1439,25 +1439,25 @@ ISA::getCurSmeVecLenInBits() const
         len = static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL2]).len;
     } else if (release->has(ArmExtension::VIRTUALIZATION) && !isSecure(tc) &&
                (el == EL0 || el == EL1)) {
-        len = std::min(
-            len, static_cast<unsigned>(
-                     static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL2]).len));
+        len = std::min(len,
+                       static_cast<unsigned>(
+                           static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL2]).len));
     }
 
     if (el == EL3) {
         len = static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL3]).len;
     } else if (release->has(ArmExtension::SECURITY)) {
-        len = std::min(
-            len, static_cast<unsigned>(
-                     static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL3]).len));
+        len = std::min(len,
+                       static_cast<unsigned>(
+                           static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL3]).len));
     }
 
     len = std::min(len, smeVL - 1);
 
     // len + 1 must be a power of 2! Round down to the nearest whole power of
     // two.
-    static const unsigned LUT[16] = {
-        0, 1, 1, 3, 3, 3, 3, 7, 7, 7, 7, 7, 7, 7, 7, 15};
+    static const unsigned LUT[16] = {0, 1, 1, 3, 3, 3, 3, 7,
+                                     7, 7, 7, 7, 7, 7, 7, 15};
     len = LUT[len];
 
     return (len + 1) * 128;
@@ -1481,7 +1481,7 @@ ISA::unserialize(CheckpointIn &cp)
             miscRegs[idx] != lookUpMiscReg[idx].reset()) {
             warn("Checkpoint value for register %s does not match "
                  "current configuration (checkpointed: %#x, current: %#x)",
-                miscRegName[idx], miscRegs[idx], lookUpMiscReg[idx].reset());
+                 miscRegName[idx], miscRegs[idx], lookUpMiscReg[idx].reset());
             miscRegs[idx] = lookUpMiscReg[idx].reset();
         }
     }
@@ -1492,7 +1492,7 @@ ISA::unserialize(CheckpointIn &cp)
 
 void
 ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
-    BaseMMU::Mode mode, Request::Flags flags, RegVal val)
+                          BaseMMU::Mode mode, Request::Flags flags, RegVal val)
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance
@@ -1502,8 +1502,9 @@ ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
     // with unexpected atomic snoop requests.
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
-    auto req = std::make_shared<Request>(val, 0, flags,
-        Request::funcRequestorId, tc->pcState().instAddr(), tc->contextId());
+    auto req =
+        std::make_shared<Request>(val, 0, flags, Request::funcRequestorId,
+                                  tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(req, tc, mode, tran_type);
 
@@ -1518,7 +1519,7 @@ ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
         }
         par = (paddr & mask(47, 12)) | attr;
         DPRINTF(MiscRegs, "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n", val,
-            par);
+                par);
     } else {
         ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
         arm_fault->update(tc);
@@ -1531,8 +1532,8 @@ ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
         par.s = arm_fault->isStage2() ? 1 : 0;   // S
 
         DPRINTF(MiscRegs,
-            "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n", val, fsr,
-            par);
+                "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n", val,
+                fsr, par);
     }
     setMiscRegNoEffect(MISCREG_PAR_EL1, par);
     return;
@@ -1540,7 +1541,7 @@ ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
 
 void
 ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
-    Request::Flags flags, RegVal val)
+                        Request::Flags flags, RegVal val)
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance
@@ -1550,8 +1551,9 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
     // with unexpected atomic snoop requests.
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
-    auto req = std::make_shared<Request>(val, 0, flags,
-        Request::funcRequestorId, tc->pcState().instAddr(), tc->contextId());
+    auto req =
+        std::make_shared<Request>(val, 0, flags, Request::funcRequestorId,
+                                  tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(req, tc, mode, tran_type);
 
@@ -1564,7 +1566,7 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
         uint8_t max_paddr_bit = 0;
         if (release->has(ArmExtension::LPAE) &&
             (ttbcr.eae || tran_type & MMU::HypMode ||
-                ((tran_type & MMU::S1S2NsTran) && hcr.vm))) {
+             ((tran_type & MMU::S1S2NsTran) && hcr.vm))) {
             max_paddr_bit = 39;
         } else {
             max_paddr_bit = 31;
@@ -1573,7 +1575,7 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
         par = (paddr & mask(max_paddr_bit, 12)) | (getMMUPtr(tc)->getAttr());
 
         DPRINTF(MiscRegs, "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
-            val, par);
+                val, par);
     } else {
         ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
         arm_fault->update(tc);
@@ -1594,8 +1596,8 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
             par.fs5 = fsr.ext;
         }
         DPRINTF(MiscRegs,
-            "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
-            val, fsr, par);
+                "MISCREG: Translated addr 0x%08x fault fsr %#x: PAR: 0x%08x\n",
+                val, fsr, par);
     }
     setMiscRegNoEffect(MISCREG_PAR, par);
     return;
@@ -1603,15 +1605,15 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
 
 template <class XC>
 static inline void
-lockedSnoopHandler(
-    ThreadContext *tc, XC *xc, PacketPtr pkt, Addr cacheBlockMask)
+lockedSnoopHandler(ThreadContext *tc, XC *xc, PacketPtr pkt,
+                   Addr cacheBlockMask)
 {
     // Should only every see invalidations / direct writes
     assert(pkt->isInvalidate() || pkt->isWrite());
 
     DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked: %d\n",
-        tc->getCpuPtr()->name(), pkt->getAddr(),
-        xc->readMiscReg(MISCREG_LOCKFLAG));
+            tc->getCpuPtr()->name(), pkt->getAddr(),
+            xc->readMiscReg(MISCREG_LOCKFLAG));
     if (!xc->readMiscReg(MISCREG_LOCKFLAG))
         return;
 
@@ -1620,10 +1622,10 @@ lockedSnoopHandler(
     Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
 
     DPRINTF(LLSC, "%s:  handling snoop for address: %#x locked addr: %#x\n",
-        tc->getCpuPtr()->name(), snoop_addr, locked_addr);
+            tc->getCpuPtr()->name(), snoop_addr, locked_addr);
     if (locked_addr == snoop_addr) {
         DPRINTF(LLSC, "%s: address match, clearing lock and signaling sev\n",
-            tc->getCpuPtr()->name());
+                tc->getCpuPtr()->name());
         xc->setMiscReg(MISCREG_LOCKFLAG, false);
         // Implement ARMv8 WFE/SEV semantics
         sendEvent(tc);
@@ -1649,7 +1651,7 @@ ISA::handleLockedRead(const RequestPtr &req)
     tc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
     tc->setMiscReg(MISCREG_LOCKFLAG, true);
     DPRINTF(LLSC, "%s: Placing address %#x in monitor\n",
-        tc->getCpuPtr()->name(), req->getPaddr());
+            tc->getCpuPtr()->name(), req->getPaddr());
 }
 
 void
@@ -1658,14 +1660,14 @@ ISA::handleLockedRead(ExecContext *xc, const RequestPtr &req)
     xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
     xc->setMiscReg(MISCREG_LOCKFLAG, true);
     DPRINTF(LLSC, "%s: Placing address %#x in monitor\n",
-        xc->tcBase()->getCpuPtr()->name(), req->getPaddr());
+            xc->tcBase()->getCpuPtr()->name(), req->getPaddr());
 }
 
 void
 ISA::handleLockedSnoopHit()
 {
     DPRINTF(LLSC, "%s:  handling snoop lock hit address: %#x\n",
-        tc->getCpuPtr()->name(), tc->readMiscReg(MISCREG_LOCKADDR));
+            tc->getCpuPtr()->name(), tc->readMiscReg(MISCREG_LOCKADDR));
     tc->setMiscReg(MISCREG_LOCKFLAG, false);
     tc->setMiscReg(MISCREG_SEV_MAILBOX, true);
 }
@@ -1674,21 +1676,22 @@ void
 ISA::handleLockedSnoopHit(ExecContext *xc)
 {
     DPRINTF(LLSC, "%s:  handling snoop lock hit address: %#x\n",
-        xc->tcBase()->getCpuPtr()->name(), xc->readMiscReg(MISCREG_LOCKADDR));
+            xc->tcBase()->getCpuPtr()->name(),
+            xc->readMiscReg(MISCREG_LOCKADDR));
     xc->setMiscReg(MISCREG_LOCKFLAG, false);
     xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
 }
 
 template <class XC>
 static inline bool
-lockedWriteHandler(
-    ThreadContext *tc, XC *xc, const RequestPtr &req, Addr cacheBlockMask)
+lockedWriteHandler(ThreadContext *tc, XC *xc, const RequestPtr &req,
+                   Addr cacheBlockMask)
 {
     if (req->isSwap())
         return true;
 
     DPRINTF(LLSC, "Handling locked write for address %#x in monitor.\n",
-        req->getPaddr());
+            req->getPaddr());
     // Verify that the lock flag is still set and the address
     // is correct
     bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
@@ -1699,7 +1702,7 @@ lockedWriteHandler(
         req->setExtraData(0);
         xc->setMiscReg(MISCREG_LOCKFLAG, false);
         DPRINTF(LLSC, "clearing lock flag in handle locked write\n",
-            tc->getCpuPtr()->name());
+                tc->getCpuPtr()->name());
         // the rest of this code is not architectural;
         // it's just a debugging aid to help detect
         // livelock by warning on long sequences of failed
@@ -1710,7 +1713,7 @@ lockedWriteHandler(
         if (stCondFailures % 100000 == 0) {
             warn("context %d: %d consecutive "
                  "store conditional failures\n",
-                tc->contextId(), stCondFailures);
+                 tc->contextId(), stCondFailures);
         }
 
         // store conditional failed already, so don't issue it to mem
@@ -1726,8 +1729,8 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
 }
 
 bool
-ISA::handleLockedWrite(
-    ExecContext *xc, const RequestPtr &req, Addr cacheBlockMask)
+ISA::handleLockedWrite(ExecContext *xc, const RequestPtr &req,
+                       Addr cacheBlockMask)
 {
     return lockedWriteHandler(xc->tcBase(), xc, req, cacheBlockMask);
 }

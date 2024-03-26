@@ -295,7 +295,7 @@ Event::unserialize(CheckpointIn &cp)
         flags.clear(Squashed | Scheduled);
     } else {
         DPRINTF(Checkpoint, "Event '%s' need to be scheduled @%d\n", name(),
-            _when);
+                _when);
     }
 }
 
@@ -406,7 +406,7 @@ Event::trace(const char *action)
     // the particular subclass where you have the information that
     // needs to be printed.
     DPRINTF(Event, "%s %s %s @ %d\n", description(), instanceString(), action,
-        when());
+            when());
 }
 
 const std::string
@@ -437,8 +437,8 @@ Event::dump() const
     }
 }
 
-EventQueue::EventQueue(const std::string &n) :
-    objName(n), head(NULL), _curTick(0)
+EventQueue::EventQueue(const std::string &n)
+    : objName(n), head(NULL), _curTick(0)
 {}
 
 void

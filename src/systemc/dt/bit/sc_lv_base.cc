@@ -76,11 +76,11 @@ sc_proxy_out_of_bounds(const char *msg, int64 val)
 //  Arbitrary size logic vector base class.
 // ----------------------------------------------------------------------------
 
-static const sc_digit data_array[] = {
-    SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
+static const sc_digit data_array[] = {SC_DIGIT_ZERO, ~SC_DIGIT_ZERO,
+                                      SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
 
-static const sc_digit ctrl_array[] = {
-    SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
+static const sc_digit ctrl_array[] = {SC_DIGIT_ZERO, SC_DIGIT_ZERO,
+                                      ~SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
 
 void
 sc_lv_base::init(int length_, const sc_logic &init_value)
@@ -127,27 +127,27 @@ sc_lv_base::assign_from_string(const std::string &s)
 }
 
 // constructors
-sc_lv_base::sc_lv_base(const char *a) :
-    m_len(0), m_size(0), m_data(0), m_ctrl(0)
+sc_lv_base::sc_lv_base(const char *a)
+    : m_len(0), m_size(0), m_data(0), m_ctrl(0)
 {
     std::string s = convert_to_bin(a);
     init(s.length() - 1);
     assign_from_string(s);
 }
 
-sc_lv_base::sc_lv_base(const char *a, int length_) :
-    m_len(0), m_size(0), m_data(0), m_ctrl(0)
+sc_lv_base::sc_lv_base(const char *a, int length_)
+    : m_len(0), m_size(0), m_data(0), m_ctrl(0)
 {
     init(length_);
     assign_from_string(convert_to_bin(a));
 }
 
-sc_lv_base::sc_lv_base(const sc_lv_base &a) :
-    sc_proxy<sc_lv_base>(),
-    m_len(a.m_len),
-    m_size(a.m_size),
-    m_data(new sc_digit[m_size * 2]),
-    m_ctrl(m_data + m_size)
+sc_lv_base::sc_lv_base(const sc_lv_base &a)
+    : sc_proxy<sc_lv_base>(),
+      m_len(a.m_len),
+      m_size(a.m_size),
+      m_data(new sc_digit[m_size * 2]),
+      m_ctrl(m_data + m_size)
 {
     // copy the bits
     int sz = m_size;

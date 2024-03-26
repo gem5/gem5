@@ -46,7 +46,8 @@ namespace gem5
 {
 // A dummy fault class so we have something to return from failed translations.
 class FaultBase
-{};
+{
+};
 
 Fault dummyFault1 = std::make_shared<gem5::FaultBase>();
 Fault dummyFault2 = std::make_shared<gem5::FaultBase>();
@@ -105,10 +106,10 @@ class TestTranslationGen : public TranslationGen
 
   public:
     TestTranslationGen(Addr new_start, Addr new_size,
-        std::initializer_list<Range> ranges = {}) :
-        TranslationGen(new_start, new_size),
-        results(ranges),
-        resultPos(results.begin())
+                       std::initializer_list<Range> ranges = {})
+        : TranslationGen(new_start, new_size),
+          results(ranges),
+          resultPos(results.begin())
     {}
 
     void
@@ -161,8 +162,9 @@ TEST(TranslationGen, BeginAndEnd)
 TEST(TranslationGen, SuccessfulTwoStep)
 {
     TestTranslationGen gen(0x10000, 0x10000,
-        {// Results for translate.
-            {0x0, 0x8000, 0x30000, NoFault}, {0x0, 0x8000, 0x40000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x8000, 0x40000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -170,21 +172,22 @@ TEST(TranslationGen, SuccessfulTwoStep)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x8000, 0x40000, NoFault}};
+                                 {0x18000, 0x8000, 0x40000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
-    const RangeList expected_trans{
-        {0x10000, 0x10000, 0x0, NoFault}, {0x18000, 0x8000, 0x0, NoFault}};
+    const RangeList expected_trans{{0x10000, 0x10000, 0x0, NoFault},
+                                   {0x18000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
 TEST(TranslationGen, RetryOnFault)
 {
     TestTranslationGen gen(0x10000, 0x10000,
-        {// Results for translate.
-            {0x0, 0x8000, 0x30000, NoFault}, {0x0, 0x0, 0x0, dummyFault1},
-            {0x0, 0x8000, 0x40000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x0, 0x0, dummyFault1},
+                            {0x0, 0x8000, 0x40000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -192,21 +195,25 @@ TEST(TranslationGen, RetryOnFault)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x0, 0x0, dummyFault1}, {0x18000, 0x8000, 0x40000, NoFault}};
+                                 {0x18000, 0x0, 0x0, dummyFault1},
+                                 {0x18000, 0x8000, 0x40000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
     const RangeList expected_trans{{0x10000, 0x10000, 0x0, NoFault},
-        {0x18000, 0x8000, 0x0, NoFault}, {0x18000, 0x8000, 0x0, NoFault}};
+                                   {0x18000, 0x8000, 0x0, NoFault},
+                                   {0x18000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
 TEST(TranslationGen, RetryTwiceOnFault)
 {
     TestTranslationGen gen(0x10000, 0x10000,
-        {// Results for translate.
-            {0x0, 0x8000, 0x30000, NoFault}, {0x0, 0x0, 0x0, dummyFault1},
-            {0x0, 0x0, 0x0, dummyFault2}, {0x0, 0x8000, 0x40000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x0, 0x0, dummyFault1},
+                            {0x0, 0x0, 0x0, dummyFault2},
+                            {0x0, 0x8000, 0x40000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -214,23 +221,26 @@ TEST(TranslationGen, RetryTwiceOnFault)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x0, 0x0, dummyFault1}, {0x18000, 0x0, 0x0, dummyFault2},
-        {0x18000, 0x8000, 0x40000, NoFault}};
+                                 {0x18000, 0x0, 0x0, dummyFault1},
+                                 {0x18000, 0x0, 0x0, dummyFault2},
+                                 {0x18000, 0x8000, 0x40000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
     const RangeList expected_trans{{0x10000, 0x10000, 0x0, NoFault},
-        {0x18000, 0x8000, 0x0, NoFault}, {0x18000, 0x8000, 0x0, NoFault},
-        {0x18000, 0x8000, 0x0, NoFault}};
+                                   {0x18000, 0x8000, 0x0, NoFault},
+                                   {0x18000, 0x8000, 0x0, NoFault},
+                                   {0x18000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
 TEST(TranslationGen, FaultAtStart)
 {
     TestTranslationGen gen(0x10000, 0x10000,
-        {// Results for translate.
-            {0x0, 0x0, 0x0, dummyFault1}, {0x0, 0x8000, 0x30000, NoFault},
-            {0x0, 0x8000, 0x40000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x0, 0x0, dummyFault1},
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x8000, 0x40000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -238,22 +248,25 @@ TEST(TranslationGen, FaultAtStart)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x0, 0x0, dummyFault1},
-        {0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x8000, 0x40000, NoFault}};
+                                 {0x10000, 0x8000, 0x30000, NoFault},
+                                 {0x18000, 0x8000, 0x40000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
     const RangeList expected_trans{{0x10000, 0x10000, 0x0, NoFault},
-        {0x10000, 0x10000, 0x0, NoFault}, {0x18000, 0x8000, 0x0, NoFault}};
+                                   {0x10000, 0x10000, 0x0, NoFault},
+                                   {0x18000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
 TEST(TranslationGen, FaultInMiddle)
 {
     TestTranslationGen gen(0x10000, 0x18000,
-        {// Results for translate.
-            {0x0, 0x8000, 0x30000, NoFault}, {0x0, 0x0, 0x0, dummyFault1},
-            {0x0, 0x8000, 0x40000, NoFault}, {0x0, 0x8000, 0x50000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x0, 0x0, dummyFault1},
+                            {0x0, 0x8000, 0x40000, NoFault},
+                            {0x0, 0x8000, 0x50000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -261,23 +274,26 @@ TEST(TranslationGen, FaultInMiddle)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x0, 0x0, dummyFault1}, {0x18000, 0x8000, 0x40000, NoFault},
-        {0x20000, 0x8000, 0x50000, NoFault}};
+                                 {0x18000, 0x0, 0x0, dummyFault1},
+                                 {0x18000, 0x8000, 0x40000, NoFault},
+                                 {0x20000, 0x8000, 0x50000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
     const RangeList expected_trans{{0x10000, 0x18000, 0x0, NoFault},
-        {0x18000, 0x10000, 0x0, NoFault}, {0x18000, 0x10000, 0x0, NoFault},
-        {0x20000, 0x8000, 0x0, NoFault}};
+                                   {0x18000, 0x10000, 0x0, NoFault},
+                                   {0x18000, 0x10000, 0x0, NoFault},
+                                   {0x20000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
 TEST(TranslationGen, VariablePageSize)
 {
     TestTranslationGen gen(0x10000, 0x20000,
-        {// Results for translate.
-            {0x0, 0x8000, 0x30000, NoFault}, {0x0, 0x10000, 0x40000, NoFault},
-            {0x0, 0x8000, 0x50000, NoFault}});
+                           {// Results for translate.
+                            {0x0, 0x8000, 0x30000, NoFault},
+                            {0x0, 0x10000, 0x40000, NoFault},
+                            {0x0, 0x8000, 0x50000, NoFault}});
 
     RangeList range_list;
     for (const auto &range : gen)
@@ -285,13 +301,14 @@ TEST(TranslationGen, VariablePageSize)
 
     // What the generator should return.
     const RangeList expected_gen{{0x10000, 0x8000, 0x30000, NoFault},
-        {0x18000, 0x10000, 0x40000, NoFault},
-        {0x28000, 0x8000, 0x50000, NoFault}};
+                                 {0x18000, 0x10000, 0x40000, NoFault},
+                                 {0x28000, 0x8000, 0x50000, NoFault}};
     EXPECT_THAT(range_list, Pointwise(GenRangeEq(), expected_gen));
 
     // What the generator should have been asked to translate.
     const RangeList expected_trans{{0x10000, 0x20000, 0x0, NoFault},
-        {0x18000, 0x18000, 0x0, NoFault}, {0x28000, 0x8000, 0x0, NoFault}};
+                                   {0x18000, 0x18000, 0x0, NoFault},
+                                   {0x28000, 0x8000, 0x0, NoFault}};
     EXPECT_THAT(gen.args, Pointwise(TransRangeEq(), expected_trans));
 }
 
@@ -300,6 +317,6 @@ TEST(TranslationGenDeathTest, IncrementEndIterator)
     TestTranslationGen gen(0x10000, 0x20000);
     gtestLogOutput.str("");
     ASSERT_ANY_THROW(gen.end()++);
-    EXPECT_THAT(
-        gtestLogOutput.str(), HasSubstr("Can't increment end iterator."));
+    EXPECT_THAT(gtestLogOutput.str(),
+                HasSubstr("Can't increment end iterator."));
 }

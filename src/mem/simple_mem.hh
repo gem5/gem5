@@ -88,11 +88,11 @@ class SimpleMemory : public AbstractMemory
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
-        Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &_backdoor) override;
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor) override;
         bool recvTimingReq(PacketPtr pkt) override;
         void recvRespRetry() override;
         AddrRangeList getAddrRanges() const override;
@@ -177,16 +177,16 @@ class SimpleMemory : public AbstractMemory
 
     DrainState drain() override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
     void init() override;
 
   protected:
     Tick recvAtomic(PacketPtr pkt);
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
 };

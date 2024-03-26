@@ -148,8 +148,8 @@ class PCEventQueue : public PCEventScope
     void dump() const;
 };
 
-inline PCEvent::PCEvent(PCEventScope *s, const std::string &desc, Addr pc) :
-    description(desc), scope(s), evpc(pc)
+inline PCEvent::PCEvent(PCEventScope *s, const std::string &desc, Addr pc)
+    : description(desc), scope(s), evpc(pc)
 {
     scope->schedule(this);
 }
@@ -169,8 +169,8 @@ class BreakPCEvent : public PCEvent
     bool remove;
 
   public:
-    BreakPCEvent(
-        PCEventScope *s, const std::string &desc, Addr addr, bool del = false);
+    BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
+                 bool del = false);
     virtual void process(ThreadContext *tc);
 };
 

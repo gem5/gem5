@@ -52,8 +52,8 @@ class Router;
 class OutputUnit : public Consumer
 {
   public:
-    OutputUnit(
-        int id, PortDirection direction, Router *router, uint32_t consumerVcs);
+    OutputUnit(int id, PortDirection direction, Router *router,
+               uint32_t consumerVcs);
     ~OutputUnit() = default;
     void set_out_link(NetworkLink *link);
     void set_credit_link(CreditLink *credit_link);

@@ -292,7 +292,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     pcState(const PCStateBase &val) override
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s.\n", val,
-            thread->pcState());
+                thread->pcState());
         thread->pcState(val);
     }
     //////////////////////////////////////////
@@ -313,7 +313,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setMiscRegNoEffect(int misc_reg, RegVal val)
     {
         DPRINTF(Checker, "Setting misc reg %d with no effect to check later\n",
-            misc_reg);
+                misc_reg);
         miscRegIdxs.push(misc_reg);
         return thread->setMiscRegNoEffect(misc_reg, val);
     }
@@ -322,7 +322,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     setMiscReg(int misc_reg, RegVal val) override
     {
         DPRINTF(Checker, "Setting misc reg %d with effect to check later\n",
-            misc_reg);
+                misc_reg);
         miscRegIdxs.push(misc_reg);
         return thread->setMiscReg(misc_reg, val);
     }
@@ -399,19 +399,21 @@ class CheckerCPU : public BaseCPU, public ExecContext
      * mask is all-false for the fragment.
      */
     RequestPtr genMemFragmentRequest(Addr frag_addr, int size,
-        Request::Flags flags, const std::vector<bool> &byte_enable,
-        int &frag_size, int &size_left) const;
+                                     Request::Flags flags,
+                                     const std::vector<bool> &byte_enable,
+                                     int &frag_size, int &size_left) const;
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
-        Request::Flags flags, const std::vector<bool> &byte_enable) override;
+                  Request::Flags flags,
+                  const std::vector<bool> &byte_enable) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-        Request::Flags flags, uint64_t *res,
-        const std::vector<bool> &byte_enable) override;
+                   Request::Flags flags, uint64_t *res,
+                   const std::vector<bool> &byte_enable) override;
 
     Fault
     amoMem(Addr addr, uint8_t *data, unsigned size, Request::Flags flags,
-        AtomicOpFunctorPtr amo_op) override
+           AtomicOpFunctorPtr amo_op) override
     {
         panic("AMO is not supported yet in CPU checker\n");
     }
@@ -438,8 +440,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
             dumpAndExit();
     }
 
-    bool checkFlags(
-        const RequestPtr &unverified_req, Addr vAddr, Addr pAddr, int flags);
+    bool checkFlags(const RequestPtr &unverified_req, Addr vAddr, Addr pAddr,
+                    int flags);
 
     void dumpAndExit();
 
@@ -478,8 +480,8 @@ template <class DynInstPtr>
 class Checker : public CheckerCPU
 {
   public:
-    Checker(const Params &p) :
-        CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
+    Checker(const Params &p)
+        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
     {}
 
     void switchOut();
@@ -493,8 +495,8 @@ class Checker : public CheckerCPU
     void validateExecution(const DynInstPtr &inst);
     void validateState();
 
-    void copyResult(
-        const DynInstPtr &inst, const InstResult &mismatch_val, int start_idx);
+    void copyResult(const DynInstPtr &inst, const InstResult &mismatch_val,
+                    int start_idx);
     void handlePendingInt();
 
   private:

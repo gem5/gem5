@@ -62,17 +62,18 @@ namespace gem5
 using namespace ArmISA;
 
 ArmProcess::ArmProcess(const ProcessParams &params,
-    loader::ObjectFile *objFile, loader::Arch _arch) :
-    Process(params, new EmulationPageTable(params.name, params.pid, PageBytes),
-        objFile),
-    arch(_arch)
+                       loader::ObjectFile *objFile, loader::Arch _arch)
+    : Process(params,
+              new EmulationPageTable(params.name, params.pid, PageBytes),
+              objFile),
+      arch(_arch)
 {
     fatal_if(params.useArchPT, "Arch page tables not implemented.");
 }
 
 ArmProcess32::ArmProcess32(const ProcessParams &params,
-    loader::ObjectFile *objFile, loader::Arch _arch) :
-    ArmProcess(params, objFile, _arch)
+                           loader::ObjectFile *objFile, loader::Arch _arch)
+    : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0xbf000000L;
@@ -80,13 +81,14 @@ ArmProcess32::ArmProcess32(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x40000000L;
 
-    memState = std::make_shared<MemState>(this, brk_point, stack_base,
-        max_stack_size, next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 ArmProcess64::ArmProcess64(const ProcessParams &params,
-    loader::ObjectFile *objFile, loader::Arch _arch) :
-    ArmProcess(params, objFile, _arch)
+                           loader::ObjectFile *objFile, loader::Arch _arch)
+    : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7fffff0000L;
@@ -94,8 +96,9 @@ ArmProcess64::ArmProcess64(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x4000000000L;
 
-    memState = std::make_shared<MemState>(this, brk_point, stack_base,
-        max_stack_size, next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -442,7 +445,7 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
 
     // map memory
     memState->mapRegion(roundDown(memState->getStackMin(), pageSize),
-        roundUp(memState->getStackSize(), pageSize), "stack");
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     IntType sentry_base = memState->getStackBase() - sentry_size;
@@ -503,10 +506,10 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(
-        envp, envp_array_base, env_data_base, ByteOrder::little, *initVirtMem);
-    copyStringArray(
-        argv, argv_array_base, arg_data_base, ByteOrder::little, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::little,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::little,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
@@ -518,14 +521,14 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     tc->setReg(ArgumentReg0, (RegVal)0);
     // Set argument regs 1 and 2 to argv[0] and envp[0] respectively
     if (argv.size() > 0) {
-        tc->setReg(ArgumentReg1,
-            arg_data_base + arg_data_size - argv[argv.size() - 1].size() - 1);
+        tc->setReg(ArgumentReg1, arg_data_base + arg_data_size -
+                                     argv[argv.size() - 1].size() - 1);
     } else {
         tc->setReg(ArgumentReg1, (RegVal)0);
     }
     if (envp.size() > 0) {
-        tc->setReg(ArgumentReg2,
-            env_data_base + env_data_size - envp[envp.size() - 1].size() - 1);
+        tc->setReg(ArgumentReg2, env_data_base + env_data_size -
+                                     envp[envp.size() - 1].size() - 1);
     } else {
         tc->setReg(ArgumentReg2, (RegVal)0);
     }

@@ -51,8 +51,8 @@ namespace memory
 {
 namespace qos
 {
-FixedPriorityPolicy::FixedPriorityPolicy(const Params &p) :
-    Policy(p), defaultPriority(p.qos_fixed_prio_default_prio)
+FixedPriorityPolicy::FixedPriorityPolicy(const Params &p)
+    : Policy(p), defaultPriority(p.qos_fixed_prio_default_prio)
 {}
 
 FixedPriorityPolicy::~FixedPriorityPolicy() {}
@@ -68,8 +68,8 @@ FixedPriorityPolicy::initRequestorName(std::string requestor, uint8_t priority)
 }
 
 void
-FixedPriorityPolicy::initRequestorObj(
-    const SimObject *requestor, uint8_t priority)
+FixedPriorityPolicy::initRequestorObj(const SimObject *requestor,
+                                      uint8_t priority)
 {
     priorityMap.insert(
         this->pair<const SimObject *, uint8_t>(requestor, priority));
@@ -88,9 +88,9 @@ FixedPriorityPolicy::schedule(const RequestorID id, const uint64_t data)
         return ret->second;
     } else {
         DPRINTF(QOS,
-            "Requestor %s (RequestorID %d) not present in "
-            "priorityMap, assigning default priority %d\n",
-            memCtrl->system()->getRequestorName(id), id, defaultPriority);
+                "Requestor %s (RequestorID %d) not present in "
+                "priorityMap, assigning default priority %d\n",
+                memCtrl->system()->getRequestorName(id), id, defaultPriority);
         return defaultPriority;
     }
 }

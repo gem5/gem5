@@ -40,12 +40,13 @@ class BSOp : public RiscvStaticInst
   protected:
     uint8_t bs;
 
-    BSOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass), bs(0)
+    BSOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass), bs(0)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

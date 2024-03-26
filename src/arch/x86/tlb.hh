@@ -122,8 +122,8 @@ class TLB : public BaseTLB
     Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
 
     Fault translate(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode,
-        bool &delayedResponse, bool timing);
+                    BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                    bool &delayedResponse, bool timing);
 
   public:
     void evictLRU();
@@ -134,12 +134,13 @@ class TLB : public BaseTLB
         return ++lruSeq;
     }
 
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
 
     /**
      * Do post-translation physical address finalization.
@@ -155,7 +156,7 @@ class TLB : public BaseTLB
      * @return A fault on failure, NoFault otherwise.
      */
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Mode mode) const override;
+                           BaseMMU::Mode mode) const override;
 
     TlbEntry *insert(Addr vpn, const TlbEntry &entry, uint64_t pcid);
 

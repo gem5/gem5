@@ -83,8 +83,8 @@ nameIsUnique(Objects *objects, Events *events, const std::string &name)
 
 Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, nullptr) {}
 
-Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
-    _sc_obj(_sc_obj), _basename(obj_name ? obj_name : ""), parent(nullptr)
+Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name)
+    : _sc_obj(_sc_obj), _basename(obj_name ? obj_name : ""), parent(nullptr)
 {
     if (_basename == "")
         _basename = ::sc_core::sc_gen_unique_name("object");
@@ -123,8 +123,8 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
     _name = path + _basename;
 }
 
-Object::Object(sc_core::sc_object *_sc_obj, const Object &arg) :
-    Object(_sc_obj, arg._basename.c_str())
+Object::Object(sc_core::sc_object *_sc_obj, const Object &arg)
+    : Object(_sc_obj, arg._basename.c_str())
 {}
 
 Object &

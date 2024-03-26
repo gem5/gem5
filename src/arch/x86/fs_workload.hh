@@ -66,8 +66,8 @@ class ConfigTable;
 
 } // namespace intelmp
 
-void installSegDesc(
-    ThreadContext *tc, int seg, SegDescriptor desc, bool longmode);
+void installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc,
+                    bool longmode);
 
 class FsWorkload : public KernelWorkload
 {
@@ -98,11 +98,11 @@ class FsWorkload : public KernelWorkload
     intelmp::ConfigTable *mpConfigTable;
     ACPI::RSDP *rsdp;
 
-    void writeOutSMBiosTable(
-        Addr header, Addr &headerSize, Addr &tableSize, Addr table = 0);
+    void writeOutSMBiosTable(Addr header, Addr &headerSize, Addr &tableSize,
+                             Addr table = 0);
 
-    void writeOutMPTable(
-        Addr fp, Addr &fpSize, Addr &tableSize, Addr table = 0);
+    void writeOutMPTable(Addr fp, Addr &fpSize, Addr &tableSize,
+                         Addr table = 0);
 
     void writeOutACPITables(Addr begin, Addr &size);
 

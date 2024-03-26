@@ -78,8 +78,8 @@ class VecPredRegT
 
   public:
     /// Container type alias.
-    using Container = typename std::conditional_t<Const,
-        const VecPredRegContainer<NUM_BITS, Packed>,
+    using Container = typename std::conditional_t<
+        Const, const VecPredRegContainer<NUM_BITS, Packed>,
         VecPredRegContainer<NUM_BITS, Packed>>;
 
   protected:
@@ -134,7 +134,7 @@ class VecPredRegT
     getRaw(size_t idx) const
     {
         return container.getBits(idx * (Packed ? 1 : sizeof(VecElem)),
-            (Packed ? 1 : sizeof(VecElem)));
+                                 (Packed ? 1 : sizeof(VecElem)));
     }
 
     /// Write a raw value in an element of the predicate register
@@ -143,7 +143,7 @@ class VecPredRegT
     setRaw(size_t idx, uint8_t val)
     {
         container.setBits(idx * (Packed ? 1 : sizeof(VecElem)),
-            (Packed ? 1 : sizeof(VecElem)), val);
+                          (Packed ? 1 : sizeof(VecElem)), val);
     }
 
     /// Equality operator, required to compare thread contexts.
@@ -179,7 +179,7 @@ class VecPredRegT
     template <bool MC>
     bool
     firstActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
-        size_t actual_num_elems) const
+                size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
         for (int i = 0; i < actual_num_elems; ++i) {
@@ -197,7 +197,7 @@ class VecPredRegT
     template <bool MC>
     bool
     noneActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
-        size_t actual_num_elems) const
+               size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
         for (int i = 0; i < actual_num_elems; ++i) {
@@ -215,7 +215,7 @@ class VecPredRegT
     template <bool MC>
     bool
     lastActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
-        size_t actual_num_elems) const
+               size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
         for (int i = actual_num_elems - 1; i >= 0; --i) {
@@ -362,7 +362,7 @@ class VecPredRegContainer
     as() const
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
-            "Container size incompatible with view size.");
+                      "Container size incompatible with view size.");
         return VecPredRegT < VecElem,
                Packed ? NumBits : (NumBits / sizeof(VecElem)), Packed,
                true > (*this);
@@ -373,7 +373,7 @@ class VecPredRegContainer
     as()
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
-            "Container size incompatible with view size.");
+                      "Container size incompatible with view size.");
         return VecPredRegT < VecElem,
                Packed ? NumBits : (NumBits / sizeof(VecElem)), Packed,
                false > (*this);

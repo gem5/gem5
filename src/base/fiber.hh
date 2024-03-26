@@ -32,11 +32,11 @@
 // as deprecated and are hence hidden in latest macOS releases.
 // By defining _XOPEN_SOURCE we make them available at compilation time.
 #if defined(__APPLE__) && defined(__MACH__)
-#    define _XOPEN_SOURCE 600
-#    include <ucontext.h>
-#    undef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600
+#include <ucontext.h>
+#undef _XOPEN_SOURCE
 #else
-#    include <ucontext.h>
+#include <ucontext.h>
 #endif
 
 // Avoid fortify source for longjmp to work between ucontext stacks.

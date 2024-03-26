@@ -52,13 +52,13 @@ namespace gem5
 /**
  * ThermalReference
  */
-ThermalReference::ThermalReference(const Params &p) :
-    SimObject(p), _temperature(p.temperature), node(NULL)
+ThermalReference::ThermalReference(const Params &p)
+    : SimObject(p), _temperature(p.temperature), node(NULL)
 {}
 
 LinearEquation
-ThermalReference::getEquation(
-    ThermalNode *n, unsigned nnodes, double step) const
+ThermalReference::getEquation(ThermalNode *n, unsigned nnodes,
+                              double step) const
 {
     // Just return an empty equation
     return LinearEquation(nnodes);
@@ -67,13 +67,13 @@ ThermalReference::getEquation(
 /**
  * ThermalResistor
  */
-ThermalResistor::ThermalResistor(const Params &p) :
-    SimObject(p), _resistance(p.resistance), node1(NULL), node2(NULL)
+ThermalResistor::ThermalResistor(const Params &p)
+    : SimObject(p), _resistance(p.resistance), node1(NULL), node2(NULL)
 {}
 
 LinearEquation
-ThermalResistor::getEquation(
-    ThermalNode *n, unsigned nnodes, double step) const
+ThermalResistor::getEquation(ThermalNode *n, unsigned nnodes,
+                             double step) const
 {
     // i[n] = (Vn2 - Vn1)/R
     LinearEquation eq(nnodes);
@@ -101,13 +101,13 @@ ThermalResistor::getEquation(
 /**
  * ThermalCapacitor
  */
-ThermalCapacitor::ThermalCapacitor(const Params &p) :
-    SimObject(p), _capacitance(p.capacitance), node1(NULL), node2(NULL)
+ThermalCapacitor::ThermalCapacitor(const Params &p)
+    : SimObject(p), _capacitance(p.capacitance), node1(NULL), node2(NULL)
 {}
 
 LinearEquation
-ThermalCapacitor::getEquation(
-    ThermalNode *n, unsigned nnodes, double step) const
+ThermalCapacitor::getEquation(ThermalNode *n, unsigned nnodes,
+                              double step) const
 {
     // i(t) = C * d(Vn2 - Vn1)/dt
     // i[n] = C/step * (Vn2 - Vn1 - Vn2[n-1] + Vn1[n-1])
@@ -139,8 +139,8 @@ ThermalCapacitor::getEquation(
 /**
  * ThermalModel
  */
-ThermalModel::ThermalModel(const Params &p) :
-    ClockedObject(p), stepEvent([this] { doStep(); }, name()), _step(p.step)
+ThermalModel::ThermalModel(const Params &p)
+    : ClockedObject(p), stepEvent([this] { doStep(); }, name()), _step(p.step)
 {}
 
 void

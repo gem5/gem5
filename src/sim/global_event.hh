@@ -79,8 +79,8 @@ class BaseGlobalEvent : public EventBase
       protected:
         BaseGlobalEvent *_globalEvent;
 
-        BarrierEvent(BaseGlobalEvent *global_event, Priority p, Flags f) :
-            Event(p, f), _globalEvent(global_event)
+        BarrierEvent(BaseGlobalEvent *global_event, Priority p, Flags f)
+            : Event(p, f), _globalEvent(global_event)
         {}
 
         ~BarrierEvent();
@@ -185,8 +185,8 @@ class GlobalEvent : public BaseGlobalEventTemplate<GlobalEvent>
     {
       public:
         void process();
-        BarrierEvent(Base *global_event, Priority p, Flags f) :
-            Base::BarrierEvent(global_event, p, f)
+        BarrierEvent(Base *global_event, Priority p, Flags f)
+            : Base::BarrierEvent(global_event, p, f)
         {}
     };
 
@@ -214,15 +214,15 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
     {
       public:
         void process();
-        BarrierEvent(Base *global_event, Priority p, Flags f) :
-            Base::BarrierEvent(global_event, p, f)
+        BarrierEvent(Base *global_event, Priority p, Flags f)
+            : Base::BarrierEvent(global_event, p, f)
         {}
     };
 
     GlobalSyncEvent(Priority p, Flags f) : Base(p, f), repeat(0) {}
 
-    GlobalSyncEvent(Tick when, Tick _repeat, Priority p, Flags f) :
-        Base(p, f), repeat(_repeat)
+    GlobalSyncEvent(Tick when, Tick _repeat, Priority p, Flags f)
+        : Base(p, f), repeat(_repeat)
     {
         schedule(when);
     }

@@ -52,19 +52,19 @@
 
 namespace gem5
 {
-Pl011::Pl011(const Pl011Params &p) :
-    Uart(p, 0x1000),
-    intEvent([this] { generateInterrupt(); }, name()),
-    control(0x300),
-    fbrd(0),
-    ibrd(0),
-    lcrh(0),
-    ifls(0x12),
-    imsc(0),
-    rawInt(0),
-    endOnEOT(p.end_on_eot),
-    interrupt(p.interrupt->get()),
-    intDelay(p.int_delay)
+Pl011::Pl011(const Pl011Params &p)
+    : Uart(p, 0x1000),
+      intEvent([this] { generateInterrupt(); }, name()),
+      control(0x300),
+      fbrd(0),
+      ibrd(0),
+      lcrh(0),
+      ifls(0x12),
+      imsc(0),
+      rawInt(0),
+      endOnEOT(p.end_on_eot),
+      interrupt(p.interrupt->get()),
+      intDelay(p.int_delay)
 {}
 
 Tick
@@ -108,9 +108,9 @@ Pl011::read(PacketPtr pkt)
                UART_FR_TXFE; // TX FIFO empty
 
         DPRINTF(Uart,
-            "Reading FR register as %#x rawInt=0x%x "
-            "imsc=0x%x maskInt=0x%x\n",
-            data, rawInt, imsc, maskInt());
+                "Reading FR register as %#x rawInt=0x%x "
+                "imsc=0x%x maskInt=0x%x\n",
+                data, rawInt, imsc, maskInt());
         break;
     case UART_CR:
         data = control;
@@ -167,7 +167,7 @@ Pl011::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Uart, " write register %#x value %#x size=%d\n", daddr,
-        pkt->getLE<uint8_t>(), pkt->getSize());
+            pkt->getLE<uint8_t>(), pkt->getSize());
 
     // use a temporary data since the uart registers are read/written with
     // different size operations
@@ -226,8 +226,8 @@ Pl011::write(PacketPtr pkt)
         warn("PL011: DMA not supported\n");
         break;
     default:
-        panic(
-            "Tried to write PL011 at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to write PL011 at offset %#x that doesn't exist\n",
+              daddr);
         break;
     }
     pkt->makeAtomicResponse();
@@ -247,7 +247,7 @@ void
 Pl011::generateInterrupt()
 {
     DPRINTF(Uart, "Generate Interrupt: imsc=0x%x rawInt=0x%x maskInt=0x%x\n",
-        imsc, rawInt, maskInt());
+            imsc, rawInt, maskInt());
 
     if (maskInt()) {
         interrupt->raise();

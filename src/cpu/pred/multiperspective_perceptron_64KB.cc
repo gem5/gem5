@@ -44,8 +44,8 @@ namespace gem5
 namespace branch_prediction
 {
 MultiperspectivePerceptron64KB::MultiperspectivePerceptron64KB(
-    const MultiperspectivePerceptron64KBParams &p) :
-    MultiperspectivePerceptron(p)
+    const MultiperspectivePerceptron64KBParams &p)
+    : MultiperspectivePerceptron(p)
 {}
 
 void

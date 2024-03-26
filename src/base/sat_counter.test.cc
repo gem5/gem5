@@ -50,7 +50,7 @@ TEST(SatCounterDeathTest, BitCountExceeds)
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(SatCounter8 counter(9));
     ASSERT_NE(gtestLogOutput.str().find("Number of bits exceeds counter size"),
-        std::string::npos);
+              std::string::npos);
 }
 
 /**
@@ -67,7 +67,7 @@ TEST(SatCounterDeathTest, InitialValueExceeds)
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(SatCounter8 counter(7, 128));
     ASSERT_NE(gtestLogOutput.str().find("initial value exceeds max value"),
-        std::string::npos);
+              std::string::npos);
 }
 
 /**

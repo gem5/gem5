@@ -39,7 +39,7 @@
  */
 
 #if defined(__APPLE__)
-#    define _GLIBCPP_USE_C99 1
+#define _GLIBCPP_USE_C99 1
 #endif
 
 #include "base/stats/text.hh"
@@ -69,8 +69,8 @@ namespace statistics
 {
 std::list<Info *> &statsList();
 
-Text::Text() :
-    mystream(false), stream(NULL), descriptions(false), spaces(false)
+Text::Text()
+    : mystream(false), stream(NULL), descriptions(false), spaces(false)
 {}
 
 Text::Text(std::ostream &stream) : Text() { open(stream); }
@@ -202,8 +202,8 @@ struct BasePrint
 
     void
     setup(std::string _name, Flags _flags, int _precision,
-        bool enable_descriptions, std::string _desc, bool enable_units,
-        std::string unit_str, bool enable_spaces)
+          bool enable_descriptions, std::string _desc, bool enable_units,
+          std::string unit_str, bool enable_spaces)
     {
         name = _name;
         flags = _flags;
@@ -335,7 +335,7 @@ VectorPrint::operator()(std::ostream &stream) const
 
     ScalarPrint print(spaces);
     print.setup(name, flags, precision, descriptions, desc, enableUnits,
-        unitStr, spaces);
+                unitStr, spaces);
     print.pdf = _total ? 0.0 : Nan;
     print.cdf = _total ? 0.0 : Nan;
 
@@ -409,8 +409,8 @@ DistPrint::DistPrint(const Text *text, const DistInfo &info) : data(info.data)
     init(text, info);
 }
 
-DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i) :
-    data(info.data[i])
+DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
+    : data(info.data[i])
 {
     init(text, info);
 
@@ -428,8 +428,8 @@ void
 DistPrint::init(const Text *text, const Info &info)
 {
     setup(text->statName(info.name), info.flags, info.precision,
-        text->descriptions, info.desc, text->enableUnits,
-        info.unit->getUnitString(), text->spaces);
+          text->descriptions, info.desc, text->enableUnits,
+          info.unit->getUnitString(), text->spaces);
     separatorString = info.separatorString;
     if (spaces) {
         nameSpaces = 40;
@@ -577,7 +577,7 @@ Text::visit(const ScalarInfo &info)
 
     ScalarPrint print(spaces);
     print.setup(statName(info.name), info.flags, info.precision, descriptions,
-        info.desc, enableUnits, info.unit->getUnitString(), spaces);
+                info.desc, enableUnits, info.unit->getUnitString(), spaces);
     print.value = info.result();
     print.pdf = Nan;
     print.cdf = Nan;
@@ -594,7 +594,7 @@ Text::visit(const VectorInfo &info)
     size_type size = info.size();
     VectorPrint print(spaces);
     print.setup(statName(info.name), info.flags, info.precision, descriptions,
-        info.desc, enableUnits, info.unit->getUnitString(), spaces);
+                info.desc, enableUnits, info.unit->getUnitString(), spaces);
     print.separatorString = info.separatorString;
     print.vec = info.result();
     print.total = info.total();
@@ -734,9 +734,8 @@ struct SparseHistPrint : public BasePrint
 };
 
 /* Call initialization function */
-SparseHistPrint::SparseHistPrint(
-    const Text *text, const SparseHistInfo &info) :
-    data(info.data)
+SparseHistPrint::SparseHistPrint(const Text *text, const SparseHistInfo &info)
+    : data(info.data)
 {
     init(text, info);
 }
@@ -746,8 +745,8 @@ void
 SparseHistPrint::init(const Text *text, const Info &info)
 {
     setup(text->statName(info.name), info.flags, info.precision,
-        text->descriptions, info.desc, text->enableUnits,
-        info.unit->getUnitString(), text->spaces);
+          text->descriptions, info.desc, text->enableUnits,
+          info.unit->getUnitString(), text->spaces);
     separatorString = info.separatorString;
 }
 
@@ -759,7 +758,7 @@ SparseHistPrint::operator()(std::ostream &stream) const
 
     ScalarPrint print(spaces);
     print.setup(base + "samples", flags, precision, descriptions, desc,
-        enableUnits, unitStr, spaces);
+                enableUnits, unitStr, spaces);
     print.pdf = Nan;
     print.cdf = Nan;
     print.value = data.samples;

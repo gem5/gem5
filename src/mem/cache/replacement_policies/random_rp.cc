@@ -72,7 +72,7 @@ Random::getVictim(const ReplacementCandidates &candidates) const
     // its eviction is prioritized
     for (const auto &candidate : candidates) {
         if (!std::static_pointer_cast<RandomReplData>(
-                candidate->replacementData)
+                 candidate->replacementData)
                  ->valid) {
             victim = candidate;
             break;

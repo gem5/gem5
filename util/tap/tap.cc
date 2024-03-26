@@ -26,8 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern "C"
-{
+extern "C" {
 #include <pcap.h>
 }
 
@@ -51,10 +50,10 @@ extern "C"
 #include <list>
 #include <string>
 
-#define panic(arg...) \
-    do { \
-        printf("Panic: " arg); \
-        exit(1); \
+#define panic(arg...)                                                         \
+    do {                                                                      \
+        printf("Panic: " arg);                                                \
+        exit(1);                                                              \
     } while (0)
 
 const char *program = "ethertap";
@@ -70,16 +69,16 @@ usage()
 }
 
 int verbose = 0;
-#define DPRINTF(args...) \
-    do { \
-        if (verbose >= 1) \
-            printf(args); \
+#define DPRINTF(args...)                                                      \
+    do {                                                                      \
+        if (verbose >= 1)                                                     \
+            printf(args);                                                     \
     } while (0)
 
-#define DDUMP(args...) \
-    do { \
-        if (verbose >= 2) \
-            dump((const u_char *)args); \
+#define DDUMP(args...)                                                        \
+    do {                                                                      \
+        if (verbose >= 2)                                                     \
+            dump((const u_char *)args);                                       \
     } while (0)
 
 void
@@ -474,7 +473,7 @@ main(int argc, char *argv[])
             if (client_pfd->revents & POLLIN) {
                 if (buffer_offset < data_len + sizeof(u_int32_t)) {
                     int len = read(client_pfd->fd, buffer + buffer_offset,
-                        bufsize - buffer_offset);
+                                   bufsize - buffer_offset);
 
                     if (len <= 0) {
                         perror("read");
@@ -487,7 +486,7 @@ main(int argc, char *argv[])
 
                     DPRINTF("Received data from peer: len=%d buffer_offset=%d "
                             "data_len=%d\n",
-                        len, buffer_offset, data_len);
+                            len, buffer_offset, data_len);
                 }
 
                 while (data_len != 0 &&

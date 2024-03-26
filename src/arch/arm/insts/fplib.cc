@@ -193,7 +193,7 @@ mul64x32(uint64_t *x0, uint64_t *x1, uint64_t a, uint32_t b)
 
 static inline void
 add128(uint64_t *x0, uint64_t *x1, uint64_t a0, uint64_t a1, uint64_t b0,
-    uint64_t b1)
+       uint64_t b1)
 {
     *x0 = a0 + b0;
     *x1 = a1 + b1 + (*x0 < a0);
@@ -201,7 +201,7 @@ add128(uint64_t *x0, uint64_t *x1, uint64_t a0, uint64_t a1, uint64_t b0,
 
 static inline void
 sub128(uint64_t *x0, uint64_t *x1, uint64_t a0, uint64_t a1, uint64_t b0,
-    uint64_t b1)
+       uint64_t b1)
 {
     *x0 = a0 - b0;
     *x1 = a1 - b1 - (*x0 > a0);
@@ -387,8 +387,8 @@ fp64_defaultNaN()
 }
 
 static inline void
-fp16_unpack(
-    int *sgn, int *exp, uint16_t *mnt, uint16_t x, int mode, int *flags)
+fp16_unpack(int *sgn, int *exp, uint16_t *mnt, uint16_t x, int mode,
+            int *flags)
 {
     *sgn = x >> (FP16_BITS - 1);
     *exp = FP16_EXP(x);
@@ -410,8 +410,8 @@ fp16_unpack(
 }
 
 static inline void
-fp32_unpack(
-    int *sgn, int *exp, uint32_t *mnt, uint32_t x, int mode, int *flags)
+fp32_unpack(int *sgn, int *exp, uint32_t *mnt, uint32_t x, int mode,
+            int *flags)
 {
     *sgn = x >> (FP32_BITS - 1);
     *exp = FP32_EXP(x);
@@ -433,8 +433,8 @@ fp32_unpack(
 }
 
 static inline void
-fp64_unpack(
-    int *sgn, int *exp, uint64_t *mnt, uint64_t x, int mode, int *flags)
+fp64_unpack(int *sgn, int *exp, uint64_t *mnt, uint64_t x, int mode,
+            int *flags)
 {
     *sgn = x >> (FP64_BITS - 1);
     *exp = FP64_EXP(x);
@@ -1256,8 +1256,8 @@ fp16_add(uint16_t a, uint16_t b, int neg, int mode, int *flags)
 
     x_mnt = fp16_normalise(x_mnt, &x_exp);
 
-    return fp16_round(
-        x_sgn, x_exp + FP16_EXP_BITS - 3, x_mnt << 1, mode, flags);
+    return fp16_round(x_sgn, x_exp + FP16_EXP_BITS - 3, x_mnt << 1, mode,
+                      flags);
 }
 
 static uint32_t
@@ -1316,8 +1316,8 @@ fp32_add(uint32_t a, uint32_t b, int neg, int mode, int *flags)
 
     x_mnt = fp32_normalise(x_mnt, &x_exp);
 
-    return fp32_round(
-        x_sgn, x_exp + FP32_EXP_BITS - 3, x_mnt << 1, mode, flags);
+    return fp32_round(x_sgn, x_exp + FP32_EXP_BITS - 3, x_mnt << 1, mode,
+                      flags);
 }
 
 static uint64_t
@@ -1376,8 +1376,8 @@ fp64_add(uint64_t a, uint64_t b, int neg, int mode, int *flags)
 
     x_mnt = fp64_normalise(x_mnt, &x_exp);
 
-    return fp64_round(
-        x_sgn, x_exp + FP64_EXP_BITS - 3, x_mnt << 1, mode, flags);
+    return fp64_round(x_sgn, x_exp + FP64_EXP_BITS - 3, x_mnt << 1, mode,
+                      flags);
 }
 
 static uint16_t
@@ -1492,8 +1492,8 @@ fp64_mul(uint64_t a, uint64_t b, int mode, int *flags)
 }
 
 static uint16_t
-fp16_muladd(
-    uint16_t a, uint16_t b, uint16_t c, int scale, int mode, int *flags)
+fp16_muladd(uint16_t a, uint16_t b, uint16_t c, int scale, int mode,
+            int *flags)
 {
     int a_sgn, a_exp, b_sgn, b_exp, c_sgn, c_exp, x_sgn, x_exp, y_sgn, y_exp;
     uint16_t a_mnt, b_mnt, c_mnt, x;
@@ -1508,7 +1508,7 @@ fp16_muladd(
     // Quiet NaN added to product of zero and infinity:
     if (fp16_is_quiet_NaN(a_exp, a_mnt) &&
         ((!b_mnt && fp16_is_infinity(c_exp, c_mnt)) ||
-            (!c_mnt && fp16_is_infinity(b_exp, b_mnt)))) {
+         (!c_mnt && fp16_is_infinity(b_exp, b_mnt)))) {
         x = fp16_defaultNaN();
         *flags |= FPLIB_IOC;
     }
@@ -1521,8 +1521,8 @@ fp16_muladd(
     if ((b_exp == FP16_EXP_INF && !c_mnt) ||
         (c_exp == FP16_EXP_INF && !b_mnt) ||
         (a_exp == FP16_EXP_INF &&
-            (b_exp == FP16_EXP_INF || c_exp == FP16_EXP_INF) &&
-            (a_sgn != (b_sgn ^ c_sgn)))) {
+         (b_exp == FP16_EXP_INF || c_exp == FP16_EXP_INF) &&
+         (a_sgn != (b_sgn ^ c_sgn)))) {
         *flags |= FPLIB_IOC;
         return fp16_defaultNaN();
     }
@@ -1577,8 +1577,8 @@ fp16_muladd(
 }
 
 static uint32_t
-fp32_muladd(
-    uint32_t a, uint32_t b, uint32_t c, int scale, int mode, int *flags)
+fp32_muladd(uint32_t a, uint32_t b, uint32_t c, int scale, int mode,
+            int *flags)
 {
     int a_sgn, a_exp, b_sgn, b_exp, c_sgn, c_exp, x_sgn, x_exp, y_sgn, y_exp;
     uint32_t a_mnt, b_mnt, c_mnt, x;
@@ -1593,7 +1593,7 @@ fp32_muladd(
     // Quiet NaN added to product of zero and infinity:
     if (fp32_is_quiet_NaN(a_exp, a_mnt) &&
         ((!b_mnt && fp32_is_infinity(c_exp, c_mnt)) ||
-            (!c_mnt && fp32_is_infinity(b_exp, b_mnt)))) {
+         (!c_mnt && fp32_is_infinity(b_exp, b_mnt)))) {
         x = fp32_defaultNaN();
         *flags |= FPLIB_IOC;
     }
@@ -1606,8 +1606,8 @@ fp32_muladd(
     if ((b_exp == FP32_EXP_INF && !c_mnt) ||
         (c_exp == FP32_EXP_INF && !b_mnt) ||
         (a_exp == FP32_EXP_INF &&
-            (b_exp == FP32_EXP_INF || c_exp == FP32_EXP_INF) &&
-            (a_sgn != (b_sgn ^ c_sgn)))) {
+         (b_exp == FP32_EXP_INF || c_exp == FP32_EXP_INF) &&
+         (a_sgn != (b_sgn ^ c_sgn)))) {
         *flags |= FPLIB_IOC;
         return fp32_defaultNaN();
     }
@@ -1662,8 +1662,8 @@ fp32_muladd(
 }
 
 static uint64_t
-fp64_muladd(
-    uint64_t a, uint64_t b, uint64_t c, int scale, int mode, int *flags)
+fp64_muladd(uint64_t a, uint64_t b, uint64_t c, int scale, int mode,
+            int *flags)
 {
     int a_sgn, a_exp, b_sgn, b_exp, c_sgn, c_exp, x_sgn, x_exp, y_sgn, y_exp;
     uint64_t a_mnt, b_mnt, c_mnt, x;
@@ -1678,7 +1678,7 @@ fp64_muladd(
     // Quiet NaN added to product of zero and infinity:
     if (fp64_is_quiet_NaN(a_exp, a_mnt) &&
         ((!b_mnt && fp64_is_infinity(c_exp, c_mnt)) ||
-            (!c_mnt && fp64_is_infinity(b_exp, b_mnt)))) {
+         (!c_mnt && fp64_is_infinity(b_exp, b_mnt)))) {
         x = fp64_defaultNaN();
         *flags |= FPLIB_IOC;
     }
@@ -1691,8 +1691,8 @@ fp64_muladd(
     if ((b_exp == FP64_EXP_INF && !c_mnt) ||
         (c_exp == FP64_EXP_INF && !b_mnt) ||
         (a_exp == FP64_EXP_INF &&
-            (b_exp == FP64_EXP_INF || c_exp == FP64_EXP_INF) &&
-            (a_sgn != (b_sgn ^ c_sgn)))) {
+         (b_exp == FP64_EXP_INF || c_exp == FP64_EXP_INF) &&
+         (a_sgn != (b_sgn ^ c_sgn)))) {
         *flags |= FPLIB_IOC;
         return fp64_defaultNaN();
     }
@@ -1720,14 +1720,14 @@ fp64_muladd(
     if (x_exp >= y_exp) {
         uint64_t t0, t1;
         lsl128(&t0, &t1, y0_mnt, y1_mnt,
-            x_exp - y_exp < 128 ? 128 - (x_exp - y_exp) : 0);
+               x_exp - y_exp < 128 ? 128 - (x_exp - y_exp) : 0);
         lsr128(&y0_mnt, &y1_mnt, y0_mnt, y1_mnt, x_exp - y_exp);
         y0_mnt |= !!(t0 | t1);
         y_exp = x_exp;
     } else {
         uint64_t t0, t1;
         lsl128(&t0, &t1, x0_mnt, x1_mnt,
-            y_exp - x_exp < 128 ? 128 - (y_exp - x_exp) : 0);
+               y_exp - x_exp < 128 ? 128 - (y_exp - x_exp) : 0);
         lsr128(&x0_mnt, &x1_mnt, x0_mnt, x1_mnt, y_exp - x_exp);
         x0_mnt |= !!(t0 | t1);
         x_exp = y_exp;
@@ -1947,8 +1947,8 @@ fp16_scale(uint16_t a, int16_t b, int mode, int *flags)
 
     a_mnt = fp16_normalise(a_mnt, &a_exp);
 
-    return fp16_round(
-        a_sgn, a_exp + FP16_EXP_BITS - 3, a_mnt << 1, mode, flags);
+    return fp16_round(a_sgn, a_exp + FP16_EXP_BITS - 3, a_mnt << 1, mode,
+                      flags);
 }
 
 static uint32_t
@@ -1981,8 +1981,8 @@ fp32_scale(uint32_t a, int32_t b, int mode, int *flags)
 
     a_mnt = fp32_normalise(a_mnt, &a_exp);
 
-    return fp32_round(
-        a_sgn, a_exp + FP32_EXP_BITS - 3, a_mnt << 1, mode, flags);
+    return fp32_round(a_sgn, a_exp + FP32_EXP_BITS - 3, a_mnt << 1, mode,
+                      flags);
 }
 
 static uint64_t
@@ -2015,8 +2015,8 @@ fp64_scale(uint64_t a, int64_t b, int mode, int *flags)
 
     a_mnt = fp64_normalise(a_mnt, &a_exp);
 
-    return fp64_round(
-        a_sgn, a_exp + FP64_EXP_BITS - 3, a_mnt << 1, mode, flags);
+    return fp64_round(a_sgn, a_exp + FP64_EXP_BITS - 3, a_mnt << 1, mode,
+                      flags);
 }
 
 static uint16_t
@@ -2508,48 +2508,48 @@ static uint16_t
 fp16_FPConvertNaN_32(uint32_t op)
 {
     return fp16_pack(op >> (FP32_BITS - 1), FP16_EXP_INF,
-        1ULL << (FP16_MANT_BITS - 1) |
-            op >> (FP32_MANT_BITS - FP16_MANT_BITS));
+                     1ULL << (FP16_MANT_BITS - 1) |
+                         op >> (FP32_MANT_BITS - FP16_MANT_BITS));
 }
 
 static uint16_t
 fp16_FPConvertNaN_64(uint64_t op)
 {
     return fp16_pack(op >> (FP64_BITS - 1), FP16_EXP_INF,
-        1ULL << (FP16_MANT_BITS - 1) |
-            op >> (FP64_MANT_BITS - FP16_MANT_BITS));
+                     1ULL << (FP16_MANT_BITS - 1) |
+                         op >> (FP64_MANT_BITS - FP16_MANT_BITS));
 }
 
 static uint32_t
 fp32_FPConvertNaN_16(uint16_t op)
 {
     return fp32_pack(op >> (FP16_BITS - 1), FP32_EXP_INF,
-        1ULL << (FP32_MANT_BITS - 1) |
-            (uint32_t)op << (FP32_MANT_BITS - FP16_MANT_BITS));
+                     1ULL << (FP32_MANT_BITS - 1) |
+                         (uint32_t)op << (FP32_MANT_BITS - FP16_MANT_BITS));
 }
 
 static uint32_t
 fp32_FPConvertNaN_64(uint64_t op)
 {
     return fp32_pack(op >> (FP64_BITS - 1), FP32_EXP_INF,
-        1ULL << (FP32_MANT_BITS - 1) |
-            op >> (FP64_MANT_BITS - FP32_MANT_BITS));
+                     1ULL << (FP32_MANT_BITS - 1) |
+                         op >> (FP64_MANT_BITS - FP32_MANT_BITS));
 }
 
 static uint64_t
 fp64_FPConvertNaN_16(uint16_t op)
 {
     return fp64_pack(op >> (FP16_BITS - 1), FP64_EXP_INF,
-        1ULL << (FP64_MANT_BITS - 1) |
-            (uint64_t)op << (FP64_MANT_BITS - FP16_MANT_BITS));
+                     1ULL << (FP64_MANT_BITS - 1) |
+                         (uint64_t)op << (FP64_MANT_BITS - FP16_MANT_BITS));
 }
 
 static uint64_t
 fp64_FPConvertNaN_32(uint32_t op)
 {
     return fp64_pack(op >> (FP32_BITS - 1), FP64_EXP_INF,
-        1ULL << (FP64_MANT_BITS - 1) |
-            (uint64_t)op << (FP64_MANT_BITS - FP32_MANT_BITS));
+                     1ULL << (FP64_MANT_BITS - 1) |
+                         (uint64_t)op << (FP64_MANT_BITS - FP32_MANT_BITS));
 }
 
 static uint16_t
@@ -2643,7 +2643,8 @@ fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr)
     } else if (!mnt) {
         result = fp16_zero(sgn);
     } else {
-        result = fp16_round_(sgn, exp - FP32_EXP_BIAS + FP16_EXP_BIAS,
+        result = fp16_round_(
+            sgn, exp - FP32_EXP_BIAS + FP16_EXP_BIAS,
             mnt >> (FP32_MANT_BITS - FP16_BITS) |
                 !!(mnt & ((1ULL << (FP32_MANT_BITS - FP16_BITS)) - 1)),
             rounding, (mode & 0xf) | alt_hp << 4, &flags);
@@ -2691,7 +2692,8 @@ fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr)
     } else if (!mnt) {
         result = fp16_zero(sgn);
     } else {
-        result = fp16_round_(sgn, exp - FP64_EXP_BIAS + FP16_EXP_BIAS,
+        result = fp16_round_(
+            sgn, exp - FP64_EXP_BIAS + FP16_EXP_BIAS,
             mnt >> (FP64_MANT_BITS - FP16_BITS) |
                 !!(mnt & ((1ULL << (FP64_MANT_BITS - FP16_BITS)) - 1)),
             rounding, (mode & 0xf) | alt_hp << 4, &flags);
@@ -2730,8 +2732,8 @@ fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr)
         result = fp32_zero(sgn);
     } else {
         mnt = fp16_normalise(mnt, &exp);
-        result = fp32_pack(sgn,
-            (exp - FP16_EXP_BIAS + FP32_EXP_BIAS + FP16_EXP_BITS),
+        result = fp32_pack(
+            sgn, (exp - FP16_EXP_BIAS + FP32_EXP_BIAS + FP16_EXP_BITS),
             (uint32_t)mnt << (FP32_MANT_BITS - FP16_BITS + 1));
     }
 
@@ -2767,7 +2769,8 @@ fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr)
     } else if (!mnt) {
         result = fp32_zero(sgn);
     } else {
-        result = fp32_round_(sgn, exp - FP64_EXP_BIAS + FP32_EXP_BIAS,
+        result = fp32_round_(
+            sgn, exp - FP64_EXP_BIAS + FP32_EXP_BIAS,
             mnt >> (FP64_MANT_BITS - FP32_BITS) |
                 !!(mnt & ((1ULL << (FP64_MANT_BITS - FP32_BITS)) - 1)),
             rounding, mode, &flags);
@@ -2806,8 +2809,8 @@ fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr)
         result = fp64_zero(sgn);
     } else {
         mnt = fp16_normalise(mnt, &exp);
-        result = fp64_pack(sgn,
-            (exp - FP16_EXP_BIAS + FP64_EXP_BIAS + FP16_EXP_BITS),
+        result = fp64_pack(
+            sgn, (exp - FP16_EXP_BIAS + FP64_EXP_BIAS + FP16_EXP_BITS),
             (uint64_t)mnt << (FP64_MANT_BITS - FP16_BITS + 1));
     }
 
@@ -2844,8 +2847,8 @@ fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr)
         result = fp64_zero(sgn);
     } else {
         mnt = fp32_normalise(mnt, &exp);
-        result = fp64_pack(sgn,
-            (exp - FP32_EXP_BIAS + FP64_EXP_BIAS + FP32_EXP_BITS),
+        result = fp64_pack(
+            sgn, (exp - FP32_EXP_BIAS + FP64_EXP_BIAS + FP32_EXP_BITS),
             (uint64_t)mnt << (FP64_MANT_BITS - FP32_BITS + 1));
     }
 
@@ -2921,11 +2924,11 @@ template <>
 uint16_t
 fplibExpA(uint16_t op)
 {
-    static uint16_t coeff[32] = {0x0000, 0x0016, 0x002d, 0x0045, 0x005d,
-        0x0075, 0x008e, 0x00a8, 0x00c2, 0x00dc, 0x00f8, 0x0114, 0x0130, 0x014d,
-        0x016b, 0x0189, 0x01a8, 0x01c8, 0x01e8, 0x0209, 0x022b, 0x024e, 0x0271,
-        0x0295, 0x02ba, 0x02e0, 0x0306, 0x032e, 0x0356, 0x037f, 0x03a9,
-        0x03d4};
+    static uint16_t coeff[32] = {
+        0x0000, 0x0016, 0x002d, 0x0045, 0x005d, 0x0075, 0x008e, 0x00a8,
+        0x00c2, 0x00dc, 0x00f8, 0x0114, 0x0130, 0x014d, 0x016b, 0x0189,
+        0x01a8, 0x01c8, 0x01e8, 0x0209, 0x022b, 0x024e, 0x0271, 0x0295,
+        0x02ba, 0x02e0, 0x0306, 0x032e, 0x0356, 0x037f, 0x03a9, 0x03d4};
     return ((((op >> 5) & ((1 << FP16_EXP_BITS) - 1)) << FP16_MANT_BITS) |
             coeff[op & ((1 << 5) - 1)]);
 }
@@ -2934,16 +2937,17 @@ template <>
 uint32_t
 fplibExpA(uint32_t op)
 {
-    static uint32_t coeff[64] = {0x000000, 0x0164d2, 0x02cd87, 0x043a29,
-        0x05aac3, 0x071f62, 0x08980f, 0x0a14d5, 0x0b95c2, 0x0d1adf, 0x0ea43a,
-        0x1031dc, 0x11c3d3, 0x135a2b, 0x14f4f0, 0x16942d, 0x1837f0, 0x19e046,
-        0x1b8d3a, 0x1d3eda, 0x1ef532, 0x20b051, 0x227043, 0x243516, 0x25fed7,
-        0x27cd94, 0x29a15b, 0x2b7a3a, 0x2d583f, 0x2f3b79, 0x3123f6, 0x3311c4,
-        0x3504f3, 0x36fd92, 0x38fbaf, 0x3aff5b, 0x3d08a4, 0x3f179a, 0x412c4d,
-        0x4346cd, 0x45672a, 0x478d75, 0x49b9be, 0x4bec15, 0x4e248c, 0x506334,
-        0x52a81e, 0x54f35b, 0x5744fd, 0x599d16, 0x5bfbb8, 0x5e60f5, 0x60ccdf,
-        0x633f89, 0x65b907, 0x68396a, 0x6ac0c7, 0x6d4f30, 0x6fe4ba, 0x728177,
-        0x75257d, 0x77d0df, 0x7a83b3, 0x7d3e0c};
+    static uint32_t coeff[64] = {
+        0x000000, 0x0164d2, 0x02cd87, 0x043a29, 0x05aac3, 0x071f62, 0x08980f,
+        0x0a14d5, 0x0b95c2, 0x0d1adf, 0x0ea43a, 0x1031dc, 0x11c3d3, 0x135a2b,
+        0x14f4f0, 0x16942d, 0x1837f0, 0x19e046, 0x1b8d3a, 0x1d3eda, 0x1ef532,
+        0x20b051, 0x227043, 0x243516, 0x25fed7, 0x27cd94, 0x29a15b, 0x2b7a3a,
+        0x2d583f, 0x2f3b79, 0x3123f6, 0x3311c4, 0x3504f3, 0x36fd92, 0x38fbaf,
+        0x3aff5b, 0x3d08a4, 0x3f179a, 0x412c4d, 0x4346cd, 0x45672a, 0x478d75,
+        0x49b9be, 0x4bec15, 0x4e248c, 0x506334, 0x52a81e, 0x54f35b, 0x5744fd,
+        0x599d16, 0x5bfbb8, 0x5e60f5, 0x60ccdf, 0x633f89, 0x65b907, 0x68396a,
+        0x6ac0c7, 0x6d4f30, 0x6fe4ba, 0x728177, 0x75257d, 0x77d0df, 0x7a83b3,
+        0x7d3e0c};
     return ((((op >> 6) & ((1 << FP32_EXP_BITS) - 1)) << FP32_MANT_BITS) |
             coeff[op & ((1 << 6) - 1)]);
 }
@@ -2952,28 +2956,29 @@ template <>
 uint64_t
 fplibExpA(uint64_t op)
 {
-    static uint64_t coeff[64] = {0x0000000000000ULL, 0x02c9a3e778061ULL,
-        0x059b0d3158574ULL, 0x0874518759bc8ULL, 0x0b5586cf9890fULL,
-        0x0e3ec32d3d1a2ULL, 0x11301d0125b51ULL, 0x1429aaea92de0ULL,
-        0x172b83c7d517bULL, 0x1a35beb6fcb75ULL, 0x1d4873168b9aaULL,
-        0x2063b88628cd6ULL, 0x2387a6e756238ULL, 0x26b4565e27cddULL,
-        0x29e9df51fdee1ULL, 0x2d285a6e4030bULL, 0x306fe0a31b715ULL,
-        0x33c08b26416ffULL, 0x371a7373aa9cbULL, 0x3a7db34e59ff7ULL,
-        0x3dea64c123422ULL, 0x4160a21f72e2aULL, 0x44e086061892dULL,
-        0x486a2b5c13cd0ULL, 0x4bfdad5362a27ULL, 0x4f9b2769d2ca7ULL,
-        0x5342b569d4f82ULL, 0x56f4736b527daULL, 0x5ab07dd485429ULL,
-        0x5e76f15ad2148ULL, 0x6247eb03a5585ULL, 0x6623882552225ULL,
-        0x6a09e667f3bcdULL, 0x6dfb23c651a2fULL, 0x71f75e8ec5f74ULL,
-        0x75feb564267c9ULL, 0x7a11473eb0187ULL, 0x7e2f336cf4e62ULL,
-        0x82589994cce13ULL, 0x868d99b4492edULL, 0x8ace5422aa0dbULL,
-        0x8f1ae99157736ULL, 0x93737b0cdc5e5ULL, 0x97d829fde4e50ULL,
-        0x9c49182a3f090ULL, 0xa0c667b5de565ULL, 0xa5503b23e255dULL,
-        0xa9e6b5579fdbfULL, 0xae89f995ad3adULL, 0xb33a2b84f15fbULL,
-        0xb7f76f2fb5e47ULL, 0xbcc1e904bc1d2ULL, 0xc199bdd85529cULL,
-        0xc67f12e57d14bULL, 0xcb720dcef9069ULL, 0xd072d4a07897cULL,
-        0xd5818dcfba487ULL, 0xda9e603db3285ULL, 0xdfc97337b9b5fULL,
-        0xe502ee78b3ff6ULL, 0xea4afa2a490daULL, 0xefa1bee615a27ULL,
-        0xf50765b6e4540ULL, 0xfa7c1819e90d8ULL};
+    static uint64_t coeff[64] = {
+        0x0000000000000ULL, 0x02c9a3e778061ULL, 0x059b0d3158574ULL,
+        0x0874518759bc8ULL, 0x0b5586cf9890fULL, 0x0e3ec32d3d1a2ULL,
+        0x11301d0125b51ULL, 0x1429aaea92de0ULL, 0x172b83c7d517bULL,
+        0x1a35beb6fcb75ULL, 0x1d4873168b9aaULL, 0x2063b88628cd6ULL,
+        0x2387a6e756238ULL, 0x26b4565e27cddULL, 0x29e9df51fdee1ULL,
+        0x2d285a6e4030bULL, 0x306fe0a31b715ULL, 0x33c08b26416ffULL,
+        0x371a7373aa9cbULL, 0x3a7db34e59ff7ULL, 0x3dea64c123422ULL,
+        0x4160a21f72e2aULL, 0x44e086061892dULL, 0x486a2b5c13cd0ULL,
+        0x4bfdad5362a27ULL, 0x4f9b2769d2ca7ULL, 0x5342b569d4f82ULL,
+        0x56f4736b527daULL, 0x5ab07dd485429ULL, 0x5e76f15ad2148ULL,
+        0x6247eb03a5585ULL, 0x6623882552225ULL, 0x6a09e667f3bcdULL,
+        0x6dfb23c651a2fULL, 0x71f75e8ec5f74ULL, 0x75feb564267c9ULL,
+        0x7a11473eb0187ULL, 0x7e2f336cf4e62ULL, 0x82589994cce13ULL,
+        0x868d99b4492edULL, 0x8ace5422aa0dbULL, 0x8f1ae99157736ULL,
+        0x93737b0cdc5e5ULL, 0x97d829fde4e50ULL, 0x9c49182a3f090ULL,
+        0xa0c667b5de565ULL, 0xa5503b23e255dULL, 0xa9e6b5579fdbfULL,
+        0xae89f995ad3adULL, 0xb33a2b84f15fbULL, 0xb7f76f2fb5e47ULL,
+        0xbcc1e904bc1d2ULL, 0xc199bdd85529cULL, 0xc67f12e57d14bULL,
+        0xcb720dcef9069ULL, 0xd072d4a07897cULL, 0xd5818dcfba487ULL,
+        0xda9e603db3285ULL, 0xdfc97337b9b5fULL, 0xe502ee78b3ff6ULL,
+        0xea4afa2a490daULL, 0xefa1bee615a27ULL, 0xf50765b6e4540ULL,
+        0xfa7c1819e90d8ULL};
     return ((((op >> 6) & ((1 << FP64_EXP_BITS) - 1)) << FP64_MANT_BITS) |
             coeff[op & ((1 << 6) - 1)]);
 }
@@ -3362,22 +3367,25 @@ fplibNeg(uint64_t op)
     return op ^ 1ULL << (FP64_BITS - 1);
 }
 
-static const uint8_t recip_sqrt_estimate[256] = {255, 253, 251, 249, 247, 245,
-    243, 242, 240, 238, 236, 234, 233, 231, 229, 228, 226, 224, 223, 221, 219,
-    218, 216, 215, 213, 212, 210, 209, 207, 206, 204, 203, 201, 200, 198, 197,
-    196, 194, 193, 192, 190, 189, 188, 186, 185, 184, 183, 181, 180, 179, 178,
-    176, 175, 174, 173, 172, 170, 169, 168, 167, 166, 165, 164, 163, 162, 160,
-    159, 158, 157, 156, 155, 154, 153, 152, 151, 150, 149, 148, 147, 146, 145,
-    144, 143, 142, 141, 140, 140, 139, 138, 137, 136, 135, 134, 133, 132, 131,
-    131, 130, 129, 128, 127, 126, 126, 125, 124, 123, 122, 121, 121, 120, 119,
-    118, 118, 117, 116, 115, 114, 114, 113, 112, 111, 111, 110, 109, 109, 108,
-    107, 106, 105, 104, 103, 101, 100, 99, 97, 96, 95, 93, 92, 91, 90, 88, 87,
-    86, 85, 84, 82, 81, 80, 79, 78, 77, 76, 75, 74, 72, 71, 70, 69, 68, 67, 66,
-    65, 64, 63, 62, 61, 60, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 51, 50, 49,
-    48, 47, 46, 46, 45, 44, 43, 42, 42, 41, 40, 39, 38, 38, 37, 36, 35, 35, 34,
-    33, 33, 32, 31, 30, 30, 29, 28, 28, 27, 26, 26, 25, 24, 24, 23, 22, 22, 21,
-    20, 20, 19, 19, 18, 17, 17, 16, 16, 15, 14, 14, 13, 13, 12, 11, 11, 10, 10,
-    9, 9, 8, 8, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0};
+static const uint8_t recip_sqrt_estimate[256] = {
+    255, 253, 251, 249, 247, 245, 243, 242, 240, 238, 236, 234, 233, 231, 229,
+    228, 226, 224, 223, 221, 219, 218, 216, 215, 213, 212, 210, 209, 207, 206,
+    204, 203, 201, 200, 198, 197, 196, 194, 193, 192, 190, 189, 188, 186, 185,
+    184, 183, 181, 180, 179, 178, 176, 175, 174, 173, 172, 170, 169, 168, 167,
+    166, 165, 164, 163, 162, 160, 159, 158, 157, 156, 155, 154, 153, 152, 151,
+    150, 149, 148, 147, 146, 145, 144, 143, 142, 141, 140, 140, 139, 138, 137,
+    136, 135, 134, 133, 132, 131, 131, 130, 129, 128, 127, 126, 126, 125, 124,
+    123, 122, 121, 121, 120, 119, 118, 118, 117, 116, 115, 114, 114, 113, 112,
+    111, 111, 110, 109, 109, 108, 107, 106, 105, 104, 103, 101, 100, 99,  97,
+    96,  95,  93,  92,  91,  90,  88,  87,  86,  85,  84,  82,  81,  80,  79,
+    78,  77,  76,  75,  74,  72,  71,  70,  69,  68,  67,  66,  65,  64,  63,
+    62,  61,  60,  60,  59,  58,  57,  56,  55,  54,  53,  52,  51,  51,  50,
+    49,  48,  47,  46,  46,  45,  44,  43,  42,  42,  41,  40,  39,  38,  38,
+    37,  36,  35,  35,  34,  33,  33,  32,  31,  30,  30,  29,  28,  28,  27,
+    26,  26,  25,  24,  24,  23,  22,  22,  21,  20,  20,  19,  19,  18,  17,
+    17,  16,  16,  15,  14,  14,  13,  13,  12,  11,  11,  10,  10,  9,   9,
+    8,   8,   7,   6,   6,   5,   5,   4,   4,   3,   3,   2,   2,   1,   1,
+    0};
 
 template <>
 uint16_t
@@ -3406,7 +3414,7 @@ fplibRSqrtEstimate(uint16_t op, FPSCR &fpscr)
         mnt = recip_sqrt_estimate[(~exp & 1) << 7 |
                                   (mnt >> (FP16_BITS - 8) & 127)];
         result = fp16_pack(0, (3 * FP16_EXP_BIAS - exp - 1) >> 1,
-            mnt << (FP16_MANT_BITS - 8));
+                           mnt << (FP16_MANT_BITS - 8));
     }
 
     set_fpscr0(fpscr, flags);
@@ -3441,7 +3449,7 @@ fplibRSqrtEstimate(uint32_t op, FPSCR &fpscr)
         mnt = recip_sqrt_estimate[(~exp & 1) << 7 |
                                   (mnt >> (FP32_BITS - 8) & 127)];
         result = fp32_pack(0, (3 * FP32_EXP_BIAS - exp - 1) >> 1,
-            mnt << (FP32_MANT_BITS - 8));
+                           mnt << (FP32_MANT_BITS - 8));
     }
 
     set_fpscr0(fpscr, flags);
@@ -3476,7 +3484,7 @@ fplibRSqrtEstimate(uint64_t op, FPSCR &fpscr)
         mnt = recip_sqrt_estimate[(~exp & 1) << 7 |
                                   (mnt >> (FP64_BITS - 8) & 127)];
         result = fp64_pack(0, (3 * FP64_EXP_BIAS - exp - 1) >> 1,
-            mnt << (FP64_MANT_BITS - 8));
+                           mnt << (FP64_MANT_BITS - 8));
     }
 
     set_fpscr0(fpscr, flags);
@@ -3958,7 +3966,7 @@ fplibRoundInt(uint16_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             exp < expint - FP16_BITS ?
                 1 :
                 ((mnt << 1 >> (expint - exp - 1) & 3) |
-                    ((uint16_t)(mnt << 2 << (FP16_BITS + exp - expint)) != 0));
+                 ((uint16_t)(mnt << 2 << (FP16_BITS + exp - expint)) != 0));
         switch (rounding) {
         case FPRounding_TIEEVEN:
             x += (err == 3 || (err == 2 && (x & 1)));
@@ -4025,7 +4033,7 @@ fplibRoundInt(uint32_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             exp < expint - FP32_BITS ?
                 1 :
                 ((mnt << 1 >> (expint - exp - 1) & 3) |
-                    ((uint32_t)(mnt << 2 << (FP32_BITS + exp - expint)) != 0));
+                 ((uint32_t)(mnt << 2 << (FP32_BITS + exp - expint)) != 0));
         switch (rounding) {
         case FPRounding_TIEEVEN:
             x += (err == 3 || (err == 2 && (x & 1)));
@@ -4092,7 +4100,7 @@ fplibRoundInt(uint64_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             exp < expint - FP64_BITS ?
                 1 :
                 ((mnt << 1 >> (expint - exp - 1) & 3) |
-                    ((uint64_t)(mnt << 2 << (FP64_BITS + exp - expint)) != 0));
+                 ((uint64_t)(mnt << 2 << (FP64_BITS + exp - expint)) != 0));
         switch (rounding) {
         case FPRounding_TIEEVEN:
             x += (err == 3 || (err == 2 && (x & 1)));
@@ -4223,20 +4231,22 @@ template <>
 uint16_t
 fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2, FPSCR &fpscr)
 {
-    static uint16_t coeff[2][8] = {{
-                                       0x3c00,
-                                       0xb155,
-                                       0x2030,
-                                       0x0000,
-                                       0x0000,
-                                       0x0000,
-                                       0x0000,
-                                       0x0000,
-                                   },
+    static uint16_t coeff[2][8] = {
+        {
+            0x3c00,
+            0xb155,
+            0x2030,
+            0x0000,
+            0x0000,
+            0x0000,
+            0x0000,
+            0x0000,
+        },
         {0x3c00, 0xb800, 0x293a, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}};
     int flags = 0;
-    uint16_t result = fp16_muladd(coeff[op2 >> (FP16_BITS - 1)][coeff_index],
-        op1, fplibAbs(op2), 0, modeConv(fpscr), &flags);
+    uint16_t result =
+        fp16_muladd(coeff[op2 >> (FP16_BITS - 1)][coeff_index], op1,
+                    fplibAbs(op2), 0, modeConv(fpscr), &flags);
     set_fpscr0(fpscr, flags);
     return result;
 }
@@ -4247,12 +4257,13 @@ fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2, FPSCR &fpscr)
 {
     static uint32_t coeff[2][8] = {
         {0x3f800000, 0xbe2aaaab, 0x3c088886, 0xb95008b9, 0x36369d6d,
-            0x00000000, 0x00000000, 0x00000000},
+         0x00000000, 0x00000000, 0x00000000},
         {0x3f800000, 0xbf000000, 0x3d2aaaa6, 0xbab60705, 0x37cd37cc,
-            0x00000000, 0x00000000, 0x00000000}};
+         0x00000000, 0x00000000, 0x00000000}};
     int flags = 0;
-    uint32_t result = fp32_muladd(coeff[op2 >> (FP32_BITS - 1)][coeff_index],
-        op1, fplibAbs(op2), 0, modeConv(fpscr), &flags);
+    uint32_t result =
+        fp32_muladd(coeff[op2 >> (FP32_BITS - 1)][coeff_index], op1,
+                    fplibAbs(op2), 0, modeConv(fpscr), &flags);
     set_fpscr0(fpscr, flags);
     return result;
 }
@@ -4263,16 +4274,15 @@ fplibTrigMulAdd(uint8_t coeff_index, uint64_t op1, uint64_t op2, FPSCR &fpscr)
 {
     static uint64_t coeff[2][8] = {
         {0x3ff0000000000000ULL, 0xbfc5555555555543ULL, 0x3f8111111110f30cULL,
-            0xbf2a01a019b92fc6ULL, 0x3ec71de351f3d22bULL,
-            0xbe5ae5e2b60f7b91ULL, 0x3de5d8408868552fULL,
-            0x0000000000000000ULL},
+         0xbf2a01a019b92fc6ULL, 0x3ec71de351f3d22bULL, 0xbe5ae5e2b60f7b91ULL,
+         0x3de5d8408868552fULL, 0x0000000000000000ULL},
         {0x3ff0000000000000ULL, 0xbfe0000000000000ULL, 0x3fa5555555555536ULL,
-            0xbf56c16c16c13a0bULL, 0x3efa01a019b1e8d8ULL,
-            0xbe927e4f7282f468ULL, 0x3e21ee96d2641b13ULL,
-            0xbda8f76380fbb401ULL}};
+         0xbf56c16c16c13a0bULL, 0x3efa01a019b1e8d8ULL, 0xbe927e4f7282f468ULL,
+         0x3e21ee96d2641b13ULL, 0xbda8f76380fbb401ULL}};
     int flags = 0;
-    uint64_t result = fp64_muladd(coeff[op2 >> (FP64_BITS - 1)][coeff_index],
-        op1, fplibAbs(op2), 0, modeConv(fpscr), &flags);
+    uint64_t result =
+        fp64_muladd(coeff[op2 >> (FP64_BITS - 1)][coeff_index], op1,
+                    fplibAbs(op2), 0, modeConv(fpscr), &flags);
     set_fpscr0(fpscr, flags);
     return result;
 }
@@ -4371,8 +4381,8 @@ fplibTrigSSel(uint64_t op1, uint64_t op2, FPSCR &fpscr)
 }
 
 static uint64_t
-FPToFixed_64(
-    int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding, int *flags)
+FPToFixed_64(int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding,
+             int *flags)
 {
     int expmax = FP64_EXP_BIAS + FP64_BITS - 1;
     uint64_t x;
@@ -4384,11 +4394,11 @@ FPToFixed_64(
     }
 
     x = lsr64(mnt << FP64_EXP_BITS, expmax - exp);
-    err = (exp > expmax - 2 ?
-               0 :
-               (lsr64(mnt << FP64_EXP_BITS, expmax - 2 - exp) & 3) |
-                   !!(mnt << FP64_EXP_BITS &
-                       (lsl64(1, expmax - 2 - exp) - 1)));
+    err =
+        (exp > expmax - 2 ?
+             0 :
+             (lsr64(mnt << FP64_EXP_BITS, expmax - 2 - exp) & 3) |
+                 !!(mnt << FP64_EXP_BITS & (lsl64(1, expmax - 2 - exp) - 1)));
 
     switch (rounding) {
     case FPRounding_TIEEVEN:
@@ -4422,13 +4432,13 @@ FPToFixed_64(
 }
 
 static uint32_t
-FPToFixed_32(
-    int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding, int *flags)
+FPToFixed_32(int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding,
+             int *flags)
 {
     uint64_t x = FPToFixed_64(sgn, exp, mnt, u, rounding, flags);
     if (u ? x >= 1ULL << FP32_BITS :
             !(x < 1ULL << (FP32_BITS - 1) ||
-                (uint64_t)-x <= (uint64_t)1 << (FP32_BITS - 1))) {
+              (uint64_t)-x <= (uint64_t)1 << (FP32_BITS - 1))) {
         *flags = FPLIB_IOC;
         x = ((uint32_t)!u << (FP32_BITS - 1)) - !sgn;
     }
@@ -4436,13 +4446,13 @@ FPToFixed_32(
 }
 
 static uint16_t
-FPToFixed_16(
-    int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding, int *flags)
+FPToFixed_16(int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding,
+             int *flags)
 {
     uint64_t x = FPToFixed_64(sgn, exp, mnt, u, rounding, flags);
     if (u ? x >= 1ULL << FP16_BITS :
             !(x < 1ULL << (FP16_BITS - 1) ||
-                (uint64_t)-x <= (uint64_t)1 << (FP16_BITS - 1))) {
+              (uint64_t)-x <= (uint64_t)1 << (FP16_BITS - 1))) {
         *flags = FPLIB_IOC;
         x = ((uint16_t)!u << (FP16_BITS - 1)) - !sgn;
     }
@@ -4451,8 +4461,8 @@ FPToFixed_16(
 
 template <>
 uint16_t
-fplibFPToFixed(
-    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4468,9 +4478,10 @@ fplibFPToFixed(
     } else {
         assert(fbits >= 0);
         // Infinity is treated as an ordinary normalised number that saturates.
-        result = FPToFixed_16(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
-            (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u, rounding,
-            &flags);
+        result =
+            FPToFixed_16(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
+                         (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u,
+                         rounding, &flags);
     }
 
     set_fpscr0(fpscr, flags);
@@ -4480,8 +4491,8 @@ fplibFPToFixed(
 
 template <>
 uint32_t
-fplibFPToFixed(
-    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4499,9 +4510,10 @@ fplibFPToFixed(
         assert(fbits >= 0);
         if (exp == FP16_EXP_INF)
             exp = 255; // infinity: make it big enough to saturate
-        result = FPToFixed_32(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
-            (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u, rounding,
-            &flags);
+        result =
+            FPToFixed_32(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
+                         (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u,
+                         rounding, &flags);
     }
 
     set_fpscr0(fpscr, flags);
@@ -4511,8 +4523,8 @@ fplibFPToFixed(
 
 template <>
 uint32_t
-fplibFPToFixed(
-    uint32_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4528,9 +4540,10 @@ fplibFPToFixed(
     } else {
         assert(fbits >= 0);
         // Infinity is treated as an ordinary normalised number that saturates.
-        result = FPToFixed_32(sgn, exp + FP64_EXP_BIAS - FP32_EXP_BIAS + fbits,
-            (uint64_t)mnt << (FP64_MANT_BITS - FP32_MANT_BITS), u, rounding,
-            &flags);
+        result =
+            FPToFixed_32(sgn, exp + FP64_EXP_BIAS - FP32_EXP_BIAS + fbits,
+                         (uint64_t)mnt << (FP64_MANT_BITS - FP32_MANT_BITS), u,
+                         rounding, &flags);
     }
 
     set_fpscr0(fpscr, flags);
@@ -4540,8 +4553,8 @@ fplibFPToFixed(
 
 template <>
 uint32_t
-fplibFPToFixed(
-    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4633,8 +4646,8 @@ fplibFPToFixedJS(uint64_t op, FPSCR &fpscr, bool is64, uint8_t &nz)
 
 template <>
 uint64_t
-fplibFPToFixed(
-    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4652,9 +4665,10 @@ fplibFPToFixed(
         assert(fbits >= 0);
         if (exp == FP16_EXP_INF)
             exp = 255; // infinity: make it big enough to saturate
-        result = FPToFixed_64(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
-            (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u, rounding,
-            &flags);
+        result =
+            FPToFixed_64(sgn, exp + FP64_EXP_BIAS - FP16_EXP_BIAS + fbits,
+                         (uint64_t)mnt << (FP64_MANT_BITS - FP16_MANT_BITS), u,
+                         rounding, &flags);
     }
 
     set_fpscr0(fpscr, flags);
@@ -4664,8 +4678,8 @@ fplibFPToFixed(
 
 template <>
 uint64_t
-fplibFPToFixed(
-    uint32_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4682,9 +4696,10 @@ fplibFPToFixed(
     } else {
         assert(fbits >= 0);
         // Infinity is treated as an ordinary normalised number that saturates.
-        result = FPToFixed_64(sgn, exp + FP64_EXP_BIAS - FP32_EXP_BIAS + fbits,
-            (uint64_t)mnt << (FP64_MANT_BITS - FP32_MANT_BITS), u, rounding,
-            &flags);
+        result =
+            FPToFixed_64(sgn, exp + FP64_EXP_BIAS - FP32_EXP_BIAS + fbits,
+                         (uint64_t)mnt << (FP64_MANT_BITS - FP32_MANT_BITS), u,
+                         rounding, &flags);
     }
 
     set_fpscr0(fpscr, flags);
@@ -4694,8 +4709,8 @@ fplibFPToFixed(
 
 template <>
 uint64_t
-fplibFPToFixed(
-    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     int sgn, exp;
@@ -4778,8 +4793,8 @@ fp64_cvtf(uint64_t a, int fbits, int u, int mode, int *flags)
 
 template <>
 uint16_t
-fplibFixedToFP(
-    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     uint16_t res = fp16_cvtf(
@@ -4790,8 +4805,8 @@ fplibFixedToFP(
 
 template <>
 uint32_t
-fplibFixedToFP(
-    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     uint32_t res = fp32_cvtf(
@@ -4802,8 +4817,8 @@ fplibFixedToFP(
 
 template <>
 uint64_t
-fplibFixedToFP(
-    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr)
+fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
+               FPSCR &fpscr)
 {
     int flags = 0;
     uint64_t res = fp64_cvtf(

@@ -128,7 +128,7 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
         }
 
         DPRINTF(RubyNetwork, "Target width: %d Current: %d\n", target_width,
-            cur_width);
+                cur_width);
         assert(target_width != cur_width);
 
         int vc = t_flit->get_vc();
@@ -173,14 +173,14 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
             }
 
             DPRINTF(RubyNetwork,
-                "Deserialize :%dB -----> %dB "
-                " vc:%d\n",
-                cur_width, target_width, vc);
+                    "Deserialize :%dB -----> %dB "
+                    " vc:%d\n",
+                    cur_width, target_width, vc);
 
             flit *fl = NULL;
             if (flitPossible) {
-                fl = t_flit->deserialize(
-                    lenBuffer[vc], num_flits, target_width);
+                fl = t_flit->deserialize(lenBuffer[vc], num_flits,
+                                         target_width);
             }
 
             // Inform the credit serializer about the number
@@ -200,9 +200,9 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
         } else {
             // Serialize
             DPRINTF(RubyNetwork,
-                "Serializing flit :%d -----> %d "
-                "(vc:%d, Original Message Size: %d)\n",
-                cur_width, target_width, vc, t_flit->msgSize);
+                    "Serializing flit :%d -----> %d "
+                    "(vc:%d, Original Message Size: %d)\n",
+                    cur_width, target_width, vc, t_flit->msgSize);
 
             int flitPossible = 0;
             if (t_flit->get_type() == CREDIT_) {
@@ -236,9 +236,9 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 flit *fl = t_flit->serialize(i, flitPossible, target_width);
                 scheduleFlit(fl, serDesLatency);
                 DPRINTF(RubyNetwork,
-                    "Serialized to flit[%d of %d parts]:"
-                    " %s\n",
-                    i + 1, flitPossible, *fl);
+                        "Serialized to flit[%d of %d parts]:"
+                        " %s\n",
+                        i + 1, flitPossible, *fl);
             }
 
             if (t_flit->get_type() != CREDIT_) {

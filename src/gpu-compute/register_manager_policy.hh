@@ -72,8 +72,8 @@ class RegisterManagerPolicy
     virtual bool canAllocateSgprs(int simdId, int nWfs, int demandPerWf) = 0;
 
     // allocate vector registers and reserve from register pool
-    virtual void allocateRegisters(
-        Wavefront *w, int vectorDemand, int scalarDemand) = 0;
+    virtual void allocateRegisters(Wavefront *w, int vectorDemand,
+                                   int scalarDemand) = 0;
 
     // free all remaining registers held by specified WF
     virtual void freeRegisters(Wavefront *w) = 0;

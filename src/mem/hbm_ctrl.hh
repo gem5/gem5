@@ -101,8 +101,8 @@ class HBMCtrl : public MemCtrl
      *                           in a burst window
      * @return tick for command issue without contention
      */
-    Tick verifySingleCmd(
-        Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd) override;
+    Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                         bool row_cmd) override;
 
     /**
      * Check for command bus contention for multi-cycle (2 currently)
@@ -120,7 +120,7 @@ class HBMCtrl : public MemCtrl
      * @return tick for command issue without contention
      */
     Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
-        Tick max_multi_cmd_split = 0) override;
+                        Tick max_multi_cmd_split = 0) override;
 
     /**
      * NextReq and Respond events for second pseudo channel
@@ -253,8 +253,8 @@ class HBMCtrl : public MemCtrl
     Tick recvAtomic(PacketPtr pkt) override;
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override;
     void recvFunctional(PacketPtr pkt) override;
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &_backdoor) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &_backdoor) override;
     bool recvTimingReq(PacketPtr pkt) override;
 };
 

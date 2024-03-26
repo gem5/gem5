@@ -89,7 +89,7 @@ pybind_init_debug(py::module_ &m_native)
 
     m_debug
         .def("getAllFlagsVersion",
-            []() { return debug::AllFlagsFlag::version(); })
+             []() { return debug::AllFlagsFlag::version(); })
         .def("allFlags", &debug::allFlags, py::return_value_policy::reference)
 
         .def("schedBreak", &schedBreak);

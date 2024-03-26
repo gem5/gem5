@@ -41,13 +41,13 @@
 #include <cassert>
 
 #ifndef __ARCH_ARM_REGS_INT_HH__
-#    define __ARCH_ARM_REGS_INT_HH__
+#define __ARCH_ARM_REGS_INT_HH__
 
-#    include "arch/arm/types.hh"
-#    include "base/logging.hh"
-#    include "cpu/reg_class.hh"
-#    include "debug/IntRegs.hh"
-#    include "sim/core.hh"
+#include "arch/arm/types.hh"
+#include "base/logging.hh"
+#include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
+#include "sim/core.hh"
 
 namespace gem5
 {
@@ -302,10 +302,11 @@ inline constexpr auto &Sp = R13, &Lr = R14, &Pc = R15,
 
 typedef const RegId RegMap[NumArchRegs];
 
-const RegMap Reg64Map = {R0, R1, R2, R3, R4, R5, R6, R7, R8Usr, R9Usr, R10Usr,
-    R11Usr, R12Usr, R13Usr, R14Usr, R13Hyp, R14Irq, R13Irq, R14Svc, R13Svc,
-    R14Abt, R13Abt, R14Und, R13Und, R8Fiq, R9Fiq, R10Fiq, R11Fiq, R12Fiq,
-    R13Fiq, R14Fiq, Zero};
+const RegMap Reg64Map = {
+    R0,     R1,     R2,     R3,     R4,     R5,     R6,     R7,
+    R8Usr,  R9Usr,  R10Usr, R11Usr, R12Usr, R13Usr, R14Usr, R13Hyp,
+    R14Irq, R13Irq, R14Svc, R13Svc, R14Abt, R13Abt, R14Und, R13Und,
+    R8Fiq,  R9Fiq,  R10Fiq, R11Fiq, R12Fiq, R13Fiq, R14Fiq, Zero};
 
 static inline RegId
 x(unsigned index)
@@ -314,10 +315,11 @@ x(unsigned index)
     return intRegClass[_X0Idx + index];
 }
 
-const RegMap RegUsrMap = {R0Usr, R1Usr, R2Usr, R3Usr, R4Usr, R5Usr, R6Usr,
-    R7Usr, R8Usr, R9Usr, R10Usr, R11Usr, R12Usr, R13Usr, R14Usr, R15Usr, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegUsrMap = {
+    R0Usr, R1Usr, R2Usr,  R3Usr,  R4Usr,  R5Usr,  R6Usr,  R7Usr,
+    R8Usr, R9Usr, R10Usr, R11Usr, R12Usr, R13Usr, R14Usr, R15Usr,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 usr(unsigned index)
@@ -326,10 +328,11 @@ usr(unsigned index)
     return RegUsrMap[index];
 }
 
-const RegMap RegHypMap = {R0Hyp, R1Hyp, R2Hyp, R3Hyp, R4Hyp, R5Hyp, R6Hyp,
-    R7Hyp, R8Hyp, R9Hyp, R10Hyp, R11Hyp, R12Hyp, R13Hyp, R14Hyp, R15Hyp, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegHypMap = {
+    R0Hyp, R1Hyp, R2Hyp,  R3Hyp,  R4Hyp,  R5Hyp,  R6Hyp,  R7Hyp,
+    R8Hyp, R9Hyp, R10Hyp, R11Hyp, R12Hyp, R13Hyp, R14Hyp, R15Hyp,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 hyp(unsigned index)
@@ -338,10 +341,11 @@ hyp(unsigned index)
     return RegHypMap[index];
 }
 
-const RegMap RegSvcMap = {R0Svc, R1Svc, R2Svc, R3Svc, R4Svc, R5Svc, R6Svc,
-    R7Svc, R8Svc, R9Svc, R10Svc, R11Svc, R12Svc, R13Svc, R14Svc, R15Svc, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegSvcMap = {
+    R0Svc, R1Svc, R2Svc,  R3Svc,  R4Svc,  R5Svc,  R6Svc,  R7Svc,
+    R8Svc, R9Svc, R10Svc, R11Svc, R12Svc, R13Svc, R14Svc, R15Svc,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 svc(unsigned index)
@@ -350,10 +354,11 @@ svc(unsigned index)
     return RegSvcMap[index];
 }
 
-const RegMap RegMonMap = {R0Mon, R1Mon, R2Mon, R3Mon, R4Mon, R5Mon, R6Mon,
-    R7Mon, R8Mon, R9Mon, R10Mon, R11Mon, R12Mon, R13Mon, R14Mon, R15Mon, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegMonMap = {
+    R0Mon, R1Mon, R2Mon,  R3Mon,  R4Mon,  R5Mon,  R6Mon,  R7Mon,
+    R8Mon, R9Mon, R10Mon, R11Mon, R12Mon, R13Mon, R14Mon, R15Mon,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 mon(unsigned index)
@@ -362,10 +367,11 @@ mon(unsigned index)
     return RegMonMap[index];
 }
 
-const RegMap RegAbtMap = {R0Abt, R1Abt, R2Abt, R3Abt, R4Abt, R5Abt, R6Abt,
-    R7Abt, R8Abt, R9Abt, R10Abt, R11Abt, R12Abt, R13Abt, R14Abt, R15Abt, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegAbtMap = {
+    R0Abt, R1Abt, R2Abt,  R3Abt,  R4Abt,  R5Abt,  R6Abt,  R7Abt,
+    R8Abt, R9Abt, R10Abt, R11Abt, R12Abt, R13Abt, R14Abt, R15Abt,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 abt(unsigned index)
@@ -374,10 +380,11 @@ abt(unsigned index)
     return RegAbtMap[index];
 }
 
-const RegMap RegUndMap = {R0Und, R1Und, R2Und, R3Und, R4Und, R5Und, R6Und,
-    R7Und, R8Und, R9Und, R10Und, R11Und, R12Und, R13Und, R14Und, R15Und, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegUndMap = {
+    R0Und, R1Und, R2Und,  R3Und,  R4Und,  R5Und,  R6Und,  R7Und,
+    R8Und, R9Und, R10Und, R11Und, R12Und, R13Und, R14Und, R15Und,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 und(unsigned index)
@@ -386,10 +393,11 @@ und(unsigned index)
     return RegUndMap[index];
 }
 
-const RegMap RegIrqMap = {R0Irq, R1Irq, R2Irq, R3Irq, R4Irq, R5Irq, R6Irq,
-    R7Irq, R8Irq, R9Irq, R10Irq, R11Irq, R12Irq, R13Irq, R14Irq, R15Irq, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegIrqMap = {
+    R0Irq, R1Irq, R2Irq,  R3Irq,  R4Irq,  R5Irq,  R6Irq,  R7Irq,
+    R8Irq, R9Irq, R10Irq, R11Irq, R12Irq, R13Irq, R14Irq, R15Irq,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 irq(unsigned index)
@@ -398,10 +406,11 @@ irq(unsigned index)
     return RegIrqMap[index];
 }
 
-const RegMap RegFiqMap = {R0Fiq, R1Fiq, R2Fiq, R3Fiq, R4Fiq, R5Fiq, R6Fiq,
-    R7Fiq, R8Fiq, R9Fiq, R10Fiq, R11Fiq, R12Fiq, R13Fiq, R14Fiq, R15Fiq, Zero,
-    Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero, Zero,
-    Zero, Zero, Zero};
+const RegMap RegFiqMap = {
+    R0Fiq, R1Fiq, R2Fiq,  R3Fiq,  R4Fiq,  R5Fiq,  R6Fiq,  R7Fiq,
+    R8Fiq, R9Fiq, R10Fiq, R11Fiq, R12Fiq, R13Fiq, R14Fiq, R15Fiq,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero,
+    Zero,  Zero,  Zero,   Zero,   Zero,   Zero,   Zero,   Zero};
 
 static inline const RegId &
 fiq(unsigned index)
@@ -446,7 +455,7 @@ flattenIntRegModeIndex(int reg)
         return int_reg::und(reg);
     default:
         panic("%d: Flattening into an unknown mode: reg:%#x mode:%#x\n",
-            curTick(), reg, mode);
+              curTick(), reg, mode);
     }
 }
 

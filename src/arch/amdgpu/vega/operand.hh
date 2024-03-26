@@ -76,8 +76,8 @@ class Operand
   public:
     Operand() = delete;
 
-    Operand(GPUDynInstPtr gpuDynInst, int opIdx) :
-        _gpuDynInst(gpuDynInst), _opIdx(opIdx)
+    Operand(GPUDynInstPtr gpuDynInst, int opIdx)
+        : _gpuDynInst(gpuDynInst), _opIdx(opIdx)
     {
         assert(_gpuDynInst);
         assert(_opIdx >= 0);
@@ -108,22 +108,22 @@ template <typename DataType, bool Const, size_t NumDwords>
 class ScalarOperand;
 
 template <typename DataType, bool Const,
-    size_t NumDwords = sizeof(DataType) / sizeof(VecElemU32)>
+          size_t NumDwords = sizeof(DataType) / sizeof(VecElemU32)>
 class VecOperand final : public Operand
 {
     static_assert(NumDwords >= 1 && NumDwords <= MaxOperandDwords,
-        "Incorrect number of DWORDS for VEGA operand.");
+                  "Incorrect number of DWORDS for VEGA operand.");
 
   public:
     VecOperand() = delete;
 
-    VecOperand(GPUDynInstPtr gpuDynInst, int opIdx) :
-        Operand(gpuDynInst, opIdx),
-        scalar(false),
-        absMod(false),
-        negMod(false),
-        scRegData(gpuDynInst, _opIdx),
-        vrfData{{nullptr}}
+    VecOperand(GPUDynInstPtr gpuDynInst, int opIdx)
+        : Operand(gpuDynInst, opIdx),
+          scalar(false),
+          absMod(false),
+          negMod(false),
+          scRegData(gpuDynInst, _opIdx),
+          vrfData{{nullptr}}
     {
         vecReg.zero();
     }
@@ -177,7 +177,7 @@ class VecOperand final : public Operand
             auto reg_file_vgpr = vrfData[0]->template as<VecElemU32>();
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 std::memcpy((void *)&vgpr[lane], (void *)&reg_file_vgpr[lane],
-                    sizeof(DataType));
+                            sizeof(DataType));
             }
         } else if (NumDwords == 2) {
             assert(vrfData[0]);
@@ -227,7 +227,7 @@ class VecOperand final : public Operand
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (exec_mask[lane] || _gpuDynInst->ignoreExec()) {
                     std::memcpy((void *)&reg_file_vgpr[lane],
-                        (void *)&vgpr[lane], sizeof(DataType));
+                                (void *)&vgpr[lane], sizeof(DataType));
                 }
             }
 
@@ -372,17 +372,17 @@ class VecOperand final : public Operand
 };
 
 template <typename DataType, bool Const,
-    size_t NumDwords = sizeof(DataType) / sizeof(ScalarRegU32)>
+          size_t NumDwords = sizeof(DataType) / sizeof(ScalarRegU32)>
 class ScalarOperand final : public Operand
 {
     static_assert(NumDwords >= 1 && NumDwords <= MaxOperandDwords,
-        "Incorrect number of DWORDS for VEGA operand.");
+                  "Incorrect number of DWORDS for VEGA operand.");
 
   public:
     ScalarOperand() = delete;
 
-    ScalarOperand(GPUDynInstPtr gpuDynInst, int opIdx) :
-        Operand(gpuDynInst, opIdx)
+    ScalarOperand(GPUDynInstPtr gpuDynInst, int opIdx)
+        : Operand(gpuDynInst, opIdx)
     {
         std::memset(srfData.data(), 0, NumDwords * sizeof(ScalarRegU32));
     }
@@ -402,8 +402,8 @@ class ScalarOperand final : public Operand
     {
         assert(sizeof(DataType) <= sizeof(srfData));
         DataType raw_data((DataType)0);
-        std::memcpy(
-            (void *)&raw_data, (void *)srfData.data(), sizeof(DataType));
+        std::memcpy((void *)&raw_data, (void *)srfData.data(),
+                    sizeof(DataType));
 
         return raw_data;
     }
@@ -443,10 +443,10 @@ class ScalarOperand final : public Operand
                 ScalarRegU64 new_exec_mask_val = wf->execMask().to_ullong();
                 if (NumDwords == 1) {
                     std::memcpy((void *)&new_exec_mask_val,
-                        (void *)srfData.data(), sizeof(VecElemU32));
+                                (void *)srfData.data(), sizeof(VecElemU32));
                 } else if (NumDwords == 2) {
                     std::memcpy((void *)&new_exec_mask_val,
-                        (void *)srfData.data(), sizeof(VecElemU64));
+                                (void *)srfData.data(), sizeof(VecElemU64));
                 } else {
                     panic("Trying to write more than 2 DWORDS to EXEC\n");
                 }
@@ -463,7 +463,8 @@ class ScalarOperand final : public Operand
                 ScalarRegU32 new_exec_mask_hi_val(0);
                 ScalarRegU64 new_exec_mask_val = wf->execMask().to_ullong();
                 std::memcpy((void *)&new_exec_mask_hi_val,
-                    (void *)srfData.data(), sizeof(new_exec_mask_hi_val));
+                            (void *)srfData.data(),
+                            sizeof(new_exec_mask_hi_val));
                 replaceBits(new_exec_mask_val, 63, 32, new_exec_mask_hi_val);
                 VectorMask new_exec_mask(new_exec_mask_val);
                 wf->execMask() = new_exec_mask;
@@ -524,8 +525,8 @@ class ScalarOperand final : public Operand
         case REG_EXEC_LO: {
             ScalarRegU64 exec_mask =
                 _gpuDynInst->wavefront()->execMask().to_ullong();
-            std::memcpy(
-                (void *)srfData.data(), (void *)&exec_mask, sizeof(exec_mask));
+            std::memcpy((void *)srfData.data(), (void *)&exec_mask,
+                        sizeof(exec_mask));
             DPRINTF(GPUSRF, "Read EXEC\n");
             DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
         } break;
@@ -540,7 +541,7 @@ class ScalarOperand final : public Operand
 
             ScalarRegU32 exec_mask_hi = bits(exec_mask, 63, 32);
             std::memcpy((void *)srfData.data(), (void *)&exec_mask_hi,
-                sizeof(exec_mask_hi));
+                        sizeof(exec_mask_hi));
             DPRINTF(GPUSRF, "Read EXEC_HI\n");
             DPRINTF(GPUSRF, "EXEC_HI = %#x\n", exec_mask_hi);
         } break;
@@ -552,14 +553,14 @@ class ScalarOperand final : public Operand
             break;
         case REG_POS_HALF: {
             typename OpTraits<DataType>::FloatT pos_half = 0.5;
-            std::memcpy(
-                (void *)srfData.data(), (void *)&pos_half, sizeof(pos_half));
+            std::memcpy((void *)srfData.data(), (void *)&pos_half,
+                        sizeof(pos_half));
 
         } break;
         case REG_NEG_HALF: {
             typename OpTraits<DataType>::FloatT neg_half = -0.5;
-            std::memcpy(
-                (void *)srfData.data(), (void *)&neg_half, sizeof(neg_half));
+            std::memcpy((void *)srfData.data(), (void *)&neg_half,
+                        sizeof(neg_half));
         } break;
         case REG_POS_ONE: {
             typename OpTraits<DataType>::FloatT pos_one = 1.0;
@@ -583,8 +584,8 @@ class ScalarOperand final : public Operand
         } break;
         case REG_NEG_FOUR: {
             typename OpTraits<DataType>::FloatT neg_four = -4.0;
-            std::memcpy(
-                (void *)srfData.data(), (void *)&neg_four, sizeof(neg_four));
+            std::memcpy((void *)srfData.data(), (void *)&neg_four,
+                        sizeof(neg_four));
         } break;
         case REG_PI: {
             assert(sizeof(DataType) == sizeof(ScalarRegF64) ||
@@ -594,11 +595,11 @@ class ScalarOperand final : public Operand
             const ScalarRegU64 pi_u64(0x3fc45f306dc9c882ULL);
 
             if (sizeof(DataType) == sizeof(ScalarRegF64)) {
-                std::memcpy(
-                    (void *)srfData.data(), (void *)&pi_u64, sizeof(pi_u64));
+                std::memcpy((void *)srfData.data(), (void *)&pi_u64,
+                            sizeof(pi_u64));
             } else {
-                std::memcpy(
-                    (void *)srfData.data(), (void *)&pi_u32, sizeof(pi_u32));
+                std::memcpy((void *)srfData.data(), (void *)&pi_u32,
+                            sizeof(pi_u32));
             }
         } break;
         default: {
@@ -610,8 +611,8 @@ class ScalarOperand final : public Operand
             } else {
                 misc_val = (DataType)_gpuDynInst->readMiscReg(_opIdx);
             }
-            std::memcpy(
-                (void *)srfData.data(), (void *)&misc_val, sizeof(DataType));
+            std::memcpy((void *)srfData.data(), (void *)&misc_val,
+                        sizeof(DataType));
         }
         }
     }
@@ -629,18 +630,18 @@ class ScalarOperand final : public Operand
         int sgprIdx(-1);
 
         if (_opIdx == REG_VCC_HI) {
-            sgprIdx = cu->registerManager->mapSgpr(
-                wf, wf->reservedScalarRegs - 1 + dword);
+            sgprIdx = cu->registerManager->mapSgpr(wf, wf->reservedScalarRegs -
+                                                           1 + dword);
         } else if (_opIdx == REG_VCC_LO) {
-            sgprIdx = cu->registerManager->mapSgpr(
-                wf, wf->reservedScalarRegs - 2 + dword);
+            sgprIdx = cu->registerManager->mapSgpr(wf, wf->reservedScalarRegs -
+                                                           2 + dword);
         } else if (_opIdx == REG_FLAT_SCRATCH_HI) {
-            sgprIdx = cu->registerManager->mapSgpr(
-                wf, wf->reservedScalarRegs - 3 + dword);
+            sgprIdx = cu->registerManager->mapSgpr(wf, wf->reservedScalarRegs -
+                                                           3 + dword);
         } else if (_opIdx == REG_FLAT_SCRATCH_LO) {
             assert(NumDwords == 1);
-            sgprIdx = cu->registerManager->mapSgpr(
-                wf, wf->reservedScalarRegs - 4 + dword);
+            sgprIdx = cu->registerManager->mapSgpr(wf, wf->reservedScalarRegs -
+                                                           4 + dword);
         } else {
             sgprIdx = cu->registerManager->mapSgpr(wf, _opIdx + dword);
         }

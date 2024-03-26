@@ -77,7 +77,7 @@ using namespace X86ISA;
 // Some linux distro s(e.g., RHEL7) define the KVM macros using "BIT" but do
 // not include where BIT is defined, so define it here in that case.
 #ifndef BIT
-#    define BIT(nr) (1UL << (nr))
+#define BIT(nr) (1UL << (nr))
 #endif
 
 struct GEM5_PACKED FXSave
@@ -142,63 +142,63 @@ struct XSaveHeader
 
 static_assert(sizeof(XSaveHeader) == 64, "Unexpected size of XSaveHeader");
 
-#define FOREACH_IREG() \
-    do { \
-        APPLY_IREG(rax, int_reg::Rax); \
-        APPLY_IREG(rbx, int_reg::Rbx); \
-        APPLY_IREG(rcx, int_reg::Rcx); \
-        APPLY_IREG(rdx, int_reg::Rdx); \
-        APPLY_IREG(rsi, int_reg::Rsi); \
-        APPLY_IREG(rdi, int_reg::Rdi); \
-        APPLY_IREG(rsp, int_reg::Rsp); \
-        APPLY_IREG(rbp, int_reg::Rbp); \
-        APPLY_IREG(r8, int_reg::R8); \
-        APPLY_IREG(r9, int_reg::R9); \
-        APPLY_IREG(r10, int_reg::R10); \
-        APPLY_IREG(r11, int_reg::R11); \
-        APPLY_IREG(r12, int_reg::R12); \
-        APPLY_IREG(r13, int_reg::R13); \
-        APPLY_IREG(r14, int_reg::R14); \
-        APPLY_IREG(r15, int_reg::R15); \
+#define FOREACH_IREG()                                                        \
+    do {                                                                      \
+        APPLY_IREG(rax, int_reg::Rax);                                        \
+        APPLY_IREG(rbx, int_reg::Rbx);                                        \
+        APPLY_IREG(rcx, int_reg::Rcx);                                        \
+        APPLY_IREG(rdx, int_reg::Rdx);                                        \
+        APPLY_IREG(rsi, int_reg::Rsi);                                        \
+        APPLY_IREG(rdi, int_reg::Rdi);                                        \
+        APPLY_IREG(rsp, int_reg::Rsp);                                        \
+        APPLY_IREG(rbp, int_reg::Rbp);                                        \
+        APPLY_IREG(r8, int_reg::R8);                                          \
+        APPLY_IREG(r9, int_reg::R9);                                          \
+        APPLY_IREG(r10, int_reg::R10);                                        \
+        APPLY_IREG(r11, int_reg::R11);                                        \
+        APPLY_IREG(r12, int_reg::R12);                                        \
+        APPLY_IREG(r13, int_reg::R13);                                        \
+        APPLY_IREG(r14, int_reg::R14);                                        \
+        APPLY_IREG(r15, int_reg::R15);                                        \
     } while (0)
 
-#define FOREACH_SREG() \
-    do { \
-        APPLY_SREG(cr0, misc_reg::Cr0); \
-        APPLY_SREG(cr2, misc_reg::Cr2); \
-        APPLY_SREG(cr3, misc_reg::Cr3); \
-        APPLY_SREG(cr4, misc_reg::Cr4); \
-        APPLY_SREG(cr8, misc_reg::Cr8); \
-        APPLY_SREG(efer, misc_reg::Efer); \
-        APPLY_SREG(apic_base, misc_reg::ApicBase); \
+#define FOREACH_SREG()                                                        \
+    do {                                                                      \
+        APPLY_SREG(cr0, misc_reg::Cr0);                                       \
+        APPLY_SREG(cr2, misc_reg::Cr2);                                       \
+        APPLY_SREG(cr3, misc_reg::Cr3);                                       \
+        APPLY_SREG(cr4, misc_reg::Cr4);                                       \
+        APPLY_SREG(cr8, misc_reg::Cr8);                                       \
+        APPLY_SREG(efer, misc_reg::Efer);                                     \
+        APPLY_SREG(apic_base, misc_reg::ApicBase);                            \
     } while (0)
 
-#define FOREACH_DREG() \
-    do { \
-        APPLY_DREG(db[0], misc_reg::Dr0); \
-        APPLY_DREG(db[1], misc_reg::Dr1); \
-        APPLY_DREG(db[2], misc_reg::Dr2); \
-        APPLY_DREG(db[3], misc_reg::Dr3); \
-        APPLY_DREG(dr6, misc_reg::Dr6); \
-        APPLY_DREG(dr7, misc_reg::Dr7); \
+#define FOREACH_DREG()                                                        \
+    do {                                                                      \
+        APPLY_DREG(db[0], misc_reg::Dr0);                                     \
+        APPLY_DREG(db[1], misc_reg::Dr1);                                     \
+        APPLY_DREG(db[2], misc_reg::Dr2);                                     \
+        APPLY_DREG(db[3], misc_reg::Dr3);                                     \
+        APPLY_DREG(dr6, misc_reg::Dr6);                                       \
+        APPLY_DREG(dr7, misc_reg::Dr7);                                       \
     } while (0)
 
-#define FOREACH_SEGMENT() \
-    do { \
-        APPLY_SEGMENT(cs, misc_reg::Cs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ds, misc_reg::Ds - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(es, misc_reg::Es - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(fs, misc_reg::Fs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(gs, misc_reg::Gs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ss, misc_reg::Ss - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(tr, misc_reg::Tr - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ldt, misc_reg::Tsl - misc_reg::SegSelBase); \
+#define FOREACH_SEGMENT()                                                     \
+    do {                                                                      \
+        APPLY_SEGMENT(cs, misc_reg::Cs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ds, misc_reg::Ds - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(es, misc_reg::Es - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(fs, misc_reg::Fs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(gs, misc_reg::Gs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ss, misc_reg::Ss - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(tr, misc_reg::Tr - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ldt, misc_reg::Tsl - misc_reg::SegSelBase);             \
     } while (0)
 
-#define FOREACH_DTABLE() \
-    do { \
-        APPLY_DTABLE(gdt, misc_reg::Tsg - misc_reg::SegSelBase); \
-        APPLY_DTABLE(idt, misc_reg::Idtr - misc_reg::SegSelBase); \
+#define FOREACH_DTABLE()                                                      \
+    do {                                                                      \
+        APPLY_DTABLE(gdt, misc_reg::Tsg - misc_reg::SegSelBase);              \
+        APPLY_DTABLE(idt, misc_reg::Idtr - misc_reg::SegSelBase);             \
     } while (0)
 
 template <typename Struct, typename Entry>
@@ -231,8 +231,8 @@ dumpKvm(const char *reg_name, const struct kvm_segment &seg)
     inform("\t%s: @0x%llx+%x [sel: 0x%x, type: 0x%x]\n"
            "\t\tpres.: %u, dpl: %u, db: %u, s: %u, l: %u, g: %u, avl: %u, "
            "unus.: %u\n",
-        reg_name, seg.base, seg.limit, seg.selector, seg.type, seg.present,
-        seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl, seg.unusable);
+           reg_name, seg.base, seg.limit, seg.selector, seg.type, seg.present,
+           seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl, seg.unusable);
 }
 
 static void
@@ -268,11 +268,11 @@ dumpKvm(const struct kvm_debugregs &regs)
 {
     inform("KVM debug state:\n");
 
-#    define APPLY_DREG(kreg, mreg) inform("\t" #    kreg ": 0x%llx\n", regs.kreg)
+#define APPLY_DREG(kreg, mreg) inform("\t" #kreg ": 0x%llx\n", regs.kreg)
 
     FOREACH_DREG();
 
-#    undef APPLY_DREG
+#undef APPLY_DREG
 
     inform("\tflags: 0x%llx\n", regs.flags);
 }
@@ -302,18 +302,18 @@ dumpFpuCommon(const T &fpu)
 
     inform("\tfsw: 0x%x (top: %i, "
            "conditions: %s%s%s%s, exceptions: %s%s%s%s%s%s %s%s%s)\n",
-        fpu.fsw, top,
+           fpu.fsw, top,
 
-        (fpu.fsw & CC0Bit) ? "C0" : "", (fpu.fsw & CC1Bit) ? "C1" : "",
-        (fpu.fsw & CC2Bit) ? "C2" : "", (fpu.fsw & CC3Bit) ? "C3" : "",
+           (fpu.fsw & CC0Bit) ? "C0" : "", (fpu.fsw & CC1Bit) ? "C1" : "",
+           (fpu.fsw & CC2Bit) ? "C2" : "", (fpu.fsw & CC3Bit) ? "C3" : "",
 
-        (fpu.fsw & IEBit) ? "I" : "", (fpu.fsw & DEBit) ? "D" : "",
-        (fpu.fsw & ZEBit) ? "Z" : "", (fpu.fsw & OEBit) ? "O" : "",
-        (fpu.fsw & UEBit) ? "U" : "", (fpu.fsw & PEBit) ? "P" : "",
+           (fpu.fsw & IEBit) ? "I" : "", (fpu.fsw & DEBit) ? "D" : "",
+           (fpu.fsw & ZEBit) ? "Z" : "", (fpu.fsw & OEBit) ? "O" : "",
+           (fpu.fsw & UEBit) ? "U" : "", (fpu.fsw & PEBit) ? "P" : "",
 
-        (fpu.fsw & StackFaultBit) ? "SF " : "",
-        (fpu.fsw & ErrSummaryBit) ? "ES " : "",
-        (fpu.fsw & BusyBit) ? "BUSY " : "");
+           (fpu.fsw & StackFaultBit) ? "SF " : "",
+           (fpu.fsw & ErrSummaryBit) ? "ES " : "",
+           (fpu.fsw & BusyBit) ? "BUSY " : "");
     inform("\tftwx: 0x%x\n", fpu.ftwx);
     inform("\tlast_opcode: 0x%x\n", fpu.last_opcode);
     dumpFpuSpec(fpu);
@@ -327,7 +327,7 @@ dumpFpuCommon(const T &fpu)
         for (int j = 0; j < 10; ++j)
             snprintf(&hex[j * 2], 3, "%.2x", fpu.fpr[i][j]);
         inform("\t\tST%i/%i: 0x%s (%f)%s\n", i, reg_idx, hex, value,
-            empty ? " (e)" : "");
+               empty ? " (e)" : "");
     }
     inform("\tXMM registers:\n");
     for (int i = 0; i < 16; ++i) {
@@ -381,14 +381,15 @@ dumpKvm(const struct kvm_vcpu_events &events)
     inform("vCPU events:\n");
 
     inform("\tException: [inj: %i, nr: %i, has_ec: %i, ec: %i]\n",
-        events.exception.injected, events.exception.nr,
-        events.exception.has_error_code, events.exception.error_code);
+           events.exception.injected, events.exception.nr,
+           events.exception.has_error_code, events.exception.error_code);
 
     inform("\tInterrupt: [inj: %i, nr: %i, soft: %i]\n",
-        events.interrupt.injected, events.interrupt.nr, events.interrupt.soft);
+           events.interrupt.injected, events.interrupt.nr,
+           events.interrupt.soft);
 
     inform("\tNMI: [inj: %i, pending: %i, masked: %i]\n", events.nmi.injected,
-        events.nmi.pending, events.nmi.masked);
+           events.nmi.pending, events.nmi.masked);
 
     inform("\tSIPI vector: 0x%x\n", events.sipi_vector);
     inform("\tFlags: 0x%x\n", events.flags);
@@ -407,7 +408,7 @@ isCanonicalAddress(uint64_t addr)
 
 static void
 checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
-    struct kvm_sregs sregs)
+         struct kvm_sregs sregs)
 {
     // Check the register base
     switch (idx) {
@@ -539,7 +540,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
         if (((seg.limit & 0xFFF) == 0 && seg.g) ||
             ((seg.limit & 0xFFF00000) != 0 && !seg.g)) {
             warn("%s limit (0x%x) and g (%i) combination is illegal.\n", name,
-                seg.limit, seg.g);
+                 seg.limit, seg.g);
         }
         break;
     }
@@ -547,8 +548,8 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
     // TODO: Check CS DB
 }
 
-X86KvmCPU::X86KvmCPU(const X86KvmCPUParams &params) :
-    BaseKvmCPU(params), useXSave(params.useXSave)
+X86KvmCPU::X86KvmCPU(const X86KvmCPUParams &params)
+    : BaseKvmCPU(params), useXSave(params.useXSave)
 {}
 
 void
@@ -736,8 +737,8 @@ X86KvmCPU::updateKvmStateRegs()
 }
 
 static inline void
-setKvmSegmentReg(
-    ThreadContext *tc, struct kvm_segment &kvm_seg, const int index)
+setKvmSegmentReg(ThreadContext *tc, struct kvm_segment &kvm_seg,
+                 const int index)
 {
     SegAttr attr(tc->readMiscRegNoEffect(misc_reg::segAttr(index)));
 
@@ -756,8 +757,8 @@ setKvmSegmentReg(
 }
 
 static inline void
-setKvmDTableReg(
-    ThreadContext *tc, struct kvm_dtable &kvm_dtable, const int index)
+setKvmDTableReg(ThreadContext *tc, struct kvm_dtable &kvm_dtable,
+                const int index)
 {
     kvm_dtable.base = tc->readMiscRegNoEffect(misc_reg::segBase(index));
     kvm_dtable.limit = tc->readMiscRegNoEffect(misc_reg::segLimit(index));
@@ -808,7 +809,7 @@ X86KvmCPU::updateKvmStateSRegs()
     // marked as busy. This is illegal in VMX, so we force it to busy.
     if (sregs.tr.type == SEG_SYS_TYPE_TSS_AVAILABLE) {
         hack("tr.type (%i) is not busy. Forcing the busy bit.\n",
-            sregs.tr.type);
+             sregs.tr.type);
         sregs.tr.type = SEG_SYS_TYPE_TSS_BUSY;
     }
 
@@ -817,10 +818,10 @@ X86KvmCPU::updateKvmStateSRegs()
     // DPL of SS correctly when taking interrupts, so we need to fix
     // that here.
     if ((sregs.cs.type == SEG_CS_TYPE_ACCESSED ||
-            sregs.cs.type == SEG_CS_TYPE_READ_ACCESSED) &&
+         sregs.cs.type == SEG_CS_TYPE_READ_ACCESSED) &&
         sregs.cs.dpl != sregs.ss.dpl) {
         hack("CS.DPL (%i) != SS.DPL (%i): Forcing SS.DPL to %i\n",
-            sregs.cs.dpl, sregs.ss.dpl, sregs.cs.dpl);
+             sregs.cs.dpl, sregs.ss.dpl, sregs.cs.dpl);
         sregs.ss.dpl = sregs.cs.dpl;
     }
 
@@ -832,7 +833,7 @@ X86KvmCPU::updateKvmStateSRegs()
         // 8086 mode.  We currently assume that unrestricted guest
         // mode is available.
 
-#define APPLY_SEGMENT(kreg, idx) \
+#define APPLY_SEGMENT(kreg, idx)                                              \
     checkSeg(#kreg, idx + misc_reg::SegSelBase, sregs.kreg, sregs)
 
         FOREACH_SEGMENT();
@@ -862,7 +863,7 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
         const unsigned reg_idx((i + top) & 0x7);
         const double value(bitsToFloat64(tc->getReg(float_reg::fpr(reg_idx))));
         DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n", reg_idx,
-            i, value);
+                i, value);
         X86ISA::storeFloat80(fpu.fpr[i], value);
     }
 
@@ -959,7 +960,7 @@ X86KvmCPU::updateKvmStateMSRs()
         e.reserved = 0;
         e.data = tc->readMiscReg(msrMap.at(*it));
         DPRINTF(KvmContext, "Adding MSR: idx: 0x%x, data: 0x%x\n", e.index,
-            e.data);
+                e.data);
 
         msrs.push_back(e);
     }
@@ -1002,8 +1003,8 @@ X86KvmCPU::updateThreadContext()
 }
 
 void
-X86KvmCPU::updateThreadContextRegs(
-    const struct kvm_regs &regs, const struct kvm_sregs &sregs)
+X86KvmCPU::updateThreadContextRegs(const struct kvm_regs &regs,
+                                   const struct kvm_sregs &sregs)
 {
 #define APPLY_IREG(kreg, mreg) tc->setReg(mreg, regs.kreg)
 
@@ -1019,8 +1020,8 @@ X86KvmCPU::updateThreadContextRegs(
 }
 
 inline void
-setContextSegment(
-    ThreadContext *tc, const struct kvm_segment &kvm_seg, const int index)
+setContextSegment(ThreadContext *tc, const struct kvm_segment &kvm_seg,
+                  const int index)
 {
     SegAttr attr(0);
 
@@ -1044,8 +1045,8 @@ setContextSegment(
 }
 
 inline void
-setContextSegment(
-    ThreadContext *tc, const struct kvm_dtable &kvm_dtable, const int index)
+setContextSegment(ThreadContext *tc, const struct kvm_dtable &kvm_dtable,
+                  const int index)
 {
     // We need some setMiscReg magic here to keep the effective base
     // addresses in sync. We need an up-to-date version of EFER, so
@@ -1081,7 +1082,7 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
         const unsigned reg_idx((i + top) & 0x7);
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
         DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n", reg_idx,
-            i, value);
+                i, value);
         tc->setReg(float_reg::fpr(reg_idx), floatToBits64(value));
     }
 
@@ -1153,7 +1154,7 @@ X86KvmCPU::updateThreadContextMSRs()
     entry = &kvm_msrs->entries[0];
     for (int i = 0; i < kvm_msrs->nmsrs; ++i, ++entry) {
         DPRINTF(KvmContext, "Setting M5 MSR: idx: 0x%x, data: 0x%x\n",
-            entry->index, entry->data);
+                entry->index, entry->data);
 
         tc->setMiscReg(X86ISA::msrMap.at(entry->index), entry->data);
     }
@@ -1203,7 +1204,7 @@ X86KvmCPU::deliverInterrupts()
         kvm_int.irq = x86int->getVector();
 
         DPRINTF(KvmInt, "Delivering interrupt: %s (%u)\n", fault->name(),
-            kvm_int.irq);
+                kvm_int.irq);
 
         kvmInterrupt(kvm_int);
     } else {
@@ -1232,12 +1233,12 @@ X86KvmCPU::kvmRun(Tick ticks)
             syncThreadContext();
             if (lapic->checkInterrupts()) {
                 DPRINTF(KvmInt,
-                    "M5 has pending interrupts, delivering interrupt.\n");
+                        "M5 has pending interrupts, delivering interrupt.\n");
 
                 deliverInterrupts();
             } else {
                 DPRINTF(KvmInt,
-                    "Interrupt delivery delayed due to KVM confusion.\n");
+                        "Interrupt delivery delayed due to KVM confusion.\n");
                 kvm_run.request_interrupt_window = 1;
             }
         } else if (!kvm_run.request_interrupt_window) {
@@ -1298,12 +1299,12 @@ X86KvmCPU::handleIOMiscReg32(int miscreg)
 
     if (kvm_run.io.size != 4) {
         panic("Unexpected IO size (%u) for address 0x%x.\n", kvm_run.io.size,
-            port);
+              port);
     }
 
     if (kvm_run.io.count != 1) {
         panic("Unexpected IO count (%u) for address 0x%x.\n", kvm_run.io.count,
-            port);
+              port);
     }
 
     uint32_t *data((uint32_t *)getGuestData(kvm_run.io.data_offset));
@@ -1328,7 +1329,7 @@ X86KvmCPU::handleKvmExitIO()
            kvm_run.io.direction == KVM_EXIT_IO_OUT);
 
     DPRINTF(KvmIO, "KVM-x86: Handling IO instruction (%s) (port: 0x%x)\n",
-        (isWrite ? "out" : "in"), kvm_run.io.port);
+            (isWrite ? "out" : "in"), kvm_run.io.port);
 
     /* Vanilla gem5 handles PCI discovery in the TLB(!). Since we
      * don't use the TLB component, we need to intercept and handle
@@ -1346,8 +1347,8 @@ X86KvmCPU::handleKvmExitIO()
         Addr pciConfigAddr(
             tc->readMiscRegNoEffect(misc_reg::PciConfigAddress));
         if (pciConfigAddr & 0x80000000) {
-            pAddr = X86ISA::x86PciConfigAddress(
-                (pciConfigAddr & 0x7ffffffc) | (port & 0x3));
+            pAddr = X86ISA::x86PciConfigAddress((pciConfigAddr & 0x7ffffffc) |
+                                                (port & 0x3));
         } else {
             pAddr = X86ISA::x86IOAddress(port);
         }
@@ -1405,10 +1406,10 @@ X86KvmCPU::archIsDrained() const
 
     if (pending_events) {
         DPRINTF(Drain, "archIsDrained: Pending events: %s %s %s %s\n",
-            events.exception.injected ? "exception" : "",
-            events.interrupt.injected ? "interrupt" : "",
-            events.nmi.injected ? "nmi[i]" : "",
-            events.nmi.pending ? "nmi[p]" : "");
+                events.exception.injected ? "exception" : "",
+                events.interrupt.injected ? "interrupt" : "",
+                events.nmi.injected ? "nmi[i]" : "",
+                events.nmi.pending ? "nmi[p]" : "");
     }
 
     return !pending_events;
@@ -1432,8 +1433,8 @@ X86KvmCPU::ioctlRun()
 }
 
 static struct kvm_cpuid_entry2
-makeKvmCpuid(
-    uint32_t function, uint32_t index, CpuidResult &result, uint32_t flags = 0)
+makeKvmCpuid(uint32_t function, uint32_t index, CpuidResult &result,
+             uint32_t flags = 0)
 {
     struct kvm_cpuid_entry2 e;
     e.function = function;
@@ -1613,7 +1614,7 @@ X86KvmCPU::getMsrIntersection() const
                 DPRINTF(Kvm, "kvm-x86: Adding MSR 0x%x\n", *it);
             } else {
                 warn("kvm-x86: MSR (0x%x) unsupported by gem5. Skipping.\n",
-                    *it);
+                     *it);
             }
         }
     }

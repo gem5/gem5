@@ -144,7 +144,7 @@ class SparcTraceChild : public TraceChild
     // while this equals npc for most instructions, it doesn't for all of
     // them. The return value is the number of actual potential targets.
     int getTargets(uint32_t inst, uint64_t pc, uint64_t npc, uint64_t &target1,
-        uint64_t &target2);
+                   uint64_t &target2);
 
   protected:
     bool update(int pid);

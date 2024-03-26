@@ -78,8 +78,8 @@ DistIface::Sync::init(Tick start_tick, Tick repeat_tick)
 
     if (repeat_tick < nextRepeat) {
         nextRepeat = repeat_tick;
-        inform(
-            "Dist synchronisation interval is changed to %lu.\n", nextRepeat);
+        inform("Dist synchronisation interval is changed to %lu.\n",
+               nextRepeat);
     }
 }
 
@@ -198,7 +198,8 @@ DistIface::SyncSwitch::run(bool same_tick)
 
 bool
 DistIface::SyncSwitch::progress(Tick send_tick, Tick sync_repeat,
-    ReqType need_ckpt, ReqType need_exit, ReqType need_stop_sync)
+                                ReqType need_ckpt, ReqType need_exit,
+                                ReqType need_stop_sync)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
     if (isAbort) // sync aborted
@@ -236,7 +237,8 @@ DistIface::SyncSwitch::progress(Tick send_tick, Tick sync_repeat,
 
 bool
 DistIface::SyncNode::progress(Tick max_send_tick, Tick next_repeat,
-    ReqType do_ckpt, ReqType do_exit, ReqType do_stop_sync)
+                              ReqType do_ckpt, ReqType do_exit,
+                              ReqType do_stop_sync)
 {
     std::unique_lock<std::mutex> sync_lock(lock);
     if (isAbort) // sync aborted
@@ -265,8 +267,8 @@ DistIface::SyncNode::requestCkpt(ReqType req)
     std::lock_guard<std::mutex> sync_lock(lock);
     assert(req != ReqType::none);
     if (needCkpt != ReqType::none)
-        warn(
-            "Ckpt requested multiple times (req:%d)\n", static_cast<int>(req));
+        warn("Ckpt requested multiple times (req:%d)\n",
+             static_cast<int>(req));
     if (needCkpt == ReqType::none || req == ReqType::immediate)
         needCkpt = req;
 }
@@ -277,8 +279,8 @@ DistIface::SyncNode::requestExit(ReqType req)
     std::lock_guard<std::mutex> sync_lock(lock);
     assert(req != ReqType::none);
     if (needExit != ReqType::none)
-        warn(
-            "Exit requested multiple times (req:%d)\n", static_cast<int>(req));
+        warn("Exit requested multiple times (req:%d)\n",
+             static_cast<int>(req));
     if (needExit == ReqType::none || req == ReqType::immediate)
         needExit = req;
 }
@@ -355,7 +357,7 @@ DistIface::SyncEvent::start()
         schedule(DistIface::sync->nextAt);
 
     inform("Dist sync scheduled at %lu and repeats %lu\n", when(),
-        DistIface::sync->nextRepeat);
+           DistIface::sync->nextRepeat);
 }
 
 void
@@ -372,7 +374,7 @@ DistIface::SyncEvent::process()
     // fine since no extra global sync will happen (i.e. all peer gem5 will
     // hit this periodic sync eventually).
     panic_if(_draining && DistIface::sync->doCkpt,
-        "Distributed sync is hit while draining");
+             "Distributed sync is hit while draining");
     /*
      * Note that this is a global event so this process method will be called
      * by only exactly one thread.
@@ -435,20 +437,20 @@ DistIface::RecvScheduler::init(Event *recv_done, Tick link_delay)
 }
 
 Tick
-DistIface::RecvScheduler::calcReceiveTick(
-    Tick send_tick, Tick send_delay, Tick prev_recv_tick)
+DistIface::RecvScheduler::calcReceiveTick(Tick send_tick, Tick send_delay,
+                                          Tick prev_recv_tick)
 {
     Tick recv_tick = send_tick + send_delay + linkDelay;
     // sanity check (we need atleast a send delay long window)
     assert(recv_tick >= prev_recv_tick + send_delay);
     panic_if(prev_recv_tick + send_delay > recv_tick,
-        "Receive window is smaller than send delay");
+             "Receive window is smaller than send delay");
     panic_if(recv_tick <= curTick(),
-        "Simulators out of sync - missed packet receive by %llu ticks"
-        "(rev_recv_tick: %lu send_tick: %lu send_delay: %lu "
-        "linkDelay: %lu )",
-        curTick() - recv_tick, prev_recv_tick, send_tick, send_delay,
-        linkDelay);
+             "Simulators out of sync - missed packet receive by %llu ticks"
+             "(rev_recv_tick: %lu send_tick: %lu send_delay: %lu "
+             "linkDelay: %lu )",
+             curTick() - recv_tick, prev_recv_tick, send_tick, send_delay,
+             linkDelay);
 
     return recv_tick;
 }
@@ -487,20 +489,20 @@ DistIface::RecvScheduler::resumeRecvTicks()
 }
 
 void
-DistIface::RecvScheduler::pushPacket(
-    EthPacketPtr new_packet, Tick send_tick, Tick send_delay)
+DistIface::RecvScheduler::pushPacket(EthPacketPtr new_packet, Tick send_tick,
+                                     Tick send_delay)
 {
     // Note : this is called from the receiver thread
     curEventQueue()->lock();
     Tick recv_tick = calcReceiveTick(send_tick, send_delay, prevRecvTick);
 
     DPRINTF(DistEthernetPkt,
-        "DistIface::recvScheduler::pushPacket "
-        "send_tick:%llu send_delay:%llu link_delay:%llu recv_tick:%llu\n",
-        send_tick, send_delay, linkDelay, recv_tick);
+            "DistIface::recvScheduler::pushPacket "
+            "send_tick:%llu send_delay:%llu link_delay:%llu recv_tick:%llu\n",
+            send_tick, send_delay, linkDelay, recv_tick);
     // Every packet must be sent and arrive in the same quantum
-    assert(
-        send_tick > primary->syncEvent->when() - primary->syncEvent->repeat);
+    assert(send_tick >
+           primary->syncEvent->when() - primary->syncEvent->repeat);
     // No packet may be scheduled for receive in the arrival quantum
     assert(send_tick + send_delay + linkDelay > primary->syncEvent->when());
 
@@ -519,9 +521,9 @@ DistIface::RecvScheduler::pushPacket(
         assert(recvDone->scheduled());
         panic_if(descQueue.front().sendTick + descQueue.front().sendDelay >
                      recv_tick,
-            "Out of order packet received (recv_tick: %lu top(): %lu\n",
-            recv_tick,
-            descQueue.front().sendTick + descQueue.front().sendDelay);
+                 "Out of order packet received (recv_tick: %lu top(): %lu\n",
+                 recv_tick,
+                 descQueue.front().sendTick + descQueue.front().sendDelay);
     }
     curEventQueue()->unlock();
 }
@@ -536,8 +538,9 @@ DistIface::RecvScheduler::popPacket()
     descQueue.pop();
 
     if (descQueue.size() > 0) {
-        Tick recv_tick = calcReceiveTick(descQueue.front().sendTick,
-            descQueue.front().sendDelay, curTick());
+        Tick recv_tick =
+            calcReceiveTick(descQueue.front().sendTick,
+                            descQueue.front().sendDelay, curTick());
         eventManager->schedule(recvDone, recv_tick);
     }
     prevRecvTick = curTick();
@@ -597,15 +600,15 @@ DistIface::RecvScheduler::unserialize(CheckpointIn &cp)
 }
 
 DistIface::DistIface(unsigned dist_rank, unsigned dist_size, Tick sync_start,
-    Tick sync_repeat, EventManager *em, bool use_pseudo_op, bool is_switch,
-    int num_nodes) :
-    syncStart(sync_start),
-    syncRepeat(sync_repeat),
-    recvThread(nullptr),
-    recvScheduler(em),
-    syncStartOnPseudoOp(use_pseudo_op),
-    rank(dist_rank),
-    size(dist_size)
+                     Tick sync_repeat, EventManager *em, bool use_pseudo_op,
+                     bool is_switch, int num_nodes)
+    : syncStart(sync_start),
+      syncRepeat(sync_repeat),
+      recvThread(nullptr),
+      recvScheduler(em),
+      syncStartOnPseudoOp(use_pseudo_op),
+      rank(dist_rank),
+      size(dist_size)
 {
     DPRINTF(DistEthernet, "DistIface() ctor rank:%d\n", dist_rank);
     isPrimary = false;
@@ -658,8 +661,8 @@ DistIface::packetOut(EthPacketPtr pkt, Tick send_delay)
     sendPacket(header, pkt);
 
     DPRINTF(DistEthernetPkt,
-        "DistIface::sendDataPacket() done size:%d send_delay:%llu\n",
-        pkt->length, send_delay);
+            "DistIface::sendDataPacket() done size:%d send_delay:%llu\n",
+            pkt->length, send_delay);
 }
 
 void
@@ -692,12 +695,13 @@ DistIface::recvThreadFunc(Event *recv_done, Tick link_delay)
         // We got a valid dist header packet, let's process it
         if (header.msgType == MsgType::dataDescriptor) {
             recvPacket(header, new_packet);
-            recvScheduler.pushPacket(
-                new_packet, header.sendTick, header.sendDelay);
+            recvScheduler.pushPacket(new_packet, header.sendTick,
+                                     header.sendDelay);
         } else {
             // everything else must be synchronisation related command
             if (!sync->progress(header.sendTick, header.syncRepeat,
-                    header.needCkpt, header.needExit, header.needStopSync))
+                                header.needCkpt, header.needExit,
+                                header.needStopSync))
                 // Finish receiver thread if simulation is about to exit
                 break;
         }
@@ -710,7 +714,7 @@ DistIface::spawnRecvThread(const Event *recv_done, Tick link_delay)
     assert(recvThread == nullptr);
 
     recvThread = new std::thread(&DistIface::recvThreadFunc, this,
-        const_cast<Event *>(recv_done), link_delay);
+                                 const_cast<Event *>(recv_done), link_delay);
     recvThreadsNum++;
 }
 
@@ -760,11 +764,11 @@ DistIface::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(dist_iface_id_orig);
 
     panic_if(rank != rank_orig, "Rank mismatch at resume (rank=%d, orig=%d)",
-        rank, rank_orig);
+             rank, rank_orig);
     panic_if(distIfaceId != dist_iface_id_orig,
-        "Dist iface ID mismatch "
-        "at resume (distIfaceId=%d, orig=%d)",
-        distIfaceId, dist_iface_id_orig);
+             "Dist iface ID mismatch "
+             "at resume (distIfaceId=%d, orig=%d)",
+             distIfaceId, dist_iface_id_orig);
 
     recvScheduler.unserializeSection(cp, "recvScheduler");
     if (this == primary) {
@@ -813,9 +817,9 @@ DistIface::readyToCkpt(Tick delay, Tick period)
 {
     bool ret = true;
     DPRINTF(DistEthernet,
-        "DistIface::readyToCkpt() called, delay:%lu "
-        "period:%lu\n",
-        delay, period);
+            "DistIface::readyToCkpt() called, delay:%lu "
+            "period:%lu\n",
+            delay, period);
     if (primary) {
         if (delay == 0) {
             inform("m5 checkpoint called with zero delay => triggering "
@@ -884,8 +888,8 @@ bool
 DistIface::readyToExit(Tick delay)
 {
     bool ret = true;
-    DPRINTF(
-        DistEthernet, "DistIface::readyToExit() called, delay:%lu\n", delay);
+    DPRINTF(DistEthernet, "DistIface::readyToExit() called, delay:%lu\n",
+            delay);
     if (primary) {
         // To successfully coordinate an exit, all nodes must be synchronising
         if (!primary->syncEvent->scheduled())

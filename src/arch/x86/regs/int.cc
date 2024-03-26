@@ -46,14 +46,14 @@ namespace X86ISA
 std::string
 FlatIntRegClassOps::regName(const RegId &id) const
 {
-    constexpr const char *abcdFormats[9] = {
-        "", "%s", "%sx", "", "e%sx", "", "", "", "r%sx"};
-    constexpr const char *piFormats[9] = {
-        "", "%s", "%s", "", "e%s", "", "", "", "r%s"};
-    constexpr const char *longFormats[9] = {
-        "", "r%sb", "r%sw", "", "r%sd", "", "", "", "r%s"};
-    constexpr const char *microFormats[9] = {
-        "", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
+    constexpr const char *abcdFormats[9] = {"", "%s", "%sx", "",    "e%sx",
+                                            "", "",   "",    "r%sx"};
+    constexpr const char *piFormats[9] = {"", "%s", "%s", "",   "e%s",
+                                          "", "",   "",   "r%s"};
+    constexpr const char *longFormats[9] = {"", "r%sb", "r%sw", "",   "r%sd",
+                                            "", "",     "",     "r%s"};
+    constexpr const char *microFormats[9] = {"", "t%db", "t%dw", "",   "t%dd",
+                                             "", "",     "",     "t%d"};
 
     // Fix size at 8 for now.
     constexpr unsigned size = 8;

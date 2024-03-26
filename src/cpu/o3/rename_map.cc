@@ -79,7 +79,7 @@ SimpleRenameMap::rename(const RegId &arch_reg)
         assert(arch_reg.getNumPinnedWrites() == 0); // Prevent pinning the
                                                     // same register twice
         DPRINTF(Rename, "Renaming pinned reg, numPinnedWrites %d\n",
-            prev_reg->getNumPinnedWrites());
+                prev_reg->getNumPinnedWrites());
         renamed_reg = prev_reg;
         renamed_reg->decrNumPinnedWrites();
     } else {
@@ -91,10 +91,10 @@ SimpleRenameMap::rename(const RegId &arch_reg)
     }
 
     DPRINTF(Rename,
-        "Renamed reg %d to physical reg %d (%d) old mapping was"
-        " %d (%d)\n",
-        arch_reg, renamed_reg->flatIndex(), renamed_reg->flatIndex(),
-        prev_reg->flatIndex(), prev_reg->flatIndex());
+            "Renamed reg %d to physical reg %d (%d) old mapping was"
+            " %d (%d)\n",
+            arch_reg, renamed_reg->flatIndex(), renamed_reg->flatIndex(),
+            prev_reg->flatIndex(), prev_reg->flatIndex());
 
     return RenameInfo(renamed_reg, prev_reg);
 }
@@ -103,7 +103,7 @@ SimpleRenameMap::rename(const RegId &arch_reg)
 
 void
 UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
-    PhysRegFile *_regFile, UnifiedFreeList *freeList)
+                       PhysRegFile *_regFile, UnifiedFreeList *freeList)
 {
     regFile = _regFile;
 

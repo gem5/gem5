@@ -45,8 +45,8 @@ namespace gem5
 {
 const FrameBuffer FrameBuffer::dummy(320, 240);
 
-FrameBuffer::FrameBuffer(unsigned width, unsigned height) :
-    pixels(width * height), _width(width), _height(height)
+FrameBuffer::FrameBuffer(unsigned width, unsigned height)
+    : pixels(width * height), _width(width), _height(height)
 {
     clear();
 }
@@ -117,7 +117,7 @@ uint64_t
 FrameBuffer::getHash() const
 {
     return adler32(0UL, reinterpret_cast<const Bytef *>(pixels.data()),
-        area() * sizeof(Pixel));
+                   area() * sizeof(Pixel));
 }
 
 } // namespace gem5

@@ -53,8 +53,8 @@ class ThreadContext
 };
 
 const int ThreadContext::ints[] = {0, 1, 2, 3, 4, 5, 6, 7};
-const double ThreadContext::floats[] = {
-    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+const double ThreadContext::floats[] = {10.0, 11.0, 12.0, 13.0,
+                                        14.0, 15.0, 16.0, 17.0};
 
 const int ThreadContext::DefaultIntResult = 0;
 const double ThreadContext::DefaultFloatResult = 0.0;
@@ -110,7 +110,7 @@ struct Argument<TestABI_1D, int>
 
 template <typename Arg>
 struct Argument<TestABI_1D, Arg,
-    typename std::enable_if_t<std::is_floating_point_v<Arg>>>
+                typename std::enable_if_t<std::is_floating_point_v<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_1D::State &state)
@@ -131,7 +131,7 @@ struct Result<TestABI_1D, int>
 
 template <typename Ret>
 struct Result<TestABI_1D, Ret,
-    typename std::enable_if_t<std::is_floating_point_v<Ret>>>
+              typename std::enable_if_t<std::is_floating_point_v<Ret>>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)
@@ -187,7 +187,7 @@ struct Argument<TestABI_2D, int>
 
 template <typename Arg>
 struct Argument<TestABI_2D, Arg,
-    typename std::enable_if_t<std::is_floating_point_v<Arg>>>
+                typename std::enable_if_t<std::is_floating_point_v<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, TestABI_2D::State &state)
@@ -208,7 +208,7 @@ struct Result<TestABI_2D, int>
 
 template <typename Ret>
 struct Result<TestABI_2D, Ret,
-    typename std::enable_if_t<std::is_floating_point_v<Ret>>>
+              typename std::enable_if_t<std::is_floating_point_v<Ret>>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret)
@@ -235,7 +235,7 @@ struct Argument<TestABI_TcInit, int>
 // which doesn't return anything.
 void
 testIntVoid(ThreadContext *tc, int a, float b, int c, double d,
-    guest_abi::VarArgs<int, float, double> varargs)
+            guest_abi::VarArgs<int, float, double> varargs)
 {
     EXPECT_EQ(a, tc->ints[0]);
     EXPECT_EQ(b, tc->floats[1]);
@@ -268,7 +268,7 @@ testPrepareInt(ThreadContext *tc, int a, int b)
 // which doesn't return anything.
 void
 test2DVoid(ThreadContext *tc, int a, float b, int c, double d,
-    guest_abi::VarArgs<int, float, double> varargs)
+           guest_abi::VarArgs<int, float, double> varargs)
 {
     EXPECT_EQ(a, tc->ints[0]);
     EXPECT_EQ(b, tc->floats[0]);
@@ -409,9 +409,11 @@ TEST(GuestABITest, isVarArgs)
     EXPECT_FALSE(guest_abi::IsVarArgsV<int>);
     EXPECT_FALSE(guest_abi::IsVarArgsV<double>);
     struct FooStruct
-    {};
+    {
+    };
     EXPECT_FALSE(guest_abi::IsVarArgsV<FooStruct>);
     union FooUnion
-    {};
+    {
+    };
     EXPECT_FALSE(guest_abi::IsVarArgsV<FooUnion>);
 }

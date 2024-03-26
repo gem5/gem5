@@ -173,8 +173,8 @@ class BubbleTraitsPtrAdaptor
 
 /** TimeBuffer with MinorTrace and Named interfaces */
 template <typename ElemType,
-    typename ReportTraits = ReportTraitsAdaptor<ElemType>,
-    typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
+          typename ReportTraits = ReportTraitsAdaptor<ElemType>,
+          typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
 class MinorBuffer : public Named, public TimeBuffer<ElemType>
 {
   protected:
@@ -186,13 +186,13 @@ class MinorBuffer : public Named, public TimeBuffer<ElemType>
 
   public:
     MinorBuffer(const std::string &name, const std::string &data_name,
-        int num_past, int num_future, int report_left = -1,
-        int report_right = -1) :
-        Named(name),
-        TimeBuffer<ElemType>(num_past, num_future),
-        reportLeft(report_left),
-        reportRight(report_right),
-        dataName(data_name)
+                int num_past, int num_future, int report_left = -1,
+                int report_right = -1)
+        : Named(name),
+          TimeBuffer<ElemType>(num_past, num_future),
+          reportLeft(report_left),
+          reportRight(report_right),
+          dataName(data_name)
     {}
 
   public:
@@ -255,10 +255,10 @@ class Latch
     /** forward/backwardDelay specify the delay from input to output in each
      *  direction.  These arguments *must* be >= 1 */
     Latch(const std::string &name, const std::string &data_name,
-        Cycles delay_ = Cycles(1), bool report_backwards = false) :
-        delay(delay_),
-        buffer(name, data_name, delay_, 0, (report_backwards ? -delay_ : 0),
-            (report_backwards ? 0 : -delay_))
+          Cycles delay_ = Cycles(1), bool report_backwards = false)
+        : delay(delay_),
+          buffer(name, data_name, delay_, 0, (report_backwards ? -delay_ : 0),
+                 (report_backwards ? 0 : -delay_))
     {}
 
   public:
@@ -323,7 +323,7 @@ class Latch
  *  The user can clear the stall before calling advance to unstall the
  *  pipeline. */
 template <typename ElemType, typename ReportTraits,
-    typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
+          typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
 class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
 {
   protected:
@@ -341,13 +341,13 @@ class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
 
   public:
     SelfStallingPipeline(const std::string &name, const std::string &data_name,
-        unsigned depth) :
-        MinorBuffer<ElemType, ReportTraits>(
-            name, data_name, depth, 0, -1, -depth),
-        pushWire(this->getWire(0)),
-        popWire(this->getWire(-depth)),
-        stalled(false),
-        occupancy(0)
+                         unsigned depth)
+        : MinorBuffer<ElemType, ReportTraits>(name, data_name, depth, 0, -1,
+                                              -depth),
+          pushWire(this->getWire(0)),
+          popWire(this->getWire(-depth)),
+          stalled(false),
+          occupancy(0)
     {
         assert(depth > 0);
 
@@ -448,8 +448,8 @@ class Reservable
  *  BubbleTraitsAdaptor to work on data which *does* directly implement
  *  those interfaces. */
 template <typename ElemType,
-    typename ReportTraits = ReportTraitsAdaptor<ElemType>,
-    typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
+          typename ReportTraits = ReportTraitsAdaptor<ElemType>,
+          typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
 class Queue : public Named, public Reservable
 {
   private:
@@ -467,11 +467,11 @@ class Queue : public Named, public Reservable
 
   public:
     Queue(const std::string &name, const std::string &data_name,
-        unsigned int capacity_) :
-        Named(name),
-        numReservedSlots(0),
-        capacity(capacity_),
-        dataName(data_name)
+          unsigned int capacity_)
+        : Named(name),
+          numReservedSlots(0),
+          capacity(capacity_),
+          dataName(data_name)
     {}
 
   public:
@@ -488,7 +488,7 @@ class Queue : public Named, public Reservable
             if (queue.size() > capacity) {
                 warn("%s: No space to push data into queue of capacity"
                      " %u, pushing anyway\n",
-                    name(), capacity);
+                     name(), capacity);
             }
         }
     }
@@ -618,8 +618,8 @@ class Queue : public Named, public Reservable
 
         int num_printed_reserved = 1;
         /* Show reserved slots */
-        while (
-            num_printed_reserved <= num_reserved && num_printed <= num_total) {
+        while (num_printed_reserved <= num_reserved &&
+               num_printed <= num_total) {
             data << 'R';
             num_printed_reserved++;
             num_printed++;
@@ -652,8 +652,8 @@ class Queue : public Named, public Reservable
  *  The intended use case is the input buffer for pipeline stages, hence the
  *  class name */
 template <typename ElemType,
-    typename ReportTraits = ReportTraitsAdaptor<ElemType>,
-    typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
+          typename ReportTraits = ReportTraitsAdaptor<ElemType>,
+          typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
 class InputBuffer : public Reservable
 {
   protected:
@@ -665,8 +665,8 @@ class InputBuffer : public Reservable
 
   public:
     InputBuffer(const std::string &name, const std::string &data_name,
-        unsigned int capacity_) :
-        queue(name, data_name, capacity_), elementPtr(NULL)
+                unsigned int capacity_)
+        : queue(name, data_name, capacity_), elementPtr(NULL)
     {}
 
   public:

@@ -43,12 +43,12 @@
 
 using namespace google::protobuf;
 
-ProtoOutputStream::ProtoOutputStream(const std::string &filename) :
-    fileStream(
-        filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc),
-    wrappedFileStream(NULL),
-    gzipStream(NULL),
-    zeroCopyStream(NULL)
+ProtoOutputStream::ProtoOutputStream(const std::string &filename)
+    : fileStream(filename.c_str(),
+                 std::ios::out | std::ios::binary | std::ios::trunc),
+      wrappedFileStream(NULL),
+      gzipStream(NULL),
+      zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for writing\n", filename);
@@ -102,13 +102,13 @@ ProtoOutputStream::write(const Message &msg)
     msg.SerializeWithCachedSizes(&codedStream);
 }
 
-ProtoInputStream::ProtoInputStream(const std::string &filename) :
-    fileStream(filename.c_str(), std::ios::in | std::ios::binary),
-    fileName(filename),
-    useGzip(false),
-    wrappedFileStream(NULL),
-    gzipStream(NULL),
-    zeroCopyStream(NULL)
+ProtoInputStream::ProtoInputStream(const std::string &filename)
+    : fileStream(filename.c_str(), std::ios::in | std::ios::binary),
+      fileName(filename),
+      useGzip(false),
+      wrappedFileStream(NULL),
+      gzipStream(NULL),
+      zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for reading\n", filename);

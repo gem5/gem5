@@ -36,8 +36,8 @@ namespace sc_gem5
 class Method : public Process
 {
   public:
-    Method(const char *name, ProcessFuncWrapper *func, bool internal = false) :
-        Process(name, func, internal)
+    Method(const char *name, ProcessFuncWrapper *func, bool internal = false)
+        : Process(name, func, internal)
     {}
 
     const char *
@@ -56,8 +56,8 @@ class Method : public Process
 class Thread : public Process
 {
   public:
-    Thread(const char *name, ProcessFuncWrapper *func, bool internal = false) :
-        Process(name, func, internal), ctx(nullptr)
+    Thread(const char *name, ProcessFuncWrapper *func, bool internal = false)
+        : Process(name, func, internal), ctx(nullptr)
     {}
 
     ~Thread() { delete ctx; }
@@ -86,8 +86,8 @@ class Thread : public Process
     class Context : public gem5::Fiber
     {
       public:
-        Context(Thread *thread, size_t size) :
-            gem5::Fiber(size), thread(thread)
+        Context(Thread *thread, size_t size)
+            : gem5::Fiber(size), thread(thread)
         {}
 
       private:
@@ -116,9 +116,8 @@ class Thread : public Process
 class CThread : public Thread
 {
   public:
-    CThread(
-        const char *name, ProcessFuncWrapper *func, bool internal = false) :
-        Thread(name, func, internal)
+    CThread(const char *name, ProcessFuncWrapper *func, bool internal = false)
+        : Thread(name, func, internal)
     {
         // We'll be in the initialization list now, but we shouldn't be.
         popListNode();

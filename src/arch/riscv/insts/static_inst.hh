@@ -50,9 +50,9 @@ namespace RiscvISA
 class RiscvStaticInst : public StaticInst
 {
   protected:
-    RiscvStaticInst(
-        const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass) :
-        StaticInst(_mnemonic, __opClass), machInst(_machInst)
+    RiscvStaticInst(const char *_mnemonic, ExtMachInst _machInst,
+                    OpClass __opClass)
+        : StaticInst(_mnemonic, __opClass), machInst(_machInst)
     {}
 
     bool alignmentOk(ExecContext *xc, Addr addr, Addr size) const;
@@ -99,8 +99,8 @@ class RiscvStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(
-        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
+    buildRetPC(const PCStateBase &cur_pc,
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         auto &ret_pc = ret_pc_ptr->as<PCState>();
@@ -123,9 +123,8 @@ class RiscvMacroInst : public RiscvStaticInst
   protected:
     std::vector<StaticInstPtr> microops;
 
-    RiscvMacroInst(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass)
+    RiscvMacroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass)
     {
         flags[IsMacroop] = true;
     }
@@ -146,7 +145,7 @@ class RiscvMacroInst : public RiscvStaticInst
 
     Fault
     completeAcc(PacketPtr pkt, ExecContext *xc,
-        trace::InstRecord *traceData) const override
+                trace::InstRecord *traceData) const override
     {
         panic("Tried to execute a macroop directly!\n");
     }
@@ -173,9 +172,8 @@ class RiscvMacroInst : public RiscvStaticInst
 class RiscvMicroInst : public RiscvStaticInst
 {
   protected:
-    RiscvMicroInst(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass)
+    RiscvMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;
     }

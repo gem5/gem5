@@ -50,33 +50,33 @@ namespace gem5
 {
 using namespace ArmISA;
 
-const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(
-    SGI_base + 0x0400, SGI_base + 0x0420);
+const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(SGI_base + 0x0400,
+                                                    SGI_base + 0x0420);
 
-Gicv3Redistributor::Gicv3Redistributor(Gicv3 *gic, uint32_t cpu_id) :
-    gic(gic),
-    distributor(nullptr),
-    cpuInterface(nullptr),
-    cpuId(cpu_id),
-    memProxy(nullptr),
-    peInLowPowerState(true),
-    irqGroup(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
-    irqEnabled(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
-    irqPending(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
-    irqPendingIspendr(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
-    irqActive(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
-    irqPriority(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
-    irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX, Gicv3::INT_EDGE_TRIGGERED),
-    irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
-    irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
-    DPG1S(false),
-    DPG1NS(false),
-    DPG0(false),
-    EnableLPIs(false),
-    lpiConfigurationTablePtr(0),
-    lpiIDBits(0),
-    lpiPendingTablePtr(0),
-    addrRangeSize(gic->params().gicv4 ? 0x40000 : 0x20000)
+Gicv3Redistributor::Gicv3Redistributor(Gicv3 *gic, uint32_t cpu_id)
+    : gic(gic),
+      distributor(nullptr),
+      cpuInterface(nullptr),
+      cpuId(cpu_id),
+      memProxy(nullptr),
+      peInLowPowerState(true),
+      irqGroup(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqEnabled(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqPending(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqPendingIspendr(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqActive(Gicv3::SGI_MAX + Gicv3::PPI_MAX, false),
+      irqPriority(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX, Gicv3::INT_EDGE_TRIGGERED),
+      irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX, 0),
+      DPG1S(false),
+      DPG1NS(false),
+      DPG0(false),
+      EnableLPIs(false),
+      lpiConfigurationTablePtr(0),
+      lpiIDBits(0),
+      lpiPendingTablePtr(0),
+      addrRangeSize(gic->params().gicv4 ? 0x40000 : 0x20000)
 {}
 
 void
@@ -374,15 +374,15 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
         return 0;
 
     default:
-        gic->reserved(
-            "Gicv3Redistributor::read(): invalid offset %#x\n", addr);
+        gic->reserved("Gicv3Redistributor::read(): invalid offset %#x\n",
+                      addr);
         return 0; // RES0
     }
 }
 
 void
-Gicv3Redistributor::write(
-    Addr addr, uint64_t data, size_t size, bool is_secure_access)
+Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
+                          bool is_secure_access)
 {
     if (GICR_IPRIORITYR.contains(addr)) { // Interrupt Priority Registers
         int first_intid = addr - GICR_IPRIORITYR.start();
@@ -402,9 +402,9 @@ Gicv3Redistributor::write(
 
             irqPriority[int_id] = prio;
             DPRINTF(GIC,
-                "Gicv3Redistributor::write(): "
-                "int_id %d priority %d\n",
-                int_id, irqPriority[int_id]);
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d priority %d\n",
+                    int_id, irqPriority[int_id]);
         }
 
         return;
@@ -450,9 +450,9 @@ Gicv3Redistributor::write(
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             irqGroup[int_id] = data & (1 << int_id) ? 1 : 0;
             DPRINTF(GIC,
-                "Gicv3Redistributor::write(): "
-                "int_id %d group %d\n",
-                int_id, irqGroup[int_id]);
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d group %d\n",
+                    int_id, irqGroup[int_id]);
         }
 
         break;
@@ -473,9 +473,9 @@ Gicv3Redistributor::write(
             }
 
             DPRINTF(GIC,
-                "Gicv3Redistributor::write(): "
-                "int_id %d enable %i\n",
-                int_id, irqEnabled[int_id]);
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d enable %i\n",
+                    int_id, irqEnabled[int_id]);
         }
 
         break;
@@ -496,9 +496,9 @@ Gicv3Redistributor::write(
             }
 
             DPRINTF(GIC,
-                "Gicv3Redistributor::write(): "
-                "int_id %d enable %i\n",
-                int_id, irqEnabled[int_id]);
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d enable %i\n",
+                    int_id, irqEnabled[int_id]);
         }
 
         break;
@@ -516,10 +516,10 @@ Gicv3Redistributor::write(
 
             if (pending) {
                 DPRINTF(GIC,
-                    "Gicv3Redistributor::write() "
-                    "(GICR_ISPENDR0): int_id %d (PPI) "
-                    "pending bit set\n",
-                    int_id);
+                        "Gicv3Redistributor::write() "
+                        "(GICR_ISPENDR0): int_id %d (PPI) "
+                        "pending bit set\n",
+                        int_id);
                 irqPending[int_id] = true;
                 irqPendingIspendr[int_id] = true;
             }
@@ -560,9 +560,9 @@ Gicv3Redistributor::write(
             if (activate) {
                 if (!irqActive[int_id]) {
                     DPRINTF(GIC,
-                        "Gicv3Redistributor::write(): "
-                        "int_id %d active set\n",
-                        int_id);
+                            "Gicv3Redistributor::write(): "
+                            "int_id %d active set\n",
+                            int_id);
                 }
 
                 irqActive[int_id] = true;
@@ -585,9 +585,9 @@ Gicv3Redistributor::write(
             if (clear) {
                 if (irqActive[int_id]) {
                     DPRINTF(GIC,
-                        "Gicv3Redistributor::write(): "
-                        "int_id %d active cleared\n",
-                        int_id);
+                            "Gicv3Redistributor::write(): "
+                            "int_id %d active cleared\n",
+                            int_id);
                 }
 
                 irqActive[int_id] = false;
@@ -614,9 +614,9 @@ Gicv3Redistributor::write(
             irqConfig[int_id] = data & (0x2 << i) ? Gicv3::INT_EDGE_TRIGGERED :
                                                     Gicv3::INT_LEVEL_SENSITIVE;
             DPRINTF(GIC,
-                "Gicv3Redistributor::write(): "
-                "int_id %d (PPI) config %d\n",
-                int_id, irqConfig[int_id]);
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d (PPI) config %d\n",
+                    int_id, irqConfig[int_id]);
         }
 
         break;
@@ -716,8 +716,8 @@ Gicv3Redistributor::write(
     }
 
     default:
-        gic->reserved(
-            "Gicv3Redistributor::write(): invalid offset %#x\n", addr);
+        gic->reserved("Gicv3Redistributor::write(): invalid offset %#x\n",
+                      addr);
         break;
     }
 }
@@ -730,9 +730,9 @@ Gicv3Redistributor::sendPPInt(uint32_t int_id)
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
     DPRINTF(GIC,
-        "Gicv3Redistributor::sendPPInt(): "
-        "int_id %d (PPI) pending bit set\n",
-        int_id);
+            "Gicv3Redistributor::sendPPInt(): "
+            "int_id %d (PPI) pending bit set\n",
+            int_id);
     updateDistributor();
 }
 
@@ -772,7 +772,7 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
         // Secure EL1 and EL3 access
         forward = (group == int_group) ||
                   (group == Gicv3::G1S && int_group == Gicv3::G0S &&
-                      distributor->DS);
+                   distributor->DS);
     }
 
     if (!forward)
@@ -781,9 +781,9 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
     DPRINTF(GIC,
-        "Gicv3ReDistributor::sendSGI(): "
-        "int_id %d (SGI) pending bit set\n",
-        int_id);
+            "Gicv3ReDistributor::sendSGI(): "
+            "int_id %d (SGI) pending bit set\n",
+            int_id);
     updateDistributor();
 }
 
@@ -834,7 +834,7 @@ Gicv3Redistributor::update()
                  * Our implementation selects the one with the lower id.
                  */
                 (irqPriority[int_id] == cpuInterface->hppi.prio &&
-                    int_id < cpuInterface->hppi.intid)) {
+                 int_id < cpuInterface->hppi.intid)) {
                 cpuInterface->hppi.intid = int_id;
                 cpuInterface->hppi.prio = irqPriority[int_id];
                 cpuInterface->hppi.group = int_group;
@@ -850,11 +850,11 @@ Gicv3Redistributor::update()
         uint8_t lpi_pending_table[largest_lpi_id / 8];
         uint8_t lpi_config_table[number_lpis];
 
-        memProxy->readBlob(
-            lpiPendingTablePtr, lpi_pending_table, sizeof(lpi_pending_table));
+        memProxy->readBlob(lpiPendingTablePtr, lpi_pending_table,
+                           sizeof(lpi_pending_table));
 
         memProxy->readBlob(lpiConfigurationTablePtr, lpi_config_table,
-            sizeof(lpi_config_table));
+                           sizeof(lpi_config_table));
 
         for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id; lpi_id++) {
             uint32_t lpi_pending_entry_byte = lpi_id / 8;
@@ -878,7 +878,7 @@ Gicv3Redistributor::update()
 
                 if ((lpi_priority < cpuInterface->hppi.prio) ||
                     (lpi_priority == cpuInterface->hppi.prio &&
-                        lpi_id < cpuInterface->hppi.intid)) {
+                     lpi_id < cpuInterface->hppi.intid)) {
                     cpuInterface->hppi.intid = lpi_id;
                     cpuInterface->hppi.prio = lpi_priority;
                     cpuInterface->hppi.group = lpi_group;
@@ -903,8 +903,8 @@ Gicv3Redistributor::readEntryLPI(uint32_t lpi_id)
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
     uint8_t lpi_pending_entry;
-    memProxy->readBlob(
-        lpi_pending_entry_ptr, &lpi_pending_entry, sizeof(lpi_pending_entry));
+    memProxy->readBlob(lpi_pending_entry_ptr, &lpi_pending_entry,
+                       sizeof(lpi_pending_entry));
 
     return lpi_pending_entry;
 }
@@ -914,8 +914,8 @@ Gicv3Redistributor::writeEntryLPI(uint32_t lpi_id, uint8_t lpi_pending_entry)
 {
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
-    memProxy->writeBlob(
-        lpi_pending_entry_ptr, &lpi_pending_entry, sizeof(lpi_pending_entry));
+    memProxy->writeBlob(lpi_pending_entry_ptr, &lpi_pending_entry,
+                        sizeof(lpi_pending_entry));
 }
 
 bool
@@ -1074,8 +1074,8 @@ Gicv3Redistributor::copy(Gicv3Registers *from, Gicv3Registers *to)
     gic->copyRedistRegister(from, to, affinity, GICR_IGRPMODR0);
     gic->copyRedistRegister(from, to, affinity, GICR_NSACR);
 
-    gic->copyRedistRange(
-        from, to, affinity, GICR_IPRIORITYR.start(), GICR_IPRIORITYR.size());
+    gic->copyRedistRange(from, to, affinity, GICR_IPRIORITYR.start(),
+                         GICR_IPRIORITYR.size());
 
     // RD_Base regs
     gic->copyRedistRegister(from, to, affinity, GICR_PROPBASER);

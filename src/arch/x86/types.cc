@@ -36,8 +36,8 @@ using namespace X86ISA;
 
 template <>
 void
-paramOut(
-    CheckpointOut &cp, const std::string &name, ExtMachInst const &machInst)
+paramOut(CheckpointOut &cp, const std::string &name,
+         ExtMachInst const &machInst)
 {
     // Prefixes
     paramOut(cp, name + ".legacy", (uint8_t)machInst.legacy);

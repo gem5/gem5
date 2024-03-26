@@ -38,11 +38,11 @@ namespace compression
 {
 namespace encoder
 {
-Huffman::Huffman(uint64_t max_code_length) :
-    Base(), maxCodeLength(max_code_length)
+Huffman::Huffman(uint64_t max_code_length)
+    : Base(), maxCodeLength(max_code_length)
 {
     fatal_if(maxCodeLength > 64,
-        "Code length cannot surpass its underlying container");
+             "Code length cannot surpass its underlying container");
 }
 
 void

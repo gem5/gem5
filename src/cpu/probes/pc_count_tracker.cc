@@ -30,8 +30,8 @@
 
 namespace gem5
 {
-PcCountTracker::PcCountTracker(const PcCountTrackerParams &p) :
-    ProbeListenerObject(p), cpuptr(p.core), manager(p.ptmanager)
+PcCountTracker::PcCountTracker(const PcCountTrackerParams &p)
+    : ProbeListenerObject(p), cpuptr(p.core), manager(p.ptmanager)
 {
     if (!cpuptr || !manager) {
         fatal("%s is NULL", !cpuptr ? "CPU" : "PcCountTrackerManager");
@@ -50,8 +50,8 @@ PcCountTracker::regProbeListeners()
     // when "RetiredInstsPC" notifies the probe listener, then the function
     // 'check_pc' is automatically called
     typedef ProbeListenerArg<PcCountTracker, Addr> PcCountTrackerListener;
-    listeners.push_back(new PcCountTrackerListener(
-        this, "RetiredInstsPC", &PcCountTracker::checkPc));
+    listeners.push_back(new PcCountTrackerListener(this, "RetiredInstsPC",
+                                                   &PcCountTracker::checkPc));
 }
 
 void

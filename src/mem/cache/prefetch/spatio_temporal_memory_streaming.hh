@@ -90,12 +90,12 @@ class STeMS : public Queued
         /** Sequence of accesses */
         std::vector<SequenceEntry> sequence;
 
-        ActiveGenerationTableEntry(int num_positions) :
-            TaggedEntry(),
-            paddress(0),
-            pc(0),
-            seqCounter(0),
-            sequence(num_positions)
+        ActiveGenerationTableEntry(int num_positions)
+            : TaggedEntry(),
+              paddress(0),
+              pc(0),
+              seqCounter(0),
+              sequence(num_positions)
         {}
 
         void
@@ -208,8 +208,8 @@ class STeMS : public Queued
     ~STeMS() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

@@ -114,8 +114,8 @@ SC_MODULE(Target)
 
   public:
     SC_HAS_PROCESS(Target);
-    Target(sc_module_name name, unsigned int bufferSize = 8) :
-        sc_module(name), tSocket("tSocket")
+    Target(sc_module_name name, unsigned int bufferSize = 8)
+        : sc_module(name), tSocket("tSocket")
     {
         tSocket.register_b_transport(this, &Target::b_transport);
     }
@@ -150,12 +150,12 @@ SC_MODULE(Target)
 
         if (cmd == tlm::TLM_READ_COMMAND) {
             memcpy(&mem[trans.get_address()], // destination
-                trans.get_data_ptr(),         // source
-                trans.get_data_length());     // size
+                   trans.get_data_ptr(),      // source
+                   trans.get_data_length());  // size
         } else if (cmd == tlm::TLM_WRITE_COMMAND) {
-            memcpy(trans.get_data_ptr(),   // destination
-                &mem[trans.get_address()], // source
-                trans.get_data_length());  // size
+            memcpy(trans.get_data_ptr(),      // destination
+                   &mem[trans.get_address()], // source
+                   trans.get_data_length());  // size
         }
 
         cout << "\033[1;32m(" << name() << ")@" << setfill(' ') << setw(12)
@@ -180,8 +180,8 @@ SC_MODULE(Interconnect)
     SC_CTOR(Interconnect)
     {
         for (unsigned int i = 0; i < T; i++) {
-            tSocket[i].register_b_transport(
-                this, &Interconnect::b_transport, i);
+            tSocket[i].register_b_transport(this, &Interconnect::b_transport,
+                                            i);
         }
     }
 
@@ -204,8 +204,8 @@ SC_MODULE(Interconnect)
         return outPort;
     }
 
-    virtual void b_transport(
-        int id, tlm::tlm_generic_payload &trans, sc_time &delay)
+    virtual void b_transport(int id, tlm::tlm_generic_payload &trans,
+                             sc_time &delay)
     {
         sc_assert(id < T);
         int outPort = routeFW(id, trans);
@@ -215,7 +215,7 @@ SC_MODULE(Interconnect)
 
 int
 sc_main(int __attribute__((unused)) sc_argc,
-    char __attribute__((unused)) * sc_argv[])
+        char __attribute__((unused)) * sc_argv[])
 {
     Initiator *cpu1 = new Initiator("C1");
     Initiator *cpu2 = new Initiator("C2");

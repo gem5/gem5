@@ -481,8 +481,8 @@ class Request : public Extensible<Request>
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, RequestorID id) :
-        _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
+    Request(Addr paddr, unsigned size, Flags flags, RequestorID id)
+        : _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
     {
         _flags.set(flags);
         privateFlags.set(VALID_PADDR | VALID_SIZE);
@@ -490,33 +490,33 @@ class Request : public Extensible<Request>
     }
 
     Request(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
-        ContextID cid, AtomicOpFunctorPtr atomic_op = nullptr)
+            ContextID cid, AtomicOpFunctorPtr atomic_op = nullptr)
     {
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
         _byteEnable = std::vector<bool>(size, true);
     }
 
-    Request(const Request &other) :
-        Extensible<Request>(other),
-        _paddr(other._paddr),
-        _size(other._size),
-        _byteEnable(other._byteEnable),
-        _requestorId(other._requestorId),
-        _flags(other._flags),
-        _cacheCoherenceFlags(other._cacheCoherenceFlags),
-        privateFlags(other.privateFlags),
-        _time(other._time),
-        _taskId(other._taskId),
-        _vaddr(other._vaddr),
-        _extraData(other._extraData),
-        _contextId(other._contextId),
-        _pc(other._pc),
-        _reqInstSeqNum(other._reqInstSeqNum),
-        _localAccessor(other._localAccessor),
-        translateDelta(other.translateDelta),
-        accessDelta(other.accessDelta),
-        depth(other.depth)
+    Request(const Request &other)
+        : Extensible<Request>(other),
+          _paddr(other._paddr),
+          _size(other._size),
+          _byteEnable(other._byteEnable),
+          _requestorId(other._requestorId),
+          _flags(other._flags),
+          _cacheCoherenceFlags(other._cacheCoherenceFlags),
+          privateFlags(other.privateFlags),
+          _time(other._time),
+          _taskId(other._taskId),
+          _vaddr(other._vaddr),
+          _extraData(other._extraData),
+          _contextId(other._contextId),
+          _pc(other._pc),
+          _reqInstSeqNum(other._reqInstSeqNum),
+          _localAccessor(other._localAccessor),
+          translateDelta(other.translateDelta),
+          accessDelta(other.accessDelta),
+          depth(other.depth)
     {
         atomicOpFunctor.reset(
             other.atomicOpFunctor ? other.atomicOpFunctor->clone() : nullptr);
@@ -571,7 +571,7 @@ class Request : public Extensible<Request>
      */
     void
     setVirt(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
-        AtomicOpFunctorPtr amo_op = nullptr)
+            AtomicOpFunctorPtr amo_op = nullptr)
     {
         _vaddr = vaddr;
         _size = size;
@@ -1159,8 +1159,8 @@ class Request : public Extensible<Request>
     bool
     isHTMCmd() const
     {
-        return (
-            isHTMStart() || isHTMCommit() || isHTMCancel() || isHTMAbort());
+        return (isHTMStart() || isHTMCommit() || isHTMCancel() ||
+                isHTMAbort());
     }
 
     bool

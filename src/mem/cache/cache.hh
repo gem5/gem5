@@ -85,13 +85,13 @@ class Cache : public BaseCache
     void promoteWholeLineWrites(PacketPtr pkt);
 
     bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-        PacketList &writebacks) override;
+                PacketList &writebacks) override;
 
-    void handleTimingReqHit(
-        PacketPtr pkt, CacheBlk *blk, Tick request_time) override;
+    void handleTimingReqHit(PacketPtr pkt, CacheBlk *blk,
+                            Tick request_time) override;
 
     void handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
-        Tick request_time) override;
+                             Tick request_time) override;
 
     void recvTimingReq(PacketPtr pkt) override;
 
@@ -99,26 +99,26 @@ class Cache : public BaseCache
 
     void doWritebacksAtomic(PacketList &writebacks) override;
 
-    void serviceMSHRTargets(
-        MSHR *mshr, const PacketPtr pkt, CacheBlk *blk) override;
+    void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
+                            CacheBlk *blk) override;
 
     void recvTimingSnoopReq(PacketPtr pkt) override;
 
     void recvTimingSnoopResp(PacketPtr pkt) override;
 
-    Cycles handleAtomicReqMiss(
-        PacketPtr pkt, CacheBlk *&blk, PacketList &writebacks) override;
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
+                               PacketList &writebacks) override;
 
     Tick recvAtomic(PacketPtr pkt) override;
 
     Tick recvAtomicSnoop(PacketPtr pkt) override;
 
     void satisfyRequest(PacketPtr pkt, CacheBlk *blk,
-        bool deferred_response = false,
-        bool pending_downgrade = false) override;
+                        bool deferred_response = false,
+                        bool pending_downgrade = false) override;
 
     void doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
-        bool already_copied, bool pending_inval);
+                                bool already_copied, bool pending_inval);
 
     /**
      * Perform an upward snoop if needed, and update the block state
@@ -133,7 +133,7 @@ class Cache : public BaseCache
      * @return The snoop delay incurred by the upwards snoop
      */
     uint32_t handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
-        bool is_deferred, bool pending_inval);
+                         bool is_deferred, bool pending_inval);
 
     [[nodiscard]] PacketPtr evictBlock(CacheBlk *blk) override;
 
@@ -146,7 +146,8 @@ class Cache : public BaseCache
     PacketPtr cleanEvictBlk(CacheBlk *blk);
 
     PacketPtr createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
-        bool needs_writable, bool is_whole_line_write) const override;
+                               bool needs_writable,
+                               bool is_whole_line_write) const override;
 
     /**
      * Send up a snoop request and find cached copies. If cached copies are

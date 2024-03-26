@@ -124,12 +124,13 @@ class GarnetNetwork : public Network
 
     // Methods used by Topology to setup the network
     void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry);
+                        std::vector<NetDest> &routing_table_entry);
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry);
+                       std::vector<NetDest> &routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
-        std::vector<NetDest> &routing_table_entry,
-        PortDirection src_outport_dirn, PortDirection dest_inport_dirn);
+                          std::vector<NetDest> &routing_table_entry,
+                          PortDirection src_outport_dirn,
+                          PortDirection dest_inport_dirn);
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     //! Function for performing a functional write. The return value

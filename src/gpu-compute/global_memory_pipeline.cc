@@ -43,15 +43,15 @@
 
 namespace gem5
 {
-GlobalMemPipeline::GlobalMemPipeline(
-    const ComputeUnitParams &p, ComputeUnit &cu) :
-    computeUnit(cu),
-    _name(cu.name() + ".GlobalMemPipeline"),
-    gmQueueSize(p.global_mem_queue_size),
-    maxWaveRequests(p.max_wave_requests),
-    inflightStores(0),
-    inflightLoads(0),
-    stats(&cu)
+GlobalMemPipeline::GlobalMemPipeline(const ComputeUnitParams &p,
+                                     ComputeUnit &cu)
+    : computeUnit(cu),
+      _name(cu.name() + ".GlobalMemPipeline"),
+      gmQueueSize(p.global_mem_queue_size),
+      maxWaveRequests(p.max_wave_requests),
+      inflightStores(0),
+      inflightLoads(0),
+      stats(&cu)
 {}
 
 void
@@ -101,7 +101,7 @@ GlobalMemPipeline::outstandingReqsCheck(GPUDynInstPtr mp) const
     // Ensure we haven't exceeded the maximum number of vmem requests
     // for this wavefront
     if ((mp->wavefront()->outstandingReqsRdGm +
-            mp->wavefront()->outstandingReqsWrGm) >= maxWaveRequests) {
+         mp->wavefront()->outstandingReqsWrGm) >= maxWaveRequests) {
         return false;
     }
 
@@ -130,11 +130,11 @@ GlobalMemPipeline::exec()
     if (m && m->latency.rdy() && computeUnit.glbMemToVrfBus.rdy() &&
         accessVrf &&
         (computeUnit.shader->coissue_return ||
-            computeUnit.vectorGlobalMemUnit.rdy())) {
+         computeUnit.vectorGlobalMemUnit.rdy())) {
         w = m->wavefront();
 
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: Completing global mem instr %s\n",
-            m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
+                m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
         if (m->isFlat()) {
             w->decLGKMInstsIssued();
@@ -142,8 +142,8 @@ GlobalMemPipeline::exec()
         w->decVMemInstsIssued();
 
         if (m->isLoad() || m->isAtomicRet()) {
-            w->computeUnit->vrf[w->simdId]->scheduleWriteOperandsFromLoad(
-                w, m);
+            w->computeUnit->vrf[w->simdId]->scheduleWriteOperandsFromLoad(w,
+                                                                          m);
         }
 
         completeRequest(m);
@@ -154,14 +154,14 @@ GlobalMemPipeline::exec()
         computeUnit.shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
         if (m->isStore() || m->isAtomic() || m->isMemSync()) {
             computeUnit.shader->sampleStore(accessTime);
-            computeUnit.shader->ScheduleAdd(
-                &w->outstandingReqsWrGm, m->time, -1);
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsWrGm, m->time,
+                                            -1);
         }
 
         if (m->isLoad() || m->isAtomic() || m->isMemSync()) {
             computeUnit.shader->sampleLoad(accessTime);
-            computeUnit.shader->ScheduleAdd(
-                &w->outstandingReqsRdGm, m->time, -1);
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsRdGm, m->time,
+                                            -1);
         }
 
         w->validateRequestCounters();
@@ -199,7 +199,7 @@ GlobalMemPipeline::exec()
         }
 
         DPRINTF(GPUCoalescer, "initiateAcc for %s seqNum %d\n",
-            mp->disassemble(), mp->seqNum());
+                mp->disassemble(), mp->seqNum());
         mp->initiateAcc(mp);
 
         if (mp->isStore() && mp->isGlobalSeg()) {
@@ -237,7 +237,7 @@ GlobalMemPipeline::exec()
         gmIssuedRequests.pop();
 
         DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = \n",
-            computeUnit.cu_id, mp->simdId, mp->wfSlotId);
+                computeUnit.cu_id, mp->simdId, mp->wfSlotId);
     }
 }
 
@@ -314,10 +314,11 @@ GlobalMemPipeline::handleResponse(GPUDynInstPtr gpuDynInst)
 }
 
 GlobalMemPipeline::GlobalMemPipelineStats::GlobalMemPipelineStats(
-    statistics::Group *parent) :
-    statistics::Group(parent, "GlobalMemPipeline"),
-    ADD_STAT(loadVrfBankConflictCycles, "total number of cycles GM data "
-                                        "are delayed before updating the VRF")
+    statistics::Group *parent)
+    : statistics::Group(parent, "GlobalMemPipeline"),
+      ADD_STAT(loadVrfBankConflictCycles,
+               "total number of cycles GM data "
+               "are delayed before updating the VRF")
 {}
 
 } // namespace gem5

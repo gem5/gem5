@@ -77,8 +77,8 @@ class CommMonitor : public SimObject
     void regProbePoints() override;
 
   public: // SimObject interfaces
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
   private:
     /**
@@ -94,8 +94,8 @@ class CommMonitor : public SimObject
          *
          * @param _transmitTime Time of packet transmission
          */
-        CommMonitorSenderState(Tick _transmitTime) :
-            transmitTime(_transmitTime)
+        CommMonitorSenderState(Tick _transmitTime)
+            : transmitTime(_transmitTime)
         {}
 
         /** Destructor */
@@ -114,8 +114,8 @@ class CommMonitor : public SimObject
     class MonitorRequestPort : public RequestPort
     {
       public:
-        MonitorRequestPort(const std::string &_name, CommMonitor &_mon) :
-            RequestPort(_name), mon(_mon)
+        MonitorRequestPort(const std::string &_name, CommMonitor &_mon)
+            : RequestPort(_name), mon(_mon)
         {}
 
       protected:
@@ -183,8 +183,8 @@ class CommMonitor : public SimObject
     class MonitorResponsePort : public ResponsePort
     {
       public:
-        MonitorResponsePort(const std::string &_name, CommMonitor &_mon) :
-            ResponsePort(_name), mon(_mon)
+        MonitorResponsePort(const std::string &_name, CommMonitor &_mon)
+            : ResponsePort(_name), mon(_mon)
         {}
 
       protected:
@@ -381,13 +381,13 @@ class CommMonitor : public SimObject
          * that are not statistics themselves, but used to control the
          * stats or track values during a sample period.
          */
-        MonitorStats(
-            statistics::Group *parent, const CommMonitorParams &params);
+        MonitorStats(statistics::Group *parent,
+                     const CommMonitorParams &params);
 
         void updateReqStats(const probing::PacketInfo &pkt, bool is_atomic,
-            bool expects_response);
-        void updateRespStats(
-            const probing::PacketInfo &pkt, Tick latency, bool is_atomic);
+                            bool expects_response);
+        void updateRespStats(const probing::PacketInfo &pkt, Tick latency,
+                             bool is_atomic);
     };
 
     /** This function is called periodically at the end of each time bin */

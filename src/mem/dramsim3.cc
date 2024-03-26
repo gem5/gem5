@@ -47,25 +47,25 @@ namespace gem5
 {
 namespace memory
 {
-DRAMsim3::DRAMsim3(const Params &p) :
-    AbstractMemory(p),
-    port(name() + ".port", *this),
-    read_cb(
-        std::bind(&DRAMsim3::readComplete, this, 0, std::placeholders::_1)),
-    write_cb(
-        std::bind(&DRAMsim3::writeComplete, this, 0, std::placeholders::_1)),
-    wrapper(p.configFile, p.filePath, read_cb, write_cb),
-    retryReq(false),
-    retryResp(false),
-    startTick(0),
-    nbrOutstandingReads(0),
-    nbrOutstandingWrites(0),
-    sendResponseEvent([this] { sendResponse(); }, name()),
-    tickEvent([this] { tick(); }, name())
+DRAMsim3::DRAMsim3(const Params &p)
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      read_cb(
+          std::bind(&DRAMsim3::readComplete, this, 0, std::placeholders::_1)),
+      write_cb(
+          std::bind(&DRAMsim3::writeComplete, this, 0, std::placeholders::_1)),
+      wrapper(p.configFile, p.filePath, read_cb, write_cb),
+      retryReq(false),
+      retryResp(false),
+      startTick(0),
+      nbrOutstandingReads(0),
+      nbrOutstandingWrites(0),
+      sendResponseEvent([this] { sendResponse(); }, name()),
+      tickEvent([this] { tick(); }, name())
 {
     DPRINTF(DRAMsim3,
-        "Instantiated DRAMsim3 with clock %d ns and queue size %d\n",
-        wrapper.clockPeriod(), wrapper.queueSize());
+            "Instantiated DRAMsim3 with clock %d ns and queue size %d\n",
+            wrapper.clockPeriod(), wrapper.queueSize());
 
     // Register a callback to compensate for the destructor not
     // being called. The callback prints the DRAMsim3 stats.
@@ -85,7 +85,7 @@ DRAMsim3::init()
 
     if (system()->cacheLineSize() != wrapper.burstSize())
         fatal("DRAMsim3 burst size %d does not match cache line size %d\n",
-            wrapper.burstSize(), system()->cacheLineSize());
+              wrapper.burstSize(), system()->cacheLineSize());
 }
 
 void
@@ -116,7 +116,8 @@ DRAMsim3::sendResponse()
         responseQueue.pop_front();
 
         DPRINTF(DRAMsim3, "Have %d read, %d write, %d responses outstanding\n",
-            nbrOutstandingReads, nbrOutstandingWrites, responseQueue.size());
+                nbrOutstandingReads, nbrOutstandingWrites,
+                responseQueue.size());
 
         if (!responseQueue.empty() && !sendResponseEvent.scheduled())
             schedule(sendResponseEvent, curTick());
@@ -153,8 +154,8 @@ DRAMsim3::tick()
         }
     }
 
-    schedule(
-        tickEvent, curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
+    schedule(tickEvent,
+             curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
 }
 
 Tick
@@ -274,8 +275,8 @@ DRAMsim3::accessAndRespond(PacketPtr pkt)
         // Reset the timings of the packet
         pkt->headerDelay = pkt->payloadDelay = 0;
 
-        DPRINTF(
-            DRAMsim3, "Queuing response for address %lld\n", pkt->getAddr());
+        DPRINTF(DRAMsim3, "Queuing response for address %lld\n",
+                pkt->getAddr());
 
         // queue it to be sent back
         responseQueue.push_back(pkt);
@@ -356,8 +357,8 @@ DRAMsim3::drain()
     return nbrOutstanding() != 0 ? DrainState::Draining : DrainState::Drained;
 }
 
-DRAMsim3::MemoryPort::MemoryPort(const std::string &_name, DRAMsim3 &_memory) :
-    ResponsePort(_name), mem(_memory)
+DRAMsim3::MemoryPort::MemoryPort(const std::string &_name, DRAMsim3 &_memory)
+    : ResponsePort(_name), mem(_memory)
 {}
 
 AddrRangeList

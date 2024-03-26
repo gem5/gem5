@@ -128,8 +128,8 @@ class BaseTrafficGen : public ClockedObject
     class TrafficGenPort : public RequestPort
     {
       public:
-        TrafficGenPort(const std::string &name, BaseTrafficGen &traffic_gen) :
-            RequestPort(name), trafficGen(traffic_gen)
+        TrafficGenPort(const std::string &name, BaseTrafficGen &traffic_gen)
+            : RequestPort(name), trafficGen(traffic_gen)
         {}
 
       protected:
@@ -256,8 +256,8 @@ class BaseTrafficGen : public ClockedObject
 
     ~BaseTrafficGen();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
 
@@ -271,52 +271,64 @@ class BaseTrafficGen : public ClockedObject
     std::shared_ptr<BaseGen> createExit(Tick duration);
 
     std::shared_ptr<BaseGen> createLinear(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit);
+                                          Addr end_addr, Addr blocksize,
+                                          Tick min_period, Tick max_period,
+                                          uint8_t read_percent,
+                                          Addr data_limit);
 
     std::shared_ptr<BaseGen> createRandom(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit);
+                                          Addr end_addr, Addr blocksize,
+                                          Tick min_period, Tick max_period,
+                                          uint8_t read_percent,
+                                          Addr data_limit);
 
-    std::shared_ptr<BaseGen> createDram(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts,
-        unsigned int page_size, unsigned int nbr_of_banks,
-        unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
-        unsigned int nbr_of_ranks);
+    std::shared_ptr<BaseGen>
+    createDram(Tick duration, Addr start_addr, Addr end_addr, Addr blocksize,
+               Tick min_period, Tick max_period, uint8_t read_percent,
+               Addr data_limit, unsigned int num_seq_pkts,
+               unsigned int page_size, unsigned int nbr_of_banks,
+               unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
+               unsigned int nbr_of_ranks);
 
-    std::shared_ptr<BaseGen> createDramRot(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts,
-        unsigned int page_size, unsigned int nbr_of_banks,
-        unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
-        unsigned int nbr_of_ranks, unsigned int max_seq_count_per_rank);
+    std::shared_ptr<BaseGen>
+    createDramRot(Tick duration, Addr start_addr, Addr end_addr,
+                  Addr blocksize, Tick min_period, Tick max_period,
+                  uint8_t read_percent, Addr data_limit,
+                  unsigned int num_seq_pkts, unsigned int page_size,
+                  unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
+                  enums::AddrMap addr_mapping, unsigned int nbr_of_ranks,
+                  unsigned int max_seq_count_per_rank);
 
-    std::shared_ptr<BaseGen> createHybrid(Tick duration, Addr start_addr_dram,
-        Addr end_addr_dram, Addr blocksize_dram, Addr start_addr_nvm,
-        Addr end_addr_nvm, Addr blocksize_nvm, Tick min_period,
-        Tick max_period, uint8_t read_percent, Addr data_limit,
-        unsigned int num_seq_pkts_dram, unsigned int page_size_dram,
-        unsigned int nbr_of_banks_dram, unsigned int nbr_of_banks_util_dram,
-        unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
-        unsigned int nbr_of_banks_nvm, unsigned int nbr_of_banks_util_nvm,
-        enums::AddrMap addr_mapping, unsigned int nbr_of_ranks_dram,
-        unsigned int nbr_of_ranks_nvm, uint8_t nvm_percent);
+    std::shared_ptr<BaseGen> createHybrid(
+        Tick duration, Addr start_addr_dram, Addr end_addr_dram,
+        Addr blocksize_dram, Addr start_addr_nvm, Addr end_addr_nvm,
+        Addr blocksize_nvm, Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts_dram,
+        unsigned int page_size_dram, unsigned int nbr_of_banks_dram,
+        unsigned int nbr_of_banks_util_dram, unsigned int num_seq_pkts_nvm,
+        unsigned int buffer_size_nvm, unsigned int nbr_of_banks_nvm,
+        unsigned int nbr_of_banks_util_nvm, enums::AddrMap addr_mapping,
+        unsigned int nbr_of_ranks_dram, unsigned int nbr_of_ranks_nvm,
+        uint8_t nvm_percent);
 
-    std::shared_ptr<BaseGen> createNvm(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts,
-        unsigned int buffer_size, unsigned int nbr_of_banks,
-        unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
-        unsigned int nbr_of_ranks);
+    std::shared_ptr<BaseGen>
+    createNvm(Tick duration, Addr start_addr, Addr end_addr, Addr blocksize,
+              Tick min_period, Tick max_period, uint8_t read_percent,
+              Addr data_limit, unsigned int num_seq_pkts,
+              unsigned int buffer_size, unsigned int nbr_of_banks,
+              unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
+              unsigned int nbr_of_ranks);
 
     std::shared_ptr<BaseGen> createStrided(Tick duration, Addr start_addr,
-        Addr end_addr, Addr blocksize, Addr stride_size, int gen_id,
-        Tick min_period, Tick max_period, uint8_t read_percent,
-        Addr data_limit);
+                                           Addr end_addr, Addr blocksize,
+                                           Addr stride_size, int gen_id,
+                                           Tick min_period, Tick max_period,
+                                           uint8_t read_percent,
+                                           Addr data_limit);
 
-    std::shared_ptr<BaseGen> createTrace(
-        Tick duration, const std::string &trace_file, Addr addr_offset);
+    std::shared_ptr<BaseGen> createTrace(Tick duration,
+                                         const std::string &trace_file,
+                                         Addr addr_offset);
 
   protected:
     void start();

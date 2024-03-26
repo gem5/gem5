@@ -102,8 +102,8 @@ enum : RegIndex
 
 } // namespace int_reg
 
-inline constexpr RegClass intRegClass(
-    IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs);
+inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
+                                      int_reg::NumRegs, debug::IntRegs);
 
 namespace int_reg
 {
@@ -125,10 +125,10 @@ inline constexpr RegId Zero = intRegClass[_ZeroIdx], Ra = intRegClass[_RaIdx],
                        T5 = intRegClass[_T5Idx], T6 = intRegClass[_T6Idx],
                        Ureg0 = intRegClass[_Ureg0Idx];
 
-const std::vector<std::string> RegNames = {"zero", "ra", "sp", "gp", "tp",
-    "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6",
-    "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3",
-    "t4", "t5", "t6"};
+const std::vector<std::string> RegNames = {
+    "zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
+    "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
+    "s6",   "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
 } // namespace int_reg
 
@@ -141,7 +141,8 @@ inline constexpr auto &ReturnAddrReg = int_reg::Ra,
                       &SyscallNumReg = int_reg::A7;
 
 inline constexpr RegId ArgumentRegs[] = {int_reg::A0, int_reg::A1, int_reg::A2,
-    int_reg::A3, int_reg::A4, int_reg::A5, int_reg::A6, int_reg::A7};
+                                         int_reg::A3, int_reg::A4, int_reg::A5,
+                                         int_reg::A6, int_reg::A7};
 
 } // namespace RiscvISA
 } // namespace gem5

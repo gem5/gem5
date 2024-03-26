@@ -44,14 +44,14 @@
 namespace gem5
 {
 Ticked::Ticked(ClockedObject &object_, statistics::Scalar *imported_num_cycles,
-    Event::Priority priority) :
-    object(object_),
-    event([this] { processClockEvent(); }, object_.name(), false, priority),
-    running(false),
-    lastStopped(0),
-    /* Allocate numCycles if an external stat wasn't passed in */
-    numCyclesLocal((imported_num_cycles ? NULL : new statistics::Scalar)),
-    numCycles((imported_num_cycles ? *imported_num_cycles : *numCyclesLocal))
+               Event::Priority priority)
+    : object(object_),
+      event([this] { processClockEvent(); }, object_.name(), false, priority),
+      running(false),
+      lastStopped(0),
+      /* Allocate numCycles if an external stat wasn't passed in */
+      numCyclesLocal((imported_num_cycles ? NULL : new statistics::Scalar)),
+      numCycles((imported_num_cycles ? *imported_num_cycles : *numCyclesLocal))
 {}
 
 void
@@ -105,11 +105,11 @@ Ticked::unserialize(CheckpointIn &cp)
     lastStopped = Cycles(lastStoppedUint);
 }
 
-TickedObject::TickedObject(
-    const TickedObjectParams &params, Event::Priority priority) :
-    ClockedObject(params),
-    /* Make numCycles in Ticked */
-    Ticked(*this, NULL, priority)
+TickedObject::TickedObject(const TickedObjectParams &params,
+                           Event::Priority priority)
+    : ClockedObject(params),
+      /* Make numCycles in Ticked */
+      Ticked(*this, NULL, priority)
 {}
 
 void

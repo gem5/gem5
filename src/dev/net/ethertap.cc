@@ -33,18 +33,18 @@
 #include "dev/net/ethertap.hh"
 
 #if defined(__OpenBSD__) || defined(__APPLE__)
-#    include <sys/param.h>
+#include <sys/param.h>
 
 #endif
 
 #if HAVE_TUNTAP && defined(__linux__)
-#    if 1 // Hide from the style checker since these have to be out of order.
-#        include <sys/socket.h> // Has to be included before if.h for some reason.
+#if 1 // Hide from the style checker since these have to be out of order.
+#include <sys/socket.h> // Has to be included before if.h for some reason.
 
-#    endif
+#endif
 
-#    include <linux/if.h>
-#    include <linux/if_tun.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
 
 #endif
 
@@ -91,13 +91,13 @@ class TapEvent : public PollEvent
     }
 };
 
-EtherTapBase::EtherTapBase(const Params &p) :
-    SimObject(p),
-    buflen(p.bufsz),
-    dump(p.dump),
-    event(NULL),
-    interface(NULL),
-    txEvent([this] { retransmit(); }, "EtherTapBase retransmit")
+EtherTapBase::EtherTapBase(const Params &p)
+    : SimObject(p),
+      buflen(p.bufsz),
+      dump(p.dump),
+      event(NULL),
+      interface(NULL),
+      txEvent([this] { retransmit(); }, "EtherTapBase retransmit")
 {
     buffer = new uint8_t[buflen];
     interface = new EtherTapInt(name() + ".interface", this);
@@ -252,8 +252,8 @@ class TapListener
     EtherTapStub *tap;
 
   public:
-    TapListener(EtherTapStub *t, ListenSocketPtr _listener) :
-        listener(std::move(_listener)), tap(t)
+    TapListener(EtherTapStub *t, ListenSocketPtr _listener)
+        : listener(std::move(_listener)), tap(t)
     {}
     ~TapListener() { delete event; }
 
@@ -365,9 +365,9 @@ EtherTapStub::recvReal(int revent)
         frame_len = ntohl(*(uint32_t *)buffer);
 
     DPRINTF(Ethernet,
-        "Received data from peer: len=%d buffer_used=%d "
-        "frame_len=%d\n",
-        len, buffer_used, frame_len);
+            "Received data from peer: len=%d buffer_used=%d "
+            "frame_len=%d\n",
+            len, buffer_used, frame_len);
 
     uint8_t *frame_start = &buffer[sizeof(uint32_t)];
     while (frame_len != 0 && buffer_used >= frame_len + sizeof(uint32_t)) {

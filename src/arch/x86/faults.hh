@@ -60,11 +60,11 @@ class X86FaultBase : public FaultBase
     uint64_t errorCode;
 
     X86FaultBase(const char *_faultName, const char *_mnem,
-        const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1) :
-        faultName(_faultName),
-        mnem(_mnem),
-        vector(_vector),
-        errorCode(_errorCode)
+                 const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1)
+        : faultName(_faultName),
+          mnem(_mnem),
+          vector(_vector),
+          errorCode(_errorCode)
     {}
 
     const char *
@@ -84,7 +84,7 @@ class X86FaultBase : public FaultBase
     }
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 
     virtual std::string describe() const;
 
@@ -117,7 +117,7 @@ class X86Trap : public X86FaultBase
     using X86FaultBase::X86FaultBase;
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // Base class for x86 aborts which seem to be catastrophic failures.
@@ -127,7 +127,7 @@ class X86Abort : public X86FaultBase
     using X86FaultBase::X86FaultBase;
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // Base class for x86 interrupts.
@@ -148,7 +148,7 @@ class UnimpInstFault : public FaultBase
 
     void
     invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override
+           const StaticInstPtr &inst = nullStaticInstPtr) override
     {
         panic("Unimplemented instruction!");
     }
@@ -201,8 +201,8 @@ class DebugException : public X86FaultBase
 class NonMaskableInterrupt : public X86Interrupt
 {
   public:
-    NonMaskableInterrupt(uint8_t _vector) :
-        X86Interrupt("Non Maskable Interrupt", "#NMI", 2, _vector)
+    NonMaskableInterrupt(uint8_t _vector)
+        : X86Interrupt("Non Maskable Interrupt", "#NMI", 2, _vector)
     {}
 };
 
@@ -230,7 +230,7 @@ class InvalidOpcode : public X86Fault
     InvalidOpcode() : X86Fault("Invalid-Opcode", "#UD", 6) {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class DeviceNotAvailable : public X86Fault
@@ -248,16 +248,16 @@ class DoubleFault : public X86Abort
 class InvalidTSS : public X86Fault
 {
   public:
-    InvalidTSS(uint32_t _errorCode) :
-        X86Fault("Invalid-TSS", "#TS", 10, _errorCode)
+    InvalidTSS(uint32_t _errorCode)
+        : X86Fault("Invalid-TSS", "#TS", 10, _errorCode)
     {}
 };
 
 class SegmentNotPresent : public X86Fault
 {
   public:
-    SegmentNotPresent(uint32_t _errorCode) :
-        X86Fault("Segment-Not-Present", "#NP", 11, _errorCode)
+    SegmentNotPresent(uint32_t _errorCode)
+        : X86Fault("Segment-Not-Present", "#NP", 11, _errorCode)
     {}
 };
 
@@ -271,8 +271,8 @@ class StackFault : public X86Fault
 class GeneralProtection : public X86Fault
 {
   public:
-    GeneralProtection(uint32_t _errorCode) :
-        X86Fault("General-Protection", "#GP", 13, _errorCode)
+    GeneralProtection(uint32_t _errorCode)
+        : X86Fault("General-Protection", "#GP", 13, _errorCode)
     {}
 };
 
@@ -290,13 +290,13 @@ class PageFault : public X86Fault
     Addr addr;
 
   public:
-    PageFault(Addr _addr, uint32_t _errorCode) :
-        X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
+    PageFault(Addr _addr, uint32_t _errorCode)
+        : X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
     {}
 
     PageFault(Addr _addr, bool present, BaseMMU::Mode mode, bool user,
-        bool reserved) :
-        X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
+              bool reserved)
+        : X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
     {
         PageFaultErrorCode code = 0;
         code.present = present;
@@ -307,8 +307,8 @@ class PageFault : public X86Fault
         errorCode = code;
     }
 
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 
     virtual std::string describe() const;
 };
@@ -316,8 +316,8 @@ class PageFault : public X86Fault
 class X87FpExceptionPending : public X86Fault
 {
   public:
-    X87FpExceptionPending() :
-        X86Fault("x87 Floating-Point Exception Pending", "#MF", 16)
+    X87FpExceptionPending()
+        : X86Fault("x87 Floating-Point Exception Pending", "#MF", 16)
     {}
 };
 
@@ -348,39 +348,39 @@ class SecurityException : public X86FaultBase
 class ExternalInterrupt : public X86Interrupt
 {
   public:
-    ExternalInterrupt(uint8_t _vector) :
-        X86Interrupt("External Interrupt", "#INTR", _vector)
+    ExternalInterrupt(uint8_t _vector)
+        : X86Interrupt("External Interrupt", "#INTR", _vector)
     {}
 };
 
 class SystemManagementInterrupt : public X86Interrupt
 {
   public:
-    SystemManagementInterrupt() :
-        X86Interrupt("System Management Interrupt", "#SMI", 0)
+    SystemManagementInterrupt()
+        : X86Interrupt("System Management Interrupt", "#SMI", 0)
     {}
 };
 
 class InitInterrupt : public X86Interrupt
 {
   public:
-    InitInterrupt(uint8_t _vector) :
-        X86Interrupt("INIT Interrupt", "#INIT", _vector)
+    InitInterrupt(uint8_t _vector)
+        : X86Interrupt("INIT Interrupt", "#INIT", _vector)
     {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class StartupInterrupt : public X86Interrupt
 {
   public:
-    StartupInterrupt(uint8_t _vector) :
-        X86Interrupt("Startup Interrupt", "#SIPI", _vector)
+    StartupInterrupt(uint8_t _vector)
+        : X86Interrupt("Startup Interrupt", "#SIPI", _vector)
     {}
 
     void invoke(ThreadContext *tc,
-        const StaticInstPtr &inst = nullStaticInstPtr) override;
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 } // namespace X86ISA

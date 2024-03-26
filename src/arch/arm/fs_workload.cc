@@ -89,7 +89,7 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p)
     bootldr = getBootLoader(kernelObj);
 
     fatal_if(!bootLoaders.empty() && !bootldr,
-        "Can't find a matching boot loader / kernel combination!");
+             "Can't find a matching boot loader / kernel combination!");
 
     if (bootldr)
         loader::debugSymbolTable.insert(*bootldr->symtab().globals());
@@ -122,10 +122,10 @@ FsWorkload::initState()
         // where to branch to after the reset fault
         // All other values needed by the boot loader to know what to do
         fatal_if(!params().cpu_release_addr,
-            "cpu_release_addr must be set with bootloader");
+                 "cpu_release_addr must be set with bootloader");
 
         fatal_if(!arm_sys->params().gic_cpu_addr && is_gic_v2,
-            "gic_cpu_addr must be set with bootloader");
+                 "gic_cpu_addr must be set with bootloader");
 
         for (auto *tc : arm_sys->threads) {
             tc->setReg(int_reg::R3, kernelEntry);

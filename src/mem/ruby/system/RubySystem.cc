@@ -74,10 +74,10 @@ bool RubySystem::m_warmup_enabled = false;
 unsigned RubySystem::m_systems_to_warmup = 0;
 bool RubySystem::m_cooldown_enabled = false;
 
-RubySystem::RubySystem(const Params &p) :
-    ClockedObject(p),
-    m_access_backing_store(p.access_backing_store),
-    m_cache_recorder(NULL)
+RubySystem::RubySystem(const Params &p)
+    : ClockedObject(p),
+      m_access_backing_store(p.access_backing_store),
+      m_cache_recorder(NULL)
 {
     m_randomization = p.randomization;
 
@@ -122,7 +122,7 @@ RubySystem::registerMachineID(const MachineID &mach_id, Network *network)
     }
 
     fatal_if(network_id < 0, "Could not add MachineID %s. Network not found",
-        MachineIDToString(mach_id).c_str());
+             MachineIDToString(mach_id).c_str());
 
     machineToNetwork.insert(std::make_pair(mach_id, network_id));
 }
@@ -148,8 +148,8 @@ RubySystem::registerRequestorIDs()
 
         // These are setup in Network constructor and should exist
         fatal_if(!machineToNetwork.count(mach_id),
-            "No machineID %s. Does not belong to a Ruby network?",
-            MachineIDToString(mach_id).c_str());
+                 "No machineID %s. Does not belong to a Ruby network?",
+                 MachineIDToString(mach_id).c_str());
 
         auto network_id = machineToNetwork[mach_id];
         requestorToNetwork.insert(std::make_pair(id, network_id));
@@ -170,7 +170,8 @@ RubySystem::~RubySystem() { delete m_profiler; }
 
 void
 RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
-    uint64_t cache_trace_size, uint64_t block_size_bytes)
+                              uint64_t cache_trace_size,
+                              uint64_t block_size_bytes)
 {
     std::vector<RubyPort *> ruby_port_map;
     RubyPort *ruby_port_ptr = NULL;
@@ -205,8 +206,8 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
     }
 
     // Create the CacheRecorder and record the cache trace
-    m_cache_recorder = new CacheRecorder(
-        uncompressed_trace, cache_trace_size, ruby_port_map, block_size_bytes);
+    m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
+                                         ruby_port_map, block_size_bytes);
 }
 
 void
@@ -239,9 +240,9 @@ RubySystem::memWriteback()
         Event *curr_head = eventq->getHead();
         if (curr_head->isAutoDelete()) {
             DPRINTF(RubyCacheTrace,
-                "Event %s auto-deletes when descheduled,"
-                " not recording\n",
-                curr_head->name());
+                    "Event %s auto-deletes when descheduled,"
+                    " not recording\n",
+                    curr_head->name());
         } else {
             original_events.push_back(
                 std::make_pair(curr_head, curr_head->when()));
@@ -291,8 +292,8 @@ RubySystem::memWriteback()
 }
 
 void
-RubySystem::writeCompressedTrace(
-    uint8_t *raw_data, std::string filename, uint64_t uncompressed_trace_size)
+RubySystem::writeCompressedTrace(uint8_t *raw_data, std::string filename,
+                                 uint64_t uncompressed_trace_size)
 {
     // Create the checkpoint file for the memory
     std::string thefile = CheckpointIn::dir() + "/" + filename.c_str();
@@ -306,7 +307,7 @@ RubySystem::writeCompressedTrace(
     gzFile compressedMemory = gzdopen(fd, "wb");
     if (compressedMemory == NULL)
         fatal("Insufficient memory to allocate compression state for %s\n",
-            filename);
+              filename);
 
     if (gzwrite(compressedMemory, raw_data, uncompressed_trace_size) !=
         uncompressed_trace_size) {
@@ -360,7 +361,7 @@ RubySystem::drainResume()
 
 void
 RubySystem::readCompressedTrace(std::string filename, uint8_t *&raw_data,
-    uint64_t &uncompressed_trace_size)
+                                uint64_t &uncompressed_trace_size)
 {
     // Read the trace file
     gzFile compressedTrace;
@@ -375,7 +376,7 @@ RubySystem::readCompressedTrace(std::string filename, uint8_t *&raw_data,
     compressedTrace = gzdopen(fd, "rb");
     if (compressedTrace == NULL) {
         fatal("Insufficient memory to allocate compression state for %s\n",
-            filename);
+              filename);
     }
 
     raw_data = new uint8_t[uncompressed_trace_size];
@@ -407,8 +408,8 @@ RubySystem::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(cache_trace_size);
     cache_trace_file = cp.getCptDir() + "/" + cache_trace_file;
 
-    readCompressedTrace(
-        cache_trace_file, uncompressed_trace, cache_trace_size);
+    readCompressedTrace(cache_trace_file, uncompressed_trace,
+                        cache_trace_size);
     m_warmup_enabled = true;
     m_systems_to_warmup++;
 
@@ -558,8 +559,8 @@ RubySystem::functionalRead(PacketPtr pkt)
     // read it only if it's not in the cache hierarchy at all.
     int num_controllers = netCntrls[request_net_id].size();
     if (num_invalid == (num_controllers - 1) && num_backing_store == 1) {
-        DPRINTF(
-            RubySystem, "only copy in Backing_Store memory, read from it\n");
+        DPRINTF(RubySystem,
+                "only copy in Backing_Store memory, read from it\n");
         ctrl_backing_store->functionalRead(line_address, pkt);
         return true;
     } else if (num_ro > 0 || num_rw >= 1) {
@@ -569,16 +570,16 @@ RubySystem::functionalRead(PacketPtr pkt)
             // in writable permission, the first one found would be returned.
             warn("More than one Abstract Controller with RW permission for "
                  "addr: %#x on cacheline: %#x.",
-                address, line_address);
+                 address, line_address);
         }
         // In Broadcast/Snoop protocols, this covers if you know the block
         // exists somewhere in the caching hierarchy, then you want to read any
         // valid RO or RW block.  In directory protocols, same thing, you want
         // to read any valid readable copy of the block.
         DPRINTF(RubySystem,
-            "num_maybe_stale=%d, num_busy = %d, num_ro = %d, "
-            "num_rw = %d\n",
-            num_maybe_stale, num_busy, num_ro, num_rw);
+                "num_maybe_stale=%d, num_busy = %d, num_ro = %d, "
+                "num_rw = %d\n",
+                num_maybe_stale, num_busy, num_ro, num_rw);
         // Use the copy from the controller with read/write permission (if
         // any), otherwise use get the first read only found
         if (ctrl_rw) {
@@ -593,17 +594,17 @@ RubySystem::functionalRead(PacketPtr pkt)
         // stale state indicates a valid copy should be in transit in the
         // network or in a message buffer waiting to be handled
         DPRINTF(RubySystem,
-            "Controllers functionalRead lookup "
-            "(num_maybe_stale=%d, num_busy = %d)\n",
-            num_maybe_stale, num_busy);
+                "Controllers functionalRead lookup "
+                "(num_maybe_stale=%d, num_busy = %d)\n",
+                num_maybe_stale, num_busy);
         for (auto &cntrl : netCntrls[request_net_id]) {
             if (cntrl->functionalReadBuffers(pkt))
                 return true;
         }
         DPRINTF(RubySystem,
-            "Network functionalRead lookup "
-            "(num_maybe_stale=%d, num_busy = %d)\n",
-            num_maybe_stale, num_busy);
+                "Network functionalRead lookup "
+                "(num_maybe_stale=%d, num_busy = %d)\n",
+                num_maybe_stale, num_busy);
         for (auto &network : m_networks) {
             if (network->functionalRead(pkt))
                 return true;
@@ -656,10 +657,10 @@ RubySystem::functionalRead(PacketPtr pkt)
     }
 
     DPRINTF(RubySystem,
-        "num_ro=%d, num_busy=%d , has_rw=%d, "
-        "backing_store=%d\n",
-        ctrl_ro.size(), ctrl_busy.size(), ctrl_rw != nullptr,
-        ctrl_bs != nullptr);
+            "num_ro=%d, num_busy=%d , has_rw=%d, "
+            "backing_store=%d\n",
+            ctrl_ro.size(), ctrl_busy.size(), ctrl_rw != nullptr,
+            ctrl_bs != nullptr);
 
     // Issue functional reads to all controllers found in a stable state
     // until we get a full copy of the line
@@ -704,7 +705,8 @@ RubySystem::functionalRead(PacketPtr pkt)
     }
     // we either got the full line or couldn't find anything at this point
     panic_if(!(bytes.isFull() || bytes.isEmpty()),
-        "Inconsistent state on functional read for %#x %s\n", address, bytes);
+             "Inconsistent state on functional read for %#x %s\n", address,
+             bytes);
 
     return bytes.isFull();
 }

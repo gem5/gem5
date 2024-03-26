@@ -51,9 +51,9 @@
 #include "dev/arm/gic_v3_redistributor.hh"
 #include "mem/packet_access.hh"
 
-#define COMMAND(x, method) \
-    { \
-        x, DispatchEntry(#x, method) \
+#define COMMAND(x, method)                                                    \
+    {                                                                         \
+        x, DispatchEntry(#x, method)                                          \
     }
 
 namespace gem5
@@ -155,8 +155,8 @@ ItsProcess::writeDeviceTable(Yield &yield, uint32_t device_id, DTE dte)
 }
 
 void
-ItsProcess::writeIrqTranslationTable(
-    Yield &yield, const Addr itt_base, uint32_t event_id, ITTE itte)
+ItsProcess::writeIrqTranslationTable(Yield &yield, const Addr itt_base,
+                                     uint32_t event_id, ITTE itte)
 {
     const Addr address = itt_base + (event_id * sizeof(itte));
 
@@ -166,8 +166,8 @@ ItsProcess::writeIrqTranslationTable(
 }
 
 void
-ItsProcess::writeIrqCollectionTable(
-    Yield &yield, uint32_t collection_id, CTE cte)
+ItsProcess::writeIrqCollectionTable(Yield &yield, uint32_t collection_id,
+                                    CTE cte)
 {
     const Addr base = its.pageAddress(Gicv3Its::COLLECTION_TABLE);
     const Addr address = base + (collection_id * sizeof(cte));
@@ -191,8 +191,8 @@ ItsProcess::readDeviceTable(Yield &yield, uint32_t device_id)
 }
 
 uint64_t
-ItsProcess::readIrqTranslationTable(
-    Yield &yield, const Addr itt_base, uint32_t event_id)
+ItsProcess::readIrqTranslationTable(Yield &yield, const Addr itt_base,
+                                    uint32_t event_id)
 {
     uint64_t itte;
     const Addr address = itt_base + (event_id * sizeof(itte));
@@ -256,8 +256,8 @@ ItsTranslation::main(Yield &yield)
 }
 
 std::pair<uint32_t, Gicv3Redistributor *>
-ItsTranslation::translateLPI(
-    Yield &yield, uint32_t device_id, uint32_t event_id)
+ItsTranslation::translateLPI(Yield &yield, uint32_t device_id,
+                             uint32_t event_id)
 {
     if (its.deviceOutOfRange(device_id)) {
         terminate(yield);
@@ -364,9 +364,9 @@ ItsCommand::readCommand(Yield &yield, CommandEntry &command)
     doRead(yield, cmd_addr, &command, sizeof(command));
 
     DPRINTF(ITS, "Command %s read from queue at address: %#x\n",
-        commandName(command.type), cmd_addr);
+            commandName(command.type), cmd_addr);
     DPRINTF(ITS, "dw0: %#x dw1: %#x dw2: %#x dw3: %#x\n", command.raw[0],
-        command.raw[1], command.raw[2], command.raw[3]);
+            command.raw[1], command.raw[2], command.raw[3]);
 }
 
 void
@@ -765,21 +765,21 @@ ItsCommand::vsync(Yield &yield, CommandEntry &command)
     panic("ITS %s command unimplemented", __func__);
 }
 
-Gicv3Its::Gicv3Its(const Gicv3ItsParams &params) :
-    BasicPioDevice(params, params.pio_size),
-    dmaPort(name() + ".dma", *this),
-    gitsControl(CTLR_QUIESCENT),
-    gitsTyper(params.gits_typer),
-    gitsCbaser(0),
-    gitsCreadr(0),
-    gitsCwriter(0),
-    gitsIidr(0),
-    tableBases(NUM_BASER_REGS, 0),
-    requestorId(params.system->getRequestorId(this)),
-    gic(nullptr),
-    commandEvent([this] { checkCommandQueue(); }, name()),
-    pendingCommands(false),
-    pendingTranslations(0)
+Gicv3Its::Gicv3Its(const Gicv3ItsParams &params)
+    : BasicPioDevice(params, params.pio_size),
+      dmaPort(name() + ".dma", *this),
+      gitsControl(CTLR_QUIESCENT),
+      gitsTyper(params.gits_typer),
+      gitsCbaser(0),
+      gitsCreadr(0),
+      gitsCwriter(0),
+      gitsIidr(0),
+      tableBases(NUM_BASER_REGS, 0),
+      requestorId(params.system->getRequestorId(this)),
+      gic(nullptr),
+      commandEvent([this] { checkCommandQueue(); }, name()),
+      pendingCommands(false),
+      pendingTranslations(0)
 {
     BASER device_baser = 0;
     device_baser.type = DEVICE_TABLE;
@@ -1012,7 +1012,7 @@ Gicv3Its::lpiOutOfRange(uint32_t intid) const
 {
     return intid >= (1ULL << (Gicv3Distributor::IDBITS + 1)) ||
            (intid < Gicv3Redistributor::SMALLEST_LPI_ID &&
-               intid != Gicv3::INTID_SPURIOUS);
+            intid != Gicv3::INTID_SPURIOUS);
 }
 
 DrainState
@@ -1234,8 +1234,9 @@ Gicv3Its::getRedistributor(uint64_t rd_base)
 Addr
 Gicv3Its::pageAddress(Gicv3Its::ItsTables table)
 {
-    auto base_it = std::find_if(tableBases.begin(), tableBases.end(),
-        [table](const BASER &b) { return b.type == table; });
+    auto base_it =
+        std::find_if(tableBases.begin(), tableBases.end(),
+                     [table](const BASER &b) { return b.type == table; });
 
     panic_if(base_it == tableBases.end(), "ITS Table not recognised\n");
 
@@ -1261,14 +1262,16 @@ Gicv3Its::moveAllPendingState(Gicv3Redistributor *rd1, Gicv3Redistributor *rd2)
 
     // Copying the pending table from redistributor 1 to redistributor 2
     rd1->memProxy->readBlob(rd1->lpiPendingTablePtr,
-        (uint8_t *)lpi_pending_table, sizeof(lpi_pending_table));
+                            (uint8_t *)lpi_pending_table,
+                            sizeof(lpi_pending_table));
 
     rd2->memProxy->writeBlob(rd2->lpiPendingTablePtr,
-        (uint8_t *)lpi_pending_table, sizeof(lpi_pending_table));
+                             (uint8_t *)lpi_pending_table,
+                             sizeof(lpi_pending_table));
 
     // Clearing pending table in redistributor 2
-    rd1->memProxy->memsetBlob(
-        rd1->lpiPendingTablePtr, 0, sizeof(lpi_pending_table));
+    rd1->memProxy->memsetBlob(rd1->lpiPendingTablePtr, 0,
+                              sizeof(lpi_pending_table));
 
     rd2->updateDistributor();
 }

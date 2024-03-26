@@ -97,11 +97,11 @@ class QueueEntry : public Packet::SenderState, public Named
          * @param ready_time The tick at which the packet will be serviceable.
          * @param _order Global order.
          */
-        Target(PacketPtr _pkt, Tick ready_time, Counter _order) :
-            recvTime(curTick()),
-            readyTime(ready_time),
-            order(_order),
-            pkt(_pkt)
+        Target(PacketPtr _pkt, Tick ready_time, Counter _order)
+            : recvTime(curTick()),
+              readyTime(ready_time),
+              order(_order),
+              pkt(_pkt)
         {}
     };
 
@@ -120,15 +120,15 @@ class QueueEntry : public Packet::SenderState, public Named
     /** True if the entry targets the secure memory space. */
     bool isSecure;
 
-    QueueEntry(const std::string &name) :
-        Named(name),
-        readyTime(0),
-        _isUncacheable(false),
-        inService(false),
-        order(0),
-        blkAddr(0),
-        blkSize(0),
-        isSecure(false)
+    QueueEntry(const std::string &name)
+        : Named(name),
+          readyTime(0),
+          _isUncacheable(false),
+          inService(false),
+          order(0),
+          blkAddr(0),
+          blkSize(0),
+          isSecure(false)
     {}
 
     bool
@@ -144,8 +144,8 @@ class QueueEntry : public Packet::SenderState, public Named
      * @param is_secure Whether the target should be in secure space or not.
      * @return True if entry matches given information.
      */
-    virtual bool matchBlockAddr(
-        const Addr addr, const bool is_secure) const = 0;
+    virtual bool matchBlockAddr(const Addr addr,
+                                const bool is_secure) const = 0;
 
     /**
      * Check if entry contains a packet that corresponds to the one being

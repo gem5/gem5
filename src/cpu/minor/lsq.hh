@@ -96,8 +96,8 @@ class LSQ : public Named
         LSQ &lsq;
 
       public:
-        DcachePort(std::string name, LSQ &lsq_, MinorCPU &cpu) :
-            MinorCPU::MinorCPUPort(name, cpu), lsq(lsq_)
+        DcachePort(std::string name, LSQ &lsq_, MinorCPU &cpu)
+            : MinorCPU::MinorCPUPort(name, cpu), lsq(lsq_)
         {}
 
       protected:
@@ -220,7 +220,7 @@ class LSQ : public Named
 
       public:
         LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
-            PacketDataPtr data_ = NULL, uint64_t *res_ = NULL);
+                   PacketDataPtr data_ = NULL, uint64_t *res_ = NULL);
 
         virtual ~LSQRequest();
 
@@ -246,7 +246,9 @@ class LSQ : public Named
         /** Does address range req1 (req1_addr to req1_addr + req1_size - 1)
          *  fully cover, partially cover or not cover at all the range req2 */
         static AddrRangeCoverage containsAddrRangeOf(Addr req1_addr,
-            unsigned int req1_size, Addr req2_addr, unsigned int req2_size);
+                                                     unsigned int req1_size,
+                                                     Addr req2_addr,
+                                                     unsigned int req2_size);
 
         /** Does this request's address range fully cover the range
          *  of other_request? */
@@ -299,8 +301,8 @@ class LSQ : public Named
 
     friend std::ostream &operator<<(std::ostream &os, AddrRangeCoverage state);
 
-    friend std::ostream &operator<<(
-        std::ostream &os, LSQRequest::LSQRequestState state);
+    friend std::ostream &operator<<(std::ostream &os,
+                                    LSQRequest::LSQRequestState state);
 
   protected:
     /** Special request types that don't actually issue memory requests */
@@ -310,7 +312,7 @@ class LSQ : public Named
         /** TLB interace */
         void
         finish(const Fault &fault_, const RequestPtr &request_,
-            ThreadContext *tc, BaseMMU::Mode mode)
+               ThreadContext *tc, BaseMMU::Mode mode)
         {}
 
       public:
@@ -352,9 +354,9 @@ class LSQ : public Named
         {}
 
       public:
-        SpecialDataRequest(LSQ &port_, MinorDynInstPtr inst_) :
-            /* Say this is a load, not actually relevant */
-            LSQRequest(port_, inst_, true, NULL, 0)
+        SpecialDataRequest(LSQ &port_, MinorDynInstPtr inst_)
+            : /* Say this is a load, not actually relevant */
+              LSQRequest(port_, inst_, true, NULL, 0)
         {}
     };
 
@@ -364,8 +366,8 @@ class LSQ : public Named
     class FailedDataRequest : public SpecialDataRequest
     {
       public:
-        FailedDataRequest(LSQ &port_, MinorDynInstPtr inst_) :
-            SpecialDataRequest(port_, inst_)
+        FailedDataRequest(LSQ &port_, MinorDynInstPtr inst_)
+            : SpecialDataRequest(port_, inst_)
         {
             state = Failed;
         }
@@ -383,8 +385,8 @@ class LSQ : public Named
         }
 
       public:
-        BarrierDataRequest(LSQ &port_, MinorDynInstPtr inst_) :
-            SpecialDataRequest(port_, inst_)
+        BarrierDataRequest(LSQ &port_, MinorDynInstPtr inst_)
+            : SpecialDataRequest(port_, inst_)
         {
             state = Complete;
         }
@@ -396,7 +398,7 @@ class LSQ : public Named
       protected:
         /** TLB interace */
         void finish(const Fault &fault_, const RequestPtr &request_,
-            ThreadContext *tc, BaseMMU::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
         /** Has my only packet been sent to the memory system but has not
          *  yet been responded to */
@@ -445,10 +447,10 @@ class LSQ : public Named
 
       public:
         SingleDataRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
-            PacketDataPtr data_ = NULL, uint64_t *res_ = NULL) :
-            LSQRequest(port_, inst_, isLoad_, data_, res_),
-            packetInFlight(false),
-            packetSent(false)
+                          PacketDataPtr data_ = NULL, uint64_t *res_ = NULL)
+            : LSQRequest(port_, inst_, isLoad_, data_, res_),
+              packetInFlight(false),
+              packetSent(false)
         {}
     };
 
@@ -487,11 +489,11 @@ class LSQ : public Named
       protected:
         /** TLB response interface */
         void finish(const Fault &fault_, const RequestPtr &request_,
-            ThreadContext *tc, BaseMMU::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
         SplitDataRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
-            PacketDataPtr data_ = NULL, uint64_t *res_ = NULL);
+                         PacketDataPtr data_ = NULL, uint64_t *res_ = NULL);
 
         ~SplitDataRequest();
 
@@ -562,8 +564,8 @@ class LSQ : public Named
 
       public:
         StoreBuffer(std::string name_, LSQ &lsq_,
-            unsigned int store_buffer_size,
-            unsigned int store_limit_per_cycle);
+                    unsigned int store_buffer_size,
+                    unsigned int store_limit_per_cycle);
 
       public:
         /** Can a new request be inserted into the queue? */
@@ -580,8 +582,8 @@ class LSQ : public Named
          *  partly or not all all satisfied.  If the request can be
          *  wholly satisfied, the store buffer slot number which can be used
          *  is returned in found_slot */
-        AddrRangeCoverage canForwardDataToLoad(
-            LSQRequestPtr request, unsigned int &found_slot);
+        AddrRangeCoverage canForwardDataToLoad(LSQRequestPtr request,
+                                               unsigned int &found_slot);
 
         /** Fill the given packet with appropriate date from slot
          *  slot_number */
@@ -635,7 +637,7 @@ class LSQ : public Named
      *  store buffer storeBuffer. */
 
     typedef Queue<LSQRequestPtr, ReportTraitsPtrAdaptor<LSQRequestPtr>,
-        NoBubbleTraits<LSQRequestPtr> >
+                  NoBubbleTraits<LSQRequestPtr> >
         LSQQueue;
 
     /** requests contains LSQRequests which have been issued to the TLB by
@@ -803,10 +805,11 @@ class LSQ : public Named
 
     /** Single interface for readMem/writeMem/amoMem to issue requests into
      *  the LSQ */
-    Fault pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
-        AtomicOpFunctorPtr amo_op,
-        const std::vector<bool> &byte_enable = std::vector<bool>());
+    Fault
+    pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
+                unsigned int size, Addr addr, Request::Flags flags,
+                uint64_t *res, AtomicOpFunctorPtr amo_op,
+                const std::vector<bool> &byte_enable = std::vector<bool>());
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */
@@ -831,7 +834,8 @@ class LSQ : public Named
  *  data will be the payload data.  If sender_state is NULL, it won't be
  *  pushed into the packet as senderState */
 PacketPtr makePacketForRequest(const RequestPtr &request, bool isLoad,
-    Packet::SenderState *sender_state = NULL, PacketDataPtr data = NULL);
+                               Packet::SenderState *sender_state = NULL,
+                               PacketDataPtr data = NULL);
 
 } // namespace minor
 } // namespace gem5

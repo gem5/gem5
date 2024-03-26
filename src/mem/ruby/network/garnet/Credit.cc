@@ -42,8 +42,8 @@ namespace garnet
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
 
-Credit::Credit(int vc, bool is_free_signal, Tick curTime) :
-    flit(0, 0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
+Credit::Credit(int vc, bool is_free_signal, Tick curTime)
+    : flit(0, 0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
 {
     m_is_free_signal = is_free_signal;
     m_type = CREDIT_;
@@ -65,7 +65,7 @@ flit *
 Credit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 {
     DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n", m_vc,
-        m_is_free_signal);
+            m_is_free_signal);
     if (m_is_free_signal) {
         // We are not going to get anymore credits for this vc
         // So send a credit in any case

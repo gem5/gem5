@@ -107,8 +107,8 @@ class Policy : public SimObject
      * @param data data to schedule
      * @return QoS priority value
      */
-    virtual uint8_t schedule(
-        const RequestorID requestor_id, const uint64_t data) = 0;
+    virtual uint8_t schedule(const RequestorID requestor_id,
+                             const uint64_t data) = 0;
 
     /**
      * Schedules a packet. Non virtual interface for the scheduling
@@ -131,10 +131,10 @@ Policy::pair(Requestor requestor, T value)
     auto id = memCtrl->system()->lookupRequestorId(requestor);
 
     panic_if(id == Request::invldRequestorId, "Unable to find requestor %s\n",
-        requestor);
+             requestor);
 
     DPRINTF(QOS, "Requestor %s [id %d] associated with QoS data %d\n",
-        requestor, id, value);
+            requestor, id, value);
 
     return std::pair<RequestorID, T>(id, value);
 }

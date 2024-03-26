@@ -98,16 +98,16 @@ class MemInterface : public AbstractMemory
         uint32_t rowAccesses;
         uint32_t bytesAccessed;
 
-        Bank() :
-            openRow(NO_ROW),
-            bank(0),
-            bankgr(0),
-            rdAllowedAt(0),
-            wrAllowedAt(0),
-            preAllowedAt(0),
-            actAllowedAt(0),
-            rowAccesses(0),
-            bytesAccessed(0)
+        Bank()
+            : openRow(NO_ROW),
+              bank(0),
+              bankgr(0),
+              rdAllowedAt(0),
+              wrAllowedAt(0),
+              preAllowedAt(0),
+              actAllowedAt(0),
+              rowAccesses(0),
+              bytesAccessed(0)
         {}
     };
 
@@ -237,7 +237,7 @@ class MemInterface : public AbstractMemory
      *  @param pseudo_channel pseudo channel number
      */
     void setCtrl(MemCtrl *_ctrl, unsigned int command_window,
-        uint8_t pseudo_channel = 0);
+                 uint8_t pseudo_channel = 0);
 
     /**
      * Get an address in a dense range which starts from 0. The input
@@ -281,8 +281,8 @@ class MemInterface : public AbstractMemory
      * @return an iterator to the selected packet, else queue.end()
      * @return the tick when the packet selected will issue
      */
-    virtual std::pair<MemPacketQueue::iterator, Tick> chooseNextFRFCFS(
-        MemPacketQueue &queue, Tick min_col_at) const = 0;
+    virtual std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const = 0;
 
     /*
      * Function to calulate unloaded latency
@@ -356,7 +356,7 @@ class MemInterface : public AbstractMemory
      */
     virtual MemPacket *
     decodePacket(const PacketPtr pkt, Addr pkt_addr, unsigned int size,
-        bool is_read, uint8_t pseudo_channel = 0)
+                 bool is_read, uint8_t pseudo_channel = 0)
     {
         panic("MemInterface decodePacket should not be executed from here.\n");
         return nullptr;
@@ -379,8 +379,9 @@ class MemInterface : public AbstractMemory
     /**
      * This function performs the burst and update stats.
      */
-    virtual std::pair<Tick, Tick> doBurstAccess(MemPacket *mem_pkt,
-        Tick next_burst_at, const std::vector<MemPacketQueue> &queue) = 0;
+    virtual std::pair<Tick, Tick>
+    doBurstAccess(MemPacket *mem_pkt, Tick next_burst_at,
+                  const std::vector<MemPacketQueue> &queue) = 0;
 
     /**
      * This function is DRAM specific.

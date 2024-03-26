@@ -36,8 +36,8 @@ namespace gem5
 {
 namespace qemu
 {
-FwCfgItemE820::FwCfgItemE820(const QemuFwCfgItemE820Params &p) :
-    FwCfgItemFixed(p.path, p.arch_specific, p.index)
+FwCfgItemE820::FwCfgItemE820(const QemuFwCfgItemE820Params &p)
+    : FwCfgItemFixed(p.path, p.arch_specific, p.index)
 {
     struct GEM5_PACKED Entry
     {

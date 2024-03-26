@@ -60,8 +60,8 @@ namespace gem5
 {
 using namespace copy_engine_reg;
 
-CopyEngine::CopyEngine(const Params &p) :
-    PciDevice(p), copyEngineStats(this, p.ChanCnt)
+CopyEngine::CopyEngine(const Params &p)
+    : PciDevice(p), copyEngineStats(this, p.ChanCnt)
 {
     // All Reg regs are initialized to 0 by default
     regs.chanCount = p.ChanCnt;
@@ -78,22 +78,22 @@ CopyEngine::CopyEngine(const Params &p) :
     }
 }
 
-CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid) :
-    cePort(_ce, _ce->sys),
-    ce(_ce),
-    channelId(cid),
-    busy(false),
-    underReset(false),
-    refreshNext(false),
-    latBeforeBegin(ce->params().latBeforeBegin),
-    latAfterCompletion(ce->params().latAfterCompletion),
-    completionDataReg(0),
-    nextState(Idle),
-    fetchCompleteEvent([this] { fetchDescComplete(); }, name()),
-    addrCompleteEvent([this] { fetchAddrComplete(); }, name()),
-    readCompleteEvent([this] { readCopyBytesComplete(); }, name()),
-    writeCompleteEvent([this] { writeCopyBytesComplete(); }, name()),
-    statusCompleteEvent([this] { writeStatusComplete(); }, name())
+CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
+    : cePort(_ce, _ce->sys),
+      ce(_ce),
+      channelId(cid),
+      busy(false),
+      underReset(false),
+      refreshNext(false),
+      latBeforeBegin(ce->params().latBeforeBegin),
+      latAfterCompletion(ce->params().latAfterCompletion),
+      completionDataReg(0),
+      nextState(Idle),
+      fetchCompleteEvent([this] { fetchDescComplete(); }, name()),
+      addrCompleteEvent([this] { fetchAddrComplete(); }, name()),
+      readCompleteEvent([this] { readCopyBytesComplete(); }, name()),
+      writeCompleteEvent([this] { writeCopyBytesComplete(); }, name()),
+      statusCompleteEvent([this] { writeStatusComplete(); }, name())
 
 {
     cr.status.dma_transfer_status(3);
@@ -230,7 +230,7 @@ CopyEngine::read(PacketPtr pkt)
 
     if (chanid >= regs.chanCount)
         panic("Access to channel %d (device only configured for %d channels)",
-            chanid, regs.chanCount);
+              chanid, regs.chanCount);
 
     ///
     /// Channel registers are handled here
@@ -286,7 +286,7 @@ CopyEngine::CopyEngineChannel::channelRead(Packet *pkt, Addr daddr, int size)
         break;
     default:
         panic("Read request to unknown channel register number: (%d)%#x\n",
-            channelId, daddr);
+              channelId, daddr);
     }
 }
 
@@ -311,19 +311,19 @@ CopyEngine::write(PacketPtr pkt)
     if (size == sizeof(uint64_t)) {
         [[maybe_unused]] uint64_t val = pkt->getLE<uint64_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr,
-            val);
+                val);
     } else if (size == sizeof(uint32_t)) {
         [[maybe_unused]] uint32_t val = pkt->getLE<uint32_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr,
-            val);
+                val);
     } else if (size == sizeof(uint16_t)) {
         [[maybe_unused]] uint16_t val = pkt->getLE<uint16_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr,
-            val);
+                val);
     } else if (size == sizeof(uint8_t)) {
         [[maybe_unused]] uint8_t val = pkt->getLE<uint8_t>();
         DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr,
-            val);
+                val);
     } else {
         panic("Unknown size for MMIO access: %d\n", size);
     }
@@ -334,7 +334,7 @@ CopyEngine::write(PacketPtr pkt)
         case GEN_XFERCAP:
         case GEN_ATTNSTATUS:
             DPRINTF(DMACopyEngine, "Warning, ignorning write to register %x\n",
-                daddr);
+                    daddr);
             break;
         case GEN_INTRCTRL:
             regs.intrctrl.master_int_enable(bits(pkt->getLE<uint8_t>(), 0, 1));
@@ -356,7 +356,7 @@ CopyEngine::write(PacketPtr pkt)
 
     if (chanid >= regs.chanCount)
         panic("Access to channel %d (device only configured for %d channels)",
-            chanid, regs.chanCount);
+              chanid, regs.chanCount);
 
     ///
     /// Channel registers are handled here
@@ -383,8 +383,8 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
         break;
     case CHAN_STATUS:
         assert(size == sizeof(uint64_t));
-        DPRINTF(
-            DMACopyEngine, "Warning, ignorning write to register %x\n", daddr);
+        DPRINTF(DMACopyEngine, "Warning, ignorning write to register %x\n",
+                daddr);
         break;
     case CHAN_CHAINADDR:
         assert(size == sizeof(uint64_t) || size == sizeof(uint32_t));
@@ -425,17 +425,17 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
         break;
     default:
         panic("Read request to unknown channel register number: (%d)%#x\n",
-            channelId, daddr);
+              channelId, daddr);
     }
 }
 
-CopyEngine::CopyEngineStats::CopyEngineStats(
-    statistics::Group *parent, const uint8_t &channel_count) :
-    statistics::Group(parent, "CopyEngine"),
-    ADD_STAT(bytesCopied, statistics::units::Byte::get(),
-        "Number of bytes copied by each engine"),
-    ADD_STAT(copiesProcessed, statistics::units::Count::get(),
-        "Number of copies processed by each engine")
+CopyEngine::CopyEngineStats::CopyEngineStats(statistics::Group *parent,
+                                             const uint8_t &channel_count)
+    : statistics::Group(parent, "CopyEngine"),
+      ADD_STAT(bytesCopied, statistics::units::Byte::get(),
+               "Number of bytes copied by each engine"),
+      ADD_STAT(copiesProcessed, statistics::units::Count::get(),
+               "Number of copies processed by each engine")
 {
     bytesCopied.init(channel_count).flags(statistics::total);
     copiesProcessed.init(channel_count).flags(statistics::total);
@@ -445,16 +445,17 @@ void
 CopyEngine::CopyEngineChannel::fetchDescriptor(Addr address)
 {
     DPRINTF(DMACopyEngine,
-        "Reading descriptor from at memory location %#x(%#x)\n", address,
-        ce->pciToDma(address));
+            "Reading descriptor from at memory location %#x(%#x)\n", address,
+            ce->pciToDma(address));
     assert(address);
     busy = true;
 
     DPRINTF(DMACopyEngine, "dmaAction: %#x, %d bytes, to addr %#x\n",
-        ce->pciToDma(address), sizeof(DmaDesc), curDmaDesc);
+            ce->pciToDma(address), sizeof(DmaDesc), curDmaDesc);
 
     cePort.dmaAction(MemCmd::ReadReq, ce->pciToDma(address), sizeof(DmaDesc),
-        &fetchCompleteEvent, (uint8_t *)curDmaDesc, latBeforeBegin);
+                     &fetchCompleteEvent, (uint8_t *)curDmaDesc,
+                     latBeforeBegin);
     lastDescriptorAddr = address;
 }
 
@@ -493,10 +494,10 @@ void
 CopyEngine::CopyEngineChannel::readCopyBytes()
 {
     DPRINTF(DMACopyEngine,
-        "Reading %d bytes from buffer to memory location %#x(%#x)\n",
-        curDmaDesc->len, curDmaDesc->dest, ce->pciToDma(curDmaDesc->src));
+            "Reading %d bytes from buffer to memory location %#x(%#x)\n",
+            curDmaDesc->len, curDmaDesc->dest, ce->pciToDma(curDmaDesc->src));
     cePort.dmaAction(MemCmd::ReadReq, ce->pciToDma(curDmaDesc->src),
-        curDmaDesc->len, &readCompleteEvent, copyBuffer, 0);
+                     curDmaDesc->len, &readCompleteEvent, copyBuffer, 0);
 }
 
 void
@@ -514,11 +515,11 @@ void
 CopyEngine::CopyEngineChannel::writeCopyBytes()
 {
     DPRINTF(DMACopyEngine,
-        "Writing %d bytes from buffer to memory location %#x(%#x)\n",
-        curDmaDesc->len, curDmaDesc->dest, ce->pciToDma(curDmaDesc->dest));
+            "Writing %d bytes from buffer to memory location %#x(%#x)\n",
+            curDmaDesc->len, curDmaDesc->dest, ce->pciToDma(curDmaDesc->dest));
 
     cePort.dmaAction(MemCmd::WriteReq, ce->pciToDma(curDmaDesc->dest),
-        curDmaDesc->len, &writeCompleteEvent, copyBuffer, 0);
+                     curDmaDesc->len, &writeCompleteEvent, copyBuffer, 0);
 
     ce->copyEngineStats.bytesCopied[channelId] += curDmaDesc->len;
     ce->copyEngineStats.copiesProcessed[channelId]++;
@@ -528,7 +529,7 @@ void
 CopyEngine::CopyEngineChannel::writeCopyBytesComplete()
 {
     DPRINTF(DMACopyEngine, "Write of bytes to copy complete user1: %#x\n",
-        curDmaDesc->user1);
+            curDmaDesc->user1);
 
     cr.status.compl_desc_addr(lastDescriptorAddr >> 6);
     completionDataReg = cr.status() | 1;
@@ -578,13 +579,13 @@ CopyEngine::CopyEngineChannel::continueProcessing()
 void
 CopyEngine::CopyEngineChannel::writeCompletionStatus()
 {
-    DPRINTF(DMACopyEngine,
-        "Writing completion status %#x to address %#x(%#x)\n",
+    DPRINTF(
+        DMACopyEngine, "Writing completion status %#x to address %#x(%#x)\n",
         completionDataReg, cr.completionAddr, ce->pciToDma(cr.completionAddr));
 
     cePort.dmaAction(MemCmd::WriteReq, ce->pciToDma(cr.completionAddr),
-        sizeof(completionDataReg), &statusCompleteEvent,
-        (uint8_t *)&completionDataReg, latAfterCompletion);
+                     sizeof(completionDataReg), &statusCompleteEvent,
+                     (uint8_t *)&completionDataReg, latAfterCompletion);
 }
 
 void
@@ -600,16 +601,16 @@ CopyEngine::CopyEngineChannel::fetchNextAddr(Addr address)
     DPRINTF(DMACopyEngine, "Fetching next address...\n");
     busy = true;
     cePort.dmaAction(MemCmd::ReadReq,
-        ce->pciToDma(address + offsetof(DmaDesc, next)), sizeof(Addr),
-        &addrCompleteEvent, (uint8_t *)curDmaDesc + offsetof(DmaDesc, next),
-        0);
+                     ce->pciToDma(address + offsetof(DmaDesc, next)),
+                     sizeof(Addr), &addrCompleteEvent,
+                     (uint8_t *)curDmaDesc + offsetof(DmaDesc, next), 0);
 }
 
 void
 CopyEngine::CopyEngineChannel::fetchAddrComplete()
 {
     DPRINTF(DMACopyEngine, "Fetching next address complete: %#x\n",
-        curDmaDesc->next);
+            curDmaDesc->next);
     if (!curDmaDesc->next) {
         DPRINTF(DMACopyEngine, "Got NULL descriptor, nothing more to do\n");
         busy = false;
@@ -727,8 +728,8 @@ CopyEngine::CopyEngineChannel::restartStateMachine()
 void
 CopyEngine::CopyEngineChannel::drainResume()
 {
-    DPRINTF(
-        DMACopyEngine, "Restarting state machine at state %d\n", nextState);
+    DPRINTF(DMACopyEngine, "Restarting state machine at state %d\n",
+            nextState);
     restartStateMachine();
 }
 

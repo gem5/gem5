@@ -83,11 +83,12 @@ class DramGen : public RandomGen
      *                     assumes single channel system
      */
     DramGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-        Addr start_addr, Addr end_addr, Addr _blocksize, Addr cacheline_size,
-        Tick min_period, Tick max_period, uint8_t read_percent,
-        Addr data_limit, unsigned int num_seq_pkts, unsigned int page_size,
-        unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-        enums::AddrMap addr_mapping, unsigned int nbr_of_ranks);
+            Addr start_addr, Addr end_addr, Addr _blocksize,
+            Addr cacheline_size, Tick min_period, Tick max_period,
+            uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts,
+            unsigned int page_size, unsigned int nbr_of_banks_DRAM,
+            unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
+            unsigned int nbr_of_ranks);
 
     PacketPtr getNextPacket();
 

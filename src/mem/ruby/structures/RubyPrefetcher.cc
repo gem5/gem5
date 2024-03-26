@@ -52,37 +52,37 @@ namespace gem5
 {
 namespace ruby
 {
-RubyPrefetcher::RubyPrefetcher(const Params &p) :
-    SimObject(p),
-    m_num_streams(p.num_streams),
-    m_array(p.num_streams),
-    m_train_misses(p.train_misses),
-    m_num_startup_pfs(p.num_startup_pfs),
-    unitFilter(p.unit_filter),
-    negativeFilter(p.unit_filter),
-    nonUnitFilter(p.nonunit_filter),
-    m_prefetch_cross_pages(p.cross_page),
-    pageShift(p.page_shift),
-    rubyPrefetcherStats(this)
+RubyPrefetcher::RubyPrefetcher(const Params &p)
+    : SimObject(p),
+      m_num_streams(p.num_streams),
+      m_array(p.num_streams),
+      m_train_misses(p.train_misses),
+      m_num_startup_pfs(p.num_startup_pfs),
+      unitFilter(p.unit_filter),
+      negativeFilter(p.unit_filter),
+      nonUnitFilter(p.nonunit_filter),
+      m_prefetch_cross_pages(p.cross_page),
+      pageShift(p.page_shift),
+      rubyPrefetcherStats(this)
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);
 }
 
 RubyPrefetcher::RubyPrefetcherStats::RubyPrefetcherStats(
-    statistics::Group *parent) :
-    statistics::Group(parent, "RubyPrefetcher"),
-    ADD_STAT(numMissObserved, "Number of misses observed"),
-    ADD_STAT(numAllocatedStreams, "Number of streams allocated for "
-                                  "prefetching"),
-    ADD_STAT(numPrefetchRequested, "Number of prefetch requests made"),
-    ADD_STAT(numHits, "Number of prefetched blocks accessed "
-                      "(for the first time)"),
-    ADD_STAT(numPartialHits, "Number of misses observed for a block being "
-                             "prefetched"),
-    ADD_STAT(numPagesCrossed, "Number of prefetches across pages"),
-    ADD_STAT(numMissedPrefetchedBlocks, "Number of misses for blocks that "
-                                        "were prefetched, yet missed")
+    statistics::Group *parent)
+    : statistics::Group(parent, "RubyPrefetcher"),
+      ADD_STAT(numMissObserved, "Number of misses observed"),
+      ADD_STAT(numAllocatedStreams, "Number of streams allocated for "
+                                    "prefetching"),
+      ADD_STAT(numPrefetchRequested, "Number of prefetch requests made"),
+      ADD_STAT(numHits, "Number of prefetched blocks accessed "
+                        "(for the first time)"),
+      ADD_STAT(numPartialHits, "Number of misses observed for a block being "
+                               "prefetched"),
+      ADD_STAT(numPagesCrossed, "Number of prefetches across pages"),
+      ADD_STAT(numMissedPrefetchedBlocks, "Number of misses for blocks that "
+                                          "were prefetched, yet missed")
 {}
 
 void
@@ -206,8 +206,8 @@ RubyPrefetcher::getLRUindex(void)
 }
 
 void
-RubyPrefetcher::initializeStream(
-    Addr address, int stride, uint32_t index, const RubyRequestType &type)
+RubyPrefetcher::initializeStream(Addr address, int stride, uint32_t index,
+                                 const RubyRequestType &type)
 {
     rubyPrefetcherStats.numAllocatedStreams++;
 
@@ -255,7 +255,8 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
         if (m_array[i].m_is_valid) {
             for (int j = 0; j < m_num_startup_pfs; j++) {
                 if (makeNextStrideAddress(m_array[i].m_address,
-                        -(m_array[i].m_stride * j)) == address) {
+                                          -(m_array[i].m_stride * j)) ==
+                    address) {
                     return &(m_array[i]);
                 }
             }
@@ -266,7 +267,8 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 
 bool
 RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry> *const filter,
-    Addr line_addr, int stride, const RubyRequestType &type)
+                                 Addr line_addr, int stride,
+                                 const RubyRequestType &type)
 {
     for (auto &entry : *filter) {
         if (entry.addr == line_addr) {
@@ -288,8 +290,8 @@ RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry> *const filter,
 }
 
 bool
-RubyPrefetcher::accessNonunitFilter(
-    Addr line_addr, const RubyRequestType &type)
+RubyPrefetcher::accessNonunitFilter(Addr line_addr,
+                                    const RubyRequestType &type)
 {
     /// look for non-unit strides based on a (user-defined) page size
     Addr page_addr = pageAddress(line_addr);
@@ -317,8 +319,8 @@ RubyPrefetcher::accessNonunitFilter(
                         // clear this filter entry
                         entry.clear();
 
-                        initializeStream(
-                            line_addr, stride, getLRUindex(), type);
+                        initializeStream(line_addr, stride, getLRUindex(),
+                                         type);
                     }
                 } else {
                     // If delta didn't match reset entry's hit count

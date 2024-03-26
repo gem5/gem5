@@ -91,8 +91,8 @@ class PageTableEntry
   public:
     PageTableEntry() : entry(0), type(invalid), populated(false) {}
 
-    PageTableEntry(uint64_t e, EntryType t = sun4u) :
-        entry(e), type(t), populated(true)
+    PageTableEntry(uint64_t e, EntryType t = sun4u)
+        : entry(e), type(t), populated(true)
     {
         populate(entry, type);
     }
@@ -301,8 +301,8 @@ struct TlbEntry
 {
     TlbEntry() {}
 
-    TlbEntry(
-        Addr asn, Addr vaddr, Addr paddr, bool uncacheable, bool read_only)
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr, bool uncacheable,
+             bool read_only)
     {
         uint64_t entry = 0;
         if (!read_only)

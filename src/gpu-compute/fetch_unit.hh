@@ -73,17 +73,17 @@ class FetchUnit
     class FetchBufDesc
     {
       public:
-        FetchBufDesc() :
-            bufStart(nullptr),
-            bufEnd(nullptr),
-            readPtr(nullptr),
-            fetchDepth(0),
-            maxIbSize(0),
-            maxFbSize(0),
-            cacheLineSize(0),
-            restartFromBranch(false),
-            wavefront(nullptr),
-            _decoder(nullptr)
+        FetchBufDesc()
+            : bufStart(nullptr),
+              bufEnd(nullptr),
+              readPtr(nullptr),
+              fetchDepth(0),
+              maxIbSize(0),
+              maxFbSize(0),
+              cacheLineSize(0),
+              restartFromBranch(false),
+              wavefront(nullptr),
+              _decoder(nullptr)
         {}
 
         ~FetchBufDesc() { delete[] bufStart; }
@@ -263,8 +263,8 @@ class FetchUnit
         PacketPtr reqPkt;
 
       public:
-        SystemHubEvent(PacketPtr pkt, FetchUnit *fetch_unit) :
-            fetchUnit(fetch_unit), reqPkt(pkt)
+        SystemHubEvent(PacketPtr pkt, FetchUnit *fetch_unit)
+            : fetchUnit(fetch_unit), reqPkt(pkt)
         {
             setFlags(Event::AutoDelete);
         }

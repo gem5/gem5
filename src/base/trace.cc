@@ -103,7 +103,7 @@ ObjectMatch ignore;
 
 void
 Logger::dump(Tick when, const std::string &name, const void *d, int len,
-    const std::string &flag)
+             const std::string &flag)
 {
     if (!isEnabled(name))
         return;
@@ -144,7 +144,7 @@ Logger::dump(Tick when, const std::string &name, const void *d, int len,
 
 void
 OstreamLogger::logMessage(Tick when, const std::string &name,
-    const std::string &flag, const std::string &message)
+                          const std::string &flag, const std::string &message)
 {
     if (!isEnabled(name))
         return;

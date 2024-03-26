@@ -104,8 +104,8 @@ class ListenSocket : public Named
     /* Create a socket, adding SOCK_CLOEXEC if available. */
     static int socketCloexec(int domain, int type, int protocol);
     /* Accept a connection, adding SOCK_CLOEXEC if available. */
-    static int acceptCloexec(
-        int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+    static int acceptCloexec(int sockfd, struct sockaddr *addr,
+                             socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
 
@@ -194,15 +194,15 @@ class ListenSocketUnixFile : public ListenSocketUnix
 
   public:
     ListenSocketUnixFile(const std::string &_name, const std::string &_dir,
-        const std::string &_fname);
+                         const std::string &_fname);
     ~ListenSocketUnixFile();
 
     void listen() override;
     void output(std::ostream &os) const override;
 };
 
-ListenSocketConfig listenSocketUnixFileConfig(
-    std::string dir, std::string fname);
+ListenSocketConfig listenSocketUnixFileConfig(std::string dir,
+                                              std::string fname);
 
 class ListenSocketUnixAbstract : public ListenSocketUnix
 {
@@ -212,8 +212,8 @@ class ListenSocketUnixAbstract : public ListenSocketUnix
     size_t prepSockaddrUn(sockaddr_un &addr) const override;
 
   public:
-    ListenSocketUnixAbstract(
-        const std::string &_name, const std::string &_path);
+    ListenSocketUnixAbstract(const std::string &_name,
+                             const std::string &_path);
 
     void output(std::ostream &os) const override;
 };

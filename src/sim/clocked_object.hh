@@ -108,8 +108,8 @@ class Clocked
      * Create a clocked object and set the clock domain based on the
      * parameters.
      */
-    Clocked(ClockDomain &clk_domain) :
-        tick(0), cycle(0), clockDomain(clk_domain)
+    Clocked(ClockDomain &clk_domain)
+        : tick(0), cycle(0), clockDomain(clk_domain)
     {
         // Register with the clock domain, so that if the clock domain
         // frequency changes, we can update this object's tick.

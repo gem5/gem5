@@ -56,9 +56,8 @@ PacketPtr
 RandomGen::getNextPacket()
 {
     // choose if we generate a read or a write here
-    bool isRead =
-        readPercent != 0 &&
-        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+    bool isRead = readPercent != 0 && (readPercent == 100 ||
+                                       random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
@@ -70,14 +69,14 @@ RandomGen::getNextPacket()
     addr -= addr % blocksize;
 
     DPRINTF(TrafficGen, "RandomGen::getNextPacket: %c to addr %x, size %d\n",
-        isRead ? 'r' : 'w', addr, blocksize);
+            isRead ? 'r' : 'w', addr, blocksize);
 
     // add the amount of data manipulated to the total
     dataManipulated += blocksize;
 
     // create a new request packet
-    return getPacket(
-        addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    return getPacket(addr, blocksize,
+                     isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 }
 
 Tick

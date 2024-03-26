@@ -72,8 +72,8 @@ class Fetch1 : public Named
         Fetch1 &fetch;
 
       public:
-        IcachePort(std::string name, Fetch1 &fetch_, MinorCPU &cpu) :
-            MinorCPU::MinorCPUPort(name, cpu), fetch(fetch_)
+        IcachePort(std::string name, Fetch1 &fetch_, MinorCPU &cpu)
+            : MinorCPU::MinorCPUPort(name, cpu), fetch(fetch_)
         {}
 
       protected:
@@ -180,18 +180,18 @@ class Fetch1 : public Named
          *  the request on to the ports' handleTLBResponse member
          *  function */
         void finish(const Fault &fault_, const RequestPtr &request_,
-            ThreadContext *tc, BaseMMU::Mode mode);
+                    ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
-        FetchRequest(Fetch1 &fetch_, InstId id_, Addr pc_) :
-            SenderState(),
-            fetch(fetch_),
-            state(NotIssued),
-            id(id_),
-            packet(NULL),
-            request(),
-            pc(pc_),
-            fault(NoFault)
+        FetchRequest(Fetch1 &fetch_, InstId id_, Addr pc_)
+            : SenderState(),
+              fetch(fetch_),
+              state(NotIssued),
+              id(id_),
+              packet(NULL),
+              request(),
+              pc(pc_),
+              fault(NoFault)
         {
             request = std::make_shared<Request>();
         }
@@ -256,12 +256,12 @@ class Fetch1 : public Named
         // All fields have default initializers.
         Fetch1ThreadInfo() {}
 
-        Fetch1ThreadInfo(const Fetch1ThreadInfo &other) :
-            state(other.state),
-            pc(other.pc->clone()),
-            streamSeqNum(other.streamSeqNum),
-            predictionSeqNum(other.predictionSeqNum),
-            blocked(other.blocked)
+        Fetch1ThreadInfo(const Fetch1ThreadInfo &other)
+            : state(other.state),
+              pc(other.pc->clone()),
+              streamSeqNum(other.streamSeqNum),
+              predictionSeqNum(other.predictionSeqNum),
+              blocked(other.blocked)
         {}
 
         FetchState state = FetchWaitingForPC;
@@ -303,7 +303,7 @@ class Fetch1 : public Named
     };
 
     typedef Queue<FetchRequestPtr, ReportTraitsPtrAdaptor<FetchRequestPtr>,
-        NoBubbleTraits<FetchRequestPtr>>
+                  NoBubbleTraits<FetchRequestPtr>>
         FetchQueue;
 
     /** Queue of address translated requests from Fetch1 */
@@ -329,8 +329,8 @@ class Fetch1 : public Named
     unsigned int numFetchesInITLB;
 
   protected:
-    friend std::ostream &operator<<(
-        std::ostream &os, Fetch1::FetchState state);
+    friend std::ostream &operator<<(std::ostream &os,
+                                    Fetch1::FetchState state);
 
     /** Start fetching from a new address. */
     void changeStream(const BranchData &branch);
@@ -382,8 +382,8 @@ class Fetch1 : public Named
     unsigned int numInFlightFetches();
 
     /** Print the appropriate MinorLine line for a fetch response */
-    void minorTraceResponseLine(
-        const std::string &name, FetchRequestPtr response) const;
+    void minorTraceResponseLine(const std::string &name,
+                                FetchRequestPtr response) const;
 
     /** Memory interface */
     virtual bool recvTimingResp(PacketPtr pkt);
@@ -391,10 +391,10 @@ class Fetch1 : public Named
 
   public:
     Fetch1(const std::string &name_, MinorCPU &cpu_,
-        const BaseMinorCPUParams &params, Latch<BranchData>::Output inp_,
-        Latch<ForwardLineData>::Input out_,
-        Latch<BranchData>::Output prediction_,
-        std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer);
+           const BaseMinorCPUParams &params, Latch<BranchData>::Output inp_,
+           Latch<ForwardLineData>::Input out_,
+           Latch<BranchData>::Output prediction_,
+           std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer);
 
   public:
     /** Returns the IcachePort owned by this Fetch1 */

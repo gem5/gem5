@@ -44,8 +44,8 @@
 
 namespace gem5
 {
-VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p) :
-    RegisterFile(p)
+VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
+    : RegisterFile(p)
 {
     regFile.resize(numRegs());
 
@@ -61,7 +61,7 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
         for (const auto &physIdx : srcVecOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
-                    w->wfDynId, ii->disassemble(), physIdx);
+                        w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueRAWDependencies++;
                 return false;
             }
@@ -72,7 +72,7 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
         for (const auto &physIdx : dstVecOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUVRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
-                    w->wfDynId, ii->disassemble(), physIdx);
+                        w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueWAXDependencies++;
                 return false;
             }
@@ -151,8 +151,8 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 }
 
 void
-VectorRegisterFile::scheduleWriteOperandsFromLoad(
-    Wavefront *w, GPUDynInstPtr ii)
+VectorRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
+                                                  GPUDynInstPtr ii)
 {
     assert(ii->isLoad() || ii->isAtomicRet());
     for (const auto &dstVecOp : ii->dstVecRegOperands()) {

@@ -58,79 +58,34 @@ namespace gem5
 namespace branch_prediction
 {
 int MultiperspectivePerceptron::xlat[] = {
-    1,
-    3,
-    4,
-    5,
-    7,
-    8,
-    9,
-    11,
-    12,
-    14,
-    15,
-    17,
-    19,
-    21,
-    23,
-    25,
-    27,
-    29,
-    32,
-    34,
-    37,
-    41,
-    45,
-    49,
-    53,
-    58,
-    63,
-    69,
-    76,
-    85,
-    94,
-    106,
+    1,  3,  4,  5,  7,  8,  9,  11, 12, 14, 15, 17, 19, 21, 23, 25,
+    27, 29, 32, 34, 37, 41, 45, 49, 53, 58, 63, 69, 76, 85, 94, 106,
 };
 int MultiperspectivePerceptron::xlat4[] = {
-    0,
-    4,
-    5,
-    7,
-    9,
-    11,
-    12,
-    14,
-    16,
-    17,
-    19,
-    22,
-    28,
-    33,
-    39,
-    45,
+    0, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 22, 28, 33, 39, 45,
 };
 
-MultiperspectivePerceptron::ThreadData::ThreadData(int num_filters,
-    int n_local_histories, int local_history_length, int assoc,
-    const std::vector<std::vector<int>> &blurrypath_bits, int path_length,
-    int ghist_length, int block_size,
+MultiperspectivePerceptron::ThreadData::ThreadData(
+    int num_filters, int n_local_histories, int local_history_length,
+    int assoc, const std::vector<std::vector<int>> &blurrypath_bits,
+    int path_length, int ghist_length, int block_size,
     const std::vector<std::vector<std::vector<bool>>> &acyclic_bits,
     const std::vector<int> &modhist_indices,
     const std::vector<int> &modhist_lengths,
     const std::vector<int> &modpath_indices,
     const std::vector<int> &modpath_lengths,
-    const std::vector<int> &table_sizes, int n_sign_bits) :
-    filterTable(num_filters),
-    acyclic_histories(acyclic_bits.size()),
-    acyclic2_histories(acyclic_bits.size()),
-    blurrypath_histories(blurrypath_bits.size()),
-    ghist_words(ghist_length / block_size + 1, 0),
-    path_history(path_length, 0),
-    imli_counter(4, 0),
-    localHistories(n_local_histories, local_history_length),
-    recency_stack(assoc),
-    last_ghist_bit(false),
-    occupancy(0)
+    const std::vector<int> &table_sizes, int n_sign_bits)
+    : filterTable(num_filters),
+      acyclic_histories(acyclic_bits.size()),
+      acyclic2_histories(acyclic_bits.size()),
+      blurrypath_histories(blurrypath_bits.size()),
+      ghist_words(ghist_length / block_size + 1, 0),
+      path_history(path_length, 0),
+      imli_counter(4, 0),
+      localHistories(n_local_histories, local_history_length),
+      recency_stack(assoc),
+      last_ghist_bit(false),
+      occupancy(0)
 {
     for (int i = 0; i < blurrypath_bits.size(); i += 1) {
         blurrypath_histories[i].resize(blurrypath_bits[i].size());
@@ -176,47 +131,47 @@ MultiperspectivePerceptron::ThreadData::ThreadData(int num_filters,
 }
 
 MultiperspectivePerceptron::MultiperspectivePerceptron(
-    const MultiperspectivePerceptronParams &p) :
-    BPredUnit(p),
-    blockSize(p.block_size),
-    pcshift(p.pcshift),
-    threshold(p.threshold),
-    bias0(p.bias0),
-    bias1(p.bias1),
-    biasmostly0(p.biasmostly0),
-    biasmostly1(p.biasmostly1),
-    nbest(p.nbest),
-    tunebits(p.tunebits),
-    hshift(p.hshift),
-    imli_mask1(p.imli_mask1),
-    imli_mask4(p.imli_mask4),
-    recencypos_mask(p.recencypos_mask),
-    fudge(p.fudge),
-    n_sign_bits(p.n_sign_bits),
-    pcbit(p.pcbit),
-    decay(p.decay),
-    record_mask(p.record_mask),
-    hash_taken(p.hash_taken),
-    tuneonly(p.tuneonly),
-    extra_rounds(p.extra_rounds),
-    speed(p.speed),
-    budgetbits(p.budgetbits),
-    speculative_update(p.speculative_update),
-    threadData(p.numThreads, nullptr),
-    doing_local(false),
-    doing_recency(false),
-    assoc(0),
-    ghist_length(p.initial_ghist_length),
-    modghist_length(1),
-    path_length(1),
-    thresholdCounter(0),
-    theta(p.initial_theta),
-    extrabits(0),
-    imli_counter_bits(4),
-    modhist_indices(),
-    modhist_lengths(),
-    modpath_indices(),
-    modpath_lengths()
+    const MultiperspectivePerceptronParams &p)
+    : BPredUnit(p),
+      blockSize(p.block_size),
+      pcshift(p.pcshift),
+      threshold(p.threshold),
+      bias0(p.bias0),
+      bias1(p.bias1),
+      biasmostly0(p.biasmostly0),
+      biasmostly1(p.biasmostly1),
+      nbest(p.nbest),
+      tunebits(p.tunebits),
+      hshift(p.hshift),
+      imli_mask1(p.imli_mask1),
+      imli_mask4(p.imli_mask4),
+      recencypos_mask(p.recencypos_mask),
+      fudge(p.fudge),
+      n_sign_bits(p.n_sign_bits),
+      pcbit(p.pcbit),
+      decay(p.decay),
+      record_mask(p.record_mask),
+      hash_taken(p.hash_taken),
+      tuneonly(p.tuneonly),
+      extra_rounds(p.extra_rounds),
+      speed(p.speed),
+      budgetbits(p.budgetbits),
+      speculative_update(p.speculative_update),
+      threadData(p.numThreads, nullptr),
+      doing_local(false),
+      doing_recency(false),
+      assoc(0),
+      ghist_length(p.initial_ghist_length),
+      modghist_length(1),
+      path_length(1),
+      thresholdCounter(0),
+      theta(p.initial_theta),
+      extrabits(0),
+      imli_counter_bits(4),
+      modhist_indices(),
+      modhist_lengths(),
+      modpath_indices(),
+      modpath_lengths()
 {
     fatal_if(speculative_update, "Speculative update not implemented");
 }
@@ -245,20 +200,23 @@ MultiperspectivePerceptron::init()
         static_cast<const MultiperspectivePerceptronParams &>(params());
 
     computeBits(p.num_filter_entries, p.num_local_histories,
-        p.local_history_length, p.ignore_path_size);
+                p.local_history_length, p.ignore_path_size);
 
     for (int i = 0; i < threadData.size(); i += 1) {
-        threadData[i] = new ThreadData(p.num_filter_entries,
-            p.num_local_histories, p.local_history_length, assoc,
-            blurrypath_bits, path_length, ghist_length, blockSize,
-            acyclic_bits, modhist_indices, modhist_lengths, modpath_indices,
-            modpath_lengths, table_sizes, n_sign_bits);
+        threadData[i] =
+            new ThreadData(p.num_filter_entries, p.num_local_histories,
+                           p.local_history_length, assoc, blurrypath_bits,
+                           path_length, ghist_length, blockSize, acyclic_bits,
+                           modhist_indices, modhist_lengths, modpath_indices,
+                           modpath_lengths, table_sizes, n_sign_bits);
     }
 }
 
 void
 MultiperspectivePerceptron::computeBits(int num_filter_entries,
-    int nlocal_histories, int local_history_length, bool ignore_path_size)
+                                        int nlocal_histories,
+                                        int local_history_length,
+                                        bool ignore_path_size)
 {
     int totalbits = extrabits;
     for (auto &imli_bits : imli_counter_bits) {
@@ -322,21 +280,21 @@ MultiperspectivePerceptron::computeBits(int num_filter_entries,
     }
 
     DPRINTF(Branch,
-        "%d bits of metadata so far, %d left out of "
-        "%d total budget\n",
-        totalbits, remaining, budgetbits);
+            "%d bits of metadata so far, %d left out of "
+            "%d total budget\n",
+            totalbits, remaining, budgetbits);
     DPRINTF(Branch,
-        "table size is %d bits, %d entries for 5 bit, %d entries "
-        "for 6 bit\n",
-        table_size_bits, table_size_bits / (5 + (n_sign_bits - 1)),
-        table_size_bits / (6 + (n_sign_bits - 1)));
-    DPRINTF(
-        Branch, "%d total bits (%0.2fKB)\n", totalbits, totalbits / 8192.0);
+            "table size is %d bits, %d entries for 5 bit, %d entries "
+            "for 6 bit\n",
+            table_size_bits, table_size_bits / (5 + (n_sign_bits - 1)),
+            table_size_bits / (6 + (n_sign_bits - 1)));
+    DPRINTF(Branch, "%d total bits (%0.2fKB)\n", totalbits,
+            totalbits / 8192.0);
 }
 
 void
-MultiperspectivePerceptron::findBest(
-    ThreadID tid, std::vector<int> &best_preds) const
+MultiperspectivePerceptron::findBest(ThreadID tid,
+                                     std::vector<int> &best_preds) const
 {
     if (threshold < 0) {
         return;
@@ -364,7 +322,7 @@ MultiperspectivePerceptron::findBest(
 
 unsigned int
 MultiperspectivePerceptron::getIndex(ThreadID tid, const MPPBranchInfo &bi,
-    const HistorySpec &spec, int index) const
+                                     const HistorySpec &spec, int index) const
 {
     unsigned int g = spec.getHash(tid, bi.getPC(), bi.getPC2(), index);
     unsigned long long int h = g;
@@ -386,7 +344,7 @@ MultiperspectivePerceptron::getIndex(ThreadID tid, const MPPBranchInfo &bi,
     if (doing_recency) {
         if ((1ull << index) & recencypos_mask) {
             h ^= RECENCYPOS::hash(threadData[tid]->recency_stack, table_sizes,
-                bi.getPC2(), 31, index);
+                                  bi.getPC2(), 31, index);
         }
     }
     h %= table_sizes[index];
@@ -455,8 +413,8 @@ MultiperspectivePerceptron::computeOutput(ThreadID tid, MPPBranchInfo &bi)
 }
 
 void
-MultiperspectivePerceptron::satIncDec(
-    bool taken, bool &sign, int &counter, int max_weight) const
+MultiperspectivePerceptron::satIncDec(bool taken, bool &sign, int &counter,
+                                      int max_weight) const
 {
     if (taken) {
         // increment sign/magnitude
@@ -638,7 +596,8 @@ MultiperspectivePerceptron::train(ThreadID tid, MPPBranchInfo &bi, bool taken)
 
 void
 MultiperspectivePerceptron::updateHistories(ThreadID tid, Addr pc, bool uncond,
-    bool taken, Addr target, void *&bp_history)
+                                            bool taken, Addr target,
+                                            void *&bp_history)
 {
     assert(uncond || bp_history);
 
@@ -662,14 +621,14 @@ MultiperspectivePerceptron::updateHistories(ThreadID tid, Addr pc, bool uncond,
         ab = ab_new;
     }
     memmove(&threadData[tid]->path_history[1],
-        &threadData[tid]->path_history[0],
-        sizeof(unsigned short int) * (path_length - 1));
+            &threadData[tid]->path_history[0],
+            sizeof(unsigned short int) * (path_length - 1));
     threadData[tid]->path_history[0] = pc2;
 }
 
 bool
-MultiperspectivePerceptron::lookup(
-    ThreadID tid, Addr instPC, void *&bp_history)
+MultiperspectivePerceptron::lookup(ThreadID tid, Addr instPC,
+                                   void *&bp_history)
 {
     MPPBranchInfo *bi = new MPPBranchInfo(instPC, pcshift, true);
     bp_history = (void *)bi;
@@ -711,7 +670,8 @@ MultiperspectivePerceptron::lookup(
 
 void
 MultiperspectivePerceptron::update(ThreadID tid, Addr pc, bool taken,
-    void *&bp_history, bool squashed, const StaticInstPtr &inst, Addr target)
+                                   void *&bp_history, bool squashed,
+                                   const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
     MPPBranchInfo *bi = static_cast<MPPBranchInfo *>(bp_history);
@@ -835,8 +795,8 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr pc, bool taken,
     if (!bi->filtered || (record_mask & Path)) {
         assert(threadData[tid]->path_history.size() > 0);
         memmove(&threadData[tid]->path_history[1],
-            &threadData[tid]->path_history[0],
-            sizeof(unsigned short int) * (path_length - 1));
+                &threadData[tid]->path_history[0],
+                sizeof(unsigned short int) * (path_length - 1));
         threadData[tid]->path_history[0] = bi->getPC2();
     }
 
@@ -851,8 +811,9 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr pc, bool taken,
             int i = modpath_indices[ii];
             if (bi->getHPC() % (i + 2) == 0) {
                 memmove(&threadData[tid]->modpath_histories[i][1],
-                    &threadData[tid]->modpath_histories[i][0],
-                    sizeof(unsigned short int) * (modpath_lengths[ii] - 1));
+                        &threadData[tid]->modpath_histories[i][0],
+                        sizeof(unsigned short int) *
+                            (modpath_lengths[ii] - 1));
                 threadData[tid]->modpath_histories[i][0] = bi->getPC2();
             }
         }
@@ -868,9 +829,9 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr pc, bool taken,
                 unsigned int z = bi->getPC() >> i;
                 if (blurrypath_histories[i][0] != z) {
                     memmove(&blurrypath_histories[i][1],
-                        &blurrypath_histories[i][0],
-                        sizeof(unsigned int) *
-                            (blurrypath_histories[i].size() - 1));
+                            &blurrypath_histories[i][0],
+                            sizeof(unsigned int) *
+                                (blurrypath_histories[i].size() - 1));
                     blurrypath_histories[i][0] = z;
                 }
             }

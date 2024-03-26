@@ -200,8 +200,8 @@ class TraceCPU : public ClockedObject
     {
       public:
         /** Default constructor. */
-        IcachePort(TraceCPU *_cpu) :
-            RequestPort(_cpu->name() + ".icache_port"), owner(_cpu)
+        IcachePort(TraceCPU *_cpu)
+            : RequestPort(_cpu->name() + ".icache_port"), owner(_cpu)
         {}
 
       public:
@@ -241,8 +241,8 @@ class TraceCPU : public ClockedObject
     {
       public:
         /** Default constructor. */
-        DcachePort(TraceCPU *_cpu) :
-            RequestPort(_cpu->name() + ".dcache_port"), owner(_cpu)
+        DcachePort(TraceCPU *_cpu)
+            : RequestPort(_cpu->name() + ".dcache_port"), owner(_cpu)
         {}
 
       public:
@@ -404,17 +404,17 @@ class TraceCPU : public ClockedObject
       public:
         /* Constructor */
         FixedRetryGen(TraceCPU &_owner, const std::string &_name,
-            RequestPort &_port, RequestorID requestor_id,
-            const std::string &trace_file) :
-            owner(_owner),
-            port(_port),
-            requestorId(requestor_id),
-            trace(trace_file),
-            genName(owner.name() + ".fixedretry." + _name),
-            retryPkt(nullptr),
-            delta(0),
-            traceComplete(false),
-            fixedStats(&_owner, _name)
+                      RequestPort &_port, RequestorID requestor_id,
+                      const std::string &trace_file)
+            : owner(_owner),
+              port(_port),
+              requestorId(requestor_id),
+              trace(trace_file),
+              genName(owner.name() + ".fixedretry." + _name),
+              retryPkt(nullptr),
+              delta(0),
+              traceComplete(false),
+              fixedStats(&_owner, _name)
         {}
 
         /**
@@ -454,7 +454,7 @@ class TraceCPU : public ClockedObject
          * @return true if packet was sent successfully
          */
         bool send(Addr addr, unsigned size, const MemCmd &cmd,
-            Request::FlagsType flags, Addr pc);
+                  Request::FlagsType flags, Addr pc);
 
         /** Exit the FixedRetryGen. */
         void exit();
@@ -524,8 +524,8 @@ class TraceCPU : public ClockedObject
         struct FixedRetryGenStatGroup : public statistics::Group
         {
             /** name is the extension to the name for these stats */
-            FixedRetryGenStatGroup(
-                statistics::Group *parent, const std::string &_name);
+            FixedRetryGenStatGroup(statistics::Group *parent,
+                                   const std::string &_name);
             /** Stats for instruction accesses replayed. */
             statistics::Scalar numSendAttempted;
             statistics::Scalar numSendSucceeded;
@@ -691,8 +691,8 @@ class TraceCPU : public ClockedObject
              * @param max_stores size of Store Buffer
              * @param max_loads size of Load Buffer
              */
-            HardwareResource(
-                uint16_t max_rob, uint16_t max_stores, uint16_t max_loads);
+            HardwareResource(uint16_t max_rob, uint16_t max_stores,
+                             uint16_t max_loads);
 
             /**
              * Occupy appropriate structures for an issued node.
@@ -811,8 +811,8 @@ class TraceCPU : public ClockedObject
              * @param filename Path to the file to read from
              * @param time_multiplier used to scale the compute delays
              */
-            InputStream(
-                const std::string &filename, const double time_multiplier);
+            InputStream(const std::string &filename,
+                        const double time_multiplier);
 
             /**
              * Reset the stream such that it can be played once
@@ -849,24 +849,25 @@ class TraceCPU : public ClockedObject
       public:
         /* Constructor */
         ElasticDataGen(TraceCPU &_owner, const std::string &_name,
-            RequestPort &_port, RequestorID requestor_id,
-            const std::string &trace_file, const TraceCPUParams &params) :
-            owner(_owner),
-            port(_port),
-            requestorId(requestor_id),
-            trace(trace_file, 1.0 / params.freqMultiplier),
-            genName(owner.name() + ".elastic." + _name),
-            retryPkt(nullptr),
-            traceComplete(false),
-            nextRead(false),
-            execComplete(false),
-            windowSize(trace.getWindowSize()),
-            hwResource(
-                params.sizeROB, params.sizeStoreBuffer, params.sizeLoadBuffer),
-            elasticStats(&_owner, _name)
+                       RequestPort &_port, RequestorID requestor_id,
+                       const std::string &trace_file,
+                       const TraceCPUParams &params)
+            : owner(_owner),
+              port(_port),
+              requestorId(requestor_id),
+              trace(trace_file, 1.0 / params.freqMultiplier),
+              genName(owner.name() + ".elastic." + _name),
+              retryPkt(nullptr),
+              traceComplete(false),
+              nextRead(false),
+              execComplete(false),
+              windowSize(trace.getWindowSize()),
+              hwResource(params.sizeROB, params.sizeStoreBuffer,
+                         params.sizeLoadBuffer),
+              elasticStats(&_owner, _name)
         {
-            DPRINTF(
-                TraceCPUData, "Window size in the trace is %d.\n", windowSize);
+            DPRINTF(TraceCPUData, "Window size in the trace is %d.\n",
+                    windowSize);
         }
 
         /**
@@ -1053,8 +1054,8 @@ class TraceCPU : public ClockedObject
         struct ElasticDataGenStatGroup : public statistics::Group
         {
             /** name is the extension to the name for these stats */
-            ElasticDataGenStatGroup(
-                statistics::Group *parent, const std::string &_name);
+            ElasticDataGenStatGroup(statistics::Group *parent,
+                                    const std::string &_name);
             /** Stats for data memory accesses replayed. */
             statistics::Scalar maxDependents;
             statistics::Scalar maxReadyListSize;
@@ -1187,8 +1188,8 @@ class TraceCPU : public ClockedObject
      *
      * @return a reference to the port with the given name
      */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

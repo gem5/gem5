@@ -44,9 +44,8 @@ namespace gem5
 const int AddressManager::INVALID_VALUE = -1;
 const int AddressManager::INVALID_LOCATION = -1;
 
-AddressManager::AddressManager(
-    int n_atomic_locs, int n_normal_locs_per_atomic) :
-    numAtomicLocs(n_atomic_locs), numLocsPerAtomic(n_normal_locs_per_atomic)
+AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
+    : numAtomicLocs(n_atomic_locs), numLocsPerAtomic(n_normal_locs_per_atomic)
 {
     assert(numAtomicLocs > 0 && numLocsPerAtomic > 0);
     numNormalLocs = numAtomicLocs * numLocsPerAtomic;
@@ -60,7 +59,8 @@ AddressManager::AddressManager(
 
     // randomly shuffle randAddressMap. The seed is determined by the random_mt
     // gem5 rng. This allows for deterministic randomization.
-    std::shuffle(randAddressMap.begin(), randAddressMap.end(),
+    std::shuffle(
+        randAddressMap.begin(), randAddressMap.end(),
         std::default_random_engine(random_mt.random<unsigned>(0, UINT_MAX)));
 
     // initialize atomic locations
@@ -137,8 +137,9 @@ AddressManager::printLastWriter(Location loc) const
 }
 
 // ------------------- AtomicStruct --------------------------
-AddressManager::AtomicStruct::AtomicStruct(
-    Location atomic_loc, Location loc_begin, Location loc_end)
+AddressManager::AtomicStruct::AtomicStruct(Location atomic_loc,
+                                           Location loc_begin,
+                                           Location loc_end)
 {
     // the location range must have at least 1 location
     assert(loc_begin <= loc_end);
@@ -414,7 +415,7 @@ AddressManager::AtomicStruct::swap(LocProperty &prop_1, LocProperty &prop_2)
 // ------------------ log table ---------------------
 void
 AddressManager::updateLogTable(Location loc, int thread_id, int episode_id,
-    Value new_value, Tick cur_tick, int cu_id)
+                               Value new_value, Tick cur_tick, int cu_id)
 {
     assert(loc >= 0 && loc < numAtomicLocs + numNormalLocs);
     logTable[loc]->update(thread_id, cu_id, episode_id, new_value, cur_tick);

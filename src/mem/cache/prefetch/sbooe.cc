@@ -35,15 +35,15 @@ namespace gem5
 {
 namespace prefetch
 {
-SBOOE::SBOOE(const SBOOEPrefetcherParams &p) :
-    Queued(p),
-    sequentialPrefetchers(p.sequential_prefetchers),
-    scoreThreshold((p.sandbox_entries * p.score_threshold_pct) / 100),
-    latencyBuffer(p.latency_buffer_size),
-    averageAccessLatency(0),
-    latencyBufferSum(0),
-    bestSandbox(NULL),
-    accesses(0)
+SBOOE::SBOOE(const SBOOEPrefetcherParams &p)
+    : Queued(p),
+      sequentialPrefetchers(p.sequential_prefetchers),
+      scoreThreshold((p.sandbox_entries * p.score_threshold_pct) / 100),
+      latencyBuffer(p.latency_buffer_size),
+      averageAccessLatency(0),
+      latencyBufferSum(0),
+      bestSandbox(NULL),
+      accesses(0)
 {
     // Initialize a sandbox for every sequential prefetcher between
     // -1 and the number of sequential prefetchers defined
@@ -118,7 +118,8 @@ SBOOE::notifyFill(const CacheAccessProbeArg &arg)
 
 void
 SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                         std::vector<AddrPriority> &addresses,
+                         const CacheAccessor &cache)
 {
     const Addr pfi_addr = pfi.getAddr();
     const Addr pfi_line = pfi_addr >> lBlkSize;

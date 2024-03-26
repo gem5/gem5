@@ -54,15 +54,15 @@ class PCDependentDisassembly : public PowerStaticInst
     mutable const loader::SymbolTable *cachedSymtab;
 
     /// Constructor
-    PCDependentDisassembly(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PowerStaticInst(mnem, _machInst, __opClass),
-        cachedPC(0),
-        cachedSymtab(0)
+    PCDependentDisassembly(const char *mnem, ExtMachInst _machInst,
+                           OpClass __opClass)
+        : PowerStaticInst(mnem, _machInst, __opClass),
+          cachedPC(0),
+          cachedSymtab(0)
     {}
 
-    const std::string &disassemble(
-        Addr pc, const loader::SymbolTable *symtab) const;
+    const std::string &disassemble(Addr pc,
+                                   const loader::SymbolTable *symtab) const;
 };
 
 /**
@@ -76,21 +76,22 @@ class BranchOp : public PCDependentDisassembly
     int64_t li;
 
     /// Constructor
-    BranchOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PCDependentDisassembly(mnem, _machInst, __opClass),
-        aa(machInst.aa),
-        lk(machInst.lk),
-        li(sext<26>(machInst.li << 2))
+    BranchOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PCDependentDisassembly(mnem, _machInst, __opClass),
+          aa(machInst.aa),
+          lk(machInst.lk),
+          li(sext<26>(machInst.li << 2))
     {}
 
-    std::unique_ptr<PCStateBase> branchTarget(
-        ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase>
+    branchTarget(ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -104,11 +105,11 @@ class BranchCondOp : public PCDependentDisassembly
     uint8_t bo;
 
     /// Constructor
-    BranchCondOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        PCDependentDisassembly(mnem, _machInst, __opClass),
-        lk(machInst.lk),
-        bi(machInst.bi),
-        bo(machInst.bo)
+    BranchCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : PCDependentDisassembly(mnem, _machInst, __opClass),
+          lk(machInst.lk),
+          bi(machInst.bi),
+          bo(machInst.bo)
     {}
 
     inline bool
@@ -143,20 +144,21 @@ class BranchDispCondOp : public BranchCondOp
     int64_t bd;
 
     /// Constructor
-    BranchDispCondOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        BranchCondOp(mnem, _machInst, __opClass),
-        aa(machInst.aa),
-        bd(sext<16>(machInst.bd << 2))
+    BranchDispCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : BranchCondOp(mnem, _machInst, __opClass),
+          aa(machInst.aa),
+          bd(sext<16>(machInst.bd << 2))
     {}
 
-    std::unique_ptr<PCStateBase> branchTarget(
-        ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase>
+    branchTarget(ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -169,18 +171,19 @@ class BranchRegCondOp : public BranchCondOp
     uint8_t bh;
 
     /// Constructor.
-    BranchRegCondOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-        BranchCondOp(mnem, _machInst, __opClass), bh(machInst.bh)
+    BranchRegCondOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : BranchCondOp(mnem, _machInst, __opClass), bh(machInst.bh)
     {}
 
-    std::unique_ptr<PCStateBase> branchTarget(
-        ThreadContext *tc) const override;
+    std::unique_ptr<PCStateBase>
+    branchTarget(ThreadContext *tc) const override;
 
     /// Explicitly import the otherwise hidden branchTarget
     using StaticInst::branchTarget;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

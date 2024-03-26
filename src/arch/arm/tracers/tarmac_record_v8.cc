@@ -50,11 +50,11 @@ using namespace ArmISA;
 namespace trace
 {
 TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
-    const TarmacContext &tarmCtx, bool predicate) :
-    TraceInstEntry(tarmCtx, predicate),
-    TraceEntryV8(tarmCtx.tarmacCpuName()),
-    paddr(0),
-    paddrValid(false)
+    const TarmacContext &tarmCtx, bool predicate)
+    : TraceInstEntry(tarmCtx, predicate),
+      TraceEntryV8(tarmCtx.tarmacCpuName()),
+      paddr(0),
+      paddrValid(false)
 {
     const auto thread = tarmCtx.thread;
 
@@ -64,10 +64,10 @@ TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
 }
 
 TarmacTracerRecordV8::TraceMemEntryV8::TraceMemEntryV8(
-    const TarmacContext &tarmCtx, uint8_t _size, Addr _addr, uint64_t _data) :
-    TraceMemEntry(tarmCtx, _size, _addr, _data),
-    TraceEntryV8(tarmCtx.tarmacCpuName()),
-    paddr(_addr)
+    const TarmacContext &tarmCtx, uint8_t _size, Addr _addr, uint64_t _data)
+    : TraceMemEntry(tarmCtx, _size, _addr, _data),
+      TraceEntryV8(tarmCtx.tarmacCpuName()),
+      paddr(_addr)
 {
     const auto thread = tarmCtx.thread;
 
@@ -77,10 +77,10 @@ TarmacTracerRecordV8::TraceMemEntryV8::TraceMemEntryV8(
 }
 
 TarmacTracerRecordV8::TraceRegEntryV8::TraceRegEntryV8(
-    const TarmacContext &tarmCtx, const RegId &reg) :
-    TraceRegEntry(tarmCtx, reg),
-    TraceEntryV8(tarmCtx.tarmacCpuName()),
-    regWidth(64)
+    const TarmacContext &tarmCtx, const RegId &reg)
+    : TraceRegEntry(tarmCtx, reg),
+      TraceEntryV8(tarmCtx.tarmacCpuName()),
+      regWidth(64)
 {}
 
 void
@@ -165,8 +165,8 @@ TarmacTracerRecordV8::TraceRegEntryV8::updatePred(const TarmacContext &tarmCtx)
 }
 
 void
-TarmacTracerRecordV8::addInstEntry(
-    std::vector<InstPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecordV8::addInstEntry(std::vector<InstPtr> &queue,
+                                   const TarmacContext &tarmCtx)
 {
     // Generate an instruction entry in the record and
     // add it to the Instruction Queue
@@ -174,21 +174,22 @@ TarmacTracerRecordV8::addInstEntry(
 }
 
 void
-TarmacTracerRecordV8::addMemEntry(
-    std::vector<MemPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecordV8::addMemEntry(std::vector<MemPtr> &queue,
+                                  const TarmacContext &tarmCtx)
 {
     // Generate a memory entry in the record if the record
     // implies a valid memory access, and add it to the
     // Memory Queue
     if (getMemValid()) {
-        queue.push_back(std::make_unique<TraceMemEntryV8>(tarmCtx,
-            static_cast<uint8_t>(getSize()), getAddr(), getIntData()));
+        queue.push_back(std::make_unique<TraceMemEntryV8>(
+            tarmCtx, static_cast<uint8_t>(getSize()), getAddr(),
+            getIntData()));
     }
 }
 
 void
-TarmacTracerRecordV8::addRegEntry(
-    std::vector<RegPtr> &queue, const TarmacContext &tarmCtx)
+TarmacTracerRecordV8::addRegEntry(std::vector<RegPtr> &queue,
+                                  const TarmacContext &tarmCtx)
 {
     // Generate an entry for every ARM register being
     // written by the current instruction
@@ -210,8 +211,9 @@ TarmacTracerRecordV8::addRegEntry(
 }
 
 void
-TarmacTracerRecordV8::TraceInstEntryV8::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecordV8::TraceInstEntryV8::print(std::ostream &outs,
+                                              int verbosity,
+                                              const std::string &prefix) const
 {
     // If there is a valid vaddr->paddr translation, print the
     // physical address, otherwise print the virtual address only.
@@ -224,47 +226,47 @@ TarmacTracerRecordV8::TraceInstEntryV8::print(
     // Print the instruction record formatted according
     // to the Tarmac specification
     ccprintf(outs, "%s clk %s %s (%u) %08x%s %s %s %s_%s : %s\n",
-        curTick(),                 /* Tick time */
-        cpuName,                   /* Cpu name */
-        taken ? "IT" : "IS",       /* Instruction taken/skipped */
-        instCount,                 /* Instruction count */
-        addr,                      /* Instruction virt address */
-        paddr_str,                 /* Instruction phys address */
-        opcode_str,                /* Instruction opcode */
-        iSetStateToStr(isetstate), /* Instruction Set */
-        opModeToStr(mode),         /* Exception level */
-        secureMode ? "s" : "ns",   /* Security */
-        disassemble);              /* Instruction disass */
+             curTick(),                 /* Tick time */
+             cpuName,                   /* Cpu name */
+             taken ? "IT" : "IS",       /* Instruction taken/skipped */
+             instCount,                 /* Instruction count */
+             addr,                      /* Instruction virt address */
+             paddr_str,                 /* Instruction phys address */
+             opcode_str,                /* Instruction opcode */
+             iSetStateToStr(isetstate), /* Instruction Set */
+             opModeToStr(mode),         /* Exception level */
+             secureMode ? "s" : "ns",   /* Security */
+             disassemble);              /* Instruction disass */
 }
 
 void
-TarmacTracerRecordV8::TraceMemEntryV8::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecordV8::TraceMemEntryV8::print(std::ostream &outs, int verbosity,
+                                             const std::string &prefix) const
 {
     // Print the memory record formatted according
     // to the Tarmac specification
     ccprintf(outs, "%s clk %s M%s%d %08x:%012x %0*x\n",
-        curTick(),              /* Tick time */
-        cpuName,                /* Cpu name */
-        loadAccess ? "R" : "W", /* Access type */
-        size,                   /* Access size */
-        addr,                   /* Virt Memory address */
-        paddr,                  /* Phys Memory address */
-        size * 2,               /* Padding with access size */
-        data);                  /* Memory data */
+             curTick(),              /* Tick time */
+             cpuName,                /* Cpu name */
+             loadAccess ? "R" : "W", /* Access type */
+             size,                   /* Access size */
+             addr,                   /* Virt Memory address */
+             paddr,                  /* Phys Memory address */
+             size * 2,               /* Padding with access size */
+             data);                  /* Memory data */
 }
 
 void
-TarmacTracerRecordV8::TraceRegEntryV8::print(
-    std::ostream &outs, int verbosity, const std::string &prefix) const
+TarmacTracerRecordV8::TraceRegEntryV8::print(std::ostream &outs, int verbosity,
+                                             const std::string &prefix) const
 {
     // Print the register record formatted according
     // to the Tarmac specification
     if (regValid) {
         ccprintf(outs, "%s clk %s R %s %s\n", curTick(), /* Tick time */
-            cpuName,                                     /* Cpu name */
-            regName,                                     /* Register name */
-            formatReg());                                /* Register value */
+                 cpuName,                                /* Cpu name */
+                 regName,                                /* Register name */
+                 formatReg());                           /* Register value */
     }
 }
 

@@ -45,11 +45,11 @@
 
 namespace gem5
 {
-MmDisk::MmDisk(const Params &p) :
-    BasicPioDevice(p, p.image->size() * SectorSize),
-    image(p.image),
-    curSector((off_t)-1),
-    dirty(false)
+MmDisk::MmDisk(const Params &p)
+    : BasicPioDevice(p, p.image->size() * SectorSize),
+      image(p.image),
+      curSector((off_t)-1),
+      dirty(false)
 {
     std::memset(&diskData, 0, SectorSize);
 }
@@ -87,7 +87,7 @@ MmDisk::read(PacketPtr pkt)
     case sizeof(uint8_t):
         pkt->setRaw(diskData[accessAddr % SectorSize]);
         DPRINTF(IdeDisk, "reading byte %#x value= %#x\n", accessAddr,
-            diskData[accessAddr % SectorSize]);
+                diskData[accessAddr % SectorSize]);
         break;
     case sizeof(uint16_t):
         memcpy(&d16, diskData + (accessAddr % SectorSize), 2);
@@ -147,7 +147,7 @@ MmDisk::write(PacketPtr pkt)
     case sizeof(uint8_t):
         diskData[accessAddr % SectorSize] = htobe(pkt->getRaw<uint8_t>());
         DPRINTF(IdeDisk, "writing byte %#x value= %#x\n", accessAddr,
-            diskData[accessAddr % SectorSize]);
+                diskData[accessAddr % SectorSize]);
         break;
     case sizeof(uint16_t):
         d16 = pkt->getRaw<uint16_t>();

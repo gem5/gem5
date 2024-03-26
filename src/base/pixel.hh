@@ -58,8 +58,8 @@ struct Pixel
 {
     Pixel() : red(0), green(0), blue(0), padding(0) {}
 
-    Pixel(uint8_t _red, uint8_t _green, uint8_t _blue) :
-        red(_red), green(_green), blue(_blue), padding(0)
+    Pixel(uint8_t _red, uint8_t _green, uint8_t _blue)
+        : red(_red), green(_green), blue(_blue), padding(0)
     {}
 
     uint8_t red;
@@ -131,15 +131,15 @@ class PixelConverter
     };
 
     PixelConverter(unsigned length, unsigned ro, unsigned go, unsigned bo,
-        unsigned rw, unsigned gw, unsigned bw,
-        ByteOrder byte_order = ByteOrder::little);
+                   unsigned rw, unsigned gw, unsigned bw,
+                   ByteOrder byte_order = ByteOrder::little);
 
     /** Get the Pixel representation of a color word. */
     Pixel
     toPixel(uint32_t word) const
     {
-        return Pixel(
-            ch_r.toPixel(word), ch_g.toPixel(word), ch_b.toPixel(word));
+        return Pixel(ch_r.toPixel(word), ch_g.toPixel(word),
+                     ch_b.toPixel(word));
     }
 
     /** Get a Pixel representation by reading a word from memory. */

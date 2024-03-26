@@ -154,8 +154,8 @@ class CopyEngine : public PciDevice
   private:
     struct CopyEngineStats : public statistics::Group
     {
-        CopyEngineStats(
-            statistics::Group *parent, const uint8_t &channel_count);
+        CopyEngineStats(statistics::Group *parent,
+                        const uint8_t &channel_count);
 
         statistics::Vector bytesCopied;
         statistics::Vector copiesProcessed;
@@ -172,8 +172,8 @@ class CopyEngine : public PciDevice
     CopyEngine(const Params &params);
     ~CopyEngine();
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

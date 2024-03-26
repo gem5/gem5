@@ -54,14 +54,14 @@ using namespace ArmISA;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR_NS;
 
-Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 *gic, ThreadContext *_tc) :
-    BaseISADevice(),
-    gic(gic),
-    redistributor(nullptr),
-    distributor(nullptr),
-    tc(_tc),
-    maintenanceInterrupt(gic->params().maint_int->get(tc)),
-    cpuId(tc->contextId())
+Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 *gic, ThreadContext *_tc)
+    : BaseISADevice(),
+      gic(gic),
+      redistributor(nullptr),
+      distributor(nullptr),
+      tc(_tc),
+      maintenanceInterrupt(gic->params().maint_int->get(tc)),
+      cpuId(tc->contextId())
 {
     hppi.prio = 0xff;
     hppi.intid = Gicv3::INTID_SPURIOUS;
@@ -89,7 +89,7 @@ Gicv3CPUInterface::setThreadContext(ThreadContext *_tc)
     tc = _tc;
     maintenanceInterrupt = gic->params().maint_int->get(tc);
     fatal_if(maintenanceInterrupt->num() >= redistributor->irqPending.size(),
-        "Invalid maintenance interrupt number\n");
+             "Invalid maintenance interrupt number\n");
 }
 
 bool
@@ -439,8 +439,8 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
                     // - Move from pending to invalid...
                     // - Return de bogus id...
                     ich_lr_el2.State = ICH_LR_EL2_STATE_INVALID;
-                    isa->setMiscRegNoEffect(
-                        MISCREG_ICH_LR0_EL2 + lr_idx, ich_lr_el2);
+                    isa->setMiscRegNoEffect(MISCREG_ICH_LR0_EL2 + lr_idx,
+                                            ich_lr_el2);
                 }
             }
         }
@@ -495,8 +495,8 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
                     // - Move from pending to invalid...
                     // - Return de bogus id...
                     ich_lr_el2.State = ICH_LR_EL2_STATE_INVALID;
-                    isa->setMiscRegNoEffect(
-                        MISCREG_ICH_LR0_EL2 + lr_idx, ich_lr_el2);
+                    isa->setMiscRegNoEffect(MISCREG_ICH_LR0_EL2 + lr_idx,
+                                            ich_lr_el2);
                 }
             }
         }
@@ -731,11 +731,11 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
 
     default:
         panic("Gicv3CPUInterface::readMiscReg(): unknown register %d (%s)",
-            misc_reg, miscRegName[misc_reg]);
+              misc_reg, miscRegName[misc_reg]);
     }
 
     DPRINTF(GIC, "Gicv3CPUInterface::readMiscReg(): register %s value %#x\n",
-        miscRegName[misc_reg], value);
+            miscRegName[misc_reg], value);
     return value;
 }
 
@@ -744,7 +744,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
 {
     bool do_virtual_update = false;
     DPRINTF(GIC, "Gicv3CPUInterface::setMiscReg(): register %s value %#x\n",
-        miscRegName[misc_reg], val);
+            miscRegName[misc_reg], val);
     bool hcr_fmo = getHCREL2FMO();
     bool hcr_imo = getHCREL2IMO();
 
@@ -1370,10 +1370,10 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
     case MISCREG_ICC_IGRPEN1_EL3: {
         ICC_IGRPEN1_EL3 icc_igrpen1_el3 = val;
 
-        isa->setMiscRegNoEffect(
-            MISCREG_ICC_IGRPEN1_EL1_S, icc_igrpen1_el3.EnableGrp1S);
-        isa->setMiscRegNoEffect(
-            MISCREG_ICC_IGRPEN1_EL1_NS, icc_igrpen1_el3.EnableGrp1NS);
+        isa->setMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1_S,
+                                icc_igrpen1_el3.EnableGrp1S);
+        isa->setMiscRegNoEffect(MISCREG_ICC_IGRPEN1_EL1_NS,
+                                icc_igrpen1_el3.EnableGrp1NS);
         updateDistributor();
         return;
     }
@@ -1603,7 +1603,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
 
     default:
         panic("Gicv3CPUInterface::setMiscReg(): unknown register %d (%s)",
-            misc_reg, miscRegName[misc_reg]);
+              misc_reg, miscRegName[misc_reg]);
     }
 
     isa->setMiscRegNoEffect(misc_reg, val);
@@ -1635,7 +1635,7 @@ Gicv3CPUInterface::virtualFindActive(uint32_t int_id) const
             isa->readMiscRegNoEffect(MISCREG_ICH_LR0_EL2 + lr_idx);
 
         if (((ich_lr_el2.State == ICH_LR_EL2_STATE_ACTIVE) ||
-                (ich_lr_el2.State == ICH_LR_EL2_STATE_ACTIVE_PENDING)) &&
+             (ich_lr_el2.State == ICH_LR_EL2_STATE_ACTIVE_PENDING)) &&
             (ich_lr_el2.vINTID == int_id)) {
             return lr_idx;
         }
@@ -1799,7 +1799,7 @@ Gicv3CPUInterface::generateSGI(RegVal val, Gicv3::GroupId group)
             uint8_t aff0_i = bits(affinity_i, 7, 0);
 
             if (!(aff0_i >= rs * 16 && aff0_i < (rs + 1) * 16 &&
-                    ((0x1 << (aff0_i - rs * 16)) & target_list))) {
+                  ((0x1 << (aff0_i - rs * 16)) & target_list))) {
                 continue;
             }
         }
@@ -2043,9 +2043,9 @@ Gicv3CPUInterface::update()
     if (hppiCanPreempt()) {
         InterruptTypes int_type = intSignalType(hppi.group);
         DPRINTF(GIC,
-            "Gicv3CPUInterface::update(): "
-            "posting int as %d!\n",
-            int_type);
+                "Gicv3CPUInterface::update(): "
+                "posting int as %d!\n",
+                int_type);
         int_type == INT_IRQ ? signal_IRQ = true : signal_FIQ = true;
     }
 
@@ -2098,9 +2098,9 @@ Gicv3CPUInterface::virtualUpdate()
 
     if (signal_IRQ) {
         DPRINTF(GIC,
-            "Gicv3CPUInterface::virtualUpdate(): "
-            "posting int as %d!\n",
-            INT_VIRT_IRQ);
+                "Gicv3CPUInterface::virtualUpdate(): "
+                "posting int as %d!\n",
+                INT_VIRT_IRQ);
         gic->postInt(cpuId, INT_VIRT_IRQ);
     } else {
         gic->deassertInt(cpuId, INT_VIRT_IRQ);
@@ -2108,9 +2108,9 @@ Gicv3CPUInterface::virtualUpdate()
 
     if (signal_FIQ) {
         DPRINTF(GIC,
-            "Gicv3CPUInterface::virtualUpdate(): "
-            "posting int as %d!\n",
-            INT_VIRT_FIQ);
+                "Gicv3CPUInterface::virtualUpdate(): "
+                "posting int as %d!\n",
+                INT_VIRT_FIQ);
         gic->postInt(cpuId, INT_VIRT_FIQ);
     } else {
         gic->deassertInt(cpuId, INT_VIRT_FIQ);

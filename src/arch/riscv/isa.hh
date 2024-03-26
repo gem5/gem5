@@ -146,8 +146,8 @@ class ISA : public BaseISA
 
     void handleLockedRead(const RequestPtr &req) override;
 
-    bool handleLockedWrite(
-        const RequestPtr &req, Addr cacheBlockMask) override;
+    bool handleLockedWrite(const RequestPtr &req,
+                           Addr cacheBlockMask) override;
 
     void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
 
@@ -197,8 +197,8 @@ class ISA : public BaseISA
         return _privilegeModeSet;
     }
 
-    virtual Addr getFaultHandlerAddr(
-        RegIndex idx, uint64_t cause, bool intr) const;
+    virtual Addr getFaultHandlerAddr(RegIndex idx, uint64_t cause,
+                                     bool intr) const;
 };
 
 } // namespace RiscvISA

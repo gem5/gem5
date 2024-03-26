@@ -101,8 +101,8 @@ class MipsFaultBase : public FaultBase
         return base(tc) + offset(tc);
     }
 
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 template <typename T>
@@ -130,19 +130,26 @@ class MipsFault : public MipsFaultBase
 };
 
 class SystemCallFault : public MipsFault<SystemCallFault>
-{};
+{
+};
 class ReservedInstructionFault : public MipsFault<ReservedInstructionFault>
-{};
+{
+};
 class ThreadFault : public MipsFault<ThreadFault>
-{};
+{
+};
 class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
-{};
+{
+};
 class TrapFault : public MipsFault<TrapFault>
-{};
+{
+};
 class BreakpointFault : public MipsFault<BreakpointFault>
-{};
+{
+};
 class DspStateDisabledFault : public MipsFault<DspStateDisabledFault>
-{};
+{
+};
 
 class MachineCheckFault : public MipsFault<MachineCheckFault>
 {
@@ -157,22 +164,22 @@ class MachineCheckFault : public MipsFault<MachineCheckFault>
 class ResetFault : public MipsFault<ResetFault>
 {
   public:
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class SoftResetFault : public MipsFault<SoftResetFault>
 {
   public:
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
   public:
-    void invoke(
-        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
@@ -228,8 +235,8 @@ class AddressFault : public MipsFault<T>
 class AddressErrorFault : public AddressFault<AddressErrorFault>
 {
   public:
-    AddressErrorFault(Addr _vaddr, bool _store) :
-        AddressFault<AddressErrorFault>(_vaddr, _store)
+    AddressErrorFault(Addr _vaddr, bool _store)
+        : AddressFault<AddressErrorFault>(_vaddr, _store)
     {}
 
     ExcCode
@@ -246,8 +253,8 @@ class TlbFault : public AddressFault<T>
     Addr asid;
     Addr vpn;
 
-    TlbFault(Addr _asid, Addr _vaddr, Addr _vpn, bool _store) :
-        AddressFault<T>(_vaddr, _store), asid(_asid), vpn(_vpn)
+    TlbFault(Addr _asid, Addr _vaddr, Addr _vpn, bool _store)
+        : AddressFault<T>(_vaddr, _store), asid(_asid), vpn(_vpn)
     {}
 
     void
@@ -290,8 +297,8 @@ class TlbFault : public AddressFault<T>
 class TlbRefillFault : public TlbFault<TlbRefillFault>
 {
   public:
-    TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
-        TlbFault<TlbRefillFault>(asid, vaddr, vpn, store)
+    TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool store)
+        : TlbFault<TlbRefillFault>(asid, vaddr, vpn, store)
     {}
 
     FaultVect
@@ -305,16 +312,16 @@ class TlbRefillFault : public TlbFault<TlbRefillFault>
 class TlbInvalidFault : public TlbFault<TlbInvalidFault>
 {
   public:
-    TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
-        TlbFault<TlbInvalidFault>(asid, vaddr, vpn, store)
+    TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool store)
+        : TlbFault<TlbInvalidFault>(asid, vaddr, vpn, store)
     {}
 };
 
 class TlbModifiedFault : public TlbFault<TlbModifiedFault>
 {
   public:
-    TlbModifiedFault(Addr asid, Addr vaddr, Addr vpn) :
-        TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
+    TlbModifiedFault(Addr asid, Addr vaddr, Addr vpn)
+        : TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
     {}
 
     ExcCode

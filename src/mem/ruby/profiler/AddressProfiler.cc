@@ -68,7 +68,8 @@ lookupTraceForAddress(Addr addr, AddressMap &record_map)
 
 void
 printSorted(std::ostream &out, int num_of_sequencers,
-    const AddressMap &record_map, std::string description, Profiler *profiler)
+            const AddressMap &record_map, std::string description,
+            Profiler *profiler)
 {
     const int records_printed = 100;
 
@@ -149,8 +150,8 @@ printSorted(std::ostream &out, int num_of_sequencers,
         << std::endl;
 }
 
-AddressProfiler::AddressProfiler(int num_of_sequencers, Profiler *profiler) :
-    m_profiler(profiler)
+AddressProfiler::AddressProfiler(int num_of_sequencers, Profiler *profiler)
+    : m_profiler(profiler)
 {
     m_num_of_sequencers = num_of_sequencers;
     clearStats();
@@ -190,20 +191,20 @@ AddressProfiler::printStats(std::ostream &out) const
         out << "---------------" << std::endl;
         out << std::endl;
         printSorted(out, m_num_of_sequencers, m_dataAccessTrace,
-            "block_address", m_profiler);
+                    "block_address", m_profiler);
 
         out << std::endl;
         out << "Hot MacroData Blocks" << std::endl;
         out << "--------------------" << std::endl;
         out << std::endl;
         printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace,
-            "macroblock_address", m_profiler);
+                    "macroblock_address", m_profiler);
 
         out << "Hot Instructions" << std::endl;
         out << "----------------" << std::endl;
         out << std::endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
-            "pc_address", m_profiler);
+                    "pc_address", m_profiler);
     }
 
     if (m_all_instructions) {
@@ -212,7 +213,7 @@ AddressProfiler::printStats(std::ostream &out) const
         out << "-------------------------" << std::endl;
         out << std::endl;
         printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
-            "pc_address", m_profiler);
+                    "pc_address", m_profiler);
         out << std::endl;
     }
 
@@ -232,7 +233,7 @@ AddressProfiler::printStats(std::ostream &out) const
         out << std::endl;
 
         printSorted(out, m_num_of_sequencers, m_retryProfileMap,
-            "block_address", m_profiler);
+                    "block_address", m_profiler);
         out << std::endl;
     }
 }
@@ -255,7 +256,7 @@ AddressProfiler::clearStats()
 
 void
 AddressProfiler::profileGetX(Addr datablock, Addr PC, const Set &owner,
-    const Set &sharers, NodeID requestor)
+                             const Set &sharers, NodeID requestor)
 {
     Set indirection_set;
     indirection_set.addSet(sharers);
@@ -267,12 +268,12 @@ AddressProfiler::profileGetX(Addr datablock, Addr PC, const Set &owner,
     bool indirection_miss = (num_indirections > 0);
 
     addTraceSample(datablock, PC, RubyRequestType_ST, RubyAccessMode(0),
-        requestor, indirection_miss);
+                   requestor, indirection_miss);
 }
 
 void
 AddressProfiler::profileGetS(Addr datablock, Addr PC, const Set &owner,
-    const Set &sharers, NodeID requestor)
+                             const Set &sharers, NodeID requestor)
 {
     Set indirection_set;
     indirection_set.addSet(owner);
@@ -283,13 +284,14 @@ AddressProfiler::profileGetS(Addr datablock, Addr PC, const Set &owner,
     bool indirection_miss = (num_indirections > 0);
 
     addTraceSample(datablock, PC, RubyRequestType_LD, RubyAccessMode(0),
-        requestor, indirection_miss);
+                   requestor, indirection_miss);
 }
 
 void
 AddressProfiler::addTraceSample(Addr data_addr, Addr pc_addr,
-    RubyRequestType type, RubyAccessMode access_mode, NodeID id,
-    bool sharing_miss)
+                                RubyRequestType type,
+                                RubyAccessMode access_mode, NodeID id,
+                                bool sharing_miss)
 {
     if (m_all_instructions) {
         if (sharing_miss) {

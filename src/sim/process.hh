@@ -67,7 +67,7 @@ class Process : public SimObject
 {
   public:
     Process(const ProcessParams &params, EmulationPageTable *pTable,
-        loader::ObjectFile *obj_file);
+            loader::ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -208,10 +208,10 @@ class Process : public SimObject
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
     void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
-        ThreadContext *new_tc, bool alloc_page);
+                       ThreadContext *new_tc, bool alloc_page);
 
     virtual void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-        Process *new_p, RegVal flags);
+                       Process *new_p, RegVal flags);
 
     // thread contexts associated with this process
     std::vector<ContextID> contextIds;
@@ -258,14 +258,14 @@ class Process : public SimObject
          * error like file IO errors, etc., those should fail non-silently
          * with a panic or fail as normal.
          */
-        virtual Process *load(
-            const ProcessParams &params, loader::ObjectFile *obj_file) = 0;
+        virtual Process *load(const ProcessParams &params,
+                              loader::ObjectFile *obj_file) = 0;
     };
 
     // Try all the Loader instance's "load" methods one by one until one is
     // successful. If none are, complain and fail.
-    static Process *tryLoaders(
-        const ProcessParams &params, loader::ObjectFile *obj_file);
+    static Process *tryLoaders(const ProcessParams &params,
+                               loader::ObjectFile *obj_file);
 
     loader::ObjectFile *objFile;
     loader::MemoryImage image;

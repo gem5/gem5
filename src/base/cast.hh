@@ -78,7 +78,7 @@ safe_cast(U &&ref_or_ptr)
      * compile in a non-debug build and fail in a debug build.
      */
     static_assert(std::is_polymorphic_v<
-        std::remove_pointer_t<std::remove_reference_t<U> > >);
+                  std::remove_pointer_t<std::remove_reference_t<U> > >);
     return static_cast<T>(std::forward<U>(ref_or_ptr));
 }
 

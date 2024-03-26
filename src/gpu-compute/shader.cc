@@ -53,32 +53,32 @@
 
 namespace gem5
 {
-Shader::Shader(const Params &p) :
-    ClockedObject(p),
-    _activeCus(0),
-    _lastInactiveTick(0),
-    cpuThread(nullptr),
-    gpuTc(nullptr),
-    cpuPointer(p.cpu_pointer),
-    tickEvent([this] { execScheduledAdds(); }, "Shader scheduled adds event",
-        false, Event::CPU_Tick_Pri),
-    timingSim(p.timing),
-    hsail_mode(SIMT),
-    impl_kern_launch_acq(p.impl_kern_launch_acq),
-    impl_kern_end_rel(p.impl_kern_end_rel),
-    coissue_return(1),
-    trace_vgpr_all(1),
-    n_cu((p.CUs).size()),
-    n_wf(p.n_wf),
-    globalMemSize(p.globalmem),
-    nextSchedCu(0),
-    sa_n(0),
-    gpuCmdProc(*p.gpu_cmd_proc),
-    _dispatcher(*p.dispatcher),
-    systemHub(p.system_hub),
-    max_valu_insts(p.max_valu_insts),
-    total_valu_insts(0),
-    stats(this, p.CUs[0]->wfSize())
+Shader::Shader(const Params &p)
+    : ClockedObject(p),
+      _activeCus(0),
+      _lastInactiveTick(0),
+      cpuThread(nullptr),
+      gpuTc(nullptr),
+      cpuPointer(p.cpu_pointer),
+      tickEvent([this] { execScheduledAdds(); }, "Shader scheduled adds event",
+                false, Event::CPU_Tick_Pri),
+      timingSim(p.timing),
+      hsail_mode(SIMT),
+      impl_kern_launch_acq(p.impl_kern_launch_acq),
+      impl_kern_end_rel(p.impl_kern_end_rel),
+      coissue_return(1),
+      trace_vgpr_all(1),
+      n_cu((p.CUs).size()),
+      n_wf(p.n_wf),
+      globalMemSize(p.globalmem),
+      nextSchedCu(0),
+      sa_n(0),
+      gpuCmdProc(*p.gpu_cmd_proc),
+      _dispatcher(*p.dispatcher),
+      systemHub(p.system_hub),
+      max_valu_insts(p.max_valu_insts),
+      total_valu_insts(0),
+      stats(this, p.CUs[0]->wfSize())
 {
     gpuCmdProc.setShader(this);
     _dispatcher.setShader(this);
@@ -273,11 +273,11 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
         if (!task->dispComplete() && can_disp) {
             scheduledSomething = true;
             DPRINTF(GPUDisp, "Dispatching a workgroup to CU %d: WG %d\n",
-                curCu, task->globalWgId());
+                    curCu, task->globalWgId());
             DPRINTF(GPUAgentDisp, "Dispatching a workgroup to CU %d: WG %d\n",
-                curCu, task->globalWgId());
+                    curCu, task->globalWgId());
             DPRINTF(GPUWgLatency, "WG Begin cycle:%d wg:%d cu:%d\n", curTick(),
-                task->globalWgId(), curCu);
+                    task->globalWgId(), curCu);
 
             if (!cuList[curCu]->tickEvent.scheduled()) {
                 if (!_activeCus)
@@ -286,7 +286,7 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
             }
 
             panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
-                "Invalid activeCu size\n");
+                     "Invalid activeCu size\n");
             cuList[curCu]->dispWorkgroup(task, num_wfs_in_wg);
 
             task->markWgDispatch();
@@ -304,7 +304,7 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
 
 void
 Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
-    bool suppress_func_errors, int cu_id)
+                           bool suppress_func_errors, int cu_id)
 {
     int block_size = cuList.at(cu_id)->cacheLineSize();
     unsigned size = req->getSize();
@@ -385,29 +385,30 @@ Shader::ScheduleAdd(int *val, Tick when, int x)
     ++sa_n;
     if (!tickEvent.scheduled() || (when < tickEvent.when())) {
         DPRINTF(GPUDisp,
-            "New scheduled add; scheduling shader wakeup at "
-            "%lu\n",
-            when);
+                "New scheduled add; scheduling shader wakeup at "
+                "%lu\n",
+                when);
         reschedule(tickEvent, when, true);
     } else {
         assert(tickEvent.scheduled());
         DPRINTF(GPUDisp,
-            "New scheduled add; wakeup already scheduled at "
-            "%lu\n",
-            when);
+                "New scheduled add; wakeup already scheduled at "
+                "%lu\n",
+                when);
     }
 }
 
 void
 Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
-    MemCmd cmd, bool suppress_func_errors)
+                  MemCmd cmd, bool suppress_func_errors)
 {
     uint8_t *data_buf = (uint8_t *)ptr;
 
     for (ChunkGenerator gen(address, size, cuList.at(cu_id)->cacheLineSize());
          !gen.done(); gen.next()) {
-        RequestPtr req = std::make_shared<Request>(gen.addr(), gen.size(), 0,
-            cuList[0]->requestorId(), 0, 0, nullptr);
+        RequestPtr req =
+            std::make_shared<Request>(gen.addr(), gen.size(), 0,
+                                      cuList[0]->requestorId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);
         data_buf += gen.size();
@@ -422,10 +423,10 @@ Shader::ReadMem(uint64_t address, void *ptr, uint32_t size, int cu_id)
 
 void
 Shader::ReadMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
-    bool suppress_func_errors)
+                bool suppress_func_errors)
 {
-    AccessMem(
-        address, ptr, size, cu_id, MemCmd::ReadReq, suppress_func_errors);
+    AccessMem(address, ptr, size, cu_id, MemCmd::ReadReq,
+              suppress_func_errors);
 }
 
 void
@@ -436,10 +437,10 @@ Shader::WriteMem(uint64_t address, void *ptr, uint32_t size, int cu_id)
 
 void
 Shader::WriteMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
-    bool suppress_func_errors)
+                 bool suppress_func_errors)
 {
-    AccessMem(
-        address, ptr, size, cu_id, MemCmd::WriteReq, suppress_func_errors);
+    AccessMem(address, ptr, size, cu_id, MemCmd::WriteReq,
+              suppress_func_errors);
 }
 
 /*
@@ -541,7 +542,7 @@ Shader::notifyCuSleep()
 {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
-        "Invalid activeCu size\n");
+             "Invalid activeCu size\n");
     _activeCus--;
     if (!_activeCus) {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
@@ -562,27 +563,27 @@ Shader::vramRequestorId()
     return gpuCmdProc.vramRequestorId();
 }
 
-Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size) :
-    statistics::Group(parent),
-    ADD_STAT(allLatencyDist, "delay distribution for all"),
-    ADD_STAT(loadLatencyDist, "delay distribution for loads"),
-    ADD_STAT(storeLatencyDist, "delay distribution for stores"),
-    ADD_STAT(initToCoalesceLatency,
-        "Ticks from vmem inst initiateAcc to coalescer issue"),
-    ADD_STAT(rubyNetworkLatency,
-        "Ticks from coalescer issue to coalescer hit callback"),
-    ADD_STAT(gmEnqueueLatency,
-        "Ticks from coalescer hit callback to GM pipe enqueue"),
-    ADD_STAT(gmToCompleteLatency,
-        "Ticks queued in GM pipes ordered response buffer"),
-    ADD_STAT(
-        coalsrLineAddresses, "Number of cache lines for coalesced request"),
-    ADD_STAT(shaderActiveTicks,
-        "Total ticks that any CU attached to this shader is active"),
-    ADD_STAT(vectorInstSrcOperand,
-        "vector instruction source operand distribution"),
-    ADD_STAT(vectorInstDstOperand,
-        "vector instruction destination operand distribution")
+Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
+    : statistics::Group(parent),
+      ADD_STAT(allLatencyDist, "delay distribution for all"),
+      ADD_STAT(loadLatencyDist, "delay distribution for loads"),
+      ADD_STAT(storeLatencyDist, "delay distribution for stores"),
+      ADD_STAT(initToCoalesceLatency,
+               "Ticks from vmem inst initiateAcc to coalescer issue"),
+      ADD_STAT(rubyNetworkLatency,
+               "Ticks from coalescer issue to coalescer hit callback"),
+      ADD_STAT(gmEnqueueLatency,
+               "Ticks from coalescer hit callback to GM pipe enqueue"),
+      ADD_STAT(gmToCompleteLatency,
+               "Ticks queued in GM pipes ordered response buffer"),
+      ADD_STAT(coalsrLineAddresses,
+               "Number of cache lines for coalesced request"),
+      ADD_STAT(shaderActiveTicks,
+               "Total ticks that any CU attached to this shader is active"),
+      ADD_STAT(vectorInstSrcOperand,
+               "vector instruction source operand distribution"),
+      ADD_STAT(vectorInstDstOperand,
+               "vector instruction destination operand distribution")
 {
     allLatencyDist.init(0, 1600000, 10000)
         .flags(statistics::pdf | statistics::oneline);
@@ -605,8 +606,8 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size) :
     gmToCompleteLatency.init(0, 1600000, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
-    coalsrLineAddresses.init(0, 20, 1).flags(
-        statistics::pdf | statistics::oneline);
+    coalsrLineAddresses.init(0, 20, 1).flags(statistics::pdf |
+                                             statistics::oneline);
 
     vectorInstSrcOperand.init(4);
     vectorInstDstOperand.init(4);
@@ -615,7 +616,7 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size) :
     for (int idx = 0; idx < wf_size; ++idx) {
         std::stringstream namestr;
         ccprintf(namestr, "%s.cacheBlockRoundTrip%d",
-            static_cast<Shader *>(parent)->name(), idx);
+                 static_cast<Shader *>(parent)->name(), idx);
         cacheBlockRoundTrip[idx]
             .init(0, 1600000, 10000)
             .name(namestr.str())

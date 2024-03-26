@@ -165,8 +165,8 @@ class RubyPrefetcher : public SimObject
     uint32_t getLRUindex(void);
 
     //! allocate a new stream buffer at a specific index
-    void initializeStream(
-        Addr address, int stride, uint32_t index, const RubyRequestType &type);
+    void initializeStream(Addr address, int stride, uint32_t index,
+                          const RubyRequestType &type);
 
     //! get pointer to the matching stream entry, returns NULL if not found
     //! index holds the multiple of the stride this address is.
@@ -183,7 +183,8 @@ class RubyPrefetcher : public SimObject
      * @return True if a corresponding entry was found.
      */
     bool accessUnitFilter(CircularQueue<UnitFilterEntry> *const filter,
-        Addr line_addr, int stride, const RubyRequestType &type);
+                          Addr line_addr, int stride,
+                          const RubyRequestType &type);
 
     /**
      * Access a non-unit stride filter to determine if there is a hit, and

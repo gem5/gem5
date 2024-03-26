@@ -71,12 +71,12 @@ class SimpleCache : public ClockedObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        CPUSidePort(const std::string &name, int id, SimpleCache *owner) :
-            ResponsePort(name),
-            id(id),
-            owner(owner),
-            needRetry(false),
-            blockedPacket(nullptr)
+        CPUSidePort(const std::string &name, int id, SimpleCache *owner)
+            : ResponsePort(name),
+              id(id),
+              owner(owner),
+              needRetry(false),
+              blockedPacket(nullptr)
         {}
 
         /**
@@ -157,8 +157,8 @@ class SimpleCache : public ClockedObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        MemSidePort(const std::string &name, SimpleCache *owner) :
-            RequestPort(name), owner(owner), blockedPacket(nullptr)
+        MemSidePort(const std::string &name, SimpleCache *owner)
+            : RequestPort(name), owner(owner), blockedPacket(nullptr)
         {}
 
         /**
@@ -324,8 +324,8 @@ class SimpleCache : public ClockedObject
      *
      * @return A reference to the given port
      */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

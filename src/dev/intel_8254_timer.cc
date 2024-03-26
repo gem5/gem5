@@ -35,11 +35,12 @@
 
 namespace gem5
 {
-Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name) :
-    EventManager(em),
-    _name(name),
-    counters{{{this, name + ".counter0", 0}, {this, name + ".counter1", 1},
-        {this, name + ".counter2", 2}}}
+Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name)
+    : EventManager(em),
+      _name(name),
+      counters{{{this, name + ".counter0", 0},
+                {this, name + ".counter1", 1},
+                {this, name + ".counter2", 2}}}
 {}
 
 void
@@ -51,7 +52,7 @@ Intel8254Timer::writeControl(const CtrlReg data)
         ReadBackCommandVal rb_val = static_cast<uint8_t>(data);
 
         panic_if(!rb_val.status,
-            "Latching the PIT status byte is not implemented.");
+                 "Latching the PIT status byte is not implemented.");
 
         if (!rb_val.count) {
             for (auto &counter : counters) {
@@ -97,21 +98,21 @@ Intel8254Timer::startup()
     counters[2].startup();
 }
 
-Intel8254Timer::Counter::Counter(
-    Intel8254Timer *p, const std::string &name, unsigned int _num) :
-    _name(name),
-    num(_num),
-    event(this),
-    running(false),
-    initial_count(0),
-    latched_count(0),
-    period(0),
-    mode(0),
-    output_high(false),
-    latch_on(false),
-    read_byte(LSB),
-    write_byte(LSB),
-    parent(p)
+Intel8254Timer::Counter::Counter(Intel8254Timer *p, const std::string &name,
+                                 unsigned int _num)
+    : _name(name),
+      num(_num),
+      event(this),
+      running(false),
+      initial_count(0),
+      latched_count(0),
+      period(0),
+      mode(0),
+      output_high(false),
+      latch_on(false),
+      read_byte(LSB),
+      write_byte(LSB),
+      parent(p)
 {
     offset = period * event.getInterval();
 }
@@ -237,8 +238,8 @@ Intel8254Timer::Counter::outputHigh()
 }
 
 void
-Intel8254Timer::Counter::serialize(
-    const std::string &base, CheckpointOut &cp) const
+Intel8254Timer::Counter::serialize(const std::string &base,
+                                   CheckpointOut &cp) const
 {
     paramOut(cp, base + ".initial_count", initial_count);
     paramOut(cp, base + ".latched_count", latched_count);
@@ -310,8 +311,8 @@ Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
 {
     if (clocks == 0)
         panic("Timer can't be set to go off instantly.\n");
-    DPRINTF(
-        Intel8254Timer, "Timer set to curTick() + %d\n", clocks * interval);
+    DPRINTF(Intel8254Timer, "Timer set to curTick() + %d\n",
+            clocks * interval);
     counter->parent->schedule(this, curTick() + clocks * interval);
 }
 

@@ -69,7 +69,7 @@ namespace X86ISA
 {
 Fault
 Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
-    const RequestPtr &_req, BaseMMU::Mode _mode)
+              const RequestPtr &_req, BaseMMU::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
@@ -93,8 +93,8 @@ Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(
-    ThreadContext *_tc, Addr &addr, unsigned &logBytes, BaseMMU::Mode _mode)
+Walker::startFunctional(ThreadContext *_tc, Addr &addr, unsigned &logBytes,
+                        BaseMMU::Mode _mode)
 {
     funcState.initState(_tc, _mode);
     return funcState.startFunctional(addr, logBytes);
@@ -178,8 +178,8 @@ Walker::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-Walker::WalkerState::initState(
-    ThreadContext *_tc, BaseMMU::Mode _mode, bool _isTiming)
+Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                               bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -199,7 +199,7 @@ Walker::startWalkWrapper()
         num_squashed++;
 
         DPRINTF(PageTableWalker, "Squashing table walk for address %#x\n",
-            currState->req->getVaddr());
+                currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
         currState->translation->finish(
@@ -375,8 +375,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         doEndWalk = true;
         break;
     case PAEPDP:
-        DPRINTF(
-            PageTableWalker, "Got legacy mode PAE PDP entry %#08x.\n", pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PAE PDP entry %#08x.\n",
+                pte);
         nextRead = mbits(pte, 51, 12) + vaddr.pael2 * dataSize;
         if (!pte.p) {
             doEndWalk = true;
@@ -415,8 +415,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             break;
         }
     case PAEPTE:
-        DPRINTF(
-            PageTableWalker, "Got legacy mode PAE PTE entry %#08x.\n", pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PAE PTE entry %#08x.\n",
+                pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -598,8 +598,8 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     if (!cr4.pcide && cr3.pcd)
         flags.set(Request::UNCACHEABLE);
 
-    RequestPtr request = std::make_shared<Request>(
-        topAddr, dataSize, flags, walker->requestorId);
+    RequestPtr request = std::make_shared<Request>(topAddr, dataSize, flags,
+                                                   walker->requestorId);
 
     read = new Packet(request, MemCmd::ReadReq);
     read->allocate();
@@ -650,8 +650,8 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              * well.
              */
             bool delayedResponse;
-            Fault fault = walker->tlb->translate(
-                req, tc, NULL, mode, delayedResponse, true);
+            Fault fault = walker->tlb->translate(req, tc, NULL, mode,
+                                                 delayedResponse, true);
             assert(!delayedResponse);
             // Let the CPU continue.
             translation->finish(fault, req, tc, mode);
@@ -742,8 +742,8 @@ Walker::WalkerState::pageFault(bool present)
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
     if (mode == BaseMMU::Execute && !enableNX)
         mode = BaseMMU::Read;
-    return std::make_shared<PageFault>(
-        entry.vaddr, present, mode, m5reg.cpl == 3, false);
+    return std::make_shared<PageFault>(entry.vaddr, present, mode,
+                                       m5reg.cpl == 3, false);
 }
 
 } // namespace X86ISA

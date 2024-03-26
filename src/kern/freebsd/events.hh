@@ -65,8 +65,8 @@ class SkipUDelay : public Base
 
   public:
     SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
-        uint64_t mult, uint64_t div) :
-        Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
+               uint64_t mult, uint64_t div)
+        : Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
     {}
 
     void

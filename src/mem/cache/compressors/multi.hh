@@ -105,9 +105,9 @@ class Multi : public Base
 
     void setCache(BaseCache *_cache) override;
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
-        Cycles &decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
     void decompress(const CompressionData *comp_data, uint64_t *data) override;
 };
@@ -128,8 +128,8 @@ class Multi::MultiCompData : public CompressionData
      * @param index Index of the compressor that provided this compression.
      * @param comp_data Compression data of the best compressor.
      */
-    MultiCompData(
-        unsigned index, std::unique_ptr<Base::CompressionData> comp_data);
+    MultiCompData(unsigned index,
+                  std::unique_ptr<Base::CompressionData> comp_data);
 
     /** Default destructor. */
     ~MultiCompData() = default;

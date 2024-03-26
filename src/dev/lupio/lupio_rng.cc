@@ -41,8 +41,8 @@
 
 namespace gem5
 {
-LupioRNG::LupioRNG(const Params &params) :
-    BasicPioDevice(params, params.pio_size), user_seed(params.seed)
+LupioRNG::LupioRNG(const Params &params)
+    : BasicPioDevice(params, params.pio_size), user_seed(params.seed)
 {
     mt.seed(user_seed);
     DPRINTF(LupioRNG, "LupioRNG initalized with seed: %d\n", user_seed);
@@ -105,7 +105,7 @@ LupioRNG::read(PacketPtr pkt)
     Addr rng_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioRNG, "Read request - addr: %#x, size: %#x\n", rng_addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t rand_read = lupioRNGRead(rng_addr);
     DPRINTF(LupioRNG, "Packet Read: %#x\n", rand_read);
@@ -121,7 +121,7 @@ LupioRNG::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioRNG, "Write register %#x value %#x\n", daddr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioRNGWrite(daddr, pkt->getUintX(byteOrder));
     DPRINTF(LupioRNG, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

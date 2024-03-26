@@ -66,20 +66,20 @@ class ArmStaticInst : public StaticInst
     bool aarch64;
     uint8_t intWidth;
 
-    int32_t shift_rm_imm(
-        uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const;
-    int32_t shift_rm_rs(
-        uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const;
+    int32_t shift_rm_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                         uint32_t cfval) const;
+    int32_t shift_rm_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                        uint32_t cfval) const;
 
-    bool shift_carry_imm(
-        uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const;
-    bool shift_carry_rs(
-        uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval) const;
+    bool shift_carry_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                         uint32_t cfval) const;
+    bool shift_carry_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                        uint32_t cfval) const;
 
     int64_t shiftReg64(uint64_t base, uint64_t shiftAmt, ArmShiftType type,
-        uint8_t width) const;
+                       uint8_t width) const;
     int64_t extendReg64(uint64_t base, ArmExtendType type, uint64_t shiftAmt,
-        uint8_t width) const;
+                        uint8_t width) const;
 
     template <int width>
     static inline bool
@@ -149,8 +149,8 @@ class ArmStaticInst : public StaticInst
     ExtMachInst machInst;
 
     // Constructor
-    ArmStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        StaticInst(mnem, __opClass), machInst(_machInst)
+    ArmStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : StaticInst(mnem, __opClass), machInst(_machInst)
     {
         aarch64 = machInst.aarch64;
         if (bits(machInst, 28, 24) == 0x10)
@@ -161,34 +161,36 @@ class ArmStaticInst : public StaticInst
 
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
-    void printIntReg(
-        std::ostream &os, RegIndex reg_idx, uint8_t opWidth = 0) const;
+    void printIntReg(std::ostream &os, RegIndex reg_idx,
+                     uint8_t opWidth = 0) const;
     void printFloatReg(std::ostream &os, RegIndex reg_idx) const;
-    void printVecReg(
-        std::ostream &os, RegIndex reg_idx, bool isSveVecReg = false) const;
+    void printVecReg(std::ostream &os, RegIndex reg_idx,
+                     bool isSveVecReg = false) const;
     void printVecPredReg(std::ostream &os, RegIndex reg_idx) const;
     void printCCReg(std::ostream &os, RegIndex reg_idx) const;
     void printMiscReg(std::ostream &os, RegIndex reg_idx) const;
     void printMnemonic(std::ostream &os, const std::string &suffix = "",
-        bool withPred = true, bool withCond64 = false,
-        ConditionCode cond64 = COND_UC) const;
+                       bool withPred = true, bool withCond64 = false,
+                       ConditionCode cond64 = COND_UC) const;
     void printTarget(std::ostream &os, Addr target,
-        const loader::SymbolTable *symtab) const;
-    void printCondition(
-        std::ostream &os, unsigned code, bool noImplicit = false) const;
+                     const loader::SymbolTable *symtab) const;
+    void printCondition(std::ostream &os, unsigned code,
+                        bool noImplicit = false) const;
     void printMemSymbol(std::ostream &os, const loader::SymbolTable *symtab,
-        const std::string &prefix, const Addr addr,
-        const std::string &suffix) const;
+                        const std::string &prefix, const Addr addr,
+                        const std::string &suffix) const;
     void printShiftOperand(std::ostream &os, RegIndex rm, bool immShift,
-        uint32_t shiftAmt, RegIndex rs, ArmShiftType type) const;
+                           uint32_t shiftAmt, RegIndex rs,
+                           ArmShiftType type) const;
     void printExtendOperand(bool firstOperand, std::ostream &os, RegIndex rm,
-        ArmExtendType type, int64_t shiftAmt) const;
+                            ArmExtendType type, int64_t shiftAmt) const;
     void printPFflags(std::ostream &os, int flag) const;
 
     void printDataInst(std::ostream &os, bool withImm) const;
     void printDataInst(std::ostream &os, bool withImm, bool immShift, bool s,
-        RegIndex rd, RegIndex rn, RegIndex rm, RegIndex rs, uint32_t shiftAmt,
-        ArmShiftType type, uint64_t imm) const;
+                       RegIndex rd, RegIndex rn, RegIndex rm, RegIndex rs,
+                       uint32_t shiftAmt, ArmShiftType type,
+                       uint64_t imm) const;
 
     void
     advancePC(PCStateBase &pcState) const override
@@ -211,16 +213,17 @@ class ArmStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(
-        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
+    buildRetPC(const PCStateBase &cur_pc,
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc = call_pc.clone();
         ret_pc->as<PCState>().uEnd();
         return std::unique_ptr<PCStateBase>{ret_pc};
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     static void
     activateBreakpoint(ThreadContext *tc)
@@ -231,7 +234,8 @@ class ArmStaticInst : public StaticInst
 
     static inline uint32_t
     cpsrWriteByInstr(CPSR cpsr, uint32_t val, SCR scr, NSACR nsacr,
-        uint8_t byteMask, bool affectState, bool nmfi, ThreadContext *tc)
+                     uint8_t byteMask, bool affectState, bool nmfi,
+                     ThreadContext *tc)
     {
         bool privileged = (cpsr.mode != MODE_USER);
         bool haveVirt = ArmSystem::haveEL(tc, EL2);
@@ -312,8 +316,8 @@ class ArmStaticInst : public StaticInst
     }
 
     static inline uint32_t
-    spsrWriteByInstr(
-        uint32_t spsr, uint32_t val, uint8_t byteMask, bool affectState)
+    spsrWriteByInstr(uint32_t spsr, uint32_t val, uint8_t byteMask,
+                     bool affectState)
     {
         uint32_t bitMask = 0;
 
@@ -404,8 +408,8 @@ class ArmStaticInst : public StaticInst
 
     // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
     // Returns true if processor has to trap a WFI/WFE instruction.
-    bool isWFxTrapping(
-        ThreadContext *tc, ExceptionLevel targetEL, bool isWfe) const;
+    bool isWFxTrapping(ThreadContext *tc, ExceptionLevel targetEL,
+                       bool isWfe) const;
 
     /**
      * Trigger a Software Breakpoint.
@@ -441,8 +445,8 @@ class ArmStaticInst : public StaticInst
      * See aarch64/exceptions/traps/AArch64.CheckFPAdvSIMDEnabled in the
      * ARM ARM psueodcode library.
      */
-    Fault checkFPAdvSIMDEnabled64(
-        ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;
+    Fault checkFPAdvSIMDEnabled64(ThreadContext *tc, CPSR cpsr,
+                                  CPACR cpacr) const;
 
     /**
      * Check if a VFP/SIMD access from aarch32 should be allowed.
@@ -451,7 +455,8 @@ class ArmStaticInst : public StaticInst
      * ARM ARM psueodcode library.
      */
     Fault checkAdvSIMDOrFPEnabled32(ThreadContext *tc, CPSR cpsr, CPACR cpacr,
-        NSACR nsacr, FPEXC fpexc, bool fpexc_check, bool advsimd) const;
+                                    NSACR nsacr, FPEXC fpexc, bool fpexc_check,
+                                    bool advsimd) const;
 
     /**
      * Check if WFE/WFI instruction execution in aarch32 should be trapped.
@@ -459,8 +464,8 @@ class ArmStaticInst : public StaticInst
      * See aarch32/exceptions/traps/AArch32.checkForWFxTrap in the
      * ARM ARM psueodcode library.
      */
-    Fault checkForWFxTrap32(
-        ThreadContext *tc, ExceptionLevel tgtEl, bool isWfe) const;
+    Fault checkForWFxTrap32(ThreadContext *tc, ExceptionLevel tgtEl,
+                            bool isWfe) const;
 
     /**
      * Check if WFE/WFI instruction execution in aarch64 should be trapped.
@@ -468,8 +473,8 @@ class ArmStaticInst : public StaticInst
      * See aarch64/exceptions/traps/AArch64.checkForWFxTrap in the
      * ARM ARM psueodcode library.
      */
-    Fault checkForWFxTrap64(
-        ThreadContext *tc, ExceptionLevel tgtEl, bool isWfe) const;
+    Fault checkForWFxTrap64(ThreadContext *tc, ExceptionLevel tgtEl,
+                            bool isWfe) const;
 
     /**
      * WFE/WFI trapping helper function.
@@ -557,8 +562,8 @@ class ArmStaticInst : public StaticInst
      * See aarch32/exceptions/exceptions/AArch32.GeneralExceptionsToAArch64
      * in the ARM ARM pseudocode library.
      */
-    bool generalExceptionsToAArch64(
-        ThreadContext *tc, ExceptionLevel pstateEL) const;
+    bool generalExceptionsToAArch64(ThreadContext *tc,
+                                    ExceptionLevel pstateEL) const;
 
   public:
     virtual void
@@ -629,8 +634,8 @@ class ArmStaticInst : public StaticInst
     inline Fault
     undefined(bool disabled = false) const
     {
-        return std::make_shared<UndefinedInstruction>(
-            machInst, false, mnemonic, disabled);
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic, disabled);
     }
 };
 

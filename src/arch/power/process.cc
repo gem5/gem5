@@ -51,10 +51,11 @@ namespace gem5
 {
 using namespace PowerISA;
 
-PowerProcess::PowerProcess(
-    const ProcessParams &params, loader::ObjectFile *objFile) :
-    Process(params, new EmulationPageTable(params.name, params.pid, PageBytes),
-        objFile)
+PowerProcess::PowerProcess(const ProcessParams &params,
+                           loader::ObjectFile *objFile)
+    : Process(params,
+              new EmulationPageTable(params.name, params.pid, PageBytes),
+              objFile)
 {
     fatal_if(params.useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)
@@ -71,8 +72,9 @@ PowerProcess::PowerProcess(
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     Addr mmap_end = 0x70000000L;
 
-    memState = std::make_shared<MemState>(this, brk_point, stack_base,
-        max_stack_size, next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -261,7 +263,7 @@ PowerProcess::argsInit(int pageSize)
 
     // map memory
     memState->mapRegion(roundDown(stack_min, pageSize),
-        roundUp(memState->getStackSize(), pageSize), "stack");
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     IntType sentry_base = memState->getStackBase() - sentry_size;
@@ -319,10 +321,10 @@ PowerProcess::argsInit(int pageSize)
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(
-        envp, envp_array_base, env_data_base, byteOrder, *initVirtMem);
-    copyStringArray(
-        argv, argv_array_base, arg_data_base, byteOrder, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, byteOrder,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, byteOrder,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 

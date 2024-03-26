@@ -63,8 +63,8 @@ class NativeTraceRecord : public ExeTracerRecord
 {
   public:
     NativeTraceRecord(NativeTrace *_parent, Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        const StaticInstPtr _macroStaticInst = nullptr);
+                      const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                      const StaticInstPtr _macroStaticInst = nullptr);
 
     void dump();
 
@@ -85,11 +85,11 @@ class NativeTrace : public ExeTracer
 
     NativeTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
-        const PCStateBase &pc,
-        const StaticInstPtr macroStaticInst = nullptr) override
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) override
     {
-        return new NativeTraceRecord(
-            this, when, tc, staticInst, pc, macroStaticInst);
+        return new NativeTraceRecord(this, when, tc, staticInst, pc,
+                                     macroStaticInst);
     }
 
     template <class T>
@@ -98,7 +98,7 @@ class NativeTrace : public ExeTracer
     {
         if (val != realVal) {
             DPRINTFN("Register %s should be %#x but is %#x.\n", regName,
-                realVal, val);
+                     realVal, val);
             return false;
         }
         return true;

@@ -56,8 +56,8 @@ namespace ArmISA
 class TLBIOp
 {
   public:
-    TLBIOp(ExceptionLevel _targetEL, bool _secure) :
-        secureLookup(_secure), targetEL(_targetEL)
+    TLBIOp(ExceptionLevel _targetEL, bool _secure)
+        : secureLookup(_secure), targetEL(_targetEL)
     {}
 
     virtual ~TLBIOp() {}
@@ -109,11 +109,11 @@ class TLBIOp
 class TLBIALL : public TLBIOp
 {
   public:
-    TLBIALL(ExceptionLevel _targetEL, bool _secure) :
-        TLBIOp(_targetEL, _secure),
-        inHost(false),
-        el2Enabled(false),
-        currentEL(EL0)
+    TLBIALL(ExceptionLevel _targetEL, bool _secure)
+        : TLBIOp(_targetEL, _secure),
+          inHost(false),
+          el2Enabled(false),
+          currentEL(EL0)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -140,8 +140,8 @@ class TLBIALL : public TLBIOp
 class ITLBIALL : public TLBIALL
 {
   public:
-    ITLBIALL(ExceptionLevel _targetEL, bool _secure) :
-        TLBIALL(_targetEL, _secure)
+    ITLBIALL(ExceptionLevel _targetEL, bool _secure)
+        : TLBIALL(_targetEL, _secure)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -155,8 +155,8 @@ class ITLBIALL : public TLBIALL
 class DTLBIALL : public TLBIALL
 {
   public:
-    DTLBIALL(ExceptionLevel _targetEL, bool _secure) :
-        TLBIALL(_targetEL, _secure)
+    DTLBIALL(ExceptionLevel _targetEL, bool _secure)
+        : TLBIALL(_targetEL, _secure)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -170,8 +170,8 @@ class DTLBIALL : public TLBIALL
 class TLBIALLEL : public TLBIOp
 {
   public:
-    TLBIALLEL(ExceptionLevel _targetEL, bool _secure) :
-        TLBIOp(_targetEL, _secure), inHost(false)
+    TLBIALLEL(ExceptionLevel _targetEL, bool _secure)
+        : TLBIOp(_targetEL, _secure), inHost(false)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -195,11 +195,11 @@ class TLBIALLEL : public TLBIOp
 class TLBIVMALL : public TLBIOp
 {
   public:
-    TLBIVMALL(ExceptionLevel _targetEL, bool _secure, bool _stage2) :
-        TLBIOp(_targetEL, _secure),
-        inHost(false),
-        el2Enabled(false),
-        stage2(_stage2)
+    TLBIVMALL(ExceptionLevel _targetEL, bool _secure, bool _stage2)
+        : TLBIOp(_targetEL, _secure),
+          inHost(false),
+          el2Enabled(false),
+          stage2(_stage2)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -224,11 +224,11 @@ class TLBIVMALL : public TLBIOp
 class TLBIASID : public TLBIOp
 {
   public:
-    TLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid) :
-        TLBIOp(_targetEL, _secure),
-        asid(_asid),
-        inHost(false),
-        el2Enabled(false)
+    TLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
+        : TLBIOp(_targetEL, _secure),
+          asid(_asid),
+          inHost(false),
+          el2Enabled(false)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -244,8 +244,8 @@ class TLBIASID : public TLBIOp
 class ITLBIASID : public TLBIASID
 {
   public:
-    ITLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid) :
-        TLBIASID(_targetEL, _secure, _asid)
+    ITLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
+        : TLBIASID(_targetEL, _secure, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -259,8 +259,8 @@ class ITLBIASID : public TLBIASID
 class DTLBIASID : public TLBIASID
 {
   public:
-    DTLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid) :
-        TLBIASID(_targetEL, _secure, _asid)
+    DTLBIASID(ExceptionLevel _targetEL, bool _secure, uint16_t _asid)
+        : TLBIASID(_targetEL, _secure, _asid)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -297,12 +297,12 @@ class TLBIMVAA : public TLBIOp
     TlbEntry::Lookup lookupGen(vmid_t vmid) const;
 
   public:
-    TLBIMVAA(
-        ExceptionLevel _targetEL, bool _secure, Addr _addr, bool last_level) :
-        TLBIOp(_targetEL, _secure),
-        addr(_addr),
-        inHost(false),
-        lastLevel(last_level)
+    TLBIMVAA(ExceptionLevel _targetEL, bool _secure, Addr _addr,
+             bool last_level)
+        : TLBIOp(_targetEL, _secure),
+          addr(_addr),
+          inHost(false),
+          lastLevel(last_level)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -322,12 +322,12 @@ class TLBIMVA : public TLBIOp
 
   public:
     TLBIMVA(ExceptionLevel _targetEL, bool _secure, Addr _addr, uint16_t _asid,
-        bool last_level) :
-        TLBIOp(_targetEL, _secure),
-        addr(_addr),
-        asid(_asid),
-        inHost(false),
-        lastLevel(last_level)
+            bool last_level)
+        : TLBIOp(_targetEL, _secure),
+          addr(_addr),
+          asid(_asid),
+          inHost(false),
+          lastLevel(last_level)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -344,9 +344,9 @@ class TLBIMVA : public TLBIOp
 class ITLBIMVA : public TLBIMVA
 {
   public:
-    ITLBIMVA(
-        ExceptionLevel _targetEL, bool _secure, Addr _addr, uint16_t _asid) :
-        TLBIMVA(_targetEL, _secure, _addr, _asid, false)
+    ITLBIMVA(ExceptionLevel _targetEL, bool _secure, Addr _addr,
+             uint16_t _asid)
+        : TLBIMVA(_targetEL, _secure, _addr, _asid, false)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -360,9 +360,9 @@ class ITLBIMVA : public TLBIMVA
 class DTLBIMVA : public TLBIMVA
 {
   public:
-    DTLBIMVA(
-        ExceptionLevel _targetEL, bool _secure, Addr _addr, uint16_t _asid) :
-        TLBIMVA(_targetEL, _secure, _addr, _asid, false)
+    DTLBIMVA(ExceptionLevel _targetEL, bool _secure, Addr _addr,
+             uint16_t _asid)
+        : TLBIMVA(_targetEL, _secure, _addr, _asid, false)
     {}
 
     void broadcast(ThreadContext *tc) = delete;
@@ -394,8 +394,8 @@ class TLBIRange
         Bitfield<36, 0> baseAddr;
     EndBitUnion(RangeData)
 
-    static constexpr std::array<GrainSize, 4> tgMap = {
-        ReservedGrain, Grain4KB, Grain16KB, Grain64KB};
+    static constexpr std::array<GrainSize, 4> tgMap = {ReservedGrain, Grain4KB,
+                                                       Grain16KB, Grain64KB};
 
     TLBIRange(RegVal val) : rangeData(val), granule(tgMap[rangeData.tg]) {}
 
@@ -432,9 +432,9 @@ class TLBIRange
 class TLBIIPA : public TLBIOp
 {
   public:
-    TLBIIPA(
-        ExceptionLevel _targetEL, bool _secure, Addr _addr, bool last_level) :
-        TLBIOp(_targetEL, _secure), addr(_addr), lastLevel(last_level)
+    TLBIIPA(ExceptionLevel _targetEL, bool _secure, Addr _addr,
+            bool last_level)
+        : TLBIOp(_targetEL, _secure), addr(_addr), lastLevel(last_level)
     {}
 
     void operator()(ThreadContext *tc) override;
@@ -467,9 +467,9 @@ class TLBIRMVA : public TLBIRange, public TLBIMVA
 {
   public:
     TLBIRMVA(ExceptionLevel _targetEL, bool _secure, RegVal val,
-        uint16_t _asid, bool last_level) :
-        TLBIRange(val),
-        TLBIMVA(_targetEL, _secure, startAddress(), _asid, last_level)
+             uint16_t _asid, bool last_level)
+        : TLBIRange(val),
+          TLBIMVA(_targetEL, _secure, startAddress(), _asid, last_level)
     {}
 
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -479,10 +479,10 @@ class TLBIRMVA : public TLBIRange, public TLBIMVA
 class TLBIRMVAA : public TLBIRange, public TLBIMVAA
 {
   public:
-    TLBIRMVAA(
-        ExceptionLevel _targetEL, bool _secure, RegVal val, bool last_level) :
-        TLBIRange(val),
-        TLBIMVAA(_targetEL, _secure, startAddress(), last_level)
+    TLBIRMVAA(ExceptionLevel _targetEL, bool _secure, RegVal val,
+              bool last_level)
+        : TLBIRange(val),
+          TLBIMVAA(_targetEL, _secure, startAddress(), last_level)
     {}
 
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -492,9 +492,10 @@ class TLBIRMVAA : public TLBIRange, public TLBIMVAA
 class TLBIRIPA : public TLBIRange, public TLBIIPA
 {
   public:
-    TLBIRIPA(
-        ExceptionLevel _targetEL, bool _secure, RegVal val, bool last_level) :
-        TLBIRange(val), TLBIIPA(_targetEL, _secure, startAddress(), last_level)
+    TLBIRIPA(ExceptionLevel _targetEL, bool _secure, RegVal val,
+             bool last_level)
+        : TLBIRange(val),
+          TLBIIPA(_targetEL, _secure, startAddress(), last_level)
     {}
 
     virtual TLBIMVAA

@@ -44,12 +44,12 @@
 namespace gem5
 {
 NonCachingSimpleCPU::NonCachingSimpleCPU(
-    const BaseNonCachingSimpleCPUParams &p) :
-    AtomicSimpleCPU(p)
+    const BaseNonCachingSimpleCPUParams &p)
+    : AtomicSimpleCPU(p)
 {
     assert(p.numThreads == 1);
-    fatal_if(
-        !FullSystem && p.workload.size() != 1, "only one workload allowed");
+    fatal_if(!FullSystem && p.workload.size() != 1,
+             "only one workload allowed");
 }
 
 void

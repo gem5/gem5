@@ -60,8 +60,8 @@ class E820Entry : public SimObject
 
   public:
     typedef X86E820EntryParams Params;
-    E820Entry(const Params &p) :
-        SimObject(p), addr(p.addr), size(p.size), type(p.range_type)
+    E820Entry(const Params &p)
+        : SimObject(p), addr(p.addr), size(p.size), type(p.range_type)
     {}
 };
 

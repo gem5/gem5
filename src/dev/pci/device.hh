@@ -89,8 +89,8 @@ class PciBar : public SimObject
     // Accepts a value written to config space, consumes it, and returns what
     // value config space should actually be set to. Both should be in host
     // endian format.
-    virtual uint32_t write(
-        const PciHost::DeviceInterface &host, uint32_t val) = 0;
+    virtual uint32_t write(const PciHost::DeviceInterface &host,
+                           uint32_t val) = 0;
 
     AddrRange
     range() const
@@ -146,7 +146,7 @@ class PciIoBar : public PciBar
         if (!legacy) {
             Bar bar = _size;
             fatal_if(!_size || !isPowerOf2(_size) || bar.io || bar.reserved,
-                "Illegal size %d for bar %s.", _size, name());
+                     "Illegal size %d for bar %s.", _size, name());
         }
     }
 
@@ -217,7 +217,7 @@ class PciMemBar : public PciBar
         _size = p.size;
         Bar bar = _size;
         fatal_if(!_size || !isPowerOf2(_size) || bar.io || bar.type,
-            "Illegal size %d for bar %s.", _size, name());
+                 "Illegal size %d for bar %s.", _size, name());
     }
 
     bool

@@ -44,7 +44,8 @@ namespace replacement_policy
  * should have its own implementation of replacement data.
  */
 struct ReplacementData
-{};
+{
+};
 
 } // namespace replacement_policy
 

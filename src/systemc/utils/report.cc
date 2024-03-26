@@ -30,9 +30,9 @@
 namespace sc_gem5
 {
 const char *reportSeverityNames[] = {[sc_core::SC_INFO] = "Info",
-    [sc_core::SC_WARNING] = "Warning",
-    [sc_core::SC_ERROR] = "Error",
-    [sc_core::SC_FATAL] = "Fatal"};
+                                     [sc_core::SC_WARNING] = "Warning",
+                                     [sc_core::SC_ERROR] = "Error",
+                                     [sc_core::SC_FATAL] = "Fatal"};
 
 ReportSevInfo reportSevInfos[sc_core::SC_MAX_SEVERITY] = {
     [sc_core::SC_INFO] = ReportSevInfo(sc_core::SC_DEFAULT_INFO_ACTIONS),

@@ -142,15 +142,16 @@ class FsLinux : public ArmISA::FsWorkload
 class DumpStats : public PCEvent
 {
   public:
-    DumpStats(PCEventScope *s, const std::string &desc, Addr addr) :
-        PCEvent(s, desc, addr)
+    DumpStats(PCEventScope *s, const std::string &desc, Addr addr)
+        : PCEvent(s, desc, addr)
     {}
 
     void process(ThreadContext *tc) override;
 
   protected:
     virtual void getTaskDetails(ThreadContext *tc, uint32_t &pid,
-        uint32_t &tgid, std::string &next_task_str, int32_t &mm);
+                                uint32_t &tgid, std::string &next_task_str,
+                                int32_t &mm);
 };
 
 class DumpStats64 : public DumpStats
@@ -160,7 +161,7 @@ class DumpStats64 : public DumpStats
 
   private:
     void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
-        std::string &next_task_str, int32_t &mm) override;
+                        std::string &next_task_str, int32_t &mm) override;
 };
 
 } // namespace ArmISA

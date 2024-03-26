@@ -114,8 +114,8 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
     /** Wakes up at most count waiting threads on a futex */
     int wakeup(Addr addr, uint64_t tgid, int count);
 
-    void suspend_bitset(
-        Addr addr, uint64_t tgid, ThreadContext *tc, int bitmask);
+    void suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
+                        int bitmask);
 
     int wakeup_bitset(Addr addr, uint64_t tgid, int bitmask);
 

@@ -101,7 +101,7 @@ sc_bv_base::assign_from_string(const std::string &s)
         char c = s[s_len - i - 1];
         if (c != '0' && c != '1') {
             SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
-                "string can contain only '0' and '1' characters");
+                            "string can contain only '0' and '1' characters");
             // may continue, if suppressed
             c = '0';
         }
@@ -123,18 +123,18 @@ sc_bv_base::sc_bv_base(const char *a) : m_len(0), m_size(0), m_data(0)
     assign_from_string(s);
 }
 
-sc_bv_base::sc_bv_base(const char *a, int length_) :
-    m_len(0), m_size(0), m_data(0)
+sc_bv_base::sc_bv_base(const char *a, int length_)
+    : m_len(0), m_size(0), m_data(0)
 {
     init(length_);
     assign_from_string(convert_to_bin(a));
 }
 
-sc_bv_base::sc_bv_base(const sc_bv_base &a) :
-    sc_proxy<sc_bv_base>(),
-    m_len(a.m_len),
-    m_size(a.m_size),
-    m_data(new sc_digit[m_size])
+sc_bv_base::sc_bv_base(const sc_bv_base &a)
+    : sc_proxy<sc_bv_base>(),
+      m_len(a.m_len),
+      m_size(a.m_size),
+      m_data(new sc_digit[m_size])
 {
     // copy the bits
     int sz = m_size;
@@ -161,13 +161,13 @@ convert_to_bin(const char *s)
     //         because this is seen as a hexadecimal encoding prefix!
 
     if (s == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CANNOT_CONVERT_, "character string is zero");
+        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
+                        "character string is zero");
         return std::string();
     }
     if (*s == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CANNOT_CONVERT_, "character string is empty");
+        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
+                        "character string is empty");
         return std::string();
     }
 
@@ -202,8 +202,8 @@ convert_to_bin(const char *s)
             } catch (const sc_core::sc_report &) {
                 std::stringstream msg;
                 msg << "character string '" << s << "' is not valid";
-                SC_REPORT_ERROR(
-                    sc_core::SC_ID_CANNOT_CONVERT_, msg.str().c_str());
+                SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
+                                msg.str().c_str());
                 return std::string();
             }
         }

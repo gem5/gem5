@@ -99,8 +99,9 @@ class X86MicroopBase : public X86StaticInst
     uint8_t addrSize;
 
     X86MicroopBase(ExtMachInst _machInst, const char *mnem,
-        const char *_instMnem, uint64_t setFlags, OpClass __opClass) :
-        X86ISA::X86StaticInst(mnem, _machInst, __opClass), instMnem(_instMnem)
+                   const char *_instMnem, uint64_t setFlags, OpClass __opClass)
+        : X86ISA::X86StaticInst(mnem, _machInst, __opClass),
+          instMnem(_instMnem)
     {
         const int ChunkSize = sizeof(unsigned long);
         const int Chunks = sizeof(setFlags) / ChunkSize;
@@ -114,8 +115,8 @@ class X86MicroopBase : public X86StaticInst
     }
 
     std::string
-    generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream ss;
 
@@ -147,8 +148,8 @@ class X86MicroopBase : public X86StaticInst
         tc->pcState(pc);
     }
 
-    std::unique_ptr<PCStateBase> branchTarget(
-        const PCStateBase &branch_pc) const override;
+    std::unique_ptr<PCStateBase>
+    branchTarget(const PCStateBase &branch_pc) const override;
 
     // Explicitly import the otherwise hidden branchTarget.
     using StaticInst::branchTarget;
@@ -161,10 +162,10 @@ class MicroCondBase : public X86MicroopBase
 
   public:
     MicroCondBase(ExtMachInst mach_inst, const char *mnem,
-        const char *inst_mnem, uint64_t set_flags, OpClass op_class,
-        uint8_t _cc) :
-        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
-        cc(_cc)
+                  const char *inst_mnem, uint64_t set_flags, OpClass op_class,
+                  uint8_t _cc)
+        : X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+          cc(_cc)
     {}
 };
 

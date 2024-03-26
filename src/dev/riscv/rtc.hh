@@ -71,8 +71,8 @@ class RiscvRTC : public SimObject
 
     RiscvRTC(const Params &params);
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void startup() override;
 

@@ -51,7 +51,7 @@ AMDGPUSystemHub::sendRequest(PacketPtr pkt, Event *callback)
     if (outstandingReqs[pkt->getAddr()].size() > 1) {
         // There is another request in progress, Delay this one.
         DPRINTF(AMDGPUSystemHub, "SystemHub deferring request for %#lx\n",
-            pkt->getAddr());
+                pkt->getAddr());
     } else {
         // No other requests, we can send immediately.
         sendDeferredRequest(this_req);
@@ -74,14 +74,14 @@ AMDGPUSystemHub::sendDeferredRequest(DeferredReq &deferredReq)
         // This places the current value in the packet, which is correct since
         // atomics return the value prior to performing the atomic.
         dmaRead(pkt->getAddr(), pkt->getSize(), atomicRespEvent,
-            pkt->getPtr<uint8_t>(), 0, 0, delay);
+                pkt->getPtr<uint8_t>(), 0, 0, delay);
 
         req_type = "Atomic";
     } else if (pkt->isWrite()) {
         ResponseEvent *dmaRespEvent = new ResponseEvent(*this, callback, pkt);
 
         dmaWrite(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
-            pkt->getPtr<uint8_t>(), 0, 0, delay);
+                 pkt->getPtr<uint8_t>(), 0, 0, delay);
 
         req_type = "Write";
     } else {
@@ -89,13 +89,13 @@ AMDGPUSystemHub::sendDeferredRequest(DeferredReq &deferredReq)
 
         assert(pkt->isRead());
         dmaRead(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
-            pkt->getPtr<uint8_t>(), 0, 0, delay);
+                pkt->getPtr<uint8_t>(), 0, 0, delay);
 
         req_type = "Read";
     }
 
     DPRINTF(AMDGPUSystemHub, "SystemHub %s request for %#lx size %d\n",
-        req_type.c_str(), pkt->getAddr(), pkt->getSize());
+            req_type.c_str(), pkt->getAddr(), pkt->getSize());
 }
 
 void
@@ -113,16 +113,16 @@ AMDGPUSystemHub::sendNextRequest(Addr addr, const PacketPtr donePkt)
     // Otherwise issue the next request in the list
     if (outstandingReqs[addr].empty()) {
         DPRINTF(AMDGPUSystemHub, "SystemHub done with packets for addr %#lx\n",
-            donePkt->getAddr());
+                donePkt->getAddr());
 
         outstandingReqs.erase(addr);
     } else {
         DeferredReq &nextPkt = outstandingReqs[addr].front();
 
         DPRINTF(AMDGPUSystemHub,
-            "SystemHub sending deferred request for addr"
-            " %#lx size %d\n",
-            nextPkt.first->getAddr(), nextPkt.first->getSize());
+                "SystemHub sending deferred request for addr"
+                " %#lx size %d\n",
+                nextPkt.first->getAddr(), nextPkt.first->getSize());
 
         sendDeferredRequest(nextPkt);
     }
@@ -132,9 +132,9 @@ void
 AMDGPUSystemHub::dmaResponse(PacketPtr pkt)
 {}
 
-AMDGPUSystemHub::ResponseEvent::ResponseEvent(
-    AMDGPUSystemHub &_hub, Event *_callback, PacketPtr _pkt) :
-    systemHub(_hub), callback(_callback), pkt(_pkt)
+AMDGPUSystemHub::ResponseEvent::ResponseEvent(AMDGPUSystemHub &_hub,
+                                              Event *_callback, PacketPtr _pkt)
+    : systemHub(_hub), callback(_callback), pkt(_pkt)
 {
     // Delete this event after process is called
     setFlags(Event::AutoDelete);
@@ -144,7 +144,7 @@ void
 AMDGPUSystemHub::ResponseEvent::process()
 {
     DPRINTF(AMDGPUSystemHub, "SystemHub response for addr %#lx size %d\n",
-        pkt->getAddr(), pkt->getSize());
+            pkt->getAddr(), pkt->getSize());
 
     systemHub.sendNextRequest(pkt->getAddr(), pkt);
 
@@ -152,8 +152,8 @@ AMDGPUSystemHub::ResponseEvent::process()
 }
 
 AMDGPUSystemHub::AtomicResponseEvent::AtomicResponseEvent(
-    AMDGPUSystemHub &_hub, Event *_callback, PacketPtr _pkt) :
-    systemHub(_hub), callback(_callback), pkt(_pkt)
+    AMDGPUSystemHub &_hub, Event *_callback, PacketPtr _pkt)
+    : systemHub(_hub), callback(_callback), pkt(_pkt)
 {
     // Delete this event after process is called
     setFlags(Event::AutoDelete);
@@ -183,7 +183,8 @@ AMDGPUSystemHub::AtomicResponseEvent::process()
     // Write back the new value. The atomic is not considered done until
     // this packet's response event is triggered.
     systemHub.dmaWrite(write_pkt->getAddr(), write_pkt->getSize(),
-        dmaRespEvent, write_pkt->getPtr<uint8_t>(), 0, 0, delay);
+                       dmaRespEvent, write_pkt->getPtr<uint8_t>(), 0, 0,
+                       delay);
 
     // Atomics from the GPU are at most 64-bit and usually 32-bit.
     // We can take a peek at the data for debugging purposes.
@@ -195,7 +196,7 @@ AMDGPUSystemHub::AtomicResponseEvent::process()
     }
 
     DPRINTF(AMDGPUSystemHub, "SystemHub atomic %#lx writing %lx size %d\n",
-        write_pkt->getAddr(), req_data, write_pkt->getSize());
+            write_pkt->getAddr(), req_data, write_pkt->getSize());
 }
 
 AddrRangeList

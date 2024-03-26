@@ -50,9 +50,9 @@ class Gem5SlaveTransactor;
 /**
  * Test that gem5 is at the same time as SystemC
  */
-#define CAUGHT_UP \
-    do { \
-        assert(gem5::curTick() == sc_core::sc_time_stamp().value()); \
+#define CAUGHT_UP                                                             \
+    do {                                                                      \
+        assert(gem5::curTick() == sc_core::sc_time_stamp().value());          \
     } while (0)
 
 /**
@@ -71,7 +71,7 @@ class SCSlavePort : public gem5::ExternalSlave::ExternalPort
     /** One instance of pe and the related callback needed */
     // payloadEvent<SCSlavePort> pe;
     void pec(PayloadEvent<SCSlavePort> *pe, tlm::tlm_generic_payload &trans,
-        const tlm::tlm_phase &phase);
+             const tlm::tlm_phase &phase);
 
     /**
      * A transaction after BEGIN_REQ has been sent but before END_REQ, which
@@ -105,10 +105,11 @@ class SCSlavePort : public gem5::ExternalSlave::ExternalPort
   public:
     /** The TLM initiator interface */
     tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload &trans,
-        tlm::tlm_phase &phase, sc_core::sc_time &t);
+                                       tlm::tlm_phase &phase,
+                                       sc_core::sc_time &t);
 
     SCSlavePort(const std::string &name_, const std::string &systemc_name,
-        gem5::ExternalSlave &owner_);
+                gem5::ExternalSlave &owner_);
 
     void bindToTransactor(Gem5SlaveTransactor *transactor);
 
@@ -123,8 +124,9 @@ class SCSlavePortHandler : public gem5::ExternalSlave::Handler
   public:
     SCSlavePortHandler(Gem5SimControl &control) : control(control) {}
 
-    gem5::ExternalSlave::ExternalPort *getExternalPort(const std::string &name,
-        gem5::ExternalSlave &owner, const std::string &port_data);
+    gem5::ExternalSlave::ExternalPort *
+    getExternalPort(const std::string &name, gem5::ExternalSlave &owner,
+                    const std::string &port_data);
 };
 
 } // namespace Gem5SystemC

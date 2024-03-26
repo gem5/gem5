@@ -316,7 +316,7 @@ hasBuiltinCtz()
 // __has_builtin(__builtin_ctz), we must explicitly define it as zero
 // if it's undefined to avoid a preprocessor error.
 #ifndef __has_builtin
-#    define __has_builtin(foo) 0
+#define __has_builtin(foo) 0
 #endif
 #if defined(__has_builtin) && __has_builtin(__builtin_ctz)
     return sizeof(unsigned long long) >= sizeof(T);
@@ -418,9 +418,9 @@ constexpr int
 popCount(uint64_t val)
 {
 #ifndef __has_builtin
-#    define __has_builtin(foo) 0
+#define __has_builtin(foo) 0
 #endif
-#if defined(__GNUC__) || \
+#if defined(__GNUC__) ||                                                      \
     (defined(__clang__) && __has_builtin(__builtin_popcountl))
     return __builtin_popcountl(val);
 #else

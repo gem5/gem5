@@ -54,28 +54,28 @@ namespace gem5
 {
 namespace branch_prediction
 {
-LoopPredictor::LoopPredictor(const LoopPredictorParams &p) :
-    SimObject(p),
-    logSizeLoopPred(p.logSizeLoopPred),
-    loopTableAgeBits(p.loopTableAgeBits),
-    loopTableConfidenceBits(p.loopTableConfidenceBits),
-    loopTableTagBits(p.loopTableTagBits),
-    loopTableIterBits(p.loopTableIterBits),
-    logLoopTableAssoc(p.logLoopTableAssoc),
-    confidenceThreshold((1 << loopTableConfidenceBits) - 1),
-    loopTagMask((1 << loopTableTagBits) - 1),
-    loopNumIterMask((1 << loopTableIterBits) - 1),
-    loopSetMask((1 << (logSizeLoopPred - logLoopTableAssoc)) - 1),
-    loopUseCounter(-1),
-    withLoopBits(p.withLoopBits),
-    useDirectionBit(p.useDirectionBit),
-    useSpeculation(p.useSpeculation),
-    useHashing(p.useHashing),
-    restrictAllocation(p.restrictAllocation),
-    initialLoopIter(p.initialLoopIter),
-    initialLoopAge(p.initialLoopAge),
-    optionalAgeReset(p.optionalAgeReset),
-    stats(this)
+LoopPredictor::LoopPredictor(const LoopPredictorParams &p)
+    : SimObject(p),
+      logSizeLoopPred(p.logSizeLoopPred),
+      loopTableAgeBits(p.loopTableAgeBits),
+      loopTableConfidenceBits(p.loopTableConfidenceBits),
+      loopTableTagBits(p.loopTableTagBits),
+      loopTableIterBits(p.loopTableIterBits),
+      logLoopTableAssoc(p.logLoopTableAssoc),
+      confidenceThreshold((1 << loopTableConfidenceBits) - 1),
+      loopTagMask((1 << loopTableTagBits) - 1),
+      loopNumIterMask((1 << loopTableIterBits) - 1),
+      loopSetMask((1 << (logSizeLoopPred - logLoopTableAssoc)) - 1),
+      loopUseCounter(-1),
+      withLoopBits(p.withLoopBits),
+      useDirectionBit(p.useDirectionBit),
+      useSpeculation(p.useSpeculation),
+      useHashing(p.useHashing),
+      restrictAllocation(p.restrictAllocation),
+      initialLoopIter(p.initialLoopIter),
+      initialLoopAge(p.initialLoopAge),
+      optionalAgeReset(p.optionalAgeReset),
+      stats(this)
 {
     assert(initialLoopAge <= ((1 << loopTableAgeBits) - 1));
 }
@@ -126,8 +126,8 @@ LoopPredictor::finallindex(int index, int lowPcBits, int way) const
 
 // loop prediction: only used if high confidence
 bool
-LoopPredictor::getLoop(
-    Addr pc, BranchInfo *bi, bool speculative, unsigned instShiftAmt) const
+LoopPredictor::getLoop(Addr pc, BranchInfo *bi, bool speculative,
+                       unsigned instShiftAmt) const
 {
     bi->loopHit = -1;
     bi->loopPredValid = false;
@@ -225,8 +225,8 @@ LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo *bi, bool tage_pred)
         if (taken != (useDirectionBit ? ltable[idx].dir : true)) {
             if (ltable[idx].currentIter == ltable[idx].numIter) {
                 DPRINTF(LTage, "Loop End predicted successfully:%lx\n", pc);
-                unsignedCtrUpdate(
-                    ltable[idx].confidence, true, loopTableConfidenceBits);
+                unsignedCtrUpdate(ltable[idx].confidence, true,
+                                  loopTableConfidenceBits);
                 // just do not predict when the loop count is 1 or 2
                 if (ltable[idx].numIter < 3) {
                     // free the entry
@@ -263,7 +263,7 @@ LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo *bi, bool tage_pred)
                 idx = finallindex(bi->loopIndex, bi->loopIndexB, loop_hit);
                 if (ltable[idx].age == 0) {
                     DPRINTF(LTage,
-                        "Allocating loop pred entry for branch %lx\n", pc);
+                            "Allocating loop pred entry for branch %lx\n", pc);
                     ltable[idx].dir = !taken; // ignored if no useDirectionBit
                     ltable[idx].tag = bi->loopTag;
                     ltable[idx].numIter = 0;
@@ -285,7 +285,8 @@ LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo *bi, bool tage_pred)
 
 bool
 LoopPredictor::loopPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-    BranchInfo *bi, bool prev_pred_taken, unsigned instShiftAmt)
+                           BranchInfo *bi, bool prev_pred_taken,
+                           unsigned instShiftAmt)
 {
     bool pred_taken = prev_pred_taken;
     if (cond_branch) {
@@ -338,7 +339,8 @@ LoopPredictor::updateStats(bool taken, BranchInfo *bi)
 
 void
 LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-    bool tage_pred, BranchInfo *bi, unsigned instShiftAmt)
+                                bool tage_pred, BranchInfo *bi,
+                                unsigned instShiftAmt)
 {
     if (useSpeculation) {
         // recalculate loop prediction without speculation
@@ -350,8 +352,8 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 
     if (bi->loopPredValid) {
         if (bi->predTaken != bi->loopPred) {
-            signedCtrUpdate(
-                loopUseCounter, (bi->loopPred == taken), withLoopBits);
+            signedCtrUpdate(loopUseCounter, (bi->loopPred == taken),
+                            withLoopBits);
         }
     }
 
@@ -359,16 +361,16 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 }
 
 LoopPredictor::LoopPredictorStats::LoopPredictorStats(
-    statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(used, statistics::units::Count::get(),
-        "Number of times the loop predictor is the provider."),
-    ADD_STAT(correct, statistics::units::Count::get(),
-        "Number of times the loop predictor is the provider and the "
-        "prediction is correct"),
-    ADD_STAT(wrong, statistics::units::Count::get(),
-        "Number of times the loop predictor is the provider and the "
-        "prediction is wrong")
+    statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(used, statistics::units::Count::get(),
+               "Number of times the loop predictor is the provider."),
+      ADD_STAT(correct, statistics::units::Count::get(),
+               "Number of times the loop predictor is the provider and the "
+               "prediction is correct"),
+      ADD_STAT(wrong, statistics::units::Count::get(),
+               "Number of times the loop predictor is the provider and the "
+               "prediction is wrong")
 {}
 
 size_t
@@ -376,8 +378,8 @@ LoopPredictor::getSizeInBits() const
 {
     return (1ULL << logSizeLoopPred) *
            ((useSpeculation ? 3 : 2) * loopTableIterBits +
-               loopTableConfidenceBits + loopTableTagBits + loopTableAgeBits +
-               useDirectionBit);
+            loopTableConfidenceBits + loopTableTagBits + loopTableAgeBits +
+            useDirectionBit);
 }
 
 } // namespace branch_prediction

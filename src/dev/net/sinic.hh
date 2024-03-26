@@ -154,14 +154,14 @@ class Device : public Base
         Counter rxUnique;
         Counter txUnique;
 
-        VirtualReg() :
-            RxData(0),
-            RxDone(0),
-            TxData(0),
-            TxDone(0),
-            rxPacketOffset(0),
-            rxPacketBytes(0),
-            rxDoneData(0)
+        VirtualReg()
+            : RxData(0),
+              RxDone(0),
+              TxData(0),
+              TxDone(0),
+              rxPacketOffset(0),
+              rxPacketBytes(0),
+              rxDoneData(0)
         {}
     };
     typedef std::vector<VirtualReg> VirtualRegs;
@@ -256,8 +256,8 @@ class Device : public Base
   public:
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     /**
      * DMA parameters

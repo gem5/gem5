@@ -127,7 +127,8 @@ struct TimeStruct
     DecodeComm decodeInfo[MaxThreads];
 
     struct RenameComm
-    {};
+    {
+    };
 
     RenameComm renameInfo[MaxThreads];
 

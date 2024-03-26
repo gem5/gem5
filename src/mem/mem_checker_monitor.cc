@@ -46,12 +46,12 @@
 
 namespace gem5
 {
-MemCheckerMonitor::MemCheckerMonitor(const Params &params) :
-    SimObject(params),
-    memSidePort(name() + "-memSidePort", *this),
-    cpuSidePort(name() + "-cpuSidePort", *this),
-    warnOnly(params.warn_only),
-    memchecker(params.memchecker)
+MemCheckerMonitor::MemCheckerMonitor(const Params &params)
+    : SimObject(params),
+      memSidePort(name() + "-memSidePort", *this),
+      cpuSidePort(name() + "-cpuSidePort", *this),
+      warnOnly(params.warn_only),
+      memchecker(params.memchecker)
 {}
 
 MemCheckerMonitor::~MemCheckerMonitor() {}
@@ -90,7 +90,8 @@ MemCheckerMonitor::recvFunctional(PacketPtr pkt)
     memSidePort.sendFunctional(pkt);
 
     DPRINTF(MemCheckerMonitor,
-        "Forwarded functional access: addr = %#llx, size = %d\n", addr, size);
+            "Forwarded functional access: addr = %#llx, size = %d\n", addr,
+            size);
 }
 
 void
@@ -105,7 +106,8 @@ MemCheckerMonitor::recvFunctionalSnoop(PacketPtr pkt)
     cpuSidePort.sendFunctionalSnoop(pkt);
 
     DPRINTF(MemCheckerMonitor,
-        "Received functional snoop: addr = %#llx, size = %d\n", addr, size);
+            "Received functional snoop: addr = %#llx, size = %d\n", addr,
+            size);
 }
 
 Tick
@@ -183,9 +185,9 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
             state->serial = serial;
 
             DPRINTF(MemCheckerMonitor,
-                "Forwarded read request: serial = %d, addr = %#llx, "
-                "size = %d\n",
-                serial, addr, size);
+                    "Forwarded read request: serial = %d, addr = %#llx, "
+                    "size = %d\n",
+                    serial, addr, size);
         } else if (is_write) {
             MemChecker::Serial serial =
                 memchecker->startWrite(curTick(), addr, size, pkt_data.get());
@@ -193,17 +195,17 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
             state->serial = serial;
 
             DPRINTF(MemCheckerMonitor,
-                "Forwarded write request: serial = %d, addr = %#llx, "
-                "size = %d\n",
-                serial, addr, size);
+                    "Forwarded write request: serial = %d, addr = %#llx, "
+                    "size = %d\n",
+                    serial, addr, size);
         } else {
             DPRINTF(MemCheckerMonitor,
-                "Forwarded non read/write request: addr = %#llx\n", addr);
+                    "Forwarded non read/write request: addr = %#llx\n", addr);
         }
     } else if (successful) {
         DPRINTF(MemCheckerMonitor,
-            "Forwarded request marked for cache response: addr = %#llx\n",
-            addr);
+                "Forwarded request marked for cache response: addr = %#llx\n",
+                addr);
     }
 
     return successful;
@@ -239,7 +241,7 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
 
         // Restore initial sender state
         panic_if(received_state == NULL,
-            "Monitor got a response without monitor sender state\n");
+                 "Monitor got a response without monitor sender state\n");
 
         // Restore the state
         pkt->senderState = received_state->predecessor;
@@ -253,16 +255,16 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
     if (successful) {
         if (is_read) {
             DPRINTF(MemCheckerMonitor,
-                "Received read response: serial = %d, addr = %#llx, "
-                "size = %d\n",
-                received_state->serial, addr, size);
+                    "Received read response: serial = %d, addr = %#llx, "
+                    "size = %d\n",
+                    received_state->serial, addr, size);
 
             bool result = memchecker->completeRead(
                 received_state->serial, curTick(), addr, size, pkt_data.get());
 
             if (!result) {
                 warn("%s: read of %#llx @ cycle %d failed:\n%s\n", name(),
-                    addr, curTick(), memchecker->getErrorMessage().c_str());
+                     addr, curTick(), memchecker->getErrorMessage().c_str());
 
                 panic_if(!warnOnly, "MemChecker violation!");
             }
@@ -270,22 +272,22 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
             delete received_state;
         } else if (is_write) {
             DPRINTF(MemCheckerMonitor,
-                "Received write response: serial = %d, addr = %#llx, "
-                "size = %d\n",
-                received_state->serial, addr, size);
+                    "Received write response: serial = %d, addr = %#llx, "
+                    "size = %d\n",
+                    received_state->serial, addr, size);
 
             if (is_failed_LLSC) {
                 // The write was not successful, let MemChecker know.
                 memchecker->abortWrite(received_state->serial, addr, size);
             } else {
-                memchecker->completeWrite(
-                    received_state->serial, curTick(), addr, size);
+                memchecker->completeWrite(received_state->serial, curTick(),
+                                          addr, size);
             }
 
             delete received_state;
         } else {
             DPRINTF(MemCheckerMonitor,
-                "Received non read/write response: addr = %#llx\n", addr);
+                    "Received non read/write response: addr = %#llx\n", addr);
         }
     } else if (is_read || is_write) {
         // Don't delete anything and let the packet look like we

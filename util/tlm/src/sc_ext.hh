@@ -51,10 +51,10 @@ class Gem5Extension : public tlm::tlm_extension<Gem5Extension>
     virtual tlm_extension_base *clone() const;
     virtual void copy_from(const tlm_extension_base &ext);
 
-    static Gem5Extension &getExtension(
-        const tlm::tlm_generic_payload *payload);
-    static Gem5Extension &getExtension(
-        const tlm::tlm_generic_payload &payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload *payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload &payload);
     gem5::PacketPtr getPacket();
 
   private:

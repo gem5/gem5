@@ -44,7 +44,8 @@ Tagged::Tagged(const TaggedPrefetcherParams &p) : Queued(p), degree(p.degree)
 
 void
 Tagged::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                          std::vector<AddrPriority> &addresses,
+                          const CacheAccessor &cache)
 {
     Addr blkAddr = blockAddress(pfi.getAddr());
 

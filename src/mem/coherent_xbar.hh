@@ -92,11 +92,11 @@ class CoherentXBar : public BaseXBar
         RespPacketQueue queue;
 
       public:
-        CoherentXBarResponsePort(
-            const std::string &_name, CoherentXBar &_xbar, PortID _id) :
-            QueuedResponsePort(_name, queue, _id),
-            xbar(_xbar),
-            queue(_xbar, *this)
+        CoherentXBarResponsePort(const std::string &_name, CoherentXBar &_xbar,
+                                 PortID _id)
+            : QueuedResponsePort(_name, queue, _id),
+              xbar(_xbar),
+              queue(_xbar, *this)
         {}
 
       protected:
@@ -131,8 +131,8 @@ class CoherentXBar : public BaseXBar
         }
 
         void
-        recvMemBackdoorReq(
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override
+        recvMemBackdoorReq(const MemBackdoorReq &req,
+                           MemBackdoorPtr &backdoor) override
         {
             xbar.recvMemBackdoorReq(req, backdoor);
         }
@@ -156,9 +156,9 @@ class CoherentXBar : public BaseXBar
         CoherentXBar &xbar;
 
       public:
-        CoherentXBarRequestPort(
-            const std::string &_name, CoherentXBar &_xbar, PortID _id) :
-            RequestPort(_name, _id), xbar(_xbar)
+        CoherentXBarRequestPort(const std::string &_name, CoherentXBar &_xbar,
+                                PortID _id)
+            : RequestPort(_name, _id), xbar(_xbar)
         {}
 
       protected:
@@ -225,9 +225,9 @@ class CoherentXBar : public BaseXBar
         /**
          * Create a snoop response port that mirrors a given CPU-side port.
          */
-        SnoopRespPort(QueuedResponsePort &cpu_side_port, CoherentXBar &_xbar) :
-            RequestPort(cpu_side_port.name() + ".snoopRespPort"),
-            cpuSidePort(cpu_side_port)
+        SnoopRespPort(QueuedResponsePort &cpu_side_port, CoherentXBar &_xbar)
+            : RequestPort(cpu_side_port.name() + ".snoopRespPort"),
+              cpuSidePort(cpu_side_port)
         {}
 
         /**
@@ -333,10 +333,10 @@ class CoherentXBar : public BaseXBar
      * @param dests Vector of destination ports for the forwarded pkt
      */
     void forwardTiming(PacketPtr pkt, PortID exclude_cpu_side_port_id,
-        const std::vector<QueuedResponsePort *> &dests);
+                       const std::vector<QueuedResponsePort *> &dests);
 
     Tick recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
-        MemBackdoorPtr *backdoor = nullptr);
+                            MemBackdoorPtr *backdoor = nullptr);
     Tick recvAtomicSnoop(PacketPtr pkt, PortID mem_side_port_id);
 
     /**
@@ -352,8 +352,8 @@ class CoherentXBar : public BaseXBar
     std::pair<MemCmd, Tick>
     forwardAtomic(PacketPtr pkt, PortID exclude_cpu_side_port_id)
     {
-        return forwardAtomic(
-            pkt, exclude_cpu_side_port_id, InvalidPortID, snoopPorts);
+        return forwardAtomic(pkt, exclude_cpu_side_port_id, InvalidPortID,
+                             snoopPorts);
     }
 
     /**
@@ -369,9 +369,10 @@ class CoherentXBar : public BaseXBar
      *
      * @return a pair containing the snoop response and snoop latency
      */
-    std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
-        PortID exclude_cpu_side_port_id, PortID source_mem_side_port_id,
-        const std::vector<QueuedResponsePort *> &dests);
+    std::pair<MemCmd, Tick>
+    forwardAtomic(PacketPtr pkt, PortID exclude_cpu_side_port_id,
+                  PortID source_mem_side_port_id,
+                  const std::vector<QueuedResponsePort *> &dests);
 
     /** Function called by the port when the crossbar is receiving a Functional
         transaction.*/
@@ -379,8 +380,8 @@ class CoherentXBar : public BaseXBar
 
     /** Function called by the port when the crossbar receives a request for
         a memory backdoor.*/
-    void recvMemBackdoorReq(
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor);
 
     /** Function called by the port when the crossbar is receiving a functional
         snoop transaction.*/

@@ -266,36 +266,36 @@ struct TlbEntry : public Serializable
 
     // Construct an entry that maps to physical address addr for SE mode
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr, bool uncacheable,
-        bool read_only) :
-        pfn(_paddr >> PageShift),
-        size(PageBytes - 1),
-        vpn(_vaddr >> PageShift),
-        attributes(0),
-        lookupLevel(LookupLevel::L1),
-        asid(_asn),
-        vmid(0),
-        tg(Grain4KB),
-        N(0),
-        innerAttrs(0),
-        outerAttrs(0),
-        ap(read_only ? 0x3 : 0),
-        hap(0x3),
-        domain(DomainType::Client),
-        mtype(MemoryType::StronglyOrdered),
-        longDescFormat(false),
-        isHyp(false),
-        global(false),
-        valid(true),
-        ns(true),
-        nstid(true),
-        el(EL0),
-        type(TypeTLB::unified),
-        partial(false),
-        nonCacheable(uncacheable),
-        shareable(false),
-        outerShareable(false),
-        xn(0),
-        pxn(0)
+             bool read_only)
+        : pfn(_paddr >> PageShift),
+          size(PageBytes - 1),
+          vpn(_vaddr >> PageShift),
+          attributes(0),
+          lookupLevel(LookupLevel::L1),
+          asid(_asn),
+          vmid(0),
+          tg(Grain4KB),
+          N(0),
+          innerAttrs(0),
+          outerAttrs(0),
+          ap(read_only ? 0x3 : 0),
+          hap(0x3),
+          domain(DomainType::Client),
+          mtype(MemoryType::StronglyOrdered),
+          longDescFormat(false),
+          isHyp(false),
+          global(false),
+          valid(true),
+          ns(true),
+          nstid(true),
+          el(EL0),
+          type(TypeTLB::unified),
+          partial(false),
+          nonCacheable(uncacheable),
+          shareable(false),
+          outerShareable(false),
+          xn(0),
+          pxn(0)
     {
         // no restrictions by default, hap = 0x3
 
@@ -304,36 +304,36 @@ struct TlbEntry : public Serializable
             warn("ARM TlbEntry does not support read-only mappings\n");
     }
 
-    TlbEntry() :
-        pfn(0),
-        size(0),
-        vpn(0),
-        attributes(0),
-        lookupLevel(LookupLevel::L1),
-        asid(0),
-        vmid(0),
-        tg(ReservedGrain),
-        N(0),
-        innerAttrs(0),
-        outerAttrs(0),
-        ap(0),
-        hap(0x3),
-        domain(DomainType::Client),
-        mtype(MemoryType::StronglyOrdered),
-        longDescFormat(false),
-        isHyp(false),
-        global(false),
-        valid(false),
-        ns(true),
-        nstid(true),
-        el(EL0),
-        type(TypeTLB::unified),
-        partial(false),
-        nonCacheable(false),
-        shareable(false),
-        outerShareable(false),
-        xn(0),
-        pxn(0)
+    TlbEntry()
+        : pfn(0),
+          size(0),
+          vpn(0),
+          attributes(0),
+          lookupLevel(LookupLevel::L1),
+          asid(0),
+          vmid(0),
+          tg(ReservedGrain),
+          N(0),
+          innerAttrs(0),
+          outerAttrs(0),
+          ap(0),
+          hap(0x3),
+          domain(DomainType::Client),
+          mtype(MemoryType::StronglyOrdered),
+          longDescFormat(false),
+          isHyp(false),
+          global(false),
+          valid(false),
+          ns(true),
+          nstid(true),
+          el(EL0),
+          type(TypeTLB::unified),
+          partial(false),
+          nonCacheable(false),
+          shareable(false),
+          outerShareable(false),
+          xn(0),
+          pxn(0)
     {
         // no restrictions by default, hap = 0x3
 
@@ -459,8 +459,8 @@ struct TlbEntry : public Serializable
     {
         return csprintf("%#x, asn %d vmn %d hyp %d ppn %#x size: %#x ap:%d "
                         "ns:%d nstid:%d g:%d el:%d",
-            vpn << N, asid, vmid, isHyp, pfn << N, size, ap, ns, nstid, global,
-            el);
+                        vpn << N, asid, vmid, isHyp, pfn << N, size, ap, ns,
+                        nstid, global, el);
     }
 
     void

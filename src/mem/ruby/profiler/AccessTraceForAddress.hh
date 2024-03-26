@@ -45,14 +45,14 @@ class Histogram;
 class AccessTraceForAddress
 {
   public:
-    AccessTraceForAddress() :
-        m_loads(0),
-        m_stores(0),
-        m_atomics(0),
-        m_total(0),
-        m_user(0),
-        m_sharing(0),
-        m_histogram_ptr(NULL)
+    AccessTraceForAddress()
+        : m_loads(0),
+          m_stores(0),
+          m_atomics(0),
+          m_total(0),
+          m_user(0),
+          m_sharing(0),
+          m_histogram_ptr(NULL)
     {}
     ~AccessTraceForAddress();
 
@@ -62,7 +62,7 @@ class AccessTraceForAddress
         m_addr = addr;
     }
     void update(RubyRequestType type, RubyAccessMode access_mode, NodeID cpu,
-        bool sharing_miss);
+                bool sharing_miss);
     int getTotal() const;
     int
     getSharing() const
@@ -84,8 +84,8 @@ class AccessTraceForAddress
     void print(std::ostream &out) const;
 
     static inline bool
-    less_equal(
-        const AccessTraceForAddress *n1, const AccessTraceForAddress *n2)
+    less_equal(const AccessTraceForAddress *n1,
+               const AccessTraceForAddress *n2)
     {
         return n1->getTotal() <= n2->getTotal();
     }

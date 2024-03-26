@@ -35,11 +35,11 @@
 
 namespace gem5
 {
-LupioIPI::LupioIPI(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    intType(params.int_type),
-    nThread(params.num_threads)
+LupioIPI::LupioIPI(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      intType(params.int_type),
+      nThread(params.num_threads)
 {
     mask.resize(nThread, 0);
     pending.resize(nThread, 0);
@@ -119,7 +119,7 @@ LupioIPI::read(PacketPtr pkt)
     Addr ipi_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioIPI, "Read request - addr: %#x, size: %#x\n", ipi_addr,
-        pkt->getSize());
+            pkt->getSize());
 
     uint64_t read_val = lupioIPIRead(ipi_addr, pkt->getSize());
     DPRINTF(LupioIPI, "Packet Read: %#x\n", read_val);
@@ -135,7 +135,7 @@ LupioIPI::write(PacketPtr pkt)
     Addr ipi_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioIPI, "Write register %#x value %#x\n", ipi_addr,
-        pkt->getUintX(byteOrder));
+            pkt->getUintX(byteOrder));
 
     lupioIPIWrite(ipi_addr, pkt->getUintX(byteOrder), pkt->getSize());
     DPRINTF(LupioIPI, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

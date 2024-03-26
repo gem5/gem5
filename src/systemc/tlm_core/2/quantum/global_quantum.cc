@@ -23,8 +23,8 @@
 
 namespace tlm
 {
-tlm_global_quantum::tlm_global_quantum() :
-    m_global_quantum(sc_core::SC_ZERO_TIME)
+tlm_global_quantum::tlm_global_quantum()
+    : m_global_quantum(sc_core::SC_ZERO_TIME)
 {}
 
 tlm_global_quantum &

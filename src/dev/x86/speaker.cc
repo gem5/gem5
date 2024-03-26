@@ -44,9 +44,9 @@ X86ISA::Speaker::read(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     controlVal.timer = timer->outputHigh(2) ? 1 : 0;
     DPRINTF(PcSpeaker,
-        "Reading from speaker device: gate %s, speaker %s, output %s.\n",
-        controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off",
-        controlVal.timer ? "on" : "off");
+            "Reading from speaker device: gate %s, speaker %s, output %s.\n",
+            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off",
+            controlVal.timer ? "on" : "off");
     pkt->setLE((uint8_t)controlVal);
     pkt->makeAtomicResponse();
     return latency;
@@ -68,7 +68,7 @@ X86ISA::Speaker::write(PacketPtr pkt)
     // anything.
     controlVal.speaker = val.speaker;
     DPRINTF(PcSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
-        controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
+            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
     pkt->makeAtomicResponse();
     return latency;
 }

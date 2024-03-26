@@ -49,8 +49,8 @@ namespace gem5
 {
 namespace trace
 {
-NativeTrace::NativeTrace(const Params &p) :
-    ExeTracer(p), native_listener(listenSocketInetConfig(8000).build(p.name))
+NativeTrace::NativeTrace(const Params &p)
+    : ExeTracer(p), native_listener(listenSocketInetConfig(8000).build(p.name))
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled!");
@@ -61,11 +61,13 @@ NativeTrace::NativeTrace(const Params &p) :
 }
 
 NativeTraceRecord::NativeTraceRecord(NativeTrace *_parent, Tick _when,
-    ThreadContext *_thread, const StaticInstPtr _staticInst,
-    const PCStateBase &_pc, const StaticInstPtr _macroStaticInst) :
-    ExeTracerRecord(
-        _when, _thread, _staticInst, _pc, *_parent, _macroStaticInst),
-    parent(_parent)
+                                     ThreadContext *_thread,
+                                     const StaticInstPtr _staticInst,
+                                     const PCStateBase &_pc,
+                                     const StaticInstPtr _macroStaticInst)
+    : ExeTracerRecord(_when, _thread, _staticInst, _pc, *_parent,
+                      _macroStaticInst),
+      parent(_parent)
 {}
 
 void

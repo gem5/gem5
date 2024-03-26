@@ -51,8 +51,8 @@ namespace gem5
 class StreamGen
 {
   protected:
-    StreamGen(const BaseTrafficGenParams &p) :
-        streamIds(p.sids), substreamIds(p.ssids)
+    StreamGen(const BaseTrafficGenParams &p)
+        : streamIds(p.sids), substreamIds(p.ssids)
     {
         // A non empty vector of StreamIDs must be provided.
         // SubstreamIDs are not mandatory hence having an empty
@@ -112,7 +112,7 @@ class FixedStreamGen : public StreamGen
         // For a fixed stream generator only one sid must be provided. The
         // ssid can have either 0 (not used) or 1 value.
         fatal_if(streamIds.size() != 1 || substreamIds.size() > 1,
-            "Invalid sids/ssids configuration");
+                 "Invalid sids/ssids configuration");
     }
 
     uint32_t

@@ -73,12 +73,12 @@ class Base : public ClockedObject
     {
       public:
         PrefetchListener(Base &_parent, ProbeManager *pm,
-            const std::string &name, bool _isFill = false,
-            bool _miss = false) :
-            ProbeListenerArgBase(pm, name),
-            parent(_parent),
-            isFill(_isFill),
-            miss(_miss)
+                         const std::string &name, bool _isFill = false,
+                         bool _miss = false)
+            : ProbeListenerArgBase(pm, name),
+              parent(_parent),
+              isFill(_isFill),
+              miss(_miss)
         {}
         void notify(const CacheAccessProbeArg &arg) override;
 
@@ -93,9 +93,9 @@ class Base : public ClockedObject
     class PrefetchEvictListener : public ProbeListenerArgBase<EvictionInfo>
     {
       public:
-        PrefetchEvictListener(
-            Base &_parent, ProbeManager *pm, const std::string &name) :
-            ProbeListenerArgBase(pm, name), parent(_parent)
+        PrefetchEvictListener(Base &_parent, ProbeManager *pm,
+                              const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
         {}
         void notify(const EvictionInfo &info) override;
 
@@ -389,15 +389,15 @@ class Base : public ClockedObject
     Base(const BasePrefetcherParams &p);
     virtual ~Base() = default;
 
-    virtual void setParentInfo(
-        System *sys, ProbeManager *pm, unsigned blk_size);
+    virtual void setParentInfo(System *sys, ProbeManager *pm,
+                               unsigned blk_size);
 
     /**
      * Notify prefetcher of cache access (may be any access or just
      * misses, depending on cache parameters.)
      */
-    virtual void notify(
-        const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) = 0;
+    virtual void notify(const CacheAccessProbeArg &acc,
+                        const PrefetchInfo &pfi) = 0;
 
     /** Notify prefetcher of cache fill */
     virtual void

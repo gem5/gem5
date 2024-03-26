@@ -45,15 +45,15 @@
 
 namespace gem5
 {
-GPUDispatcher::GPUDispatcher(const Params &p) :
-    SimObject(p),
-    shader(nullptr),
-    gpuCmdProc(nullptr),
-    tickEvent(
-        [this] { exec(); }, "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
-    dispatchActive(false),
-    kernelExitEvents(p.kernel_exit_events),
-    stats(this)
+GPUDispatcher::GPUDispatcher(const Params &p)
+    : SimObject(p),
+      shader(nullptr),
+      gpuCmdProc(nullptr),
+      tickEvent([this] { exec(); }, "GPU Dispatcher tick", false,
+                Event::CPU_Tick_Pri),
+      dispatchActive(false),
+      kernelExitEvents(p.kernel_exit_events),
+      stats(this)
 {
     schedule(&tickEvent, 0);
 }
@@ -117,9 +117,9 @@ GPUDispatcher::dispatch(HSAQueueEntry *task)
     ++stats.numKernelLaunched;
 
     DPRINTF(GPUDisp, "launching kernel: %s, dispatch ID: %d\n",
-        task->kernelName(), task->dispatchId());
+            task->kernelName(), task->dispatchId());
     DPRINTF(GPUAgentDisp, "launching kernel: %s, dispatch ID: %d\n",
-        task->kernelName(), task->dispatchId());
+            task->kernelName(), task->dispatchId());
 
     execIds.push(task->dispatchId());
     dispatchActive = true;
@@ -176,9 +176,9 @@ GPUDispatcher::exec()
             ++fail_count;
 
             DPRINTF(GPUDisp,
-                "kernel %d failed to launch, due to [%d] pending"
-                " invalidate requests\n",
-                exec_id, task->outstandingInvs());
+                    "kernel %d failed to launch, due to [%d] pending"
+                    " invalidate requests\n",
+                    exec_id, task->outstandingInvs());
 
             // try the next kernel_id
             execIds.pop();
@@ -192,7 +192,7 @@ GPUDispatcher::exec()
 
             // attempt to dispatch workgroup
             DPRINTF(GPUWgLatency, "Attempt Kernel Launch cycle:%d kernel:%d\n",
-                curTick(), exec_id);
+                    curTick(), exec_id);
 
             if (!shader->dispatchWorkgroups(task)) {
                 /**
@@ -217,7 +217,7 @@ GPUDispatcher::exec()
 
     DPRINTF(GPUDisp, "Returning %d Kernels\n", doneIds.size());
     DPRINTF(GPUWgLatency, "Kernel Wgs dispatched: %d | %d failures\n",
-        disp_count, fail_count);
+            disp_count, fail_count);
 
     while (doneIds.size()) {
         DPRINTF(GPUDisp, "Kernel %d completed\n", doneIds.front());
@@ -307,17 +307,17 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
     task->notifyWgCompleted();
 
     DPRINTF(GPUWgLatency, "WG Complete cycle:%d wg:%d kernel:%d cu:%d\n",
-        curTick(), wf->wgId, kern_id, wf->computeUnit->cu_id);
+            curTick(), wf->wgId, kern_id, wf->computeUnit->cu_id);
 
     if (task->numWgCompleted() == task->numWgTotal()) {
         // Notify the HSA PP that this kernel is complete
-        gpuCmdProc->hsaPacketProc().finishPkt(
-            task->dispPktPtr(), task->queueId());
+        gpuCmdProc->hsaPacketProc().finishPkt(task->dispPktPtr(),
+                                              task->queueId());
         if (task->completionSignal()) {
             DPRINTF(GPUDisp,
-                "HSA AQL Kernel Complete with completion "
-                "signal! Addr: %d\n",
-                task->completionSignal());
+                    "HSA AQL Kernel Complete with completion "
+                    "signal! Addr: %d\n",
+                    task->completionSignal());
 
             gpuCmdProc->sendCompletionSignal(task->completionSignal());
         } else {
@@ -326,7 +326,7 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         }
 
         DPRINTF(GPUWgLatency, "Kernel Complete ticks:%d kernel:%d\n",
-            curTick(), kern_id);
+                curTick(), kern_id);
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
         if (kernelExitEvents) {
@@ -348,12 +348,12 @@ GPUDispatcher::scheduleDispatch()
 }
 
 GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(
-    statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(numKernelLaunched, "number of kernel launched"),
-    ADD_STAT(cyclesWaitingForDispatch,
-        "number of cycles with outstanding "
-        "wavefronts that are waiting to be dispatched")
+    statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(numKernelLaunched, "number of kernel launched"),
+      ADD_STAT(cyclesWaitingForDispatch,
+               "number of cycles with outstanding "
+               "wavefronts that are waiting to be dispatched")
 {}
 
 } // namespace gem5

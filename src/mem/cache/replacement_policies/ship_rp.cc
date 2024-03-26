@@ -37,8 +37,8 @@ namespace gem5
 {
 namespace replacement_policy
 {
-SHiP::SHiPReplData::SHiPReplData(int num_bits) :
-    BRRIPReplData(num_bits), signature(0), outcome(false)
+SHiP::SHiPReplData::SHiPReplData(int num_bits)
+    : BRRIPReplData(num_bits), signature(0), outcome(false)
 {}
 
 SHiP::SignatureType
@@ -66,10 +66,10 @@ SHiP::SHiPReplData::wasReReferenced() const
     return outcome;
 }
 
-SHiP::SHiP(const Params &p) :
-    BRRIP(p),
-    insertionThreshold(p.insertion_threshold / 100.0),
-    SHCT(p.shct_size, SatCounter8(numRRPVBits))
+SHiP::SHiP(const Params &p)
+    : BRRIP(p),
+      insertionThreshold(p.insertion_threshold / 100.0),
+      SHCT(p.shct_size, SatCounter8(numRRPVBits))
 {}
 
 void
@@ -89,7 +89,7 @@ SHiP::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 
 void
 SHiP::touch(const std::shared_ptr<ReplacementData> &replacement_data,
-    const PacketPtr pkt)
+            const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -111,7 +111,7 @@ SHiP::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 
 void
 SHiP::reset(const std::shared_ptr<ReplacementData> &replacement_data,
-    const PacketPtr pkt)
+            const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);

@@ -101,7 +101,7 @@ RubyRequest::functionalWrite(Packet *pkt)
     if (pkt->isMaskedWrite() || m_pkt->isMaskedWrite()) {
         warn("Skiping functional write to/from a masked write packet"
              " (addr: %#x, other addr: %#x).\n",
-            m_PhysicalAddress, pkt->getAddr());
+             m_PhysicalAddress, pkt->getAddr());
         return false;
     }
 
@@ -126,7 +126,8 @@ RubyRequest::functionalWrite(Packet *pkt)
 }
 
 void
-RubyRequest::setWriteMask(uint32_t offset, uint32_t len,
+RubyRequest::setWriteMask(
+    uint32_t offset, uint32_t len,
     std::vector<std::pair<int, AtomicOpFunctor *>> atomicOps)
 {
     m_writeMask.setMask(offset, len);

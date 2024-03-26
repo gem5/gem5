@@ -224,12 +224,12 @@ class ChannelAddrRange
      * @ingroup api_channel_addr
      * @{
      */
-    constexpr ChannelAddrRange() :
-        ChannelAddrRange(ChannelAddr(1), ChannelAddr(0))
+    constexpr ChannelAddrRange()
+        : ChannelAddrRange(ChannelAddr(1), ChannelAddr(0))
     {}
 
-    constexpr ChannelAddrRange(ChannelAddr start, ChannelAddr end) :
-        _start(start), _end(end)
+    constexpr ChannelAddrRange(ChannelAddr start, ChannelAddr end)
+        : _start(start), _end(end)
     {}
 
     ChannelAddrRange(AddrRange ch_range, Addr start, Addr end);

@@ -45,11 +45,11 @@
 
 namespace gem5
 {
-PciVirtIO::PciVirtIO(const Params &params) :
-    PciDevice(params),
-    queueNotify(0),
-    interruptDeliveryPending(false),
-    vio(*params.vio)
+PciVirtIO::PciVirtIO(const Params &params)
+    : PciDevice(params),
+      queueNotify(0),
+      interruptDeliveryPending(false),
+      vio(*params.vio)
 {
     // Override the subsystem ID with the device ID from VirtIO
     config.subsystemID = htole(vio.deviceId);

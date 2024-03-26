@@ -98,15 +98,15 @@ class PropFairPolicy : public Policy
      * @param pkt_size size of the packet
      * @return QoS priority value
      */
-    virtual uint8_t schedule(
-        const RequestorID id, const uint64_t pkt_size) override;
+    virtual uint8_t schedule(const RequestorID id,
+                             const uint64_t pkt_size) override;
 
   protected:
     template <typename Requestor>
     void initRequestor(const Requestor requestor, const double score);
 
-    inline double updateScore(
-        const double old_score, const uint64_t served_bytes) const;
+    inline double updateScore(const double old_score,
+                              const uint64_t served_bytes) const;
 
   protected:
     /** PF Policy weight */

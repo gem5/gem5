@@ -51,17 +51,17 @@ namespace gem5
 {
 namespace branch_prediction
 {
-BiModeBP::BiModeBP(const BiModeBPParams &params) :
-    BPredUnit(params),
-    globalHistoryReg(params.numThreads, 0),
-    globalHistoryBits(ceilLog2(params.globalPredictorSize)),
-    choicePredictorSize(params.choicePredictorSize),
-    choiceCtrBits(params.choiceCtrBits),
-    globalPredictorSize(params.globalPredictorSize),
-    globalCtrBits(params.globalCtrBits),
-    choiceCounters(choicePredictorSize, SatCounter8(choiceCtrBits)),
-    takenCounters(globalPredictorSize, SatCounter8(globalCtrBits)),
-    notTakenCounters(globalPredictorSize, SatCounter8(globalCtrBits))
+BiModeBP::BiModeBP(const BiModeBPParams &params)
+    : BPredUnit(params),
+      globalHistoryReg(params.numThreads, 0),
+      globalHistoryBits(ceilLog2(params.globalPredictorSize)),
+      choicePredictorSize(params.choicePredictorSize),
+      choiceCtrBits(params.choiceCtrBits),
+      globalPredictorSize(params.globalPredictorSize),
+      globalCtrBits(params.globalCtrBits),
+      choiceCounters(choicePredictorSize, SatCounter8(choiceCtrBits)),
+      takenCounters(globalPredictorSize, SatCounter8(globalCtrBits)),
+      notTakenCounters(globalPredictorSize, SatCounter8(globalCtrBits))
 {
     if (!isPowerOf2(choicePredictorSize))
         fatal("Invalid choice predictor size.\n");
@@ -96,7 +96,7 @@ BiModeBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
 
 void
 BiModeBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-    Addr target, void *&bp_history)
+                          Addr target, void *&bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {
@@ -131,7 +131,7 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void *&bp_history)
         ((branchAddr >> instShiftAmt) & choiceHistoryMask);
     unsigned globalHistoryIdx =
         (((branchAddr >> instShiftAmt) ^ globalHistoryReg[tid]) &
-            globalHistoryMask);
+         globalHistoryMask);
 
     assert(choiceHistoryIdx < choicePredictorSize);
     assert(globalHistoryIdx < globalPredictorSize);
@@ -168,7 +168,7 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void *&bp_history)
  */
 void
 BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *&bp_history,
-    bool squashed, const StaticInstPtr &inst, Addr target)
+                 bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
 
@@ -185,7 +185,7 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *&bp_history,
         ((branchAddr >> instShiftAmt) & choiceHistoryMask);
     unsigned globalHistoryIdx =
         (((branchAddr >> instShiftAmt) ^ history->globalHistoryReg) &
-            globalHistoryMask);
+         globalHistoryMask);
 
     assert(choiceHistoryIdx < choicePredictorSize);
     assert(globalHistoryIdx < globalPredictorSize);

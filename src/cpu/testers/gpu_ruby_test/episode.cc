@@ -41,12 +41,12 @@
 namespace gem5
 {
 Episode::Episode(ProtocolTester *_tester, TesterThread *_thread, int num_loads,
-    int num_stores) :
-    tester(_tester),
-    thread(_thread),
-    numLoads(num_loads),
-    numStores(num_stores),
-    nextActionIdx(0)
+                 int num_stores)
+    : tester(_tester),
+      thread(_thread),
+      numLoads(num_loads),
+      numStores(num_stores),
+      nextActionIdx(0)
 {
     assert(tester && thread);
 
@@ -150,12 +150,12 @@ Episode::initActions()
 
                 if (normal_loc != AddressManager::INVALID_LOCATION) {
                     // check DRF
-                    if (!tester->checkDRF(
-                            atomicLocs[lane], normal_loc, false) ||
-                        !this->checkDRF(
-                            atomicLocs[lane], normal_loc, false, lane)) {
+                    if (!tester->checkDRF(atomicLocs[lane], normal_loc,
+                                          false) ||
+                        !this->checkDRF(atomicLocs[lane], normal_loc, false,
+                                        lane)) {
                         panic("TestTh %d - Data race detected. STOPPED!\n",
-                            thread->getTesterThreadId());
+                              thread->getTesterThreadId());
                     }
                 }
 
@@ -168,12 +168,12 @@ Episode::initActions()
 
                 if (normal_loc != AddressManager::INVALID_LOCATION) {
                     // check DRF
-                    if (!tester->checkDRF(
-                            atomicLocs[lane], normal_loc, true) ||
-                        !this->checkDRF(
-                            atomicLocs[lane], normal_loc, true, lane)) {
+                    if (!tester->checkDRF(atomicLocs[lane], normal_loc,
+                                          true) ||
+                        !this->checkDRF(atomicLocs[lane], normal_loc, true,
+                                        lane)) {
                         panic("TestTh %d - Data race detected. STOPPED!\n",
-                            thread->getTesterThreadId());
+                              thread->getTesterThreadId());
                     }
                 }
 
@@ -233,8 +233,8 @@ Episode::completeEpisode()
 }
 
 bool
-Episode::checkDRF(
-    Location atomic_loc, Location loc, bool isStore, int max_lane) const
+Episode::checkDRF(Location atomic_loc, Location loc, bool isStore,
+                  int max_lane) const
 {
     assert(atomic_loc != AddressManager::INVALID_LOCATION);
     assert(loc != AddressManager::INVALID_LOCATION);
@@ -246,13 +246,13 @@ Episode::checkDRF(
                 if (!action->isAtomicAction() && !action->isMemFenceAction()) {
                     if (isStore && loc == action->getLocation(lane)) {
                         warn("ST at location %d races against thread %d\n",
-                            loc, thread->getTesterThreadId());
+                             loc, thread->getTesterThreadId());
                         return false;
                     } else if (!isStore &&
                                action->getType() == Action::Type::STORE &&
                                loc == action->getLocation(lane)) {
                         warn("LD at location %d races against thread %d\n",
-                            loc, thread->getTesterThreadId());
+                             loc, thread->getTesterThreadId());
                         return false;
                     }
                 }

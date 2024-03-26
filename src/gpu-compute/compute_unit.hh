@@ -428,7 +428,8 @@ class ComputeUnit : public ClockedObject
     void fillKernelState(Wavefront *w, HSAQueueEntry *task);
 
     void startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
-        HSAQueueEntry *task, int bar_id, bool fetchContext = false);
+                        HSAQueueEntry *task, int bar_id,
+                        bool fetchContext = false);
 
     void doInvalidate(RequestPtr req, int kernId);
     void doFlush(GPUDynInstPtr gpuDynInst);
@@ -490,7 +491,7 @@ class ComputeUnit : public ClockedObject
     void sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt);
     void sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt);
     void injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelMemSync,
-        RequestPtr req = nullptr);
+                              RequestPtr req = nullptr);
     void handleMemPacket(PacketPtr pkt, int memport_index);
     bool processTimingPacket(PacketPtr pkt);
     void processFetchReturn(PacketPtr pkt);
@@ -520,8 +521,8 @@ class ComputeUnit : public ClockedObject
         return lds;
     }
 
-    int32_t getRefCounter(
-        const uint32_t dispatchId, const uint32_t wgId) const;
+    int32_t getRefCounter(const uint32_t dispatchId,
+                          const uint32_t wgId) const;
 
     [[nodiscard]] bool sendToLds(GPUDynInstPtr gpuDynInst);
 
@@ -534,8 +535,8 @@ class ComputeUnit : public ClockedObject
     {
       public:
         GMTokenPort(const std::string &name, SimObject *owner,
-            PortID id = InvalidPortID) :
-            TokenRequestPort(name, owner, id)
+                    PortID id = InvalidPortID)
+            : TokenRequestPort(name, owner, id)
         {}
         ~GMTokenPort() {}
 
@@ -556,8 +557,8 @@ class ComputeUnit : public ClockedObject
     class DataPort : public RequestPort
     {
       public:
-        DataPort(const std::string &_name, ComputeUnit *_cu, PortID id) :
-            RequestPort(_name, id), computeUnit(_cu)
+        DataPort(const std::string &_name, ComputeUnit *_cu, PortID id)
+            : RequestPort(_name, id), computeUnit(_cu)
         {}
 
         bool snoopRangeSent;
@@ -569,10 +570,10 @@ class ComputeUnit : public ClockedObject
             Packet::SenderState *saved;
 
             SenderState(GPUDynInstPtr gpuDynInst, PortID _port_index,
-                Packet::SenderState *sender_state = nullptr) :
-                _gpuDynInst(gpuDynInst),
-                port_index(_port_index),
-                saved(sender_state)
+                        Packet::SenderState *sender_state = nullptr)
+                : _gpuDynInst(gpuDynInst),
+                  port_index(_port_index),
+                  saved(sender_state)
             {}
         };
 
@@ -582,8 +583,8 @@ class ComputeUnit : public ClockedObject
             PacketPtr reqPkt;
 
           public:
-            SystemHubEvent(PacketPtr pkt, DataPort *_dataPort) :
-                dataPort(_dataPort), reqPkt(pkt)
+            SystemHubEvent(PacketPtr pkt, DataPort *_dataPort)
+                : dataPort(_dataPort), reqPkt(pkt)
             {
                 setFlags(Event::AutoDelete);
             }
@@ -637,8 +638,8 @@ class ComputeUnit : public ClockedObject
     class ScalarDataPort : public RequestPort
     {
       public:
-        ScalarDataPort(const std::string &_name, ComputeUnit *_cu) :
-            RequestPort(_name), computeUnit(_cu)
+        ScalarDataPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name), computeUnit(_cu)
         {}
 
         bool recvTimingResp(PacketPtr pkt) override;
@@ -647,8 +648,8 @@ class ComputeUnit : public ClockedObject
         struct SenderState : public Packet::SenderState
         {
             SenderState(GPUDynInstPtr gpuDynInst,
-                Packet::SenderState *sender_state = nullptr) :
-                _gpuDynInst(gpuDynInst), saved(sender_state)
+                        Packet::SenderState *sender_state = nullptr)
+                : _gpuDynInst(gpuDynInst), saved(sender_state)
             {}
 
             GPUDynInstPtr _gpuDynInst;
@@ -662,8 +663,8 @@ class ComputeUnit : public ClockedObject
             PacketPtr pkt;
 
           public:
-            MemReqEvent(ScalarDataPort &_scalar_data_port, PacketPtr _pkt) :
-                Event(), scalarDataPort(_scalar_data_port), pkt(_pkt)
+            MemReqEvent(ScalarDataPort &_scalar_data_port, PacketPtr _pkt)
+                : Event(), scalarDataPort(_scalar_data_port), pkt(_pkt)
             {
                 setFlags(Event::AutoDelete);
             }
@@ -678,8 +679,8 @@ class ComputeUnit : public ClockedObject
             PacketPtr reqPkt;
 
           public:
-            SystemHubEvent(PacketPtr pkt, ScalarDataPort *_dataPort) :
-                dataPort(_dataPort), reqPkt(pkt)
+            SystemHubEvent(PacketPtr pkt, ScalarDataPort *_dataPort)
+                : dataPort(_dataPort), reqPkt(pkt)
             {
                 setFlags(Event::AutoDelete);
             }
@@ -706,8 +707,8 @@ class ComputeUnit : public ClockedObject
     class SQCPort : public RequestPort
     {
       public:
-        SQCPort(const std::string &_name, ComputeUnit *_cu) :
-            RequestPort(_name), computeUnit(_cu)
+        SQCPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name), computeUnit(_cu)
         {}
 
         bool snoopRangeSent;
@@ -720,9 +721,9 @@ class ComputeUnit : public ClockedObject
             int kernId;
 
             SenderState(Wavefront *_wavefront,
-                Packet::SenderState *sender_state = nullptr,
-                int _kernId = -1) :
-                wavefront(_wavefront), saved(sender_state), kernId(_kernId)
+                        Packet::SenderState *sender_state = nullptr,
+                        int _kernId = -1)
+                : wavefront(_wavefront), saved(sender_state), kernId(_kernId)
             {}
         };
 
@@ -757,8 +758,8 @@ class ComputeUnit : public ClockedObject
     class DTLBPort : public RequestPort
     {
       public:
-        DTLBPort(const std::string &_name, ComputeUnit *_cu, PortID id) :
-            RequestPort(_name, id), computeUnit(_cu), stalled(false)
+        DTLBPort(const std::string &_name, ComputeUnit *_cu, PortID id)
+            : RequestPort(_name, id), computeUnit(_cu), stalled(false)
         {}
 
         bool
@@ -796,8 +797,8 @@ class ComputeUnit : public ClockedObject
             PortID portIndex;
 
             // constructor used for packets involved in timing accesses
-            SenderState(GPUDynInstPtr gpuDynInst, PortID port_index) :
-                _gpuDynInst(gpuDynInst), portIndex(port_index)
+            SenderState(GPUDynInstPtr gpuDynInst, PortID port_index)
+                : _gpuDynInst(gpuDynInst), portIndex(port_index)
             {}
         };
 
@@ -823,8 +824,8 @@ class ComputeUnit : public ClockedObject
     class ScalarDTLBPort : public RequestPort
     {
       public:
-        ScalarDTLBPort(const std::string &_name, ComputeUnit *_cu) :
-            RequestPort(_name), computeUnit(_cu), stalled(false)
+        ScalarDTLBPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name), computeUnit(_cu), stalled(false)
         {}
 
         struct SenderState : public Packet::SenderState
@@ -866,8 +867,8 @@ class ComputeUnit : public ClockedObject
     class ITLBPort : public RequestPort
     {
       public:
-        ITLBPort(const std::string &_name, ComputeUnit *_cu) :
-            RequestPort(_name), computeUnit(_cu), stalled(false)
+        ITLBPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name), computeUnit(_cu), stalled(false)
         {}
 
         bool
@@ -928,8 +929,8 @@ class ComputeUnit : public ClockedObject
     class LDSPort : public RequestPort
     {
       public:
-        LDSPort(const std::string &_name, ComputeUnit *_cu) :
-            RequestPort(_name), computeUnit(_cu)
+        LDSPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name), computeUnit(_cu)
         {}
 
         bool

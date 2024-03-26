@@ -86,7 +86,7 @@ modified_imm(uint8_t ctrlImm, uint8_t dataImm)
 
 static inline uint64_t
 simd_modified_imm(bool op, uint8_t cmode, uint8_t data, bool &immValid,
-    bool isAarch64 = false)
+                  bool isAarch64 = false)
 {
     uint64_t bigData = data;
     immValid = true;
@@ -222,8 +222,8 @@ class PredOp : public ArmStaticInst
     ConditionCode condCode;
 
     /// Constructor
-    PredOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        ArmStaticInst(mnem, _machInst, __opClass)
+    PredOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : ArmStaticInst(mnem, _machInst, __opClass)
     {
         if (machInst.aarch64)
             condCode = COND_UC;
@@ -246,20 +246,21 @@ class PredImmOp : public PredOp
     uint32_t rotate;
 
     /// Constructor
-    PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PredOp(mnem, _machInst, __opClass),
-        imm(machInst.imm),
-        rotated_imm(0),
-        rotated_carry(0),
-        rotate(machInst.rotate << 1)
+    PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass),
+          imm(machInst.imm),
+          rotated_imm(0),
+          rotated_carry(0),
+          rotate(machInst.rotate << 1)
     {
         rotated_imm = rotate_imm(imm, rotate);
         if (rotate != 0)
             rotated_carry = bits(rotated_imm, 31);
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -272,14 +273,15 @@ class PredIntOp : public PredOp
     uint32_t shift;
 
     /// Constructor
-    PredIntOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PredOp(mnem, _machInst, __opClass),
-        shift_size(machInst.shiftSize),
-        shift(machInst.shift)
+    PredIntOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass),
+          shift_size(machInst.shiftSize),
+          shift(machInst.shift)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataImmOp : public PredOp
@@ -292,16 +294,17 @@ class DataImmOp : public PredOp
     bool rotC;
 
     DataImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _op1, uint32_t _imm, bool _rotC) :
-        PredOp(mnem, _machInst, __opClass),
-        dest(_dest),
-        op1(_op1),
-        imm(_imm),
-        rotC(_rotC)
+              RegIndex _dest, RegIndex _op1, uint32_t _imm, bool _rotC)
+        : PredOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          imm(_imm),
+          rotC(_rotC)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataRegOp : public PredOp
@@ -312,18 +315,19 @@ class DataRegOp : public PredOp
     ArmShiftType shiftType;
 
     DataRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _op1, RegIndex _op2, int32_t _shiftAmt,
-        ArmShiftType _shiftType) :
-        PredOp(mnem, _machInst, __opClass),
-        dest(_dest),
-        op1(_op1),
-        op2(_op2),
-        shiftAmt(_shiftAmt),
-        shiftType(_shiftType)
+              RegIndex _dest, RegIndex _op1, RegIndex _op2, int32_t _shiftAmt,
+              ArmShiftType _shiftType)
+        : PredOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          shiftAmt(_shiftAmt),
+          shiftType(_shiftType)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataRegRegOp : public PredOp
@@ -333,18 +337,19 @@ class DataRegRegOp : public PredOp
     ArmShiftType shiftType;
 
     DataRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _dest, RegIndex _op1, RegIndex _op2, RegIndex _shift,
-        ArmShiftType _shiftType) :
-        PredOp(mnem, _machInst, __opClass),
-        dest(_dest),
-        op1(_op1),
-        op2(_op2),
-        shift(_shift),
-        shiftType(_shiftType)
+                 RegIndex _dest, RegIndex _op1, RegIndex _op2, RegIndex _shift,
+                 ArmShiftType _shiftType)
+        : PredOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          shift(_shift),
+          shiftType(_shiftType)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -357,8 +362,8 @@ class PredMacroOp : public PredOp
     StaticInstPtr *microOps;
 
     /// Constructor
-    PredMacroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PredOp(mnem, _machInst, __opClass), numMicroops(0), microOps(nullptr)
+    PredMacroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass), numMicroops(0), microOps(nullptr)
     {
         // We rely on the subclasses of this object to handle the
         // initialization of the micro-operations, since they are
@@ -385,8 +390,9 @@ class PredMacroOp : public PredOp
         panic("Execute method called when it shouldn't!");
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     void
     size(size_t newSize) override
@@ -404,8 +410,8 @@ class PredMacroOp : public PredOp
 class PredMicroop : public PredOp
 {
     /// Constructor
-    PredMicroop(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PredOp(mnem, _machInst, __opClass)
+    PredMicroop(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;
     }

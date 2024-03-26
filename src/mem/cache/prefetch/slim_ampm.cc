@@ -34,13 +34,14 @@ namespace gem5
 {
 namespace prefetch
 {
-SlimAMPM::SlimAMPM(const SlimAMPMPrefetcherParams &p) :
-    Queued(p), ampm(*p.ampm), dcpt(*p.dcpt)
+SlimAMPM::SlimAMPM(const SlimAMPMPrefetcherParams &p)
+    : Queued(p), ampm(*p.ampm), dcpt(*p.dcpt)
 {}
 
 void
 SlimAMPM::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                            std::vector<AddrPriority> &addresses,
+                            const CacheAccessor &cache)
 {
     dcpt.calculatePrefetch(pfi, addresses, cache);
     if (addresses.empty()) {

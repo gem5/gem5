@@ -71,7 +71,7 @@ class DebugPrintk : public Base
             std::string str;
             std::function<int(ThreadContext *, Addr, PrintkVarArgs)> func =
                 [&str](ThreadContext *tc, Addr format_ptr,
-                    PrintkVarArgs args) -> int {
+                       PrintkVarArgs args) -> int {
                 return printk(str, tc, format_ptr, args);
             };
             invokeSimcall<ABI>(tc, func);
@@ -96,8 +96,9 @@ class PanicOrOopsEvent : public PCEvent
 
   public:
     PanicOrOopsEvent(PCEventScope *s, const std::string &desc, Addr addr,
-        const std::string &_fname, const KernelPanicOopsBehaviour _behaviour) :
-        PCEvent(s, desc, addr), fname(_fname), behaviour(_behaviour)
+                     const std::string &_fname,
+                     const KernelPanicOopsBehaviour _behaviour)
+        : PCEvent(s, desc, addr), fname(_fname), behaviour(_behaviour)
     {}
     void process(ThreadContext *tc) override;
 };
@@ -131,8 +132,8 @@ class SkipUDelay : public Base
 
   public:
     SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
-        uint64_t mult, uint64_t div) :
-        Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
+               uint64_t mult, uint64_t div)
+        : Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
     {}
 
     void

@@ -101,7 +101,8 @@ struct hash;
 // Reuse std::hash whenever possible
 template <typename T>
 struct hash<T, std::enable_if_t<is_std_hash_enabled_v<T>>> : std::hash<T>
-{};
+{
+};
 
 // Enable type deduction for hash object construction
 template <typename T>
@@ -162,10 +163,10 @@ struct hash<T, std::enable_if_t<!is_std_hash_enabled_v<T> && is_iterable_v<T>>>
             return 0;
         // Equivalent to hypothetical functional style
         // return t.map(hash_value).reduce(hash_combine)
-        auto h = std::accumulate(
-            next(b), e, hash_value(*b), [](const auto &acc, const auto &val) {
-                return hash_combine(acc, hash_value(val));
-            });
+        auto h = std::accumulate(next(b), e, hash_value(*b),
+                                 [](const auto &acc, const auto &val) {
+                                     return hash_combine(acc, hash_value(val));
+                                 });
         return hash_refine(h);
     }
 };
@@ -196,16 +197,18 @@ using hash_impl::make_hash_for;
  * never be owned as a std::unordered_X.
  */
 template <typename Key, typename T, typename Hash = hash<Key>,
-    typename KeyEqual = std::equal_to<Key>,
-    typename Allocator = std::allocator<std::pair<const Key, T>>>
+          typename KeyEqual = std::equal_to<Key>,
+          typename Allocator = std::allocator<std::pair<const Key, T>>>
 struct unordered_map : std::unordered_map<Key, T, Hash, KeyEqual, Allocator>
-{};
+{
+};
 
 template <typename Key, typename Hash = hash<Key>,
-    typename KeyEqual = std::equal_to<Key>,
-    typename Allocator = std::allocator<Key>>
+          typename KeyEqual = std::equal_to<Key>,
+          typename Allocator = std::allocator<Key>>
 struct unordered_set : std::unordered_set<Key, Hash, KeyEqual, Allocator>
-{};
+{
+};
 
 } // namespace gem5::stl_helpers
 

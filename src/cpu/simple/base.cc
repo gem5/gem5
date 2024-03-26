@@ -79,22 +79,22 @@
 
 namespace gem5
 {
-BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p) :
-    BaseCPU(p),
-    curThread(0),
-    branchPred(p.branchPred),
-    traceData(NULL),
-    _status(Idle)
+BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
+    : BaseCPU(p),
+      curThread(0),
+      branchPred(p.branchPred),
+      traceData(NULL),
+      _status(Idle)
 {
     SimpleThread *thread;
 
     for (unsigned i = 0; i < numThreads; i++) {
         if (FullSystem) {
-            thread = new SimpleThread(
-                this, i, p.system, p.mmu, p.isa[i], p.decoder[i]);
+            thread = new SimpleThread(this, i, p.system, p.mmu, p.isa[i],
+                                      p.decoder[i]);
         } else {
             thread = new SimpleThread(this, i, p.system, p.workload[i], p.mmu,
-                p.isa[i], p.decoder[i]);
+                                      p.isa[i], p.decoder[i]);
         }
         threadInfo.push_back(new SimpleExecContext(this, thread));
         ThreadContext *tc = thread->getTC();
@@ -281,9 +281,9 @@ BaseSimpleCPU::checkForInterrupts()
                 !std::dynamic_pointer_cast<GenericHtmFailureFault>(interrupt));
             if (t_info.inHtmTransactionalState()) {
                 DPRINTF(HtmCpu,
-                    "Deferring pending interrupt - %s -"
-                    "due to transactional state\n",
-                    interrupt->name());
+                        "Deferring pending interrupt - %s -"
+                        "due to transactional state\n",
+                        interrupt->name());
                 return;
             }
 
@@ -309,7 +309,7 @@ BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
     DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
     req->setVirt(fetchPC, decoder->moreBytesSize(), Request::INST_FETCH,
-        instRequestorId(), instAddr);
+                 instRequestorId(), instAddr);
 }
 
 void
@@ -378,8 +378,9 @@ BaseSimpleCPU::preExecute()
     // If we decoded an instruction this "tick", record information about it.
     if (curStaticInst) {
 #if TRACING_ON
-        traceData = tracer->getInstRecord(curTick(), thread->getTC(),
-            curStaticInst, thread->pcState(), curMacroStaticInst);
+        traceData =
+            tracer->getInstRecord(curTick(), thread->getTC(), curStaticInst,
+                                  thread->pcState(), curMacroStaticInst);
 #endif // TRACING_ON
     }
 
@@ -514,8 +515,8 @@ BaseSimpleCPU::advancePC(const Fault &fault)
             branchPred->update(cur_sn, curThread);
         } else {
             // Mis-predicted branch
-            branchPred->squash(
-                cur_sn, thread->pcState(), branching, curThread);
+            branchPred->squash(cur_sn, thread->pcState(), branching,
+                               curThread);
             ++t_info.execContextStats.numBranchMispred;
         }
     }

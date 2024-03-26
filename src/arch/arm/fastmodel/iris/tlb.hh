@@ -53,15 +53,16 @@ class TLB : public BaseTLB
     {}
 
     Fault translateFunctional(const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) override;
+                              BaseMMU::Mode mode) override;
     Fault translateAtomic(const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) override;
+                          BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
 
     Fault
     finalizePhysical(const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) const override
+                     BaseMMU::Mode mode) const override
     {
         return NoFault;
     }

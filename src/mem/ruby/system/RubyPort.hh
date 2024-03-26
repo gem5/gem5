@@ -89,7 +89,8 @@ class RubyPort : public ClockedObject
 
       public:
         MemResponsePort(const std::string &_name, RubyPort &_port,
-            bool _access_backing_store, PortID id, bool _no_retry_on_stall);
+                        bool _access_backing_store, PortID id,
+                        bool _no_retry_on_stall);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(Addr address);
 
@@ -165,8 +166,8 @@ class RubyPort : public ClockedObject
 
     void init() override;
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;

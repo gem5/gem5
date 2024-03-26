@@ -56,8 +56,8 @@ newMethodProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_MODULE_METHOD_AFTER_START_, name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_METHOD_AFTER_START_,
+                        name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -71,8 +71,8 @@ newThreadProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_MODULE_THREAD_AFTER_START_, name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_THREAD_AFTER_START_,
+                        name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -86,8 +86,8 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_MODULE_CTHREAD_AFTER_START_, name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_CTHREAD_AFTER_START_,
+                        name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -101,12 +101,12 @@ namespace sc_core
 {
 sc_bind_proxy::sc_bind_proxy() : _interface(nullptr), _port(nullptr) {}
 
-sc_bind_proxy::sc_bind_proxy(sc_interface &_interface) :
-    _interface(&_interface), _port(nullptr)
+sc_bind_proxy::sc_bind_proxy(sc_interface &_interface)
+    : _interface(&_interface), _port(nullptr)
 {}
 
-sc_bind_proxy::sc_bind_proxy(sc_port_base &_port) :
-    _interface(nullptr), _port(&_port)
+sc_bind_proxy::sc_bind_proxy(sc_port_base &_port)
+    : _interface(nullptr), _port(&_port)
 {}
 
 const sc_bind_proxy SC_BIND_PROXY_NIL;
@@ -121,37 +121,37 @@ sc_module::~sc_module() { delete _gem5_module; }
 
 void
 sc_module::operator()(const sc_bind_proxy &p001, const sc_bind_proxy &p002,
-    const sc_bind_proxy &p003, const sc_bind_proxy &p004,
-    const sc_bind_proxy &p005, const sc_bind_proxy &p006,
-    const sc_bind_proxy &p007, const sc_bind_proxy &p008,
-    const sc_bind_proxy &p009, const sc_bind_proxy &p010,
-    const sc_bind_proxy &p011, const sc_bind_proxy &p012,
-    const sc_bind_proxy &p013, const sc_bind_proxy &p014,
-    const sc_bind_proxy &p015, const sc_bind_proxy &p016,
-    const sc_bind_proxy &p017, const sc_bind_proxy &p018,
-    const sc_bind_proxy &p019, const sc_bind_proxy &p020,
-    const sc_bind_proxy &p021, const sc_bind_proxy &p022,
-    const sc_bind_proxy &p023, const sc_bind_proxy &p024,
-    const sc_bind_proxy &p025, const sc_bind_proxy &p026,
-    const sc_bind_proxy &p027, const sc_bind_proxy &p028,
-    const sc_bind_proxy &p029, const sc_bind_proxy &p030,
-    const sc_bind_proxy &p031, const sc_bind_proxy &p032,
-    const sc_bind_proxy &p033, const sc_bind_proxy &p034,
-    const sc_bind_proxy &p035, const sc_bind_proxy &p036,
-    const sc_bind_proxy &p037, const sc_bind_proxy &p038,
-    const sc_bind_proxy &p039, const sc_bind_proxy &p040,
-    const sc_bind_proxy &p041, const sc_bind_proxy &p042,
-    const sc_bind_proxy &p043, const sc_bind_proxy &p044,
-    const sc_bind_proxy &p045, const sc_bind_proxy &p046,
-    const sc_bind_proxy &p047, const sc_bind_proxy &p048,
-    const sc_bind_proxy &p049, const sc_bind_proxy &p050,
-    const sc_bind_proxy &p051, const sc_bind_proxy &p052,
-    const sc_bind_proxy &p053, const sc_bind_proxy &p054,
-    const sc_bind_proxy &p055, const sc_bind_proxy &p056,
-    const sc_bind_proxy &p057, const sc_bind_proxy &p058,
-    const sc_bind_proxy &p059, const sc_bind_proxy &p060,
-    const sc_bind_proxy &p061, const sc_bind_proxy &p062,
-    const sc_bind_proxy &p063, const sc_bind_proxy &p064)
+                      const sc_bind_proxy &p003, const sc_bind_proxy &p004,
+                      const sc_bind_proxy &p005, const sc_bind_proxy &p006,
+                      const sc_bind_proxy &p007, const sc_bind_proxy &p008,
+                      const sc_bind_proxy &p009, const sc_bind_proxy &p010,
+                      const sc_bind_proxy &p011, const sc_bind_proxy &p012,
+                      const sc_bind_proxy &p013, const sc_bind_proxy &p014,
+                      const sc_bind_proxy &p015, const sc_bind_proxy &p016,
+                      const sc_bind_proxy &p017, const sc_bind_proxy &p018,
+                      const sc_bind_proxy &p019, const sc_bind_proxy &p020,
+                      const sc_bind_proxy &p021, const sc_bind_proxy &p022,
+                      const sc_bind_proxy &p023, const sc_bind_proxy &p024,
+                      const sc_bind_proxy &p025, const sc_bind_proxy &p026,
+                      const sc_bind_proxy &p027, const sc_bind_proxy &p028,
+                      const sc_bind_proxy &p029, const sc_bind_proxy &p030,
+                      const sc_bind_proxy &p031, const sc_bind_proxy &p032,
+                      const sc_bind_proxy &p033, const sc_bind_proxy &p034,
+                      const sc_bind_proxy &p035, const sc_bind_proxy &p036,
+                      const sc_bind_proxy &p037, const sc_bind_proxy &p038,
+                      const sc_bind_proxy &p039, const sc_bind_proxy &p040,
+                      const sc_bind_proxy &p041, const sc_bind_proxy &p042,
+                      const sc_bind_proxy &p043, const sc_bind_proxy &p044,
+                      const sc_bind_proxy &p045, const sc_bind_proxy &p046,
+                      const sc_bind_proxy &p047, const sc_bind_proxy &p048,
+                      const sc_bind_proxy &p049, const sc_bind_proxy &p050,
+                      const sc_bind_proxy &p051, const sc_bind_proxy &p052,
+                      const sc_bind_proxy &p053, const sc_bind_proxy &p054,
+                      const sc_bind_proxy &p055, const sc_bind_proxy &p056,
+                      const sc_bind_proxy &p057, const sc_bind_proxy &p058,
+                      const sc_bind_proxy &p059, const sc_bind_proxy &p060,
+                      const sc_bind_proxy &p061, const sc_bind_proxy &p062,
+                      const sc_bind_proxy &p063, const sc_bind_proxy &p064)
 {
     std::vector<const ::sc_core::sc_bind_proxy *> proxies;
     auto insert = [&proxies](const ::sc_core::sc_bind_proxy &p) -> bool {
@@ -219,9 +219,9 @@ sc_module::get_child_events() const
     return _gem5_module->obj()->get_child_events();
 }
 
-sc_module::sc_module() :
-    sc_object(sc_gem5::newModuleChecked()->name()),
-    _gem5_module(sc_gem5::currentModule())
+sc_module::sc_module()
+    : sc_object(sc_gem5::newModuleChecked()->name()),
+      _gem5_module(sc_gem5::currentModule())
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
@@ -235,8 +235,8 @@ sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name))
     _gem5_module->deprecatedConstructor();
     SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name);
 }
-sc_module::sc_module(const std::string &_name) :
-    sc_module(sc_module_name(_name.c_str()))
+sc_module::sc_module(const std::string &_name)
+    : sc_module(sc_module_name(_name.c_str()))
 {
     _gem5_module->deprecatedConstructor();
     SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name.c_str());
@@ -602,7 +602,7 @@ waitErrorCheck(sc_gem5::Process *p)
 {
     if (p->procKind() == SC_METHOD_PROC_) {
         SC_REPORT_ERROR(SC_ID_WAIT_NOT_ALLOWED_,
-            "\n        in SC_METHODs use next_trigger() instead");
+                        "\n        in SC_METHODs use next_trigger() instead");
         return true;
     }
     return false;

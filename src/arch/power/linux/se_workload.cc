@@ -63,7 +63,7 @@ class LinuxLoader : public Process::Loader
 
         if ((arch == loader::Power && opsys != loader::Linux) ||
             (arch == loader::Power64 && opsys != loader::LinuxPower64ABIv1 &&
-                opsys != loader::LinuxPower64ABIv2))
+             opsys != loader::LinuxPower64ABIv2))
             return nullptr;
 
         return new PowerProcess(params, obj);

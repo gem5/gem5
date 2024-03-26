@@ -88,9 +88,9 @@ DramRotGen::getNextPacket()
         nextSeqCount = (nextSeqCount + 1) % (nbrOfRanks * maxSeqCountPerRank);
 
         DPRINTF(TrafficGen,
-            "DramRotGen::getNextPacket nextSeqCount: %d "
-            "new_rank: %d  new_bank: %d\n",
-            nextSeqCount, new_rank, new_bank);
+                "DramRotGen::getNextPacket nextSeqCount: %d "
+                "new_rank: %d  new_bank: %d\n",
+                nextSeqCount, new_rank, new_bank);
 
         // Generate the start address of the command series
         // routine will update addr variable with bank, rank, and col
@@ -110,21 +110,21 @@ DramRotGen::getNextPacket()
 
             unsigned int new_col =
                 ((addr / blocksize / nbrOfBanksDRAM / nbrOfRanks) %
-                    (pageSize / blocksize)) +
+                 (pageSize / blocksize)) +
                 1;
             replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
-                blockBits + bankBits + rankBits, new_col);
+                        blockBits + bankBits + rankBits, new_col);
         }
     }
 
     DPRINTF(TrafficGen,
-        "DramRotGen::getNextPacket: %c to addr %x, "
-        "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
-        isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
+            "DramRotGen::getNextPacket: %c to addr %x, "
+            "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
+            isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 
     // create a new request packet
-    PacketPtr pkt = getPacket(
-        addr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    PacketPtr pkt = getPacket(addr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // add the amount of data manipulated to the total
     dataManipulated += blocksize;

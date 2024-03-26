@@ -69,13 +69,13 @@ ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
 
 template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
-    const sc_core::sc_module_name &mod_name, const Params &p) :
-    Base(mod_name),
-    amba(Base::amba, p.name + ".amba", -1),
-    top_reset(p.name + ".top_reset", 0),
-    dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset"),
-    params(p)
+    const sc_core::sc_module_name &mod_name, const Params &p)
+    : Base(mod_name),
+      amba(Base::amba, p.name + ".amba", -1),
+      top_reset(p.name + ".top_reset", 0),
+      dbg_reset(p.name + ".dbg_reset", 0),
+      model_reset(p.name + ".model_reset"),
+      params(p)
 {
     model_reset.onChange([this](const bool &new_val) {
         // Set reset for all cores.
@@ -88,8 +88,9 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
     });
 
     for (int i = 0; i < CoreCount; i++) {
-        redist.emplace_back(new TlmGicTarget(this->redistributor[i],
-            csprintf("%s.redistributor[%d]", name(), i), i));
+        redist.emplace_back(
+            new TlmGicTarget(this->redistributor[i],
+                             csprintf("%s.redistributor[%d]", name(), i), i));
         cnthpirq.emplace_back(new SignalReceiver(csprintf("cnthpirq[%d]", i)));
         cnthvirq.emplace_back(new SignalReceiver(csprintf("cnthvirq[%d]", i)));
         cntpsirq.emplace_back(new SignalReceiver(csprintf("cntpsirq[%d]", i)));
@@ -137,7 +138,7 @@ ScxEvsCortexA76<Types>::before_end_of_elaboration()
     Base::before_end_of_elaboration();
 
     auto set_on_change = [this](SignalReceiver &recv, ArmInterruptPinGen *gen,
-                             int num) {
+                                int num) {
         auto *pin = gen->get(gem5CpuCluster->getCore(num)->getContext(0));
         auto handler = [pin](bool status) {
             status ? pin->raise() : pin->clear();

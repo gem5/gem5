@@ -67,11 +67,11 @@ class TarmacContext
 {
   public:
     TarmacContext(const TarmacTracer &_tracer, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc) :
-        tracer(_tracer),
-        thread(_thread),
-        staticInst(_staticInst),
-        pc(_pc.clone())
+                  const StaticInstPtr _staticInst, const PCStateBase &_pc)
+        : tracer(_tracer),
+          thread(_thread),
+          staticInst(_staticInst),
+          pc(_pc.clone())
     {}
 
     std::string tarmacCpuName() const;
@@ -105,9 +105,10 @@ class TarmacTracer : public InstTracer
      * - Tarmac
      * - TarmacV8
      */
-    InstRecord *getInstRecord(Tick when, ThreadContext *tc,
-        const StaticInstPtr staticInst, const PCStateBase &pc,
-        const StaticInstPtr macroStaticInst = nullptr) override;
+    InstRecord *
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) override;
 
     std::ostream &output();
 

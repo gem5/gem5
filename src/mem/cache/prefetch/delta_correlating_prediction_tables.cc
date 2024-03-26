@@ -38,12 +38,12 @@ namespace gem5
 namespace prefetch
 {
 DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
-    const DeltaCorrelatingPredictionTablesParams &p) :
-    SimObject(p),
-    deltaBits(p.delta_bits),
-    deltaMaskBits(p.delta_mask_bits),
-    table(p.table_assoc, p.table_entries, p.table_indexing_policy,
-        p.table_replacement_policy, DCPTEntry(p.deltas_per_entry))
+    const DeltaCorrelatingPredictionTablesParams &p)
+    : SimObject(p),
+      deltaBits(p.delta_bits),
+      deltaMaskBits(p.delta_mask_bits),
+      table(p.table_assoc, p.table_entries, p.table_indexing_policy,
+            p.table_replacement_policy, DCPTEntry(p.deltas_per_entry))
 {}
 
 void
@@ -152,7 +152,8 @@ DCPT::DCPT(const DCPTPrefetcherParams &p) : Queued(p), dcpt(*p.dcpt) {}
 
 void
 DCPT::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
+                        std::vector<AddrPriority> &addresses,
+                        const CacheAccessor &cache)
 {
     dcpt.calculatePrefetch(pfi, addresses, cache);
 }

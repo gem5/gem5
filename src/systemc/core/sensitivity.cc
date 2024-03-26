@@ -64,8 +64,8 @@ Sensitivity::notify(Event *e)
     if (scheduler.current() == process) {
         static bool warned = false;
         if (!warned) {
-            SC_REPORT_WARNING(
-                sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_, process->name());
+            SC_REPORT_WARNING(sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_,
+                              process->name());
             warned = true;
         }
         return false;
@@ -158,17 +158,17 @@ newStaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f)
 }
 
 StaticSensitivityInterface::StaticSensitivityInterface(
-    Process *p, const sc_core::sc_interface *i) :
-    Sensitivity(p),
-    StaticSensitivity(p),
-    SensitivityEvent(p, &i->default_event())
+    Process *p, const sc_core::sc_interface *i)
+    : Sensitivity(p),
+      StaticSensitivity(p),
+      SensitivityEvent(p, &i->default_event())
 {}
 
 StaticSensitivityExport::StaticSensitivityExport(
-    Process *p, const sc_core::sc_export_base *exp) :
-    Sensitivity(p),
-    StaticSensitivity(p),
-    SensitivityEvent(p, &exp->get_interface()->default_event())
+    Process *p, const sc_core::sc_export_base *exp)
+    : Sensitivity(p),
+      StaticSensitivity(p),
+      SensitivityEvent(p, &exp->get_interface()->default_event())
 {}
 
 const ::sc_core::sc_event &
@@ -190,8 +190,8 @@ newDynamicSensitivityEvent(Process *p, const sc_core::sc_event *e)
 }
 
 void
-newDynamicSensitivityEventOrList(
-    Process *p, const sc_core::sc_event_or_list *eol)
+newDynamicSensitivityEventOrList(Process *p,
+                                 const sc_core::sc_event_or_list *eol)
 {
     auto s = new DynamicSensitivityEventOrList(p, eol);
     for (auto event : s->events)
@@ -200,8 +200,8 @@ newDynamicSensitivityEventOrList(
 }
 
 void
-newDynamicSensitivityEventAndList(
-    Process *p, const sc_core::sc_event_and_list *eal)
+newDynamicSensitivityEventAndList(Process *p,
+                                  const sc_core::sc_event_and_list *eal)
 {
     auto s = new DynamicSensitivityEventAndList(p, eal);
     for (auto event : s->events)
@@ -210,18 +210,18 @@ newDynamicSensitivityEventAndList(
 }
 
 DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
-    Process *p, const sc_core::sc_event_or_list *eol) :
-    Sensitivity(p),
-    DynamicSensitivity(p),
-    SensitivityEvents(p, eol->events),
-    list(eol)
+    Process *p, const sc_core::sc_event_or_list *eol)
+    : Sensitivity(p),
+      DynamicSensitivity(p),
+      SensitivityEvents(p, eol->events),
+      list(eol)
 {}
 
 DynamicSensitivityEventOrList::~DynamicSensitivityEventOrList()
 {
     if (list->autoDelete) {
         panic_if(list->busy,
-            "sc_event_or_list can never be busy in gem5 implementation");
+                 "sc_event_or_list can never be busy in gem5 implementation");
         delete list;
     }
 }
@@ -241,18 +241,18 @@ DynamicSensitivityEventOrList::notifyWork(Event *e)
 }
 
 DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
-    Process *p, const sc_core::sc_event_and_list *eal) :
-    Sensitivity(p),
-    DynamicSensitivity(p),
-    SensitivityEvents(p, eal->events),
-    list(eal)
+    Process *p, const sc_core::sc_event_and_list *eal)
+    : Sensitivity(p),
+      DynamicSensitivity(p),
+      SensitivityEvents(p, eal->events),
+      list(eal)
 {}
 
 DynamicSensitivityEventAndList::~DynamicSensitivityEventAndList()
 {
     if (list->autoDelete) {
         panic_if(list->busy,
-            "sc_event_and_list can never be busy in gem5 implementation");
+                 "sc_event_and_list can never be busy in gem5 implementation");
         delete list;
     }
 }

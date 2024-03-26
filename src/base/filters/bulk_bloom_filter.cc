@@ -39,12 +39,12 @@ namespace gem5
 {
 namespace bloom_filter
 {
-Bulk::Bulk(const BloomFilterBulkParams &p) :
-    MultiBitSel(p), sectorBits(floorLog2(parFilterSize))
+Bulk::Bulk(const BloomFilterBulkParams &p)
+    : MultiBitSel(p), sectorBits(floorLog2(parFilterSize))
 {
     fatal_if((numHashes * sectorBits) >
                  (std::numeric_limits<Addr>::digits - offsetBits),
-        "Sectors need more bits than available");
+             "Sectors need more bits than available");
 }
 
 Bulk::~Bulk() {}
@@ -56,7 +56,7 @@ Bulk::hash(Addr addr, int hash_number) const
 
     // Get the sector-based c index
     int c = bits(addr, (offsetBits + (hash_number + 1) * sectorBits) - 1,
-        offsetBits + hash_number * sectorBits);
+                 offsetBits + hash_number * sectorBits);
     assert(c < filter.size() / numHashes);
 
     // Transform the sector-based c index into a filder index (v)

@@ -54,14 +54,14 @@
 
 namespace gem5
 {
-BaseIndexingPolicy::BaseIndexingPolicy(const Params &p) :
-    SimObject(p),
-    assoc(p.assoc),
-    numSets(p.size / (p.entry_size * assoc)),
-    setShift(floorLog2(p.entry_size)),
-    setMask(numSets - 1),
-    sets(numSets),
-    tagShift(setShift + floorLog2(numSets))
+BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
+    : SimObject(p),
+      assoc(p.assoc),
+      numSets(p.size / (p.entry_size * assoc)),
+      setShift(floorLog2(p.entry_size)),
+      setMask(numSets - 1),
+      sets(numSets),
+      tagShift(setShift + floorLog2(numSets))
 {
     fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power "
                                    "of 2");

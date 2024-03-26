@@ -69,8 +69,8 @@ TEST_F(GlobalsSerializationFixture, Serialization)
     // Verify the output
     std::ifstream is(getCptPath());
     assert(is.good());
-    std::string str = std::string(
-        std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
+    std::string str = std::string(std::istreambuf_iterator<char>(is),
+                                  std::istreambuf_iterator<char>());
     ASSERT_THAT(
         str, ::testing::StrEq(
                  "\n[Section1]\ncurTick=1234\n"
@@ -80,8 +80,8 @@ TEST_F(GlobalsSerializationFixture, Serialization)
 /** Test unserialization. */
 TEST_F(GlobalsSerializationFixture, Unserialization)
 {
-    version_tags = {
-        "first-tag-un", "second-tag-un", "third-tag-un", "fourth-tag-un"};
+    version_tags = {"first-tag-un", "second-tag-un", "third-tag-un",
+                    "fourth-tag-un"};
     simulateSerialization(
         "\n[Section1]\ncurTick=1111\nversion_tags="
         "first-tag-un second-tag-un third-tag-un fourth-tag-un\n");
@@ -112,7 +112,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptNoVersionTags)
 
     gtestLogOutput.str("");
     globals.unserialize(cp);
-    ASSERT_THAT(gtestLogOutput.str(),
+    ASSERT_THAT(
+        gtestLogOutput.str(),
         ::testing::HasSubstr("Checkpoint uses an old versioning scheme."));
     ASSERT_EQ(globals.unserializedCurTick, 2222);
 }
@@ -120,8 +121,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptNoVersionTags)
 /** Test that a warning is thrown when the cpt misses any of gem5's tags. */
 TEST_F(GlobalsSerializationFixture, UnserializationCptMissingVersionTags)
 {
-    version_tags = {
-        "first-tag-un", "second-tag-un", "third-tag-un", "fourth-tag-un"};
+    version_tags = {"first-tag-un", "second-tag-un", "third-tag-un",
+                    "fourth-tag-un"};
     simulateSerialization("\n[Section1]\ncurTick=3333\n"
                           "version_tags=second-tag-un fourth-tag-un\n");
 
@@ -131,7 +132,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptMissingVersionTags)
 
     gtestLogOutput.str("");
     globals.unserialize(cp);
-    ASSERT_THAT(gtestLogOutput.str(),
+    ASSERT_THAT(
+        gtestLogOutput.str(),
         ::testing::HasSubstr("warn:   first-tag-un\nwarn:   third-tag-un\n"));
     ASSERT_EQ(globals.unserializedCurTick, 3333);
 }
@@ -150,8 +152,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationGem5MissingVersionTags)
 
     gtestLogOutput.str("");
     globals.unserialize(cp);
-    ASSERT_THAT(
-        gtestLogOutput.str(), ::testing::HasSubstr("warn:   fourth-tag-un\n"));
+    ASSERT_THAT(gtestLogOutput.str(),
+                ::testing::HasSubstr("warn:   fourth-tag-un\n"));
     ASSERT_EQ(globals.unserializedCurTick, 4444);
 }
 

@@ -98,8 +98,8 @@ class SyscallDesc
         std::function<SyscallReturn(SyscallDesc *, ThreadContext *)>;
     using Dumper = std::function<std::string(std::string, ThreadContext *)>;
 
-    SyscallDesc(int num, const char *name, Executor exec, Dumper dump) :
-        _name(name), _num(num), executor(exec), dumper(dump)
+    SyscallDesc(int num, const char *name, Executor exec, Dumper dump)
+        : _name(name), _num(num), executor(exec), dumper(dump)
     {}
 
     void retrySyscall(ThreadContext *tc);
@@ -132,8 +132,8 @@ class SyscallDescABI : public SyscallDesc
         std::function<SyscallReturn(SyscallDesc *, ThreadContext *, Args...)>;
 
     template <typename... Args>
-    using ABIExecutorPtr = SyscallReturn (*)(
-        SyscallDesc *, ThreadContext *, Args...);
+    using ABIExecutorPtr = SyscallReturn (*)(SyscallDesc *, ThreadContext *,
+                                             Args...);
 
     // Wrap an executor with guest arguments with a normal executor that gets
     // those additional arguments from the guest context.
@@ -146,7 +146,7 @@ class SyscallDescABI : public SyscallDesc
                 // Create a partial function which will stick desc to the front
                 // of the parameter list.
                 auto partial = [target, desc](ThreadContext *tc,
-                                   Args... args) -> SyscallReturn {
+                                              Args... args) -> SyscallReturn {
                     return target(desc, tc, args...);
                 };
 
@@ -170,18 +170,18 @@ class SyscallDescABI : public SyscallDesc
   public:
     // Constructors which plumb in buildExecutor.
     template <typename... Args>
-    SyscallDescABI(int num, const char *name, ABIExecutor<Args...> target) :
-        SyscallDesc(
-            num, name, buildExecutor<Args...>(target), buildDumper<Args...>())
+    SyscallDescABI(int num, const char *name, ABIExecutor<Args...> target)
+        : SyscallDesc(num, name, buildExecutor<Args...>(target),
+                      buildDumper<Args...>())
     {}
 
     template <typename... Args>
-    SyscallDescABI(int num, const char *name, ABIExecutorPtr<Args...> target) :
-        SyscallDescABI(num, name, ABIExecutor<Args...>(target))
+    SyscallDescABI(int num, const char *name, ABIExecutorPtr<Args...> target)
+        : SyscallDescABI(num, name, ABIExecutor<Args...>(target))
     {}
 
-    SyscallDescABI(int num, const char *name) :
-        SyscallDescABI(num, name, ABIExecutor<>(unimplementedFunc))
+    SyscallDescABI(int num, const char *name)
+        : SyscallDescABI(num, name, ABIExecutor<>(unimplementedFunc))
     {}
 
     void

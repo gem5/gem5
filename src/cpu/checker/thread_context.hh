@@ -62,10 +62,10 @@ template <class TC>
 class CheckerThreadContext : public ThreadContext
 {
   public:
-    CheckerThreadContext(TC *actual_tc, CheckerCPU *checker_cpu) :
-        actualTC(actual_tc),
-        checkerTC(checker_cpu->thread),
-        checkerCPU(checker_cpu)
+    CheckerThreadContext(TC *actual_tc, CheckerCPU *checker_cpu)
+        : actualTC(actual_tc),
+          checkerTC(checker_cpu->thread),
+          checkerCPU(checker_cpu)
     {}
 
   private:
@@ -327,7 +327,7 @@ class CheckerThreadContext : public ThreadContext
     pcState(const PCStateBase &val) override
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s\n", val,
-            checkerTC->pcState());
+                checkerTC->pcState());
         checkerTC->pcState(val);
         checkerCPU->recordPCChange(val);
         return actualTC->pcState(val);
@@ -355,9 +355,9 @@ class CheckerThreadContext : public ThreadContext
     setMiscRegNoEffect(RegIndex misc_reg, RegVal val) override
     {
         DPRINTF(Checker,
-            "Setting misc reg with no effect: %d to both Checker"
-            " and O3..\n",
-            misc_reg);
+                "Setting misc reg with no effect: %d to both Checker"
+                " and O3..\n",
+                misc_reg);
         checkerTC->setMiscRegNoEffect(misc_reg, val);
         actualTC->setMiscRegNoEffect(misc_reg, val);
     }
@@ -366,9 +366,9 @@ class CheckerThreadContext : public ThreadContext
     setMiscReg(RegIndex misc_reg, RegVal val) override
     {
         DPRINTF(Checker,
-            "Setting misc reg with effect: %d to both Checker"
-            " and O3..\n",
-            misc_reg);
+                "Setting misc reg with effect: %d to both Checker"
+                " and O3..\n",
+                misc_reg);
         checkerTC->setMiscReg(misc_reg, val);
         actualTC->setMiscReg(misc_reg, val);
     }

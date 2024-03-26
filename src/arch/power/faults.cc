@@ -42,7 +42,7 @@ UnimplementedOpcodeFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (!tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId())) {
         panic("Unimplemented opcode encountered at virtual address %#x\n",
-            tc->pcState().instAddr());
+              tc->pcState().instAddr());
     }
 }
 
@@ -59,7 +59,7 @@ TrapFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     if (!tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId())) {
         panic("Trap encountered at virtual address %#x\n",
-            tc->pcState().instAddr());
+              tc->pcState().instAddr());
     }
 }
 

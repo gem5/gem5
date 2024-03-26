@@ -57,21 +57,20 @@ PacketPtr
 LinearGen::getNextPacket()
 {
     // choose if we generate a read or a write here
-    bool isRead =
-        readPercent != 0 &&
-        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+    bool isRead = readPercent != 0 && (readPercent == 100 ||
+                                       random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
 
     DPRINTF(TrafficGen, "LinearGen::getNextPacket: %c to addr %x, size %d\n",
-        isRead ? 'r' : 'w', nextAddr, blocksize);
+            isRead ? 'r' : 'w', nextAddr, blocksize);
 
     // Add the amount of data manipulated to the total
     dataManipulated += blocksize;
 
-    PacketPtr pkt = getPacket(
-        nextAddr, blocksize, isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
+    PacketPtr pkt = getPacket(nextAddr, blocksize,
+                              isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // increment the address
     nextAddr += blocksize;

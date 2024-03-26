@@ -40,17 +40,17 @@
 
 namespace gem5
 {
-GenericRiscvPciHost::GenericRiscvPciHost(const GenericRiscvPciHostParams &p) :
-    GenericPciHost(p), intBase(p.int_base), intCount(p.int_count)
+GenericRiscvPciHost::GenericRiscvPciHost(const GenericRiscvPciHostParams &p)
+    : GenericPciHost(p), intBase(p.int_base), intCount(p.int_count)
 {}
 
 uint32_t
-GenericRiscvPciHost::mapPciInterrupt(
-    const PciBusAddr &addr, PciIntPin pin) const
+GenericRiscvPciHost::mapPciInterrupt(const PciBusAddr &addr,
+                                     PciIntPin pin) const
 {
     fatal_if(pin == PciIntPin::NO_INT,
-        "%02x:%02x.%i: Interrupt from a device without interrupts\n", addr.bus,
-        addr.dev, addr.func);
+             "%02x:%02x.%i: Interrupt from a device without interrupts\n",
+             addr.bus, addr.dev, addr.func);
 
     return intBase + (addr.dev % intCount);
 }

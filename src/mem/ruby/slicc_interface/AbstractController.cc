@@ -51,24 +51,24 @@ namespace gem5
 {
 namespace ruby
 {
-AbstractController::AbstractController(const Params &p) :
-    ClockedObject(p),
-    Consumer(this),
-    m_version(p.version),
-    m_clusterID(p.cluster_id),
-    m_id(p.system->getRequestorId(this)),
-    m_is_blocking(false),
-    m_number_of_TBEs(p.number_of_TBEs),
-    m_transitions_per_cycle(p.transitions_per_cycle),
-    m_buffer_size(p.buffer_size),
-    m_recycle_latency(p.recycle_latency),
-    m_mandatory_queue_latency(p.mandatory_queue_latency),
-    m_waiting_mem_retry(false),
-    m_mem_ctrl_waiting_retry(false),
-    memoryPort(csprintf("%s.memory", name()), this),
-    addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
-    mRetryRespEvent{*this, false},
-    stats(this)
+AbstractController::AbstractController(const Params &p)
+    : ClockedObject(p),
+      Consumer(this),
+      m_version(p.version),
+      m_clusterID(p.cluster_id),
+      m_id(p.system->getRequestorId(this)),
+      m_is_blocking(false),
+      m_number_of_TBEs(p.number_of_TBEs),
+      m_transitions_per_cycle(p.transitions_per_cycle),
+      m_buffer_size(p.buffer_size),
+      m_recycle_latency(p.recycle_latency),
+      m_mandatory_queue_latency(p.mandatory_queue_latency),
+      m_waiting_mem_retry(false),
+      m_mem_ctrl_waiting_retry(false),
+      memoryPort(csprintf("%s.memory", name()), this),
+      addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
+      mRetryRespEvent{*this, false},
+      stats(this)
 {
     if (m_version == 0) {
         // Combine the statistics from all controllers
@@ -104,7 +104,7 @@ AbstractController::init()
             if ((i != downstreamAddrMap.end()) &&
                 (i->second.intersects(addr_range) != i->second.end())) {
                 fatal("%s: %s mapped to multiple machines of the same type\n",
-                    name(), addr_range.to_string());
+                      name(), addr_range.to_string());
             }
             downstreamAddrMap[mid.getType()].insert(addr_range, mid);
         }
@@ -152,8 +152,8 @@ AbstractController::stallBuffer(MessageBuffer *buf, Addr addr)
         msgVec->resize(m_in_ports, NULL);
         m_waiting_buffers[addr] = msgVec;
     }
-    DPRINTF(
-        RubyQueue, "stalling %s port %d addr %#x\n", buf, m_cur_in_port, addr);
+    DPRINTF(RubyQueue, "stalling %s port %d addr %#x\n", buf, m_cur_in_port,
+            addr);
     assert(m_in_ports > m_cur_in_port);
     (*(m_waiting_buffers[addr]))[m_cur_in_port] = buf;
 }
@@ -285,7 +285,8 @@ AbstractController::serviceMemoryQueue()
         pkt->dataDynamic(newData);
     } else {
         panic("Unknown memory request type (%s) for addr %p",
-            MemoryRequestType_to_string(mem_msg->getType()), mem_msg->m_addr);
+              MemoryRequestType_to_string(mem_msg->getType()),
+              mem_msg->m_addr);
     }
 
     SenderState *s = new SenderState(mem_msg->m_Sender);
@@ -392,8 +393,8 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         (*msg).m_MessageSize = MessageSizeType_Response_Data;
 
         // Copy data from the packet
-        (*msg).m_DataBlk.setData(
-            pkt->getPtr<uint8_t>(), 0, RubySystem::getBlockSizeBytes());
+        (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
+                                 RubySystem::getBlockSizeBytes());
     } else if (pkt->isWrite()) {
         (*msg).m_Type = MemoryRequestType_MEMORY_WB;
         (*msg).m_MessageSize = MessageSizeType_Writeback_Control;
@@ -421,8 +422,8 @@ AbstractController::mapAddressToMachine(Addr addr, MachineType mtype) const
 }
 
 MachineID
-AbstractController::mapAddressToDownstreamMachine(
-    Addr addr, MachineType mtype) const
+AbstractController::mapAddressToDownstreamMachine(Addr addr,
+                                                  MachineType mtype) const
 {
     if (mtype == MachineType_NUM) {
         // map to the first match
@@ -440,7 +441,7 @@ AbstractController::mapAddressToDownstreamMachine(
         }
     }
     fatal("%s: couldn't find mapping for address %x mtype=%s\n", name(), addr,
-        mtype);
+          mtype);
 }
 
 void
@@ -482,17 +483,17 @@ AbstractController::MemoryPort::recvReqRetry()
     controller->serviceMemoryQueue();
 }
 
-AbstractController::MemoryPort::MemoryPort(
-    const std::string &_name, AbstractController *_controller, PortID id) :
-    RequestPort(_name, id), controller(_controller)
+AbstractController::MemoryPort::MemoryPort(const std::string &_name,
+                                           AbstractController *_controller,
+                                           PortID id)
+    : RequestPort(_name, id), controller(_controller)
 {}
 
-AbstractController::ControllerStats::ControllerStats(
-    statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(fullyBusyCycles,
-        "cycles for which number of transistions == max transitions"),
-    ADD_STAT(delayHistogram, "delay_histogram")
+AbstractController::ControllerStats::ControllerStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(fullyBusyCycles,
+               "cycles for which number of transistions == max transitions"),
+      ADD_STAT(delayHistogram, "delay_histogram")
 {
     fullyBusyCycles.flags(statistics::nozero);
     delayHistogram.flags(statistics::nozero);

@@ -78,7 +78,7 @@ System::Threads::Thread::name() const
 {
     assert(context);
     return csprintf("%s.threads[%d]", context->getSystemPtr()->name(),
-        context->contextId());
+                    context->contextId());
 }
 
 void
@@ -162,29 +162,29 @@ System::Threads::quiesceTick(ContextID id, Tick when)
 
 int System::numSystemsRunning = 0;
 
-System::System(const Params &p) :
-    SimObject(p),
-    _systemPort("system_port"),
-    multiThread(p.multi_thread),
-    init_param(p.init_param),
-    physProxy(_systemPort, p.cache_line_size),
-    workload(p.workload),
-    physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
-        p.shared_backstore, p.auto_unlink_shared_backstore),
-    ShadowRomRanges(p.shadow_rom_ranges.begin(), p.shadow_rom_ranges.end()),
-    memoryMode(p.mem_mode),
-    _cacheLineSize(p.cache_line_size),
-    numWorkIds(p.num_work_ids),
-    thermalModel(p.thermal_model),
-    _m5opRange(p.m5ops_base ?
-                   RangeSize(p.m5ops_base, 0x10000) :
-                   AddrRange(1, 0)), // Create an empty range if disabled
-    redirectPaths(p.redirect_paths)
+System::System(const Params &p)
+    : SimObject(p),
+      _systemPort("system_port"),
+      multiThread(p.multi_thread),
+      init_param(p.init_param),
+      physProxy(_systemPort, p.cache_line_size),
+      workload(p.workload),
+      physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
+              p.shared_backstore, p.auto_unlink_shared_backstore),
+      ShadowRomRanges(p.shadow_rom_ranges.begin(), p.shadow_rom_ranges.end()),
+      memoryMode(p.mem_mode),
+      _cacheLineSize(p.cache_line_size),
+      numWorkIds(p.num_work_ids),
+      thermalModel(p.thermal_model),
+      _m5opRange(p.m5ops_base ?
+                     RangeSize(p.m5ops_base, 0x10000) :
+                     AddrRange(1, 0)), // Create an empty range if disabled
+      redirectPaths(p.redirect_paths)
 {
     panic_if(!workload,
-        "No workload set for system %s "
-        "(could use StubWorkload?).",
-        name());
+             "No workload set for system %s "
+             "(could use StubWorkload?).",
+             name());
     workload->setSystem(this);
 
     // add self to global system list
@@ -291,8 +291,8 @@ System::isMemAddr(Addr addr) const
 }
 
 void
-System::addDeviceMemory(
-    RequestorID requestor_id, memory::AbstractMemory *deviceMemory)
+System::addDeviceMemory(RequestorID requestor_id,
+                        memory::AbstractMemory *deviceMemory)
 {
     deviceMemMap[requestor_id].push_back(deviceMemory);
 }
@@ -313,7 +313,7 @@ System::getDeviceMemory(const PacketPtr &pkt) const
     const RequestorID &rid = pkt->requestorId();
 
     panic_if(!deviceMemMap.count(rid),
-        "No device memory found for Requestor %d\n", rid);
+             "No device memory found for Requestor %d\n", rid);
 
     for (auto &mem : deviceMemMap.at(rid)) {
         if (pkt->getAddrRange().isSubset(mem->getAddrRange())) {
@@ -445,8 +445,8 @@ System::lookupRequestorId(const SimObject *obj) const
     }
 
     fatal_if(obj_number > 1,
-        "Cannot lookup RequestorID by SimObject pointer: "
-        "More than one requestor is sharing the same SimObject\n");
+             "Cannot lookup RequestorID by SimObject pointer: "
+             "More than one requestor is sharing the same SimObject\n");
 
     return id;
 }
@@ -479,8 +479,8 @@ System::getRequestorId(const SimObject *requestor, std::string subrequestor)
 }
 
 RequestorID
-System::_getRequestorId(
-    const SimObject *requestor, const std::string &requestor_name)
+System::_getRequestorId(const SimObject *requestor,
+                        const std::string &requestor_name)
 {
     std::string name = stripSystemName(requestor_name);
 
@@ -510,8 +510,8 @@ System::_getRequestorId(
 }
 
 std::string
-System::leafRequestorName(
-    const SimObject *requestor, const std::string &subrequestor)
+System::leafRequestorName(const SimObject *requestor,
+                          const std::string &subrequestor)
 {
     if (subrequestor.empty()) {
         return requestor->name();

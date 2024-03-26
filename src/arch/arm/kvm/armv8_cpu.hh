@@ -96,8 +96,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     /** Mapping between integer registers in gem5 and KVM */
     struct IntRegInfo
     {
-        IntRegInfo(uint64_t _kvm, RegIndex _idx, const char *_name) :
-            kvm(_kvm), idx(_idx), name(_name)
+        IntRegInfo(uint64_t _kvm, RegIndex _idx, const char *_name)
+            : kvm(_kvm), idx(_idx), name(_name)
         {}
 
         /** Register index in KVM */
@@ -112,8 +112,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     struct MiscRegInfo
     {
         MiscRegInfo(uint64_t _kvm, ArmISA::MiscRegIndex _idx,
-            const char *_name, bool _is_device = false) :
-            kvm(_kvm), idx(_idx), name(_name), is_device(_is_device)
+                    const char *_name, bool _is_device = false)
+            : kvm(_kvm), idx(_idx), name(_name), is_device(_is_device)
         {}
 
         /** Register index in KVM */

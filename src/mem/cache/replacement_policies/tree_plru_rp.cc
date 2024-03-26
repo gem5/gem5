@@ -93,16 +93,16 @@ isRightSubtree(const uint64_t index)
     return index % 2 == 0;
 }
 
-TreePLRU::TreePLRUReplData::TreePLRUReplData(
-    const uint64_t index, std::shared_ptr<PLRUTree> tree) :
-    index(index), tree(tree)
+TreePLRU::TreePLRUReplData::TreePLRUReplData(const uint64_t index,
+                                             std::shared_ptr<PLRUTree> tree)
+    : index(index), tree(tree)
 {}
 
-TreePLRU::TreePLRU(const Params &p) :
-    Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
+TreePLRU::TreePLRU(const Params &p)
+    : Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
 {
     fatal_if(!isPowerOf2(numLeaves),
-        "Number of leaves must be non-zero and a power of 2");
+             "Number of leaves must be non-zero and a power of 2");
 }
 
 void
@@ -170,7 +170,7 @@ TreePLRU::getVictim(const ReplacementCandidates &candidates) const
 
     // Get tree
     const PLRUTree *tree = std::static_pointer_cast<TreePLRUReplData>(
-        candidates[0]->replacementData)
+                               candidates[0]->replacementData)
                                ->tree.get();
 
     // Index of the tree entry we are currently checking. Start with root.
@@ -202,7 +202,7 @@ TreePLRU::instantiateEntry()
     // Create replacement data using current tree instance
     TreePLRUReplData *treePLRUReplData =
         new TreePLRUReplData((count % numLeaves) + numLeaves - 1,
-            std::shared_ptr<PLRUTree>(treeInstance));
+                             std::shared_ptr<PLRUTree>(treeInstance));
 
     // Update instance counter
     count++;

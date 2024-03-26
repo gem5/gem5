@@ -50,15 +50,15 @@ class InstDecoder : public SimObject
 
   public:
     template <typename MoreBytesType>
-    InstDecoder(const InstDecoderParams &params, MoreBytesType *mb_buf) :
-        SimObject(params),
-        _moreBytesPtr(mb_buf),
-        _moreBytesSize(sizeof(MoreBytesType)),
-        _pcMask(~mask(floorLog2(_moreBytesSize)))
+    InstDecoder(const InstDecoderParams &params, MoreBytesType *mb_buf)
+        : SimObject(params),
+          _moreBytesPtr(mb_buf),
+          _moreBytesSize(sizeof(MoreBytesType)),
+          _pcMask(~mask(floorLog2(_moreBytesSize)))
     {}
 
-    virtual StaticInstPtr fetchRomMicroop(
-        MicroPC micropc, StaticInstPtr curMacroop);
+    virtual StaticInstPtr fetchRomMicroop(MicroPC micropc,
+                                          StaticInstPtr curMacroop);
     virtual void
     reset()
     {

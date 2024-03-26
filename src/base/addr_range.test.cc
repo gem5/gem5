@@ -604,7 +604,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressesIntersectsOnOneByteAddress)
 }
 
 TEST(AddrRangeTest,
-    DISABLED_InterleavingAddressesDoesNotIntersectOnOneByteAddress)
+     DISABLED_InterleavingAddressesDoesNotIntersectOnOneByteAddress)
 {
     /*
      * Range: all the odd addresses between 0x0000 and 0xFFFF.
@@ -783,7 +783,7 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossRange)
          * As intlv_match = 0xF, all the interleaved bits should be set.
          */
         EXPECT_EQ(i | (1 << 2) | (1 << 3) | (1 << 7) | (1 << 11),
-            r.addIntlvBits(removedBits));
+                  r.addIntlvBits(removedBits));
     }
 }
 
@@ -810,8 +810,8 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossContiguousRange)
         /*
          * As intlv_match = 0x7, all the interleaved bits should be set.
          */
-        EXPECT_EQ(
-            i | (1 << 2) | (1 << 3) | (1 << 4), r.addIntlvBits(removedBits));
+        EXPECT_EQ(i | (1 << 2) | (1 << 3) | (1 << 4),
+                  r.addIntlvBits(removedBits));
     }
 }
 
@@ -1178,8 +1178,8 @@ TEST(AddrRangeTest, ExcludeAllMultiple)
  */
 TEST(AddrRangeTest, ExcludeAllOverlapping)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x0, 0x150), AddrRange(0x140, 0x220)};
+    const AddrRangeList exclude_ranges{AddrRange(0x0, 0x150),
+                                       AddrRange(0x140, 0x220)};
 
     AddrRange r(0x100, 0x200);
 
@@ -1279,7 +1279,8 @@ TEST(AddrRangeTest, DoubleExclusion)
 TEST(AddrRangeTest, MultipleExclusion)
 {
     const AddrRangeList exclude_ranges{AddrRange(0x000, 0x130),
-        AddrRange(0x140, 0x170), AddrRange(0x180, 0x210)};
+                                       AddrRange(0x140, 0x170),
+                                       AddrRange(0x180, 0x210)};
 
     const AddrRange expected_range1(0x130, 0x140);
     const AddrRange expected_range2(0x170, 0x180);
@@ -1310,7 +1311,8 @@ TEST(AddrRangeTest, MultipleExclusion)
 TEST(AddrRangeTest, MultipleExclusionOverlapping)
 {
     const AddrRangeList exclude_ranges{AddrRange(0x000, 0x130),
-        AddrRange(0x140, 0x170), AddrRange(0x150, 0x210)};
+                                       AddrRange(0x140, 0x170),
+                                       AddrRange(0x150, 0x210)};
 
     const AddrRange expected_range1(0x130, 0x140);
 
@@ -1341,8 +1343,8 @@ TEST(AddrRangeTest, MultipleExclusionOverlapping)
  */
 TEST(AddrRangeTest, ExclusionOverlapping)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x120, 0x180), AddrRange(0x130, 0x170)};
+    const AddrRangeList exclude_ranges{AddrRange(0x120, 0x180),
+                                       AddrRange(0x130, 0x170)};
 
     const AddrRange expected_range1(0x100, 0x120);
     const AddrRange expected_range2(0x180, 0x200);
@@ -1373,7 +1375,8 @@ TEST(AddrRangeTest, ExclusionOverlapping)
 TEST(AddrRangeTest, MultipleExclusionUnsorted)
 {
     const AddrRangeList exclude_ranges{AddrRange(0x180, 0x210),
-        AddrRange(0x000, 0x130), AddrRange(0x140, 0x170)};
+                                       AddrRange(0x000, 0x130),
+                                       AddrRange(0x140, 0x170)};
 
     const AddrRange expected_range1(0x130, 0x140);
     const AddrRange expected_range2(0x170, 0x180);
@@ -1425,7 +1428,7 @@ TEST(AddrRangeTest, ExclusionOfRangeListFromRangeList)
 
     EXPECT_EQ(ranges.size(), 4);
     EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
-                            expected_range3, expected_range4));
+                                    expected_range3, expected_range4));
 }
 
 TEST(AddrRangeTest, SubtractionOperatorRange)
@@ -1451,8 +1454,8 @@ TEST(AddrRangeTest, SubtractionOperatorRangeList)
         r - AddrRangeList({AddrRange(0x140, 0x160), AddrRange(0x180, 0x1a0)});
 
     EXPECT_EQ(ranges.size(), 3);
-    EXPECT_THAT(ranges,
-        ElementsAre(expected_range1, expected_range2, expected_range3));
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
+                                    expected_range3));
 }
 
 TEST(AddrRangeTest, SubtractionOfRangeFromRangeList)
@@ -1483,7 +1486,7 @@ TEST(AddrRangeTest, SubtractionOfRangeListFromRangeList)
 
     EXPECT_EQ(ranges.size(), 4);
     EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
-                            expected_range3, expected_range4));
+                                    expected_range3, expected_range4));
 }
 
 TEST(AddrRangeTest, SubtractionAssignmentOfRangeFromRangeList)
@@ -1514,7 +1517,7 @@ TEST(AddrRangeTest, SubtractionAssignmentOfRangeListFromRangeList)
 
     EXPECT_EQ(base.size(), 4);
     EXPECT_THAT(base, ElementsAre(expected_range1, expected_range2,
-                          expected_range3, expected_range4));
+                                  expected_range3, expected_range4));
 }
 
 /*

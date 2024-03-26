@@ -75,12 +75,12 @@ BaseGic::params() const
     return dynamic_cast<const Params &>(_params);
 }
 
-ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p) :
-    SimObject(p)
+ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p)
+    : SimObject(p)
 {}
 
-ArmSPIGen::ArmSPIGen(const ArmSPIParams &p) :
-    ArmInterruptPinGen(p), pin(new ArmSPI(p))
+ArmSPIGen::ArmSPIGen(const ArmSPIParams &p)
+    : ArmInterruptPinGen(p), pin(new ArmSPI(p))
 {}
 
 ArmInterruptPin *
@@ -112,9 +112,8 @@ ArmPPIGen::get(ThreadContext *tc)
     }
 }
 
-ArmSigInterruptPinGen::ArmSigInterruptPinGen(
-    const ArmSigInterruptPinParams &p) :
-    ArmInterruptPinGen(p), pin(new ArmSigInterruptPin(p))
+ArmSigInterruptPinGen::ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p)
+    : ArmInterruptPinGen(p), pin(new ArmSigInterruptPin(p))
 {}
 
 ArmInterruptPin *
@@ -139,13 +138,13 @@ ArmSigInterruptPinGen::getPort(const std::string &if_name, PortID idx)
     return ArmInterruptPinGen::getPort(if_name, idx);
 }
 
-ArmInterruptPin::ArmInterruptPin(
-    const ArmInterruptPinParams &p, ThreadContext *tc) :
-    threadContext(tc),
-    platform(dynamic_cast<RealView *>(p.platform)),
-    intNum(p.num),
-    triggerType(p.int_type),
-    _active(false)
+ArmInterruptPin::ArmInterruptPin(const ArmInterruptPinParams &p,
+                                 ThreadContext *tc)
+    : threadContext(tc),
+      platform(dynamic_cast<RealView *>(p.platform)),
+      intNum(p.num),
+      triggerType(p.int_type),
+      _active(false)
 {
     fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
@@ -194,8 +193,8 @@ ArmSPI::clear()
     platform->gic->clearInt(intNum);
 }
 
-ArmPPI::ArmPPI(const ArmPPIParams &p, ThreadContext *tc) :
-    ArmInterruptPin(p, tc)
+ArmPPI::ArmPPI(const ArmPPIParams &p, ThreadContext *tc)
+    : ArmInterruptPin(p, tc)
 {}
 
 void
@@ -212,8 +211,8 @@ ArmPPI::clear()
     platform->gic->clearPPInt(intNum, targetContext());
 }
 
-ArmSigInterruptPin::ArmSigInterruptPin(const ArmSigInterruptPinParams &p) :
-    ArmInterruptPin(p, nullptr)
+ArmSigInterruptPin::ArmSigInterruptPin(const ArmSigInterruptPinParams &p)
+    : ArmInterruptPin(p, nullptr)
 {}
 
 void

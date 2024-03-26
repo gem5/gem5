@@ -50,8 +50,8 @@
 
 namespace gem5
 {
-SimpleDisk::SimpleDisk(const Params &p) :
-    SimObject(p), system(p.system), image(p.disk)
+SimpleDisk::SimpleDisk(const Params &p)
+    : SimObject(p), system(p.system), image(p.disk)
 {}
 
 SimpleDisk::~SimpleDisk() {}

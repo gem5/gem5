@@ -70,7 +70,7 @@ namespace RiscvISA
 {
 Fault
 Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
-    const RequestPtr &_req, BaseMMU::Mode _mode)
+              const RequestPtr &_req, BaseMMU::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
@@ -94,8 +94,8 @@ Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(
-    ThreadContext *_tc, Addr &addr, unsigned &logBytes, BaseMMU::Mode _mode)
+Walker::startFunctional(ThreadContext *_tc, Addr &addr, unsigned &logBytes,
+                        BaseMMU::Mode _mode)
 {
     funcState.initState(_tc, _mode);
     return funcState.startFunctional(addr, logBytes);
@@ -179,8 +179,8 @@ Walker::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-Walker::WalkerState::initState(
-    ThreadContext *_tc, BaseMMU::Mode _mode, bool _isTiming)
+Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                               bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -205,7 +205,7 @@ Walker::startWalkWrapper()
         num_squashed++;
 
         DPRINTF(PageTableWalker, "Squashing table walk for address %#x\n",
-            currState->req->getVaddr());
+                currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
         currState->translation->finish(
@@ -304,8 +304,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     walker->pma->check(read->req);
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
-    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
-        RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+    fault =
+        walker->pmp->pmpCheck(read->req, BaseMMU::Read,
+                              RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
 
     if (fault == NoFault) {
         // step 3:
@@ -318,18 +319,18 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             if (pte.r || pte.x) {
                 // step 5: leaf PTE
                 doEndWalk = true;
-                fault = walker->tlb->checkPermissions(
-                    status, pmode, entry.vaddr, mode, pte);
+                fault = walker->tlb->checkPermissions(status, pmode,
+                                                      entry.vaddr, mode, pte);
 
                 // step 6
                 if (fault == NoFault) {
                     if (level >= 1 && pte.ppn0 != 0) {
                         DPRINTF(PageTableWalker,
-                            "PTE has misaligned PPN, raising PF\n");
+                                "PTE has misaligned PPN, raising PF\n");
                         fault = pageFault(true);
                     } else if (level == 2 && pte.ppn1 != 0) {
                         DPRINTF(PageTableWalker,
-                            "PTE has misaligned PPN, raising PF\n");
+                                "PTE has misaligned PPN, raising PF\n");
                         fault = pageFault(true);
                     }
                 }
@@ -396,7 +397,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory.
         if (!functional && doWrite) {
             DPRINTF(PageTableWalker, "Writing level%d PTE to %#x: %#x\n",
-                level, oldRead->getAddr(), pte);
+                    level, oldRead->getAddr(), pte);
             write = oldRead;
             write->setLE<uint64_t>(pte);
             write->cmd = MemCmd::WriteReq;
@@ -410,9 +411,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                 walker->tlb->insert(entry.vaddr, entry);
             else {
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
-                    entry.vaddr,
-                    entry.paddr << PageShift |
-                        (entry.vaddr & mask(entry.logBytes)));
+                        entry.vaddr,
+                        entry.paddr << PageShift |
+                            (entry.vaddr & mask(entry.logBytes)));
             }
         }
         endWalk();
@@ -428,7 +429,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         read->allocate();
 
         DPRINTF(PageTableWalker, "Loading level%d PTE from %#x\n", level,
-            nextRead);
+                nextRead);
     }
 
     return fault;
@@ -461,8 +462,8 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     entry.asid = satp.asid;
 
     Request::Flags flags = Request::PHYSICAL;
-    RequestPtr request = std::make_shared<Request>(
-        topAddr, sizeof(PTESv39), flags, walker->requestorId);
+    RequestPtr request = std::make_shared<Request>(topAddr, sizeof(PTESv39),
+                                                   flags, walker->requestorId);
 
     read = new Packet(request, MemCmd::ReadReq);
     read->allocate();

@@ -33,12 +33,12 @@
 
 namespace gem5
 {
-SimpleMemobj::SimpleMemobj(const SimpleMemobjParams &params) :
-    SimObject(params),
-    instPort(params.name + ".inst_port", this),
-    dataPort(params.name + ".data_port", this),
-    memPort(params.name + ".mem_side", this),
-    blocked(false)
+SimpleMemobj::SimpleMemobj(const SimpleMemobjParams &params)
+    : SimObject(params),
+      instPort(params.name + ".inst_port", this),
+      dataPort(params.name + ".data_port", this),
+      memPort(params.name + ".mem_side", this),
+      blocked(false)
 {}
 
 Port &

@@ -55,7 +55,7 @@ GPUISA::readMiscReg(int opIdx) const
     default:
         fatal("attempting to read from unsupported or non-readable "
               "register. selector val: %i\n",
-            opIdx);
+              opIdx);
         return 0;
     }
 }
@@ -73,7 +73,7 @@ GPUISA::writeMiscReg(int opIdx, ScalarRegU32 operandVal)
     default:
         fatal("attempting to write to an unsupported or non-writable "
               "register. selector val: %i\n",
-            opIdx);
+              opIdx);
         break;
     }
 }
@@ -85,10 +85,10 @@ GPUISA::advancePC(GPUDynInstPtr gpuDynInst)
 }
 
 const std::array<const ScalarRegU32, NumPosConstRegs> GPUISA::posConstRegs = {
-    {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-        22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-        40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
-        58, 59, 60, 61, 62, 63, 64}};
+    {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+     17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+     33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+     49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64}};
 
 const std::array<const ScalarRegI32, NumNegConstRegs> GPUISA::negConstRegs = {
     {-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16}};

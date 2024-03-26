@@ -53,8 +53,8 @@ struct ValueSamples
     statistics::Counter value;
     statistics::Counter numSamples;
 
-    ValueSamples(statistics::Counter value, statistics::Counter num_samples) :
-        value(value), numSamples(num_samples)
+    ValueSamples(statistics::Counter value, statistics::Counter num_samples)
+        : value(value), numSamples(num_samples)
     {}
 };
 
@@ -145,9 +145,9 @@ TEST(StatsAvgStorTest, SetValueResult)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(
-        stor.result(), statistics::Result(total + val) /
-                           statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 
     total += val * (curTick() - last_tick);
@@ -155,9 +155,9 @@ TEST(StatsAvgStorTest, SetValueResult)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(
-        stor.result(), statistics::Result(total + val) /
-                           statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 }
 
@@ -189,18 +189,18 @@ TEST(StatsAvgStorTest, Prepare)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(
-        stor.result(), statistics::Result(total + val) /
-                           statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 
     total += val * (curTick() - last_tick);
     stor.prepare(nullptr);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(
-        stor.result(), statistics::Result(total + val) /
-                           statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 }
 
@@ -320,7 +320,8 @@ TEST(StatsDistStorTest, Size)
  */
 void
 checkExpectedDistData(const statistics::DistData &data,
-    const statistics::DistData &expected_data, bool no_log = true)
+                      const statistics::DistData &expected_data,
+                      bool no_log = true)
 {
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.min, expected_data.min);
@@ -352,7 +353,8 @@ checkExpectedDistData(const statistics::DistData &data,
  */
 void
 prepareCheckDistStor(statistics::DistStor::Params &params,
-    ValueSamples *values, int num_values, statistics::DistData &expected_data)
+                     ValueSamples *values, int num_values,
+                     statistics::DistData &expected_data)
 {
     statistics::DistStor stor(&params);
 
@@ -415,8 +417,9 @@ TEST(StatsDistStorTest, SamplePrepareMultiple)
     // minimum bucket value (-10, -1) are added to the underflow counter.
     // The extremes (0 and 99) are added to check if they go to the first and
     // last buckets.
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {12345678, 99}, {-10, 4},
-        {17, 17}, {52, 63}, {18, 11}, {0, 1}, {99, 15}, {-1, 200}, {100, 50}};
+    ValueSamples values[] = {{10, 5},  {1234, 2}, {12345678, 99}, {-10, 4},
+                             {17, 17}, {52, 63},  {18, 11},       {0, 1},
+                             {99, 15}, {-1, 200}, {100, 50}};
     int num_values = sizeof(values) / sizeof(ValueSamples);
 
     // Setup variables that should always match params' values
@@ -448,8 +451,9 @@ TEST(StatsDistStorTest, Reset)
     statistics::DistStor stor(&params);
 
     // Populate storage with random samples
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {12345678, 99}, {-10, 4},
-        {17, 17}, {52, 63}, {18, 11}, {0, 1}, {99, 15}, {-1, 200}, {100, 50}};
+    ValueSamples values[] = {{10, 5},  {1234, 2}, {12345678, 99}, {-10, 4},
+                             {17, 17}, {52, 63},  {18, 11},       {0, 1},
+                             {99, 15}, {-1, 200}, {100, 50}};
     int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);
@@ -553,7 +557,8 @@ TEST(StatsHistStorTest, Size)
  */
 void
 prepareCheckHistStor(statistics::HistStor::Params &params,
-    ValueSamples *values, int num_values, statistics::DistData &expected_data)
+                     ValueSamples *values, int num_values,
+                     statistics::DistData &expected_data)
 {
     statistics::HistStor stor(&params);
 
@@ -687,8 +692,8 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownOddBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 2. The final buckets will be divided at:
     //   Bkt0=[-4,-2[ , Bkt1=[-2,-0[, Bkt2=[0,2[, Bkt3=[2,4[, Bkt4=[4,6[
-    ValueSamples values[] = {
-        {0, 5}, {1, 2}, {2, 99}, {3, 12}, {4, 33}, {-1, 4}};
+    ValueSamples values[] = {{0, 5},  {1, 2},  {2, 99},
+                             {3, 12}, {4, 33}, {-1, 4}};
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -749,8 +754,8 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutOddBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 8. The final buckets will be divided at:
     //   Bkt0=[-16,-8[ , Bkt1=[-8,0[, Bkt2=[0,8[, Bkt3=[8,16[, Bkt4=[16,24[
-    ValueSamples values[] = {
-        {0, 5}, {1, 2}, {2, 99}, {3, 12}, {4, 33}, {-12, 4}};
+    ValueSamples values[] = {{0, 5},  {1, 2},  {2, 99},
+                             {3, 12}, {4, 33}, {-12, 4}};
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -812,8 +817,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowOddBuckets)
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[,
     //   Bkt4=[128,192[
-    ValueSamples values[] = {
-        {0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = {{0, 5},   {7, 2},     {31, 99}, {-8, 12},
+                             {127, 4}, {-120, 53}, {-50, 1}};
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -844,8 +849,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
     // a few positive and negative samples, and the bucket size will grow to
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[
-    ValueSamples values[] = {
-        {0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = {{0, 5},   {7, 2},     {31, 99}, {-8, 12},
+                             {127, 4}, {-120, 53}, {-50, 1}};
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -872,8 +877,8 @@ TEST(StatsHistStorTest, Reset)
     // a few positive and negative samples, and the bucket size will grow to
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[
-    ValueSamples values[] = {
-        {0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = {{0, 5},   {7, 2},     {31, 99}, {-8, 12},
+                             {127, 4}, {-120, 53}, {-50, 1}};
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);

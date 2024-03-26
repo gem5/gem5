@@ -76,8 +76,8 @@ class DependencyGraph
     typedef DependencyEntry<DynInstPtr> DepEntry;
 
     /** Default construction.  Must call resize() prior to use. */
-    DependencyGraph() :
-        numEntries(0), memAllocCounter(0), nodesTraversed(0), nodesRemoved(0)
+    DependencyGraph()
+        : numEntries(0), memAllocCounter(0), nodesTraversed(0), nodesRemoved(0)
     {}
 
     ~DependencyGraph();
@@ -209,8 +209,8 @@ DependencyGraph<DynInstPtr>::insert(RegIndex idx, const DynInstPtr &new_inst)
 
 template <class DynInstPtr>
 void
-DependencyGraph<DynInstPtr>::remove(
-    RegIndex idx, const DynInstPtr &inst_to_remove)
+DependencyGraph<DynInstPtr>::remove(RegIndex idx,
+                                    const DynInstPtr &inst_to_remove)
 {
     DepEntry *prev = &dependGraph[idx];
     DepEntry *curr = dependGraph[idx].next;
@@ -284,7 +284,7 @@ DependencyGraph<DynInstPtr>::dump()
 
         if (curr->inst) {
             cprintf("dependGraph[%i]: producer: %s [sn:%lli] consumer: ", i,
-                curr->inst->pcState(), curr->inst->seqNum);
+                    curr->inst->pcState(), curr->inst->seqNum);
         } else {
             cprintf("dependGraph[%i]: No producer. consumer: ", i);
         }
@@ -292,8 +292,8 @@ DependencyGraph<DynInstPtr>::dump()
         while (curr->next != NULL) {
             curr = curr->next;
 
-            cprintf(
-                "%s [sn:%lli] ", curr->inst->pcState(), curr->inst->seqNum);
+            cprintf("%s [sn:%lli] ", curr->inst->pcState(),
+                    curr->inst->seqNum);
         }
 
         cprintf("\n");

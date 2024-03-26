@@ -54,8 +54,8 @@
 namespace gem5
 {
 void
-Gicv3Registers::copyDistRegister(
-    Gicv3Registers *from, Gicv3Registers *to, Addr daddr)
+Gicv3Registers::copyDistRegister(Gicv3Registers *from, Gicv3Registers *to,
+                                 Addr daddr)
 {
     auto val = from->readDistributor(daddr);
     DPRINTF(GIC, "copy dist 0x%x 0x%08x\n", daddr, val);
@@ -64,49 +64,51 @@ Gicv3Registers::copyDistRegister(
 
 void
 Gicv3Registers::copyRedistRegister(Gicv3Registers *from, Gicv3Registers *to,
-    const ArmISA::Affinity &aff, Addr daddr)
+                                   const ArmISA::Affinity &aff, Addr daddr)
 {
     auto val = from->readRedistributor(aff, daddr);
     DPRINTF(GIC,
-        "copy redist (aff3: %d, aff2: %d, aff1: %d, aff0: %d) "
-        "0x%x 0x%08x\n",
-        aff.aff3, aff.aff2, aff.aff1, aff.aff0, daddr, val);
+            "copy redist (aff3: %d, aff2: %d, aff1: %d, aff0: %d) "
+            "0x%x 0x%08x\n",
+            aff.aff3, aff.aff2, aff.aff1, aff.aff0, daddr, val);
 
     to->writeRedistributor(aff, daddr, val);
 }
 
 void
 Gicv3Registers::copyCpuRegister(Gicv3Registers *from, Gicv3Registers *to,
-    const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg)
+                                const ArmISA::Affinity &aff,
+                                ArmISA::MiscRegIndex misc_reg)
 {
     auto val = from->readCpu(aff, misc_reg);
     DPRINTF(GIC,
-        "copy cpu (aff3: %d, aff2: %d, aff1: %d, aff0: %d) "
-        "%s 0x%08x\n",
-        aff.aff3, aff.aff2, aff.aff1, aff.aff0, ArmISA::miscRegName[misc_reg],
-        val);
+            "copy cpu (aff3: %d, aff2: %d, aff1: %d, aff0: %d) "
+            "%s 0x%08x\n",
+            aff.aff3, aff.aff2, aff.aff1, aff.aff0,
+            ArmISA::miscRegName[misc_reg], val);
 
     to->writeCpu(aff, misc_reg, val);
 }
 
 void
-Gicv3Registers::clearRedistRegister(
-    Gicv3Registers *to, const ArmISA::Affinity &aff, Addr daddr)
+Gicv3Registers::clearRedistRegister(Gicv3Registers *to,
+                                    const ArmISA::Affinity &aff, Addr daddr)
 {
     to->writeRedistributor(aff, daddr, 0xFFFFFFFF);
 }
 
 void
 Gicv3Registers::copyRedistRange(Gicv3Registers *from, Gicv3Registers *to,
-    const ArmISA::Affinity &aff, Addr daddr, size_t size)
+                                const ArmISA::Affinity &aff, Addr daddr,
+                                size_t size)
 {
     for (auto a = daddr; a < daddr + size; a += 4)
         copyRedistRegister(from, to, aff, a);
 }
 
 void
-Gicv3Registers::copyDistRange(
-    Gicv3Registers *from, Gicv3Registers *to, Addr daddr, size_t size)
+Gicv3Registers::copyDistRange(Gicv3Registers *from, Gicv3Registers *to,
+                              Addr daddr, size_t size)
 {
     for (auto a = daddr; a < daddr + size; a += 4)
         copyDistRegister(from, to, a);
@@ -130,9 +132,9 @@ Gicv3::init()
     cpuInterfaces.resize(threads, nullptr);
 
     panic_if(threads > params().cpu_max,
-        "Exceeding maximum number of PEs supported by GICv3: "
-        "using %u while maximum is %u.",
-        threads, params().cpu_max);
+             "Exceeding maximum number of PEs supported by GICv3: "
+             "using %u while maximum is %u.",
+             threads, params().cpu_max);
 
     for (int i = 0; i < threads; i++) {
         redistributors[i] = new Gicv3Redistributor(this, i);
@@ -176,9 +178,9 @@ Gicv3::read(PacketPtr pkt)
         resp = distributor->read(daddr, size, is_secure_access);
         delay = params().dist_pio_delay;
         DPRINTF(GIC,
-            "Gicv3::read(): (distributor) context_id %d register %#x "
-            "size %d is_secure_access %d (value %#x)\n",
-            pkt->req->contextId(), daddr, size, is_secure_access, resp);
+                "Gicv3::read(): (distributor) context_id %d register %#x "
+                "size %d is_secure_access %d (value %#x)\n",
+                pkt->req->contextId(), daddr, size, is_secure_access, resp);
     } else if (redistRange.contains(addr)) {
         Addr daddr = (addr - redistRange.start()) % redistSize;
 
@@ -187,10 +189,10 @@ Gicv3::read(PacketPtr pkt)
 
         delay = params().redist_pio_delay;
         DPRINTF(GIC,
-            "Gicv3::read(): (redistributor %d) context_id %d "
-            "register %#x size %d is_secure_access %d (value %#x)\n",
-            redist->processorNumber(), pkt->req->contextId(), daddr, size,
-            is_secure_access, resp);
+                "Gicv3::read(): (redistributor %d) context_id %d "
+                "register %#x size %d is_secure_access %d (value %#x)\n",
+                redist->processorNumber(), pkt->req->contextId(), daddr, size,
+                is_secure_access, resp);
     } else {
         panic("Gicv3::read(): unknown address %#x\n", addr);
     }
@@ -213,9 +215,9 @@ Gicv3::write(PacketPtr pkt)
         const Addr daddr = addr - distRange.start();
         panic_if(!distributor, "Distributor is null!");
         DPRINTF(GIC,
-            "Gicv3::write(): (distributor) context_id %d "
-            "register %#x size %d is_secure_access %d value %#x\n",
-            pkt->req->contextId(), daddr, size, is_secure_access, data);
+                "Gicv3::write(): (distributor) context_id %d "
+                "register %#x size %d is_secure_access %d value %#x\n",
+                pkt->req->contextId(), daddr, size, is_secure_access, data);
         distributor->write(daddr, data, size, is_secure_access);
         delay = params().dist_pio_delay;
     } else if (redistRange.contains(addr)) {
@@ -223,10 +225,10 @@ Gicv3::write(PacketPtr pkt)
 
         Gicv3Redistributor *redist = getRedistributorByAddr(addr);
         DPRINTF(GIC,
-            "Gicv3::write(): (redistributor %d) context_id %d "
-            "register %#x size %d is_secure_access %d value %#x\n",
-            redist->processorNumber(), pkt->req->contextId(), daddr, size,
-            is_secure_access, data);
+                "Gicv3::write(): (redistributor %d) context_id %d "
+                "register %#x size %d is_secure_access %d value %#x\n",
+                redist->processorNumber(), pkt->req->contextId(), daddr, size,
+                is_secure_access, data);
 
         redist->write(daddr, data, size, is_secure_access);
 
@@ -258,7 +260,7 @@ Gicv3::sendPPInt(uint32_t int_id, uint32_t cpu)
 {
     panic_if(cpu >= redistributors.size(), "Invalid cpuID sending PPI!");
     DPRINTF(Interrupt, "Gicv3::sendPPInt(): received PPI %d cpuTarget %#x\n",
-        int_id, cpu);
+            int_id, cpu);
     redistributors[cpu]->sendPPInt(int_id);
 }
 
@@ -267,7 +269,7 @@ Gicv3::clearPPInt(uint32_t int_id, uint32_t cpu)
 {
     panic_if(cpu >= redistributors.size(), "Invalid cpuID clearing PPI!");
     DPRINTF(Interrupt, "Gicv3::clearPPInt(): received PPI %d cpuTarget %#x\n",
-        int_id, cpu);
+            int_id, cpu);
     redistributors[cpu]->clearPPInt(int_id);
 }
 
@@ -335,13 +337,13 @@ Gicv3Redistributor *
 Gicv3::getRedistributorByAddr(Addr addr) const
 {
     panic_if(!redistRange.contains(addr),
-        "Address not pointing to a valid redistributor\n");
+             "Address not pointing to a valid redistributor\n");
 
     const Addr daddr = addr - redistRange.start();
     const uint32_t redistributor_id = daddr / redistSize;
 
     panic_if(redistributor_id >= redistributors.size(),
-        "Invalid redistributor_id!");
+             "Invalid redistributor_id!");
     panic_if(!redistributors[redistributor_id], "Redistributor is null!");
 
     return redistributors[redistributor_id];
@@ -376,8 +378,8 @@ Gicv3::writeDistributor(Addr daddr, uint32_t data)
 }
 
 void
-Gicv3::writeRedistributor(
-    const ArmISA::Affinity &aff, Addr daddr, uint32_t data)
+Gicv3::writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                          uint32_t data)
 {
     auto redistributor = getRedistributorByAffinity(aff);
     assert(redistributor);
@@ -385,8 +387,8 @@ Gicv3::writeRedistributor(
 }
 
 void
-Gicv3::writeCpu(
-    const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg, RegVal data)
+Gicv3::writeCpu(const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg,
+                RegVal data)
 {
     auto cpu_interface = getCPUInterfaceByAffinity(aff);
     assert(cpu_interface);

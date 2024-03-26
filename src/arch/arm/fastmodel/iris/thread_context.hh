@@ -81,10 +81,10 @@ class ThreadContext : public gem5::ThreadContext
 
     virtual void initFromIrisInstance(const ResourceMap &resources);
 
-    iris::ResourceId extractResourceId(
-        const ResourceMap &resources, const std::string &name);
+    iris::ResourceId extractResourceId(const ResourceMap &resources,
+                                       const std::string &name);
     void extractResourceMap(ResourceIds &ids, const ResourceMap &resources,
-        const IdxNameMap &idx_names);
+                            const IdxNameMap &idx_names);
     iris::MemorySpaceId getMemorySpaceId(const Iris::CanonicalMsn &msn) const;
 
     ResourceIds miscRegIds;
@@ -152,21 +152,30 @@ class ThreadContext : public gem5::ThreadContext
 
     virtual const std::vector<iris::MemorySpaceId> &getBpSpaceIds() const = 0;
 
-    iris::IrisErrorCode instanceRegistryChanged(uint64_t esId,
-        const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-        bool syncEc, std::string &error_message_out);
+    iris::IrisErrorCode
+    instanceRegistryChanged(uint64_t esId, const iris::IrisValueMap &fields,
+                            uint64_t time, uint64_t sInstId, bool syncEc,
+                            std::string &error_message_out);
     iris::IrisErrorCode phaseInitLeave(uint64_t esId,
-        const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-        bool syncEc, std::string &error_message_out);
+                                       const iris::IrisValueMap &fields,
+                                       uint64_t time, uint64_t sInstId,
+                                       bool syncEc,
+                                       std::string &error_message_out);
     iris::IrisErrorCode simulationTimeEvent(uint64_t esId,
-        const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-        bool syncEc, std::string &error_message_out);
+                                            const iris::IrisValueMap &fields,
+                                            uint64_t time, uint64_t sInstId,
+                                            bool syncEc,
+                                            std::string &error_message_out);
     iris::IrisErrorCode breakpointHit(uint64_t esId,
-        const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-        bool syncEc, std::string &error_message_out);
+                                      const iris::IrisValueMap &fields,
+                                      uint64_t time, uint64_t sInstId,
+                                      bool syncEc,
+                                      std::string &error_message_out);
     iris::IrisErrorCode semihostingEvent(uint64_t esId,
-        const iris::IrisValueMap &fields, uint64_t time, uint64_t sInstId,
-        bool syncEc, std::string &error_message_out);
+                                         const iris::IrisValueMap &fields,
+                                         uint64_t time, uint64_t sInstId,
+                                         bool syncEc,
+                                         std::string &error_message_out);
 
     iris::EventStreamId regEventStreamId;
     iris::EventStreamId initEventStreamId;
@@ -189,15 +198,16 @@ class ThreadContext : public gem5::ThreadContext
     mutable ArmISA::PCState pc;
 
     void readMem(iris::MemorySpaceId space, Addr addr, void *p, size_t size);
-    void writeMem(
-        iris::MemorySpaceId space, Addr addr, const void *p, size_t size);
+    void writeMem(iris::MemorySpaceId space, Addr addr, const void *p,
+                  size_t size);
     bool translateAddress(Addr &paddr, iris::MemorySpaceId p_space, Addr vaddr,
-        iris::MemorySpaceId v_space);
+                          iris::MemorySpaceId v_space);
 
   public:
     ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
-        gem5::BaseMMU *mmu, gem5::BaseISA *isa,
-        iris::IrisConnectionInterface *iris_if, const std::string &iris_path);
+                  gem5::BaseMMU *mmu, gem5::BaseISA *isa,
+                  iris::IrisConnectionInterface *iris_if,
+                  const std::string &iris_path);
     virtual ~ThreadContext();
 
     virtual bool translateAddress(Addr &paddr, Addr vaddr) = 0;
@@ -370,8 +380,8 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     iris::ResourceId getVecPredRegRscId(RegIndex vec_reg) const;
-    virtual const ArmISA::VecPredRegContainer &readVecPredReg(
-        const RegId &reg) const;
+    virtual const ArmISA::VecPredRegContainer &
+    readVecPredReg(const RegId &reg) const;
     virtual ArmISA::VecPredRegContainer &
     getWritableVecPredReg(const RegId &reg)
     {

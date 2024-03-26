@@ -110,14 +110,14 @@ class InstId
   public:
     /** Very boring default constructor */
     InstId(ThreadID thread_id = 0, InstSeqNum stream_seq_num = 0,
-        InstSeqNum prediction_seq_num = 0, InstSeqNum line_seq_num = 0,
-        InstSeqNum fetch_seq_num = 0, InstSeqNum exec_seq_num = 0) :
-        threadId(thread_id),
-        streamSeqNum(stream_seq_num),
-        predictionSeqNum(prediction_seq_num),
-        lineSeqNum(line_seq_num),
-        fetchSeqNum(fetch_seq_num),
-        execSeqNum(exec_seq_num)
+           InstSeqNum prediction_seq_num = 0, InstSeqNum line_seq_num = 0,
+           InstSeqNum fetch_seq_num = 0, InstSeqNum exec_seq_num = 0)
+        : threadId(thread_id),
+          streamSeqNum(stream_seq_num),
+          predictionSeqNum(prediction_seq_num),
+          lineSeqNum(line_seq_num),
+          fetchSeqNum(fetch_seq_num),
+          execSeqNum(exec_seq_num)
     {}
 
   public:
@@ -128,9 +128,9 @@ class InstId
         /* If any of fetch and exec sequence number are not set
          *  they need to be 0, so a straight comparison is still
          *  fine */
-        bool ret = (threadId == rhs.threadId && lineSeqNum == rhs.lineSeqNum &&
-                    fetchSeqNum == rhs.fetchSeqNum &&
-                    execSeqNum == rhs.execSeqNum);
+        bool ret =
+            (threadId == rhs.threadId && lineSeqNum == rhs.lineSeqNum &&
+             fetchSeqNum == rhs.fetchSeqNum && execSeqNum == rhs.execSeqNum);
 
         /* Stream and prediction *must* match if these are the same id */
         if (ret) {
@@ -236,13 +236,13 @@ class MinorDynInst : public RefCounted
     std::vector<RegId> flatDestRegIdx;
 
   public:
-    MinorDynInst(
-        StaticInstPtr si, InstId id_ = InstId(), Fault fault_ = NoFault) :
-        staticInst(si),
-        id(id_),
-        fault(fault_),
-        translationFault(NoFault),
-        flatDestRegIdx(si ? si->numDestRegs() : 0)
+    MinorDynInst(StaticInstPtr si, InstId id_ = InstId(),
+                 Fault fault_ = NoFault)
+        : staticInst(si),
+          id(id_),
+          fault(fault_),
+          translationFault(NoFault),
+          flatDestRegIdx(si ? si->numDestRegs() : 0)
     {}
 
   public:

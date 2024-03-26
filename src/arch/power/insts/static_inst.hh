@@ -45,9 +45,8 @@ class PowerStaticInst : public StaticInst
     ExtMachInst machInst;
 
     // Constructor
-    PowerStaticInst(
-        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        StaticInst(mnem, __opClass), machInst(_machInst)
+    PowerStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : StaticInst(mnem, __opClass), machInst(_machInst)
     {}
 
     // Insert a condition value into a CR (condition register) field
@@ -63,8 +62,9 @@ class PowerStaticInst : public StaticInst
     /// dependence tag number (FP or int).
     void printReg(std::ostream &os, RegId reg) const;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     void
     advancePC(PCStateBase &pc_state) const override
@@ -81,8 +81,8 @@ class PowerStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(
-        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
+    buildRetPC(const PCStateBase &cur_pc,
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc = call_pc.clone();
         ret_pc->as<PCState>().advance();

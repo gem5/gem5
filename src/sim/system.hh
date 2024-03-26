@@ -151,8 +151,8 @@ class System : public SimObject, public PCEventScope
 
             friend class Threads;
 
-            const_iterator(const Threads &_threads, int _pos) :
-                threads(&_threads), pos(_pos)
+            const_iterator(const Threads &_threads, int _pos)
+                : threads(&_threads), pos(_pos)
             {}
 
           public:
@@ -267,8 +267,8 @@ class System : public SimObject, public PCEventScope
     /**
      * Additional function to return the Port of a memory object.
      */
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     /** @{ */
     /**
@@ -413,8 +413,8 @@ class System : public SimObject, public PCEventScope
      * be considered a non-PIO memory address if the requestorId of the packet
      * and range match something in the device memory map.
      */
-    void addDeviceMemory(
-        RequestorID requestorId, memory::AbstractMemory *deviceMemory);
+    void addDeviceMemory(RequestorID requestorId,
+                         memory::AbstractMemory *deviceMemory);
 
     /**
      * Similar to isMemAddr but for devices. Checks if a physical address
@@ -521,8 +521,8 @@ class System : public SimObject, public PCEventScope
      * @param subrequestor String containing the subrequestor's name
      * @return the requestor's ID.
      */
-    RequestorID getRequestorId(
-        const SimObject *requestor, std::string subrequestor = {});
+    RequestorID getRequestorId(const SimObject *requestor,
+                               std::string subrequestor = {});
 
     /**
      * Registers a GLOBAL RequestorID, which is a RequestorID not related
@@ -560,15 +560,15 @@ class System : public SimObject, public PCEventScope
 
   protected:
     /** helper function for getRequestorId */
-    RequestorID _getRequestorId(
-        const SimObject *requestor, const std::string &requestor_name);
+    RequestorID _getRequestorId(const SimObject *requestor,
+                                const std::string &requestor_name);
 
     /**
      * Helper function for constructing the full (sub)requestor name
      * by providing the root requestor and the relative subrequestor name.
      */
-    std::string leafRequestorName(
-        const SimObject *requestor, const std::string &subrequestor);
+    std::string leafRequestorName(const SimObject *requestor,
+                                  const std::string &subrequestor);
 
   public:
     void regStats() override;

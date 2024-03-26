@@ -48,15 +48,15 @@
 
 namespace gem5
 {
-VGic::VGic(const Params &p) :
-    PioDevice(p),
-    gicvIIDR(p.gicv_iidr),
-    platform(p.platform),
-    gic(p.gic),
-    vcpuAddr(p.vcpu_addr),
-    hvAddr(p.hv_addr),
-    pioDelay(p.pio_delay),
-    maintInt(p.maint_int)
+VGic::VGic(const Params &p)
+    : PioDevice(p),
+      gicvIIDR(p.gicv_iidr),
+      platform(p.platform),
+      gic(p.gic),
+      vcpuAddr(p.vcpu_addr),
+      hvAddr(p.hv_addr),
+      pioDelay(p.pio_delay),
+      maintInt(p.maint_int)
 {
     for (int x = 0; x < VGIC_CPU_MAX; x++) {
         postVIntEvent[x] = new EventFunctionWrapper(
@@ -127,10 +127,10 @@ VGic::readVCpu(PacketPtr pkt)
             if (lr->HW)
                 panic("VGIC does not support 'HW' List Register feature (LR "
                       "%#x)!\n",
-                    *lr);
+                      *lr);
             lr->State = LR_ACTIVE;
             DPRINTF(VGIC, "Consumed interrupt %d (cpu%d) from LR%d (EOI%d)\n",
-                lr->VirtualID, lr->CpuID, i, lr->EOI);
+                    lr->VirtualID, lr->CpuID, i, lr->EOI);
         }
     } break;
     case GICV_IIDR:
@@ -245,7 +245,7 @@ VGic::writeVCpu(PacketPtr pkt)
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
     DPRINTF(VGIC, "VGIC VCPU write register %#x <= %#x\n", daddr,
-        pkt->getLE<uint32_t>());
+            pkt->getLE<uint32_t>());
 
     switch (daddr) {
     case GICV_CTLR:
@@ -265,8 +265,8 @@ VGic::writeVCpu(PacketPtr pkt)
         if (i < 0) {
             DPRINTF(VGIC, "EOIR: No LR for irq %d(cpu%d)\n", virq, vcpu);
         } else {
-            DPRINTF(
-                VGIC, "EOIR: Found LR%d for irq %d(cpu%d)\n", i, virq, vcpu);
+            DPRINTF(VGIC, "EOIR: Found LR%d for irq %d(cpu%d)\n", i, virq,
+                    vcpu);
             ListReg *lr = &vid->LR[i];
             lr->State = 0;
             // Maintenance interrupt -- via eisr -- is flagged when
@@ -275,7 +275,7 @@ VGic::writeVCpu(PacketPtr pkt)
     } break;
     default:
         panic("VGIC VCPU write %#x to unk address %#x\n",
-            pkt->getLE<uint32_t>(), daddr);
+              pkt->getLE<uint32_t>(), daddr);
     }
 
     // This updates the EISRs and flags IRQs:
@@ -293,7 +293,7 @@ VGic::writeCtrl(PacketPtr pkt)
     ContextID ctx_id = pkt->req->contextId();
 
     DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n", daddr,
-        pkt->getLE<uint32_t>());
+            pkt->getLE<uint32_t>());
 
     /* Munge the address: 0-0xfff is the usual space banked by requestor CPU.
      * Anything > that is 0x200-sized slices of 'per CPU' regs.

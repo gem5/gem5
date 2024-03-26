@@ -189,8 +189,8 @@ class SMMUv3 : public ClockedObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    virtual Port &getPort(
-        const std::string &name, PortID id = InvalidPortID) override;
+    virtual Port &getPort(const std::string &name,
+                          PortID id = InvalidPortID) override;
 };
 
 } // namespace gem5

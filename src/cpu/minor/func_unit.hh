@@ -71,8 +71,8 @@ class MinorOpClass : public SimObject
     OpClass opClass;
 
   public:
-    MinorOpClass(const MinorOpClassParams &params) :
-        SimObject(params), opClass(params.opClass)
+    MinorOpClass(const MinorOpClassParams &params)
+        : SimObject(params), opClass(params.opClass)
     {}
 };
 
@@ -181,13 +181,13 @@ class MinorFU : public SimObject
     std::vector<MinorFUTiming *> timings;
 
   public:
-    MinorFU(const MinorFUParams &params) :
-        SimObject(params),
-        opClasses(params.opClasses),
-        opLat(params.opLat),
-        issueLat(params.issueLat),
-        cantForwardFromFUIndices(params.cantForwardFromFUIndices),
-        timings(params.timings)
+    MinorFU(const MinorFUParams &params)
+        : SimObject(params),
+          opClasses(params.opClasses),
+          opLat(params.opLat),
+          issueLat(params.issueLat),
+          cantForwardFromFUIndices(params.cantForwardFromFUIndices),
+          timings(params.timings)
     {}
 };
 
@@ -198,8 +198,8 @@ class MinorFUPool : public SimObject
     std::vector<MinorFU *> funcUnits;
 
   public:
-    MinorFUPool(const MinorFUPoolParams &params) :
-        SimObject(params), funcUnits(params.funcUnits)
+    MinorFUPool(const MinorFUPoolParams &params)
+        : SimObject(params), funcUnits(params.funcUnits)
     {}
 };
 
@@ -262,7 +262,7 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
 
   public:
     FUPipeline(const std::string &name, const MinorFU &description_,
-        ClockedObject &timeSource_);
+               ClockedObject &timeSource_);
 
   public:
     /** How many cycles must from curCycle before insertion into the

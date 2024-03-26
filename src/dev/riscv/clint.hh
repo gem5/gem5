@@ -112,8 +112,8 @@ class Clint : public BasicPioDevice
         Register64 mtime = {"mtime", 0};
         std::vector<RegisterRaz> reserved;
 
-        ClintRegisters(const std::string &name, Addr base, Clint *clint) :
-            RegisterBankLE(name, base), clint(clint)
+        ClintRegisters(const std::string &name, Addr base, Clint *clint)
+            : RegisterBankLE(name, base), clint(clint)
         {}
 
         Clint *clint;
@@ -139,8 +139,8 @@ class Clint : public BasicPioDevice
      * SimObject functions
      */
     void init() override;
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };

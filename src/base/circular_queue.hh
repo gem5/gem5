@@ -112,7 +112,7 @@ class CircularQueue
          * iterator satisfies OutputIterator, therefore reference
          * must be T& */
         static_assert(std::is_same_v<reference, T &>,
-            "reference type is not assignable as required");
+                      "reference type is not assignable as required");
 
         /**
          * @ingroup api_base_utils

@@ -52,10 +52,11 @@ namespace gem5
 using namespace SparcISA;
 
 SparcProcess::SparcProcess(const ProcessParams &params,
-    loader::ObjectFile *objFile, Addr _StackBias) :
-    Process(params, new EmulationPageTable(params.name, params.pid, PageBytes),
-        objFile),
-    StackBias(_StackBias)
+                           loader::ObjectFile *objFile, Addr _StackBias)
+    : Process(params,
+              new EmulationPageTable(params.name, params.pid, PageBytes),
+              objFile),
+      StackBias(_StackBias)
 {
     fatal_if(params.useArchPT, "Arch page tables not implemented.");
     // Initialize these to 0s
@@ -268,7 +269,7 @@ SparcProcess::argsInit(int pageSize)
 
     // Allocate space for the stack
     memState->mapRegion(roundDown(memState->getStackMin(), pageSize),
-        roundUp(memState->getStackSize(), pageSize), "stack");
+                        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents
     IntType sentry_base = memState->getStackBase() - sentry_size;
@@ -328,10 +329,10 @@ SparcProcess::argsInit(int pageSize)
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(
-        envp, envp_array_base, env_data_base, ByteOrder::big, *initVirtMem);
-    copyStringArray(
-        argv, argv_array_base, arg_data_base, ByteOrder::big, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::big,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::big,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
@@ -364,10 +365,10 @@ Sparc64Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint64_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(
-        fillStart, fillHandler64, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(
-        spillStart, spillHandler64, sizeof(MachInst) * numSpillInsts);
+    initVirtMem->writeBlob(fillStart, fillHandler64,
+                           sizeof(MachInst) * numFillInsts);
+    initVirtMem->writeBlob(spillStart, spillHandler64,
+                           sizeof(MachInst) * numSpillInsts);
 }
 
 void
@@ -376,10 +377,10 @@ Sparc32Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint32_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(
-        fillStart, fillHandler32, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(
-        spillStart, spillHandler32, sizeof(MachInst) * numSpillInsts);
+    initVirtMem->writeBlob(fillStart, fillHandler32,
+                           sizeof(MachInst) * numFillInsts);
+    initVirtMem->writeBlob(spillStart, spillHandler32,
+                           sizeof(MachInst) * numSpillInsts);
 }
 
 } // namespace gem5

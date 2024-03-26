@@ -67,7 +67,7 @@ class GPUComputeDriver final : public EmulatedDriver
 
     int open(ThreadContext *tc, int mode, int flags) override;
     Addr mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
-        int tgt_flags, int tgt_fd, off_t offset) override;
+              int tgt_flags, int tgt_fd, off_t offset) override;
     virtual void signalWakeupEvent(uint32_t event_id);
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
     /**
@@ -101,9 +101,9 @@ class GPUComputeDriver final : public EmulatedDriver
     class DriverWakeupEvent : public Event
     {
       public:
-        DriverWakeupEvent(
-            GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt) :
-            driver(gpu_driver), tc(thrd_cntxt)
+        DriverWakeupEvent(GPUComputeDriver *gpu_driver,
+                          ThreadContext *thrd_cntxt)
+            : driver(gpu_driver), tc(thrd_cntxt)
         {}
         void process() override;
         const char *description() const override;
@@ -117,8 +117,8 @@ class GPUComputeDriver final : public EmulatedDriver
     class EventTableEntry
     {
       public:
-        EventTableEntry() :
-            mailBoxPtr(0), tc(nullptr), threadWaiting(false), setEvent(false)
+        EventTableEntry()
+            : mailBoxPtr(0), tc(nullptr), threadWaiting(false), setEvent(false)
         {}
         // Mail box pointer for this address. Current implementation does not
         // use this mailBoxPtr to notify events but directly calls
@@ -190,8 +190,8 @@ class GPUComputeDriver final : public EmulatedDriver
     {
       public:
         EventList() : driver(nullptr), timerEvent(nullptr, nullptr) {}
-        EventList(GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt) :
-            driver(gpu_driver), timerEvent(gpu_driver, thrd_cntxt)
+        EventList(GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt)
+            : driver(gpu_driver), timerEvent(gpu_driver, thrd_cntxt)
         {}
         void
         clearEvents()
@@ -250,8 +250,8 @@ class GPUComputeDriver final : public EmulatedDriver
      * be able to select which pages to unmap when the user provides us with
      * a handle during the free ioctl.
      */
-    void allocateGpuVma(
-        Request::CacheCoherenceFlags mtype, Addr start, Addr length);
+    void allocateGpuVma(Request::CacheCoherenceFlags mtype, Addr start,
+                        Addr length);
     Addr deallocateGpuVma(Addr start);
 
     void allocateQueue(PortProxy &mem_proxy, Addr ioc_buf_addr);

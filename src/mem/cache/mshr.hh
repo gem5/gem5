@@ -155,11 +155,11 @@ class MSHR : public QueueEntry, public Printable
                                 //!< target list allocate in the cache?
 
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order, Source _source,
-            bool _markedPending, bool alloc_on_fill) :
-            QueueEntry::Target(_pkt, _readyTime, _order),
-            source(_source),
-            markedPending(_markedPending),
-            allocOnFill(alloc_on_fill)
+               bool _markedPending, bool alloc_on_fill)
+            : QueueEntry::Target(_pkt, _readyTime, _order),
+              source(_source),
+              markedPending(_markedPending),
+              allocOnFill(alloc_on_fill)
         {}
     };
 
@@ -186,8 +186,8 @@ class MSHR : public QueueEntry, public Printable
          * @param source Indicates the source of the packet
          * @param alloc_on_fill Whether the pkt would allocate on a fill
          */
-        void updateFlags(
-            PacketPtr pkt, Target::Source source, bool alloc_on_fill);
+        void updateFlags(PacketPtr pkt, Target::Source source,
+                         bool alloc_on_fill);
 
         /**
          * Reset state
@@ -260,7 +260,7 @@ class MSHR : public QueueEntry, public Printable
          * @param alloc_on_fill Whether it should allocate on a fill
          */
         void add(PacketPtr pkt, Tick readyTime, Counter order,
-            Target::Source source, bool markPending, bool alloc_on_fill);
+                 Target::Source source, bool markPending, bool alloc_on_fill);
 
         /**
          * Convert upgrades to the equivalent request if the cache line they
@@ -271,8 +271,8 @@ class MSHR : public QueueEntry, public Printable
         void clearDownstreamPending();
         void clearDownstreamPending(iterator begin, iterator end);
         bool trySatisfyFunctional(PacketPtr pkt);
-        void print(
-            std::ostream &os, int verbosity, const std::string &prefix) const;
+        void print(std::ostream &os, int verbosity,
+                   const std::string &prefix) const;
 
         /**
          * Check if this list contains writes that cover an entire
@@ -285,7 +285,7 @@ class MSHR : public QueueEntry, public Printable
         isWholeLineWrite() const
         {
             return std::all_of(writesBitmap.begin(), writesBitmap.end(),
-                [](bool i) { return i; });
+                               [](bool i) { return i; });
         }
 
       private:
@@ -441,7 +441,7 @@ class MSHR : public QueueEntry, public Printable
      * @param alloc_on_fill Should the cache allocate a block on fill
      */
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-        Tick when_ready, Counter _order, bool alloc_on_fill);
+                  Tick when_ready, Counter _order, bool alloc_on_fill);
 
     void markInService(bool pending_modified_resp);
 
@@ -456,8 +456,8 @@ class MSHR : public QueueEntry, public Printable
      * Add a request to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(
-        PacketPtr target, Tick when, Counter order, bool alloc_on_fill);
+    void allocateTarget(PacketPtr target, Tick when, Counter order,
+                        bool alloc_on_fill);
     bool handleSnoop(PacketPtr target, Counter order);
 
     /** A simple constructor. */
@@ -515,7 +515,7 @@ class MSHR : public QueueEntry, public Printable
     popTarget()
     {
         DPRINTF(MSHR, "Force deallocating MSHR targets: %s\n",
-            targets.front().pkt->print());
+                targets.front().pkt->print());
         targets.pop_front();
     }
 
@@ -557,7 +557,7 @@ class MSHR : public QueueEntry, public Printable
      * Prints the contents of this MSHR for debugging.
      */
     void print(std::ostream &os, int verbosity = 0,
-        const std::string &prefix = "") const override;
+               const std::string &prefix = "") const override;
     /**
      * A no-args wrapper of print(std::ostream...)  meant to be
      * invoked from DPRINTFs avoiding string overheads in fast mode

@@ -1235,38 +1235,39 @@ struct MiscRegLUTEntry
     uint64_t _rao;   // read as one (fixed at 1)
     std::bitset<NUM_MISCREG_INFOS> info;
 
-    using FaultCB = std::function<Fault(const MiscRegLUTEntry &entry,
-        ThreadContext *tc, const MiscRegOp64 &inst)>;
+    using FaultCB =
+        std::function<Fault(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                            const MiscRegOp64 &inst)>;
 
     std::array<FaultCB, EL3 + 1> faultRead;
     std::array<FaultCB, EL3 + 1> faultWrite;
 
-    Fault checkFault(
-        ThreadContext *tc, const MiscRegOp64 &inst, ExceptionLevel el);
+    Fault checkFault(ThreadContext *tc, const MiscRegOp64 &inst,
+                     ExceptionLevel el);
 
   protected:
     template <MiscRegInfo Sec, MiscRegInfo NonSec>
     static Fault defaultFault(const MiscRegLUTEntry &entry, ThreadContext *tc,
-        const MiscRegOp64 &inst);
+                              const MiscRegOp64 &inst);
 
   public:
-    MiscRegLUTEntry() :
-        lower(0),
-        upper(0),
-        _reset(0),
-        _res0(0),
-        _res1(0),
-        _raz(0),
-        _rao(0),
-        info(0),
-        faultRead({defaultFault<MISCREG_USR_S_RD, MISCREG_USR_NS_RD>,
-            defaultFault<MISCREG_PRI_S_RD, MISCREG_PRI_NS_RD>,
-            defaultFault<MISCREG_HYP_S_RD, MISCREG_HYP_NS_RD>,
-            defaultFault<MISCREG_MON_NS0_RD, MISCREG_MON_NS1_RD>}),
-        faultWrite({defaultFault<MISCREG_USR_S_WR, MISCREG_USR_NS_WR>,
-            defaultFault<MISCREG_PRI_S_WR, MISCREG_PRI_NS_WR>,
-            defaultFault<MISCREG_HYP_S_WR, MISCREG_HYP_NS_WR>,
-            defaultFault<MISCREG_MON_NS0_WR, MISCREG_MON_NS1_WR>})
+    MiscRegLUTEntry()
+        : lower(0),
+          upper(0),
+          _reset(0),
+          _res0(0),
+          _res1(0),
+          _raz(0),
+          _rao(0),
+          info(0),
+          faultRead({defaultFault<MISCREG_USR_S_RD, MISCREG_USR_NS_RD>,
+                     defaultFault<MISCREG_PRI_S_RD, MISCREG_PRI_NS_RD>,
+                     defaultFault<MISCREG_HYP_S_RD, MISCREG_HYP_NS_RD>,
+                     defaultFault<MISCREG_MON_NS0_RD, MISCREG_MON_NS1_RD>}),
+          faultWrite({defaultFault<MISCREG_USR_S_WR, MISCREG_USR_NS_WR>,
+                      defaultFault<MISCREG_PRI_S_WR, MISCREG_PRI_NS_WR>,
+                      defaultFault<MISCREG_HYP_S_WR, MISCREG_HYP_NS_WR>,
+                      defaultFault<MISCREG_MON_NS0_WR, MISCREG_MON_NS1_WR>})
     {}
     uint64_t
     reset() const
@@ -1702,21 +1703,21 @@ extern std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
 struct MiscRegNum32
 {
     MiscRegNum32(unsigned _coproc, unsigned _opc1, unsigned _crn,
-        unsigned _crm, unsigned _opc2) :
-        reg64(0),
-        coproc(_coproc),
-        opc1(_opc1),
-        crn(_crn),
-        crm(_crm),
-        opc2(_opc2)
+                 unsigned _crm, unsigned _opc2)
+        : reg64(0),
+          coproc(_coproc),
+          opc1(_opc1),
+          crn(_crn),
+          crm(_crm),
+          opc2(_opc2)
     {
         // MCR/MRC CP14 or CP15 register
         assert(coproc == 0b1110 || coproc == 0b1111);
         assert(opc1 < 8 && crn < 16 && crm < 16 && opc2 < 8);
     }
 
-    MiscRegNum32(unsigned _coproc, unsigned _opc1, unsigned _crm) :
-        reg64(1), coproc(_coproc), opc1(_opc1), crn(0), crm(_crm), opc2(0)
+    MiscRegNum32(unsigned _coproc, unsigned _opc1, unsigned _crm)
+        : reg64(1), coproc(_coproc), opc1(_opc1), crn(0), crm(_crm), opc2(0)
     {
         // MCRR/MRRC CP14 or CP15 register
         assert(coproc == 0b1110 || coproc == 0b1111);
@@ -1755,8 +1756,8 @@ struct MiscRegNum32
 struct MiscRegNum64
 {
     MiscRegNum64(unsigned _op0, unsigned _op1, unsigned _crn, unsigned _crm,
-        unsigned _op2) :
-        op0(_op0), op1(_op1), crn(_crn), crm(_crm), op2(_op2)
+                 unsigned _op2)
+        : op0(_op0), op1(_op1), crn(_crn), crm(_crm), op2(_op2)
     {
         assert(op0 < 4 && op1 < 8 && crn < 16 && crm < 16 && op2 < 8);
     }
@@ -1784,10 +1785,10 @@ struct MiscRegNum64
 };
 
 // Decodes 32-bit CP14 registers accessible through MCR/MRC instructions
-MiscRegIndex decodeCP14Reg(
-    unsigned crn, unsigned opc1, unsigned crm, unsigned opc2);
-MiscRegIndex decodeAArch64SysReg(
-    unsigned op0, unsigned op1, unsigned crn, unsigned crm, unsigned op2);
+MiscRegIndex decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm,
+                           unsigned opc2);
+MiscRegIndex decodeAArch64SysReg(unsigned op0, unsigned op1, unsigned crn,
+                                 unsigned crm, unsigned op2);
 MiscRegIndex decodeAArch64SysReg(const MiscRegNum64 &misc_reg);
 MiscRegNum64 encodeAArch64SysReg(MiscRegIndex misc_reg);
 
@@ -1795,8 +1796,8 @@ MiscRegNum64 encodeAArch64SysReg(MiscRegIndex misc_reg);
 bool aarch64SysRegReadOnly(MiscRegIndex miscReg);
 
 // Decodes 32-bit CP15 registers accessible through MCR/MRC instructions
-MiscRegIndex decodeCP15Reg(
-    unsigned crn, unsigned opc1, unsigned crm, unsigned opc2);
+MiscRegIndex decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm,
+                           unsigned opc2);
 
 // Decodes 64-bit CP15 registers accessible through MCRR/MRRC instructions
 MiscRegIndex decodeCP15Reg64(unsigned crm, unsigned opc1);
@@ -2889,7 +2890,7 @@ const char *const miscRegName[] = {
 };
 
 static_assert(sizeof(miscRegName) / sizeof(*miscRegName) == NUM_MISCREGS,
-    "The miscRegName array and NUM_MISCREGS are inconsistent.");
+              "The miscRegName array and NUM_MISCREGS are inconsistent.");
 
 class MiscRegClassOps : public RegClassOps
 {
@@ -2947,8 +2948,8 @@ static const uint32_t FpscrExcMask = 0x0000009F;
  * @param the thread context on the core
  * @return a tuple of booleans: can_read, undefined
  */
-std::tuple<bool, bool> canReadCoprocReg(
-    MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc);
+std::tuple<bool, bool> canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
+                                        ThreadContext *tc);
 
 /**
  * Check for permission to write coprocessor registers.
@@ -2964,16 +2965,17 @@ std::tuple<bool, bool> canReadCoprocReg(
  * @param the thread context on the core
  * @return a tuple of booleans: can_write, undefined
  */
-std::tuple<bool, bool> canWriteCoprocReg(
-    MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc);
+std::tuple<bool, bool> canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
+                                         ThreadContext *tc);
 
 // Checks for UNDEFINED behaviours when accessing AArch32
 // Generic Timer system registers
 bool AArch32isUndefinedGenericTimer(MiscRegIndex reg, ThreadContext *tc);
 
 // Checks access permissions to AArch64 system registers
-Fault checkFaultAccessAArch64SysReg(
-    MiscRegIndex reg, CPSR cpsr, ThreadContext *tc, const MiscRegOp64 &inst);
+Fault checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr,
+                                    ThreadContext *tc,
+                                    const MiscRegOp64 &inst);
 
 // Uses just the scr.ns bit to pre flatten the misc regs. This is useful
 // for MCR/MRC instructions

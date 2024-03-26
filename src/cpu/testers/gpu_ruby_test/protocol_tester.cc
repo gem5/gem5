@@ -47,28 +47,28 @@
 
 namespace gem5
 {
-ProtocolTester::ProtocolTester(const Params &p) :
-    ClockedObject(p),
-    _requestorId(p.system->getRequestorId(this)),
-    numCpuPorts(p.port_cpu_ports_connection_count),
-    numDmaPorts(p.port_dma_ports_connection_count),
-    numVectorPorts(p.port_cu_vector_ports_connection_count),
-    numSqcPorts(p.port_cu_sqc_ports_connection_count),
-    numScalarPorts(p.port_cu_scalar_ports_connection_count),
-    numTokenPorts(p.port_cu_token_ports_connection_count),
-    numCusPerSqc(p.cus_per_sqc),
-    numCusPerScalar(p.cus_per_scalar),
-    numWfsPerCu(p.wavefronts_per_cu),
-    numWisPerWf(p.workitems_per_wavefront),
-    numCuTokens(p.max_cu_tokens),
-    numAtomicLocs(p.num_atomic_locations),
-    numNormalLocsPerAtomic(p.num_normal_locs_per_atomic),
-    episodeLength(p.episode_length),
-    maxNumEpisodes(p.max_num_episodes),
-    debugTester(p.debug_tester),
-    cpuThreads(p.cpu_threads),
-    dmaThreads(p.dma_threads),
-    wfs(p.wavefronts)
+ProtocolTester::ProtocolTester(const Params &p)
+    : ClockedObject(p),
+      _requestorId(p.system->getRequestorId(this)),
+      numCpuPorts(p.port_cpu_ports_connection_count),
+      numDmaPorts(p.port_dma_ports_connection_count),
+      numVectorPorts(p.port_cu_vector_ports_connection_count),
+      numSqcPorts(p.port_cu_sqc_ports_connection_count),
+      numScalarPorts(p.port_cu_scalar_ports_connection_count),
+      numTokenPorts(p.port_cu_token_ports_connection_count),
+      numCusPerSqc(p.cus_per_sqc),
+      numCusPerScalar(p.cus_per_scalar),
+      numWfsPerCu(p.wavefronts_per_cu),
+      numWisPerWf(p.workitems_per_wavefront),
+      numCuTokens(p.max_cu_tokens),
+      numAtomicLocs(p.num_atomic_locations),
+      numNormalLocsPerAtomic(p.num_normal_locs_per_atomic),
+      episodeLength(p.episode_length),
+      maxNumEpisodes(p.max_num_episodes),
+      debugTester(p.debug_tester),
+      cpuThreads(p.cpu_threads),
+      dmaThreads(p.dma_threads),
+      wfs(p.wavefronts)
 {
     int idx = 0; // global port index
 
@@ -79,7 +79,7 @@ ProtocolTester::ProtocolTester(const Params &p) :
     // create all physical cpu's data ports
     for (int i = 0; i < numCpuPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-            csprintf("%s-cpuPort%d", name(), i));
+                csprintf("%s-cpuPort%d", name(), i));
         cpuPorts.push_back(
             new SeqPort(csprintf("%s-cpuPort%d", name(), i), this, i, idx));
         idx++;
@@ -88,7 +88,7 @@ ProtocolTester::ProtocolTester(const Params &p) :
     // create all physical DMA data ports
     for (int i = 0; i < numDmaPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-            csprintf("%s-dmaPort%d", name(), i));
+                csprintf("%s-dmaPort%d", name(), i));
         dmaPorts.push_back(
             new SeqPort(csprintf("%s-dmaPort%d", name(), i), this, i, idx));
         idx++;
@@ -97,7 +97,7 @@ ProtocolTester::ProtocolTester(const Params &p) :
     // create all physical gpu's data ports
     for (int i = 0; i < numVectorPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-            csprintf("%s-cuVectorPort%d", name(), i));
+                csprintf("%s-cuVectorPort%d", name(), i));
         cuVectorPorts.push_back(new SeqPort(
             csprintf("%s-cuVectorPort%d", name(), i), this, i, idx));
         idx++;
@@ -105,7 +105,7 @@ ProtocolTester::ProtocolTester(const Params &p) :
 
     for (int i = 0; i < numScalarPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-            csprintf("%s-cuScalarPort%d", name(), i));
+                csprintf("%s-cuScalarPort%d", name(), i));
         cuScalarPorts.push_back(new SeqPort(
             csprintf("%s-cuScalarPort%d", name(), i), this, i, idx));
         idx++;
@@ -113,7 +113,7 @@ ProtocolTester::ProtocolTester(const Params &p) :
 
     for (int i = 0; i < numSqcPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-            csprintf("%s-cuSqcPort%d", name(), i));
+                csprintf("%s-cuSqcPort%d", name(), i));
         cuSqcPorts.push_back(
             new SeqPort(csprintf("%s-cuSqcPort%d", name(), i), this, i, idx));
         idx++;
@@ -227,8 +227,8 @@ ProtocolTester::init()
 
         for (int i = 0; i < numWfsPerCu; ++i) {
             wfId = cu_id * numWfsPerCu + i;
-            wfs[wfId]->attachTesterThreadToPorts(this,
-                static_cast<SeqPort *>(cuVectorPorts[vectorPortId]),
+            wfs[wfId]->attachTesterThreadToPorts(
+                this, static_cast<SeqPort *>(cuVectorPorts[vectorPortId]),
                 cuTokenPorts[vectorPortId],
                 static_cast<SeqPort *>(cuSqcPorts[sqcPortId]),
                 static_cast<SeqPort *>(cuScalarPorts[scalarPortId]));

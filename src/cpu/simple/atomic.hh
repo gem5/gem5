@@ -132,8 +132,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     class AtomicCPUDPort : public AtomicCPUPort
     {
       public:
-        AtomicCPUDPort(const std::string &_name, BaseSimpleCPU *_cpu) :
-            AtomicCPUPort(_name), cpu(_cpu)
+        AtomicCPUDPort(const std::string &_name, BaseSimpleCPU *_cpu)
+            : AtomicCPUPort(_name), cpu(_cpu)
         {
             cacheBlockMask = ~(cpu->cacheLineSize() - 1);
         }
@@ -214,11 +214,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * @return True if the byte-enable mask for the fragment is not all-false.
      */
     bool genMemFragmentRequest(const RequestPtr &req, Addr frag_addr, int size,
-        Request::Flags flags, const std::vector<bool> &byte_enable,
-        int &frag_size, int &size_left) const;
+                               Request::Flags flags,
+                               const std::vector<bool> &byte_enable,
+                               int &frag_size, int &size_left) const;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size,
-        Request::Flags flags,
+    Fault readMem(
+        Addr addr, uint8_t *data, unsigned size, Request::Flags flags,
         const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault
@@ -229,19 +230,20 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     }
 
     void
-    htmSendAbortSignal(
-        ThreadID tid, uint64_t htm_uid, HtmFailureFaultCause cause) override
+    htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                       HtmFailureFaultCause cause) override
     {
         panic("htmSendAbortSignal() is for timing accesses, and should "
               "never be called on AtomicSimpleCPU.");
     }
 
-    Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-        Request::Flags flags, uint64_t *res,
+    Fault writeMem(
+        uint8_t *data, unsigned size, Addr addr, Request::Flags flags,
+        uint64_t *res,
         const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault amoMem(Addr addr, uint8_t *data, unsigned size, Request::Flags flags,
-        AtomicOpFunctorPtr amo_op) override;
+                 AtomicOpFunctorPtr amo_op) override;
 
     void regProbePoints() override;
 

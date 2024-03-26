@@ -69,8 +69,8 @@ class CallType
     CallType(const std::string &_name) : name(_name)
     {
         map().emplace(std::piecewise_construct,
-            std::forward_as_tuple(std::string(_name)),
-            std::forward_as_tuple(*this));
+                      std::forward_as_tuple(std::string(_name)),
+                      std::forward_as_tuple(*this));
     }
 
     ~CallType() { map().erase(name); }

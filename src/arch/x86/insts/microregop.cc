@@ -49,7 +49,7 @@ namespace X86ISA
 {
 uint64_t
 RegOpBase::genFlags(uint64_t old_flags, uint64_t flag_mask, uint64_t _dest,
-    uint64_t _src1, uint64_t _src2, bool subtract) const
+                    uint64_t _src1, uint64_t _src2, bool subtract) const
 {
     DPRINTF(X86, "flag_mask = %#x\n", flag_mask);
     uint64_t flags = old_flags & ~flag_mask;

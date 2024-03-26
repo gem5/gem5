@@ -69,14 +69,14 @@ buildKey(Addr vpn, uint16_t asid)
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
-TLB::TLB(const Params &p) :
-    BaseTLB(p),
-    size(p.size),
-    tlb(size),
-    lruSeq(0),
-    stats(this),
-    pma(p.pma_checker),
-    pmp(p.pmp)
+TLB::TLB(const Params &p)
+    : BaseTLB(p),
+      size(p.size),
+      tlb(size),
+      lruSeq(0),
+      stats(this),
+      pma(p.pma_checker),
+      pmp(p.pmp)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
@@ -135,7 +135,7 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
         }
 
         DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n", vpn,
-            asid, entry ? "hit" : "miss", entry ? entry->paddr : 0);
+                asid, entry ? "hit" : "miss", entry ? entry->paddr : 0);
     }
 
     return entry;
@@ -145,7 +145,7 @@ TlbEntry *
 TLB::insert(Addr vpn, const TlbEntry &entry)
 {
     DPRINTF(TLB, "insert(vpn=%#x, asid=%#x): ppn=%#x pte=%#x size=%#x\n", vpn,
-        entry.asid, entry.paddr, entry.pte, entry.size());
+            entry.asid, entry.paddr, entry.pte, entry.size());
 
     // If somebody beat us to it, just use that existing entry.
     TlbEntry *newEntry = lookup(vpn, entry.asid, BaseMMU::Read, true);
@@ -211,8 +211,8 @@ void
 TLB::remove(size_t idx)
 {
     DPRINTF(TLB, "remove(vpn=%#x, asid=%#x): ppn=%#x pte=%#x size=%#x\n",
-        tlb[idx].vaddr, tlb[idx].asid, tlb[idx].paddr, tlb[idx].pte,
-        tlb[idx].size());
+            tlb[idx].vaddr, tlb[idx].asid, tlb[idx].paddr, tlb[idx].pte,
+            tlb[idx].size());
 
     assert(tlb[idx].trieHandle);
     trie.remove(tlb[idx].trieHandle);
@@ -222,7 +222,7 @@ TLB::remove(size_t idx)
 
 Fault
 TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-    BaseMMU::Mode mode, PTESv39 pte)
+                      BaseMMU::Mode mode, PTESv39 pte)
 {
     Fault fault = NoFault;
 
@@ -274,7 +274,8 @@ TLB::translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode)
 
 Fault
 TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
-    BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed)
+                 BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                 bool &delayed)
 {
     delayed = false;
 
@@ -313,7 +314,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
 
     Addr paddr = e->paddr << PageShift | (vaddr & mask(e->logBytes));
     DPRINTF(TLBVerbose, "translate(vpn=%#x, asid=%#x): %#x\n", vaddr,
-        satp.asid, paddr);
+            satp.asid, paddr);
     req->setPaddr(paddr);
 
     return NoFault;
@@ -331,7 +332,8 @@ TLB::getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
 
 Fault
 TLB::translate(const RequestPtr &req, ThreadContext *tc,
-    BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed)
+               BaseMMU::Translation *translation, BaseMMU::Mode mode,
+               bool &delayed)
 {
     delayed = false;
 
@@ -402,8 +404,8 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateAtomic(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                     BaseMMU::Mode mode)
 {
     bool delayed;
     return translate(req, tc, nullptr, mode, delayed);
@@ -411,7 +413,7 @@ TLB::translateAtomic(
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-    BaseMMU::Translation *translation, BaseMMU::Mode mode)
+                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     bool delayed;
     assert(translation);
@@ -423,8 +425,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateFunctional(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Mode mode)
 {
     const Addr vaddr = req->getVaddr();
     Addr paddr = vaddr;
@@ -470,8 +472,8 @@ TLB::translateFunctional(
 }
 
 Fault
-TLB::finalizePhysical(
-    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }
@@ -514,20 +516,22 @@ TLB::unserialize(CheckpointIn &cp)
     }
 }
 
-TLB::TlbStats::TlbStats(statistics::Group *parent) :
-    statistics::Group(parent),
-    ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
-    ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),
-    ADD_STAT(readAccesses, statistics::units::Count::get(), "read accesses"),
-    ADD_STAT(writeHits, statistics::units::Count::get(), "write hits"),
-    ADD_STAT(writeMisses, statistics::units::Count::get(), "write misses"),
-    ADD_STAT(writeAccesses, statistics::units::Count::get(), "write accesses"),
-    ADD_STAT(hits, statistics::units::Count::get(),
-        "Total TLB (read and write) hits", readHits + writeHits),
-    ADD_STAT(misses, statistics::units::Count::get(),
-        "Total TLB (read and write) misses", readMisses + writeMisses),
-    ADD_STAT(accesses, statistics::units::Count::get(),
-        "Total TLB (read and write) accesses", readAccesses + writeAccesses)
+TLB::TlbStats::TlbStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
+      ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),
+      ADD_STAT(readAccesses, statistics::units::Count::get(), "read accesses"),
+      ADD_STAT(writeHits, statistics::units::Count::get(), "write hits"),
+      ADD_STAT(writeMisses, statistics::units::Count::get(), "write misses"),
+      ADD_STAT(writeAccesses, statistics::units::Count::get(),
+               "write accesses"),
+      ADD_STAT(hits, statistics::units::Count::get(),
+               "Total TLB (read and write) hits", readHits + writeHits),
+      ADD_STAT(misses, statistics::units::Count::get(),
+               "Total TLB (read and write) misses", readMisses + writeMisses),
+      ADD_STAT(accesses, statistics::units::Count::get(),
+               "Total TLB (read and write) accesses",
+               readAccesses + writeAccesses)
 {}
 
 Port *

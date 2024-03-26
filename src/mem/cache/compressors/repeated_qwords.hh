@@ -91,16 +91,16 @@ class RepeatedQwords : public DictionaryCompressor<uint64_t>
 
     std::unique_ptr<Pattern>
     getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
-        const int match_location) const override
+               const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
-        Cycles &decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
   public:
     typedef RepeatedQwordsCompressorParams Params;
@@ -112,8 +112,8 @@ class RepeatedQwords::PatternX :
     public DictionaryCompressor::UncompressedPattern
 {
   public:
-    PatternX(const DictionaryEntry bytes, const int match_location) :
-        UncompressedPattern(X, 0, 0, match_location, bytes)
+    PatternX(const DictionaryEntry bytes, const int match_location)
+        : UncompressedPattern(X, 0, 0, match_location, bytes)
     {}
 };
 
@@ -121,9 +121,9 @@ class RepeatedQwords::PatternM :
     public DictionaryCompressor::LocatedMaskedPattern<0xFFFFFFFFFFFFFFFF, 0>
 {
   public:
-    PatternM(const DictionaryEntry bytes, const int match_location) :
-        LocatedMaskedPattern<0xFFFFFFFFFFFFFFFF, 0>(
-            M, 1, 0, match_location, bytes, false)
+    PatternM(const DictionaryEntry bytes, const int match_location)
+        : LocatedMaskedPattern<0xFFFFFFFFFFFFFFFF, 0>(M, 1, 0, match_location,
+                                                      bytes, false)
     {}
 };
 

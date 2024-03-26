@@ -123,8 +123,8 @@ Flag::globalDisable()
         i.second->sync();
 }
 
-SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format) :
-    Flag(name, desc), _isFormat(is_format)
+SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format)
+    : Flag(name, desc), _isFormat(is_format)
 {
     // Add non-format flags to the special "All" compound flag.
     if (!isFormat())
@@ -145,9 +145,11 @@ CompoundFlag::disable()
         k->disable();
 }
 
-AllFlagsFlag::AllFlagsFlag() :
-    CompoundFlag("All",
-        "Controls all debug flags. It should not be used within C++ code.", {})
+AllFlagsFlag::AllFlagsFlag()
+    : CompoundFlag(
+          "All",
+          "Controls all debug flags. It should not be used within C++ code.",
+          {})
 {}
 
 void

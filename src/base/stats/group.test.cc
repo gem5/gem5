@@ -133,7 +133,7 @@ TEST(StatsGroupTest, ConstructCorrectlyAssigned)
     node1_1.addStatGroup("Node1_1_1", &node1_1_1);
 
     ASSERT_EQ(node1.getStatGroups().find("Node1_1")->second->getStatGroups(),
-        node1_1.getStatGroups());
+              node1_1.getStatGroups());
 }
 
 /**
@@ -201,8 +201,8 @@ TEST(StatsGroupTest, ConstructTwoLevelsLinear)
     ASSERT_EQ(root_map.find("Node1_1"), root_map.end());
 
     ASSERT_EQ(node1.getStatGroups().size(), 1);
-    ASSERT_NE(
-        node1.getStatGroups().find("Node1_1"), node1.getStatGroups().end());
+    ASSERT_NE(node1.getStatGroups().find("Node1_1"),
+              node1.getStatGroups().end());
 
     ASSERT_EQ(node1_1.getStatGroups().size(), 0);
 }
@@ -235,20 +235,20 @@ TEST(StatsGroupTest, ConstructTwoLevelsUnbalancedTree)
     ASSERT_EQ(root_map.find("Node2_2"), root_map.end());
 
     ASSERT_EQ(node1.getStatGroups().size(), 1);
-    ASSERT_NE(
-        node1.getStatGroups().find("Node1_1"), node1.getStatGroups().end());
-    ASSERT_EQ(
-        node1.getStatGroups().find("Node2_1"), node1.getStatGroups().end());
-    ASSERT_EQ(
-        node1.getStatGroups().find("Node2_2"), node1.getStatGroups().end());
+    ASSERT_NE(node1.getStatGroups().find("Node1_1"),
+              node1.getStatGroups().end());
+    ASSERT_EQ(node1.getStatGroups().find("Node2_1"),
+              node1.getStatGroups().end());
+    ASSERT_EQ(node1.getStatGroups().find("Node2_2"),
+              node1.getStatGroups().end());
 
     ASSERT_EQ(node2.getStatGroups().size(), 2);
-    ASSERT_EQ(
-        node2.getStatGroups().find("Node1_1"), node2.getStatGroups().end());
-    ASSERT_NE(
-        node2.getStatGroups().find("Node2_1"), node2.getStatGroups().end());
-    ASSERT_NE(
-        node2.getStatGroups().find("Node2_2"), node2.getStatGroups().end());
+    ASSERT_EQ(node2.getStatGroups().find("Node1_1"),
+              node2.getStatGroups().end());
+    ASSERT_NE(node2.getStatGroups().find("Node2_1"),
+              node2.getStatGroups().end());
+    ASSERT_NE(node2.getStatGroups().find("Node2_2"),
+              node2.getStatGroups().end());
 
     ASSERT_EQ(node1_1.getStatGroups().size(), 0);
     ASSERT_EQ(node2_1.getStatGroups().size(), 0);

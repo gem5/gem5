@@ -294,8 +294,8 @@ class ThreadContext : public gem5::ThreadContext
     void setReg(const RegId &reg, const void *val) override;
 
     // hardware transactional memory
-    void htmAbortTransaction(
-        uint64_t htm_uid, HtmFailureFaultCause cause) override;
+    void htmAbortTransaction(uint64_t htm_uid,
+                             HtmFailureFaultCause cause) override;
     BaseHTMCheckpointPtr &getHtmCheckpointPtr() override;
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };

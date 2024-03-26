@@ -78,7 +78,7 @@ class BaseGen
      * @param flags Optional request flags
      */
     PacketPtr getPacket(Addr addr, unsigned size, const MemCmd &cmd,
-        Request::FlagsType flags = 0);
+                        Request::FlagsType flags = 0);
 
   public:
     /** Time to spend in this state */
@@ -139,9 +139,9 @@ class StochasticGen : public BaseGen
 {
   public:
     StochasticGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-        Addr start_addr, Addr end_addr, Addr _blocksize, Addr cacheline_size,
-        Tick min_period, Tick max_period, uint8_t read_percent,
-        Addr data_limit);
+                  Addr start_addr, Addr end_addr, Addr _blocksize,
+                  Addr cacheline_size, Tick min_period, Tick max_period,
+                  uint8_t read_percent, Addr data_limit);
 
   protected:
     /** Start of address range */

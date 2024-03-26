@@ -96,8 +96,8 @@ class AMDGPUSystemHub : public DmaDevice
         PacketPtr pkt;
 
       public:
-        AtomicResponseEvent(
-            AMDGPUSystemHub &_hub, Event *_callback, PacketPtr _pkt);
+        AtomicResponseEvent(AMDGPUSystemHub &_hub, Event *_callback,
+                            PacketPtr _pkt);
 
         void process();
     };

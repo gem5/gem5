@@ -30,8 +30,8 @@
 
 namespace gem5
 {
-PortTerminator::PortTerminator(const PortTerminatorParams &params) :
-    SimObject(params)
+PortTerminator::PortTerminator(const PortTerminatorParams &params)
+    : SimObject(params)
 {
     for (int i = 0; i < params.port_req_ports_connection_count; ++i) {
         reqPorts.emplace_back(name() + ".req_ports" + std::to_string(i));

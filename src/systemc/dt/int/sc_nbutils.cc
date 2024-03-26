@@ -86,9 +86,9 @@ is_valid_base(sc_numrep base)
     case SC_HEX_SM:
     case SC_CSD:
         SC_REPORT_ERROR("not implemented",
-            "is_valid_base( sc_numrep base ) : "
-            "bases SC_CSD, or ending in _US and _SM are "
-            "not supported");
+                        "is_valid_base( sc_numrep base ) : "
+                        "bases SC_CSD, or ending in _US and _SM are "
+                        "not supported");
         break;
     default:
         std::stringstream msg;
@@ -108,8 +108,8 @@ const std::string
 to_string(sc_numrep numrep)
 {
     switch (numrep) {
-#define CASE_ENUM2STR(Value) \
-    case Value: \
+#define CASE_ENUM2STR(Value)                                                  \
+    case Value:                                                               \
         return #Value
 
         CASE_ENUM2STR(SC_DEC);
@@ -293,8 +293,8 @@ get_base_and_sign(const char *v, small_type &b, small_type &s)
 // Result is true if value was non-zero.
 //-----------------------------------------------------------------------------
 void
-parse_binary_bits(
-    const char *src_p, int dst_n, sc_digit *data_p, sc_digit *ctrl_p)
+parse_binary_bits(const char *src_p, int dst_n, sc_digit *data_p,
+                  sc_digit *ctrl_p)
 {
     int bit_i;     // Number of bit now processing.
     sc_digit ctrl; // Control word now assembling.
@@ -306,13 +306,13 @@ parse_binary_bits(
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is zero");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is zero");
         return;
     }
     if (*src_p == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is empty");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is empty");
         return;
     }
 
@@ -368,8 +368,8 @@ parse_binary_bits(
                 default: {
                     std::stringstream msg;
                     msg << "character string '" << src_p << "' is not valid";
-                    SC_REPORT_ERROR(
-                        sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                    msg.str().c_str());
                     return;
                 } break;
                 }
@@ -404,8 +404,8 @@ parse_binary_bits(
             default: {
                 std::stringstream msg;
                 msg << "character string '" << src_p << "' is not valid";
-                SC_REPORT_ERROR(
-                    sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                msg.str().c_str());
                 return;
             } break;
             }
@@ -430,8 +430,8 @@ parse_binary_bits(
 // Result is true if value was non-zero.
 //-----------------------------------------------------------------------------
 void
-parse_hex_bits(
-    const char *src_p, int dst_n, sc_digit *data_p, sc_digit *ctrl_p)
+parse_hex_bits(const char *src_p, int dst_n, sc_digit *data_p,
+               sc_digit *ctrl_p)
 {
     sc_digit ctrl; // Control word now assembling.
     sc_digit data; // Data word now assembling.
@@ -443,13 +443,13 @@ parse_hex_bits(
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is zero");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is zero");
         return;
     }
     if (*src_p == 0) {
-        SC_REPORT_ERROR(
-            sc_core::SC_ID_CONVERSION_FAILED_, "character string is empty");
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                        "character string is empty");
         return;
     }
 
@@ -552,8 +552,8 @@ parse_hex_bits(
                 default: {
                     std::stringstream msg;
                     msg << "character string '" << src_p << "' is not valid";
-                    SC_REPORT_ERROR(
-                        sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                    msg.str().c_str());
                     return;
                 } break;
                 }
@@ -636,8 +636,8 @@ parse_hex_bits(
             default: {
                 std::stringstream msg;
                 msg << "character string '" << src_p << "' is not valid";
-                SC_REPORT_ERROR(
-                    sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                msg.str().c_str());
                 return;
             } break;
             }
@@ -676,8 +676,8 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
             msg << "vec_from_str( int, int, sc_digit*, const char*, "
                 << "sc_numrep base ) : base = " << base
                 << " does not match the default base";
-            SC_REPORT_ERROR(
-                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                            msg.str().c_str());
             return 0;
         }
     }
@@ -699,8 +699,8 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
                 msg << "vec_from_str( int, int, sc_digit*, const char*, "
                     << "sc_numrep base ) : '" << *v << "' is not a valid "
                     << "digit in base " << b;
-                SC_REPORT_ERROR(
-                    sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                msg.str().c_str());
                 return 0;
             }
 
@@ -714,8 +714,8 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
             msg << "vec_from_str( int, int, sc_digit*, const char*, "
                 << "sc_numrep base ) : '" << *v << "' is not a valid "
                 << "digit in base " << b;
-            SC_REPORT_ERROR(
-                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                            msg.str().c_str());
             return 0;
         }
     }
@@ -802,9 +802,9 @@ vec_add_on(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
 #ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
-            "vec_add_on( int, sc_digit*, int, const "
-            "sc_digit* ) : "
-            "result of addition is wrapped around");
+                          "vec_add_on( int, sc_digit*, int, const "
+                          "sc_digit* ) : "
+                          "result of addition is wrapped around");
     }
 #endif
 }
@@ -814,9 +814,9 @@ vec_add_on(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
 void
 vec_add_on2(int ulen, sc_digit *ubegin, int,
 #ifdef DEBUG_SYSTEMC
-    vlen,
+            vlen,
 #endif
-    const sc_digit *v)
+            const sc_digit *v)
 {
 #ifdef DEBUG_SYSTEMC
     sc_assert((ulen > 0) && (ubegin != NULL));
@@ -839,9 +839,9 @@ vec_add_on2(int ulen, sc_digit *ubegin, int,
 #ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
-            "vec_add_on2( int, sc_digit*, int, const "
-            "sc_digit* ) : "
-            "result of addition is wrapped around");
+                          "vec_add_on2( int, sc_digit*, int, const "
+                          "sc_digit* ) : "
+                          "result of addition is wrapped around");
     }
 #endif
 }
@@ -897,9 +897,9 @@ vec_add_small_on(int ulen, sc_digit *u, sc_digit v)
 #ifdef DEBUG_SYSTEMC
     if (v != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
-            "vec_add_small_on( int, sc_digit*, unsigned "
-            "long ) : "
-            "result of addition is wrapped around");
+                          "vec_add_small_on( int, sc_digit*, unsigned "
+                          "long ) : "
+                          "result of addition is wrapped around");
     }
 #endif
 }
@@ -1008,9 +1008,9 @@ vec_sub_on2(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
 #ifdef DEBUG_SYSTEMC
     if (borrow != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
-            "vec_sub_on2( int, sc_digit*, int, const "
-            "sc_digit* ) : "
-            "result of subtraction is wrapped around");
+                          "vec_sub_on2( int, sc_digit*, int, const "
+                          "sc_digit* ) : "
+                          "result of subtraction is wrapped around");
     }
 #endif
 }
@@ -1069,7 +1069,7 @@ vec_sub_small_on(int ulen, sc_digit *u, sc_digit v)
 // Compute w = u * v, where w, u, and v are vectors.
 void
 vec_mul(int ulen, const sc_digit *u, int vlen, const sc_digit *vbegin,
-    sc_digit *wbegin)
+        sc_digit *wbegin)
 {
     /* Consider u = Ax + B and v = Cx + D where x is equal to
        HALF_DIGIT_RADIX. In other words, A is the higher half of u and
@@ -1229,9 +1229,9 @@ vec_mul_small_on(int ulen, sc_digit *u, sc_digit v)
 #ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
-            "vec_mul_small_on( int, sc_digit*, unsigned "
-            "long ) : "
-            "result of multiplication is wrapped around");
+                          "vec_mul_small_on( int, sc_digit*, unsigned "
+                          "long ) : "
+                          "result of multiplication is wrapped around");
     }
 #endif
 }
@@ -1239,8 +1239,8 @@ vec_mul_small_on(int ulen, sc_digit *u, sc_digit v)
 // Compute w = u / v, where w, u, and v are vectors.
 // - u and v are assumed to have at least two digits as uchars.
 void
-vec_div_large(
-    int ulen, const sc_digit *u, int vlen, const sc_digit *v, sc_digit *w)
+vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
+              sc_digit *w)
 {
 #ifdef DEBUG_SYSTEMC
     sc_assert((ulen > 0) && (u != NULL));
@@ -1312,7 +1312,7 @@ vec_div_large(
         int k2 = k + ylen;
 
         qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) + (x[k2 - 1] << BITS_PER_BYTE) +
-                 x[k2 - 2]) /
+              x[k2 - 2]) /
              y2;
 
         if (qk >= BYTE_RADIX)    // qk cannot be larger than the largest
@@ -1435,8 +1435,8 @@ vec_div_small(int ulen, const sc_digit *u, sc_digit v, sc_digit *q)
 // Compute w = u % v, where w, u, and v are vectors.
 // - u and v are assumed to have at least two digits as uchars.
 void
-vec_rem_large(
-    int ulen, const sc_digit *u, int vlen, const sc_digit *v, sc_digit *w)
+vec_rem_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
+              sc_digit *w)
 {
 #ifdef DEBUG_SYSTEMC
     sc_assert((ulen > 0) && (u != NULL));
@@ -1500,7 +1500,7 @@ vec_rem_large(
         int k2 = k + ylen;
 
         qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) + (x[k2 - 1] << BITS_PER_BYTE) +
-                 x[k2 - 2]) /
+              x[k2 - 2]) /
              y2;
 
         if (qk >= BYTE_RADIX)    // qk cannot be larger than the largest
@@ -1809,8 +1809,8 @@ vec_reverse(int unb, int und, sc_digit *ud, int l, int r)
         std::stringstream msg;
         msg << "vec_reverse( int, int, sc_digit*, int l, int r ) : "
             << "l = " << l << " < r = " << r << " is not valid",
-            SC_REPORT_ERROR(
-                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                            msg.str().c_str());
         return;
     }
 

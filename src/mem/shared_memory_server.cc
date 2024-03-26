@@ -42,7 +42,7 @@
 
 // check if filesystem library is available
 #if defined(__cpp_lib_filesystem) || __has_include(<filesystem>)
-#    include <filesystem>
+#include <filesystem>
 #else
 // This is only reachable if we're using GCC 7 or clang versions 6
 // through 10 (note: gem5 does not support GCC versions older than
@@ -50,7 +50,7 @@
 // support the C++17 standard).
 // If we're using GCC 7 or clang versions 6 through 10, we need to use
 // <experimental/filesystem>.
-#    include <experimental/filesystem>
+#include <experimental/filesystem>
 namespace std
 {
 namespace filesystem = experimental::filesystem;
@@ -81,11 +81,10 @@ buildListenSocket(const std::string &path, const std::string &name)
 
 } // anonymous namespace
 
-SharedMemoryServer::SharedMemoryServer(
-    const SharedMemoryServerParams &params) :
-    SimObject(params),
-    system(params.system),
-    listener(buildListenSocket(params.server_path, name()))
+SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams &params)
+    : SimObject(params),
+      system(params.system),
+      listener(buildListenSocket(params.server_path, name()))
 {
     fatal_if(system == nullptr, "Requires a system to share memory from!");
     listener->listen();
@@ -98,10 +97,10 @@ SharedMemoryServer::SharedMemoryServer(
 SharedMemoryServer::~SharedMemoryServer() {}
 
 SharedMemoryServer::BaseShmPollEvent::BaseShmPollEvent(
-    int fd, SharedMemoryServer *shm_server) :
-    PollEvent(fd, POLLIN),
-    shmServer(shm_server),
-    eventName(shmServer->name() + ".fd" + std::to_string(fd))
+    int fd, SharedMemoryServer *shm_server)
+    : PollEvent(fd, POLLIN),
+      shmServer(shm_server),
+      eventName(shmServer->name() + ".fd" + std::to_string(fd))
 {}
 
 const std::string &
@@ -158,7 +157,7 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
         }
         if (req_type != RequestType::kGetPhysRange) {
             warn("%s: receive unknown request: %d", name(),
-                static_cast<int>(req_type));
+                 static_cast<int>(req_type));
             break;
         }
         if (!tryReadAll(&request, sizeof(request))) {
@@ -175,12 +174,12 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
             });
         if (it == stores.end()) {
             warn("%s: cannot find backing store for %s", name(),
-                range.to_string());
+                 range.to_string());
             break;
         }
         inform("%s: find shared backing store for %s at %s, shm=%d:%lld",
-            name(), range.to_string(), it->range.to_string(), it->shmFd,
-            (unsigned long long)it->shmOffset);
+               name(), range.to_string(), it->range.to_string(), it->shmFd,
+               (unsigned long long)it->shmOffset);
 
         // Populate response message.
         // mmap fd @ offset <===> [start, end] in simulated phys mem.

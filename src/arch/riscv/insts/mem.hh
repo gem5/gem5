@@ -46,8 +46,8 @@ class MemInst : public RiscvStaticInst
     int64_t offset;
     Request::Flags memAccessFlags;
 
-    MemInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        RiscvStaticInst(mnem, _machInst, __opClass), offset(0)
+    MemInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass), offset(0)
     {}
 };
 
@@ -56,8 +56,9 @@ class Load : public MemInst
   protected:
     using MemInst::MemInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class Store : public MemInst
@@ -65,8 +66,9 @@ class Store : public MemInst
   protected:
     using MemInst::MemInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

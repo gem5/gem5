@@ -119,20 +119,20 @@ class DmaPort : public RequestPort, public Drainable
         const Packet::Command cmd;
 
         DmaReqState(Packet::Command _cmd, Addr addr, Addr chunk_sz, Addr tb,
-            uint8_t *_data, Request::Flags _flags, RequestorID _id,
-            uint32_t _sid, uint32_t _ssid, Event *ce, Tick _delay,
-            Event *ae = nullptr) :
-            completionEvent(ce),
-            abortEvent(ae),
-            totBytes(tb),
-            delay(_delay),
-            gen(addr, tb, chunk_sz),
-            data(_data),
-            flags(_flags),
-            id(_id),
-            sid(_sid),
-            ssid(_ssid),
-            cmd(_cmd)
+                    uint8_t *_data, Request::Flags _flags, RequestorID _id,
+                    uint32_t _sid, uint32_t _ssid, Event *ce, Tick _delay,
+                    Event *ae = nullptr)
+            : completionEvent(ce),
+              abortEvent(ae),
+              totBytes(tb),
+              delay(_delay),
+              gen(addr, tb, chunk_sz),
+              data(_data),
+              flags(_flags),
+              id(_id),
+              sid(_sid),
+              ssid(_ssid),
+              cmd(_cmd)
         {}
 
         PacketPtr createPacket();
@@ -201,15 +201,15 @@ class DmaPort : public RequestPort, public Drainable
     void recvReqRetry() override;
 
   public:
-    DmaPort(
-        ClockedObject *dev, System *s, uint32_t sid = 0, uint32_t ssid = 0);
+    DmaPort(ClockedObject *dev, System *s, uint32_t sid = 0,
+            uint32_t ssid = 0);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-        uint8_t *data, Tick delay, Request::Flags flag = 0);
+                   uint8_t *data, Tick delay, Request::Flags flag = 0);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-        uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
-        Request::Flags flag = 0);
+                   uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
+                   Request::Flags flag = 0);
 
     // Abort and remove any pending DMA transmissions.
     void abortPending();
@@ -235,10 +235,10 @@ class DmaDevice : public PioDevice
 
     void
     dmaWrite(Addr addr, int size, Event *event, uint8_t *data, uint32_t sid,
-        uint32_t ssid, Tick delay = 0)
+             uint32_t ssid, Tick delay = 0)
     {
-        dmaPort.dmaAction(
-            MemCmd::WriteReq, addr, size, event, data, sid, ssid, delay);
+        dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data, sid, ssid,
+                          delay);
     }
 
     void
@@ -249,10 +249,10 @@ class DmaDevice : public PioDevice
 
     void
     dmaRead(Addr addr, int size, Event *event, uint8_t *data, uint32_t sid,
-        uint32_t ssid, Tick delay = 0)
+            uint32_t ssid, Tick delay = 0)
     {
-        dmaPort.dmaAction(
-            MemCmd::ReadReq, addr, size, event, data, sid, ssid, delay);
+        dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data, sid, ssid,
+                          delay);
     }
 
     void
@@ -275,8 +275,8 @@ class DmaDevice : public PioDevice
         return sys->cacheLineSize();
     }
 
-    Port &getPort(
-        const std::string &if_name, PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 };
 
 /**
@@ -346,8 +346,8 @@ class DmaCallback : public Drainable
     getChunkEvent()
     {
         ++count;
-        return new EventFunctionWrapper(
-            [this] { chunkComplete(); }, name(), true);
+        return new EventFunctionWrapper([this] { chunkComplete(); }, name(),
+                                        true);
     }
 };
 
@@ -398,7 +398,7 @@ class DmaReadFifo : public Drainable, public Serializable
 {
   public:
     DmaReadFifo(DmaPort &port, size_t size, unsigned max_req_size,
-        unsigned max_pending, Request::Flags flags = 0);
+                unsigned max_pending, Request::Flags flags = 0);
 
     ~DmaReadFifo();
 

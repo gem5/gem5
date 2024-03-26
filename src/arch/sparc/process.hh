@@ -49,7 +49,7 @@ class SparcProcess : public Process
     Addr fillStart, spillStart;
 
     SparcProcess(const ProcessParams &params, loader::ObjectFile *objFile,
-        Addr _StackBias);
+                 Addr _StackBias);
 
     void initState() override;
 
@@ -75,8 +75,8 @@ class Sparc32Process : public SparcProcess
     void initState() override;
 
   public:
-    Sparc32Process(const ProcessParams &params, loader::ObjectFile *objFile) :
-        SparcProcess(params, objFile, 0)
+    Sparc32Process(const ProcessParams &params, loader::ObjectFile *objFile)
+        : SparcProcess(params, objFile, 0)
     {
         Addr brk_point = image.maxAddr();
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
@@ -94,8 +94,9 @@ class Sparc32Process : public SparcProcess
         // Set up region for mmaps.
         Addr mmap_end = 0x70000000;
 
-        memState = std::make_shared<MemState>(this, brk_point, stack_base,
-            max_stack_size, next_thread_stack_base, mmap_end);
+        memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
     }
 
     void argsInit(int intSize, int pageSize);
@@ -107,8 +108,8 @@ class Sparc64Process : public SparcProcess
     void initState() override;
 
   public:
-    Sparc64Process(const ProcessParams &params, loader::ObjectFile *objFile) :
-        SparcProcess(params, objFile, 2047)
+    Sparc64Process(const ProcessParams &params, loader::ObjectFile *objFile)
+        : SparcProcess(params, objFile, 2047)
     {
         Addr brk_point = image.maxAddr();
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
@@ -125,8 +126,9 @@ class Sparc64Process : public SparcProcess
         // Set up region for mmaps.
         Addr mmap_end = 0xfffff80000000000ULL;
 
-        memState = std::make_shared<MemState>(this, brk_point, stack_base,
-            max_stack_size, next_thread_stack_base, mmap_end);
+        memState = std::make_shared<MemState>(
+            this, brk_point, stack_base, max_stack_size,
+            next_thread_stack_base, mmap_end);
     }
 
     void argsInit(int intSize, int pageSize);

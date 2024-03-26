@@ -60,28 +60,28 @@
 
 namespace gem5
 {
-PciDevice::PciDevice(const PciDeviceParams &p) :
-    DmaDevice(p),
-    _busAddr(p.pci_bus, p.pci_dev, p.pci_func),
-    PMCAP_BASE(p.PMCAPBaseOffset),
-    PMCAP_ID_OFFSET(p.PMCAPBaseOffset + PMCAP_ID),
-    PMCAP_PC_OFFSET(p.PMCAPBaseOffset + PMCAP_PC),
-    PMCAP_PMCS_OFFSET(p.PMCAPBaseOffset + PMCAP_PMCS),
-    MSICAP_BASE(p.MSICAPBaseOffset),
-    MSIXCAP_BASE(p.MSIXCAPBaseOffset),
-    MSIXCAP_ID_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_ID),
-    MSIXCAP_MXC_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MXC),
-    MSIXCAP_MTAB_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MTAB),
-    MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MPBA),
-    PXCAP_BASE(p.PXCAPBaseOffset),
+PciDevice::PciDevice(const PciDeviceParams &p)
+    : DmaDevice(p),
+      _busAddr(p.pci_bus, p.pci_dev, p.pci_func),
+      PMCAP_BASE(p.PMCAPBaseOffset),
+      PMCAP_ID_OFFSET(p.PMCAPBaseOffset + PMCAP_ID),
+      PMCAP_PC_OFFSET(p.PMCAPBaseOffset + PMCAP_PC),
+      PMCAP_PMCS_OFFSET(p.PMCAPBaseOffset + PMCAP_PMCS),
+      MSICAP_BASE(p.MSICAPBaseOffset),
+      MSIXCAP_BASE(p.MSIXCAPBaseOffset),
+      MSIXCAP_ID_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_ID),
+      MSIXCAP_MXC_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MXC),
+      MSIXCAP_MTAB_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MTAB),
+      MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MPBA),
+      PXCAP_BASE(p.PXCAPBaseOffset),
 
-    hostInterface(
-        p.host->registerDevice(this, _busAddr, (PciIntPin)p.InterruptPin)),
-    pioDelay(p.pio_latency),
-    configDelay(p.config_latency)
+      hostInterface(
+          p.host->registerDevice(this, _busAddr, (PciIntPin)p.InterruptPin)),
+      pioDelay(p.pio_latency),
+      configDelay(p.config_latency)
 {
     fatal_if(p.InterruptPin >= 5, "Invalid PCI interrupt '%i' specified.",
-        p.InterruptPin);
+             p.InterruptPin);
 
     BARs[0] = p.BAR0;
     BARs[1] = p.BAR1;
@@ -97,7 +97,7 @@ PciDevice::PciDevice(const PciDeviceParams &p) :
         // the lower 32 bits.
         if (mu) {
             fatal_if(idx == 0,
-                "First BAR in %s is upper 32 bits of a memory BAR.", idx);
+                     "First BAR in %s is upper 32 bits of a memory BAR.", idx);
             auto *ml = dynamic_cast<PciMemBar *>(BARs[idx - 1]);
             fatal_if(!ml, "Upper 32 bits of memory BAR in %s doesn't come "
                           "after the lower 32.");
@@ -216,7 +216,7 @@ PciDevice::readConfig(PacketPtr pkt)
     if (offset >= PCI_DEVICE_SPECIFIC && offset < PCI_CONFIG_SIZE) {
         warn_once("Device specific PCI config space "
                   "not implemented for %s!\n",
-            this->name());
+                  this->name());
         switch (pkt->getSize()) {
         case sizeof(uint8_t):
             pkt->setLE<uint8_t>(0);
@@ -238,23 +238,23 @@ PciDevice::readConfig(PacketPtr pkt)
     case sizeof(uint8_t):
         pkt->setLE<uint8_t>(config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint8_t>());
+                "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint8_t>());
         break;
     case sizeof(uint16_t):
         pkt->setLE<uint16_t>(*(uint16_t *)&config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint16_t>());
+                "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint16_t>());
         break;
     case sizeof(uint32_t):
         pkt->setLE<uint32_t>(*(uint32_t *)&config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint32_t>());
+                "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint32_t>());
         break;
     default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -286,7 +286,7 @@ PciDevice::writeConfig(PacketPtr pkt)
     if (offset >= PCI_DEVICE_SPECIFIC && offset < PCI_CONFIG_SIZE) {
         warn_once("Device specific PCI config space "
                   "not implemented for %s!\n",
-            this->name());
+                  this->name());
         switch (pkt->getSize()) {
         case sizeof(uint8_t):
         case sizeof(uint16_t):
@@ -322,9 +322,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint8_t>());
+                "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint8_t>());
         break;
     case sizeof(uint16_t):
         switch (offset) {
@@ -343,9 +343,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint16_t>());
+                "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint16_t>());
         break;
     case sizeof(uint32_t):
         switch (offset) {
@@ -382,9 +382,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             DPRINTF(PciDevice, "Writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint32_t>());
+                "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
+                _busAddr.dev, _busAddr.func, offset,
+                (uint32_t)pkt->getLE<uint32_t>());
         break;
     default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -430,13 +430,13 @@ PciDevice::serialize(CheckpointOut &cp) const
 
         for (int i = 0; i < msix_array_size; i++) {
             paramOut(cp, csprintf("msix_table[%d].addr_lo", i),
-                msix_table[i].fields.addr_lo);
+                     msix_table[i].fields.addr_lo);
             paramOut(cp, csprintf("msix_table[%d].addr_hi", i),
-                msix_table[i].fields.addr_hi);
+                     msix_table[i].fields.addr_hi);
             paramOut(cp, csprintf("msix_table[%d].msg_data", i),
-                msix_table[i].fields.msg_data);
+                     msix_table[i].fields.msg_data);
             paramOut(cp, csprintf("msix_table[%d].vec_ctrl", i),
-                msix_table[i].fields.vec_ctrl);
+                     msix_table[i].fields.vec_ctrl);
         }
         for (int i = 0; i < pba_array_size; i++) {
             paramOut(cp, csprintf("msix_pba[%d].bits", i), msix_pba[i].bits);
@@ -458,8 +458,8 @@ PciDevice::serialize(CheckpointOut &cp) const
 void
 PciDevice::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_ARRAY(
-        config.data, sizeof(config.data) / sizeof(config.data[0]));
+    UNSERIALIZE_ARRAY(config.data,
+                      sizeof(config.data) / sizeof(config.data[0]));
 
     for (int idx = 0; idx < BARs.size(); idx++)
         BARs[idx]->write(hostInterface, config.baseAddr[idx]);
@@ -512,13 +512,13 @@ PciDevice::unserialize(CheckpointIn &cp)
 
         for (int i = 0; i < msix_array_size; i++) {
             paramIn(cp, csprintf("msix_table[%d].addr_lo", i),
-                msix_table[i].fields.addr_lo);
+                    msix_table[i].fields.addr_lo);
             paramIn(cp, csprintf("msix_table[%d].addr_hi", i),
-                msix_table[i].fields.addr_hi);
+                    msix_table[i].fields.addr_hi);
             paramIn(cp, csprintf("msix_table[%d].msg_data", i),
-                msix_table[i].fields.msg_data);
+                    msix_table[i].fields.msg_data);
             paramIn(cp, csprintf("msix_table[%d].vec_ctrl", i),
-                msix_table[i].fields.vec_ctrl);
+                    msix_table[i].fields.vec_ctrl);
         }
         for (int i = 0; i < pba_array_size; i++) {
             paramIn(cp, csprintf("msix_pba[%d].bits", i), msix_pba[i].bits);

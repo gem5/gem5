@@ -54,11 +54,11 @@ class Mult3 : public PredOp
     RegIndex reg0, reg1, reg2;
 
     Mult3(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _reg0, RegIndex _reg1, RegIndex _reg2) :
-        PredOp(mnem, _machInst, __opClass),
-        reg0(_reg0),
-        reg1(_reg1),
-        reg2(_reg2)
+          RegIndex _reg0, RegIndex _reg1, RegIndex _reg2)
+        : PredOp(mnem, _machInst, __opClass),
+          reg0(_reg0),
+          reg1(_reg1),
+          reg2(_reg2)
     {}
 };
 
@@ -71,8 +71,8 @@ class Mult4 : public Mult3
     RegIndex reg3;
 
     Mult4(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-        RegIndex _reg0, RegIndex _reg1, RegIndex _reg2, RegIndex _reg3) :
-        Mult3(mnem, _machInst, __opClass, _reg0, _reg1, _reg2), reg3(_reg3)
+          RegIndex _reg0, RegIndex _reg1, RegIndex _reg2, RegIndex _reg3)
+        : Mult3(mnem, _machInst, __opClass, _reg0, _reg1, _reg2), reg3(_reg3)
     {}
 };
 

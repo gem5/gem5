@@ -60,11 +60,11 @@ typedef std::shared_ptr<Message> MsgPtr;
 class Message
 {
   public:
-    Message(Tick curTime) :
-        m_time(curTime),
-        m_LastEnqueueTime(curTime),
-        m_DelayedTicks(0),
-        m_msg_counter(0)
+    Message(Tick curTime)
+        : m_time(curTime),
+          m_LastEnqueueTime(curTime),
+          m_DelayedTicks(0),
+          m_msg_counter(0)
     {}
 
     Message(const Message &other) = default;

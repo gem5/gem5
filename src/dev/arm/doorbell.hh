@@ -52,10 +52,10 @@ namespace gem5
 class Doorbell : public SimObject
 {
   public:
-    Doorbell(const DoorbellParams &p) :
-        SimObject(p),
-        _setAddress(p.set_address),
-        _clearAddress(p.clear_address)
+    Doorbell(const DoorbellParams &p)
+        : SimObject(p),
+          _setAddress(p.set_address),
+          _clearAddress(p.clear_address)
     {}
 
     Addr

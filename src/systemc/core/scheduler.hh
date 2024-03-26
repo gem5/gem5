@@ -151,8 +151,8 @@ class Scheduler
     class TimeSlot : public gem5::Event
     {
       public:
-        TimeSlot(Scheduler *scheduler) :
-            gem5::Event(Default_Pri, AutoDelete), parent_scheduler(scheduler)
+        TimeSlot(Scheduler *scheduler)
+            : gem5::Event(Default_Pri, AutoDelete), parent_scheduler(scheduler)
         {}
         // Event::when() is only set after it's scheduled to an event queue.
         // However, TimeSlot won't be scheduled before init is done. We need
@@ -309,13 +309,13 @@ class Scheduler
 
         // Timed notification/timeout.
         auto tsit = timeSlots.begin();
-        while (
-            tsit != timeSlots.end() && (*tsit)->targeted_when < event->when())
+        while (tsit != timeSlots.end() &&
+               (*tsit)->targeted_when < event->when())
             tsit++;
 
-        panic_if(
-            tsit == timeSlots.end() || (*tsit)->targeted_when != event->when(),
-            "Descheduling event at time with no events.");
+        panic_if(tsit == timeSlots.end() ||
+                     (*tsit)->targeted_when != event->when(),
+                 "Descheduling event at time with no events.");
         TimeSlot *ts = *tsit;
         ScEvents &events = ts->events;
         assert(on == &events);
@@ -560,7 +560,7 @@ class Scheduler
         return (readyListMethods.empty() && readyListThreads.empty() &&
                 updateList.empty() && deltas.empty() &&
                 (timeSlots.empty() ||
-                    timeSlots.front()->targeted_when > maxTick) &&
+                 timeSlots.front()->targeted_when > maxTick) &&
                 initList.empty());
     }
     gem5::MemberEventWrapper<&Scheduler::pause> starvationEvent;

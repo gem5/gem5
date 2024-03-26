@@ -80,9 +80,10 @@ SMMUTranslRequest::prefetch(Addr addr, uint32_t sid, uint32_t ssid)
     return req;
 }
 
-SMMUTranslationProcess::SMMUTranslationProcess(
-    const std::string &name, SMMUv3 &_smmu, SMMUv3DeviceInterface &_ifc) :
-    SMMUProcess(name, _smmu), ifc(_ifc)
+SMMUTranslationProcess::SMMUTranslationProcess(const std::string &name,
+                                               SMMUv3 &_smmu,
+                                               SMMUv3DeviceInterface &_ifc)
+    : SMMUProcess(name, _smmu), ifc(_ifc)
 {
     // Decrease number of pending translation slots on the device interface
     assert(ifc.xlateSlotsRemaining > 0);
@@ -124,7 +125,8 @@ SMMUTranslationProcess::resumeTransaction()
 
     (void)resumeTick;
     DPRINTF(SMMUv3, "Resume at tick = %d. Fault duration = %d (%.3fus)\n",
-        resumeTick, resumeTick - faultTick, (resumeTick - faultTick) / 1e6);
+            resumeTick, resumeTick - faultTick,
+            (resumeTick - faultTick) / 1e6);
 
     beginTransaction(request);
 
@@ -146,7 +148,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
     if ((request.addr + request.size) > next4k)
         panic("Transaction crosses 4k boundary (addr=%#x size=%#x)!\n",
-            request.addr, request.size);
+              request.addr, request.size);
 
     unsigned numResponderBeats =
         request.isWrite ?
@@ -228,8 +230,8 @@ SMMUTranslationProcess::main(Yield &yield)
         if (tr.fault != FAULT_NONE)
             panic("Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
                   "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
-                request.addr, request.size, request.sid, request.ssid,
-                request.isWrite, request.isPrefetch, request.isAtsRequest);
+                  request.addr, request.size, request.sid, request.ssid,
+                  request.isWrite, request.isPrefetch, request.isAtsRequest);
 
         completeTransaction(yield, tr);
     }
@@ -323,14 +325,14 @@ SMMUTranslationProcess::microTLBLookup(Yield &yield, TranslResult &tr)
 
     if (!e) {
         DPRINTF(SMMUv3, "micro TLB miss vaddr=%#x sid=%#x ssid=%#x\n",
-            request.addr, request.sid, request.ssid);
+                request.addr, request.sid, request.ssid);
 
         return false;
     }
 
     DPRINTF(SMMUv3,
-        "micro TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x paddr=%#x\n",
-        request.addr, e->vaMask, request.sid, request.ssid, e->pa);
+            "micro TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x paddr=%#x\n",
+            request.addr, e->vaMask, request.sid, request.ssid, e->pa);
 
     tr.fault = FAULT_NONE;
     tr.addr = e->pa + (request.addr & ~e->vaMask);
@@ -342,8 +344,8 @@ SMMUTranslationProcess::microTLBLookup(Yield &yield, TranslResult &tr)
 }
 
 bool
-SMMUTranslationProcess::ifcTLBLookup(
-    Yield &yield, TranslResult &tr, bool &wasPrefetched)
+SMMUTranslationProcess::ifcTLBLookup(Yield &yield, TranslResult &tr,
+                                     bool &wasPrefetched)
 {
     if (!ifc.mainTLBEnable)
         return false;
@@ -356,16 +358,16 @@ SMMUTranslationProcess::ifcTLBLookup(
 
     if (!e) {
         DPRINTF(SMMUv3,
-            "RESPONSE Interface TLB miss vaddr=%#x sid=%#x ssid=%#x\n",
-            request.addr, request.sid, request.ssid);
+                "RESPONSE Interface TLB miss vaddr=%#x sid=%#x ssid=%#x\n",
+                request.addr, request.sid, request.ssid);
 
         return false;
     }
 
     DPRINTF(SMMUv3,
-        "RESPONSE Interface TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x "
-        "paddr=%#x\n",
-        request.addr, e->vaMask, request.sid, request.ssid, e->pa);
+            "RESPONSE Interface TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x "
+            "paddr=%#x\n",
+            request.addr, e->vaMask, request.sid, request.ssid, e->pa);
 
     tr.fault = FAULT_NONE;
     tr.addr = e->pa + (request.addr & ~e->vaMask);
@@ -391,14 +393,14 @@ SMMUTranslationProcess::smmuTLBLookup(Yield &yield, TranslResult &tr)
 
     if (!e) {
         DPRINTF(SMMUv3, "SMMU TLB miss vaddr=%#x asid=%#x vmid=%#x\n",
-            request.addr, context.asid, context.vmid);
+                request.addr, context.asid, context.vmid);
 
         return false;
     }
 
     DPRINTF(SMMUv3,
-        "SMMU TLB hit vaddr=%#x amask=%#x asid=%#x vmid=%#x paddr=%#x\n",
-        request.addr, e->vaMask, context.asid, context.vmid, e->pa);
+            "SMMU TLB hit vaddr=%#x amask=%#x asid=%#x vmid=%#x paddr=%#x\n",
+            request.addr, e->vaMask, context.asid, context.vmid, e->pa);
 
     tr.fault = FAULT_NONE;
     tr.addr = e->pa + (request.addr & ~e->vaMask);
@@ -432,8 +434,8 @@ SMMUTranslationProcess::microTLBUpdate(Yield &yield, const TranslResult &tr)
     doSemaphoreDown(yield, ifc.microTLBSem);
 
     DPRINTF(SMMUv3,
-        "micro TLB upd vaddr=%#x amask=%#x paddr=%#x sid=%#x ssid=%#x\n", e.va,
-        e.vaMask, e.pa, e.sid, e.ssid);
+            "micro TLB upd vaddr=%#x amask=%#x paddr=%#x sid=%#x ssid=%#x\n",
+            e.va, e.vaMask, e.pa, e.sid, e.ssid);
 
     ifc.microTLB->store(e, SMMUTLB::ALLOC_ANY_WAY);
 
@@ -468,9 +470,9 @@ SMMUTranslationProcess::ifcTLBUpdate(Yield &yield, const TranslResult &tr)
     doSemaphoreDown(yield, ifc.mainTLBSem);
 
     DPRINTF(SMMUv3,
-        "RESPONSE Interface upd vaddr=%#x amask=%#x paddr=%#x sid=%#x "
-        "ssid=%#x\n",
-        e.va, e.vaMask, e.pa, e.sid, e.ssid);
+            "RESPONSE Interface upd vaddr=%#x amask=%#x paddr=%#x sid=%#x "
+            "ssid=%#x\n",
+            e.va, e.vaMask, e.pa, e.sid, e.ssid);
 
     ifc.mainTLB->store(e, alloc);
 
@@ -497,8 +499,8 @@ SMMUTranslationProcess::smmuTLBUpdate(Yield &yield, const TranslResult &tr)
     doSemaphoreDown(yield, smmu.tlbSem);
 
     DPRINTF(SMMUv3,
-        "SMMU TLB upd vaddr=%#x amask=%#x paddr=%#x asid=%#x vmid=%#x\n", e.va,
-        e.vaMask, e.pa, e.asid, e.vmid);
+            "SMMU TLB upd vaddr=%#x amask=%#x paddr=%#x asid=%#x vmid=%#x\n",
+            e.va, e.vaMask, e.pa, e.asid, e.vmid);
 
     smmu.tlb.store(e);
 
@@ -519,13 +521,13 @@ SMMUTranslationProcess::configCacheLookup(Yield &yield, TranslContext &tc)
 
     if (!e) {
         DPRINTF(SMMUv3, "Config miss sid=%#x ssid=%#x\n", request.sid,
-            request.ssid);
+                request.ssid);
 
         return false;
     }
 
     DPRINTF(SMMUv3, "Config hit sid=%#x ssid=%#x ttb=%#08x asid=%#x\n",
-        request.sid, request.ssid, e->ttb0, e->asid);
+            request.sid, request.ssid, e->ttb0, e->asid);
 
     tc.stage1Enable = e->stage1_en;
     tc.stage2Enable = e->stage2_en;
@@ -546,8 +548,8 @@ SMMUTranslationProcess::configCacheLookup(Yield &yield, TranslContext &tc)
 }
 
 void
-SMMUTranslationProcess::configCacheUpdate(
-    Yield &yield, const TranslContext &tc)
+SMMUTranslationProcess::configCacheUpdate(Yield &yield,
+                                          const TranslContext &tc)
 {
     if (!smmu.configCacheEnable)
         return;
@@ -578,8 +580,8 @@ SMMUTranslationProcess::configCacheUpdate(
 }
 
 bool
-SMMUTranslationProcess::findConfig(
-    Yield &yield, TranslContext &tc, TranslResult &tr)
+SMMUTranslationProcess::findConfig(Yield &yield, TranslContext &tc,
+                                   TranslResult &tr)
 {
     tc.stage1Enable = false;
     tc.stage2Enable = false;
@@ -645,8 +647,10 @@ SMMUTranslationProcess::findConfig(
 
 void
 SMMUTranslationProcess::walkCacheLookup(Yield &yield,
-    const WalkCache::Entry *&walkEntry, Addr addr, uint16_t asid,
-    uint16_t vmid, unsigned stage, unsigned level)
+                                        const WalkCache::Entry *&walkEntry,
+                                        Addr addr, uint16_t asid,
+                                        uint16_t vmid, unsigned stage,
+                                        unsigned level)
 {
     const char *indent = stage == 2 ? "  " : "";
     (void)indent; // this is only used in DPRINTFs
@@ -665,19 +669,19 @@ SMMUTranslationProcess::walkCacheLookup(Yield &yield,
         doSemaphoreDown(yield, smmu.walkSem);
         doDelay(yield, smmu.walkLat);
 
-        walkEntry = smmu.walkCache.lookup(
-            addr, pt_ops->walkMask(level), asid, vmid, stage, level);
+        walkEntry = smmu.walkCache.lookup(addr, pt_ops->walkMask(level), asid,
+                                          vmid, stage, level);
 
         if (walkEntry) {
             DPRINTF(SMMUv3,
-                "%sWalkCache hit  va=%#x asid=%#x vmid=%#x "
-                "base=%#x (S%d, L%d)\n",
-                indent, addr, asid, vmid, walkEntry->pa, stage, level);
+                    "%sWalkCache hit  va=%#x asid=%#x vmid=%#x "
+                    "base=%#x (S%d, L%d)\n",
+                    indent, addr, asid, vmid, walkEntry->pa, stage, level);
         } else {
             DPRINTF(SMMUv3,
-                "%sWalkCache miss va=%#x asid=%#x vmid=%#x "
-                "(S%d, L%d)\n",
-                indent, addr, asid, vmid, stage, level);
+                    "%sWalkCache miss va=%#x asid=%#x vmid=%#x "
+                    "(S%d, L%d)\n",
+                    indent, addr, asid, vmid, stage, level);
         }
 
         doSemaphoreUp(smmu.walkSem);
@@ -686,7 +690,9 @@ SMMUTranslationProcess::walkCacheLookup(Yield &yield,
 
 void
 SMMUTranslationProcess::walkCacheUpdate(Yield &yield, Addr va, Addr vaMask,
-    Addr pa, unsigned stage, unsigned level, bool leaf, uint8_t permissions)
+                                        Addr pa, unsigned stage,
+                                        unsigned level, bool leaf,
+                                        uint8_t permissions)
 {
     unsigned walkCacheLevels =
         stage == 1 ? smmu.walkCacheS1Levels : smmu.walkCacheS2Levels;
@@ -707,10 +713,10 @@ SMMUTranslationProcess::walkCacheUpdate(Yield &yield, Addr va, Addr vaMask,
         doSemaphoreDown(yield, smmu.walkSem);
 
         DPRINTF(SMMUv3,
-            "%sWalkCache upd  va=%#x mask=%#x asid=%#x vmid=%#x "
-            "tpa=%#x leaf=%s (S%d, L%d)\n",
-            e.stage == 2 ? "  " : "", e.va, e.vaMask, e.asid, e.vmid, e.pa,
-            e.leaf, e.stage, e.level);
+                "%sWalkCache upd  va=%#x mask=%#x asid=%#x vmid=%#x "
+                "tpa=%#x leaf=%s (S%d, L%d)\n",
+                e.stage == 2 ? "  " : "", e.va, e.vaMask, e.asid, e.vmid, e.pa,
+                e.leaf, e.stage, e.level);
 
         smmu.walkCache.store(e);
 
@@ -725,7 +731,8 @@ SMMUTranslationProcess::walkCacheUpdate(Yield &yield, Addr va, Addr vaMask,
  */
 SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
-    const PageTableOps *pt_ops, unsigned level, Addr walkPtr)
+                                       const PageTableOps *pt_ops,
+                                       unsigned level, Addr walkPtr)
 {
     PageTableOps::pte_t pte = 0;
 
@@ -737,13 +744,13 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
         Addr pte_addr =
             walkPtr + pt_ops->index(addr, level, 64 - context.t0sz);
 
-        DPRINTF(
-            SMMUv3, "Fetching S1 L%d PTE from pa=%#08x\n", level, pte_addr);
+        DPRINTF(SMMUv3, "Fetching S1 L%d PTE from pa=%#08x\n", level,
+                pte_addr);
 
         doReadPTE(yield, addr, pte_addr, &pte, 1, level);
 
         DPRINTF(SMMUv3, "Got S1 L%d PTE=%#x from pa=%#08x\n", level, pte,
-            pte_addr);
+                pte_addr);
 
         doSemaphoreDown(yield, smmu.cycleSem);
         doDelay(yield, Cycles(1));
@@ -782,8 +789,8 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
             walkPtr = s2tr.addr;
         }
 
-        walkCacheUpdate(
-            yield, addr, pt_ops->walkMask(level), walkPtr, 1, level, leaf, 0);
+        walkCacheUpdate(yield, addr, pt_ops->walkMask(level), walkPtr, 1,
+                        level, leaf, 0);
     }
 
     TranslResult tr;
@@ -800,15 +807,16 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
         tr = combineTranslations(tr, s2tr);
     }
 
-    walkCacheUpdate(
-        yield, addr, tr.addrMask, walkPtr, 1, level, true, tr.writable);
+    walkCacheUpdate(yield, addr, tr.addrMask, walkPtr, 1, level, true,
+                    tr.writable);
 
     return tr;
 }
 
 SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
-    const PageTableOps *pt_ops, unsigned level, Addr walkPtr)
+                                   const PageTableOps *pt_ops, unsigned level,
+                                   Addr walkPtr)
 {
     PageTableOps::pte_t pte;
 
@@ -820,13 +828,13 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
         Addr pte_addr =
             walkPtr + pt_ops->index(addr, level, 64 - context.s2t0sz);
 
-        DPRINTF(
-            SMMUv3, "  Fetching S2 L%d PTE from pa=%#08x\n", level, pte_addr);
+        DPRINTF(SMMUv3, "  Fetching S2 L%d PTE from pa=%#08x\n", level,
+                pte_addr);
 
         doReadPTE(yield, addr, pte_addr, &pte, 2, level);
 
         DPRINTF(SMMUv3, "  Got S2 L%d PTE=%#x from pa=%#08x\n", level, pte,
-            pte_addr);
+                pte_addr);
 
         doSemaphoreDown(yield, smmu.cycleSem);
         doDelay(yield, Cycles(1));
@@ -856,7 +864,8 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
 
         if (final_tr || smmu.walkCacheNonfinalEnable)
             walkCacheUpdate(yield, addr, pt_ops->walkMask(level), walkPtr, 2,
-                level, leaf, leaf ? pt_ops->isWritable(pte, level, true) : 0);
+                            level, leaf,
+                            leaf ? pt_ops->isWritable(pte, level, true) : 0);
         if (leaf)
             break;
     }
@@ -883,8 +892,8 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
     // to 0 using unsigned int.
     for (level = pt_ops->lastLevel() + 1;
          level > pt_ops->firstLevel(context.t0sz); level--) {
-        walkCacheLookup(
-            yield, walk_ep, addr, context.asid, context.vmid, 1, level - 1);
+        walkCacheLookup(yield, walk_ep, addr, context.asid, context.vmid, 1,
+                        level - 1);
 
         if (walk_ep)
             break;
@@ -913,8 +922,8 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
             table_addr = s2tr.addr;
         }
 
-        tr = walkStage1And2(
-            yield, addr, pt_ops, pt_ops->firstLevel(context.t0sz), table_addr);
+        tr = walkStage1And2(yield, addr, pt_ops,
+                            pt_ops->firstLevel(context.t0sz), table_addr);
     }
 
     if (tr.fault == FAULT_NONE)
@@ -945,12 +954,12 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
         tr.writable = ipa_ep->permissions;
 
         DPRINTF(SMMUv3, "  IPACache hit  ipa=%#x vmid=%#x pa=%#x\n", addr,
-            context.vmid, tr.addr);
+                context.vmid, tr.addr);
 
         return tr;
     } else if (smmu.ipaCacheEnable) {
-        DPRINTF(
-            SMMUv3, "  IPACache miss ipa=%#x vmid=%#x\n", addr, context.vmid);
+        DPRINTF(SMMUv3, "  IPACache miss ipa=%#x vmid=%#x\n", addr,
+                context.vmid);
     }
 
     const WalkCache::Entry *walk_ep = NULL;
@@ -961,8 +970,8 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
         // to 0 using unsigned int.
         for (level = pt_ops->lastLevel() + 1;
              level > pt_ops->firstLevel(context.s2t0sz); level--) {
-            walkCacheLookup(
-                yield, walk_ep, addr, 0, context.vmid, 2, level - 1);
+            walkCacheLookup(yield, walk_ep, addr, 0, context.vmid, 2,
+                            level - 1);
 
             if (walk_ep)
                 break;
@@ -980,17 +989,17 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
             tr.addrMask = walk_ep->vaMask;
             tr.writable = walk_ep->permissions;
         } else {
-            tr = walkStage2(
-                yield, addr, final_tr, pt_ops, level + 1, walk_ep->pa);
+            tr = walkStage2(yield, addr, final_tr, pt_ops, level + 1,
+                            walk_ep->pa);
         }
     } else {
         tr = walkStage2(yield, addr, final_tr, pt_ops,
-            pt_ops->firstLevel(context.s2t0sz), context.httb);
+                        pt_ops->firstLevel(context.s2t0sz), context.httb);
     }
 
     if (tr.fault == FAULT_NONE)
         DPRINTF(SMMUv3, "  Translated %saddr %#x to paddr %#x\n",
-            context.stage1Enable ? "ip" : "v", addr, tr.addr);
+                context.stage1Enable ? "ip" : "v", addr, tr.addr);
 
     if (smmu.ipaCacheEnable) {
         IPACache::Entry e;
@@ -1010,8 +1019,8 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
 }
 
 SMMUTranslationProcess::TranslResult
-SMMUTranslationProcess::combineTranslations(
-    const TranslResult &s1tr, const TranslResult &s2tr) const
+SMMUTranslationProcess::combineTranslations(const TranslResult &s1tr,
+                                            const TranslResult &s2tr) const
 {
     if (s2tr.fault != FAULT_NONE)
         return s2tr;
@@ -1046,7 +1055,7 @@ void
 SMMUTranslationProcess::hazard4kRegister()
 {
     DPRINTF(SMMUv3Hazard, "4kReg:  p=%p a4k=%#x\n", this,
-        request.addr & ~0xfffULL);
+            request.addr & ~0xfffULL);
 
     ifc.duplicateReqs.push_back(this);
 }
@@ -1066,17 +1075,17 @@ SMMUTranslationProcess::hazard4kHold(Yield &yield)
             Addr other4k = (*it)->request.addr & ~0xfffULL;
 
             DPRINTF(SMMUv3Hazard, "4kHold: p=%p a4k=%#x Q: p=%p a4k=%#x\n",
-                this, addr4k, *it, other4k);
+                    this, addr4k, *it, other4k);
 
             if (addr4k == other4k) {
                 DPRINTF(SMMUv3Hazard,
-                    "4kHold: p=%p a4k=%#x WAIT on p=%p a4k=%#x\n", this,
-                    addr4k, *it, other4k);
+                        "4kHold: p=%p a4k=%#x WAIT on p=%p a4k=%#x\n", this,
+                        addr4k, *it, other4k);
 
                 doWaitForSignal(yield, ifc.duplicateReqRemoved);
 
                 DPRINTF(SMMUv3Hazard, "4kHold: p=%p a4k=%#x RESUME\n", this,
-                    addr4k);
+                        addr4k);
 
                 // This is to avoid checking *it!=this after doWaitForSignal()
                 // since it could have been deleted.
@@ -1091,7 +1100,7 @@ void
 SMMUTranslationProcess::hazard4kRelease()
 {
     DPRINTF(SMMUv3Hazard, "4kRel:  p=%p a4k=%#x\n", this,
-        request.addr & ~0xfffULL);
+            request.addr & ~0xfffULL);
 
     std::list<SMMUTranslationProcess *>::iterator it;
 
@@ -1142,16 +1151,16 @@ SMMUTranslationProcess::hazardIdHold(Yield &yield)
         for (auto it = depReqs.begin(); it != depReqs.end() && *it != this;
              ++it) {
             DPRINTF(SMMUv3Hazard, "IdHold: p=%p oid=%d Q: %p\n", this, orderId,
-                *it);
+                    *it);
 
             if (AMBA::orderId((*it)->request.pkt) == orderId) {
                 DPRINTF(SMMUv3Hazard, "IdHold: p=%p oid=%d WAIT on=%p\n", this,
-                    orderId, *it);
+                        orderId, *it);
 
                 doWaitForSignal(yield, ifc.dependentReqRemoved);
 
                 DPRINTF(SMMUv3Hazard, "IdHold: p=%p oid=%d RESUME\n", this,
-                    orderId);
+                        orderId);
 
                 // This is to avoid checking *it!=this after doWaitForSignal()
                 // since it could have been deleted.
@@ -1206,8 +1215,8 @@ SMMUTranslationProcess::issuePrefetch(Addr addr)
 }
 
 void
-SMMUTranslationProcess::completeTransaction(
-    Yield &yield, const TranslResult &tr)
+SMMUTranslationProcess::completeTransaction(Yield &yield,
+                                            const TranslResult &tr)
 {
     assert(tr.fault == FAULT_NONE);
 
@@ -1291,10 +1300,10 @@ SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
                       (smmu.regs.eventq_prod & sizeMask) * sizeof(ev);
 
     DPRINTF(SMMUv3,
-        "Sending event to addr=%#08x (pos=%d): type=%#x stag=%#x "
-        "flags=%#x sid=%#x ssid=%#x va=%#08x ipa=%#x\n",
-        event_addr, smmu.regs.eventq_prod, ev.type, ev.stag, ev.flags,
-        ev.streamId, ev.substreamId, ev.va, ev.ipa);
+            "Sending event to addr=%#08x (pos=%d): type=%#x stag=%#x "
+            "flags=%#x sid=%#x ssid=%#x va=%#08x ipa=%#x\n",
+            event_addr, smmu.regs.eventq_prod, ev.type, ev.stag, ev.flags,
+            ev.streamId, ev.substreamId, ev.va, ev.ipa);
 
     // This deliberately resets the overflow field in eventq_prod!
     smmu.regs.eventq_prod = (smmu.regs.eventq_prod + 1) & sizeMask;
@@ -1305,12 +1314,12 @@ SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
         panic("eventq msi not enabled\n");
 
     doWrite(yield, smmu.regs.eventq_irq_cfg0 & E_BASE_ADDR_MASK,
-        &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
+            &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
 }
 
 void
-SMMUTranslationProcess::doReadSTE(
-    Yield &yield, StreamTableEntry &ste, uint32_t sid)
+SMMUTranslationProcess::doReadSTE(Yield &yield, StreamTableEntry &ste,
+                                  uint32_t sid)
 {
     unsigned max_sid = 1 << (smmu.regs.strtab_base_cfg & ST_CFG_SIZE_MASK);
     if (sid >= max_sid)
@@ -1342,7 +1351,7 @@ SMMUTranslationProcess::doReadSTE(
         unsigned index = bits(sid, split - 1, 0);
         if (index >= (1 << span))
             panic("StreamID %d out of level 1 descriptor range %d", sid,
-                1 << span);
+                  1 << span);
 
         ste_addr = (l2_ptr & ST_L2_ADDR_MASK) + index * sizeof(ste);
 
@@ -1376,7 +1385,8 @@ SMMUTranslationProcess::doReadSTE(
 
 void
 SMMUTranslationProcess::doReadCD(Yield &yield, ContextDescriptor &cd,
-    const StreamTableEntry &ste, uint32_t sid, uint32_t ssid)
+                                 const StreamTableEntry &ste, uint32_t sid,
+                                 uint32_t ssid)
 {
     Addr cd_addr = 0;
 
@@ -1437,14 +1447,14 @@ SMMUTranslationProcess::doReadCD(Yield &yield, ContextDescriptor &cd,
 
 void
 SMMUTranslationProcess::doReadConfig(Yield &yield, Addr addr, void *ptr,
-    size_t size, uint32_t sid, uint32_t ssid)
+                                     size_t size, uint32_t sid, uint32_t ssid)
 {
     doRead(yield, addr, ptr, size);
 }
 
 void
 SMMUTranslationProcess::doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr,
-    unsigned stage, unsigned level)
+                                  unsigned stage, unsigned level)
 {
     size_t pte_size = sizeof(PageTableOps::pte_t);
 
