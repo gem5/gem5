@@ -27,5 +27,9 @@
 Import ("*")
 
 if env['CONF']['USE_TEST_OBJECTS']:
-    SimObject('StatTester.py', sim_objects=['StatTester', 'ScalarStatTester'])
+    SimObject('StatTester.py', sim_objects=[
+        'StatTester',
+        'ScalarStatTester',
+        'VectorStatTester',
+    ])
     Source('stat_tester.cc')

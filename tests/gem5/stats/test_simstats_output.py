@@ -39,7 +39,6 @@ gem5_verify_config(
         "simstat_output_check.py",
     ),
     config_args=[
-        "scalar",
         "42",
         "--name",
         "scalar_test",
@@ -63,7 +62,6 @@ gem5_verify_config(
         "simstat_output_check.py",
     ),
     config_args=[
-        "scalar",
         "0",
     ],
     valid_isas=(constants.all_compiled_tag,),
@@ -83,7 +81,6 @@ gem5_verify_config(
         "simstat_output_check.py",
     ),
     config_args=[
-        "scalar",
         "-245",
     ],
     valid_isas=(constants.all_compiled_tag,),
@@ -103,12 +100,84 @@ gem5_verify_config(
         "simstat_output_check.py",
     ),
     config_args=[
-        "scalar",
         "42.869",
         "--name",
         "float_test",
         "--description",
         "A scalar statistic with a float value",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="pystat_vector_test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystat_vector_check.py",
+    ),
+    config_args=[
+        "2.0,4,5.9,2.3,-8,0,0.0,-8.9",
+        "--name",
+        "vector_stat",
+        "--description",
+        "A vector statistic with a float value",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="pystat_vector_with_subnames_test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystat_vector_check.py",
+    ),
+    config_args=[
+        "2.0,4,3",
+        "--name",
+        "vector_stat",
+        "--description",
+        "A vector statistic with a float value",
+        "--subnames",
+        "first,second,third",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="pystat_vector_with_subdescs_test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystat_vector_check.py",
+    ),
+    config_args=[
+        "2.0,4,3",
+        "--name",
+        "vector_stat",
+        "--description",
+        "A vector statistic with a float value",
+        "--subdescs",
+        "first,second",
     ],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,

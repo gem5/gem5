@@ -30,51 +30,91 @@ import sys
 import m5
 from m5.objects import (
     Root,
-    ScalarStatTester,
+    VectorStatTester,
 )
 from m5.stats.gem5stats import get_simstat
 
-"""This script is used for checking that statistics set in the simulation are
-correctly parsed through to the python SimStats. This script sets the
-statistics using the "StatTester" simobjects and ensures verifies correctness
-against the expected JSON output and that produced by the SimStats module.
+"""This script is used for checking that the Vector statistics set in "
+the simulation are correctly parsed through to the python Pystats.
 """
 
-parser = argparse.ArgumentParser(description="Tests the output of a SimStat.")
+parser = argparse.ArgumentParser(
+    description="Tests the output of a Vector PyStat."
+)
 
 parser.add_argument(
-    "value", type=float, help="The value of the scalar statistic."
+    "value",
+    help="Comma delimited list representing the vector.",
+    type=lambda s: [float(item) for item in s.split(",")],
 )
+
 parser.add_argument(
     "--name",
     type=str,
-    default="scalar",
+    default="vector",
     required=False,
-    help="The name of the scalar statistic.",
+    help="Name of the vector statistic.",
 )
+
 parser.add_argument(
     "--description",
     type=str,
     default="",
     required=False,
-    help="The description of the scalar statistic.",
+    help="Description of the vector statistic.",
+)
+
+parser.add_argument(
+    "--subnames",
+    help="Comma delimited list representing the vector subnames.",
+    type=str,
+)
+
+parser.add_argument(
+    "--subdescs",
+    help="Comma delimited list representing the vector subdescs",
+    type=str,
 )
 
 args = parser.parse_args()
 
-stat_tester = ScalarStatTester()
+stat_tester = VectorStatTester()
 stat_tester.name = args.name
 stat_tester.description = args.description
-stat_tester.value = args.value
+stat_tester.values = args.value
+
+stat_tester.subnames = []
+if args.subnames:
+    stat_tester.subnames = [str(item) for item in args.subnames.split(",")]
+
+stat_tester.subdescs = []
+if args.subdescs:
+    stat_tester.subdescs = [str(item) for item in args.subdescs.split(",")]
+
+value_dict = {}
+for i in range(len(args.value)):
+    i_name = i
+    description = args.description
+    if stat_tester.subnames and i < len(stat_tester.subnames):
+        i_name = stat_tester.subnames[i]
+    if stat_tester.subdescs and i < len(stat_tester.subdescs):
+        description = stat_tester.subdescs[i]
+
+    value_dict[i_name] = {
+        "value": args.value[i],
+        "type": "Scalar",
+        "unit": "Count",
+        "description": description,
+        "datatype": "f64",
+    }
+
 expected_output = {
     "type": "Group",
     "time_conversion": None,
     args.name: {
-        "value": args.value,
-        "type": "Scalar",
-        "unit": "Count",
+        "value": value_dict,
+        "type": "Vector",
         "description": args.description,
-        "datatype": "f64",
     },
 }
 
