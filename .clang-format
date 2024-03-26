@@ -9,7 +9,7 @@ Language: Cpp
 AccessModifierOffset: -2
 
 # AlignAfterOpenBracket (BracketAlignmentStyle) clang-format 3.8
-AlignAfterOpenBracket: DontAlign
+AlignAfterOpenBracket: Align
 
 # AlignArrayOfStructures (ArrayInitializerAlignmentStyle) clang-format 13
 
@@ -25,7 +25,7 @@ AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: false
 
 # AlignEscapedNewlines (EscapedNewlineAlignmentStyle) clang-format 5
-AlignEscapedNewlines: DontAlign
+AlignEscapedNewlines: Right
 
 # AlignOperands (Boolean) clang-format 3.5
 AlignOperands: true
@@ -95,7 +95,7 @@ BraceWrapping:
   # AfterObjCDeclaration
     AfterStruct: true
     AfterUnion: true
-    AfterExternBlock: true
+    AfterExternBlock: false
     BeforeCatch: false
     BeforeElse: false
   # Not clang-format 10
@@ -103,7 +103,7 @@ BraceWrapping:
   # BeforeWhile:     false
     IndentBraces: false
     SplitEmptyFunction: false
-    SplitEmptyRecord: false
+    SplitEmptyRecord: true
     SplitEmptyNamespace: false
 
 # BreakAfterAttributes (AttributeBreakingStyle) clang-format 16
@@ -126,7 +126,7 @@ BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 
 # BreakConstructorInitializers (BreakConstructorInitializersStyle) clang-format 5
-BreakConstructorInitializers: AfterColon
+BreakConstructorInitializers: BeforeColon
 
 # BreakInheritanceList (BreakInheritanceListStyle) clang-format 7
 BreakInheritanceList: AfterColon
@@ -213,7 +213,7 @@ IndentCaseLabels: false
 IndentGotoLabels: true
 
 # IndentPPDirectives (PPDirectiveIndentStyle) clang-format 6
-IndentPPDirectives: AfterHash
+IndentPPDirectives: None
 
 # IndentRequiresClause (Boolean) clang-format 15
 
