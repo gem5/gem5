@@ -44,8 +44,8 @@ namespace gem5::mpam
 uint64_t
 MSC::readPacketPartitionID(PacketPtr pkt) const
 {
-    // get partition_id from PartitionFieldExtention
-    auto ext = pkt->req->getExtension<ArmISA::mpam::PartitionFieldExtention>();
+    // get partition_id from PartitionFieldExtension
+    auto ext = pkt->req->getExtension<ArmISA::mpam::PartitionFieldExtension>();
     // use default value if extension is not set
     return (ext != nullptr) ? ext->getPartitionID() :
         ArmISA::mpam::DEFAULT_PARTITION_ID;

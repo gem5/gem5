@@ -58,7 +58,7 @@ namespace partitioning_policy
  * PartitionID to it. The way the partition ID is attached/extracted
  * from the request depends on the partitioning manager.
  *
- * See the use of the PartitionFieldExtention in Arm as an example.
+ * See the use of the PartitionFieldExtension in Arm as an example.
  *
  * When partitioning policies are in place, the allocatable cache blocks for
  * this memory request will be filtered based on its PartitionID.
