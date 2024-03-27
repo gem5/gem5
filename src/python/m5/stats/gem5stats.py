@@ -140,6 +140,8 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
         return __get_vector(statistic)
     elif isinstance(statistic, _m5.stats.Vector2dInfo):
         return __get_vector2d(statistic)
+    elif isinstance(statistic, _m5.stats.SparseHistInfo):
+        return __get_sparse_hist(statistic)
 
     return None
 
@@ -266,6 +268,24 @@ def __get_vector2d(statistic: _m5.stats.Vector2dInfo) -> Vector2d:
         )
 
     return Vector2d(value=vector_rep, type="Vector2d", description=description)
+
+
+def __get_sparse_hist(statistic: _m5.stats.SparseHistInfo) -> SparseHist:
+    description = statistic.desc
+    value = statistic.values
+
+    parsed_values = {}
+    for val in value:
+        parsed_values[val] = Scalar(
+            value=value[val],
+            unit=statistic.unit,
+            datatype=StorageType["f64"],
+        )
+
+    return SparseHist(
+        value=parsed_values,
+        description=description,
+    )
 
 
 def _prepare_stats(group: _m5.stats.Group):

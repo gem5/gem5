@@ -28,6 +28,8 @@
 
 #include "test_objects/stat_tester.hh"
 
+#include <set>
+
 #include "base/stats/group.hh"
 
 namespace gem5
@@ -131,6 +133,30 @@ Vector2dStatTester::Vector2dStatTesterStats::Vector2dStatTesterStats(
 
     }
 
+}
+
+void
+SparseHistStatTester::setStats()
+{
+    for (auto sample : params.samples) {
+        stats.sparse_histogram.sample(sample);
+    }
+}
+
+SparseHistStatTester::SparseHistStatTesterStats::SparseHistStatTesterStats(
+    statistics::Group *parent,
+    const SparseHistStatTesterParams &params
+) : statistics::Group(parent),
+    sparse_histogram(
+        this,
+        params.name.c_str(),
+        statistics::units::Count::get(),
+        params.description.c_str()
+    )
+{
+    sparse_histogram.init(
+        (std::set(params.samples.begin(), params.samples.end())).size()
+    );
 }
 
 } // namespace gem5

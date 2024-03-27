@@ -31,6 +31,7 @@
 
 #include "base/statistics.hh"
 #include "params/ScalarStatTester.hh"
+#include "params/SparseHistStatTester.hh"
 #include "params/StatTester.hh"
 #include "params/Vector2dStatTester.hh"
 #include "params/VectorStatTester.hh"
@@ -155,6 +156,27 @@ class Vector2dStatTester : public StatTester
                 const Vector2dStatTesterParams &params
             );
             statistics::Vector2d vector2d;
+        } stats;
+};
+
+class SparseHistStatTester : public StatTester
+{
+    private:
+        SparseHistStatTesterParams params;
+
+    public:
+        SparseHistStatTester(const SparseHistStatTesterParams &p) :
+            StatTester(p), params(p), stats(this, p) {}
+
+    protected:
+        void setStats() override;
+        struct SparseHistStatTesterStats : public statistics::Group
+        {
+            SparseHistStatTesterStats(
+                statistics::Group *parent,
+                const SparseHistStatTesterParams &params
+            );
+            statistics::SparseHistogram sparse_histogram;
         } stats;
 };
 
