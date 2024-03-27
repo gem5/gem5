@@ -1,0 +1,110 @@
+# This workflow runs all of the very-long tests within main.py
+
+name: Weekly Tests
+
+on:
+  # Runs every Sunday from 7AM UTC
+  schedule:
+    - cron:  '00 7 * * 6'
+  # Allows us to manually start workflow for testing
+  workflow_dispatch:
+
+jobs:
+  name-artifacts:
+    runs-on: ubuntu-latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+    - uses: actions/checkout@v2
+    - id: artifact-name
+      run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
+
+  build-gem5:
+    strategy:
+      matrix:
+        image: [ALL, GCN3_X86]
+        # this allows us to pass additional command line parameters
+        # the default is to add -j $(nproc), but some images
+        # require more specifications when built
+        include:
+          - command-line: -j $(nproc)
+          - image: GCN3_X86
+            command-line: -j4 --ignore-style
+    runs-on: [self-hosted, linux, x64, build]
+    needs: name-artifacts
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - name: Build gem5
+        run: scons build/${{ matrix.image }}/gem5.opt ${{ matrix.command-line }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
+          path: build/${{ matrix.image }}/gem5.opt
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
+
+  # These tests fail due to the setting up of cachefiles
+  DNNMark-tests:
+    runs-on: [self-hosted, linux, x64, build]
+    container:
+      image: mkjost/testing-gpu-image:latest
+      # volumes:
+      #   - ${{ github.workspace }}:${{ github.workspace }}
+      #   - ${{ github.workspace }}/cachefiles:/~/.cache/miopen/2.9.0
+    needs: [build-gem5, name-artifact]
+    timeout-minutes: 4320 # 3 days
+    steps:
+      - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
+          rm -rf ${{ github.workspace }}/gem5-resources || true
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{needs.name-artifacts.outputs.build-name}}GCN3_X86
+          path: build/GCN3_X86
+      - run: chmod u+x build/GCN3_X86/gem5.opt
+      - name: checkout gem5 resources
+        working-directory: ${{ github.workspace }}
+        run: |
+          git clone https://gem5.googlesource.com/public/gem5-resources
+          cd gem5-resources
+          git checkout develop
+      - name: Compile m5ops and x86
+        working-directory: ${{ github.workspace }}/util/m5
+        run: |
+          export TERM=xterm-256color
+          scons build/x86/out/m5
+      - name: Setup cmark for DNNMark #potentially can combine all these steps
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu/DNNMark
+        run: ./setup.sh HIP
+      - name: Make the DNNMark library
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu/DNNMark/build
+        run: make -j4
+      - name: Generate cachefiles #iffy on working directory
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu/DNNMark/
+        run: python3 generate_cachefiles.py cachefiles.csv --gfx-version=gfx801 --num-cus=4
+      - name: Generate mmap data
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu/DNNMark
+        run: |
+          g++ -std=c++0x generate_rand_data.cpp -o generate_rand_data
+          ./generate_rand_data
+      - name: Run DNNMark
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu/DNNMark
+        run: |
+          ../../../../build/GCN3_X86/gem5.opt ../../../../configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root="build/benchmarks/test_fwd_softmax" -c dnnmark_test_fwd_softmax --options="-config config_example/softmax_config.dnnmark -mmap mmap.bin"
+          ../../../../build/GCN3_X86/gem5.opt ../../../../configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root="build/benchmarks/test_fwd_pool" -c dnnmark_test_fwd_pool --options="-config config_example/pool_config.dnnmark -mmap mmap.bin"
+          ../../../../build/GCN3_X86/gem5.opt ../../../../configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root="build/benchmarks/test_bwd_bn" -c dnnmark_test_bwd_bn --options="-config config_example/bn_config.dnnmark -mmap mmap.bin"
