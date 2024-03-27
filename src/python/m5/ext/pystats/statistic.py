@@ -253,3 +253,31 @@ class Distribution(Vector):
         # These check some basic conditions of a distribution.
         assert self.bin_size >= 0
         assert self.num_bins >= 1
+
+
+class SparseHist(Vector):
+    """A Sparse Histogram of values. A sparse histogram simply counts the "
+    frequency of each value in a sample. Ergo, it is, ineffect an disctionary
+    of values mapped to their count"""
+
+    def __init__(
+        self,
+        value: Dict[float, Scalar],
+        description: Optional[str] = None,
+    ):
+        super().__init__(
+            value=value,
+            type="SparseHist",
+            description=description,
+        )
+
+    def size(self) -> int:
+        """The number of unique sampled values."""
+        return len(self.value)
+
+    def count(self) -> int:
+        """
+        Returns the total number of samples.
+        """
+        assert self.value != None
+        return sum(self.value.values())

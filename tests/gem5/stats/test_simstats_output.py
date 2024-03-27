@@ -212,3 +212,26 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
+
+gem5_verify_config(
+    name="pystat-sparsehist-test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystat_sparse_dist_check.py",
+    ),
+    config_args=[
+        "1.0,1,1.00,23,23,0.2,0.2,0.2,0.2,-1,-1.0,264",
+        "--name",
+        "sparsehist_stat",
+        "--description",
+        "A sparse histogram statistic.",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)

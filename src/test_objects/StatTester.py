@@ -87,3 +87,14 @@ class Vector2dStatTester(StatTester):
         [],
         "The vector stat's y subdescriptions. If empty, the subdescriptions ",
     )
+
+
+class SparseHistStatTester(StatTester):
+    type = "SparseHistStatTester"
+    cxx_header = "test_objects/stat_tester.hh"
+    cxx_class = "gem5::SparseHistStatTester"
+
+    samples = VectorParam.Float(
+        "The sparse histogram's sampled values, to be inserted into the "
+        "histogram."
+    )
