@@ -195,37 +195,3 @@ class Distribution(Vector):
         # These check some basic conditions of a distribution.
         assert self.bin_size >= 0
         assert self.num_bins >= 1
-
-
-class Accumulator(Vector):
-    """
-    A statistical type representing an accumulator.
-    """
-
-    _count: int
-    min: Union[int, float]
-    max: Union[int, float]
-    sum_squared: Optional[int]
-
-    def __init__(
-        self,
-        value: Iterable[Union[int, float]],
-        count: int,
-        min: Union[int, float],
-        max: Union[int, float],
-        sum_squared: Optional[int] = None,
-        description: Optional[str] = None,
-    ):
-        super().__init__(
-            value=value,
-            type="Accumulator",
-            description=description,
-        )
-
-        self._count = count
-        self.min = min
-        self.max = max
-        self.sum_squared = sum_squared
-
-    def count(self) -> int:
-        return self._count
