@@ -78,37 +78,47 @@ class JSONClient(AbstractClient):
         resource_info: List[Dict[str, str]],
         gem5_version: Optional[str] = None,
     ) -> Dict[str, Any]:
-        filtered_resources = []  # Unfiltered.
+        def filter_resource(resource, resource_info):
+            for resource_query in resource_info:
+                gem5_version_match = False
+                resource_version_match = False
 
-        for resource in resource_info:
-            if "resource_version" in resource.keys():
-                filtered_resources.append(
-                    [
-                        res
-                        for res in self.resources
-                        if res["id"] == resource["id"]
-                        and res["resource_version"]
-                        == resource["resource_version"]
-                    ]
-                )
-            else:
-                filtered_resources.append(
-                    [
-                        res
-                        for res in self.resources
-                        if res["id"] == resource["id"]
-                    ]
-                )
+                if (
+                    "gem5_version" in resource_query.keys()
+                    and not resource_query["gem5_version"].startswith(
+                        "DEVELOP"
+                    )
+                ):
+                    gem5_version_match = (
+                        resource["gem5_version"]
+                        in resource_query["gem5_version"]
+                    )
 
-        # Filter by gem5_version.
-        filtered_compatible_resources = self.filter_incompatible_resources(
-            resources_to_filter=filtered_resources, gem5_version=gem5_version
+                if "resource_version" in resource_query.keys():
+                    resource_version_match = (
+                        resource["resource_version"]
+                        == resource_query["resource_version"]
+                    )
+
+                if gem5_version_match and resource_version_match:
+                    return True
+
+            return False
+
+        filtered_resources = filter(
+            lambda resource: filter_resource(resource, resource_info),
+            self.resources,
         )
 
         resources_by_id = {}
-        for resource in filtered_compatible_resources:
+        for resource in filtered_resources:
             if resource["resource_id"] in resources_by_id.keys():
                 resources_by_id[resource["resource_id"]].append(resource)
             else:
                 resources_by_id[resource["resource_id"]] = [resource]
+
+        # Sort the resoruces by resoruce version and get the latest version.
+        for id, resource_list in resources_by_id.items():
+            resources_by_id[id] = self.sort_resources(resource_list)[0]
+
         return resources_by_id

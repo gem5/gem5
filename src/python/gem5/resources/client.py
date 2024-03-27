@@ -172,37 +172,34 @@ def get_resource_json_obj(
     _get_clientwrapper()
     if resource_version:
         resource_info = [
-            {"id": resource_id, "resource_version": resource_version}
+            {
+                "id": resource_id,
+                "resource_version": resource_version,
+                "gem5_version": gem5_version,
+            }
         ]
     else:
-        resource_info = [{"id": resource_id}]
+        resource_info = [{"id": resource_id, "gem5_version": gem5_version}]
 
     # We will return a list when we refactor ontain_resources to handle multiple
     # resources
-    return _get_resource_json_obj_from_client(
-        resource_info, clients, gem5_version
-    )[0]
+    return _get_resource_json_obj_from_client(resource_info, clients)[0]
 
 
 def get_multiple_resource_json_obj(
     resource_info: List[Dict[str, str]],
     clients: Optional[List[str]] = None,
-    gem5_version: Optional[str] = core.gem5Version,
 ) -> List[Dict]:
     """
     Get the resource json object from the clients wrapper.
 
-    :param resource_info: The resource info.
+    :param resource_info: The resource info. Each dictionary contains the
+                            resource id and gem5 version, and optionally the
+                            resource version.
     :param clients: The list of clients to query.
-    :param gem5_version: The gem5 versions to filter the resources based on
-                         compatibility. By default, it is the gem5 version of the
-                         current build. If ``None``, filtering based on compatibility
-                         is not performed.
     """
     _get_clientwrapper()
-    return _get_resource_json_obj_from_client(
-        resource_info, clients, gem5_version
-    )
+    return _get_resource_json_obj_from_client(resource_info, clients)
 
 
 def _create_clients(
@@ -262,7 +259,6 @@ def _list_all_resources(
 def _get_resource_json_obj_from_client(
     resource_info: List[Dict[str, str]],
     clients: Optional[List[str]] = None,
-    gem5_version: Optional[str] = core.gem5Version,
 ) -> Dict:
     """
     This function returns the resource object from the client with the
@@ -280,28 +276,20 @@ def _get_resource_json_obj_from_client(
                 If not found, exception is thrown.
     """
     # getting all the resources with the given id from the dictionary
-    resources = _get_all_resources_by_id(resource_info, clients)
-    # if no resource with the given id is found, return None
-    if len(resources) == 0:
-        raise Exception(f"Resource with ID '{resource_info}' not found.")
+    resources_list = _get_all_resources_by_id(resource_info, clients)
+
+    for id, resources in resources_list.items():
+        # if no resource with the given id is found, return None
+        if len(resources) == 0:
+            raise Exception(f"Resource with ID '{id}' not found.")
 
     resource_to_return = []
 
-    compatible_resources = _get_resources_compatible_with_gem5_version(
-        resources, resource_info, gem5_version=gem5_version
-    )
-
-    for id, resource in compatible_resources.items():
-        if len(resource) == 0:
-            resource_to_return.append(_sort_resources(resources[id])[0])
-        else:
-            resource_to_return.append(_sort_resources(resource)[0])
-
-    if gem5_version:
-        for resource in resource_to_return:
-            _check_resource_version_compatibility(
-                resource, gem5_version=gem5_version
-            )
+    # if there are multiple resources with the same id, return the one with
+    # the highest version
+    for id, resources in resources_list.items():
+        resources_list[id] = _sort_resources(resources)
+        resource_to_return.append(resources_list[id][0])
 
     return resource_to_return
 
@@ -340,7 +328,7 @@ def _get_all_resources_by_id(
             )
             for k in resources.keys():
                 if k in filtered_resources.keys():
-                    resources[k].extend(filtered_resources[k])
+                    resources[k].append(filtered_resources[k])
 
         except Exception as e:
             print(
@@ -361,65 +349,6 @@ def _get_all_resources_by_id(
                 )
 
     return resources
-
-
-def _get_resources_compatible_with_gem5_version(
-    resources: Dict[str, Any],
-    resource_info: List[Dict[str, str]],
-    gem5_version: str = core.gem5Version,
-) -> Dict[str, Any]:
-    """
-    Returns a list of compatible resources with the current gem5 version.
-
-    .. note::
-
-        This function assumes if the minor component of a resource's
-        gem5_version is not specified, it that the resource is compatible
-        all minor versions of the same major version.
-
-        Likewise, if no hot-fix component is specified, it is assumed that
-        the resource is compatible with all hot-fix versions of the same
-        minor version.
-
-    * '20.1' would be compatible with gem5 '20.1.1.0' and '20.1.2.0'.
-    * '21.5.2' would be compatible with gem5 '21.5.2.0' and '21.5.2.0'.
-    * '22.3.2.4' would only be compatible with gem5 '22.3.2.4'.
-
-    :param resources: A dictionary of resources to filter.
-    :param resource_info: List of dictionaries containing information about the
-                            resources to fetch from datasources.
-
-    :return: A list of compatible resources as Python dictionaries.
-
-    .. note::
-
-        This is a big duplication of code. This functionality already
-        exists in the `AbstractClient` class. This code should be refactored
-        to avoid this duplication.
-    """
-    compatible_resources = {}
-
-    for resource_id_ver in resource_info:
-        # If resource version is specified then we just add the specific
-        # resource version to the compatible resources as we don't need to
-        # check for compatibility which will be done later
-        if "resource_version" not in resource_id_ver.keys():
-            compatible_resource_versions = []
-
-            for resource in resources[resource_id_ver["id"]]:
-                for version in resource["gem5_versions"]:
-                    if gem5_version.startswith(version):
-                        compatible_resource_versions.append(resource)
-
-            compatible_resources[
-                resource_id_ver["id"]
-            ] = compatible_resource_versions
-        else:
-            compatible_resources[resource_id_ver["id"]] = resources[
-                resource_id_ver["id"]
-            ]
-
-    return compatible_resources
 
 
 def _sort_resources(resources: List) -> List:
@@ -455,40 +384,3 @@ def _sort_resources(resources: List) -> List:
         key=lambda resource: sort_tuple(resource),
         reverse=True,
     )
-
-
-def _check_resource_version_compatibility(
-    resource: dict, gem5_version: Optional[str] = core.gem5Version
-) -> bool:
-    """
-    Checks if the resource is compatible with the gem5 version.
-
-    Prints a warning if the resource is not compatible.
-
-    :param resource: The resource to check.
-    :optional param gem5_version: The gem5 version to check
-                                    compatibility with.
-    :return: ``True`` if the resource is compatible, ``False`` otherwise.
-    """
-    if not resource:
-        return False
-    if (
-        gem5_version
-        and not gem5_version.upper().startswith("DEVELOP")
-        and not _get_resources_compatible_with_gem5_version(
-            [resource], gem5_version=gem5_version
-        )
-    ):
-        if not gem5_version.upper().startswith("DEVELOP"):
-            warn(
-                f"Resource {resource['id']} with version "
-                f"{resource['resource_version']} is not known to be compatible"
-                f" with gem5 version {gem5_version}. "
-                "This may cause problems with your simulation. "
-                "This resource's compatibility "
-                "with different gem5 versions can be found here: "
-                "https://resources.gem5.org"
-                f"/resources/{resource['id']}/versions"
-            )
-        return False
-    return True

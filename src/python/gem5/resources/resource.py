@@ -1030,16 +1030,15 @@ def _get_suite(
         id_input_group_dict[workload["id"]] = workload["input_group"]
 
     # Fetching the workload resources as a list of dicts
-    mongo_query = [
+    db_query = [
         {
             "id": resource_info["id"],
             "resource_version": resource_info["resource_version"],
+            "gem5_version": gem5_version,
         }
         for resource_info in suite["workloads"]
     ]
-    workload_json = get_multiple_resource_json_obj(
-        mongo_query, clients, gem5_version
-    )
+    workload_json = get_multiple_resource_json_obj(db_query, clients)
 
     # Creating the workload resource objects for each workload
     # and setting the input group for each workload
@@ -1097,10 +1096,17 @@ def _get_workload(
         for param, resource_info in resources.items()
     }
 
+    db_query = []
+    for resource in workload["resources"].values():
+        db_query.append(
+            {
+                "id": resource["id"],
+                "resource_version": resource["resource_version"],
+                "gem5_version": gem5_version,
+            }
+        )
     # Fetching resources as a list of dicts
-    resource_details_list = get_multiple_resource_json_obj(
-        list(resources.values())
-    )
+    resource_details_list = get_multiple_resource_json_obj(db_query, clients)
 
     # Preparing the final mapping of parameters to their complete JSON objects
     param_to_resource_json = {}

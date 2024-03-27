@@ -156,7 +156,6 @@ class AtlasClient(AbstractClient):
     def get_resources(
         self,
         resource_info: List[Dict[str, str]],
-        gem5_version: Optional[str] = None,
     ) -> Dict[str, Any]:
         url = f"{self.url}/action/find"
         data = {
@@ -165,7 +164,29 @@ class AtlasClient(AbstractClient):
             "database": self.database,
         }
 
-        filter = {"$or": resource_info}
+        search_conditions = []
+        for resource in resource_info:
+            condition = {
+                "id": resource["id"],
+            }
+
+            if not resource["gem5_version"].startswith("DEVELOP"):
+                # This is a regex search that matches the beginning of the
+                # string. So if the resource version is '20.1', it will
+                # match '20.1.1'.
+                condition["gem5_versions"] = {
+                    "$regex": f"^{resource['gem5_version']}",
+                    "$options": "i",
+                }
+
+            # If the resource has a resource_version, add it to the search
+            # conditions.
+            if "resource_version" in resource:
+                condition["resource_version"] = resource["resource_version"]
+
+            search_conditions.append(condition)
+
+        filter = {"$or": search_conditions}
         data["filter"] = filter
 
         headers = {
@@ -179,17 +200,16 @@ class AtlasClient(AbstractClient):
             headers=headers,
             purpose_of_request="Get Resources",
         )["documents"]
-        # I do this as a lazy post-processing step because I can't figure out
-        # how to do this via an Atlas query, which may be more efficient.
-        filtered_resources = self.filter_incompatible_resources(
-            resources_to_filter=resources, gem5_version=gem5_version
-        )
 
         resources_by_id = {}
-        for resource in filtered_resources:
+        for resource in resources:
             if resource["id"] in resources_by_id.keys():
                 resources_by_id[resource["id"]].append(resource)
             else:
                 resources_by_id[resource["id"]] = [resource]
+
+        # Sort the resources by version and return the latest version.
+        for id, resource_list in resources_by_id.items():
+            resources_by_id[id] = self.sort_resources(resource_list)[0]
 
         return resources_by_id
