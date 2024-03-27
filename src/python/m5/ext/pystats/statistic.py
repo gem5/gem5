@@ -164,7 +164,7 @@ class Distribution(Vector):
 
     def __init__(
         self,
-        value: Iterable[int],
+        value: Dict[Union[int, float], Scalar],
         min: Union[float, int],
         max: Union[float, int],
         num_bins: int,

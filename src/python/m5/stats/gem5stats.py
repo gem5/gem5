@@ -167,8 +167,16 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
     overflow = statistic.overflow
     logs = statistic.logs
 
+    parsed_values = {}
+    for index in range(len(value)):
+        parsed_values[index] = Scalar(
+            value=value[index],
+            unit=statistic.unit,
+            datatype=StorageType["f64"],
+        )
+
     return Distribution(
-        value=value,
+        value=parsed_values,
         min=min,
         max=max,
         num_bins=num_bins,
