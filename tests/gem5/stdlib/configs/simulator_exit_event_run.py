@@ -160,4 +160,10 @@ simulator = Simulator(
         ExitEvent.EXIT: exit_event_handler,
     },
 )
-simulator.run()
+
+# The simulator's `run` method returns the exit event object triggered the
+# termination of the `run` method. Its state is printed below.
+exit_event_obj = simulator.run()
+
+print(f"Exit event object cause: '{exit_event_obj.getCause()}'")
+print(f"Exit event code '{exit_event_obj.getCode()}'")

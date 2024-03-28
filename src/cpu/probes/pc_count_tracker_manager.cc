@@ -62,11 +62,11 @@ PcCountTrackerManager::checkCount(Addr pc)
 
         currentPair = PcCountPair(pc,count);
         // update the current PC Count pair
-        if(targetPair.find(currentPair) != targetPair.end()) {
+
+        if (targetPair.find(currentPair) != targetPair.end()) {
             // if the current PC Count pair is one of the target pairs
             DPRINTF(PcCountTracker,
                 "pc:%s encountered\n", currentPair.to_string());
-
             exitSimLoopNow("simpoint starting point found");
             // raise the SIMPOINT_BEGIN exit event
 

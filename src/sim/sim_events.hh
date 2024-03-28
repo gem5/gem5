@@ -43,6 +43,7 @@
 #ifndef __SIM_SIM_EVENTS_HH__
 #define __SIM_SIM_EVENTS_HH__
 
+#include "cpu/probes/pc_count_pair.hh"
 #include "sim/global_event.hh"
 #include "sim/serialize.hh"
 
@@ -75,6 +76,22 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     };
     virtual const char *description() const;
 };
+
+
+class SimpointStartExitEvent : public GlobalEvent
+{
+  private:
+    PcCountPair count_pair;
+
+  public:
+    SimpointStartExitEvent(PcCountPair _count_pair);
+    ~SimpointStartExitEvent (){
+        DPRINTF(Event,"SimpointStartEventEvent destructed\n");
+    };
+    PcCountPair getPcCountPair();
+    const char *description() const override;
+};
+
 
 class LocalSimLoopExitEvent : public Event
 {

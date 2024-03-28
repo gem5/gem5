@@ -84,6 +84,24 @@ GlobalSimLoopExitEvent::process()
     }
 }
 
+SimpointStartExitEvent::SimpointStartExitEvent(PcCountPair _count_pair)
+    : GlobalSimLoopExitEvent("Simpoint starting point found", 0, 0),
+      count_pair(_count_pair)
+{
+}
+
+PcCountPair
+SimpointStartExitEvent::getPcCountPair()
+{
+    return count_pair;
+}
+
+const char *
+SimpointStartExitEvent::description() const
+{
+    return "Simpoint starting point exit";
+}
+
 void
 exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
             bool serialize)

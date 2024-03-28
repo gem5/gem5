@@ -6,3 +6,5 @@ About to exit the simulation for the 2 st/nd/rd/th time
 Handled exit event.
 About to exit the simulation for the 3 st/nd/rd/th time
 Handling the final exit event. We'll exit now.
+Exit event object cause: 'm5_exit instruction encountered'
+Exit event code '0'
