@@ -306,6 +306,8 @@ PySource('gem5.utils', 'gem5/utils/filelock.py')
 PySource('gem5.utils', 'gem5/utils/override.py')
 PySource('gem5.utils', 'gem5/utils/progress_bar.py')
 PySource('gem5.utils', 'gem5/utils/requires.py')
+PySource('gem5.utils',
+         'gem5/utils/socks_ssl_context.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/__init__.py')
 PySource('gem5.utils.multiprocessing',

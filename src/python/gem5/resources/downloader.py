@@ -48,6 +48,7 @@ from ..utils.progress_bar import (
     progress_hook,
     tqdm,
 )
+from ..utils.socks_ssl_context import get_proxy_context
 from .client import get_resource_json_obj
 from .client import list_resources as client_list_resources
 from .md5_utils import (
@@ -79,7 +80,6 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
 
     # TODO: This whole setup will only work for single files we can get via
     # wget. We also need to support git clones going forward.
-
     attempt = 0
     while True:
         # The loop will be broken on a successful download, via a `return`, or
@@ -87,30 +87,13 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
         # number of download attempts has been reached or if a HTTP status code
         # other than 408, 429, or 5xx is received.
         try:
-            # check to see if user requests a proxy connection
             use_proxy = os.getenv("GEM5_USE_PROXY")
             if use_proxy:
-                # If the "use_proxy" variable is specified we setup a socks5
-                # connection.
-
-                import socket
-                import ssl
-
-                import socks
-
-                IP_ADDR, host_port = use_proxy.split(":")
-                PORT = int(host_port)
-                socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
-                socket.socket = socks.socksocket
-
-                # base SSL context for https connection
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-
                 # get the file as a bytes blob
                 request = urllib.request.Request(url)
-                with urllib.request.urlopen(request, context=ctx) as fr:
+                with urllib.request.urlopen(
+                    request, context=get_proxy_context()
+                ) as fr:
                     with tqdm.wrapattr(
                         open(download_to, "wb"),
                         "write",
