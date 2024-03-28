@@ -180,19 +180,24 @@ ForEachMacros:
 # IfMacros (List of Strings) clang-format 13
 
 # IncludeBlocks (IncludeBlocksStyle) clang-format 6
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 
 # IncludeCategories (List of IncludeCategories) clang-format 3.8
 IncludeCategories:
+    - Regex: ^<Python.h>$
+      Priority: 0
+      SortPriority: -1
+    - Regex: ^"pybind11/.*"
+      Priority: 1
+      SortPriority: -1
     - Regex: ^<.*\.h>
       Priority: 1
-      SortPriority: 0
-    - Regex: ^<.*
+    - Regex: ^<[^.]*>$
       Priority: 2
-      SortPriority: 0
-    - Regex: .*
+    - Regex: ^<.*
       Priority: 3
-      SortPriority: 0
+    - Regex: .*
+      Priority: 4
 
 # IncludeIsMainRegex (String) clang-format 3.9
 IncludeIsMainRegex: ([-_](test|unittest))?$
