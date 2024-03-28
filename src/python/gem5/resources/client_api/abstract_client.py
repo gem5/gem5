@@ -34,6 +34,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
 )
 
 
@@ -55,9 +56,7 @@ class AbstractClient(ABC):
     @abstractmethod
     def get_resources(
         self,
-        resource_id: Optional[str] = None,
-        resource_version: Optional[str] = None,
-        gem5_version: Optional[str] = None,
+        resource_info: List[Dict[str, str]],
     ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource. Optional, if not set, all
@@ -71,6 +70,40 @@ class AbstractClient(ABC):
         :return: A list of all the Resources with the given ID.
         """
         raise NotImplementedError
+
+    def sort_resources(resources: List) -> List:
+        """
+        Sorts the resources by ID.
+
+        If the IDs are the same, the resources are sorted by version.
+
+        :param resources: A list of resources to sort.
+
+        :return: A list of sorted resources.
+        """
+
+        def sort_tuple(resource: Dict) -> Tuple:
+            """This is used for sorting resources by ID and version. First
+            the ID is sorted, then the version. In cases where the version
+            contains periods, it's assumed this is to separate a
+            ``major.minor.hotfix`` style versioning system. In which case, the
+            value separated in the most-significant position is sorted before
+            those less significant. If the value is a digit it is cast as an
+            int, otherwise, it is cast as a string, to lower-case.
+            """
+            to_return = (resource["id"].lower(),)
+            for val in resource["resource_version"].split("."):
+                if val.isdigit():
+                    to_return += (int(val),)
+                else:
+                    to_return += (str(val).lower(),)
+            return to_return
+
+        return sorted(
+            resources,
+            key=lambda resource: sort_tuple(resource),
+            reverse=True,
+        )
 
     def filter_incompatible_resources(
         self,
@@ -111,10 +144,12 @@ class AbstractClient(ABC):
                     filtered_resources.append(resource)
         return filtered_resources
 
-    def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
+    def get_resources_by_id(
+        self, resource_info: List[Dict[str, str]]
+    ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource.
 
         :return: A list of all the Resources with the given ID.
         """
-        return self.get_resources(resource_id=resource_id)
+        return self.get_resources(resource_info=resource_info)
