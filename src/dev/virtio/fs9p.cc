@@ -73,28 +73,50 @@ struct P9MsgInfo
 
 typedef std::map<P9MsgType, P9MsgInfo> P9MsgInfoMap;
 
-#define P9MSG(type, name)                                                     \
-    {(type), P9MsgInfo((type), "T" #name)},                                   \
-    {                                                                         \
-        (type + 1), P9MsgInfo((type + 1), "R" #name)                          \
-    }
+/* clang-format off */
+#define P9MSG(type, name)                               \
+    { (type), P9MsgInfo((type), "T" # name ) },         \
+    { (type + 1), P9MsgInfo((type + 1), "R" # name ) }
 
-static const P9MsgInfoMap p9_msg_info{
-    P9MSG(6, LERROR),    P9MSG(8, STATFS),     P9MSG(12, LOPEN),
-    P9MSG(14, LCREATE),  P9MSG(16, SYMLINK),   P9MSG(18, MKNOD),
-    P9MSG(20, RENAME),   P9MSG(22, READLINK),  P9MSG(24, GETATTR),
-    P9MSG(26, SETATTR),  P9MSG(30, XATTRWALK), P9MSG(32, XATTRCREATE),
-    P9MSG(40, READDIR),  P9MSG(50, FSYNC),     P9MSG(52, LOCK),
-    P9MSG(54, GETLOCK),  P9MSG(70, LINK),      P9MSG(72, MKDIR),
-    P9MSG(74, RENAMEAT), P9MSG(76, UNLINKAT),  P9MSG(100, VERSION),
-    P9MSG(102, AUTH),    P9MSG(104, ATTACH),   P9MSG(106, ERROR),
-    P9MSG(108, FLUSH),   P9MSG(110, WALK),     P9MSG(112, OPEN),
-    P9MSG(114, CREATE),  P9MSG(116, READ),     P9MSG(118, WRITE),
-    P9MSG(120, CLUNK),   P9MSG(122, REMOVE),   P9MSG(124, STAT),
+static const P9MsgInfoMap p9_msg_info {
+    P9MSG(6, LERROR),
+    P9MSG(8, STATFS),
+    P9MSG(12, LOPEN),
+    P9MSG(14, LCREATE),
+    P9MSG(16, SYMLINK),
+    P9MSG(18, MKNOD),
+    P9MSG(20, RENAME),
+    P9MSG(22, READLINK),
+    P9MSG(24, GETATTR),
+    P9MSG(26, SETATTR),
+    P9MSG(30, XATTRWALK),
+    P9MSG(32, XATTRCREATE),
+    P9MSG(40, READDIR),
+    P9MSG(50, FSYNC),
+    P9MSG(52, LOCK),
+    P9MSG(54, GETLOCK),
+    P9MSG(70, LINK),
+    P9MSG(72, MKDIR),
+    P9MSG(74, RENAMEAT),
+    P9MSG(76, UNLINKAT),
+    P9MSG(100, VERSION),
+    P9MSG(102, AUTH),
+    P9MSG(104, ATTACH),
+    P9MSG(106, ERROR),
+    P9MSG(108, FLUSH),
+    P9MSG(110, WALK),
+    P9MSG(112, OPEN),
+    P9MSG(114, CREATE),
+    P9MSG(116, READ),
+    P9MSG(118, WRITE),
+    P9MSG(120, CLUNK),
+    P9MSG(122, REMOVE),
+    P9MSG(124, STAT),
     P9MSG(126, WSTAT),
 };
 
 #undef P9MSG
+/* clang-format on */
 
 VirtIO9PBase::VirtIO9PBase(const Params &params)
     : VirtIODeviceBase(params, ID_9P, sizeof(Config) + params.tag.size(),

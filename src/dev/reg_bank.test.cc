@@ -68,6 +68,8 @@ using testing::ElementsAreArray;
 using testing::AllOf;
 using testing::HasSubstr;
 
+/* clang-format off */
+
 /*
  * The RegisterRaz (read as zero) type.
  */
@@ -82,22 +84,32 @@ class RegisterRazTest : public testing::Test
     std::array<uint8_t, BufSize> buf;
     RegisterBankLE::RegisterRaz raz;
 
-    RegisterRazTest() : raz("raz", RazSize) { buf.fill(0xff); }
+    RegisterRazTest() : raz("raz", RazSize)
+    {
+        buf.fill(0xff);
+    }
 };
 // Needed by C++14 and lower
 constexpr size_t RegisterRazTest::RazSize;
 
-TEST_F(RegisterRazTest, Name) { EXPECT_EQ(raz.name(), "raz"); }
+TEST_F(RegisterRazTest, Name)
+{
+    EXPECT_EQ(raz.name(), "raz");
+}
 
-TEST_F(RegisterRazTest, Size) { EXPECT_EQ(raz.size(), RazSize); }
+TEST_F(RegisterRazTest, Size)
+{
+    EXPECT_EQ(raz.size(), RazSize);
+}
 
 // Accessing the entire register at once.
 TEST_F(RegisterRazTest, FullAccess)
 {
     raz.write(buf.data() + BufOffset);
     raz.read(buf.data() + BufOffset);
-    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
-                                       0x00, 0x00, 0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                       0x00, 0x00, 0x00, 0x00,
+                                       0xff, 0xff, 0xff, 0xff}));
 }
 
 // Partial access, excluding the start of the register.
@@ -105,8 +117,9 @@ TEST_F(RegisterRazTest, PartialAccessHigh)
 {
     raz.write(buf.data() + BufOffset, 1, 3);
     raz.read(buf.data() + BufOffset, 1, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
-                                       0x00, 0xff, 0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                       0x00, 0x00, 0x00, 0xff,
+                                       0xff, 0xff, 0xff, 0xff}));
 }
 
 // Partial access, excluding the end of the register.
@@ -114,8 +127,9 @@ TEST_F(RegisterRazTest, PartialAccessLow)
 {
     raz.write(buf.data() + BufOffset, 0, 3);
     raz.read(buf.data() + BufOffset, 0, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
-                                       0x00, 0xff, 0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                       0x00, 0x00, 0x00, 0xff,
+                                       0xff, 0xff, 0xff, 0xff}));
 }
 
 // Partial access, excluding both ends of the register.
@@ -123,8 +137,9 @@ TEST_F(RegisterRazTest, PartialAccessMid)
 {
     raz.write(buf.data() + BufOffset, 1, 2);
     raz.read(buf.data() + BufOffset, 1, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0x00, 0x00,
-                                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(buf, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                       0x00, 0x00, 0xff, 0xff,
+                                       0xff, 0xff, 0xff, 0xff}));
 }
 
 TEST_F(RegisterRazTest, Serialize)
@@ -140,6 +155,7 @@ TEST_F(RegisterRazTest, Unserialize)
     EXPECT_TRUE(raz.unserialize(s));
 }
 
+
 /*
  * The RegisterRao (read as one) type.
  */
@@ -154,22 +170,32 @@ class RegisterRaoTest : public testing::Test
     std::array<uint8_t, BufSize> buf;
     RegisterBankLE::RegisterRao rao;
 
-    RegisterRaoTest() : rao("rao", RaoSize) { buf.fill(0x00); }
+    RegisterRaoTest() : rao("rao", RaoSize)
+    {
+        buf.fill(0x00);
+    }
 };
 // Needed by C++14 and lower
 constexpr size_t RegisterRaoTest::RaoSize;
 
-TEST_F(RegisterRaoTest, Name) { EXPECT_EQ(rao.name(), "rao"); }
+TEST_F(RegisterRaoTest, Name)
+{
+    EXPECT_EQ(rao.name(), "rao");
+}
 
-TEST_F(RegisterRaoTest, Size) { EXPECT_EQ(rao.size(), RaoSize); }
+TEST_F(RegisterRaoTest, Size)
+{
+    EXPECT_EQ(rao.size(), RaoSize);
+}
 
 // Accessing the entire register at once.
 TEST_F(RegisterRaoTest, FullAccess)
 {
     rao.write(buf.data() + BufOffset);
     rao.read(buf.data() + BufOffset);
-    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
-                                       0xff, 0xff, 0x00, 0x00, 0x00, 0x00}));
+    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00,
+                                       0xff, 0xff, 0xff, 0xff,
+                                       0x00, 0x00, 0x00, 0x00}));
 }
 
 // Partial access, excluding the start of the register.
@@ -177,8 +203,9 @@ TEST_F(RegisterRaoTest, PartialAccessHigh)
 {
     rao.write(buf.data() + BufOffset, 1, 3);
     rao.read(buf.data() + BufOffset, 1, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
-                                       0xff, 0x00, 0x00, 0x00, 0x00, 0x00}));
+    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00,
+                                       0xff, 0xff, 0xff, 0x00,
+                                       0x00, 0x00, 0x00, 0x00}));
 }
 
 // Partial access, excluding the end of the register.
@@ -186,8 +213,9 @@ TEST_F(RegisterRaoTest, PartialAccessLow)
 {
     rao.write(buf.data() + BufOffset, 0, 3);
     rao.read(buf.data() + BufOffset, 0, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
-                                       0xff, 0x00, 0x00, 0x00, 0x00, 0x00}));
+    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00,
+                                       0xff, 0xff, 0xff, 0x00,
+                                       0x00, 0x00, 0x00, 0x00}));
 }
 
 // Partial access, excluding both ends of the register.
@@ -195,8 +223,9 @@ TEST_F(RegisterRaoTest, PartialAccessMid)
 {
     rao.write(buf.data() + BufOffset, 1, 2);
     rao.read(buf.data() + BufOffset, 1, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
-                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00}));
+    EXPECT_THAT(buf, ElementsAreArray({0x00, 0x00, 0x00, 0x00,
+                                       0xff, 0xff, 0x00, 0x00,
+                                       0x00, 0x00, 0x00, 0x00}));
 }
 
 TEST_F(RegisterRaoTest, Serialize)
@@ -211,6 +240,7 @@ TEST_F(RegisterRaoTest, Unserialize)
     std::string s;
     EXPECT_TRUE(rao.unserialize(s));
 }
+
 
 /*
  * The RegisterBuf type.
@@ -228,103 +258,119 @@ class RegisterBufTest : public testing::Test
 
   public:
     RegisterBufTest()
-        : buf{0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc},
-          backing{0x10, 0x20, 0x30, 0x40, 0x50, 0x60,
-                  0x70, 0x80, 0x90, 0xa0, 0xb0, 0xc0},
-          reg("buf_reg", backing.data() + RegSize, RegSize)
+      : buf{0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc},
+        backing{0x10, 0x20, 0x30, 0x40, 0x50, 0x60,
+                0x70, 0x80, 0x90, 0xa0, 0xb0, 0xc0},
+        reg("buf_reg", backing.data() + RegSize, RegSize)
     {}
 };
 // Needed by C++14 and lower
 constexpr size_t RegisterBufTest::RegSize;
 
-TEST_F(RegisterBufTest, Name) { EXPECT_EQ(reg.name(), "buf_reg"); }
+TEST_F(RegisterBufTest, Name)
+{
+    EXPECT_EQ(reg.name(), "buf_reg");
+}
 
-TEST_F(RegisterBufTest, Size) { EXPECT_EQ(reg.size(), RegSize); }
+TEST_F(RegisterBufTest, Size)
+{
+    EXPECT_EQ(reg.size(), RegSize);
+}
 
 // Read the entire register.
 TEST_F(RegisterBufTest, FullRead)
 {
     reg.read(buf.data() + RegSize);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x50, 0x60, 0x70,
-                                       0x80, 0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
-                                  0x80, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x50, 0x60, 0x70, 0x80,
+                                       0x9, 0xa, 0xb, 0xc}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x60, 0x70, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Write the entire register.
 TEST_F(RegisterBufTest, FullWrite)
 {
     reg.write(buf.data() + RegSize);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x5, 0x6, 0x7, 0x8,
                                        0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x5, 0x6,
-                                           0x7, 0x8, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x5, 0x6, 0x7, 0x8,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial read, excluding the start of the register.
 TEST_F(RegisterBufTest, PartialReadHigh)
 {
     reg.read(buf.data() + RegSize, 1, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x60, 0x70, 0x80,
-                                       0x8, 0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
-                                  0x80, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x60, 0x70, 0x80, 0x8,
+                                       0x9, 0xa, 0xb, 0xc}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x60, 0x70, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial write, excluding the start of the register.
 TEST_F(RegisterBufTest, PartialWriteHigh)
 {
     reg.write(buf.data() + RegSize, 1, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x5, 0x6, 0x7, 0x8,
                                        0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x5,
-                                           0x6, 0x7, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x5, 0x6, 0x7,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial read, excluding the end of the register.
 TEST_F(RegisterBufTest, PartialReadLow)
 {
     reg.read(buf.data() + RegSize, 0, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x50, 0x60, 0x70,
-                                       0x8, 0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
-                                  0x80, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x50, 0x60, 0x70, 0x8,
+                                       0x9, 0xa, 0xb, 0xc}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x60, 0x70, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial write, excluding the end of the register.
 TEST_F(RegisterBufTest, PartialWriteLow)
 {
     reg.write(buf.data() + RegSize, 0, 3);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x5, 0x6, 0x7, 0x8,
                                        0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x5, 0x6, 0x7, 0x80,
-                                  0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x5, 0x6, 0x7, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial read, excluding both ends of the register.
 TEST_F(RegisterBufTest, PartialReadMid)
 {
     reg.read(buf.data() + RegSize, 1, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x60, 0x70, 0x7,
-                                       0x8, 0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
-                                  0x80, 0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x60, 0x70, 0x7, 0x8,
+                                       0x9, 0xa, 0xb, 0xc}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x60, 0x70, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 // Partial write, excluding both ends of the register.
 TEST_F(RegisterBufTest, PartialWriteMid)
 {
     reg.write(buf.data() + RegSize, 1, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
+    EXPECT_THAT(buf, ElementsAreArray({0x1, 0x2, 0x3, 0x4,
+                                       0x5, 0x6, 0x7, 0x8,
                                        0x9, 0xa, 0xb, 0xc}));
-    EXPECT_THAT(backing,
-                ElementsAreArray({0x10, 0x20, 0x30, 0x40, 0x50, 0x5, 0x6, 0x80,
-                                  0x90, 0xa0, 0xb0, 0xc0}));
+    EXPECT_THAT(backing, ElementsAreArray({0x10, 0x20, 0x30, 0x40,
+                                           0x50, 0x5, 0x6, 0x80,
+                                           0x90, 0xa0, 0xb0, 0xc0}));
 }
 
 TEST_F(RegisterBufTest, Serialize)
@@ -339,6 +385,7 @@ TEST_F(RegisterBufTest, Unserialize)
     std::string s;
     EXPECT_TRUE(reg.unserialize(s));
 }
+
 
 /*
  * The RegisterLBuf type. Since it's so similar to RegisterBuf, just do a
@@ -361,14 +408,17 @@ class RegisterLBufTest : public testing::Test
     }
 };
 
-TEST_F(RegisterLBufTest, Name) { EXPECT_EQ(reg.name(), "lbuf_reg"); }
+TEST_F(RegisterLBufTest, Name)
+{
+    EXPECT_EQ(reg.name(), "lbuf_reg");
+}
 
 TEST_F(RegisterLBufTest, PartialWrite)
 {
     reg.write(to_write.data(), 4, 4);
-    EXPECT_THAT(reg.buffer,
-                ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0x1, 0x2, 0x3, 0x4,
-                                  0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(reg.buffer, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                              0x1, 0x2, 0x3, 0x4,
+                                              0xff, 0xff, 0xff, 0xff}));
 }
 
 TEST_F(RegisterLBufTest, Serialize)
@@ -384,18 +434,19 @@ TEST_F(RegisterLBufTest, UnserializeSucess)
 {
     std::string s = "0 1 2 3 4 5 6 7 8 9 10 11";
     EXPECT_TRUE(reg.unserialize(s));
-    EXPECT_THAT(reg.buffer,
-                ElementsAreArray({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}));
+    EXPECT_THAT(reg.buffer, ElementsAreArray({0, 1, 2, 3, 4, 5,
+                                              6, 7, 8, 9, 10, 11}));
 }
 
 TEST_F(RegisterLBufTest, UnserializeFailure)
 {
     std::string s = "0 1 2 3 4 5 6 7 8 9 10";
     EXPECT_FALSE(reg.unserialize(s));
-    EXPECT_THAT(reg.buffer,
-                ElementsAreArray({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                                  0xff, 0xff, 0xff, 0xff, 0xff}));
+    EXPECT_THAT(reg.buffer, ElementsAreArray({0xff, 0xff, 0xff, 0xff,
+                                              0xff, 0xff, 0xff, 0xff,
+                                              0xff, 0xff, 0xff, 0xff}));
 }
+
 
 /*
  * The templated Register<> type which takes a backing type and endianness
@@ -415,9 +466,8 @@ class TypedRegisterTest : public testing::Test
 
     std::array<uint8_t, RegSize * 3> buf;
 
-    TypedRegisterTest()
-        : reg("le_reg", 0x1122), regBE("be_reg", 0x1122), buf{0x1, 0x2, 0x3,
-                                                              0x4, 0x5, 0x6}
+    TypedRegisterTest() : reg("le_reg", 0x1122), regBE("be_reg", 0x1122),
+        buf{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}
     {}
 };
 // Needed by C++14 and lower
@@ -429,9 +479,15 @@ TEST_F(TypedRegisterTest, DefaultConstructor)
     EXPECT_EQ(def.get(), 0);
 }
 
-TEST_F(TypedRegisterTest, Name) { EXPECT_EQ(reg.name(), "le_reg"); }
+TEST_F(TypedRegisterTest, Name)
+{
+    EXPECT_EQ(reg.name(), "le_reg");
+}
 
-TEST_F(TypedRegisterTest, Size) { EXPECT_EQ(reg.size(), RegSize); }
+TEST_F(TypedRegisterTest, Size)
+{
+    EXPECT_EQ(reg.size(), RegSize);
+}
 
 TEST_F(TypedRegisterTest, Writable)
 {
@@ -440,7 +496,10 @@ TEST_F(TypedRegisterTest, Writable)
 }
 
 // Verify that get returns the initial value of the reg.
-TEST_F(TypedRegisterTest, GetInitial) { EXPECT_EQ(reg.get(), 0x1122); }
+TEST_F(TypedRegisterTest, GetInitial)
+{
+    EXPECT_EQ(reg.get(), 0x1122);
+}
 
 TEST_F(TypedRegisterTest, Get)
 {
@@ -587,7 +646,7 @@ TEST_F(TypedRegisterTest, Reader)
     RegisterBankLE::Register<BackingType> *reg_ptr = nullptr;
     BackingType ret = 0x3344;
 
-    reg.reader([&reg_ptr, &ret](auto &r) {
+    reg.reader([&reg_ptr, &ret](auto &r){
         reg_ptr = &r;
         return ret;
     });
@@ -724,8 +783,8 @@ TEST_F(TypedRegisterTest, PartialWriter)
     int first = 0;
     int last = 0;
 
-    reg.partialWriter([&reg_ptr, &value, &first,
-                       &last](auto &r, const BackingType &v, int f, int l) {
+    reg.partialWriter([&reg_ptr, &value, &first, &last](
+                auto &r, const BackingType &v, int f, int l) {
         reg_ptr = &r;
         value = v;
         first = f;
@@ -776,7 +835,7 @@ TEST_F(TypedRegisterTest, PartialReaderReader)
     RegisterBankLE::Register<BackingType> *reg_ptr = nullptr;
     BackingType ret = 0x3344;
 
-    reg.reader([&reg_ptr, &ret](auto &r) {
+    reg.reader([&reg_ptr, &ret](auto &r){
         reg_ptr = &r;
         return ret;
     });
@@ -795,14 +854,13 @@ TEST_F(TypedRegisterTest, PartialWriterReaderWriter)
     RegisterBankLE::Register<BackingType> *write_reg_ptr = nullptr;
     BackingType write_value = 0;
 
-    reg.reader([&read_reg_ptr, read_ret](auto &r) {
-           read_reg_ptr = &r;
-           return read_ret;
-       })
-        .writer([&write_reg_ptr, &write_value](auto &r, const BackingType &v) {
-            write_reg_ptr = &r;
-            write_value = v;
-        });
+    reg.reader([&read_reg_ptr, read_ret](auto &r){
+        read_reg_ptr = &r;
+        return read_ret;
+    }).writer([&write_reg_ptr, &write_value](auto &r, const BackingType &v) {
+        write_reg_ptr = &r;
+        write_value = v;
+    });
 
     reg.write(buf.data() + RegSize, 1, 1);
     EXPECT_THAT(buf, ElementsAre(0x1, 0x2, 0x3, 0x4, 0x5, 0x6));
@@ -851,7 +909,9 @@ TEST_F(TypedRegisterTest, Resetter)
 {
     RegisterBankLE::Register<BackingType> *reg_ptr = nullptr;
 
-    reg.resetter([&reg_ptr](auto &r) { reg_ptr = &r; });
+    reg.resetter([&reg_ptr](auto &r) {
+        reg_ptr = &r;
+    });
 
     reg.reset();
 
@@ -911,8 +971,8 @@ class RegisterBankTest : public testing::Test
     class TestRegBank : public RegisterBankLE
     {
       public:
-        TestRegBank(const std::string &new_name, Addr new_base)
-            : RegisterBankLE(new_name, new_base)
+        TestRegBank(const std::string &new_name, Addr new_base) :
+            RegisterBankLE(new_name, new_base)
         {}
     };
 
@@ -933,17 +993,18 @@ class RegisterBankTest : public testing::Test
         uint32_t ret = 0;
 
         Access(AccessType _type) : type(_type) {}
-        Access(AccessType _type, uint32_t _value, int _first, int _last,
-               uint32_t _ret)
-            : type(_type), value(_value), first(_first), last(_last), ret(_ret)
+        Access(AccessType _type, uint32_t _value,
+                int _first, int _last, uint32_t _ret) :
+            type(_type), value(_value),
+            first(_first), last(_last), ret(_ret)
         {}
 
         bool
-        operator==(const Access &other) const
+        operator == (const Access &other) const
         {
             return type == other.type && value == other.value &&
-                   first == other.first && last == other.last &&
-                   ret == other.ret;
+                first == other.first && last == other.last &&
+                ret == other.ret;
         }
     };
 
@@ -953,8 +1014,8 @@ class RegisterBankTest : public testing::Test
       public:
         std::vector<Access> accesses;
 
-        TestReg(const std::string &new_name, uint32_t initial)
-            : TestRegBank::Register32(new_name, initial)
+        TestReg(const std::string &new_name, uint32_t initial) :
+            TestRegBank::Register32(new_name, initial)
         {
             reader([this](auto &r) {
                 Access access(Read);
@@ -992,14 +1053,12 @@ class RegisterBankTest : public testing::Test
 
     std::array<uint8_t, 12> buf;
 
-    RegisterBankTest()
-        : reg0("reg0", 0xd3d2d1d0),
-          reg1("reg1", 0xe3e2e1e0),
-          reg2("reg2", 0xf3f2f1f0),
-          emptyBank("empty", 0x12345),
-          fullBank("full", 0x1000),
-          buf{0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
-              0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc}
+    RegisterBankTest() :
+        reg0("reg0", 0xd3d2d1d0), reg1("reg1", 0xe3e2e1e0),
+        reg2("reg2", 0xf3f2f1f0),
+        emptyBank("empty", 0x12345), fullBank("full", 0x1000),
+        buf{0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+            0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc}
     {
         fullBank.addRegisters({reg0, reg1, reg2});
     }
@@ -1069,9 +1128,12 @@ TEST_F(RegisterBankTest, BadBankOffsetDeath)
 TEST_F(RegisterBankTest, ReadOneAlignedFirst)
 {
     fullBank.read(0x1000, buf.data() + 4, 4);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xd0, 0xd1,
-                                       0xd2, 0xd3, 0x99, 0xaa, 0xbb, 0xcc}));
-    EXPECT_THAT(reg0.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0)));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xd0, 0xd1, 0xd2, 0xd3,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0)
+                ));
     EXPECT_TRUE(reg1.accesses.empty());
     EXPECT_TRUE(reg2.accesses.empty());
 }
@@ -1079,41 +1141,54 @@ TEST_F(RegisterBankTest, ReadOneAlignedFirst)
 TEST_F(RegisterBankTest, ReadOneAlignedMid)
 {
     fullBank.read(0x1004, buf.data() + 4, 4);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xe0, 0xe1,
-                                       0xe2, 0xe3, 0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xe0, 0xe1, 0xe2, 0xe3,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
 TEST_F(RegisterBankTest, ReadOneAlignedLast)
 {
     fullBank.read(0x1008, buf.data() + 4, 4);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xf0, 0xf1,
-                                       0xf2, 0xf3, 0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xf0, 0xf1, 0xf2, 0xf3,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
     EXPECT_TRUE(reg0.accesses.empty());
     EXPECT_TRUE(reg1.accesses.empty());
-    EXPECT_THAT(reg2.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0)));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0)
+                ));
 }
 
 TEST_F(RegisterBankTest, ReadTwoAligned)
 {
     fullBank.read(0x1004, buf.data() + 2, 8);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0xe0, 0xe1, 0xe2, 0xe3,
-                                       0xf0, 0xf1, 0xf2, 0xf3, 0xbb, 0xcc}));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0xe0, 0xe1,
+                                       0xe2, 0xe3, 0xf0, 0xf1,
+                                       0xf2, 0xf3, 0xbb, 0xcc}));
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0)));
-    EXPECT_THAT(reg2.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0)
+                ));
 }
 
 TEST_F(RegisterBankTest, ReadContained)
 {
     fullBank.read(0x1001, buf.data() + 4, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xd1, 0xd2,
-                                       0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc}));
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(PartialRead, 0, 23, 8, 0x00d2d100)));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xd1, 0xd2, 0x77, 0x88,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(PartialRead, 0, 23, 8, 0x00d2d100)
+                ));
     EXPECT_TRUE(reg1.accesses.empty());
     EXPECT_TRUE(reg2.accesses.empty());
 }
@@ -1121,65 +1196,83 @@ TEST_F(RegisterBankTest, ReadContained)
 TEST_F(RegisterBankTest, ReadOneSpanning)
 {
     fullBank.read(0x1002, buf.data() + 4, 4);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xd2, 0xd3,
-                                       0xe0, 0xe1, 0x99, 0xaa, 0xbb, 0xcc}));
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(PartialRead, 0, 31, 16, 0xd3d20000)));
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0),
-                            Access(PartialRead, 0, 15, 0, 0x0000e1e0)));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xd2, 0xd3, 0xe0, 0xe1,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(PartialRead, 0, 31, 16, 0xd3d20000)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0),
+                Access(PartialRead, 0, 15, 0, 0x0000e1e0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
 TEST_F(RegisterBankTest, ReadTwoSpanning)
 {
     fullBank.read(0x1002, buf.data() + 2, 8);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0xd2, 0xd3, 0xe0, 0xe1,
-                                       0xe2, 0xe3, 0xf0, 0xf1, 0xbb, 0xcc}));
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(PartialRead, 0, 31, 16, 0xd3d20000)));
-    EXPECT_THAT(reg1.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0)));
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0),
-                            Access(PartialRead, 0, 15, 0, 0x0000f1f0)));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0xd2, 0xd3,
+                                       0xe0, 0xe1, 0xe2, 0xe3,
+                                       0xf0, 0xf1, 0xbb, 0xcc}));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(PartialRead, 0, 31, 16, 0xd3d20000)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0),
+                Access(PartialRead, 0, 15, 0, 0x0000f1f0)
+                ));
 }
 
 TEST_F(RegisterBankTest, ReadPartialFull)
 {
     fullBank.read(0x1002, buf.data() + 4, 6);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xd2, 0xd3,
-                                       0xe0, 0xe1, 0xe2, 0xe3, 0xbb, 0xcc}));
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(PartialRead, 0, 31, 16, 0xd3d20000)));
-    EXPECT_THAT(reg1.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0)));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xd2, 0xd3, 0xe0, 0xe1,
+                                       0xe2, 0xe3, 0xbb, 0xcc}));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(PartialRead, 0, 31, 16, 0xd3d20000)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
 TEST_F(RegisterBankTest, ReadFullPartial)
 {
     fullBank.read(0x1004, buf.data() + 4, 6);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xe0, 0xe1,
-                                       0xe2, 0xe3, 0xf0, 0xf1, 0xbb, 0xcc}));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xe0, 0xe1, 0xe2, 0xe3,
+                                       0xf0, 0xf1, 0xbb, 0xcc}));
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses, ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0)));
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0),
-                            Access(PartialRead, 0, 15, 0, 0x0000f1f0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0),
+                Access(PartialRead, 0, 15, 0, 0x0000f1f0)
+                ));
 }
 
 TEST_F(RegisterBankTest, ReadLastPartial)
 {
     fullBank.read(0x100a, buf.data() + 4, 2);
-    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44, 0xf2, 0xf3,
-                                       0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc}));
+    EXPECT_THAT(buf, ElementsAreArray({0x11, 0x22, 0x33, 0x44,
+                                       0xf2, 0xf3, 0x77, 0x88,
+                                       0x99, 0xaa, 0xbb, 0xcc}));
     EXPECT_TRUE(reg0.accesses.empty());
     EXPECT_TRUE(reg1.accesses.empty());
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0),
-                            Access(PartialRead, 0, 31, 16, 0xf3f20000)));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0),
+                Access(PartialRead, 0, 31, 16, 0xf3f20000)
+                ));
 }
 
 // Write.
@@ -1190,8 +1283,9 @@ TEST_F(RegisterBankTest, WriteOneAlignedFirst)
     EXPECT_EQ(reg0.get(), 0x88776655);
     EXPECT_EQ(reg1.get(), 0xe3e2e1e0);
     EXPECT_EQ(reg2.get(), 0xf3f2f1f0);
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Write, 0x88776655, 0, 0, 0)));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Write, 0x88776655, 0, 0, 0)
+                ));
     EXPECT_TRUE(reg1.accesses.empty());
     EXPECT_TRUE(reg2.accesses.empty());
 }
@@ -1203,8 +1297,9 @@ TEST_F(RegisterBankTest, WriteOneAlignedMid)
     EXPECT_EQ(reg1.get(), 0x88776655);
     EXPECT_EQ(reg2.get(), 0xf3f2f1f0);
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Write, 0x88776655, 0, 0, 0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Write, 0x88776655, 0, 0, 0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
@@ -1216,8 +1311,9 @@ TEST_F(RegisterBankTest, WriteOneAlignedLast)
     EXPECT_EQ(reg2.get(), 0x88776655);
     EXPECT_TRUE(reg0.accesses.empty());
     EXPECT_TRUE(reg1.accesses.empty());
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Write, 0x88776655, 0, 0, 0)));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Write, 0x88776655, 0, 0, 0)
+                ));
 }
 
 TEST_F(RegisterBankTest, WriteTwoAligned)
@@ -1227,10 +1323,12 @@ TEST_F(RegisterBankTest, WriteTwoAligned)
     EXPECT_EQ(reg1.get(), 0x66554433);
     EXPECT_EQ(reg2.get(), 0xaa998877);
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Write, 0x66554433, 0, 0, 0)));
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Write, 0xaa998877, 0, 0, 0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Write, 0x66554433, 0, 0, 0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Write, 0xaa998877, 0, 0, 0)
+                ));
 }
 
 TEST_F(RegisterBankTest, WriteContained)
@@ -1239,10 +1337,11 @@ TEST_F(RegisterBankTest, WriteContained)
     EXPECT_EQ(reg0.get(), 0xd36655d0);
     EXPECT_EQ(reg1.get(), 0xe3e2e1e0);
     EXPECT_EQ(reg2.get(), 0xf3f2f1f0);
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(Write, 0xd36655d0, 0, 0, 0),
-                            Access(PartialWrite, 0x00665500, 23, 8, 0)));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(Write, 0xd36655d0, 0, 0, 0),
+                Access(PartialWrite, 0x00665500, 23, 8, 0)
+                ));
     EXPECT_TRUE(reg1.accesses.empty());
     EXPECT_TRUE(reg2.accesses.empty());
 }
@@ -1253,14 +1352,16 @@ TEST_F(RegisterBankTest, WriteOneSpanning)
     EXPECT_EQ(reg0.get(), 0x6655d1d0);
     EXPECT_EQ(reg1.get(), 0xe3e28877);
     EXPECT_EQ(reg2.get(), 0xf3f2f1f0);
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(Write, 0x6655d1d0, 0, 0, 0),
-                            Access(PartialWrite, 0x66550000, 31, 16, 0)));
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xe3e2e1e0),
-                            Access(Write, 0xe3e28877, 0, 0, 0),
-                            Access(PartialWrite, 0x00008877, 15, 0, 0)));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(Write, 0x6655d1d0, 0, 0, 0),
+                Access(PartialWrite, 0x66550000, 31, 16, 0)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xe3e2e1e0),
+                Access(Write, 0xe3e28877, 0, 0, 0),
+                Access(PartialWrite, 0x00008877, 15, 0, 0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
@@ -1270,16 +1371,19 @@ TEST_F(RegisterBankTest, WriteTwoSpanning)
     EXPECT_EQ(reg0.get(), 0x4433d1d0);
     EXPECT_EQ(reg1.get(), 0x88776655);
     EXPECT_EQ(reg2.get(), 0xf3f2aa99);
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(Write, 0x4433d1d0, 0, 0, 0),
-                            Access(PartialWrite, 0x44330000, 31, 16, 0)));
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Write, 0x88776655, 0, 0, 0)));
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0),
-                            Access(Write, 0xf3f2aa99, 0, 0, 0),
-                            Access(PartialWrite, 0x0000aa99, 15, 0, 0)));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(Write, 0x4433d1d0, 0, 0, 0),
+                Access(PartialWrite, 0x44330000, 31, 16, 0)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Write, 0x88776655, 0, 0, 0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0),
+                Access(Write, 0xf3f2aa99, 0, 0, 0),
+                Access(PartialWrite, 0x0000aa99, 15, 0, 0)
+                ));
 }
 
 TEST_F(RegisterBankTest, WritePartialFull)
@@ -1288,12 +1392,14 @@ TEST_F(RegisterBankTest, WritePartialFull)
     EXPECT_EQ(reg0.get(), 0x6655d1d0);
     EXPECT_EQ(reg1.get(), 0xaa998877);
     EXPECT_EQ(reg2.get(), 0xf3f2f1f0);
-    EXPECT_THAT(reg0.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xd3d2d1d0),
-                            Access(Write, 0x6655d1d0, 0, 0, 0),
-                            Access(PartialWrite, 0x66550000, 31, 16, 0)));
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Write, 0xaa998877, 0, 0, 0)));
+    EXPECT_THAT(reg0.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xd3d2d1d0),
+                Access(Write, 0x6655d1d0, 0, 0, 0),
+                Access(PartialWrite, 0x66550000, 31, 16, 0)
+                ));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Write, 0xaa998877, 0, 0, 0)
+                ));
     EXPECT_TRUE(reg2.accesses.empty());
 }
 
@@ -1304,10 +1410,13 @@ TEST_F(RegisterBankTest, WriteFullPartial)
     EXPECT_EQ(reg1.get(), 0x88776655);
     EXPECT_EQ(reg2.get(), 0xf3f2aa99);
     EXPECT_TRUE(reg0.accesses.empty());
-    EXPECT_THAT(reg1.accesses,
-                ElementsAre(Access(Write, 0x88776655, 0, 0, 0)));
-    EXPECT_THAT(reg2.accesses,
-                ElementsAre(Access(Read, 0, 0, 0, 0xf3f2f1f0),
-                            Access(Write, 0xf3f2aa99, 0, 0, 0),
-                            Access(PartialWrite, 0x0000aa99, 15, 0, 0)));
+    EXPECT_THAT(reg1.accesses, ElementsAre(
+                Access(Write, 0x88776655, 0, 0, 0)
+                ));
+    EXPECT_THAT(reg2.accesses, ElementsAre(
+                Access(Read, 0, 0, 0, 0xf3f2f1f0),
+                Access(Write, 0xf3f2aa99, 0, 0, 0),
+                Access(PartialWrite, 0x0000aa99, 15, 0, 0)
+                ));
 }
+/* clang-format on */

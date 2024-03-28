@@ -193,31 +193,49 @@ struct Info
 
 } // namespace registers
 
-inline const registers::Info &
+/* clang-format off */
+inline const registers::Info&
 regInfo(Addr daddr)
 {
-    static registers::Info invalid = {0, false, false, "invalid"};
-    static registers::Info info[] = {
-        {4, true, true, "Config"},        {4, false, true, "Command"},
-        {4, true, true, "IntrStatus"},    {4, true, true, "IntrMask"},
-        {4, true, false, "RxMaxCopy"},    {4, true, false, "TxMaxCopy"},
-        {4, true, false, "ZeroCopySize"}, {4, true, false, "ZeroCopyMark"},
-        {4, true, false, "VirtualCount"}, {4, true, false, "RxMaxIntr"},
-        {4, true, false, "RxFifoSize"},   {4, true, false, "TxFifoSize"},
-        {4, true, false, "RxFifoLow"},    {4, true, false, "TxFifoLow"},
-        {4, true, false, "RxFifoHigh"},   {4, true, false, "TxFifoHigh"},
-        {8, true, true, "RxData"},        invalid,
-        {8, true, false, "RxDone"},       invalid,
-        {8, true, false, "RxWait"},       invalid,
-        {8, true, true, "TxData"},        invalid,
-        {8, true, false, "TxDone"},       invalid,
-        {8, true, false, "TxWait"},       invalid,
-        {8, true, false, "HwAddr"},       invalid,
-        {8, true, false, "RxStatus"},     invalid,
+    static registers::Info invalid = { 0, false, false, "invalid" };
+    static registers::Info info [] = {
+        { 4, true,  true,  "Config"       },
+        { 4, false, true,  "Command"      },
+        { 4, true,  true,  "IntrStatus"   },
+        { 4, true,  true,  "IntrMask"     },
+        { 4, true,  false, "RxMaxCopy"    },
+        { 4, true,  false, "TxMaxCopy"    },
+        { 4, true,  false, "ZeroCopySize" },
+        { 4, true,  false, "ZeroCopyMark" },
+        { 4, true,  false, "VirtualCount" },
+        { 4, true,  false, "RxMaxIntr"    },
+        { 4, true,  false, "RxFifoSize"   },
+        { 4, true,  false, "TxFifoSize"   },
+        { 4, true,  false, "RxFifoLow"    },
+        { 4, true,  false, "TxFifoLow"    },
+        { 4, true,  false, "RxFifoHigh"   },
+        { 4, true,  false, "TxFifoHigh"   },
+        { 8, true,  true,  "RxData"       },
+        invalid,
+        { 8, true,  false, "RxDone"       },
+        invalid,
+        { 8, true,  false, "RxWait"       },
+        invalid,
+        { 8, true,  true,  "TxData"       },
+        invalid,
+        { 8, true,  false, "TxDone"       },
+        invalid,
+        { 8, true,  false, "TxWait"       },
+        invalid,
+        { 8, true,  false, "HwAddr"       },
+        invalid,
+        { 8, true,  false, "RxStatus"     },
+        invalid,
     };
 
     return info[daddr / 4];
 }
+/* clang-format on */
 
 inline bool
 regValid(Addr daddr)

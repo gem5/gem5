@@ -56,16 +56,38 @@ using std::string;
 
 namespace gem5
 {
-const char *NsRxStateStrings[] = {"rxIdle",      "rxDescRefr",  "rxDescRead",
-                                  "rxFifoBlock", "rxFragWrite", "rxDescWrite",
-                                  "rxAdvance"};
+/* clang-format off */
+const char *NsRxStateStrings[] =
+{
+    "rxIdle",
+    "rxDescRefr",
+    "rxDescRead",
+    "rxFifoBlock",
+    "rxFragWrite",
+    "rxDescWrite",
+    "rxAdvance"
+};
 
-const char *NsTxStateStrings[] = {"txIdle",      "txDescRefr", "txDescRead",
-                                  "txFifoBlock", "txFragRead", "txDescWrite",
-                                  "txAdvance"};
+const char *NsTxStateStrings[] =
+{
+    "txIdle",
+    "txDescRefr",
+    "txDescRead",
+    "txFifoBlock",
+    "txFragRead",
+    "txDescWrite",
+    "txAdvance"
+};
 
-const char *NsDmaState[] = {"dmaIdle", "dmaReading", "dmaWriting",
-                            "dmaReadWaiting", "dmaWriteWaiting"};
+const char *NsDmaState[] =
+{
+    "dmaIdle",
+    "dmaReading",
+    "dmaWriting",
+    "dmaReadWaiting",
+    "dmaWriteWaiting"
+};
+/* clang-format on */
 
 using namespace networking;
 

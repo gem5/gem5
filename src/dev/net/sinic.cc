@@ -49,11 +49,25 @@ using namespace networking;
 
 namespace sinic
 {
-const char *RxStateStrings[] = {"rxIdle", "rxFifoBlock", "rxBeginCopy",
-                                "rxCopy", "rxCopyDone"};
+/* clang-format off */
+const char *RxStateStrings[] =
+{
+    "rxIdle",
+    "rxFifoBlock",
+    "rxBeginCopy",
+    "rxCopy",
+    "rxCopyDone"
+};
 
-const char *TxStateStrings[] = {"txIdle", "txFifoBlock", "txBeginCopy",
-                                "txCopy", "txCopyDone"};
+const char *TxStateStrings[] =
+{
+    "txIdle",
+    "txFifoBlock",
+    "txBeginCopy",
+    "txCopy",
+    "txCopyDone"
+};
+/* clang-format on */
 
 ///////////////////////////////////////////////////////////////////////
 //
