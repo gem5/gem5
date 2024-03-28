@@ -75,8 +75,8 @@ class BaseTags(ClockedObject):
         SetAssociative(), "Indexing policy"
     )
 
-    partitioning_policies = VectorParam.BasePartitioningPolicy(
-        Parent.partitioning_policies, "Partitioning policies"
+    partitioning_manager = Param.PartitionManager(
+        Parent.partitioning_manager, "Cache partitioning manager"
     )
 
     # Set the indexing entry size as the block size

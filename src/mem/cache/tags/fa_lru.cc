@@ -75,7 +75,7 @@ FALRU::FALRU(const Params &p)
               blkSize);
     if (!isPowerOf2(size))
         fatal("Cache Size must be power of 2 for now");
-    if (this->partitioningPolicies.size() != 0)
+    if (partitionManager)
         fatal("Cannot use Cache Partitioning Policies with FALRU");
 
     blks = new FALRUBlk[numBlocks];
