@@ -44,10 +44,11 @@
 namespace gem5
 {
 
-namespace ArmISA {
+namespace ArmISA
+{
 
-const uint8_t
-Crypto::aesSBOX[256] = {
+/* clang-format off */
+const uint8_t Crypto::aesSBOX[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b,
     0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0,
     0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26,
@@ -150,17 +151,16 @@ Crypto::aesFFEXP[256] = {
     0xc7, 0x52, 0xf6, 0x01
 };
 
-const uint8_t
-Crypto::aesSHIFT[16] = {
-    0, 5, 10, 15, 4, 9, 14, 3,
-    8, 13, 2, 7, 12, 1, 6, 11
+const uint8_t Crypto::aesSHIFT[16] = {
+    0, 5,  10, 15, 4,  9, 14, 3,
+    8, 13, 2,  7,  12, 1, 6,  11
 };
 
-const uint8_t
-Crypto::aesINVSHIFT[16] = {
-    0, 13, 10, 7, 4, 1, 14, 11,
-    8, 5, 2, 15, 12, 9, 6, 3
+const uint8_t Crypto::aesINVSHIFT[16] = {
+    0, 13, 10, 7,  4,  1, 14, 11,
+    8, 5,  2,  15, 12, 9, 6,  3
 };
+/* clang-format on */
 
 uint8_t
 Crypto::aesFFMul(uint8_t a, uint8_t b)

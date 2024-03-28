@@ -2811,6 +2811,7 @@ ISA::initializeMiscRegMetadata()
      *  architecturally mandated."
      */
 
+    /* clang-format off */
     InitReg(MISCREG_CPSR)
       .reset(resetCPSR(system))
       .allPrivileges();
@@ -6395,6 +6396,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VDISR_EL2)
       .warnNotFail()
       .fault(faultUnimplemented);
+    /* clang-format on */
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR

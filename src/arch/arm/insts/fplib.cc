@@ -2937,6 +2937,7 @@ template <>
 uint16_t
 fplibExpA(uint16_t op)
 {
+    /* clang-format off */
     static uint16_t coeff[32] = {
         0x0000,
         0x0016,
@@ -2971,6 +2972,7 @@ fplibExpA(uint16_t op)
         0x03a9,
         0x03d4
     };
+    /* clang-format on */
     return ((((op >> 5) & ((1 << FP16_EXP_BITS) - 1)) << FP16_MANT_BITS) |
             coeff[op & ((1 << 5) - 1)]);
 }
@@ -2979,6 +2981,7 @@ template <>
 uint32_t
 fplibExpA(uint32_t op)
 {
+    /* clang-format off */
     static uint32_t coeff[64] = {
         0x000000,
         0x0164d2,
@@ -3045,6 +3048,7 @@ fplibExpA(uint32_t op)
         0x7a83b3,
         0x7d3e0c
     };
+    /* clang-format on */
     return ((((op >> 6) & ((1 << FP32_EXP_BITS) - 1)) << FP32_MANT_BITS) |
             coeff[op & ((1 << 6) - 1)]);
 }
@@ -3053,6 +3057,7 @@ template <>
 uint64_t
 fplibExpA(uint64_t op)
 {
+    /* clang-format off */
     static uint64_t coeff[64] = {
         0x0000000000000ULL,
         0x02c9a3e778061ULL,
@@ -3119,6 +3124,7 @@ fplibExpA(uint64_t op)
         0xf50765b6e4540ULL,
         0xfa7c1819e90d8ULL
     };
+    /* clang-format on */
     return ((((op >> 6) & ((1 << FP64_EXP_BITS) - 1)) << FP64_MANT_BITS) |
             coeff[op & ((1 << 6) - 1)]);
 }
@@ -3507,6 +3513,7 @@ fplibNeg(uint64_t op)
     return op ^ 1ULL << (FP64_BITS - 1);
 }
 
+/* clang-format off */
 static const uint8_t recip_sqrt_estimate[256] = {
     255, 253, 251, 249, 247, 245, 243, 242, 240, 238, 236, 234, 233, 231, 229, 228,
     226, 224, 223, 221, 219, 218, 216, 215, 213, 212, 210, 209, 207, 206, 204, 203,
@@ -3525,6 +3532,7 @@ static const uint8_t recip_sqrt_estimate[256] = {
     17,  17,  16,  16,  15,  14,  14,  13,  13,  12,  11,  11,  10,  10,   9,   9,
     8,   8,   7,   6,   6,   5,   5,   4,   4,   3,   3,   2,   2,   1,   1,   0
 };
+/* clang-format on */
 
 template <>
 uint16_t
@@ -4367,6 +4375,7 @@ template <>
 uint16_t
 fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2, FPSCR &fpscr)
 {
+    /* clang-format off */
     static uint16_t coeff[2][8] = {
         {
             0x3c00,
@@ -4389,6 +4398,7 @@ fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2, FPSCR &fpscr)
             0x0000
         }
     };
+    /* clang-format on */
     int flags = 0;
     uint16_t result =
         fp16_muladd(coeff[op2 >> (FP16_BITS - 1)][coeff_index], op1,
@@ -4401,6 +4411,7 @@ template <>
 uint32_t
 fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2, FPSCR &fpscr)
 {
+    /* clang-format off */
     static uint32_t coeff[2][8] = {
         {
             0x3f800000,
@@ -4423,6 +4434,7 @@ fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2, FPSCR &fpscr)
             0x00000000
         }
     };
+    /* clang-format on */
     int flags = 0;
     uint32_t result =
         fp32_muladd(coeff[op2 >> (FP32_BITS - 1)][coeff_index], op1,
@@ -4435,6 +4447,7 @@ template <>
 uint64_t
 fplibTrigMulAdd(uint8_t coeff_index, uint64_t op1, uint64_t op2, FPSCR &fpscr)
 {
+    /* clang-format off */
     static uint64_t coeff[2][8] = {
         {
             0x3ff0000000000000ULL,
@@ -4457,6 +4470,7 @@ fplibTrigMulAdd(uint8_t coeff_index, uint64_t op1, uint64_t op2, FPSCR &fpscr)
             0xbda8f76380fbb401ULL
         }
     };
+    /* clang-format on */
     int flags = 0;
     uint64_t result =
         fp64_muladd(coeff[op2 >> (FP64_BITS - 1)][coeff_index], op1,
