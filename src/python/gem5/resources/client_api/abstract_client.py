@@ -114,6 +114,7 @@ class AbstractClient(ABC):
     def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource.
+
         :return: A list of all the Resources with the given ID.
         """
         return self.get_resources(resource_id=resource_id)

@@ -80,6 +80,7 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
 
     # TODO: This whole setup will only work for single files we can get via
     # wget. We also need to support git clones going forward.
+
     attempt = 0
     while True:
         # The loop will be broken on a successful download, via a `return`, or
@@ -87,12 +88,12 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
         # number of download attempts has been reached or if a HTTP status code
         # other than 408, 429, or 5xx is received.
         try:
-            use_proxy = os.getenv("GEM5_USE_PROXY")
-            if use_proxy:
+            proxy_context = get_proxy_context()
+            if proxy_context:
                 # get the file as a bytes blob
                 request = urllib.request.Request(url)
                 with urllib.request.urlopen(
-                    request, context=get_proxy_context()
+                    request, context=proxy_context
                 ) as fr:
                     with tqdm.wrapattr(
                         open(download_to, "wb"),
