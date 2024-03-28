@@ -1,5 +1,6 @@
 #ifndef _VIRTIO_RING_H
 #define _VIRTIO_RING_H
+/* clang-format off */
 /* An interface for efficient virtio implementation, currently for use by KVM
  * and lguest, but hopefully others soon.  Do NOT change this since it will
  * break existing servers and clients.
@@ -31,6 +32,7 @@
  * SUCH DAMAGE.
  *
  * Copyright Rusty Russell IBM Corporation 2007. */
+/* clang-format on */
 #include <stdint.h>
 
 /* This marks a buffer as continuing via the next field. */

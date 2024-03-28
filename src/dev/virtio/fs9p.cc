@@ -75,6 +75,7 @@ struct P9MsgInfo
 
 typedef std::map<P9MsgType, P9MsgInfo> P9MsgInfoMap;
 
+/* clang-format off */
 #define P9MSG(type, name)                               \
     { (type), P9MsgInfo((type), "T" # name ) },         \
     { (type + 1), P9MsgInfo((type + 1), "R" # name ) }
@@ -117,6 +118,7 @@ static const P9MsgInfoMap p9_msg_info {
 };
 
 #undef P9MSG
+/* clang-format on */
 
 VirtIO9PBase::VirtIO9PBase(const Params &params)
     : VirtIODeviceBase(params, ID_9P,

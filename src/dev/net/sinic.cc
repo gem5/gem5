@@ -51,6 +51,7 @@ using namespace networking;
 namespace sinic
 {
 
+/* clang-format off */
 const char *RxStateStrings[] =
 {
     "rxIdle",
@@ -68,7 +69,7 @@ const char *TxStateStrings[] =
     "txCopy",
     "txCopyDone"
 };
-
+/* clang-format on */
 
 ///////////////////////////////////////////////////////////////////////
 //

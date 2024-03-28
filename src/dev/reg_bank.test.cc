@@ -68,6 +68,7 @@ using testing::ElementsAreArray;
 using testing::AllOf;
 using testing::HasSubstr;
 
+/* clang-format off */
 
 /*
  * The RegisterRaz (read as zero) type.
@@ -1505,3 +1506,4 @@ TEST_F(RegisterBankTest, WriteFullPartial)
                 Access(PartialWrite, 0x0000aa99, 15, 0, 0)
                 ));
 }
+/* clang-format on */

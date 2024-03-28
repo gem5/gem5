@@ -57,6 +57,7 @@ using std::string;
 namespace gem5
 {
 
+/* clang-format off */
 const char *NsRxStateStrings[] =
 {
     "rxIdle",
@@ -87,6 +88,7 @@ const char *NsDmaState[] =
     "dmaReadWaiting",
     "dmaWriteWaiting"
 };
+/* clang-format on */
 
 using namespace networking;
 

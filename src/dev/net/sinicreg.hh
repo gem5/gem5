@@ -188,6 +188,7 @@ struct Info
 
 } // namespace registers
 
+/* clang-format off */
 inline const registers::Info&
 regInfo(Addr daddr)
 {
@@ -229,6 +230,7 @@ regInfo(Addr daddr)
 
     return info[daddr / 4];
 }
+/* clang-format on */
 
 inline bool
 regValid(Addr daddr)
