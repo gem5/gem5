@@ -58,6 +58,7 @@ Source('pma_checker.cc', tags='riscv isa')
 Source('pmp.cc', tags='riscv isa')
 Source('reg_abi.cc', tags='riscv isa')
 Source('remote_gdb.cc', tags='riscv isa')
+Source('semihosting.cc', tags='riscv isa')
 Source('tlb.cc', tags='riscv isa')
 
 Source('linux/se_workload.cc', tags='riscv isa')
@@ -78,6 +79,8 @@ SimObject('RiscvInterrupts.py', sim_objects=['RiscvInterrupts'],
 SimObject('RiscvISA.py', sim_objects=['RiscvISA'],
     enums=['RiscvType', 'PrivilegeModeSet'], tags='riscv isa')
 SimObject('RiscvMMU.py', sim_objects=['RiscvMMU'], tags='riscv isa')
+SimObject('RiscvSemihosting.py', sim_objects=['RiscvSemihosting'],
+          tags='riscv isa')
 SimObject('RiscvSeWorkload.py', sim_objects=[
     'RiscvSEWorkload', 'RiscvEmuLinux'], tags='riscv isa')
 SimObject('RiscvTLB.py', sim_objects=['RiscvPagetableWalker', 'RiscvTLB'],
