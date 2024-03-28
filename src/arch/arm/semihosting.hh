@@ -51,6 +51,7 @@
 #include "mem/port_proxy.hh"
 #include "sim/core.hh"
 #include "sim/guest_abi.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -602,28 +603,37 @@ std::ostream &operator << (
 namespace guest_abi
 {
 
+using namespace pseudo_inst;
+
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi64, Arg,
-    typename std::enable_if_t<std::is_integral_v<Arg>>>
+    typename std::enable_if_t<
+        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
     {
-        return state.get(tc);
+        auto arg = state.get(tc);
+        return *reinterpret_cast<Arg*>(&arg);
     }
 };
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi32, Arg,
-    typename std::enable_if_t<std::is_integral_v<Arg>>>
+    typename std::enable_if_t<
+        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)
     {
-        if (std::is_signed_v<Arg>)
-            return sext<32>(state.get(tc));
-        else
-            return state.get(tc);
+        if (std::is_signed_v<Arg>) {
+            auto arg = sext<32>(state.get(tc));
+            return *reinterpret_cast<Arg*>(&arg);
+        }
+        else {
+            auto arg = state.get(tc);
+            return *reinterpret_cast<Arg*>(&arg);
+        }
     }
 };
 

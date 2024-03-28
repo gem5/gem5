@@ -31,6 +31,7 @@
 #include "arch/sparc/regs/int.hh"
 #include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace gem5
 {
@@ -42,6 +43,8 @@ struct SparcPseudoInstABI
 
 namespace guest_abi
 {
+
+using namespace pseudo_inst;
 
 template <typename T>
 struct Result<SparcPseudoInstABI, T>
@@ -64,6 +67,18 @@ struct Argument<SparcPseudoInstABI, uint64_t>
     {
         panic_if(state >= 6, "Too many psuedo inst arguments.");
         return tc->getReg(SparcISA::int_reg::o(state++));
+    }
+};
+
+template <>
+struct Argument<SparcPseudoInstABI, GuestAddr>
+{
+    static GuestAddr
+    get(ThreadContext *tc, SparcPseudoInstABI::State &state)
+    {
+        panic_if(state >= 6, "Too many psuedo inst arguments.");
+        auto arg = tc->getReg(SparcISA::int_reg::o(state++));
+        return *reinterpret_cast<GuestAddr*>(&arg);
     }
 };
 

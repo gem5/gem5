@@ -32,6 +32,7 @@
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "sim/guest_abi.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/syscall_return.hh"
 
 namespace gem5
@@ -78,19 +79,22 @@ struct GenericSyscallABI32 : public GenericSyscallABI
 namespace guest_abi
 {
 
+using namespace pseudo_inst;
+
 // For 64 bit systems, return syscall args directly.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<
         std::is_base_of_v<GenericSyscallABI64, ABI> &&
-        std::is_integral_v<Arg>>>
+        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        return tc->getReg(ABI::ArgumentRegs[state++]);
+        auto arg = tc->getReg(ABI::ArgumentRegs[state++]);
+        return *reinterpret_cast<Arg*>(&arg);
     }
 };
 

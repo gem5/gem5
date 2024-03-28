@@ -3,6 +3,7 @@
 // Copyright (c) 2015 RISC-V Foundation
 // Copyright (c) 2016 The University of Virginia
 // Copyright (c) 2020 Barkhausen Institut
+// Copyright (c) 2024 University of Rostock
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -71,6 +72,7 @@ def operands {{
     'sp': IntReg('ud', 'StackPointerReg', 'IsInteger', 2),
 
     'a0': IntReg('ud', '10', 'IsInteger', 1),
+    'a1': IntReg('ud', '11', 'IsInteger', 2),
 
     'Fd': FloatRegOp('df', 'FD', 'IsFloating', 1),
     'Fd_bits': FloatRegOp('ud', 'FD', 'IsFloating', 1),
