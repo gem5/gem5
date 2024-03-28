@@ -707,20 +707,26 @@ for variant_path in variant_paths:
     if GetOption('with_ubsan'):
         sanitizers.append('undefined')
     if GetOption('with_asan'):
-        # Available for gcc >= 5 or llvm >= 3.1 both a requirement
-        # by the build system
-        sanitizers.append('address')
-        suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
-        suppressions_opt = 'suppressions=%s' % suppressions_file
-        suppressions_opts = ':'.join([suppressions_opt,
-                                      'print_suppressions=0'])
-        env['ENV']['LSAN_OPTIONS'] = suppressions_opts
-        print()
-        warning('To suppress false positive leaks, set the LSAN_OPTIONS '
-                'environment variable to "%s" when running gem5' %
-                suppressions_opts)
-        warning('LSAN_OPTIONS=%s' % suppressions_opts)
-        print()
+        if env['GCC']:
+            # Address sanitizer is not supported with GCC. Please see Github
+            # Issue https://github.com/gem5/gem5/issues/916 for more details.
+            warning("Address Sanitizer is not supported with GCC. "
+                    "This option will be ignored.")
+        else:
+            # Available for llvm >= 3.1. A requirement by the build system.
+            sanitizers.append('address')
+            suppressions_file = Dir('util').File('lsan-suppressions')\
+                                .get_abspath()
+            suppressions_opt = 'suppressions=%s' % suppressions_file
+            suppressions_opts = ':'.join([suppressions_opt,
+                                        'print_suppressions=0'])
+            env['ENV']['LSAN_OPTIONS'] = suppressions_opts
+            print()
+            warning('To suppress false positive leaks, set the LSAN_OPTIONS '
+                    'environment variable to "%s" when running gem5' %
+                    suppressions_opts)
+            warning('LSAN_OPTIONS=%s' % suppressions_opts)
+            print()
     if sanitizers:
         sanitizers = ','.join(sanitizers)
         if env['GCC'] or env['CLANG']:
