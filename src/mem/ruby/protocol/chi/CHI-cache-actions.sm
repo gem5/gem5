@@ -401,6 +401,12 @@ action(Initiate_Replacement, desc="") {
   }
   copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
 
+  // UD_RU line needs to be written back because the upstream may be in UC state.
+  if (initial == State:UD_RU) {
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+  }
+
   // model the initial tag array read
   tbe.actions.pushNB(Event:TagArrayRead);
 
@@ -1553,7 +1559,8 @@ action(Send_InvSnpResp, desc="") {
 action(Send_WriteBackOrWriteEvict, desc="") {
   assert(is_valid(tbe));
   assert(tbe.dataBlkValid.isFull());
-  assert(tbe.dataValid);
+  assert(tbe.dataValid ||
+         (tbe.dir_ownerIsExcl && tbe.dataUnique && tbe.dataDirty));
   assert(is_HN == false);
 
   assert(tbe.dataUnique || tbe.dataDirty);
@@ -1576,7 +1583,9 @@ action(Send_WriteBackOrWriteEvict, desc="") {
 action(Send_WriteCleanFull, desc="") {
   assert(is_valid(tbe));
   assert(tbe.dataBlkValid.isFull());
-  assert(tbe.dataValid);
+  // Data must be valid or the line was in UD_RU state.
+  assert(tbe.dataValid ||
+         (tbe.dir_ownerIsExcl && tbe.dataUnique && tbe.dataDirty));
   assert(is_HN == false);
   assert(tbe.dataDirty);
 
@@ -2654,14 +2663,20 @@ action(Send_WBData, desc="") {
   if (is_HN) {
     assert(tbe.dataBlkValid.isFull());
     assert(tbe.dataDirty);
-    assert(tbe.dataValid);
+    assert(tbe.dataValid ||
+           (tbe.dir_ownerIsExcl && tbe.dataUnique && tbe.dataDirty));
     tbe.snd_msgType := CHIDataType:NCBWrData;
   } else {
     if (tbe.dataValid == false) {
-      // only possible when the WB was made stale by a snoop
-      assert(tbe.is_stale);
-      tbe.dataBlkValid.fillMask();
-      tbe.snd_msgType := CHIDataType:CBWrData_I;
+      // only possible when the WB was made stale by a snoop or
+      // Writeback on UD_RU line.
+      if (tbe.dir_ownerIsExcl && tbe.dataUnique && tbe.dataDirty) {
+        tbe.snd_msgType := CHIDataType:CBWrData_UD_PD;
+      } else {
+        assert(tbe.is_stale);
+        tbe.dataBlkValid.fillMask();
+        tbe.snd_msgType := CHIDataType:CBWrData_I;
+      }
     } else if (tbe.dataUnique) {
       assert(tbe.dataBlkValid.isFull());
       if (tbe.dataDirty) {
