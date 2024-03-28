@@ -83,7 +83,8 @@ Vagrant.configure("2") do |config|
       SHELL
       # Execute the actions-run.sh script on every boot. This configures and starts the runner.
       # Note the 'kvm' label is applied to this runner if the "kvm-works" file eixsts. See above.
-      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} $(if [ -f 'kvm-works' ]; then echo 'kvm'; fi) >> action-run.log 2>&1 &"
+      # The `tail` statement takes the last 1MB of output and logs it.
+      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} $(if [ -f 'kvm-works' ]; then echo 'kvm'; fi) 2>&1 | tail -c 1000000 > action-run.log &"
     end
   end
 end
