@@ -414,7 +414,7 @@ VMvWholeMicroInst::generateDisassembly(Addr pc,
 VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
     uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize)
     : VectorArithMicroInst("vmask_mv_micro", extMachInst,
-                            VectorIntegerArithOp, 0, 0),
+                            SimdAddOp, 0, 0),
       vlen(_vlen),
       elemSize(_elemSize)
 {
@@ -503,7 +503,7 @@ VxsatMicroInst::generateDisassembly(Addr pc,
 
 VlFFTrimVlMicroOp::VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
     uint32_t _microIdx, uint32_t _vlen, std::vector<StaticInstPtr>& _microops)
-    : VectorMicroInst("vlff_trimvl_v_micro", _machInst, VectorConfigOp,
+    : VectorMicroInst("vlff_trimvl_v_micro", _machInst, SimdConfigOp,
                       _microVl, _microIdx, _vlen),
       microops(_microops)
 {
@@ -618,7 +618,7 @@ VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst, uint32_t
                         uint32_t _microIdx, uint32_t _numMicroops,
                         uint32_t _field, uint32_t _vlen, uint32_t _sizeOfElement)
     : VectorArithMicroInst("vlseg_deintrlv_micro", extMachInst,
-                            VectorIntegerArithOp, 0, 0),
+                            SimdAddOp, 0, 0),
         vlen(_vlen)
 {
     setRegIdxArrays(
@@ -715,7 +715,7 @@ VsSegIntrlvMicroInst::VsSegIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _mi
                         uint32_t _microIdx, uint32_t _numMicroops,
                         uint32_t _field, uint32_t _vlen, uint32_t _sizeOfElement)
     : VectorArithMicroInst("vsseg_reintrlv_micro", extMachInst,
-                            VectorIntegerArithOp, 0, 0),
+                            SimdAddOp, 0, 0),
         vlen(_vlen)
 {
     setRegIdxArrays(

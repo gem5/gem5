@@ -607,7 +607,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Vd_ub[i] = Vs2_ub[i];
                             }
-                        }}, inst_flags=VectorUnitStrideLoadOp);
+                        }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
@@ -616,7 +616,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
@@ -624,7 +624,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
@@ -632,7 +632,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
@@ -640,7 +640,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
@@ -648,7 +648,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
@@ -656,7 +656,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
@@ -664,28 +664,28 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ub[i] = Vs2_ub[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
                     }
                     0x08: decode NF {
                         format VlWholeOp {
                             0x0: vl1re8_v({{
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x1: vl2re8_v({{
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x3: vl4re8_v({{
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x7: vl8re8_v({{
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
                     0x0b: VlmOp::vlm_v({{
                         Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                    }}, inst_flags=VectorUnitStrideMaskLoadOp);
+                    }}, inst_flags=SimdUnitStrideMaskLoadOp);
                     0x10: VleOp::vle8ff_v({{
                         if ((machInst.vm || elem_mask(v0, ei)) &&
                             i < this->microVl && i < this->faultIdx) {
@@ -693,21 +693,21 @@ decode QUADRANT default Unknown::unknown() {
                         } else {
                             Vd_ub[i] = Vs2_ub[i];
                         }
-                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
+                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei8_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
                 0x2: VlStrideOp::vlse8_v({{
                     Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
-                }}, inst_flags=VectorStridedLoadOp);
+                }}, inst_flags=SimdStridedLoadOp);
                 0x3: VlIndexOp::vloxei8_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
             }
             0x5: decode MOP {
                 0x0: decode LUMOP {
@@ -719,7 +719,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Vd_uh[i] = Vs2_uh[i];
                             }
-                        }}, inst_flags=VectorUnitStrideLoadOp);
+                        }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
@@ -728,7 +728,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
@@ -736,7 +736,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
@@ -744,7 +744,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
@@ -752,7 +752,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
@@ -760,7 +760,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
@@ -768,7 +768,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
@@ -776,23 +776,23 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uh[i] = Vs2_uh[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
                     }
                     0x08: decode NF {
                         format VlWholeOp {
                             0x0: vl1re16_v({{
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x1: vl2re16_v({{
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x3: vl4re16_v({{
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x7: vl8re16_v({{
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
                     0x10: VleOp::vle16ff_v({{
@@ -802,21 +802,21 @@ decode QUADRANT default Unknown::unknown() {
                         } else {
                             Vd_uh[i] = Vs2_uh[i];
                         }
-                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
+                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei16_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
                 0x2: VlStrideOp::vlse16_v({{
                     Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
-                }}, inst_flags=VectorStridedLoadOp);
+                }}, inst_flags=SimdStridedLoadOp);
                 0x3: VlIndexOp::vloxei16_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
             }
             0x6: decode MOP {
                 0x0: decode LUMOP {
@@ -828,7 +828,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Vd_uw[i] = Vs2_uw[i];
                             }
-                        }}, inst_flags=VectorUnitStrideLoadOp);
+                        }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
@@ -837,7 +837,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
@@ -845,7 +845,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
@@ -853,7 +853,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
@@ -861,7 +861,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
@@ -869,7 +869,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
@@ -877,7 +877,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
@@ -885,23 +885,23 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_uw[i] = Vs2_uw[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
                     }
                     0x08: decode NF {
                         format VlWholeOp {
                             0x0: vl1re32_v({{
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x1: vl2re32_v({{
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x3: vl4re32_v({{
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x7: vl8re32_v({{
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
                     0x10: VleOp::vle32ff_v({{
@@ -911,21 +911,21 @@ decode QUADRANT default Unknown::unknown() {
                         } else {
                             Vd_uw[i] = Vs2_uw[i];
                         }
-                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
+                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei32_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
                 0x2: VlStrideOp::vlse32_v({{
                     Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
-                }}, inst_flags=VectorStridedLoadOp);
+                }}, inst_flags=SimdStridedLoadOp);
                 0x3: VlIndexOp::vloxei32_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
             }
             0x7: decode MOP {
                 0x0: decode LUMOP {
@@ -937,7 +937,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Vd_ud[i] = Vs2_ud[i];
                             }
-                        }}, inst_flags=VectorUnitStrideLoadOp);
+                        }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
@@ -946,7 +946,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
@@ -954,7 +954,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
@@ -962,7 +962,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
@@ -970,7 +970,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
@@ -978,7 +978,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
@@ -986,7 +986,7 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
@@ -994,23 +994,23 @@ decode QUADRANT default Unknown::unknown() {
                                 } else {
                                     Vd_ud[i] = Vs2_ud[i];
                                 }
-                            }}, inst_flags=VectorUnitStrideSegmentedLoadOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
                     }
                     0x08: decode NF {
                         format VlWholeOp {
                             0x0: vl1re64_v({{
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x1: vl2re64_v({{
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x3: vl4re64_v({{
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                             0x7: vl8re64_v({{
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
                     0x10: VleOp::vle64ff_v({{
@@ -1020,21 +1020,21 @@ decode QUADRANT default Unknown::unknown() {
                         } else {
                             Vd_ud[i] = Vs2_ud[i];
                         }
-                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
+                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei64_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
                 0x2: VlStrideOp::vlse64_v({{
                     Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
-                }}, inst_flags=VectorStridedLoadOp);
+                }}, inst_flags=SimdStridedLoadOp);
                 0x3: VlIndexOp::vloxei64_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedLoadOp);
+                }}, inst_flags=SimdIndexedLoadOp);
             }
         }
 
@@ -1366,93 +1366,93 @@ decode QUADRANT default Unknown::unknown() {
                     0x00: decode NF {
                         0x00: VseOp::vse8_v({{
                             Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                        }}, inst_flags=VectorUnitStrideStoreOp);
+                        }}, inst_flags=SimdUnitStrideStoreOp);
                         format VsSegOp {
                             0x01: vsseg2e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x02: vsseg3e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x03: vsseg4e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x04: vsseg5e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x05: vsseg6e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x06: vsseg7e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x07: vsseg8e8_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                         }
                     }
                     format VsWholeOp {
                         0x8: decode NF {
                             0x0: vs1r_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            }}, inst_flags=SimdWholeRegisterStoreOp);
                             0x1: vs2r_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            }}, inst_flags=SimdWholeRegisterStoreOp);
                             0x3: vs4r_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            }}, inst_flags=SimdWholeRegisterStoreOp);
                             0x7: vs8r_v({{
                                 Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            }}, inst_flags=SimdWholeRegisterStoreOp);
                         }
                     }
                     0x0b: VsmOp::vsm_v({{
                         Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
-                    }}, inst_flags=VectorUnitStrideMaskStoreOp);
+                    }}, inst_flags=SimdUnitStrideMaskStoreOp);
                 }
                 0x1: VsIndexOp::vsuxei8_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
                 0x2: VsStrideOp::vsse8_v({{
                     Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
-                }}, inst_flags=VectorStridedStoreOp);
+                }}, inst_flags=SimdStridedStoreOp);
                 0x3: VsIndexOp::vsoxei8_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
             }
             0x5: decode MOP {
                 0x0: decode SUMOP {
                     0x00: decode NF {
                         0x00: VseOp::vse16_v({{
                             Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                        }}, inst_flags=VectorUnitStrideStoreOp);
+                        }}, inst_flags=SimdUnitStrideStoreOp);
                         format VsSegOp {
                             0x01: vsseg2e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x02: vsseg3e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x03: vsseg4e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x04: vsseg5e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x05: vsseg6e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x06: vsseg7e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x07: vsseg8e16_v({{
                                 Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                         }
                     }
                 }
@@ -1460,44 +1460,44 @@ decode QUADRANT default Unknown::unknown() {
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
                 0x2: VsStrideOp::vsse16_v({{
                     Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
-                }}, inst_flags=VectorStridedStoreOp);
+                }}, inst_flags=SimdStridedStoreOp);
                 0x3: VsIndexOp::vsoxei16_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
             }
             0x6: decode MOP {
                 0x0: decode SUMOP {
                     0x00: decode NF {
                         0x00: VseOp::vse32_v({{
                             Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                        }}, inst_flags=VectorUnitStrideStoreOp);
+                        }}, inst_flags=SimdUnitStrideStoreOp);
                         format VsSegOp {
                             0x01: vsseg2e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x02: vsseg3e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x03: vsseg4e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x04: vsseg5e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x05: vsseg6e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x06: vsseg7e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x07: vsseg8e32_v({{
                                 Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                         }
                     }
                 }
@@ -1505,44 +1505,44 @@ decode QUADRANT default Unknown::unknown() {
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
                 0x2: VsStrideOp::vsse32_v({{
                     Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
-                }}, inst_flags=VectorStridedStoreOp);
+                }}, inst_flags=SimdStridedStoreOp);
                 0x3: VsIndexOp::vsoxei32_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
             }
             0x7: decode MOP {
                 0x0: decode SUMOP {
                     0x00: decode NF {
                         0x00: VseOp::vse64_v({{
                             Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                        }}, inst_flags=VectorUnitStrideStoreOp);
+                        }}, inst_flags=SimdUnitStrideStoreOp);
                         format VsSegOp {
                             0x01: vsseg2e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x02: vsseg3e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x03: vsseg4e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x04: vsseg5e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x05: vsseg6e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x06: vsseg7e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                             0x07: vsseg8e64_v({{
                                 Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
-                            }}, inst_flags=VectorUnitStrideSegmentedStoreOp);
+                            }}, inst_flags=SimdUnitStrideSegmentedStoreOp);
                         }
                     }
                 }
@@ -1550,15 +1550,15 @@ decode QUADRANT default Unknown::unknown() {
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
                 0x2: VsStrideOp::vsse64_v({{
                     Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
-                }}, inst_flags=VectorStridedStoreOp);
+                }}, inst_flags=SimdStridedStoreOp);
                 0x3: VsIndexOp::vsoxei64_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
-                }}, inst_flags=VectorIndexedStoreOp);
+                }}, inst_flags=SimdIndexedStoreOp);
             }
         }
 
@@ -2772,35 +2772,35 @@ decode QUADRANT default Unknown::unknown() {
                 format VectorIntFormat {
                     0x0: vadd_vv({{
                         Vd_vu[i] = Vs2_vu[i] + Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x2: vsub_vv({{
                         Vd_vu[i] = Vs2_vu[i] - Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x4: vminu_vv({{
                         Vd_vu[i] = Vs2_vu[i] < Vs1_vu[i] ?
                                 Vs2_vu[i] : Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x5: vmin_vv({{
                         Vd_vi[i] = Vs2_vi[i] < Vs1_vi[i] ?
                                 Vs2_vi[i] : Vs1_vi[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x6: vmaxu_vv({{
                         Vd_vu[i] = Vs2_vu[i] > Vs1_vu[i] ?
                                 Vs2_vu[i] : Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x7: vmax_vv({{
                         Vd_vi[i] = Vs2_vi[i] > Vs1_vi[i] ?
                                 Vs2_vi[i] : Vs1_vi[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x9: vand_vv({{
                         Vd_vu[i] = Vs2_vu[i] & Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAluOp);
                     0xa: vor_vv({{
                         Vd_vu[i] = Vs2_vu[i] | Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAluOp);
                     0xb: vxor_vv({{
                         Vd_vu[i] = Vs2_vu[i] ^ Vs1_vu[i];
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAluOp);
                 }
                 0x0c: VectorGatherFormat::vrgather_vv({{
                     for (uint32_t i = 0; i < microVl; i++) {
@@ -2814,7 +2814,7 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vu[i] = res;
                         }
                     }
-                }}, OPIVV, VectorMiscOp);
+                }}, OPIVV, SimdMiscOp);
                 0x0e: VectorGatherFormat::vrgatherei16_vv({{
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
@@ -2827,20 +2827,20 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vu[i + vd_bias] = res;
                         }
                     }
-                }}, OPIVV, VectorMiscOp);
+                }}, OPIVV, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
                         0x0: vadc_vvm({{
                             Vd_vi[i] = Vs2_vi[i] + Vs1_vi[i]
                                     + elem_mask(v0, ei);
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
                     0x12: decode VM {
                         0x0: vsbc_vvm({{
                             Vd_vi[i] = Vs2_vi[i] - Vs1_vi[i]
                                     - elem_mask(v0, ei);
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
                     0x17: decode VM {
@@ -2848,11 +2848,11 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vu[i] = elem_mask(v0, ei)
                                     ? Vs1_vu[i]
                                     : Vs2_vu[i];
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdMiscOp);
                         0x1: decode VS2 {
                             0x0: vmv_v_v({{
                                 Vd_vu[i] = Vs1_vu[i];
-                            }}, OPIVV, VectorIntegerArithOp);
+                            }}, OPIVV, SimdMiscOp);
                         }
                     }
                 }
@@ -2860,19 +2860,19 @@ decode QUADRANT default Unknown::unknown() {
                     0x20: vsaddu_vv({{
                         Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], Vs1_vu[i],
                             vxsatptr);
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x21: vsadd_vv({{
                         Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Vs1_vu[i],
                             vxsatptr);
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x22: vssubu_vv({{
                         Vd_vu[i] = sat_subu<vu>(Vs2_vu[i], Vs1_vu[i],
                             vxsatptr);
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x23: vssub_vv({{
                         Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Vs1_vu[i],
                             vxsatptr);
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdAddOp);
                     0x27: vsmul_vv({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
@@ -2889,18 +2889,18 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vi[i] = (vi)result;
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdMultOp);
                 }
                 format VectorIntFormat {
                     0x25: vsll_vv({{
                         Vd_vu[i] = Vs2_vu[i] << (Vs1_vu[i] & (sew - 1));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x28: vsrl_vv({{
                         Vd_vu[i] = Vs2_vu[i] >> (Vs1_vu[i] & (sew - 1));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x29: vsra_vv({{
                         Vd_vi[i] = Vs2_vi[i] >> (Vs1_vu[i] & (sew - 1));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x2a: vssrl_vv({{
                         int sh = Vs1_vu[i] & (sew - 1);
                         __uint128_t val = Vs2_vu[i];
@@ -2908,7 +2908,7 @@ decode QUADRANT default Unknown::unknown() {
                         val = int_rounding<__uint128_t>(val,
                             xc->readMiscReg(MISCREG_VXRM), sh);
                         Vd_vu[i] = val >> sh;
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x2b: vssra_vv({{
                         int sh = Vs1_vi[i] & (sew - 1);
                         __int128_t val = Vs2_vi[i];
@@ -2916,17 +2916,17 @@ decode QUADRANT default Unknown::unknown() {
                         val = int_rounding<__int128_t>(val,
                             xc->readMiscReg(MISCREG_VXRM), sh);
                         Vd_vi[i] = val >> sh;
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                 }
                 format VectorReduceIntWideningFormat {
                     0x30: vwredsumu_vs({{
                         Vd_vwu[0] = reduce_loop(std::plus<vwu>(),
                             Vs1_vwu, Vs2_vu);
-                    }}, OPIVV, VectorIntegerReduceOp);
+                    }}, OPIVV, SimdReduceAddOp);
                     0x31: vwredsum_vs({{
                         Vd_vwu[0] = reduce_loop(std::plus<vwi>(),
                             Vs1_vwi, Vs2_vi);
-                    }}, OPIVV, VectorIntegerReduceOp);
+                    }}, OPIVV, SimdReduceAddOp);
                 }
                 format VectorIntMaskFormat {
                     0x11: decode VM {
@@ -2934,57 +2934,57 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vu[i], Vs1_vu[i],
                                     elem_mask(v0, ei)));
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                         0x1: vmadc_vv({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vu[i], Vs1_vu[i]));
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                     }
                     0x13: decode VM {
                         0x0: vmsbc_vvm({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 borrow_out(Vs2_vi[i], Vs1_vi[i],
                                     elem_mask(v0, ei)));
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                         0x1: vmsbc_vv({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 borrow_out(Vs2_vi[i], Vs1_vi[i]));
-                        }}, OPIVV, VectorIntegerArithOp);
+                        }}, OPIVV, SimdAddOp);
                     }
                     0x18: vmseq_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] == Vs1_vu[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x19: vmsne_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] != Vs1_vu[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x1a: vmsltu_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] < Vs1_vu[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x1b: vmslt_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] < Vs1_vi[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x1c: vmsleu_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] <= Vs1_vu[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                     0x1d: vmsle_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] <= Vs1_vi[i]));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCmpOp);
                 }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wv({{
                         Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
                             ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x2d: vnsra_wv({{
                         Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
                             ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdShiftOp);
                     0x2e: vnclipu_wv({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
@@ -3001,7 +3001,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vu[i + offset] = (vu)res;
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCvtOp);
                     0x2f: vnclip_wv({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
@@ -3020,7 +3020,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vi[i + offset] = (vi)res;
-                    }}, OPIVV, VectorIntegerArithOp);
+                    }}, OPIVV, SimdCvtOp);
                 }
             }
             // OPFVV
@@ -3029,57 +3029,57 @@ decode QUADRANT default Unknown::unknown() {
                     auto fd = fadd<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatAddOp);
                 0x01: VectorReduceFloatFormat::vfredusum_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fadd<et>(ftype<et>(src1), ftype<et>(src2));
                     }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, VectorFloatReduceOp);
+                }}, OPFVV, SimdFloatReduceAddOp);
                 0x02: VectorFloatFormat::vfsub_vv({{
                     auto fd = fsub<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatAddOp);
                 0x03: VectorReduceFloatFormat::vfredosum_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fadd<et>(ftype<et>(src1), ftype<et>(src2));
                     }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, VectorFloatReduceOp);
+                }}, OPFVV, SimdFloatReduceAddOp);
                 0x04: VectorFloatFormat::vfmin_vv({{
                     auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatCmpOp);
                 0x05: VectorReduceFloatFormat::vfredmin_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fmin<et>(ftype<et>(src1), ftype<et>(src2));
                     }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, VectorFloatReduceOp);
+                }}, OPFVV, SimdFloatReduceCmpOp);
                 0x06: VectorFloatFormat::vfmax_vv({{
                     auto fd = fmax<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatCmpOp);
                 0x07: VectorReduceFloatFormat::vfredmax_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fmax<et>(ftype<et>(src1), ftype<et>(src2));
                     }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, VectorFloatReduceOp);
+                }}, OPFVV, SimdFloatReduceCmpOp);
                 0x08: VectorFloatFormat::vfsgnj_vv({{
                     Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                          ftype<et>(Vs1_vu[i]),
                                          false, false).v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatCvtOp);
                 0x09: VectorFloatFormat::vfsgnjn_vv({{
                     Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                          ftype<et>(Vs1_vu[i]),
                                          true, false).v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatCvtOp);
                 0x0a: VectorFloatFormat::vfsgnjx_vv({{
                     Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                          ftype<et>(Vs1_vu[i]),
                                          false, true).v;
-                }}, OPFVV, VectorFloatArithOp);
+                }}, OPFVV, SimdFloatCvtOp);
                 // VWFUNARY0
                 0x10: decode VS1 {
                     0x00: decode VM {
@@ -3088,7 +3088,7 @@ decode QUADRANT default Unknown::unknown() {
                         0x1: VectorNonSplitFormat::vfmv_f_s({{
                             freg_t fd = freg(Vs2_vu[0]);
                             Fd_bits = fd.v;
-                        }}, OPFVV, VectorMiscOp);
+                        }}, OPFVV, SimdMiscOp);
                     }
                 }
                 0x12: decode VS1 {
@@ -3096,101 +3096,101 @@ decode QUADRANT default Unknown::unknown() {
                         0x00: vfcvt_xu_f_v({{
                             Vd_vu[i] = f_to_ui<et>(ftype<et>(Vs2_vu[i]),
                                                    softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x01: vfcvt_x_f_v({{
                             Vd_vu[i] = f_to_i<et>(ftype<et>(Vs2_vu[i]),
                                                   softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x02: vfcvt_f_xu_v({{
                             auto fd = ui_to_f<et>(Vs2_vu[i]);
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x03: vfcvt_f_x_v({{
                             auto fd = i_to_f<et>(Vs2_vu[i]);
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x06: vfcvt_rtz_xu_f_v({{
                             Vd_vu[i] = f_to_ui<et>(ftype<et>(Vs2_vu[i]),
                                                    softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x07: vfcvt_rtz_x_f_v({{
                             Vd_vu[i] = f_to_i<et>(ftype<et>(Vs2_vu[i]),
                                                   softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                     }
                     format VectorFloatWideningCvtFormat {
                         0x08: vfwcvt_xu_f_v({{
                             Vd_vwu[i] = f_to_wui<et>(
                                 ftype<et>(Vs2_vu[i + offset]),
                                 softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x09: vfwcvt_x_f_v({{
                             Vd_vwu[i] = f_to_wi<et>(
                                 ftype<et>(Vs2_vu[i + offset]),
                                 softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0a: vfwcvt_f_xu_v({{
                             auto fd = ui_to_wf<vu>(Vs2_vu[i + offset]);
                             Vd_vwu[i] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0b: vfwcvt_f_x_v({{
                             auto fd = i_to_wf<vu>(Vs2_vu[i + offset]);
                             Vd_vwu[i] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0c: vfwcvt_f_f_v({{
                             auto fd = f_to_wf<et>(
                                 ftype<et>(Vs2_vu[i + offset]));
                             Vd_vwu[i] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0e: vfwcvt_rtz_xu_f_v({{
                             Vd_vwu[i] = f_to_wui<et>(
                                 ftype<et>(Vs2_vu[i + offset]),
                                 softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0f: vfwcvt_rtz_x_f_v({{
                             Vd_vwu[i] = f_to_wi<et>(
                                 ftype<et>(Vs2_vu[i + offset]),
                                 softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                     }
                     format VectorFloatNarrowingCvtFormat {
                         0x10: vfncvt_xu_f_w({{
                             Vd_vu[i + offset] = f_to_nui<vu>(
                                 ftype<ewt>(Vs2_vwu[i]),
                                 softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x11: vfncvt_x_f_w({{
                             Vd_vu[i + offset] = f_to_ni<vu>(
                                 ftype<ewt>(Vs2_vwu[i]),
                                 softfloat_roundingMode);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x12: vfncvt_f_xu_w({{
                             auto fd = ui_to_nf<et>(Vs2_vwu[i]);
                             Vd_vu[i + offset] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x13: vfncvt_f_x_w({{
                             auto fd = i_to_nf<et>(Vs2_vwu[i]);
                             Vd_vu[i + offset] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x14: vfncvt_f_f_w({{
                             auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
                             Vd_vu[i + offset] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x15: vfncvt_rod_f_f_w({{
                             softfloat_roundingMode = softfloat_round_odd;
                             auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
                             Vd_vu[i + offset] = fd.v;
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x16: vfncvt_rtz_xu_f_w({{
                             Vd_vu[i + offset] = f_to_nui<vu>(
                                 ftype<ewt>(Vs2_vwu[i]),
                                 softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x17: vfncvt_rtz_x_f_w({{
                             Vd_vu[i + offset] = f_to_ni<vu>(
                                 ftype<ewt>(Vs2_vwu[i]),
                                 softfloat_round_minMag);
-                        }}, OPFVV, VectorFloatConvertOp);
+                        }}, OPFVV, SimdFloatCvtOp);
                     }
                 }
                 0x13: decode VS1 {
@@ -3198,19 +3198,19 @@ decode QUADRANT default Unknown::unknown() {
                         0x00: vfsqrt_v({{
                             auto fd = fsqrt<et>(ftype<et>(Vs2_vu[i]));
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatArithOp);
+                        }}, OPFVV, SimdFloatSqrtOp);
                         0x04: vfrsqrt7_v({{
                             auto fd = frsqrte7<et>(ftype<et>(Vs2_vu[i]));
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatArithOp);
+                        }}, OPFVV, SimdFloatSqrtOp);
                         0x05: vfrec7_v({{
                             auto fd = frecip7<et>(ftype<et>(Vs2_vu[i]));
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatArithOp);
+                        }}, OPFVV, SimdFloatDivOp);
                         0x10: vfclass_v({{
                             auto fd = fclassify<et>(ftype<et>(Vs2_vu[i]));
                             Vd_vu[i] = fd.v;
-                        }}, OPFVV, VectorFloatArithOp);
+                        }}, OPFVV, SimdMiscOp);
                     }
                 }
 
@@ -3219,82 +3219,82 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             feq<et>(ftype<et>(Vs2_vu[i]),
                                     ftype<et>(Vs1_vu[i])));
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatCmpOp);
                     0x19: vmfle_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             fle<et>(ftype<et>(Vs2_vu[i]),
                                     ftype<et>(Vs1_vu[i])));
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatCmpOp);
                     0x1b: vmflt_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             flt<et>(ftype<et>(Vs2_vu[i]),
                                     ftype<et>(Vs1_vu[i])));
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatCmpOp);
                     0x1c: vmfne_vv({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             !feq<et>(ftype<et>(Vs2_vu[i]),
                                     ftype<et>(Vs1_vu[i])));
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatCmpOp);
                 }
                 format VectorFloatFormat {
                     0x20: vfdiv_vv({{
                         auto fd = fdiv<et>(ftype<et>(Vs2_vu[i]),
                                            ftype<et>(Vs1_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatDivOp);
                     0x24: vfmul_vv({{
                         auto fd = fmul<et>(ftype<et>(Vs2_vu[i]),
                                            ftype<et>(Vs1_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultOp);
                     0x28: vfmadd_vv({{
                         auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
                                             ftype<et>(Vs1_vu[i]),
                                             ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x29: vfnmadd_vv({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
                                             ftype<et>(Vs1_vu[i]),
                                             fneg(ftype<et>(Vs2_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2a: vfmsub_vv({{
                         auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
                                             ftype<et>(Vs1_vu[i]),
                                             fneg(ftype<et>(Vs2_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2b: vfnmsub_vv({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
                                             ftype<et>(Vs1_vu[i]),
                                             ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2c: vfmacc_vv({{
                         auto fd = fmadd<et>(ftype<et>(Vs1_vu[i]),
                                             ftype<et>(Vs2_vu[i]),
                                             ftype<et>(Vs3_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2d: vfnmacc_vv({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs1_vu[i])),
                                             ftype<et>(Vs2_vu[i]),
                                             fneg(ftype<et>(Vs3_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2e: vfmsac_vv({{
                         auto fd = fmadd<et>(ftype<et>(Vs1_vu[i]),
                                             ftype<et>(Vs2_vu[i]),
                                             fneg(ftype<et>(Vs3_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x2f: vfnmsac_vv({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs1_vu[i])),
                                             ftype<et>(Vs2_vu[i]),
                                             ftype<et>(Vs3_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x31: VectorReduceFloatWideningFormat::vfwredusum_vs({{
                         Vd_vwu[0] = reduce_loop(
                             [](const vwu& src1, const vu& src2) {
@@ -3303,7 +3303,7 @@ decode QUADRANT default Unknown::unknown() {
                                     f_to_wf<et>(ftype<et>(src2))
                                 );
                             }, Vs1_vwu, Vs2_vu);
-                    }}, OPFVV, VectorFloatReduceOp);
+                    }}, OPFVV, SimdFloatReduceAddOp);
                     0x33: VectorReduceFloatWideningFormat::vfwredosum_vs({{
                         Vd_vwu[0] = reduce_loop(
                             [](const vwu& src1, const vu& src2) {
@@ -3312,7 +3312,7 @@ decode QUADRANT default Unknown::unknown() {
                                     f_to_wf<et>(ftype<et>(src2))
                                 );
                             }, Vs1_vwu, Vs2_vu);
-                    }}, OPFVV, VectorFloatReduceOp);
+                    }}, OPFVV, SimdFloatReduceAddOp);
                 }
                 format VectorFloatWideningFormat {
                     0x30: vfwadd_vv({{
@@ -3320,59 +3320,59 @@ decode QUADRANT default Unknown::unknown() {
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatAddOp);
                     0x32: vfwsub_vv({{
                         auto fd = fsub<ewt>(
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatAddOp);
                     0x34: vfwadd_wv({{
                         auto fd = fadd<ewt>(
                             ftype<ewt>(Vs2_vwu[i]),
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatAddOp);
                     0x36: vfwsub_wv({{
                         auto fd = fsub<ewt>(
                             ftype<ewt>(Vs2_vwu[i]),
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatAddOp);
                     0x38: vfwmul_vv({{
                         auto fd = fmul<ewt>(
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultOp);
                     0x3c: vfwmacc_vv({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype<et>(Vs1_vu[i + offset])),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             ftype<ewt>(Vs3_vwu[i]));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x3d: vfwnmacc_vv({{
                         auto fd = fmadd<ewt>(
                             fwiden(fneg(ftype<et>(Vs1_vu[i + offset]))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fneg(ftype<ewt>(Vs3_vwu[i])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x3e: vfwmsac_vv({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype<et>(Vs1_vu[i + offset])),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fneg(ftype<ewt>(Vs3_vwu[i])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x3f: vfwnmsac_vv({{
                         auto fd = fmadd<ewt>(
                             fwiden(fneg(ftype<et>(Vs1_vu[i + offset]))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             ftype<ewt>(Vs3_vwu[i]));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVV, VectorFloatArithOp);
+                    }}, OPFVV, SimdFloatMultAccOp);
                 }
             }
             // OPMVV
@@ -3381,65 +3381,65 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: vredsum_vs({{
                         Vd_vi[0] =
                             reduce_loop(std::plus<vi>(), Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceAddOp);
                     0x1: vredand_vs({{
                         Vd_vi[0] =
                             reduce_loop(std::bit_and<vi>(), Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceAluOp);
                     0x2: vredor_vs({{
                         Vd_vi[0] =
                             reduce_loop(std::bit_or<vi>(), Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceAluOp);
                     0x3: vredxor_vs({{
                         Vd_vi[0] =
                             reduce_loop(std::bit_xor<vi>(), Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceAluOp);
                     0x4: vredminu_vs({{
                         Vd_vu[0] =
                             reduce_loop([](const vu& src1, const vu& src2) {
                                 return std::min<vu>(src1, src2);
                             }, Vs1_vu, Vs2_vu);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceCmpOp);
                     0x5: vredmin_vs({{
                         Vd_vi[0] =
                             reduce_loop([](const vi& src1, const vi& src2) {
                                 return std::min<vi>(src1, src2);
                             }, Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceCmpOp);
                     0x6: vredmaxu_vs({{
                         Vd_vu[0] =
                             reduce_loop([](const vu& src1, const vu& src2) {
                                 return std::max<vu>(src1, src2);
                             }, Vs1_vu, Vs2_vu);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceCmpOp);
                     0x7: vredmax_vs({{
                         Vd_vi[0] =
                             reduce_loop([](const vi& src1, const vi& src2) {
                                 return std::max<vi>(src1, src2);
                             }, Vs1_vi, Vs2_vi);
-                    }}, OPMVV, VectorIntegerReduceOp);
+                    }}, OPMVV, SimdReduceCmpOp);
                 }
                 format VectorIntFormat {
                     0x8: vaaddu_vv({{
                         __uint128_t res = (__uint128_t)Vs2_vu[i] + Vs1_vu[i];
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vu[i] = res >> 1;
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x9: vaadd_vv({{
                         __uint128_t res = (__uint128_t)Vs2_vi[i] + Vs1_vi[i];
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0xa: vasubu_vv({{
                         __uint128_t res = (__uint128_t)Vs2_vu[i] - Vs1_vu[i];
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vu[i] = res >> 1;
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0xb: vasub_vv({{
                         __uint128_t res = (__uint128_t)Vs2_vi[i] - Vs1_vi[i];
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                 }
                 // VWXUNARY0
                 0x10: decode VS1 {
@@ -3448,7 +3448,7 @@ decode QUADRANT default Unknown::unknown() {
                         // (vm=0) of vmv.x.s are reserved.
                         0x1: VectorNonSplitFormat::vmv_x_s({{
                             Rd_ud = Vs2_vi[0];
-                        }}, OPMVV, VectorMiscOp);
+                        }}, OPMVV, SimdMiscOp);
                     }
                     0x10: Vector1Vs1RdMaskFormat::vcpop_m({{
                         uint64_t popcount = 0;
@@ -3462,7 +3462,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                         Rd_vu = popcount;
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x11: Vector1Vs1RdMaskFormat::vfirst_m({{
                         int64_t pos = -1;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
@@ -3478,7 +3478,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                         Rd_vu = pos;
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdMiscOp);
                 }
                 0x12: decode VS1 {
                     format VectorIntExtFormat {
@@ -3486,32 +3486,32 @@ decode QUADRANT default Unknown::unknown() {
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vu[i] = Vs2_vextu[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                         0x03: vsext_vf8({{
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vi[i] = Vs2_vext[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                         0x04: vzext_vf4({{
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vu[i] = Vs2_vextu[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                         0x05: vsext_vf4({{
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vi[i] = Vs2_vext[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                         0x06: vzext_vf2({{
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vu[i] = Vs2_vextu[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                         0x07: vsext_vf2({{
                             auto offset = (vlen / SEW) * index;
 
                             Vd_vi[i] = Vs2_vext[i + offset];
-                        }}, OPMVV, VectorIntegerExtensionOp);
+                        }}, OPMVV, SimdExtOp);
                     }
                 }
                 0x14: decode VS1 {
@@ -3529,7 +3529,7 @@ decode QUADRANT default Unknown::unknown() {
                                 Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
                             }
                         }
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x02: Vector1Vs1VdMaskFormat::vmsof_m({{
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
@@ -3543,7 +3543,7 @@ decode QUADRANT default Unknown::unknown() {
                                 Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
                             }
                         }
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x03: Vector1Vs1VdMaskFormat::vmsif_m({{
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
@@ -3559,7 +3559,7 @@ decode QUADRANT default Unknown::unknown() {
                                 Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
                             }
                         }
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x10: ViotaFormat::viota_m({{
                         RiscvISAInst::VecRegContainer tmp_s2;
                         xc->getRegOperand(this, 2,
@@ -3585,139 +3585,139 @@ decode QUADRANT default Unknown::unknown() {
                                 *cnt = *cnt+1;
                             }
                         }
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x11: VectorIntFormat::vid_v({{
                         Vd_vu[i] = ei;
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdMiscOp);
                 }
                 format VectorMaskFormat {
                     0x18: vmandn_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             elem_mask(Vs2_vu, i) & !elem_mask(Vs1_vu, i));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x19: vmand_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             elem_mask(Vs2_vu, i) & elem_mask(Vs1_vu, i));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1a: vmor_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             elem_mask(Vs2_vu, i) | elem_mask(Vs1_vu, i));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1b: vmxor_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             elem_mask(Vs2_vu, i) ^ elem_mask(Vs1_vu, i));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1c: vmorn_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             elem_mask(Vs2_vu, i) | !elem_mask(Vs1_vu, i));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1d: vmnand_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             !(elem_mask(Vs2_vu, i) & elem_mask(Vs1_vu, i)));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1e: vmnor_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             !(elem_mask(Vs2_vu, i) | elem_mask(Vs1_vu, i)));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                     0x1f: vmxnor_mm({{
                         Vd_ub[i/8] = ASSIGN_VD_BIT(i,
                             !(elem_mask(Vs2_vu, i) ^ elem_mask(Vs1_vu, i)));
-                    }}, OPMVV, VectorMiscOp);
+                    }}, OPMVV, SimdAluOp);
                 }
                 format VectorIntFormat {
                     0x20: vdivu_vv({{
                         Vd_vu[i] = divu<vu>(Vs2_vu[i], Vs1_vu[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdDivOp);
                     0x21: vdiv_vv({{
                         Vd_vi[i] = div<vi>(Vs2_vi[i], Vs1_vi[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdDivOp);
                     0x22: vremu_vv({{
                         Vd_vu[i] = remu<vu>(Vs2_vu[i], Vs1_vu[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdDivOp);
                     0x23: vrem_vv({{
                         Vd_vi[i] = rem<vi>(Vs2_vi[i], Vs1_vi[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdDivOp);
                     0x24: vmulhu_vv({{
                         Vd_vu[i] = mulhu<vu>(Vs2_vu[i], Vs1_vu[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x25: vmul_vv({{
                         Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x26: vmulhsu_vv({{
                         Vd_vi[i] = mulhsu<vi>(Vs2_vi[i], Vs1_vu[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x27: vmulh_vv({{
                         Vd_vi[i] = mulh<vi>(Vs2_vi[i], Vs1_vi[i]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x29: vmadd_vv({{
                         Vd_vi[i] = Vs3_vi[i] * Vs1_vi[i] + Vs2_vi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                     0x2b: vnmsub_vv({{
                         Vd_vi[i] = -(Vs3_vi[i] * Vs1_vi[i]) + Vs2_vi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                     0x2d: vmacc_vv({{
                         Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i] + Vs3_vi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                     0x2f: vnmsac_vv({{
                         Vd_vi[i] = -(Vs2_vi[i] * Vs1_vi[i]) + Vs3_vi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                 }
                 format VectorIntWideningFormat {
                     0x30: vwaddu_vv({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset])
                                 + vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x31: vwadd_vv({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset])
                                 + vwi(Vs1_vi[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x32: vwsubu_vv({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset])
                                 - vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x33: vwsub_vv({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset])
                                 - vwi(Vs1_vi[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x34: vwaddu_wv({{
                         Vd_vwu[i] = Vs2_vwu[i] + vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x35: vwadd_wv({{
                         Vd_vwi[i] = Vs2_vwi[i] + vwi(Vs1_vi[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x36: vwsubu_wv({{
                         Vd_vwu[i] = Vs2_vwu[i] - vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x37: vwsub_wv({{
                         Vd_vwi[i] = Vs2_vwi[i] - vwi(Vs1_vi[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdAddOp);
                     0x38: vwmulu_vv({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset])
                                 * vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x3a: vwmulsu_vv({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset])
                                 * vwu(Vs1_vu[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x3b: vwmul_vv({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset])
                                 * vwi(Vs1_vi[i + offset]);
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultOp);
                     0x3c: vwmaccu_vv({{
                         Vd_vwu[i] = vwu(Vs1_vu[i + offset])
                                 * vwu(Vs2_vu[i + offset])
                                 + Vs3_vwu[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                     0x3d: vwmacc_vv({{
                         Vd_vwi[i] = vwi(Vs1_vi[i + offset])
                                 * vwi(Vs2_vi[i + offset])
                                 + Vs3_vwi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                     0x3f: vwmaccsu_vv({{
                         Vd_vwi[i] = vwi(Vs1_vi[i + offset])
                                 * vwu(Vs2_vu[i + offset])
                                 + Vs3_vwi[i];
-                    }}, OPMVV, VectorIntegerArithOp);
+                    }}, OPMVV, SimdMultAccOp);
                 }
             }
             // OPIVI
@@ -3725,19 +3725,19 @@ decode QUADRANT default Unknown::unknown() {
                 format VectorIntFormat {
                     0x00: vadd_vi({{
                         Vd_vi[i] = Vs2_vi[i] + (vi)sext<5>(SIMM5);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAddOp);
                     0x03: vrsub_vi({{
                         Vd_vi[i] = (vi)sext<5>(SIMM5) - Vs2_vi[i];
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAddOp);
                     0x09: vand_vi({{
                         Vd_vi[i] = Vs2_vi[i] & (vi)sext<5>(SIMM5);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAluOp);
                     0x0a: vor_vi({{
                         Vd_vi[i] = Vs2_vi[i] | (vi)sext<5>(SIMM5);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAluOp);
                     0x0b: vxor_vi({{
                         Vd_vi[i] = Vs2_vi[i] ^ (vi)sext<5>(SIMM5);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAluOp);
                 }
                 0x0c: VectorGatherFormat::vrgather_vi({{
                     for (uint32_t i = 0; i < microVl; i++) {
@@ -3750,7 +3750,7 @@ decode QUADRANT default Unknown::unknown() {
                                 : Vs3_vu[i];
                         }
                     }
-                }}, OPIVI, VectorMiscOp);
+                }}, OPIVI, SimdMiscOp);
                 0x0e: VectorSlideUpFormat::vslideup_vi({{
                     const int offset = (int)(uint64_t)(SIMM5);
                     const int microVlmax = vtype_VLMAX(machInst.vtype8,
@@ -3776,7 +3776,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPIVI, VectorMiscOp);
+                }}, OPIVI, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vi({{
                     const int offset = (int)(uint64_t)(SIMM5);
                     const int microVlmax = vtype_VLMAX(machInst.vtype8,
@@ -3815,13 +3815,13 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPIVI, VectorMiscOp);
+                }}, OPIVI, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
                         0x0: vadc_vim({{
                             Vd_vi[i] = Vs2_vi[i] +
                                 (vi)sext<5>(SIMM5) + elem_mask(v0, ei);
-                        }}, OPIVI, VectorIntegerArithOp);
+                        }}, OPIVI, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
                     0x17: decode VM {
@@ -3829,29 +3829,29 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vi[i] = elem_mask(v0, ei)
                                     ? (vi)sext<5>(SIMM5)
                                     : Vs2_vi[i];
-                        }}, OPIVI, VectorIntegerArithOp);
+                        }}, OPIVI, SimdMiscOp);
                         0x1: vmv_v_i({{
                             Vd_vi[i] = (vi)sext<5>(SIMM5);
-                        }}, OPIVI, VectorIntegerArithOp);
+                        }}, OPIVI, SimdMiscOp);
                     }
                 }
                 format VectorIntVxsatFormat{
                     0x20: vsaddu_vi({{
                         Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)sext<5>(SIMM5),
                             vxsatptr);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAddOp);
                     0x21: vsadd_vi({{
                         Vd_vi[i] = sat_add<vi>(Vs2_vi[i], (vi)sext<5>(SIMM5),
                             vxsatptr);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdAddOp);
                 }
                 format VectorIntFormat {
                     0x25: vsll_vi({{
                         Vd_vu[i] = Vs2_vu[i] << ((vu)SIMM5 & (sew - 1) & 0x1f);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x28: vsrl_vi({{
                         Vd_vu[i] = Vs2_vu[i] >> ((vu)SIMM5 & (sew - 1) & 0x1f);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x2a: vssrl_vi({{
                         int sh = SIMM5 & (vtype_SEW(vtype) - 1);
                         __uint128_t res = Vs2_vu[i];
@@ -3860,10 +3860,10 @@ decode QUADRANT default Unknown::unknown() {
                             res, 0 /* TODO */, sh) >> sh;
 
                         Vd_vu[i] = res;
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x29: vsra_vi({{
                         Vd_vi[i] = Vs2_vi[i] >> ((vu)SIMM5 & (sew - 1) & 0x1f);
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x2b: vssra_vi({{
                         int sh = SIMM5 & (sew - 1);
                         __int128_t val = Vs2_vi[i];
@@ -3871,7 +3871,7 @@ decode QUADRANT default Unknown::unknown() {
                         val = int_rounding<__int128_t>(val,
                             xc->readMiscReg(MISCREG_VXRM), sh);
                         Vd_vi[i] = val >> sh;
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                 }
                 // According to Spec Section 16.6,
                 // vm must be 1 (unmasked) in vmv<nr>r.v instructions.
@@ -3879,16 +3879,16 @@ decode QUADRANT default Unknown::unknown() {
                     format VMvWholeFormat {
                         0x0: vmv1r_v({{
                             Vd_ud[i] = Vs2_ud[i];
-                        }}, OPIVI, VectorMiscOp);
+                        }}, OPIVI, SimdMiscOp);
                         0x1: vmv2r_v({{
                             Vd_ud[i] = Vs2_ud[i];
-                        }}, OPIVI, VectorMiscOp);
+                        }}, OPIVI, SimdMiscOp);
                         0x3: vmv4r_v({{
                             Vd_ud[i] = Vs2_ud[i];
-                        }}, OPIVI, VectorMiscOp);
+                        }}, OPIVI, SimdMiscOp);
                         0x7: vmv8r_v({{
                             Vd_ud[i] = Vs2_ud[i];
-                        }}, OPIVI, VectorMiscOp);
+                        }}, OPIVI, SimdMiscOp);
                     }
                 }}
                 format VectorIntMaskFormat {
@@ -3897,46 +3897,46 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vi[i], (vi)sext<5>(SIMM5),
                                     elem_mask(v0, ei)));
-                        }}, OPIVI, VectorIntegerArithOp);
+                        }}, OPIVI, SimdAddOp);
                         0x1: vmadc_vi({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vi[i], (vi)sext<5>(SIMM5)));
-                        }}, OPIVI, VectorIntegerArithOp);
+                        }}, OPIVI, SimdAddOp);
                     }
                     0x18: vmseq_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] == (vi)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                     0x19: vmsne_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] != (vi)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                     0x1c: vmsleu_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] <= (vu)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                     0x1d: vmsle_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] <= (vi)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                     0x1e: vmsgtu_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] > (vu)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                     0x1f: vmsgt_vi({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] > (vi)sext<5>(SIMM5)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCmpOp);
                 }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wi({{
                         Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x2d: vnsra_wi({{
                         Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdShiftOp);
                     0x2e: vnclipu_wi({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
@@ -3953,7 +3953,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vu[i + offset] = (vu)res;
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCvtOp);
                     0x2f: vnclip_wi({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
@@ -3972,7 +3972,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vi[i + offset] = (vi)res;
-                    }}, OPIVI, VectorIntegerArithOp);
+                    }}, OPIVI, SimdCvtOp);
                 }
             }
             // OPIVX
@@ -3980,34 +3980,34 @@ decode QUADRANT default Unknown::unknown() {
                 format VectorIntFormat {
                     0x0: vadd_vx({{
                         Vd_vu[i] = Vs2_vu[i] + Rs1_vu;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x2: vsub_vx({{
                         Vd_vu[i] = Vs2_vu[i] - Rs1_vu;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x3: vrsub_vx({{
                         Vd_vu[i] = Rs1_vu - Vs2_vu[i];
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x4: vminu_vx({{
                         Vd_vu[i] = std::min(Vs2_vu[i], Rs1_vu);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x5: vmin_vx({{
                         Vd_vi[i] = std::min(Vs2_vi[i], Rs1_vi);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x6: vmaxu_vx({{
                         Vd_vu[i] = std::max(Vs2_vu[i], Rs1_vu);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x7: vmax_vx({{
                         Vd_vi[i] = std::max(Vs2_vi[i], Rs1_vi);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x9: vand_vx({{
                         Vd_vu[i] = Vs2_vu[i] & Rs1_vu;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAluOp);
                     0xa: vor_vx({{
                         Vd_vu[i] = Vs2_vu[i] | Rs1_vu;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAluOp);
                     0xb: vxor_vx({{
                         Vd_vu[i] = Vs2_vu[i] ^ Rs1_vu;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAluOp);
                 }
                 0x0e: VectorSlideUpFormat::vslideup_vx({{
                     const int offset = (int)Rs1_vu;
@@ -4034,7 +4034,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPIVX, VectorMiscOp);
+                }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vx({{
                     const int offset = (int)Rs1_vu;
                     const int microVlmax = vtype_VLMAX(machInst.vtype8,
@@ -4073,7 +4073,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPIVX, VectorMiscOp);
+                }}, OPIVX, SimdMiscOp);
                 0x0c: VectorGatherFormat::vrgather_vx({{
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
@@ -4084,28 +4084,28 @@ decode QUADRANT default Unknown::unknown() {
                                 : Vs3_vu[i];
                         }
                     }
-                }}, OPIVX, VectorMiscOp);
+                }}, OPIVX, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
                         0x0: vadc_vxm({{
                             Vd_vi[i] = Vs2_vi[i] + Rs1_vi + elem_mask(v0, ei);
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
                     0x12: decode VM {
                         0x0: vsbc_vxm({{
                             Vd_vi[i] = Vs2_vi[i] - Rs1_vi - elem_mask(v0, ei);
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
                     0x17: decode VM {
                         0x0: vmerge_vxm({{
                             Vd_vu[i] = elem_mask(v0, ei) ? Rs1_vu : Vs2_vu[i];
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdMiscOp);
                         0x1: decode VS2 {
                             0x0: vmv_v_x({{
                                 Vd_vu[i] = Rs1_vu;
-                            }}, OPIVX, VectorIntegerArithOp);
+                            }}, OPIVX, SimdMiscOp);
                         }
                     }
                 }
@@ -4113,19 +4113,19 @@ decode QUADRANT default Unknown::unknown() {
                     0x20: vsaddu_vx({{
                         Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], Rs1_vu,
                             vxsatptr);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x21: vsadd_vx({{
                         Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Rs1_vu,
                             vxsatptr);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x22: vssubu_vx({{
                         Vd_vu[i] = sat_subu<vu>(Vs2_vu[i], Rs1_vu,
                             vxsatptr);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x23: vssub_vx({{
                         Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Rs1_vu,
                             vxsatptr);
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdAddOp);
                     0x27: vsmul_vx({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
@@ -4141,18 +4141,18 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vi[i] = (vi)result;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdMultOp);
                 }
                 format VectorIntFormat {
                     0x25: vsll_vx({{
                         Vd_vu[i] = Vs2_vu[i] << (Rs1_vu & (sew - 1));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x28: vsrl_vx({{
                         Vd_vu[i] = Vs2_vu[i] >> (Rs1_vu & (sew - 1));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x29: vsra_vx({{
                         Vd_vi[i] = Vs2_vi[i] >> (Rs1_vu & (sew - 1));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x2a: vssrl_vx({{
                         int sh = Rs1_vu & (sew - 1);
                         __uint128_t val = Vs2_vu[i];
@@ -4160,7 +4160,7 @@ decode QUADRANT default Unknown::unknown() {
                         val = int_rounding<__uint128_t>(val,
                             xc->readMiscReg(MISCREG_VXRM), sh);
                         Vd_vu[i] = val >> sh;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x2b: vssra_vx({{
                         int sh = Rs1_vu & (sew - 1);
                         __int128_t val = Vs2_vi[i];
@@ -4168,17 +4168,17 @@ decode QUADRANT default Unknown::unknown() {
                         val = int_rounding<__int128_t>(val,
                             xc->readMiscReg(MISCREG_VXRM), sh);
                         Vd_vi[i] = val >> sh;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                 }
                 format VectorIntNarrowingFormat {
                     0x2c: vnsrl_wx({{
                         Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
                                             ((vwu)Rs1_vu & (sew * 2 - 1)));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x2d: vnsra_wx({{
                         Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
                                             ((vwu)Rs1_vu & (sew * 2 - 1)));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdShiftOp);
                     0x2e: vnclipu_wx({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
@@ -4195,7 +4195,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vu[i + offset] = (vu)res;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCvtOp);
                     0x2f: vnclip_wx({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
@@ -4214,7 +4214,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
 
                         Vd_vi[i + offset] = (vi)res;
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCvtOp);
                 }
 
                 format VectorIntMaskFormat {
@@ -4223,55 +4223,55 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vi[i], Rs1_vi,
                                     elem_mask(v0, ei)));
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                         0x1: vmadc_vx({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 carry_out(Vs2_vi[i], Rs1_vi));
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                     }
                     0x13: decode VM {
                         0x0: vmsbc_vxm({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 borrow_out(Vs2_vi[i], Rs1_vi,
                                     elem_mask(v0, ei)));
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                         0x1: vmsbc_vx({{
                             Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                                 borrow_out(Vs2_vi[i], Rs1_vi));
-                        }}, OPIVX, VectorIntegerArithOp);
+                        }}, OPIVX, SimdAddOp);
                     }
                     0x18: vmseq_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] == Rs1_vu));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x19: vmsne_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] != Rs1_vu));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1a: vmsltu_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] < Rs1_vu));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1b: vmslt_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] < Rs1_vi));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1c: vmsleu_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] <= Rs1_vu));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1d: vmsle_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] <= Rs1_vi));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1e: vmsgtu_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vu[i] > Rs1_vu));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                     0x1f: vmsgt_vx({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             (Vs2_vi[i] > Rs1_vi));
-                    }}, OPIVX, VectorIntegerArithOp);
+                    }}, OPIVX, SimdCmpOp);
                 }
             }
             // OPFVF
@@ -4281,37 +4281,37 @@ decode QUADRANT default Unknown::unknown() {
                         auto fd = fadd<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x02: vfsub_vf({{
                         auto fd = fsub<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x04: vfmin_vf({{
                         auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x06: vfmax_vf({{
                         auto fd = fmax<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                             Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x08: vfsgnj_vf({{
                         Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                              ftype_freg<et>(freg(Fs1_bits)),
                                              false, false).v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatExtOp);
                     0x09: vfsgnjn_vf({{
                         Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                              ftype_freg<et>(freg(Fs1_bits)),
                                              true, false).v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatExtOp);
                     0x0a: vfsgnjx_vf({{
                         Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
                                              ftype_freg<et>(freg(Fs1_bits)),
                                              false, true).v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatExtOp);
                 }
                 0x0e: VectorFloatSlideUpFormat::vfslide1up_vf({{
                     const int offset = 1;
@@ -4343,7 +4343,7 @@ decode QUADRANT default Unknown::unknown() {
                             tmp_d0.as<vu>()[0] = Rs1_vu;
                         }
                     }
-                }}, OPFVF, VectorMiscOp);
+                }}, OPFVF, SimdMiscOp);
                 0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
                     const int offset = 1;
                     const int microVlmax = vtype_VLMAX(machInst.vtype8,
@@ -4384,7 +4384,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPFVF, VectorMiscOp);
+                }}, OPFVF, SimdMiscOp);
                 // VRFUNARY0
                 0x10: decode VS2 {
                     0x00: decode VM {
@@ -4395,7 +4395,7 @@ decode QUADRANT default Unknown::unknown() {
                                 auto fd = ftype_freg<et>(freg(Fs1_bits));
                                 Vd_vu[0] = fd.v;
                             }
-                        }}, OPFVV, VectorMiscOp);
+                        }}, OPFVV, SimdMiscOp);
                     }
                 }
                 format VectorFloatFormat{
@@ -4404,11 +4404,11 @@ decode QUADRANT default Unknown::unknown() {
                             Vd_vu[i] = elem_mask(v0, ei)
                                     ? ftype_freg<et>(freg(Fs1_bits)).v
                                     : Vs2_vu[i];
-                        }}, OPFVF, VectorFloatArithOp);
+                        }}, OPFVF, SimdMiscOp);
                         0x1: vfmv_v_f({{
                             auto fd = ftype_freg<et>(freg(Fs1_bits));
                             Vd_vu[i] = fd.v;
-                        }}, OPFVF, VectorFloatArithOp);
+                        }}, OPFVF, SimdMiscOp);
                     }
                 }
                 format VectorFloatMaskFormat {
@@ -4416,84 +4416,84 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             feq<et>(ftype<et>(Vs2_vu[i]),
                                     ftype_freg<et>(freg(Fs1_bits))));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x19: vmfle_vf({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             fle<et>(ftype<et>(Vs2_vu[i]),
                                     ftype_freg<et>(freg(Fs1_bits))));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x1b: vmflt_vf({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             flt<et>(ftype<et>(Vs2_vu[i]),
                                     ftype_freg<et>(freg(Fs1_bits))));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x1c: vmfne_vf({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             !feq<et>(ftype<et>(Vs2_vu[i]),
                                      ftype_freg<et>(freg(Fs1_bits))));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x1d: vmfgt_vf({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             flt<et>(ftype_freg<et>(freg(Fs1_bits)),
                                     ftype<et>(Vs2_vu[i])));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                     0x1f: vmfge_vf({{
                         Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
                             fle<et>(ftype_freg<et>(freg(Fs1_bits)),
                                     ftype<et>(Vs2_vu[i])));
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatCmpOp);
                 }
                 format VectorFloatFormat{
                     0x20: vfdiv_vf({{
                         auto fd = fdiv<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatDivOp);
                     0x21: vfrdiv_vf({{
                         auto fd = fdiv<et>(ftype_freg<et>(freg(Fs1_bits)),
                                            ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatDivOp);
                     0x24: vfmul_vf({{
                         auto fd = fmul<et>(ftype<et>(Vs2_vu[i]),
                                            ftype_freg<et>(freg(Fs1_bits)));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultOp);
                     0x27: vfrsub_vf({{
                         auto fd = fsub<et>(ftype_freg<et>(freg(Fs1_bits)),
                                            ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x28: vfmadd_vf({{
                         auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
                                             ftype_freg<et>(freg(Fs1_bits)),
                                             ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x29: vfnmadd_vf({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
                                             ftype_freg<et>(freg(Fs1_bits)),
                                             fneg(ftype<et>(Vs2_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2a: vfmsub_vf({{
                         auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
                                             ftype_freg<et>(freg(Fs1_bits)),
                                             fneg(ftype<et>(Vs2_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2b: vfnmsub_vf({{
                         auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
                                             ftype_freg<et>(freg(Fs1_bits)),
                                             ftype<et>(Vs2_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2c: vfmacc_vf({{
                         auto fd = fmadd<et>(ftype_freg<et>(freg(Fs1_bits)),
                                             ftype<et>(Vs2_vu[i]),
                                             ftype<et>(Vs3_vu[i]));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2d: vfnmacc_vf({{
                         auto fd = fmadd<et>(
                             fneg(ftype_freg<et>(freg(Fs1_bits))),
@@ -4501,13 +4501,13 @@ decode QUADRANT default Unknown::unknown() {
                             fneg(ftype<et>(Vs3_vu[i]))
                         );
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2e: vfmsac_vf({{
                         auto fd = fmadd<et>(ftype_freg<et>(freg(Fs1_bits)),
                                             ftype<et>(Vs2_vu[i]),
                                             fneg(ftype<et>(Vs3_vu[i])));
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x2f: vfnmsac_vf({{
                         auto fd = fmadd<et>(
                             fneg(ftype_freg<et>(freg(Fs1_bits))),
@@ -4515,7 +4515,7 @@ decode QUADRANT default Unknown::unknown() {
                             ftype<et>(Vs3_vu[i])
                         );
                         Vd_vu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                 }
                 format VectorFloatWideningFormat {
                     0x30: vfwadd_vf({{
@@ -4523,59 +4523,59 @@ decode QUADRANT default Unknown::unknown() {
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x32: vfwsub_vf({{
                         auto fd = fsub<ewt>(
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x34: vfwadd_wf({{
                         auto fd = fadd<ewt>(
                             ftype<ewt>(Vs2_vwu[i]),
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x36: vfwsub_wf({{
                         auto fd = fsub<ewt>(
                             ftype<ewt>(Vs2_vwu[i]),
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatAddOp);
                     0x38: vfwmul_vf({{
                         auto fd = fmul<ewt>(
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultOp);
                     0x3c: vfwmacc_vf({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype_freg<et>(freg(Fs1_bits))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             ftype<ewt>(Vs3_vwu[i]));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x3d: vfwnmacc_vf({{
                         auto fd = fmadd<ewt>(
                             fwiden(fneg(ftype_freg<et>(freg(Fs1_bits)))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fneg(ftype<ewt>(Vs3_vwu[i])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x3e: vfwmsac_vf({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype_freg<et>(freg(Fs1_bits))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             fneg(ftype<ewt>(Vs3_vwu[i])));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x3f: vfwnmsac_vf({{
                         auto fd = fmadd<ewt>(
                             fwiden(fneg(ftype_freg<et>(freg(Fs1_bits)))),
                             fwiden(ftype<et>(Vs2_vu[i + offset])),
                             ftype<ewt>(Vs3_vwu[i]));
                         Vd_vwu[i] = fd.v;
-                    }}, OPFVF, VectorFloatArithOp);
+                    }}, OPFVF, SimdFloatMultAccOp);
                 }
             }
             // OPMVX
@@ -4585,12 +4585,12 @@ decode QUADRANT default Unknown::unknown() {
                         __uint128_t res = (__uint128_t)Vs2_vu[i] + Rs1_vu;
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vu[i] = res >> 1;
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x09: vaadd_vx({{
                         __uint128_t res = (__uint128_t)Vs2_vi[i] + Rs1_vi;
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                 }
                 0x0e: VectorSlideUpFormat::vslide1up_vx({{
                     const int offset = 1;
@@ -4622,7 +4622,7 @@ decode QUADRANT default Unknown::unknown() {
                             tmp_d0.as<vu>()[0] = Rs1_vu;
                         }
                     }
-                }}, OPIVX, VectorMiscOp);
+                }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslide1down_vx({{
                     const int offset = 1;
                     const int microVlmax = vtype_VLMAX(machInst.vtype8,
@@ -4663,7 +4663,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                }}, OPIVX, VectorMiscOp);
+                }}, OPIVX, SimdMiscOp);
                 // VRXUNARY0
                 0x10: decode VS2 {
                     0x00: decode VM {
@@ -4673,7 +4673,7 @@ decode QUADRANT default Unknown::unknown() {
                             if (this->vl) {
                                 Vd_vu[0] = Rs1_vu;
                             }
-                        }}, OPMVX, VectorMiscOp);
+                        }}, OPMVX, SimdMiscOp);
                     }
                 }
                 format VectorIntFormat {
@@ -4681,99 +4681,99 @@ decode QUADRANT default Unknown::unknown() {
                         __uint128_t res = (__uint128_t)Vs2_vu[i] - Rs1_vu;
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vu[i] = res >> 1;
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x0b: vasub_vx({{
                         __uint128_t res = (__uint128_t)Vs2_vi[i] - Rs1_vi;
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x20: vdivu_vx({{
                         Vd_vu[i] = divu<vu>(Vs2_vu[i], Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdDivOp);
                     0x21: vdiv_vx({{
                         Vd_vi[i] = div<vi>(Vs2_vi[i], Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdDivOp);
                     0x22: vremu_vx({{
                         Vd_vu[i] = remu<vu>(Vs2_vu[i], Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdDivOp);
                     0x23: vrem_vx({{
                         Vd_vi[i] = rem<vi>(Vs2_vi[i], Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdDivOp);
                     0x24: vmulhu_vx({{
                         Vd_vu[i] = mulhu<vu>(Vs2_vu[i], Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x25: vmul_vx({{
                         Vd_vi[i] = Vs2_vi[i] * Rs1_vi;
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x26: vmulhsu_vx({{
                         Vd_vi[i] = mulhsu<vi>(Vs2_vi[i], Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x27: vmulh_vx({{
                         Vd_vi[i] = mulh<vi>(Vs2_vi[i], Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x29: vmadd_vx({{
                         Vd_vi[i] = Vs3_vi[i] * Rs1_vi + Vs2_vi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x2b: vnmsub_vx({{
                         Vd_vi[i] = -(Vs3_vi[i] * Rs1_vi) + Vs2_vi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x2d: vmacc_vx({{
                         Vd_vi[i] = Vs2_vi[i] * Rs1_vi + Vs3_vi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x2f: vnmsac_vx({{
                         Vd_vi[i] = -(Vs2_vi[i] * Rs1_vi) + Vs3_vi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                 }
                 format VectorIntWideningFormat {
                     0x30: vwaddu_vx({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset]) + vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x31: vwadd_vx({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset]) + vwi(Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x32: vwsubu_vx({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset]) - vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x33: vwsub_vx({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset]) - vwi(Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x34: vwaddu_wx({{
                         Vd_vwu[i] = Vs2_vwu[i] + vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x35: vwadd_wx({{
                         Vd_vwi[i] = Vs2_vwi[i] + vwi(Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x36: vwsubu_wx({{
                         Vd_vwu[i] = Vs2_vwu[i] - vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x37: vwsub_wx({{
                         Vd_vwi[i] = Vs2_vwi[i] - vwi(Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdAddOp);
                     0x38: vwmulu_vx({{
                         Vd_vwu[i] = vwu(Vs2_vu[i + offset]) * vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x3a: vwmulsu_vx({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset]) * vwu(Rs1_vu);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x3b: vwmul_vx({{
                         Vd_vwi[i] = vwi(Vs2_vi[i + offset]) * vwi(Rs1_vi);
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultOp);
                     0x3c: vwmaccu_vx({{
                         Vd_vwu[i] = vwu(Rs1_vu) * vwu(Vs2_vu[i + offset])
                                 + Vs3_vwu[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x3d: vwmacc_vx({{
                         Vd_vwi[i] = vwi(Rs1_vi) * vwi(Vs2_vi[i + offset])
                                 + Vs3_vwi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x3e: vwmaccus_vx({{
                         Vd_vwi[i] = vwu(Rs1_vu) * vwi(Vs2_vi[i + offset])
                                 + Vs3_vwi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                     0x3f: vwmaccsu_vx({{
                         Vd_vwi[i] = vwi(Rs1_vi) * vwu(Vs2_vu[i + offset])
                                 + Vs3_vwi[i];
-                    }}, OPMVX, VectorIntegerArithOp);
+                    }}, OPMVX, SimdMultAccOp);
                 }
             }
             0x7: decode BIT31 {
@@ -4791,7 +4791,7 @@ decode QUADRANT default Unknown::unknown() {
                         VL = new_vl;
                         Vtype = new_vtype;
                     }}, VSetVlDeclare, VSetVliBranchTarget
-                      , VectorConfigOp, IsUncondControl
+                      , SimdConfigOp, IsUncondControl
                       , IsIndirectControl);
                     0x1: decode BIT30 {
                         0x0: vsetvl({{
@@ -4807,7 +4807,7 @@ decode QUADRANT default Unknown::unknown() {
                             VL = new_vl;
                             Vtype = new_vtype;
                         }}, VSetVlDeclare, VSetVlBranchTarget
-                          , VectorConfigOp, IsUncondControl
+                          , SimdConfigOp, IsUncondControl
                           , IsIndirectControl);
                         0x1: vsetivli({{
                             uint64_t rd_bits = RD;
@@ -4822,7 +4822,7 @@ decode QUADRANT default Unknown::unknown() {
                             VL = new_vl;
                             Vtype = new_vtype;
                         }}, VSetiVliDeclare, VSetiVliBranchTarget
-                          , VectorConfigOp, IsUncondControl
+                          , SimdConfigOp, IsUncondControl
                           , IsDirectControl);
                     }
                 }
