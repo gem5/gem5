@@ -195,6 +195,13 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     // CPU switch have different frequencies.
     dest->setMiscReg(misc_reg::Tsc, src->readMiscReg(misc_reg::Tsc));
 
+	// MCG_CAP register count field holds how many MC MSRs are defined,
+	// to function correctly it must be updated with the number of simulated MC MSRs.
+	X86ISA::McgCap mcgCap = src->readMiscReg(misc_reg::McgCap);
+	mcgCap.count = 8;
+	dest->setMiscReg(misc_reg::McgCap, mcgCap);
+
+	
     dest->getMMUPtr()->flushAll();
 }
 
