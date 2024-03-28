@@ -83,14 +83,29 @@ SysSecCtrl::SysSecCtrl(const Params &p)
     compid2.readonly();
     compid3.readonly();
 
+    /* clang-format off */
     regBank.addRegisters({
-        sscDbgcfgStat, sscDbgcfgSet, sscDbgcfgClr, space0,       sscAuxDbgcfg,
-        space1,        sscAuxGpretn, space2,       sscVersion,   space3,
-        sscSwScratch,  space4,       sscSwCap,     sscSwCapCtrl, space5,
-        sscChipIdSt,   space6,       sscPid4,      space7,       sscPid0,
-        sscPid1,       sscPid2,      space8,       compid0,      compid1,
-        compid2,       compid3,
+        sscDbgcfgStat, sscDbgcfgSet, sscDbgcfgClr,
+        space0,
+        sscAuxDbgcfg,
+        space1,
+        sscAuxGpretn,
+        space2,
+        sscVersion,
+        space3,
+        sscSwScratch,
+        space4,
+        sscSwCap, sscSwCapCtrl,
+        space5,
+        sscChipIdSt,
+        space6,
+        sscPid4,
+        space7,
+        sscPid0, sscPid1, sscPid2,
+        space8,
+        compid0, compid1, compid2, compid3,
     });
+    /* clang-format on */
 }
 
 Tick
