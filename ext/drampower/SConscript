@@ -62,6 +62,7 @@ DRAMPowerFile('libdrampower/LibDRAMPower.cc')
 DRAMPowerFile('CAHelpers.cc')
 DRAMPowerFile('CmdHandlers.cc')
 DRAMPowerFile('MemBankWiseParams.cc')
+DRAMPowerFile('BankStateVector.cc')
 
 env.Library('drampower', [env.SharedObject(f) for f in drampower_files])
 

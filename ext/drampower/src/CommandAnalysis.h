@@ -53,19 +53,21 @@
 #include "MemCommand.h"
 #include "MemorySpecification.h"
 #include "Utils.h"
+#include "BankStateVector.h"
 
 namespace Data {
+  
 class CommandAnalysis {
  public:
+
   // Power-Down and Self-refresh related memory states
   enum memstate {
     MS_NOT_IN_PD = 0, MS_PDN_F_ACT = 10, MS_PDN_S_ACT = 11, MS_PDN_F_PRE = 12,
     MS_PDN_S_PRE = 13, MS_SREF = 14
   };
-
+  
   // Returns number of reads, writes, acts, pres and refs in the trace
   CommandAnalysis(const MemorySpecification& memSpec);
-
   // Number of activate commands per bank
   std::vector<int64_t> numberofactsBanks;
   // Number of precharge commands per bank
@@ -91,7 +93,7 @@ class CommandAnalysis {
   int64_t f_act_pdns;
   // Number of slow-exit activate power-downs
   int64_t s_act_pdns;
-  // Number of fast-exit precharged power-downs
+  // Number of fast-exit pecharged power-downs
   int64_t f_pre_pdns;
   // Number of slow-exit activate power-downs
   int64_t s_pre_pdns;
@@ -140,16 +142,16 @@ class CommandAnalysis {
                    bool                       lastupdate,
                    int64_t timestamp = 0);
 
+  std::vector<MemCommand> mergeSortedVectors(const std::vector<MemCommand>& vec1, const std::vector<MemCommand>& vec2);
+  
+
  private:
   MemorySpecification memSpec;
 
-  // Possible bank states are precharged or active
-  enum BankState {
-    BANK_PRECHARGED = 0,
-    BANK_ACTIVE
-  };
+
 
   int64_t  zero;
+  
   // Cached last read command from the file
   std::vector<MemCommand> cached_cmd;
 
@@ -161,10 +163,12 @@ class CommandAnalysis {
 
   // To save states of the different banks, before entering active
   // power-down mode (slow/fast-exit).
-  std::vector<BankState> last_bank_state;
+  //std::vector<BankState> last_bank_state;
+  BankStateVector last_bank_state;
   // Bank state vector
-  std::vector<BankState> bank_state;
-
+  //std::vector<BankState> bank_state;
+  BankStateVector bank_state;
+  
   std::vector<int64_t> activation_cycle;
   // To keep track of the last ACT cycle
   int64_t latest_act_cycle;

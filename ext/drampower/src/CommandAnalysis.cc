@@ -78,8 +78,9 @@ CommandAnalysis::CommandAnalysis(const Data::MemorySpecification& memSpec) :
   clearStats(0);
   zero = 0;
 
-  bank_state.resize(static_cast<size_t>(nBanks), BANK_PRECHARGED);
-  last_bank_state.resize(static_cast<size_t>(nBanks), BANK_PRECHARGED);
+  bank_state.SetSize(nBanks);
+  last_bank_state.SetSize(nBanks);
+  
   mem_state  = MS_NOT_IN_PD;
 
   cmd_list.clear();
@@ -169,10 +170,20 @@ void CommandAnalysis::clear()
 
 void CommandAnalysis::getCommands(std::vector<MemCommand>& list, bool lastupdate, int64_t timestamp)
 {
+  if (!is_sorted(list.begin(), list.end(), commandSorter))
+  {
+    sort(list.begin(), list.end(), commandSorter);
+  }
+  if (!is_sorted(next_window_cmd_list.begin(),next_window_cmd_list.end(), commandSorter))
+  {
+    sort(next_window_cmd_list.begin(), next_window_cmd_list.end(), commandSorter);
+  }
+
   if (!next_window_cmd_list.empty()) {
-    list.insert(list.begin(), next_window_cmd_list.begin(), next_window_cmd_list.end());
+    list = mergeSortedVectors(next_window_cmd_list, list);
     next_window_cmd_list.clear();
   }
+
   for (size_t i = 0; i < list.size(); ++i) {
     MemCommand& cmd = list[i];
     MemCommand::cmds cmdType = cmd.getType();
@@ -185,7 +196,10 @@ void CommandAnalysis::getCommands(std::vector<MemCommand>& list, bool lastupdate
       // Add the auto precharge to the list of cached_cmds
       int64_t preTime = max(cmd.getTimeInt64() + cmd.getPrechargeOffset(memSpec, cmdType),
                            activation_cycle[cmd.getBank()] + memSpec.memTimingSpec.RAS);
-      list.push_back(MemCommand(MemCommand::PRE, cmd.getBank(), preTime));
+
+      MemCommand command = MemCommand(MemCommand::PRE, cmd.getBank(), preTime);
+      auto it = std::lower_bound(list.begin(), list.end(), command, commandSorter);
+      list.insert(it, command);
     }
 
     if (!lastupdate && timestamp > 0) {
@@ -197,17 +211,47 @@ void CommandAnalysis::getCommands(std::vector<MemCommand>& list, bool lastupdate
       }
     }
   }
-  sort(list.begin(), list.end(), commandSorter);
 
   if (lastupdate && list.empty() == false) {
     // Add cycles at the end of the list
     int64_t t = timeToCompletion(list.back().getType()) + list.back().getTimeInt64() - 1;
-    list.push_back(MemCommand(MemCommand::NOP, 0, t));
+
+    MemCommand command = MemCommand(MemCommand::NOP, 0, t);
+    auto it = std::lower_bound(list.begin(), list.end(), command, commandSorter);
+    list.insert(it, command);
   }
 
   evaluateCommands(list);
-} // CommandAnalysis::getCommands
+}
 
+ std::vector<MemCommand> CommandAnalysis::mergeSortedVectors(const std::vector<MemCommand>& vec1, const std::vector<MemCommand>& vec2) {
+    std::vector<MemCommand> result;
+    result.reserve(vec1.size() + vec2.size());
+
+    size_t i = 0, j = 0;
+
+    while (i < vec1.size() && j < vec2.size()) {
+        if (commandSorter(vec1[i], vec2[j])) {
+            result.push_back(vec1[i]);
+            ++i;
+        } else {
+            result.push_back(vec2[j]);
+            ++j;
+        }
+    }
+
+    while (i < vec1.size()) {
+        result.push_back(vec1[i]);
+        ++i;
+    }
+
+    while (j < vec2.size()) {
+        result.push_back(vec2[j]);
+        ++j;
+    }
+
+    return result;
+}
 
 // Used to analyse a given list of commands and identify command timings
 // and memory state transitions
@@ -291,4 +335,3 @@ void CommandAnalysis::idle_pre_update(int64_t timestamp, int64_t latest_pre_cycl
     idlecycles_pre += max(zero, timestamp - latest_pre_cycle);
   }
 }
-

@@ -73,7 +73,8 @@ void CommandAnalysis::handleAct(unsigned bank, int64_t timestamp)
       idle_pre_update(timestamp, latest_pre_cycle);
     }
 
-    bank_state[bank] = BANK_ACTIVE;
+    bank_state.SetByIndex(BANK_ACTIVE, bank);
+
     latest_act_cycle = timestamp;
   } else {
     printWarning("Bank is already active!", MemCommand::ACT, timestamp, bank);
@@ -126,8 +127,8 @@ void CommandAnalysis::handleRef(unsigned bank, int64_t timestamp)
   for (auto &e : actcyclesBanks) {
     e += memSpec.memTimingSpec.RFC - memSpec.memTimingSpec.RP;
   }
-  for (auto& bs : bank_state) {
-    bs = BANK_PRECHARGED;
+  for (int i = 0; i < bank_state.size(); i++) {
+      bank_state.SetByIndex(BANK_PRECHARGED, i);  
   }
 }
 
@@ -161,7 +162,7 @@ void CommandAnalysis::handlePre(unsigned bank, int64_t timestamp)
   // warning.
 
   // Precharge only if the target bank is active
-  if (bank_state[bank] == BANK_ACTIVE) {
+  if (bank_state.GetByIndex(bank) == BANK_ACTIVE) {
     numberofpresBanks[bank]++;
     actcyclesBanks[bank] += zero_guard(timestamp - first_act_cycle_banks[bank], "first_act_cycle is in the future (bank).");
     // Since we got here, at least one bank is active
@@ -176,8 +177,9 @@ void CommandAnalysis::handlePre(unsigned bank, int64_t timestamp)
       idle_act_update(latest_read_cycle, latest_write_cycle, latest_act_cycle, timestamp);
     }
 
-    bank_state[bank] = BANK_PRECHARGED;
-    latest_pre_cycle = timestamp;
+    bank_state.SetByIndex(BANK_PRECHARGED, bank);
+    
+    latest_pre_cycle =   timestamp;
   } else {
     printWarning("Bank is already precharged!", MemCommand::PRE, timestamp, bank);
   }
@@ -204,7 +206,7 @@ void CommandAnalysis::handlePreA(unsigned bank, int64_t timestamp)
     last_pre_cycle = timestamp;
 
     for (unsigned b = 0; b < num_banks; b++) {
-      if (bank_state[b] == BANK_ACTIVE) {
+      if (bank_state.GetByIndex(b) == BANK_ACTIVE) {
         // Active banks are being precharged
         numberofpresBanks[b] += 1;
         actcyclesBanks[b] += zero_guard(timestamp - first_act_cycle_banks[b], "first_act_cycle is in the future (bank).");
@@ -215,8 +217,8 @@ void CommandAnalysis::handlePreA(unsigned bank, int64_t timestamp)
 
     latest_pre_cycle = timestamp;
     // Reset the state for all banks to precharged.
-    for (auto& bs : bank_state) {
-      bs = BANK_PRECHARGED;
+    for (int i = 0; i < bank_state.size(); i++) {
+      bank_state.SetByIndex(BANK_PRECHARGED, i);  
     }
   } else {
     printWarning("All banks are already precharged!", MemCommand::PREA, timestamp, bank);
@@ -236,7 +238,7 @@ void CommandAnalysis::handlePdnFAct(unsigned bank, int64_t timestamp)
   pdn_cycle  = timestamp;
   actcycles += zero_guard(timestamp - first_act_cycle, "first_act_cycle is in the future.");
   for (unsigned b = 0; b < num_banks; b++) {
-    if (bank_state[b] == BANK_ACTIVE) {
+    if (bank_state.GetByIndex(b) == BANK_ACTIVE) {
       actcyclesBanks[b] += zero_guard(timestamp - first_act_cycle_banks[b], "first_act_cycle is in the future (bank).");
     }
   }
@@ -254,10 +256,11 @@ void CommandAnalysis::handlePdnSAct(unsigned bank, int64_t timestamp)
   printWarningIfNotActive("All banks are precharged! Incorrect use of Active Power-Down.", MemCommand::PDN_S_ACT, timestamp, bank);
   s_act_pdns++;
   last_bank_state = bank_state;
+
   pdn_cycle  = timestamp;
   actcycles += zero_guard(timestamp - first_act_cycle, "first_act_cycle is in the future.");
   for (unsigned b = 0; b < num_banks; b++) {
-    if (bank_state[b] == BANK_ACTIVE) {
+    if (bank_state.GetByIndex(b) == BANK_ACTIVE) {
       actcyclesBanks[b] += zero_guard(timestamp - first_act_cycle_banks[b], "first_act_cycle is in the future (bank).");
     }
   }
@@ -573,7 +576,7 @@ void CommandAnalysis::handleNopEnd(int64_t timestamp)
   // Update all counters based on completion of operations.
   const MemTimingSpec& t = memSpec.memTimingSpec;
   for (unsigned b = 0; b < num_banks; b++) {
-    if (bank_state[b] == BANK_ACTIVE) {
+    if (bank_state.GetByIndex(b) == BANK_ACTIVE) {
       actcyclesBanks[b] += zero_guard(timestamp - first_act_cycle_banks[b], "first_act_cycle is in the future (bank)");
     }
   }
