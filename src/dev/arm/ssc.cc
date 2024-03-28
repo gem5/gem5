@@ -84,6 +84,7 @@ SysSecCtrl::SysSecCtrl(const Params &p)
     compid2.readonly();
     compid3.readonly();
 
+    /* clang-format off */
     regBank.addRegisters({
         sscDbgcfgStat, sscDbgcfgSet, sscDbgcfgClr,
         space0,
@@ -105,6 +106,7 @@ SysSecCtrl::SysSecCtrl(const Params &p)
         space8,
         compid0, compid1, compid2, compid3,
     });
+    /* clang-format on */
 }
 
 Tick
