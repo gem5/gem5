@@ -61,6 +61,7 @@ class OpenFlagTable
 {
   public:
     // open(2) flags translation table
+    /* clang-format off */
     static inline const std::map<int, int> openFlagTable = {
 #ifdef _MSC_VER
       { Target::TGT_O_RDONLY,     _O_RDONLY },
@@ -112,6 +113,7 @@ class OpenFlagTable
 #endif
 #endif /* _MSC_VER */
     };
+    /* clang-format on */
 };
 
 } // namespace gem5
