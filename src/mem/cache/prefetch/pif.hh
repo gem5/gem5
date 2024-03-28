@@ -138,11 +138,12 @@ class PIF : public Queued
         {
             HistoryBuffer::iterator historyIt;
         };
+
         /**
          * The index table is a small cache-like structure that facilitates
          * fast search of the history buffer.
          */
-        AssociativeSet<IndexEntry> index;
+        AssociativeCache<IndexEntry> index;
 
         /**
          * A Stream Address Buffer (SAB) tracks a window of consecutive
