@@ -91,6 +91,7 @@ class BaseISA : public SimObject
     virtual void resetThread() { panic("Thread reset not implemented."); }
 
     const RegClasses &regClasses() const { return _regClasses; }
+    const std::string getIsaName() const { return isaName; }
 
     // Locked memory handling functions.
     virtual void handleLockedRead(const RequestPtr &req) {}
