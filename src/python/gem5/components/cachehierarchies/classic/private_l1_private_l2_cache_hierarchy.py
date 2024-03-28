@@ -1,3 +1,15 @@
+# Copyright (c) 2024 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All rights reserved.
 #
@@ -26,6 +38,7 @@
 
 from m5.objects import (
     BadAddr,
+    BaseCPU,
     BaseXBar,
     Cache,
     L2XBar,
@@ -42,7 +55,6 @@ from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from .caches.l1dcache import L1DCache
 from .caches.l1icache import L1ICache
 from .caches.l2cache import L2Cache
-from .caches.mmu_cache import MMUCache
 
 
 class PrivateL1PrivateL2CacheHierarchy(
@@ -130,16 +142,6 @@ class PrivateL1PrivateL2CacheHierarchy(
             L2Cache(size=self._l2_size)
             for i in range(board.get_processor().get_num_cores())
         ]
-        # ITLB Page walk caches
-        self.iptw_caches = [
-            MMUCache(size="8KiB")
-            for _ in range(board.get_processor().get_num_cores())
-        ]
-        # DTLB Page walk caches
-        self.dptw_caches = [
-            MMUCache(size="8KiB")
-            for _ in range(board.get_processor().get_num_cores())
-        ]
 
         if board.has_coherent_io():
             self._setup_io_cache(board)
@@ -150,16 +152,12 @@ class PrivateL1PrivateL2CacheHierarchy(
 
             self.l1icaches[i].mem_side = self.l2buses[i].cpu_side_ports
             self.l1dcaches[i].mem_side = self.l2buses[i].cpu_side_ports
-            self.iptw_caches[i].mem_side = self.l2buses[i].cpu_side_ports
-            self.dptw_caches[i].mem_side = self.l2buses[i].cpu_side_ports
 
             self.l2buses[i].mem_side_ports = self.l2caches[i].cpu_side
 
             self.membus.cpu_side_ports = self.l2caches[i].mem_side
 
-            cpu.connect_walker_ports(
-                self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
-            )
+            self._connect_table_walker(i, cpu)
 
             if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = self.membus.mem_side_ports
@@ -167,6 +165,11 @@ class PrivateL1PrivateL2CacheHierarchy(
                 cpu.connect_interrupt(int_req_port, int_resp_port)
             else:
                 cpu.connect_interrupt()
+
+    def _connect_table_walker(self, cpu_id: int, cpu: BaseCPU) -> None:
+        cpu.connect_walker_ports(
+            self.membus.cpu_side_ports, self.membus.cpu_side_ports
+        )
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
         """Create a cache for coherent I/O connections"""

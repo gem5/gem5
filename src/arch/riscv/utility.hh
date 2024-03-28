@@ -306,6 +306,17 @@ elem_mask(const T* vs, const int index)
     return (vs[idx] >> pos) & 1;
 }
 
+template<typename T>
+inline int
+elem_mask_vseg(const T* vs, const int elem, const int num_fields)
+{
+    int index = floor(elem / num_fields);
+    static_assert(std::is_integral_v<T>);
+    int idx = index / (sizeof(T)*8);
+    int pos = index % (sizeof(T)*8);
+    return (vs[idx] >> pos) & 1;
+}
+
 template<typename FloatType, typename IntType = decltype(FloatType::v)> auto
 ftype(IntType a) -> FloatType
 {

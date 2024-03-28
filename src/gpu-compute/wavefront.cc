@@ -430,6 +430,9 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
         }
     }
 
+    // Save the offset to the first accumulation VGPR number from HSA task.
+    accumOffset = task->accumOffset();
+
     regInitIdx = 0;
 
     // VGPRs are initialized to the work item IDs for a given thread. There

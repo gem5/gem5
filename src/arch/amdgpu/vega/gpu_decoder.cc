@@ -500,10 +500,10 @@ namespace VegaISA
         &Decoder::subDecode_OP_FLAT,
         &Decoder::subDecode_OP_FLAT,
         &Decoder::subDecode_OP_FLAT,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::subDecode_OP_FLAT,
+        &Decoder::subDecode_OP_FLAT,
+        &Decoder::subDecode_OP_FLAT,
+        &Decoder::subDecode_OP_FLAT,
         &Decoder::subDecode_OP_MUBUF,
         &Decoder::subDecode_OP_MUBUF,
         &Decoder::subDecode_OP_MUBUF,
@@ -1091,7 +1091,7 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_MAD_I16,
         &Decoder::decode_OPU_VOP3__V_FMA_F16,
         &Decoder::decode_OPU_VOP3__V_DIV_FIXUP_F16,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OPU_VOP3__V_LSHL_ADD_U64,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -1238,12 +1238,12 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_CVT_PK_I16_I32,
         &Decoder::decode_OPU_VOP3__V_PKNORM_I16_F16,
         &Decoder::decode_OPU_VOP3__V_PKNORM_U16_F16,
+        &Decoder::decode_invalid,
         &Decoder::decode_OPU_VOP3__V_ADD_I32,
         &Decoder::decode_OPU_VOP3__V_SUB_I32,
         &Decoder::decode_OPU_VOP3__V_ADD_I16,
         &Decoder::decode_OPU_VOP3__V_SUB_I16,
         &Decoder::decode_OPU_VOP3__V_PACK_B32_F16,
-        &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -4217,8 +4217,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_XNOR_B32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP2__V_XNOR_B32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
@@ -7052,6 +7051,12 @@ namespace VegaISA
     Decoder::decode_OPU_VOP3__V_DIV_FIXUP_F16(MachInst iFmt)
     {
         return new Inst_VOP3__V_DIV_FIXUP_F16(&iFmt->iFmt_VOP3A);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_LSHL_ADD_U64(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_LSHL_ADD_U64(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*

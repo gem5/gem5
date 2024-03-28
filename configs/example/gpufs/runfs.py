@@ -140,17 +140,35 @@ def addRunFSOptions(parser):
     )
 
     parser.add_argument(
-        "--debug-at-gpu-kernel",
+        "--debug-at-gpu-task",
         type=int,
         default=-1,
-        help="Turn on debug flags starting with this kernel",
+        help="Turn on debug flags starting with this task (counting both blit"
+        " and non-blit kernels)",
     )
 
     parser.add_argument(
-        "--exit-at-gpu-kernel",
+        "--exit-at-gpu-task",
         type=int,
         default=-1,
-        help="Exit simulation after running this many kernels",
+        help="Exit simulation after running this many tasks (counting both "
+        "blit and non-blit kernels)",
+    )
+
+    parser.add_argument(
+        "--exit-after-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Exit simulation after completing this (non-blit) kernel",
+    )
+
+    parser.add_argument(
+        "--skip-until-gpu-kernel",
+        type=int,
+        default=0,
+        help="Skip (non-blit) kernels until reaching this kernel. Note that "
+        "this can impact correctness (the skipped kernels are completely "
+        "skipped, not fast forwarded)",
     )
 
     parser.add_argument(
@@ -230,8 +248,9 @@ def runGpuFSSystem(args):
 
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
-    kernels_launched = 0
-    if args.debug_at_gpu_kernel != -1:
+    kernels_completed = 0
+    tasks_completed = 0
+    if args.debug_at_gpu_task != -1:
         m5.trace.disable()
 
     exit_event = m5.simulate(sim_ticks)
@@ -249,16 +268,27 @@ def runGpuFSSystem(args):
             m5.checkpoint(args.checkpoint_dir)
             break
         elif "GPU Kernel Completed" in exit_event.getCause():
-            kernels_launched += 1
+            if kernels_completed == args.exit_after_gpu_kernel:
+                print(f"Exiting after GPU kernel {kernels_completed}")
+                break
+            kernels_completed += 1
+            tasks_completed += 1
+        elif "GPU Blit Kernel Completed" in exit_event.getCause():
+            tasks_completed += 1
+        elif "Skipping GPU Kernel" in exit_event.getCause():
+            print(f"Skipping GPU kernel {kernels_completed}")
+            kernels_completed += 1
+            tasks_completed += 1
         else:
             print(
                 f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
 
-        if kernels_launched == args.debug_at_gpu_kernel:
+        if tasks_completed == args.debug_at_gpu_task:
+            print(f"Enabling debug flags @ GPU task {tasks_completed}")
             m5.trace.enable()
-        if kernels_launched == args.exit_at_gpu_kernel:
-            print(f"Exiting @ GPU kernel {kernels_launched}")
+        if tasks_completed == args.exit_at_gpu_task:
+            print(f"Exiting @ GPU task {tasks_completed}")
             break
 
         exit_event = m5.simulate(sim_ticks - m5.curTick())

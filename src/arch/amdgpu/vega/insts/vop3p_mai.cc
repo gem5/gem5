@@ -56,9 +56,19 @@ namespace VegaISA
     void
     Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8::execute(GPUDynInstPtr gpuDynInst)
     {
-        int acc_offset = 0;
+        // Accumulation register offsets for A, B, and C/D matrix.
+        int a_offset = 0;
+        int b_offset = 0;
+        int cd_offset = 0;
         if (instData.ACC_CD) {
-            warn("ACC_CD not yet implemented\n");
+            cd_offset = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            if (extData.ACC & 0x1) {
+                a_offset = gpuDynInst->wavefront()->accumOffset;
+            } else if (extData.ACC & 0x2) {
+                b_offset = gpuDynInst->wavefront()->accumOffset;
+            }
         }
 
         // int8 size allows for 4 elements per lane. At 16x16 this means 4
@@ -71,24 +81,27 @@ namespace VegaISA
 
         // VecOperandI8 will read 8 bits and sign extend, so used U32 to read
         // as "untyped" 32-bit values.
-        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
-        ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
-        ConstVecOperandI32 src2a(gpuDynInst, extData.SRC2+acc_offset);
-        ConstVecOperandI32 src2b(gpuDynInst, extData.SRC2+acc_offset+1*delta);
-        ConstVecOperandI32 src2c(gpuDynInst, extData.SRC2+acc_offset+2*delta);
-        ConstVecOperandI32 src2d(gpuDynInst, extData.SRC2+acc_offset+3*delta);
+        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0+a_offset);
+        ConstVecOperandU32 src1(gpuDynInst, extData.SRC1+b_offset);
+        ConstVecOperandI32 src2[4] = {
+            ConstVecOperandI32(gpuDynInst, extData.SRC2+cd_offset),
+            ConstVecOperandI32(gpuDynInst, extData.SRC2+cd_offset+1*delta),
+            ConstVecOperandI32(gpuDynInst, extData.SRC2+cd_offset+2*delta),
+            ConstVecOperandI32(gpuDynInst, extData.SRC2+cd_offset+3*delta),
+        };
 
-        VecOperandI32 vdsta(gpuDynInst, instData.VDST+acc_offset);
-        VecOperandI32 vdstb(gpuDynInst, instData.VDST+acc_offset+1);
-        VecOperandI32 vdstc(gpuDynInst, instData.VDST+acc_offset+2);
-        VecOperandI32 vdstd(gpuDynInst, instData.VDST+acc_offset+3);
+        VecOperandI32 vdst[4] = {
+            VecOperandI32(gpuDynInst, instData.VDST+cd_offset),
+            VecOperandI32(gpuDynInst, instData.VDST+cd_offset+1),
+            VecOperandI32(gpuDynInst, instData.VDST+cd_offset+2),
+            VecOperandI32(gpuDynInst, instData.VDST+cd_offset+3),
+        };
 
         src0.readSrc();
         src1.readSrc();
-        src2a.readSrc();
-        src2b.readSrc();
-        src2c.readSrc();
-        src2d.readSrc();
+        for (int i = 0; i < 4; ++i) {
+            src2[i].readSrc();
+        }
 
         int32_t A[16][16];
         for (int i = 0; i < 64; ++i) {
@@ -124,14 +137,14 @@ namespace VegaISA
 
         // Load accumulation matrix C into result
         for (int i = 0; i < 64; ++i) {
-            // src2a contains rows 0, 4, 8, 12
-            result[(i/16)*4][(i%16)] = src2a[i];
-            // src2b contains rows 1, 5, 9, 13
-            result[(i/16)*4+1][(i%16)] = src2b[i];
-            // src2c contains rows 2, 6, 10, 14
-            result[(i/16)*4+2][(i%16)] = src2c[i];
-            // src2d contains rows 3, 7, 11, 15
-            result[(i/16)*4+3][(i%16)] = src2d[i];
+            // src2[0] contains rows 0, 4, 8, 12
+            result[(i/16)*4][(i%16)] = src2[0][i];
+            // src2[1] contains rows 1, 5, 9, 13
+            result[(i/16)*4+1][(i%16)] = src2[1][i];
+            // src2[2] contains rows 2, 6, 10, 14
+            result[(i/16)*4+2][(i%16)] = src2[2][i];
+            // src2[3] contains rows 3, 7, 11, 15
+            result[(i/16)*4+3][(i%16)] = src2[3][i];
         }
 
         // Compute new result - This is (obviously) not optimized
@@ -145,20 +158,19 @@ namespace VegaISA
 
         // Put result in dest VGPRs
         for (int i = 0; i < 64; ++i) {
-            // vdsta contains rows 0, 4, 8, 12
-            vdsta[i] = result[(i/16)*4][(i%16)];
-            // vdstb contains rows 1, 5, 9, 13
-            vdstb[i] = result[(i/16)*4+1][(i%16)];
-            // vdstc contains rows 2, 6, 10, 14
-            vdstc[i] = result[(i/16)*4+2][(i%16)];
-            // vdstd contains rows 3, 7, 11, 15
-            vdstd[i] = result[(i/16)*4+3][(i%16)];
+            // vdst[0] contains rows 0, 4, 8, 12
+            vdst[0][i] = result[(i/16)*4][(i%16)];
+            // vdst[1] contains rows 1, 5, 9, 13
+            vdst[1][i] = result[(i/16)*4+1][(i%16)];
+            // vdst[2] contains rows 2, 6, 10, 14
+            vdst[2][i] = result[(i/16)*4+2][(i%16)];
+            // vdst[3] contains rows 3, 7, 11, 15
+            vdst[3][i] = result[(i/16)*4+3][(i%16)];
         }
 
-        vdsta.write();
-        vdstb.write();
-        vdstc.write();
-        vdstd.write();
+        for (int i = 0; i < 4; ++i) {
+            vdst[i].write();
+        }
     } // execute
     // --- Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64 class methods ---
 
@@ -179,9 +191,19 @@ namespace VegaISA
     void
     Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64::execute(GPUDynInstPtr gpuDynInst)
     {
-        int acc_offset = 0;
+        // Accumulation register offsets for A, B, and C/D matrix.
+        int a_offset = 0;
+        int b_offset = 0;
+        int cd_offset = 0;
         if (instData.ACC_CD) {
-            warn("ACC_CD not yet implemented\n");
+            cd_offset = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            if (extData.ACC & 0x1) {
+                a_offset = gpuDynInst->wavefront()->accumOffset;
+            } else if (extData.ACC & 0x2) {
+                b_offset = gpuDynInst->wavefront()->accumOffset;
+            }
         }
 
         // Handling of src2 is a bit tricky. The operator[] overload cannot
@@ -191,37 +213,41 @@ namespace VegaISA
         // a delta for each of the pairs of src2 GPRs.
         int delta = isVectorReg(extData.SRC2) ? 2 : 0;
 
-        ConstVecOperandF64 src0(gpuDynInst, extData.SRC0);
-        ConstVecOperandF64 src1(gpuDynInst, extData.SRC1);
-        ConstVecOperandF64 src2a(gpuDynInst, extData.SRC2+acc_offset);
-        ConstVecOperandF64 src2b(gpuDynInst, extData.SRC2+acc_offset+1*delta);
-        ConstVecOperandF64 src2c(gpuDynInst, extData.SRC2+acc_offset+2*delta);
-        ConstVecOperandF64 src2d(gpuDynInst, extData.SRC2+acc_offset+3*delta);
+        ConstVecOperandF64 src0(gpuDynInst, extData.SRC0+a_offset);
+        ConstVecOperandF64 src1(gpuDynInst, extData.SRC1+b_offset);
+        ConstVecOperandF64 src2[4] = {
+            ConstVecOperandF64(gpuDynInst, extData.SRC2+cd_offset),
+            ConstVecOperandF64(gpuDynInst, extData.SRC2+cd_offset+1*delta),
+            ConstVecOperandF64(gpuDynInst, extData.SRC2+cd_offset+2*delta),
+            ConstVecOperandF64(gpuDynInst, extData.SRC2+cd_offset+3*delta),
+        };
 
-        VecOperandF64 vdsta(gpuDynInst, instData.VDST+acc_offset);
-        VecOperandF64 vdstb(gpuDynInst, instData.VDST+acc_offset+2);
-        VecOperandF64 vdstc(gpuDynInst, instData.VDST+acc_offset+4);
-        VecOperandF64 vdstd(gpuDynInst, instData.VDST+acc_offset+6);
+        VecOperandF64 vdst[4] = {
+            VecOperandF64(gpuDynInst, instData.VDST+cd_offset),
+            VecOperandF64(gpuDynInst, instData.VDST+cd_offset+2),
+            VecOperandF64(gpuDynInst, instData.VDST+cd_offset+4),
+            VecOperandF64(gpuDynInst, instData.VDST+cd_offset+6),
+        };
 
         src0.readSrc();
         src1.readSrc();
-        src2a.readSrc();
-        src2b.readSrc();
-        src2c.readSrc();
-        src2d.readSrc();
+
+        for (int i = 0; i < 4; ++i) {
+            src2[i].readSrc();
+        }
 
         double result[16][16];
 
         // Load src2 into result. src2 is row major
         for (int i = 0; i < 64; ++i) {
-            // src2a contains rows 0 - 3
-            result[(i/16)][(i%16)] = src2a[i];
-            // src2b contains rows 4 - 7
-            result[(i/16)+4][(i%16)] = src2b[i];
-            // src2c contains rows 8 - 11
-            result[(i/16)+8][(i%16)] = src2c[i];
-            // src2d contains rows 12 - 15
-            result[(i/16)+12][(i%16)] = src2d[i];
+            // src2[0] contains rows 0 - 3
+            result[(i/16)][(i%16)] = src2[0][i];
+            // src2[1] contains rows 4 - 7
+            result[(i/16)+4][(i%16)] = src2[1][i];
+            // src2[2] contains rows 8 - 11
+            result[(i/16)+8][(i%16)] = src2[2][i];
+            // src2[3] contains rows 12 - 15
+            result[(i/16)+12][(i%16)] = src2[3][i];
         }
 
         // Compute new result
@@ -238,20 +264,19 @@ namespace VegaISA
 
         // Put result in dest VGPRs
         for (int i = 0; i < 64; ++i) {
-            // vdsta contains rows 0 - 3
-            vdsta[i] = result[(i/16)][(i%16)];
-            // src2b contains rows 4 - 7
-            vdstb[i] = result[(i/16)+4][(i%16)];
-            // src2c contains rows 8 - 11
-            vdstc[i] = result[(i/16)+8][(i%16)];
-            // src2d contains rows 12 - 15
-            vdstd[i] = result[(i/16)+12][(i%16)];
+            // vdst[0] contains rows 0 - 3
+            vdst[0][i] = result[(i/16)][(i%16)];
+            // src2[1] contains rows 4 - 7
+            vdst[1][i] = result[(i/16)+4][(i%16)];
+            // src2[2] contains rows 8 - 11
+            vdst[2][i] = result[(i/16)+8][(i%16)];
+            // src2[3] contains rows 12 - 15
+            vdst[3][i] = result[(i/16)+12][(i%16)];
         }
 
-        vdsta.write();
-        vdstb.write();
-        vdstc.write();
-        vdstd.write();
+        for (int i = 0; i < 4; ++i) {
+            vdst[i].write();
+        }
     } // execute
 } // namespace VegaISA
 } // namespace gem5

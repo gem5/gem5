@@ -53,3 +53,7 @@ class PMAChecker(BasePMAChecker):
     cxx_class = "gem5::RiscvISA::PMAChecker"
 
     uncacheable = VectorParam.AddrRange([], "Uncacheable address ranges")
+    misaligned = VectorParam.AddrRange(
+        [],
+        "Address ranges support misaligned load/store to memory",
+    )

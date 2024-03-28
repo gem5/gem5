@@ -101,6 +101,9 @@ class Shader : public ClockedObject
     // shader to complete before actually exiting so that stats are updated.
     bool kernelExitRequested = false;
 
+    // Set to true by the dispatcher if the current kernel is a blit kernel
+    bool blitKernel = false;
+
   public:
     typedef ShaderParams Params;
     enum hsail_mode_e {SIMT,VECTOR_SCALAR};
@@ -321,9 +324,10 @@ class Shader : public ClockedObject
     }
 
     void
-    requestKernelExitEvent()
+    requestKernelExitEvent(bool is_blit_kernel)
     {
         kernelExitRequested = true;
+        blitKernel = is_blit_kernel;
     }
 
   protected:

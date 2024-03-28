@@ -94,6 +94,23 @@ class MMU : public BaseMMU
     {
         return static_cast<TLB*>(dtb)->pmp;
     }
+
+    /*
+     * The usage of Memory Request Arch Flags for RISC-V
+     *  | 7 ------------- 3 | 2 ------ 0 |
+     *  |     Reserved      |  LDST Size |
+     *  | ------------------| -----------|
+     */
+    enum RiscvFlags
+    {
+        ByteAlign = 0,
+        HalfWordAlign = 1,
+        WordAlign = 2,
+        DoubleWordAlign = 3,
+        QuadWordAlign = 4,
+
+        AlignmentMask = 0x7,
+    };
 };
 
 } // namespace RiscvISA

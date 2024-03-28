@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013, 2023-2024 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -73,6 +73,10 @@ class BaseTags(ClockedObject):
     # Get indexing policy
     indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(), "Indexing policy"
+    )
+
+    partitioning_policies = VectorParam.BasePartitioningPolicy(
+        Parent.partitioning_policies, "Partitioning policies"
     )
 
     # Set the indexing entry size as the block size
