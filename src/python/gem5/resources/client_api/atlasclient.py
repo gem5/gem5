@@ -43,6 +43,7 @@ from urllib import (
 
 from m5.util import warn
 
+from ...utils.socks_ssl_context import get_proxy_context
 from .abstract_client import AbstractClient
 
 
@@ -133,7 +134,7 @@ class AtlasClient(AbstractClient):
 
         for attempt in itertools.count(start=1):
             try:
-                response = request.urlopen(req)
+                response = request.urlopen(req, context=get_proxy_context())
                 break
             except Exception as e:
                 if attempt >= max_failed_attempts:
