@@ -59,7 +59,8 @@ BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
     : SimObject(p), assoc(p.assoc),
       numSets(p.size / (p.entry_size * assoc)),
       setShift(floorLog2(p.entry_size)), setMask(numSets - 1), sets(numSets),
-      tagShift(setShift + floorLog2(numSets))
+      tagShift(setShift + floorLog2(numSets)),
+      tagMask(mask(p.tag_bits))
 {
     fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power " \
              "of 2");
@@ -98,7 +99,7 @@ BaseIndexingPolicy::setEntry(ReplaceableEntry* entry, const uint64_t index)
 Addr
 BaseIndexingPolicy::extractTag(const Addr addr) const
 {
-    return (addr >> tagShift);
+    return (addr >> tagShift) & tagMask;
 }
 
 } // namespace gem5
