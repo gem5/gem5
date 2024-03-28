@@ -75,7 +75,7 @@ class Scalar(Statistic):
 
     def __init__(
         self,
-        value: Any,
+        value: Union[float, int],
         unit: Optional[str] = None,
         description: Optional[str] = None,
         datatype: Optional[StorageType] = None,
