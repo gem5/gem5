@@ -31,10 +31,7 @@ from typing import (
     Union,
 )
 
-from .group import (
-    Group,
-    Vector,
-)
+from .group import Group
 from .simstat import SimStat
 from .statistic import (
     Distribution,
