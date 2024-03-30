@@ -22,7 +22,7 @@ jobs:
                   ref: develop
             - name: Build gem5
               run: scons build/VEGA_X86/gem5.opt -j $(nproc) --ignore-style
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
                   path: build/VEGA_X86/gem5.opt
@@ -42,7 +42,7 @@ jobs:
                   ref: develop
 
             - name: Download build/VEGA_X86/gem5.opt
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
                   path: build/VEGA_X86
@@ -72,7 +72,7 @@ jobs:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
                   path: build/VEGA_X86
@@ -106,7 +106,7 @@ jobs:
             - name: Build gem5
               run: |
                   scons build/ALL/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: ${{ steps.artifact-name.outputs.name }}
                   path: build/ALL/gem5.opt
@@ -131,7 +131,7 @@ jobs:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
@@ -146,7 +146,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:

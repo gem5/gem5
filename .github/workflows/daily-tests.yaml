@@ -61,7 +61,7 @@ jobs:
               run: scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option }}
             - name: Build gem5
               run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
                   path: build/${{ matrix.image }}/gem5.opt
@@ -108,47 +108,47 @@ jobs:
     # since long tests can't start until the build matrix completes,
     # we download all artifacts from the build for each test
     # in this matrix
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
                   path: build/ALL
             - run: chmod u+x build/ALL/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_CHI
                   path: build/ALL_CHI
             - run: chmod u+x build/ALL_CHI/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ARM
                   path: build/ARM
             - run: chmod u+x build/ARM/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_MSI
                   path: build/ALL_MSI
             - run: chmod u+x build/ALL_MSI/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_MESI_Two_Level
                   path: build/ALL_MESI_Two_Level
             - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}NULL
                   path: build/NULL
             - run: chmod u+x build/NULL/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}NULL_MI_example
                   path: build/NULL_MI_example
             - run: chmod u+x build/NULL_MI_example/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}RISCV
                   path: build/RISCV
             - run: chmod u+x build/RISCV/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}VEGA_X86
                   path: build/VEGA_X86
@@ -164,7 +164,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
@@ -193,7 +193,7 @@ jobs:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
                   path: build/ALL
@@ -209,7 +209,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
