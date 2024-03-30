@@ -27,16 +27,12 @@
 from typing import (
     Dict,
     List,
-    Mapping,
     Optional,
     Union,
 )
 
 from .abstract_stat import AbstractStat
-from .statistic import (
-    Scalar,
-    Statistic,
-)
+from .statistic import Statistic
 from .timeconversion import TimeConversion
 
 
@@ -66,19 +62,3 @@ class Group(AbstractStat):
 
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-
-class Vector(Group):
-    """
-    The Vector class is used to store vector information. However, in gem5
-    Vectors, in practise, hold information that is more like a dictionary of
-    Scalar Values. This class may change, and may be merged into Group in
-    accordance to decisions made in relation to
-    https://gem5.atlassian.net/browse/GEM5-867.
-    """
-
-    def __init__(self, scalar_map: Mapping[str, Scalar]):
-        super().__init__(type="Vector", time_conversion=None, **scalar_map)
-
-    def _repr_name(self) -> str:
-        return "Vector"
