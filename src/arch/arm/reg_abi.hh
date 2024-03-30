@@ -55,8 +55,6 @@ struct RegABI64 : public GenericSyscallABI64
 namespace guest_abi
 {
 
-using namespace pseudo_inst;
-
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<
@@ -74,22 +72,22 @@ struct Argument<ABI, Arg,
                 "Ran out of syscall argument registers.");
         auto low = ABI::ArgumentRegs[state++];
         auto high = ABI::ArgumentRegs[state++];
-        return (Arg) ABI::mergeRegs(tc, low, high);
+        return (Arg)ABI::mergeRegs(tc, low, high);
     }
 };
 
 template <>
-struct Argument<ArmISA::RegABI32, GuestAddr>
+struct Argument<ArmISA::RegABI32, pseudo_inst::GuestAddr>
 {
     using ABI = ArmISA::RegABI32;
+    using Arg = pseudo_inst::GuestAddr;
 
-    static GuestAddr
+    static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state + 1 >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
-        auto arg = bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
-        return *reinterpret_cast<GuestAddr*>(&arg);
+        return (Arg)bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };
 

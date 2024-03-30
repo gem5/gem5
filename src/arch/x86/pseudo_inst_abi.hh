@@ -50,8 +50,6 @@ struct X86PseudoInstABI
 namespace guest_abi
 {
 
-using namespace pseudo_inst;
-
 template <typename T>
 struct Result<X86PseudoInstABI, T>
 {
@@ -88,9 +86,11 @@ struct Argument<X86PseudoInstABI, uint64_t>
 };
 
 template <>
-struct Argument<X86PseudoInstABI, GuestAddr>
+struct Argument<X86PseudoInstABI, pseudo_inst::GuestAddr>
 {
-    static GuestAddr
+    using Arg = pseudo_inst::GuestAddr;
+
+    static Arg
     get(ThreadContext *tc, X86PseudoInstABI::State &state)
     {
         // The first 6 integer arguments are passed in registers, the rest
@@ -105,8 +105,7 @@ struct Argument<X86PseudoInstABI, GuestAddr>
             int_reg::Rcx, int_reg::R8, int_reg::R9
         };
 
-        auto arg = tc->getReg(int_reg_map[state++]);
-        return *reinterpret_cast<GuestAddr*>(&arg);
+        return (Arg)tc->getReg(int_reg_map[state++]);
     }
 };
 

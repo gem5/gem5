@@ -603,36 +603,33 @@ std::ostream &operator << (
 namespace guest_abi
 {
 
-using namespace pseudo_inst;
-
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi64, Arg,
     typename std::enable_if_t<
-        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value)>>
+        (std::is_integral_v<Arg> ||
+         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
     {
-        auto arg = state.get(tc);
-        return *reinterpret_cast<Arg*>(&arg);
+        return (Arg)state.get(tc);
     }
 };
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi32, Arg,
     typename std::enable_if_t<
-        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value)>>
+        (std::is_integral_v<Arg> ||
+         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)
     {
         if (std::is_signed_v<Arg>) {
-            auto arg = sext<32>(state.get(tc));
-            return *reinterpret_cast<Arg*>(&arg);
+            return (Arg)sext<32>(state.get(tc));
         }
         else {
-            auto arg = state.get(tc);
-            return *reinterpret_cast<Arg*>(&arg);
+            return (Arg)state.get(tc);
         }
     }
 };

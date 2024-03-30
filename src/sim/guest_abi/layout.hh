@@ -169,8 +169,7 @@ template <typename ABI, typename Arg>
 static Arg
 getArgument(ThreadContext *tc, typename ABI::State &state)
 {
-    auto arg = Argument<ABI, Arg>::get(tc, state);
-    return *reinterpret_cast<Arg*>(&arg);
+    return (Arg)Argument<ABI, Arg>::get(tc, state);
 }
 
 } // namespace guest_abi

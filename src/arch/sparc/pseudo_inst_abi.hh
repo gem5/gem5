@@ -44,8 +44,6 @@ struct SparcPseudoInstABI
 namespace guest_abi
 {
 
-using namespace pseudo_inst;
-
 template <typename T>
 struct Result<SparcPseudoInstABI, T>
 {
@@ -71,14 +69,15 @@ struct Argument<SparcPseudoInstABI, uint64_t>
 };
 
 template <>
-struct Argument<SparcPseudoInstABI, GuestAddr>
+struct Argument<SparcPseudoInstABI, pseudo_inst::GuestAddr>
 {
-    static GuestAddr
+    using Arg = pseudo_inst::GuestAddr;
+
+    static Arg
     get(ThreadContext *tc, SparcPseudoInstABI::State &state)
     {
         panic_if(state >= 6, "Too many psuedo inst arguments.");
-        auto arg = tc->getReg(SparcISA::int_reg::o(state++));
-        return *reinterpret_cast<GuestAddr*>(&arg);
+        return (Arg)tc->getReg(SparcISA::int_reg::o(state++));
     }
 };
 
