@@ -16,7 +16,7 @@ jobs:
         outputs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
             - id: artifact-name
               run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
 
