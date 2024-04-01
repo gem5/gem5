@@ -69,6 +69,10 @@ map_m5_mem()
         exit(1);
     }
 
+    if (m5op_addr == 0) {
+        fprintf(stdout, "Warn: m5op_addr is set to 0x0\n");
+    }
+
     fd = open(m5_mmap_dev, O_RDWR | O_SYNC);
     if (fd == -1) {
         fprintf(stderr, "Can't open %s: %s\n", m5_mmap_dev, strerror(errno));
