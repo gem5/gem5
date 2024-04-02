@@ -685,64 +685,57 @@ copyOutStatxBuf(TgtStatPtr tgt, HostStatPtr host, bool fakeTTY = false)
     constexpr ByteOrder bo = OS::byteOrder;
 
     if (fakeTTY) {
-        tgt->stx_dev_major = MAJOR(0xA);
-        tgt->stx_dev_minor = MINOR(0xA);
+        tgt->stx_dev_major = 0x00;
+        tgt->stx_dev_minor = 0x0A;
     } else {
-        tgt->stx_dev_major = host->stx_dev_major;
-        tgt->stx_dev_minor = host->stx_dev_minor;
+        tgt->stx_dev_major = host->st_dev >> 8;
+        tgt->stx_dev_minor = host->st_dev & 0xFF;
     }
     tgt->stx_dev_major = htog(tgt->stx_dev_major, bo);
     tgt->stx_dev_minor = htog(tgt->stx_dev_minor, bo);
-    tgt->stx_ino = host->stx_ino;
+    tgt->stx_ino = host->st_ino;
     tgt->stx_ino = htog(tgt->stx_ino, bo);
-    tgt->stx_mode = host->stx_mode;
+    tgt->stx_mode = host->st_mode;
     if (fakeTTY) {
       // Claim to be character device.
       tgt->stx_mode &= ~S_IFMT;
       tgt->stx_mode |= S_IFCHR;
     }
     tgt->stx_mode = htog(tgt->stx_mode, bo);
-    tgt->stx_nlink = host->stx_nlink;
+    tgt->stx_nlink = host->st_nlink;
     tgt->stx_nlink = htog(tgt->stx_nlink, bo);
-    tgt->stx_uid = host->stx_uid;
+    tgt->stx_uid = host->st_uid;
     tgt->stx_uid = htog(tgt->stx_uid, bo);
-    tgt->stx_gid = host->stx_gid;
+    tgt->stx_gid = host->st_gid;
     tgt->stx_gid = htog(tgt->stx_gid, bo);
     if (fakeTTY) {
-        tgt->stx_rdev_major = MAJOR(0x880d);
-        tgt->stx_rdev_minor = MINOR(0x880d);
+        tgt->stx_rdev_major = 0x880d >> 8;
+        tgt->stx_rdev_minor = 0x880d & 0xFF;
     } else {
-        tgt->stx_rdev_major = host->stx_rdev_major;
-        tgt->stx_rdev_minor = host->stx_rdev_minor;
+        tgt->stx_rdev_major = host->st_rdev >> 8;
+        tgt->stx_rdev_minor = host->st_rdev & 0xFF;
     }
     tgt->stx_rdev_major = htog(tgt->stx_rdev_major, bo);
     tgt->stx_rdev_minor = htog(tgt->stx_rdev_minor, bo);
-    tgt->stx_size = host->stx_size;
+    tgt->stx_size = host->st_size;
     tgt->stx_size = htog(tgt->stx_size, bo);
-#define statx_copy_time(out, in)                \
-    out##X = in.tv_sec;                         \
-    out##X = htog(out##X, bo);                  \
-    out##_nsec = in.tv_sec;                     \
-    out##_nsec = htog(out##_nsec, bo);
-    statx_copy_time(tgt->stx_atime, host->stx_atime);
-    statx_copy_time(tgt->stx_btime, host->stx_btime);
-    statx_copy_time(tgt->stx_ctime, host->stx_ctime);
-    statx_copy_time(tgt->stx_mtime, host->stx_mtime);
-#undef statx_copy_time
+    tgt->stx_atimeX = host->st_atime;
+    tgt->stx_atimeX = htog(tgt->stx_atimeX, bo);
+    tgt->stx_ctimeX = host->st_ctime;
+    tgt->stx_ctimeX = htog(tgt->stx_ctimeX, bo);
+    tgt->stx_mtimeX = host->st_mtime;
+    tgt->stx_mtimeX = htog(tgt->stx_mtimeX, bo);
     // Force the block size to be 8KB. This helps to ensure buffered io works
     // consistently across different hosts.
     tgt->stx_blksize = 0x2000;
     tgt->stx_blksize = htog(tgt->stx_blksize, bo);
-    tgt->stx_blocks = host->stx_blocks;
+    tgt->stx_blocks = host->st_blocks;
     tgt->stx_blocks = htog(tgt->stx_blocks, bo);
-    tgt->stx_mask = host->stx_mask;
+    tgt->stx_mask = 0x000007ffU; // STATX_BASIC_STATS on Linux.
     tgt->stx_mask = htog(tgt->stx_mask, bo);
-    tgt->stx_attributes = host->stx_attributes;
-    tgt->stx_attributes = htog(tgt->stx_attributes, bo);
-    tgt->stx_attributes_mask = host->stx_attributes_mask;
+    tgt->stx_attributes = 0;
+    tgt->stx_attributes_mask = 0;
     tgt->stx_attributes_mask = htog(tgt->stx_attributes_mask, bo);
-    tgt->stx_mnt_id = host->stx_mnt_id;
-    tgt->stx_mnt_id = htog(tgt->stx_mnt_id, bo);
 }
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
@@ -1552,9 +1545,8 @@ statxFunc(SyscallDesc *desc, ThreadContext *tc,
     // Adjust path for cwd and redirection
     path = p->checkPathRedirect(path);
 
-    struct statx host_buf;
-    std::memset(&host_buf, 0, sizeof host_buf);
-    int result = statx(AT_FDCWD, path.c_str(), flags, mask, &host_buf);
+    struct stat host_buf;
+    int result = stat(path.c_str(), &host_buf);
 
     if (result < 0)
         return -errno;
