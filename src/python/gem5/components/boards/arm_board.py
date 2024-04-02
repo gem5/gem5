@@ -113,13 +113,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         requires(isa_required=ISA.ARM)
 
         # Setting up ARM release here. We use the ARM default release, which
-        # corresponds to an ARMv8 system. The default release is updated if
-        # the user is using any KVM cores.
+        # corresponds to an ARMv8 system.
         self.release = release
-        if any(core.is_kvm_core() for core in processor.get_cores()):
-            # KVM cores only work with VExpress_GEM5_V1()
-            if isinstance(platform, VExpress_GEM5_V1):
-                self.release = ArmDefaultRelease.for_kvm()
 
         # Setting multi_proc of ArmSystem by counting the number of processors.
         if processor.get_num_cores() == 1:
