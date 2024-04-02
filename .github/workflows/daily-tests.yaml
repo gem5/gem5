@@ -11,14 +11,14 @@ on:
     workflow_dispatch:
 
 jobs:
-  name-artifacts:
-    runs-on: ubuntu-latest
-    outputs:
-      build-name: ${{ steps.artifact-name.outputs.name }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: artifact-name
-        run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
+    name-artifacts:
+        runs-on: ubuntu-latest
+        outputs:
+            build-name: ${{ steps.artifact-name.outputs.name }}
+        steps:
+            - uses: actions/checkout@v4
+            - id: artifact-name
+              run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
 
   build-gem5:
     strategy:
@@ -63,43 +63,21 @@ jobs:
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
-          ref: develop
-      - name: defconfig gem5
-        if: ${{ matrix.setconfig-option  != '' }}
-        run:
-          scons defconfig build/${{ matrix.image }} build_opts/${{
-          matrix.isa-option }}
-      - name: setconfig gem5
-        if: ${{ matrix.setconfig-option  != '' }}
-        run:
-          scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option
-          }}
-      - name: Build gem5
-        run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
-      - uses: actions/upload-artifact@v4.0.0
-        with:
-          name:
-            ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
-          path: "*build/${{ matrix.image }}/gem5.opt"
-          retention-days: 1
-      - run: echo "This job's status is ${{ job.status }}."
-  # The actions/upload-artifact@v4 action has a special "merge" sub action
-  # which allows for the merging of multiple artifacts into a single one.
-  # This is otherwise not possible as artifacts are immutable after creation
-  # in v4. We createa a merged artifact here as we want to download all the
-  # gem5 build artifacts when running the long tests.
-  merge-gem5-build-artifacts:
-    runs-on: [self-hosted, linux, x64]
-    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-    needs: [build-gem5, name-artifacts]
-    steps:
-      - name: Merge gem5 build artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: ${{needs.name-artifacts.outputs.build-name}}
-          pattern: ${{needs.name-artifacts.outputs.build-name}}*
-          retention-days: 1
-          compression-level: 9
+                  ref: develop
+            - name: defconfig gem5
+              if: ${{ matrix.setconfig-option  != '' }}
+              run: scons defconfig build/${{ matrix.image }} build_opts/${{ matrix.isa-option }}
+            - name: setconfig gem5
+              if: ${{ matrix.setconfig-option  != '' }}
+              run: scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option }}
+            - name: Build gem5
+              run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
+                  path: build/${{ matrix.image }}/gem5.opt
+                  retention-days: 5
+            - run: echo "This job's status is ${{ job.status }}."
 
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
@@ -141,47 +119,47 @@ jobs:
     # since long tests can't start until the build matrix completes,
     # we download all artifacts from the build for each test
     # in this matrix
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
                   path: build/ALL
             - run: chmod u+x build/ALL/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_CHI
                   path: build/ALL_CHI
             - run: chmod u+x build/ALL_CHI/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ARM
                   path: build/ARM
             - run: chmod u+x build/ARM/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_MSI
                   path: build/ALL_MSI
             - run: chmod u+x build/ALL_MSI/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL_MESI_Two_Level
                   path: build/ALL_MESI_Two_Level
             - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}NULL
                   path: build/NULL
             - run: chmod u+x build/NULL/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}NULL_MI_example
                   path: build/NULL_MI_example
             - run: chmod u+x build/NULL_MI_example/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}RISCV
                   path: build/RISCV
             - run: chmod u+x build/RISCV/gem5.opt
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}VEGA_X86
                   path: build/VEGA_X86
@@ -197,7 +175,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
@@ -226,7 +204,7 @@ jobs:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
                   path: build/ALL
@@ -242,7 +220,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:

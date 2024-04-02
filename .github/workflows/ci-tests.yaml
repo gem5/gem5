@@ -123,22 +123,22 @@ jobs:
       - name: Build gem5
         run: scons ${{ matrix.build-target }} -j $(nproc)
 
-      # Upload the gem5 binary as an artifact.
-      # Note: the "achor.txt" file is a hack to make sure the paths are
-      # preserverd in the artifact. The upload-artifact action finds the
-      # closest common directory and uploads everything relative to that.
-      # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
-      # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
-      # stripping the "build" directory. By adding the "anchor.txt" file, we
-      # ensure the "build" directory is preserved.
-      - run: echo "anchor" > anchor.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
-          path: |
-            build/*/gem5.*
-            anchor.txt
-          retention-days: 7
+        # Upload the gem5 binary as an artifact.
+        # Note: the "achor.txt" file is a hack to make sure the paths are
+        # preserverd in the artifact. The upload-artifact action finds the
+        # closest common directory and uploads everything relative to that.
+        # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
+        # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
+        # stripping the "build" directory. By adding the "anchor.txt" file, we
+        # ensure the "build" directory is preserved.
+            - run: echo "anchor" > anchor.txt
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  path: |
+                      build/*/gem5.*
+                      anchor.txt
+                  retention-days: 7
 
   testlib-quick-execution:
     runs-on: [self-hosted, linux, x64]
@@ -161,11 +161,11 @@ jobs:
       - name: Clean runner
         run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
 
-      # Checkout the repository then download the gem5.opt artifact.
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+        # Checkout the repository then download the gem5.opt artifact.
+            - uses: actions/checkout@v4
+            - uses: actions/download-artifact@v4
+              with:
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
 
       # Check that the gem5.opt artifact exists and is executable.
       - name: Chmod gem5.{opt,debug,fast} to be executable
@@ -188,18 +188,15 @@ jobs:
           echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed
           's/\//-/g')" >> $GITHUB_OUTPUT
 
-      # Upload the tests/testing-results directory as an artifact.
-      - name: upload results
-        if: success() || failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name:
-            ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt
-            }}-testlib-quick-${{
-            steps.sanitize-test-dir.outputs.sanatized-test-dir }}-status-${{
-            steps.run-tests.outcome }}-output
-          path: tests/testing-results
-          retention-days: 30
+        # Upload the tests/testing-results directory as an artifact.
+            - name: Upload test results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanatized-test-dir
+                      }}-status-${{ steps.run-tests.outcome }}-output
+                  path: tests/testing-results
+                  retention-days: 30
 
   pyunit:
     runs-on: [self-hosted, linux, x64]
