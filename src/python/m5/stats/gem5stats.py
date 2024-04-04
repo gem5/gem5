@@ -155,7 +155,6 @@ def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
 
 
 def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
-    unit = statistic.unit
     description = statistic.desc
     value = statistic.values
     bin_size = statistic.bucket_size
@@ -167,8 +166,6 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
     underflow = statistic.underflow
     overflow = statistic.overflow
     logs = statistic.logs
-    # DistInfo uses the C++ `double`.
-    datatype = StorageType["f64"]
 
     return Distribution(
         value=value,
@@ -181,9 +178,7 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
         underflow=underflow,
         overflow=overflow,
         logs=logs,
-        unit=unit,
         description=description,
-        datatype=datatype,
     )
 
 
