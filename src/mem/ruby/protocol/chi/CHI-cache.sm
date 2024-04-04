@@ -325,7 +325,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     AtomicReturn,                desc="", in_trans="yes";
     AtomicNoReturn,              desc="", in_trans="yes";
     AtomicReturn_PoC,            desc="", in_trans="yes";
+    AtomicReturn_PoC_Alloc,      desc="", in_trans="yes";
     AtomicNoReturn_PoC,          desc="", in_trans="yes";
+    AtomicNoReturn_PoC_Alloc,    desc="", in_trans="yes";
     SnpCleanInvalid,             desc="", in_trans="yes";
     SnpShared,                   desc="", in_trans="yes";
     SnpSharedFwd,                desc="", in_trans="yes";
@@ -661,6 +663,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // Atomic info associated with the transaction
     WriteMask atomic_op,    desc="Atomic Operation Wrapper";
     bool atomic_to_be_done, desc="We have yet to perform the atomic";
+    bool atomic_to_be_wb,   desc="We are writebacking the atomic";
 
     // NOTE: seqReq is a smart pointer pointing to original CPU request object
     // that triggers transactions associated with this TBE. seqReq carries some

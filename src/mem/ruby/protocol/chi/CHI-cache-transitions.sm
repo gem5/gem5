@@ -448,7 +448,7 @@ transition({RSC,RSD,RUSD,RUSC,RU,I}, WriteUnique, BUSY_BLKD) {
 
 // AtomicReturn and AtomicNoReturn
 
-transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
+transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,RUSC,
             UD,UD_RSC,UD_RSD,UD_RU,UC,UC_RSC,UC_RU,RSC,RU}, AtomicReturn, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicReturn_Forward;
@@ -457,7 +457,7 @@ transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
   ProcessNextState;
 }
 
-transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
+transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,RUSC,
             UD,UD_RSC,UD_RSD,UD_RU,UC,UC_RSC,UC_RU,RSC,RU}, AtomicNoReturn, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicNoReturn_Forward;
@@ -467,7 +467,7 @@ transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
 }
 
 transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
-           AtomicReturn_PoC, BUSY_BLKD) {
+           {AtomicReturn_PoC_Alloc, AtomicReturn_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicReturn_LocalWrite;
   Profile_Hit;
@@ -476,7 +476,7 @@ transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
 }
 
 transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
-           AtomicNoReturn_PoC, BUSY_BLKD) {
+           {AtomicNoReturn_PoC_Alloc, AtomicNoReturn_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicNoReturn_LocalWrite;
   Profile_Hit;
@@ -484,8 +484,8 @@ transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
   ProcessNextState;
 }
 
-transition({SD, SD_RSD, SD_RSC, SC, SC_RSC, RSC, RSD, RUSC, RUSD, RU},
-           AtomicReturn_PoC, BUSY_BLKD) {
+transition({SD, SD_RSD, SD_RSC, SC, SC_RSC},
+           {AtomicReturn_PoC_Alloc, AtomicReturn_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicReturn_LocalWrite;
   Profile_Miss;
@@ -493,14 +493,69 @@ transition({SD, SD_RSD, SD_RSC, SC, SC_RSC, RSC, RSD, RUSC, RUSD, RU},
   ProcessNextState;
 }
 
-transition({SD, SD_RSD, SD_RSC, SC, SC_RSC, RSC, RSD, RUSC, RUSD, RU},
-           AtomicNoReturn_PoC, BUSY_BLKD) {
+transition({RSC, RSD, RUSC, RUSD, RU},
+           AtomicReturn_PoC_Alloc, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_LocalWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({RSC, RSD, RUSC, RUSD, RU},
+           AtomicReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_WriteBack;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({SD, SD_RSD, SD_RSC, SC, SC_RSC},
+           {AtomicNoReturn_PoC_Alloc, AtomicNoReturn_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_AtomicNoReturn_LocalWrite;
   Profile_Miss;
   Pop_ReqRdyQueue;
   ProcessNextState;
 }
+
+transition({RSC, RSD, RUSC, RUSD, RU},
+           AtomicNoReturn_PoC_Alloc, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_LocalWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({RSC, RSD, RUSC, RUSD, RU},
+           AtomicNoReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_WriteBack;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(I, AtomicReturn_PoC_Alloc, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_Miss_Alloc;
+  Allocate_DirEntry;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(I, AtomicNoReturn_PoC_Alloc, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_Miss_Alloc;
+  Allocate_DirEntry;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 
 transition(I, AtomicReturn_PoC, BUSY_BLKD) {
   Initiate_Request;
@@ -519,7 +574,6 @@ transition(I, AtomicNoReturn_PoC, BUSY_BLKD) {
   Pop_ReqRdyQueue;
   ProcessNextState;
 }
-
 
 // Load / Store / Atomic from sequencer & Prefetch from prefetcher
 
@@ -880,8 +934,8 @@ transition({BUSY_BLKD,BUSY_INTR},
             WriteUnique,WriteUniquePtl_PoC,
             WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc,
             WriteUniqueZero,
-            AtomicReturn,AtomicReturn_PoC,
-            AtomicNoReturn,AtomicNoReturn_PoC,
+            AtomicReturn,AtomicReturn_PoC, AtomicReturn_PoC_Alloc
+            AtomicNoReturn,AtomicNoReturn_PoC, AtomicNoReturn_PoC_Alloc
             StashOnceShared,StashOnceUnique}) {
   StallRequest;
 }
