@@ -1058,13 +1058,29 @@ action(Initiate_AtomicReturn_LocalWrite, desc="") {
   tbe.actions.push(Event:SendDBIDResp_AR);
   tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendCompData_AR);
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_AtomicReturn_WriteBack, desc="") {
+  if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+  } else if (tbe.dir_sharers.count() > 0){
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+  }
+  tbe.actions.push(Event:SendDBIDResp_AR);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
 
 action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
   if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
@@ -1081,21 +1097,42 @@ action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
   }
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_AtomicNoReturn_WriteBack, desc="") {
+  if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+  } else if (tbe.dir_sharers.count() > 0){
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+  }
+  if (comp_anr) {
+    tbe.actions.push(Event:SendDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_ANR);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
 
 action(Initiate_AtomicReturn_Forward, desc="") {
-  tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendAtomicReturn);
+  tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendDBIDResp_AR);
   tbe.actions.push(Event:SendARData);
-  tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.pushNB(Event:TagArrayWrite);
 
   tbe.dataToBeInvalid := true;
@@ -1104,10 +1141,12 @@ action(Initiate_AtomicReturn_Forward, desc="") {
 action(Initiate_AtomicNoReturn_Forward, desc="") {
   if (comp_anr) {
     tbe.actions.push(Event:SendAtomicNoReturn);
+    tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:SendComp_ANR);
   } else {
     tbe.actions.push(Event:SendAtomicNoReturn);
+    tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
   }
   tbe.actions.push(Event:WriteBEPipe);
@@ -1117,18 +1156,47 @@ action(Initiate_AtomicNoReturn_Forward, desc="") {
   tbe.dataToBeInvalid := true;
 }
 
+action(Initiate_AtomicReturn_Miss_Alloc, desc="") {
+  tbe.actions.push(Event:SendReadNoSnp);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendDBIDResp_AR);
+  tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
 action(Initiate_AtomicReturn_Miss, desc="") {
   tbe.actions.push(Event:SendReadNoSnp);
   tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendDBIDResp_AR);
-  tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendCompData_AR);
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_AtomicNoReturn_Miss_Alloc, desc="") {
+  assert(is_HN);
+  tbe.actions.push(Event:SendReadNoSnp);
+  if (comp_anr) {
+    tbe.actions.push(Event:SendDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_ANR);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
+
 
 action(Initiate_AtomicNoReturn_Miss, desc="") {
   assert(is_HN);
@@ -1141,12 +1209,12 @@ action(Initiate_AtomicNoReturn_Miss, desc="") {
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
   }
-
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
   tbe.actions.push(Event:WriteBEPipe);
-  tbe.actions.push(Event:TagArrayWrite);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
 }
 
 action(Initiate_CopyBack, desc="") {
@@ -1615,6 +1683,9 @@ action(Send_WriteNoSnp, desc="") {
   // so addExpectedCount
   tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
   tbe.expected_req_resp.addExpectedCount(1);
+
+  // If we are WB after AtomicReturn/NoReturn
+  tbe.atomic_to_be_wb := true;
 }
 
 action(Send_WriteNoSnp_Partial, desc="") {
@@ -2948,7 +3019,8 @@ action(Send_Data, desc="") {
     }
     tbe.snd_pendBytes.setMask(offset, range, false);
 
-    if (tbe.reqType == CHIRequestType:AtomicReturn){
+    if ((tbe.reqType == CHIRequestType:AtomicReturn) &&
+        (tbe.atomic_to_be_wb == false)){
         out_msg.dataBlk := tbe.oldDataBlk;
     } else {
         out_msg.dataBlk := tbe.dataBlk;
