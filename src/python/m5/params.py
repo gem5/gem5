@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017-2019, 2021 Arm Limited
+# Copyright (c) 2012-2014, 2017-2019, 2021, 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1035,6 +1035,9 @@ class AddrRange(ParamValue):
         pybind_include = self.getValue().exclude(pybind_exclude)
 
         return list([AddrRange(r.start(), r.end()) for r in pybind_include])
+
+    def is_subset(self, addr_range):
+        return self.getValue().isSubset(addr_range.getValue())
 
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
