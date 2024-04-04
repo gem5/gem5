@@ -55,6 +55,7 @@ namespace X86ISA
 
     const int NumCRegs = 16;
     const int NumDRegs = 8;
+    const int NumXCRegs = 1;
 
     const int NumSegments = 6;
     const int NumSysSegments = 4;

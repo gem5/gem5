@@ -405,6 +405,9 @@ enum : RegIndex
     // "Fake" MSRs for internally implemented devices
     PciConfigAddress,
 
+    XcrBase,
+    Xcr0 = XcrBase,
+
     NumRegs
 };
 
@@ -422,6 +425,13 @@ cr(int index)
 {
     assert(index >= 0 && index < NumCRegs);
     return CrBase + index;
+}
+
+static inline RegIndex
+xcr(int index)
+{
+    assert(index >= 0 && index < NumXCRegs);
+    return XcrBase + index;
 }
 
 static inline RegIndex
@@ -648,6 +658,24 @@ EndBitUnion(CR4)
 BitUnion64(CR8)
     Bitfield<3, 0> tpr; // Task Priority Register
 EndBitUnion(CR8)
+
+BitUnion64(XCR0)
+    Bitfield<0> x87; // x87 FPU/MMX support (must be 1)
+    Bitfield<1> sse; // XSAVE support for MXCSR and XMM registers
+    Bitfield<2> avx; // AVX enabled and XSAVE support for upper halves of YMM
+                     // registers
+    Bitfield<3> bndreg; // MPX enabled and XSAVE support for BND0-BND3
+                        // registers
+    Bitfield<4> bndsrc; // MPX enabled and XSAVE support for BNDCFGU and
+                        // BNDSTATUS registers
+    Bitfield<5> opmask; // AVX-512 enabled and XSAVE support for opmask
+                        // registers k0-k7
+    Bitfield<6> zmm_hi256; // AVX-512 enabled and XSAVE support for upper
+                           // halves of lower ZMM registers
+    Bitfield<7> hi16_zmm; // AVX-512 enabled and XSAVE support for upper ZMM
+                          // registers
+    Bitfield<9> pkru; // XSAVE support for PKRU register
+EndBitUnion(XCR0)
 
 BitUnion64(DR6)
     Bitfield<0> b0;

@@ -302,6 +302,11 @@ FsWorkload::initState()
     // Point to the page tables.
     tc->setMiscReg(misc_reg::Cr3, PageMapLevel4);
 
+    // Only used if cr4.osxsave is set
+    XCR0 xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
+    xcr0.x87 = 1; // Must be 1 according to x86 specification
+    tc->setMiscReg(misc_reg::Xcr0, xcr0);
+
     Efer efer = tc->readMiscRegNoEffect(misc_reg::Efer);
     // Enable long mode.
     efer.lme = 1;
