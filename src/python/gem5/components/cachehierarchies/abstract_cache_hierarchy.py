@@ -53,7 +53,7 @@ class CacheNode:
         self,
         name: str,
         cache: SimObject,
-        next_level: int,
+        next_level: "CacheNode",
         hierarchy: "AbstractCacheHierarchy",
     ):
         self.name = name
