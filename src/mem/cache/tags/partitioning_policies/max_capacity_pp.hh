@@ -81,14 +81,9 @@ class MaxCapacityPartitioningPolicy : public BasePartitioningPolicy
 
   private:
     /**
-    * Cache size in number of bytes
+    * Total number of cache blocks
     */
-    const uint64_t cacheSize;
-
-    /**
-    * Cache block size in number of bytes
-    */
-    const uint64_t blkSize;
+    const uint64_t totalBlockCount;
 
     /**
     * Vector of partitionIDs the policy operates on

@@ -52,8 +52,9 @@ namespace partitioning_policy
 
 MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
     (const MaxCapacityPartitioningPolicyParams &params):
-    BasePartitioningPolicy(params), cacheSize(params.cache_size),
-    blkSize(params.blk_size), partitionIDs(params.partition_ids),
+    BasePartitioningPolicy(params),
+    totalBlockCount(params.cache_size / params.blk_size),
+    partitionIDs(params.partition_ids),
     capacities(params.capacities)
 {
     // check if ids and capacities vectors are the same length
@@ -61,9 +62,6 @@ MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
         fatal("MaxCapacity Partitioning Policy configuration invalid: ids and "
             "capacities arrays are not equal lengths");
     }
-
-    // calculate total cache block count to use when creating allocation maps
-    const uint64_t total_block_cnt = this->cacheSize / this->blkSize;
 
     // check allocations and create map
     for (auto i = 0; i < this->partitionIDs.size(); i++) {
@@ -77,13 +75,13 @@ MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
                 cap_frac);
         }
 
-        const uint64_t allocated_block_cnt = cap_frac * total_block_cnt;
+        const uint64_t allocated_block_cnt = cap_frac * totalBlockCount;
         partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
 
         DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
             "for PartitionID: %d to use portion of size %f (%d cache blocks "
             "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
-            total_block_cnt);
+            totalBlockCount);
 
     }
 }
