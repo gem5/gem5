@@ -68,22 +68,28 @@ MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
         const uint64_t partition_id = this->partitionIDs[i];
         const double cap_frac = capacities[i];
 
-        // check Capacity Fraction (cap_frac) is actually a fraction in [0,1]
-        if (!(cap_frac >= 0 && cap_frac <= 1)) {
-            fatal("MaxCapacity Partitioning Policy for PartitionID %d has "
-                "Capacity Fraction %f outside of [0,1] range", partition_id,
-                cap_frac);
-        }
-
-        const uint64_t allocated_block_cnt = cap_frac * totalBlockCount;
-        partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
-
-        DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
-            "for PartitionID: %d to use portion of size %f (%d cache blocks "
-            "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
-            totalBlockCount);
-
+        // Configure partition
+        configurePartition(partition_id, cap_frac);
     }
+}
+
+void
+MaxCapacityPartitioningPolicy::configurePartition(uint64_t partition_id,
+                                                  double cap_frac)
+{
+    // check Capacity Fraction (cap_frac) is actually a fraction in [0,1]
+    panic_if(!(cap_frac >= 0 && cap_frac <= 1),
+             "MaxCapacity Partitioning Policy for PartitionID %d has "
+             "Capacity Fraction %f outside of [0,1] range", partition_id,
+             cap_frac);
+
+    const uint64_t allocated_block_cnt = cap_frac * totalBlockCount;
+    partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
+
+    DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
+        "for PartitionID: %d to use portion of size %f (%d cache blocks "
+        "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
+        totalBlockCount);
 }
 
 void

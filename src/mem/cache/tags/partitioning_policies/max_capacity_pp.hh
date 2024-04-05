@@ -79,6 +79,14 @@ class MaxCapacityPartitioningPolicy : public BasePartitioningPolicy
     void
     notifyRelease(const uint64_t partition_id) override;
 
+    /**
+    * Set the maximum capacity (as a fraction) for the provided partition
+    *
+    * param partion_id partition to be configured
+    * param cap_frac max capacity for the partition (0 < cap_frac < 1)
+    */
+    void configurePartition(uint64_t partition_id, double cap_frac);
+
   private:
     /**
     * Total number of cache blocks
