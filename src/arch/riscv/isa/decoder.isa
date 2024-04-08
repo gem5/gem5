@@ -183,7 +183,7 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<IllegalInstFault>("FPU is off",
                                                                    machInst);
 
-                    Mem_uw = unboxF32(boxF32(Fs2_bits));
+                    Mem_uw = unboxF32(boxF32(Fp2_bits));
                 }}, {{
                     EA = (uint32_t)(Rp1_uw + offset);
                 }});
