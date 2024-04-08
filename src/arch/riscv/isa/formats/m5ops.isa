@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2020 Barkhausen Institut
+// Copyright (c) 2024 University of Rostock
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -40,10 +41,12 @@ def format M5Op() {{
             uint64_t result;
             if (machInst.rv_type == RV32) {
                 pseudo_inst::pseudoInst<RegABI32>(xc->tcBase(), M5FUNC, result);
+                a0 = bits(result, 31, 0);
+                a1 = bits(result, 63, 32);
             } else {
                 pseudo_inst::pseudoInst<RegABI64>(xc->tcBase(), M5FUNC, result);
-            }
-            a0 = rvSext(result)''',
+                a0 = rvSext(result);
+            }''',
             ['IsNonSpeculative', 'IsSerializeAfter'])
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
