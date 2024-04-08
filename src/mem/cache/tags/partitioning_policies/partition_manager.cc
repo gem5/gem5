@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2024 ARM Limited
- * All rights reserved.
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -35,12 +35,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
-#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 
-#include "base/extensible.hh"
-#include "mem/packet.hh"
-#include "mem/request.hh"
+#include "mem/cache/tags/partitioning_policies/base_pp.hh"
 
 namespace gem5
 {
@@ -48,55 +45,41 @@ namespace gem5
 namespace partitioning_policy
 {
 
-const uint64_t DEFAULT_PARTITION_ID = 0;
-const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
+PartitionManager::PartitionManager(const Params &p)
+  : SimObject(p),
+    partitioningPolicies(p.partitioning_policies)
+{}
 
-class PartitionFieldExtention : public Extension<Request,
-                                                 PartitionFieldExtention>
+void
+PartitionManager::notifyAcquire(uint64_t partition_id)
 {
-  public:
-    std::unique_ptr<ExtensionBase> clone() const override;
-    PartitionFieldExtention() = default;
+    // Notify partitioning policies of acquisition of ownership
+    for (auto & partitioning_policy : partitioningPolicies) {
+        // get partitionId from Packet
+        partitioning_policy->notifyAcquire(partition_id);
+    }
+}
 
-    /**
-    * _partitionID getter
-    * @return extension Partition ID
-    */
-    uint64_t getPartitionID() const;
+void
+PartitionManager::notifyRelease(uint64_t partition_id)
+{
+    // Notify partitioning policies of release of ownership
+    for (auto partitioning_policy : partitioningPolicies) {
+        partitioning_policy->notifyRelease(partition_id);
+    }
+}
 
-    /**
-    * _partitionMonitoringID getter
-    * @return extension Partition Monitoring ID
-    */
-    uint64_t getPartitionMonitoringID() const;
-
-    /**
-    * _partitionID setter
-    * @param id Partition ID to set for the extension
-    */
-    void setPartitionID(uint64_t id);
-
-    /**
-    * _partitionMonitoringID setter
-    * @param id Partition Monitoring ID to set for the extension
-    */
-    void setPartitionMonitoringID(uint64_t id);
-
-  private:
-    uint64_t _partitionID = DEFAULT_PARTITION_ID;
-    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
-};
-
-/**
-* Helper function to retrieve PartitionID from a packet; Returns packet
-* PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
-* @param pkt pointer to packet (PacketPtr)
-* @return packet PartitionID.
-*/
-uint64_t readPacketPartitionID (PacketPtr pkt);
+void
+PartitionManager::filterByPartition(
+    std::vector<ReplaceableEntry *> &entries,
+    const uint64_t partition_id) const
+{
+    // Filter entries based on PartitionID
+    for (auto partitioning_policy : partitioningPolicies) {
+        partitioning_policy->filterByPartition(entries, partition_id);
+    }
+}
 
 } // namespace partitioning_policy
 
 } // namespace gem5
-
-#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__

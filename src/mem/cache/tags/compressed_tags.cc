@@ -50,6 +50,7 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/packet.hh"
 #include "params/CompressedTags.hh"
 
@@ -124,8 +125,8 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
         indexingPolicy->getPossibleEntries(addr);
 
     // Filter entries based on PartitionID
-    for (auto partitioning_policy : partitioningPolicies){
-        partitioning_policy->filterByPartition(superblock_entries,
+    if (partitionManager){
+        partitionManager->filterByPartition(superblock_entries,
             partition_id);
     }
 

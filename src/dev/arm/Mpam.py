@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2024 ARM Limited
+# Copyright (c) 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,18 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.PartitioningPolicies import PartitionManager
 
-SimObject('PartitioningPolicies.py', sim_objects=[
-    'PartitionManager',
-    'BasePartitioningPolicy',
-    'MaxCapacityPartitioningPolicy',
-    'WayPolicyAllocation',
-    'WayPartitioningPolicy']
-    )
 
-Source('base_pp.cc')
-Source('max_capacity_pp.cc')
-Source('way_allocation.cc')
-Source('way_pp.cc')
-Source('partition_manager.cc')
+class MpamMSC(PartitionManager):
+    type = "MpamMSC"
+    abstract = True
+    cxx_header = "dev/arm/mpam.hh"
+    cxx_class = "gem5::mpam::MSC"

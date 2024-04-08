@@ -59,7 +59,7 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
-#include "mem/cache/tags/partitioning_policies/partition_fields_extension.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 
@@ -177,8 +177,9 @@ class BaseSetAssoc : public BaseTags
             indexingPolicy->getPossibleEntries(addr);
 
         // Filter entries based on PartitionID
-        for (auto partitioning_policy : partitioningPolicies)
-            partitioning_policy->filterByPartition(entries, partition_id);
+        if (partitionManager) {
+            partitionManager->filterByPartition(entries, partition_id);
+        }
 
         // Choose replacement victim from replacement candidates
         CacheBlk* victim = entries.empty() ? nullptr :
@@ -204,12 +205,9 @@ class BaseSetAssoc : public BaseTags
         // Increment tag counter
         stats.tagsInUse++;
 
-        // Notify partitioning policies of acquisition of ownership
-        for (auto & partitioning_policy : partitioningPolicies) {
-            // get partitionId from Packet
-            const auto partitionId =
-                partitioning_policy::readPacketPartitionID(pkt);
-            partitioning_policy->notifyAcquire(partitionId);
+        if (partitionManager) {
+            auto partition_id = partitionManager->readPacketPartitionID(pkt);
+            partitionManager->notifyAcquire(partition_id);
         }
 
         // Update replacement policy

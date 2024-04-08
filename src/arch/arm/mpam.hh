@@ -35,55 +35,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "partition_fields_extension.hh"
+#ifndef __ARCH_ARM_MPAM_HH__
+#define __ARCH_ARM_MPAM_HH__
 
-namespace gem5
+#include "base/extensible.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
+
+namespace gem5::ArmISA::mpam
 {
 
-namespace partitioning_policy
+const uint64_t DEFAULT_PARTITION_ID = 0;
+const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
+
+class PartitionFieldExtension : public Extension<Request,
+                                                 PartitionFieldExtension>
 {
+  public:
+    std::unique_ptr<ExtensionBase> clone() const override;
+    PartitionFieldExtension() = default;
 
-std::unique_ptr<ExtensionBase>
-PartitionFieldExtention::clone() const
-{
-    return std::make_unique<PartitionFieldExtention>(*this);
-}
+    /**
+    * _partitionID getter
+    * @return extension Partition ID
+    */
+    uint64_t getPartitionID() const;
 
-uint64_t
-PartitionFieldExtention::getPartitionID() const
-{
-    return this->_partitionID;
-}
+    /**
+    * _partitionMonitoringID getter
+    * @return extension Partition Monitoring ID
+    */
+    uint64_t getPartitionMonitoringID() const;
 
-uint64_t
-PartitionFieldExtention::getPartitionMonitoringID() const
-{
-    return this->_partitionMonitoringID;
-}
+    /**
+    * _partitionID setter
+    * @param id Partition ID to set for the extension
+    */
+    void setPartitionID(uint64_t id);
 
-void
-PartitionFieldExtention::setPartitionID(uint64_t id)
-{
-    this->_partitionID = id;
-}
+    /**
+    * _partitionMonitoringID setter
+    * @param id Partition Monitoring ID to set for the extension
+    */
+    void setPartitionMonitoringID(uint64_t id);
 
-void
-PartitionFieldExtention::setPartitionMonitoringID(uint64_t id)
-{
-    this->_partitionMonitoringID = id;
-}
+  private:
+    uint64_t _partitionID = DEFAULT_PARTITION_ID;
+    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
+};
 
-uint64_t
-readPacketPartitionID (PacketPtr pkt)
-{
-    // get partition_id from PartitionFieldExtention
-    std::shared_ptr<PartitionFieldExtention> ext =
-        pkt->req->getExtension<PartitionFieldExtention>();
+} // namespace gem5::ArmISA::mpam
 
-    // use default value if extension is not set
-    return (ext != nullptr) ? ext->getPartitionID() : DEFAULT_PARTITION_ID;
-}
-
-} // namespace partitioning_policy
-
-} // namespace gem5
+#endif // __ARCH_ARM_MPAM_HH__

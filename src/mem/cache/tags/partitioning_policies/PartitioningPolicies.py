@@ -1,5 +1,14 @@
-# Copyright (c) 2024 ARM Limited
-# All rights reserved.
+# Copyright (c) 2024 Arm Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -30,6 +39,19 @@ from m5.params import (
 )
 from m5.proxy import Parent
 from m5.SimObject import SimObject
+
+
+class PartitionManager(SimObject):
+    type = "PartitionManager"
+    cxx_header = "mem/cache/tags/partitioning_policies/partition_manager.hh"
+    cxx_class = "gem5::partitioning_policy::PartitionManager"
+
+    partitioning_policies = VectorParam.BasePartitioningPolicy(
+        [],
+        "Partitioning policies "
+        "Setting multiple policies will enforce all of them individually "
+        "in order",
+    )
 
 
 class BasePartitioningPolicy(SimObject):

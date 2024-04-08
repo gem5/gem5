@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 ARM Limited
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -35,67 +35,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
-#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#include "arch/arm/mpam.hh"
+#include "dev/arm/mpam.hh"
 
-#include <vector>
-
-#include "params/BasePartitioningPolicy.hh"
-#include "sim/sim_object.hh"
-
-namespace gem5
+namespace gem5::mpam
 {
 
-class ReplaceableEntry;
-
-namespace partitioning_policy
+uint64_t
+MSC::readPacketPartitionID(PacketPtr pkt) const
 {
+    // get partition_id from PartitionFieldExtension
+    auto ext = pkt->req->getExtension<ArmISA::mpam::PartitionFieldExtension>();
+    // use default value if extension is not set
+    return (ext != nullptr) ? ext->getPartitionID() :
+        ArmISA::mpam::DEFAULT_PARTITION_ID;
+}
 
-/**
- * A Partitioning Policy is a cache partitioning mechanism that limits the
- * cache block allocations in a cache based on a PartitionID identifier. This
- * identifier may be set to any upstream memory request by attaching the
- * PartitionID to it. The way the partition ID is attached/extracted
- * from the request depends on the partitioning manager.
- *
- * See the use of the PartitionFieldExtension in Arm as an example.
- *
- * When partitioning policies are in place, the allocatable cache blocks for
- * this memory request will be filtered based on its PartitionID.
- *
- */
-class BasePartitioningPolicy : public SimObject
-{
-  public:
-    BasePartitioningPolicy(const BasePartitioningPolicyParams &params);
-
-    /**
-    * Filters the allocatable cache blocks for a memory request based on its
-    * PartitionID and policy allocation
-    * @param entries candidate cache blocks for this request; filtered in place
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                      const uint64_t partition_id) const = 0;
-
-    /**
-    * Notify of acquisition of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyAcquire(const uint64_t partition_id) = 0;
-
-    /**
-    * Notify of release of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyRelease(const uint64_t partition_id) = 0;
-};
-
-} // namespace partitioning_policy
-
-} // namespace gem5
-
-#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+} // namespace gem5::mpam
