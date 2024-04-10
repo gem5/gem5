@@ -798,13 +798,15 @@ bool needCacheEntry(CHIRequestType req_type,
       (enable_DMT && is_invalid(dir_entry) &&
        ((req_type == CHIRequestType:ReadShared) ||
         (req_type == CHIRequestType:ReadUnique) ||
+        (req_type == CHIRequestType:MakeReadUnique) ||
         (req_type == CHIRequestType:ReadOnce)))) {
     return false;
   } else {
     return is_prefetch ||
            (alloc_on_readshared && ((req_type == CHIRequestType:ReadShared) ||
                                     (req_type == CHIRequestType:ReadNotSharedDirty))) ||
-           (alloc_on_readunique && (req_type == CHIRequestType:ReadUnique)) ||
+           (alloc_on_readunique && ((req_type == CHIRequestType:ReadUnique) ||
+                                   (req_type == CHIRequestType:MakeReadUnique))) ||
            (alloc_on_readonce && (req_type == CHIRequestType:ReadOnce)) ||
            (alloc_on_writeback && ((req_type == CHIRequestType:WriteBackFull) ||
                                    (req_type == CHIRequestType:WriteCleanFull) ||
@@ -824,6 +826,7 @@ bool needDeallocCacheEntry(CHIRequestType req_type) {
   return (dealloc_on_shared && ((req_type == CHIRequestType:ReadShared) ||
                                 (req_type == CHIRequestType:ReadNotSharedDirty))) ||
          (dealloc_on_unique && ((req_type == CHIRequestType:ReadUnique) ||
+                                (req_type == CHIRequestType:MakeReadUnique) ||
                                 (req_type == CHIRequestType:CleanUnique)));
 }
 
@@ -1185,6 +1188,7 @@ bool isReadReqType(CHIRequestType type) {
   if (type == CHIRequestType:Load ||
       type == CHIRequestType:ReadShared ||
       type == CHIRequestType:ReadNotSharedDirty ||
+      type == CHIRequestType:MakeReadUnique ||
       type == CHIRequestType:ReadOnce) {
     return true;
   }
@@ -1243,6 +1247,8 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     return Event:CleanUnique;
   } else if (type == CHIRequestType:ReadOnce) {
     return Event:ReadOnce;
+  } else if (type == CHIRequestType:MakeReadUnique) {
+      return Event:MakeReadUnique;
   } else if (type == CHIRequestType:Evict) {
     return Event:Evict;
   } else if (type == CHIRequestType:WriteBackFull) {

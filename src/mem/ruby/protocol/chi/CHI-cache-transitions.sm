@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Arm Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -330,6 +330,29 @@ transition({SC_RSC, SD_RSC, RSC, SD_RSD, RSD}, ReadUnique, BUSY_BLKD) {
   Profile_Miss;
   Pop_ReqRdyQueue;
   ProcessNextState;
+}
+
+// MakeReadUnique
+transition({UD_RSC,UC_RSC,UD_RSD}, MakeReadUnique, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_MakeReadUnique_Hit_InvUpstream;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({RUSD,RUSC,RSC,RSD,SC_RSC,SD_RSC,SD_RSD}, MakeReadUnique, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_MakeReadUnique_Hit_InvUpstream;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({BUSY_BLKD, BUSY_INTR}, FinishMakeReadUnique, BUSY_BLKD) {
+  Pop_TriggerQueue;
+  Finish_MakeReadUnique;
+  ProcessNextState_ClearPending;
 }
 
 // CleanUnique
@@ -927,6 +950,7 @@ transition({BUSY_BLKD,BUSY_INTR},
             {ReadShared, ReadNotSharedDirty, ReadUnique, ReadUnique_PoC,
             ReadOnce, CleanUnique, CleanUnique_Stale,
             Load, Store, AtomicLoad, AtomicStore, Prefetch,
+            MakeReadUnique,
             WriteBackFull, WriteBackFull_Stale,
             WriteEvictFull, WriteEvictFull_Stale,
             WriteCleanFull, WriteCleanFull_Stale,
@@ -1151,6 +1175,12 @@ transition(BUSY_BLKD, SendCompUCRespStale) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendCompUDResp) {
+  Pop_TriggerQueue;
+  Send_CompUD_PD;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, SendRespSepData) {
   Pop_TriggerQueue;
   Send_RespSepData;
@@ -1185,6 +1215,13 @@ transition(BUSY_BLKD, SendReadOnce, BUSY_INTR) {DestinationAvailable} {
 transition(BUSY_BLKD, SendReadUnique, BUSY_INTR) {DestinationAvailable} {
   Pop_TriggerQueue;
   Send_ReadUnique;
+  Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_BLKD, SendMakeReadUnique, BUSY_INTR) {DestinationAvailable} {
+  Pop_TriggerQueue;
+  Send_MakeReadUnique;
   Profile_OutgoingStart;
   ProcessNextState_ClearPending;
 }
