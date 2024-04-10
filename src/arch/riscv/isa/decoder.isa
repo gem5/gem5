@@ -427,7 +427,7 @@ decode QUADRANT default Unknown::unknown() {
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
-                    Fd_bits = fd.v;
+                    Fc1_bits = fd.v;
                 }}, {{
                     EA = (uint32_t)(sp_uw + offset);
                 }});
