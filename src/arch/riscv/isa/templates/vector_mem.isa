@@ -82,7 +82,7 @@ def template VleConstructor {{
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
     }
 
-    if (_opClass == VectorUnitStrideFaultOnlyFirstLoadOp) {
+    if (_opClass == SimdUnitStrideFaultOnlyFirstLoadOp) {
         microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
                                         vlen, microops);
         this->microops.push_back(microop);
