@@ -42,6 +42,11 @@ services:
             context: ubuntu-24.04_all-dependencies
             dockerfile: Dockerfile
         image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    ubuntu-24.04_min-dependencies:
+        build:
+            context: ubuntu-24.04_min-dependencies
+            dockerfile: Dockerfile
+        image: ghcr.io/gem5/ubuntu-24.04_min-dependencies:latest
     gcc-8:
         build:
             context: ubuntu-20.04_gcc-version
