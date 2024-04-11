@@ -44,7 +44,7 @@ group "default" {
 }
 
 group "ubuntu-releases" {
-  targets=["ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-22-04_min-dependencies"]
+  targets=["ubuntu-24-04_all-dependencies", "ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-22-04_min-dependencies"]
 }
 
 group "clang-compilers" {
@@ -88,6 +88,13 @@ target "systemc" {
   dockerfile = "Dockerfile"
   context = "systemc-2.3.3"
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
+}
+
+target "ubuntu-24-04_all-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-24.04_all-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-22-04_all-dependencies" {
