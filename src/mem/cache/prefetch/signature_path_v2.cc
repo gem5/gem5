@@ -42,10 +42,11 @@ namespace prefetch
 
 SignaturePathV2::SignaturePathV2(const SignaturePathPrefetcherV2Params &p)
     : SignaturePath(p),
-      globalHistoryRegister(p.global_history_register_entries,
+      globalHistoryRegister((name() + ".GlobalHistoryRegister").c_str(),
                             p.global_history_register_entries,
-                            p.global_history_register_indexing_policy,
+			    p.global_history_register_entries,
                             p.global_history_register_replacement_policy,
+                            p.global_history_register_indexing_policy,
                             GlobalHistoryEntry())
 {
 }
@@ -124,7 +125,7 @@ SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
     GlobalHistoryEntry *gh_entry = globalHistoryRegister.findVictim(0);
     assert(gh_entry != nullptr);
     // Any address value works, as it is never used
-    globalHistoryRegister.insertEntry(0, false, gh_entry);
+    globalHistoryRegister.insertEntry(0, gh_entry);
 
     gh_entry->signature = signature;
     gh_entry->lastBlock = last_offset;
