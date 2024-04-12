@@ -161,7 +161,7 @@ class BaseTags : public ClockedObject
     } stats;
 
   public:
-    typedef BaseTagsParams Params;
+    PARAMS(BaseTags);
     BaseTags(const Params &p);
 
     /**

@@ -136,6 +136,7 @@ class PIF : public Queued
 
         struct IndexEntry : public TaggedEntry
         {
+            using TaggedEntry::TaggedEntry;
             HistoryBuffer::iterator historyIt;
         };
 

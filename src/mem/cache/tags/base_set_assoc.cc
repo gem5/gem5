@@ -82,6 +82,9 @@ BaseSetAssoc::tagsInit()
 
         // Associate a replacement data entry to the block
         blk->replacementData = replacementPolicy->instantiateEntry();
+
+        // This is not used as of now but we set it for security
+        blk->setIndexingPolicy(indexingPolicy);
     }
 }
 

@@ -79,7 +79,8 @@ class SignaturePath : public Queued
         signature_t signature;
         /** Last accessed block within a page */
         stride_t lastBlock;
-        SignatureEntry() : signature(0), lastBlock(0)
+        SignatureEntry(BaseIndexingPolicy *ip)
+          : TaggedEntry(ip), signature(0), lastBlock(0)
         {}
     };
     /** Signature table */
@@ -102,8 +103,9 @@ class SignaturePath : public Queued
         std::vector<PatternStrideEntry> strideEntries;
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
-        PatternEntry(size_t num_strides, unsigned counter_bits)
-          : TaggedEntry(), strideEntries(num_strides, counter_bits),
+        PatternEntry(size_t num_strides, unsigned counter_bits,
+                     BaseIndexingPolicy *ip)
+          : TaggedEntry(ip), strideEntries(num_strides, counter_bits),
             counter(counter_bits)
         {
         }

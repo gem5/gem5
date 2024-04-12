@@ -98,8 +98,9 @@ class IndirectMemory : public Queued
          */
         bool increasedIndirectCounter;
 
-        PrefetchTableEntry(unsigned indirect_counter_bits)
-            : TaggedEntry(), address(0), secure(false), streamCounter(0),
+        PrefetchTableEntry(unsigned indirect_counter_bits,
+                           BaseIndexingPolicy *ip)
+            : TaggedEntry(ip), address(0), secure(false), streamCounter(0),
               enabled(false), index(0), baseAddr(0), shift(0),
               indirectCounter(indirect_counter_bits),
               increasedIndirectCounter(false)
@@ -142,8 +143,9 @@ class IndirectMemory : public Queued
         std::vector<std::vector<Addr>> baseAddr;
 
         IndirectPatternDetectorEntry(unsigned int num_addresses,
-                                     unsigned int num_shifts)
-          : TaggedEntry(), idx1(0), idx2(0), secondIndexSet(false),
+                                     unsigned int num_shifts,
+                                     BaseIndexingPolicy *ip)
+          : TaggedEntry(ip), idx1(0), idx2(0), secondIndexSet(false),
             numMisses(0),
             baseAddr(num_addresses, std::vector<Addr>(num_shifts))
         {

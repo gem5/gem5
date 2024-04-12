@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2024 Pranith Kumar
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved
@@ -149,17 +161,6 @@ class AssociativeCache : public Named
     }
 
     /**
-     * Get the tag for the addr
-     * @param addr Addr to get the tag for
-     * @return Tag for the address
-     */
-    virtual Addr
-    getTag(const Addr addr) const
-    {
-        return indexingPolicy->extractTag(addr);
-    }
-
-    /**
      * Do an access to the entry if it exists.
      * This is required to update the replacement information data.
      * @param addr key to the entry
@@ -196,13 +197,11 @@ class AssociativeCache : public Named
     virtual Entry*
     findEntry(const Addr addr) const
     {
-        auto tag = getTag(addr);
-
         auto candidates = indexingPolicy->getPossibleEntries(addr);
 
         for (auto candidate : candidates) {
             Entry *entry = static_cast<Entry*>(candidate);
-            if (entry->matchTag(tag)) {
+            if (entry->match(addr)) {
                 return entry;
             }
         }
@@ -247,7 +246,7 @@ class AssociativeCache : public Named
     virtual void
     insertEntry(const Addr addr, Entry *entry)
     {
-        entry->insert(indexingPolicy->extractTag(addr));
+        entry->insert(addr);
         replPolicy->reset(entry->replacementData);
     }
 

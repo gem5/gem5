@@ -526,9 +526,11 @@ class TempCacheBlk final : public CacheBlk
      * Creates a temporary cache block, with its own storage.
      * @param size The size (in bytes) of this cache block.
      */
-    TempCacheBlk(unsigned size) : CacheBlk()
+    TempCacheBlk(unsigned size, BaseIndexingPolicy *ip) : CacheBlk()
     {
         data = new uint8_t[size];
+
+        setIndexingPolicy(ip);
     }
     TempCacheBlk(const TempCacheBlk&) = delete;
     using CacheBlk::operator=;

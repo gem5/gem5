@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2024 - Pranith Kumar
  * Copyright (c) 2020 Inria
  * All rights reserved.
@@ -35,6 +47,7 @@
 #include "base/cprintf.hh"
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 
 namespace gem5
 {
@@ -46,8 +59,11 @@ namespace gem5
 class CacheEntry : public ReplaceableEntry
 {
   public:
-    CacheEntry() = default;
+    CacheEntry(BaseIndexingPolicy *ip) : indexingPolicy(ip) {}
     ~CacheEntry() = default;
+    CacheEntry(const CacheEntry &rhs)
+      : indexingPolicy(rhs.indexingPolicy)
+    {}
 
     /**
      * Checks if the entry is valid.
@@ -66,26 +82,26 @@ class CacheEntry : public ReplaceableEntry
     /**
      * Checks if the given tag information corresponds to this entry's.
      *
-     * @param tag The tag value to compare to.
+     * @param addr The address value to be compared before tag is extracted
      * @return True if the tag information match this entry's.
      */
     virtual bool
-    matchTag(const Addr tag) const
+    match(const Addr addr) const
     {
-        return isValid() && (getTag() == tag);
+        return isValid() && (getTag() == extractTag(addr));
     }
 
     /**
      * Insert the block by assigning it a tag and marking it valid. Touches
      * block if it hadn't been touched previously.
      *
-     * @param tag The tag value.
+     * @param addr The address value.
      */
     virtual void
-    insert(const Addr tag)
+    insert(const Addr addr)
     {
         setValid();
-        setTag(tag);
+        setTag(extractTag(addr));
     }
 
     /** Invalidate the block. Its contents are no longer valid. */
@@ -101,6 +117,12 @@ class CacheEntry : public ReplaceableEntry
     {
         return csprintf("tag: %#x valid: %d | %s", getTag(),
                         isValid(), ReplaceableEntry::print());
+    }
+
+    void
+    setIndexingPolicy(BaseIndexingPolicy *ip)
+    {
+        indexingPolicy = ip;
     }
 
   protected:
@@ -119,6 +141,12 @@ class CacheEntry : public ReplaceableEntry
         valid = true;
     }
 
+    virtual Addr
+    extractTag(Addr addr) const
+    {
+        return indexingPolicy->extractTag(addr);
+    }
+
   private:
     /**
      * Valid bit. The contents of this entry are only valid if this bit is set.
@@ -126,6 +154,8 @@ class CacheEntry : public ReplaceableEntry
      * @sa insert()
      */
     bool valid{false};
+
+    BaseIndexingPolicy *indexingPolicy{nullptr};
 
     /** The entry's tag. */
     Addr tag{MaxAddr};

@@ -125,7 +125,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
 
-    tempBlock = new TempCacheBlk(blkSize);
+    tempBlock = new TempCacheBlk(blkSize, tags->params().indexing_policy);
 
     tags->tagsInit();
     if (prefetcher)

@@ -53,7 +53,8 @@ FrequentValues::FrequentValues(const Params &p)
     numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
     VFT((name() + ".VFT").c_str(),
         p.vft_entries, p.vft_assoc, p.vft_replacement_policy,
-        p.vft_indexing_policy, VFTEntry(counterBits)),
+        p.vft_indexing_policy,
+        VFTEntry(counterBits, p.vft_indexing_policy)),
     codeGenerationEvent([this]{ phase = COMPRESSING; }, name())
 {
     fatal_if((numVFTEntries - 1) > mask(chunkSizeBits),

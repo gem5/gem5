@@ -94,8 +94,8 @@ class AccessMapPatternMatching : public ClockedObject
         /** vector containing the state of the cachelines in this zone */
         std::vector<AccessMapState> states;
 
-        AccessMapEntry(size_t num_entries)
-          : TaggedEntry(), states(num_entries, AM_INIT)
+        AccessMapEntry(size_t num_entries, BaseIndexingPolicy *ip)
+          : TaggedEntry(ip), states(num_entries, AM_INIT)
         {
         }
 

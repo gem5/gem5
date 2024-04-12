@@ -56,10 +56,11 @@ SignaturePathV2::SignaturePathV2(const SignaturePathPrefetcherV2Params &p)
     : SignaturePath(p),
       globalHistoryRegister((name() + ".GlobalHistoryRegister").c_str(),
                             p.global_history_register_entries,
-			    p.global_history_register_entries,
+                            p.global_history_register_entries,
                             p.global_history_register_replacement_policy,
                             p.global_history_register_indexing_policy,
-                            GlobalHistoryEntry())
+                            GlobalHistoryEntry(
+                                p.global_history_register_indexing_policy))
 {
 }
 

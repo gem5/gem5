@@ -48,7 +48,9 @@ namespace gem5
 class TaggedEntry : public CacheEntry
 {
   public:
-    TaggedEntry() : CacheEntry(), _secure(false) {}
+    TaggedEntry(BaseIndexingPolicy *ip=nullptr)
+      : CacheEntry(ip), _secure(false)
+    {}
     ~TaggedEntry() = default;
 
     /**
@@ -103,7 +105,7 @@ class TaggedEntry : public CacheEntry
     }
 
     bool
-    matchTag(const Addr tag) const override
+    match(const Addr tag) const override
     {
         panic("Need is_secure arg");
         return false;
@@ -130,7 +132,7 @@ class TaggedEntry : public CacheEntry
     void clearSecure() { _secure = false; }
 
     /** Do not use API without is_secure flag. */
-    using CacheEntry::matchTag;
+    using CacheEntry::match;
     using CacheEntry::insert;
 };
 

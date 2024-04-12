@@ -49,11 +49,13 @@ IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
                   p.pt_table_assoc,
                   p.pt_table_replacement_policy,
                   p.pt_table_indexing_policy,
-                  PrefetchTableEntry(p.num_indirect_counter_bits)),
+                  PrefetchTableEntry(p.num_indirect_counter_bits,
+                                     p.pt_table_indexing_policy)),
     ipd((name() + ".IPD").c_str(), p.ipd_table_entries, p.ipd_table_assoc,
         p.ipd_table_replacement_policy,
         p.ipd_table_indexing_policy,
-        IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
+        IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size(),
+                                     p.ipd_table_indexing_policy)),
     ipdEntryTrackingMisses(nullptr), byteOrder(p.sys->getGuestByteOrder())
 {
 }

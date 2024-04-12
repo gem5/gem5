@@ -93,8 +93,9 @@ class STeMS : public Queued
         /** Sequence of accesses */
         std::vector<SequenceEntry> sequence;
 
-        ActiveGenerationTableEntry(int num_positions)
-          : TaggedEntry(), paddress(0), pc(0),
+        ActiveGenerationTableEntry(int num_positions,
+            BaseIndexingPolicy *ip)
+          : TaggedEntry(ip), paddress(0), pc(0),
             seqCounter(0), sequence(num_positions)
         {
         }

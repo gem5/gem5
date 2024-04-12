@@ -63,8 +63,9 @@ namespace gem5
 namespace prefetch
 {
 
-Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence)
-  : TaggedEntry(), confidence(init_confidence)
+Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence,
+                                 BaseIndexingPolicy *ip)
+  : TaggedEntry(ip), confidence(init_confidence)
 {
     invalidate();
 }
@@ -114,7 +115,7 @@ Stride::allocateNewContext(int context)
         pcTableInfo.assoc,
         pcTableInfo.replacementPolicy,
         pcTableInfo.indexingPolicy,
-        StrideEntry(initConfidence)));
+        StrideEntry(initConfidence, pcTableInfo.indexingPolicy)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
