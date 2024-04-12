@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -59,16 +71,13 @@ SignaturePathV2::handleSignatureTableMiss(stride_t current_block,
 
     // This should return all entries of the GHR, since it is a fully
     // associative table
-    std::vector<GlobalHistoryEntry *> all_ghr_entries =
-             globalHistoryRegister.getPossibleEntries(0 /* any value works */);
-
-    for (auto gh_entry : all_ghr_entries) {
-        if (gh_entry->lastBlock + gh_entry->delta == current_block) {
-            new_signature = gh_entry->signature;
-            new_conf = gh_entry->confidence;
-            new_stride = gh_entry->delta;
+    for (auto &gh_entry : globalHistoryRegister) {
+        if (gh_entry.lastBlock + gh_entry.delta == current_block) {
+            new_signature = gh_entry.signature;
+            new_conf = gh_entry.confidence;
+            new_stride = gh_entry.delta;
             found = true;
-            globalHistoryRegister.accessEntry(gh_entry);
+            globalHistoryRegister.accessEntry(&gh_entry);
             break;
         }
     }
