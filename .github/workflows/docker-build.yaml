@@ -6,7 +6,7 @@ on:
 jobs:
     obtain-dockerfiles:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
         steps:
             - uses: actions/checkout@v4
