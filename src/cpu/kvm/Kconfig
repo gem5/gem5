@@ -23,11 +23,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+config HAVE_KVM
+    bool
+    default "$(HAVE_KVM)"
+
 config KVM_ISA
     string
     default "$(KVM_ISA)"
 
 config USE_KVM
-    depends on KVM_ISA != ""
+    depends on KVM_ISA != "" && HAVE_KVM
     bool "Enable hardware virtualized (KVM) CPU models"
     default y
