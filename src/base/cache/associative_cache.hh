@@ -62,8 +62,8 @@ class AssociativeCache : public Named
 {
   protected:
 
-    static_assert(std::is_base_of_v<CacheEntry, Entry>,
-                  "Entry should be derived from CacheEntry");
+    static_assert(std::is_base_of_v<ReplaceableEntry, Entry>,
+                  "Entry should be derived from ReplaceableEntry");
 
     typedef replacement_policy::Base BaseReplacementPolicy;
     typedef typename Entry::IndexingPolicy IndexingPolicy;
