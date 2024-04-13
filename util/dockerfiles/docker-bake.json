@@ -1,0 +1,256 @@
+{
+    "variable": {
+        "IMAGE_URI": {
+            "default": "ghcr.io/gem5"
+        },
+        "TAG": {
+            "default": "latest"
+        }
+    },
+    "group": {
+        "default": {
+            "targets" : [
+                "ubuntu-releases",
+                "clang-compilers",
+                "gcc-compilers",
+                "gcn-gpu",
+                "gpu-fs",
+                "sst",
+                "systemc",
+                "llvm-gnu-cross-compiler-riscv64",
+                "gem5-all-min-dependencies",
+                "devcontainer"
+            ]
+        },
+        "ubuntu-releases" : {
+            "targets" : [
+                "ubuntu-24-04_all-dependencies",
+                "ubuntu-22-04_all-dependencies",
+                "ubuntu-20-04_all-dependencies",
+                "ubuntu-24-04_min-dependencies"
+            ]
+        },
+        "clang-compilers" : {
+            "targets" : [
+                "clang-version-7",
+                "clang-version-8",
+                "clang-version-9",
+                "clang-version-10",
+                "clang-version-11",
+                "clang-version-12",
+                "clang-version-13",
+                "clang-version-14",
+                "clang-version-15",
+                "clang-version-16"
+            ]
+        },
+        "gcc-compilers" : {
+            "targets" : [
+                "gcc-version-8",
+                "gcc-version-10",
+                "gcc-version-11",
+                "gcc-version-12",
+                "gcc-version-13"
+            ]
+        }
+    },
+    "target" : {
+        "common" : {
+            "pull" : true,
+            "platforms" : [
+                "linux/amd64",
+                "linux/arm64",
+                "linux/riscv64"
+            ]
+        },
+        "gcn-gpu" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "gcn-gpu",
+            "tags" : ["${IMAGE_URI}/gcn-gpu:${TAG}"]
+        },
+        "gpu-fs" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "gpu-fs",
+            "tags" : ["${IMAGE_URI}/gpu-fs:${TAG}"]
+        },
+        "sst" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "sst",
+            "tags" : ["${IMAGE_URI}/sst-env:${TAG}"]
+        },
+        "systemc" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "systemc-2.3.3",
+            "tags" : ["${IMAGE_URI}/systemc-env:${TAG}"]
+        },
+        "devcontainer" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "devcontainer",
+            "tags" : ["${IMAGE_URI}/devcontainer:${TAG}"]
+        },
+        "ubuntu-20-04_all-dependencies" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-20.04_all-dependencies",
+            "tags" : ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
+        },
+        "ubuntu-22-04_all-dependencies" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-22.04_all-dependencies",
+            "tags" : ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
+        },
+        "ubuntu-24-04_all-dependencies" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-24.04_all-dependencies",
+            "tags" : ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
+        },
+        "ubuntu-24-04_min-dependencies" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-24.04_min-dependencies",
+            "tags" : ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
+        },
+        "gcc-compilers-base-20-04" : {
+            "inherits" : ["common"],
+            "context" : "ubuntu-20.04_gcc-version",
+            "dockerfile" : "Dockerfile"
+        },
+        "gcc-version-8" : {
+            "inherits" : ["gcc-compilers-base-20-04"],
+            "args" : {
+                "version" : "8"
+            },
+            "tags" : ["${IMAGE_URI}/gcc-version-8:${TAG}"]
+        },
+        "gcc-version-10" : {
+            "inherits" : ["gcc-compilers-base-20-04"],
+            "args" : {
+                "version" : "10"
+            },
+            "tags" : ["${IMAGE_URI}/gcc-version-10:${TAG}"]
+        },
+        "gcc-compilers-base-22-04" : {
+            "inherits" : ["common"],
+            "context" : "ubuntu-22.04_gcc-version",
+            "dockerfile" : "Dockerfile"
+        },
+        "gcc-version-11" : {
+            "inherits" : ["gcc-compilers-base-22-04"],
+            "args" : {
+                "version" : "11"
+            },
+            "tags" : ["${IMAGE_URI}/gcc-version-11:${TAG}"]
+        },
+        "gcc-version-12" : {
+            "inherits" : ["gcc-compilers-base-22-04"],
+            "args" : {
+                "version" : "12"
+            },
+            "tags" : ["${IMAGE_URI}/gcc-version-12:${TAG}"]
+        },
+        "gcc-version-13": {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-22.04_gcc_13-version",
+            "tags" : ["${IMAGE_URI}/gcc-version-13:${TAG}"]
+        },
+        "clang-compilers-base-20-04" : {
+            "inherits" : ["common"],
+            "context" : "ubuntu-20.04_clang-version",
+            "dockerfile" : "Dockerfile"
+        },
+        "clang-version-7": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "7"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-7:${TAG}"]
+        },
+        "clang-version-8": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "8"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-8:${TAG}"]
+        },
+        "clang-version-9": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "9"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-9:${TAG}"]
+        },
+        "clang-version-10": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "10"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-10:${TAG}"]
+        },
+        "clang-version-11": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "11"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-11:${TAG}"]
+        },
+        "clang-version-12": {
+           "inherits" : ["clang-compilers-base-20-04"],
+           "args" : {
+               "version" : "12"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-12:${TAG}"]
+        },
+        "clang-compilers-base-22-04" : {
+            "inherits" : ["common"],
+            "context" : "ubuntu-22.04_clang-version",
+            "dockerfile" : "Dockerfile"
+        },
+        "clang-version-13": {
+           "inherits" : ["clang-compilers-base-22-04"],
+           "args" : {
+               "version" : "13"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-13:${TAG}"]
+        },
+        "clang-version-14": {
+           "inherits" : ["clang-compilers-base-22-04"],
+           "args" : {
+               "version" : "14"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-14:${TAG}"]
+        },
+        "clang-version-15": {
+           "inherits" : ["clang-compilers-base-22-04"],
+           "args" : {
+               "version" : "15"
+           },
+           "tags" :  ["${IMAGE_URI}/clang-version-15:${TAG}"]
+        },
+        "clang-version-16" : {
+            "inherits" :["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "ubuntu-22.04_clang-16",
+            "tags" : ["${IMAGE_URI}/clang-version-16:${TAG}"]
+        },
+        "llvm-gnu-cross-compiler-riscv64" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "llvm-gnu-cross-compiler-riscv64",
+            "tags" : ["${IMAGE_URI}/llvm-gnu-cross-compiler-riscv64:${TAG}"]
+        },
+        "gem5-all-min-dependencies" : {
+            "inherits" : ["common"],
+            "dockerfile" : "Dockerfile",
+            "context" : "gem5-all-min-dependencies",
+            "tags" : ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
+        }
+    }
+}
