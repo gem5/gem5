@@ -17,7 +17,6 @@
                 "gpu-fs",
                 "sst",
                 "systemc",
-                "llvm-gnu-cross-compiler-riscv64",
                 "gem5-all-min-dependencies",
                 "devcontainer"
             ]
@@ -239,12 +238,6 @@
             "dockerfile" : "Dockerfile",
             "context" : "ubuntu-22.04_clang-16",
             "tags" : ["${IMAGE_URI}/clang-version-16:${TAG}"]
-        },
-        "llvm-gnu-cross-compiler-riscv64" : {
-            "inherits" : ["common"],
-            "dockerfile" : "Dockerfile",
-            "context" : "llvm-gnu-cross-compiler-riscv64",
-            "tags" : ["${IMAGE_URI}/llvm-gnu-cross-compiler-riscv64:${TAG}"]
         },
         "gem5-all-min-dependencies" : {
             "inherits" : ["common"],
