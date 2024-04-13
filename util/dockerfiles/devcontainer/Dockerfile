@@ -35,38 +35,11 @@
 #
 # `docker buildx bake devcontainer --push`
 
-# Stage 1: We create the base image will all-dependencies.
-# Notes:
-# * This is an exact copy of the ubuntu-22.04_all-dependencies Dockerfile
-#   We do not use the image because it is not multi-platform right now. When
-#   the image utilizes multi-platform we can remove this duplication and
-#   replace it with
-#   `FROM ubuntu-22.04_all-dependencies:latest as all-dependenices`.
-# * The all-dependencies docker is all dependeices needed to build and run
-#   gem5. As there may be addition dependenices useful for development, we will
-#   add in the final stage of the Dockerfile.
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04 as all-dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
-    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python3-dev doxygen libboost-all-dev libhdf5-serial-dev python3-pydot \
-    libpng-dev libelf-dev pkg-config pip python3-venv black python3-tk wget
-RUN pip install mypy pre-commit
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0.tar.gz \
-    && tar -xzf cmake-3.24.0.tar.gz \
-    && cd cmake-3.24.0 \
-    && ./bootstrap \
-    && make -j`nproc` \
-    && make install \
-    && cd .. \
-    && rm -rf cmake-3.24.0.tar.gz cmake-3.24.0
-
-# Stage 2: We build the stable version of gem5.
+# Stage 1: We build the stable version of gem5.
 # In the final stage this this is copied into /usr/local/bin/gem5. This ensures
 # there is a pre-built gem5 binary in each devcontainer. This can save time
 # if the container is used for education or demonstration purposes.
-FROM --platform=${BUILDPLATFORM} all-dependencies as builder
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-22.04_all-dependencies as builder
 RUN git clone --branch stable https://github.com/gem5/gem5
 WORKDIR /gem5
 RUN scons build/ALL/gem5.opt -j`nproc`
@@ -74,7 +47,7 @@ RUN scons build/ALL/gem5.opt -j`nproc`
 # Stage 3: The final stage where we create the devcontainer image.
 # This includes all dependencies for building and running gem5, the
 # dependencies for developing gem5, and a pre-built gem5 binary.
-FROM --platform=${BUILDPLATFORM} all-dependencies
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-22.04_all-dependencies
 RUN apt -y update  && \
     apt -y install vim
 COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5
