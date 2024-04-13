@@ -44,7 +44,7 @@ group "default" {
 }
 
 group "ubuntu-releases" {
-  targets=["ubuntu-24-04_all-dependencies", "ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-22-04_min-dependencies", "ubuntu-24-04_min-dependencies"]
+  targets=["ubuntu-24-04_all-dependencies", "ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-24-04_min-dependencies"]
 }
 
 group "clang-compilers" {
@@ -124,13 +124,6 @@ target "ubuntu-24-04_min-dependencies" {
   dockerfile = "Dockerfile"
   context = "ubuntu-24.04_min-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
-}
-
-target "ubuntu-22-04_min-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_min-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
 }
 
 target "gcc-compilers-base-20-04" {

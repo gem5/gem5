@@ -32,11 +32,6 @@ services:
             context: ubuntu-22.04_all-dependencies
             dockerfile: Dockerfile
         image: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
-    ubuntu-22.04_min-dependencies:
-        build:
-            context: ubuntu-22.04_min-dependencies
-            dockerfile: Dockerfile
-        image: ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest
     ubuntu-24.04_all-dependencies:
         build:
             context: ubuntu-24.04_all-dependencies
