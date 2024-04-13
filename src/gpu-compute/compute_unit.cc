@@ -2436,15 +2436,15 @@ ComputeUnit::ComputeUnitStats::ComputeUnitStats(statistics::Group *parent,
     instCyclesLdsPerSimd.init(cu->numVectorALUs);
 
     hitsPerTLBLevel.init(4);
-    execRateDist.init(0, 10, 2);
-    ldsBankConflictDist.init(0, cu->wfSize(), 2);
+    execRateDist.init(0, 10-1, 2);
+    ldsBankConflictDist.init(0, cu->wfSize()-1, 2);
 
     pageDivergenceDist.init(1, cu->wfSize(), 4);
     controlFlowDivergenceDist.init(1, cu->wfSize(), 4);
     activeLanesPerGMemInstrDist.init(1, cu->wfSize(), 4);
     activeLanesPerLMemInstrDist.init(1, cu->wfSize(), 4);
 
-    headTailLatency.init(0, 1000000, 10000).flags(statistics::pdf |
+    headTailLatency.init(0, 1000000-1, 10000).flags(statistics::pdf |
         statistics::oneline);
     waveLevelParallelism.init(0, n_wf * cu->numVectorALUs, 1);
     instInterleave.init(cu->numVectorALUs, 0, 20, 1);
