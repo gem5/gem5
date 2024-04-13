@@ -86,7 +86,6 @@ class AssociativeSet : public AssociativeCache<Entry>
 
   private:
     // The following APIs are excluded since they lack the secure bit
-    using AssociativeCache<Entry>::accessEntryByAddr;
     using AssociativeCache<Entry>::findEntry;
     using AssociativeCache<Entry>::insertEntry;
     using AssociativeCache<Entry>::replPolicy;

@@ -60,6 +60,7 @@ class CacheEntry : public ReplaceableEntry
 {
   public:
     using IndexingPolicy = BaseIndexingPolicy;
+    using KeyType = Addr;
 
     CacheEntry(BaseIndexingPolicy *ip) : indexingPolicy(ip) {}
     ~CacheEntry() = default;

@@ -67,6 +67,7 @@ class AssociativeCache : public Named
 
     typedef replacement_policy::Base BaseReplacementPolicy;
     typedef typename Entry::IndexingPolicy IndexingPolicy;
+    typedef typename Entry::KeyType KeyType;
 
     /** Associativity of the cache. */
     size_t associativity;
@@ -164,13 +165,13 @@ class AssociativeCache : public Named
     /**
      * Do an access to the entry if it exists.
      * This is required to update the replacement information data.
-     * @param addr key to the entry
+     * @param key key to the entry
      * @return The entry if it exists
      */
     virtual Entry*
-    accessEntryByAddr(const Addr addr)
+    accessEntry(const KeyType &key)
     {
-        auto entry = findEntry(addr);
+        auto entry = findEntry(key);
 
         if (entry) {
             accessEntry(entry);
@@ -191,18 +192,18 @@ class AssociativeCache : public Named
 
     /**
      * Find an entry within the set
-     * @param addr key element
+     * @param key key element
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
     virtual Entry*
-    findEntry(const Addr addr) const
+    findEntry(const KeyType &key) const
     {
-        auto candidates = indexingPolicy->getPossibleEntries(addr);
+        auto candidates = indexingPolicy->getPossibleEntries(key);
 
         for (auto candidate : candidates) {
             Entry *entry = static_cast<Entry*>(candidate);
-            if (entry->match(addr)) {
+            if (entry->match(key)) {
                 return entry;
             }
         }
@@ -212,13 +213,13 @@ class AssociativeCache : public Named
 
     /**
      * Find a victim to be replaced
-     * @param addr key to select the possible victim
+     * @param key key to select the possible victim
      * @result entry to be victimized
      */
     virtual Entry*
-    findVictim(const Addr addr)
+    findVictim(const KeyType &key)
     {
-        auto candidates = indexingPolicy->getPossibleEntries(addr);
+        auto candidates = indexingPolicy->getPossibleEntries(key);
 
         auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
 
@@ -241,13 +242,13 @@ class AssociativeCache : public Named
 
     /**
      * Indicate that an entry has just been inserted
-     * @param addr key of the container
+     * @param key key of the container
      * @param entry pointer to the container entry to be inserted
      */
     virtual void
-    insertEntry(const Addr addr, Entry *entry)
+    insertEntry(const KeyType &key, Entry *entry)
     {
-        entry->insert(addr);
+        entry->insert(key);
         replPolicy->reset(entry->replacementData);
     }
 
@@ -258,10 +259,10 @@ class AssociativeCache : public Named
      * @result vector of candidates matching with the provided key
      */
     std::vector<Entry *>
-    getPossibleEntries(const Addr addr) const
+    getPossibleEntries(const KeyType &key) const
     {
         std::vector<ReplaceableEntry *> selected_entries =
-            indexingPolicy->getPossibleEntries(addr);
+            indexingPolicy->getPossibleEntries(key);
 
         std::vector<Entry *> entries;
 
