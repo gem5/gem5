@@ -17,7 +17,6 @@
                 "gpu-fs",
                 "sst",
                 "systemc",
-                "gem5-all-min-dependencies",
                 "devcontainer"
             ]
         },
@@ -238,12 +237,6 @@
             "dockerfile" : "Dockerfile",
             "context" : "ubuntu-22.04_clang-16",
             "tags" : ["${IMAGE_URI}/clang-version-16:${TAG}"]
-        },
-        "gem5-all-min-dependencies" : {
-            "inherits" : ["common"],
-            "dockerfile" : "Dockerfile",
-            "context" : "gem5-all-min-dependencies",
-            "tags" : ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
         }
     }
 }
