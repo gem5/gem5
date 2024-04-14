@@ -44,7 +44,7 @@ RUN apt -y update && \
     gcc-13 g++-13 make
 
 RUN update-alternatives --install \
-    /usr/bin/g++ g++ /usr/bin/g++- 100
+    /usr/bin/g++ g++ /usr/bin/g++-13 100
 RUN update-alternatives --install \
     /usr/bin/gcc gcc /usr/bin/gcc-13 100
 RUN update-alternatives --install \
