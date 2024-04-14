@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,27 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
-
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
-    protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
-    python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev make lsb-release wget \
-    software-properties-common gnupg
-
-COPY llvm.sh /llvm.sh
-RUN ./llvm.sh 16
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
 RUN apt-get --purge -y remove gcc
 
+ARG version
+RUN apt update && apt -y install clang-${version}
+
 RUN update-alternatives --install \
-    /usr/bin/clang++ clang++ /usr/bin/clang++-16 100
+    /usr/bin/clang++ clang++ /usr/bin/clang++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/clang clang /usr/bin/clang-16 100
+    /usr/bin/clang clang /usr/bin/clang-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/c++ c++ /usr/bin/clang++-16 100
+    /usr/bin/c++ c++ /usr/bin/clang++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/cc cc /usr/bin/clang-16 100
+    /usr/bin/cc cc /usr/bin/clang-${version} 100

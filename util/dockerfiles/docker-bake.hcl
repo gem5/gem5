@@ -48,11 +48,11 @@ group "ubuntu-releases" {
 }
 
 group "clang-compilers" {
-  targets = ["clang-compilers-base-22-04", "clang-compilers-16"]
+  targets = ["clang-compilers"]
 }
 
 group "gcc-compilers" {
-  targets = ["gcc-compilers-base-22-04"]
+  targets = ["gcc-compilers"]
 }
 
 # Common attributes across all targets. Note: these can be overwritten.
@@ -119,7 +119,7 @@ target "ubuntu-22-04_min-dependencies" {
   tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
 }
 
-target "gcc-compilers-base-22-04" {
+target "gcc-compilers" {
   name = "gcc-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
   context = "ubuntu-22.04_gcc-version"
@@ -133,25 +133,18 @@ target "gcc-compilers-base-22-04" {
   tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
 }
 
-target "clang-compilers-base-22-04" {
+target "clang-compilers" {
   name = "clang-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
-  context = "ubuntu-22.04_clang-version"
+  context = "clang-compilers"
   dockerfile = "Dockerfile"
   matrix = {
-    ver = ["14", "15"]
+    ver = ["14", "15", "16"]
   }
   args = {
     version = ver
   }
   tags =  ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
-}
-
-target "clang-compilers-16" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_clang_16"
-  tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
 }
 
 target "llvm-gnu-cross-compiler-riscv64" {

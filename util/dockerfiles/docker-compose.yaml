@@ -39,40 +39,40 @@ services:
         image: ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest
     gcc-11:
         build:
-            context: ubuntu-22.04_gcc-version
+            context: gcc-version
             dockerfile: Dockerfile
             args:
                 - version=11
         image: ghcr.io/gem5/gcc-version-11:latest
     gcc-12:
         build:
-            context: ubuntu-22.04_gcc-version
+            context: gcc-version
             dockerfile: Dockerfile
             args:
                 - version=12
         image: ghcr.io/gem5/gcc-version-12:latest
     gcc-13:
         build:
-            context: ubuntu-22.04_gcc_13-version
+            context: clang-version
             dockerfile: Dockerfile
         image: ghcr.io/gem5/gcc-version-13:latest
     clang-14:
         build:
-            context: ubuntu-22.04_clang-version
+            context: clang-version
             dockerfile: Dockerfile
             args:
                 - version=14
         image: ghcr.io/gem5/clang-version-14:latest
     clang-15:
         build:
-            context: ubuntu-22.04_clang-version
+            context: clang-version
             dockerfile: Dockerfile
             args:
                 - version=15
         image: ghcr.io/gem5/clang-version-15:latest
     clang-16:
         build:
-            context: ubuntu-22.04_clang-16
+            context: clang-version
             dockerfile: Dockerfile
         image: ghcr.io/gem5/clang-version-16:latest
     llvm-gnu-cross-compiler-riscv64:

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,27 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
-
-# Valid version values:
-# 13
-# 15
-ARG version
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
-    protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
-    python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev clang-${version} make
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
 RUN apt-get --purge -y remove gcc
 
+ARG version
+RUN apt update && apt -y install gcc-${version} g++-${version}
+
 RUN update-alternatives --install \
-    /usr/bin/clang++ clang++ /usr/bin/clang++-${version} 100
+    /usr/bin/g++ g++ /usr/bin/g++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/clang clang /usr/bin/clang-${version} 100
+    /usr/bin/gcc gcc /usr/bin/gcc-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/c++ c++ /usr/bin/clang++-${version} 100
+    /usr/bin/c++ c++ /usr/bin/g++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/cc cc /usr/bin/clang-${version} 100
+    /usr/bin/cc cc /usr/bin/gcc-${version} 100
