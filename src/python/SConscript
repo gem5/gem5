@@ -36,7 +36,6 @@ PySource('gem5.simulate', 'gem5/simulate/__init__.py')
 PySource('gem5.simulate', 'gem5/simulate/simulator.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event_generators.py')
-PySource('gem5.simulate', 'gem5/simulate/multi_sim.py')
 PySource('gem5.components', 'gem5/components/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/abstract_board.py')
@@ -310,6 +309,8 @@ PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/_command_line.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/context.py')
+PySource('gem5.utils.multiprocessing',
+    'gem5/utils/multiprocessing/multi_sim.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/popen_spawn_gem5.py')
 

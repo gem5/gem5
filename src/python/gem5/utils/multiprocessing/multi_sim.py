@@ -36,10 +36,12 @@ from typing import (
     Tuple,
 )
 
+from m5.util import inform
+
 from gem5.resources.resource import AbstractResource
 from gem5.utils.multiprocessing import Process
 
-from .simulator import Simulator
+from ...simulate.simulator import Simulator
 
 
 class MultiSim:
@@ -55,54 +57,40 @@ class MultiSim:
         """
         self.sim_callables = sim_callables
 
-    def run_all(self, num_cpus: int):
+    def run(self, num_processes: int):
         """
-        Run all the simulations in parallel
-        :param num_cpus: The number of simulations to run in parallel at a time
+        Run a specified number of simulations in parallel
+        :param num_processes: The number of simulations to run in parallel at a time
         """
-        processes = []
+        active_processes = []
+        remaiing_sim_callables = self.sim_callables.copy()
+        while remaiing_sim_callables or active_processes:
+            while (
+                remaiing_sim_callables
+                and len(active_processes) < num_processes
+            ):
+                sim_callable = remaiing_sim_callables.pop(0)
+                process_name = f"{sim_callable.func.__name__}_{sim_callable.args[0].get_id()}"
+                process = Process(
+                    target=_run_simulator,
+                    args=(sim_callable,),
+                    name=process_name,
+                )
+                inform(f"Starting process {process_name}")
 
-        for sim_callable in self.sim_callables:
-            if len(processes) > num_cpus:
-                for process in processes:
-                    if not process.is_alive():
-                        processes.remove(process)
-                    os.kill(process.pid, signal.SIGTERM)
-                sleep(1)
-            process_name = (
-                f"{sim_callable.func.__name__}_{sim_callable.args[0].get_id()}"
-            )
-            process = Process(
-                target=run_simulator,
-                args=(sim_callable,),
-                name=process_name,
-            )
-            print(f"Starting process {process_name}")
+                process.start()
+                print("===================================")
+                active_processes.append(process)
 
-            process.start()
-            processes.append(process)
-
-        while processes:
-            for process in processes:
+            for process in active_processes:
                 if not process.is_alive():
-                    processes.remove(process)
+                    active_processes.remove(process)
             sleep(1)
 
-        print("All simulations have finished")
+        inform("All simulations have finished")
 
 
-def get_cross_product_sim_callables(
-    configs: List[Any], resources: List[AbstractResource]
-):
-    sim_callables = []
-
-    for config, resource in itertools.product(configs, resources):
-        sim_callables.append(partial(config, resource))
-
-    return sim_callables
-
-
-def run_simulator(
+def _run_simulator(
     sim_callable: Callable[[], Simulator],
 ):
     """

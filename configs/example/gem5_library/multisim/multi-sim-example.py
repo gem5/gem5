@@ -24,19 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import itertools
 from functools import partial
 
 from example_callable import (
-    run_riscvmatched_worklaod_diff_clocks,
+    run_riscvmatched_workload_diff_clocks,
     run_riscvmathed_workload,
 )
 
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.multi_sim import (
-    MultiSim,
-    get_cross_product_sim_callables,
-)
+from gem5.utils.multiprocessing.multi_sim import MultiSim
 
 # getting the resources we want to run
 workload_1 = obtain_resource("riscv-gapbs-tc-run")
@@ -55,12 +53,16 @@ sim_factory = []
 #     partial(run_riscvmathed_workload, workload_2)
 # )
 
-sim_factory = get_cross_product_sim_callables(
-    [run_riscvmathed_workload, run_riscvmatched_worklaod_diff_clocks],
-    [workload_1, workload_2],
-)
+# This is a way tocreate a cross product of all the workloads and configurations
+
+configs = [run_riscvmathed_workload, run_riscvmatched_workload_diff_clocks]
+workloads = [workload_1, workload_2]
+sim_factory = [
+    partial(config, workload)
+    for config, workload in itertools.product(configs, workloads)
+]
 
 multi_sim = MultiSim(sim_factory)
 
 # running the simulations with 4 threads
-multi_sim.run_all(4)
+multi_sim.run(2)

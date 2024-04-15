@@ -44,7 +44,7 @@ def run_riscvmathed_workload(resource) -> Simulator:
     return simulator
 
 
-def run_riscvmatched_worklaod_diff_clocks(resource) -> Simulator:
+def run_riscvmatched_workload_diff_clocks(resource) -> Simulator:
     requires(isa_required=ISA.RISCV)
 
     # instantiate the riscv matched board with default parameters
