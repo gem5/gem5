@@ -18,8 +18,8 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v4
-            - uses: actions/setup-python@v3
-            - uses: pre-commit/action@v3.0.0
+            - uses: actions/setup-python@v5
+            - uses: pre-commit/action@v3.0.1
 
   # ensures we have a change-id in every commit, needed for gerrit
     check-for-change-id:
