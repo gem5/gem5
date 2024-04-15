@@ -121,8 +121,9 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
         indexingPolicy->getPossibleEntries(addr);
 
     // Filter entries based on PartitionID
-    if (partitionManager) {
-        partitionManager->filterByPartition(superblock_entries, partition_id);
+    if (partitionManager){
+        partitionManager->filterByPartition(superblock_entries,
+            partition_id);
     }
 
     // Check if the superblock this address belongs to has been allocated. If

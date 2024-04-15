@@ -66,7 +66,7 @@ struct Argument<ABI, Arg,
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-                 "Ran out of syscall argument registers.");
+                "Ran out of syscall argument registers.");
 
         auto low = ABI::ArgumentRegs[state++];
         auto high = ABI::ArgumentRegs[state++];

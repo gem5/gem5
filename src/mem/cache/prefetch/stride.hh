@@ -126,13 +126,12 @@ class Stride : public Queued
         replacement_policy::Base *const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
-                    BaseIndexingPolicy *indexing_policy,
-                    replacement_policy::Base *repl_policy)
-            : assoc(assoc),
-              numEntries(num_entries),
-              indexingPolicy(indexing_policy),
-              replacementPolicy(repl_policy)
-        {}
+                    BaseIndexingPolicy* indexing_policy,
+                    replacement_policy::Base* repl_policy)
+          : assoc(assoc), numEntries(num_entries),
+            indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
+        {
+        }
     } pcTableInfo;
 
     /** Tagged by hashed PCs. */

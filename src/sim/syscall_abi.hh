@@ -85,16 +85,16 @@ namespace guest_abi
 // For 64 bit systems, return syscall args directly.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-                typename std::enable_if_t<
-                    std::is_base_of_v<GenericSyscallABI64, ABI> &&
-                    (std::is_integral_v<Arg> ||
-                     std::is_same<Arg, pseudo_inst::GuestAddr>::value)>>
+    typename std::enable_if_t<
+        std::is_base_of_v<GenericSyscallABI64, ABI> &&
+        (std::is_integral_v<Arg> ||
+         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-                 "Ran out of syscall argument registers.");
+                "Ran out of syscall argument registers.");
         return (Arg)tc->getReg(ABI::ArgumentRegs[state++]);
     }
 };

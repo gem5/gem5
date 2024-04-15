@@ -79,15 +79,16 @@ Stride::StrideEntry::invalidate()
 }
 
 Stride::Stride(const StridePrefetcherParams &p)
-    : Queued(p),
-      initConfidence(p.confidence_counter_bits, p.initial_confidence),
-      threshConf(p.confidence_threshold / 100.0),
-      useRequestorId(p.use_requestor_id),
-      degree(p.degree),
-      distance(p.distance),
-      pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
-                  p.table_replacement_policy)
-{}
+  : Queued(p),
+    initConfidence(p.confidence_counter_bits, p.initial_confidence),
+    threshConf(p.confidence_threshold/100.0),
+    useRequestorId(p.use_requestor_id),
+    degree(p.degree),
+    distance(p.distance),
+    pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
+                p.table_replacement_policy)
+{
+}
 
 Stride::PCTable *
 Stride::findTable(int context)
@@ -106,12 +107,14 @@ Stride::allocateNewContext(int context)
 {
     std::string table_name = name() + ".PCTable" + std::to_string(context);
     // Create new table
-    auto ins_result = pcTables.emplace(
-        std::piecewise_construct, std::forward_as_tuple(context),
-        std::forward_as_tuple(table_name.c_str(), pcTableInfo.numEntries,
-                              pcTableInfo.assoc, pcTableInfo.replacementPolicy,
-                              pcTableInfo.indexingPolicy,
-                              StrideEntry(initConfidence)));
+    auto ins_result = pcTables.emplace(std::piecewise_construct,
+                           std::forward_as_tuple(context),
+                           std::forward_as_tuple(table_name.c_str(),
+                                                 pcTableInfo.numEntries,
+                                                 pcTableInfo.assoc,
+                                                 pcTableInfo.replacementPolicy,
+                                                 pcTableInfo.indexingPolicy,
+                                                 StrideEntry(initConfidence)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 

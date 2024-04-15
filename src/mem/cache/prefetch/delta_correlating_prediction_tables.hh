@@ -77,8 +77,9 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * @param num_deltas number of deltas stored in the entry
          */
         DCPTEntry(unsigned int num_deltas)
-            : CacheEntry(), lastAddress(0), deltas(num_deltas)
-        {}
+          : CacheEntry(), lastAddress(0), deltas(num_deltas)
+        {
+        }
 
         void invalidate() override;
 

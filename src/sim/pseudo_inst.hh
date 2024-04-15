@@ -93,7 +93,7 @@ uint64_t quiesceTime(ThreadContext *tc);
 uint64_t readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
                   uint64_t offset);
 uint64_t writefile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
-                   uint64_t offset, GuestAddr filenameAddr);
+    uint64_t offset, GuestAddr filenameAddr);
 void loadsymbol(ThreadContext *xc);
 void addsymbol(ThreadContext *tc, GuestAddr addr, GuestAddr symbolAddr);
 uint64_t initParam(ThreadContext *xc, uint64_t key_str1, uint64_t key_str2);

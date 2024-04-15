@@ -115,11 +115,7 @@ class PIF : public Queued
         void getPredictedAddresses(unsigned int log_blk_size,
                                    std::vector<AddrPriority> &addresses) const;
 
-        struct IndexEntry : public TaggedEntry
-        {
-            HistoryBuffer::iterator historyIt;
-        };
-
+      private:
         /**
          * Computes the distance, in cache blocks, from an address to the
          * trigger of the entry.
@@ -127,7 +123,8 @@ class PIF : public Queued
          * @param log_blk_distance log_2(block size of the cache)
          * @result distance in cache blocks from the address to the trigger
          */
-        AssociativeCache<IndexEntry> index;
+        Addr distanceFromTrigger(Addr addr, unsigned int log_blk_size) const;
+    };
 
         CompactorEntry spatialCompactor;
         std::deque<CompactorEntry> temporalCompactor;
@@ -144,11 +141,11 @@ class PIF : public Queued
             HistoryBuffer::iterator historyIt;
         };
 
-        /**
-         * The index table is a small cache-like structure that facilitates
-         * fast search of the history buffer.
-         */
-        AssociativeSet<IndexEntry> index;
+    /**
+     * The index table is a small cache-like structure that facilitates
+     * fast search of the history buffer.
+     */
+    AssociativeCache<IndexEntry> index;
 
         /**
          * A Stream Address Buffer (SAB) tracks a window of consecutive

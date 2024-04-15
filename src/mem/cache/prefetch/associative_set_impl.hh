@@ -65,10 +65,10 @@ AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
 
 template <class Entry>
 void
-AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry *entry)
+AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry* entry)
 {
-    entry->insert(indexingPolicy->extractTag(addr), is_secure);
-    replPolicy->reset(entry->replacementData);
+   entry->insert(indexingPolicy->extractTag(addr), is_secure);
+   replPolicy->reset(entry->replacementData);
 }
 
 } // namespace gem5

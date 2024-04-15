@@ -611,7 +611,8 @@ class VxsatMicroInst : public VectorArithMicroInst
 
   public:
     VxsatMicroInst(bool *Vxsat, ExtMachInst extMachInst)
-        : VectorArithMicroInst("vxsat_micro", extMachInst, SimdMiscOp, 0, 0)
+        : VectorArithMicroInst("vxsat_micro", extMachInst,
+          SimdMiscOp, 0, 0)
     {
         vxsat = Vxsat;
     }

@@ -44,7 +44,7 @@ namespace gem5
  * Each element is indexed by a key of type Addr, an additional
  * bool value is used as an additional tag data of the entry.
  */
-template <class Entry>
+template<class Entry>
 class AssociativeSet : public AssociativeCache<Entry>
 {
     static_assert(std::is_base_of_v<TaggedEntry, Entry>,

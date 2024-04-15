@@ -80,8 +80,8 @@ SectorTags::SectorTags(const SectorTagsParams &p)
     fatal_if(!isPowerOf2(numBlocksPerSector),
              "# of blocks per sector must be non-zero and a power of 2");
     warn_if(partitionManager,
-            "Using cache partitioning policies with sector and/or compressed "
-            "tags is not fully tested.");
+             "Using cache partitioning policies with sector and/or compressed "
+             "tags is not fully tested.");
 }
 
 void

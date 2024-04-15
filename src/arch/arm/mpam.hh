@@ -48,8 +48,8 @@ namespace gem5::ArmISA::mpam
 const uint64_t DEFAULT_PARTITION_ID = 0;
 const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
-class PartitionFieldExtension :
-    public Extension<Request, PartitionFieldExtension>
+class PartitionFieldExtension : public Extension<Request,
+                                                 PartitionFieldExtension>
 {
   public:
     std::unique_ptr<ExtensionBase> clone() const override;

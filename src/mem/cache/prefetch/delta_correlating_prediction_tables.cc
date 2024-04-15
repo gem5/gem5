@@ -40,14 +40,13 @@ namespace prefetch
 {
 
 DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
-    const DeltaCorrelatingPredictionTablesParams &p)
-    : SimObject(p),
-      deltaBits(p.delta_bits),
-      deltaMaskBits(p.delta_mask_bits),
-      table((name() + "DCPT").c_str(), p.table_entries, p.table_assoc,
-            p.table_replacement_policy, p.table_indexing_policy,
-            DCPTEntry(p.deltas_per_entry))
-{}
+   const DeltaCorrelatingPredictionTablesParams &p) : SimObject(p),
+   deltaBits(p.delta_bits), deltaMaskBits(p.delta_mask_bits),
+   table((name() + "DCPT").c_str(), p.table_entries,
+         p.table_assoc, p.table_replacement_policy,
+         p.table_indexing_policy, DCPTEntry(p.deltas_per_entry))
+{
+}
 
 void
 DeltaCorrelatingPredictionTables::DCPTEntry::invalidate()

@@ -39,22 +39,24 @@ namespace prefetch
 {
 
 IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
-    : Queued(p),
-      maxPrefetchDistance(p.max_prefetch_distance),
-      shiftValues(p.shift_values),
-      prefetchThreshold(p.prefetch_threshold),
-      streamCounterThreshold(p.stream_counter_threshold),
-      streamingDistance(p.streaming_distance),
-      prefetchTable((name() + ".PrefetchTable").c_str(), p.pt_table_entries,
-                    p.pt_table_assoc, p.pt_table_replacement_policy,
-                    p.pt_table_indexing_policy,
-                    PrefetchTableEntry(p.num_indirect_counter_bits)),
-      ipd((name() + ".IPD").c_str(), p.ipd_table_entries, p.ipd_table_assoc,
-          p.ipd_table_replacement_policy, p.ipd_table_indexing_policy,
-          IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
-      ipdEntryTrackingMisses(nullptr),
-      byteOrder(p.sys->getGuestByteOrder())
-{}
+  : Queued(p),
+    maxPrefetchDistance(p.max_prefetch_distance),
+    shiftValues(p.shift_values), prefetchThreshold(p.prefetch_threshold),
+    streamCounterThreshold(p.stream_counter_threshold),
+    streamingDistance(p.streaming_distance),
+    prefetchTable((name() + ".PrefetchTable").c_str(),
+                  p.pt_table_entries,
+                  p.pt_table_assoc,
+                  p.pt_table_replacement_policy,
+                  p.pt_table_indexing_policy,
+                  PrefetchTableEntry(p.num_indirect_counter_bits)),
+    ipd((name() + ".IPD").c_str(), p.ipd_table_entries, p.ipd_table_assoc,
+        p.ipd_table_replacement_policy,
+        p.ipd_table_indexing_policy,
+        IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
+    ipdEntryTrackingMisses(nullptr), byteOrder(p.sys->getGuestByteOrder())
+{
+}
 
 void
 IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
@@ -170,7 +172,7 @@ IndirectMemory::allocateOrUpdateIPDEntry(const PrefetchTableEntry *pt_entry,
                                          int64_t index)
 {
     // The address of the pt_entry is used to index the IPD
-    Addr ipd_entry_addr = (Addr)pt_entry;
+    Addr ipd_entry_addr = (Addr) pt_entry;
     IndirectPatternDetectorEntry *ipd_entry = ipd.findEntry(ipd_entry_addr);
     if (ipd_entry != nullptr) {
         ipd.accessEntry(ipd_entry);

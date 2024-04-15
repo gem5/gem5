@@ -65,7 +65,7 @@ doGzipLoad(int fd)
     }
 
     std::string tmpnam_str = std::string(P_tmpdir) + "/gem5-gz-obj-XXXXXX";
-    char *tmpnam = const_cast<char *>(tmpnam_str.c_str());
+    char *tmpnam = const_cast<char*>(tmpnam_str.c_str());
     fd = mkstemp(tmpnam); // repurposing fd variable for output
     if (fd < 0) {
         gzclose(fdz);
