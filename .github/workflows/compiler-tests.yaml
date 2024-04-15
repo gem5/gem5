@@ -61,7 +61,7 @@ jobs:
         # I.e., if we want to stop pull requests from being merged if the
         # compiler tests are failing, we can add this job as a required status
         # check.
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-latest
         needs:
             - latest-compilers-all-gem5-builds
             - all-compilers
