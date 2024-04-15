@@ -29,8 +29,6 @@
 namespace gem5
 {
 
-SSTResponderInterface::SSTResponderInterface()
-{
-}
+SSTResponderInterface::SSTResponderInterface() {}
 
 }; // namespace gem5

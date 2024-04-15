@@ -34,14 +34,12 @@ namespace gem5
 namespace memory
 {
 
-DRAMSysWrapper::DRAMSysWrapper(
-    sc_core::sc_module_name name,
-    ::DRAMSys::Config::Configuration const &config,
-    bool recordable,
-    AddrRange range) :
-    sc_core::sc_module(name),
-    dramsys(instantiateDRAMSys(recordable, config)),
-    range(range)
+DRAMSysWrapper::DRAMSysWrapper(sc_core::sc_module_name name,
+                               ::DRAMSys::Config::Configuration const &config,
+                               bool recordable, AddrRange range)
+    : sc_core::sc_module(name),
+      dramsys(instantiateDRAMSys(recordable, config)),
+      range(range)
 {
     tSocket.register_nb_transport_fw(this, &DRAMSysWrapper::nb_transport_fw);
     iSocket.register_nb_transport_bw(this, &DRAMSysWrapper::nb_transport_bw);
@@ -53,27 +51,25 @@ DRAMSysWrapper::DRAMSysWrapper(
 
     // Register a callback to compensate for the destructor not
     // being called.
-    registerExitCallback(
-        []()
-        {
-            // Workaround for BUG GEM5-1233
-            sc_gem5::Kernel::stop();
-        });
+    registerExitCallback([]() {
+        // Workaround for BUG GEM5-1233
+        sc_gem5::Kernel::stop();
+    });
 }
 
 std::shared_ptr<::DRAMSys::DRAMSys>
 DRAMSysWrapper::instantiateDRAMSys(
-    bool recordable,
-    ::DRAMSys::Config::Configuration const &config)
+    bool recordable, ::DRAMSys::Config::Configuration const &config)
 {
-    return recordable
-        ? std::make_shared<::DRAMSys::DRAMSysRecordable>("DRAMSys", config)
-        : std::make_shared<::DRAMSys::DRAMSys>("DRAMSys", config);
+    return recordable ?
+               std::make_shared<::DRAMSys::DRAMSysRecordable>("DRAMSys",
+                                                              config) :
+               std::make_shared<::DRAMSys::DRAMSys>("DRAMSys", config);
 }
 
-void DRAMSysWrapper::b_transport(
-    tlm::tlm_generic_payload &payload,
-    sc_core::sc_time &delay)
+void
+DRAMSysWrapper::b_transport(tlm::tlm_generic_payload &payload,
+                            sc_core::sc_time &delay)
 {
     // Subtract base address offset
     payload.set_address(payload.get_address() - range.start());
@@ -81,10 +77,10 @@ void DRAMSysWrapper::b_transport(
     iSocket->b_transport(payload, delay);
 }
 
-tlm::tlm_sync_enum DRAMSysWrapper::nb_transport_fw(
-    tlm::tlm_generic_payload &payload,
-    tlm::tlm_phase &phase,
-    sc_core::sc_time &fwDelay)
+tlm::tlm_sync_enum
+DRAMSysWrapper::nb_transport_fw(tlm::tlm_generic_payload &payload,
+                                tlm::tlm_phase &phase,
+                                sc_core::sc_time &fwDelay)
 {
     // Subtract base address offset
     payload.set_address(payload.get_address() - range.start());
@@ -92,15 +88,16 @@ tlm::tlm_sync_enum DRAMSysWrapper::nb_transport_fw(
     return iSocket->nb_transport_fw(payload, phase, fwDelay);
 }
 
-tlm::tlm_sync_enum DRAMSysWrapper::nb_transport_bw(
-    tlm::tlm_generic_payload &payload,
-    tlm::tlm_phase &phase,
-    sc_core::sc_time &bwDelay)
+tlm::tlm_sync_enum
+DRAMSysWrapper::nb_transport_bw(tlm::tlm_generic_payload &payload,
+                                tlm::tlm_phase &phase,
+                                sc_core::sc_time &bwDelay)
 {
     return tSocket->nb_transport_bw(payload, phase, bwDelay);
 }
 
-unsigned int DRAMSysWrapper::transport_dbg(tlm::tlm_generic_payload &trans)
+unsigned int
+DRAMSysWrapper::transport_dbg(tlm::tlm_generic_payload &trans)
 {
     // Subtract base address offset
     trans.set_address(trans.get_address() - range.start());

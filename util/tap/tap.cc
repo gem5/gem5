@@ -28,7 +28,6 @@
 
 extern "C" {
 #include <pcap.h>
-
 }
 
 #include <arpa/inet.h>
@@ -51,10 +50,14 @@ extern "C" {
 #include <list>
 #include <string>
 
-#define panic(arg...) \
-  do { printf("Panic: " arg); exit(1); } while (0)
+#define panic(arg...)                                                         \
+    do {                                                                      \
+        printf("Panic: " arg);                                                \
+        exit(1);                                                              \
+    } while (0)
 
 const char *program = "ethertap";
+
 void
 usage()
 {
@@ -67,56 +70,59 @@ usage()
 }
 
 int verbose = 0;
-#define DPRINTF(args...) do { \
-    if (verbose >= 1) \
-        printf(args); \
-} while (0)
+#define DPRINTF(args...)                                                      \
+    do {                                                                      \
+        if (verbose >= 1)                                                     \
+            printf(args);                                                     \
+    } while (0)
 
-#define DDUMP(args...) do { \
-    if (verbose >= 2) \
-        dump((const u_char *)args); \
-} while (0)
+#define DDUMP(args...)                                                        \
+    do {                                                                      \
+        if (verbose >= 2)                                                     \
+            dump((const u_char *)args);                                       \
+    } while (0)
 
 void
 dump(const u_char *data, int len)
 {
-        int c, i, j;
+    int c, i, j;
 
-        for (i = 0; i < len; i += 16) {
-                printf("%08x  ", i);
-                c = len - i;
-                if (c > 16) c = 16;
+    for (i = 0; i < len; i += 16) {
+        printf("%08x  ", i);
+        c = len - i;
+        if (c > 16)
+            c = 16;
 
-                for (j = 0; j < c; j++) {
-                        printf("%02x ", data[i + j] & 0xff);
-                        if ((j & 0xf) == 7 && j > 0)
-                                printf(" ");
-                }
-
-                for (; j < 16; j++)
-                        printf("   ");
-                printf("  ");
-
-                for (j = 0; j < c; j++) {
-                        int ch = data[i + j] & 0x7f;
-                        printf("%c", (char)(isprint(ch) ? ch : ' '));
-                }
-
-                printf("\n");
-
-                if (c < 16)
-                        break;
+        for (j = 0; j < c; j++) {
+            printf("%02x ", data[i + j] & 0xff);
+            if ((j & 0xf) == 7 && j > 0)
+                printf(" ");
         }
+
+        for (; j < 16; j++)
+            printf("   ");
+        printf("  ");
+
+        for (j = 0; j < c; j++) {
+            int ch = data[i + j] & 0x7f;
+            printf("%c", (char)(isprint(ch) ? ch : ' '));
+        }
+
+        printf("\n");
+
+        if (c < 16)
+            break;
+    }
 }
 
 bool quit = false;
+
 void
 quit_now(int sigtype)
 {
     DPRINTF("User requested exit\n");
     quit = true;
 }
-
 
 int
 Socket(int reuse)
@@ -127,8 +133,8 @@ Socket(int reuse)
 
     if (reuse) {
         int i = 1;
-        if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&i,
-                         sizeof(i)) < 0)
+        if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&i, sizeof(i)) <
+            0)
             panic("setsockopt() SO_REUSEADDR failed!\n");
     }
 
@@ -143,7 +149,7 @@ Listen(int fd, int port)
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sockaddr.sin_port = htons(port);
-    int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
+    int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     if (ret == -1)
         panic("bind() failed!\n");
 
@@ -157,7 +163,7 @@ int
 Accept(int fd, bool nodelay)
 {
     struct sockaddr_in sockaddr;
-    socklen_t slen = sizeof (sockaddr);
+    socklen_t slen = sizeof(sockaddr);
     int sfd = ::accept(fd, (struct sockaddr *)&sockaddr, &slen);
     if (sfd == -1)
         panic("accept() failed!\n");
@@ -198,7 +204,12 @@ class Ethernet
   public:
     virtual ~Ethernet() {}
 
-    int getfd() const { return fd; }
+    int
+    getfd() const
+    {
+        return fd;
+    }
+
     virtual bool read(const char *&data, int &len) = 0;
     virtual bool write(const char *data, int len) = 0;
 };
@@ -254,10 +265,7 @@ PCap::PCap(char *device, char *filter)
     fd = pcap_fileno(pcap);
 }
 
-PCap::~PCap()
-{
-    pcap_close(pcap);
-}
+PCap::~PCap() { pcap_close(pcap); }
 
 bool
 PCap::read(const char *&data, int &len)
@@ -284,10 +292,7 @@ Tap::Tap(char *device)
         panic("could not open %s: %s\n", device, strerror(errno));
 }
 
-Tap::~Tap()
-{
-    close(fd);
-}
+Tap::~Tap() { close(fd); }
 
 bool
 Tap::read(const char *&data, int &len)
@@ -332,28 +337,28 @@ main(int argc, char *argv[])
     while ((ret = getopt(argc, argv, "b:df:lp:tv")) != -1) {
         char c = ret;
         switch (c) {
-          case 'b':
+        case 'b':
             bufsize = atoi(optarg);
             break;
-          case 'd':
+        case 'd':
             daemon = true;
             break;
-          case 'f':
+        case 'f':
             filter = optarg;
             break;
-          case 'l':
+        case 'l':
             listening = true;
             break;
-          case 'p':
+        case 'p':
             port = atoi(optarg);
             break;
-          case 't':
+        case 't':
             usetap = true;
             break;
-          case 'v':
+        case 'v':
             verbose++;
             break;
-          default:
+        default:
             usage();
             break;
         }
@@ -365,12 +370,12 @@ main(int argc, char *argv[])
 
     if (daemon) {
         verbose = 0;
-        switch(fork()) {
-          case -1:
+        switch (fork()) {
+        case -1:
             panic("Fork failed\n");
-          case 0:
+        case 0:
             break;
-          default:
+        default:
             exit(0);
         }
     }
@@ -417,7 +422,7 @@ main(int argc, char *argv[])
     pfds[1].revents = 0;
 
     pfds[2].fd = 0;
-    pfds[2].events = POLLIN|POLLERR;
+    pfds[2].events = POLLIN | POLLERR;
     pfds[2].revents = 0;
 
     pollfd *listen_pfd = listening ? &pfds[0] : NULL;
@@ -453,7 +458,8 @@ main(int argc, char *argv[])
         DPRINTF("tap events: %x\n", tap_pfd->revents);
         if (tap_pfd && tap_pfd->revents) {
             if (tap_pfd->revents & POLLIN) {
-                const char *data; int len;
+                const char *data;
+                int len;
                 if (tap->read(data, len) && client_pfd) {
                     DPRINTF("Received packet from ethernet len=%d\n", len);
                     DDUMP(data, len);
@@ -482,7 +488,8 @@ main(int argc, char *argv[])
                         data_len = ntohl(*(u_int32_t *)buffer);
 
                     DPRINTF("Received data from peer: len=%d buffer_offset=%d "
-                            "data_len=%d\n", len, buffer_offset, data_len);
+                            "data_len=%d\n",
+                            len, buffer_offset, data_len);
                 }
 
                 while (data_len != 0 &&
@@ -502,7 +509,7 @@ main(int argc, char *argv[])
             }
 
             if (client_pfd->revents & POLLERR) {
-              error:
+            error:
                 DPRINTF("Error on client socket\n");
                 close(client_pfd->fd);
                 client_pfd = NULL;
@@ -520,7 +527,7 @@ main(int argc, char *argv[])
         }
     }
 
-    delete [] buffer;
+    delete[] buffer;
     delete tap;
 
     if (listen_pfd)

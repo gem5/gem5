@@ -62,8 +62,7 @@ class CuttingStreambuf : public std::streambuf
     /** Logger to send complete lines to */
     gem5::trace::Logger *logger;
 
-    CuttingStreambuf(gem5::trace::Logger *logger_) : logger(logger_)
-    { }
+    CuttingStreambuf(gem5::trace::Logger *logger_) : logger(logger_) {}
 
     /** Accumulate to line up to \n and then emit */
     int overflow(int i);
@@ -75,7 +74,8 @@ class CuttingStreambuf : public std::streambuf
     ~CuttingStreambuf();
 };
 
-void CuttingStreambuf::outputLine()
+void
+CuttingStreambuf::outputLine()
 {
     logger->logMessage((gem5::Tick)-1, "gem5", "", line.str());
     line.clear();
@@ -95,7 +95,7 @@ CuttingStreambuf::overflow(int chr)
     if (chr == '\n')
         outputLine();
     else if (chr != EOF)
-        line << (char) chr;
+        line << (char)chr;
 
     /* Always succeeds */
     return 0;
@@ -111,16 +111,11 @@ CuttingStreambuf::sync()
     return 0;
 }
 
-CuttingStreambuf::~CuttingStreambuf()
-{
-    sync();
-}
+CuttingStreambuf::~CuttingStreambuf() { sync(); }
 
-Logger::Logger() :
-    cuttingStreambuf(new CuttingStreambuf(this)),
-    stream(cuttingStreambuf)
-{
-}
+Logger::Logger()
+    : cuttingStreambuf(new CuttingStreambuf(this)), stream(cuttingStreambuf)
+{}
 
 Logger::~Logger()
 {
@@ -131,12 +126,11 @@ Logger::~Logger()
 /** Log a single message as a single sc_report call */
 void
 Logger::logMessage(gem5::Tick when, const std::string &name,
-    const std::string &flag, const std::string &message)
+                   const std::string &flag, const std::string &message)
 {
     /* Need to chop the newline off the message */
     std::string message_without_nl = message;
-    message_without_nl.erase(
-        message_without_nl.find_last_not_of(" \n\r") + 1);
+    message_without_nl.erase(message_without_nl.find_last_not_of(" \n\r") + 1);
 
     SC_REPORT_INFO(name.c_str(), message_without_nl.c_str());
 }

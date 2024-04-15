@@ -68,11 +68,12 @@ class Logger : public gem5::trace::Logger
 
     /** Log a single message as a single sc_report call */
     void logMessage(gem5::Tick when, const std::string &name,
-            const std::string &flag, const std::string &message) override;
+                    const std::string &flag,
+                    const std::string &message) override;
 
     std::ostream &getOstream();
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif // __SIM_SC_LOGGER_H__

@@ -81,7 +81,7 @@ DataBlock::clear()
 }
 
 bool
-DataBlock::equal(const DataBlock& obj) const
+DataBlock::equal(const DataBlock &obj) const
 {
     size_t block_bytes = RubySystem::getBlockSizeBytes();
     // Check that the block contents match
@@ -111,7 +111,7 @@ DataBlock::copyPartial(const DataBlock &dblk, const WriteMask &mask)
 
 void
 DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask,
-        bool isAtomicNoReturn)
+                         bool isAtomicNoReturn)
 {
     for (int i = 0; i < RubySystem::getBlockSizeBytes(); i++) {
         m_data[i] = dblk.m_data[i];
@@ -120,13 +120,13 @@ DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask,
 }
 
 void
-DataBlock::print(std::ostream& out) const
+DataBlock::print(std::ostream &out) const
 {
     int size = RubySystem::getBlockSizeBytes();
     out << "[ ";
     for (int i = 0; i < size; i++) {
-        out << std::setw(2) << std::setfill('0') << std::hex
-            << "0x" << (int)m_data[i] << " " << std::setfill(' ');
+        out << std::setw(2) << std::setfill('0') << std::hex << "0x"
+            << (int)m_data[i] << " " << std::setfill(' ');
     }
     out << std::dec << "]" << std::flush;
 }
@@ -136,7 +136,8 @@ DataBlock::numAtomicLogEntries() const
 {
     return m_atomicLog.size();
 }
-uint8_t*
+
+uint8_t *
 DataBlock::popAtomicLogEntryFront()
 {
     assert(m_atomicLog.size() > 0);
@@ -144,23 +145,24 @@ DataBlock::popAtomicLogEntryFront()
     m_atomicLog.pop_front();
     return ret;
 }
+
 void
 DataBlock::clearAtomicLogEntries()
 {
     for (auto log : m_atomicLog) {
-        delete [] log;
+        delete[] log;
     }
     m_atomicLog.clear();
 }
 
-const uint8_t*
+const uint8_t *
 DataBlock::getData(int offset, int len) const
 {
     assert(offset + len <= RubySystem::getBlockSizeBytes());
     return &m_data[offset];
 }
 
-uint8_t*
+uint8_t *
 DataBlock::getDataMod(int offset)
 {
     return &m_data[offset];
@@ -181,7 +183,7 @@ DataBlock::setData(PacketPtr pkt)
 }
 
 DataBlock &
-DataBlock::operator=(const DataBlock & obj)
+DataBlock::operator=(const DataBlock &obj)
 {
     uint8_t *block_update;
     size_t block_bytes = RubySystem::getBlockSizeBytes();

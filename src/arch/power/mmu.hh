@@ -45,25 +45,24 @@
 namespace gem5
 {
 
-namespace PowerISA {
+namespace PowerISA
+{
 
 class MMU : public BaseMMU
 {
   public:
-    MMU(const PowerMMUParams &p)
-      : BaseMMU(p)
-    {}
+    MMU(const PowerMMUParams &p) : BaseMMU(p) {}
 
     TranslationGenPtr
-    translateFunctional(Addr start, Addr size, ThreadContext *tc,
-            Mode mode, Request::Flags flags) override
+    translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
+                        Request::Flags flags) override
     {
-        return TranslationGenPtr(new MMUTranslationGen(
-                PageBytes, start, size, tc, this, mode, flags));
+        return TranslationGenPtr(new MMUTranslationGen(PageBytes, start, size,
+                                                       tc, this, mode, flags));
     }
 };
 
 } // namespace PowerISA
 } // namespace gem5
 
-#endif  // __ARCH_POWER_MMU_HH__
+#endif // __ARCH_POWER_MMU_HH__

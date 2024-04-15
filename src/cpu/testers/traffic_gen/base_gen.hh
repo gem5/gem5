@@ -63,9 +63,7 @@ class SimObject;
  */
 class BaseGen
 {
-
   protected:
-
     /** Name to use for status and debug printing */
     const std::string _name;
 
@@ -80,11 +78,10 @@ class BaseGen
      * @param cmd Memory command to send
      * @param flags Optional request flags
      */
-    PacketPtr getPacket(Addr addr, unsigned size, const MemCmd& cmd,
+    PacketPtr getPacket(Addr addr, unsigned size, const MemCmd &cmd,
                         Request::FlagsType flags = 0);
 
   public:
-
     /** Time to spend in this state */
     const Tick duration;
 
@@ -97,14 +94,18 @@ class BaseGen
      */
     BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration);
 
-    virtual ~BaseGen() { }
+    virtual ~BaseGen() {}
 
     /**
      * Get the name, useful for DPRINTFs.
      *
      * @return the given name
      */
-    std::string name() const { return _name; }
+    std::string
+    name() const
+    {
+        return _name;
+    }
 
     /**
      * Enter this generator state.
@@ -121,7 +122,7 @@ class BaseGen
     /**
      * Exit this generator state. By default do nothing.
      */
-    virtual void exit() { };
+    virtual void exit(){};
 
     /**
      * Determine the tick when the next packet is available. MaxTick
@@ -133,17 +134,14 @@ class BaseGen
      * @return next tick when a packet is available
      */
     virtual Tick nextPacketTick(bool elastic, Tick delay) const = 0;
-
 };
 
 class StochasticGen : public BaseGen
 {
   public:
-    StochasticGen(SimObject &obj,
-                  RequestorID requestor_id, Tick _duration,
-                  Addr start_addr, Addr end_addr,
-                  Addr _blocksize, Addr cacheline_size,
-                  Tick min_period, Tick max_period,
+    StochasticGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+                  Addr start_addr, Addr end_addr, Addr _blocksize,
+                  Addr cacheline_size, Tick min_period, Tick max_period,
                   uint8_t read_percent, Addr data_limit);
 
   protected:

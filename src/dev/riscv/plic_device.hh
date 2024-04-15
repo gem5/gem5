@@ -67,9 +67,8 @@ class PlicIntDevice : public BasicPioDevice
     const int &
     id()
     {
-      return _interruptID;
+        return _interruptID;
     }
-
 };
 
 } // namespace gem5

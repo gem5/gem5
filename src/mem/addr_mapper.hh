@@ -67,7 +67,7 @@ class AddrMapper : public SimObject
     virtual ~AddrMapper() = default;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
 
@@ -97,16 +97,13 @@ class AddrMapper : public SimObject
 
     class AddrMapperSenderState : public Packet::SenderState
     {
-
       public:
-
         /**
          * Construct a new sender state to remember the original address.
          *
          * @param _origAddr Address before remapping
          */
-        AddrMapperSenderState(Addr _origAddr) : origAddr(_origAddr)
-        {}
+        AddrMapperSenderState(Addr _origAddr) : origAddr(_origAddr) {}
 
         /** Destructor */
         ~AddrMapperSenderState() {}
@@ -118,9 +115,9 @@ class AddrMapper : public SimObject
     class MapperRequestPort : public RequestPort
     {
       public:
-        MapperRequestPort(const std::string& _name, AddrMapper& _mapper)
+        MapperRequestPort(const std::string &_name, AddrMapper &_mapper)
             : RequestPort(_name), mapper(_mapper)
-        { }
+        {}
 
       protected:
         void
@@ -166,7 +163,7 @@ class AddrMapper : public SimObject
         }
 
       private:
-        AddrMapper& mapper;
+        AddrMapper &mapper;
     };
 
     /** Instance of request port, facing the memory side */
@@ -175,7 +172,7 @@ class AddrMapper : public SimObject
     class MapperResponsePort : public ResponsePort
     {
       public:
-        MapperResponsePort(const std::string& _name, AddrMapper& _mapper)
+        MapperResponsePort(const std::string &_name, AddrMapper &_mapper)
             : ResponsePort(_name), mapper(_mapper)
         {}
 
@@ -186,8 +183,9 @@ class AddrMapper : public SimObject
             mapper.recvFunctional(pkt);
         }
 
-        void recvMemBackdoorReq(const MemBackdoorReq &req,
-                                MemBackdoorPtr &backdoor) override
+        void
+        recvMemBackdoorReq(const MemBackdoorReq &req,
+                           MemBackdoorPtr &backdoor) override
         {
             mapper.recvMemBackdoorReq(req, backdoor);
         }
@@ -199,7 +197,7 @@ class AddrMapper : public SimObject
         }
 
         Tick
-        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor) override
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
         {
             return mapper.recvAtomicBackdoor(pkt, backdoor);
         }
@@ -229,7 +227,7 @@ class AddrMapper : public SimObject
         }
 
       private:
-        AddrMapper& mapper;
+        AddrMapper &mapper;
     };
 
     /** Instance of response port, i.e. on the CPU side */
@@ -246,7 +244,7 @@ class AddrMapper : public SimObject
 
     Tick recvAtomicSnoop(PacketPtr pkt);
 
-    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor);
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
 
     bool recvTimingReq(PacketPtr pkt);
 

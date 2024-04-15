@@ -47,44 +47,44 @@ namespace SparcISA
 
 enum CondTest
 {
-    Always=0x8,
-    Never=0x0,
-    NotEqual=0x9,
-    Equal=0x1,
-    Greater=0xA,
-    LessOrEqual=0x2,
-    GreaterOrEqual=0xB,
-    Less=0x3,
-    GreaterUnsigned=0xC,
-    LessOrEqualUnsigned=0x4,
-    CarryClear=0xD,
-    CarrySet=0x5,
-    Positive=0xE,
-    Negative=0x6,
-    OverflowClear=0xF,
-    OverflowSet=0x7
+    Always = 0x8,
+    Never = 0x0,
+    NotEqual = 0x9,
+    Equal = 0x1,
+    Greater = 0xA,
+    LessOrEqual = 0x2,
+    GreaterOrEqual = 0xB,
+    Less = 0x3,
+    GreaterUnsigned = 0xC,
+    LessOrEqualUnsigned = 0x4,
+    CarryClear = 0xD,
+    CarrySet = 0x5,
+    Positive = 0xE,
+    Negative = 0x6,
+    OverflowClear = 0xF,
+    OverflowSet = 0x7
 };
 
 extern const char *CondTestAbbrev[];
 
 enum FpCondTest
 {
-    FAlways=0x8,
-    FNever=0x0,
-    FUnordered=0x7,
-    FGreater=0x6,
-    FUnorderedOrGreater=0x5,
-    FLess=0x4,
-    FUnorderedOrLess=0x3,
-    FLessOrGreater=0x2,
-    FNotEqual=0x1,
-    FEqual=0x9,
-    FUnorderedOrEqual=0xA,
-    FGreaterOrEqual=0xB,
-    FUnorderedOrGreaterOrEqual=0xC,
-    FLessOrEqual=0xD,
-    FUnorderedOrLessOrEqual=0xE,
-    FOrdered=0xF
+    FAlways = 0x8,
+    FNever = 0x0,
+    FUnordered = 0x7,
+    FGreater = 0x6,
+    FUnorderedOrGreater = 0x5,
+    FLess = 0x4,
+    FUnorderedOrLess = 0x3,
+    FLessOrGreater = 0x2,
+    FNotEqual = 0x1,
+    FEqual = 0x9,
+    FUnorderedOrEqual = 0xA,
+    FGreaterOrEqual = 0xB,
+    FUnorderedOrGreaterOrEqual = 0xC,
+    FLessOrEqual = 0xD,
+    FUnorderedOrLessOrEqual = 0xE,
+    FOrdered = 0xF
 };
 
 /**
@@ -96,12 +96,13 @@ class SparcStaticInst : public StaticInst
     ExtMachInst machInst;
 
     SparcStaticInst(const char *_mnemonic, ExtMachInst _machInst,
-            OpClass __opClass) :
-        StaticInst(_mnemonic, __opClass), machInst(_machInst)
+                    OpClass __opClass)
+        : StaticInst(_mnemonic, __opClass), machInst(_machInst)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     static void printMnemonic(std::ostream &os, const char *mnemonic);
     static void printReg(std::ostream &os, RegId reg);
@@ -109,8 +110,8 @@ class SparcStaticInst : public StaticInst
     void printSrcReg(std::ostream &os, int reg) const;
     void printDestReg(std::ostream &os, int reg) const;
 
-    void printRegArray(std::ostream &os,
-        const RegId *indexArray, int num) const;
+    void printRegArray(std::ostream &os, const RegId *indexArray,
+                       int num) const;
 
     void advancePC(PCStateBase &pcState) const override;
     void advancePC(ThreadContext *tc) const override;
@@ -126,13 +127,13 @@ class SparcStaticInst : public StaticInst
 
     std::unique_ptr<PCStateBase>
     buildRetPC(const PCStateBase &cur_pc,
-            const PCStateBase &call_pc) const override
+               const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_ptr = call_pc.clone();
         auto &ret = ret_ptr->as<PCState>();
         ret.uEnd();
         ret.pc(cur_pc.as<PCState>().npc());
-        return std::unique_ptr<PCStateBase>{ret_ptr};
+        return std::unique_ptr<PCStateBase>{ ret_ptr };
     }
 };
 

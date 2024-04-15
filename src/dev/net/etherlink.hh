@@ -60,6 +60,7 @@ namespace gem5
 
 class EtherDump;
 class Checkpoint;
+
 /*
  * Model for a fixed bandwidth full duplex ethernet link
  */
@@ -108,17 +109,38 @@ class EtherLink : public SimObject
         void txComplete(EthPacketPtr packet);
 
       public:
-        Link(const std::string &name, EtherLink *p, int num,
-             double rate, Tick delay, Tick delay_var, EtherDump *dump);
+        Link(const std::string &name, EtherLink *p, int num, double rate,
+             Tick delay, Tick delay_var, EtherDump *dump);
+
         ~Link() {}
 
-        const std::string name() const { return objName; }
+        const std::string
+        name() const
+        {
+            return objName;
+        }
 
-        bool busy() const { return (bool)packet; }
+        bool
+        busy() const
+        {
+            return (bool)packet;
+        }
+
         bool transmit(EthPacketPtr packet);
 
-        void setTxInt(Interface *i) { assert(!txint); txint = i; }
-        void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
+        void
+        setTxInt(Interface *i)
+        {
+            assert(!txint);
+            txint = i;
+        }
+
+        void
+        setRxInt(Interface *i)
+        {
+            assert(!rxint);
+            rxint = i;
+        }
 
         void serialize(const std::string &base, CheckpointOut &cp) const;
         void unserialize(const std::string &base, CheckpointIn &cp);
@@ -134,9 +156,24 @@ class EtherLink : public SimObject
 
       public:
         Interface(const std::string &name, Link *txlink, Link *rxlink);
-        bool recvPacket(EthPacketPtr packet) { return txlink->transmit(packet); }
-        void sendDone() { peer->sendDone(); }
-        bool isBusy() { return txlink->busy(); }
+
+        bool
+        recvPacket(EthPacketPtr packet)
+        {
+            return txlink->transmit(packet);
+        }
+
+        void
+        sendDone()
+        {
+            peer->sendDone();
+        }
+
+        bool
+        isBusy()
+        {
+            return txlink->busy();
+        }
     };
 
     Link *link[2];
@@ -148,11 +185,10 @@ class EtherLink : public SimObject
     virtual ~EtherLink();
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
 };
 
 } // namespace gem5

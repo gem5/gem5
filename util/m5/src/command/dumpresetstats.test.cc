@@ -55,24 +55,24 @@ TEST(Dumpresetstats, Arguments)
     // Called with no arguments.
     test_ns_delay = 50;
     test_ns_period = 40;
-    EXPECT_TRUE(run({"dumpresetstats"}));
+    EXPECT_TRUE(run({ "dumpresetstats" }));
     EXPECT_EQ(test_ns_delay, 0);
     EXPECT_EQ(test_ns_period, 0);
 
     // Called with one argument.
     test_ns_delay = 50;
     test_ns_period = 40;
-    EXPECT_TRUE(run({"dumpresetstats", "10"}));
+    EXPECT_TRUE(run({ "dumpresetstats", "10" }));
     EXPECT_EQ(test_ns_delay, 10);
     EXPECT_EQ(test_ns_period, 0);
 
     // Called with two arguments.
     test_ns_delay = 50;
     test_ns_period = 40;
-    EXPECT_TRUE(run({"dumpresetstats", "10", "20"}));
+    EXPECT_TRUE(run({ "dumpresetstats", "10", "20" }));
     EXPECT_EQ(test_ns_delay, 10);
     EXPECT_EQ(test_ns_period, 20);
 
     // Called with three arguments.
-    EXPECT_FALSE(run({"dumpresetstats", "10", "20", "30"}));
+    EXPECT_FALSE(run({ "dumpresetstats", "10", "20", "30" }));
 }

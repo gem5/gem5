@@ -153,9 +153,9 @@ class Hdf5 : public Output
     H5::H5File h5File;
 };
 
-std::unique_ptr<Output> initHDF5(
-    const std::string &filename,unsigned chunking = 10,
-    bool desc = true, bool formulas = true);
+std::unique_ptr<Output> initHDF5(const std::string &filename,
+                                 unsigned chunking = 10, bool desc = true,
+                                 bool formulas = true);
 
 } // namespace statistics
 } // namespace gem5

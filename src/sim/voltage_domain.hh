@@ -56,7 +56,6 @@ namespace gem5
 class VoltageDomain : public SimObject
 {
   public:
-
     typedef VoltageDomainParams Params;
     VoltageDomain(const Params &p);
 
@@ -67,7 +66,11 @@ class VoltageDomain : public SimObject
      *
      * @return Voltage of the domain
      */
-    double voltage() const { return voltageOpPoints[_perfLevel]; }
+    double
+    voltage() const
+    {
+        return voltageOpPoints[_perfLevel];
+    }
 
     /**
      * Get the voltage at specified performance level.
@@ -75,16 +78,22 @@ class VoltageDomain : public SimObject
      * @param perf_level Performance level for which the voltage is requested
      * @return Voltage of the domain at specified performance level
      */
-    double voltage(PerfLevel perf_level) const
+    double
+    voltage(PerfLevel perf_level) const
     {
-        gem5_assert(perf_level < numVoltages(), "VoltageDomain %s "\
-                    "request for voltage perf level %u is outside "\
-                    "of numVoltages %u", name(), perf_level,
-                    numVoltages());
+        gem5_assert(perf_level < numVoltages(),
+                    "VoltageDomain %s "
+                    "request for voltage perf level %u is outside "
+                    "of numVoltages %u",
+                    name(), perf_level, numVoltages());
         return voltageOpPoints[perf_level];
     }
 
-    uint32_t numVoltages() const { return (uint32_t)voltageOpPoints.size(); }
+    uint32_t
+    numVoltages() const
+    {
+        return (uint32_t)voltageOpPoints.size();
+    }
 
     /**
      * Set the voltage point of the domain.
@@ -96,13 +105,19 @@ class VoltageDomain : public SimObject
      * Get the voltage point of the domain.
      * @param Voltage value to be set
      */
-    PerfLevel perfLevel() const { return _perfLevel; }
+    PerfLevel
+    perfLevel() const
+    {
+        return _perfLevel;
+    }
 
     /**
      * Register a SrcClockDomain with this voltage domain.
      * @param src_clock_domain The SrcClockDomain to register.
      */
-    void registerSrcClockDom(SrcClockDomain *src_clock_dom) {
+    void
+    registerSrcClockDom(SrcClockDomain *src_clock_dom)
+    {
         assert(src_clock_dom->voltageDomain() == this);
         srcClockChildren.push_back(src_clock_dom);
     }

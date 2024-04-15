@@ -55,8 +55,7 @@ Sp805::Sp805(const Sp805Params &params)
       writeAccessEnabled(true),
       integrationTestEnabled(false),
       timeoutEvent([this] { timeoutExpired(); }, name())
-{
-}
+{}
 
 Tick
 Sp805::read(PacketPtr pkt)
@@ -67,34 +66,34 @@ Sp805::read(PacketPtr pkt)
 
     uint64_t resp = 0;
     switch (addr) {
-      case WDOGLOAD:
+    case WDOGLOAD:
         resp = timeoutInterval;
         break;
-      case WDOGVALUE:
+    case WDOGVALUE:
         resp = value();
         break;
-      case WDOGCONTROL:
+    case WDOGCONTROL:
         resp = enabled | (resetEnabled << 1);
         break;
-      case WDOGINTCLR:
+    case WDOGINTCLR:
         warn("Sp805::read: WO reg (0x%x) [WDOGINTCLR]\n", addr);
         break;
-      case WDOGRIS:
+    case WDOGRIS:
         resp = interrupt->active();
         break;
-      case WDOGMIS:
+    case WDOGMIS:
         resp = interrupt->active() && enabled;
         break;
-      case WDOGLOCK:
+    case WDOGLOCK:
         resp = writeAccessEnabled;
         break;
-      case WDOGITCR:
+    case WDOGITCR:
         resp = integrationTestEnabled;
         break;
-      case WDOGITOP:
+    case WDOGITOP:
         warn("Sp805::read: WO reg (0x%x) [WDOGITOP]\n", addr);
         break;
-      default:
+    default:
         if (readId(pkt, ambaId, pioAddr))
             resp = pkt->getUintX(ByteOrder::little);
         else
@@ -118,7 +117,7 @@ Sp805::write(PacketPtr pkt)
 
     uint64_t data = pkt->getUintX(ByteOrder::little);
     switch (addr) {
-      case WDOGLOAD:
+    case WDOGLOAD:
         if (writeAccessEnabled) {
             // When WdogLoad is written 0x0, immediately trigger an interrupt
             if (!timeoutInterval)
@@ -129,10 +128,10 @@ Sp805::write(PacketPtr pkt)
                 restartCounter();
         }
         break;
-      case WDOGVALUE:
+    case WDOGVALUE:
         warn("Sp805::write: RO reg (0x%x) [WDOGVALUE]\n", addr);
         break;
-      case WDOGCONTROL:
+    case WDOGCONTROL:
         if (writeAccessEnabled) {
             bool was_enabled = enabled;
             enabled = bits(data, 0);
@@ -145,7 +144,7 @@ Sp805::write(PacketPtr pkt)
                 stopCounter();
         }
         break;
-      case WDOGINTCLR:
+    case WDOGINTCLR:
         if (writeAccessEnabled) {
             // Clear the interrupt and restart the counter if enabled
             clearInt();
@@ -153,21 +152,21 @@ Sp805::write(PacketPtr pkt)
                 restartCounter();
         }
         break;
-      case WDOGRIS:
+    case WDOGRIS:
         warn("Sp805::write: RO reg (0x%x) [WDOGRIS]\n", addr);
         break;
-      case WDOGMIS:
+    case WDOGMIS:
         warn("Sp805::write: RO reg (0x%x) [WDOGMIS]\n", addr);
         break;
-      case WDOGLOCK:
+    case WDOGLOCK:
         writeAccessEnabled = (data == WDOGLOCK_MAGIC);
         break;
-      case WDOGITCR ... WDOGITOP:
+    case WDOGITCR ... WDOGITOP:
         warn("Sp805::write: No support for integration test harness\n");
         break;
-      default:
-        warn("Sp805::write: Unexpected address (0x%x:%i), assuming WI\n",
-             addr, size);
+    default:
+        warn("Sp805::write: Unexpected address (0x%x:%i), assuming WI\n", addr,
+             size);
     }
 
     DPRINTF(Sp805, "Sp805::write: 0x%x->0x%x(%i)\n", data, addr, size);
@@ -179,9 +178,10 @@ Sp805::write(PacketPtr pkt)
 uint32_t
 Sp805::value() const
 {
-    return timeoutEvent.scheduled() ? timeoutInterval -
-           ((timeoutEvent.when() - timeoutStartTick) / clockPeriod())
-           : persistedValue;
+    return timeoutEvent.scheduled() ?
+               timeoutInterval -
+                   ((timeoutEvent.when() - timeoutStartTick) / clockPeriod()) :
+               persistedValue;
 }
 
 void

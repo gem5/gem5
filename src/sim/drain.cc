@@ -50,15 +50,9 @@ namespace gem5
 
 DrainManager DrainManager::_instance;
 
-DrainManager::DrainManager()
-    : _count(0),
-      _state(DrainState::Running)
-{
-}
+DrainManager::DrainManager() : _count(0), _state(DrainState::Running) {}
 
-DrainManager::~DrainManager()
-{
-}
+DrainManager::~DrainManager() {}
 
 bool
 DrainManager::tryDrain()
@@ -74,7 +68,7 @@ DrainManager::tryDrain()
     for (auto *obj : _allDrainable) {
         DrainState status = obj->dmDrain();
         if (debug::Drain && status != DrainState::Drained) {
-            Named *temp = dynamic_cast<Named*>(obj);
+            Named *temp = dynamic_cast<Named *>(obj);
             if (temp)
                 DPRINTF(Drain, "Failed to drain %s\n", temp->name());
         }
@@ -108,7 +102,8 @@ DrainManager::resume()
 
     panic_if(_count != 0,
              "Resume called in the middle of a drain cycle. %u objects "
-             "left to drain.\n", _count);
+             "left to drain.\n",
+             _count);
 
     // At this point in time the DrainManager and all objects will be
     // in the the Drained state. New objects (i.e., objects created
@@ -155,7 +150,6 @@ DrainManager::signalDrainDone()
     }
 }
 
-
 void
 DrainManager::registerDrainable(Drainable *obj)
 {
@@ -192,8 +186,6 @@ DrainManager::drainableCount() const
     return _allDrainable.size();
 }
 
-
-
 Drainable::Drainable()
     : _drainManager(DrainManager::instance()),
       _drainState(_drainManager.state())
@@ -201,10 +193,7 @@ Drainable::Drainable()
     _drainManager.registerDrainable(this);
 }
 
-Drainable::~Drainable()
-{
-    _drainManager.unregisterDrainable(this);
-}
+Drainable::~Drainable() { _drainManager.unregisterDrainable(this); }
 
 DrainState
 Drainable::dmDrain()
@@ -221,7 +210,7 @@ void
 Drainable::dmDrainResume()
 {
     panic_if(_drainState != DrainState::Drained &&
-             _drainState != DrainState::Resuming,
+                 _drainState != DrainState::Resuming,
              "Trying to resume an object that hasn't been drained\n");
 
     _drainState = DrainState::Running;

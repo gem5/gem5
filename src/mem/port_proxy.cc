@@ -44,25 +44,24 @@
 namespace gem5
 {
 
-PortProxy::PortProxy(ThreadContext *tc, Addr cache_line_size) :
-    PortProxy([tc](PacketPtr pkt)->void { tc->sendFunctional(pkt); },
-        cache_line_size)
+PortProxy::PortProxy(ThreadContext *tc, Addr cache_line_size)
+    : PortProxy([tc](PacketPtr pkt) -> void { tc->sendFunctional(pkt); },
+                cache_line_size)
 {}
 
-PortProxy::PortProxy(const RequestPort &port, Addr cache_line_size) :
-    PortProxy([&port](PacketPtr pkt)->void { port.sendFunctional(pkt); },
-        cache_line_size)
+PortProxy::PortProxy(const RequestPort &port, Addr cache_line_size)
+    : PortProxy([&port](PacketPtr pkt) -> void { port.sendFunctional(pkt); },
+                cache_line_size)
 {}
 
 void
-PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
-                        void *p, uint64_t size) const
+PortProxy::readBlobPhys(Addr addr, Request::Flags flags, void *p,
+                        uint64_t size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-
-        auto req = std::make_shared<Request>(
-            gen.addr(), gen.size(), flags, Request::funcRequestorId);
+        auto req = std::make_shared<Request>(gen.addr(), gen.size(), flags,
+                                             Request::funcRequestorId);
 
         Packet pkt(req, MemCmd::ReadReq);
         pkt.dataStatic(static_cast<uint8_t *>(p));
@@ -72,14 +71,13 @@ PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
 }
 
 void
-PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
-                         const void *p, uint64_t size) const
+PortProxy::writeBlobPhys(Addr addr, Request::Flags flags, const void *p,
+                         uint64_t size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
-
-        auto req = std::make_shared<Request>(
-            gen.addr(), gen.size(), flags, Request::funcRequestorId);
+        auto req = std::make_shared<Request>(gen.addr(), gen.size(), flags,
+                                             Request::funcRequestorId);
 
         Packet pkt(req, MemCmd::WriteReq);
         pkt.dataStaticConst(static_cast<const uint8_t *>(p));
@@ -89,8 +87,8 @@ PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
 }
 
 void
-PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
-                          uint8_t v, uint64_t size) const
+PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags, uint8_t v,
+                          uint64_t size) const
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];
@@ -98,7 +96,7 @@ PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
     std::memset(buf, v, size);
     PortProxy::writeBlobPhys(addr, flags, buf, size);
 
-    delete [] buf;
+    delete[] buf;
 }
 
 bool

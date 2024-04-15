@@ -52,7 +52,8 @@ class ThreadContext;
 
 /* To maintain compatibility with other architectures, we'll
    simply create an ITLB and DTLB that will point to the real TLB */
-namespace RiscvISA {
+namespace RiscvISA
+{
 
 class Walker;
 
@@ -62,9 +63,9 @@ class TLB : public BaseTLB
 
   protected:
     size_t size;
-    std::vector<TlbEntry> tlb;  // our TLB
-    TlbEntryTrie trie;          // for quick access
-    EntryList freeList;         // free entries
+    std::vector<TlbEntry> tlb; // our TLB
+    TlbEntryTrie trie;         // for quick access
+    EntryList freeList;        // free entries
     uint64_t lruSeq;
 
     Walker *walker;
@@ -95,7 +96,9 @@ class TLB : public BaseTLB
 
     Walker *getWalker();
 
-    void takeOverFrom(BaseTLB *old) override {}
+    void
+    takeOverFrom(BaseTLB *old) override
+    {}
 
     TlbEntry *insert(Addr vpn, const TlbEntry &entry);
     void flushAll() override;
@@ -125,8 +128,8 @@ class TLB : public BaseTLB
 
     Addr translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode);
 
-    Fault translateAtomic(const RequestPtr &req,
-                          ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
                          BaseMMU::Translation *translation,
                          BaseMMU::Mode mode) override;
@@ -137,7 +140,11 @@ class TLB : public BaseTLB
     TlbEntry *lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden);
 
   private:
-    uint64_t nextSeq() { return ++lruSeq; }
+    uint64_t
+    nextSeq()
+    {
+        return ++lruSeq;
+    }
 
     void evictLRU();
     void remove(size_t idx);

@@ -58,38 +58,43 @@ class MPP_StatisticalCorrector_64KB : public MPP_StatisticalCorrector
     const unsigned snb;
     const unsigned logSnb;
     std::vector<int> sm;
-    std::vector<int8_t> * sgehl;
+    std::vector<int8_t> *sgehl;
     std::vector<int8_t> ws;
 
     // Third local history GEHL
     const unsigned tnb;
     const unsigned logTnb;
     std::vector<int> tm;
-    std::vector<int8_t> * tgehl;
+    std::vector<int8_t> *tgehl;
     std::vector<int8_t> wt;
 
     StatisticalCorrector::SCThreadHistory *makeThreadHistory() override;
     int gPredictions(ThreadID tid, Addr branch_pc,
-            StatisticalCorrector::BranchInfo* bi, int &lsum, int64_t phist)
-            override;
-    void getBiasLSUM(Addr branch_pc,
-            StatisticalCorrector::BranchInfo *bi, int &lsum) const override;
+                     StatisticalCorrector::BranchInfo *bi, int &lsum,
+                     int64_t phist) override;
+    void getBiasLSUM(Addr branch_pc, StatisticalCorrector::BranchInfo *bi,
+                     int &lsum) const override;
     void gUpdates(ThreadID tid, Addr pc, bool taken,
-            StatisticalCorrector::BranchInfo* bi, int64_t phist) override;
+                  StatisticalCorrector::BranchInfo *bi,
+                  int64_t phist) override;
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
-            StatisticalCorrector::BranchInfo *bi, Addr corrTarget) override;
+                         StatisticalCorrector::BranchInfo *bi,
+                         Addr corrTarget) override;
+
   public:
     MPP_StatisticalCorrector_64KB(
-            const MPP_StatisticalCorrector_64KBParams &p);
+        const MPP_StatisticalCorrector_64KBParams &p);
     size_t getSizeInBits() const override;
 };
 
 class MultiperspectivePerceptronTAGE64KB :
-        public MultiperspectivePerceptronTAGE {
+    public MultiperspectivePerceptronTAGE
+{
     void createSpecs() override;
+
   public:
     MultiperspectivePerceptronTAGE64KB(
-            const MultiperspectivePerceptronTAGE64KBParams &p);
+        const MultiperspectivePerceptronTAGE64KBParams &p);
 };
 
 } // namespace branch_prediction

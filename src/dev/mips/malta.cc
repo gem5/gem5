@@ -40,8 +40,7 @@
 namespace gem5
 {
 
-Malta::Malta(const Params &p)
-    : Platform(p)
+Malta::Malta(const Params &p) : Platform(p)
 {
     for (int i = 0; i < Malta::Max_CPUs; i++)
         intr_sum_type[i] = 0;
@@ -50,15 +49,15 @@ Malta::Malta(const Params &p)
 void
 Malta::postConsoleInt()
 {
-    //see {Linux-src}/arch/mips/mips-boards/sim/sim_setup.c
-    io->postIntr(0x10/*HW4*/);
+    // see {Linux-src}/arch/mips/mips-boards/sim/sim_setup.c
+    io->postIntr(0x10 /*HW4*/);
 }
 
 void
 Malta::clearConsoleInt()
 {
-    //FIXME: implement clearConsoleInt()
-    io->clearIntr(0x10/*HW4*/);
+    // FIXME: implement clearConsoleInt()
+    io->clearIntr(0x10 /*HW4*/);
 }
 
 void

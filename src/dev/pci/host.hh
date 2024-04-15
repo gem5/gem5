@@ -128,7 +128,11 @@ class PciHost : public PioDevice
          * @param addr Address in the PCI IO address space
          * @return Address in the system's physical address space.
          */
-        Addr pioAddr(Addr addr) const { return host.pioAddr(busAddr, addr); }
+        Addr
+        pioAddr(Addr addr) const
+        {
+            return host.pioAddr(busAddr, addr);
+        }
 
         /**
          * Calculate the physical address of a non-prefetchable memory
@@ -137,7 +141,11 @@ class PciHost : public PioDevice
          * @param addr Address in the PCI memory address space
          * @return Address in the system's physical address space.
          */
-        Addr memAddr(Addr addr) const { return host.memAddr(busAddr, addr); }
+        Addr
+        memAddr(Addr addr) const
+        {
+            return host.memAddr(busAddr, addr);
+        }
 
         /**
          * Calculate the physical address of a prefetchable memory
@@ -146,7 +154,11 @@ class PciHost : public PioDevice
          * @param addr Address in the PCI DMA memory address space
          * @return Address in the system's physical address space.
          */
-        Addr dmaAddr(Addr addr) const { return host.dmaAddr(busAddr, addr); }
+        Addr
+        dmaAddr(Addr addr) const
+        {
+            return host.dmaAddr(busAddr, addr);
+        }
 
       protected:
         PciHost &host;
@@ -209,7 +221,6 @@ class PciHost : public PioDevice
      * @return Address in the system's physical address space.
      */
     virtual Addr memAddr(const PciBusAddr &bus_addr, Addr pci_addr) const = 0;
-
 
     /**
      * Calculate the physical address of a prefetchable memory
@@ -286,15 +297,21 @@ class GenericPciHost : public PciHost
     AddrRangeList getAddrRanges() const override;
 
   protected: // PciHost
-    Addr pioAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    pioAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override
+    {
         return pciPioBase + pci_addr;
     }
 
-    Addr memAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    memAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override
+    {
         return pciMemBase + pci_addr;
     }
 
-    Addr dmaAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    dmaAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override
+    {
         return pciDmaBase + pci_addr;
     }
 

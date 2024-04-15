@@ -160,26 +160,25 @@ namespace gem5
 using namespace RiscvISA;
 
 static RiscvType
-getRvType(ThreadContext* tc)
+getRvType(ThreadContext *tc)
 {
-    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+    auto isa = dynamic_cast<ISA *>(tc->getIsaPtr());
     panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
     return isa->rvType();
 }
 
 static PrivilegeModeSet
-getPrivilegeModeSet(ThreadContext* tc)
+getPrivilegeModeSet(ThreadContext *tc)
 {
-    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+    auto isa = dynamic_cast<ISA *>(tc->getIsaPtr());
     panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
     return isa->getPrivilegeModeSet();
 }
 
 template <typename xint>
 static void
-setRegNoEffectWithMask(
-        ThreadContext *context, RiscvType type, PrivilegeModeSet pms,
-        CSRIndex idx, xint val)
+setRegNoEffectWithMask(ThreadContext *context, RiscvType type,
+                       PrivilegeModeSet pms, CSRIndex idx, xint val)
 {
     RegVal oldVal, newVal;
     RegVal mask = CSRMasks[type][pms].at(idx);
@@ -190,9 +189,8 @@ setRegNoEffectWithMask(
 
 template <typename xint>
 static void
-setRegWithMask(
-        ThreadContext *context, RiscvType type, PrivilegeModeSet pms,
-        CSRIndex idx, xint val)
+setRegWithMask(ThreadContext *context, RiscvType type, PrivilegeModeSet pms,
+               CSRIndex idx, xint val)
 {
     RegVal oldVal, newVal;
     RegVal mask = CSRMasks[type][pms].at(idx);
@@ -203,15 +201,14 @@ setRegWithMask(
 
 RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
     : BaseRemoteGDB(_system, _listen_config),
-    regCache32(this), regCache64(this)
-{
-}
+      regCache32(this),
+      regCache64(this)
+{}
 
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-    if (FullSystem)
-    {
+    if (FullSystem) {
         MMU *mmu = static_cast<MMU *>(context()->getMMUPtr());
         unsigned logBytes;
         Addr paddr = va;
@@ -222,8 +219,8 @@ RemoteGDB::acc(Addr va, size_t len)
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
-            Fault fault = walker->startFunctional(
-                context(), paddr, logBytes, BaseMMU::Read);
+            Fault fault = walker->startFunctional(context(), paddr, logBytes,
+                                                  BaseMMU::Read);
             if (fault != NoFault)
                 return false;
         }
@@ -238,7 +235,7 @@ RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
     PrivilegeModeSet pms = getPrivilegeModeSet(context);
-    auto& RVxCSRMasks = CSRMasks[RV32][pms];
+    auto &RVxCSRMasks = CSRMasks[RV32][pms];
 
     // General registers
     for (int i = 0; i < int_reg::NumArchRegs; i++) {
@@ -249,101 +246,83 @@ RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
     // Floating point registers
     for (int i = 0; i < float_reg::NumRegs; i++)
         r.fpu[i] = context->getReg(floatRegClass[i]);
-    r.fflags = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FFLAGS).physIndex) & RVxCSRMasks.at(CSR_FFLAGS);
-    r.frm = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FRM).physIndex) & RVxCSRMasks.at(CSR_FRM);
-    r.fcsr = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FCSR).physIndex) & RVxCSRMasks.at(CSR_FCSR);
+    r.fflags = context->readMiscRegNoEffect(CSRData.at(CSR_FFLAGS).physIndex) &
+               RVxCSRMasks.at(CSR_FFLAGS);
+    r.frm = context->readMiscRegNoEffect(CSRData.at(CSR_FRM).physIndex) &
+            RVxCSRMasks.at(CSR_FRM);
+    r.fcsr = context->readMiscRegNoEffect(CSRData.at(CSR_FCSR).physIndex) &
+             RVxCSRMasks.at(CSR_FCSR);
 
     // CSR registers
-    r.cycle = context->readMiscRegNoEffect(
-        CSRData.at(CSR_CYCLE).physIndex);
-    r.cycleh = context->readMiscRegNoEffect(
-        CSRData.at(CSR_CYCLEH).physIndex);
-    r.time = context->readMiscRegNoEffect(
-        CSRData.at(CSR_TIME).physIndex);
-    r.timeh = context->readMiscRegNoEffect(
-        CSRData.at(CSR_TIMEH).physIndex);
+    r.cycle = context->readMiscRegNoEffect(CSRData.at(CSR_CYCLE).physIndex);
+    r.cycleh = context->readMiscRegNoEffect(CSRData.at(CSR_CYCLEH).physIndex);
+    r.time = context->readMiscRegNoEffect(CSRData.at(CSR_TIME).physIndex);
+    r.timeh = context->readMiscRegNoEffect(CSRData.at(CSR_TIMEH).physIndex);
 
     // U mode CSR
-    r.ustatus = context->readMiscReg(
-        CSRData.at(CSR_USTATUS).physIndex) & RVxCSRMasks.at(CSR_USTATUS);
-    r.uie = context->readMiscReg(
-        CSRData.at(CSR_UIE).physIndex) & RVxCSRMasks.at(CSR_UIE);
-    r.utvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UTVEC).physIndex);
-    r.uscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex);
-    r.uepc = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UEPC).physIndex);
-    r.ucause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UCAUSE).physIndex);
-    r.utval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UTVAL).physIndex);
-    r.uip = context->readMiscReg(
-        CSRData.at(CSR_UIP).physIndex) & RVxCSRMasks.at(CSR_UIP);
+    r.ustatus = context->readMiscReg(CSRData.at(CSR_USTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_USTATUS);
+    r.uie = context->readMiscReg(CSRData.at(CSR_UIE).physIndex) &
+            RVxCSRMasks.at(CSR_UIE);
+    r.utvec = context->readMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex);
+    r.uscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex);
+    r.uepc = context->readMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex);
+    r.ucause = context->readMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex);
+    r.utval = context->readMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex);
+    r.uip = context->readMiscReg(CSRData.at(CSR_UIP).physIndex) &
+            RVxCSRMasks.at(CSR_UIP);
 
     // S mode CSR
-    r.sstatus = context->readMiscReg(
-        CSRData.at(CSR_SSTATUS).physIndex) & RVxCSRMasks.at(CSR_SSTATUS);
-    r.sedeleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SEDELEG).physIndex);
-    r.sideleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SIDELEG).physIndex);
-    r.sie = context->readMiscReg(
-        CSRData.at(CSR_SIE).physIndex) & RVxCSRMasks.at(CSR_SIE);
-    r.stvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_STVEC).physIndex);
-    r.scounteren = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex);
-    r.sscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex);
-    r.sepc = context->readMiscReg(
-        CSRData.at(CSR_SEPC).physIndex);
-    r.scause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SCAUSE).physIndex);
-    r.stval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_STVAL).physIndex);
-    r.sip = context->readMiscReg(
-        CSRData.at(CSR_SIP).physIndex) & RVxCSRMasks.at(CSR_SIP);
-    r.satp = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SATP).physIndex);
+    r.sstatus = context->readMiscReg(CSRData.at(CSR_SSTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_SSTATUS);
+    r.sedeleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex);
+    r.sideleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex);
+    r.sie = context->readMiscReg(CSRData.at(CSR_SIE).physIndex) &
+            RVxCSRMasks.at(CSR_SIE);
+    r.stvec = context->readMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex);
+    r.scounteren =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex);
+    r.sscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex);
+    r.sepc = context->readMiscReg(CSRData.at(CSR_SEPC).physIndex);
+    r.scause = context->readMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex);
+    r.stval = context->readMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex);
+    r.sip = context->readMiscReg(CSRData.at(CSR_SIP).physIndex) &
+            RVxCSRMasks.at(CSR_SIP);
+    r.satp = context->readMiscRegNoEffect(CSRData.at(CSR_SATP).physIndex);
 
     // M mode CSR
-    r.mvendorid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MVENDORID).physIndex);
-    r.marchid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MARCHID).physIndex);
-    r.mimpid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MIMPID).physIndex);
+    r.mvendorid =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MVENDORID).physIndex);
+    r.marchid =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MARCHID).physIndex);
+    r.mimpid = context->readMiscRegNoEffect(CSRData.at(CSR_MIMPID).physIndex);
     r.mhartid = context->contextId();
-    r.mstatus = context->readMiscReg(
-        CSRData.at(CSR_MSTATUS).physIndex) & RVxCSRMasks.at(CSR_MSTATUS);
-    r.misa = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MISA).physIndex) & RVxCSRMasks.at(CSR_MISA);
-    r.medeleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MEDELEG).physIndex);
-    r.mideleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MIDELEG).physIndex);
-    r.mie = context->readMiscReg(
-        CSRData.at(CSR_MIE).physIndex) & RVxCSRMasks.at(CSR_MIE);
-    r.mtvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MTVEC).physIndex);
-    r.mcounteren = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex);
-    r.mstatush = context->readMiscReg(
-        CSRData.at(CSR_MSTATUSH).physIndex) & RVxCSRMasks.at(CSR_MSTATUSH);
-    r.mscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex);
-    r.mepc = context->readMiscReg(
-        CSRData.at(CSR_MEPC).physIndex);
-    r.mcause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MCAUSE).physIndex);
-    r.mtval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MTVAL).physIndex);
-    r.mip = context->readMiscReg(
-        CSRData.at(CSR_MIP).physIndex) & RVxCSRMasks.at(CSR_MIP);
+    r.mstatus = context->readMiscReg(CSRData.at(CSR_MSTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_MSTATUS);
+    r.misa = context->readMiscRegNoEffect(CSRData.at(CSR_MISA).physIndex) &
+             RVxCSRMasks.at(CSR_MISA);
+    r.medeleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex);
+    r.mideleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex);
+    r.mie = context->readMiscReg(CSRData.at(CSR_MIE).physIndex) &
+            RVxCSRMasks.at(CSR_MIE);
+    r.mtvec = context->readMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex);
+    r.mcounteren =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex);
+    r.mstatush = context->readMiscReg(CSRData.at(CSR_MSTATUSH).physIndex) &
+                 RVxCSRMasks.at(CSR_MSTATUSH);
+    r.mscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex);
+    r.mepc = context->readMiscReg(CSRData.at(CSR_MEPC).physIndex);
+    r.mcause = context->readMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex);
+    r.mtval = context->readMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex);
+    r.mip = context->readMiscReg(CSRData.at(CSR_MIP).physIndex) &
+            RVxCSRMasks.at(CSR_MIP);
 
     // H mode CSR (to be implemented)
 }
@@ -371,61 +350,44 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
     setRegNoEffectWithMask(context, RV32, pms, CSR_USTATUS, r.ustatus);
     setRegWithMask(context, RV32, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV32, pms, CSR_UIP, r.uip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UTVEC).physIndex, r.utvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex, r.uscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UEPC).physIndex, r.uepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UTVAL).physIndex, r.utval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex, r.utvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex,
+                                r.uscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex, r.uepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex, r.utval);
 
     // S mode CSR
     setRegNoEffectWithMask(context, RV32, pms, CSR_SSTATUS, r.sstatus);
     setRegWithMask(context, RV32, pms, CSR_SIE, r.sie);
     setRegWithMask(context, RV32, pms, CSR_SIP, r.sip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_STVEC).physIndex, r.stvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex, r.scounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex, r.sscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SEPC).physIndex, r.sepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCAUSE).physIndex, r.scause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_STVAL).physIndex, r.stval);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SATP).physIndex, r.satp);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex, r.stvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex,
+                                r.scounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex,
+                                r.sscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SEPC).physIndex, r.sepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex, r.scause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex, r.stval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SATP).physIndex, r.satp);
 
     // M mode CSR
     setRegNoEffectWithMask(context, RV32, pms, CSR_MSTATUS, r.mstatus);
     setRegNoEffectWithMask(context, RV32, pms, CSR_MISA, r.misa);
     setRegWithMask(context, RV32, pms, CSR_MIE, r.mie);
     setRegWithMask(context, RV32, pms, CSR_MIP, r.mip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex, r.mcounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex, r.mscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MEPC).physIndex, r.mepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MTVAL).physIndex, r.mtval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex,
+                                r.mcounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex,
+                                r.mscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MEPC).physIndex, r.mepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex, r.mtval);
 
     // H mode CSR (to be implemented)
 }
@@ -435,7 +397,7 @@ RemoteGDB::Riscv64GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
     PrivilegeModeSet pms = getPrivilegeModeSet(context);
-    auto& RVxCSRMasks = CSRMasks[RV64][pms];
+    auto &RVxCSRMasks = CSRMasks[RV64][pms];
 
     // General registers
     for (int i = 0; i < int_reg::NumArchRegs; i++) {
@@ -446,95 +408,79 @@ RemoteGDB::Riscv64GdbRegCache::getRegs(ThreadContext *context)
     // Floating point registers
     for (int i = 0; i < float_reg::NumRegs; i++)
         r.fpu[i] = context->getReg(floatRegClass[i]);
-    r.fflags = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FFLAGS).physIndex) & RVxCSRMasks.at(CSR_FFLAGS);
-    r.frm = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FRM).physIndex) & RVxCSRMasks.at(CSR_FRM);
-    r.fcsr = context->readMiscRegNoEffect(
-        CSRData.at(CSR_FCSR).physIndex) & RVxCSRMasks.at(CSR_FCSR);
+    r.fflags = context->readMiscRegNoEffect(CSRData.at(CSR_FFLAGS).physIndex) &
+               RVxCSRMasks.at(CSR_FFLAGS);
+    r.frm = context->readMiscRegNoEffect(CSRData.at(CSR_FRM).physIndex) &
+            RVxCSRMasks.at(CSR_FRM);
+    r.fcsr = context->readMiscRegNoEffect(CSRData.at(CSR_FCSR).physIndex) &
+             RVxCSRMasks.at(CSR_FCSR);
 
     // CSR registers
-    r.cycle = context->readMiscRegNoEffect(
-        CSRData.at(CSR_CYCLE).physIndex);
-    r.time = context->readMiscRegNoEffect(
-        CSRData.at(CSR_TIME).physIndex);
+    r.cycle = context->readMiscRegNoEffect(CSRData.at(CSR_CYCLE).physIndex);
+    r.time = context->readMiscRegNoEffect(CSRData.at(CSR_TIME).physIndex);
 
     // U mode CSR
-    r.ustatus = context->readMiscReg(
-        CSRData.at(CSR_USTATUS).physIndex) & RVxCSRMasks.at(CSR_USTATUS);
-    r.uie = context->readMiscReg(
-        CSRData.at(CSR_UIE).physIndex) & RVxCSRMasks.at(CSR_UIE);
-    r.utvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UTVEC).physIndex);
-    r.uscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex);
-    r.uepc = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UEPC).physIndex);
-    r.ucause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UCAUSE).physIndex);
-    r.utval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_UTVAL).physIndex);
-    r.uip = context->readMiscReg(
-        CSRData.at(CSR_UIP).physIndex) & RVxCSRMasks.at(CSR_UIP);
+    r.ustatus = context->readMiscReg(CSRData.at(CSR_USTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_USTATUS);
+    r.uie = context->readMiscReg(CSRData.at(CSR_UIE).physIndex) &
+            RVxCSRMasks.at(CSR_UIE);
+    r.utvec = context->readMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex);
+    r.uscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex);
+    r.uepc = context->readMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex);
+    r.ucause = context->readMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex);
+    r.utval = context->readMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex);
+    r.uip = context->readMiscReg(CSRData.at(CSR_UIP).physIndex) &
+            RVxCSRMasks.at(CSR_UIP);
 
     // S mode CSR
-    r.sstatus = context->readMiscReg(
-        CSRData.at(CSR_SSTATUS).physIndex) & RVxCSRMasks.at(CSR_SSTATUS);
-    r.sedeleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SEDELEG).physIndex);
-    r.sideleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SIDELEG).physIndex);
-    r.sie = context->readMiscReg(
-        CSRData.at(CSR_SIE).physIndex) & RVxCSRMasks.at(CSR_SIE);
-    r.stvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_STVEC).physIndex);
-    r.scounteren = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex);
-    r.sscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex);
-    r.sepc = context->readMiscReg(
-        CSRData.at(CSR_SEPC).physIndex);
-    r.scause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SCAUSE).physIndex);
-    r.stval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_STVAL).physIndex);
-    r.sip = context->readMiscReg(
-        CSRData.at(CSR_SIP).physIndex) & RVxCSRMasks.at(CSR_SIP);
-    r.satp = context->readMiscRegNoEffect(
-        CSRData.at(CSR_SATP).physIndex);
+    r.sstatus = context->readMiscReg(CSRData.at(CSR_SSTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_SSTATUS);
+    r.sedeleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex);
+    r.sideleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex);
+    r.sie = context->readMiscReg(CSRData.at(CSR_SIE).physIndex) &
+            RVxCSRMasks.at(CSR_SIE);
+    r.stvec = context->readMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex);
+    r.scounteren =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex);
+    r.sscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex);
+    r.sepc = context->readMiscReg(CSRData.at(CSR_SEPC).physIndex);
+    r.scause = context->readMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex);
+    r.stval = context->readMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex);
+    r.sip = context->readMiscReg(CSRData.at(CSR_SIP).physIndex) &
+            RVxCSRMasks.at(CSR_SIP);
+    r.satp = context->readMiscRegNoEffect(CSRData.at(CSR_SATP).physIndex);
 
     // M mode CSR
-    r.mvendorid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MVENDORID).physIndex);
-    r.marchid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MARCHID).physIndex);
-    r.mimpid = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MIMPID).physIndex);
+    r.mvendorid =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MVENDORID).physIndex);
+    r.marchid =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MARCHID).physIndex);
+    r.mimpid = context->readMiscRegNoEffect(CSRData.at(CSR_MIMPID).physIndex);
     r.mhartid = context->contextId();
-    r.mstatus = context->readMiscReg(
-        CSRData.at(CSR_MSTATUS).physIndex) & RVxCSRMasks.at(CSR_MSTATUS);
-    r.misa = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MISA).physIndex) & RVxCSRMasks.at(CSR_MISA);
-    r.medeleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MEDELEG).physIndex);
-    r.mideleg = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MIDELEG).physIndex);
-    r.mie = context->readMiscReg(
-        CSRData.at(CSR_MIE).physIndex) & RVxCSRMasks.at(CSR_MIE);
-    r.mtvec = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MTVEC).physIndex);
-    r.mcounteren = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex);
-    r.mscratch = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex);
-    r.mepc = context->readMiscReg(
-        CSRData.at(CSR_MEPC).physIndex);
-    r.mcause = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MCAUSE).physIndex);
-    r.mtval = context->readMiscRegNoEffect(
-        CSRData.at(CSR_MTVAL).physIndex);
-    r.mip = context->readMiscReg(
-        CSRData.at(CSR_MIP).physIndex) & RVxCSRMasks.at(CSR_MIP);
+    r.mstatus = context->readMiscReg(CSRData.at(CSR_MSTATUS).physIndex) &
+                RVxCSRMasks.at(CSR_MSTATUS);
+    r.misa = context->readMiscRegNoEffect(CSRData.at(CSR_MISA).physIndex) &
+             RVxCSRMasks.at(CSR_MISA);
+    r.medeleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex);
+    r.mideleg =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex);
+    r.mie = context->readMiscReg(CSRData.at(CSR_MIE).physIndex) &
+            RVxCSRMasks.at(CSR_MIE);
+    r.mtvec = context->readMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex);
+    r.mcounteren =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex);
+    r.mscratch =
+        context->readMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex);
+    r.mepc = context->readMiscReg(CSRData.at(CSR_MEPC).physIndex);
+    r.mcause = context->readMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex);
+    r.mtval = context->readMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex);
+    r.mip = context->readMiscReg(CSRData.at(CSR_MIP).physIndex) &
+            RVxCSRMasks.at(CSR_MIP);
 
     // H mode CSR (to be implemented)
 }
@@ -562,63 +508,44 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
     setRegNoEffectWithMask(context, RV64, pms, CSR_USTATUS, r.ustatus);
     setRegWithMask(context, RV64, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV64, pms, CSR_UIP, r.uip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UTVEC).physIndex, r.utvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_USCRATCH).physIndex, r.uscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UEPC).physIndex, r.uepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_UTVAL).physIndex, r.utval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UTVEC).physIndex, r.utvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_USCRATCH).physIndex,
+                                r.uscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UEPC).physIndex, r.uepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UCAUSE).physIndex, r.ucause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_UTVAL).physIndex, r.utval);
 
     // S mode CSR
-    setRegNoEffectWithMask(
-        context, RV64, pms, CSR_SSTATUS, r.sstatus);
+    setRegNoEffectWithMask(context, RV64, pms, CSR_SSTATUS, r.sstatus);
     setRegWithMask(context, RV64, pms, CSR_SIE, r.sie);
     setRegWithMask(context, RV64, pms, CSR_SIP, r.sip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_STVEC).physIndex, r.stvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCOUNTEREN).physIndex, r.scounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SSCRATCH).physIndex, r.sscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SEPC).physIndex, r.sepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SCAUSE).physIndex, r.scause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_STVAL).physIndex, r.stval);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_SATP).physIndex, r.satp);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SEDELEG).physIndex, r.sedeleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SIDELEG).physIndex, r.sideleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_STVEC).physIndex, r.stvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCOUNTEREN).physIndex,
+                                r.scounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SSCRATCH).physIndex,
+                                r.sscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SEPC).physIndex, r.sepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SCAUSE).physIndex, r.scause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_STVAL).physIndex, r.stval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_SATP).physIndex, r.satp);
 
     // M mode CSR
-    setRegNoEffectWithMask(
-        context, RV64, pms, CSR_MSTATUS, r.mstatus);
+    setRegNoEffectWithMask(context, RV64, pms, CSR_MSTATUS, r.mstatus);
     setRegNoEffectWithMask(context, RV64, pms, CSR_MISA, r.misa);
     setRegWithMask(context, RV64, pms, CSR_MIE, r.mie);
     setRegWithMask(context, RV64, pms, CSR_MIP, r.mip);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCOUNTEREN).physIndex, r.mcounteren);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MSCRATCH).physIndex, r.mscratch);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MEPC).physIndex, r.mepc);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
-    context->setMiscRegNoEffect(
-        CSRData.at(CSR_MTVAL).physIndex, r.mtval);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MEDELEG).physIndex, r.medeleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MIDELEG).physIndex, r.mideleg);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MTVEC).physIndex, r.mtvec);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCOUNTEREN).physIndex,
+                                r.mcounteren);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MSCRATCH).physIndex,
+                                r.mscratch);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MEPC).physIndex, r.mepc);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MCAUSE).physIndex, r.mcause);
+    context->setMiscRegNoEffect(CSRData.at(CSR_MTVAL).physIndex, r.mtval);
 
     // H mode CSR (to be implemented)
 }
@@ -632,22 +559,25 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
      *
      * Import using #include blobs/<blob_name>.hh
      */
-#define GDB_XML(x, s)                                            \
-    {                                                            \
-        x, std::string(reinterpret_cast<const char *>(Blobs::s), \
-                       Blobs::s##_len)                           \
+#define GDB_XML(x, s)                                                         \
+    {                                                                         \
+        x, std::string(reinterpret_cast<const char *>(Blobs::s),              \
+                       Blobs::s##_len)                                        \
     }
-    static const std::map<std::string, std::string> annexMaps[enums::Num_RiscvType] = {
-        [RV32] = {GDB_XML("target.xml", gdb_xml_riscv_32bit_target),
-                  GDB_XML("riscv-32bit-cpu.xml", gdb_xml_riscv_32bit_cpu),
-                  GDB_XML("riscv-32bit-fpu.xml", gdb_xml_riscv_32bit_fpu),
-                  GDB_XML("riscv-32bit-csr.xml", gdb_xml_riscv_32bit_csr)},
-        [RV64] = {GDB_XML("target.xml", gdb_xml_riscv_64bit_target),
-                  GDB_XML("riscv-64bit-cpu.xml", gdb_xml_riscv_64bit_cpu),
-                  GDB_XML("riscv-64bit-fpu.xml", gdb_xml_riscv_64bit_fpu),
-                  GDB_XML("riscv-64bit-csr.xml", gdb_xml_riscv_64bit_csr)},
-    };
-    auto& annexMap = annexMaps[getRvType(context())];
+    static const std::map<std::string, std::string>
+        annexMaps[enums::Num_RiscvType] = {
+            [RV32] = { GDB_XML("target.xml", gdb_xml_riscv_32bit_target),
+                       GDB_XML("riscv-32bit-cpu.xml", gdb_xml_riscv_32bit_cpu),
+                       GDB_XML("riscv-32bit-fpu.xml", gdb_xml_riscv_32bit_fpu),
+                       GDB_XML("riscv-32bit-csr.xml",
+                               gdb_xml_riscv_32bit_csr) },
+            [RV64] = { GDB_XML("target.xml", gdb_xml_riscv_64bit_target),
+                       GDB_XML("riscv-64bit-cpu.xml", gdb_xml_riscv_64bit_cpu),
+                       GDB_XML("riscv-64bit-fpu.xml", gdb_xml_riscv_64bit_fpu),
+                       GDB_XML("riscv-64bit-csr.xml",
+                               gdb_xml_riscv_64bit_csr) },
+        };
+    auto &annexMap = annexMaps[getRvType(context())];
     auto it = annexMap.find(annex);
     if (it == annexMap.end())
         return false;
@@ -658,7 +588,7 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
-    BaseGdbRegCache* regs[enums::Num_RiscvType] = {
+    BaseGdbRegCache *regs[enums::Num_RiscvType] = {
         [RV32] = &regCache32,
         [RV64] = &regCache64,
     };

@@ -72,9 +72,9 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
     suspend();
 
     call().memory_getMemorySpaces(_instId, memorySpaces);
-    for (const auto &space: memorySpaces) {
-        memorySpaceIds.emplace(
-            Iris::CanonicalMsn(space.canonicalMsn), space.spaceId);
+    for (const auto &space : memorySpaces) {
+        memorySpaceIds.emplace(Iris::CanonicalMsn(space.canonicalMsn),
+                               space.spaceId);
     }
     call().memory_getUsefulAddressTranslations(_instId, translations);
 
@@ -82,40 +82,41 @@ ThreadContext::initFromIrisInstance(const ResourceMap &resources)
     iris::EventSourceInfo evSrcInfo;
 
     client.registerEventCallback<Self, &Self::breakpointHit>(
-            this, "ec_IRIS_BREAKPOINT_HIT",
-            "Handle hitting a breakpoint", "Iris::ThreadContext");
+        this, "ec_IRIS_BREAKPOINT_HIT", "Handle hitting a breakpoint",
+        "Iris::ThreadContext");
     call().event_getEventSource(_instId, evSrcInfo, "IRIS_BREAKPOINT_HIT");
     call().eventStream_create(_instId, breakpointEventStreamId,
-            evSrcInfo.evSrcId, client.getInstId());
+                              evSrcInfo.evSrcId, client.getInstId());
 
     for (auto it = bps.begin(); it != bps.end(); it++)
         installBp(it);
 
     client.registerEventCallback<Self, &Self::semihostingEvent>(
-            this, "ec_IRIS_SEMIHOSTING_CALL_EXTENSION",
-            "Handle a semihosting call", "Iris::ThreadContext");
+        this, "ec_IRIS_SEMIHOSTING_CALL_EXTENSION",
+        "Handle a semihosting call", "Iris::ThreadContext");
     call().event_getEventSource(_instId, evSrcInfo,
-            "IRIS_SEMIHOSTING_CALL_EXTENSION");
+                                "IRIS_SEMIHOSTING_CALL_EXTENSION");
     call().eventStream_create(_instId, semihostingEventStreamId,
-            evSrcInfo.evSrcId, client.getInstId(),
-            // Set all arguments to their defaults, except syncEc which is
-            // changed to true.
-            nullptr, "", false, 0, nullptr, false, false, true);
+                              evSrcInfo.evSrcId, client.getInstId(),
+                              // Set all arguments to their defaults, except
+                              // syncEc which is changed to true.
+                              nullptr, "", false, 0, nullptr, false, false,
+                              true);
 }
 
 iris::ResourceId
-ThreadContext::extractResourceId(
-        const ResourceMap &resources, const std::string &name)
+ThreadContext::extractResourceId(const ResourceMap &resources,
+                                 const std::string &name)
 {
     return resources.at(name).rscId;
 }
 
 void
-ThreadContext::extractResourceMap(
-        ResourceIds &ids, const ResourceMap &resources,
-        const IdxNameMap &idx_names)
+ThreadContext::extractResourceMap(ResourceIds &ids,
+                                  const ResourceMap &resources,
+                                  const IdxNameMap &idx_names)
 {
-    for (const auto &idx_name: idx_names) {
+    for (const auto &idx_name : idx_names) {
         int idx = idx_name.first;
         const std::string &name = idx_name.second;
 
@@ -127,7 +128,7 @@ ThreadContext::extractResourceMap(
 }
 
 iris::MemorySpaceId
-ThreadContext::getMemorySpaceId(const Iris::CanonicalMsn& msn) const
+ThreadContext::getMemorySpaceId(const Iris::CanonicalMsn &msn) const
 {
     auto it = memorySpaceIds.find(msn);
     return it == memorySpaceIds.end() ? iris::IRIS_UINT64_MAX : it->second;
@@ -180,7 +181,7 @@ ThreadContext::installBp(BpInfoIt it)
 {
     Addr pc = it->second->pc;
     const auto &space_ids = getBpSpaceIds();
-    for (auto sid: space_ids) {
+    for (auto sid : space_ids) {
         BpId id;
         call().breakpoint_set_code(_instId, id, pc, sid, 0);
         it->second->ids.push_back(id);
@@ -190,7 +191,7 @@ ThreadContext::installBp(BpInfoIt it)
 void
 ThreadContext::uninstallBp(BpInfoIt it)
 {
-    for (auto id: it->second->ids)
+    for (auto id : it->second->ids)
         call().breakpoint_delete(_instId, id);
     it->second->clearIds();
 }
@@ -208,9 +209,11 @@ ThreadContext::delBp(BpInfoIt it)
 }
 
 iris::IrisErrorCode
-ThreadContext::instanceRegistryChanged(
-        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
-        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+ThreadContext::instanceRegistryChanged(uint64_t esId,
+                                       const iris::IrisValueMap &fields,
+                                       uint64_t time, uint64_t sInstId,
+                                       bool syncEc,
+                                       std::string &error_message_out)
 {
     const std::string &event = fields.at("EVENT").getString();
     const iris::InstanceId id = fields.at("INST_ID").getU64();
@@ -230,20 +233,19 @@ ThreadContext::instanceRegistryChanged(
 }
 
 iris::IrisErrorCode
-ThreadContext::phaseInitLeave(
-        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
-        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+ThreadContext::phaseInitLeave(uint64_t esId, const iris::IrisValueMap &fields,
+                              uint64_t time, uint64_t sInstId, bool syncEc,
+                              std::string &error_message_out)
 {
     std::vector<iris::ResourceInfo> resources;
     call().resource_getList(_instId, resources);
 
-    std::map<iris::ResourceId, const iris::ResourceInfo *>
-        idToResource;
-    for (const auto &resource: resources) {
+    std::map<iris::ResourceId, const iris::ResourceInfo *> idToResource;
+    for (const auto &resource : resources) {
         idToResource[resource.rscId] = &resource;
     }
     ResourceMap resourceMap;
-    for (const auto &resource: resources) {
+    for (const auto &resource : resources) {
         std::string name = resource.name;
         iris::ResourceId parentId = resource.parentRscId;
         while (parentId != iris::IRIS_UINT64_MAX) {
@@ -260,9 +262,10 @@ ThreadContext::phaseInitLeave(
 }
 
 iris::IrisErrorCode
-ThreadContext::simulationTimeEvent(
-        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
-        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+ThreadContext::simulationTimeEvent(uint64_t esId,
+                                   const iris::IrisValueMap &fields,
+                                   uint64_t time, uint64_t sInstId,
+                                   bool syncEc, std::string &error_message_out)
 {
     if (fields.at("RUNNING").getAsBool()) {
         // If this is just simulation time starting up, don't do anything.
@@ -298,9 +301,9 @@ ThreadContext::simulationTimeEvent(
 }
 
 iris::IrisErrorCode
-ThreadContext::breakpointHit(
-        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
-        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+ThreadContext::breakpointHit(uint64_t esId, const iris::IrisValueMap &fields,
+                             uint64_t time, uint64_t sInstId, bool syncEc,
+                             std::string &error_message_out)
 {
     // Handle the breakpoint event later when the fastmodel simulation is
     // stopped.
@@ -310,9 +313,10 @@ ThreadContext::breakpointHit(
 }
 
 iris::IrisErrorCode
-ThreadContext::semihostingEvent(
-        uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
-        uint64_t sInstId, bool syncEc, std::string &error_message_out)
+ThreadContext::semihostingEvent(uint64_t esId,
+                                const iris::IrisValueMap &fields,
+                                uint64_t time, uint64_t sInstId, bool syncEc,
+                                std::string &error_message_out)
 {
     if (ArmSystem::callSemihosting(this, true)) {
         // Stop execution in case an exit of the sim loop was scheduled. We
@@ -331,19 +335,24 @@ ThreadContext::semihostingEvent(
     return iris::E_ok;
 }
 
-ThreadContext::ThreadContext(
-        gem5::BaseCPU *cpu, int id, System *system, gem5::BaseMMU *mmu,
-        BaseISA *isa, iris::IrisConnectionInterface *iris_if,
-        const std::string &iris_path) :
-    _cpu(cpu), _threadId(id), _system(system), _mmu(mmu), _isa(isa),
-    _irisPath(iris_path), vecRegs(ArmISA::NumVecRegs),
-    vecPredRegs(ArmISA::NumVecPredRegs),
-    comInstEventQueue("instruction-based event queue"),
-    client(iris_if, "client." + iris_path)
+ThreadContext::ThreadContext(gem5::BaseCPU *cpu, int id, System *system,
+                             gem5::BaseMMU *mmu, BaseISA *isa,
+                             iris::IrisConnectionInterface *iris_if,
+                             const std::string &iris_path)
+    : _cpu(cpu),
+      _threadId(id),
+      _system(system),
+      _mmu(mmu),
+      _isa(isa),
+      _irisPath(iris_path),
+      vecRegs(ArmISA::NumVecRegs),
+      vecPredRegs(ArmISA::NumVecPredRegs),
+      comInstEventQueue("instruction-based event queue"),
+      client(iris_if, "client." + iris_path)
 {
     iris::InstanceInfo info;
     auto ret_code = noThrow().instanceRegistry_getInstanceInfoByName(
-                info, "component." + iris_path);
+        info, "component." + iris_path);
     if (ret_code == iris::E_ok) {
         // The iris instance registry already new about this path.
         _instId = info.instId;
@@ -356,62 +365,62 @@ ThreadContext::ThreadContext(
     iris::EventSourceInfo evSrcInfo;
 
     client.registerEventCallback<Self, &Self::instanceRegistryChanged>(
-            this, "ec_IRIS_INSTANCE_REGISTRY_CHANGED",
-            "Install the iris instance ID", "Iris::ThreadContext");
+        this, "ec_IRIS_INSTANCE_REGISTRY_CHANGED",
+        "Install the iris instance ID", "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdGlobalInstance, evSrcInfo,
-            "IRIS_INSTANCE_REGISTRY_CHANGED");
+                                "IRIS_INSTANCE_REGISTRY_CHANGED");
     regEventStreamId = iris::IRIS_UINT64_MAX;
-    static const std::vector<std::string> fields =
-        { "EVENT", "INST_ID", "INST_NAME" };
+    static const std::vector<std::string> fields = { "EVENT", "INST_ID",
+                                                     "INST_NAME" };
     call().eventStream_create(iris::IrisInstIdGlobalInstance, regEventStreamId,
-            evSrcInfo.evSrcId, client.getInstId(), &fields);
+                              evSrcInfo.evSrcId, client.getInstId(), &fields);
 
     client.registerEventCallback<Self, &Self::phaseInitLeave>(
-            this, "ec_IRIS_SIM_PHASE_INIT_LEAVE",
-            "Initialize register contexts", "Iris::ThreadContext");
+        this, "ec_IRIS_SIM_PHASE_INIT_LEAVE", "Initialize register contexts",
+        "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdSimulationEngine, evSrcInfo,
-            "IRIS_SIM_PHASE_INIT_LEAVE");
+                                "IRIS_SIM_PHASE_INIT_LEAVE");
     initEventStreamId = iris::IRIS_UINT64_MAX;
-    call().eventStream_create(
-            iris::IrisInstIdSimulationEngine, initEventStreamId,
-            evSrcInfo.evSrcId, client.getInstId());
+    call().eventStream_create(iris::IrisInstIdSimulationEngine,
+                              initEventStreamId, evSrcInfo.evSrcId,
+                              client.getInstId());
 
     client.registerEventCallback<Self, &Self::simulationTimeEvent>(
-            this, "ec_IRIS_SIMULATION_TIME_EVENT",
-            "Handle simulation time stopping for breakpoints or stepping",
-            "Iris::ThreadContext");
+        this, "ec_IRIS_SIMULATION_TIME_EVENT",
+        "Handle simulation time stopping for breakpoints or stepping",
+        "Iris::ThreadContext");
     call().event_getEventSource(iris::IrisInstIdSimulationEngine, evSrcInfo,
-            "IRIS_SIMULATION_TIME_EVENT");
+                                "IRIS_SIMULATION_TIME_EVENT");
     timeEventStreamId = iris::IRIS_UINT64_MAX;
-    call().eventStream_create(
-            iris::IrisInstIdSimulationEngine, timeEventStreamId,
-            evSrcInfo.evSrcId, client.getInstId());
+    call().eventStream_create(iris::IrisInstIdSimulationEngine,
+                              timeEventStreamId, evSrcInfo.evSrcId,
+                              client.getInstId());
 
     breakpointEventStreamId = iris::IRIS_UINT64_MAX;
     semihostingEventStreamId = iris::IRIS_UINT64_MAX;
 
-    auto enable_lambda = [this]{
+    auto enable_lambda = [this] {
         call().perInstanceExecution_setState(_instId, true);
     };
-    enableAfterPseudoEvent = new EventFunctionWrapper(
-            enable_lambda, "resume after pseudo inst",
-            false, Event::Sim_Exit_Pri + 1);
+    enableAfterPseudoEvent =
+        new EventFunctionWrapper(enable_lambda, "resume after pseudo inst",
+                                 false, Event::Sim_Exit_Pri + 1);
 }
 
 ThreadContext::~ThreadContext()
 {
-    call().eventStream_destroy(
-            iris::IrisInstIdSimulationEngine, initEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdSimulationEngine,
+                               initEventStreamId);
     initEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIM_PHASE_INIT_LEAVE");
 
-    call().eventStream_destroy(
-            iris::IrisInstIdGlobalInstance, regEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdGlobalInstance,
+                               regEventStreamId);
     regEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_INSTANCE_REGISTRY_CHANGED");
 
-    call().eventStream_destroy(
-            iris::IrisInstIdGlobalInstance, timeEventStreamId);
+    call().eventStream_destroy(iris::IrisInstIdGlobalInstance,
+                               timeEventStreamId);
     timeEventStreamId = iris::IRIS_UINT64_MAX;
     client.unregisterEventCallback("ec_IRIS_SIMULATION_TIME_EVENT");
 
@@ -445,8 +454,8 @@ ThreadContext::remove(PCEvent *e)
 }
 
 void
-ThreadContext::readMem(
-    iris::MemorySpaceId space, Addr addr, void *p, size_t size)
+ThreadContext::readMem(iris::MemorySpaceId space, Addr addr, void *p,
+                       size_t size)
 {
     iris::MemoryReadResult r;
     auto err = call().memory_read(_instId, r, space, addr, 1, size);
@@ -455,8 +464,8 @@ ThreadContext::readMem(
 }
 
 void
-ThreadContext::writeMem(
-    iris::MemorySpaceId space, Addr addr, const void *p, size_t size)
+ThreadContext::writeMem(iris::MemorySpaceId space, Addr addr, const void *p,
+                        size_t size)
 {
     std::vector<uint64_t> data((size + 7) / 8);
     std::memcpy(data.data(), p, size);
@@ -470,13 +479,13 @@ ThreadContext::translateAddress(Addr &paddr, iris::MemorySpaceId p_space,
                                 Addr vaddr, iris::MemorySpaceId v_space)
 {
     iris::MemoryAddressTranslationResult result;
-    auto ret = noThrow().memory_translateAddress(
-            _instId, result, v_space, vaddr, p_space);
+    auto ret = noThrow().memory_translateAddress(_instId, result, v_space,
+                                                 vaddr, p_space);
 
     if (ret != iris::E_ok) {
         // Check if there was  a legal translation between these two spaces.
         // If so, something else went wrong.
-        for (auto &trans: translations)
+        for (auto &trans : translations)
             if (trans.inSpaceId == v_space && trans.outSpaceId == p_space)
                 return false;
 
@@ -525,8 +534,8 @@ ThreadContext::getCurrentInstCount()
 void
 ThreadContext::sendFunctional(PacketPtr pkt)
 {
-    auto msn = ArmISA::isSecure(this) ?
-        Iris::PhysicalMemorySecureMsn : Iris::PhysicalMemoryNonSecureMsn;
+    auto msn = ArmISA::isSecure(this) ? Iris::PhysicalMemorySecureMsn :
+                                        Iris::PhysicalMemoryNonSecureMsn;
     auto id = getMemorySpaceId(msn);
 
     auto addr = pkt->getAddr();
@@ -596,6 +605,7 @@ ThreadContext::pcState() const
 
     return pc;
 }
+
 void
 ThreadContext::pcState(const PCStateBase &val)
 {
@@ -659,46 +669,46 @@ ThreadContext::getReg(const RegId &reg, void *val) const
     const RegClassType type = reg.classValue();
     if (flat) {
         switch (type) {
-          case IntRegClass:
+        case IntRegClass:
             *(RegVal *)val = readIntRegFlat(idx);
             break;
-          case VecRegClass:
+        case VecRegClass:
             *(ArmISA::VecRegContainer *)val = readVecRegFlat(idx);
             break;
-          case VecElemClass:
+        case VecElemClass:
             *(RegVal *)val = readVecElemFlat(idx);
             break;
-          case VecPredRegClass:
+        case VecPredRegClass:
             *(ArmISA::VecPredRegContainer *)val = readVecPredRegFlat(idx);
             break;
-          case CCRegClass:
+        case CCRegClass:
             *(RegVal *)val = readCCRegFlat(idx);
             break;
-          case MiscRegClass:
+        case MiscRegClass:
             panic("MiscRegs should not be read with getReg.");
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     } else {
         switch (type) {
-          case IntRegClass:
+        case IntRegClass:
             *(RegVal *)val = readIntReg(idx);
             break;
-          case VecRegClass:
+        case VecRegClass:
             *(ArmISA::VecRegContainer *)val = readVecReg(reg);
             break;
-          case VecElemClass:
+        case VecElemClass:
             *(RegVal *)val = readVecElem(reg);
             break;
-          case VecPredRegClass:
+        case VecPredRegClass:
             *(ArmISA::VecPredRegContainer *)val = readVecPredReg(reg);
             break;
-          case CCRegClass:
+        case CCRegClass:
             *(RegVal *)val = readCCReg(idx);
             break;
-          case MiscRegClass:
+        case MiscRegClass:
             panic("MiscRegs should not be read with getReg.");
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     }
@@ -712,46 +722,46 @@ ThreadContext::setReg(const RegId &reg, const void *val)
     const RegClassType type = reg.classValue();
     if (flat) {
         switch (type) {
-          case IntRegClass:
+        case IntRegClass:
             setIntRegFlat(idx, *(RegVal *)val);
             break;
-          case VecRegClass:
+        case VecRegClass:
             setVecRegFlat(idx, *(ArmISA::VecRegContainer *)val);
             break;
-          case VecElemClass:
+        case VecElemClass:
             setVecElemFlat(idx, *(RegVal *)val);
             break;
-          case VecPredRegClass:
+        case VecPredRegClass:
             setVecPredRegFlat(idx, *(ArmISA::VecPredRegContainer *)val);
             break;
-          case CCRegClass:
+        case CCRegClass:
             setCCRegFlat(idx, *(RegVal *)val);
             break;
-          case MiscRegClass:
+        case MiscRegClass:
             panic("MiscRegs should not be read with getReg.");
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     } else {
         switch (type) {
-          case IntRegClass:
+        case IntRegClass:
             setIntReg(idx, *(RegVal *)val);
             break;
-          case VecRegClass:
+        case VecRegClass:
             setVecReg(reg, *(ArmISA::VecRegContainer *)val);
             break;
-          case VecElemClass:
+        case VecElemClass:
             setVecElem(reg, *(RegVal *)val);
             break;
-          case VecPredRegClass:
+        case VecPredRegClass:
             setVecPredReg(reg, *(ArmISA::VecPredRegContainer *)val);
             break;
-          case CCRegClass:
+        case CCRegClass:
             setCCReg(idx, *(RegVal *)val);
             break;
-          case MiscRegClass:
+        case MiscRegClass:
             panic("MiscRegs should not be read with getReg.");
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     }
@@ -765,20 +775,20 @@ ThreadContext::getWritableReg(const RegId &reg)
     const RegClassType type = reg.classValue();
     if (flat) {
         switch (type) {
-          case VecRegClass:
+        case VecRegClass:
             return &getWritableVecRegFlat(idx);
-          case VecPredRegClass:
+        case VecPredRegClass:
             return &getWritableVecPredRegFlat(idx);
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     } else {
         switch (type) {
-          case VecRegClass:
+        case VecRegClass:
             return &getWritableVecReg(reg);
-          case VecPredRegClass:
+        case VecPredRegClass:
             return &getWritableVecPredReg(reg);
-          default:
+        default:
             panic("Unrecognized register class type %d.", type);
         }
     }

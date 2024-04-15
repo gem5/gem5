@@ -55,79 +55,123 @@ namespace ruby
 // finalized. Events can be marked as NB (non-blocking). NB are triggered by
 // the protocol even if the transactions has pending data/responses.
 
-template<typename T>
+template <typename T>
 class TriggerQueue
 {
   private:
     struct ValType
     {
-      T val;
-      bool non_blocking;
+        T val;
+        bool non_blocking;
     };
+
     std::deque<ValType> queue;
 
   public:
     // Returns the head of the queue
-    const T& front() const { return queue.front().val; }
+    const T &
+    front() const
+    {
+        return queue.front().val;
+    }
 
     // Returns the head of the queue
     // NOTE: SLICC won't allow to reuse front() or different
     // values of the template parameter, thus we use an additional
     // def. to workaround that
-    const T& next() const { return queue.front().val; }
+    const T &
+    next() const
+    {
+        return queue.front().val;
+    }
 
     // Returns the end of the queue
-    const T& back() const { return queue.back().val; }
+    const T &
+    back() const
+    {
+        return queue.back().val;
+    }
 
     // Is the head event non-blocking ?
-    bool frontNB() const { return queue.front().non_blocking; }
+    bool
+    frontNB() const
+    {
+        return queue.front().non_blocking;
+    }
 
     // Is the last event non-blocking ?
-    bool backNB() const { return queue.back().non_blocking; }
+    bool
+    backNB() const
+    {
+        return queue.back().non_blocking;
+    }
 
     // Is the queue empty ?
-    bool empty() const { return queue.empty(); }
+    bool
+    empty() const
+    {
+        return queue.empty();
+    }
 
     // put an event at the end of the queue
-    void push(const T &elem) { queue.push_back({elem,false}); }
+    void
+    push(const T &elem)
+    {
+        queue.push_back({ elem, false });
+    }
 
     // emplace an event at the end of the queue
-    template<typename... Ts>
+    template <typename... Ts>
     void
-    emplace(Ts&&... args)
+    emplace(Ts &&...args)
     {
-        queue.push_back({T(std::forward<Ts>(args)...),false});
+        queue.push_back({ T(std::forward<Ts>(args)...), false });
     }
 
     // put an event at the head of the queue
-    void pushFront(const T &elem) { queue.push_front({elem,false}); }
+    void
+    pushFront(const T &elem)
+    {
+        queue.push_front({ elem, false });
+    }
 
     // put a non-blocking event at the end of the queue
-    void pushNB(const T &elem) { queue.push_back({elem,true}); }
+    void
+    pushNB(const T &elem)
+    {
+        queue.push_back({ elem, true });
+    }
 
     // put a non-blocking event at the head of the queue
-    void pushFrontNB(const T &elem) { queue.push_front({elem,true}); }
+    void
+    pushFrontNB(const T &elem)
+    {
+        queue.push_front({ elem, true });
+    }
 
     // pop the head of the queue
-    void pop() { queue.pop_front(); }
+    void
+    pop()
+    {
+        queue.pop_front();
+    }
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 };
 
-template<class T>
-inline std::ostream&
-operator<<(std::ostream& out, const TriggerQueue<T>& obj)
+template <class T>
+inline std::ostream &
+operator<<(std::ostream &out, const TriggerQueue<T> &obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-template<class T>
+template <class T>
 inline void
-TriggerQueue<T>::print(std::ostream& out) const
-{
-}
+TriggerQueue<T>::print(std::ostream &out) const
+{}
 
 } // namespace ruby
 } // namespace gem5

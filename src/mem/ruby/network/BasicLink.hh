@@ -56,7 +56,7 @@ class BasicLink : public SimObject
 
     void init();
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     Cycles m_latency;
     int m_bandwidth_factor;
@@ -64,8 +64,8 @@ class BasicLink : public SimObject
     std::vector<int> mVnets;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const BasicLink& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const BasicLink &obj)
 {
     obj.print(out);
     out << std::flush;

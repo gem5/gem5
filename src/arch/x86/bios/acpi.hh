@@ -75,14 +75,12 @@ class XSDT;
 
 struct Allocator
 {
-    virtual Addr alloc(std::size_t size, unsigned align=1) = 0;
+    virtual Addr alloc(std::size_t size, unsigned align = 1) = 0;
 };
+
 struct LinearAllocator : public Allocator
 {
-    LinearAllocator(Addr begin, Addr end=0) :
-        next(begin),
-        end(end)
-    {}
+    LinearAllocator(Addr begin, Addr end = 0) : next(begin), end(end) {}
 
     Addr alloc(std::size_t size, unsigned align) override;
 
@@ -107,8 +105,9 @@ class RSDP : public SimObject
         uint8_t revision = 0;
         uint32_t rsdtAddress = 0;
     };
+
     static_assert(std::is_trivially_copyable_v<MemR0>,
-            "Type not suitable for memcpy.");
+                  "Type not suitable for memcpy.");
 
     struct GEM5_PACKED Mem : public MemR0
     {
@@ -118,16 +117,17 @@ class RSDP : public SimObject
         uint8_t extendedChecksum = 0;
         uint8_t _reserved[3] = {};
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy,");
 
-    RSDT* rsdt;
-    XSDT* xsdt;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy,");
+
+    RSDT *rsdt;
+    XSDT *xsdt;
 
   public:
     RSDP(const Params &p);
 
-    Addr write(PortProxy& phys_proxy, Allocator& alloc) const;
+    Addr write(PortProxy &phys_proxy, Allocator &alloc) const;
 };
 
 class SysDescTable : public SimObject
@@ -148,29 +148,30 @@ class SysDescTable : public SimObject
         uint32_t creatorID = 0;
         uint32_t creatorRevision = 0;
     };
+
     static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
+                  "Type not suitable for memcpy.");
 
-    virtual Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-            std::vector<uint8_t>& mem) const = 0;
+    virtual Addr writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                          std::vector<uint8_t> &mem) const = 0;
 
-    const char* signature;
+    const char *signature;
     uint8_t revision;
 
-    SysDescTable(const Params& p, const char* _signature, uint8_t _revision) :
-        SimObject(p), signature(_signature), revision(_revision)
+    SysDescTable(const Params &p, const char *_signature, uint8_t _revision)
+        : SimObject(p), signature(_signature), revision(_revision)
     {}
 
   public:
     Addr
-    write(PortProxy& phys_proxy, Allocator& alloc) const
+    write(PortProxy &phys_proxy, Allocator &alloc) const
     {
         std::vector<uint8_t> mem;
         return writeBuf(phys_proxy, alloc, mem);
     }
 };
 
-template<class T>
+template <class T>
 class RXSDT : public SysDescTable
 {
   protected:
@@ -178,11 +179,11 @@ class RXSDT : public SysDescTable
 
     std::vector<SysDescTable *> entries;
 
-    Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-            std::vector<uint8_t>& mem) const override;
+    Addr writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                  std::vector<uint8_t> &mem) const override;
 
   protected:
-    RXSDT(const Params& p, const char* _signature, uint8_t _revision);
+    RXSDT(const Params &p, const char *_signature, uint8_t _revision);
 };
 
 class RSDT : public RXSDT<uint32_t>
@@ -215,15 +216,16 @@ class Record : public SimObject
         uint8_t type = 0;
         uint8_t length = 0;
     };
+
     static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
+                  "Type not suitable for memcpy.");
 
     uint8_t type;
 
-    virtual void prepareBuf(std::vector<uint8_t>& mem) const = 0;
+    virtual void prepareBuf(std::vector<uint8_t> &mem) const = 0;
 
   public:
-    Record(const Params& p, uint8_t _type) : SimObject(p), type(_type) {}
+    Record(const Params &p, uint8_t _type) : SimObject(p), type(_type) {}
 
     std::vector<uint8_t>
     prepare() const
@@ -245,13 +247,14 @@ class LAPIC : public Record
         uint8_t apicId = 0;
         uint32_t flags = 0;
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
 
-    void prepareBuf(std::vector<uint8_t>& mem) const override;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t> &mem) const override;
 
   public:
-    LAPIC(const Params& p) : Record(p, 0) {}
+    LAPIC(const Params &p) : Record(p, 0) {}
 };
 
 class IOAPIC : public Record
@@ -266,13 +269,14 @@ class IOAPIC : public Record
         uint32_t ioApicAddress = 0;
         uint32_t intBase = 0;
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
 
-    void prepareBuf(std::vector<uint8_t>& mem) const override;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t> &mem) const override;
 
   public:
-    IOAPIC(const Params& p) : Record(p, 1) {}
+    IOAPIC(const Params &p) : Record(p, 1) {}
 };
 
 class IntSourceOverride : public Record
@@ -287,13 +291,14 @@ class IntSourceOverride : public Record
         uint32_t globalSystemInterrupt = 0;
         uint16_t flags = 0;
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
 
-    void prepareBuf(std::vector<uint8_t>& mem) const override;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t> &mem) const override;
 
   public:
-    IntSourceOverride(const Params& p) : Record(p, 2) {}
+    IntSourceOverride(const Params &p) : Record(p, 2) {}
 };
 
 class NMI : public Record
@@ -307,13 +312,14 @@ class NMI : public Record
         uint16_t flags = 0;
         uint8_t lintNo = 0;
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
 
-    void prepareBuf(std::vector<uint8_t>& mem) const override;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t> &mem) const override;
 
   public:
-    NMI(const Params& p) : Record(p, 3) {}
+    NMI(const Params &p) : Record(p, 3) {}
 };
 
 class LAPICOverride : public Record
@@ -326,13 +332,14 @@ class LAPICOverride : public Record
         uint16_t _reserved = 0;
         uint64_t localAPICAddress = 0;
     };
-    static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
 
-    void prepareBuf(std::vector<uint8_t>& mem) const override;
+    static_assert(std::is_trivially_copyable_v<Mem>,
+                  "Type not suitable for memcpy.");
+
+    void prepareBuf(std::vector<uint8_t> &mem) const override;
 
   public:
-    LAPICOverride(const Params& p) : Record(p, 5) {}
+    LAPICOverride(const Params &p) : Record(p, 5) {}
 };
 
 class MADT : public SysDescTable
@@ -345,13 +352,14 @@ class MADT : public SysDescTable
         uint32_t localAPICAddress = 0;
         uint32_t flags = 0;
     };
+
     static_assert(std::is_trivially_copyable_v<Mem>,
-            "Type not suitable for memcpy.");
+                  "Type not suitable for memcpy.");
 
     std::vector<Record *> records;
 
-    Addr writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-            std::vector<uint8_t>& mem) const override;
+    Addr writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                  std::vector<uint8_t> &mem) const override;
 
   public:
     MADT(const Params &p);

@@ -36,16 +36,16 @@
 
 using namespace gem5;
 
-#define CPRINTF_TEST(...)                                \
-    do {                                                 \
-        std::stringstream ss;                            \
-        ccprintf(ss, __VA_ARGS__);                       \
-        int maxlen = ss.str().length() + 3;              \
-        char *buf = new char[maxlen];                    \
-        buf[maxlen - 1] = '\0';                          \
-        snprintf(buf, maxlen - 2, __VA_ARGS__);          \
-        EXPECT_EQ(ss.str(), std::string(buf));           \
-        delete [] buf;                                   \
+#define CPRINTF_TEST(...)                                                     \
+    do {                                                                      \
+        std::stringstream ss;                                                 \
+        ccprintf(ss, __VA_ARGS__);                                            \
+        int maxlen = ss.str().length() + 3;                                   \
+        char *buf = new char[maxlen];                                         \
+        buf[maxlen - 1] = '\0';                                               \
+        snprintf(buf, maxlen - 2, __VA_ARGS__);                               \
+        EXPECT_EQ(ss.str(), std::string(buf));                                \
+        delete[] buf;                                                         \
     } while (0)
 
 TEST(CPrintf, Misc)
@@ -61,9 +61,8 @@ TEST(CPrintf, Misc)
 
     CPRINTF_TEST("another test\n");
 
-    CPRINTF_TEST("%-10s %c he home \'\"%d %#o %#llx %1.5f %1.2E\n",
-                 "hello", 'A', 1, 0xff, 0xfffffffffffffULL,
-                 3.14159265, 1.1e10);
+    CPRINTF_TEST("%-10s %c he home \'\"%d %#o %#llx %1.5f %1.2E\n", "hello",
+                 'A', 1, 0xff, 0xfffffffffffffULL, 3.14159265, 1.1e10);
 }
 
 TEST(CPrintf, FloatingPoint)

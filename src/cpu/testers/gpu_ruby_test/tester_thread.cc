@@ -40,18 +40,24 @@ namespace gem5
 {
 
 TesterThread::TesterThread(const Params &p)
-      : ClockedObject(p),
-        threadEvent(this, "TesterThread tick"),
-        deadlockCheckEvent(this),
-        threadId(p.thread_id),
-        numLanes(p.num_lanes),
-        tester(nullptr), addrManager(nullptr), port(nullptr),
-        scalarPort(nullptr), sqcPort(nullptr), curEpisode(nullptr),
-        curAction(nullptr), pendingLdStCount(0), pendingFenceCount(0),
-        pendingAtomicCount(0), lastActiveCycle(Cycles(0)),
-        deadlockThreshold(p.deadlock_threshold)
-{
-}
+    : ClockedObject(p),
+      threadEvent(this, "TesterThread tick"),
+      deadlockCheckEvent(this),
+      threadId(p.thread_id),
+      numLanes(p.num_lanes),
+      tester(nullptr),
+      addrManager(nullptr),
+      port(nullptr),
+      scalarPort(nullptr),
+      sqcPort(nullptr),
+      curEpisode(nullptr),
+      curAction(nullptr),
+      pendingLdStCount(0),
+      pendingFenceCount(0),
+      pendingAtomicCount(0),
+      lastActiveCycle(Cycles(0)),
+      deadlockThreshold(p.deadlock_threshold)
+{}
 
 TesterThread::~TesterThread()
 {
@@ -83,11 +89,8 @@ TesterThread::wakeup()
     } else {
         // check for completion of the current episode
         // completion = no outstanding requests + not having more actions
-        if (!curEpisode->hasMoreActions() &&
-            pendingLdStCount == 0 &&
-            pendingFenceCount == 0 &&
-            pendingAtomicCount == 0) {
-
+        if (!curEpisode->hasMoreActions() && pendingLdStCount == 0 &&
+            pendingFenceCount == 0 && pendingAtomicCount == 0) {
             curEpisode->completeEpisode();
 
             // check if it's time to stop the tester
@@ -125,11 +128,10 @@ TesterThread::scheduleDeadlockCheckEvent()
 }
 
 void
-TesterThread::attachTesterThreadToPorts(ProtocolTester *_tester,
-                            ProtocolTester::SeqPort *_port,
-                            ProtocolTester::GMTokenPort *_tokenPort,
-                            ProtocolTester::SeqPort *_scalarPort,
-                            ProtocolTester::SeqPort *_sqcPort)
+TesterThread::attachTesterThreadToPorts(
+    ProtocolTester *_tester, ProtocolTester::SeqPort *_port,
+    ProtocolTester::GMTokenPort *_tokenPort,
+    ProtocolTester::SeqPort *_scalarPort, ProtocolTester::SeqPort *_sqcPort)
 {
     tester = _tester;
     port = _port;
@@ -145,7 +147,7 @@ TesterThread::attachTesterThreadToPorts(ProtocolTester *_tester,
 void
 TesterThread::issueNewEpisode()
 {
-    int num_reg_loads = \
+    int num_reg_loads =
         random_mt.random<unsigned int>() % tester->getEpisodeLength();
     int num_reg_stores = tester->getEpisodeLength() - num_reg_loads;
 
@@ -164,22 +166,22 @@ TesterThread::getTokensNeeded()
     int tokens_needed = 0;
     curAction = curEpisode->peekCurAction();
 
-    switch(curAction->getType()) {
-        case Episode::Action::Type::ATOMIC:
-            tokens_needed = numLanes;
-            break;
-        case Episode::Action::Type::LOAD:
-        case Episode::Action::Type::STORE:
-            for (int lane = 0; lane < numLanes; ++lane) {
-                Location loc = curAction->getLocation(lane);
+    switch (curAction->getType()) {
+    case Episode::Action::Type::ATOMIC:
+        tokens_needed = numLanes;
+        break;
+    case Episode::Action::Type::LOAD:
+    case Episode::Action::Type::STORE:
+        for (int lane = 0; lane < numLanes; ++lane) {
+            Location loc = curAction->getLocation(lane);
 
-                if (loc != AddressManager::INVALID_LOCATION && loc >= 0) {
-                    tokens_needed++;
-                }
+            if (loc != AddressManager::INVALID_LOCATION && loc >= 0) {
+                tokens_needed++;
             }
-            break;
-        default:
-            tokens_needed = 0;
+        }
+        break;
+    default:
+        tokens_needed = 0;
     }
 
     return tokens_needed;
@@ -197,91 +199,87 @@ TesterThread::isNextActionReady()
         // of threads evaluate to true.
         bool haveTokens = true;
 
-        switch(curAction->getType()) {
-            case Episode::Action::Type::ATOMIC:
-                haveTokens = tokenPort ?
-                    tokenPort->haveTokens(getTokensNeeded()) : true;
+        switch (curAction->getType()) {
+        case Episode::Action::Type::ATOMIC:
+            haveTokens =
+                tokenPort ? tokenPort->haveTokens(getTokensNeeded()) : true;
 
-                // an atomic action must wait for all previous requests
-                // to complete
-                if (pendingLdStCount == 0 &&
-                    pendingFenceCount == 0 &&
-                    pendingAtomicCount == 0 &&
-                    haveTokens) {
-                    return true;
-                }
+            // an atomic action must wait for all previous requests
+            // to complete
+            if (pendingLdStCount == 0 && pendingFenceCount == 0 &&
+                pendingAtomicCount == 0 && haveTokens) {
+                return true;
+            }
 
+            return false;
+        case Episode::Action::Type::ACQUIRE:
+            // we should not see any outstanding ld_st or fence here
+            assert(pendingLdStCount == 0 && pendingFenceCount == 0);
+
+            // an acquire action must wait for all previous atomic
+            // requests to complete
+            if (pendingAtomicCount == 0) {
+                return true;
+            }
+
+            return false;
+        case Episode::Action::Type::RELEASE:
+            // we should not see any outstanding atomic or fence here
+            assert(pendingAtomicCount == 0 && pendingFenceCount == 0);
+
+            // a release action must wait for all previous ld/st
+            // requests to complete
+            if (pendingLdStCount == 0) {
+                return true;
+            }
+
+            return false;
+        case Episode::Action::Type::LOAD:
+        case Episode::Action::Type::STORE:
+            // we should not see any outstanding atomic here
+            assert(pendingAtomicCount == 0);
+
+            // can't issue if there is a pending fence
+            if (pendingFenceCount > 0) {
                 return false;
-            case Episode::Action::Type::ACQUIRE:
-                // we should not see any outstanding ld_st or fence here
-                assert(pendingLdStCount == 0 &&
-                       pendingFenceCount == 0);
+            }
 
-                // an acquire action must wait for all previous atomic
-                // requests to complete
-                if (pendingAtomicCount == 0) {
-                    return true;
-                }
+            // a Load or Store is ready if it doesn't overlap
+            // with any outstanding request
+            for (int lane = 0; lane < numLanes; ++lane) {
+                Location loc = curAction->getLocation(lane);
 
-                return false;
-            case Episode::Action::Type::RELEASE:
-                // we should not see any outstanding atomic or fence here
-                assert(pendingAtomicCount == 0 &&
-                       pendingFenceCount == 0);
+                if (loc != AddressManager::INVALID_LOCATION && loc >= 0) {
+                    Addr addr = addrManager->getAddress(loc);
 
-                // a release action must wait for all previous ld/st
-                // requests to complete
-                if (pendingLdStCount == 0) {
-                    return true;
-                }
+                    if (outstandingLoads.find(addr) !=
+                        outstandingLoads.end()) {
+                        return false;
+                    }
 
-                return false;
-            case Episode::Action::Type::LOAD:
-            case Episode::Action::Type::STORE:
-                // we should not see any outstanding atomic here
-                assert(pendingAtomicCount == 0);
+                    if (outstandingStores.find(addr) !=
+                        outstandingStores.end()) {
+                        return false;
+                    }
 
-                // can't issue if there is a pending fence
-                if (pendingFenceCount > 0) {
-                    return false;
-                }
-
-                // a Load or Store is ready if it doesn't overlap
-                // with any outstanding request
-                for (int lane = 0; lane < numLanes; ++lane) {
-                    Location loc = curAction->getLocation(lane);
-
-                    if (loc != AddressManager::INVALID_LOCATION && loc >= 0) {
-                        Addr addr = addrManager->getAddress(loc);
-
-                        if (outstandingLoads.find(addr) !=
-                            outstandingLoads.end()) {
-                            return false;
-                        }
-
-                        if (outstandingStores.find(addr) !=
-                            outstandingStores.end()) {
-                            return false;
-                        }
-
-                        if (outstandingAtomics.find(addr) !=
-                            outstandingAtomics.end()) {
-                            // this is not an atomic action, so the address
-                            // should not be in outstandingAtomics list
-                            assert(false);
-                        }
+                    if (outstandingAtomics.find(addr) !=
+                        outstandingAtomics.end()) {
+                        // this is not an atomic action, so the address
+                        // should not be in outstandingAtomics list
+                        assert(false);
                     }
                 }
+            }
 
-                haveTokens = tokenPort ?
-                    tokenPort->haveTokens(getTokensNeeded()) : true;
-                if (!haveTokens) {
-                    return false;
-                }
+            haveTokens =
+                tokenPort ? tokenPort->haveTokens(getTokensNeeded()) : true;
+            if (!haveTokens) {
+                return false;
+            }
 
-                return true;
-            default:
-                panic("The tester got an invalid action\n");
+            return true;
+        default:
+            panic("The tester got an invalid action\n");
         }
     }
 }
@@ -289,33 +287,33 @@ TesterThread::isNextActionReady()
 void
 TesterThread::issueNextAction()
 {
-    switch(curAction->getType()) {
-        case Episode::Action::Type::ATOMIC:
-            if (tokenPort) {
-                tokenPort->acquireTokens(getTokensNeeded());
-            }
-            issueAtomicOps();
-            break;
-        case Episode::Action::Type::ACQUIRE:
-            issueAcquireOp();
-            break;
-        case Episode::Action::Type::RELEASE:
-            issueReleaseOp();
-            break;
-        case Episode::Action::Type::LOAD:
-            if (tokenPort) {
-                tokenPort->acquireTokens(getTokensNeeded());
-            }
-            issueLoadOps();
-            break;
-        case Episode::Action::Type::STORE:
-            if (tokenPort) {
-                tokenPort->acquireTokens(getTokensNeeded());
-            }
-            issueStoreOps();
-            break;
-        default:
-            panic("The tester got an invalid action\n");
+    switch (curAction->getType()) {
+    case Episode::Action::Type::ATOMIC:
+        if (tokenPort) {
+            tokenPort->acquireTokens(getTokensNeeded());
+        }
+        issueAtomicOps();
+        break;
+    case Episode::Action::Type::ACQUIRE:
+        issueAcquireOp();
+        break;
+    case Episode::Action::Type::RELEASE:
+        issueReleaseOp();
+        break;
+    case Episode::Action::Type::LOAD:
+        if (tokenPort) {
+            tokenPort->acquireTokens(getTokensNeeded());
+        }
+        issueLoadOps();
+        break;
+    case Episode::Action::Type::STORE:
+        if (tokenPort) {
+            tokenPort->acquireTokens(getTokensNeeded());
+        }
+        issueStoreOps();
+        break;
+    default:
+        panic("The tester got an invalid action\n");
     }
 
     // the current action has been issued, pop it from the action list
@@ -330,16 +328,16 @@ TesterThread::issueNextAction()
 }
 
 void
-TesterThread::addOutstandingReqs(OutstandingReqTable& req_table, Addr address,
-                           int lane, Location loc, Value stored_val)
+TesterThread::addOutstandingReqs(OutstandingReqTable &req_table, Addr address,
+                                 int lane, Location loc, Value stored_val)
 {
     OutstandingReqTable::iterator it = req_table.find(address);
     OutstandingReq req(lane, loc, stored_val, curCycle());
 
     if (it == req_table.end()) {
         // insert a new list of requests for this address
-        req_table.insert(std::pair<Addr, OutstandingReqList>(address,
-                                                OutstandingReqList(1, req)));
+        req_table.insert(std::pair<Addr, OutstandingReqList>(
+            address, OutstandingReqList(1, req)));
     } else {
         // add a new request
         (it->second).push_back(req);
@@ -347,7 +345,7 @@ TesterThread::addOutstandingReqs(OutstandingReqTable& req_table, Addr address,
 }
 
 TesterThread::OutstandingReq
-TesterThread::popOutstandingReq(OutstandingReqTable& req_table, Addr addr)
+TesterThread::popOutstandingReq(OutstandingReqTable &req_table, Addr addr)
 {
     OutstandingReqTable::iterator it = req_table.find(addr);
 
@@ -355,7 +353,7 @@ TesterThread::popOutstandingReq(OutstandingReqTable& req_table, Addr addr)
     assert(it != req_table.end());
 
     // get the request list
-    OutstandingReqList& req_list = it->second;
+    OutstandingReqList &req_list = it->second;
     assert(!req_list.empty());
 
     // save a request
@@ -442,7 +440,7 @@ TesterThread::checkDeadlock()
         std::stringstream ss;
 
         ss << threadName << ": Deadlock detected\n"
-           << "\tLast active cycle: " <<  lastActiveCycle << "\n"
+           << "\tLast active cycle: " << lastActiveCycle << "\n"
            << "\tCurrent cycle: " << curCycle() << "\n"
            << "\tDeadlock threshold: " << deadlockThreshold << "\n";
 
@@ -460,13 +458,13 @@ TesterThread::checkDeadlock()
 }
 
 void
-TesterThread::printOutstandingReqs(const OutstandingReqTable& table,
-                             std::stringstream& ss) const
+TesterThread::printOutstandingReqs(const OutstandingReqTable &table,
+                                   std::stringstream &ss) const
 {
     Cycles cur_cycle = curCycle();
 
-    for (const auto& m : table) {
-        for (const auto& req : m.second) {
+    for (const auto &m : table) {
+        for (const auto &req : m.second) {
             ss << "\t\t\tAddr " << ruby::printAddress(m.first)
                << ": delta (curCycle - issueCycle) = "
                << (cur_cycle - req.issueCycle) << std::endl;
@@ -475,7 +473,7 @@ TesterThread::printOutstandingReqs(const OutstandingReqTable& table,
 }
 
 void
-TesterThread::printAllOutstandingReqs(std::stringstream& ss) const
+TesterThread::printAllOutstandingReqs(std::stringstream &ss) const
 {
     // dump all outstanding requests of this thread
     ss << "\t\tOutstanding Loads:\n";

@@ -61,12 +61,14 @@ namespace gem5
 {
 
 SectorTags::SectorTags(const SectorTagsParams &p)
-    : BaseTags(p), allocAssoc(p.assoc),
+    : BaseTags(p),
+      allocAssoc(p.assoc),
       sequentialAccess(p.sequential_access),
       replacementPolicy(p.replacement_policy),
       numBlocksPerSector(p.num_blocks_per_sector),
       numSectors(numBlocks / numBlocksPerSector),
-      sectorShift(floorLog2(blkSize)), sectorMask(numBlocksPerSector - 1),
+      sectorShift(floorLog2(blkSize)),
+      sectorMask(numBlocksPerSector - 1),
       sectorStats(stats, *this)
 {
     // There must be a indexing policy
@@ -90,27 +92,26 @@ SectorTags::tagsInit()
     secBlks = std::vector<SectorBlk>(numSectors);
 
     // Initialize all blocks
-    unsigned blk_index = 0;       // index into blks array
+    unsigned blk_index = 0; // index into blks array
     for (unsigned sec_blk_index = 0; sec_blk_index < numSectors;
-         sec_blk_index++)
-    {
+         sec_blk_index++) {
         // Locate next cache sector
-        SectorBlk* sec_blk = &secBlks[sec_blk_index];
+        SectorBlk *sec_blk = &secBlks[sec_blk_index];
 
         // Associate a replacement data entry to the sector
         sec_blk->replacementData = replacementPolicy->instantiateEntry();
 
         // Initialize all blocks in this sector
         sec_blk->blks.resize(numBlocksPerSector);
-        for (unsigned k = 0; k < numBlocksPerSector; ++k){
+        for (unsigned k = 0; k < numBlocksPerSector; ++k) {
             // Select block within the set to be linked
-            SectorSubBlk*& blk = sec_blk->blks[k];
+            SectorSubBlk *&blk = sec_blk->blks[k];
 
             // Locate next cache block
             blk = &blks[blk_index];
 
             // Associate a data chunk to the block
-            blk->data = &dataBlks[blkSize*blk_index];
+            blk->data = &dataBlks[blkSize * blk_index];
 
             // Associate sector block to this block
             blk->setSectorBlock(sec_blk);
@@ -136,8 +137,8 @@ SectorTags::invalidate(CacheBlk *blk)
     BaseTags::invalidate(blk);
 
     // Get block's sector
-    SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);
-    const SectorBlk* sector_blk = sub_blk->getSectorBlock();
+    SectorSubBlk *sub_blk = static_cast<SectorSubBlk *>(blk);
+    const SectorBlk *sector_blk = sub_blk->getSectorBlock();
 
     // When a block in a sector is invalidated, it does not make the tag
     // invalid automatically, as there might be other blocks in the sector
@@ -153,7 +154,7 @@ SectorTags::invalidate(CacheBlk *blk)
     }
 }
 
-CacheBlk*
+CacheBlk *
 SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
 {
     CacheBlk *blk = findBlock(pkt->getAddr(), pkt->isSecure());
@@ -167,7 +168,7 @@ SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
             stats.dataAccesses += 1;
         }
     } else {
-        stats.dataAccesses += allocAssoc*numBlocksPerSector;
+        stats.dataAccesses += allocAssoc * numBlocksPerSector;
     }
 
     // If a cache hit
@@ -176,8 +177,8 @@ SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
         blk->increaseRefCount();
 
         // Get block's sector
-        SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);
-        const SectorBlk* sector_blk = sub_blk->getSectorBlock();
+        SectorSubBlk *sub_blk = static_cast<SectorSubBlk *>(blk);
+        const SectorBlk *sector_blk = sub_blk->getSectorBlock();
 
         // Update replacement data of accessed block, which is shared with
         // the whole sector it belongs to
@@ -194,8 +195,8 @@ void
 SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     // Get block's sector
-    SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);
-    const SectorBlk* sector_blk = sub_blk->getSectorBlock();
+    SectorSubBlk *sub_blk = static_cast<SectorSubBlk *>(blk);
+    const SectorBlk *sector_blk = sub_blk->getSectorBlock();
 
     // When a block is inserted, the tag is only a newly used tag if the
     // sector was not previously present in the cache.
@@ -219,16 +220,16 @@ void
 SectorTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
 {
     const bool dest_was_valid =
-        static_cast<SectorSubBlk*>(dest_blk)->getSectorBlock()->isValid();
+        static_cast<SectorSubBlk *>(dest_blk)->getSectorBlock()->isValid();
 
     BaseTags::moveBlock(src_blk, dest_blk);
 
     // Get blocks' sectors. The blocks have effectively been swapped by now,
     // so src points to an invalid block, and dest to the moved valid one.
-    SectorSubBlk* src_sub_blk = static_cast<SectorSubBlk*>(src_blk);
-    const SectorBlk* src_sector_blk = src_sub_blk->getSectorBlock();
-    SectorSubBlk* dest_sub_blk = static_cast<SectorSubBlk*>(dest_blk);
-    const SectorBlk* dest_sector_blk = dest_sub_blk->getSectorBlock();
+    SectorSubBlk *src_sub_blk = static_cast<SectorSubBlk *>(src_blk);
+    const SectorBlk *src_sector_blk = src_sub_blk->getSectorBlock();
+    SectorSubBlk *dest_sub_blk = static_cast<SectorSubBlk *>(dest_blk);
+    const SectorBlk *dest_sector_blk = dest_sub_blk->getSectorBlock();
 
     // Since the blocks were using different replacement data pointers,
     // we must touch the replacement data of the new entry, and invalidate
@@ -261,7 +262,7 @@ SectorTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
     }
 }
 
-CacheBlk*
+CacheBlk *
 SectorTags::findBlock(Addr addr, bool is_secure) const
 {
     // Extract sector tag
@@ -272,12 +273,12 @@ SectorTags::findBlock(Addr addr, bool is_secure) const
     const Addr offset = extractSectorOffset(addr);
 
     // Find all possible sector entries that may contain the given address
-    const std::vector<ReplaceableEntry*> entries =
+    const std::vector<ReplaceableEntry *> entries =
         indexingPolicy->getPossibleEntries(addr);
 
     // Search for block
-    for (const auto& sector : entries) {
-        auto blk = static_cast<SectorBlk*>(sector)->blks[offset];
+    for (const auto &sector : entries) {
+        auto blk = static_cast<SectorBlk *>(sector)->blks[offset];
         if (blk->matchTag(tag, is_secure)) {
             return blk;
         }
@@ -287,13 +288,13 @@ SectorTags::findBlock(Addr addr, bool is_secure) const
     return nullptr;
 }
 
-CacheBlk*
+CacheBlk *
 SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
-                       std::vector<CacheBlk*>& evict_blks,
+                       std::vector<CacheBlk *> &evict_blks,
                        const uint64_t partition_id)
 {
     // Get possible entries to be victimized
-    std::vector<ReplaceableEntry*> sector_entries =
+    std::vector<ReplaceableEntry *> sector_entries =
         indexingPolicy->getPossibleEntries(addr);
 
     // Filter entries based on PartitionID
@@ -302,9 +303,9 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
 
     // Check if the sector this address belongs to has been allocated
     Addr tag = extractTag(addr);
-    SectorBlk* victim_sector = nullptr;
-    for (const auto& sector : sector_entries) {
-        SectorBlk* sector_blk = static_cast<SectorBlk*>(sector);
+    SectorBlk *victim_sector = nullptr;
+    for (const auto &sector : sector_entries) {
+        SectorBlk *sector_blk = static_cast<SectorBlk *>(sector);
         if (sector_blk->matchTag(tag, is_secure)) {
             victim_sector = sector_blk;
             break;
@@ -312,20 +313,20 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
     }
 
     // If the sector is not present
-    if (victim_sector == nullptr){
+    if (victim_sector == nullptr) {
         // check if partitioning policy limited allocation and if true - return
         // this assumes that sector_entries would not be empty if partitioning
         // policy is not in place
-        if (sector_entries.size() == 0){
+        if (sector_entries.size() == 0) {
             return nullptr;
         }
         // Choose replacement victim from replacement candidates
-        victim_sector = static_cast<SectorBlk*>(replacementPolicy->getVictim(
-                                                sector_entries));
+        victim_sector = static_cast<SectorBlk *>(
+            replacementPolicy->getVictim(sector_entries));
     }
 
     // Get the entry of the victim block within the sector
-    SectorSubBlk* victim = victim_sector->blks[extractSectorOffset(addr)];
+    SectorSubBlk *victim = victim_sector->blks[extractSectorOffset(addr)];
 
     // Get evicted blocks. Blocks are only evicted if the sectors mismatch and
     // the currently existing sector is valid.
@@ -335,7 +336,7 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
         assert(!victim->isValid());
     } else {
         // The whole sector must be evicted to make room for the new sector
-        for (const auto& blk : victim_sector->blks){
+        for (const auto &blk : victim_sector->blks) {
             if (blk->isValid()) {
                 evict_blks.push_back(blk);
             }
@@ -355,22 +356,22 @@ SectorTags::extractSectorOffset(Addr addr) const
 }
 
 Addr
-SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
+SectorTags::regenerateBlkAddr(const CacheBlk *blk) const
 {
-    const SectorSubBlk* blk_cast = static_cast<const SectorSubBlk*>(blk);
-    const SectorBlk* sec_blk = blk_cast->getSectorBlock();
+    const SectorSubBlk *blk_cast = static_cast<const SectorSubBlk *>(blk);
+    const SectorBlk *sec_blk = blk_cast->getSectorBlock();
     const Addr sec_addr =
         indexingPolicy->regenerateAddr(blk->getTag(), sec_blk);
     return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
 }
 
 SectorTags::SectorTagsStats::SectorTagsStats(BaseTagStats &base_group,
-    SectorTags& _tags)
-  : statistics::Group(&base_group), tags(_tags),
-    ADD_STAT(evictionsReplacement, statistics::units::Count::get(),
-             "Number of blocks evicted due to a replacement")
-{
-}
+                                             SectorTags &_tags)
+    : statistics::Group(&base_group),
+      tags(_tags),
+      ADD_STAT(evictionsReplacement, statistics::units::Count::get(),
+               "Number of blocks evicted due to a replacement")
+{}
 
 void
 SectorTags::SectorTagsStats::regStats()
@@ -380,15 +381,16 @@ SectorTags::SectorTagsStats::regStats()
     evictionsReplacement.init(tags.numBlocksPerSector + 1);
     for (unsigned i = 0; i <= tags.numBlocksPerSector; ++i) {
         evictionsReplacement.subname(i, std::to_string(i));
-        evictionsReplacement.subdesc(i, "Number of replacements that caused " \
-            "the eviction of " + std::to_string(i) + " blocks");
+        evictionsReplacement.subdesc(i, "Number of replacements that caused "
+                                        "the eviction of " +
+                                            std::to_string(i) + " blocks");
     }
 }
 
 bool
 SectorTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
 {
-    for (SectorSubBlk& blk : blks) {
+    for (SectorSubBlk &blk : blks) {
         if (visitor(blk)) {
             return true;
         }

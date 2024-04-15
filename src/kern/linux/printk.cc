@@ -47,7 +47,7 @@ namespace linux
 
 int
 printk(std::string &str, ThreadContext *tc, Addr format_ptr,
-        PrintkVarArgs args)
+       PrintkVarArgs args)
 {
     std::string format;
     std::ostringstream out;
@@ -58,7 +58,7 @@ printk(std::string &str, ThreadContext *tc, Addr format_ptr,
 
     while (*p) {
         switch (*p) {
-          case '%': {
+        case '%': {
             bool more = true;
             bool islong = false;
             bool leftjustify = false;
@@ -67,23 +67,23 @@ printk(std::string &str, ThreadContext *tc, Addr format_ptr,
             int width = 0;
             while (more && *++p) {
                 switch (*p) {
-                  case 'l':
-                  case 'L':
+                case 'l':
+                case 'L':
                     islong = true;
                     break;
-                  case '-':
+                case '-':
                     leftjustify = true;
                     break;
-                  case '#':
+                case '#':
                     format = true;
                     break;
-                  case '0':
+                case '0':
                     if (width)
                         width *= 10;
                     else
                         zero = true;
                     break;
-                  default:
+                default:
                     if (*p >= '1' && *p <= '9')
                         width = 10 * width + *p - '0';
                     else
@@ -96,156 +96,151 @@ printk(std::string &str, ThreadContext *tc, Addr format_ptr,
             bool octal = false;
             bool sign = false;
             switch (*p) {
-              case 'X':
-              case 'x':
+            case 'X':
+            case 'x':
                 hexnum = true;
                 break;
-              case 'O':
-              case 'o':
+            case 'O':
+            case 'o':
                 octal = true;
                 break;
-              case 'D':
-              case 'd':
+            case 'D':
+            case 'd':
                 sign = true;
                 break;
-              case 'P':
+            case 'P':
                 format = true;
                 [[fallthrough]];
-              case 'p':
+            case 'p':
                 hexnum = true;
                 break;
             }
 
             switch (*p) {
-              case 'D':
-              case 'd':
-              case 'U':
-              case 'u':
-              case 'X':
-              case 'x':
-              case 'O':
-              case 'o':
-              case 'P':
-              case 'p': {
-                    if (hexnum)
-                        out << std::hex;
+            case 'D':
+            case 'd':
+            case 'U':
+            case 'u':
+            case 'X':
+            case 'x':
+            case 'O':
+            case 'o':
+            case 'P':
+            case 'p': {
+                if (hexnum)
+                    out << std::hex;
 
-                    if (octal)
-                        out << std::oct;
+                if (octal)
+                    out << std::oct;
 
-                    if (format) {
-                        if (!zero)
-                            out.setf(std::ios::showbase);
-                        else {
-                            if (hexnum) {
-                                out << "0x";
-                                width -= 2;
-                            } else if (octal) {
-                                out << "0";
-                                width -= 1;
-                            }
+                if (format) {
+                    if (!zero)
+                        out.setf(std::ios::showbase);
+                    else {
+                        if (hexnum) {
+                            out << "0x";
+                            width -= 2;
+                        } else if (octal) {
+                            out << "0";
+                            width -= 1;
                         }
                     }
-
-                    if (zero)
-                        out.fill('0');
-
-                    if (width > 0)
-                        out.width(width);
-
-                    if (leftjustify && !zero)
-                        out.setf(std::ios::left);
-
-                    if (sign) {
-                        if (islong)
-                            out << args.get<int64_t>();
-                        else
-                            out << args.get<int32_t>();
-                    } else {
-                        if (islong)
-                            out << args.get<uint64_t>();
-                        else
-                            out << args.get<uint32_t>();
-                    }
-
-                    if (zero)
-                        out.fill(' ');
-
-                    if (width > 0)
-                        out.width(0);
-
-                    out << std::dec;
                 }
-                break;
 
-              case 's': {
-                    Addr s_ptr = args.get<Addr>();
-                    std::string s;
-                    if (s_ptr)
-                        proxy.readString(s, s_ptr);
+                if (zero)
+                    out.fill('0');
+
+                if (width > 0)
+                    out.width(width);
+
+                if (leftjustify && !zero)
+                    out.setf(std::ios::left);
+
+                if (sign) {
+                    if (islong)
+                        out << args.get<int64_t>();
                     else
-                        s = "<NULL>";
-
-                    if (width > 0)
-                        out.width(width);
-                    if (leftjustify)
-                        out.setf(std::ios::left);
-
-                    out << s;
+                        out << args.get<int32_t>();
+                } else {
+                    if (islong)
+                        out << args.get<uint64_t>();
+                    else
+                        out << args.get<uint32_t>();
                 }
-                break;
-              case 'C':
-              case 'c': {
-                    uint64_t mask = (*p == 'C') ? 0xffL : 0x7fL;
-                    uint64_t num;
-                    int cwidth;
 
-                    if (islong) {
-                        num = args.get<uint64_t>();
-                        cwidth = sizeof(uint64_t);
-                    } else {
-                        num = args.get<uint32_t>();
-                        cwidth = sizeof(uint32_t);
-                    }
+                if (zero)
+                    out.fill(' ');
 
-                    while (cwidth-- > 0) {
-                        char c = (char)(num & mask);
-                        if (c)
-                            out << c;
-                        num >>= 8;
-                    }
-                }
-                break;
-              case 'b': {
-                    uint64_t n = args.get<uint64_t>();
-                    Addr s_ptr = args.get<Addr>();
-                    std::string s;
+                if (width > 0)
+                    out.width(0);
+
+                out << std::dec;
+            } break;
+
+            case 's': {
+                Addr s_ptr = args.get<Addr>();
+                std::string s;
+                if (s_ptr)
                     proxy.readString(s, s_ptr);
-                    out << s << ": " << n;
+                else
+                    s = "<NULL>";
+
+                if (width > 0)
+                    out.width(width);
+                if (leftjustify)
+                    out.setf(std::ios::left);
+
+                out << s;
+            } break;
+            case 'C':
+            case 'c': {
+                uint64_t mask = (*p == 'C') ? 0xffL : 0x7fL;
+                uint64_t num;
+                int cwidth;
+
+                if (islong) {
+                    num = args.get<uint64_t>();
+                    cwidth = sizeof(uint64_t);
+                } else {
+                    num = args.get<uint32_t>();
+                    cwidth = sizeof(uint32_t);
                 }
-                break;
-              case '%':
+
+                while (cwidth-- > 0) {
+                    char c = (char)(num & mask);
+                    if (c)
+                        out << c;
+                    num >>= 8;
+                }
+            } break;
+            case 'b': {
+                uint64_t n = args.get<uint64_t>();
+                Addr s_ptr = args.get<Addr>();
+                std::string s;
+                proxy.readString(s, s_ptr);
+                out << s << ": " << n;
+            } break;
+            case '%':
                 out << '%';
                 break;
             }
             ++p;
-          }
-          break;
+        } break;
         case '\n':
-          out << std::endl;
-          ++p;
-          break;
+            out << std::endl;
+            ++p;
+            break;
         case '\r':
-          ++p;
-          if (*p != '\n')
-              out << std::endl;
-          break;
+            ++p;
+            if (*p != '\n')
+                out << std::endl;
+            break;
 
         default: {
-              size_t len = strcspn(p, "%\n\r\0");
-              out.write(p, len);
-              p += len;
-            }
+            size_t len = strcspn(p, "%\n\r\0");
+            out.write(p, len);
+            p += len;
+        }
         }
     }
 

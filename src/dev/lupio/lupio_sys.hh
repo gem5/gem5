@@ -47,15 +47,15 @@ class LupioSYS : public BasicPioDevice
 {
   protected:
     const ByteOrder byteOrder = ByteOrder::little;
-  // Register map
+    // Register map
   private:
     enum
     {
-      LUPIO_SYS_HALT,
-      LUPIO_SYS_REBT,
+        LUPIO_SYS_HALT,
+        LUPIO_SYS_REBT,
 
-      /* Max offset */
-      LUPIO_SYS_MAX,
+        /* Max offset */
+        LUPIO_SYS_MAX,
     };
 
     uint8_t lupioSYSRead(const uint8_t addr);

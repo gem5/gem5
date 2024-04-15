@@ -50,7 +50,8 @@ class RemoteGDB : public BaseRemoteGDB
 
     class SPARCGdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       private:
         struct
         {
@@ -65,11 +66,23 @@ class RemoteGDB : public BaseRemoteGDB
             uint32_t fsr;
             uint32_t csr;
         } r;
+
       public:
-        char *data() const { return (char *)&r; }
-        size_t size() const { return sizeof(r); }
-        void getRegs(ThreadContext*);
-        void setRegs(ThreadContext*) const;
+        char *
+        data() const
+        {
+            return (char *)&r;
+        }
+
+        size_t
+        size() const
+        {
+            return sizeof(r);
+        }
+
+        void getRegs(ThreadContext *);
+        void setRegs(ThreadContext *) const;
+
         const std::string
         name() const
         {
@@ -79,7 +92,8 @@ class RemoteGDB : public BaseRemoteGDB
 
     class SPARC64GdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       private:
         struct
         {
@@ -92,11 +106,23 @@ class RemoteGDB : public BaseRemoteGDB
             uint64_t fprs;
             uint64_t y;
         } r;
+
       public:
-        char *data() const { return (char *)&r; }
-        size_t size() const { return sizeof(r); }
-        void getRegs(ThreadContext*);
-        void setRegs(ThreadContext*) const;
+        char *
+        data() const
+        {
+            return (char *)&r;
+        }
+
+        size_t
+        size() const
+        {
+            return sizeof(r);
+        }
+
+        void getRegs(ThreadContext *);
+        void setRegs(ThreadContext *) const;
+
         const std::string
         name() const
         {

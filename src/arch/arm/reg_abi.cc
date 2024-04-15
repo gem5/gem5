@@ -34,6 +34,7 @@ namespace gem5
 namespace ArmISA
 {
 
+/* clang-format off */
 const std::vector<RegId> RegABI32::ArgumentRegs = {
     int_reg::R0, int_reg::R1, int_reg::R2, int_reg::R3,
     int_reg::R4, int_reg::R5, int_reg::R6
@@ -42,6 +43,7 @@ const std::vector<RegId> RegABI64::ArgumentRegs = {
     int_reg::X0, int_reg::X1, int_reg::X2, int_reg::X3,
     int_reg::X4, int_reg::X5, int_reg::X6
 };
+/* clang-format on */
 
 } // namespace ArmISA
 } // namespace gem5

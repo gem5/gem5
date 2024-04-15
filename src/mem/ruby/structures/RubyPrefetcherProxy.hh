@@ -77,9 +77,7 @@ namespace ruby
 class RubyPrefetcherProxy : public CacheAccessor, public Named
 {
   public:
-
-    RubyPrefetcherProxy(AbstractController* parent,
-                        prefetch::Base* prefetcher,
+    RubyPrefetcherProxy(AbstractController *parent, prefetch::Base *prefetcher,
                         MessageBuffer *pf_queue);
 
     /** Deschedled the ready prefetch event */
@@ -91,11 +89,11 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     /**
      * Notify PF probes hit/miss/fill
      */
-    void notifyPfHit(const RequestPtr& req, bool is_read,
-                     const DataBlock& data_blk);
-    void notifyPfMiss(const RequestPtr& req, bool is_read,
-                      const DataBlock& data_blk);
-    void notifyPfFill(const RequestPtr& req, const DataBlock& data_blk,
+    void notifyPfHit(const RequestPtr &req, bool is_read,
+                     const DataBlock &data_blk);
+    void notifyPfMiss(const RequestPtr &req, bool is_read,
+                      const DataBlock &data_blk);
+    void notifyPfFill(const RequestPtr &req, const DataBlock &data_blk,
                       bool from_pf);
     void notifyPfEvict(Addr blkAddr, bool hwPrefetched,
                        RequestorID requestorID);
@@ -104,7 +102,6 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     void regProbePoints();
 
   private:
-
     /** Schedule the next ready prefetch */
     void scheduleNextPrefetch();
 
@@ -112,13 +109,13 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     void issuePrefetch();
 
     /** Prefetcher from classic memory */
-    prefetch::Base* prefetcher;
+    prefetch::Base *prefetcher;
 
     /** Ruby cache controller */
-    AbstractController* cacheCntrl;
+    AbstractController *cacheCntrl;
 
     /** Prefetch queue to the cache controller */
-    MessageBuffer* pfQueue;
+    MessageBuffer *pfQueue;
 
     /** List of issued prefetch request packets */
     std::unordered_map<Addr, PacketPtr> issuedPfPkts;
@@ -143,33 +140,38 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
     ProbePointArg<CacheDataUpdateProbeArg> *ppDataUpdate;
 
   public:
-
     /** Accessor functions */
 
-    bool inCache(Addr addr, bool is_secure) const override
+    bool
+    inCache(Addr addr, bool is_secure) const override
     {
         return cacheCntrl->inCache(addr, is_secure);
     }
 
-    bool hasBeenPrefetched(Addr addr, bool is_secure) const override
+    bool
+    hasBeenPrefetched(Addr addr, bool is_secure) const override
     {
         return cacheCntrl->hasBeenPrefetched(addr, is_secure);
     }
 
-    bool hasBeenPrefetched(Addr addr, bool is_secure,
-                            RequestorID requestor) const override
+    bool
+    hasBeenPrefetched(Addr addr, bool is_secure,
+                      RequestorID requestor) const override
     {
         return cacheCntrl->hasBeenPrefetched(addr, is_secure, requestor);
     }
 
-    bool inMissQueue(Addr addr, bool is_secure) const override
+    bool
+    inMissQueue(Addr addr, bool is_secure) const override
     {
         return cacheCntrl->inMissQueue(addr, is_secure);
     }
 
-    bool coalesce() const override
-    { return cacheCntrl->coalesce(); }
-
+    bool
+    coalesce() const override
+    {
+        return cacheCntrl->coalesce();
+    }
 };
 
 } // namespace ruby

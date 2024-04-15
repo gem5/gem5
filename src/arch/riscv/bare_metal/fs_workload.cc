@@ -56,10 +56,7 @@ BareMetal::BareMetal(const Params &p) : Workload(p),
     loader::debugSymbolTable.insert(bootloaderSymtab);
 }
 
-BareMetal::~BareMetal()
-{
-    delete bootloader;
-}
+BareMetal::~BareMetal() { delete bootloader; }
 
 void
 BareMetal::initState()
@@ -69,7 +66,7 @@ BareMetal::initState()
     warn_if(!bootloader->buildImage().write(system->physProxy),
             "Could not load sections to memory.");
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }

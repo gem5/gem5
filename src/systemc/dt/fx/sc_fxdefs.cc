@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxdefs.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -60,12 +59,12 @@ const std::string
 to_string(sc_enc enc)
 {
     switch (enc) {
-        case SC_TC_:
-            return std::string("SC_TC_");
-        case SC_US_:
-            return std::string("SC_US_");
-        default:
-            return std::string("unknown");
+    case SC_TC_:
+        return std::string("SC_TC_");
+    case SC_US_:
+        return std::string("SC_US_");
+    default:
+        return std::string("unknown");
     }
 }
 
@@ -79,22 +78,22 @@ const std::string
 to_string(sc_q_mode q_mode)
 {
     switch (q_mode) {
-        case SC_RND:
-            return std::string("SC_RND");
-        case SC_RND_ZERO:
-            return std::string("SC_RND_ZERO");
-        case SC_RND_MIN_INF:
-            return std::string("SC_RND_MIN_INF");
-        case SC_RND_INF:
-            return std::string("SC_RND_INF");
-        case SC_RND_CONV:
-            return std::string("SC_RND_CONV");
-        case SC_TRN:
-            return std::string("SC_TRN");
-        case SC_TRN_ZERO:
-            return std::string("SC_TRN_ZERO");
-        default:
-            return std::string("unknown");
+    case SC_RND:
+        return std::string("SC_RND");
+    case SC_RND_ZERO:
+        return std::string("SC_RND_ZERO");
+    case SC_RND_MIN_INF:
+        return std::string("SC_RND_MIN_INF");
+    case SC_RND_INF:
+        return std::string("SC_RND_INF");
+    case SC_RND_CONV:
+        return std::string("SC_RND_CONV");
+    case SC_TRN:
+        return std::string("SC_TRN");
+    case SC_TRN_ZERO:
+        return std::string("SC_TRN_ZERO");
+    default:
+        return std::string("unknown");
     }
 }
 
@@ -108,21 +107,20 @@ const std::string
 to_string(sc_o_mode o_mode)
 {
     switch (o_mode) {
-        case SC_SAT:
-            return std::string("SC_SAT");
-        case SC_SAT_ZERO:
-            return std::string("SC_SAT_ZERO");
-        case SC_SAT_SYM:
-            return std::string("SC_SAT_SYM");
-        case SC_WRAP:
-            return std::string("SC_WRAP");
-        case SC_WRAP_SM:
-            return std::string("SC_WRAP_SM");
-        default:
-            return std::string("unknown");
+    case SC_SAT:
+        return std::string("SC_SAT");
+    case SC_SAT_ZERO:
+        return std::string("SC_SAT_ZERO");
+    case SC_SAT_SYM:
+        return std::string("SC_SAT_SYM");
+    case SC_WRAP:
+        return std::string("SC_WRAP");
+    case SC_WRAP_SM:
+        return std::string("SC_WRAP_SM");
+    default:
+        return std::string("unknown");
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  ENUM : sc_switch
@@ -134,15 +132,14 @@ const std::string
 to_string(sc_switch sw)
 {
     switch (sw) {
-        case SC_OFF:
-            return std::string("SC_OFF");
-        case SC_ON:
-            return std::string("SC_ON");
-        default:
-            return std::string("unknown");
+    case SC_OFF:
+        return std::string("SC_OFF");
+    case SC_ON:
+        return std::string("SC_ON");
+    default:
+        return std::string("unknown");
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  ENUM : sc_fmt
@@ -154,12 +151,12 @@ const std::string
 to_string(sc_fmt fmt)
 {
     switch (fmt) {
-        case SC_F:
-            return std::string("SC_F");
-        case SC_E:
-            return std::string("SC_E");
-        default:
-            return std::string("unknown");
+    case SC_F:
+        return std::string("SC_F");
+    case SC_E:
+        return std::string("SC_E");
+    default:
+        return std::string("unknown");
     }
 }
 

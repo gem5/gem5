@@ -55,7 +55,8 @@ class AssociativeSet : public AssociativeCache<Entry>
      * Public constructor
      * @param name Name of the cache
      * @param num_entries total number of entries of the container, the number
-     *        of sets can be calculated dividing this balue by the 'assoc' value
+     *        of sets can be calculated dividing this balue by the 'assoc'
+     * value
      * @param assoc number of elements in each associative set
      * @param rpl_policy replacement policy
      * @param idx_policy indexing policy
@@ -74,7 +75,7 @@ class AssociativeSet : public AssociativeCache<Entry>
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
-    Entry* findEntry(Addr addr, bool is_secure) const;
+    Entry *findEntry(Addr addr, bool is_secure) const;
 
     /**
      * Indicate that an entry has just been inserted
@@ -82,7 +83,7 @@ class AssociativeSet : public AssociativeCache<Entry>
      * @param is_secure tag component of the container
      * @param entry pointer to the container entry to be inserted
      */
-    void insertEntry(Addr addr, bool is_secure, Entry* entry);
+    void insertEntry(Addr addr, bool is_secure, Entry *entry);
 
   private:
     // The following APIs are excluded since they lack the secure bit
@@ -98,4 +99,4 @@ class AssociativeSet : public AssociativeCache<Entry>
 
 } // namespace gem5
 
-#endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
+#endif //__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__

@@ -33,17 +33,21 @@
 namespace sc_core
 {
 
-sc_signal_resolved::sc_signal_resolved() : sc_interface(),
-        sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(
-                sc_gen_unique_name("signal_resolved"))
+sc_signal_resolved::sc_signal_resolved()
+    : sc_interface(),
+      sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(
+          sc_gen_unique_name("signal_resolved"))
 {}
 
-sc_signal_resolved::sc_signal_resolved(const char *name) :
-        sc_interface(), sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(name)
+sc_signal_resolved::sc_signal_resolved(const char *name)
+    : sc_interface(), sc_signal<sc_dt::sc_logic, SC_MANY_WRITERS>(name)
 {}
 
 sc_signal_resolved::~sc_signal_resolved() {}
-void sc_signal_resolved::register_port(sc_port_base &, const char *) {}
+
+void
+sc_signal_resolved::register_port(sc_port_base &, const char *)
+{}
 
 void
 sc_signal_resolved::write(const sc_dt::sc_logic &l)
@@ -61,14 +65,14 @@ sc_signal_resolved::write(const sc_dt::sc_logic &l)
 }
 
 sc_signal_resolved &
-sc_signal_resolved::operator = (const sc_dt::sc_logic &l)
+sc_signal_resolved::operator=(const sc_dt::sc_logic &l)
 {
     write(l);
     return *this;
 }
 
 sc_signal_resolved &
-sc_signal_resolved::operator = (const sc_signal_resolved &r)
+sc_signal_resolved::operator=(const sc_signal_resolved &r)
 {
     write(r.read());
     return *this;
@@ -79,8 +83,8 @@ sc_signal_resolved::update()
 {
     using sc_dt::Log_0;
     using sc_dt::Log_1;
-    using sc_dt::Log_Z;
     using sc_dt::Log_X;
+    using sc_dt::Log_Z;
     static sc_dt::sc_logic_value_t merge_table[4][4] = {
         { Log_0, Log_X, Log_0, Log_X },
         { Log_X, Log_1, Log_1, Log_X },
@@ -90,7 +94,7 @@ sc_signal_resolved::update()
 
     // Resolve the inputs, and give the result to the underlying signal class.
     m_new_val = Log_Z;
-    for (auto &input: inputs)
+    for (auto &input : inputs)
         m_new_val = merge_table[m_new_val.value()][input.second.value()];
 
     // Ask the signal to update it's value.

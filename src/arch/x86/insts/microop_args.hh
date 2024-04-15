@@ -56,12 +56,18 @@ struct DestOp
 {
     const RegIndex dest;
     const size_t size;
-    RegIndex opIndex() const { return dest; }
+
+    RegIndex
+    opIndex() const
+    {
+        return dest;
+    }
 
     DestOp(RegIndex _dest, size_t _size) : dest(_dest), size(_size) {}
+
     template <class InstType>
-    DestOp(RegIndex _dest, InstType *inst) : dest(_dest),
-        size(inst->getDestSize())
+    DestOp(RegIndex _dest, InstType *inst)
+        : dest(_dest), size(inst->getDestSize())
     {}
 };
 
@@ -69,12 +75,18 @@ struct Src1Op
 {
     const RegIndex src1;
     const size_t size;
-    RegIndex opIndex() const { return src1; }
+
+    RegIndex
+    opIndex() const
+    {
+        return src1;
+    }
 
     Src1Op(RegIndex _src1, size_t _size) : src1(_src1), size(_size) {}
+
     template <class InstType>
-    Src1Op(RegIndex _src1, InstType *inst) : src1(_src1),
-        size(inst->getSrcSize())
+    Src1Op(RegIndex _src1, InstType *inst)
+        : src1(_src1), size(inst->getSrcSize())
     {}
 };
 
@@ -82,12 +94,18 @@ struct Src2Op
 {
     const RegIndex src2;
     const size_t size;
-    RegIndex opIndex() const { return src2; }
+
+    RegIndex
+    opIndex() const
+    {
+        return src2;
+    }
 
     Src2Op(RegIndex _src2, size_t _size) : src2(_src2), size(_size) {}
+
     template <class InstType>
-    Src2Op(RegIndex _src2, InstType *inst) : src2(_src2),
-        size(inst->getSrcSize())
+    Src2Op(RegIndex _src2, InstType *inst)
+        : src2(_src2), size(inst->getSrcSize())
     {}
 };
 
@@ -95,12 +113,18 @@ struct Src3Op
 {
     const RegIndex src3;
     const size_t size;
-    RegIndex opIndex() const { return src3; }
+
+    RegIndex
+    opIndex() const
+    {
+        return src3;
+    }
 
     Src3Op(RegIndex _src3, size_t _size) : src3(_src3), size(_size) {}
+
     template <class InstType>
-    Src3Op(RegIndex _src3, InstType *inst) : src3(_src3),
-        size(inst->getSrcSize())
+    Src3Op(RegIndex _src3, InstType *inst)
+        : src3(_src3), size(inst->getSrcSize())
     {}
 };
 
@@ -108,7 +132,12 @@ struct DataOp
 {
     const RegIndex data;
     const size_t size;
-    RegIndex opIndex() const { return data; }
+
+    RegIndex
+    opIndex() const
+    {
+        return data;
+    }
 
     DataOp(RegIndex _data, size_t _size) : data(_data), size(_size) {}
 };
@@ -117,7 +146,12 @@ struct DataHiOp
 {
     const RegIndex dataHi;
     const size_t size;
-    RegIndex opIndex() const { return dataHi; }
+
+    RegIndex
+    opIndex() const
+    {
+        return dataHi;
+    }
 
     DataHiOp(RegIndex data_hi, size_t _size) : dataHi(data_hi), size(_size) {}
 };
@@ -126,17 +160,26 @@ struct DataLowOp
 {
     const RegIndex dataLow;
     const size_t size;
-    RegIndex opIndex() const { return dataLow; }
+
+    RegIndex
+    opIndex() const
+    {
+        return dataLow;
+    }
 
     DataLowOp(RegIndex data_low, size_t _size) : dataLow(data_low), size(_size)
     {}
 };
 
-template <class T, class Enabled=void>
-struct HasDataSize : public std::false_type {};
+template <class T, class Enabled = void>
+struct HasDataSize : public std::false_type
+{
+};
 
 template <class T>
-struct HasDataSize<T, decltype((void)&T::dataSize)> : public std::true_type {};
+struct HasDataSize<T, decltype((void)&T::dataSize)> : public std::true_type
+{
+};
 
 template <class T>
 constexpr bool HasDataSizeV = HasDataSize<T>::value;
@@ -147,13 +190,13 @@ struct IntOp : public Base
     using ArgType = GpRegIndex;
 
     template <class Inst>
-    IntOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx) :
-        Base(idx.index, inst->dataSize)
+    IntOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx)
+        : Base(idx.index, inst->dataSize)
     {}
 
     template <class Inst>
-    IntOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx) :
-        Base(idx.index, inst)
+    IntOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx)
+        : Base(idx.index, inst)
     {}
 
     void
@@ -169,8 +212,8 @@ struct FoldedOp : public Base
     using ArgType = GpRegIndex;
 
     template <class InstType>
-    FoldedOp(InstType *inst, ArgType idx) :
-        Base(intRegFolded(idx.index, inst->foldOBit), inst->dataSize)
+    FoldedOp(InstType *inst, ArgType idx)
+        : Base(intRegFolded(idx.index, inst->foldOBit), inst->dataSize)
     {}
 
     void
@@ -186,7 +229,8 @@ struct CrOp : public Base
     using ArgType = CrRegIndex;
 
     template <class InstType>
-    CrOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
+    CrOp(InstType *inst, ArgType idx) : Base(idx.index, 0)
+    {}
 
     void
     print(std::ostream &os) const
@@ -201,14 +245,14 @@ struct DbgOp : public Base
     using ArgType = DbgRegIndex;
 
     template <class InstType>
-    DbgOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
+    DbgOp(InstType *inst, ArgType idx) : Base(idx.index, 0)
+    {}
 
     void
     print(std::ostream &os) const
     {
         ccprintf(os, "dr%d", this->opIndex());
     }
-
 };
 
 template <class Base>
@@ -217,7 +261,8 @@ struct SegOp : public Base
     using ArgType = SegRegIndex;
 
     template <class InstType>
-    SegOp(InstType *inst, ArgType idx) : Base(idx.index, 0) {}
+    SegOp(InstType *inst, ArgType idx) : Base(idx.index, 0)
+    {}
 
     void
     print(std::ostream &os) const
@@ -232,7 +277,8 @@ struct MiscOp : public Base
     using ArgType = CtrlRegIndex;
 
     template <class InstType>
-    MiscOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize) {}
+    MiscOp(InstType *inst, ArgType idx) : Base(idx.index, inst->dataSize)
+    {}
 
     void
     print(std::ostream &os) const
@@ -247,20 +293,20 @@ struct FloatOp : public Base
     using ArgType = FpRegIndex;
 
     template <class Inst>
-    FloatOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx) :
-        Base(idx.index, inst->dataSize)
+    FloatOp(Inst *inst, std::enable_if_t<HasDataSizeV<Inst>, ArgType> idx)
+        : Base(idx.index, inst->dataSize)
     {}
 
     template <class Inst>
-    FloatOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx) :
-        Base(idx.index, inst)
+    FloatOp(Inst *inst, std::enable_if_t<!HasDataSizeV<Inst>, ArgType> idx)
+        : Base(idx.index, inst)
     {}
 
     void
     print(std::ostream &os) const
     {
         X86StaticInst::printReg(os, floatRegClass[this->opIndex()],
-                this->size);
+                                this->size);
     }
 };
 
@@ -298,7 +344,8 @@ struct Imm8Op
     uint8_t imm8;
 
     template <class InstType>
-    Imm8Op(InstType *inst, ArgType _imm8) : imm8(_imm8) {}
+    Imm8Op(InstType *inst, ArgType _imm8) : imm8(_imm8)
+    {}
 
     void
     print(std::ostream &os) const
@@ -314,7 +361,8 @@ struct Imm64Op
     uint64_t imm64;
 
     template <class InstType>
-    Imm64Op(InstType *inst, ArgType _imm64) : imm64(_imm64) {}
+    Imm64Op(InstType *inst, ArgType _imm64) : imm64(_imm64)
+    {}
 
     void
     print(std::ostream &os) const
@@ -330,7 +378,8 @@ struct UpcOp
     MicroPC target;
 
     template <class InstType>
-    UpcOp(InstType *inst, ArgType _target) : target(_target) {}
+    UpcOp(InstType *inst, ArgType _target) : target(_target)
+    {}
 
     void
     print(std::ostream &os) const
@@ -346,7 +395,8 @@ struct FaultOp
     Fault fault;
 
     template <class InstType>
-    FaultOp(InstType *inst, ArgType _fault) : fault(_fault) {}
+    FaultOp(InstType *inst, ArgType _fault) : fault(_fault)
+    {}
 
     void
     print(std::ostream &os) const
@@ -374,11 +424,13 @@ struct AddrOp
     const size_t size;
 
     template <class InstType>
-    AddrOp(InstType *inst, const ArgType &args) : scale(args.scale),
-        index(intRegFolded(args.index.index, inst->foldABit)),
-        base(intRegFolded(args.base.index, inst->foldABit)),
-        disp(args.disp), segment(args.segment.index),
-        size(inst->addressSize)
+    AddrOp(InstType *inst, const ArgType &args)
+        : scale(args.scale),
+          index(intRegFolded(args.index.index, inst->foldABit)),
+          base(intRegFolded(args.base.index, inst->foldABit)),
+          disp(args.disp),
+          segment(args.segment.index),
+          size(inst->addressSize)
     {
         assert(segment < segment_idx::NumIdxs);
     }
@@ -386,45 +438,46 @@ struct AddrOp
     void
     print(std::ostream &os) const
     {
-        X86StaticInst::printMem(
-                os, segment, scale, index, base, disp, size, false);
+        X86StaticInst::printMem(os, segment, scale, index, base, disp, size,
+                                false);
     }
 };
 
-template <typename Base, typename ...Operands>
+template <typename Base, typename... Operands>
 class InstOperands : public Base, public Operands...
 {
   private:
     using ArgTuple = std::tuple<typename Operands::ArgType...>;
 
-    template <std::size_t ...I, typename ...CTorArgs>
+    template <std::size_t... I, typename... CTorArgs>
     InstOperands(std::index_sequence<I...>, ExtMachInst mach_inst,
-            const char *mnem, const char *inst_mnem, uint64_t set_flags,
-            OpClass op_class, [[maybe_unused]] ArgTuple args,
-            CTorArgs... ctor_args) :
-        Base(mach_inst, mnem, inst_mnem, set_flags, op_class, ctor_args...),
-        Operands(this, std::get<I>(args))...
+                 const char *mnem, const char *inst_mnem, uint64_t set_flags,
+                 OpClass op_class, [[maybe_unused]] ArgTuple args,
+                 CTorArgs... ctor_args)
+        : Base(mach_inst, mnem, inst_mnem, set_flags, op_class, ctor_args...),
+          Operands(this, std::get<I>(args))...
     {}
 
   protected:
-    template <typename ...CTorArgs>
+    template <typename... CTorArgs>
     InstOperands(ExtMachInst mach_inst, const char *mnem,
-            const char *inst_mnem, uint64_t set_flags, OpClass op_class,
-            ArgTuple args, CTorArgs... ctor_args) :
-        InstOperands(std::make_index_sequence<sizeof...(Operands)>{},
-                mach_inst, mnem, inst_mnem, set_flags, op_class,
-                std::move(args), ctor_args...)
+                 const char *inst_mnem, uint64_t set_flags, OpClass op_class,
+                 ArgTuple args, CTorArgs... ctor_args)
+        : InstOperands(std::make_index_sequence<sizeof...(Operands)>{},
+                       mach_inst, mnem, inst_mnem, set_flags, op_class,
+                       std::move(args), ctor_args...)
     {}
 
     std::string
     generateDisassembly(Addr pc,
-            const loader::SymbolTable *symtab) const override
+                        const loader::SymbolTable *symtab) const override
     {
         std::stringstream response;
         Base::printMnemonic(response, this->instMnem, this->mnemonic);
         int count = 0;
-        GEM5_FOR_EACH_IN_PACK(ccprintf(response, count++ ? ", " : ""),
-                              Operands::print(response));
+        GEM5_FOR_EACH_IN_PACK (ccprintf(response, count++ ? ", " : ""),
+                               Operands::print(response))
+            ;
         return response.str();
     }
 };

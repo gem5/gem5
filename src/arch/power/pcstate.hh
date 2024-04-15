@@ -47,13 +47,18 @@ class PCState : public GenericISA::SimplePCState<4>
   public:
     using GenericISA::SimplePCState<4>::SimplePCState;
 
-    PCState(const PCState &other) :
-        GenericISA::SimplePCState<4>(other),
-        guestByteOrder(other.guestByteOrder)
+    PCState(const PCState &other)
+        : GenericISA::SimplePCState<4>(other),
+          guestByteOrder(other.guestByteOrder)
     {}
+
     PCState &operator=(const PCState &other) = default;
 
-    PCStateBase *clone() const override { return new PCState(*this); }
+    PCStateBase *
+    clone() const override
+    {
+        return new PCState(*this);
+    }
 
     void
     update(const PCStateBase &other) override

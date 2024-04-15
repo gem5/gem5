@@ -103,13 +103,23 @@ class TranslationGen
      * may need, like pointers back to the object actually doing the
      * translation.
      */
-    TranslationGen(Addr new_start, Addr new_size) :
-        _start(new_start), _size(new_size)
+    TranslationGen(Addr new_start, Addr new_size)
+        : _start(new_start), _size(new_size)
     {}
+
     virtual ~TranslationGen() {}
 
-    Addr start() const { return _start; }
-    Addr size() const { return _size; }
+    Addr
+    start() const
+    {
+        return _start;
+    }
+
+    Addr
+    size() const
+    {
+        return _size;
+    }
 
     /**
      * A const iterator class is provided so this generator can be used in a
@@ -140,7 +150,7 @@ using TranslationGenPtr = std::unique_ptr<TranslationGen>;
 class TranslationGenConstIterator
 {
   private:
-    TranslationGen::Range current = {0};
+    TranslationGen::Range current = { 0 };
     const TranslationGen *gen = nullptr;
     bool end = true;
 
@@ -166,9 +176,10 @@ class TranslationGenConstIterator
 
     /** Construct a blank iterator, used by end(). */
     TranslationGenConstIterator() {}
+
     /** Construct a valid new iterator and set it's starting conditions. */
-    TranslationGenConstIterator(const TranslationGen *parent, Addr start) :
-        current{start}, gen(parent), end(false)
+    TranslationGenConstIterator(const TranslationGen *parent, Addr start)
+        : current{ start }, gen(parent), end(false)
     {
         update();
     }
@@ -179,8 +190,8 @@ class TranslationGenConstIterator
     using pointer = const value_type *;
     using iterator_category = std::forward_iterator_tag;
 
-    TranslationGenConstIterator(const TranslationGenConstIterator &other) :
-        current(other.current), gen(other.gen)
+    TranslationGenConstIterator(const TranslationGenConstIterator &other)
+        : current(other.current), gen(other.gen)
     {}
 
     TranslationGenConstIterator &
@@ -191,8 +202,17 @@ class TranslationGenConstIterator
         return *this;
     }
 
-    reference operator*() { return current; }
-    pointer operator->() { return &current; }
+    reference
+    operator*()
+    {
+        return current;
+    }
+
+    pointer
+    operator->()
+    {
+        return &current;
+    }
 
     /**
      * The increment operator, which is the main work horse of this class.

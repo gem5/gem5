@@ -93,47 +93,35 @@ pybind_init_debug(py::module_ &m_native)
              []() { return debug::AllFlagsFlag::version(); })
         .def("allFlags", &debug::allFlags, py::return_value_policy::reference)
 
-        .def("schedBreak", &schedBreak)
-        ;
+        .def("schedBreak", &schedBreak);
 
     py::class_<debug::Flag> c_flag(m_debug, "Flag");
-    c_flag
-        .def_property_readonly("name", &debug::Flag::name)
+    c_flag.def_property_readonly("name", &debug::Flag::name)
         .def_property_readonly("desc", &debug::Flag::desc)
         .def("enable", &debug::Flag::enable)
         .def("disable", &debug::Flag::disable)
-        .def_property("tracing",
-                      [](const debug::Flag *flag) {
-                          return flag->tracing();
-                      },
-                      [](debug::Flag *flag, bool state) {
-                          if (state) {
-                              flag->enable();
-                          } else {
-                              flag->disable();
-                          }
-                      })
-        .def("__bool__", [](const debug::Flag *flag) {
-                return (bool)*flag;
+        .def_property(
+            "tracing", [](const debug::Flag *flag) { return flag->tracing(); },
+            [](debug::Flag *flag, bool state) {
+                if (state) {
+                    flag->enable();
+                } else {
+                    flag->disable();
+                }
             })
-        ;
+        .def("__bool__", [](const debug::Flag *flag) { return (bool)*flag; });
 
     py::class_<debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag)
-        .def_property_readonly("isFormat", &debug::SimpleFlag::isFormat)
-        ;
+        .def_property_readonly("isFormat", &debug::SimpleFlag::isFormat);
     py::class_<debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag)
-        .def("kids", &debug::CompoundFlag::kids)
-        ;
-
+        .def("kids", &debug::CompoundFlag::kids);
 
     py::module_ m_trace = m_native.def_submodule("trace");
-    m_trace
-        .def("output", &output)
+    m_trace.def("output", &output)
         .def("activate", &activate)
         .def("ignore", &ignore)
         .def("enable", &trace::enable)
-        .def("disable", &trace::disable)
-        ;
+        .def("disable", &trace::disable);
 }
 
 } // namespace gem5

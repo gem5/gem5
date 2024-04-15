@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_QOS_MEM_SINK_HH__
 #define __MEM_QOS_MEM_SINK_HH__
 
@@ -85,42 +84,42 @@ class MemSinkCtrl : public MemCtrl
     {
       private:
         /** reference to parent memory object */
-        MemSinkCtrl& mem;
+        MemSinkCtrl &mem;
 
         /** Outgoing packet responses queue */
         RespPacketQueue queue;
 
       public:
-       /**
-        * Constructor
-        *
-        * @param n port name
-        * @param m reference to ProfileGen parent object
-        */
-        MemoryPort(const std::string&, MemSinkCtrl&);
+        /**
+         * Constructor
+         *
+         * @param n port name
+         * @param m reference to ProfileGen parent object
+         */
+        MemoryPort(const std::string &, MemSinkCtrl &);
 
       protected:
-       /**
-        * Receive a Packet in Atomic mode
-        *
-        * @param pkt pointer to memory packet
-        * @return packet access latency in ticks
-        */
+        /**
+         * Receive a Packet in Atomic mode
+         *
+         * @param pkt pointer to memory packet
+         * @return packet access latency in ticks
+         */
         Tick recvAtomic(PacketPtr pkt);
 
         /**
-        * Receive a Packet in Functional mode
-        *
-        * @param pkt pointer to memory packet
-        */
+         * Receive a Packet in Functional mode
+         *
+         * @param pkt pointer to memory packet
+         */
         void recvFunctional(PacketPtr pkt);
 
         /**
-        * Receive a Packet in Timing mode
-        *
-        * @param pkt pointer to memory packet
-        * @return true if the request was accepted
-        */
+         * Receive a Packet in Timing mode
+         *
+         * @param pkt pointer to memory packet
+         * @return true if the request was accepted
+         */
         bool recvTimingReq(PacketPtr pkt);
 
         /**
@@ -128,7 +127,6 @@ class MemSinkCtrl : public MemCtrl
          * @return the configured address ranges for this port
          */
         AddrRangeList getAddrRanges() const;
-
     };
 
   public:
@@ -154,7 +152,7 @@ class MemSinkCtrl : public MemCtrl
      * @param idx port ID number
      * @return reference to this memory's response port
      */
-    Port &getPort(const std::string &if_name, PortID=InvalidPortID) override;
+    Port &getPort(const std::string &if_name, PortID = InvalidPortID) override;
 
     /**
      * Initializes this object
@@ -183,7 +181,7 @@ class MemSinkCtrl : public MemCtrl
     /**
      * Create pointer to interface of actual media
      */
-    MemSinkInterface* const interface;
+    MemSinkInterface *const interface;
 
     /** Read request pending */
     bool retryRdReq;
@@ -255,12 +253,12 @@ class MemSinkCtrl : public MemCtrl
      */
     void recvFunctional(PacketPtr pkt);
 
-   /**
-    * Receive a Packet in Timing mode
-    *
-    * @param pkt pointer to memory packet
-    * @return true if the request was accepted
-    */
+    /**
+     * Receive a Packet in Timing mode
+     *
+     * @param pkt pointer to memory packet
+     * @return true if the request was accepted
+     */
     bool recvTimingReq(PacketPtr pkt);
 
     MemSinkCtrlStats stats;
@@ -270,10 +268,14 @@ class MemSinkInterface : public AbstractMemory
 {
   public:
     /** Setting a pointer to the interface */
-    void setMemCtrl(MemSinkCtrl* _ctrl) { ctrl = _ctrl; };
+    void
+    setMemCtrl(MemSinkCtrl *_ctrl)
+    {
+        ctrl = _ctrl;
+    };
 
     /** Pointer to the controller */
-    MemSinkCtrl* ctrl;
+    MemSinkCtrl *ctrl;
 
     MemSinkInterface(const QoSMemSinkInterfaceParams &_p);
 };

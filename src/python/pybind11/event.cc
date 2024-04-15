@@ -67,19 +67,20 @@ namespace gem5
 class PyEvent : public Event
 {
   public:
-    PyEvent(Event::Priority priority)
-        : Event(priority, Event::Managed)
-    {
-    }
+    PyEvent(Event::Priority priority) : Event(priority, Event::Managed) {}
 
-    void process() override {
+    void
+    process() override
+    {
         // Call the Python implementation as __call__. This provides a
         // slightly more Python-friendly interface.
         PYBIND11_OVERLOAD_PURE_NAME(void, PyEvent, "__call__", process);
     }
 
   protected:
-    void acquireImpl() override {
+    void
+    acquireImpl() override
+    {
         py::object obj = py::cast(this);
 
         if (obj) {
@@ -89,7 +90,9 @@ class PyEvent : public Event
         }
     }
 
-    void releaseImpl() override {
+    void
+    releaseImpl() override
+    {
         py::object obj = py::cast(this);
 
         if (obj) {
@@ -105,29 +108,27 @@ pybind_init_event(py::module_ &m_native)
 {
     py::module_ m = m_native.def_submodule("event");
 
-    m.def("simulate", &simulate,
-          py::arg("ticks") = MaxTick);
+    m.def("simulate", &simulate, py::arg("ticks") = MaxTick);
     m.def("setMaxTick", &set_max_tick, py::arg("tick"));
     m.def("getMaxTick", &get_max_tick, py::return_value_policy::copy);
     m.def("terminateEventQueueThreads", &terminateEventQueueThreads);
     m.def("exitSimLoop", &exitSimLoop);
-    m.def("getEventQueue", []() { return curEventQueue(); },
-          py::return_value_policy::reference);
+    m.def(
+        "getEventQueue", []() { return curEventQueue(); },
+        py::return_value_policy::reference);
     m.def("setEventQueue", [](EventQueue *q) { return curEventQueue(q); });
-    m.def("getEventQueue", &getEventQueue,
-          py::return_value_policy::reference);
+    m.def("getEventQueue", &getEventQueue, py::return_value_policy::reference);
 
     py::class_<EventQueue>(m, "EventQueue")
-        .def("name",  [](EventQueue *eq) { return eq->name(); })
+        .def("name", [](EventQueue *eq) { return eq->name(); })
         .def("dump", &EventQueue::dump)
-        .def("schedule", [](EventQueue *eq, PyEvent *e, Tick t) {
-                eq->schedule(e, t);
-            }, py::arg("event"), py::arg("when"))
-        .def("deschedule", &EventQueue::deschedule,
-             py::arg("event"))
-        .def("reschedule", &EventQueue::reschedule,
-             py::arg("event"), py::arg("tick"), py::arg("always") = false)
-        ;
+        .def(
+            "schedule",
+            [](EventQueue *eq, PyEvent *e, Tick t) { eq->schedule(e, t); },
+            py::arg("event"), py::arg("when"))
+        .def("deschedule", &EventQueue::deschedule, py::arg("event"))
+        .def("reschedule", &EventQueue::reschedule, py::arg("event"),
+             py::arg("tick"), py::arg("always") = false);
 
     // TODO: Ownership of global exit events has always been a bit
     // questionable. We currently assume they are owned by the C++
@@ -135,33 +136,28 @@ pybind_init_event(py::module_ &m_native)
     // in memory leaks.
     py::class_<GlobalSimLoopExitEvent,
                std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
-               m, "GlobalSimLoopExitEvent")
+        m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
-        .def("getCode", &GlobalSimLoopExitEvent::getCode)
-        ;
+        .def("getCode", &GlobalSimLoopExitEvent::getCode);
 
     // Event base class. These should never be returned directly to
     // Python since they don't have a well-defined life cycle. Python
     // events should be derived from PyEvent instead.
-    py::class_<Event> c_event(
-        m, "Event");
-    c_event
-        .def("name", &Event::name)
+    py::class_<Event> c_event(m, "Event");
+    c_event.def("name", &Event::name)
         .def("dump", &Event::dump)
         .def("scheduled", &Event::scheduled)
         .def("squash", &Event::squash)
         .def("squashed", &Event::squashed)
         .def("isExitEvent", &Event::isExitEvent)
         .def("when", &Event::when)
-        .def("priority", &Event::priority)
-        ;
+        .def("priority", &Event::priority);
 
     py::class_<PyEvent, Event>(m, "PyEvent")
         .def(py::init<Event::Priority>(),
-             py::arg("priority") = (int)Event::Default_Pri)
-        ;
+             py::arg("priority") = (int)Event::Default_Pri);
 
-#define PRIO(n) c_event.attr(# n) = py::cast((int)Event::n)
+#define PRIO(n) c_event.attr(#n) = py::cast((int)Event::n)
     PRIO(Minimum_Pri);
     PRIO(Minimum_Pri);
     PRIO(Debug_Enable_Pri);

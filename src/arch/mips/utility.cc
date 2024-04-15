@@ -44,48 +44,45 @@ namespace gem5
 
 using namespace MipsISA;
 
-namespace MipsISA {
+namespace MipsISA
+{
 
 uint64_t
 fpConvert(ConvertType cvt_type, double fp_val)
 {
+    switch (cvt_type) {
+    case SINGLE_TO_DOUBLE: {
+        double sdouble_val = fp_val;
+        void *sdouble_ptr = &sdouble_val;
+        uint64_t sdp_bits = *(uint64_t *)sdouble_ptr;
+        return sdp_bits;
+    }
 
-    switch (cvt_type)
-    {
-      case SINGLE_TO_DOUBLE:
-        {
-            double sdouble_val = fp_val;
-            void  *sdouble_ptr = &sdouble_val;
-            uint64_t sdp_bits  = *(uint64_t *) sdouble_ptr;
-            return sdp_bits;
-        }
+    case SINGLE_TO_WORD: {
+        int32_t sword_val = (int32_t)fp_val;
+        void *sword_ptr = &sword_val;
+        uint64_t sword_bits = *(uint32_t *)sword_ptr;
+        return sword_bits;
+    }
 
-      case SINGLE_TO_WORD:
-        {
-            int32_t sword_val  = (int32_t) fp_val;
-            void  *sword_ptr   = &sword_val;
-            uint64_t sword_bits= *(uint32_t *) sword_ptr;
-            return sword_bits;
-        }
+    case WORD_TO_SINGLE: {
+        float wfloat_val = fp_val;
+        void *wfloat_ptr = &wfloat_val;
+        uint64_t wfloat_bits = *(uint32_t *)wfloat_ptr;
+        return wfloat_bits;
+    }
 
-      case WORD_TO_SINGLE:
-        {
-            float wfloat_val   = fp_val;
-            void  *wfloat_ptr  = &wfloat_val;
-            uint64_t wfloat_bits = *(uint32_t *) wfloat_ptr;
-            return wfloat_bits;
-        }
+    case WORD_TO_DOUBLE: {
+        double wdouble_val = fp_val;
+        void *wdouble_ptr = &wdouble_val;
+        uint64_t wdp_bits = *(uint64_t *)wdouble_ptr;
+        return wdp_bits;
+    }
 
-      case WORD_TO_DOUBLE:
-        {
-            double wdouble_val = fp_val;
-            void  *wdouble_ptr = &wdouble_val;
-            uint64_t wdp_bits  = *(uint64_t *) wdouble_ptr;
-            return wdp_bits;
-        }
-
-      default:
-        panic("Invalid Floating Point Conversion Type (%d). See \"types.hh\" for List of Conversions\n",cvt_type);
+    default:
+        panic("Invalid Floating Point Conversion Type (%d). See \"types.hh\" "
+              "for List of Conversions\n",
+              cvt_type);
         return 0;
     }
 }
@@ -93,7 +90,7 @@ fpConvert(ConvertType cvt_type, double fp_val)
 double
 roundFP(double val, int digits)
 {
-    double digit_offset = pow(10.0,digits);
+    double digit_offset = pow(10.0, digits);
     val = val * digit_offset;
     val = val + 0.5;
     val = floor(val);
@@ -104,8 +101,8 @@ roundFP(double val, int digits)
 double
 truncFP(double val)
 {
-    int trunc_val = (int) val;
-    return (double) trunc_val;
+    int trunc_val = (int)val;
+    return (double)trunc_val;
 }
 
 bool
@@ -121,8 +118,7 @@ genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 {
     int cc_idx = (cc_num == 0) ? 23 : cc_num + 24;
 
-    fcsr = bits(fcsr, 31, cc_idx + 1) << (cc_idx + 1) |
-           cc_val << cc_idx |
+    fcsr = bits(fcsr, 31, cc_idx + 1) << (cc_idx + 1) | cc_val << cc_idx |
            bits(fcsr, cc_idx - 1, 0);
 
     return fcsr;
@@ -131,11 +127,11 @@ genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 uint32_t
 genInvalidVector(uint32_t fcsr_bits)
 {
-    //Set FCSR invalid in "flag" field
+    // Set FCSR invalid in "flag" field
     int invalid_offset = Invalid + Flag_Field;
     fcsr_bits = fcsr_bits | (1 << invalid_offset);
 
-    //Set FCSR invalid in "cause" flag
+    // Set FCSR invalid in "cause" flag
     int cause_offset = Invalid + Cause_Field;
     fcsr_bits = fcsr_bits | (1 << cause_offset);
 
@@ -145,44 +141,37 @@ genInvalidVector(uint32_t fcsr_bits)
 bool
 isNan(void *val_ptr, int size)
 {
-    switch (size)
-    {
-      case 32:
-        {
-            uint32_t val_bits = *(uint32_t *) val_ptr;
-            return (bits(val_bits, 30, 23) == 0xFF);
-        }
+    switch (size) {
+    case 32: {
+        uint32_t val_bits = *(uint32_t *)val_ptr;
+        return (bits(val_bits, 30, 23) == 0xFF);
+    }
 
-      case 64:
-        {
-            uint64_t val_bits = *(uint64_t *) val_ptr;
-            return (bits(val_bits, 62, 52) == 0x7FF);
-        }
+    case 64: {
+        uint64_t val_bits = *(uint64_t *)val_ptr;
+        return (bits(val_bits, 62, 52) == 0x7FF);
+    }
 
-      default:
+    default:
         panic("Type unsupported. Size mismatch\n");
     }
 }
 
-
 bool
 isQnan(void *val_ptr, int size)
 {
-    switch (size)
-    {
-      case 32:
-        {
-            uint32_t val_bits = *(uint32_t *) val_ptr;
-            return (bits(val_bits, 30, 22) == 0x1FE);
-        }
+    switch (size) {
+    case 32: {
+        uint32_t val_bits = *(uint32_t *)val_ptr;
+        return (bits(val_bits, 30, 22) == 0x1FE);
+    }
 
-      case 64:
-        {
-            uint64_t val_bits = *(uint64_t *) val_ptr;
-            return (bits(val_bits, 62, 51) == 0xFFE);
-        }
+    case 64: {
+        uint64_t val_bits = *(uint64_t *)val_ptr;
+        return (bits(val_bits, 62, 51) == 0xFFE);
+    }
 
-      default:
+    default:
         panic("Type unsupported. Size mismatch\n");
     }
 }
@@ -190,21 +179,18 @@ isQnan(void *val_ptr, int size)
 bool
 isSnan(void *val_ptr, int size)
 {
-    switch (size)
-    {
-      case 32:
-        {
-            uint32_t val_bits = *(uint32_t *) val_ptr;
-            return (bits(val_bits, 30, 22) == 0x1FF);
-        }
+    switch (size) {
+    case 32: {
+        uint32_t val_bits = *(uint32_t *)val_ptr;
+        return (bits(val_bits, 30, 22) == 0x1FF);
+    }
 
-      case 64:
-        {
-            uint64_t val_bits = *(uint64_t *) val_ptr;
-            return (bits(val_bits, 62, 51) == 0xFFF);
-        }
+    case 64: {
+        uint64_t val_bits = *(uint64_t *)val_ptr;
+        return (bits(val_bits, 62, 51) == 0xFFF);
+    }
 
-      default:
+    default:
         panic("Type unsupported. Size mismatch\n");
     }
 }

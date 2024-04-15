@@ -36,23 +36,19 @@ namespace gem5
 
 namespace VegaISA
 {
-    // --- Inst_EXP__EXP class methods ---
+// --- Inst_EXP__EXP class methods ---
 
-    Inst_EXP__EXP::Inst_EXP__EXP(InFmt_EXP *iFmt)
-        : Inst_EXP(iFmt, "exp")
-    {
-    } // Inst_EXP__EXP
+Inst_EXP__EXP::Inst_EXP__EXP(InFmt_EXP *iFmt)
+    : Inst_EXP(iFmt, "exp") {} // Inst_EXP__EXP
 
-    Inst_EXP__EXP::~Inst_EXP__EXP()
-    {
-    } // ~Inst_EXP__EXP
+Inst_EXP__EXP::~Inst_EXP__EXP() {} // ~Inst_EXP__EXP
 
-    // --- description from .arch file ---
-    // Export through SX.
-    void
-    Inst_EXP__EXP::execute(GPUDynInstPtr gpuDynInst)
-    {
-        panicUnimplemented();
-    } // execute
+// --- description from .arch file ---
+// Export through SX.
+void
+Inst_EXP__EXP::execute(GPUDynInstPtr gpuDynInst)
+{
+    panicUnimplemented();
+} // execute
 } // namespace VegaISA
 } // namespace gem5

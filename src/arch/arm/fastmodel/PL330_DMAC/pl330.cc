@@ -38,14 +38,14 @@ namespace gem5
 namespace fastmodel
 {
 
-PL330::PL330(const FastModelPL330Params &params,
-             sc_core::sc_module_name _name) :
-    scx_evs_PL330(_name), clockPeriod(params.clock),
-    dma(amba_m, params.name + ".dma", -1),
-    pioS(amba_s, params.name + ".pio_s", -1),
-    pioNs(amba_s_ns, params.name + ".pio_ns", -1),
-    irqAbortReceiver("irq_abort_receiver"),
-    resetIn("reset_in", 0)
+PL330::PL330(const FastModelPL330Params &params, sc_core::sc_module_name _name)
+    : scx_evs_PL330(_name),
+      clockPeriod(params.clock),
+      dma(amba_m, params.name + ".dma", -1),
+      pioS(amba_s, params.name + ".pio_s", -1),
+      pioNs(amba_s_ns, params.name + ".pio_ns", -1),
+      irqAbortReceiver("irq_abort_receiver"),
+      resetIn("reset_in", 0)
 {
     set_parameter("pl330.fifo_size", params.fifo_size);
     set_parameter("pl330.max_transfer", params.max_transfer);
@@ -57,9 +57,9 @@ PL330::PL330(const FastModelPL330Params &params,
     set_parameter("pl330.p_lsq_read_size", params.lsq_read_size);
     set_parameter("pl330.p_lsq_write_size", params.lsq_write_size);
     set_parameter("pl330.p_read_issuing_capability",
-            params.read_issuing_capability);
+                  params.read_issuing_capability);
     set_parameter("pl330.p_write_issuing_capability",
-            params.write_issuing_capability);
+                  params.write_issuing_capability);
     set_parameter("pl330.p_axi_bus_width_param", params.axi_bus_width);
     set_parameter("pl330.p_cache_line_words", params.cache_line_words);
     set_parameter("pl330.p_cache_lines", params.cache_lines);
@@ -71,69 +71,69 @@ PL330::PL330(const FastModelPL330Params &params,
     set_parameter("pl330.p_reset_pc", params.reset_pc);
     set_parameter("pl330.p_max_periph", params.max_periph);
     set_parameter("pl330.p_perip_request_acceptance_0",
-            params.perip_request_acceptance_0);
+                  params.perip_request_acceptance_0);
     set_parameter("pl330.p_perip_request_acceptance_1",
-            params.perip_request_acceptance_1);
+                  params.perip_request_acceptance_1);
     set_parameter("pl330.p_perip_request_acceptance_2",
-            params.perip_request_acceptance_2);
+                  params.perip_request_acceptance_2);
     set_parameter("pl330.p_perip_request_acceptance_3",
-            params.perip_request_acceptance_3);
+                  params.perip_request_acceptance_3);
     set_parameter("pl330.p_perip_request_acceptance_4",
-            params.perip_request_acceptance_4);
+                  params.perip_request_acceptance_4);
     set_parameter("pl330.p_perip_request_acceptance_5",
-            params.perip_request_acceptance_5);
+                  params.perip_request_acceptance_5);
     set_parameter("pl330.p_perip_request_acceptance_6",
-            params.perip_request_acceptance_6);
+                  params.perip_request_acceptance_6);
     set_parameter("pl330.p_perip_request_acceptance_7",
-            params.perip_request_acceptance_7);
+                  params.perip_request_acceptance_7);
     set_parameter("pl330.p_perip_request_acceptance_8",
-            params.perip_request_acceptance_8);
+                  params.perip_request_acceptance_8);
     set_parameter("pl330.p_perip_request_acceptance_9",
-            params.perip_request_acceptance_9);
+                  params.perip_request_acceptance_9);
     set_parameter("pl330.p_perip_request_acceptance_10",
-            params.perip_request_acceptance_10);
+                  params.perip_request_acceptance_10);
     set_parameter("pl330.p_perip_request_acceptance_11",
-            params.perip_request_acceptance_11);
+                  params.perip_request_acceptance_11);
     set_parameter("pl330.p_perip_request_acceptance_12",
-            params.perip_request_acceptance_12);
+                  params.perip_request_acceptance_12);
     set_parameter("pl330.p_perip_request_acceptance_13",
-            params.perip_request_acceptance_13);
+                  params.perip_request_acceptance_13);
     set_parameter("pl330.p_perip_request_acceptance_14",
-            params.perip_request_acceptance_14);
+                  params.perip_request_acceptance_14);
     set_parameter("pl330.p_perip_request_acceptance_15",
-            params.perip_request_acceptance_15);
+                  params.perip_request_acceptance_15);
     set_parameter("pl330.p_perip_request_acceptance_16",
-            params.perip_request_acceptance_16);
+                  params.perip_request_acceptance_16);
     set_parameter("pl330.p_perip_request_acceptance_17",
-            params.perip_request_acceptance_17);
+                  params.perip_request_acceptance_17);
     set_parameter("pl330.p_perip_request_acceptance_18",
-            params.perip_request_acceptance_18);
+                  params.perip_request_acceptance_18);
     set_parameter("pl330.p_perip_request_acceptance_19",
-            params.perip_request_acceptance_19);
+                  params.perip_request_acceptance_19);
     set_parameter("pl330.p_perip_request_acceptance_20",
-            params.perip_request_acceptance_20);
+                  params.perip_request_acceptance_20);
     set_parameter("pl330.p_perip_request_acceptance_21",
-            params.perip_request_acceptance_21);
+                  params.perip_request_acceptance_21);
     set_parameter("pl330.p_perip_request_acceptance_22",
-            params.perip_request_acceptance_22);
+                  params.perip_request_acceptance_22);
     set_parameter("pl330.p_perip_request_acceptance_23",
-            params.perip_request_acceptance_23);
+                  params.perip_request_acceptance_23);
     set_parameter("pl330.p_perip_request_acceptance_24",
-            params.perip_request_acceptance_24);
+                  params.perip_request_acceptance_24);
     set_parameter("pl330.p_perip_request_acceptance_25",
-            params.perip_request_acceptance_25);
+                  params.perip_request_acceptance_25);
     set_parameter("pl330.p_perip_request_acceptance_26",
-            params.perip_request_acceptance_26);
+                  params.perip_request_acceptance_26);
     set_parameter("pl330.p_perip_request_acceptance_27",
-            params.perip_request_acceptance_27);
+                  params.perip_request_acceptance_27);
     set_parameter("pl330.p_perip_request_acceptance_28",
-            params.perip_request_acceptance_28);
+                  params.perip_request_acceptance_28);
     set_parameter("pl330.p_perip_request_acceptance_29",
-            params.perip_request_acceptance_29);
+                  params.perip_request_acceptance_29);
     set_parameter("pl330.p_perip_request_acceptance_30",
-            params.perip_request_acceptance_30);
+                  params.perip_request_acceptance_30);
     set_parameter("pl330.p_perip_request_acceptance_31",
-            params.perip_request_acceptance_31);
+                  params.perip_request_acceptance_31);
 
     // Plumb up the mechanism which lets us set the clock rate inside the EVS.
     clockRateControl.bind(this->clock_rate_s);
@@ -176,16 +176,15 @@ PL330::PL330(const FastModelPL330Params &params,
     for (int i = 0; i < 32; i++) {
         // Create a receiver to receive interrupts from the EVS.
         irqReceiver.emplace_back(
-                new SignalReceiver(csprintf("irq_receiver[%d]", i)));
+            new SignalReceiver(csprintf("irq_receiver[%d]", i)));
 
         // Attach the receiver to the socket coming out of the EVS.
         irq[i].bind(irqReceiver[i]->signal_in);
 
         // Set up a handler for when the signal changes state.
-        auto on_change = [&port = irqPort[i]](bool status)
-        {
+        auto on_change = [&port = irqPort[i]](bool status) {
             // Loop through all the connections and propogate the signal.
-            for (auto &pin: port)
+            for (auto &pin : port)
                 status ? pin->raise() : pin->lower();
         };
 
@@ -196,8 +195,7 @@ PL330::PL330(const FastModelPL330Params &params,
     // Set up the abort IRQ pins.
     for (int i = 0; i < params.port_irq_abort_connection_count; i++) {
         irqAbortPort.emplace_back(new IntSourcePin<PL330>(
-                    csprintf("%s.irq_abort_master_port[%d]", name(), i),
-                    i, this));
+            csprintf("%s.irq_abort_master_port[%d]", name(), i), i, this));
     }
 
     // Attach the receiver (already set up) to the EVS.
@@ -205,7 +203,7 @@ PL330::PL330(const FastModelPL330Params &params,
 
     // Set up a handler.
     auto abort_change = [this](bool status) {
-        for (auto &pin: irqAbortPort)
+        for (auto &pin : irqAbortPort)
             status ? pin->raise() : pin->lower();
     };
 
@@ -221,8 +219,7 @@ PL330::allocateIrq(int idx, int count)
 {
     for (int i = 0; i < count; i++) {
         irqPort[idx].emplace_back(new IntSourcePin<PL330>(
-                    csprintf("%s.irq_master_port[%d][%d]", name(), idx, i),
-                    i, this));
+            csprintf("%s.irq_master_port[%d][%d]", name(), idx, i), i, this));
     }
 }
 
@@ -248,7 +245,7 @@ PL330::gem5_getPort(const std::string &if_name, int idx)
         if (suffix.size() == 1 && isdigit(suffix[0])) {
             port = suffix[0] - '0';
         } else if (suffix.size() == 2 && isdigit(suffix[0]) &&
-                isdigit(suffix[1])) {
+                   isdigit(suffix[1])) {
             port = (suffix[0] - '0') * 10 + (suffix[1] - '0');
         }
         if (port != -1 && port < irqPort.size())

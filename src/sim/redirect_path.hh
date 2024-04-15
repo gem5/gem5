@@ -48,8 +48,17 @@ class RedirectPath : public SimObject
   public:
     RedirectPath(const RedirectPathParams &p);
 
-    const std::string& appPath() { return _appPath; };
-    const std::vector<std::string>& hostPaths() { return _hostPaths; };
+    const std::string &
+    appPath()
+    {
+        return _appPath;
+    };
+
+    const std::vector<std::string> &
+    hostPaths()
+    {
+        return _hostPaths;
+    };
 
   protected:
     /**
@@ -57,9 +66,9 @@ class RedirectPath : public SimObject
      * by one of the corresponding hostPath (when accessing files on the host
      * filesystem.)
      */
-     // _appPath holds the path as it would appear from an app's perspective.
+    // _appPath holds the path as it would appear from an app's perspective.
     std::string _appPath;
-     // _hostPaths holds a set of host filesystem paths
+    // _hostPaths holds a set of host filesystem paths
     std::vector<std::string> _hostPaths;
 };
 

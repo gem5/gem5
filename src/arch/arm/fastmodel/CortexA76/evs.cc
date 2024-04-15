@@ -71,13 +71,13 @@ ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
 
 template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
-        const sc_core::sc_module_name &mod_name, const Params &p) :
-    Base(mod_name),
-    amba(Base::amba, p.name + ".amba", -1),
-    top_reset(p.name + ".top_reset", 0),
-    dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset"),
-    params(p)
+    const sc_core::sc_module_name &mod_name, const Params &p)
+    : Base(mod_name),
+      amba(Base::amba, p.name + ".amba", -1),
+      top_reset(p.name + ".top_reset", 0),
+      dbg_reset(p.name + ".dbg_reset", 0),
+      model_reset(p.name + ".model_reset"),
+      params(p)
 {
     model_reset.onChange([this](const bool &new_val) {
         // Set reset for all cores.
@@ -90,26 +90,27 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
     });
 
     for (int i = 0; i < CoreCount; i++) {
-        redist.emplace_back(new TlmGicTarget(this->redistributor[i],
-                    csprintf("%s.redistributor[%d]", name(), i), i));
+        redist.emplace_back(
+            new TlmGicTarget(this->redistributor[i],
+                             csprintf("%s.redistributor[%d]", name(), i), i));
         cnthpirq.emplace_back(new SignalReceiver(csprintf("cnthpirq[%d]", i)));
         cnthvirq.emplace_back(new SignalReceiver(csprintf("cnthvirq[%d]", i)));
         cntpsirq.emplace_back(new SignalReceiver(csprintf("cntpsirq[%d]", i)));
         cntvirq.emplace_back(new SignalReceiver(csprintf("cntvirq[%d]", i)));
         commirq.emplace_back(new SignalReceiver(csprintf("commirq[%d]", i)));
         ctidbgirq.emplace_back(
-                new SignalReceiver(csprintf("ctidbgirq[%d]", i)));
+            new SignalReceiver(csprintf("ctidbgirq[%d]", i)));
         pmuirq.emplace_back(new SignalReceiver(csprintf("pmuirq[%d]", i)));
         vcpumntirq.emplace_back(
-                new SignalReceiver(csprintf("vcpumntirq[%d]", i)));
+            new SignalReceiver(csprintf("vcpumntirq[%d]", i)));
         cntpnsirq.emplace_back(
-                new SignalReceiver(csprintf("cntpnsirq[%d]", i)));
+            new SignalReceiver(csprintf("cntpnsirq[%d]", i)));
         rvbaraddr.emplace_back(new SignalInitiator<uint64_t>(
-                    csprintf("rvbaraddr[%d]", i).c_str()));
+            csprintf("rvbaraddr[%d]", i).c_str()));
         core_reset.emplace_back(
-                new SignalSender(csprintf("core_reset[%d]", i), 0));
+            new SignalSender(csprintf("core_reset[%d]", i), 0));
         poweron_reset.emplace_back(
-                new SignalSender(csprintf("poweron_reset[%d]", i), 0));
+            new SignalSender(csprintf("poweron_reset[%d]", i), 0));
 
         Base::cnthpirq[i].bind(cnthpirq[i]->signal_in);
         Base::cnthvirq[i].bind(cnthvirq[i]->signal_in);
@@ -138,12 +139,10 @@ ScxEvsCortexA76<Types>::before_end_of_elaboration()
 {
     Base::before_end_of_elaboration();
 
-    auto set_on_change = [this](
-            SignalReceiver &recv, ArmInterruptPinGen *gen, int num)
-    {
+    auto set_on_change = [this](SignalReceiver &recv, ArmInterruptPinGen *gen,
+                                int num) {
         auto *pin = gen->get(gem5CpuCluster->getCore(num)->getContext(0));
-        auto handler = [pin](bool status)
-        {
+        auto handler = [pin](bool status) {
             status ? pin->raise() : pin->clear();
         };
         recv.onChange(handler);

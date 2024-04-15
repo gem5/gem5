@@ -72,40 +72,39 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
     proc->dontInitialize(dontInitialize);
 
     if (opts) {
-        for (auto e: opts->_events)
+        for (auto e : opts->_events)
             newStaticSensitivityEvent(proc, e);
 
-        for (auto p: opts->_ports)
+        for (auto p : opts->_ports)
             newStaticSensitivityPort(proc, p);
 
-        for (auto e: opts->_exports)
+        for (auto e : opts->_exports)
             newStaticSensitivityExport(proc, e);
 
-        for (auto i: opts->_interfaces)
+        for (auto i : opts->_interfaces)
             newStaticSensitivityInterface(proc, i);
 
-        for (auto f: opts->_finders)
+        for (auto f : opts->_finders)
             newStaticSensitivityFinder(proc, f);
 
-        for (auto p: opts->_in_resets)
+        for (auto p : opts->_in_resets)
             newReset(p.target, proc, p.sync, p.value);
 
-        for (auto p: opts->_inout_resets)
+        for (auto p : opts->_inout_resets)
             newReset(p.target, proc, p.sync, p.value);
 
-        for (auto p: opts->_out_resets)
+        for (auto p : opts->_out_resets)
             newReset(p.target, proc, p.sync, p.value);
 
-        for (auto i: opts->_if_resets)
+        for (auto i : opts->_if_resets)
             newReset(i.target, proc, i.sync, i.value);
     }
 
-    if (opts && opts->_dontInitialize &&
-            opts->_events.empty() && opts->_ports.empty() &&
-            opts->_exports.empty() && opts->_interfaces.empty() &&
-            opts->_finders.empty()) {
+    if (opts && opts->_dontInitialize && opts->_events.empty() &&
+        opts->_ports.empty() && opts->_exports.empty() &&
+        opts->_interfaces.empty() && opts->_finders.empty()) {
         SC_REPORT_WARNING(sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_,
-                proc->name());
+                          proc->name());
     }
 
     scheduler.reg(proc);
@@ -118,10 +117,9 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
 namespace sc_core
 {
 
-sc_spawn_options::sc_spawn_options() :
-    _spawnMethod(false), _dontInitialize(false), _stackSize(-1)
+sc_spawn_options::sc_spawn_options()
+    : _spawnMethod(false), _dontInitialize(false), _stackSize(-1)
 {}
-
 
 void
 sc_spawn_options::spawn_method()
@@ -140,7 +138,6 @@ sc_spawn_options::set_stack_size(int ss)
 {
     _stackSize = ss;
 }
-
 
 void
 sc_spawn_options::set_sensitivity(const sc_event *e)
@@ -172,7 +169,6 @@ sc_spawn_options::set_sensitivity(sc_event_finder *f)
     _finders.push_back(f);
 }
 
-
 void
 sc_spawn_options::reset_signal_is(const sc_in<bool> &port, bool value)
 {
@@ -192,12 +188,11 @@ sc_spawn_options::reset_signal_is(const sc_out<bool> &port, bool value)
 }
 
 void
-sc_spawn_options::reset_signal_is(
-        const sc_signal_in_if<bool> &iface, bool value)
+sc_spawn_options::reset_signal_is(const sc_signal_in_if<bool> &iface,
+                                  bool value)
 {
     _if_resets.emplace_back(&iface, value, true);
 }
-
 
 void
 sc_spawn_options::async_reset_signal_is(const sc_in<bool> &port, bool value)
@@ -218,8 +213,8 @@ sc_spawn_options::async_reset_signal_is(const sc_out<bool> &port, bool value)
 }
 
 void
-sc_spawn_options::async_reset_signal_is(
-        const sc_signal_in_if<bool> &iface, bool value)
+sc_spawn_options::async_reset_signal_is(const sc_signal_in_if<bool> &iface,
+                                        bool value)
 {
     _if_resets.emplace_back(&iface, value, false);
 }

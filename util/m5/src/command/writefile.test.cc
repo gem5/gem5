@@ -145,9 +145,23 @@ class TempFile
         close(fd);
     }
 
-    size_t size() const { return _size; }
-    const std::string &path() const { return _path; }
-    const void *buf() const { return _buf; }
+    size_t
+    size() const
+    {
+        return _size;
+    }
+
+    const std::string &
+    path() const
+    {
+        return _path;
+    }
+
+    const void *
+    buf() const
+    {
+        return _buf;
+    }
 
     void
     verify()
@@ -174,14 +188,14 @@ class TempFile
 TEST(Writefile, NoArguments)
 {
     // Call with no arguments.
-    EXPECT_FALSE(run({"writefile"}));
+    EXPECT_FALSE(run({ "writefile" }));
     EXPECT_EQ(test_total_written, 0);
 }
 
 TEST(Writefile, ThreeArguments)
 {
     // Call with no arguments.
-    EXPECT_FALSE(run({"writefile", "1", "2", "3"}));
+    EXPECT_FALSE(run({ "writefile", "1", "2", "3" }));
     EXPECT_EQ(test_total_written, 0);
 }
 
@@ -190,7 +204,7 @@ TEST(Writefile, SmallFile)
     // Write a small file.
     TempFile tmp(16);
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"writefile", tmp.path()}));
+    EXPECT_TRUE(run({ "writefile", tmp.path() }));
     tmp.verify();
 }
 
@@ -200,7 +214,7 @@ TEST(Writefile, SmallFileHostName)
     TempFile tmp(16);
     test_max_buf_size = 0;
     std::string host_path = "/different/host/path";
-    EXPECT_TRUE(run({"writefile", tmp.path(), host_path}));
+    EXPECT_TRUE(run({ "writefile", tmp.path(), host_path }));
     tmp.verify(host_path);
 }
 
@@ -209,7 +223,7 @@ TEST(Writefile, MultipleChunks)
     // Write a file which will need to be split into multiple whole chunks.
     TempFile tmp(256 * 1024 * 4);
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"writefile", tmp.path()}));
+    EXPECT_TRUE(run({ "writefile", tmp.path() }));
     tmp.verify();
 }
 
@@ -218,7 +232,7 @@ TEST(Writefile, MultipleAndPartialChunks)
     // Write a file which will be split into some whole and one partial chunk.
     TempFile tmp(256 * 1024 * 2 + 256);
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"writefile", tmp.path()}));
+    EXPECT_TRUE(run({ "writefile", tmp.path() }));
     tmp.verify();
 }
 
@@ -227,7 +241,7 @@ TEST(Writefile, OddSizedChunks)
     // Write a file in chunks that aren't nicely aligned.
     TempFile tmp(256 * 1024);
     test_max_buf_size = 13;
-    EXPECT_TRUE(run({"writefile", tmp.path()}));
+    EXPECT_TRUE(run({ "writefile", tmp.path() }));
     tmp.verify();
 }
 
@@ -236,12 +250,12 @@ TEST(Writefile, CappedWriteSize)
     // Write a file, accepting less than the requested amount of data.
     TempFile tmp(256 * 1024 * 2 + 256);
     test_max_buf_size = 256;
-    EXPECT_TRUE(run({"writefile", tmp.path()}));
+    EXPECT_TRUE(run({ "writefile", tmp.path() }));
     tmp.verify();
 }
 
 TEST(WritefileDeathTest, BadFile)
 {
-    EXPECT_EXIT(run({"writefile", "this is not a valid path#$#$://\\\\"}),
-            ::testing::ExitedWithCode(2), "Error opening ");
+    EXPECT_EXIT(run({ "writefile", "this is not a valid path#$#$://\\\\" }),
+                ::testing::ExitedWithCode(2), "Error opening ");
 }

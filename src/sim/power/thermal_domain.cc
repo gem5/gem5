@@ -52,12 +52,14 @@ namespace gem5
 {
 
 ThermalDomain::ThermalDomain(const Params &p)
-    : SimObject(p), _initTemperature(p.initial_temperature),
-    node(NULL), subsystem(NULL),
-    ADD_STAT(currentTemp, statistics::units::DegreeCelsius::get(), "Temperature")
+    : SimObject(p),
+      _initTemperature(p.initial_temperature),
+      node(NULL),
+      subsystem(NULL),
+      ADD_STAT(currentTemp, statistics::units::DegreeCelsius::get(),
+               "Temperature")
 {
-    currentTemp
-        .functor([this]() { return currentTemperature().toCelsius(); });
+    currentTemp.functor([this]() { return currentTemperature().toCelsius(); });
 }
 
 Temperature
@@ -67,7 +69,7 @@ ThermalDomain::currentTemperature() const
 }
 
 void
-ThermalDomain::setSubSystem(SubSystem * ss)
+ThermalDomain::setSubSystem(SubSystem *ss)
 {
     assert(!this->subsystem);
     this->subsystem = ss;
@@ -82,9 +84,8 @@ ThermalDomain::emitUpdate()
     ppThermalUpdate->notify(node->temp);
 }
 
-
 LinearEquation
-ThermalDomain::getEquation(ThermalNode * tn, unsigned n, double step) const
+ThermalDomain::getEquation(ThermalNode *tn, unsigned n, double step) const
 {
     LinearEquation eq(n);
     double power = subsystem->getDynamicPower() + subsystem->getStaticPower();

@@ -75,8 +75,8 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
 FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p)
 {
     if (kernelObj) {
-        kernelEntry = (kernelObj->entryPoint() & loadAddrMask()) +
-            loadAddrOffset();
+        kernelEntry =
+            (kernelObj->entryPoint() & loadAddrMask()) + loadAddrOffset();
     }
 
     bootLoaders.reserve(p.boot_loader.size());
@@ -106,7 +106,7 @@ FsWorkload::initState()
 
     // FPEXC.EN = 0
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         Reset().invoke(tc);
         tc->activate();
     }
@@ -129,7 +129,7 @@ FsWorkload::initState()
         fatal_if(!arm_sys->params().gic_cpu_addr && is_gic_v2,
                  "gic_cpu_addr must be set with bootloader");
 
-        for (auto *tc: arm_sys->threads) {
+        for (auto *tc : arm_sys->threads) {
             tc->setReg(int_reg::R3, kernelEntry);
             if (is_gic_v2)
                 tc->setReg(int_reg::R4, arm_sys->params().gic_cpu_addr);

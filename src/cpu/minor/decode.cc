@@ -48,36 +48,33 @@ namespace gem5
 namespace minor
 {
 
-Decode::Decode(const std::string &name,
-    MinorCPU &cpu_,
-    const BaseMinorCPUParams &params,
-    Latch<ForwardInstData>::Output inp_,
-    Latch<ForwardInstData>::Input out_,
-    std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer) :
-    Named(name),
-    cpu(cpu_),
-    inp(inp_),
-    out(out_),
-    nextStageReserve(next_stage_input_buffer),
-    outputWidth(params.executeInputWidth),
-    processMoreThanOneInput(params.decodeCycleInput),
-    decodeInfo(params.numThreads),
-    threadPriority(0)
+Decode::Decode(
+    const std::string &name, MinorCPU &cpu_, const BaseMinorCPUParams &params,
+    Latch<ForwardInstData>::Output inp_, Latch<ForwardInstData>::Input out_,
+    std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer)
+    : Named(name),
+      cpu(cpu_),
+      inp(inp_),
+      out(out_),
+      nextStageReserve(next_stage_input_buffer),
+      outputWidth(params.executeInputWidth),
+      processMoreThanOneInput(params.decodeCycleInput),
+      decodeInfo(params.numThreads),
+      threadPriority(0)
 {
     if (outputWidth < 1)
         fatal("%s: executeInputWidth must be >= 1 (%d)\n", name, outputWidth);
 
     if (params.decodeInputBufferSize < 1) {
         fatal("%s: decodeInputBufferSize must be >= 1 (%d)\n", name,
-        params.decodeInputBufferSize);
+              params.decodeInputBufferSize);
     }
 
     /* Per-thread input buffers */
     for (ThreadID tid = 0; tid < params.numThreads; tid++) {
-        inputBuffer.push_back(
-            InputBuffer<ForwardInstData>(
-                name + ".inputBuffer" + std::to_string(tid), "insts",
-                params.decodeInputBufferSize));
+        inputBuffer.push_back(InputBuffer<ForwardInstData>(
+            name + ".inputBuffer" + std::to_string(tid), "insts",
+            params.decodeInputBufferSize));
     }
 }
 
@@ -110,11 +107,11 @@ Decode::popInput(ThreadID tid)
  *  (these are used as the 'FetchSeq' in tracing data) */
 static void
 dynInstAddTracing(MinorDynInstPtr inst, StaticInstPtr static_inst,
-    MinorCPU &cpu)
+                  MinorCPU &cpu)
 {
-    inst->traceData = cpu.getTracer()->getInstRecord(curTick(),
-        cpu.getContext(inst->id.threadId),
-        inst->staticInst, *inst->pc, static_inst);
+    inst->traceData = cpu.getTracer()->getInstRecord(
+        curTick(), cpu.getContext(inst->id.threadId), inst->staticInst,
+        *inst->pc, static_inst);
 
     /* Use the execSeqNum as the fetch sequence number as this most closely
      *  matches the other processor models' idea of fetch sequence */
@@ -148,9 +145,9 @@ Decode::evaluate()
         /* Pack instructions into the output while we can.  This may involve
          * using more than one input line */
         while (insts_in &&
-           decode_info.inputIndex < insts_in->width() && /* Still more input */
-           output_index < outputWidth /* Still more output to fill */)
-        {
+               decode_info.inputIndex <
+                   insts_in->width() && /* Still more input */
+               output_index < outputWidth /* Still more output to fill */) {
             MinorDynInstPtr inst = insts_in->insts[decode_info.inputIndex];
 
             if (inst->isBubble()) {
@@ -165,7 +162,7 @@ Decode::evaluate()
 
                 if (inst->isFault()) {
                     DPRINTF(Decode, "Fault being passed: %d\n",
-                        inst->fault->name());
+                            inst->fault->name());
 
                     decode_info.inputIndex++;
                     decode_info.inMacroop = false;
@@ -181,9 +178,8 @@ Decode::evaluate()
 
                     /* Get the micro-op static instruction from the
                      * static_inst. */
-                    static_micro_inst =
-                        static_inst->fetchMicroop(
-                                decode_info.microopPC->microPC());
+                    static_micro_inst = static_inst->fetchMicroop(
+                        decode_info.microopPC->microPC());
 
                     output_inst =
                         new MinorDynInst(static_micro_inst, inst->id);
@@ -195,17 +191,17 @@ Decode::evaluate()
                     if (static_micro_inst->isLastMicroop()) {
                         output_inst->predictedTaken = inst->predictedTaken;
                         set(output_inst->predictedTarget,
-                                inst->predictedTarget);
+                            inst->predictedTarget);
                     }
 
-                    DPRINTF(Decode, "Microop decomposition inputIndex:"
-                        " %d output_index: %d lastMicroop: %s microopPC:"
-                        " %s inst: %d\n",
-                        decode_info.inputIndex, output_index,
-                        (static_micro_inst->isLastMicroop() ?
-                            "true" : "false"),
-                        *decode_info.microopPC,
-                        *output_inst);
+                    DPRINTF(Decode,
+                            "Microop decomposition inputIndex:"
+                            " %d output_index: %d lastMicroop: %s microopPC:"
+                            " %s inst: %d\n",
+                            decode_info.inputIndex, output_index,
+                            (static_micro_inst->isLastMicroop() ? "true" :
+                                                                  "false"),
+                            *decode_info.microopPC, *output_inst);
 
                     /* Acknowledge that the static_inst isn't mine, it's my
                      * parent macro-op's */
@@ -220,9 +216,11 @@ Decode::evaluate()
                     }
                 } else {
                     /* Doesn't need decomposing, pass on instruction */
-                    DPRINTF(Decode, "Passing on inst: %s inputIndex:"
-                        " %d output_index: %d\n",
-                        *output_inst, decode_info.inputIndex, output_index);
+                    DPRINTF(Decode,
+                            "Passing on inst: %s inputIndex:"
+                            " %d output_index: %d\n",
+                            *output_inst, decode_info.inputIndex,
+                            output_index);
 
                     parent_static_inst = static_inst;
 
@@ -242,7 +240,8 @@ Decode::evaluate()
                 decode_info.execSeqNum++;
 
                 /* Correctly size the output before writing */
-                if (output_index == 0) insts_out.resize(outputWidth);
+                if (output_index == 0)
+                    insts_out.resize(outputWidth);
                 /* Push into output */
                 insts_out.insts[output_index] = output_inst;
                 output_index++;
@@ -283,8 +282,7 @@ Decode::evaluate()
 
     /* If we still have input to process and somewhere to put it,
      *  mark stage as active */
-    for (ThreadID i = 0; i < cpu.numThreads; i++)
-    {
+    for (ThreadID i = 0; i < cpu.numThreads; i++) {
         if (getInput(i) && nextStageReserve[i].canReserve()) {
             cpu.activityRecorder->activateStage(Pipeline::DecodeStageId);
             break;
@@ -303,16 +301,16 @@ Decode::getScheduledThread()
     std::vector<ThreadID> priority_list;
 
     switch (cpu.threadPolicy) {
-      case enums::SingleThreaded:
+    case enums::SingleThreaded:
         priority_list.push_back(0);
         break;
-      case enums::RoundRobin:
+    case enums::RoundRobin:
         priority_list = cpu.roundRobinPriority(threadPriority);
         break;
-      case enums::Random:
+    case enums::Random:
         priority_list = cpu.randomPriority();
         break;
-      default:
+    default:
         panic("Unknown fetch policy");
     }
 
@@ -323,7 +321,7 @@ Decode::getScheduledThread()
         }
     }
 
-   return InvalidThreadID;
+    return InvalidThreadID;
 }
 
 bool

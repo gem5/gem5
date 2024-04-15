@@ -109,6 +109,7 @@ class DistIface : public Drainable, public Serializable
 
   private:
     class SyncEvent;
+
     /** @class Sync
      * This class implements global sync operations among gem5 peer processes.
      *
@@ -181,10 +182,8 @@ class DistIface : public Drainable, public Serializable
          * @return false if the receiver thread needs to stop (e.g.
          * simulation is to exit)
          */
-        virtual bool progress(Tick send_tick,
-                              Tick next_repeat,
-                              ReqType do_ckpt,
-                              ReqType do_exit,
+        virtual bool progress(Tick send_tick, Tick next_repeat,
+                              ReqType do_ckpt, ReqType do_exit,
                               ReqType do_stop_sync) = 0;
         /**
          * Abort processing an on-going sync event (in case of an error, e.g.
@@ -202,7 +201,7 @@ class DistIface : public Drainable, public Serializable
         virtual void unserialize(CheckpointIn &cp) override = 0;
     };
 
-    class SyncNode: public Sync
+    class SyncNode : public Sync
     {
       private:
         /**
@@ -219,15 +218,13 @@ class DistIface : public Drainable, public Serializable
         ReqType needStopSync;
 
       public:
-
         SyncNode();
+
         ~SyncNode() {}
+
         bool run(bool same_tick) override;
-        bool progress(Tick max_req_tick,
-                      Tick next_repeat,
-                      ReqType do_ckpt,
-                      ReqType do_exit,
-                      ReqType do_stop_sync) override;
+        bool progress(Tick max_req_tick, Tick next_repeat, ReqType do_ckpt,
+                      ReqType do_exit, ReqType do_stop_sync) override;
 
         void requestCkpt(ReqType req) override;
         void requestExit(ReqType req) override;
@@ -237,7 +234,7 @@ class DistIface : public Drainable, public Serializable
         void unserialize(CheckpointIn &cp) override;
     };
 
-    class SyncSwitch: public Sync
+    class SyncSwitch : public Sync
     {
       private:
         /**
@@ -259,22 +256,28 @@ class DistIface : public Drainable, public Serializable
 
       public:
         SyncSwitch(int num_nodes);
+
         ~SyncSwitch() {}
 
         bool run(bool same_tick) override;
-        bool progress(Tick max_req_tick,
-                      Tick next_repeat,
-                      ReqType do_ckpt,
-                      ReqType do_exit,
-                      ReqType do_stop_sync) override;
+        bool progress(Tick max_req_tick, Tick next_repeat, ReqType do_ckpt,
+                      ReqType do_exit, ReqType do_stop_sync) override;
 
-        void requestCkpt(ReqType) override {
+        void
+        requestCkpt(ReqType) override
+        {
             panic("Switch requested checkpoint");
         }
-        void requestExit(ReqType) override {
+
+        void
+        requestExit(ReqType) override
+        {
             panic("Switch requested exit");
         }
-        void requestStopSync(ReqType) override {
+
+        void
+        requestStopSync(ReqType) override
+        {
             panic("Switch requested stop sync");
         }
 
@@ -301,6 +304,7 @@ class DistIface : public Drainable, public Serializable
          * Flag to set when the system is draining
          */
         bool _draining;
+
       public:
         /**
          * Only the firstly instantiated DistIface object will
@@ -309,6 +313,7 @@ class DistIface : public Drainable, public Serializable
         SyncEvent() : GlobalSyncEvent(Sim_Exit_Pri, 0), _draining(false) {}
 
         ~SyncEvent() {}
+
         /**
          * Schedule the first periodic sync event.
          */
@@ -320,9 +325,19 @@ class DistIface : public Drainable, public Serializable
          */
         void process() override;
 
-        bool draining() const { return _draining; }
-        void draining(bool fl) { _draining = fl; }
+        bool
+        draining() const
+        {
+            return _draining;
+        }
+
+        void
+        draining(bool fl)
+        {
+            _draining = fl;
+        }
     };
+
     /**
      * Class to encapsulate information about data packets received.
 
@@ -345,14 +360,21 @@ class DistIface : public Drainable, public Serializable
             Tick sendDelay;
 
             Desc() : sendTick(0), sendDelay(0) {}
-            Desc(EthPacketPtr p, Tick s, Tick d) :
-                packet(p), sendTick(s), sendDelay(d) {}
-            Desc(const Desc &d) :
-                packet(d.packet), sendTick(d.sendTick), sendDelay(d.sendDelay) {}
+
+            Desc(EthPacketPtr p, Tick s, Tick d)
+                : packet(p), sendTick(s), sendDelay(d)
+            {}
+
+            Desc(const Desc &d)
+                : packet(d.packet),
+                  sendTick(d.sendTick),
+                  sendDelay(d.sendDelay)
+            {}
 
             void serialize(CheckpointOut &cp) const override;
             void unserialize(CheckpointIn &cp) override;
         };
+
         /**
          * The queue to store the receive descriptors.
          */
@@ -398,8 +420,7 @@ class DistIface : public Drainable, public Serializable
          * contention and adjust receive tick for the incoming packets
          * accordingly.
          */
-        Tick calcReceiveTick(Tick send_tick,
-                             Tick send_delay,
+        Tick calcReceiveTick(Tick send_tick, Tick send_delay,
                              Tick prev_recv_tick);
 
         /**
@@ -415,9 +436,13 @@ class DistIface : public Drainable, public Serializable
          * @param em The event manager associated with the simulated Ethernet
          * link.
          */
-        RecvScheduler(EventManager *em) :
-            prevRecvTick(0), recvDone(nullptr), linkDelay(0),
-            eventManager(em), ckptRestore(false) {}
+        RecvScheduler(EventManager *em)
+            : prevRecvTick(0),
+              recvDone(nullptr),
+              linkDelay(0),
+              eventManager(em),
+              ckptRestore(false)
+        {}
 
         /**
          *  Initialize network link parameters.
@@ -427,8 +452,8 @@ class DistIface : public Drainable, public Serializable
          */
         void init(Event *recv_done, Tick link_delay);
         /**
-         * Fetch the next packet that is to be received by the simulated network
-         * link.
+         * Fetch the next packet that is to be received by the simulated
+         * network link.
          *
          * @note This method is called from the process() method of the receive
          * done event associated with the network link.
@@ -437,8 +462,7 @@ class DistIface : public Drainable, public Serializable
         /**
          * Push a newly arrived packet into the desc queue.
          */
-        void pushPacket(EthPacketPtr new_packet,
-                        Tick send_tick,
+        void pushPacket(EthPacketPtr new_packet, Tick send_tick,
                         Tick send_delay);
 
         void serialize(CheckpointOut &cp) const override;
@@ -451,6 +475,7 @@ class DistIface : public Drainable, public Serializable
          */
         void resumeRecvTicks();
     };
+
     /**
      * Tick to schedule the first dist sync event.
      * This is just as optimization : we do not need any dist sync
@@ -520,7 +545,7 @@ class DistIface : public Drainable, public Serializable
     /**
      * Is this node a switch?
      */
-     static bool isSwitch;
+    static bool isSwitch;
 
   private:
     /**
@@ -529,22 +554,23 @@ class DistIface : public Drainable, public Serializable
      * to the destination alongside the packet).
      * @param packet Pointer to the packet to send.
      */
-    virtual void sendPacket(const Header &header, const EthPacketPtr &packet) = 0;
+    virtual void sendPacket(const Header &header,
+                            const EthPacketPtr &packet) = 0;
     /**
      * Send out a control command to the remote end.
      * @param header Meta info describing the command (e.g. sync request)
      */
     virtual void sendCmd(const Header &header) = 0;
     /**
-     * Receive a header (i.e. meta info describing a data packet or a control command)
-     * from the remote end.
+     * Receive a header (i.e. meta info describing a data packet or a control
+     * command) from the remote end.
      * @param header The meta info structure to store the incoming header.
      */
     virtual bool recvHeader(Header &header) = 0;
     /**
      * Receive a packet from the remote end.
-     * @param header Meta info about the incoming packet (obtanied by a previous
-     * call to the recvHedaer() method).
+     * @param header Meta info about the incoming packet (obtanied by a
+     * previous call to the recvHedaer() method).
      * @param Pointer to packet received.
      */
     virtual void recvPacket(const Header &header, EthPacketPtr &packet) = 0;
@@ -565,7 +591,6 @@ class DistIface : public Drainable, public Serializable
     void recvThreadFunc(Event *recv_done, Tick link_delay);
 
   public:
-
     /**
      * ctor
      * @param dist_rank Rank of this gem5 process within the dist run
@@ -573,14 +598,9 @@ class DistIface : public Drainable, public Serializable
      * @param sync_repeat Frequency for dist synchronisation
      * @param em The event manager associated with the simulated Ethernet link
      */
-    DistIface(unsigned dist_rank,
-              unsigned dist_size,
-              Tick sync_start,
-              Tick sync_repeat,
-              EventManager *em,
-              bool use_pseudo_op,
-              bool is_switch,
-              int num_nodes);
+    DistIface(unsigned dist_rank, unsigned dist_size, Tick sync_start,
+              Tick sync_repeat, EventManager *em, bool use_pseudo_op,
+              bool is_switch, int num_nodes);
 
     virtual ~DistIface();
     /**
@@ -589,6 +609,7 @@ class DistIface : public Drainable, public Serializable
      * @param send_delay The delay in ticks for the send completion event.
      */
     void packetOut(EthPacketPtr pkt, Tick send_delay);
+
     /**
      * Fetch the packet scheduled to be received next by the simulated
      * network link.
@@ -597,7 +618,11 @@ class DistIface : public Drainable, public Serializable
      * receive done event. It also schedules the next receive event if the
      * receive queue is not empty.
      */
-    EthPacketPtr packetIn() { return recvScheduler.popPacket(); }
+    EthPacketPtr
+    packetIn()
+    {
+        return recvScheduler.popPacket();
+    }
 
     DrainState drain() override;
     void drainResume() override;
@@ -640,7 +665,7 @@ class DistIface : public Drainable, public Serializable
      * Trigger the primary to start/stop synchronization.
      */
     static void toggleSync(ThreadContext *tc);
- };
+};
 
 } // namespace gem5
 

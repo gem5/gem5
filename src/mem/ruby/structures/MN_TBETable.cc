@@ -45,42 +45,42 @@ namespace ruby
 
 // Based on the current set of TBEs, choose a new "distributor"
 // Can return null -> no distributor
-MiscNode_TBE*
+MiscNode_TBE *
 MN_TBETable::chooseNewDistributor()
 {
     // Run over the current TBEs, gather information
-    std::vector<MiscNode_TBE*> ready_sync_tbes;
-    std::vector<MiscNode_TBE*> ready_nonsync_tbes;
-    std::vector<MiscNode_TBE*> potential_sync_dependency_tbes;
+    std::vector<MiscNode_TBE *> ready_sync_tbes;
+    std::vector<MiscNode_TBE *> ready_nonsync_tbes;
+    std::vector<MiscNode_TBE *> potential_sync_dependency_tbes;
     bool has_waiting_sync = false;
     int waiting_count = 0;
-    for (auto& keyValuePair : m_map) {
-        MiscNode_TBE& tbe = keyValuePair.second;
+    for (auto &keyValuePair : m_map) {
+        MiscNode_TBE &tbe = keyValuePair.second;
 
         switch (tbe.getstate()) {
-            case MiscNode_State_DvmSync_Distributing:
-            case MiscNode_State_DvmNonSync_Distributing:
-                // If something is still distributing, just return it
-                return &tbe;
-            case MiscNode_State_DvmSync_ReadyToDist:
-                ready_sync_tbes.push_back(&tbe);
-                break;
-            case MiscNode_State_DvmNonSync_ReadyToDist:
-                ready_nonsync_tbes.push_back(&tbe);
-                // Sync ops can potentially depend on not-executed NonSync ops
-                potential_sync_dependency_tbes.push_back(&tbe);
-                break;
-            case MiscNode_State_DvmSync_Waiting:
-                has_waiting_sync = true;
-                waiting_count++;
-                break;
-            case MiscNode_State_DvmNonSync_Waiting:
-                waiting_count++;
-                // Sync ops can potentially depend on not-finished NonSync ops
-                potential_sync_dependency_tbes.push_back(&tbe);
-                break;
-            default:
-                break;
+        case MiscNode_State_DvmSync_Distributing:
+        case MiscNode_State_DvmNonSync_Distributing:
+            // If something is still distributing, just return it
+            return &tbe;
+        case MiscNode_State_DvmSync_ReadyToDist:
+            ready_sync_tbes.push_back(&tbe);
+            break;
+        case MiscNode_State_DvmNonSync_ReadyToDist:
+            ready_nonsync_tbes.push_back(&tbe);
+            // Sync ops can potentially depend on not-executed NonSync ops
+            potential_sync_dependency_tbes.push_back(&tbe);
+            break;
+        case MiscNode_State_DvmSync_Waiting:
+            has_waiting_sync = true;
+            waiting_count++;
+            break;
+        case MiscNode_State_DvmNonSync_Waiting:
+            waiting_count++;
+            // Sync ops can potentially depend on not-finished NonSync ops
+            potential_sync_dependency_tbes.push_back(&tbe);
+            break;
+        default:
+            break;
         }
     }
 
@@ -102,8 +102,8 @@ MN_TBETable::chooseNewDistributor()
     // the RN-F can send a dependent Sync immediately afterwards.
     // The Non-Sync must receive all responses before the Sync starts.
     // => ignore Syncs which arrive after unfinished NonSyncs
-    auto hasNonSyncDependency = [&](const MiscNode_TBE* sync_tbe) {
-        for (const auto* potential_dep : potential_sync_dependency_tbes) {
+    auto hasNonSyncDependency = [&](const MiscNode_TBE *sync_tbe) {
+        for (const auto *potential_dep : potential_sync_dependency_tbes) {
             if (sync_tbe->gettimestamp() > potential_dep->gettimestamp() &&
                 sync_tbe->getrequestor() == potential_dep->getrequestor()) {
                 // A NonSync from the same machine arrived before us
@@ -117,11 +117,10 @@ MN_TBETable::chooseNewDistributor()
     // https://en.wikipedia.org/wiki/Erase%E2%80%93remove_idiom
     // This calls an O(n) function n times = O(n^2) worst case.
     // TODO this should be improved if n grows > 16
-    ready_sync_tbes.erase(
-        std::remove_if(ready_sync_tbes.begin(), ready_sync_tbes.end(),
-                       hasNonSyncDependency),
-        ready_sync_tbes.end()
-    );
+    ready_sync_tbes.erase(std::remove_if(ready_sync_tbes.begin(),
+                                         ready_sync_tbes.end(),
+                                         hasNonSyncDependency),
+                          ready_sync_tbes.end());
 
     // TODO shouldn't use age?
 
@@ -134,12 +133,11 @@ MN_TBETable::chooseNewDistributor()
         return nullptr;
 
     // Otherwise select the minimum timestamp = oldest element
-    auto it = std::min_element(
-        ready_nonsync_tbes.begin(), ready_nonsync_tbes.end(),
-        [](const MiscNode_TBE* a, const MiscNode_TBE* b) {
-            return a->gettimestamp() - b->gettimestamp();
-        }
-    );
+    auto it =
+        std::min_element(ready_nonsync_tbes.begin(), ready_nonsync_tbes.end(),
+                         [](const MiscNode_TBE *a, const MiscNode_TBE *b) {
+                             return a->gettimestamp() - b->gettimestamp();
+                         });
     assert(it != ready_nonsync_tbes.end());
     return *it;
 }

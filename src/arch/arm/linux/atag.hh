@@ -48,12 +48,12 @@ namespace gem5
 
 enum
 {
-    CoreTag   = 0x54410001,
-    MemTag    = 0x54410002,
-    RevTag    = 0x54410007,
+    CoreTag = 0x54410001,
+    MemTag = 0x54410002,
+    RevTag = 0x54410007,
     SerialTag = 0x54410006,
-    CmdTag    = 0x54410009,
-    NoneTag   = 0x00000000
+    CmdTag = 0x54410009,
+    NoneTag = 0x00000000
 };
 
 class AtagHeader
@@ -65,23 +65,26 @@ class AtagHeader
   public:
     /** Tag (normally starts with 'T''A' and 16 bits of number */
     virtual uint32_t tag() = 0;
+
     /** If the header should be 0 size */
-    virtual bool null() { return false; }
-
-    uint32_t size() const { return _size; }
-
-    AtagHeader(uint32_t s)
-        : _size(s)
+    virtual bool
+    null()
     {
-        storage = new uint32_t[size()];
+        return false;
     }
 
-    virtual ~AtagHeader()
+    uint32_t
+    size() const
     {
-        delete[] storage;
+        return _size;
     }
 
-    uint32_t copyOut(uint8_t *p)
+    AtagHeader(uint32_t s) : _size(s) { storage = new uint32_t[size()]; }
+
+    virtual ~AtagHeader() { delete[] storage; }
+
+    uint32_t
+    copyOut(uint8_t *p)
     {
         storage[0] = null() ? 0 : size();
         storage[1] = tag();
@@ -94,61 +97,114 @@ class AtagCore : public AtagHeader
 {
   public:
     static const uint32_t Size = 5;
-    uint32_t tag() { return CoreTag; }
 
-    void flags(uint32_t i) { storage[2] = i; }
-    void pagesize(uint32_t i) { storage[3] = i; }
-    void rootdev(uint32_t i) { storage[4] = i; }
-    AtagCore()
-        : AtagHeader(Size)
-    {}
+    uint32_t
+    tag()
+    {
+        return CoreTag;
+    }
+
+    void
+    flags(uint32_t i)
+    {
+        storage[2] = i;
+    }
+
+    void
+    pagesize(uint32_t i)
+    {
+        storage[3] = i;
+    }
+
+    void
+    rootdev(uint32_t i)
+    {
+        storage[4] = i;
+    }
+
+    AtagCore() : AtagHeader(Size) {}
 };
 
 class AtagMem : public AtagHeader
 {
   public:
     static const uint32_t Size = 4;
-    uint32_t tag() { return MemTag; }
 
-    void memSize(uint32_t i) { storage[2] = i; }
-    void memStart(uint32_t i) { storage[3] = i; }
-    AtagMem()
-        : AtagHeader(Size)
-    {}
+    uint32_t
+    tag()
+    {
+        return MemTag;
+    }
+
+    void
+    memSize(uint32_t i)
+    {
+        storage[2] = i;
+    }
+
+    void
+    memStart(uint32_t i)
+    {
+        storage[3] = i;
+    }
+
+    AtagMem() : AtagHeader(Size) {}
 };
 
 class AtagRev : public AtagHeader
 {
   public:
     static const uint32_t Size = 3;
-    uint32_t tag() { return RevTag; }
 
-    void rev(uint32_t i) { storage[2] = i; }
-    AtagRev()
-        : AtagHeader(Size)
-    {}
+    uint32_t
+    tag()
+    {
+        return RevTag;
+    }
+
+    void
+    rev(uint32_t i)
+    {
+        storage[2] = i;
+    }
+
+    AtagRev() : AtagHeader(Size) {}
 };
-
 
 class AtagSerial : public AtagHeader
 {
   public:
     static const uint32_t Size = 4;
-    uint32_t tag() { return SerialTag; }
 
-    void sn(uint64_t i) { storage[2] = (uint32_t)i; storage[3] = i >> 32; }
-    AtagSerial()
-        : AtagHeader(Size)
-    {}
+    uint32_t
+    tag()
+    {
+        return SerialTag;
+    }
+
+    void
+    sn(uint64_t i)
+    {
+        storage[2] = (uint32_t)i;
+        storage[3] = i >> 32;
+    }
+
+    AtagSerial() : AtagHeader(Size) {}
 };
 
 class AtagCmdline : public AtagHeader
 {
   public:
     static const uint32_t Size = 3;
-    uint32_t tag() { return CmdTag; }
 
-    void cmdline(const std::string &s)
+    uint32_t
+    tag()
+    {
+        return CmdTag;
+    }
+
+    void
+    cmdline(const std::string &s)
     {
         // Add one for null terminator
         int len = s.length() + 1;
@@ -162,28 +218,38 @@ class AtagCmdline : public AtagHeader
         // longer than needed and mis-speculation of the NULL in the O3 CPU can
         // change stats ever so slightly when that happens.
         storage[size() - 1] = 0;
-        strcpy((char*)&storage[2] , s.c_str());
+        strcpy((char *)&storage[2], s.c_str());
     }
-    AtagCmdline()
-        : AtagHeader(Size)
-    {}
+
+    AtagCmdline() : AtagHeader(Size) {}
 };
 
 class AtagNone : public AtagHeader
 {
   public:
     static const uint32_t Size = 2;
-    virtual bool null() { return true; }
-    uint32_t tag() { return NoneTag; }
-    AtagNone()
-        : AtagHeader(Size)
-    {}
+
+    virtual bool
+    null()
+    {
+        return true;
+    }
+
+    uint32_t
+    tag()
+    {
+        return NoneTag;
+    }
+
+    AtagNone() : AtagHeader(Size) {}
 };
+
 /*
 //
 // example ARM Linux bootloader code
 // this example is distributed under the BSD licence
-// Code taken from http://www.simtec.co.uk/products/SWLINUX/files/booting_article.html
+// Code taken from
+http://www.simtec.co.uk/products/SWLINUX/files/booting_article.html
 ///
 
 // list of possible tags

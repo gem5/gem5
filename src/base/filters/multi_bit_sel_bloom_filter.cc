@@ -42,9 +42,11 @@ namespace bloom_filter
 {
 
 MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams &p)
-    : Base(p), numHashes(p.num_hashes),
+    : Base(p),
+      numHashes(p.num_hashes),
       parFilterSize(p.size / numHashes),
-      isParallel(p.is_parallel), skipBits(p.skip_bits)
+      isParallel(p.is_parallel),
+      skipBits(p.skip_bits)
 {
     if (p.size % numHashes) {
         fatal("Can't divide filter (%d) in %d equal portions", p.size,
@@ -52,9 +54,7 @@ MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams &p)
     }
 }
 
-MultiBitSel::~MultiBitSel()
-{
-}
+MultiBitSel::~MultiBitSel() {}
 
 void
 MultiBitSel::set(Addr addr)
@@ -68,7 +68,7 @@ int
 MultiBitSel::getCount(Addr addr) const
 {
     int count = 0;
-    for (int i=0; i < numHashes; i++) {
+    for (int i = 0; i < numHashes; i++) {
         count += filter[hash(addr, i)];
     }
     return count;
@@ -77,8 +77,9 @@ MultiBitSel::getCount(Addr addr) const
 int
 MultiBitSel::hash(Addr addr, int hash_number) const
 {
-    uint64_t value = bits(addr, std::numeric_limits<Addr>::digits - 1,
-        offsetBits) >> skipBits;
+    uint64_t value =
+        bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits) >>
+        skipBits;
     const int max_bits = std::numeric_limits<Addr>::digits - offsetBits;
     int result = 0;
     int bit, i;

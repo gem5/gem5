@@ -56,13 +56,16 @@ namespace gem5
 {
 
 BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
-    : SimObject(p), assoc(p.assoc),
+    : SimObject(p),
+      assoc(p.assoc),
       numSets(p.size / (p.entry_size * assoc)),
-      setShift(floorLog2(p.entry_size)), setMask(numSets - 1), sets(numSets),
+      setShift(floorLog2(p.entry_size)),
+      setMask(numSets - 1),
+      sets(numSets),
       tagShift(setShift + floorLog2(numSets))
 {
-    fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power " \
-             "of 2");
+    fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power "
+                                   "of 2");
     fatal_if(assoc <= 0, "associativity must be greater than zero");
 
     // Make space for the entries
@@ -71,14 +74,14 @@ BaseIndexingPolicy::BaseIndexingPolicy(const Params &p)
     }
 }
 
-ReplaceableEntry*
+ReplaceableEntry *
 BaseIndexingPolicy::getEntry(const uint32_t set, const uint32_t way) const
 {
     return sets[set][way];
 }
 
 void
-BaseIndexingPolicy::setEntry(ReplaceableEntry* entry, const uint64_t index)
+BaseIndexingPolicy::setEntry(ReplaceableEntry *entry, const uint64_t index)
 {
     // Calculate set and way from entry index
     const std::lldiv_t div_result = std::div((long long)index, assoc);

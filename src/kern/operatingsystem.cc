@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "kern/operatingsystem.hh"
 
 #include "base/logging.hh"
@@ -39,8 +38,9 @@ OperatingSystem::openSpecialFile(std::string path, Process *process,
                                  ThreadContext *tc)
 {
     warn("Attempting to open special file: %s. Ignoring. Simulation may"
-            " take un-expected code path or be non-deterministic until proper"
-            "  handling is implemented.\n", path.c_str());
+         " take un-expected code path or be non-deterministic until proper"
+         "  handling is implemented.\n",
+         path.c_str());
     return -1;
 }
 

@@ -48,7 +48,7 @@ class CallbackQueue : public std::list<std::function<void()>>
     void
     process()
     {
-        for (auto &f: *this)
+        for (auto &f : *this)
             f();
     }
 };

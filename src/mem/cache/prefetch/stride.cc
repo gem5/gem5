@@ -63,8 +63,8 @@ namespace gem5
 namespace prefetch
 {
 
-Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence)
-  : TaggedEntry(), confidence(init_confidence)
+Stride::StrideEntry::StrideEntry(const SatCounter8 &init_confidence)
+    : TaggedEntry(), confidence(init_confidence)
 {
     invalidate();
 }
@@ -90,7 +90,7 @@ Stride::Stride(const StridePrefetcherParams &p)
 {
 }
 
-Stride::PCTable*
+Stride::PCTable *
 Stride::findTable(int context)
 {
     // Check if table for given context exists
@@ -102,7 +102,7 @@ Stride::findTable(int context)
     return allocateNewContext(context);
 }
 
-Stride::PCTable*
+Stride::PCTable *
 Stride::allocateNewContext(int context)
 {
     std::string table_name = name() + ".PCTable" + std::to_string(context);
@@ -124,8 +124,8 @@ Stride::allocateNewContext(int context)
 
 void
 Stride::calculatePrefetch(const PrefetchInfo &pfi,
-                                    std::vector<AddrPriority> &addresses,
-                                    const CacheAccessor &cache)
+                          std::vector<AddrPriority> &addresses,
+                          const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -139,7 +139,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     RequestorID requestor_id = useRequestorId ? pfi.getRequestorId() : 0;
 
     // Get corresponding pc table
-    PCTable* pcTable = findTable(requestor_id);
+    PCTable *pcTable = findTable(requestor_id);
 
     // Search for entry in the pc table
     StrideEntry *entry = pcTable->findEntry(pc, is_secure);
@@ -162,10 +162,11 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
             }
         }
 
-        DPRINTF(HWPrefetch, "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
-                "conf %d\n", pc, pf_addr, is_secure ? "s" : "ns",
-                new_stride, stride_match ? "match" : "change",
-                (int)entry->confidence);
+        DPRINTF(HWPrefetch,
+                "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
+                "conf %d\n",
+                pc, pf_addr, is_secure ? "s" : "ns", new_stride,
+                stride_match ? "match" : "change", (int)entry->confidence);
 
         entry->lastAddr = pf_addr;
 
@@ -191,7 +192,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
                 is_secure ? "s" : "ns");
 
-        StrideEntry* entry = pcTable->findVictim(pc);
+        StrideEntry *entry = pcTable->findVictim(pc);
 
         // Insert new entry's data
         entry->lastAddr = pf_addr;

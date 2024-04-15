@@ -62,7 +62,7 @@ ARMTraceChild::ARMTraceChild()
         regDiffSinceUpdate[x] = false;
     }
 
-    assert(sizeof(regs.uregs)/sizeof(regs.uregs[0]) > CPSR);
+    assert(sizeof(regs.uregs) / sizeof(regs.uregs[0]) > CPSR);
 }
 
 bool
@@ -156,7 +156,7 @@ ARMTraceChild::getOldRegVal(int num)
 }
 
 ostream &
-ARMTraceChild::outputStartState(ostream & os)
+ARMTraceChild::outputStartState(ostream &os)
 {
     uint32_t sp = getSP();
     uint32_t pc = getPC();
@@ -167,19 +167,18 @@ ARMTraceChild::outputStartState(ostream & os)
     sprintf(obuf, "Initial program counter = 0x%08x\n", pc);
     os << obuf;
 
-    //Output the argument count
+    // Output the argument count
     int32_t cargc = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
     sprintf(obuf, "0x%08x: Argc = 0x%08x\n", sp, cargc);
     os << obuf;
     sp += 4;
 
-    //Output argv pointers
+    // Output argv pointers
     int argCount = 0;
     int32_t cargv;
     do {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%08x: argv[%d] = 0x%08x\n",
-                sp, argCount++, cargv);
+        sprintf(obuf, "0x%08x: argv[%d] = 0x%08x\n", sp, argCount++, cargv);
         if (cargv)
             if (highestInfo < cargv)
                 highestInfo = cargv;
@@ -187,13 +186,12 @@ ARMTraceChild::outputStartState(ostream & os)
         sp += 4;
     } while (cargv);
 
-    //Output the envp pointers
+    // Output the envp pointers
     int envCount = 0;
     uint32_t cenvp;
     do {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%08x: envp[%d] = 0x%08x\n",
-                sp, envCount++, cenvp);
+        sprintf(obuf, "0x%08x: envp[%d] = 0x%08x\n", sp, envCount++, cenvp);
         os << obuf;
         sp += 4;
     } while (cenvp);
@@ -203,24 +201,24 @@ ARMTraceChild::outputStartState(ostream & os)
         sp += 4;
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 4;
-        sprintf(obuf, "0x%08x: Auxiliary vector = {0x%08x, 0x%08x}\n",
-                sp - 8, auxType, auxVal);
+        sprintf(obuf, "0x%08x: Auxiliary vector = {0x%08x, 0x%08x}\n", sp - 8,
+                auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
-    //Print out the argument strings, environment strings, and file name.
+    // Print out the argument strings, environment strings, and file name.
     string current;
     uint32_t buf;
     uint32_t currentStart = sp;
     bool clearedInitialPadding = false;
     do {
         buf = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        char * cbuf = (char *)&buf;
+        char *cbuf = (char *)&buf;
         for (int x = 0; x < sizeof(uint32_t); x++) {
             if (cbuf[x])
                 current += cbuf[x];
             else {
-                sprintf(obuf, "0x%08x: \"%s\"\n",
-                        currentStart, current.c_str());
+                sprintf(obuf, "0x%08x: \"%s\"\n", currentStart,
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;
@@ -257,7 +255,6 @@ ARMTraceChild::step()
     //  So we look for this pattern and set a breakpoint on the LR at the SUB
     //  instruction.
 
-
     subsOp = ptrace(PTRACE_PEEKDATA, pid, pc, 0);
     if ((subsOp & 0xFFFF0FFF) == 0xe3e00a0f)
         foundMvn = true;
@@ -273,7 +270,6 @@ ARMTraceChild::step()
     if (patch)
         ptrace(PTRACE_POKEDATA, pid, lr, lrOp);
 }
-
 
 TraceChild *
 genTraceChild()

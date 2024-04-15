@@ -26,17 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * Implementation of the Spatio-Temporal Memory Streaming Prefetcher (STeMS)
-  * Reference:
-  *    Spatio-temporal memory streaming.
-  *    Somogyi, S., Wenisch, T. F., Ailamaki, A., & Falsafi, B. (2009).
-  *    ACM SIGARCH Computer Architecture News, 37(3), 69-80.
-  *
-  * Notes:
-  * - The functionality described in the paper as Streamed Value Buffer (SVB)
-  *   is not implemented here, as this is handled by the QueuedPrefetcher class
-  */
+/**
+ * Implementation of the Spatio-Temporal Memory Streaming Prefetcher (STeMS)
+ * Reference:
+ *    Spatio-temporal memory streaming.
+ *    Somogyi, S., Wenisch, T. F., Ailamaki, A., & Falsafi, B. (2009).
+ *    ACM SIGARCH Computer Architecture News, 37(3), 69-80.
+ *
+ * Notes:
+ * - The functionality described in the paper as Streamed Value Buffer (SVB)
+ *   is not implemented here, as this is handled by the QueuedPrefetcher class
+ */
 
 #ifndef __MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__
 #define __MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__
@@ -87,17 +87,20 @@ class STeMS : public Queued
             unsigned int offset;
             /** Intearleaving position on the global access sequence */
             unsigned int delta;
-            SequenceEntry() : counter(2), offset(0), delta(0)
-            {}
+
+            SequenceEntry() : counter(2), offset(0), delta(0) {}
         };
+
         /** Sequence of accesses */
         std::vector<SequenceEntry> sequence;
 
         ActiveGenerationTableEntry(int num_positions)
-          : TaggedEntry(), paddress(0), pc(0),
-            seqCounter(0), sequence(num_positions)
-        {
-        }
+            : TaggedEntry(),
+              paddress(0),
+              pc(0),
+              seqCounter(0),
+              sequence(num_positions)
+        {}
 
         void
         invalidate() override
@@ -119,7 +122,8 @@ class STeMS : public Queued
          * becasuse the TaggedEntry component must not be copied.
          * @param e entry which generation has ended
          */
-        void update(ActiveGenerationTableEntry const &e)
+        void
+        update(ActiveGenerationTableEntry const &e)
         {
             paddress = e.paddress;
             pc = e.pc;
@@ -131,7 +135,9 @@ class STeMS : public Queued
          * Add a new access to the sequence
          * @param offset offset in cachelines within the spatial region
          */
-        void addOffset(unsigned int offset) {
+        void
+        addOffset(unsigned int offset)
+        {
             // Search for the offset in the deltas array, if it exist, update
             // the corresponding counter, if not, add the offset to the array
             for (auto &seq_entry : sequence) {
@@ -213,4 +219,4 @@ class STeMS : public Queued
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__
+#endif //__MEM_CACHE_PREFETCH_SPATIO_TEMPORAL_MEMORY_STREAMING_HH__

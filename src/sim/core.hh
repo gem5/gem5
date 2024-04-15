@@ -89,6 +89,7 @@ extern Tick ps; ///< picosecond
 /** @} */
 } // namespace as_int
 } // namespace sim_clock
+
 /** @} */
 
 void fixClockFrequency();

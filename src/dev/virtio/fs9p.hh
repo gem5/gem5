@@ -65,14 +65,23 @@ struct GEM5_PACKED P9MsgHeader
 };
 
 /** Convert p9 byte order (LE) to host byte order */
-template <typename T> inline T
-p9toh(T v) { return letoh(v); }
+template <typename T>
+inline T
+p9toh(T v)
+{
+    return letoh(v);
+}
 
 /** Convert host byte order to p9 byte order (LE) */
-template <typename T> inline T
-htop9(T v) { return htole(v); }
+template <typename T>
+inline T
+htop9(T v)
+{
+    return htole(v);
+}
 
-template <> inline P9MsgHeader
+template <>
+inline P9MsgHeader
 p9toh(P9MsgHeader v)
 {
     v.len = p9toh(v.len);
@@ -81,7 +90,8 @@ p9toh(P9MsgHeader v)
     return v;
 }
 
-template <> inline P9MsgHeader
+template <>
+inline P9MsgHeader
 htop9(P9MsgHeader v)
 {
     v.len = htop9(v.len);
@@ -132,8 +142,9 @@ class VirtIO9PBase : public VirtIODeviceBase
     };
 
     /** Currently active configuration (host byte order) */
-    std::unique_ptr<Config, void(*)(void *p)> config =
-        {nullptr, [](void *p){ operator delete(p); }};
+    std::unique_ptr<Config, void (*)(void *p)> config = {
+        nullptr, [](void *p) { operator delete(p); }
+    };
 
     /** VirtIO device ID */
     static const DeviceId ID_9P = 0x09;
@@ -152,14 +163,20 @@ class VirtIO9PBase : public VirtIODeviceBase
     class FSQueue : public VirtQueue
     {
       public:
-        FSQueue(PortProxy &proxy, ByteOrder bo,
-                uint16_t size, VirtIO9PBase &_parent)
-            : VirtQueue(proxy, bo, size), parent(_parent) {}
+        FSQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+                VirtIO9PBase &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
+        {}
+
         virtual ~FSQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
 
-        std::string name() const { return parent.name() + ".queue"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".queue";
+        }
 
       protected:
         VirtIO9PBase &parent;
@@ -175,7 +192,8 @@ class VirtIO9PBase : public VirtIODeviceBase
      * @param data Pointer to data in message.
      * @param size Size of data (excluding header)
      */
-    virtual void recvTMsg(const P9MsgHeader &header, const uint8_t *data, size_t size) = 0;
+    virtual void recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                          size_t size) = 0;
     /**
      * Send a 9p RPC message reply.
      *
@@ -285,7 +303,7 @@ class VirtIO9PProxy : public VirtIO9PBase
      * that we do not, and cannot, track the complete state across
      * host and guest.
      */
-     bool deviceUsed;
+    bool deviceUsed;
 };
 
 struct VirtIO9PDiodParams;
@@ -319,9 +337,10 @@ class VirtIO9PDiod : public VirtIO9PProxy
     {
       public:
         DiodDataEvent(VirtIO9PDiod &_parent, int fd, int event)
-            : PollEvent(fd, event), parent(_parent) {}
+            : PollEvent(fd, event), parent(_parent)
+        {}
 
-        virtual ~DiodDataEvent() {};
+        virtual ~DiodDataEvent(){};
 
         void process(int revent);
 
@@ -372,9 +391,10 @@ class VirtIO9PSocket : public VirtIO9PProxy
     {
       public:
         SocketDataEvent(VirtIO9PSocket &_parent, int fd, int event)
-            : PollEvent(fd, event), parent(_parent) {}
+            : PollEvent(fd, event), parent(_parent)
+        {}
 
-        virtual ~SocketDataEvent() {};
+        virtual ~SocketDataEvent(){};
 
         void process(int revent);
 

@@ -46,18 +46,15 @@ namespace gem5
 {
 
 BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
-    : _name(obj.name()), requestorId(requestor_id),
-      duration(_duration)
-{
-}
+    : _name(obj.name()), requestorId(requestor_id), duration(_duration)
+{}
 
 PacketPtr
-BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
+BaseGen::getPacket(Addr addr, unsigned size, const MemCmd &cmd,
                    Request::FlagsType flags)
 {
     // Create new request
-    RequestPtr req = std::make_shared<Request>(addr, size, flags,
-                                               requestorId);
+    RequestPtr req = std::make_shared<Request>(addr, size, flags, requestorId);
     // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
     // bits
     req->setPC(((Addr)requestorId) << 2);
@@ -65,7 +62,7 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
     // Embed it in a packet
     PacketPtr pkt = new Packet(req, cmd);
 
-    uint8_t* pkt_data = new uint8_t[req->getSize()];
+    uint8_t *pkt_data = new uint8_t[req->getSize()];
     pkt->dataDynamic(pkt_data);
 
     if (cmd.isWrite()) {
@@ -75,22 +72,25 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
     return pkt;
 }
 
-StochasticGen::StochasticGen(SimObject &obj,
-                             RequestorID requestor_id, Tick _duration,
-                             Addr start_addr, Addr end_addr,
+StochasticGen::StochasticGen(SimObject &obj, RequestorID requestor_id,
+                             Tick _duration, Addr start_addr, Addr end_addr,
                              Addr _blocksize, Addr cacheline_size,
                              Tick min_period, Tick max_period,
                              uint8_t read_percent, Addr data_limit)
-        : BaseGen(obj, requestor_id, _duration),
-          startAddr(start_addr), endAddr(end_addr),
-          blocksize(_blocksize), cacheLineSize(cacheline_size),
-          minPeriod(min_period), maxPeriod(max_period),
-          readPercent(read_percent), dataLimit(data_limit)
+    : BaseGen(obj, requestor_id, _duration),
+      startAddr(start_addr),
+      endAddr(end_addr),
+      blocksize(_blocksize),
+      cacheLineSize(cacheline_size),
+      minPeriod(min_period),
+      maxPeriod(max_period),
+      readPercent(read_percent),
+      dataLimit(data_limit)
 {
     if (blocksize > cacheLineSize)
         fatal("TrafficGen %s block size (%d) is larger than "
-              "cache line size (%d)\n", name(),
-              blocksize, cacheLineSize);
+              "cache line size (%d)\n",
+              name(), blocksize, cacheLineSize);
 
     if (read_percent > 100)
         fatal("%s cannot have more than 100% reads", name());

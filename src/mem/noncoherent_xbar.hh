@@ -67,15 +67,13 @@ namespace gem5
  */
 class NoncoherentXBar : public BaseXBar
 {
-
   protected:
-
     /**
      * Declare the layers of this crossbar, one vector for requests
      * and one for responses.
      */
-    std::vector<ReqLayer*> reqLayers;
-    std::vector<RespLayer*> respLayers;
+    std::vector<ReqLayer *> reqLayers;
+    std::vector<RespLayer *> respLayers;
 
     /**
      * Declaration of the non-coherent crossbar CPU-side port type, one
@@ -85,7 +83,6 @@ class NoncoherentXBar : public BaseXBar
     class NoncoherentXBarResponsePort : public QueuedResponsePort
     {
       private:
-
         /** A reference to the crossbar to which this port belongs. */
         NoncoherentXBar &xbar;
 
@@ -93,15 +90,14 @@ class NoncoherentXBar : public BaseXBar
         RespPacketQueue queue;
 
       public:
-
         NoncoherentXBarResponsePort(const std::string &_name,
-                                NoncoherentXBar &_xbar, PortID _id)
-            : QueuedResponsePort(_name, queue, _id), xbar(_xbar),
+                                    NoncoherentXBar &_xbar, PortID _id)
+            : QueuedResponsePort(_name, queue, _id),
+              xbar(_xbar),
               queue(_xbar, *this)
-        { }
+        {}
 
       protected:
-
         bool
         recvTimingReq(PacketPtr pkt) override
         {
@@ -128,7 +124,7 @@ class NoncoherentXBar : public BaseXBar
 
         void
         recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override
+                           MemBackdoorPtr &backdoor) override
         {
             xbar.recvMemBackdoorReq(req, backdoor);
         }
@@ -148,19 +144,16 @@ class NoncoherentXBar : public BaseXBar
     class NoncoherentXBarRequestPort : public RequestPort
     {
       private:
-
         /** A reference to the crossbar to which this port belongs. */
         NoncoherentXBar &xbar;
 
       public:
-
         NoncoherentXBarRequestPort(const std::string &_name,
-                                 NoncoherentXBar &_xbar, PortID _id)
+                                   NoncoherentXBar &_xbar, PortID _id)
             : RequestPort(_name, _id), xbar(_xbar)
-        { }
+        {}
 
       protected:
-
         bool
         recvTimingResp(PacketPtr pkt) override
         {
@@ -184,13 +177,12 @@ class NoncoherentXBar : public BaseXBar
     virtual bool recvTimingResp(PacketPtr pkt, PortID mem_side_port_id);
     void recvReqRetry(PortID mem_side_port_id);
     Tick recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
-                            MemBackdoorPtr *backdoor=nullptr);
+                            MemBackdoorPtr *backdoor = nullptr);
     void recvFunctional(PacketPtr pkt, PortID cpu_side_port_id);
     void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
+                            MemBackdoorPtr &backdoor);
 
   public:
-
     NoncoherentXBar(const NoncoherentXBarParams &p);
 
     virtual ~NoncoherentXBar();

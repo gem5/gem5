@@ -47,8 +47,8 @@ class BlockMem : public SparcMacroInst
   protected:
     // We make the assumption that all block memory operations will take
     // 8 instructions to execute.
-    BlockMem(const char *mnem, ExtMachInst _machInst) :
-        SparcMacroInst(mnem, _machInst, No_OpClass, 8)
+    BlockMem(const char *mnem, ExtMachInst _machInst)
+        : SparcMacroInst(mnem, _machInst, No_OpClass, 8)
     {}
 };
 
@@ -61,13 +61,14 @@ class BlockMemImm : public BlockMem
 class BlockMemMicro : public SparcMicroInst
 {
   protected:
-    BlockMemMicro(const char *mnem, ExtMachInst _machInst,
-                  OpClass __opClass, int8_t _offset) :
-        SparcMicroInst(mnem, _machInst, __opClass), offset(_offset)
+    BlockMemMicro(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                  int8_t _offset)
+        : SparcMicroInst(mnem, _machInst, __opClass), offset(_offset)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     const int8_t offset;
 };
@@ -76,13 +77,14 @@ class BlockMemImmMicro : public BlockMemMicro
 {
   protected:
     BlockMemImmMicro(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, int8_t _offset) :
-        BlockMemMicro(mnem, _machInst, __opClass, _offset),
-        imm(szext<13>(_machInst))
+                     OpClass __opClass, int8_t _offset)
+        : BlockMemMicro(mnem, _machInst, __opClass, _offset),
+          imm(szext<13>(_machInst))
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     const int32_t imm;
 };

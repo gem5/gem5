@@ -58,44 +58,42 @@ Root::RootStats &rootStats = Root::RootStats::instance;
 
 Root::RootStats::RootStats()
     : statistics::Group(nullptr),
-    ADD_STAT(simSeconds, statistics::units::Second::get(),
-             "Number of seconds simulated"),
-    ADD_STAT(simTicks, statistics::units::Tick::get(),
-             "Number of ticks simulated"),
-    ADD_STAT(finalTick, statistics::units::Tick::get(),
-             "Number of ticks from beginning of simulation "
-             "(restored from checkpoints and never reset)"),
-    ADD_STAT(simFreq, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Second>::get(),
-             "The number of ticks per simulated second"),
-    ADD_STAT(hostSeconds, statistics::units::Second::get(),
-             "Real time elapsed on the host"),
-    ADD_STAT(hostTickRate, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Second>::get(),
-             "The number of ticks simulated per host second (ticks/s)"),
-    ADD_STAT(hostMemory, statistics::units::Byte::get(),
-             "Number of bytes of host memory used"),
+      ADD_STAT(simSeconds, statistics::units::Second::get(),
+               "Number of seconds simulated"),
+      ADD_STAT(simTicks, statistics::units::Tick::get(),
+               "Number of ticks simulated"),
+      ADD_STAT(finalTick, statistics::units::Tick::get(),
+               "Number of ticks from beginning of simulation "
+               "(restored from checkpoints and never reset)"),
+      ADD_STAT(simFreq,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Second>::get(),
+               "The number of ticks per simulated second"),
+      ADD_STAT(hostSeconds, statistics::units::Second::get(),
+               "Real time elapsed on the host"),
+      ADD_STAT(hostTickRate,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Second>::get(),
+               "The number of ticks simulated per host second (ticks/s)"),
+      ADD_STAT(hostMemory, statistics::units::Byte::get(),
+               "Number of bytes of host memory used"),
 
-    statTime(true),
-    startTick(0)
+      statTime(true),
+      startTick(0)
 {
     simFreq.scalar(sim_clock::Frequency);
     simTicks.functor([this]() { return curTick() - startTick; });
     finalTick.functor(curTick);
 
-    hostMemory
-        .functor(memUsage)
-        .prereq(hostMemory)
-        ;
+    hostMemory.functor(memUsage).prereq(hostMemory);
 
     hostSeconds
         .functor([this]() {
-                Time now;
-                now.setTimer();
-                return now - statTime;
-            })
-        .precision(2)
-        ;
+            Time now;
+            now.setTimer();
+            return now - statTime;
+        })
+        .precision(2);
 
     hostTickRate.precision(0);
 
@@ -176,8 +174,10 @@ Root::timeSyncSpinThreshold(Time newThreshold)
 }
 
 Root::Root(const RootParams &p, int)
-    : SimObject(p), _enabled(false), _periodTick(p.time_sync_period),
-      syncEvent([this]{ timeSync(); }, name())
+    : SimObject(p),
+      _enabled(false),
+      _periodTick(p.time_sync_period),
+      syncEvent([this] { timeSync(); }, name())
 {
     _period.setTick(p.time_sync_period);
     _spinThreshold.setTick(p.time_sync_spin_threshold);

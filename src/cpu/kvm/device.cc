@@ -49,22 +49,15 @@
 namespace gem5
 {
 
-KvmDevice::KvmDevice(int _fd)
-    : fd(_fd)
-{
-}
+KvmDevice::KvmDevice(int _fd) : fd(_fd) {}
 
-KvmDevice::~KvmDevice()
-{
-    close(fd);
-}
+KvmDevice::~KvmDevice() { close(fd); }
 
 void
 KvmDevice::getAttrPtr(uint32_t group, uint64_t attr, void *data) const
 {
 #ifdef KVM_GET_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
         group,
         attr,
@@ -84,8 +77,7 @@ void
 KvmDevice::setAttrPtr(uint32_t group, uint64_t attr, const void *data) const
 {
 #ifdef KVM_SET_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
         group,
         attr,
@@ -105,11 +97,9 @@ bool
 KvmDevice::hasAttr(uint32_t group, uint64_t attr) const
 {
 #ifdef KVM_HAS_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
-        group,
-        attr,
+        group, attr,
         0, // Data address (ignored)
     };
 

@@ -66,7 +66,6 @@ class Platform : public SimObject
      */
     virtual void clearConsoleInt() = 0;
 
-
     /**
      * Cause the chipset to post a cpi interrupt to the CPU.
      */

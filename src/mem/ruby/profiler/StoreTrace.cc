@@ -36,18 +36,20 @@ namespace gem5
 namespace ruby
 {
 
-bool StoreTrace::s_init = false; // Total number of store lifetimes of
-                                 // all lines
+bool StoreTrace::s_init = false;         // Total number of store lifetimes of
+                                         // all lines
 int64_t StoreTrace::s_total_samples = 0; // Total number of store
-                                       // lifetimes of all lines
-Histogram* StoreTrace::s_store_count_ptr = NULL;
-Histogram* StoreTrace::s_store_first_to_stolen_ptr = NULL;
-Histogram* StoreTrace::s_store_last_to_stolen_ptr = NULL;
-Histogram* StoreTrace::s_store_first_to_last_ptr = NULL;
+                                         // lifetimes of all lines
+Histogram *StoreTrace::s_store_count_ptr = NULL;
+Histogram *StoreTrace::s_store_first_to_stolen_ptr = NULL;
+Histogram *StoreTrace::s_store_last_to_stolen_ptr = NULL;
+Histogram *StoreTrace::s_store_first_to_last_ptr = NULL;
 
 StoreTrace::StoreTrace(Addr addr)
-    : m_store_count(-1), m_store_first_to_stolen(-1),
-      m_store_last_to_stolen(-1), m_store_first_to_last(-1)
+    : m_store_count(-1),
+      m_store_first_to_stolen(-1),
+      m_store_last_to_stolen(-1),
+      m_store_first_to_last(-1)
 {
     StoreTrace::initSummary();
     m_addr = addr;
@@ -58,19 +60,16 @@ StoreTrace::StoreTrace(Addr addr)
     m_stores_this_interval = 0;
 }
 
-StoreTrace::~StoreTrace()
-{
-}
+StoreTrace::~StoreTrace() {}
 
 void
-StoreTrace::print(std::ostream& out) const
+StoreTrace::print(std::ostream &out) const
 {
-    out << m_addr
-        << " total_samples: " << m_total_samples << std::endl
+    out << m_addr << " total_samples: " << m_total_samples << std::endl
         << "store_count: " << m_store_count << std::endl
         << "store_first_to_stolen: " << m_store_first_to_stolen << std::endl
         << "store_last_to_stolen: " << m_store_last_to_stolen << std::endl
-        << "store_first_to_last: " << m_store_first_to_last  << std::endl;
+        << "store_first_to_last: " << m_store_first_to_last << std::endl;
 }
 
 void
@@ -87,14 +86,14 @@ StoreTrace::initSummary()
 }
 
 void
-StoreTrace::printSummary(std::ostream& out)
+StoreTrace::printSummary(std::ostream &out)
 {
     out << "total_samples: " << s_total_samples << std::endl;
     out << "store_count: " << (*s_store_count_ptr) << std::endl;
-    out << "store_first_to_stolen: "
-        << (*s_store_first_to_stolen_ptr) << std::endl;
-    out << "store_last_to_stolen: "
-        << (*s_store_last_to_stolen_ptr) << std::endl;
+    out << "store_first_to_stolen: " << (*s_store_first_to_stolen_ptr)
+        << std::endl;
+    out << "store_last_to_stolen: " << (*s_store_last_to_stolen_ptr)
+        << std::endl;
     out << "store_first_to_last: " << (*s_store_first_to_last_ptr)
         << std::endl;
 }

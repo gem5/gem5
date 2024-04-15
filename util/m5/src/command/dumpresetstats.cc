@@ -46,8 +46,10 @@ do_dump_reset_stats(const DispatchTable &dt, Args &args)
 }
 
 Command dump_reset_stats = {
-    "dumpresetstats", 0, 2, do_dump_reset_stats, "[delay [period]]\n"
-        "        After delay (default 0) dump and reset the stats, and then "
-            "optionally every period after" };
+    "dumpresetstats", 0, 2, do_dump_reset_stats,
+    "[delay [period]]\n"
+    "        After delay (default 0) dump and reset the stats, and then "
+    "optionally every period after"
+};
 
 } // anonymous namespace

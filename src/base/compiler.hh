@@ -47,7 +47,6 @@
 
 // http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 
-
 /*
  * Compiler specific features.
  */
@@ -56,67 +55,80 @@
 // Mark a structure as packed, so that no padding is added to its layout. This
 // padding might be added to, for instance, ensure certain fields have certain
 // alignment.
-#  define GEM5_PACKED [[gnu::packed]]
+#define GEM5_PACKED [[gnu::packed]]
 
 // Prevent a function from being inlined.
-#  define GEM5_NO_INLINE [[gnu::noinline]]
+#define GEM5_NO_INLINE [[gnu::noinline]]
 
 // Set the visibility of a symbol.
-#  define GEM5_PUBLIC [[gnu:visibility("default")]]
-#  define GEM5_LOCAL [[gnu::visibility("hidden")]]
-#  define GEM5_WEAK [[gnu::weak]]
+#define GEM5_PUBLIC [[gnu:visibility("default")]]
+#define GEM5_LOCAL [[gnu::visibility("hidden")]]
+#define GEM5_WEAK [[gnu::weak]]
 
 // Force an alignment for a variable.
-#  define GEM5_ALIGNED(alignment) [[gnu::aligned(alignment)]]
+#define GEM5_ALIGNED(alignment) [[gnu::aligned(alignment)]]
 
 // Marker for what should be an unreachable point in the code.
-#  define GEM5_UNREACHABLE __builtin_unreachable()
+#define GEM5_UNREACHABLE __builtin_unreachable()
 
 // To mark a branch condition as likely taken, wrap it's condition with
 // GEM5_LIKELY. To mark it as likely not taken, wrap it's condition with
 // GEM5_UNLIKELY. These can be replaced with the standard attributes [[likely]]
 // and [[unlikely]] in c++20, although the syntax is different enough that
 // we can't do that with direct substitution.
-#  define GEM5_LIKELY(cond) __builtin_expect(!!(cond), 1)
-#  define GEM5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#define GEM5_LIKELY(cond) __builtin_expect(!!(cond), 1)
+#define GEM5_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 
 // Mark an expression-like macro as deprecated by wrapping it in some code
 // which declares and uses a deprecated variable with the same name as the
 // macro. The wrapping macro evaluates to the same thing as the original macro.
 // The definition must be an c++ expression and not a statement because of how
 // the original macro is wrapped.
-#  define GEM5_DEPRECATED_MACRO(name, definition, message) \
-     ([](){[[deprecated(message)]] int name{}; return name;}(), (definition))
+#define GEM5_DEPRECATED_MACRO(name, definition, message)                      \
+    (                                                                         \
+        []() {                                                                \
+            [[deprecated(message)]] int name{};                               \
+            return name;                                                      \
+        }(),                                                                  \
+        (definition))
 // This version is for macros which are statement-like, which frequently use
 // "do {} while (0)" to make their syntax look more like normal c++ statements.
-#  define GEM5_DEPRECATED_MACRO_STMT(name, definition, message) \
-     do {{definition;} GEM5_DEPRECATED_MACRO(name, ({}), message);} while (0)
+#define GEM5_DEPRECATED_MACRO_STMT(name, definition, message)                 \
+    do {                                                                      \
+        {                                                                     \
+            definition;                                                       \
+        }                                                                     \
+        GEM5_DEPRECATED_MACRO(name, ({}), message);                           \
+    } while (0)
 
 // To mark a class as deprecated in favor of a new name, add a respective
 // instance of this macro to the file that used to declare the old name.
 // This macro should be used *after* the new class has been defined.
-#  define GEM5_DEPRECATED_CLASS(old_class, new_class) \
-    using old_class \
-        [[deprecated("Please use the new class name: '" #new_class "'")]] = \
-        new_class
+#define GEM5_DEPRECATED_CLASS(old_class, new_class)                           \
+    using old_class                                                           \
+        [[deprecated("Please use the new class name: '" #new_class "'")]] =   \
+            new_class
 
 // These macros should be used when namespaces are deprecated in favor of
 // a new name. They should be used wherever the namespace is declared.
 // Namespace deprecation is broken for GNU < 10 [1], so there is no
 // deprecation warning in that case. Clang only supports it from C++17 on.
 // [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79817
-#  if HAVE_DEPRECATED_NAMESPACE
-#    define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace) \
-       namespace new_namespace {} \
-       namespace [[deprecated("Please use the new namespace: '" \
-         #new_namespace "'")]] old_namespace { \
-         using namespace new_namespace; \
-       }
-#  else
-#    define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace) \
-       namespace new_namespace {} \
-       namespace old_namespace = new_namespace
-#  endif
+#if HAVE_DEPRECATED_NAMESPACE
+#define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace)               \
+    namespace new_namespace                                                   \
+    {}                                                                        \
+    namespace [[deprecated("Please use the new namespace: '" #new_namespace   \
+                           "'")]] old_namespace                               \
+    {                                                                         \
+    using namespace new_namespace;                                            \
+    }
+#else
+#define GEM5_DEPRECATED_NAMESPACE(old_namespace, new_namespace)               \
+    namespace new_namespace                                                   \
+    {}                                                                        \
+    namespace old_namespace = new_namespace
+#endif
 
 // Evaluate an expanded parameter pack in order. Multiple arguments can be
 // passed in which be evaluated in order relative to each other as a group.
@@ -124,11 +136,13 @@
 // the elements of a brace inclosed initializer list are evaluated in order,
 // as are the arguments to the comma operator, which evaluates to the last
 // value. This is compiler specific because it uses variadic macros.
-#define GEM5_FOR_EACH_IN_PACK(...) \
-do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
+#define GEM5_FOR_EACH_IN_PACK(...)                                            \
+    do {                                                                      \
+        [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... };        \
+    } while (0)
 
 #else
-#  error "Don't know what to do for your compiler."
+#error "Don't know what to do for your compiler."
 #endif
 
 // When a member variable may be unused, mark it with GEM5_CLASS_VAR_USED. This
@@ -136,9 +150,9 @@ do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 // variables, and g++ will actually warn if you use this attribute since it
 // won't do anything there.
 #if defined(__clang__) // clang only.
-#  define GEM5_CLASS_VAR_USED GEM5_VAR_USED
+#define GEM5_CLASS_VAR_USED GEM5_VAR_USED
 #else
-#  define GEM5_CLASS_VAR_USED
+#define GEM5_CLASS_VAR_USED
 #endif
 
 // Aliases for macros using the deprecated M5 prefix.
@@ -154,19 +168,24 @@ do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 #define M5_UNREACHABLE GEM5_UNREACHABLE
 #define M5_LIKELY(x) GEM5_LIKELY(x)
 #define M5_UNLIKELY(x) GEM5_UNLIKELY(x)
-#define M5_FOR_EACH_IN_PACK(...) GEM5_FOR_EACH_IN_PACK(__VA_ARGS__)
+#define M5_FOR_EACH_IN_PACK(...) GEM5_FOR_EACH_IN_PACK (__VA_ARGS__)
 #define M5_CLASS_VAR_USED GEM5_CLASS_VAR_USED
 
 // Deprecated attributes which warn.
-#define GEM5_FALLTHROUGH GEM5_DEPRECATED_MACRO_STMT(GEM5_FALLTHROUGH,,\
-        "Please use the [[fallthrough]] attribute directly."); [[fallthrough]]
-#define GEM5_DEPRECATED(message) \
-     [[deprecated(message " The GEM5_DEPRECATED macro is also deprecated, "\
-             "please use the [[deprecated()]] attribute directly.")]]
-#define GEM5_DEPRECATED_ENUM_VAL(message) \
-     [[deprecated(message " The GEM5_DEPRECATED_ENUM_VAL macro is also "\
-             "deprecated, please use the [[deprecated()]] attribute "\
-             "directly.")]]
+#define GEM5_FALLTHROUGH                                                      \
+    GEM5_DEPRECATED_MACRO_STMT(                                               \
+        GEM5_FALLTHROUGH, ,                                                   \
+        "Please use the [[fallthrough]] attribute directly.");                \
+    [[fallthrough]]
+#define GEM5_DEPRECATED(message)                                              \
+    [[deprecated(message                                                      \
+                 " The GEM5_DEPRECATED macro is also deprecated, "            \
+                 "please use the [[deprecated()]] attribute directly.")]]
+#define GEM5_DEPRECATED_ENUM_VAL(message)                                     \
+    [[deprecated(message                                                      \
+                 " The GEM5_DEPRECATED_ENUM_VAL macro is also "               \
+                 "deprecated, please use the [[deprecated()]] attribute "     \
+                 "directly.")]]
 
 // Deprecated attributes which can't be made to warn without possibly breaking
 // existing code.

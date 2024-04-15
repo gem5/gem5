@@ -50,65 +50,61 @@ using namespace std;
 using namespace sc_core;
 using namespace gem5;
 
-void Target::b_transport(tlm::tlm_generic_payload& trans,
-                            sc_time& delay)
+void
+Target::b_transport(tlm::tlm_generic_payload &trans, sc_time &delay)
 {
     executeTransaction(trans);
 }
 
-void Target::executeTransaction(tlm::tlm_generic_payload& trans)
+void
+Target::executeTransaction(tlm::tlm_generic_payload &trans)
 {
     tlm::tlm_command cmd = trans.get_command();
-    sc_dt::uint64    adr = trans.get_address();
-    unsigned char*   ptr = trans.get_data_ptr();
-    unsigned int     len = trans.get_data_length();
-    unsigned char*   byt = trans.get_byte_enable_ptr();
+    sc_dt::uint64 adr = trans.get_address();
+    unsigned char *ptr = trans.get_data_ptr();
+    unsigned int len = trans.get_data_length();
+    unsigned char *byt = trans.get_byte_enable_ptr();
 
-    if (trans.get_address() >= 16*1024*1024) {
+    if (trans.get_address() >= 16 * 1024 * 1024) {
         cout << "\033[1;31m("
              << "Address Error"
              << "\033[0m" << endl;
-        trans.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+        trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
         return;
     }
     if (byt != 0) {
         cout << "\033[1;31m("
              << "Byte Enable Error"
              << "\033[0m" << endl;
-        trans.set_response_status( tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE );
+        trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
         return;
     }
     if (len < 1 || len > 64) {
         cout << "\033[1;31m("
              << "Burst Error"
              << "\033[0m" << endl;
-        trans.set_response_status( tlm::TLM_BURST_ERROR_RESPONSE );
+        trans.set_response_status(tlm::TLM_BURST_ERROR_RESPONSE);
         return;
     }
 
-    if (cmd == tlm::TLM_READ_COMMAND)
-    {
-        memcpy(mem+trans.get_address(), // destination
-                trans.get_data_ptr(),      // source
-                trans.get_data_length());  // size
-    }
-    else if (cmd == tlm::TLM_WRITE_COMMAND)
-    {
+    if (cmd == tlm::TLM_READ_COMMAND) {
+        memcpy(mem + trans.get_address(), // destination
+               trans.get_data_ptr(),      // source
+               trans.get_data_length());  // size
+    } else if (cmd == tlm::TLM_WRITE_COMMAND) {
         memcpy(trans.get_data_ptr(),      // destination
-                mem + trans.get_address(), // source
-                trans.get_data_length());  // size
+               mem + trans.get_address(), // source
+               trans.get_data_length());  // size
     }
 
-    cout << "\033[1;32m("
-            << name()
-            << ")@"  << setfill(' ') << setw(12) << sc_time_stamp()
-            << ": " << setw(12) << (cmd ? "Exec. Write " : "Exec. Read ")
-            << "Addr = " << setfill('0') << setw(8) << hex << adr
-            << " Data = " << "0x" << setfill('0') << setw(8) << hex
-            << *reinterpret_cast<int*>(ptr)
-            << "\033[0m" << endl;
+    cout << "\033[1;32m(" << name() << ")@" << setfill(' ') << setw(12)
+         << sc_time_stamp() << ": " << setw(12)
+         << (cmd ? "Exec. Write " : "Exec. Read ") << "Addr = " << setfill('0')
+         << setw(8) << hex << adr << " Data = "
+         << "0x" << setfill('0') << setw(8) << hex
+         << *reinterpret_cast<int *>(ptr) << "\033[0m" << endl;
 
-    trans.set_response_status( tlm::TLM_OK_RESPONSE );
+    trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
 // This "create" method bridges the python configuration and the systemc
@@ -123,8 +119,8 @@ gem5::TLM_TargetParams::create() const
     return target;
 }
 
-gem5::Port
-&Target::gem5_getPort(const std::string &if_name, int idx)
+gem5::Port &
+Target::gem5_getPort(const std::string &if_name, int idx)
 {
     return wrapper;
 }

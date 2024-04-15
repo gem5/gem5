@@ -54,7 +54,6 @@ class AssociativeCache : public Named
     typedef replacement_policy::Base BaseReplacementPolicy;
 
   protected:
-
     /** Associativity of the cache. */
     size_t associativity;
 
@@ -68,11 +67,11 @@ class AssociativeCache : public Named
     std::vector<Entry> entries;
 
   private:
-
     void
     initParams(size_t _num_entries, size_t _assoc)
     {
-        fatal_if((_num_entries % _assoc) != 0, "The number of entries of an "
+        fatal_if((_num_entries % _assoc) != 0,
+                 "The number of entries of an "
                  "AssociativeCache<> must be a multiple of its associativity");
         for (auto entry_idx = 0; entry_idx < _num_entries; entry_idx++) {
             Entry *entry = &entries[entry_idx];
@@ -82,7 +81,6 @@ class AssociativeCache : public Named
     }
 
   public:
-
     /**
      * Empty constructor - need to call init() later with all args
      */
@@ -114,13 +112,13 @@ class AssociativeCache : public Named
     /**
      * Default destructor
      */
-    ~AssociativeCache()  = default;
+    ~AssociativeCache() = default;
 
     /**
      * Disable copy and assignment
      */
-    AssociativeCache(const AssociativeCache&) = delete;
-    AssociativeCache& operator=(const AssociativeCache&) = delete;
+    AssociativeCache(const AssociativeCache &) = delete;
+    AssociativeCache &operator=(const AssociativeCache &) = delete;
 
     /**
      * Clear the entries in the cache.
@@ -134,11 +132,9 @@ class AssociativeCache : public Named
     }
 
     void
-    init(const size_t num_entries,
-         const size_t associativity_,
+    init(const size_t num_entries, const size_t associativity_,
          BaseReplacementPolicy *_repl_policy,
-         BaseIndexingPolicy *_indexing_policy,
-         Entry const &init_val = Entry())
+         BaseIndexingPolicy *_indexing_policy, Entry const &init_val = Entry())
     {
         associativity = associativity_;
         replPolicy = _repl_policy;
@@ -165,7 +161,7 @@ class AssociativeCache : public Named
      * @param addr key to the entry
      * @return The entry if it exists
      */
-    virtual Entry*
+    virtual Entry *
     accessEntryByAddr(const Addr addr)
     {
         auto entry = findEntry(addr);
@@ -193,7 +189,7 @@ class AssociativeCache : public Named
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
-    virtual Entry*
+    virtual Entry *
     findEntry(const Addr addr) const
     {
         auto tag = getTag(addr);
@@ -201,7 +197,7 @@ class AssociativeCache : public Named
         auto candidates = indexingPolicy->getPossibleEntries(addr);
 
         for (auto candidate : candidates) {
-            Entry *entry = static_cast<Entry*>(candidate);
+            Entry *entry = static_cast<Entry *>(candidate);
             if (entry->matchTag(tag)) {
                 return entry;
             }
@@ -215,12 +211,12 @@ class AssociativeCache : public Named
      * @param addr key to select the possible victim
      * @result entry to be victimized
      */
-    virtual Entry*
+    virtual Entry *
     findVictim(const Addr addr)
     {
         auto candidates = indexingPolicy->getPossibleEntries(addr);
 
-        auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
+        auto victim = static_cast<Entry *>(replPolicy->getVictim(candidates));
 
         invalidate(victim);
 
@@ -320,6 +316,6 @@ class AssociativeCache : public Named
     }
 };
 
-}
+} // namespace gem5
 
 #endif

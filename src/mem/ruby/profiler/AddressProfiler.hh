@@ -56,30 +56,36 @@ class AddressProfiler
     AddressProfiler(int num_of_sequencers, Profiler *profiler);
     ~AddressProfiler();
 
-    void printStats(std::ostream& out) const;
+    void printStats(std::ostream &out) const;
     void clearStats();
 
-    void addTraceSample(Addr data_addr, Addr pc_addr,
-                        RubyRequestType type, RubyAccessMode access_mode,
-                        NodeID id, bool sharing_miss);
+    void addTraceSample(Addr data_addr, Addr pc_addr, RubyRequestType type,
+                        RubyAccessMode access_mode, NodeID id,
+                        bool sharing_miss);
     void profileRetry(Addr data_addr, AccessType type, int count);
-    void profileGetX(Addr datablock, Addr PC,
-                     const Set& owner, const Set& sharers, NodeID requestor);
-    void profileGetS(Addr datablock, Addr PC,
-                     const Set& owner, const Set& sharers, NodeID requestor);
+    void profileGetX(Addr datablock, Addr PC, const Set &owner,
+                     const Set &sharers, NodeID requestor);
+    void profileGetS(Addr datablock, Addr PC, const Set &owner,
+                     const Set &sharers, NodeID requestor);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
-    //added by SS
+    // added by SS
     void setHotLines(bool hot_lines);
     void setAllInstructions(bool all_instructions);
-    void regStats(const std::string &name) {}
-    void collateStats() {}
+
+    void
+    regStats(const std::string &name)
+    {}
+
+    void
+    collateStats()
+    {}
 
   private:
     // Private copy constructor and assignment operator
-    AddressProfiler(const AddressProfiler& obj);
-    AddressProfiler& operator=(const AddressProfiler& obj);
+    AddressProfiler(const AddressProfiler &obj);
+    AddressProfiler &operator=(const AddressProfiler &obj);
 
     int64_t m_sharing_miss_counter;
 
@@ -95,23 +101,22 @@ class AddressProfiler
 
     Profiler *m_profiler;
 
-    //added by SS
+    // added by SS
     bool m_hot_lines;
     bool m_all_instructions;
 
     int m_num_of_sequencers;
 };
 
-AccessTraceForAddress& lookupTraceForAddress(Addr addr,
-                                             AddressProfiler::AddressMap&
-                                             record_map);
+AccessTraceForAddress &
+lookupTraceForAddress(Addr addr, AddressProfiler::AddressMap &record_map);
 
-void printSorted(std::ostream& out, int num_of_sequencers,
+void printSorted(std::ostream &out, int num_of_sequencers,
                  const AddressProfiler::AddressMap &record_map,
                  std::string description, Profiler *profiler);
 
-inline std::ostream&
-operator<<(std::ostream& out, const AddressProfiler& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const AddressProfiler &obj)
 {
     obj.print(out);
     out << std::flush;

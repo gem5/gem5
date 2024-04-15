@@ -48,9 +48,7 @@ class Doorbell;
 class Scp : public ClockedObject
 {
   public:
-    Scp(const ClockedObjectParams &p)
-      : ClockedObject(p)
-    {}
+    Scp(const ClockedObjectParams &p) : ClockedObject(p) {}
 
     virtual ~Scp() {}
 

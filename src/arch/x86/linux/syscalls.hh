@@ -42,8 +42,8 @@ namespace X86ISA
 SyscallReturn unameFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<Linux::utsname> name);
 
-SyscallReturn archPrctlFunc(SyscallDesc *desc, ThreadContext *tc,
-                            int code, uint64_t addr);
+SyscallReturn archPrctlFunc(SyscallDesc *desc, ThreadContext *tc, int code,
+                            uint64_t addr);
 
 BitUnion32(UserDescFlags)
     Bitfield<0> seg_32bit;

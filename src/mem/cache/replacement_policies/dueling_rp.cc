@@ -38,17 +38,18 @@ namespace replacement_policy
 {
 
 Dueling::Dueling(const Params &p)
-  : Base(p), replPolicyA(p.replacement_policy_a),
-    replPolicyB(p.replacement_policy_b),
-    duelingMonitor(p.constituency_size, p.team_size),
-    duelingStats(this)
+    : Base(p),
+      replPolicyA(p.replacement_policy_a),
+      replPolicyB(p.replacement_policy_b),
+      duelingMonitor(p.constituency_size, p.team_size),
+      duelingStats(this)
 {
     fatal_if((replPolicyA == nullptr) || (replPolicyB == nullptr),
-        "All replacement policies must be instantiated");
+             "All replacement policies must be instantiated");
 }
 
 void
-Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+Dueling::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -57,8 +58,8 @@ Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+Dueling::touch(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -67,7 +68,7 @@ Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data,
 }
 
 void
-Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+Dueling::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -76,8 +77,8 @@ Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+Dueling::reset(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -88,11 +89,12 @@ Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data,
     // implies in the replacement of an entry, which was either caused by
     // a miss, an external invalidation, or the initialization of the table
     // entry (when warming up)
-    duelingMonitor.sample(static_cast<Dueler*>(casted_replacement_data.get()));
+    duelingMonitor.sample(
+        static_cast<Dueler *>(casted_replacement_data.get()));
 }
 
 void
-Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+Dueling::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -103,16 +105,19 @@ Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     // implies in the replacement of an entry, which was either caused by
     // a miss, an external invalidation, or the initialization of the table
     // entry (when warming up)
-    duelingMonitor.sample(static_cast<Dueler*>(casted_replacement_data.get()));
+    duelingMonitor.sample(
+        static_cast<Dueler *>(casted_replacement_data.get()));
 }
 
-ReplaceableEntry*
-Dueling::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+Dueling::getVictim(const ReplacementCandidates &candidates) const
 {
     // This function assumes that all candidates are either part of the same
     // sampled set, or are not samples.
     // @todo This should be improved at some point.
-    panic_if(candidates.size() != params().team_size, "We currently only "
+    panic_if(
+        candidates.size() != params().team_size,
+        "We currently only "
         "support team sizes that match the number of replacement candidates");
 
     // The team with the most misses loses
@@ -120,9 +125,11 @@ Dueling::getVictim(const ReplacementCandidates& candidates) const
 
     // If the entry is a sample, it can only be used with a certain policy.
     bool team;
-    bool is_sample = duelingMonitor.isSample(static_cast<Dueler*>(
-        std::static_pointer_cast<DuelerReplData>(
-            candidates[0]->replacementData).get()), team);
+    bool is_sample = duelingMonitor.isSample(
+        static_cast<Dueler *>(std::static_pointer_cast<DuelerReplData>(
+                                  candidates[0]->replacementData)
+                                  .get()),
+        team);
 
     // All replacement candidates must be set appropriately, so that the
     // proper replacement data is used. A replacement policy X must be used
@@ -141,29 +148,29 @@ Dueling::getVictim(const ReplacementCandidates& candidates) const
     // Create a temporary list of replacement candidates which re-routes the
     // replacement data of the selected team
     std::vector<std::shared_ptr<ReplacementData>> dueling_replacement_data;
-    for (auto& candidate : candidates) {
+    for (auto &candidate : candidates) {
         std::shared_ptr<DuelerReplData> dueler_repl_data =
             std::static_pointer_cast<DuelerReplData>(
-            candidate->replacementData);
+                candidate->replacementData);
 
         // As of now we assume that all candidates are either part of
         // the same sampled team, or are not samples.
         bool candidate_team;
         panic_if(
             duelingMonitor.isSample(dueler_repl_data.get(), candidate_team) &&
-            (team != candidate_team),
+                (team != candidate_team),
             "Not all sampled candidates belong to the same team");
 
         // Copy the original entry's data, re-routing its replacement data
         // to the selected one
         dueling_replacement_data.push_back(dueler_repl_data);
-        candidate->replacementData = team_a ? dueler_repl_data->replDataA :
-            dueler_repl_data->replDataB;
+        candidate->replacementData =
+            team_a ? dueler_repl_data->replDataA : dueler_repl_data->replDataB;
     }
 
     // Use the selected replacement policy to find the victim
-    ReplaceableEntry* victim = team_a ? replPolicyA->getVictim(candidates) :
-        replPolicyB->getVictim(candidates);
+    ReplaceableEntry *victim = team_a ? replPolicyA->getVictim(candidates) :
+                                        replPolicyB->getVictim(candidates);
 
     // Search for entry within the original candidates and clean-up duplicates
     for (int i = 0; i < candidates.size(); i++) {
@@ -176,18 +183,17 @@ Dueling::getVictim(const ReplacementCandidates& candidates) const
 std::shared_ptr<ReplacementData>
 Dueling::instantiateEntry()
 {
-    DuelerReplData* replacement_data = new DuelerReplData(
+    DuelerReplData *replacement_data = new DuelerReplData(
         replPolicyA->instantiateEntry(), replPolicyB->instantiateEntry());
-    duelingMonitor.initEntry(static_cast<Dueler*>(replacement_data));
+    duelingMonitor.initEntry(static_cast<Dueler *>(replacement_data));
     return std::shared_ptr<DuelerReplData>(replacement_data);
 }
 
-Dueling::DuelingStats::DuelingStats(statistics::Group* parent)
-  : statistics::Group(parent),
-    ADD_STAT(selectedA, "Number of times A was selected to victimize"),
-    ADD_STAT(selectedB, "Number of times B was selected to victimize")
-{
-}
+Dueling::DuelingStats::DuelingStats(statistics::Group *parent)
+    : statistics::Group(parent),
+      ADD_STAT(selectedA, "Number of times A was selected to victimize"),
+      ADD_STAT(selectedB, "Number of times B was selected to victimize")
+{}
 
 } // namespace replacement_policy
 } // namespace gem5

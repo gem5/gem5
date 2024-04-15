@@ -56,7 +56,7 @@ namespace MipsISA
 
 static inline RegVal
 readRegOtherThread(ThreadContext *tc, const RegId &reg,
-                   ThreadID tid=InvalidThreadID)
+                   ThreadID tid = InvalidThreadID)
 {
     ThreadContext *otc = nullptr;
     if (tid != InvalidThreadID)
@@ -65,20 +65,20 @@ readRegOtherThread(ThreadContext *tc, const RegId &reg,
         otc = tc;
 
     switch (reg.classValue()) {
-      case IntRegClass:
-      case FloatRegClass:
+    case IntRegClass:
+    case FloatRegClass:
         return otc->getReg(reg);
         break;
-      case MiscRegClass:
+    case MiscRegClass:
         return otc->readMiscReg(reg.index());
-      default:
+    default:
         panic("Unexpected reg class! (%s)", reg.className());
     }
 }
 
 static inline void
-setRegOtherThread(ThreadContext *tc, const RegId& reg, RegVal val,
-                  ThreadID tid=InvalidThreadID)
+setRegOtherThread(ThreadContext *tc, const RegId &reg, RegVal val,
+                  ThreadID tid = InvalidThreadID)
 {
     ThreadContext *otc = nullptr;
     if (tid != InvalidThreadID)
@@ -87,27 +87,27 @@ setRegOtherThread(ThreadContext *tc, const RegId& reg, RegVal val,
         otc = tc;
 
     switch (reg.classValue()) {
-      case IntRegClass:
-      case FloatRegClass:
+    case IntRegClass:
+    case FloatRegClass:
         otc->setReg(reg, val);
         break;
-      case MiscRegClass:
+    case MiscRegClass:
         return otc->setMiscReg(reg.index(), val);
-      default:
+    default:
         panic("Unexpected reg class! (%s)", reg.className());
     }
 }
 
 static inline RegVal
 readRegOtherThread(ExecContext *xc, const RegId &reg,
-                   ThreadID tid=InvalidThreadID)
+                   ThreadID tid = InvalidThreadID)
 {
     return readRegOtherThread(xc->tcBase(), reg, tid);
 }
 
 static inline void
-setRegOtherThread(ExecContext *xc, const RegId& reg, RegVal val,
-                  ThreadID tid=InvalidThreadID)
+setRegOtherThread(ExecContext *xc, const RegId &reg, RegVal val,
+                  ThreadID tid = InvalidThreadID)
 {
     setRegOtherThread(xc->tcBase(), reg, val, tid);
 }
@@ -142,8 +142,8 @@ haltThread(TC *tc)
         tc->setMiscReg(misc_reg::TcRestart, pc.npc());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
-                curTick(), tc->threadId(), tc->getCpuPtr()->name(),
-                pc.pc(), pc.npc());
+             curTick(), tc->threadId(), tc->getCpuPtr()->name(), pc.pc(),
+             pc.npc());
     }
 }
 
@@ -159,8 +159,8 @@ restoreThread(TC *tc)
         tc->pcState(restartPC);
         tc->activate();
 
-        warn("%i: Restoring thread %i in %s @ PC %x",
-                curTick(), tc->threadId(), tc->getCpuPtr()->name(), restartPC);
+        warn("%i: Restoring thread %i in %s @ PC %x", curTick(),
+             tc->threadId(), tc->getCpuPtr()->name(), restartPC);
     }
 }
 
@@ -178,7 +178,6 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
         TCBindReg tcBind = tc->readMiscRegNoEffect(misc_reg::TcBind);
 
         if (tidTCBind.curVPE == tcBind.curVPE) {
-
             TCStatusReg tidTCStatus =
                 readRegOtherThread(tc, miscRegClass[misc_reg::TcStatus], tid);
 
@@ -187,7 +186,6 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
 
             if (tidTCStatus.da == 1 && tidTCHalt.h == 0 &&
                 tidTCStatus.a == 0 && success == 0) {
-
                 setRegOtherThread(tc, miscRegClass[misc_reg::TcRestart], Rs,
                                   tid);
                 setRegOtherThread(tc, intRegClass[Rd_bits], Rt, tid);
@@ -229,7 +227,6 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
     }
 }
 
-
 template <class TC>
 int
 yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
@@ -252,10 +249,8 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
                 readRegOtherThread(tc, miscRegClass[misc_reg::TcBind], tid);
 
             if (tidTCBind.curVPE == tcBind.curVPE &&
-                tidTCBind.curTC == tcBind.curTC &&
-                tidTCStatus.da == 1 &&
-                tidTCHalt.h == 0    &&
-                tidTCStatus.a == 1) {
+                tidTCBind.curTC == tcBind.curTC && tidTCStatus.da == 1 &&
+                tidTCHalt.h == 0 && tidTCStatus.a == 1) {
                 ok = 1;
             }
         }
@@ -264,8 +259,8 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
             TCStatusReg tcStatus = tc->readMiscRegNoEffect(misc_reg::TcStatus);
             tcStatus.a = 0;
             tc->setMiscReg(misc_reg::TcStatus, tcStatus);
-            warn("%i: Deactivating Hardware Thread Context #%i",
-                    curTick(), tc->threadId());
+            warn("%i: Deactivating Hardware Thread Context #%i", curTick(),
+                 tc->threadId());
         }
     } else if (src_reg > 0) {
         if ((src_reg & ~yield_mask) != 0) {
@@ -280,7 +275,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
         VPEControlReg vpeControl =
             tc->readMiscRegNoEffect(misc_reg::VpeControl);
 
-        if (vpeControl.ysi == 1 && tcStatus.dt == 1 ) {
+        if (vpeControl.ysi == 1 && tcStatus.dt == 1) {
             vpeControl.excpt = 4;
             fault = std::make_shared<ThreadFault>();
         } else {
@@ -289,7 +284,6 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
 
     return src_reg & yield_mask;
 }
-
 
 // TC will usually be a object derived from ThreadContext
 // (src/cpu/thread_context.hh)

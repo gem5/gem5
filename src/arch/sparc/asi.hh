@@ -273,7 +273,7 @@ bool asiIsHPriv(ASI);
 bool asiIsReg(ASI);
 bool asiIsInterrupt(ASI);
 bool asiIsSparcError(ASI);
-};
+}; // namespace SparcISA
 
 } // namespace gem5
 

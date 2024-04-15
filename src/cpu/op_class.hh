@@ -50,8 +50,8 @@ namespace gem5
  * Do a bunch of wonky stuff to maintain backward compatability so I
  * don't have to change code in a zillion places.
  */
-using enums::OpClass;
 using enums::No_OpClass;
+using enums::OpClass;
 
 static const OpClass IntAluOp = enums::IntAlu;
 static const OpClass IntMultOp = enums::IntMult;
@@ -110,20 +110,17 @@ static const OpClass FloatMemReadOp = enums::FloatMemRead;
 static const OpClass FloatMemWriteOp = enums::FloatMemWrite;
 static const OpClass SimdUnitStrideLoadOp = enums::SimdUnitStrideLoad;
 static const OpClass SimdUnitStrideStoreOp = enums::SimdUnitStrideStore;
-static const OpClass SimdUnitStrideMaskLoadOp
-             = enums::SimdUnitStrideMaskLoad;
-static const OpClass SimdUnitStrideMaskStoreOp
-             = enums::SimdUnitStrideMaskStore;
+static const OpClass SimdUnitStrideMaskLoadOp = enums::SimdUnitStrideMaskLoad;
+static const OpClass SimdUnitStrideMaskStoreOp =
+    enums::SimdUnitStrideMaskStore;
 static const OpClass SimdStridedLoadOp = enums::SimdStridedLoad;
 static const OpClass SimdStridedStoreOp = enums::SimdStridedStore;
 static const OpClass SimdIndexedLoadOp = enums::SimdIndexedLoad;
 static const OpClass SimdIndexedStoreOp = enums::SimdIndexedStore;
-static const OpClass SimdUnitStrideFaultOnlyFirstLoadOp
-             = enums::SimdUnitStrideFaultOnlyFirstLoad;
-static const OpClass SimdWholeRegisterLoadOp
-             = enums::SimdWholeRegisterLoad;
-static const OpClass SimdWholeRegisterStoreOp
-             = enums::SimdWholeRegisterStore;
+static const OpClass SimdUnitStrideFaultOnlyFirstLoadOp =
+    enums::SimdUnitStrideFaultOnlyFirstLoad;
+static const OpClass SimdWholeRegisterLoadOp = enums::SimdWholeRegisterLoad;
+static const OpClass SimdWholeRegisterStoreOp = enums::SimdWholeRegisterStore;
 static const OpClass IprAccessOp = enums::IprAccess;
 static const OpClass InstPrefetchOp = enums::InstPrefetch;
 static const OpClass SimdUnitStrideSegmentedLoadOp = enums::SimdUnitStrideSegmentedLoad;

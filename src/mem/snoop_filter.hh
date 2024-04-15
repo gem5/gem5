@@ -89,19 +89,19 @@ namespace gem5
 class SnoopFilter : public SimObject
 {
   public:
-
     // Change for systems with more than 256 ports tracked by this object
     static const int SNOOP_MASK_SIZE = 256;
 
-    typedef std::vector<QueuedResponsePort*> SnoopList;
+    typedef std::vector<QueuedResponsePort *> SnoopList;
 
-    SnoopFilter (const SnoopFilterParams &p) :
-        SimObject(p), reqLookupResult(cachedLocations.end()),
-        linesize(p.system->cacheLineSize()), lookupLatency(p.lookup_latency),
-        maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
-        stats(this)
-    {
-    }
+    SnoopFilter(const SnoopFilterParams &p)
+        : SimObject(p),
+          reqLookupResult(cachedLocations.end()),
+          linesize(p.system->cacheLineSize()),
+          lookupLatency(p.lookup_latency),
+          maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
+          stats(this)
+    {}
 
     /**
      * Init a new snoop filter and tell it about all the cpu_sideports
@@ -109,11 +109,13 @@ class SnoopFilter : public SimObject
      *
      * @param _cpu_side_ports Response ports that the bus is attached to.
      */
-    void setCPUSidePorts(const SnoopList& _cpu_side_ports) {
+    void
+    setCPUSidePorts(const SnoopList &_cpu_side_ports)
+    {
         localResponsePortIds.resize(_cpu_side_ports.size(), InvalidPortID);
 
         PortID id = 0;
-        for (const auto& p : _cpu_side_ports) {
+        for (const auto &p : _cpu_side_ports) {
             // no need to track this port if it is not snooping
             if (p->isSnooping()) {
                 cpuSidePorts.push_back(p);
@@ -139,8 +141,8 @@ class SnoopFilter : public SimObject
      * @param cpu_side_port     Response port where the request came from.
      * @return Pair of a vector of snoop target ports and lookup latency.
      */
-    std::pair<SnoopList, Cycles> lookupRequest(const Packet* cpkt,
-                                        const ResponsePort& cpu_side_port);
+    std::pair<SnoopList, Cycles>
+    lookupRequest(const Packet *cpkt, const ResponsePort &cpu_side_port);
 
     /**
      * For an un-successful request, revert the change to the snoop
@@ -162,7 +164,7 @@ class SnoopFilter : public SimObject
      * @return Pair with a vector of ResponsePorts that need snooping and a
      * lookup latency.
      */
-    std::pair<SnoopList, Cycles> lookupSnoop(const Packet* cpkt);
+    std::pair<SnoopList, Cycles> lookupSnoop(const Packet *cpkt);
 
     /**
      * Let the snoop filter see any snoop responses that turn into
@@ -174,8 +176,8 @@ class SnoopFilter : public SimObject
      * @param req_port ResponsePort that made the original request and is the
      *                 destination of the snoop response.
      */
-    void updateSnoopResponse(const Packet *cpkt, const ResponsePort& rsp_port,
-                             const ResponsePort& req_port);
+    void updateSnoopResponse(const Packet *cpkt, const ResponsePort &rsp_port,
+                             const ResponsePort &req_port);
 
     /**
      * Pass snoop responses that travel downward through the snoop
@@ -186,8 +188,8 @@ class SnoopFilter : public SimObject
      * @param rsp_port ResponsePort that sends the response.
      * @param req_port RequestPort through which the response is forwarded.
      */
-    void updateSnoopForward(const Packet *cpkt, const ResponsePort& rsp_port,
-                            const RequestPort& req_port);
+    void updateSnoopForward(const Packet *cpkt, const ResponsePort &rsp_port,
+                            const RequestPort &req_port);
 
     /**
      * Update the snoop filter with a response from below (outer /
@@ -198,12 +200,11 @@ class SnoopFilter : public SimObject
      * @param cpu_side_port ResponsePort that made the original request and
      *                      is the target of this response.
      */
-    void updateResponse(const Packet *cpkt, const ResponsePort& cpu_side_port);
+    void updateResponse(const Packet *cpkt, const ResponsePort &cpu_side_port);
 
     virtual void regStats();
 
   protected:
-
     /**
      * The underlying type for the bitmask we use for tracking. This
      * limits the number of snooping ports supported per crossbar.
@@ -211,15 +212,16 @@ class SnoopFilter : public SimObject
     typedef std::bitset<SNOOP_MASK_SIZE> SnoopMask;
 
     /**
-    * Per cache line item tracking a bitmask of ResponsePorts who have an
-    * outstanding request to this line (requested) or already share a
-    * cache line with this address (holder).
-    */
+     * Per cache line item tracking a bitmask of ResponsePorts who have an
+     * outstanding request to this line (requested) or already share a
+     * cache line with this address (holder).
+     */
     struct SnoopItem
     {
         SnoopMask requested;
         SnoopMask holder;
     };
+
     /**
      * HashMap of SnoopItems indexed by line address
      */
@@ -228,19 +230,23 @@ class SnoopFilter : public SimObject
     /**
      * Simple factory methods for standard return values.
      */
-    std::pair<SnoopList, Cycles> snoopAll(Cycles latency) const
+    std::pair<SnoopList, Cycles>
+    snoopAll(Cycles latency) const
     {
         return std::make_pair(cpuSidePorts, latency);
     }
-    std::pair<SnoopList, Cycles> snoopSelected(const SnoopList&
-                                _cpu_side_ports, Cycles latency) const
+
+    std::pair<SnoopList, Cycles>
+    snoopSelected(const SnoopList &_cpu_side_ports, Cycles latency) const
     {
         return std::make_pair(_cpu_side_ports, latency);
     }
-    std::pair<SnoopList, Cycles> snoopDown(Cycles latency) const
+
+    std::pair<SnoopList, Cycles>
+    snoopDown(Cycles latency) const
     {
         SnoopList empty;
-        return std::make_pair(empty , latency);
+        return std::make_pair(empty, latency);
     }
 
     /**
@@ -248,7 +254,7 @@ class SnoopFilter : public SimObject
      * @param port ResponsePort that should be converted.
      * @return One-hot bitmask corresponding to the port.
      */
-    SnoopMask portToMask(const ResponsePort& port) const;
+    SnoopMask portToMask(const ResponsePort &port) const;
     /**
      * Converts a bitmask of ports into the corresponing list of ports
      * @param ports SnoopMask of the requested ports
@@ -257,11 +263,10 @@ class SnoopFilter : public SimObject
     SnoopList maskToPortList(SnoopMask ports) const;
 
   private:
-
     /**
      * Removes snoop filter items which have no requestors and no holders.
      */
-    void eraseIfNullEntry(SnoopFilterCache::iterator& sf_it);
+    void eraseIfNullEntry(SnoopFilterCache::iterator &sf_it);
 
     /** Simple hash set of cached addresses. */
     SnoopFilterCache cachedLocations;
@@ -291,9 +296,9 @@ class SnoopFilter : public SimObject
          * @param end_it Iterator to the end of the internal cache.
          */
         ReqLookupResult(SnoopFilterCache::iterator end_it)
-            : it(end_it), retryItem{0, 0}
-        {
-        }
+            : it(end_it), retryItem{ 0, 0 }
+        {}
+
         ReqLookupResult() = delete;
     } reqLookupResult;
 
@@ -333,19 +338,20 @@ class SnoopFilter : public SimObject
 };
 
 inline SnoopFilter::SnoopMask
-SnoopFilter::portToMask(const ResponsePort& port) const
+SnoopFilter::portToMask(const ResponsePort &port) const
 {
     assert(port.getId() != InvalidPortID);
     // if this is not a snooping port, return a zero mask
-    return !port.isSnooping() ? 0 :
-        ((SnoopMask)1) << localResponsePortIds[port.getId()];
+    return !port.isSnooping() ?
+               0 :
+               ((SnoopMask)1) << localResponsePortIds[port.getId()];
 }
 
 inline SnoopFilter::SnoopList
 SnoopFilter::maskToPortList(SnoopMask port_mask) const
 {
     SnoopList res;
-    for (const auto& p : cpuSidePorts)
+    for (const auto &p : cpuSidePorts)
         if ((port_mask & portToMask(*p)).any())
             res.push_back(p);
     return res;

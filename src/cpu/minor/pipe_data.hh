@@ -128,24 +128,28 @@ class BranchData /* : public ReportIF, public BubbleIF */
     BranchData() {}
 
     BranchData(Reason reason_, ThreadID thread_id,
-            InstSeqNum new_stream_seq_num, InstSeqNum new_prediction_seq_num,
-            const PCStateBase &_target, MinorDynInstPtr inst_) :
-        reason(reason_), threadId(thread_id),
-        newStreamSeqNum(new_stream_seq_num),
-        newPredictionSeqNum(new_prediction_seq_num),
-        inst(inst_)
+               InstSeqNum new_stream_seq_num,
+               InstSeqNum new_prediction_seq_num, const PCStateBase &_target,
+               MinorDynInstPtr inst_)
+        : reason(reason_),
+          threadId(thread_id),
+          newStreamSeqNum(new_stream_seq_num),
+          newPredictionSeqNum(new_prediction_seq_num),
+          inst(inst_)
     {
         set(target, _target);
     }
 
-    BranchData(const BranchData &other) :
-        reason(other.reason), threadId(other.threadId),
-        newStreamSeqNum(other.newStreamSeqNum),
-        newPredictionSeqNum(other.newPredictionSeqNum),
-        inst(other.inst)
+    BranchData(const BranchData &other)
+        : reason(other.reason),
+          threadId(other.threadId),
+          newStreamSeqNum(other.newStreamSeqNum),
+          newPredictionSeqNum(other.newPredictionSeqNum),
+          inst(other.inst)
     {
         set(target, other.target);
     }
+
     BranchData &
     operator=(const BranchData &other)
     {
@@ -159,25 +163,42 @@ class BranchData /* : public ReportIF, public BubbleIF */
     }
 
     /** BubbleIF interface */
-    static BranchData bubble() { return BranchData(); }
-    bool isBubble() const { return reason == NoBranch; }
+    static BranchData
+    bubble()
+    {
+        return BranchData();
+    }
+
+    bool
+    isBubble() const
+    {
+        return reason == NoBranch;
+    }
 
     /** As static isStreamChange but on this branch data */
-    bool isStreamChange() const { return isStreamChange(reason); }
+    bool
+    isStreamChange() const
+    {
+        return isStreamChange(reason);
+    }
 
     /** As static isBranch but on this branch data */
-    bool isBranch() const { return isBranch(reason); }
+    bool
+    isBranch() const
+    {
+        return isBranch(reason);
+    }
 
     /** ReportIF interface */
     void reportData(std::ostream &os) const;
 };
 
 /** Print a branch reason enum */
-std::ostream &operator <<(std::ostream &os, BranchData::Reason reason);
+std::ostream &operator<<(std::ostream &os, BranchData::Reason reason);
 
 /** Print BranchData contents in a format suitable for DPRINTF comments, not
  *  for MinorTrace */
-std::ostream &operator <<(std::ostream &os, const BranchData &branch);
+std::ostream &operator<<(std::ostream &os, const BranchData &branch);
 
 /** Line fetch data in the forward direction.  Contains a single cache line
  *  (or fragment of a line), its address, a sequence number assigned when
@@ -222,12 +243,19 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
 
   public:
     ForwardLineData() {}
-    ForwardLineData(const ForwardLineData &other) :
-        bubbleFlag(other.bubbleFlag), lineBaseAddr(other.lineBaseAddr),
-        pc(other.pc->clone()), fetchAddr(other.fetchAddr),
-        lineWidth(other.lineWidth), fault(other.fault), id(other.id),
-        line(other.line), packet(other.packet)
+
+    ForwardLineData(const ForwardLineData &other)
+        : bubbleFlag(other.bubbleFlag),
+          lineBaseAddr(other.lineBaseAddr),
+          pc(other.pc->clone()),
+          fetchAddr(other.fetchAddr),
+          lineWidth(other.lineWidth),
+          fault(other.fault),
+          id(other.id),
+          line(other.line),
+          packet(other.packet)
     {}
+
     ForwardLineData &
     operator=(const ForwardLineData &other)
     {
@@ -247,7 +275,11 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
 
   public:
     /** This is a fault, not a line */
-    bool isFault() const { return fault != NoFault; }
+    bool
+    isFault() const
+    {
+        return fault != NoFault;
+    }
 
     /** Set fault and possible clear the bubble flag */
     void setFault(Fault fault_);
@@ -267,8 +299,17 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
     void freeLine();
 
     /** BubbleIF interface */
-    static ForwardLineData bubble() { return ForwardLineData(); }
-    bool isBubble() const { return bubbleFlag; }
+    static ForwardLineData
+    bubble()
+    {
+        return ForwardLineData();
+    }
+
+    bool
+    isBubble() const
+    {
+        return bubbleFlag;
+    }
 
     /** ReportIF interface */
     void reportData(std::ostream &os) const;
@@ -300,10 +341,14 @@ class ForwardInstData /* : public ReportIF, public BubbleIF */
 
   public:
     /** Number of instructions carried by this object */
-    unsigned int width() const { return numInsts; }
+    unsigned int
+    width() const
+    {
+        return numInsts;
+    }
 
     /** Copy the inst array only as far as numInsts */
-    ForwardInstData &operator =(const ForwardInstData &src);
+    ForwardInstData &operator=(const ForwardInstData &src);
 
     /** Resize a bubble/empty ForwardInstData and fill with bubbles */
     void resize(unsigned int width);

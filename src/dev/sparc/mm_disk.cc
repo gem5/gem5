@@ -48,7 +48,9 @@ namespace gem5
 
 MmDisk::MmDisk(const Params &p)
     : BasicPioDevice(p, p.image->size() * SectorSize),
-      image(p.image), curSector((off_t)-1), dirty(false)
+      image(p.image),
+      curSector((off_t)-1),
+      dirty(false)
 {
     std::memset(&diskData, 0, SectorSize);
 }
@@ -83,27 +85,27 @@ MmDisk::read(PacketPtr pkt)
         curSector = sector;
     }
     switch (pkt->getSize()) {
-      case sizeof(uint8_t):
+    case sizeof(uint8_t):
         pkt->setRaw(diskData[accessAddr % SectorSize]);
-        DPRINTF(IdeDisk, "reading byte %#x value= %#x\n",
-                accessAddr, diskData[accessAddr % SectorSize]);
+        DPRINTF(IdeDisk, "reading byte %#x value= %#x\n", accessAddr,
+                diskData[accessAddr % SectorSize]);
         break;
-      case sizeof(uint16_t):
+    case sizeof(uint16_t):
         memcpy(&d16, diskData + (accessAddr % SectorSize), 2);
         pkt->setRaw(d16);
         DPRINTF(IdeDisk, "reading word %#x value= %#x\n", accessAddr, d16);
         break;
-      case sizeof(uint32_t):
+    case sizeof(uint32_t):
         memcpy(&d32, diskData + (accessAddr % SectorSize), 4);
         pkt->setRaw(d32);
         DPRINTF(IdeDisk, "reading dword %#x value= %#x\n", accessAddr, d32);
         break;
-      case sizeof(uint64_t):
+    case sizeof(uint64_t):
         memcpy(&d64, diskData + (accessAddr % SectorSize), 8);
         pkt->setRaw(d64);
         DPRINTF(IdeDisk, "reading qword %#x value= %#x\n", accessAddr, d64);
         break;
-      default:
+    default:
         panic("Invalid access size\n");
     }
 
@@ -136,34 +138,34 @@ MmDisk::write(PacketPtr pkt)
 #ifndef NDEBUG
         off_t bytes_read =
 #endif
-            image->read(diskData,  sector);
+            image->read(diskData, sector);
         assert(bytes_read == SectorSize);
         curSector = sector;
     }
     dirty = true;
 
     switch (pkt->getSize()) {
-      case sizeof(uint8_t):
+    case sizeof(uint8_t):
         diskData[accessAddr % SectorSize] = htobe(pkt->getRaw<uint8_t>());
-        DPRINTF(IdeDisk, "writing byte %#x value= %#x\n",
-                accessAddr, diskData[accessAddr % SectorSize]);
+        DPRINTF(IdeDisk, "writing byte %#x value= %#x\n", accessAddr,
+                diskData[accessAddr % SectorSize]);
         break;
-      case sizeof(uint16_t):
+    case sizeof(uint16_t):
         d16 = pkt->getRaw<uint16_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d16, 2);
         DPRINTF(IdeDisk, "writing word %#x value= %#x\n", accessAddr, d16);
         break;
-      case sizeof(uint32_t):
+    case sizeof(uint32_t):
         d32 = pkt->getRaw<uint32_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d32, 4);
         DPRINTF(IdeDisk, "writing dword %#x value= %#x\n", accessAddr, d32);
         break;
-      case sizeof(uint64_t):
+    case sizeof(uint64_t):
         d64 = pkt->getRaw<uint64_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d64, 8);
         DPRINTF(IdeDisk, "writing qword %#x value= %#x\n", accessAddr, d64);
         break;
-      default:
+    default:
         panic("Invalid access size\n");
     }
 

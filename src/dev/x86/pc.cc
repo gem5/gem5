@@ -43,8 +43,7 @@
 namespace gem5
 {
 
-Pc::Pc(const Params &p) : Platform(p), southBridge(p.south_bridge)
-{}
+Pc::Pc(const Params &p) : Platform(p), southBridge(p.south_bridge) {}
 
 void
 Pc::init()
@@ -55,11 +54,11 @@ Pc::init()
      * Initialize the timer.
      */
     auto &timer = *southBridge->pit;
-    //Timer 0, mode 2, no bcd, 16 bit count
+    // Timer 0, mode 2, no bcd, 16 bit count
     timer.writeControl(0x34);
-    //Timer 0, latch command
+    // Timer 0, latch command
     timer.writeControl(0x00);
-    //Write a 16 bit count of 0
+    // Write a 16 bit count of 0
     timer.writeCounter(0, 0);
     timer.writeCounter(0, 0);
 
@@ -115,7 +114,7 @@ void
 Pc::clearConsoleInt()
 {
     warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
+    // panic("Need implementation\n");
 }
 
 void

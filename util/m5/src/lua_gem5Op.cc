@@ -25,7 +25,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
@@ -182,7 +181,7 @@ do_read_file(lua_State *L)
 static int
 do_write_file(lua_State *L)
 {
-    const char* buf = lua_tostring(L, 1);
+    const char *buf = lua_tostring(L, 1);
     uint64_t len = lua_tointeger(L, 2);
     assert(len <= lua_strlen(L, 1));
     uint64_t offset = lua_tointeger(L, 3);
@@ -217,7 +216,7 @@ static int
 do_add_symbol(lua_State *L)
 {
     uint64_t addr = lua_tointeger(L, 1);
-    char *string = (char*) lua_tostring(L, 2);
+    char *string = (char *)lua_tostring(L, 2);
     m5_add_symbol(addr, string);
     return 0;
 }
@@ -254,21 +253,20 @@ do_work_end(lua_State *L)
     return 0;
 }
 
-extern "C"
-{
+extern "C" {
 
 int luaopen_gem5OpLua(lua_State *);
-
 }
 
 int
 luaopen_gem5OpLua(lua_State *L)
 {
     map_m5_mem();
-#define ADD_FUNC(fname) do{                         \
-        lua_pushcfunction(L, fname);                \
-        lua_setfield(L, -2, #fname);                \
-    }while (0)
+#define ADD_FUNC(fname)                                                       \
+    do {                                                                      \
+        lua_pushcfunction(L, fname);                                          \
+        lua_setfield(L, -2, #fname);                                          \
+    } while (0)
 
     lua_newtable(L);
     ADD_FUNC(do_arm);

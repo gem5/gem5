@@ -48,26 +48,25 @@ VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
       TLBProbesPerCycle(p.probesPerCycle),
       coalescingWindow(p.coalescingWindow),
       disableCoalescing(p.disableCoalescing),
-      probeTLBEvent([this]{ processProbeTLBEvent(); },
-                    "Probe the TLB below",
+      probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
                     false, Event::CPU_Tick_Pri),
-      cleanupEvent([this]{ processCleanupEvent(); },
-                   "Cleanup issuedTranslationsTable hashmap",
-                   false, Event::Maximum_Pri),
+      cleanupEvent([this] { processCleanupEvent(); },
+                   "Cleanup issuedTranslationsTable hashmap", false,
+                   Event::Maximum_Pri),
       tlb_level(p.tlb_level),
       maxDownstream(p.maxDownstream),
       numDownstream(0)
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
-        cpuSidePort.push_back(new CpuSidePort(csprintf("%s-port%d", name(), i),
-                                              this, i));
+        cpuSidePort.push_back(
+            new CpuSidePort(csprintf("%s-port%d", name(), i), this, i));
     }
 
     // create the request ports based on the number of connected ports
     for (size_t i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
-        memSidePort.push_back(new MemSidePort(csprintf("%s-port%d", name(), i),
-                                              this, i));
+        memSidePort.push_back(
+            new MemSidePort(csprintf("%s-port%d", name(), i), this, i));
     }
 }
 
@@ -80,7 +79,7 @@ VegaTLBCoalescer::getPort(const std::string &if_name, PortID idx)
         }
 
         return *cpuSidePort[idx];
-    } else  if (if_name == "mem_side_ports") {
+    } else if (if_name == "mem_side_ports") {
         if (idx >= static_cast<PortID>(memSidePort.size())) {
             panic("VegaTLBCoalescer::getPort: unknown index %d\n", idx);
         }
@@ -104,18 +103,18 @@ VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
         return false;
 
     GpuTranslationState *incoming_state =
-      safe_cast<GpuTranslationState*>(incoming_pkt->senderState);
+        safe_cast<GpuTranslationState *>(incoming_pkt->senderState);
 
     GpuTranslationState *coalesced_state =
-     safe_cast<GpuTranslationState*>(coalesced_pkt->senderState);
+        safe_cast<GpuTranslationState *>(coalesced_pkt->senderState);
 
     // Rule 1: Coalesce requests only if they
     // fall within the same virtual page
-    Addr incoming_virt_page_addr = roundDown(incoming_pkt->req->getVaddr(),
-                                             VegaISA::PageBytes);
+    Addr incoming_virt_page_addr =
+        roundDown(incoming_pkt->req->getVaddr(), VegaISA::PageBytes);
 
-    Addr coalesced_virt_page_addr = roundDown(coalesced_pkt->req->getVaddr(),
-                                              VegaISA::PageBytes);
+    Addr coalesced_virt_page_addr =
+        roundDown(coalesced_pkt->req->getVaddr(), VegaISA::PageBytes);
 
     if (incoming_virt_page_addr != coalesced_virt_page_addr)
         return false;
@@ -151,7 +150,7 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
 
     GpuTranslationState *sender_state =
-        safe_cast<GpuTranslationState*>(pkt->senderState);
+        safe_cast<GpuTranslationState *>(pkt->senderState);
 
     // Make a copy. This gets deleted after the first is sent back on the port
     assert(sender_state->tlbEntry);
@@ -167,7 +166,7 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
         PacketPtr local_pkt = issuedTranslationsTable[virt_page_addr][i];
         GpuTranslationState *sender_state =
-            safe_cast<GpuTranslationState*>(local_pkt->senderState);
+            safe_cast<GpuTranslationState *>(local_pkt->senderState);
 
         // we are sending the packet back, so pop the reqCnt associated
         // with this level in the TLB hiearchy
@@ -183,8 +182,8 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
          * page offsets.
          */
         if (i) {
-            Addr paddr = first_entry_paddr
-                       + (local_pkt->req->getVaddr() & (page_size - 1));
+            Addr paddr = first_entry_paddr +
+                         (local_pkt->req->getVaddr() & (page_size - 1));
             local_pkt->req->setPaddr(paddr);
 
             if (uncacheable)
@@ -193,15 +192,12 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             // update senderState->tlbEntry, so we can insert
             // the correct TLBEentry in the TLBs above.
 
-            //auto p = sender_state->tc->getProcessPtr();
+            // auto p = sender_state->tc->getProcessPtr();
             if (sender_state->tlbEntry == NULL) {
                 // not set by lower(l2) coalescer
-                sender_state->tlbEntry =
-                    new VegaISA::VegaTlbEntry(1 /* VMID TODO */,
-                                              first_entry_vaddr,
-                                              first_entry_paddr,
-                                              tlb_entry.logBytes,
-                                              tlb_entry.pte);
+                sender_state->tlbEntry = new VegaISA::VegaTlbEntry(
+                    1 /* VMID TODO */, first_entry_vaddr, first_entry_paddr,
+                    tlb_entry.logBytes, tlb_entry.pte);
             }
 
             // update the hitLevel for all uncoalesced reqs
@@ -249,7 +245,7 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     int coalescedReq_cnt = 0;
 
     GpuTranslationState *sender_state =
-        safe_cast<GpuTranslationState*>(pkt->senderState);
+        safe_cast<GpuTranslationState *>(pkt->senderState);
 
     bool update_stats = !sender_state->isPrefetch;
 
@@ -322,16 +318,17 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
         new_array.push_back(pkt);
         coalescer->coalescerFIFO[tick_index].push_back(new_array);
 
-        DPRINTF(GPUTLB, "coalescerFIFO[%d] now has %d coalesced reqs after "
-                "push\n", tick_index,
-                coalescer->coalescerFIFO[tick_index].size());
+        DPRINTF(GPUTLB,
+                "coalescerFIFO[%d] now has %d coalesced reqs after "
+                "push\n",
+                tick_index, coalescer->coalescerFIFO[tick_index].size());
     }
 
-    //schedule probeTLBEvent next cycle to send the
-    //coalesced requests to the TLB
+    // schedule probeTLBEvent next cycle to send the
+    // coalesced requests to the TLB
     if (!coalescer->probeTLBEvent.scheduled()) {
         coalescer->schedule(coalescer->probeTLBEvent,
-                curTick() + coalescer->clockPeriod());
+                            curTick() + coalescer->clockPeriod());
     }
 
     return true;
@@ -346,9 +343,8 @@ VegaTLBCoalescer::CpuSidePort::recvReqRetry()
 void
 VegaTLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-
     GpuTranslationState *sender_state =
-        safe_cast<GpuTranslationState*>(pkt->senderState);
+        safe_cast<GpuTranslationState *>(pkt->senderState);
 
     bool update_stats = !sender_state->isPrefetch;
 
@@ -359,8 +355,10 @@ VegaTLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
     int map_count = coalescer->issuedTranslationsTable.count(virt_page_addr);
 
     if (map_count) {
-        DPRINTF(GPUTLB, "Warning! Functional access to addr %#x sees timing "
-                "req. pending\n", virt_page_addr);
+        DPRINTF(GPUTLB,
+                "Warning! Functional access to addr %#x sees timing "
+                "req. pending\n",
+                virt_page_addr);
     }
 
     coalescer->memSidePort[0]->sendFunctional(pkt);
@@ -386,7 +384,6 @@ VegaTLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
     if (coalescer->tlb_level != 1)
         return true;
 
-
     coalescer->decrementNumDownstream();
 
     DPRINTF(GPUTLB,
@@ -400,10 +397,10 @@ VegaTLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
 void
 VegaTLBCoalescer::MemSidePort::recvReqRetry()
 {
-    //we've receeived a retry. Schedule a probeTLBEvent
+    // we've receeived a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled())
         coalescer->schedule(coalescer->probeTLBEvent,
-                curTick() + coalescer->clockPeriod());
+                            curTick() + coalescer->clockPeriod());
 }
 
 void
@@ -436,43 +433,42 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
     DPRINTF(GPUTLB, "triggered VegaTLBCoalescer %s\n", __func__);
 
-    if ((tlb_level == 1)
-        && (availDownstreamSlots() == 0)) {
+    if ((tlb_level == 1) && (availDownstreamSlots() == 0)) {
         DPRINTF(GPUTLB, "IssueProbeEvent - no downstream slots, bail out\n");
         return;
     }
 
-    for (auto iter = coalescerFIFO.begin();
-         iter != coalescerFIFO.end();) {
+    for (auto iter = coalescerFIFO.begin(); iter != coalescerFIFO.end();) {
         int coalescedReq_cnt = iter->second.size();
         int i = 0;
         int vector_index = 0;
 
         DPRINTF(GPUTLB, "coalescedReq_cnt is %d for tick_index %d\n",
-               coalescedReq_cnt, iter->first);
+                coalescedReq_cnt, iter->first);
 
         while (i < coalescedReq_cnt) {
             ++i;
             PacketPtr first_packet = iter->second[vector_index][0];
-            //The request to coalescer is origanized as follows.
-            //The coalescerFIFO is a map which is indexed by coalescingWindow
-            // cycle. Only requests that falls in the same coalescingWindow
-            // considered for coalescing. Each entry of a coalescerFIFO is a
-            // vector of vectors. There is one entry for each different virtual
-            // page number and it contains vector of all request that are
-            // coalesced for the same virtual page address
+            // The request to coalescer is origanized as follows.
+            // The coalescerFIFO is a map which is indexed by coalescingWindow
+            //  cycle. Only requests that falls in the same coalescingWindow
+            //  considered for coalescing. Each entry of a coalescerFIFO is a
+            //  vector of vectors. There is one entry for each different
+            //  virtual page number and it contains vector of all request that
+            //  are coalesced for the same virtual page address
 
             // compute virtual page address for this request
-            Addr virt_page_addr = roundDown(first_packet->req->getVaddr(),
-                    VegaISA::PageBytes);
+            Addr virt_page_addr =
+                roundDown(first_packet->req->getVaddr(), VegaISA::PageBytes);
 
             // is there another outstanding request for the same page addr?
-            int pending_reqs =
-                issuedTranslationsTable.count(virt_page_addr);
+            int pending_reqs = issuedTranslationsTable.count(virt_page_addr);
 
             if (pending_reqs) {
-                DPRINTF(GPUTLB, "Cannot issue - There are pending reqs for "
-                        "page %#x\n", virt_page_addr);
+                DPRINTF(GPUTLB,
+                        "Cannot issue - There are pending reqs for "
+                        "page %#x\n",
+                        virt_page_addr);
 
                 ++vector_index;
                 continue;
@@ -480,8 +476,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
             // send the coalesced request for virt_page_addr
             if (!memSidePort[0]->sendTimingReq(first_packet)) {
-                DPRINTF(GPUTLB,
-                        "Failed to send TLB request for page %#x",
+                DPRINTF(GPUTLB, "Failed to send TLB request for page %#x",
                         virt_page_addr);
 
                 // No need for a retries queue since we are already
@@ -490,13 +485,13 @@ VegaTLBCoalescer::processProbeTLBEvent()
                 // this point since it is busy. Retries will be called later
                 // by the TLB below
                 return;
-             } else {
-
+            } else {
                 if (tlb_level == 1)
                     incrementNumDownstream();
 
                 GpuTranslationState *tmp_sender_state =
-                    safe_cast<GpuTranslationState*>(first_packet->senderState);
+                    safe_cast<GpuTranslationState *>(
+                        first_packet->senderState);
 
                 bool update_stats = !tmp_sender_state->isPrefetch;
 
@@ -507,8 +502,8 @@ VegaTLBCoalescer::processProbeTLBEvent()
                     int req_cnt = tmp_sender_state->reqCnt.back();
                     queuingCycles += (curCycle() * req_cnt);
 
-                    DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n",
-                            name(), req_cnt);
+                    DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n", name(),
+                            req_cnt);
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
@@ -517,30 +512,30 @@ VegaTLBCoalescer::processProbeTLBEvent()
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x\n",
-                       virt_page_addr);
+                        virt_page_addr);
 
-                //copy coalescedReq to issuedTranslationsTable
-                issuedTranslationsTable[virt_page_addr]
-                    = iter->second[vector_index];
+                // copy coalescedReq to issuedTranslationsTable
+                issuedTranslationsTable[virt_page_addr] =
+                    iter->second[vector_index];
 
-                //erase the entry of this coalesced req
+                // erase the entry of this coalesced req
                 iter->second.erase(iter->second.begin() + vector_index);
 
                 if (iter->second.empty())
-                    assert( i == coalescedReq_cnt );
+                    assert(i == coalescedReq_cnt);
 
                 sent_probes++;
 
                 if (sent_probes == TLBProbesPerCycle ||
                     ((tlb_level == 1) && (!availDownstreamSlots()))) {
-                    //Before returning make sure that empty vectors are taken
-                    // out. Not a big issue though since a later invocation
-                    // will take it out anyway.
+                    // Before returning make sure that empty vectors are taken
+                    //  out. Not a big issue though since a later invocation
+                    //  will take it out anyway.
                     if (iter->second.empty())
                         coalescerFIFO.erase(iter);
 
-                    //schedule probeTLBEvent next cycle to send the
-                    //coalesced requests to the TLB
+                    // schedule probeTLBEvent next cycle to send the
+                    // coalesced requests to the TLB
                     if (!probeTLBEvent.scheduled()) {
                         schedule(probeTLBEvent,
                                  cyclesToTicks(curCycle() + Cycles(1)));
@@ -550,8 +545,8 @@ VegaTLBCoalescer::processProbeTLBEvent()
             }
         }
 
-        //if there are no more coalesced reqs for this tick_index
-        //erase the hash_map with the first iterator
+        // if there are no more coalesced reqs for this tick_index
+        // erase the hash_map with the first iterator
         if (iter->second.empty()) {
             coalescerFIFO.erase(iter++);
         } else {
@@ -578,40 +573,26 @@ VegaTLBCoalescer::regStats()
 {
     ClockedObject::regStats();
 
-    uncoalescedAccesses
-        .name(name() + ".uncoalesced_accesses")
-        .desc("Number of uncoalesced TLB accesses")
-        ;
+    uncoalescedAccesses.name(name() + ".uncoalesced_accesses")
+        .desc("Number of uncoalesced TLB accesses");
 
-    coalescedAccesses
-        .name(name() + ".coalesced_accesses")
-        .desc("Number of coalesced TLB accesses")
-        ;
+    coalescedAccesses.name(name() + ".coalesced_accesses")
+        .desc("Number of coalesced TLB accesses");
 
-    queuingCycles
-        .name(name() + ".queuing_cycles")
-        .desc("Number of cycles spent in queue")
-        ;
+    queuingCycles.name(name() + ".queuing_cycles")
+        .desc("Number of cycles spent in queue");
 
-    localqueuingCycles
-        .name(name() + ".local_queuing_cycles")
-        .desc("Number of cycles spent in queue for all incoming reqs")
-        ;
+    localqueuingCycles.name(name() + ".local_queuing_cycles")
+        .desc("Number of cycles spent in queue for all incoming reqs");
 
-   localCycles
-        .name(name() + ".local_cycles")
-        .desc("Number of cycles spent in queue for all incoming reqs")
-        ;
+    localCycles.name(name() + ".local_cycles")
+        .desc("Number of cycles spent in queue for all incoming reqs");
 
-    localLatency
-        .name(name() + ".local_latency")
-        .desc("Avg. latency over all incoming pkts")
-        ;
+    localLatency.name(name() + ".local_latency")
+        .desc("Avg. latency over all incoming pkts");
 
-    latency
-        .name(name() + ".latency")
-        .desc("Avg. latency over all incoming pkts")
-        ;
+    latency.name(name() + ".latency")
+        .desc("Avg. latency over all incoming pkts");
 
     localLatency = localqueuingCycles / uncoalescedAccesses;
     latency = localCycles / uncoalescedAccesses;
@@ -643,8 +624,7 @@ VegaTLBCoalescer::mustStallCUPort(CpuSidePort *port)
         warn("RED ALERT - VegaTLBCoalescer::mustStallCUPort\n");
         insertStalledPortIfNotMapped(port);
         return true;
-    }
-    else
+    } else
         return false;
 }
 

@@ -45,15 +45,17 @@ namespace gem5
 
 using namespace X86ISA;
 
-template<class T>
-void writeVal(T val, PortProxy& proxy, Addr &addr)
+template <class T>
+void
+writeVal(T val, PortProxy &proxy, Addr &addr)
 {
     T guestVal = htole(val);
     proxy.writeBlob(addr, &guestVal, sizeof(T));
     addr += sizeof(T);
 }
 
-void X86ISA::E820Table::writeTo(PortProxy& proxy, Addr countAddr, Addr addr)
+void
+X86ISA::E820Table::writeTo(PortProxy &proxy, Addr countAddr, Addr addr)
 {
     uint8_t e820Nr = entries.size();
 

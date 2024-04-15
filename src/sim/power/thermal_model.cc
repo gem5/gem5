@@ -55,12 +55,12 @@ namespace gem5
  */
 ThermalReference::ThermalReference(const Params &p)
     : SimObject(p), _temperature(p.temperature), node(NULL)
-{
-}
+{}
 
 LinearEquation
-ThermalReference::getEquation(ThermalNode * n, unsigned nnodes,
-                              double step) const {
+ThermalReference::getEquation(ThermalNode *n, unsigned nnodes,
+                              double step) const
+{
     // Just return an empty equation
     return LinearEquation(nnodes);
 }
@@ -70,11 +70,10 @@ ThermalReference::getEquation(ThermalNode * n, unsigned nnodes,
  */
 ThermalResistor::ThermalResistor(const Params &p)
     : SimObject(p), _resistance(p.resistance), node1(NULL), node2(NULL)
-{
-}
+{}
 
 LinearEquation
-ThermalResistor::getEquation(ThermalNode * n, unsigned nnodes,
+ThermalResistor::getEquation(ThermalNode *n, unsigned nnodes,
                              double step) const
 {
     // i[n] = (Vn2 - Vn1)/R
@@ -105,11 +104,10 @@ ThermalResistor::getEquation(ThermalNode * n, unsigned nnodes,
  */
 ThermalCapacitor::ThermalCapacitor(const Params &p)
     : SimObject(p), _capacitance(p.capacitance), node1(NULL), node2(NULL)
-{
-}
+{}
 
 LinearEquation
-ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
+ThermalCapacitor::getEquation(ThermalNode *n, unsigned nnodes,
                               double step) const
 {
     // i(t) = C * d(Vn2 - Vn1)/dt
@@ -119,8 +117,8 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
     if (n != node1 && n != node2)
         return eq;
 
-    eq[eq.cnt()] += _capacitance / step *
-        (node1->temp - node2->temp).toKelvin();
+    eq[eq.cnt()] +=
+        _capacitance / step * (node1->temp - node2->temp).toKelvin();
 
     if (node1->isref)
         eq[eq.cnt()] += _capacitance / step * (-node1->temp.toKelvin());
@@ -143,9 +141,8 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
  * ThermalModel
  */
 ThermalModel::ThermalModel(const Params &p)
-    : ClockedObject(p), stepEvent([this]{ doStep(); }, name()), _step(p.step)
-{
-}
+    : ClockedObject(p), stepEvent([this] { doStep(); }, name()), _step(p.step)
+{}
 
 void
 ThermalModel::doStep()
@@ -155,7 +152,7 @@ ThermalModel::doStep()
     LinearSystem ls(eq_nodes.size());
     for (unsigned i = 0; i < eq_nodes.size(); i++) {
         auto n = eq_nodes[i];
-        LinearEquation node_equation (eq_nodes.size());
+        LinearEquation node_equation(eq_nodes.size());
         for (auto e : entities) {
             LinearEquation eq = e->getEquation(n, eq_nodes.size(), _step);
             node_equation = node_equation + eq;
@@ -164,7 +161,7 @@ ThermalModel::doStep()
     }
 
     // Get temperatures for this iteration
-    std::vector <double> temps = ls.solve();
+    std::vector<double> temps = ls.solve();
     for (unsigned i = 0; i < eq_nodes.size(); i++)
         eq_nodes[i]->temp = Temperature::fromKelvin(temps[i]);
 
@@ -210,28 +207,28 @@ ThermalModel::startup()
 }
 
 void
-ThermalModel::addDomain(ThermalDomain * d)
+ThermalModel::addDomain(ThermalDomain *d)
 {
     domains.push_back(d);
     entities.push_back(d);
 }
 
 void
-ThermalModel::addReference(ThermalReference * r)
+ThermalModel::addReference(ThermalReference *r)
 {
     references.push_back(r);
     entities.push_back(r);
 }
 
 void
-ThermalModel::addCapacitor(ThermalCapacitor * c)
+ThermalModel::addCapacitor(ThermalCapacitor *c)
 {
     capacitors.push_back(c);
     entities.push_back(c);
 }
 
 void
-ThermalModel::addResistor(ThermalResistor * r)
+ThermalModel::addResistor(ThermalResistor *r)
 {
     resistors.push_back(r);
     entities.push_back(r);
@@ -242,7 +239,7 @@ ThermalModel::getTemperature() const
 {
     // Just pick the highest temperature
     Temperature temp = Temperature::fromKelvin(0.0);
-    for (auto & n : eq_nodes)
+    for (auto &n : eq_nodes)
         temp = std::max(temp, n->temp);
     return temp;
 }

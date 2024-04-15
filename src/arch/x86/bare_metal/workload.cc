@@ -39,15 +39,14 @@ namespace gem5
 namespace X86ISA
 {
 
-BareMetalWorkload::BareMetalWorkload(const Params &p) : Workload(p)
-{}
+BareMetalWorkload::BareMetalWorkload(const Params &p) : Workload(p) {}
 
 void
 BareMetalWorkload::initState()
 {
     Workload::initState();
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         X86ISA::InitInterrupt(0).invoke(tc);
 
         if (tc->contextId() == 0) {

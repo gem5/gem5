@@ -45,11 +45,10 @@ enum MiscRegIndex
     NUM_MISCREGS = 0
 };
 
-const char * const miscRegName[NUM_MISCREGS] = {
-};
+const char *const miscRegName[NUM_MISCREGS] = {};
 
 inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
-        NUM_MISCREGS, debug::MiscRegs);
+                                       NUM_MISCREGS, debug::MiscRegs);
 
 BitUnion32(Cr)
     SubBitUnion(cr0, 31, 28)
@@ -58,7 +57,7 @@ BitUnion32(Cr)
         Bitfield<29> eq;
         Bitfield<28> so;
     EndSubBitUnion(cr0)
-    Bitfield<27,24> cr1;
+    Bitfield<27, 24> cr1;
 EndBitUnion(Cr)
 
 BitUnion32(Xer)
@@ -102,7 +101,7 @@ BitUnion32(Fpscr)
     Bitfield<5> ze;
     Bitfield<4> xe;
     Bitfield<3> ni;
-    Bitfield<2,1> rn;
+    Bitfield<2, 1> rn;
 EndBitUnion(Fpscr)
 
 BitUnion64(Msr)

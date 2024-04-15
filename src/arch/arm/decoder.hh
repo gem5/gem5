@@ -68,7 +68,7 @@ class Decoder : public InstDecoder
     const bool dvmEnabled;
 
   protected:
-    //The extended machine instruction being generated
+    // The extended machine instruction being generated
     ExtMachInst emi;
     uint32_t data;
     bool bigThumb;
@@ -136,8 +136,8 @@ class Decoder : public InstDecoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
-        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-                si->getName(), mach_inst);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+                mach_inst);
         si->size((!emi.thumb || emi.bigThumb) ? 4 : 2);
         return si;
     }

@@ -62,16 +62,18 @@ namespace gem5
 template <typename Arg, typename Ret>
 class Coroutine : public Fiber
 {
-
     // This empty struct type is meant to replace coroutine channels
     // in case the channel should be void (Coroutine template parameters
     // are void. (See following ArgChannel, RetChannel typedef)
-    struct Empty {};
-    using ArgChannel = typename std::conditional_t<
-        std::is_same_v<Arg, void>, Empty, std::stack<Arg>>;
+    struct Empty
+    {
+    };
 
-    using RetChannel = typename std::conditional_t<
-        std::is_same_v<Ret, void>, Empty, std::stack<Ret>>;
+    using ArgChannel = typename std::conditional_t<std::is_same_v<Arg, void>,
+                                                   Empty, std::stack<Arg>>;
+
+    using RetChannel = typename std::conditional_t<std::is_same_v<Ret, void>,
+                                                   Empty, std::stack<Ret>>;
 
   public:
     /**
@@ -84,8 +86,9 @@ class Coroutine : public Fiber
     class CallerType
     {
         friend class Coroutine;
+
       protected:
-        CallerType(Coroutine& _coro) : coro(_coro), callerFiber(nullptr) {}
+        CallerType(Coroutine &_coro) : coro(_coro), callerFiber(nullptr) {}
 
       public:
         /**
@@ -98,9 +101,9 @@ class Coroutine : public Fiber
          * @ingroup api_coroutine
          */
         template <typename T = Ret>
-        CallerType&
-        operator()(typename std::enable_if_t<
-                   !std::is_same_v<T, void>, T> param)
+        CallerType &
+        operator()(
+            typename std::enable_if_t<!std::is_same_v<T, void>, T> param)
         {
             retChannel.push(param);
             callerFiber->run();
@@ -116,8 +119,7 @@ class Coroutine : public Fiber
          * @ingroup api_coroutine
          */
         template <typename T = Ret>
-        typename std::enable_if_t<std::is_same_v<T, void>,
-                                CallerType> &
+        typename std::enable_if_t<std::is_same_v<T, void>, CallerType> &
         operator()()
         {
             callerFiber->run();
@@ -140,7 +142,7 @@ class Coroutine : public Fiber
         typename std::enable_if_t<!std::is_same_v<T, void>, T>
         get()
         {
-            auto& args_channel = coro.argsChannel;
+            auto &args_channel = coro.argsChannel;
             while (args_channel.empty()) {
                 callerFiber->run();
             }
@@ -151,8 +153,8 @@ class Coroutine : public Fiber
         }
 
       private:
-        Coroutine& coro;
-        Fiber* callerFiber;
+        Coroutine &coro;
+        Fiber *callerFiber;
         RetChannel retChannel;
     };
 
@@ -161,8 +163,9 @@ class Coroutine : public Fiber
      * @{
      */
     Coroutine() = delete;
-    Coroutine(const Coroutine& rhs) = delete;
-    Coroutine& operator=(const Coroutine& rhs) = delete;
+    Coroutine(const Coroutine &rhs) = delete;
+    Coroutine &operator=(const Coroutine &rhs) = delete;
+
     /** @} */ // end of api_coroutine
 
     /**
@@ -182,8 +185,8 @@ class Coroutine : public Fiber
      *
      * @ingroup api_coroutine
      */
-    Coroutine(std::function<void(CallerType&)> f, bool run_coroutine = true)
-      : Fiber(), task(f), caller(*this)
+    Coroutine(std::function<void(CallerType &)> f, bool run_coroutine = true)
+        : Fiber(), task(f), caller(*this)
     {
         // When desired, run the Coroutine after it is created
         if (run_coroutine)
@@ -208,7 +211,7 @@ class Coroutine : public Fiber
      * @ingroup api_coroutine
      */
     template <typename T = Arg>
-    Coroutine&
+    Coroutine &
     operator()(typename std::enable_if_t<!std::is_same_v<T, void>, T> param)
     {
         argsChannel.push(param);
@@ -248,7 +251,7 @@ class Coroutine : public Fiber
     typename std::enable_if_t<!std::is_same_v<T, void>, T>
     get()
     {
-        auto& ret_channel = caller.retChannel;
+        auto &ret_channel = caller.retChannel;
         while (ret_channel.empty()) {
             this->call();
         }
@@ -272,7 +275,11 @@ class Coroutine : public Fiber
      * running engine and it is a simple wrapper for the task
      * that the coroutine is supposed to run.
      */
-    void main() override { this->task(caller); }
+    void
+    main() override
+    {
+        this->task(caller);
+    }
 
     void
     call()
@@ -286,12 +293,12 @@ class Coroutine : public Fiber
     ArgChannel argsChannel;
 
     /** Coroutine task */
-    std::function<void(CallerType&)> task;
+    std::function<void(CallerType &)> task;
 
     /** Coroutine caller */
     CallerType caller;
 };
 
-} //namespace gem5
+} // namespace gem5
 
 #endif // __BASE_COROUTINE_HH__

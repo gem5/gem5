@@ -54,11 +54,11 @@ class MSC : public partitioning_policy::PartitionManager
     using partitioning_policy::PartitionManager::PartitionManager;
 
     /**
-    * Helper function to retrieve PartitionID from a packet; Returns packet
-    * PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
-    * @param pkt pointer to packet (PacketPtr)
-    * @return packet PartitionID.
-    */
+     * Helper function to retrieve PartitionID from a packet; Returns packet
+     * PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
+     * @param pkt pointer to packet (PacketPtr)
+     * @return packet PartitionID.
+     */
     uint64_t readPacketPartitionID(PacketPtr pkt) const override;
 };
 

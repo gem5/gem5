@@ -46,20 +46,14 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "mtcrf" ||
-        myMnemonic == "mtxer" ||
-        myMnemonic == "mtlr"  ||
-        myMnemonic == "mtctr" ||
-        myMnemonic == "mttar" ||
-        myMnemonic == "mttb"  ||
+    if (myMnemonic == "mtcrf" || myMnemonic == "mtxer" ||
+        myMnemonic == "mtlr" || myMnemonic == "mtctr" ||
+        myMnemonic == "mttar" || myMnemonic == "mttb" ||
         myMnemonic == "mttbu") {
         printDest = false;
-    } else if (myMnemonic == "mfcr"  ||
-               myMnemonic == "mfxer" ||
-               myMnemonic == "mflr"  ||
-               myMnemonic == "mfctr" ||
-               myMnemonic == "mftar" ||
-               myMnemonic == "mftb"  ||
+    } else if (myMnemonic == "mfcr" || myMnemonic == "mfxer" ||
+               myMnemonic == "mflr" || myMnemonic == "mfctr" ||
+               myMnemonic == "mftar" || myMnemonic == "mftb" ||
                myMnemonic == "mftbu") {
         printSrcs = false;
     }
@@ -81,14 +75,13 @@ IntOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
             ss << ", ";
         printReg(ss, srcRegIdx(0));
         if (_numSrcRegs > 1 && printSecondSrc) {
-          ss << ", ";
-          printReg(ss, srcRegIdx(1));
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
         }
     }
 
     return ss.str();
 }
-
 
 std::string
 IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
@@ -114,10 +107,9 @@ IntImmOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return ss.str();
 }
 
-
 std::string
-IntArithOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntArithOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -127,14 +119,11 @@ IntArithOp::generateDisassembly(
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "addme" ||
-        myMnemonic == "addze" ||
-        myMnemonic == "subfme" ||
-        myMnemonic == "subfze" ||
+    if (myMnemonic == "addme" || myMnemonic == "addze" ||
+        myMnemonic == "subfme" || myMnemonic == "subfze" ||
         myMnemonic == "neg") {
         printSecondSrc = false;
-    } else if (myMnemonic == "maddhd" ||
-               myMnemonic == "maddhdu" ||
+    } else if (myMnemonic == "maddhd" || myMnemonic == "maddhdu" ||
                myMnemonic == "maddld") {
         printThirdSrc = true;
     }
@@ -172,10 +161,9 @@ IntArithOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntImmArithOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntImmArithOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool negateImm = false;
@@ -232,10 +220,9 @@ IntImmArithOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntDispArithOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntDispArithOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSrcs = true;
@@ -277,10 +264,9 @@ IntDispArithOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntLogicOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntLogicOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -292,12 +278,9 @@ IntLogicOp::generateDisassembly(
     if (myMnemonic == "or" && srcRegIdx(0) == srcRegIdx(1)) {
         myMnemonic = "mr";
         printSecondSrc = false;
-    } else if (myMnemonic == "extsb" ||
-               myMnemonic == "extsh" ||
-               myMnemonic == "extsw" ||
-               myMnemonic == "cntlzw" ||
-               myMnemonic == "cntlzd" ||
-               myMnemonic == "cnttzw" ||
+    } else if (myMnemonic == "extsb" || myMnemonic == "extsh" ||
+               myMnemonic == "extsw" || myMnemonic == "cntlzw" ||
+               myMnemonic == "cntlzd" || myMnemonic == "cnttzw" ||
                myMnemonic == "cnttzd") {
         printSecondSrc = false;
     }
@@ -319,7 +302,6 @@ IntLogicOp::generateDisassembly(
 
         // Print the second source register
         if (printSecondSrc) {
-
             // If the instruction updates the CR, the destination register
             // Ra is read and thus, it becomes the second source register
             // due to its higher precedence over Rb. In this case, it must
@@ -341,10 +323,9 @@ IntLogicOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntImmLogicOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntImmLogicOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printRegs = true;
@@ -353,12 +334,12 @@ IntImmLogicOp::generateDisassembly(
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "ori" &&
-        destRegIdx(0).index() == 0 && srcRegIdx(0).index() == 0) {
+    if (myMnemonic == "ori" && destRegIdx(0).index() == 0 &&
+        srcRegIdx(0).index() == 0) {
         myMnemonic = "nop";
         printRegs = false;
-    } else if (myMnemonic == "xori" &&
-               destRegIdx(0).index() == 0 && srcRegIdx(0).index() == 0) {
+    } else if (myMnemonic == "xori" && destRegIdx(0).index() == 0 &&
+               srcRegIdx(0).index() == 0) {
         myMnemonic = "xnop";
         printRegs = false;
     } else if (myMnemonic == "andi_") {
@@ -370,7 +351,6 @@ IntImmLogicOp::generateDisassembly(
     ccprintf(ss, "%-10s ", myMnemonic);
 
     if (printRegs) {
-
         // Print the first destination only
         if (_numDestRegs > 0)
             printReg(ss, destRegIdx(0));
@@ -386,13 +366,12 @@ IntImmLogicOp::generateDisassembly(
         ss << ", " << ui;
     }
 
-     return ss.str();
+    return ss.str();
 }
 
-
 std::string
-IntCompOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntCompOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -402,8 +381,7 @@ IntCompOp::generateDisassembly(
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "cmp" ||
-        myMnemonic == "cmpl") {
+    if (myMnemonic == "cmp" || myMnemonic == "cmpl") {
         myMnemonic += l ? "d" : "w";
         printFieldPrefix = true;
         printLength = false;
@@ -414,16 +392,16 @@ IntCompOp::generateDisassembly(
     // Print the first destination only
     if (printFieldPrefix) {
         if (bf > 0)
-            ss << "cr" << (int) bf;
+            ss << "cr" << (int)bf;
     } else {
-        ss << (int) bf;
+        ss << (int)bf;
     }
 
     // Print the length
     if (printLength) {
         if (!printFieldPrefix || bf > 0)
             ss << ", ";
-        ss << (int) l;
+        ss << (int)l;
     }
 
     // Print the first source register
@@ -442,10 +420,9 @@ IntCompOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntImmCompOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntImmCompOp::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -466,16 +443,16 @@ IntImmCompOp::generateDisassembly(
     // Print the first destination only
     if (printFieldPrefix) {
         if (bf > 0)
-            ss << "cr" << (int) bf;
+            ss << "cr" << (int)bf;
     } else {
-        ss << (int) bf;
+        ss << (int)bf;
     }
 
     // Print the length
     if (printLength) {
         if (!printFieldPrefix || bf > 0)
             ss << ", ";
-        ss << (int) l;
+        ss << (int)l;
     }
 
     // Print the first source register
@@ -491,10 +468,9 @@ IntImmCompOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntImmCompLogicOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntImmCompLogicOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printFieldPrefix = false;
@@ -515,16 +491,16 @@ IntImmCompLogicOp::generateDisassembly(
     // Print the first destination only
     if (printFieldPrefix) {
         if (bf > 0)
-            ss << "cr" << (int) bf;
+            ss << "cr" << (int)bf;
     } else {
-        ss << (int) bf;
+        ss << (int)bf;
     }
 
     // Print the length
     if (printLength) {
         if (!printFieldPrefix || bf > 0)
             ss << ", ";
-        ss << (int) l;
+        ss << (int)l;
     }
 
     // Print the first source register
@@ -540,10 +516,9 @@ IntImmCompLogicOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntShiftOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntShiftOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -575,7 +550,6 @@ IntShiftOp::generateDisassembly(
 
         // Print the second source register
         if (printSecondSrc) {
-
             // If the instruction updates the CR, the destination register
             // Ra is read and thus, it becomes the second source register
             // due to its higher precedence over Rb. In this case, it must
@@ -596,15 +570,14 @@ IntShiftOp::generateDisassembly(
 
     // Print the shift value
     if (printShift)
-        ss << ", " << (int) sh;
+        ss << ", " << (int)sh;
 
     return ss.str();
 }
 
-
 std::string
-IntConcatShiftOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntConcatShiftOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -614,8 +587,7 @@ IntConcatShiftOp::generateDisassembly(
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "sradi" ||
-        myMnemonic == "extswsli") {
+    if (myMnemonic == "sradi" || myMnemonic == "extswsli") {
         printSecondSrc = false;
         printShift = true;
     }
@@ -637,7 +609,6 @@ IntConcatShiftOp::generateDisassembly(
 
         // Print the second source register
         if (printSecondSrc) {
-
             // If the instruction updates the CR, the destination register
             // Ra is read and thus, it becomes the second source register
             // due to its higher precedence over Rb. In this case, it must
@@ -658,15 +629,14 @@ IntConcatShiftOp::generateDisassembly(
 
     // Print the shift value
     if (printShift)
-        ss << ", " << (int) sh;
+        ss << ", " << (int)sh;
 
     return ss.str();
 }
 
-
 std::string
-IntRotateOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntRotateOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = true;
@@ -717,7 +687,6 @@ IntRotateOp::generateDisassembly(
 
         // Print the second source register
         if (printSecondSrc) {
-
             // If the instruction updates the CR, the destination register
             // Ra is read and thus, it becomes the second source register
             // due to its higher precedence over Rb. In this case, it must
@@ -738,20 +707,20 @@ IntRotateOp::generateDisassembly(
 
     // Print the shift value
     if (printShift)
-        ss << ", " << (int) sh;
+        ss << ", " << (int)sh;
 
     // Print the mask bounds
     if (printMaskBeg)
-        ss << ", " << (int) mb;
+        ss << ", " << (int)mb;
     if (printMaskEnd)
-        ss << ", " << (int) me;
+        ss << ", " << (int)me;
 
     return ss.str();
 }
 
 std::string
-IntConcatRotateOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntConcatRotateOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     bool printSecondSrc = false;
@@ -799,7 +768,6 @@ IntConcatRotateOp::generateDisassembly(
 
         // Print the second source register
         if (printSecondSrc) {
-
             // If the instruction updates the CR, the destination register
             // Ra is read and thus, it becomes the second source register
             // due to its higher precedence over Rb. In this case, it must
@@ -820,19 +788,18 @@ IntConcatRotateOp::generateDisassembly(
 
     // Print the shift amount
     if (printShift)
-        ss << ", " << (int) sh;
+        ss << ", " << (int)sh;
 
     // Print the mask bound
     if (printMaskBeg)
-        ss << ", " << (int) mb;
+        ss << ", " << (int)mb;
 
     return ss.str();
 }
 
-
 std::string
-IntTrapOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntTrapOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::string ext;
     std::stringstream ss;
@@ -843,14 +810,13 @@ IntTrapOp::generateDisassembly(
     std::string myMnemonic(mnemonic);
 
     // Special cases
-    if (myMnemonic == "tw" &&
-        (srcRegIdx(0).index() == 0) && (srcRegIdx(1).index() == 0)) {
+    if (myMnemonic == "tw" && (srcRegIdx(0).index() == 0) &&
+        (srcRegIdx(1).index() == 0)) {
         myMnemonic = "trap";
         printSrcs = false;
     } else {
         ext = suffix();
-        if (!ext.empty() &&
-            (myMnemonic == "tw" || myMnemonic == "td")) {
+        if (!ext.empty() && (myMnemonic == "tw" || myMnemonic == "td")) {
             myMnemonic += ext;
         } else {
             printCond = true;
@@ -861,7 +827,7 @@ IntTrapOp::generateDisassembly(
 
     // Print the trap condition
     if (printCond)
-        ss << (int) to;
+        ss << (int)to;
 
     // Print the source registers
     if (printSrcs) {
@@ -880,10 +846,9 @@ IntTrapOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-IntImmTrapOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+IntImmTrapOp::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::string ext;
     std::stringstream ss;
@@ -910,7 +875,7 @@ IntImmTrapOp::generateDisassembly(
 
     // Print the trap condition
     if (printCond)
-        ss << (int) to;
+        ss << (int)to;
 
     // Print the source registers
     if (_numSrcRegs > 0) {

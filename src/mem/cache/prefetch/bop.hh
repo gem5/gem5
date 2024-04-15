@@ -51,113 +51,110 @@ namespace prefetch
 
 class BOP : public Queued
 {
-    private:
+  private:
+    enum RRWay
+    {
+        Left,
+        Right
+    };
 
-        enum RRWay
-        {
-            Left,
-            Right
-        };
+    /** Learning phase parameters */
+    const unsigned int scoreMax;
+    const unsigned int roundMax;
+    const unsigned int badScore;
+    /** Recent requests table parameteres */
+    const unsigned int rrEntries;
+    const unsigned int tagMask;
+    /** Delay queue parameters */
+    const bool delayQueueEnabled;
+    const unsigned int delayQueueSize;
+    const unsigned int delayTicks;
 
-        /** Learning phase parameters */
-        const unsigned int scoreMax;
-        const unsigned int roundMax;
-        const unsigned int badScore;
-        /** Recent requests table parameteres */
-        const unsigned int rrEntries;
-        const unsigned int tagMask;
-        /** Delay queue parameters */
-        const bool         delayQueueEnabled;
-        const unsigned int delayQueueSize;
-        const unsigned int delayTicks;
+    std::vector<Addr> rrLeft;
+    std::vector<Addr> rrRight;
 
-        std::vector<Addr> rrLeft;
-        std::vector<Addr> rrRight;
+    /** Structure to save the offset and the score */
+    typedef std::pair<int16_t, uint8_t> OffsetListEntry;
+    std::vector<OffsetListEntry> offsetsList;
 
-        /** Structure to save the offset and the score */
-        typedef std::pair<int16_t, uint8_t> OffsetListEntry;
-        std::vector<OffsetListEntry> offsetsList;
+    /** In a first implementation of the BO prefetcher, both banks of the
+     *  RR were written simultaneously when a prefetched line is inserted
+     *  into the cache. Adding the delay queue tries to avoid always
+     *  striving for timeless prefetches, which has been found to not
+     *  always being optimal.
+     */
+    struct DelayQueueEntry
+    {
+        Addr baseAddr;
+        Tick processTick;
 
-        /** In a first implementation of the BO prefetcher, both banks of the
-         *  RR were written simultaneously when a prefetched line is inserted
-         *  into the cache. Adding the delay queue tries to avoid always
-         *  striving for timeless prefetches, which has been found to not
-         *  always being optimal.
-         */
-        struct DelayQueueEntry
-        {
-            Addr baseAddr;
-            Tick processTick;
+        DelayQueueEntry(Addr x, Tick t) : baseAddr(x), processTick(t) {}
+    };
 
-            DelayQueueEntry(Addr x, Tick t) : baseAddr(x), processTick(t)
-            {}
-        };
+    std::deque<DelayQueueEntry> delayQueue;
 
-        std::deque<DelayQueueEntry> delayQueue;
+    /** Event to handle the delay queue processing */
+    void delayQueueEventWrapper();
+    EventFunctionWrapper delayQueueEvent;
 
-        /** Event to handle the delay queue processing */
-        void delayQueueEventWrapper();
-        EventFunctionWrapper delayQueueEvent;
+    /** Hardware prefetcher enabled */
+    bool issuePrefetchRequests;
+    /** Current best offset to issue prefetches */
+    Addr bestOffset;
+    /** Current best offset found in the learning phase */
+    Addr phaseBestOffset;
+    /** Current test offset index */
+    std::vector<OffsetListEntry>::iterator offsetsListIterator;
+    /** Max score found so far */
+    unsigned int bestScore;
+    /** Current round */
+    unsigned int round;
 
-        /** Hardware prefetcher enabled */
-        bool issuePrefetchRequests;
-        /** Current best offset to issue prefetches */
-        Addr bestOffset;
-        /** Current best offset found in the learning phase */
-        Addr phaseBestOffset;
-        /** Current test offset index */
-        std::vector<OffsetListEntry>::iterator offsetsListIterator;
-        /** Max score found so far */
-        unsigned int bestScore;
-        /** Current round */
-        unsigned int round;
+    /** Generate a hash for the specified address to index the RR table
+     *  @param addr: address to hash
+     *  @param way:  RR table to which is addressed (left/right)
+     */
+    unsigned int hash(Addr addr, unsigned int way) const;
 
-        /** Generate a hash for the specified address to index the RR table
-         *  @param addr: address to hash
-         *  @param way:  RR table to which is addressed (left/right)
-         */
-        unsigned int hash(Addr addr, unsigned int way) const;
+    /** Insert the specified address into the RR table
+     *  @param addr: address to insert
+     *  @param way: RR table to which the address will be inserted
+     */
+    void insertIntoRR(Addr addr, unsigned int way);
 
-        /** Insert the specified address into the RR table
-         *  @param addr: address to insert
-         *  @param way: RR table to which the address will be inserted
-         */
-        void insertIntoRR(Addr addr, unsigned int way);
+    /** Insert the specified address into the delay queue. This will
+     *  trigger an event after the delay cycles pass
+     *  @param addr: address to insert into the delay queue
+     */
+    void insertIntoDelayQueue(Addr addr);
 
-        /** Insert the specified address into the delay queue. This will
-         *  trigger an event after the delay cycles pass
-         *  @param addr: address to insert into the delay queue
-         */
-        void insertIntoDelayQueue(Addr addr);
+    /** Reset all the scores from the offset list */
+    void resetScores();
 
-        /** Reset all the scores from the offset list */
-        void resetScores();
+    /** Generate the tag for the specified address based on the tag bits
+     *  and the block size
+     *  @param addr: address to get the tag from
+     */
+    Addr tag(Addr addr) const;
 
-        /** Generate the tag for the specified address based on the tag bits
-         *  and the block size
-         *  @param addr: address to get the tag from
-        */
-        Addr tag(Addr addr) const;
+    /** Test if @X-O is hitting in the RR table to update the
+        offset score */
+    bool testRR(Addr) const;
 
-        /** Test if @X-O is hitting in the RR table to update the
-            offset score */
-        bool testRR(Addr) const;
+    /** Learning phase of the BOP. Update the intermediate values of the
+        round and update the best offset if found */
+    void bestOffsetLearning(Addr);
 
-        /** Learning phase of the BOP. Update the intermediate values of the
-            round and update the best offset if found */
-        void bestOffsetLearning(Addr);
+    /** Update the RR right table after a prefetch fill */
+    void notifyFill(const CacheAccessProbeArg &arg) override;
 
-        /** Update the RR right table after a prefetch fill */
-        void notifyFill(const CacheAccessProbeArg &arg) override;
+  public:
+    BOP(const BOPPrefetcherParams &p);
+    ~BOP() = default;
 
-    public:
-
-        BOP(const BOPPrefetcherParams &p);
-        ~BOP() = default;
-
-        void calculatePrefetch(const PrefetchInfo &pfi,
-                               std::vector<AddrPriority> &addresses,
-                               const CacheAccessor &cache) override;
+    void calculatePrefetch(const PrefetchInfo &pfi,
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

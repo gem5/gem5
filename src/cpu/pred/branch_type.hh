@@ -53,37 +53,35 @@ namespace branch_prediction
 
 typedef enums::BranchType BranchType;
 
-inline BranchType getBranchType(StaticInstPtr inst)
+inline BranchType
+getBranchType(StaticInstPtr inst)
 {
     if (inst->isReturn()) {
         return BranchType::Return;
     }
 
     if (inst->isCall()) {
-        return inst->isDirectCtrl()
-                    ? BranchType::CallDirect
-                    : BranchType::CallIndirect;
+        return inst->isDirectCtrl() ? BranchType::CallDirect :
+                                      BranchType::CallIndirect;
     }
 
     if (inst->isDirectCtrl()) {
-        return inst->isCondCtrl()
-                    ? BranchType::DirectCond
-                    : BranchType::DirectUncond;
+        return inst->isCondCtrl() ? BranchType::DirectCond :
+                                    BranchType::DirectUncond;
     }
 
     if (inst->isIndirectCtrl()) {
-        return inst->isCondCtrl()
-                    ? BranchType::IndirectCond
-                    : BranchType::IndirectUncond;
+        return inst->isCondCtrl() ? BranchType::IndirectCond :
+                                    BranchType::IndirectUncond;
     }
     return BranchType::NoBranch;
 }
 
-inline std::string toString(BranchType type)
+inline std::string
+toString(BranchType type)
 {
     return std::string(enums::BranchTypeStrings[type]);
 }
-
 
 } // namespace branch_prediction
 } // namespace gem5

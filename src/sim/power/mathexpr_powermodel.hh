@@ -49,7 +49,7 @@ namespace gem5
 
 namespace statistics
 {
-    class Info;
+class Info;
 }
 
 /**
@@ -59,7 +59,6 @@ namespace statistics
 class MathExprPowerModel : public PowerModelState
 {
   public:
-
     typedef MathExprPowerModelParams Params;
     MathExprPowerModel(const Params &p);
 
@@ -68,14 +67,22 @@ class MathExprPowerModel : public PowerModelState
      *
      * @return Power (Watts) consumed by this object (dynamic component)
      */
-    double getDynamicPower() const override { return eval(dyn_expr); }
+    double
+    getDynamicPower() const override
+    {
+        return eval(dyn_expr);
+    }
 
     /**
      * Get the static power consumption.
      *
      * @return Power (Watts) consumed by this object (static component)
      */
-    double getStaticPower() const override { return eval(st_expr); }
+    double
+    getStaticPower() const override
+    {
+        return eval(st_expr);
+    }
 
     /**
      * Get the value for a variable (maps to a stat)
@@ -84,7 +91,7 @@ class MathExprPowerModel : public PowerModelState
      *
      * @return Power (Watts) consumed by this object (static component)
      */
-    double getStatValue(const std::string & name) const;
+    double getStatValue(const std::string &name) const;
 
     void startup() override;
     void regStats() override;
@@ -103,7 +110,7 @@ class MathExprPowerModel : public PowerModelState
     MathExpr dyn_expr, st_expr;
 
     // Map that contains relevant stats for this power model
-    std::unordered_map<std::string, const statistics::Info*> statsMap;
+    std::unordered_map<std::string, const statistics::Info *> statsMap;
 };
 
 } // namespace gem5

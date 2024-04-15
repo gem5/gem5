@@ -48,15 +48,33 @@ sc_core::sc_status _status = sc_core::SC_ELABORATION;
 
 } // anonymous namespace
 
-bool Kernel::startOfSimulationComplete() { return startComplete; }
-bool Kernel::endOfSimulationComplete() { return endComplete; }
+bool
+Kernel::startOfSimulationComplete()
+{
+    return startComplete;
+}
 
-sc_core::sc_status Kernel::status() { return _status; }
-void Kernel::status(sc_core::sc_status s) { _status = s; }
+bool
+Kernel::endOfSimulationComplete()
+{
+    return endComplete;
+}
 
-Kernel::Kernel(const Params &params, int) :
-    gem5::SimObject(params),
-    t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
+sc_core::sc_status
+Kernel::status()
+{
+    return _status;
+}
+
+void
+Kernel::status(sc_core::sc_status s)
+{
+    _status = s;
+}
+
+Kernel::Kernel(const Params &params, int)
+    : gem5::SimObject(params),
+      t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
     ::sc_gem5::scheduler.setEventQueue(eventQueue());
@@ -72,11 +90,11 @@ Kernel::init()
         fatal("Simulation called sc_stop during elaboration.\n");
 
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
-    for (auto p: allPorts)
+    for (auto p : allPorts)
         p->sc_port_base()->before_end_of_elaboration();
-    for (auto m: sc_gem5::allModules)
+    for (auto m : sc_gem5::allModules)
         m->beforeEndOfElaboration();
-    for (auto c: sc_gem5::allChannels)
+    for (auto c : sc_gem5::allChannels)
         c->sc_chan()->before_end_of_elaboration();
 
     ::sc_gem5::scheduler.elaborationDone(true);
@@ -91,17 +109,17 @@ Kernel::regStats()
         return;
 
     try {
-        for (auto p: allPorts)
+        for (auto p : allPorts)
             p->finalize();
-        for (auto p: allPorts)
+        for (auto p : allPorts)
             p->regPort();
 
         status(::sc_core::SC_END_OF_ELABORATION);
-        for (auto p: allPorts)
+        for (auto p : allPorts)
             p->sc_port_base()->end_of_elaboration();
-        for (auto m: sc_gem5::allModules)
+        for (auto m : sc_gem5::allModules)
             m->endOfElaboration();
-        for (auto c: sc_gem5::allChannels)
+        for (auto c : sc_gem5::allChannels)
             c->sc_chan()->end_of_elaboration();
     } catch (...) {
         ::sc_gem5::scheduler.throwUp();
@@ -121,11 +139,11 @@ Kernel::startup()
 
     try {
         status(::sc_core::SC_START_OF_SIMULATION);
-        for (auto p: allPorts)
+        for (auto p : allPorts)
             p->sc_port_base()->start_of_simulation();
-        for (auto m: sc_gem5::allModules)
+        for (auto m : sc_gem5::allModules)
             m->startOfSimulation();
-        for (auto c: sc_gem5::allChannels)
+        for (auto c : sc_gem5::allChannels)
             c->sc_chan()->start_of_simulation();
     } catch (...) {
         ::sc_gem5::scheduler.throwUp();
@@ -153,11 +171,11 @@ Kernel::stopWork()
 {
     status(::sc_core::SC_END_OF_SIMULATION);
     try {
-        for (auto p: allPorts)
+        for (auto p : allPorts)
             p->sc_port_base()->end_of_simulation();
-        for (auto m: sc_gem5::allModules)
+        for (auto m : sc_gem5::allModules)
             m->endOfSimulation();
-        for (auto c: sc_gem5::allChannels)
+        for (auto c : sc_gem5::allChannels)
             c->sc_chan()->end_of_simulation();
     } catch (...) {
         ::sc_gem5::scheduler.throwUp();
@@ -190,7 +208,7 @@ gem5::SystemC_KernelParams::create() const
 {
     using namespace gem5;
     panic_if(sc_gem5::kernel,
-            "Only one systemc kernel object may be defined.\n");
+             "Only one systemc kernel object may be defined.\n");
     sc_gem5::kernel = new sc_gem5::Kernel(*this, 0);
     return sc_gem5::kernel;
 }

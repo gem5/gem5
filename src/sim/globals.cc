@@ -84,7 +84,7 @@ Globals::unserialize(CheckpointIn &cp)
     arrayParamIn(cp, "version_tags", cpt_tags); // UNSERIALIZE_CONTAINER
 
     bool err = false;
-    for (const auto& t : version_tags) {
+    for (const auto &t : version_tags) {
         if (cpt_tags.find(t) == cpt_tags.end()) {
             // checkpoint is missing tag that this binary has
             if (!err) {
@@ -104,7 +104,7 @@ Globals::unserialize(CheckpointIn &cp)
     }
 
     err = false;
-    for (const auto& t : cpt_tags) {
+    for (const auto &t : cpt_tags) {
         if (version_tags.find(t) == version_tags.end()) {
             // gem5 binary is missing tag that this checkpoint has
             if (!err) {
@@ -120,7 +120,7 @@ Globals::unserialize(CheckpointIn &cp)
              "supported. While it might work, you may experience incorrect "
              "behavior or crashes.\n");
         warn(divider);
-     }
+    }
 }
 
 } // namespace gem5

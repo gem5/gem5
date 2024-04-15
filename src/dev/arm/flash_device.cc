@@ -62,26 +62,25 @@ namespace gem5
  * Flash Device constructor and destructor
  */
 
-FlashDevice::FlashDevice(const FlashDeviceParams &p):
-    AbstractNVM(p),
-    diskSize(0),
-    blockSize(p.blk_size),
-    pageSize(p.page_size),
-    GCActivePercentage(p.GC_active),
-    readLatency(p.read_lat),
-    writeLatency(p.write_lat),
-    eraseLatency(p.erase_lat),
-    dataDistribution(p.data_distribution),
-    numPlanes(p.num_planes),
-    stats(this),
-    pagesPerBlock(0),
-    pagesPerDisk(0),
-    blocksPerDisk(0),
-    planeMask(numPlanes - 1),
-    planeEventQueue(numPlanes),
-    planeEvent([this]{ actionComplete(); }, name())
+FlashDevice::FlashDevice(const FlashDeviceParams &p)
+    : AbstractNVM(p),
+      diskSize(0),
+      blockSize(p.blk_size),
+      pageSize(p.page_size),
+      GCActivePercentage(p.GC_active),
+      readLatency(p.read_lat),
+      writeLatency(p.write_lat),
+      eraseLatency(p.erase_lat),
+      dataDistribution(p.data_distribution),
+      numPlanes(p.num_planes),
+      stats(this),
+      pagesPerBlock(0),
+      pagesPerDisk(0),
+      blocksPerDisk(0),
+      planeMask(numPlanes - 1),
+      planeEventQueue(numPlanes),
+      planeEvent([this] { actionComplete(); }, name())
 {
-
     /*
      * Let 'a' be a power of two of n bits, written such that a-n is the msb
      * and a-0 is the lsb. Since it is a power of two, only one bit (a-x,
@@ -108,8 +107,10 @@ FlashDevice::initializeFlash(uint64_t disk_size, uint32_t sector_size)
     blocksPerDisk = diskSize / blockSize;
 
     /** Sanity information: check flash configuration */
-    DPRINTF(FlashDevice, "diskSize: %d Bytes; %d pages per block, %d pages "
-            "per disk\n", diskSize, pagesPerBlock, pagesPerDisk);
+    DPRINTF(FlashDevice,
+            "diskSize: %d Bytes; %d pages per block, %d pages "
+            "per disk\n",
+            diskSize, pagesPerBlock, pagesPerDisk);
 
     locationTable.resize(pagesPerDisk);
 
@@ -129,7 +130,7 @@ FlashDevice::initializeFlash(uint64_t disk_size, uint32_t sector_size)
     unknownPages.resize((pagesPerDisk >> 5) + 1, 0xFFFFFFFF);
 
     for (uint32_t count = 0; count < pagesPerDisk; count++) {
-        //setup lookup table + physical aspects
+        // setup lookup table + physical aspects
 
         if (dataDistribution == enums::stripe) {
             locationTable[count].page = count / blocksPerDisk;
@@ -142,10 +143,7 @@ FlashDevice::initializeFlash(uint64_t disk_size, uint32_t sector_size)
     }
 }
 
-FlashDevice::~FlashDevice()
-{
-    DPRINTF(FlashDevice, "Remove FlashDevice\n");
-}
+FlashDevice::~FlashDevice() { DPRINTF(FlashDevice, "Remove FlashDevice\n"); }
 
 /**
  * Handles the accesses to the device.
@@ -156,8 +154,8 @@ void
 FlashDevice::accessDevice(uint64_t address, uint32_t amount,
                           const std::function<void()> &event, Actions action)
 {
-    DPRINTF(FlashDevice, "Flash calculation for %d bytes in %d pages\n"
-            , amount, pageSize);
+    DPRINTF(FlashDevice, "Flash calculation for %d bytes in %d pages\n",
+            amount, pageSize);
 
     std::vector<Tick> time(numPlanes, 0);
     uint64_t logic_page_addr = address / pageSize;
@@ -171,12 +169,14 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
      * transaction characteristics.
      */
     for (uint32_t count = 0; amount > (count * pageSize); count++) {
-        uint32_t index = (locationTable[logic_page_addr].block *
-                          pagesPerBlock) + (logic_page_addr % pagesPerBlock);
+        uint32_t index =
+            (locationTable[logic_page_addr].block * pagesPerBlock) +
+            (logic_page_addr % pagesPerBlock);
 
-        DPRINTF(FlashDevice, "Index 0x%8x, Block 0x%8x, pages/block %d,"
-                " logic address 0x%8x\n", index,
-                locationTable[logic_page_addr].block, pagesPerBlock,
+        DPRINTF(FlashDevice,
+                "Index 0x%8x, Block 0x%8x, pages/block %d,"
+                " logic address 0x%8x\n",
+                index, locationTable[logic_page_addr].block, pagesPerBlock,
                 logic_page_addr);
         DPRINTF(FlashDevice, "Page %d; %d bytes up to this point\n", count,
                 (count * pageSize));
@@ -184,24 +184,24 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
         plane_address = locationTable[logic_page_addr].block & planeMask;
 
         if (action == ActionRead) {
-            //lookup
-            //call accessTimes
-            time[plane_address] += accessTimes(locationTable[logic_page_addr]
-                                               .block, ActionRead);
+            // lookup
+            // call accessTimes
+            time[plane_address] +=
+                accessTimes(locationTable[logic_page_addr].block, ActionRead);
 
             /*stats*/
             stats.readAccess.sample(logic_page_addr);
             stats.readLatency.sample(time[plane_address]);
-        } else { //write
-            //lookup
-            //call accessTimes if appropriate, page may be unknown, so lets
-            //give it the benefit of the doubt
+        } else { // write
+            // lookup
+            // call accessTimes if appropriate, page may be unknown, so lets
+            // give it the benefit of the doubt
 
             if (getUnknownPages(index))
-                time[plane_address] += accessTimes
-                    (locationTable[logic_page_addr].block, ActionWrite);
+                time[plane_address] += accessTimes(
+                    locationTable[logic_page_addr].block, ActionWrite);
 
-            else //A remap is needed
+            else // A remap is needed
                 time[plane_address] += remap(logic_page_addr);
 
             /*stats*/
@@ -230,15 +230,14 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
      * previous part of the function found the times spend in different
      * planes, now lets find the maximum to know when to callback the disk
      */
-    for (uint32_t count = 0; count < numPlanes; count++){
-        plane_address = (time[plane_address] > time[count]) ? plane_address
-            : count;
+    for (uint32_t count = 0; count < numPlanes; count++) {
+        plane_address =
+            (time[plane_address] > time[count]) ? plane_address : count;
 
         DPRINTF(FlashDevice, "Plane %d is busy for %d ticks\n", count,
                 time[count]);
 
         if (time[count] != 0) {
-
             struct CallBackEntry cbe;
             /**
              * If there are no events for this plane, then add the current
@@ -249,8 +248,7 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
             if (planeEventQueue[count].empty())
                 cbe.time = time[count] + curTick();
             else
-                cbe.time = time[count] +
-                           planeEventQueue[count].back().time;
+                cbe.time = time[count] + planeEventQueue[count].back().time;
             planeEventQueue[count].push_back(cbe);
 
             DPRINTF(FlashDevice, "scheduled at: %ld\n", cbe.time);
@@ -259,13 +257,13 @@ FlashDevice::accessDevice(uint64_t address, uint32_t amount,
                 schedule(planeEvent, planeEventQueue[count].back().time);
             else if (planeEventQueue[count].back().time < planeEvent.when())
                 reschedule(planeEvent,
-                    planeEventQueue[plane_address].back().time, true);
+                           planeEventQueue[plane_address].back().time, true);
         }
     }
 
-    //worst case two plane finish at the same time, each triggers an event
-    //and this callback will be called once. Maybe before the other plane
-    //could execute its event, but in the same tick.
+    // worst case two plane finish at the same time, each triggers an event
+    // and this callback will be called once. Maybe before the other plane
+    // could execute its event, but in the same tick.
     planeEventQueue[plane_address].back().function = event;
     DPRINTF(FlashDevice, "Callback queued for plane %d; %d in queue\n",
             plane_address, planeEventQueue[plane_address].size());
@@ -316,8 +314,8 @@ FlashDevice::actionComplete()
     for (plane_address = 0; plane_address < numPlanes; plane_address++) {
         if (!planeEventQueue[plane_address].empty())
             if (planeEventQueue[next_event].empty() ||
-                    (planeEventQueue[plane_address].front().time <
-                     planeEventQueue[next_event].front().time))
+                (planeEventQueue[plane_address].front().time <
+                 planeEventQueue[next_event].front().time))
                 next_event = plane_address;
     }
 
@@ -345,34 +343,33 @@ FlashDevice::remap(uint64_t logic_page_addr)
      * Are there any empty left in this Block, or do we need to do an erase
      */
     if (blockEmptyEntries[locationTable[logic_page_addr].block] > 0) {
-        //just a remap
-        //update tables
+        // just a remap
+        // update tables
         --blockEmptyEntries[locationTable[logic_page_addr].block];
-        //access to this table won't be sequential anymore
+        // access to this table won't be sequential anymore
         locationTable[logic_page_addr].page = pagesPerBlock + 2;
-        //access new block
-        Tick time = accessTimes(locationTable[logic_page_addr].block,
-                                ActionWrite);
+        // access new block
+        Tick time =
+            accessTimes(locationTable[logic_page_addr].block, ActionWrite);
 
         DPRINTF(FlashDevice, "Remap returns %d ticks\n", time);
         return time;
 
     } else {
-        //calculate how much time GC would have taken
+        // calculate how much time GC would have taken
         uint32_t block = locationTable[logic_page_addr].block;
-        Tick time = ((GCActivePercentage *
-                       (accessTimes(block, ActionCopy) +
-                        accessTimes(block, ActionErase)))
-                     / 100);
+        Tick time = ((GCActivePercentage * (accessTimes(block, ActionCopy) +
+                                            accessTimes(block, ActionErase))) /
+                     100);
 
-        //use block as the logical start address of the block
+        // use block as the logical start address of the block
         block = locationTable[logic_page_addr].block * pagesPerBlock;
 
-        //assumption: clean will improve locality
+        // assumption: clean will improve locality
         for (uint32_t count = 0; count < pagesPerBlock; count++) {
             assert(block + count < pagesPerDisk);
-            locationTable[block + count].page = (block + count) %
-                pagesPerBlock;
+            locationTable[block + count].page =
+                (block + count) % pagesPerBlock;
         }
 
         blockEmptyEntries[locationTable[logic_page_addr].block] =
@@ -385,7 +382,6 @@ FlashDevice::remap(uint64_t logic_page_addr)
 
         return time;
     }
-
 }
 
 /**
@@ -396,32 +392,33 @@ FlashDevice::accessTimes(uint64_t block, Actions action)
 {
     Tick time = 0;
 
-    switch(action) {
-      case ActionRead: {
-          /**Just read the page*/
-          time = readLatency;
-      } break;
+    switch (action) {
+    case ActionRead: {
+        /**Just read the page*/
+        time = readLatency;
+    } break;
 
-      case ActionWrite: {
-          /**Write the page, and read the result*/
-          time = writeLatency + readLatency;
-      } break;
+    case ActionWrite: {
+        /**Write the page, and read the result*/
+        time = writeLatency + readLatency;
+    } break;
 
-      case ActionErase: {
-          /**Erase and check wether it was successfull*/
-          time = eraseLatency + readLatency;
-      } break;
+    case ActionErase: {
+        /**Erase and check wether it was successfull*/
+        time = eraseLatency + readLatency;
+    } break;
 
-      case ActionCopy: {
-          /**Copy every valid page*/
-          uint32_t validpages = blockValidEntries[block];
-          time = validpages * (readLatency + writeLatency);
-      } break;
+    case ActionCopy: {
+        /**Copy every valid page*/
+        uint32_t validpages = blockValidEntries[block];
+        time = validpages * (readLatency + writeLatency);
+    } break;
 
-      default: break;
+    default:
+        break;
     }
 
-    //Used to determine sequential action.
+    // Used to determine sequential action.
     DPRINTF(FlashDevice, "Access returns %d ticks\n", time);
     return time;
 }
@@ -440,8 +437,7 @@ FlashDevice::accessTimes(uint64_t block, Actions action)
  * in the future.
  */
 
-inline
-void
+inline void
 FlashDevice::clearUnknownPages(uint32_t index)
 {
     unknownPages[index >> 5] &= ~(0x01 << (index % 32));
@@ -451,8 +447,7 @@ FlashDevice::clearUnknownPages(uint32_t index)
  * getUnknownPages. Verify wether a page is known
  */
 
-inline
-bool
+inline bool
 FlashDevice::getUnknownPages(uint32_t index)
 {
     return unknownPages[index >> 5] & (0x01 << (index % 32));
@@ -460,43 +455,32 @@ FlashDevice::getUnknownPages(uint32_t index)
 
 FlashDevice::FlashDeviceStats::FlashDeviceStats(statistics::Group *parent)
     : statistics::Group(parent, "FlashDevice"),
-    ADD_STAT(totalGCActivations, statistics::units::Count::get(),
-             "Number of Garbage collector activations"),
-    ADD_STAT(writeAccess, statistics::units::Count::get(),
-             "Histogram of write addresses"),
-    ADD_STAT(readAccess, statistics::units::Count::get(),
-             "Histogram of read addresses"),
-    ADD_STAT(fileSystemAccess, statistics::units::Count::get(),
-             "Histogram of file system accesses"),
-    ADD_STAT(writeLatency, statistics::units::Tick::get(),
-             "Histogram of write latency"),
-    ADD_STAT(readLatency, statistics::units::Tick::get(),
-             "Histogram of read latency")
+      ADD_STAT(totalGCActivations, statistics::units::Count::get(),
+               "Number of Garbage collector activations"),
+      ADD_STAT(writeAccess, statistics::units::Count::get(),
+               "Histogram of write addresses"),
+      ADD_STAT(readAccess, statistics::units::Count::get(),
+               "Histogram of read addresses"),
+      ADD_STAT(fileSystemAccess, statistics::units::Count::get(),
+               "Histogram of file system accesses"),
+      ADD_STAT(writeLatency, statistics::units::Tick::get(),
+               "Histogram of write latency"),
+      ADD_STAT(readLatency, statistics::units::Tick::get(),
+               "Histogram of read latency")
 {
     using namespace statistics;
 
     /** Amount of GC activations*/
-    totalGCActivations
-        .flags(none);
+    totalGCActivations.flags(none);
 
     /** Histogram of address accesses*/
-    writeAccess
-        .init(2)
-        .flags(pdf);
-    readAccess
-        .init(2)
-        .flags(pdf);
-    fileSystemAccess
-        .init(100)
-        .flags(pdf);
+    writeAccess.init(2).flags(pdf);
+    readAccess.init(2).flags(pdf);
+    fileSystemAccess.init(100).flags(pdf);
 
     /** Histogram of access latencies*/
-    writeLatency
-        .init(100)
-        .flags(pdf);
-    readLatency
-        .init(100)
-        .flags(pdf);
+    writeLatency.init(100).flags(pdf);
+    readLatency.init(100).flags(pdf);
 }
 
 /**

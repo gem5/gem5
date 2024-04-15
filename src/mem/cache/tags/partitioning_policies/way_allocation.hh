@@ -63,26 +63,26 @@ class WayPolicyAllocation : public SimObject
     WayPolicyAllocation(const WayPolicyAllocationParams &params);
 
     /**
-    * Way Policy Allocation _ways getter
-    * @return Allocation ways
-    */
-    std::vector< uint64_t > getWays() const;
+     * Way Policy Allocation _ways getter
+     * @return Allocation ways
+     */
+    std::vector<uint64_t> getWays() const;
 
     /**
-    * Way Policy Allocation _partitionId getter
-    * @return Allocation Partition ID
-    */
+     * Way Policy Allocation _partitionId getter
+     * @return Allocation Partition ID
+     */
     uint64_t getPartitionId() const;
 
   private:
     /**
-    * Vector of ways to allocated to the PartitionID
-    */
-    const std::vector< uint64_t > _ways;
+     * Vector of ways to allocated to the PartitionID
+     */
+    const std::vector<uint64_t> _ways;
 
     /**
-    * PartitionID on which allocation should be enforced
-    */
+     * PartitionID on which allocation should be enforced
+     */
     const uint64_t _partitionId;
 };
 

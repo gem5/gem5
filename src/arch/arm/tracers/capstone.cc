@@ -49,7 +49,7 @@ namespace trace
 using namespace ArmISA;
 
 ArmCapstoneDisassembler::ArmCapstoneDisassembler(const Params &p)
-  : CapstoneDisassembler(p)
+    : CapstoneDisassembler(p)
 {
     if (cs_open(CS_ARCH_ARM64, CS_MODE_ARM, &arm64Handle) != CS_ERR_OK)
         panic("Unable to open capstone for arm64 disassembly");
@@ -58,7 +58,7 @@ ArmCapstoneDisassembler::ArmCapstoneDisassembler(const Params &p)
         panic("Unable to open capstone for arm disassembly");
 }
 
-const csh*
+const csh *
 ArmCapstoneDisassembler::currHandle(const PCStateBase &_pc) const
 {
     auto pc = _pc.as<ArmISA::PCState>();

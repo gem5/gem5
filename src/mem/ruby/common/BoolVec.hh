@@ -49,7 +49,7 @@ namespace ruby
 
 typedef std::vector<bool> BoolVec;
 
-std::ostream& operator<<(std::ostream& os, const std::vector<bool>& myvector);
+std::ostream &operator<<(std::ostream &os, const std::vector<bool> &myvector);
 
 } // namespace ruby
 } // namespace gem5

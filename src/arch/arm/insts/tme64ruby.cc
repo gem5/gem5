@@ -48,11 +48,11 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace ArmISAInst {
+namespace ArmISAInst
+{
 
 Fault
-Tstart64::initiateAcc(ExecContext *xc,
-                      trace::InstRecord *traceData) const
+Tstart64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     const uint64_t htm_depth = xc->getHtmTransactionalDepth();
@@ -68,7 +68,7 @@ Tstart64::initiateAcc(ExecContext *xc,
 
     if (fault == NoFault) {
         Request::Flags memAccessFlags =
-            Request::STRICT_ORDER|Request::PHYSICAL|Request::HTM_START;
+            Request::STRICT_ORDER | Request::PHYSICAL | Request::HTM_START;
 
         // Nested transaction start/stops never leave the core.
         // These Requests are marked as NO_ACCESS to indicate that the request
@@ -110,10 +110,9 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
         // checkpointing occurs in the outer transaction only
         if (htm_depth == 1) {
-            BaseHTMCheckpointPtr& cpt = xc->tcBase()->getHtmCheckpointPtr();
+            BaseHTMCheckpointPtr &cpt = xc->tcBase()->getHtmCheckpointPtr();
 
-            HTMCheckpoint *armcpt =
-                dynamic_cast<HTMCheckpoint*>(cpt.get());
+            HTMCheckpoint *armcpt = dynamic_cast<HTMCheckpoint *>(cpt.get());
             assert(armcpt != nullptr);
 
             armcpt->save(tc);
@@ -124,9 +123,10 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
         xc->setRegOperand(this, 0, Dest64 & mask(intWidth));
 
-
         uint64_t final_val = Dest64;
-        if (traceData) { traceData->setData(intRegClass, final_val); }
+        if (traceData) {
+            traceData->setData(intRegClass, final_val);
+        }
     }
 
     return fault;
@@ -146,7 +146,6 @@ Ttest64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
     Dest64 = htm_depth;
 
-
     // sanity check
     if (Dest64 == 0)
         assert(!xc->inHtmTransactionalState());
@@ -156,7 +155,9 @@ Ttest64::execute(ExecContext *xc, trace::InstRecord *traceData) const
     if (fault == NoFault) {
         uint64_t final_val = Dest64;
         xc->setRegOperand(this, 0, Dest64 & mask(intWidth));
-        if (traceData) { traceData->setData(intRegClass, final_val); }
+        if (traceData) {
+            traceData->setData(intRegClass, final_val);
+        }
     }
 
     return fault;
@@ -173,7 +174,7 @@ Tcancel64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
     }
 
     Request::Flags memAccessFlags =
-        Request::STRICT_ORDER|Request::PHYSICAL|Request::HTM_CANCEL;
+        Request::STRICT_ORDER | Request::PHYSICAL | Request::HTM_CANCEL;
 
     fault = xc->initiateMemMgmtCmd(memAccessFlags);
 
@@ -195,13 +196,12 @@ Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
     }
 
     if (fault == NoFault) {
-        auto tme_checkpoint = static_cast<HTMCheckpoint*>(
+        auto tme_checkpoint = static_cast<HTMCheckpoint *>(
             xc->tcBase()->getHtmCheckpointPtr().get());
         tme_checkpoint->cancelReason(imm);
 
         fault = std::make_shared<GenericHtmFailureFault>(
-            xc->getHtmTransactionUid(),
-            HtmFailureFaultCause::EXPLICIT);
+            xc->getHtmTransactionUid(), HtmFailureFaultCause::EXPLICIT);
     }
 
     return fault;
@@ -222,7 +222,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
     DPRINTF(ArmTme, "tme depth is %d\n", htm_depth);
 
     Request::Flags memAccessFlags =
-        Request::STRICT_ORDER|Request::PHYSICAL|Request::HTM_COMMIT;
+        Request::STRICT_ORDER | Request::PHYSICAL | Request::HTM_COMMIT;
 
     // Nested transaction start/stops never leave the core.
     // These Requests are marked as NO_ACCESS to indicate that the request
@@ -254,7 +254,7 @@ MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
     if (fault == NoFault) {
         if (htm_depth == 1) {
-            auto tme_checkpoint = static_cast<HTMCheckpoint*>(
+            auto tme_checkpoint = static_cast<HTMCheckpoint *>(
                 xc->tcBase()->getHtmCheckpointPtr().get());
 
             assert(tme_checkpoint);

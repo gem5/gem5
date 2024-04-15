@@ -81,7 +81,12 @@ class TouchKit : public Device, public VncMouse
   protected:
     bool recvTouchKit(const std::vector<uint8_t> &data);
     void sendTouchKit(const uint8_t *data, size_t size);
-    void sendTouchKit(uint8_t data) { sendTouchKit(&data, 1); }
+
+    void
+    sendTouchKit(uint8_t data)
+    {
+        sendTouchKit(&data, 1);
+    }
 
     /** The vnc server we're connected to (if any) */
     VncInput *const vnc;

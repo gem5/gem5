@@ -103,7 +103,11 @@ class MemDepUnit
     ~MemDepUnit();
 
     /** Returns the name of the memory dependence unit. */
-    std::string name() const { return _name; }
+    std::string
+    name() const
+    {
+        return _name;
+    }
 
     /** Initializes the unit with parameters and a thread id. */
     void init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu);
@@ -162,7 +166,6 @@ class MemDepUnit
     void dumpLists();
 
   private:
-
     /** Completes a memory instruction. */
     void completed(const DynInstPtr &inst);
 
@@ -189,7 +192,11 @@ class MemDepUnit
         ~MemDepEntry();
 
         /** Returns the name of the memory dependence entry. */
-        std::string name() const { return "memdepentry"; }
+        std::string
+        name() const
+        {
+            return "memdepentry";
+        }
 
         /** The instruction being tracked. */
         DynInstPtr inst;
@@ -218,7 +225,7 @@ class MemDepUnit
     };
 
     /** Finds the memory dependence entry in the hash map. */
-    MemDepEntryPtr &findInHash(const DynInstConstPtr& inst);
+    MemDepEntryPtr &findInHash(const DynInstConstPtr &inst);
 
     /** Moves an entry to the ready list. */
     void moveToReady(MemDepEntryPtr &ready_inst_entry);
@@ -250,10 +257,18 @@ class MemDepUnit
     std::unordered_set<InstSeqNum> storeBarrierSNs;
 
     /** Is there an outstanding load barrier that loads must wait on. */
-    bool hasLoadBarrier() const { return !loadBarrierSNs.empty(); }
+    bool
+    hasLoadBarrier() const
+    {
+        return !loadBarrierSNs.empty();
+    }
 
     /** Is there an outstanding store barrier that loads must wait on. */
-    bool hasStoreBarrier() const { return !storeBarrierSNs.empty(); }
+    bool
+    hasStoreBarrier() const
+    {
+        return !storeBarrierSNs.empty();
+    }
 
     /** Inserts the SN of a barrier inst. to the list of tracked barriers */
     void insertBarrierSN(const DynInstPtr &barr_inst);
@@ -263,6 +278,7 @@ class MemDepUnit
 
     /** The thread id of this memory dependence unit. */
     int id;
+
     struct MemDepUnitStats : public statistics::Group
     {
         MemDepUnitStats(statistics::Group *parent);

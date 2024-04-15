@@ -41,10 +41,15 @@ class Named
     const std::string _name;
 
   public:
-    Named(const std::string &name_) : _name(name_) { }
+    Named(const std::string &name_) : _name(name_) {}
+
     virtual ~Named() = default;
 
-    virtual std::string name() const { return _name; }
+    virtual std::string
+    name() const
+    {
+        return _name;
+    }
 };
 
 } // namespace gem5

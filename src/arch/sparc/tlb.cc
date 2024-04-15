@@ -55,11 +55,16 @@ namespace gem5
 
 /* @todo remove some of the magic constants.  -- ali
  * */
-namespace SparcISA {
+namespace SparcISA
+{
 
 TLB::TLB(const Params &p)
-    : BaseTLB(p), size(p.size), usedEntries(0), lastReplaced(0),
-      cacheState(0), cacheValid(false)
+    : BaseTLB(p),
+      size(p.size),
+      usedEntries(0),
+      lastReplaced(0),
+      cacheState(0),
+      cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
     if (size > 64)
@@ -97,19 +102,19 @@ TLB::clearUsedBits()
     }
 }
 
-
 void
 TLB::insert(Addr va, int partition_id, int context_id, bool real,
-        const PageTableEntry& PTE, int entry)
+            const PageTableEntry &PTE, int entry)
 {
     MapIter i;
     TlbEntry *new_entry = NULL;
     int x;
 
     cacheValid = false;
-    va &= ~(PTE.size()-1);
+    va &= ~(PTE.size() - 1);
 
-    DPRINTF(TLB,
+    DPRINTF(
+        TLB,
         "TLB: Inserting Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
         va, PTE.paddr(), partition_id, context_id, (int)real, entry);
 
@@ -119,8 +124,7 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
             tlb[x].range.partitionId == partition_id &&
             tlb[x].range.va < va + PTE.size() - 1 &&
             tlb[x].range.va + tlb[x].range.size >= va &&
-            (real || tlb[x].range.contextId == context_id ))
-        {
+            (real || tlb[x].range.contextId == context_id)) {
             if (tlb[x].valid) {
                 freeList.push_front(&tlb[x]);
                 DPRINTF(TLB, "TLB: Conflicting entry %#X , deleting it\n", x);
@@ -158,7 +162,7 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
 insertAllLocked:
     // Update the last ently if their all locked
     if (!new_entry) {
-        new_entry = &tlb[size-1];
+        new_entry = &tlb[size - 1];
     }
 
     freeList.remove(new_entry);
@@ -167,7 +171,6 @@ insertAllLocked:
     if (new_entry->valid)
         lookupTable.erase(new_entry->range);
 
-
     assert(PTE.valid());
     new_entry->range.va = va;
     new_entry->range.size = PTE.size() - 1;
@@ -175,7 +178,8 @@ insertAllLocked:
     new_entry->range.contextId = context_id;
     new_entry->range.real = real;
     new_entry->pte = PTE;
-    new_entry->used = true;;
+    new_entry->used = true;
+    ;
     new_entry->valid = true;
     usedEntries++;
 
@@ -191,8 +195,7 @@ insertAllLocked:
     }
 }
 
-
-TlbEntry*
+TlbEntry *
 TLB::lookup(Addr va, int partition_id, bool real, int context_id,
             bool update_used)
 {
@@ -200,8 +203,8 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id,
     TlbRange tr;
     TlbEntry *t;
 
-    DPRINTF(TLB, "TLB: Looking up entry va=%#x pid=%d cid=%d r=%d\n",
-            va, partition_id, context_id, real);
+    DPRINTF(TLB, "TLB: Looking up entry va=%#x pid=%d cid=%d r=%d\n", va,
+            partition_id, context_id, real);
     // Assemble full address structure
     tr.va = va;
     tr.size = 1;
@@ -242,10 +245,10 @@ TLB::dumpAll()
     MapIter i;
     for (int x = 0; x < size; x++) {
         if (tlb[x].valid) {
-           DPRINTFN("%4d:  %#2x:%#2x %c %#4x %#8x %#8x %#16x\n",
-                   x, tlb[x].range.partitionId, tlb[x].range.contextId,
-                   tlb[x].range.real ? 'R' : ' ', tlb[x].range.size,
-                   tlb[x].range.va, tlb[x].pte.paddr(), tlb[x].pte());
+            DPRINTFN("%4d:  %#2x:%#2x %c %#4x %#8x %#8x %#16x\n", x,
+                     tlb[x].range.partitionId, tlb[x].range.contextId,
+                     tlb[x].range.real ? 'R' : ' ', tlb[x].range.size,
+                     tlb[x].range.va, tlb[x].pte.paddr(), tlb[x].pte());
         }
     }
 }
@@ -256,8 +259,8 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     TlbRange tr;
     MapIter i;
 
-    DPRINTF(IPR, "TLB: Demapping Page va=%#x pid=%#d cid=%d r=%d\n",
-            va, partition_id, context_id, real);
+    DPRINTF(IPR, "TLB: Demapping Page va=%#x pid=%#d cid=%d r=%d\n", va,
+            partition_id, context_id, real);
 
     cacheValid = false;
 
@@ -285,8 +288,8 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
 void
 TLB::demapContext(int partition_id, int context_id)
 {
-    DPRINTF(IPR, "TLB: Demapping Context pid=%#d cid=%d\n",
-            partition_id, context_id);
+    DPRINTF(IPR, "TLB: Demapping Context pid=%#d cid=%d\n", partition_id,
+            context_id);
     cacheValid = false;
     for (int x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
@@ -311,7 +314,7 @@ TLB::demapAll(int partition_id)
     cacheValid = false;
     for (int x = 0; x < size; x++) {
         if (tlb[x].valid && !tlb[x].pte.locked() &&
-                tlb[x].range.partitionId == partition_id) {
+            tlb[x].range.partitionId == partition_id) {
             freeList.push_front(&tlb[x]);
             tlb[x].valid = false;
             if (tlb[x].used) {
@@ -397,18 +400,18 @@ TLB::writeSfsr(bool write, ContextType ct, bool se, FaultTypes ft, int asi)
 void
 TLB::writeTagAccess(Addr va, int context)
 {
-    DPRINTF(TLB, "TLB: Writing Tag Access: va: %#X ctx: %#X value: %#X\n",
-            va, context, mbits(va, 63,13) | mbits(context,12,0));
+    DPRINTF(TLB, "TLB: Writing Tag Access: va: %#X ctx: %#X value: %#X\n", va,
+            context, mbits(va, 63, 13) | mbits(context, 12, 0));
 
-    tag_access = mbits(va, 63,13) | mbits(context,12,0);
+    tag_access = mbits(va, 63, 13) | mbits(context, 12, 0);
 }
 
 void
-TLB::writeSfsr(Addr a, bool write, ContextType ct,
-        bool se, FaultTypes ft, int asi)
+TLB::writeSfsr(Addr a, bool write, ContextType ct, bool se, FaultTypes ft,
+               int asi)
 {
-    DPRINTF(TLB, "TLB: Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
-            a, (int)write, ct, ft, asi);
+    DPRINTF(TLB, "TLB: Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n", a, (int)write,
+            ct, ft, asi);
     TLB::writeSfsr(write, ct, se, ft, asi);
     sfar = a;
 }
@@ -423,8 +426,8 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 
     assert(req->getArchFlags() == ASI_IMPLICIT);
 
-    DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
-            vaddr, req->getSize());
+    DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n", vaddr,
+            req->getSize());
 
     // Be fast if we can!
     if (cacheValid && cacheState == tlbdata) {
@@ -440,22 +443,22 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
         }
     }
 
-    bool hpriv = bits(tlbdata,0,0);
-    bool red = bits(tlbdata,1,1);
-    bool priv = bits(tlbdata,2,2);
-    bool addr_mask = bits(tlbdata,3,3);
-    bool lsu_im = bits(tlbdata,4,4);
+    bool hpriv = bits(tlbdata, 0, 0);
+    bool red = bits(tlbdata, 1, 1);
+    bool priv = bits(tlbdata, 2, 2);
+    bool addr_mask = bits(tlbdata, 3, 3);
+    bool lsu_im = bits(tlbdata, 4, 4);
 
-    int part_id = bits(tlbdata,15,8);
-    int tl = bits(tlbdata,18,16);
-    int pri_context = bits(tlbdata,47,32);
+    int part_id = bits(tlbdata, 15, 8);
+    int tl = bits(tlbdata, 18, 16);
+    int pri_context = bits(tlbdata, 47, 32);
     int context;
     ContextType ct;
     int asi;
     bool real = false;
 
-    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsuim:%d part_id: %#X\n",
-           priv, hpriv, red, lsu_im, part_id);
+    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsuim:%d part_id: %#X\n", priv,
+            hpriv, red, lsu_im, part_id);
 
     if (tl > 0) {
         asi = ASI_N;
@@ -467,7 +470,7 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
         context = pri_context;
     }
 
-    if ( hpriv || red ) {
+    if (hpriv || red) {
         cacheValid = true;
         cacheState = tlbdata;
         cacheEntry[0] = NULL;
@@ -540,15 +543,15 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
     ASI asi;
     asi = (ASI)req->getArchFlags();
     bool implicit = false;
-    bool hpriv = bits(tlbdata,0,0);
+    bool hpriv = bits(tlbdata, 0, 0);
     bool unaligned = vaddr & (size - 1);
 
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
 
     if (lookupTable.size() != 64 - freeList.size())
-       panic("Lookup table size: %d tlb size: %d\n", lookupTable.size(),
-               freeList.size());
+        panic("Lookup table size: %d tlb size: %d\n", lookupTable.size(),
+              freeList.size());
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
@@ -561,52 +564,49 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
         }
 
         // Be fast if we can!
-        if (cacheValid &&  cacheState == tlbdata) {
-
-
-
+        if (cacheValid && cacheState == tlbdata) {
             if (cacheEntry[0]) {
                 TlbEntry *ce = cacheEntry[0];
                 Addr ce_va = ce->range.va;
-                if (cacheAsi[0] == asi &&
-                    ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                if (cacheAsi[0] == asi && ce_va < vaddr + size &&
+                    ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
                     if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1) {
-                        req->setFlags(
-                            Request::UNCACHEABLE | Request::STRICT_ORDER);
+                        req->setFlags(Request::UNCACHEABLE |
+                                      Request::STRICT_ORDER);
                     }
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
-            } // if cache entry valid
+            }     // if cache entry valid
             if (cacheEntry[1]) {
                 TlbEntry *ce = cacheEntry[1];
                 Addr ce_va = ce->range.va;
-                if (cacheAsi[1] == asi &&
-                    ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                if (cacheAsi[1] == asi && ce_va < vaddr + size &&
+                    ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
                     if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1) {
-                        req->setFlags(
-                            Request::UNCACHEABLE | Request::STRICT_ORDER);
+                        req->setFlags(Request::UNCACHEABLE |
+                                      Request::STRICT_ORDER);
                     }
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
-            } // if cache entry valid
+            }     // if cache entry valid
         }
     }
 
-    bool red = bits(tlbdata,1,1);
-    bool priv = bits(tlbdata,2,2);
-    bool addr_mask = bits(tlbdata,3,3);
-    bool lsu_dm = bits(tlbdata,5,5);
+    bool red = bits(tlbdata, 1, 1);
+    bool priv = bits(tlbdata, 2, 2);
+    bool addr_mask = bits(tlbdata, 3, 3);
+    bool lsu_dm = bits(tlbdata, 5, 5);
 
-    int part_id = bits(tlbdata,15,8);
-    int tl = bits(tlbdata,18,16);
-    int pri_context = bits(tlbdata,47,32);
-    int sec_context = bits(tlbdata,63,48);
+    int part_id = bits(tlbdata, 15, 8);
+    int tl = bits(tlbdata, 18, 16);
+    int pri_context = bits(tlbdata, 47, 32);
+    int sec_context = bits(tlbdata, 63, 48);
 
     bool real = false;
     ContextType ct = Primary;
@@ -614,8 +614,8 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 
     TlbEntry *e;
 
-    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsudm:%d part_id: %#X\n",
-            priv, hpriv, red, lsu_dm, part_id);
+    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsudm:%d part_id: %#X\n", priv,
+            hpriv, red, lsu_dm, part_id);
 
     if (implicit) {
         if (tl > 0) {
@@ -649,7 +649,7 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
         } else if (asiIsNucleus(asi)) {
             ct = Nucleus;
             context = 0;
-        } else {  // ????
+        } else { // ????
             ct = Primary;
             context = pri_context;
         }
@@ -677,7 +677,7 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
             goto handleSparcErrorRegAccess;
 
         if (!asiIsReal(asi) && !asiIsNucleus(asi) && !asiIsAsIfUser(asi) &&
-                !asiIsTwin(asi) && !asiIsBlock(asi) && !asiIsNoFault(asi))
+            !asiIsTwin(asi) && !asiIsBlock(asi) && !asiIsNoFault(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
@@ -719,7 +719,6 @@ TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
                 return std::make_shared<FastDataAccessMMUMiss>(
                     req->getVaddr());
         }
-
     }
 
     if (!priv && e->pte.priv()) {
@@ -775,8 +774,8 @@ handleIntRegAccess:
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         if (priv)
             return std::make_shared<DataAccessException>();
-         else
-             return std::make_shared<PrivilegedAction>();
+        else
+            return std::make_shared<PrivilegedAction>();
     }
 
     if ((asi == ASI_SWVR_UDB_INTR_W && !write) ||
@@ -787,7 +786,6 @@ handleIntRegAccess:
 
     goto regAccessOk;
 
-
 handleScratchRegAccess:
     if (vaddr > 0x38 || (vaddr >= 0x20 && vaddr < 0x30 && !hpriv)) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
@@ -796,7 +794,7 @@ handleScratchRegAccess:
     goto regAccessOk;
 
 handleQueueRegAccess:
-    if (!priv  && !hpriv) {
+    if (!priv && !hpriv) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return std::make_shared<PrivilegedAction>();
     }
@@ -811,21 +809,18 @@ handleSparcErrorRegAccess:
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         if (priv)
             return std::make_shared<DataAccessException>();
-         else
-             return std::make_shared<PrivilegedAction>();
+        else
+            return std::make_shared<PrivilegedAction>();
     }
     goto regAccessOk;
-
 
 regAccessOk:
 handleMmuRegAccess:
     DPRINTF(TLB, "TLB: DTB Translating local access\n");
     req->setLocalAccessor(
-        [this,write](ThreadContext *tc, PacketPtr pkt) -> Cycles
-        {
+        [this, write](ThreadContext *tc, PacketPtr pkt) -> Cycles {
             return write ? doMmuRegWrite(tc, pkt) : doMmuRegRead(tc, pkt);
-        }
-    );
+        });
     req->setPaddr(req->getVaddr());
     return NoFault;
 };
@@ -858,19 +853,19 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
     // long standing pages (e.g. locked kernel mappings) won't be in the tsb
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
-    bool hpriv = bits(tlbdata,0,0);
+    bool hpriv = bits(tlbdata, 0, 0);
     // bool priv = bits(tlbdata,2,2);
-    bool addr_mask = bits(tlbdata,3,3);
-    bool data_real = !bits(tlbdata,5,5);
-    bool inst_real = !bits(tlbdata,4,4);
-    bool ctx_zero  = bits(tlbdata,18,16) > 0;
-    int part_id = bits(tlbdata,15,8);
-    int pri_context = bits(tlbdata,47,32);
+    bool addr_mask = bits(tlbdata, 3, 3);
+    bool data_real = !bits(tlbdata, 5, 5);
+    bool inst_real = !bits(tlbdata, 4, 4);
+    bool ctx_zero = bits(tlbdata, 18, 16) > 0;
+    int part_id = bits(tlbdata, 15, 8);
+    int pri_context = bits(tlbdata, 47, 32);
     // int sec_context = bits(tlbdata,63,48);
 
     bool real = (mode == BaseMMU::Execute) ? inst_real : data_real;
 
-    TlbEntry* tbe;
+    TlbEntry *tbe;
     PageTableEntry pte;
     Addr tsbs[4];
     Addr va_tag;
@@ -913,8 +908,8 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
             uint64_t entry = mem.read<uint64_t>(tsbs[x]) + sizeof(uint64_t);
             // I think it's sun4v at least!
             pte.populate(betoh(entry), PageTableEntry::sun4v);
-            DPRINTF(TLB, "Virtual(%#x)->Physical(%#x) found in TTE\n",
-                    vaddr, pte.translate(vaddr));
+            DPRINTF(TLB, "Virtual(%#x)->Physical(%#x) found in TTE\n", vaddr,
+                    pte.translate(vaddr));
             req->setPaddr(pte.translate(vaddr));
             return NoFault;
         }
@@ -939,15 +934,15 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode)
+                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
 Fault
-TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }
@@ -960,178 +955,160 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     uint64_t temp;
 
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
-         (uint32_t)pkt->req->getArchFlags(), pkt->getAddr());
+            (uint32_t)pkt->req->getArchFlags(), pkt->getAddr());
 
     TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
 
     switch (asi) {
-      case ASI_LSU_CONTROL_REG:
+    case ASI_LSU_CONTROL_REG:
         assert(va == 0);
         pkt->setBE(tc->readMiscReg(MISCREG_MMU_LSU_CTRL));
         break;
-      case ASI_MMU:
+    case ASI_MMU:
         switch (va) {
-          case 0x8:
+        case 0x8:
             pkt->setBE(tc->readMiscReg(MISCREG_MMU_P_CONTEXT));
             break;
-          case 0x10:
+        case 0x10:
             pkt->setBE(tc->readMiscReg(MISCREG_MMU_S_CONTEXT));
             break;
-          default:
+        default:
             goto doMmuReadError;
         }
         break;
-      case ASI_QUEUE:
-        pkt->setBE(tc->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
-                    (va >> 4) - 0x3c));
+    case ASI_QUEUE:
+        pkt->setBE(
+            tc->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD + (va >> 4) - 0x3c));
         break;
-      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
+    case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
         pkt->setBE(c0_tsb_ps0);
         break;
-      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
+    case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
         pkt->setBE(c0_tsb_ps1);
         break;
-      case ASI_DMMU_CTXT_ZERO_CONFIG:
+    case ASI_DMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
         pkt->setBE(c0_config);
         break;
-      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
+    case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
         pkt->setBE(itb->c0_tsb_ps0);
         break;
-      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
+    case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
         pkt->setBE(itb->c0_tsb_ps1);
         break;
-      case ASI_IMMU_CTXT_ZERO_CONFIG:
+    case ASI_IMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
         pkt->setBE(itb->c0_config);
         break;
-      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
+    case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
         pkt->setBE(cx_tsb_ps0);
         break;
-      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
+    case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
         pkt->setBE(cx_tsb_ps1);
         break;
-      case ASI_DMMU_CTXT_NONZERO_CONFIG:
+    case ASI_DMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
         pkt->setBE(cx_config);
         break;
-      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
+    case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
         pkt->setBE(itb->cx_tsb_ps0);
         break;
-      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
+    case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
         pkt->setBE(itb->cx_tsb_ps1);
         break;
-      case ASI_IMMU_CTXT_NONZERO_CONFIG:
+    case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
         pkt->setBE(itb->cx_config);
         break;
-      case ASI_SPARC_ERROR_STATUS_REG:
+    case ASI_SPARC_ERROR_STATUS_REG:
         pkt->setBE((uint64_t)0);
         break;
-      case ASI_HYP_SCRATCHPAD:
-      case ASI_SCRATCHPAD:
+    case ASI_HYP_SCRATCHPAD:
+    case ASI_SCRATCHPAD:
         pkt->setBE(tc->readMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
         break;
-      case ASI_IMMU:
+    case ASI_IMMU:
         switch (va) {
-          case 0x0:
+        case 0x0:
             temp = itb->tag_access;
-            pkt->setBE(bits(temp,63,22) | bits(temp,12,0) << 48);
+            pkt->setBE(bits(temp, 63, 22) | bits(temp, 12, 0) << 48);
             break;
-          case 0x18:
+        case 0x18:
             pkt->setBE(itb->sfsr);
             break;
-          case 0x30:
+        case 0x30:
             pkt->setBE(itb->tag_access);
             break;
-          default:
+        default:
             goto doMmuReadError;
         }
         break;
-      case ASI_DMMU:
+    case ASI_DMMU:
         switch (va) {
-          case 0x0:
+        case 0x0:
             temp = tag_access;
-            pkt->setBE(bits(temp,63,22) | bits(temp,12,0) << 48);
+            pkt->setBE(bits(temp, 63, 22) | bits(temp, 12, 0) << 48);
             break;
-          case 0x18:
+        case 0x18:
             pkt->setBE(sfsr);
             break;
-          case 0x20:
+        case 0x20:
             pkt->setBE(sfar);
             break;
-          case 0x30:
+        case 0x30:
             pkt->setBE(tag_access);
             break;
-          case 0x80:
+        case 0x80:
             pkt->setBE(tc->readMiscReg(MISCREG_MMU_PART_ID));
             break;
-          default:
-                goto doMmuReadError;
+        default:
+            goto doMmuReadError;
         }
         break;
-      case ASI_DMMU_TSB_PS0_PTR_REG:
-        pkt->setBE(MakeTsbPtr(Ps0,
-            tag_access,
-            c0_tsb_ps0,
-            c0_config,
-            cx_tsb_ps0,
-            cx_config));
+    case ASI_DMMU_TSB_PS0_PTR_REG:
+        pkt->setBE(MakeTsbPtr(Ps0, tag_access, c0_tsb_ps0, c0_config,
+                              cx_tsb_ps0, cx_config));
         break;
-      case ASI_DMMU_TSB_PS1_PTR_REG:
-        pkt->setBE(MakeTsbPtr(Ps1,
-                tag_access,
-                c0_tsb_ps1,
-                c0_config,
-                cx_tsb_ps1,
-                cx_config));
+    case ASI_DMMU_TSB_PS1_PTR_REG:
+        pkt->setBE(MakeTsbPtr(Ps1, tag_access, c0_tsb_ps1, c0_config,
+                              cx_tsb_ps1, cx_config));
         break;
-      case ASI_IMMU_TSB_PS0_PTR_REG:
-          pkt->setBE(MakeTsbPtr(Ps0,
-                itb->tag_access,
-                itb->c0_tsb_ps0,
-                itb->c0_config,
-                itb->cx_tsb_ps0,
-                itb->cx_config));
+    case ASI_IMMU_TSB_PS0_PTR_REG:
+        pkt->setBE(MakeTsbPtr(Ps0, itb->tag_access, itb->c0_tsb_ps0,
+                              itb->c0_config, itb->cx_tsb_ps0,
+                              itb->cx_config));
         break;
-      case ASI_IMMU_TSB_PS1_PTR_REG:
-          pkt->setBE(MakeTsbPtr(Ps1,
-                itb->tag_access,
-                itb->c0_tsb_ps1,
-                itb->c0_config,
-                itb->cx_tsb_ps1,
-                itb->cx_config));
+    case ASI_IMMU_TSB_PS1_PTR_REG:
+        pkt->setBE(MakeTsbPtr(Ps1, itb->tag_access, itb->c0_tsb_ps1,
+                              itb->c0_config, itb->cx_tsb_ps1,
+                              itb->cx_config));
         break;
-      case ASI_SWVR_INTR_RECEIVE:
-        {
-            SparcISA::Interrupts * interrupts =
-                dynamic_cast<SparcISA::Interrupts *>(
-                        tc->getCpuPtr()->getInterruptController(0));
-            pkt->setBE(interrupts->get_vec(IT_INT_VEC));
-        }
-        break;
-      case ASI_SWVR_UDB_INTR_R:
-        {
-            SparcISA::Interrupts * interrupts =
-                dynamic_cast<SparcISA::Interrupts *>(
-                        tc->getCpuPtr()->getInterruptController(0));
-            temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
-            tc->getCpuPtr()->clearInterrupt(0, IT_INT_VEC, temp);
-            pkt->setBE(temp);
-        }
-        break;
-      default:
-doMmuReadError:
+    case ASI_SWVR_INTR_RECEIVE: {
+        SparcISA::Interrupts *interrupts =
+            dynamic_cast<SparcISA::Interrupts *>(
+                tc->getCpuPtr()->getInterruptController(0));
+        pkt->setBE(interrupts->get_vec(IT_INT_VEC));
+    } break;
+    case ASI_SWVR_UDB_INTR_R: {
+        SparcISA::Interrupts *interrupts =
+            dynamic_cast<SparcISA::Interrupts *>(
+                tc->getCpuPtr()->getInterruptController(0));
+        temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
+        tc->getCpuPtr()->clearInterrupt(0, IT_INT_VEC, temp);
+        pkt->setBE(temp);
+    } break;
+    default:
+    doMmuReadError:
         panic("need to impl DTB::doMmuRegRead() got asi=%#x, va=%#x\n",
-            (uint32_t)asi, va);
+              (uint32_t)asi, va);
     }
     pkt->makeAtomicResponse();
     return Cycles(1);
@@ -1156,234 +1133,234 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     PageTableEntry pte;
 
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
-         (uint32_t)asi, va, data);
+            (uint32_t)asi, va, data);
 
     TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
 
     switch (asi) {
-      case ASI_LSU_CONTROL_REG:
+    case ASI_LSU_CONTROL_REG:
         assert(va == 0);
         tc->setMiscReg(MISCREG_MMU_LSU_CTRL, data);
         break;
-      case ASI_MMU:
+    case ASI_MMU:
         switch (va) {
-          case 0x8:
+        case 0x8:
             tc->setMiscReg(MISCREG_MMU_P_CONTEXT, data);
             break;
-          case 0x10:
+        case 0x10:
             tc->setMiscReg(MISCREG_MMU_S_CONTEXT, data);
             break;
-          default:
+        default:
             goto doMmuWriteError;
         }
         break;
-      case ASI_QUEUE:
-        assert(mbits(data,13,6) == data);
-        tc->setMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
-                    (va >> 4) - 0x3c, data);
+    case ASI_QUEUE:
+        assert(mbits(data, 13, 6) == data);
+        tc->setMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD + (va >> 4) - 0x3c, data);
         break;
-      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
+    case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
         c0_tsb_ps0 = data;
         break;
-      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
+    case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
         c0_tsb_ps1 = data;
         break;
-      case ASI_DMMU_CTXT_ZERO_CONFIG:
+    case ASI_DMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
         c0_config = data;
         break;
-      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
+    case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
         itb->c0_tsb_ps0 = data;
         break;
-      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
+    case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
         itb->c0_tsb_ps1 = data;
         break;
-      case ASI_IMMU_CTXT_ZERO_CONFIG:
+    case ASI_IMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
         itb->c0_config = data;
         break;
-      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
+    case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
         cx_tsb_ps0 = data;
         break;
-      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
+    case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
         cx_tsb_ps1 = data;
         break;
-      case ASI_DMMU_CTXT_NONZERO_CONFIG:
+    case ASI_DMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
         cx_config = data;
         break;
-      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
+    case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
         itb->cx_tsb_ps0 = data;
         break;
-      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
+    case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
         itb->cx_tsb_ps1 = data;
         break;
-      case ASI_IMMU_CTXT_NONZERO_CONFIG:
+    case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
         itb->cx_config = data;
         break;
-      case ASI_SPARC_ERROR_EN_REG:
-      case ASI_SPARC_ERROR_STATUS_REG:
+    case ASI_SPARC_ERROR_EN_REG:
+    case ASI_SPARC_ERROR_STATUS_REG:
         inform("Ignoring write to SPARC ERROR regsiter\n");
         break;
-      case ASI_HYP_SCRATCHPAD:
-      case ASI_SCRATCHPAD:
+    case ASI_HYP_SCRATCHPAD:
+    case ASI_SCRATCHPAD:
         tc->setMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3), data);
         break;
-      case ASI_IMMU:
+    case ASI_IMMU:
         switch (va) {
-          case 0x18:
+        case 0x18:
             itb->sfsr = data;
             break;
-          case 0x30:
+        case 0x30:
             itb->tag_access = szext<60>(data);
             break;
-          default:
+        default:
             goto doMmuWriteError;
         }
         break;
-      case ASI_ITLB_DATA_ACCESS_REG:
-        entry_insert = bits(va, 8,3);
+    case ASI_ITLB_DATA_ACCESS_REG:
+        entry_insert = bits(va, 8, 3);
         [[fallthrough]];
-      case ASI_ITLB_DATA_IN_REG:
-        assert(entry_insert != -1 || mbits(va,10,9) == va);
+    case ASI_ITLB_DATA_IN_REG:
+        assert(entry_insert != -1 || mbits(va, 10, 9) == va);
         ta_insert = itb->tag_access;
-        va_insert = mbits(ta_insert, 63,13);
-        ct_insert = mbits(ta_insert, 12,0);
+        va_insert = mbits(ta_insert, 63, 13);
+        ct_insert = mbits(ta_insert, 12, 0);
         part_insert = tc->readMiscReg(MISCREG_MMU_PART_ID);
-        real_insert = bits(va, 9,9);
-        pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
-                PageTableEntry::sun4u);
-        itb->insert(va_insert, part_insert, ct_insert, real_insert,
-                    pte, entry_insert);
+        real_insert = bits(va, 9, 9);
+        pte.populate(data, bits(va, 10, 10) ? PageTableEntry::sun4v :
+                                              PageTableEntry::sun4u);
+        itb->insert(va_insert, part_insert, ct_insert, real_insert, pte,
+                    entry_insert);
         break;
-      case ASI_DTLB_DATA_ACCESS_REG:
-        entry_insert = bits(va, 8,3);
+    case ASI_DTLB_DATA_ACCESS_REG:
+        entry_insert = bits(va, 8, 3);
         [[fallthrough]];
-      case ASI_DTLB_DATA_IN_REG:
-        assert(entry_insert != -1 || mbits(va,10,9) == va);
+    case ASI_DTLB_DATA_IN_REG:
+        assert(entry_insert != -1 || mbits(va, 10, 9) == va);
         ta_insert = tag_access;
-        va_insert = mbits(ta_insert, 63,13);
-        ct_insert = mbits(ta_insert, 12,0);
+        va_insert = mbits(ta_insert, 63, 13);
+        ct_insert = mbits(ta_insert, 12, 0);
         part_insert = tc->readMiscReg(MISCREG_MMU_PART_ID);
-        real_insert = bits(va, 9,9);
-        pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
-                PageTableEntry::sun4u);
+        real_insert = bits(va, 9, 9);
+        pte.populate(data, bits(va, 10, 10) ? PageTableEntry::sun4v :
+                                              PageTableEntry::sun4u);
         insert(va_insert, part_insert, ct_insert, real_insert, pte,
                entry_insert);
         break;
-      case ASI_IMMU_DEMAP:
+    case ASI_IMMU_DEMAP:
         ignore = false;
         ctx_id = -1;
-        part_id =  tc->readMiscReg(MISCREG_MMU_PART_ID);
-        switch (bits(va,5,4)) {
-          case 0:
+        part_id = tc->readMiscReg(MISCREG_MMU_PART_ID);
+        switch (bits(va, 5, 4)) {
+        case 0:
             ctx_id = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
             break;
-          case 1:
+        case 1:
             ignore = true;
             break;
-          case 3:
+        case 3:
             ctx_id = 0;
             break;
-          default:
+        default:
             ignore = true;
         }
 
-        switch (bits(va,7,6)) {
-          case 0: // demap page
+        switch (bits(va, 7, 6)) {
+        case 0: // demap page
             if (!ignore)
-                itb->demapPage(mbits(va,63,13), part_id, bits(va,9,9), ctx_id);
+                itb->demapPage(mbits(va, 63, 13), part_id, bits(va, 9, 9),
+                               ctx_id);
             break;
-          case 1: // demap context
+        case 1: // demap context
             if (!ignore)
                 itb->demapContext(part_id, ctx_id);
             break;
-          case 2:
+        case 2:
             itb->demapAll(part_id);
             break;
-          default:
+        default:
             panic("Invalid type for IMMU demap\n");
         }
         break;
-      case ASI_DMMU:
+    case ASI_DMMU:
         switch (va) {
-          case 0x18:
+        case 0x18:
             sfsr = data;
             break;
-          case 0x30:
+        case 0x30:
             tag_access = szext<60>(data);
             break;
-          case 0x80:
+        case 0x80:
             tc->setMiscReg(MISCREG_MMU_PART_ID, data);
             break;
-          default:
+        default:
             goto doMmuWriteError;
         }
         break;
-      case ASI_DMMU_DEMAP:
+    case ASI_DMMU_DEMAP:
         ignore = false;
         ctx_id = -1;
-        part_id =  tc->readMiscReg(MISCREG_MMU_PART_ID);
-        switch (bits(va,5,4)) {
-          case 0:
+        part_id = tc->readMiscReg(MISCREG_MMU_PART_ID);
+        switch (bits(va, 5, 4)) {
+        case 0:
             ctx_id = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
             break;
-          case 1:
+        case 1:
             ctx_id = tc->readMiscReg(MISCREG_MMU_S_CONTEXT);
             break;
-          case 3:
+        case 3:
             ctx_id = 0;
             break;
-          default:
+        default:
             ignore = true;
         }
 
-        switch (bits(va,7,6)) {
-          case 0: // demap page
+        switch (bits(va, 7, 6)) {
+        case 0: // demap page
             if (!ignore)
-                demapPage(mbits(va,63,13), part_id, bits(va,9,9), ctx_id);
+                demapPage(mbits(va, 63, 13), part_id, bits(va, 9, 9), ctx_id);
             break;
-          case 1: // demap context
+        case 1: // demap context
             if (!ignore)
                 demapContext(part_id, ctx_id);
             break;
-          case 2:
+        case 2:
             demapAll(part_id);
             break;
-          default:
+        default:
             panic("Invalid type for IMMU demap\n");
         }
         break;
-       case ASI_SWVR_INTR_RECEIVE:
-        {
-            int msb;
-            // clear all the interrupts that aren't set in the write
-            SparcISA::Interrupts * interrupts =
-                dynamic_cast<SparcISA::Interrupts *>(
-                        tc->getCpuPtr()->getInterruptController(0));
-            while (interrupts->get_vec(IT_INT_VEC) & data) {
-                msb = findMsbSet(interrupts->get_vec(IT_INT_VEC) & data);
-                tc->getCpuPtr()->clearInterrupt(0, IT_INT_VEC, msb);
-            }
+    case ASI_SWVR_INTR_RECEIVE: {
+        int msb;
+        // clear all the interrupts that aren't set in the write
+        SparcISA::Interrupts *interrupts =
+            dynamic_cast<SparcISA::Interrupts *>(
+                tc->getCpuPtr()->getInterruptController(0));
+        while (interrupts->get_vec(IT_INT_VEC) & data) {
+            msb = findMsbSet(interrupts->get_vec(IT_INT_VEC) & data);
+            tc->getCpuPtr()->clearInterrupt(0, IT_INT_VEC, msb);
         }
+    } break;
+    case ASI_SWVR_UDB_INTR_W:
+        tc->getSystemPtr()
+            ->threads[bits(data, 12, 8)]
+            ->getCpuPtr()
+            ->postInterrupt(0, bits(data, 5, 0), 0);
         break;
-      case ASI_SWVR_UDB_INTR_W:
-            tc->getSystemPtr()->threads[bits(data,12,8)]->
-                getCpuPtr()->postInterrupt(0, bits(data, 5, 0), 0);
-        break;
-      default:
-doMmuWriteError:
+    default:
+    doMmuWriteError:
         panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
-            (uint32_t)pkt->req->getArchFlags(), pkt->getAddr(), data);
+              (uint32_t)pkt->req->getArchFlags(), pkt->getAddr(), data);
     }
     pkt->makeAtomicResponse();
     return Cycles(1);
@@ -1392,38 +1369,26 @@ doMmuWriteError:
 void
 TLB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
 {
-    uint64_t tag_access = mbits(addr,63,13) | mbits(ctx,12,0);
+    uint64_t tag_access = mbits(addr, 63, 13) | mbits(ctx, 12, 0);
     TLB *itb = static_cast<TLB *>(tc->getMMUPtr()->itb);
-    ptrs[0] = MakeTsbPtr(Ps0, tag_access,
-                c0_tsb_ps0,
-                c0_config,
-                cx_tsb_ps0,
-                cx_config);
-    ptrs[1] = MakeTsbPtr(Ps1, tag_access,
-                c0_tsb_ps1,
-                c0_config,
-                cx_tsb_ps1,
-                cx_config);
-    ptrs[2] = MakeTsbPtr(Ps0, tag_access,
-                itb->c0_tsb_ps0,
-                itb->c0_config,
-                itb->cx_tsb_ps0,
-                itb->cx_config);
-    ptrs[3] = MakeTsbPtr(Ps1, tag_access,
-                itb->c0_tsb_ps1,
-                itb->c0_config,
-                itb->cx_tsb_ps1,
-                itb->cx_config);
+    ptrs[0] = MakeTsbPtr(Ps0, tag_access, c0_tsb_ps0, c0_config, cx_tsb_ps0,
+                         cx_config);
+    ptrs[1] = MakeTsbPtr(Ps1, tag_access, c0_tsb_ps1, c0_config, cx_tsb_ps1,
+                         cx_config);
+    ptrs[2] = MakeTsbPtr(Ps0, tag_access, itb->c0_tsb_ps0, itb->c0_config,
+                         itb->cx_tsb_ps0, itb->cx_config);
+    ptrs[3] = MakeTsbPtr(Ps1, tag_access, itb->c0_tsb_ps1, itb->c0_config,
+                         itb->cx_tsb_ps1, itb->cx_config);
 }
 
 uint64_t
 TLB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
-        uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config)
+                uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config)
 {
     uint64_t tsb;
     uint64_t config;
 
-    if (bits(tag_access, 12,0) == 0) {
+    if (bits(tag_access, 12, 0) == 0) {
         tsb = c0_tsb;
         config = c0_config;
     } else {
@@ -1431,14 +1396,14 @@ TLB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
         config = cX_config;
     }
 
-    uint64_t ptr = mbits(tsb,63,13);
-    bool split = bits(tsb,12,12);
-    int tsb_size = bits(tsb,3,0);
-    int page_size = (ps == Ps0) ? bits(config, 2,0) : bits(config,10,8);
+    uint64_t ptr = mbits(tsb, 63, 13);
+    bool split = bits(tsb, 12, 12);
+    int tsb_size = bits(tsb, 3, 0);
+    int page_size = (ps == Ps0) ? bits(config, 2, 0) : bits(config, 10, 8);
 
-    if (ps == Ps1  && split)
+    if (ps == Ps1 && split)
         ptr |= 1ULL << (13 + tsb_size);
-    ptr |= (tag_access >> (9 + page_size * 3)) & mask(12+tsb_size, 4);
+    ptr |= (tag_access >> (9 + page_size * 3)) & mask(12 + tsb_size, 4);
 
     return ptr;
 }
@@ -1505,7 +1470,6 @@ TLB::unserialize(CheckpointIn &cp)
         tlb[x].unserialize(cp);
         if (tlb[x].valid)
             lookupTable.insert(tlb[x].range, &tlb[x]);
-
     }
     UNSERIALIZE_SCALAR(sfar);
 }

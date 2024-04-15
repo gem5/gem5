@@ -58,9 +58,7 @@ namespace ArmISA
 class HTMCheckpoint : public BaseHTMCheckpoint
 {
   public:
-    HTMCheckpoint()
-      : BaseHTMCheckpoint()
-    {}
+    HTMCheckpoint() : BaseHTMCheckpoint() {}
 
     const static int MAX_HTM_DEPTH = 255;
 
@@ -68,21 +66,30 @@ class HTMCheckpoint : public BaseHTMCheckpoint
     void save(ThreadContext *tc) override;
     void restore(ThreadContext *tc, HtmFailureFaultCause cause) override;
 
-    void destinationRegister(RegIndex dest) { rt = dest; }
-    void cancelReason(uint16_t reason) { tcreason = reason; }
+    void
+    destinationRegister(RegIndex dest)
+    {
+        rt = dest;
+    }
+
+    void
+    cancelReason(uint16_t reason)
+    {
+        tcreason = reason;
+    }
 
   private:
-    uint8_t rt; // TSTART destination register
-    Addr nPc; // Fallback instruction address
+    uint8_t rt;                                 // TSTART destination register
+    Addr nPc;                                   // Fallback instruction address
     std::array<RegVal, int_reg::NumArchRegs> x; // General purpose registers
-    std::array<VecRegContainer, NumVecRegs> z; // Vector registers
+    std::array<VecRegContainer, NumVecRegs> z;  // Vector registers
     std::array<VecPredRegContainer, NumVecRegs> p; // Predicate registers
-    Addr sp; // Stack Pointer at current EL
-    uint16_t tcreason; // TCANCEL reason
-    uint32_t fpcr; // Floating-point Control Register
-    uint32_t fpsr; // Floating-point Status Register
+    Addr sp;            // Stack Pointer at current EL
+    uint16_t tcreason;  // TCANCEL reason
+    uint32_t fpcr;      // Floating-point Control Register
+    uint32_t fpsr;      // Floating-point Status Register
     uint32_t iccPmrEl1; // Interrupt Controller Interrupt Priority Mask
-    uint8_t nzcv; // Condition flags
+    uint8_t nzcv;       // Condition flags
     uint8_t daif;
     PCState pcstateckpt;
 };

@@ -91,10 +91,10 @@ class TrafficGen : public BaseTrafficGen
      */
     std::string resolveFile(const std::string &name);
 
-     /**
-      * Parse the config file and build the state map and
-      * transition matrix.
-      */
+    /**
+     * Parse the config file and build the state map and
+     * transition matrix.
+     */
     void parseConfig();
 
     /**
@@ -111,7 +111,7 @@ class TrafficGen : public BaseTrafficGen
     };
 
     /** State transition matrix */
-    std::vector<std::vector<double> > transitionMatrix;
+    std::vector<std::vector<double>> transitionMatrix;
 
     /** Index of the current state */
     uint32_t currState;
@@ -123,7 +123,6 @@ class TrafficGen : public BaseTrafficGen
     std::shared_ptr<BaseGen> nextGenerator() override;
 
   public:
-
     TrafficGen(const TrafficGenParams &p);
 
     ~TrafficGen() {}
@@ -133,7 +132,6 @@ class TrafficGen : public BaseTrafficGen
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
 };
 
 } // namespace gem5

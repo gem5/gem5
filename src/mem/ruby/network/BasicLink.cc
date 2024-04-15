@@ -34,8 +34,7 @@ namespace gem5
 namespace ruby
 {
 
-BasicLink::BasicLink(const Params &p)
-    : SimObject(p)
+BasicLink::BasicLink(const Params &p) : SimObject(p)
 {
     m_latency = p.latency;
     m_bandwidth_factor = p.bandwidth_factor;
@@ -45,24 +44,17 @@ BasicLink::BasicLink(const Params &p)
 
 void
 BasicLink::init()
-{
-}
+{}
 
 void
-BasicLink::print(std::ostream& out) const
+BasicLink::print(std::ostream &out) const
 {
     out << name();
 }
 
-BasicExtLink::BasicExtLink(const Params &p)
-    : BasicLink(p)
-{
-}
+BasicExtLink::BasicExtLink(const Params &p) : BasicLink(p) {}
 
-BasicIntLink::BasicIntLink(const Params &p)
-    : BasicLink(p)
-{
-}
+BasicIntLink::BasicIntLink(const Params &p) : BasicLink(p) {}
 
 } // namespace ruby
 } // namespace gem5

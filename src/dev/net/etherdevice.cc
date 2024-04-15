@@ -37,19 +37,20 @@ EtherDevice::EtherDeviceStats::EtherDeviceStats(statistics::Group *parent)
     : statistics::Group(parent, "EtherDevice"),
       ADD_STAT(postedInterrupts, statistics::units::Count::get(),
                "Number of posts to CPU"),
-      ADD_STAT(txBytes, statistics::units::Byte::get(),
-               "Bytes Transmitted"),
+      ADD_STAT(txBytes, statistics::units::Byte::get(), "Bytes Transmitted"),
       ADD_STAT(rxBytes, statistics::units::Byte::get(), "Bytes Received"),
       ADD_STAT(txPackets, statistics::units::Count::get(),
                "Number of Packets Transmitted"),
       ADD_STAT(rxPackets, statistics::units::Count::get(),
                "Number of Packets Received"),
-      ADD_STAT(txBandwidth, statistics::units::Rate<
-                    statistics::units::Bit, statistics::units::Second>::get(),
+      ADD_STAT(txBandwidth,
+               statistics::units::Rate<statistics::units::Bit,
+                                       statistics::units::Second>::get(),
                "Transmit Bandwidth",
                txBytes * statistics::constant(8) / simSeconds),
-      ADD_STAT(rxBandwidth, statistics::units::Rate<
-                    statistics::units::Bit, statistics::units::Second>::get(),
+      ADD_STAT(rxBandwidth,
+               statistics::units::Rate<statistics::units::Bit,
+                                       statistics::units::Second>::get(),
                "Receive Bandwidth",
                rxBytes * statistics::constant(8) / simSeconds),
       ADD_STAT(txIpChecksums, statistics::units::Count::get(),
@@ -72,262 +73,206 @@ EtherDevice::EtherDeviceStats::EtherDeviceStats(statistics::Group *parent)
                "Number of descriptor bytes read w/ DMA"),
       ADD_STAT(descDmaWrBytes, statistics::units::Count::get(),
                "Number of descriptor bytes write w/ DMA"),
-      ADD_STAT(totBandwidth, statistics::units::Rate<
-                    statistics::units::Bit, statistics::units::Second>::get(),
-               "Total Bandwidth",
-               txBandwidth + rxBandwidth),
+      ADD_STAT(totBandwidth,
+               statistics::units::Rate<statistics::units::Bit,
+                                       statistics::units::Second>::get(),
+               "Total Bandwidth", txBandwidth + rxBandwidth),
       ADD_STAT(totPackets, statistics::units::Count::get(), "Total Packets",
                txPackets + rxPackets),
       ADD_STAT(totBytes, statistics::units::Byte::get(), "Total Bytes",
                txBytes + rxBytes),
-      ADD_STAT(totPacketRate, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
-               "Total Packet Tranmission Rate",
-               totPackets / simSeconds),
-      ADD_STAT(txPacketRate, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
-               "Packet Tranmission Rate",
-               txPackets / simSeconds),
-      ADD_STAT(rxPacketRate, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
-               "Packet Reception Rate",
-               rxPackets / simSeconds),
+      ADD_STAT(totPacketRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Total Packet Tranmission Rate", totPackets / simSeconds),
+      ADD_STAT(txPacketRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Packet Tranmission Rate", txPackets / simSeconds),
+      ADD_STAT(rxPacketRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
+               "Packet Reception Rate", rxPackets / simSeconds),
       ADD_STAT(postedSwi, statistics::units::Count::get(),
                "Number of software interrupts posted to CPU"),
       ADD_STAT(totalSwi, statistics::units::Count::get(),
                "Total number of Swi written to ISR"),
-      ADD_STAT(coalescedSwi, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedSwi,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of Swi's coalesced into each post",
                totalSwi / postedInterrupts),
       ADD_STAT(postedRxIdle, statistics::units::Count::get(),
                "Number of rxIdle interrupts posted to CPU"),
       ADD_STAT(totalRxIdle, statistics::units::Count::get(),
                "Total number of RxIdle written to ISR"),
-      ADD_STAT(coalescedRxIdle, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedRxIdle,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of RxIdle's coalesced into each post",
                totalRxIdle / postedInterrupts),
       ADD_STAT(postedRxOk, statistics::units::Count::get(),
                "Number of RxOk interrupts posted to CPU"),
       ADD_STAT(totalRxOk, statistics::units::Count::get(),
                "Total number of RxOk written to ISR"),
-      ADD_STAT(coalescedRxOk, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedRxOk,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of RxOk's coalesced into each post",
                totalRxOk / postedInterrupts),
       ADD_STAT(postedRxDesc, statistics::units::Count::get(),
                "Number of RxDesc interrupts posted to CPU"),
       ADD_STAT(totalRxDesc, statistics::units::Count::get(),
                "Total number of RxDesc written to ISR"),
-      ADD_STAT(coalescedRxDesc, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedRxDesc,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of RxDesc's coalesced into each post",
                totalRxDesc / postedInterrupts),
       ADD_STAT(postedTxOk, statistics::units::Count::get(),
                "Number of TxOk interrupts posted to CPU"),
       ADD_STAT(totalTxOk, statistics::units::Count::get(),
                "Total number of TxOk written to ISR"),
-      ADD_STAT(coalescedTxOk, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedTxOk,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of TxOk's coalesced into each post",
                totalTxOk / postedInterrupts),
       ADD_STAT(postedTxIdle, statistics::units::Count::get(),
                "Number of TxIdle interrupts posted to CPU"),
       ADD_STAT(totalTxIdle, statistics::units::Count::get(),
                "Total number of TxIdle written to ISR"),
-      ADD_STAT(coalescedTxIdle, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedTxIdle,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of TxIdle's coalesced into each post",
                totalTxIdle / postedInterrupts),
       ADD_STAT(postedTxDesc, statistics::units::Count::get(),
                "Number of TxDesc interrupts posted to CPU"),
       ADD_STAT(totalTxDesc, statistics::units::Count::get(),
                "Total number of TxDesc written to ISR"),
-      ADD_STAT(coalescedTxDesc, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedTxDesc,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of TxDesc's coalesced into each post",
                totalTxDesc / postedInterrupts),
       ADD_STAT(postedRxOrn, statistics::units::Count::get(),
                "Number of RxOrn posted to CPU"),
       ADD_STAT(totalRxOrn, statistics::units::Count::get(),
                "Total number of RxOrn written to ISR"),
-      ADD_STAT(coalescedRxOrn, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedRxOrn,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of RxOrn's coalesced into each post",
                totalRxOrn / postedInterrupts),
-      ADD_STAT(coalescedTotal, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
+      ADD_STAT(coalescedTotal,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
                "Average number of interrupts coalesced into each post"),
       ADD_STAT(droppedPackets, statistics::units::Count::get(),
                "Number of packets dropped")
 {
+    postedInterrupts.precision(0);
 
-    postedInterrupts
-        .precision(0);
+    txBytes.prereq(txBytes);
 
-    txBytes
-        .prereq(txBytes);
+    rxBytes.prereq(rxBytes);
 
-    rxBytes
-        .prereq(rxBytes);
+    txPackets.prereq(txBytes);
 
-    txPackets
-        .prereq(txBytes);
+    rxPackets.prereq(rxBytes);
 
-    rxPackets
-        .prereq(rxBytes);
+    txIpChecksums.precision(0).prereq(txBytes);
 
-    txIpChecksums
-        .precision(0)
-        .prereq(txBytes);
+    rxIpChecksums.precision(0).prereq(rxBytes);
 
-    rxIpChecksums
-        .precision(0)
-        .prereq(rxBytes);
+    txTcpChecksums.precision(0).prereq(txBytes);
 
-    txTcpChecksums
-        .precision(0)
-        .prereq(txBytes);
+    rxTcpChecksums.precision(0).prereq(rxBytes);
 
-    rxTcpChecksums
-        .precision(0)
-        .prereq(rxBytes);
+    txUdpChecksums.precision(0).prereq(txBytes);
 
-    txUdpChecksums
-        .precision(0)
-        .prereq(txBytes);
+    rxUdpChecksums.precision(0).prereq(rxBytes);
 
-    rxUdpChecksums
-        .precision(0)
-        .prereq(rxBytes);
+    descDmaReads.precision(0);
 
-    descDmaReads
-        .precision(0);
+    descDmaWrites.precision(0);
 
-    descDmaWrites
-        .precision(0);
+    descDmaRdBytes.precision(0);
 
-    descDmaRdBytes
-        .precision(0);
+    descDmaWrBytes.precision(0);
 
-    descDmaWrBytes
-        .precision(0);
+    txBandwidth.precision(0).prereq(txBytes);
 
-    txBandwidth
-        .precision(0)
-        .prereq(txBytes)
-        ;
+    rxBandwidth.precision(0).prereq(rxBytes);
 
-    rxBandwidth
-        .precision(0)
-        .prereq(rxBytes);
+    totBandwidth.precision(0).prereq(totBytes);
 
-    totBandwidth
-        .precision(0)
-        .prereq(totBytes);
+    totPackets.precision(0).prereq(totBytes);
 
-    totPackets
-        .precision(0)
-        .prereq(totBytes);
+    totBytes.precision(0).prereq(totBytes);
 
-    totBytes
-        .precision(0)
-        .prereq(totBytes);
+    totPacketRate.precision(0).prereq(totBytes);
 
-    totPacketRate
-        .precision(0)
-        .prereq(totBytes);
+    txPacketRate.precision(0).prereq(txBytes);
 
-    txPacketRate
-        .precision(0)
-        .prereq(txBytes);
+    rxPacketRate.precision(0).prereq(rxBytes);
 
-    rxPacketRate
-        .precision(0)
-        .prereq(rxBytes);
+    postedSwi.precision(0);
 
-    postedSwi
-        .precision(0);
+    totalSwi.precision(0);
 
-    totalSwi
-        .precision(0);
+    coalescedSwi.precision(0);
 
-    coalescedSwi
-        .precision(0);
+    postedRxIdle.precision(0);
 
-    postedRxIdle
-        .precision(0);
+    totalRxIdle.precision(0);
 
-    totalRxIdle
-        .precision(0);
+    coalescedRxIdle.precision(0);
 
-    coalescedRxIdle
-        .precision(0);
+    postedRxOk.precision(0);
 
-    postedRxOk
-        .precision(0);
+    totalRxOk.precision(0);
 
-    totalRxOk
-        .precision(0);
+    coalescedRxOk.precision(0);
 
-    coalescedRxOk
-        .precision(0);
+    postedRxDesc.precision(0);
 
-    postedRxDesc
-        .precision(0);
+    totalRxDesc.precision(0);
 
-    totalRxDesc
-        .precision(0);
+    coalescedRxDesc.precision(0);
 
-    coalescedRxDesc
-        .precision(0);
+    postedTxOk.precision(0);
 
-    postedTxOk
-        .precision(0);
+    totalTxOk.precision(0);
 
-    totalTxOk
-        .precision(0);
+    coalescedTxOk.precision(0);
 
-    coalescedTxOk
-        .precision(0);
+    postedTxIdle.precision(0);
 
-    postedTxIdle
-        .precision(0);
+    totalTxIdle.precision(0);
 
-    totalTxIdle
-        .precision(0);
+    coalescedTxIdle.precision(0);
 
-    coalescedTxIdle
-        .precision(0);
+    postedTxDesc.precision(0);
 
-    postedTxDesc
-        .precision(0);
+    totalTxDesc.precision(0);
 
-    totalTxDesc
-        .precision(0);
+    coalescedTxDesc.precision(0);
 
-    coalescedTxDesc
-        .precision(0);
+    postedRxOrn.precision(0);
 
-    postedRxOrn
-        .precision(0);
+    totalRxOrn.precision(0);
 
-    totalRxOrn
-        .precision(0);
+    coalescedRxOrn.precision(0);
 
-    coalescedRxOrn
-        .precision(0);
+    coalescedTotal.precision(0);
 
-    coalescedTotal
-        .precision(0);
-
-    droppedPackets
-        .precision(0);
+    droppedPackets.precision(0);
 
     coalescedTotal = (totalSwi + totalRxIdle + totalRxOk + totalRxDesc +
-                      totalTxOk + totalTxIdle + totalTxDesc +
-                      totalRxOrn) / postedInterrupts;
+                      totalTxOk + totalTxIdle + totalTxDesc + totalRxOrn) /
+                     postedInterrupts;
 }
 
 } // namespace gem5

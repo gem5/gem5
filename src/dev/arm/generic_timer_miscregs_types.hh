@@ -45,56 +45,56 @@ namespace gem5
 
 namespace ArmISA
 {
-    BitUnion64(CNTKCTL)
-        // IF Armv8.6-ECV
-        Bitfield<17> evntis;
-        // ENDIF Armv8.6-ECV
-        Bitfield<9> el0pten;
-        Bitfield<8> el0vten;
-        Bitfield<7,4> evnti;
-        Bitfield<3> evntdir;
-        Bitfield<2> evnten;
-        Bitfield<1> el0vcten;
-        Bitfield<0> el0pcten;
-    EndBitUnion(CNTKCTL)
+BitUnion64(CNTKCTL)
+    // IF Armv8.6-ECV
+    Bitfield<17> evntis;
+    // ENDIF Armv8.6-ECV
+    Bitfield<9> el0pten;
+    Bitfield<8> el0vten;
+    Bitfield<7, 4> evnti;
+    Bitfield<3> evntdir;
+    Bitfield<2> evnten;
+    Bitfield<1> el0vcten;
+    Bitfield<0> el0pcten;
+EndBitUnion(CNTKCTL)
 
-    BitUnion64(CNTHCTL)
-        // IF Armv8.6-ECV
-        Bitfield<17> evntis;
-        Bitfield<16> el1nvvct;
-        Bitfield<15> el1nvpct;
-        Bitfield<14> el1tvct;
-        Bitfield<13> el1tvt;
-        Bitfield<12> ecv;
-        // ENDIF Armv8.6-ECV
-        Bitfield<7,4> evnti;
-        Bitfield<3> evntdir;
-        Bitfield<2> evnten;
-        Bitfield<1> el1pcen;
-        Bitfield<0> el1pcten;
-    EndBitUnion(CNTHCTL)
-    // IF Armv8.1-VHE && HCR_EL2.E2H == 1
-    BitUnion64(CNTHCTL_E2H)
-        // IF Armv8.6-ECV
-        Bitfield<17> evntis;
-        Bitfield<16> el1nvvct;
-        Bitfield<15> el1nvpct;
-        Bitfield<14> el1tvct;
-        Bitfield<13> el1tvt;
-        Bitfield<12> ecv;
-        // ENDIF Armv8.6-ECV
-        Bitfield<11> el1pten;
-        Bitfield<10> el1pcten;
-        Bitfield<9> el0pten;
-        Bitfield<8> el0vten;
-        Bitfield<7,4> evnti;
-        Bitfield<3> evntdir;
-        Bitfield<2> evnten;
-        Bitfield<1> el0vcten;
-        Bitfield<0> el0pcten;
-    EndBitUnion(CNTHCTL_E2H)
-    // ENDIF Armv8.1-VHE && HCR_EL2.E2H == 1
-}
+BitUnion64(CNTHCTL)
+    // IF Armv8.6-ECV
+    Bitfield<17> evntis;
+    Bitfield<16> el1nvvct;
+    Bitfield<15> el1nvpct;
+    Bitfield<14> el1tvct;
+    Bitfield<13> el1tvt;
+    Bitfield<12> ecv;
+    // ENDIF Armv8.6-ECV
+    Bitfield<7, 4> evnti;
+    Bitfield<3> evntdir;
+    Bitfield<2> evnten;
+    Bitfield<1> el1pcen;
+    Bitfield<0> el1pcten;
+EndBitUnion(CNTHCTL)
+// IF Armv8.1-VHE && HCR_EL2.E2H == 1
+BitUnion64(CNTHCTL_E2H)
+    // IF Armv8.6-ECV
+    Bitfield<17> evntis;
+    Bitfield<16> el1nvvct;
+    Bitfield<15> el1nvpct;
+    Bitfield<14> el1tvct;
+    Bitfield<13> el1tvt;
+    Bitfield<12> ecv;
+    // ENDIF Armv8.6-ECV
+    Bitfield<11> el1pten;
+    Bitfield<10> el1pcten;
+    Bitfield<9> el0pten;
+    Bitfield<8> el0vten;
+    Bitfield<7, 4> evnti;
+    Bitfield<3> evntdir;
+    Bitfield<2> evnten;
+    Bitfield<1> el0vcten;
+    Bitfield<0> el0pcten;
+EndBitUnion(CNTHCTL_E2H)
+// ENDIF Armv8.1-VHE && HCR_EL2.E2H == 1
+} // namespace ArmISA
 
 } // namespace gem5
 

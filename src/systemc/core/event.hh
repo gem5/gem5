@@ -58,13 +58,17 @@ class Sensitivity;
 class Event
 {
   public:
-    Event(sc_core::sc_event *_sc_event, bool internal=false);
+    Event(sc_core::sc_event *_sc_event, bool internal = false);
     Event(sc_core::sc_event *_sc_event, const char *_basename,
-            bool internal=false);
+          bool internal = false);
 
     ~Event();
 
-    sc_core::sc_event *sc_event() { return _sc_event; }
+    sc_core::sc_event *
+    sc_event()
+    {
+        return _sc_event;
+    }
 
     const std::string &name() const;
     const std::string &basename() const;
@@ -76,16 +80,23 @@ class Event
 
     void notify();
     void notify(const sc_core::sc_time &t);
+
     void
     notify(double d, sc_core::sc_time_unit &u)
     {
         notify(sc_core::sc_time(d, u));
     }
+
     void notifyDelayed(const sc_core::sc_time &t);
     void cancel();
 
     bool triggered() const;
-    uint64_t triggeredStamp() const { return _triggeredStamp; }
+
+    uint64_t
+    triggeredStamp() const
+    {
+        return _triggeredStamp;
+    }
 
     static Event *
     getFromScEvent(sc_core::sc_event *e)
@@ -107,11 +118,12 @@ class Event
         auto &senses = s->ofMethod() ? staticSenseMethod : staticSenseThread;
         senses.insert(senses.begin(), s);
     }
+
     void
     delSensitivity(StaticSensitivity *s) const
     {
         auto &senses = s->ofMethod() ? staticSenseMethod : staticSenseThread;
-        for (auto &t: senses) {
+        for (auto &t : senses) {
             if (t == s) {
                 t = senses.back();
                 senses.pop_back();
@@ -119,17 +131,19 @@ class Event
             }
         }
     }
+
     void
     addSensitivity(DynamicSensitivity *s) const
     {
         auto &senses = s->ofMethod() ? dynamicSenseMethod : dynamicSenseThread;
         senses.push_back(s);
     }
+
     void
     delSensitivity(DynamicSensitivity *s) const
     {
         auto &senses = s->ofMethod() ? dynamicSenseMethod : dynamicSenseThread;
-        for (auto &t: senses) {
+        for (auto &t : senses) {
             if (t == s) {
                 t = senses.back();
                 senses.pop_back();
@@ -165,4 +179,4 @@ EventsIt findEvent(const std::string &name);
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_EVENT_HH__
+#endif //__SYSTEMC_CORE_EVENT_HH__

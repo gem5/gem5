@@ -48,8 +48,10 @@ class TesterDma : public DmaDevice
 {
   public:
     typedef TesterDmaParams Params;
-    TesterDma(const Params &p) : DmaDevice(p) { }
-    virtual ~TesterDma() { }
+
+    TesterDma(const Params &p) : DmaDevice(p) {}
+
+    virtual ~TesterDma() {}
 
     // The tester does not use a huge memory range. The range itself is
     // choosen arbitrarily
@@ -62,8 +64,17 @@ class TesterDma : public DmaDevice
     }
 
     // These latencies are not important. Return any integer.
-    Tick read(PacketPtr) override { return 10; }
-    Tick write(PacketPtr) override { return 10; }
+    Tick
+    read(PacketPtr) override
+    {
+        return 10;
+    }
+
+    Tick
+    write(PacketPtr) override
+    {
+        return 10;
+    }
 };
 
 } // namespace gem5

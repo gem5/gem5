@@ -45,18 +45,16 @@
 namespace gem5
 {
 
-ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
-                                           ComputeUnit &cu,
-                                           ScoreboardCheckToSchedule
-                                           &to_schedule)
-    : computeUnit(cu), toSchedule(to_schedule),
-      _name(cu.name() + ".ScoreboardCheckStage"), stats(&cu)
-{
-}
+ScoreboardCheckStage::ScoreboardCheckStage(
+    const ComputeUnitParams &p, ComputeUnit &cu,
+    ScoreboardCheckToSchedule &to_schedule)
+    : computeUnit(cu),
+      toSchedule(to_schedule),
+      _name(cu.name() + ".ScoreboardCheckStage"),
+      stats(&cu)
+{}
 
-ScoreboardCheckStage::~ScoreboardCheckStage()
-{
-}
+ScoreboardCheckStage::~ScoreboardCheckStage() {}
 
 void
 ScoreboardCheckStage::collectStatistics(nonrdytype_e rdyStatus)
@@ -109,17 +107,20 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
         assert(w->hasBarrier());
         int bar_id = w->barrierId();
         if (!computeUnit.allAtBarrier(bar_id)) {
-            DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
-                    "barrier Id%d. %d waves remain.\n", w->computeUnit->cu_id,
-                    w->simdId, w->wfSlotId, w->wfDynId, bar_id,
-                    w->computeUnit->numYetToReachBarrier(bar_id));
+            DPRINTF(GPUSync,
+                    "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
+                    "barrier Id%d. %d waves remain.\n",
+                    w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId,
+                    bar_id, w->computeUnit->numYetToReachBarrier(bar_id));
             // Are all threads at barrier?
             *rdyStatus = NRDY_BARRIER_WAIT;
             return false;
         }
-        DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
-                "Id%d. Resetting barrier resources.\n", w->computeUnit->cu_id,
-                w->simdId, w->wfSlotId, w->wfDynId, bar_id);
+        DPRINTF(GPUSync,
+                "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
+                "Id%d. Resetting barrier resources.\n",
+                w->computeUnit->cu_id, w->simdId, w->wfSlotId, w->wfDynId,
+                bar_id);
         computeUnit.resetBarrier(bar_id);
         computeUnit.releaseWFsFromBarrier(bar_id);
     }
@@ -133,7 +134,7 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     }
 
     // is the Instruction buffer empty
-    if ( w->instructionBuffer.empty()) {
+    if (w->instructionBuffer.empty()) {
         *rdyStatus = NRDY_IB_EMPTY;
         return false;
     }
@@ -152,10 +153,10 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     // make sure that we do not silently let an instruction type slip
     // through this logic and always return not ready.
     if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
-         ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
-         ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
-         ii->isFlatGlobal() || ii->isFlatScratch() || ii->isSleep() ||
-         ii->isLocalMem())) {
+          ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
+          ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
+          ii->isFlatGlobal() || ii->isFlatScratch() || ii->isSleep() ||
+          ii->isLocalMem())) {
         panic("next instruction: %s is of unknown type\n", ii->disassemble());
     }
 
@@ -227,13 +228,9 @@ ScoreboardCheckStage::mapWaveToExeUnit(Wavefront *w)
         } else {
             return w->scalarMem;
         }
-    } else if (ii->isBranch() ||
-               ii->isALU() ||
-               (ii->isKernArgSeg() && ii->isLoad()) ||
-               ii->isArgSeg() ||
-               ii->isReturn() ||
-               ii->isEndOfKernel() ||
-               ii->isNop() ||
+    } else if (ii->isBranch() || ii->isALU() ||
+               (ii->isKernArgSeg() && ii->isLoad()) || ii->isArgSeg() ||
+               ii->isReturn() || ii->isEndOfKernel() || ii->isNop() ||
                ii->isBarrier()) {
         if (!ii->isScalar()) {
             return w->simdId;
@@ -267,8 +264,7 @@ ScoreboardCheckStage::exec()
                 assert(curWave->simdId == simdId);
                 DPRINTF(GPUSched,
                         "Adding to readyList[%d]: SIMD[%d] WV[%d]: %d: %s\n",
-                        exeResType,
-                        curWave->simdId, curWave->wfDynId,
+                        exeResType, curWave->simdId, curWave->wfDynId,
                         curWave->nextInstr()->seqNum(),
                         curWave->nextInstr()->disassemble());
                 toSchedule.markWFReady(curWave, exeResType);
@@ -278,8 +274,8 @@ ScoreboardCheckStage::exec()
     }
 }
 
-ScoreboardCheckStage::
-ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
+ScoreboardCheckStage::ScoreboardCheckStageStats::ScoreboardCheckStageStats(
+    statistics::Group *parent)
     : statistics::Group(parent, "ScoreboardCheckStage"),
       ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
 {

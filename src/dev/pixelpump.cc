@@ -42,20 +42,20 @@
 namespace gem5
 {
 
-const DisplayTimings DisplayTimings::vga(
-    640, 480,
-    48, 96, 16,
-    33, 2, 10);
+const DisplayTimings DisplayTimings::vga(640, 480, 48, 96, 16, 33, 2, 10);
 
-
-DisplayTimings::DisplayTimings(unsigned _width, unsigned _height,
-                               unsigned hbp, unsigned h_sync, unsigned hfp,
-                               unsigned vbp, unsigned v_sync, unsigned vfp)
-    : width(_width), height(_height),
-      hBackPorch(hbp), hFrontPorch(hfp), hSync(h_sync),
-      vBackPorch(vbp), vFrontPorch(vfp), vSync(v_sync)
-{
-}
+DisplayTimings::DisplayTimings(unsigned _width, unsigned _height, unsigned hbp,
+                               unsigned h_sync, unsigned hfp, unsigned vbp,
+                               unsigned v_sync, unsigned vfp)
+    : width(_width),
+      height(_height),
+      hBackPorch(hbp),
+      hFrontPorch(hfp),
+      hSync(h_sync),
+      vBackPorch(vbp),
+      vFrontPorch(vfp),
+      vSync(v_sync)
+{}
 
 void
 DisplayTimings::serialize(CheckpointOut &cp) const
@@ -87,10 +87,11 @@ DisplayTimings::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(vSync);
 }
 
-
 BasePixelPump::BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
                              unsigned pixel_chunk)
-    : EventManager(em), Clocked(pxl_clk), Serializable(),
+    : EventManager(em),
+      Clocked(pxl_clk),
+      Serializable(),
       pixelChunk(pixel_chunk),
       pixelEvents(),
       evVSyncBegin("evVSyncBegin", this, &BasePixelPump::onVSyncBegin),
@@ -100,13 +101,12 @@ BasePixelPump::BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
       evBeginLine("evBeginLine", this, &BasePixelPump::beginLine),
       evRenderPixels("evRenderPixels", this, &BasePixelPump::renderPixels),
       _timings(DisplayTimings::vga),
-      line(0), _posX(0), _underrun(false)
-{
-}
+      line(0),
+      _posX(0),
+      _underrun(false)
+{}
 
-BasePixelPump::~BasePixelPump()
-{
-}
+BasePixelPump::~BasePixelPump() {}
 
 void
 BasePixelPump::serialize(CheckpointOut &cp) const
@@ -161,7 +161,6 @@ BasePixelPump::start()
     schedule(evBeginLine, clockEdge());
 }
 
-
 void
 BasePixelPump::stop()
 {
@@ -206,7 +205,6 @@ BasePixelPump::beginLine()
     // Visible area
     if (line >= _timings.lineFirstVisible() &&
         line < _timings.lineFrontPorchStart()) {
-
         const Cycles h_first_visible(h_sync_end + _timings.hBackPorch);
         schedule(evRenderPixels, clockEdge(h_first_visible));
     }
@@ -228,8 +226,8 @@ BasePixelPump::renderPixels()
     const Pixel underrun_pixel(0, 0, 0);
     for (; _posX < x_end && !_underrun; ++_posX) {
         if (!nextPixel(pixel)) {
-            warn("Input buffer underrun in BasePixelPump (%u, %u)\n",
-                 _posX, pos_y);
+            warn("Input buffer underrun in BasePixelPump (%u, %u)\n", _posX,
+                 pos_y);
             _underrun = true;
             onUnderrun(_posX, pos_y);
             pixel = underrun_pixel;
@@ -264,9 +262,7 @@ BasePixelPump::renderFrame()
     // We only care about the visible screen area when rendering the
     // frame
     for (line = _timings.lineFirstVisible();
-        line < _timings.lineFrontPorchStart();
-        ++line) {
-
+         line < _timings.lineFrontPorchStart(); ++line) {
         _posX = 0;
 
         onHSyncBegin();
@@ -291,14 +287,16 @@ BasePixelPump::renderLine()
 
     auto pixel_it = fb.pixels.begin() + _width * pos_y;
     panic_if(nextLine(pixel_it, _width) != _width,
-            "Unexpected underrun in BasePixelPump (%u, %u)", _width, pos_y);
+             "Unexpected underrun in BasePixelPump (%u, %u)", _width, pos_y);
 }
 
-
-BasePixelPump::PixelEvent::PixelEvent(
-    const char *name, BasePixelPump *_parent, CallbackType _func)
-    : Event(), Drainable(),
-      _name(name), parent(*_parent), func(_func),
+BasePixelPump::PixelEvent::PixelEvent(const char *name, BasePixelPump *_parent,
+                                      CallbackType _func)
+    : Event(),
+      Drainable(),
+      _name(name),
+      parent(*_parent),
+      func(_func),
       suspended(false),
       relativeTick(0)
 {

@@ -85,15 +85,14 @@ class Memoizer
     using ret_type = Ret;
     using args_type = std::tuple<Args...>;
 
-    constexpr Memoizer(Ret (*_func)(Args...))
-     : func(_func)
+    constexpr Memoizer(Ret (*_func)(Args...)) : func(_func)
     {
         validateMemoizer();
     }
 
     Memoizer() = delete;
     Memoizer(const Memoizer &rhs) = delete;
-    Memoizer& operator=(const Memoizer &rhs) = delete;
+    Memoizer &operator=(const Memoizer &rhs) = delete;
 
     auto
     operator()(Args... args) const
@@ -108,7 +107,11 @@ class Memoizer
     };
 
     /** Clear the memoization cache */
-    void flush() { cache.clear(); }
+    void
+    flush()
+    {
+        cache.clear();
+    }
 
   protected:
     /** True if the passed value is cached, false otherwise */
@@ -135,15 +138,15 @@ class Memoizer
     {
         constexpr size_t num_args = std::tuple_size_v<std::decay_t<args_type>>;
         iterateTupleArgs<size_t(0), num_args, size_t(1)>([&](auto i) {
-            static_assert(!std::is_reference_v<
-                typename std::tuple_element<
-                    i.value, args_type>::type>);
+            static_assert(
+                !std::is_reference_v<
+                    typename std::tuple_element<i.value, args_type>::type>);
         });
     }
 
     template <size_t Start, size_t End, size_t Inc, class F>
     constexpr void
-    iterateTupleArgs(F&& func)
+    iterateTupleArgs(F &&func)
     {
         if constexpr (Start < End) {
             func(std::integral_constant<decltype(Start), Start>());
@@ -156,7 +159,6 @@ class Memoizer
     const std::function<Ret(Args...)> func;
     /** Result cache */
     mutable std::map<args_type, ret_type> cache;
-
 };
 
 } // namespace gem5

@@ -36,7 +36,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 class ArmNativeTrace : public NativeTrace
 {
@@ -64,12 +65,39 @@ class ArmNativeTrace : public NativeTrace
         STATE_R15,
         STATE_PC = STATE_R15,
         STATE_CPSR,
-        STATE_F0, STATE_F1, STATE_F2, STATE_F3, STATE_F4, STATE_F5, STATE_F6,
-        STATE_F7, STATE_F8, STATE_F9, STATE_F10, STATE_F11, STATE_F12,
-        STATE_F13, STATE_F14, STATE_F15, STATE_F16, STATE_F17, STATE_F18,
-        STATE_F19, STATE_F20, STATE_F21, STATE_F22, STATE_F23, STATE_F24,
-        STATE_F25, STATE_F26, STATE_F27, STATE_F28, STATE_F29, STATE_F30,
-        STATE_F31, STATE_FPSCR,
+        STATE_F0,
+        STATE_F1,
+        STATE_F2,
+        STATE_F3,
+        STATE_F4,
+        STATE_F5,
+        STATE_F6,
+        STATE_F7,
+        STATE_F8,
+        STATE_F9,
+        STATE_F10,
+        STATE_F11,
+        STATE_F12,
+        STATE_F13,
+        STATE_F14,
+        STATE_F15,
+        STATE_F16,
+        STATE_F17,
+        STATE_F18,
+        STATE_F19,
+        STATE_F20,
+        STATE_F21,
+        STATE_F22,
+        STATE_F23,
+        STATE_F24,
+        STATE_F25,
+        STATE_F26,
+        STATE_F27,
+        STATE_F28,
+        STATE_F29,
+        STATE_F30,
+        STATE_F31,
+        STATE_FPSCR,
         STATE_NUMVALS
     };
 
@@ -103,8 +131,8 @@ class ArmNativeTrace : public NativeTrace
   public:
     using Params = ArmNativeTraceParams;
 
-    ArmNativeTrace(const Params &p) :
-        NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
+    ArmNativeTrace(const Params &p)
+        : NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
     {}
 
     void check(NativeTraceRecord *record);

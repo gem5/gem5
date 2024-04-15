@@ -59,7 +59,12 @@ typedef std::vector<Result> VResult;
 typedef unsigned int size_type;
 typedef unsigned int off_type;
 
-enum DistType { Deviation, Dist, Hist };
+enum DistType
+{
+    Deviation,
+    Dist,
+    Hist
+};
 
 /** General container for distribution data. */
 struct DistData

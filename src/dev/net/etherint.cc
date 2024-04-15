@@ -39,8 +39,8 @@ EtherInt::bind(Port &peer)
 {
     EtherInt *p = dynamic_cast<EtherInt *>(&peer);
     if (!p) {
-        fatal("Attempt to bind port %s to non-ethernet port %s.",
-                name(), peer.name());
+        fatal("Attempt to bind port %s to non-ethernet port %s.", name(),
+              peer.name());
     }
     setPeer(p);
     _connected = true;
@@ -58,7 +58,8 @@ EtherInt::setPeer(EtherInt *p)
 {
     if (peer && peer != p)
         panic("You cannot change the peer once it is set.\n"
-              "Current peer=%s Desired peer=%s", peer->name(), p->name());
+              "Current peer=%s Desired peer=%s",
+              peer->name(), p->name());
 
     peer = p;
 }

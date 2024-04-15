@@ -55,150 +55,191 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    struct TlbEntry;
+struct TlbEntry;
 }
 
 typedef Trie<Addr, X86ISA::TlbEntry> TlbEntryTrie;
 
 namespace X86ISA
 {
-    struct TlbEntry : public Serializable
+struct TlbEntry : public Serializable
+{
+    // The base of the physical page.
+    Addr paddr;
+
+    // The beginning of the virtual page this entry maps.
+    Addr vaddr;
+    // The size of the page this represents, in address bits.
+    unsigned logBytes;
+
+    // Read permission is always available, assuming it isn't blocked by
+    // other mechanisms.
+    bool writable;
+    // Whether this page is accesible without being in supervisor mode.
+    bool user;
+    // Whether to use write through or write back. M5 ignores this and
+    // lets the caches handle the writeback policy.
+    // bool pwt;
+    // Whether the page is cacheable or not.
+    bool uncacheable;
+    // Whether or not to kick this page out on a write to CR3.
+    bool global;
+    // A bit used to form an index into the PAT table.
+    bool patBit;
+    // Whether or not memory on this page can be executed.
+    bool noExec;
+    // A sequence number to keep track of LRU.
+    uint64_t lruSeq;
+
+    TlbEntryTrie::Handle trieHandle;
+
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, bool uncacheable,
+             bool read_only);
+    TlbEntry();
+
+    void
+    updateVaddr(Addr new_vaddr)
     {
-        // The base of the physical page.
-        Addr paddr;
+        vaddr = new_vaddr;
+    }
 
-        // The beginning of the virtual page this entry maps.
-        Addr vaddr;
-        // The size of the page this represents, in address bits.
-        unsigned logBytes;
+    Addr
+    pageStart()
+    {
+        return paddr;
+    }
 
-        // Read permission is always available, assuming it isn't blocked by
-        // other mechanisms.
-        bool writable;
-        // Whether this page is accesible without being in supervisor mode.
-        bool user;
-        // Whether to use write through or write back. M5 ignores this and
-        // lets the caches handle the writeback policy.
-        //bool pwt;
-        // Whether the page is cacheable or not.
-        bool uncacheable;
-        // Whether or not to kick this page out on a write to CR3.
-        bool global;
-        // A bit used to form an index into the PAT table.
-        bool patBit;
-        // Whether or not memory on this page can be executed.
-        bool noExec;
-        // A sequence number to keep track of LRU.
-        uint64_t lruSeq;
+    // Return the page size in bytes
+    int
+    size()
+    {
+        return (1 << logBytes);
+    }
 
-        TlbEntryTrie::Handle trieHandle;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+};
 
-        TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
-                 bool uncacheable, bool read_only);
-        TlbEntry();
+BitUnion64(VAddr)
+    Bitfield<20, 12> longl1;
+    Bitfield<29, 21> longl2;
+    Bitfield<38, 30> longl3;
+    Bitfield<47, 39> longl4;
 
-        void
-        updateVaddr(Addr new_vaddr)
-        {
-            vaddr = new_vaddr;
-        }
+    Bitfield<20, 12> pael1;
+    Bitfield<29, 21> pael2;
+    Bitfield<31, 30> pael3;
 
-        Addr pageStart()
-        {
-            return paddr;
-        }
+    Bitfield<21, 12> norml1;
+    Bitfield<31, 22> norml2;
+EndBitUnion(VAddr)
 
-        // Return the page size in bytes
-        int size()
-        {
-            return (1 << logBytes);
-        }
+// Unfortunately, the placement of the base field in a page table entry is
+// very erratic and would make a mess here. It might be moved here at some
+// point in the future.
+BitUnion64(PageTableEntry)
+    Bitfield<63> nx;
+    Bitfield<51, 12> base;
+    Bitfield<11, 9> avl;
+    Bitfield<8> g;
+    Bitfield<7> ps;
+    Bitfield<6> d;
+    Bitfield<5> a;
+    Bitfield<4> pcd;
+    Bitfield<3> pwt;
+    Bitfield<2> u;
+    Bitfield<1> w;
+    Bitfield<0> p;
+EndBitUnion(PageTableEntry)
 
-        void serialize(CheckpointOut &cp) const override;
-        void unserialize(CheckpointIn &cp) override;
+template <int first, int last>
+class LongModePTE
+{
+  public:
+    Addr
+    paddr()
+    {
+        return pte.base << PageShift;
+    }
+
+    void
+    paddr(Addr addr)
+    {
+        pte.base = addr >> PageShift;
+    }
+
+    bool
+    present()
+    {
+        return pte.p;
+    }
+
+    void
+    present(bool p)
+    {
+        pte.p = p ? 1 : 0;
+    }
+
+    bool
+    uncacheable()
+    {
+        return pte.pcd;
+    }
+
+    void
+    uncacheable(bool u)
+    {
+        pte.pcd = u ? 1 : 0;
+    }
+
+    bool
+    readonly()
+    {
+        return !pte.w;
+    }
+
+    void
+    readonly(bool r)
+    {
+        pte.w = r ? 0 : 1;
+    }
+
+    void
+    read(PortProxy &p, Addr table, Addr vaddr)
+    {
+        entryAddr = table;
+        entryAddr += bits(vaddr, first, last) * sizeof(PageTableEntry);
+        pte = p.read<PageTableEntry>(entryAddr);
+    }
+
+    void
+    reset(Addr _paddr, bool _present = true, bool _uncacheable = false,
+          bool _readonly = false)
+    {
+        pte = 0;
+        pte.u = 1;
+        paddr(_paddr);
+        present(_present);
+        uncacheable(_uncacheable);
+        readonly(_readonly);
     };
 
-
-    BitUnion64(VAddr)
-        Bitfield<20, 12> longl1;
-        Bitfield<29, 21> longl2;
-        Bitfield<38, 30> longl3;
-        Bitfield<47, 39> longl4;
-
-        Bitfield<20, 12> pael1;
-        Bitfield<29, 21> pael2;
-        Bitfield<31, 30> pael3;
-
-        Bitfield<21, 12> norml1;
-        Bitfield<31, 22> norml2;
-    EndBitUnion(VAddr)
-
-    // Unfortunately, the placement of the base field in a page table entry is
-    // very erratic and would make a mess here. It might be moved here at some
-    // point in the future.
-    BitUnion64(PageTableEntry)
-        Bitfield<63> nx;
-        Bitfield<51, 12> base;
-        Bitfield<11, 9> avl;
-        Bitfield<8> g;
-        Bitfield<7> ps;
-        Bitfield<6> d;
-        Bitfield<5> a;
-        Bitfield<4> pcd;
-        Bitfield<3> pwt;
-        Bitfield<2> u;
-        Bitfield<1> w;
-        Bitfield<0> p;
-    EndBitUnion(PageTableEntry)
-
-    template <int first, int last>
-    class LongModePTE
+    void
+    write(PortProxy &p)
     {
-      public:
-        Addr paddr() { return pte.base << PageShift; }
-        void paddr(Addr addr) { pte.base = addr >> PageShift; }
+        p.write(entryAddr, pte);
+    }
 
-        bool present() { return pte.p; }
-        void present(bool p) { pte.p = p ? 1 : 0; }
+    static int
+    tableSize()
+    {
+        return 1 << ((first - last) + 4 - PageShift);
+    }
 
-        bool uncacheable() { return pte.pcd; }
-        void uncacheable(bool u) { pte.pcd = u ? 1 : 0; }
-
-        bool readonly() { return !pte.w; }
-        void readonly(bool r) { pte.w = r ? 0 : 1; }
-
-        void
-        read(PortProxy &p, Addr table, Addr vaddr)
-        {
-            entryAddr = table;
-            entryAddr += bits(vaddr, first, last) * sizeof(PageTableEntry);
-            pte = p.read<PageTableEntry>(entryAddr);
-        }
-
-        void
-        reset(Addr _paddr, bool _present=true,
-              bool _uncacheable=false, bool _readonly=false)
-        {
-            pte = 0;
-            pte.u = 1;
-            paddr(_paddr);
-            present(_present);
-            uncacheable(_uncacheable);
-            readonly(_readonly);
-        };
-
-        void write(PortProxy &p) { p.write(entryAddr, pte); }
-
-        static int
-        tableSize()
-        {
-            return 1 << ((first - last) + 4 - PageShift);
-        }
-
-      protected:
-        PageTableEntry pte;
-        Addr entryAddr;
-    };
+  protected:
+    PageTableEntry pte;
+    Addr entryAddr;
+};
 
 } // namespace X86ISA
 } // namespace gem5

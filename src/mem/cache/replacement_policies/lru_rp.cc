@@ -40,49 +40,46 @@ namespace gem5
 namespace replacement_policy
 {
 
-LRU::LRU(const Params &p)
-  : Base(p)
-{
-}
+LRU::LRU(const Params &p) : Base(p) {}
 
 void
-LRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+LRU::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Reset last touch timestamp
-    std::static_pointer_cast<LRUReplData>(
-        replacement_data)->lastTouchTick = Tick(0);
+    std::static_pointer_cast<LRUReplData>(replacement_data)->lastTouchTick =
+        Tick(0);
 }
 
 void
-LRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+LRU::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Update last touch timestamp
-    std::static_pointer_cast<LRUReplData>(
-        replacement_data)->lastTouchTick = curTick();
+    std::static_pointer_cast<LRUReplData>(replacement_data)->lastTouchTick =
+        curTick();
 }
 
 void
-LRU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+LRU::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Set last touch timestamp
-    std::static_pointer_cast<LRUReplData>(
-        replacement_data)->lastTouchTick = curTick();
+    std::static_pointer_cast<LRUReplData>(replacement_data)->lastTouchTick =
+        curTick();
 }
 
-ReplaceableEntry*
-LRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+LRU::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
-    for (const auto& candidate : candidates) {
+    ReplaceableEntry *victim = candidates[0];
+    for (const auto &candidate : candidates) {
         // Update victim entry if necessary
-        if (std::static_pointer_cast<LRUReplData>(
-                    candidate->replacementData)->lastTouchTick <
-                std::static_pointer_cast<LRUReplData>(
-                    victim->replacementData)->lastTouchTick) {
+        if (std::static_pointer_cast<LRUReplData>(candidate->replacementData)
+                ->lastTouchTick <
+            std::static_pointer_cast<LRUReplData>(victim->replacementData)
+                ->lastTouchTick) {
             victim = candidate;
         }
     }

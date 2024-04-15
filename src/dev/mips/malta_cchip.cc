@@ -56,9 +56,8 @@ MaltaCChip::MaltaCChip(const Params &p)
 {
     warn("MaltaCCHIP::MaltaCChip() not implemented.");
 
-    //Put back pointer in malta
+    // Put back pointer in malta
     malta->cchip = this;
-
 }
 
 Tick
@@ -93,7 +92,6 @@ MaltaCChip::reqIPI(uint64_t ipreq)
     panic("MaltaCCHIP::reqIPI() not implemented.");
 }
 
-
 void
 MaltaCChip::postRTC()
 {
@@ -106,14 +104,14 @@ MaltaCChip::postIntr(uint32_t interrupt)
     uint64_t size = sys->threads.size();
     assert(size <= Malta::Max_CPUs);
 
-    for (int i=0; i < size; i++) {
-        //Note: Malta does not use index, but this was added to use the
-        //pre-existing implementation
+    for (int i = 0; i < size; i++) {
+        // Note: Malta does not use index, but this was added to use the
+        // pre-existing implementation
         auto tc = sys->threads[i];
         tc->getCpuPtr()->postInterrupt(tc->threadId(), interrupt, 0);
-        DPRINTF(Malta, "posting  interrupt to cpu %d, interrupt %d\n",
-                i, interrupt);
-   }
+        DPRINTF(Malta, "posting  interrupt to cpu %d, interrupt %d\n", i,
+                interrupt);
+    }
 }
 
 void
@@ -122,25 +120,22 @@ MaltaCChip::clearIntr(uint32_t interrupt)
     uint64_t size = sys->threads.size();
     assert(size <= Malta::Max_CPUs);
 
-    for (int i=0; i < size; i++) {
-        //Note: Malta does not use index, but this was added to use the
-        //pre-existing implementation
+    for (int i = 0; i < size; i++) {
+        // Note: Malta does not use index, but this was added to use the
+        // pre-existing implementation
         auto tc = sys->threads[i];
         tc->getCpuPtr()->clearInterrupt(tc->threadId(), interrupt, 0);
-        DPRINTF(Malta, "clearing interrupt to cpu %d, interrupt %d\n",
-                i, interrupt);
-   }
+        DPRINTF(Malta, "clearing interrupt to cpu %d, interrupt %d\n", i,
+                interrupt);
+    }
 }
-
 
 void
 MaltaCChip::serialize(CheckpointOut &cp) const
-{
-}
+{}
 
 void
 MaltaCChip::unserialize(CheckpointIn &cp)
-{
-}
+{}
 
 } // namespace gem5

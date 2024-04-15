@@ -49,6 +49,7 @@ namespace sinic
 {
 
 class Interface;
+
 class Base : public EtherDevBase
 {
   protected:
@@ -68,18 +69,23 @@ class Base : public EtherDevBase
     Interface *interface;
 
     bool cpuIntrPending() const;
-    void cpuIntrAck() { cpuIntrClear(); }
 
-/**
- * Serialization stuff
- */
+    void
+    cpuIntrAck()
+    {
+        cpuIntrClear();
+    }
+
+    /**
+     * Serialization stuff
+     */
   public:
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-/**
- * Construction/Destruction/Parameters
- */
+    /**
+     * Construction/Destruction/Parameters
+     */
   public:
     PARAMS(Sinic);
     Base(const Params &p);
@@ -153,10 +159,16 @@ class Device : public Base
         Counter txUnique;
 
         VirtualReg()
-            : RxData(0), RxDone(0), TxData(0), TxDone(0),
-              rxPacketOffset(0), rxPacketBytes(0), rxDoneData(0)
-        { }
+            : RxData(0),
+              RxDone(0),
+              TxData(0),
+              TxDone(0),
+              rxPacketOffset(0),
+              rxPacketBytes(0),
+              rxDoneData(0)
+        {}
     };
+
     typedef std::vector<VirtualReg> VirtualRegs;
     typedef std::list<unsigned> VirtualList;
     Counter rxUnique;
@@ -171,9 +183,23 @@ class Device : public Base
     int rxMappedCount;
     int rxDirtyCount;
 
-    uint8_t  &regData8(Addr daddr) { return *((uint8_t *)&regs + daddr); }
-    uint32_t &regData32(Addr daddr) { return *(uint32_t *)&regData8(daddr); }
-    uint64_t &regData64(Addr daddr) { return *(uint64_t *)&regData8(daddr); }
+    uint8_t &
+    regData8(Addr daddr)
+    {
+        return *((uint8_t *)&regs + daddr);
+    }
+
+    uint32_t &
+    regData32(Addr daddr)
+    {
+        return *(uint32_t *)&regData8(daddr);
+    }
+
+    uint64_t &
+    regData64(Addr daddr)
+    {
+        return *(uint64_t *)&regData8(daddr);
+    }
 
   protected:
     RxState rxState;
@@ -208,12 +234,15 @@ class Device : public Base
      * Retransmit event
      */
     void transmit();
-    void txEventTransmit()
+
+    void
+    txEventTransmit()
     {
         transmit();
         if (txState == txFifoBlock)
             txKick();
     }
+
     EventFunctionWrapper txEvent;
 
     void txDump() const;
@@ -224,24 +253,24 @@ class Device : public Base
      */
     bool rxFilter(const EthPacketPtr &packet);
 
-/**
- * device configuration
- */
+    /**
+     * device configuration
+     */
     void changeConfig(uint32_t newconfig);
     void command(uint32_t command);
 
-/**
- * device ethernet interface
- */
+    /**
+     * device ethernet interface
+     */
   public:
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
-/**
- * DMA parameters
- */
+    /**
+     * DMA parameters
+     */
   protected:
     void rxDmaDone();
     EventFunctionWrapper rxDmaEvent;
@@ -254,17 +283,17 @@ class Device : public Base
     Tick dmaWriteDelay;
     Tick dmaWriteFactor;
 
-/**
- * Interrupt management
- */
+    /**
+     * Interrupt management
+     */
   protected:
     void devIntrPost(uint32_t interrupts);
     void devIntrClear(uint32_t interrupts = registers::Intr_All);
     void devIntrChangeMask(uint32_t newmask);
 
-/**
- * Memory Interface
- */
+    /**
+     * Memory Interface
+     */
   public:
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
@@ -273,11 +302,11 @@ class Device : public Base
     void prepareIO(ContextID cpu, int index);
     void prepareRead(ContextID cpu, int index);
     void prepareWrite(ContextID cpu, int index);
- //   Fault iprRead(Addr daddr, ContextID cpu, uint64_t &result);
+    //   Fault iprRead(Addr daddr, ContextID cpu, uint64_t &result);
 
-/**
- * Statistics
- */
+    /**
+     * Statistics
+     */
   private:
     struct DeviceStats : public statistics::Group
     {
@@ -291,13 +320,12 @@ class Device : public Base
         int _maxVnicDistance;
     } sinicDeviceStats;
 
-
   public:
     void resetStats() override;
 
-/**
- * Serialization stuff
- */
+    /**
+     * Serialization stuff
+     */
   public:
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -316,12 +344,19 @@ class Interface : public EtherInt
     Device *dev;
 
   public:
-    Interface(const std::string &name, Device *d)
-        : EtherInt(name), dev(d)
-    { }
+    Interface(const std::string &name, Device *d) : EtherInt(name), dev(d) {}
 
-    virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
-    virtual void sendDone() { dev->transferDone(); }
+    virtual bool
+    recvPacket(EthPacketPtr pkt)
+    {
+        return dev->recvPacket(pkt);
+    }
+
+    virtual void
+    sendDone()
+    {
+        dev->transferDone();
+    }
 };
 
 } // namespace sinic

@@ -36,15 +36,17 @@ sc_mempool::allocate(std::size_t sz)
 {
     return ::operator new(sz);
 }
+
 void
 sc_mempool::release(void *p, std::size_t sz)
 {
     ::operator delete(p);
 }
+
 void
 sc_mempool::display_statistics()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-};
+}; // namespace sc_core

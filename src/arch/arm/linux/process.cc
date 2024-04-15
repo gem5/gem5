@@ -70,7 +70,7 @@ ArmLinuxProcess32::initState()
     ThreadContext *tc = system->threads[contextIds[0]];
 
     uint8_t swiNeg1[] = {
-        0xff, 0xff, 0xff, 0xef  // swi -1
+        0xff, 0xff, 0xff, 0xef // swi -1
     };
 
     SETranslatingPortProxy proxy(tc);
@@ -79,29 +79,26 @@ ArmLinuxProcess32::initState()
         proxy.writeBlob(commPage + addr, swiNeg1, sizeof(swiNeg1));
     }
 
-    uint8_t memory_barrier[] =
-    {
+    uint8_t memory_barrier[] = {
         0x5f, 0xf0, 0x7f, 0xf5, // dmb
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     proxy.writeBlob(commPage + 0x0fa0, memory_barrier, sizeof(memory_barrier));
 
-    uint8_t cmpxchg[] =
-    {
-        0x9f, 0x3f, 0x92, 0xe1,  // ldrex    r3, [r2]
-        0x00, 0x30, 0x53, 0xe0,  // subs     r3, r3, r0
-        0x91, 0x3f, 0x82, 0x01,  // strexeq  r3, r1, [r2]
-        0x01, 0x00, 0x33, 0x03,  // teqeq    r3, #1
-        0xfa, 0xff, 0xff, 0x0a,  // beq 1b
-        0x00, 0x00, 0x73, 0xe2,  // rsbs r0, r3, #0
-        0x5f, 0xf0, 0x7f, 0xf5,  // dmb
-        0x0e, 0xf0, 0xa0, 0xe1   // return
+    uint8_t cmpxchg[] = {
+        0x9f, 0x3f, 0x92, 0xe1, // ldrex    r3, [r2]
+        0x00, 0x30, 0x53, 0xe0, // subs     r3, r3, r0
+        0x91, 0x3f, 0x82, 0x01, // strexeq  r3, r1, [r2]
+        0x01, 0x00, 0x33, 0x03, // teqeq    r3, #1
+        0xfa, 0xff, 0xff, 0x0a, // beq 1b
+        0x00, 0x00, 0x73, 0xe2, // rsbs r0, r3, #0
+        0x5f, 0xf0, 0x7f, 0xf5, // dmb
+        0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     proxy.writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
 
-    uint8_t get_tls[] =
-    {
-                                // read user read-only thread id register
+    uint8_t get_tls[] = {
+        // read user read-only thread id register
         0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };

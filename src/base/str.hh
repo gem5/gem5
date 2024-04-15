@@ -88,22 +88,21 @@ to_lower(const std::string &s)
 // Split the string s into lhs and rhs on the first occurence of the
 // character c. Character c is not included in either lhs or rhs. If
 // character c is not contained within string s, lsh equals s.
-bool
-split_first(const std::string &s, std::string &lhs, std::string &rhs, char c);
+bool split_first(const std::string &s, std::string &lhs, std::string &rhs,
+                 char c);
 
 // Split the string s into lhs and rhs on the last occurence of the
 // character c. Character c is not included in either lhs or rhs. If
 // character c is not contained within string s, lhs equals s.
-bool
-split_last(const std::string &s, std::string &lhs, std::string &rhs, char c);
+bool split_last(const std::string &s, std::string &lhs, std::string &rhs,
+                char c);
 
 // Tokenize the string <s> splitting on the character <token>, and
 // place the result in the string vector <vector>.  If <ign> is true,
 // then empty result strings (due to trailing tokens, or consecutive
 // tokens) are skipped.
-void
-tokenize(std::vector<std::string> &vector, const std::string &s,
-         char token, bool ign = true);
+void tokenize(std::vector<std::string> &vector, const std::string &s,
+              char token, bool ign = true);
 
 /**
  * @{
@@ -123,8 +122,8 @@ __to_number(const std::string &value)
     // start big and narrow it down if needed, determine the base dynamically
     if constexpr (std::is_signed_v<T>) {
         long long r = std::stoll(value, nullptr, 0);
-        if (r < std::numeric_limits<T>::lowest()
-            || r > std::numeric_limits<T>::max()) {
+        if (r < std::numeric_limits<T>::lowest() ||
+            r > std::numeric_limits<T>::max()) {
             throw std::out_of_range("Out of range");
         }
         return static_cast<T>(r);
@@ -150,12 +149,13 @@ __to_number(const std::string &value)
 {
     // start big and narrow it down if needed
     long double r = std::stold(value);
-    if (r < std::numeric_limits<T>::lowest()
-        || r > std::numeric_limits<T>::max()) {
+    if (r < std::numeric_limits<T>::lowest() ||
+        r > std::numeric_limits<T>::max()) {
         throw std::out_of_range("Out of range");
     }
     return static_cast<T>(r);
 }
+
 /** @} */
 
 /**
@@ -169,16 +169,16 @@ __to_number(const std::string &value)
 template <class T>
 inline std::enable_if_t<(std::is_integral_v<T> ||
                          std::is_floating_point_v<T> ||
-                         std::is_enum_v<T>) &&
-                        !std::is_same_v<bool, T>, bool>
+                         std::is_enum_v<T>)&&!std::is_same_v<bool, T>,
+                        bool>
 to_number(const std::string &value, T &retval)
 {
     try {
         retval = __to_number<T>(value);
         return true;
-    } catch (const std::out_of_range&) {
+    } catch (const std::out_of_range &) {
         return false;
-    } catch (const std::invalid_argument&) {
+    } catch (const std::invalid_argument &) {
         return false;
     } catch (...) {
         panic("Unrecognized exception.\n");
@@ -222,7 +222,6 @@ quote(const std::string &s)
     return ret;
 }
 
-
 /**
  * Return true if 's' starts with the prefix string 'prefix'.
  */
@@ -232,7 +231,6 @@ startswith(const char *s, const char *prefix)
     return (strncmp(s, prefix, strlen(prefix)) == 0);
 }
 
-
 /**
  * Return true if 's' starts with the prefix string 'prefix'.
  */
@@ -241,7 +239,6 @@ startswith(const std::string &s, const char *prefix)
 {
     return (s.compare(0, strlen(prefix), prefix) == 0);
 }
-
 
 /**
  * Return true if 's' starts with the prefix string 'prefix'.

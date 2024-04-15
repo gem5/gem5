@@ -111,7 +111,7 @@ class FsLinux : public ArmISA::FsWorkload
 
     /** This function creates a new task Id for the given pid.
      * @param tc thread context that is currentyl executing  */
-    void mapPid(ThreadContext* tc, uint32_t pid);
+    void mapPid(ThreadContext *tc, uint32_t pid);
 
   public: // Exported Python methods
     /**
@@ -148,11 +148,12 @@ class DumpStats : public PCEvent
         : PCEvent(s, desc, addr)
     {}
 
-    void process(ThreadContext* tc) override;
+    void process(ThreadContext *tc) override;
+
   protected:
     virtual void getTaskDetails(ThreadContext *tc, uint32_t &pid,
-            uint32_t &tgid, std::string &next_task_str, int32_t &mm);
-
+                                uint32_t &tgid, std::string &next_task_str,
+                                int32_t &mm);
 };
 
 class DumpStats64 : public DumpStats

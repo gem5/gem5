@@ -49,7 +49,7 @@
 namespace gem5
 {
 
-TraceGen::InputStream::InputStream(const std::string& filename)
+TraceGen::InputStream::InputStream(const std::string &filename)
     : trace(filename)
 {
     init();
@@ -76,7 +76,7 @@ TraceGen::InputStream::reset()
 }
 
 bool
-TraceGen::InputStream::read(TraceElement& element)
+TraceGen::InputStream::read(TraceElement &element)
 {
     ProtoMessage::Packet pkt_msg;
     if (trace.read(pkt_msg)) {
@@ -105,8 +105,8 @@ TraceGen::nextPacketTick(bool elastic, Tick delay) const
 
     assert(nextElement.isValid());
 
-    DPRINTF(TrafficGen, "Next packet tick is %d\n", tickOffset +
-            nextElement.tick);
+    DPRINTF(TrafficGen, "Next packet tick is %d\n",
+            tickOffset + nextElement.tick);
 
     // if the playback is supposed to be elastic, add the delay
     if (elastic)
@@ -143,22 +143,17 @@ TraceGen::getNextPacket()
     assert(currElement.isValid());
 
     DPRINTF(TrafficGen, "TraceGen::getNextPacket: %c %d %d %d 0x%x\n",
-            currElement.cmd.isRead() ? 'r' : 'w',
-            currElement.addr,
-            currElement.blocksize,
-            currElement.tick,
-            currElement.flags);
+            currElement.cmd.isRead() ? 'r' : 'w', currElement.addr,
+            currElement.blocksize, currElement.tick, currElement.flags);
 
-    PacketPtr pkt = getPacket(currElement.addr + addrOffset,
-                              currElement.blocksize,
-                              currElement.cmd, currElement.flags);
+    PacketPtr pkt =
+        getPacket(currElement.addr + addrOffset, currElement.blocksize,
+                  currElement.cmd, currElement.flags);
 
     if (!traceComplete)
         DPRINTF(TrafficGen, "nextElement: %c addr %d size %d tick %d (%d)\n",
-                nextElement.cmd.isRead() ? 'r' : 'w',
-                nextElement.addr,
-                nextElement.blocksize,
-                nextElement.tick + tickOffset,
+                nextElement.cmd.isRead() ? 'r' : 'w', nextElement.addr,
+                nextElement.blocksize, nextElement.tick + tickOffset,
                 nextElement.tick);
 
     return pkt;

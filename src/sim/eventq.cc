@@ -86,7 +86,6 @@ Event::name() const
     return csprintf("Event_%s", instanceString());
 }
 
-
 Event *
 Event::insertBefore(Event *event, Event *curr)
 {
@@ -99,7 +98,7 @@ Event::insertBefore(Event *event, Event *curr)
         event->nextInBin = NULL;
     } else {
         // Since we're on the correct list, we need to point to the next list
-        event->nextBin = curr->nextBin;  // curr->nextBin can now become stale
+        event->nextBin = curr->nextBin; // curr->nextBin can now become stale
 
         // Insert event at the top of the stack
         event->nextInBin = curr;
@@ -124,8 +123,7 @@ Event::release()
 
 void
 Event::acquireImpl()
-{
-}
+{}
 
 void
 Event::releaseImpl()
@@ -297,8 +295,8 @@ Event::unserialize(CheckpointIn &cp)
     if (flags.isSet(Scheduled) && !flags.isSet(Squashed)) {
         flags.clear(Squashed | Scheduled);
     } else {
-        DPRINTF(Checkpoint, "Event '%s' need to be scheduled @%d\n",
-                name(), _when);
+        DPRINTF(Checkpoint, "Event '%s' need to be scheduled @%d\n", name(),
+                _when);
     }
 }
 
@@ -311,6 +309,7 @@ EventQueue::checkpointReschedule(Event *event)
     if (event->flags.isSet(Event::Scheduled))
         insert(event);
 }
+
 void
 EventQueue::dump() const
 {
@@ -378,10 +377,10 @@ EventQueue::debugVerify() const
     return true;
 }
 
-Event*
-EventQueue::replaceHead(Event* s)
+Event *
+EventQueue::replaceHead(Event *s)
 {
-    Event* t = head;
+    Event *t = head;
     head = s;
     return t;
 }
@@ -393,7 +392,6 @@ dumpMainQueue()
         mainEventQueue[i]->dump();
     }
 }
-
 
 const char *
 Event::description() const
@@ -409,8 +407,8 @@ Event::trace(const char *action)
     // more informative message in the trace, override this method on
     // the particular subclass where you have the information that
     // needs to be printed.
-    DPRINTF(Event, "%s %s %s @ %d\n",
-            description(), instanceString(), action, when());
+    DPRINTF(Event, "%s %s %s @ %d\n", description(), instanceString(), action,
+            when());
 }
 
 const std::string
@@ -443,8 +441,7 @@ Event::dump() const
 
 EventQueue::EventQueue(const std::string &n)
     : objName(n), head(NULL), _curTick(0)
-{
-}
+{}
 
 void
 EventQueue::asyncInsert(Event *event)

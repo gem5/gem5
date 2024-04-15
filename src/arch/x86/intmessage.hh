@@ -43,60 +43,59 @@ namespace gem5
 
 namespace X86ISA
 {
-    BitUnion32(TriggerIntMessage)
-        Bitfield<7, 0> destination;
-        Bitfield<15, 8> vector;
-        Bitfield<18, 16> deliveryMode;
-        Bitfield<19> destMode;
-        Bitfield<20> level;
-        Bitfield<21> trigger;
-    EndBitUnion(TriggerIntMessage)
+BitUnion32(TriggerIntMessage)
+    Bitfield<7, 0> destination;
+    Bitfield<15, 8> vector;
+    Bitfield<18, 16> deliveryMode;
+    Bitfield<19> destMode;
+    Bitfield<20> level;
+    Bitfield<21> trigger;
+EndBitUnion(TriggerIntMessage)
 
-    namespace delivery_mode
-    {
-        enum IntDeliveryMode
-        {
-            Fixed = 0,
-            LowestPriority = 1,
-            SMI = 2,
-            NMI = 4,
-            INIT = 5,
-            SIPI = 6,
-            ExtInt = 7,
-            NumModes
-        };
+namespace delivery_mode
+{
+enum IntDeliveryMode
+{
+    Fixed = 0,
+    LowestPriority = 1,
+    SMI = 2,
+    NMI = 4,
+    INIT = 5,
+    SIPI = 6,
+    ExtInt = 7,
+    NumModes
+};
 
-        static const char * const names[NumModes] = {
-            "Fixed", "LowestPriority", "SMI", "Reserved",
-            "NMI", "INIT", "Startup", "ExtInt"
-        };
+static const char *const names[NumModes] = { "Fixed",   "LowestPriority",
+                                             "SMI",     "Reserved",
+                                             "NMI",     "INIT",
+                                             "Startup", "ExtInt" };
 
-        static inline bool
-        isReserved(int mode)
-        {
-            return mode == 3;
-        }
-    } // namespace delivery_mode
+static inline bool
+isReserved(int mode)
+{
+    return mode == 3;
+}
+} // namespace delivery_mode
 
-    static const Addr TriggerIntOffset = 0;
+static const Addr TriggerIntOffset = 0;
 
-    static inline PacketPtr
-    buildIntTriggerPacket(int id, TriggerIntMessage message)
-    {
-        Addr addr = x86InterruptAddress(id, TriggerIntOffset);
-        return buildIntPacket(addr, message);
-    }
+static inline PacketPtr
+buildIntTriggerPacket(int id, TriggerIntMessage message)
+{
+    Addr addr = x86InterruptAddress(id, TriggerIntOffset);
+    return buildIntPacket(addr, message);
+}
 
-    static inline PacketPtr
-    buildIntAcknowledgePacket()
-    {
-        RequestPtr req = std::make_shared<Request>(
-                PhysAddrIntA, 1, Request::UNCACHEABLE,
-                Request::intRequestorId);
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        pkt->allocate();
-        return pkt;
-    }
+static inline PacketPtr
+buildIntAcknowledgePacket()
+{
+    RequestPtr req = std::make_shared<Request>(
+        PhysAddrIntA, 1, Request::UNCACHEABLE, Request::intRequestorId);
+    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+    pkt->allocate();
+    return pkt;
+}
 
 } // namespace X86ISA
 } // namespace gem5

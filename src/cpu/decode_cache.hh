@@ -46,7 +46,7 @@ template <typename EMI>
 using InstMap = std::unordered_map<EMI, StaticInstPtr>;
 
 /// A sparse map from an Addr to a Value, stored in page chunks.
-template<class Value, Addr CacheChunkShift = 12>
+template <class Value, Addr CacheChunkShift = 12>
 class AddrMap
 {
   protected:
@@ -69,6 +69,7 @@ class AddrMap
     {
         Value items[CacheChunkBytes];
     };
+
     // A map of cache chunks which allows a sparse mapping.
     typedef typename std::unordered_map<Addr, CacheChunk *> ChunkMap;
     typedef typename ChunkMap::iterator ChunkIt;
@@ -99,7 +100,7 @@ class AddrMap
             if (recent[0]->first == chunk_addr)
                 return recent[0]->second;
             if (recent[1] != chunkMap.end() &&
-                    recent[1]->first == chunk_addr) {
+                recent[1]->first == chunk_addr) {
                 update(recent[1]);
                 // recent[1] has just become recent[0].
                 return recent[0]->second;
@@ -122,10 +123,7 @@ class AddrMap
 
   public:
     /// Constructor
-    AddrMap()
-    {
-        recent[0] = recent[1] = chunkMap.end();
-    }
+    AddrMap() { recent[0] = recent[1] = chunkMap.end(); }
 
     Value &
     lookup(Addr addr)

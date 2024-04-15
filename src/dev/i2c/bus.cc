@@ -45,8 +45,8 @@
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std
-using std::vector;
 using std::map;
+using std::vector;
 
 namespace gem5
 {
@@ -56,10 +56,15 @@ namespace gem5
  * http://infocenter.arm.com/help/topic/com.arm.doc.dui0440b/Bbajihec.html
  */
 I2CBus::I2CBus(const I2CBusParams &p)
-    : BasicPioDevice(p, 0x1000), scl(1), sda(1), state(IDLE), currBit(7),
-      i2cAddr(0x00), message(0x00)
+    : BasicPioDevice(p, 0x1000),
+      scl(1),
+      sda(1),
+      state(IDLE),
+      currBit(7),
+      i2cAddr(0x00),
+      message(0x00)
 {
-    vector<I2CDevice*> devs = p.devices;
+    vector<I2CDevice *> devs = p.devices;
 
     for (auto d : p.devices) {
         devices[d->i2cAddr()] = d;
@@ -106,7 +111,7 @@ I2CBus::write(PacketPtr pkt)
          * register address) in the first byte they receive so they
          * must be notified somehow that this is a new transmission.
          */
-        for (auto& d : devices) {
+        for (auto &d : devices) {
             d.second->i2cStart();
         }
         return pioDelay;
@@ -123,7 +128,7 @@ I2CBus::write(PacketPtr pkt)
     // part is to only do the following once per clock cycle.
     if (isClockSet(pkt)) {
         switch (state) {
-          case RECEIVING_ADDR:
+        case RECEIVING_ADDR:
             if (currBit >= 0) {
                 message |= sda << currBit;
                 currBit--;
@@ -141,7 +146,7 @@ I2CBus::write(PacketPtr pkt)
                 sda = 0; /* Ack */
             }
             break;
-          case RECEIVING_DATA:
+        case RECEIVING_DATA:
             if (currBit >= 0) {
                 message |= sda << currBit;
                 currBit--;
@@ -152,7 +157,7 @@ I2CBus::write(PacketPtr pkt)
                 sda = 0; /* Ack */
             }
             break;
-          case SENDING_DATA:
+        case SENDING_DATA:
             if (currBit >= 0) {
                 sda = (message >> currBit) & 0x01;
                 currBit--;
@@ -162,8 +167,8 @@ I2CBus::write(PacketPtr pkt)
                 currBit = 7;
             }
             break;
-          case IDLE:
-          default:
+        case IDLE:
+        default:
             panic("Invalid state on posedge of clock in I2CBus::write.\n");
             break;
         }
@@ -179,15 +184,15 @@ I2CBus::updateSignals(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     switch (daddr) {
-      case SB_CONTROLS:
+    case SB_CONTROLS:
         scl = (msg & 1) ? 1 : scl;
         sda = (msg & 2) ? 1 : sda;
         break;
-      case SB_CONTROLC:
+    case SB_CONTROLC:
         scl = (msg & 1) ? 0 : scl;
         sda = (msg & 2) ? 0 : sda;
         break;
-      default:
+    default:
         break;
     }
 }
@@ -215,6 +220,7 @@ I2CBus::isEnd(PacketPtr pkt) const
     Addr daddr = pkt->getAddr() - pioAddr;
     return scl && (msg & 2) && daddr == SB_CONTROLS;
 }
+
 void
 I2CBus::serialize(CheckpointOut &cp) const
 {

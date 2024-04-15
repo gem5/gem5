@@ -37,20 +37,18 @@ namespace gem5
 namespace bloom_filter
 {
 
-Perfect::Perfect(const BloomFilterPerfectParams &p)
-    : Base(p)
+Perfect::Perfect(const BloomFilterPerfectParams &p) : Base(p)
 {
     fatal_if(p.size != 1, "The perfect Bloom filter cannot be limited to a "
-        "specific size.");
-    fatal_if(p.num_bits != 1, "The perfect Bloom filter tracks entries "
-        "perfectly using an unlimited amount of 1-bit entries.");
+                          "specific size.");
+    fatal_if(p.num_bits != 1,
+             "The perfect Bloom filter tracks entries "
+             "perfectly using an unlimited amount of 1-bit entries.");
     fatal_if(p.threshold != 1, "The perfect Bloom filter uses 1-bit entries; "
-        "thus, their thresholds must be 1.");
+                               "thus, their thresholds must be 1.");
 }
 
-Perfect::~Perfect()
-{
-}
+Perfect::~Perfect() {}
 
 void
 Perfect::clear()
@@ -59,9 +57,9 @@ Perfect::clear()
 }
 
 void
-Perfect::merge(const Base* other)
+Perfect::merge(const Base *other)
 {
-    auto* cast_other = static_cast<const Perfect*>(other);
+    auto *cast_other = static_cast<const Perfect *>(other);
     entries.insert(cast_other->entries.begin(), cast_other->entries.end());
 }
 

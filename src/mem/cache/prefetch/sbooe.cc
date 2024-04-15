@@ -40,16 +40,17 @@ namespace prefetch
 SBOOE::SBOOE(const SBOOEPrefetcherParams &p)
     : Queued(p),
       sequentialPrefetchers(p.sequential_prefetchers),
-      scoreThreshold((p.sandbox_entries*p.score_threshold_pct)/100),
+      scoreThreshold((p.sandbox_entries * p.score_threshold_pct) / 100),
       latencyBuffer(p.latency_buffer_size),
-      averageAccessLatency(0), latencyBufferSum(0),
+      averageAccessLatency(0),
+      latencyBufferSum(0),
       bestSandbox(NULL),
       accesses(0)
 {
     // Initialize a sandbox for every sequential prefetcher between
     // -1 and the number of sequential prefetchers defined
     for (int i = 0; i < sequentialPrefetchers; i++) {
-        sandboxes.push_back(Sandbox(p.sandbox_entries, i-1));
+        sandboxes.push_back(Sandbox(p.sandbox_entries, i - 1));
     }
 }
 
@@ -57,7 +58,7 @@ void
 SBOOE::Sandbox::access(Addr addr, Tick tick)
 {
     // Search for the address in the FIFO queue to update the score
-    for (const SandboxEntry &entry: entries) {
+    for (const SandboxEntry &entry : entries) {
         if (entry.valid && entry.line == addr) {
             sandboxScore++;
             if (entry.expectedArrivalTick > curTick()) {
@@ -93,7 +94,7 @@ SBOOE::access(Addr access_line)
 void
 SBOOE::notifyFill(const CacheAccessProbeArg &arg)
 {
-    const PacketPtr& pkt = arg.pkt;
+    const PacketPtr &pkt = arg.pkt;
 
     // (1) Look for the address in the demands list
     // (2) Calculate the elapsed cycles until it was filled (curTick)
@@ -119,8 +120,8 @@ SBOOE::notifyFill(const CacheAccessProbeArg &arg)
 
 void
 SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
-                                   std::vector<AddrPriority> &addresses,
-                                   const CacheAccessor &cache)
+                         std::vector<AddrPriority> &addresses,
+                         const CacheAccessor &cache)
 {
     const Addr pfi_addr = pfi.getAddr();
     const Addr pfi_line = pfi_addr >> lBlkSize;

@@ -48,8 +48,8 @@ namespace gem5
 namespace ps2
 {
 
-const std::vector<uint8_t> keyboard::ID{0xAB, 0x83};
-const std::vector<uint8_t> mouse::ID{0x00};
+const std::vector<uint8_t> keyboard::ID{ 0xAB, 0x83 };
+const std::vector<uint8_t> mouse::ID{ 0x00 };
 
 /** Table to convert simple key symbols (0x00XX) into ps2 bytes. Lower byte
  * is the scan code to send and upper byte is if a modifier is required to
@@ -58,6 +58,7 @@ const std::vector<uint8_t> mouse::ID{0x00};
  * for another locale.
  */
 
+/* clang-format off */
 static const uint16_t keySymToPs2Byte[128] = {
 // 0 / 8   1 / 9   2 / A   3 / B   4 / C   5 / D   6 / E   7 / F
    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // 0x00-0x07
@@ -77,6 +78,7 @@ static const uint16_t keySymToPs2Byte[128] = {
    0x004d, 0x0015, 0x002d, 0x001b, 0x002c, 0x003c, 0x002a, 0x001d, // 0x70-0x77
    0x0022, 0x0035, 0x001a, 0x0154, 0x015d, 0x015b, 0x010e, 0x0000  // 0x78-0x7f
 };
+/* clang-format on */
 
 const uint8_t ShiftKey = 0x12;
 const uint8_t BreakKey = 0xf0;
@@ -84,8 +86,7 @@ const uint8_t ExtendedKey = 0xe0;
 const uint32_t UpperKeys = 0xff00;
 
 void
-keySymToPs2(uint32_t key, bool down, bool &cur_shift,
-        std::list<uint8_t> &keys)
+keySymToPs2(uint32_t key, bool down, bool &cur_shift, std::list<uint8_t> &keys)
 {
     if (key <= XK_asciitilde) {
         uint16_t tmp = keySymToPs2Byte[key];
@@ -111,85 +112,85 @@ keySymToPs2(uint32_t key, bool down, bool &cur_shift,
         if ((key & UpperKeys) == UpperKeys) {
             bool extended = false;
             switch (key) {
-              case XK_BackSpace:
+            case XK_BackSpace:
                 keys.push_back(0x66);
                 break;
-              case XK_Tab:
+            case XK_Tab:
                 keys.push_back(0x0d);
                 break;
-              case XK_Return:
+            case XK_Return:
                 keys.push_back(0x5a);
                 break;
-             case XK_Escape:
+            case XK_Escape:
                 keys.push_back(0x76);
                 break;
-             case XK_Delete:
+            case XK_Delete:
                 extended = true;
                 keys.push_back(0x71);
                 break;
-             case XK_Home:
+            case XK_Home:
                 extended = true;
                 keys.push_back(0x6c);
                 break;
-             case XK_Left:
+            case XK_Left:
                 extended = true;
                 keys.push_back(0x6b);
                 break;
-             case XK_Right:
+            case XK_Right:
                 extended = true;
                 keys.push_back(0x74);
                 break;
-             case XK_Down:
+            case XK_Down:
                 extended = true;
                 keys.push_back(0x72);
                 break;
-             case XK_Up:
+            case XK_Up:
                 extended = true;
                 keys.push_back(0x75);
                 break;
-             case XK_Page_Up:
+            case XK_Page_Up:
                 extended = true;
                 keys.push_back(0x7d);
                 break;
-             case XK_Page_Down:
+            case XK_Page_Down:
                 extended = true;
                 keys.push_back(0x7a);
                 break;
-             case XK_End:
+            case XK_End:
                 extended = true;
                 keys.push_back(0x69);
                 break;
-             case XK_Shift_L:
+            case XK_Shift_L:
                 keys.push_back(0x12);
                 if (down)
                     cur_shift = true;
                 else
                     cur_shift = false;
                 break;
-             case XK_Shift_R:
+            case XK_Shift_R:
                 keys.push_back(0x59);
                 if (down)
                     cur_shift = true;
                 else
                     cur_shift = false;
                 break;
-             case XK_Control_L:
+            case XK_Control_L:
                 keys.push_back(0x14);
                 break;
-             case XK_Control_R:
+            case XK_Control_R:
                 extended = true;
                 keys.push_back(0x14);
                 break;
-             case XK_Alt_L:
+            case XK_Alt_L:
                 keys.push_back(0x11);
                 break;
-             case XK_Alt_R:
+            case XK_Alt_R:
                 extended = true;
                 keys.push_back(0x11);
                 break;
-             default:
-               warn("Unknown extended key %#x\n", key);
-               return;
+            default:
+                warn("Unknown extended key %#x\n", key);
+                return;
             }
 
             if (extended) {
@@ -204,7 +205,7 @@ keySymToPs2(uint32_t key, bool down, bool &cur_shift,
                     keys.push_front(BreakKey);
             }
         } // upper keys
-    } // extended keys
+    }     // extended keys
     return;
 }
 

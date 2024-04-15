@@ -116,7 +116,7 @@ class I8042 : public PioDevice
     ps2::Device *mouse = nullptr;
     ps2::Device *keyboard = nullptr;
 
-    void writeData(uint8_t newData, bool mouse=false);
+    void writeData(uint8_t newData, bool mouse = false);
     uint8_t readDataOut();
 
   public:
@@ -125,7 +125,7 @@ class I8042 : public PioDevice
     I8042(const Params &p);
 
     Port &
-    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    getPort(const std::string &if_name, PortID idx = InvalidPortID) override
     {
         if (if_name == "mouse_int_pin")
             return *mouseIntPin.at(idx);

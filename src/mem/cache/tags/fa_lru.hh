@@ -86,6 +86,7 @@ class FALRUBlk : public CacheBlk
 {
   public:
     FALRUBlk() : CacheBlk(), prev(nullptr), next(nullptr), inCachesMask(0) {}
+
     using CacheBlk::operator=;
 
     /** The previous block in LRU order. */
@@ -127,11 +128,13 @@ class FALRU : public BaseTags
     struct PairHash
     {
         template <class T1, class T2>
-        std::size_t operator()(const std::pair<T1, T2> &p) const
+        std::size_t
+        operator()(const std::pair<T1, T2> &p) const
         {
             return std::hash<T1>()(p.first) ^ std::hash<T2>()(p.second);
         }
     };
+
     typedef std::pair<Addr, bool> TagHashKey;
     typedef std::unordered_map<TagHashKey, FALRUBlk *, PairHash> TagHash;
 
@@ -183,13 +186,13 @@ class FALRU : public BaseTags
      * @param in_cache_mask Mask indicating the caches in which the blk fits.
      * @return Pointer to the cache block.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat,
+    CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat,
                           CachesMask *in_cache_mask);
 
     /**
      * Just a wrapper of above function to conform with the base interface.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override;
+    CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat) override;
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -198,7 +201,7 @@ class FALRU : public BaseTags
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
+    CacheBlk *findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find a block given set and way.
@@ -207,7 +210,7 @@ class FALRU : public BaseTags
      * @param way The way of the block.
      * @return The block.
      */
-    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
+    ReplaceableEntry *findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Find replacement victim based on address. The list of evicted blocks
@@ -220,10 +223,10 @@ class FALRU : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
+    CacheBlk *findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks,
-                         const uint64_t partition_id=0) override;
+                         std::vector<CacheBlk *> &evict_blks,
+                         const uint64_t partition_id = 0) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
@@ -241,7 +244,8 @@ class FALRU : public BaseTags
      * @param addr The address to get the tag from.
      * @return The tag.
      */
-    Addr extractTag(Addr addr) const override
+    Addr
+    extractTag(Addr addr) const override
     {
         return blkAlign(addr);
     }
@@ -252,12 +256,15 @@ class FALRU : public BaseTags
      * @param block The block.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(const CacheBlk* blk) const override
+    Addr
+    regenerateBlkAddr(const CacheBlk *blk) const override
     {
         return blk->getTag();
     }
 
-    bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
+    bool
+    anyBlk(std::function<bool(CacheBlk &)> visitor) override
+    {
         for (int i = 0; i < numBlocks; i++) {
             if (visitor(blks[i])) {
                 return true;
@@ -345,7 +352,7 @@ class FALRU : public BaseTags
         /** A mask for all cache being tracked. */
         const CachesMask inAllCachesMask;
         /** Array of pointers to blocks at the cache boundaries. */
-        std::vector<FALRUBlk*> boundaries;
+        std::vector<FALRUBlk *> boundaries;
 
       protected:
         /**
@@ -366,6 +373,7 @@ class FALRU : public BaseTags
          * @}
          */
     };
+
     CacheTracking cacheTracking;
 };
 

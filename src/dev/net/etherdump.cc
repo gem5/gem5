@@ -47,33 +47,33 @@ namespace gem5
 {
 
 EtherDump::EtherDump(const Params &p)
-    : SimObject(p), stream(simout.create(p.file, true)->stream()),
+    : SimObject(p),
+      stream(simout.create(p.file, true)->stream()),
       maxlen(p.maxlen)
-{
-}
+{}
 
-#define DLT_EN10MB              1               // Ethernet (10Mb)
-#define TCPDUMP_MAGIC           0xa1b2c3d4
-#define PCAP_VERSION_MAJOR      2
-#define PCAP_VERSION_MINOR      4
+#define DLT_EN10MB 1 // Ethernet (10Mb)
+#define TCPDUMP_MAGIC 0xa1b2c3d4
+#define PCAP_VERSION_MAJOR 2
+#define PCAP_VERSION_MINOR 4
 
 struct pcap_file_header
 {
     uint32_t magic;
     uint16_t version_major;
     uint16_t version_minor;
-    int32_t thiszone;           // gmt to local correction
-    uint32_t sigfigs;           // accuracy of timestamps
-    uint32_t snaplen;           // max length saved portion of each pkt
-    uint32_t linktype;          // data link type (DLT_*)
+    int32_t thiszone;  // gmt to local correction
+    uint32_t sigfigs;  // accuracy of timestamps
+    uint32_t snaplen;  // max length saved portion of each pkt
+    uint32_t linktype; // data link type (DLT_*)
 };
 
 struct pcap_pkthdr
 {
     uint32_t seconds;
     uint32_t microseconds;
-    uint32_t caplen;            // length of portion present
-    uint32_t len;               // length this packet (off wire)
+    uint32_t caplen; // length of portion present
+    uint32_t len;    // length this packet (off wire)
 };
 
 void

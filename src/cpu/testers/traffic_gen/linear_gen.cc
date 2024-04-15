@@ -58,8 +58,8 @@ PacketPtr
 LinearGen::getNextPacket()
 {
     // choose if we generate a read or a write here
-    bool isRead = readPercent != 0 &&
-        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+    bool isRead = readPercent != 0 && (readPercent == 100 ||
+                                       random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
@@ -80,7 +80,7 @@ LinearGen::getNextPacket()
     // address to the start of the range
     if (nextAddr > endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
-                "the range\n");
+                            "the range\n");
         nextAddr = startAddr;
     }
 

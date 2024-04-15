@@ -84,8 +84,8 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    ChunkGenerator(Addr _startAddr, Addr totalSize, Addr _chunkSize) :
-        startAddr(_startAddr), chunkSize(_chunkSize)
+    ChunkGenerator(Addr _startAddr, Addr totalSize, Addr _chunkSize)
+        : startAddr(_startAddr), chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
         assert(chunkSize == 0 || isPowerOf2(chunkSize));
@@ -116,20 +116,33 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    Addr addr() const { return curAddr; }
+    Addr
+    addr() const
+    {
+        return curAddr;
+    }
+
     /**
      * Return size in bytes of current chunk.
      *
      * @ingroup api_chunk_generator
      */
-    Addr size() const { return curSize; }
+    Addr
+    size() const
+    {
+        return curSize;
+    }
 
     /**
      * Number of bytes we have already chunked up.
      *
      * @ingroup api_chunk_generator
      */
-    Addr complete() const { return curAddr - startAddr; }
+    Addr
+    complete() const
+    {
+        return curAddr - startAddr;
+    }
 
     /**
      * Are we done?  That is, did the last call to next() advance
@@ -138,7 +151,11 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    bool done() const { return curSize == 0; }
+    bool
+    done() const
+    {
+        return curSize == 0;
+    }
 
     /**
      * Is this the last chunk?
@@ -146,7 +163,11 @@ class ChunkGenerator
      *
      * @ingroup api_chunk_generator
      */
-    bool last() const { return sizeLeft == 0; }
+    bool
+    last() const
+    {
+        return sizeLeft == 0;
+    }
 
     /**
      * Grow this chunk to cover additional bytes which are already handled.

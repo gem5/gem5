@@ -87,7 +87,7 @@ SyscallDesc::setupRetry(ThreadContext *tc)
     // a chance to execute a bit of code before trying again.
     auto *cpu = tc->getCpuPtr();
     curEventQueue()->schedule(event,
-            curTick() + cpu->cyclesToTicks(Cycles(100)));
+                              curTick() + cpu->cyclesToTicks(Cycles(100)));
 }
 
 void

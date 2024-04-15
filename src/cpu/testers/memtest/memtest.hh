@@ -69,18 +69,14 @@ namespace gem5
  */
 class MemTest : public ClockedObject
 {
-
   public:
-
     typedef MemTestParams Params;
     MemTest(const Params &p);
 
-
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
   protected:
-
     void tick();
 
     EventFunctionWrapper tickEvent;
@@ -98,20 +94,26 @@ class MemTest : public ClockedObject
         MemTest &memtest;
 
       public:
-
         CpuPort(const std::string &_name, MemTest &_memtest)
             : RequestPort(_name), memtest(_memtest)
-        { }
+        {}
 
       protected:
-
         bool recvTimingResp(PacketPtr pkt);
 
-        void recvTimingSnoopReq(PacketPtr pkt) { }
+        void
+        recvTimingSnoopReq(PacketPtr pkt)
+        {}
 
-        void recvFunctionalSnoop(PacketPtr pkt) { }
+        void
+        recvFunctionalSnoop(PacketPtr pkt)
+        {}
 
-        Tick recvAtomicSnoop(PacketPtr pkt) { return 0; }
+        Tick
+        recvAtomicSnoop(PacketPtr pkt)
+        {
+            return 0;
+        }
 
         void recvReqRetry();
     };
@@ -156,7 +158,8 @@ class MemTest : public ClockedObject
      * @param addr Address to align
      * @return The block aligned address
      */
-    Addr blockAlign(Addr addr) const
+    Addr
+    blockAlign(Addr addr) const
     {
         return (addr & ~blockAddrMask);
     }
@@ -165,9 +168,9 @@ class MemTest : public ClockedObject
     const Addr baseAddr2;
     const Addr uncacheAddr;
 
-    const unsigned progressInterval;  // frequency of progress reports
+    const unsigned progressInterval; // frequency of progress reports
     const Cycles progressCheck;
-    Tick nextProgressMessage;   // access # for next progress report
+    Tick nextProgressMessage; // access # for next progress report
 
     uint64_t numReads;
     uint64_t numWrites;
@@ -177,6 +180,7 @@ class MemTest : public ClockedObject
     const bool atomic;
 
     const bool suppressFuncErrors;
+
   protected:
     struct MemTestStats : public statistics::Group
     {
@@ -197,7 +201,6 @@ class MemTest : public ClockedObject
     bool sendPkt(PacketPtr pkt);
 
     void recvRetry();
-
 };
 
 } // namespace gem5

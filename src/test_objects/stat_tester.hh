@@ -82,34 +82,39 @@ class StatTester : public SimObject
     EventFunctionWrapper event;
 
   public:
-    StatTester(const StatTesterParams &p) :
-        SimObject(p),
-        event([this]{ setStats(); }, name() + ".event")
+    StatTester(const StatTesterParams &p)
+        : SimObject(p), event([this] { setStats(); }, name() + ".event")
     {}
-    void startup() override { schedule(event, curTick()); }
+
+    void
+    startup() override
+    {
+        schedule(event, curTick());
+    }
 
   protected:
-    virtual void setStats(){}
+    virtual void
+    setStats()
+    {}
 };
 
 class ScalarStatTester : public StatTester
 {
-
   private:
     ScalarStatTesterParams params;
 
   public:
-    ScalarStatTester(const ScalarStatTesterParams &p) :
-        StatTester(p), params(p), stats(this, p) {}
+    ScalarStatTester(const ScalarStatTesterParams &p)
+        : StatTester(p), params(p), stats(this, p)
+    {}
 
   protected:
     void setStats() override;
+
     struct ScalarStatTesterStats : public statistics::Group
     {
-        ScalarStatTesterStats(
-            statistics::Group *parent,
-            const ScalarStatTesterParams &params
-        );
+        ScalarStatTesterStats(statistics::Group *parent,
+                              const ScalarStatTesterParams &params);
         statistics::Scalar scalar;
     } stats;
 };

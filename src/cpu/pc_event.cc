@@ -41,11 +41,9 @@
 namespace gem5
 {
 
-PCEventQueue::PCEventQueue()
-{}
+PCEventQueue::PCEventQueue() {}
 
-PCEventQueue::~PCEventQueue()
-{}
+PCEventQueue::~PCEventQueue() {}
 
 bool
 PCEventQueue::remove(PCEvent *event)
@@ -73,8 +71,8 @@ PCEventQueue::schedule(PCEvent *event)
     pcMap.push_back(event);
     std::sort(pcMap.begin(), pcMap.end(), MapCompare());
 
-    DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n",
-            event->pc(), event->descr());
+    DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n", event->pc(),
+            event->descr());
 
     return true;
 }
@@ -87,8 +85,8 @@ PCEventQueue::doService(Addr pc, ThreadContext *tc)
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
-        DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",
-                (*i)->pc(), (*i)->descr());
+        DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n", (*i)->pc(),
+                (*i)->descr());
 
         (*i)->process(tc);
         ++serviced;
@@ -117,8 +115,7 @@ PCEventQueue::equal_range(Addr pc)
 BreakPCEvent::BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
                            bool del)
     : PCEvent(s, desc, addr), remove(del)
-{
-}
+{}
 
 void
 BreakPCEvent::process(ThreadContext *tc)
@@ -132,8 +129,7 @@ BreakPCEvent::process(ThreadContext *tc)
 
 PanicPCEvent::PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc)
     : PCEvent(s, desc, pc)
-{
-}
+{}
 
 void
 PanicPCEvent::process(ThreadContext *tc)

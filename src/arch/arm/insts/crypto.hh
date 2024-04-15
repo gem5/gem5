@@ -43,7 +43,8 @@
 namespace gem5
 {
 
-namespace ArmISA {
+namespace ArmISA
+{
 
 class Crypto
 {
@@ -78,7 +79,8 @@ class Crypto
     /** Finite field multiplication of two elements in the field G(256) */
     uint8_t aesFFMul(uint8_t a, uint8_t b);
 
-    uint8_t aesFFMul2(uint8_t a)
+    uint8_t
+    aesFFMul2(uint8_t a)
     {
         return ((a & 0x80) ? ((a << 1) ^ 0x1b) : (a << 1));
     }
@@ -89,34 +91,40 @@ class Crypto
     void aesInvShiftRows(uint8_t *output, uint8_t *input);
     void aesAddRoundKey(uint8_t *output, uint8_t *input, uint8_t *key);
 
-    uint32_t ror(uint32_t x, uint8_t shift)
+    uint32_t
+    ror(uint32_t x, uint8_t shift)
     {
         return (x >> shift) | (x << (32 - shift));
     }
 
-    uint32_t choose(uint32_t X, uint32_t Y, uint32_t Z)
+    uint32_t
+    choose(uint32_t X, uint32_t Y, uint32_t Z)
     {
         return (((Y ^ Z) & X) ^ Z);
     }
 
-    uint32_t parity(uint32_t X, uint32_t Y, uint32_t Z)
+    uint32_t
+    parity(uint32_t X, uint32_t Y, uint32_t Z)
     {
         return (X ^ Y ^ Z);
     }
 
-    uint32_t majority(uint32_t X, uint32_t Y, uint32_t Z)
+    uint32_t
+    majority(uint32_t X, uint32_t Y, uint32_t Z)
     {
         return ((X & Y) | ((X | Y) & Z));
     }
 
-    uint32_t sigma0(uint32_t X)
+    uint32_t
+    sigma0(uint32_t X)
     {
-        return ror(X,2) ^ ror(X,13) ^ ror(X,22);
+        return ror(X, 2) ^ ror(X, 13) ^ ror(X, 22);
     }
 
-    uint32_t sigma1(uint32_t X)
+    uint32_t
+    sigma1(uint32_t X)
     {
-        return ror(X,6) ^ ror(X,11) ^ ror(X,25);
+        return ror(X, 6) ^ ror(X, 11) ^ ror(X, 25);
     }
 
     void sha256Op(uint32_t *X, uint32_t *Y, uint32_t *Z);
@@ -124,8 +132,8 @@ class Crypto
     void _sha1Op(uint32_t *X, uint32_t *Y, uint32_t *Z, SHAOp op);
 
     void load2Reg(uint32_t *X, uint32_t *Y, uint8_t *output, uint8_t *input);
-    void load3Reg(uint32_t *X, uint32_t *Y, uint32_t *Z,
-                  uint8_t *output, uint8_t *input, uint8_t *input2);
+    void load3Reg(uint32_t *X, uint32_t *Y, uint32_t *Z, uint8_t *output,
+                  uint8_t *input, uint8_t *input2);
     void store1Reg(uint8_t *output, uint32_t *X);
 
   public:

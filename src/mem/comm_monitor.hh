@@ -62,9 +62,7 @@ namespace gem5
  */
 class CommMonitor : public SimObject
 {
-
   public: // Construction & SimObject interfaces
-
     /** Parameters of communication monitor */
     using Params = CommMonitorParams;
 
@@ -81,19 +79,16 @@ class CommMonitor : public SimObject
 
   public: // SimObject interfaces
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
   private:
-
     /**
      * Sender state class for the monitor so that we can annotate
      * packets with a transmit time and receive time.
      */
     class CommMonitorSenderState : public Packet::SenderState
     {
-
       public:
-
         /**
          * Construct a new sender state and store the time so we can
          * calculate round-trip latency.
@@ -102,14 +97,13 @@ class CommMonitor : public SimObject
          */
         CommMonitorSenderState(Tick _transmitTime)
             : transmitTime(_transmitTime)
-        { }
+        {}
 
         /** Destructor */
-        ~CommMonitorSenderState() { }
+        ~CommMonitorSenderState() {}
 
         /** Tick when request is transmitted */
         Tick transmitTime;
-
     };
 
     /**
@@ -120,59 +114,62 @@ class CommMonitor : public SimObject
      */
     class MonitorRequestPort : public RequestPort
     {
-
       public:
-
-        MonitorRequestPort(const std::string& _name, CommMonitor& _mon)
+        MonitorRequestPort(const std::string &_name, CommMonitor &_mon)
             : RequestPort(_name), mon(_mon)
-        { }
+        {}
 
       protected:
-
-        void recvFunctionalSnoop(PacketPtr pkt)
+        void
+        recvFunctionalSnoop(PacketPtr pkt)
         {
             mon.recvFunctionalSnoop(pkt);
         }
 
-        Tick recvAtomicSnoop(PacketPtr pkt)
+        Tick
+        recvAtomicSnoop(PacketPtr pkt)
         {
             return mon.recvAtomicSnoop(pkt);
         }
 
-        bool recvTimingResp(PacketPtr pkt)
+        bool
+        recvTimingResp(PacketPtr pkt)
         {
             return mon.recvTimingResp(pkt);
         }
 
-        void recvTimingSnoopReq(PacketPtr pkt)
+        void
+        recvTimingSnoopReq(PacketPtr pkt)
         {
             mon.recvTimingSnoopReq(pkt);
         }
 
-        void recvRangeChange()
+        void
+        recvRangeChange()
         {
             mon.recvRangeChange();
         }
 
-        bool isSnooping() const
+        bool
+        isSnooping() const
         {
             return mon.isSnooping();
         }
 
-        void recvReqRetry()
+        void
+        recvReqRetry()
         {
             mon.recvReqRetry();
         }
 
-        void recvRetrySnoopResp()
+        void
+        recvRetrySnoopResp()
         {
             mon.recvRetrySnoopResp();
         }
 
       private:
-
-        CommMonitor& mon;
-
+        CommMonitor &mon;
     };
 
     /** Instance of request port, facing the memory side */
@@ -186,54 +183,56 @@ class CommMonitor : public SimObject
      */
     class MonitorResponsePort : public ResponsePort
     {
-
       public:
-
-        MonitorResponsePort(const std::string& _name, CommMonitor& _mon)
+        MonitorResponsePort(const std::string &_name, CommMonitor &_mon)
             : ResponsePort(_name), mon(_mon)
-        { }
+        {}
 
       protected:
-
-        void recvFunctional(PacketPtr pkt)
+        void
+        recvFunctional(PacketPtr pkt)
         {
             mon.recvFunctional(pkt);
         }
 
-        Tick recvAtomic(PacketPtr pkt)
+        Tick
+        recvAtomic(PacketPtr pkt)
         {
             return mon.recvAtomic(pkt);
         }
 
-        bool recvTimingReq(PacketPtr pkt)
+        bool
+        recvTimingReq(PacketPtr pkt)
         {
             return mon.recvTimingReq(pkt);
         }
 
-        bool recvTimingSnoopResp(PacketPtr pkt)
+        bool
+        recvTimingSnoopResp(PacketPtr pkt)
         {
             return mon.recvTimingSnoopResp(pkt);
         }
 
-        AddrRangeList getAddrRanges() const
+        AddrRangeList
+        getAddrRanges() const
         {
             return mon.getAddrRanges();
         }
 
-        void recvRespRetry()
+        void
+        recvRespRetry()
         {
             mon.recvRespRetry();
         }
 
-        bool tryTiming(PacketPtr pkt)
+        bool
+        tryTiming(PacketPtr pkt)
         {
             return mon.tryTiming(pkt);
         }
 
       private:
-
-        CommMonitor& mon;
-
+        CommMonitor &mon;
     };
 
     /** Instance of response port, i.e. on the CPU side */
@@ -384,11 +383,11 @@ class CommMonitor : public SimObject
          * stats or track values during a sample period.
          */
         MonitorStats(statistics::Group *parent,
-            const CommMonitorParams &params);
+                     const CommMonitorParams &params);
 
-        void updateReqStats(const probing::PacketInfo& pkt, bool is_atomic,
+        void updateReqStats(const probing::PacketInfo &pkt, bool is_atomic,
                             bool expects_response);
-        void updateRespStats(const probing::PacketInfo& pkt, Tick latency,
+        void updateRespStats(const probing::PacketInfo &pkt, Tick latency,
                              bool is_atomic);
     };
 

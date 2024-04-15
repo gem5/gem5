@@ -143,7 +143,7 @@ Sparc64Process::initState()
     argsInit(sizeof(RegVal), PageBytes);
 }
 
-template<class IntType>
+template <class IntType>
 void
 SparcProcess::argsInit(int pageSize)
 {
@@ -174,13 +174,8 @@ SparcProcess::argsInit(int pageSize)
         HwcapSparcUltra3 = 32
     };
 
-    const int64_t hwcap =
-        HwcapSparcFlush |
-        HwcapSparcStbar |
-        HwcapSparcSwap |
-        HwcapSparcMuldiv |
-        HwcapSparcV9 |
-        HwcapSparcUltra3;
+    const int64_t hwcap = HwcapSparcFlush | HwcapSparcStbar | HwcapSparcSwap |
+                          HwcapSparcMuldiv | HwcapSparcV9 | HwcapSparcUltra3;
 
     // Setup the auxilliary vectors. These will already have endian conversion.
     // Auxilliary vectors are loaded only for elf formatted executables.
@@ -258,12 +253,8 @@ SparcProcess::argsInit(int pageSize)
     int window_save_size = intSize * 16;
 
     // Figure out the size of the contents of the actual initial frame
-    int frame_size =
-        aux_array_size +
-        envp_array_size +
-        argv_array_size +
-        argc_size +
-        window_save_size;
+    int frame_size = aux_array_size + envp_array_size + argv_array_size +
+                     argc_size + window_save_size;
 
     // There needs to be padding after the auxiliary vector data so that the
     // very bottom of the stack is aligned properly.
@@ -271,10 +262,7 @@ SparcProcess::argsInit(int pageSize)
     int aux_padding = aligned_partial_size - frame_size;
 
     int space_needed =
-        info_block_size +
-        aux_data_size +
-        aux_padding +
-        frame_size;
+        info_block_size + aux_data_size + aux_padding + frame_size;
 
     memState->setStackMin(memState->getStackBase() - space_needed);
     memState->setStackMin(roundDown(memState->getStackMin(), align));
@@ -325,14 +313,14 @@ SparcProcess::argsInit(int pageSize)
     initVirtMem->writeString(file_name_base, filename.c_str());
 
     // Fix up the aux vectors which point to data.
-    for (auto &aux: auxv) {
+    for (auto &aux : auxv) {
         if (aux.type == gem5::auxv::Random)
             aux.val = aux_data_base;
     }
 
     // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
-    for (const auto &aux: auxv) {
+    for (const auto &aux : auxv) {
         initVirtMem->write(auxv_array_end, aux, ByteOrder::big);
         auxv_array_end += sizeof(aux);
     }
@@ -342,10 +330,10 @@ SparcProcess::argsInit(int pageSize)
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(envp, envp_array_base, env_data_base,
-                    ByteOrder::big, *initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base,
-                    ByteOrder::big, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::big,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::big,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
@@ -378,10 +366,10 @@ Sparc64Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint64_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(fillStart,
-            fillHandler64, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(spillStart,
-            spillHandler64, sizeof(MachInst) *  numSpillInsts);
+    initVirtMem->writeBlob(fillStart, fillHandler64,
+                           sizeof(MachInst) * numFillInsts);
+    initVirtMem->writeBlob(spillStart, spillHandler64,
+                           sizeof(MachInst) * numSpillInsts);
 }
 
 void
@@ -390,10 +378,10 @@ Sparc32Process::argsInit(int intSize, int pageSize)
     SparcProcess::argsInit<uint32_t>(pageSize);
 
     // Stuff the trap handlers into the process address space
-    initVirtMem->writeBlob(fillStart,
-            fillHandler32, sizeof(MachInst) * numFillInsts);
-    initVirtMem->writeBlob(spillStart,
-            spillHandler32, sizeof(MachInst) *  numSpillInsts);
+    initVirtMem->writeBlob(fillStart, fillHandler32,
+                           sizeof(MachInst) * numFillInsts);
+    initVirtMem->writeBlob(spillStart, spillHandler32,
+                           sizeof(MachInst) * numSpillInsts);
 }
 
 } // namespace gem5

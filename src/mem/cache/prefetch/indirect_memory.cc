@@ -26,11 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- #include "mem/cache/prefetch/indirect_memory.hh"
+#include "mem/cache/prefetch/indirect_memory.hh"
 
- #include "mem/cache/base.hh"
- #include "mem/cache/prefetch/associative_set_impl.hh"
- #include "params/IndirectMemoryPrefetcher.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/prefetch/associative_set_impl.hh"
+#include "params/IndirectMemoryPrefetcher.hh"
 
 namespace gem5
 {
@@ -60,8 +60,8 @@ IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
 
 void
 IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+                                  std::vector<AddrPriority> &addresses,
+                                  const CacheAccessor &cache)
 {
     // This prefetcher requires a PC
     if (!pfi.hasPC()) {
@@ -101,7 +101,6 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                 pt_entry->address = addr;
                 pt_entry->secure = is_secure;
 
-
                 // if this is a read, read the data from the cache and assume
                 // it is an index (this is only possible if the data is already
                 // in the cache), also, only indexes up to 8 bytes are
@@ -110,22 +109,22 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                 if (!miss && !pfi.isWrite() && pfi.getSize() <= 8) {
                     int64_t index = 0;
                     bool read_index = true;
-                    switch(pfi.getSize()) {
-                        case sizeof(uint8_t):
-                            index = pfi.get<uint8_t>(byteOrder);
-                            break;
-                        case sizeof(uint16_t):
-                            index = pfi.get<uint16_t>(byteOrder);
-                            break;
-                        case sizeof(uint32_t):
-                            index = pfi.get<uint32_t>(byteOrder);
-                            break;
-                        case sizeof(uint64_t):
-                            index = pfi.get<uint64_t>(byteOrder);
-                            break;
-                        default:
-                            // Ignore non-power-of-two sizes
-                            read_index = false;
+                    switch (pfi.getSize()) {
+                    case sizeof(uint8_t):
+                        index = pfi.get<uint8_t>(byteOrder);
+                        break;
+                    case sizeof(uint16_t):
+                        index = pfi.get<uint16_t>(byteOrder);
+                        break;
+                    case sizeof(uint32_t):
+                        index = pfi.get<uint32_t>(byteOrder);
+                        break;
+                    case sizeof(uint64_t):
+                        index = pfi.get<uint64_t>(byteOrder);
+                        break;
+                    default:
+                        // Ignore non-power-of-two sizes
+                        read_index = false;
                     }
                     if (read_index && !pt_entry->enabled) {
                         // Not enabled (no pattern detected in this stream),
@@ -145,10 +144,12 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
 
                         // If the counter is high enough, start prefetching
                         if (pt_entry->indirectCounter > prefetchThreshold) {
-                            unsigned distance = maxPrefetchDistance *
+                            unsigned distance =
+                                maxPrefetchDistance *
                                 pt_entry->indirectCounter.calcSaturation();
                             for (int delta = 1; delta < distance; delta += 1) {
-                                Addr pf_addr = pt_entry->baseAddr +
+                                Addr pf_addr =
+                                    pt_entry->baseAddr +
                                     (pt_entry->index << pt_entry->shift);
                                 addresses.push_back(AddrPriority(pf_addr, 0));
                             }
@@ -167,8 +168,8 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-IndirectMemory::allocateOrUpdateIPDEntry(
-    const PrefetchTableEntry *pt_entry, int64_t index)
+IndirectMemory::allocateOrUpdateIPDEntry(const PrefetchTableEntry *pt_entry,
+                                         int64_t index)
 {
     // The address of the pt_entry is used to index the IPD
     Addr ipd_entry_addr = (Addr) pt_entry;
@@ -214,6 +215,7 @@ IndirectMemory::trackMissIndex1(Addr miss_addr)
         ipdEntryTrackingMisses = nullptr;
     }
 }
+
 void
 IndirectMemory::trackMissIndex2(Addr miss_addr)
 {
@@ -222,8 +224,7 @@ IndirectMemory::trackMissIndex2(Addr miss_addr)
     // the previous misses (using idx1) against newly generated values
     // using idx2, if a match is found, fill the additional fields
     // of the PT entry
-    for (int midx = 0; midx < entry->numMisses; midx += 1)
-    {
+    for (int midx = 0; midx < entry->numMisses; midx += 1) {
         std::vector<Addr> &ba_array = entry->baseAddr[midx];
         int idx = 0;
         for (int shift : shiftValues) {
@@ -231,7 +232,7 @@ IndirectMemory::trackMissIndex2(Addr miss_addr)
                 // Match found!
                 // Fill the corresponding pt_entry
                 PrefetchTableEntry *pt_entry =
-                    (PrefetchTableEntry *) entry->getTag();
+                    (PrefetchTableEntry *)entry->getTag();
                 pt_entry->baseAddr = ba_array[idx];
                 pt_entry->shift = shift;
                 pt_entry->enabled = true;
@@ -252,8 +253,8 @@ IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
 {
     for (auto &pt_entry : prefetchTable) {
         if (pt_entry.enabled) {
-            if (addr == pt_entry.baseAddr +
-                       (pt_entry.index << pt_entry.shift)) {
+            if (addr ==
+                pt_entry.baseAddr + (pt_entry.index << pt_entry.shift)) {
                 pt_entry.indirectCounter++;
                 pt_entry.increasedIndirectCounter = true;
             }

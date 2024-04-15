@@ -66,23 +66,26 @@ class PortTerminator : public SimObject
     class ReqPort : public RequestPort
     {
       public:
-        ReqPort(const std::string &name):
-            RequestPort(name)
-        {}
+        ReqPort(const std::string &name) : RequestPort(name) {}
+
       protected:
-        bool recvTimingResp(PacketPtr pkt) override
+        bool
+        recvTimingResp(PacketPtr pkt) override
         {
             panic("Received an unexpected response. RequestPorts on a "
-            "PortTerminator never issue any requests. Therefore, they should "
-            "never receive a response.\n");
+                  "PortTerminator never issue any requests. Therefore, they "
+                  "should "
+                  "never receive a response.\n");
         }
 
-        void recvReqRetry() override
+        void
+        recvReqRetry() override
         {
             return;
         }
 
-        void recvRangeChange() override
+        void
+        recvRangeChange() override
         {
             return;
         }
@@ -97,9 +100,7 @@ class PortTerminator : public SimObject
     class RespPort : public ResponsePort
     {
       public:
-        RespPort(const std::string &name):
-            ResponsePort(name)
-        {}
+        RespPort(const std::string &name) : ResponsePort(name) {}
     };
 
     std::vector<ReqPort> reqPorts;
@@ -110,9 +111,9 @@ class PortTerminator : public SimObject
     PortTerminator(const PortTerminatorParams &params);
 
     Port &getPort(const std::string &if_name,
-                    PortID idx = InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 };
 
-}
+} // namespace gem5
 
 #endif // __MEM_PORT_TERMINATOR_HH__

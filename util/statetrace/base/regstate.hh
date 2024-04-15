@@ -37,6 +37,7 @@ class RegState
 {
   protected:
     virtual bool update(int pid) = 0;
+
   public:
     virtual int64_t getRegVal(int num) = 0;
     virtual int64_t getOldRegVal(int num) = 0;

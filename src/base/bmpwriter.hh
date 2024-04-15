@@ -51,7 +51,7 @@ namespace gem5
 {
 
 // write frame buffer into a bitmap picture
-class  BmpWriter : public ImgWriter
+class BmpWriter : public ImgWriter
 {
   public:
     /**
@@ -60,15 +60,18 @@ class  BmpWriter : public ImgWriter
      */
     BmpWriter(const FrameBuffer *fb);
 
-    ~BmpWriter() {};
+    ~BmpWriter(){};
 
     /*
      * Return Image format as a string
      *
      * @return img extension (e.g. bmp for Bitmap)
      */
-    const char* getImgExtension() const override
-    { return _imgExtension; }
+    const char *
+    getImgExtension() const override
+    {
+        return _imgExtension;
+    }
 
     /**
      * Write the frame buffer data into the provided ostream
@@ -111,7 +114,9 @@ class  BmpWriter : public ImgWriter
 
     struct GEM5_PACKED BmpPixel32
     {
-        BmpPixel32 &operator=(const Pixel &rhs) {
+        BmpPixel32 &
+        operator=(const Pixel &rhs)
+        {
             red = rhs.red;
             green = rhs.green;
             blue = rhs.blue;
@@ -119,6 +124,7 @@ class  BmpWriter : public ImgWriter
 
             return *this;
         }
+
         uint8_t blue;
         uint8_t green;
         uint8_t red;
@@ -127,7 +133,7 @@ class  BmpWriter : public ImgWriter
 
     typedef BmpPixel32 PixelType;
 
-    static const char* _imgExtension;
+    static const char *_imgExtension;
 
     const CompleteV1Header getCompleteHeader() const;
 };

@@ -42,7 +42,6 @@
  * domain having their independent domain configuration information)
  */
 
-
 #ifndef __SIM_DVFS_HANDLER_HH__
 #define __SIM_DVFS_HANDLER_HH__
 
@@ -84,7 +83,11 @@ class DVFSHandler : public SimObject
      * Get the number of domains assigned to this DVFS handler.
      * @return Number of domains
      */
-    uint32_t numDomains() const { return domainIDList.size(); }
+    uint32_t
+    numDomains() const
+    {
+        return domainIDList.size();
+    }
 
     /**
      * Get the n-th domain ID, from the domains managed by this handler.
@@ -103,7 +106,11 @@ class DVFSHandler : public SimObject
      * Get transition latency to switch between performance levels.
      * @return Transition latency
      */
-    Tick transLatency() const { return _transLatency; }
+    Tick
+    transLatency() const
+    {
+        return _transLatency;
+    }
 
     /**
      * Set a new performance level for the specified domain.  The actual update
@@ -116,15 +123,17 @@ class DVFSHandler : public SimObject
     bool perfLevel(DomainID domain_id, PerfLevel perf_level);
 
     /**
-     * Get the current performance level of a domain.  While a change request is
-     * in-flight, will return the current (i.e. old, unmodified) value.
+     * Get the current performance level of a domain.  While a change request
+     * is in-flight, will return the current (i.e. old, unmodified) value.
      *
      * @param domain_id Domain ID to query
      * @return Current performance level of the specified domain
      */
-    PerfLevel perfLevel(DomainID domain_id) const {
-         assert(isEnabled());
-         return findDomain(domain_id)->perfLevel();
+    PerfLevel
+    perfLevel(DomainID domain_id) const
+    {
+        assert(isEnabled());
+        return findDomain(domain_id)->perfLevel();
     }
 
     /**
@@ -135,7 +144,8 @@ class DVFSHandler : public SimObject
      * @return Clock period in ticks for the requested performance level of
      * the respective domain
      */
-    Tick clkPeriodAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
+    Tick
+    clkPeriodAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
     {
         SrcClockDomain *d = findDomain(domain_id);
         assert(d);
@@ -143,8 +153,9 @@ class DVFSHandler : public SimObject
         if (perf_level < n)
             return d->clkPeriodAtPerfLevel(perf_level);
 
-        warn("DVFSHandler %s reads illegal frequency level %u from "\
-             "SrcClockDomain %s. Returning 0\n", name(), perf_level, d->name());
+        warn("DVFSHandler %s reads illegal frequency level %u from "
+             "SrcClockDomain %s. Returning 0\n",
+             name(), perf_level, d->name());
         return Tick(0);
     }
 
@@ -165,34 +176,39 @@ class DVFSHandler : public SimObject
      * @return Number of performance levels that where configured for the
      * respective domain
      */
-    PerfLevel numPerfLevels(PerfLevel domain_id) const
+    PerfLevel
+    numPerfLevels(PerfLevel domain_id) const
     {
         return findDomain(domain_id)->numPerfLevels();
     }
 
     /**
-     * Check enable status of the DVFS handler, when the handler is disabled, no
-     * request should be sent to the handler.
+     * Check enable status of the DVFS handler, when the handler is disabled,
+     * no request should be sent to the handler.
      * @return True, if the handler is enabled
      */
-    bool isEnabled() const { return enableHandler; }
+    bool
+    isEnabled() const
+    {
+        return enableHandler;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
   private:
-    typedef std::map<DomainID, SrcClockDomain*> Domains;
+    typedef std::map<DomainID, SrcClockDomain *> Domains;
     Domains domains;
 
     /**
-      * List of IDs avaiable in the domain list
-      */
+     * List of IDs avaiable in the domain list
+     */
     std::vector<DomainID> domainIDList;
 
     /**
-      * Clock domain of the system the handler is instantiated.
-      */
-    SrcClockDomain* sysClkDomain;
+     * Clock domain of the system the handler is instantiated.
+     */
+    SrcClockDomain *sysClkDomain;
 
     /**
      * Search for a domain based on the domain ID.
@@ -200,10 +216,12 @@ class DVFSHandler : public SimObject
      * @param domain_id Domain ID to search for
      * @return Pointer to the source clock domain with matching ID.
      */
-    SrcClockDomain *findDomain(DomainID domain_id) const {
+    SrcClockDomain *
+    findDomain(DomainID domain_id) const
+    {
         auto it = domains.find(domain_id);
         panic_if(it == domains.end(),
-                 "DVFS: Could not find a domain for ID %d.\n",domain_id );
+                 "DVFS: Could not find a domain for ID %d.\n", domain_id);
         return domains.find(domain_id)->second;
     }
 
@@ -213,23 +231,21 @@ class DVFSHandler : public SimObject
      */
     bool enableHandler;
 
-
     /**
      * This corresponds to the maximum transition latency associated with the
      * hardware transitioning from a particular performance level to the other
      */
     const Tick _transLatency;
 
-
-
     /**
-     * Update performance level event, encapsulates all the required information
-     * for a future call to change a domain's performance level.
+     * Update performance level event, encapsulates all the required
+     * information for a future call to change a domain's performance level.
      */
     struct UpdateEvent : public Event
     {
-        UpdateEvent() : Event(DVFS_Update_Pri), domainIDToSet(0),
-                        perfLevelToSet(0) {}
+        UpdateEvent()
+            : Event(DVFS_Update_Pri), domainIDToSet(0), perfLevelToSet(0)
+        {}
 
         /**
          * Static pointer to the single DVFS hander for all the update events
@@ -254,13 +270,17 @@ class DVFSHandler : public SimObject
          */
         void updatePerfLevel();
 
-        void process() { updatePerfLevel(); }
+        void
+        process()
+        {
+            updatePerfLevel();
+        }
     };
 
     typedef std::map<DomainID, UpdateEvent> UpdatePerfLevelEvents;
     /**
-     * Map from domain IDs -> perf level update events, records in-flight change
-     * requests per domain ID.
+     * Map from domain IDs -> perf level update events, records in-flight
+     * change requests per domain ID.
      */
     UpdatePerfLevelEvents updatePerfLevelEvents;
 };

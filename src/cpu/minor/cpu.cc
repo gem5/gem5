@@ -47,30 +47,27 @@
 namespace gem5
 {
 
-MinorCPU::MinorCPU(const BaseMinorCPUParams &params) :
-    BaseCPU(params),
-    threadPolicy(params.threadPolicy),
-    stats(this)
+MinorCPU::MinorCPU(const BaseMinorCPUParams &params)
+    : BaseCPU(params), threadPolicy(params.threadPolicy), stats(this)
 {
     /* This is only written for one thread at the moment */
     minor::MinorThread *thread;
 
     for (ThreadID i = 0; i < numThreads; i++) {
         if (FullSystem) {
-            thread = new minor::MinorThread(this, i, params.system,
-                    params.mmu, params.isa[i], params.decoder[i]);
+            thread = new minor::MinorThread(this, i, params.system, params.mmu,
+                                            params.isa[i], params.decoder[i]);
             thread->setStatus(ThreadContext::Halted);
         } else {
             thread = new minor::MinorThread(this, i, params.system,
-                    params.workload[i], params.mmu,
-                    params.isa[i], params.decoder[i]);
+                                            params.workload[i], params.mmu,
+                                            params.isa[i], params.decoder[i]);
         }
 
         threads.push_back(thread);
         ThreadContext *tc = thread->getTC();
         threadContexts.push_back(tc);
     }
-
 
     if (params.checker) {
         fatal("The Minor model doesn't support checking (yet)\n");
@@ -101,7 +98,7 @@ MinorCPU::init()
 
     if (!params().switched_out && system->getMemoryMode() != enums::timing) {
         fatal("The Minor CPU requires the memory system to be in "
-            "'timing' mode.\n");
+              "'timing' mode.\n");
     }
 }
 
@@ -209,10 +206,10 @@ MinorCPU::drainResume()
 
     if (!system->isTimingMode()) {
         fatal("The Minor CPU requires the memory system to be in "
-            "'timing' mode.\n");
+              "'timing' mode.\n");
     }
 
-    for (ThreadID tid = 0; tid < numThreads; tid++){
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         wakeup(tid);
     }
 
@@ -263,14 +260,15 @@ MinorCPU::activateContext(ThreadID thread_id)
     threads[thread_id]->activate();
     wakeupOnEvent(minor::Pipeline::CPUStageId);
 
-    if (!threads[thread_id]->getUseForClone())//the thread is not cloned
+    if (!threads[thread_id]->getUseForClone()) // the thread is not cloned
     {
         pipeline->wakeupFetch(thread_id);
-    } else { //the thread from clone
+    } else { // the thread from clone
         if (fetchEventWrapper != NULL)
             delete fetchEventWrapper;
-        fetchEventWrapper = new EventFunctionWrapper([this, thread_id]
-                  { pipeline->wakeupFetch(thread_id); }, "wakeupFetch");
+        fetchEventWrapper = new EventFunctionWrapper(
+            [this, thread_id] { pipeline->wakeupFetch(thread_id); },
+            "wakeupFetch");
         schedule(*fetchEventWrapper, clockEdge(Cycles(0)));
     }
 
@@ -314,7 +312,7 @@ MinorCPU::totalInsts() const
 {
     Counter ret = 0;
 
-    for (auto i = threads.begin(); i != threads.end(); i ++)
+    for (auto i = threads.begin(); i != threads.end(); i++)
         ret += (*i)->numInst;
 
     return ret;
@@ -325,7 +323,7 @@ MinorCPU::totalOps() const
 {
     Counter ret = 0;
 
-    for (auto i = threads.begin(); i != threads.end(); i ++)
+    for (auto i = threads.begin(); i != threads.end(); i++)
         ret += (*i)->numOp;
 
     return ret;

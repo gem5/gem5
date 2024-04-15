@@ -99,9 +99,7 @@ class FUPool : public SimObject
     {
       public:
         /** Constructs a circular queue of FU indices. */
-        FUIdxQueue()
-            : idx(0), size(0)
-        { }
+        FUIdxQueue() : idx(0), size(0) {}
 
         /** Adds a FU to the queue. */
         inline void addFU(int fu_idx);
@@ -160,18 +158,26 @@ class FUPool : public SimObject
     void processFreeUnits();
 
     /** Returns the total number of FUs. */
-    int size() { return numFU; }
+    int
+    size()
+    {
+        return numFU;
+    }
 
     /** Debugging function used to dump FU information. */
     void dump();
 
     /** Returns the operation execution latency of the given capability. */
-    Cycles getOpLatency(OpClass capability) {
+    Cycles
+    getOpLatency(OpClass capability)
+    {
         return maxOpLatencies[capability];
     }
 
     /** Returns the issue latency of the given capability. */
-    bool isPipelined(OpClass capability) {
+    bool
+    isPipelined(OpClass capability)
+    {
         return pipelined[capability];
     }
 
@@ -179,7 +185,7 @@ class FUPool : public SimObject
     bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
-    void takeOverFrom() {};
+    void takeOverFrom(){};
 };
 
 } // namespace o3

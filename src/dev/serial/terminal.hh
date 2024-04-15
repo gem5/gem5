@@ -98,7 +98,7 @@ class Terminal : public SerialDevice
     typedef TerminalParams Params;
     Terminal(const Params &p);
     ~Terminal();
-    OutputStream * terminalDump(const TerminalParams &p);
+    OutputStream *terminalDump(const TerminalParams &p);
 
   protected:
     ListenSocketPtr listener;
@@ -120,16 +120,32 @@ class Terminal : public SerialDevice
 
     void data();
 
-    void read(uint8_t &c) { read(&c, 1); }
+    void
+    read(uint8_t &c)
+    {
+        read(&c, 1);
+    }
+
     size_t read(uint8_t *buf, size_t len);
-    void write(uint8_t c) { write(&c, 1); }
+
+    void
+    write(uint8_t c)
+    {
+        write(&c, 1);
+    }
+
     size_t write(const uint8_t *buf, size_t len);
     void detach();
 
   public: // SerialDevice interface
     uint8_t readData() override;
     void writeData(uint8_t c) override;
-    bool dataAvailable() const override { return !rxbuf.empty(); }
+
+    bool
+    dataAvailable() const override
+    {
+        return !rxbuf.empty();
+    }
 
   public:
     /////////////////

@@ -52,11 +52,9 @@ namespace gem5
 class ImgWriter
 {
   public:
-    ImgWriter(const FrameBuffer *_fb)
-      : fb(*_fb)
-    {}
+    ImgWriter(const FrameBuffer *_fb) : fb(*_fb) {}
 
-    virtual ~ImgWriter() {};
+    virtual ~ImgWriter(){};
     /**
      * Write the frame buffer data into the provided ostream
      *
@@ -68,7 +66,7 @@ class ImgWriter
      *
      * @return img extension (e.g. bmp for Bitmap)
      */
-    virtual const char* getImgExtension() const = 0;
+    virtual const char *getImgExtension() const = 0;
 
   protected:
     const FrameBuffer &fb;
@@ -87,8 +85,8 @@ class ImgWriter
  *           when calling the appropriate object method
  * @return smart pointer to the allocated Image Writer
  */
-std::unique_ptr<ImgWriter>
-createImgWriter(enums::ImageFormat type, const FrameBuffer *fb);
+std::unique_ptr<ImgWriter> createImgWriter(enums::ImageFormat type,
+                                           const FrameBuffer *fb);
 
 } // namespace gem5
 

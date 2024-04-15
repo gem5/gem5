@@ -55,26 +55,26 @@
 namespace CxxConfig
 {
 
-void statsPrepare()
+void
+statsPrepare()
 {
     std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
     /* gather_stats -> prepare */
-    for (auto i = stats.begin(); i != stats.end(); ++i){
+    for (auto i = stats.begin(); i != stats.end(); ++i) {
         gem5::statistics::Info *stat = *i;
         gem5::statistics::VectorInfo *vector =
             dynamic_cast<gem5::statistics::VectorInfo *>(stat);
-        if (vector){
+        if (vector) {
             (dynamic_cast<gem5::statistics::VectorInfo *>(*i))->prepare();
-        }
-        else {
+        } else {
             (*i)->prepare();
         }
-
     }
 }
 
-void statsDump()
+void
+statsDump()
 {
     bool desc = true;
     gem5::statistics::Output *output =
@@ -104,16 +104,16 @@ void statsDump()
             dynamic_cast<gem5::statistics::VectorDistInfo *>(stat);
         const gem5::statistics::SparseHistInfo *sparse =
             dynamic_cast<gem5::statistics::SparseHistInfo *>(stat);
-        const gem5::statistics::InfoProxy <gem5::statistics::Vector2d,
-            gem5::statistics::Vector2dInfo> *info =
-            dynamic_cast<gem5::statistics::InfoProxy
-            <gem5::statistics::Vector2d,
-            gem5::statistics::Vector2dInfo>*>(stat);
+        const gem5::statistics::InfoProxy<
+            gem5::statistics::Vector2d, gem5::statistics::Vector2dInfo> *info =
+            dynamic_cast<gem5::statistics::InfoProxy<
+                gem5::statistics::Vector2d, gem5::statistics::Vector2dInfo> *>(
+                stat);
 
         if (vector) {
             const gem5::statistics::FormulaInfo *formula =
                 dynamic_cast<gem5::statistics::FormulaInfo *>(vector);
-            if (formula){
+            if (formula) {
                 output->visit(*formula);
             } else {
                 const gem5::statistics::VectorInfo *vector1 = vector;
@@ -121,9 +121,9 @@ void statsDump()
             }
         } else if (vector2d) {
             output->visit(*vector2d);
-        } else if (info){
+        } else if (info) {
             output->visit(*info);
-        } else if (vectordist){
+        } else if (vectordist) {
             output->visit(*vectordist);
         } else if (dist) {
             output->visit(*dist);
@@ -138,29 +138,29 @@ void statsDump()
     output->end();
 }
 
-void statsReset()
+void
+statsReset()
 {
     std::cerr << "Stats reset\n";
 
     gem5::statistics::processResetQueue();
 }
 
-void statsEnable()
+void
+statsEnable()
 {
     std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
-    for (auto i = stats.begin(); i != stats.end(); ++i){
+    for (auto i = stats.begin(); i != stats.end(); ++i) {
         gem5::statistics::Info *stat = *i;
         gem5::statistics::VectorInfo *vector =
             dynamic_cast<gem5::statistics::VectorInfo *>(stat);
-        if (vector){
+        if (vector) {
             (dynamic_cast<gem5::statistics::VectorInfo *>(*i))->enable();
-        }
-        else {
+        } else {
             (*i)->enable();
         }
-
     }
 }
 
-}
+} // namespace CxxConfig

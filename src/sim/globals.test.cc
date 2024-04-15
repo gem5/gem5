@@ -70,17 +70,20 @@ TEST_F(GlobalsSerializationFixture, Serialization)
     std::ifstream is(getCptPath());
     assert(is.good());
     std::string str = std::string(std::istreambuf_iterator<char>(is),
-        std::istreambuf_iterator<char>());
-    ASSERT_THAT(str, ::testing::StrEq("\n[Section1]\ncurTick=1234\n"
-        "version_tags=first-tag fourth-tag second-tag third-tag\n"));
+                                  std::istreambuf_iterator<char>());
+    ASSERT_THAT(
+        str, ::testing::StrEq(
+                 "\n[Section1]\ncurTick=1234\n"
+                 "version_tags=first-tag fourth-tag second-tag third-tag\n"));
 }
 
 /** Test unserialization. */
 TEST_F(GlobalsSerializationFixture, Unserialization)
 {
     version_tags = { "first-tag-un", "second-tag-un", "third-tag-un",
-        "fourth-tag-un" };
-    simulateSerialization("\n[Section1]\ncurTick=1111\nversion_tags="
+                     "fourth-tag-un" };
+    simulateSerialization(
+        "\n[Section1]\ncurTick=1111\nversion_tags="
         "first-tag-un second-tag-un third-tag-un fourth-tag-un\n");
 
     Globals globals;
@@ -109,7 +112,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptNoVersionTags)
 
     gtestLogOutput.str("");
     globals.unserialize(cp);
-    ASSERT_THAT(gtestLogOutput.str(),
+    ASSERT_THAT(
+        gtestLogOutput.str(),
         ::testing::HasSubstr("Checkpoint uses an old versioning scheme."));
     ASSERT_EQ(globals.unserializedCurTick, 2222);
 }
@@ -118,9 +122,9 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptNoVersionTags)
 TEST_F(GlobalsSerializationFixture, UnserializationCptMissingVersionTags)
 {
     version_tags = { "first-tag-un", "second-tag-un", "third-tag-un",
-        "fourth-tag-un" };
+                     "fourth-tag-un" };
     simulateSerialization("\n[Section1]\ncurTick=3333\n"
-        "version_tags=second-tag-un fourth-tag-un\n");
+                          "version_tags=second-tag-un fourth-tag-un\n");
 
     Globals globals;
     CheckpointIn cp(getDirName());
@@ -128,8 +132,9 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptMissingVersionTags)
 
     gtestLogOutput.str("");
     globals.unserialize(cp);
-    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr(
-        "warn:   first-tag-un\nwarn:   third-tag-un\n"));
+    ASSERT_THAT(
+        gtestLogOutput.str(),
+        ::testing::HasSubstr("warn:   first-tag-un\nwarn:   third-tag-un\n"));
     ASSERT_EQ(globals.unserializedCurTick, 3333);
 }
 
@@ -137,7 +142,8 @@ TEST_F(GlobalsSerializationFixture, UnserializationCptMissingVersionTags)
 TEST_F(GlobalsSerializationFixture, UnserializationGem5MissingVersionTags)
 {
     version_tags = { "first-tag-un", "second-tag-un", "third-tag-un" };
-    simulateSerialization("\n[Section1]\ncurTick=4444\nversion_tags="
+    simulateSerialization(
+        "\n[Section1]\ncurTick=4444\nversion_tags="
         "first-tag-un second-tag-un third-tag-un fourth-tag-un\n");
 
     Globals globals;
@@ -147,7 +153,7 @@ TEST_F(GlobalsSerializationFixture, UnserializationGem5MissingVersionTags)
     gtestLogOutput.str("");
     globals.unserialize(cp);
     ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("warn:   fourth-tag-un\n"));
+                ::testing::HasSubstr("warn:   fourth-tag-un\n"));
     ASSERT_EQ(globals.unserializedCurTick, 4444);
 }
 

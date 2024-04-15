@@ -61,82 +61,88 @@ namespace branch_prediction
 class ReturnAddrStack : public SimObject
 {
   public:
-
     /** Subclass that implements the actual address stack. ******
      */
     class AddrStack
     {
       public:
-        AddrStack(ReturnAddrStack &_parent)
-          : parent(_parent)
-        {}
+        AddrStack(ReturnAddrStack &_parent) : parent(_parent) {}
 
+        /** Initializes RAS with a specified number of entries.
+         *  @param numEntries Number of entries in the RAS.
+         */
+        void init(unsigned numEntries);
 
-      /** Initializes RAS with a specified number of entries.
-       *  @param numEntries Number of entries in the RAS.
-       */
-      void init(unsigned numEntries);
+        void reset();
 
-      void reset();
+        /** Returns the top address on the RAS. */
+        const PCStateBase *top();
 
-      /** Returns the top address on the RAS. */
-      const PCStateBase *top();
+        /** Returns the index of the top of the RAS. */
+        unsigned
+        topIdx()
+        {
+            return tos;
+        }
 
-      /** Returns the index of the top of the RAS. */
-      unsigned topIdx() { return tos; }
+        /** Pushes an address onto the RAS. */
+        void push(const PCStateBase &return_addr);
 
-      /** Pushes an address onto the RAS. */
-      void push(const PCStateBase &return_addr);
+        /** Pops the top address from the RAS. */
+        void pop();
 
-      /** Pops the top address from the RAS. */
-      void pop();
+        /** Changes index to the top of the RAS, and replaces the top address
+         *  with a new target.
+         *  @param top_of_stack the index saved at the time of the prediction.
+         *  @param restored The new target address of the new top of the RAS.
+         */
+        void restore(unsigned top_of_stack, const PCStateBase *restored);
 
-      /** Changes index to the top of the RAS, and replaces the top address
-       *  with a new target.
-       *  @param top_of_stack the index saved at the time of the prediction.
-       *  @param restored The new target address of the new top of the RAS.
-       */
-      void restore(unsigned top_of_stack, const PCStateBase *restored);
+        bool
+        empty()
+        {
+            return usedEntries == 0;
+        }
 
-      bool empty() { return usedEntries == 0; }
+        bool
+        full()
+        {
+            return usedEntries >= numEntries;
+        }
 
-      bool full() { return usedEntries >= numEntries; }
+        /** Returns the top n entries of the stack as string. For debugging. */
+        std::string toString(int n);
 
-      /** Returns the top n entries of the stack as string. For debugging. */
-      std::string toString(int n);
+        /** Increments the top of stack index. */
+        inline void
+        incrTos()
+        {
+            if (++tos == numEntries)
+                tos = 0;
+        }
 
-      /** Increments the top of stack index. */
-      inline void
-      incrTos()
-      {
-          if (++tos == numEntries)
-              tos = 0;
-      }
+        /** Decrements the top of stack index. */
+        inline void
+        decrTos()
+        {
+            tos = (tos == 0 ? numEntries - 1 : tos - 1);
+        }
 
-      /** Decrements the top of stack index. */
-      inline void
-      decrTos()
-      {
-          tos = (tos == 0 ? numEntries - 1 : tos - 1);
-      }
+        /** The Stack itself. */
+        std::vector<std::unique_ptr<PCStateBase>> addrStack;
 
-      /** The Stack itself. */
-      std::vector<std::unique_ptr<PCStateBase>> addrStack;
+        /** The number of entries in the RAS. */
+        unsigned numEntries;
 
-      /** The number of entries in the RAS. */
-      unsigned numEntries;
+        /** The number of used entries in the RAS. */
+        unsigned usedEntries;
 
-      /** The number of used entries in the RAS. */
-      unsigned usedEntries;
-
-      /** The top of stack index. */
-      unsigned tos;
+        /** The top of stack index. */
+        unsigned tos;
 
       protected:
         ReturnAddrStack &parent;
     };
-
-
 
   public:
     // typedef RASParams Params;
@@ -153,7 +159,7 @@ class ReturnAddrStack : public SimObject
      * @param ras_history Pointer that will be set to an object that
      * has the return address state associated when the address was pushed.
      */
-    void push(ThreadID tid, const PCStateBase &pc, void * &ras_history);
+    void push(ThreadID tid, const PCStateBase &pc, void *&ras_history);
 
     /**
      * Pops the top address from the RAS.
@@ -161,14 +167,14 @@ class ReturnAddrStack : public SimObject
      * has the return address state associated when an address was poped.
      * @return The address that got poped from the stack.
      *  */
-    const PCStateBase* pop(ThreadID tid, void * &ras_history);
+    const PCStateBase *pop(ThreadID tid, void *&ras_history);
 
     /**
      * The branch (call/return) got squashed.
      * Restores the state of the RAS and delete history
      *  @param res_history The pointer to the history object.
      */
-    void squash(ThreadID tid, void * &ras_history);
+    void squash(ThreadID tid, void *&ras_history);
 
     /**
      * A branch got finally got finally commited.
@@ -176,11 +182,10 @@ class ReturnAddrStack : public SimObject
      * @param brType The type of the branch.
      * @param ras_history The pointer to the history object.
      */
-    void commit(ThreadID tid, bool misp,
-                const BranchType brType, void * &ras_history);
+    void commit(ThreadID tid, bool misp, const BranchType brType,
+                void *&ras_history);
 
   private:
-
     class RASHistory
     {
       public:
@@ -196,7 +201,7 @@ class ReturnAddrStack : public SimObject
         unsigned tos = 0;
     };
 
-    void makeRASHistory(void* &ras_history);
+    void makeRASHistory(void *&ras_history);
 
     /** The RAS itself. */
     std::vector<AddrStack> addrStacks;

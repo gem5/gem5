@@ -45,13 +45,11 @@ Bulk::Bulk(const BloomFilterBulkParams &p)
     : MultiBitSel(p), sectorBits(floorLog2(parFilterSize))
 {
     fatal_if((numHashes * sectorBits) >
-        (std::numeric_limits<Addr>::digits - offsetBits),
-        "Sectors need more bits than available");
+                 (std::numeric_limits<Addr>::digits - offsetBits),
+             "Sectors need more bits than available");
 }
 
-Bulk::~Bulk()
-{
-}
+Bulk::~Bulk() {}
 
 int
 Bulk::hash(Addr addr, int hash_number) const
@@ -61,10 +59,10 @@ Bulk::hash(Addr addr, int hash_number) const
     // Get the sector-based c index
     int c = bits(addr, (offsetBits + (hash_number + 1) * sectorBits) - 1,
                  offsetBits + hash_number * sectorBits);
-    assert(c < filter.size()/numHashes);
+    assert(c < filter.size() / numHashes);
 
     // Transform the sector-based c index into a filder index (v)
-    c += (numHashes - 1 - hash_number) * (filter.size()/numHashes);
+    c += (numHashes - 1 - hash_number) * (filter.size() / numHashes);
     assert(c < filter.size());
 
     return c;
@@ -74,26 +72,26 @@ Addr
 Bulk::permute(Addr addr) const
 {
     // permutes the original address bits according to Table 5
-    Addr part1  = bits(addr, offsetBits + 6, offsetBits),
-         part2  = bits(addr, offsetBits + 9),
-         part3  = bits(addr, offsetBits + 11),
-         part4  = bits(addr, offsetBits + 17),
-         part5  = bits(addr, offsetBits + 8, offsetBits + 7),
-         part6  = bits(addr, offsetBits + 10),
-         part7  = bits(addr, offsetBits + 12),
-         part8  = bits(addr, offsetBits + 13),
-         part9  = bits(addr, offsetBits + 16, offsetBits + 15),
+    Addr part1 = bits(addr, offsetBits + 6, offsetBits),
+         part2 = bits(addr, offsetBits + 9),
+         part3 = bits(addr, offsetBits + 11),
+         part4 = bits(addr, offsetBits + 17),
+         part5 = bits(addr, offsetBits + 8, offsetBits + 7),
+         part6 = bits(addr, offsetBits + 10),
+         part7 = bits(addr, offsetBits + 12),
+         part8 = bits(addr, offsetBits + 13),
+         part9 = bits(addr, offsetBits + 16, offsetBits + 15),
          part10 = bits(addr, offsetBits + 20, offsetBits + 18),
          part11 = bits(addr, offsetBits + 14);
 
-    Addr result =
-        (part1 << 14) | (part2 << 13) | (part3 << 12) | (part4 << 11) |
-        (part5 << 9)  | (part6 << 8)  | (part7 << 7)  | (part8 << 6)  |
-        (part9 << 4)  | (part10 << 1) | (part11);
+    Addr result = (part1 << 14) | (part2 << 13) | (part3 << 12) |
+                  (part4 << 11) | (part5 << 9) | (part6 << 8) | (part7 << 7) |
+                  (part8 << 6) | (part9 << 4) | (part10 << 1) | (part11);
 
     // Select the remaining high-order bits
-    Addr remaining_bits = bits(addr, std::numeric_limits<Addr>::digits - 1,
-        offsetBits + 21) << 21;
+    Addr remaining_bits =
+        bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits + 21)
+        << 21;
     result = result | remaining_bits;
 
     return result;

@@ -43,9 +43,9 @@ namespace gem5
 std::string
 SMMUEvent::print() const
 {
-    return csprintf("type=%#x sid=%#x ssid=%#x va=%#08x\n",
-        data.dw0.eventType, data.dw0.streamId, data.dw0.substreamId,
-        data.dw2.inputAddr);
+    return csprintf("type=%#x sid=%#x ssid=%#x va=%#08x\n", data.dw0.eventType,
+                    data.dw0.streamId, data.dw0.substreamId,
+                    data.dw2.inputAddr);
 }
 
 } // namespace gem5

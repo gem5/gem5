@@ -50,7 +50,8 @@ class VectorRegisterFile : public RegisterFile
     using VecRegContainer = TheGpuISA::VecRegContainerU32;
 
     VectorRegisterFile(const VectorRegisterFileParams &p);
-    ~VectorRegisterFile() { }
+
+    ~VectorRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
     virtual void scheduleWriteOperands(Wavefront *w,
@@ -66,14 +67,14 @@ class VectorRegisterFile : public RegisterFile
     }
 
     // Read a register that is writeable (e.g., a DST operand)
-    VecRegContainer&
+    VecRegContainer &
     readWriteable(int regIdx)
     {
         return regFile[regIdx];
     }
 
     // Read a register that is not writeable (e.g., src operand)
-    const VecRegContainer&
+    const VecRegContainer &
     read(int regIdx) const
     {
         return regFile[regIdx];
@@ -96,8 +97,8 @@ class VectorRegisterFile : public RegisterFile
         for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 DPRINTF(GPUVRF, "WF[%d][%d]: WV[%d] v[%d][%d] = %#x\n",
-                    wf->simdId, wf->wfSlotId, wf->wfDynId, regIdx, lane,
-                    vgpr[lane]);
+                        wf->simdId, wf->wfSlotId, wf->wfDynId, regIdx, lane,
+                        vgpr[lane]);
             }
         }
 #endif

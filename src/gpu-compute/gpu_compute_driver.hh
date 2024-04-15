@@ -67,8 +67,8 @@ class GPUComputeDriver final : public EmulatedDriver
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
 
     int open(ThreadContext *tc, int mode, int flags) override;
-    Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-              int prot, int tgt_flags, int tgt_fd, off_t offset) override;
+    Addr mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
+              int tgt_flags, int tgt_fd, off_t offset) override;
     virtual void signalWakeupEvent(uint32_t event_id);
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
     /**
@@ -86,12 +86,12 @@ class GPUComputeDriver final : public EmulatedDriver
     doorbellSize()
     {
         switch (gfxVersion) {
-          case GfxVersion::gfx902:
+        case GfxVersion::gfx902:
             return 4;
-          case GfxVersion::gfx900:
+        case GfxVersion::gfx900:
             // gfx900 supports large BAR, so it has a larger doorbell
             return 8;
-          default:
+        default:
             fatal("Invalid GPU type\n");
         }
         return 4;
@@ -102,10 +102,13 @@ class GPUComputeDriver final : public EmulatedDriver
       public:
         DriverWakeupEvent(GPUComputeDriver *gpu_driver,
                           ThreadContext *thrd_cntxt)
-          : driver(gpu_driver), tc(thrd_cntxt) {}
+            : driver(gpu_driver), tc(thrd_cntxt)
+        {}
+
         void process() override;
         const char *description() const override;
         void scheduleWakeup(Tick wakeup_delay);
+
       private:
         GPUComputeDriver *driver;
         ThreadContext *tc;
@@ -114,9 +117,10 @@ class GPUComputeDriver final : public EmulatedDriver
     class EventTableEntry
     {
       public:
-        EventTableEntry() :
-            mailBoxPtr(0), tc(nullptr), threadWaiting(false), setEvent(false)
+        EventTableEntry()
+            : mailBoxPtr(0), tc(nullptr), threadWaiting(false), setEvent(false)
         {}
+
         // Mail box pointer for this address. Current implementation does not
         // use this mailBoxPtr to notify events but directly calls
         // signalWakeupEvent from dispatcher (GPU) to notifiy events. So,
@@ -140,7 +144,11 @@ class GPUComputeDriver final : public EmulatedDriver
     };
     typedef class EventTableEntry ETEntry;
 
-    GfxVersion getGfxVersion() const { return gfxVersion; }
+    GfxVersion
+    getGfxVersion() const
+    {
+        return gfxVersion;
+    }
 
   private:
     /**
@@ -153,7 +161,7 @@ class GPUComputeDriver final : public EmulatedDriver
     int dGPUPoolID;
     Addr eventPage;
     uint32_t eventSlotIndex;
-    //Event table that keeps track of events. It is indexed with event ID.
+    // Event table that keeps track of events. It is indexed with event ID.
     std::unordered_map<uint32_t, ETEntry> ETable;
 
     /**
@@ -166,9 +174,9 @@ class GPUComputeDriver final : public EmulatedDriver
      */
     enum MtypeFlags
     {
-        SHARED                  = 0,
-        READ_WRITE              = 1,
-        CACHED                  = 2,
+        SHARED = 0,
+        READ_WRITE = 1,
+        CACHED = 2,
         NUM_MTYPE_BITS
     };
 
@@ -183,10 +191,14 @@ class GPUComputeDriver final : public EmulatedDriver
     {
       public:
         EventList() : driver(nullptr), timerEvent(nullptr, nullptr) {}
+
         EventList(GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt)
             : driver(gpu_driver), timerEvent(gpu_driver, thrd_cntxt)
-        { }
-        void clearEvents() {
+        {}
+
+        void
+        clearEvents()
+        {
             assert(driver);
             for (auto event : signalEvents) {
                 assert(event < driver->eventSlotIndex);
@@ -198,11 +210,13 @@ class GPUComputeDriver final : public EmulatedDriver
                 driver->deschedule(timerEvent);
             }
         }
+
         GPUComputeDriver *driver;
         DriverWakeupEvent timerEvent;
         // The set of events that can wake up the same thread.
         std::set<uint32_t> signalEvents;
     };
+
     std::unordered_map<ThreadContext *, EventList> TCEvents;
 
     /**
@@ -246,7 +260,6 @@ class GPUComputeDriver final : public EmulatedDriver
     Addr deallocateGpuVma(Addr start);
 
     void allocateQueue(PortProxy &mem_proxy, Addr ioc_buf_addr);
-
 };
 
 } // namespace gem5

@@ -79,35 +79,47 @@ class ProtocolTester : public ClockedObject
 
       protected:
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual void recvReqRetry()
-            { panic("%s does not expect a retry\n", name()); }
+
+        virtual void
+        recvReqRetry()
+        {
+            panic("%s does not expect a retry\n", name());
+        }
     };
 
     class GMTokenPort : public TokenRequestPort
     {
-        public:
-            GMTokenPort(const std::string& name, ProtocolTester *_tester,
-                        PortID id = InvalidPortID)
-                : TokenRequestPort(name, _tester, id)
-            {}
-            ~GMTokenPort() {}
+      public:
+        GMTokenPort(const std::string &name, ProtocolTester *_tester,
+                    PortID id = InvalidPortID)
+            : TokenRequestPort(name, _tester, id)
+        {}
 
-        protected:
-            bool recvTimingResp(PacketPtr) { return false; }
-            void recvReqRetry() {}
+        ~GMTokenPort() {}
+
+      protected:
+        bool
+        recvTimingResp(PacketPtr)
+        {
+            return false;
+        }
+
+        void
+        recvReqRetry()
+        {}
     };
 
     struct SenderState : public Packet::SenderState
     {
-        TesterThread* th;
-        SenderState(TesterThread* _th)
+        TesterThread *th;
+
+        SenderState(TesterThread *_th)
         {
             assert(_th);
             th = _th;
         }
 
-        ~SenderState()
-        {}
+        ~SenderState() {}
     };
 
   public:
@@ -119,25 +131,51 @@ class ProtocolTester : public ClockedObject
     typedef AddressManager::Value Value;
 
     void init() override;
-    RequestorID requestorId() { return _requestorId; };
-    Port& getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
 
-    int getEpisodeLength() const { return episodeLength; }
+    RequestorID
+    requestorId()
+    {
+        return _requestorId;
+    };
+
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
+
+    int
+    getEpisodeLength() const
+    {
+        return episodeLength;
+    }
+
     // return pointer to the address manager
-    AddressManager* getAddressManager() const { return addrManager; }
+    AddressManager *
+    getAddressManager() const
+    {
+        return addrManager;
+    }
+
     // return true if the tester should stop issuing new episodes
     bool checkExit();
     // verify if a location to be picked for LD/ST will satisfy
     // data race free requirement
     bool checkDRF(Location atomic_loc, Location loc, bool isStore) const;
+
     // return the next episode id and increment it
-    int getNextEpisodeID() { return nextEpisodeId++; }
+    int
+    getNextEpisodeID()
+    {
+        return nextEpisodeId++;
+    }
+
     // get action sequence number
-    int getActionSeqNum() { return actionCount++; }
+    int
+    getActionSeqNum()
+    {
+        return actionCount++;
+    }
 
     // dump error log into a file and exit the simulation
-    void dumpErrorLog(std::stringstream& ss);
+    void dumpErrorLog(std::stringstream &ss);
 
   private:
     RequestorID _requestorId;
@@ -165,22 +203,22 @@ class ProtocolTester : public ClockedObject
     bool debugTester;
 
     // all available requestor ports connected to Ruby
-    std::vector<RequestPort*> cpuPorts;      // cpu data ports
-    std::vector<RequestPort*> dmaPorts;      // DMA data ports
-    std::vector<RequestPort*> cuVectorPorts; // ports to GPU vector cache
-    std::vector<RequestPort*> cuSqcPorts;    // ports to GPU inst cache
-    std::vector<RequestPort*> cuScalarPorts; // ports to GPU scalar cache
-    std::vector<TokenManager*> cuTokenManagers;
-    std::vector<GMTokenPort*> cuTokenPorts;
+    std::vector<RequestPort *> cpuPorts;      // cpu data ports
+    std::vector<RequestPort *> dmaPorts;      // DMA data ports
+    std::vector<RequestPort *> cuVectorPorts; // ports to GPU vector cache
+    std::vector<RequestPort *> cuSqcPorts;    // ports to GPU inst cache
+    std::vector<RequestPort *> cuScalarPorts; // ports to GPU scalar cache
+    std::vector<TokenManager *> cuTokenManagers;
+    std::vector<GMTokenPort *> cuTokenPorts;
     // all CPU, DMA, and GPU threads
-    std::vector<CpuThread*> cpuThreads;
-    std::vector<DmaThread*> dmaThreads;
-    std::vector<GpuWavefront*> wfs;
+    std::vector<CpuThread *> cpuThreads;
+    std::vector<DmaThread *> dmaThreads;
+    std::vector<GpuWavefront *> wfs;
 
     // address manager that (1) generates DRF sequences of requests,
     //                      (2) manages an internal log table and
     //                      (3) validate response data
-    AddressManager* addrManager;
+    AddressManager *addrManager;
 
     // number of CPUs and CUs
     int numCpus;
@@ -196,7 +234,7 @@ class ProtocolTester : public ClockedObject
     // if an exit signal was already sent
     bool sentExitSignal;
 
-    OutputStream* logFile;
+    OutputStream *logFile;
 };
 
 } // namespace gem5

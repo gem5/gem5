@@ -46,7 +46,7 @@ namespace gem5
 
 template <class T, class U>
 inline T
-safe_cast(U&& ref_or_ptr)
+safe_cast(U &&ref_or_ptr)
 {
     /*
      * srd::forward used in conjunction with forwarding references (template T
@@ -71,7 +71,7 @@ safe_cast(U&& ref_or_ptr)
 
 template <class T, class U>
 inline T
-safe_cast(U&& ref_or_ptr)
+safe_cast(U &&ref_or_ptr)
 {
     /*
      * safe_cast should be reserved to polymorphic types while static_cast is
@@ -79,10 +79,7 @@ safe_cast(U&& ref_or_ptr)
      * compile in a non-debug build and fail in a debug build.
      */
     static_assert(std::is_polymorphic_v<
-        std::remove_pointer_t<
-        std::remove_reference_t<
-        U>>
-    >);
+                  std::remove_pointer_t<std::remove_reference_t<U> > >);
     return static_cast<T>(std::forward<U>(ref_or_ptr));
 }
 

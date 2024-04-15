@@ -49,7 +49,7 @@ class I8237 : public BasicPioDevice
   protected:
     Tick latency;
     uint8_t maskVal;
-    //XXX These should be serialized.
+    // XXX These should be serialized.
     uint8_t requestVal;
     uint8_t commandVal;
     uint8_t statusVal;
@@ -74,7 +74,7 @@ class I8237 : public BasicPioDevice
 
         int number;
 
-        //XXX These should be serialized.
+        // XXX These should be serialized.
         uint8_t mode = 0x0;
 
         ChannelAddrReg addrReg;

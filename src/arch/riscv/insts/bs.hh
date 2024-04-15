@@ -46,8 +46,9 @@ class BSOp : public RiscvStaticInst
         : RiscvStaticInst(mnem, _machInst, __opClass), bs(0)
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

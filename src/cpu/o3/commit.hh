@@ -167,7 +167,7 @@ class Commit
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the commited state rename map. */
-    void setRenameMap(UnifiedRenameMap::PerThreadUnifiedRenameMap& rm_ptr);
+    void setRenameMap(UnifiedRenameMap::PerThreadUnifiedRenameMap &rm_ptr);
 
     /** Sets pointer to the ROB. */
     void setROB(ROB *rob_ptr);
@@ -306,10 +306,18 @@ class Commit
 
   public:
     /** Reads the PC of a specific thread. */
-    const PCStateBase &pcState(ThreadID tid) { return *pc[tid]; }
+    const PCStateBase &
+    pcState(ThreadID tid)
+    {
+        return *pc[tid];
+    }
 
     /** Sets the PC of a specific thread. */
-    void pcState(const PCStateBase &val, ThreadID tid) { set(pc[tid], val); }
+    void
+    pcState(const PCStateBase &val, ThreadID tid)
+    {
+        set(pc[tid], val);
+    }
 
   private:
     /** Time buffer interface. */
@@ -349,7 +357,8 @@ class Commit
     std::vector<ThreadState *> thread;
 
     /** Records that commit has written to the time buffer this cycle. Used for
-     * the CPU to determine if it can deschedule itself if there is no activity.
+     * the CPU to determine if it can deschedule itself if there is no
+     * activity.
      */
     bool wroteToTimeBuffer;
 

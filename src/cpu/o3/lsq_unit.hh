@@ -91,6 +91,7 @@ class LSQUnit
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
     using LSQRequest = LSQ::LSQRequest;
+
   private:
     class LSQEntry
     {
@@ -98,7 +99,7 @@ class LSQUnit
         /** The instruction. */
         DynInstPtr _inst;
         /** The request. */
-        LSQRequest* _request = nullptr;
+        LSQRequest *_request = nullptr;
         /** The size of the operation. */
         uint32_t _size = 0;
         /** Valid entry. */
@@ -126,7 +127,7 @@ class LSQUnit
         }
 
         void
-        set(const DynInstPtr& new_inst)
+        set(const DynInstPtr &new_inst)
         {
             assert(!_valid);
             _inst = new_inst;
@@ -134,15 +135,50 @@ class LSQUnit
             _size = 0;
         }
 
-        LSQRequest* request() { return _request; }
-        void setRequest(LSQRequest* r) { _request = r; }
-        bool hasRequest() { return _request != nullptr; }
+        LSQRequest *
+        request()
+        {
+            return _request;
+        }
+
+        void
+        setRequest(LSQRequest *r)
+        {
+            _request = r;
+        }
+
+        bool
+        hasRequest()
+        {
+            return _request != nullptr;
+        }
+
         /** Member accessors. */
         /** @{ */
-        bool valid() const { return _valid; }
-        uint32_t& size() { return _size; }
-        const uint32_t& size() const { return _size; }
-        const DynInstPtr& instruction() const { return _inst; }
+        bool
+        valid() const
+        {
+            return _valid;
+        }
+
+        uint32_t &
+        size()
+        {
+            return _size;
+        }
+
+        const uint32_t &
+        size() const
+        {
+            return _size;
+        }
+
+        const DynInstPtr &
+        instruction() const
+        {
+            return _inst;
+        }
+
         /** @} */
     };
 
@@ -165,13 +201,15 @@ class LSQUnit
 
       public:
         static constexpr size_t DataSize = sizeof(_data);
-        /** Constructs an empty store queue entry. */
-        SQEntry()
-        {
-            std::memset(_data, 0, DataSize);
-        }
 
-        void set(const DynInstPtr& inst) { LSQEntry::set(inst); }
+        /** Constructs an empty store queue entry. */
+        SQEntry() { std::memset(_data, 0, DataSize); }
+
+        void
+        set(const DynInstPtr &inst)
+        {
+            LSQEntry::set(inst);
+        }
 
         void
         clear()
@@ -182,26 +220,77 @@ class LSQUnit
 
         /** Member accessors. */
         /** @{ */
-        bool& canWB() { return _canWB; }
-        const bool& canWB() const { return _canWB; }
-        bool& completed() { return _completed; }
-        const bool& completed() const { return _completed; }
-        bool& committed() { return _committed; }
-        const bool& committed() const { return _committed; }
-        bool& isAllZeros() { return _isAllZeros; }
-        const bool& isAllZeros() const { return _isAllZeros; }
-        char* data() { return _data; }
-        const char* data() const { return _data; }
+        bool &
+        canWB()
+        {
+            return _canWB;
+        }
+
+        const bool &
+        canWB() const
+        {
+            return _canWB;
+        }
+
+        bool &
+        completed()
+        {
+            return _completed;
+        }
+
+        const bool &
+        completed() const
+        {
+            return _completed;
+        }
+
+        bool &
+        committed()
+        {
+            return _committed;
+        }
+
+        const bool &
+        committed() const
+        {
+            return _committed;
+        }
+
+        bool &
+        isAllZeros()
+        {
+            return _isAllZeros;
+        }
+
+        const bool &
+        isAllZeros() const
+        {
+            return _isAllZeros;
+        }
+
+        char *
+        data()
+        {
+            return _data;
+        }
+
+        const char *
+        data() const
+        {
+            return _data;
+        }
+
         /** @} */
     };
+
     using LQEntry = LSQEntry;
 
     /** Coverage of one address range with another */
     enum class AddrRangeCoverage
     {
         PartialAddrRangeCoverage, /* Two ranges partly overlap */
-        FullAddrRangeCoverage, /* One range fully covers another */
-        NoAddrRangeCoverage /* Two ranges are disjoint */
+        FullAddrRangeCoverage,    /* One range fully covers another */
+        NoAddrRangeCoverage       /* Two ranges are disjoint */
     };
 
   public:
@@ -216,14 +305,14 @@ class LSQUnit
      * contructor is deleted explicitly. However, STL vector requires
      * a valid copy constructor for the base type at compile time.
      */
-    LSQUnit(const LSQUnit &l): stats(nullptr)
+    LSQUnit(const LSQUnit &l) : stats(nullptr)
     {
         panic("LSQUnit is not copy-able");
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
-            LSQ *lsq_ptr, unsigned id);
+              LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -250,8 +339,8 @@ class LSQUnit
      * @param load_idx index to start checking at
      * @param inst the instruction to check
      */
-    Fault checkViolations(typename LoadQueue::iterator& loadIt,
-            const DynInstPtr& inst);
+    Fault checkViolations(typename LoadQueue::iterator &loadIt,
+                          const DynInstPtr &inst);
 
     /** Check if an incoming invalidate hits in the lsq on a load
      * that might have issued out of order wrt another load beacuse
@@ -262,7 +351,13 @@ class LSQUnit
     /** Executes a load instruction. */
     Fault executeLoad(const DynInstPtr &inst);
 
-    Fault executeLoad(int lq_idx) { panic("Not implemented"); return NoFault; }
+    Fault
+    executeLoad(int lq_idx)
+    {
+        panic("Not implemented");
+        return NoFault;
+    }
+
     /** Executes a store instruction. */
     Fault executeStore(const DynInstPtr &inst);
 
@@ -287,7 +382,11 @@ class LSQUnit
     /** Returns if there is a memory ordering violation. Value is reset upon
      * call to getMemDepViolator().
      */
-    bool violation() { return memDepViolator; }
+    bool
+    violation()
+    {
+        return memDepViolator;
+    }
 
     /** Returns the memory ordering violator. */
     DynInstPtr getMemDepViolator();
@@ -299,16 +398,40 @@ class LSQUnit
     unsigned numFreeStoreEntries();
 
     /** Returns the number of loads in the LQ. */
-    int numLoads() { return loadQueue.size(); }
+    int
+    numLoads()
+    {
+        return loadQueue.size();
+    }
 
     /** Returns the number of stores in the SQ. */
-    int numStores() { return storeQueue.size(); }
+    int
+    numStores()
+    {
+        return storeQueue.size();
+    }
 
     // hardware transactional memory
-    int numHtmStarts() const { return htmStarts; }
-    int numHtmStops() const { return htmStops; }
-    void resetHtmStartsStops() { htmStarts = htmStops = 0; }
+    int
+    numHtmStarts() const
+    {
+        return htmStarts;
+    }
+
+    int
+    numHtmStops() const
+    {
+        return htmStops;
+    }
+
+    void
+    resetHtmStartsStops()
+    {
+        htmStarts = htmStops = 0;
+    }
+
     uint64_t getLatestHtmUid() const;
+
     void
     setLastRetiredHtmUid(uint64_t htm_uid)
     {
@@ -321,47 +444,82 @@ class LSQUnit
     bool checkStaleTranslations() const;
 
     /** Returns if either the LQ or SQ is full. */
-    bool isFull() { return lqFull() || sqFull(); }
+    bool
+    isFull()
+    {
+        return lqFull() || sqFull();
+    }
 
     /** Returns if both the LQ and SQ are empty. */
-    bool isEmpty() const { return lqEmpty() && sqEmpty(); }
+    bool
+    isEmpty() const
+    {
+        return lqEmpty() && sqEmpty();
+    }
 
     /** Returns if the LQ is full. */
-    bool lqFull() { return loadQueue.full(); }
+    bool
+    lqFull()
+    {
+        return loadQueue.full();
+    }
 
     /** Returns if the SQ is full. */
-    bool sqFull() { return storeQueue.full(); }
+    bool
+    sqFull()
+    {
+        return storeQueue.full();
+    }
 
     /** Returns if the LQ is empty. */
-    bool lqEmpty() const { return loadQueue.size() == 0; }
+    bool
+    lqEmpty() const
+    {
+        return loadQueue.size() == 0;
+    }
 
     /** Returns if the SQ is empty. */
-    bool sqEmpty() const { return storeQueue.size() == 0; }
+    bool
+    sqEmpty() const
+    {
+        return storeQueue.size() == 0;
+    }
 
     /** Returns the number of instructions in the LSQ. */
-    unsigned getCount() { return loadQueue.size() + storeQueue.size(); }
+    unsigned
+    getCount()
+    {
+        return loadQueue.size() + storeQueue.size();
+    }
 
     /** Returns if there are any stores to writeback. */
-    bool hasStoresToWB() { return storesToWB; }
+    bool
+    hasStoresToWB()
+    {
+        return storesToWB;
+    }
 
     /** Returns the number of stores to writeback. */
-    int numStoresToWB() { return storesToWB; }
+    int
+    numStoresToWB()
+    {
+        return storesToWB;
+    }
 
     /** Returns if the LSQ unit will writeback on this cycle. */
     bool
     willWB()
     {
-        return storeWBIt.dereferenceable() &&
-                        storeWBIt->valid() &&
-                        storeWBIt->canWB() &&
-                        !storeWBIt->completed() &&
-                        !isStoreBlocked;
+        return storeWBIt.dereferenceable() && storeWBIt->valid() &&
+               storeWBIt->canWB() && !storeWBIt->completed() &&
+               !isStoreBlocked;
     }
 
     /** Handles doing the retry. */
     void recvRetry();
 
     unsigned int cacheLineSize();
+
   private:
     /** Reset the LSQ state */
     void resetState();
@@ -385,12 +543,11 @@ class LSQUnit
      */
     bool trySendPacket(bool isLoad, PacketPtr data_pkt);
 
-
     /** Debugging function to dump instructions in the LSQ. */
     void dumpInsts() const;
 
     /** Schedule event for the cpu. */
-    void schedule(Event& ev, Tick when);
+    void schedule(Event &ev, Tick when);
 
     BaseMMU *getMMUPtr();
 
@@ -413,7 +570,7 @@ class LSQUnit
       public:
         /** Constructs a writeback event. */
         WritebackEvent(const DynInstPtr &_inst, PacketPtr pkt,
-                LSQUnit *lsq_ptr);
+                       LSQUnit *lsq_ptr);
 
         /** Processes the writeback event. */
         void process();
@@ -444,6 +601,7 @@ class LSQUnit
   private:
     /** The LSQUnit thread id. */
     ThreadID lsqID;
+
   public:
     /** The store queue. */
     StoreQueue storeQueue;
@@ -548,18 +706,32 @@ class LSQUnit
     Fault write(LSQRequest *requst, uint8_t *data, ssize_t store_idx);
 
     /** Returns the index of the head load instruction. */
-    int getLoadHead() { return loadQueue.head(); }
+    int
+    getLoadHead()
+    {
+        return loadQueue.head();
+    }
 
     /** Returns the sequence number of the head load instruction. */
     InstSeqNum getLoadHeadSeqNum();
 
     /** Returns the index of the head store instruction. */
-    int getStoreHead() { return storeQueue.head(); }
+    int
+    getStoreHead()
+    {
+        return storeQueue.head();
+    }
+
     /** Returns the sequence number of the head store instruction. */
     InstSeqNum getStoreHeadSeqNum();
 
     /** Returns whether or not the LSQ unit is stalled. */
-    bool isStalled()  { return stalled; }
+    bool
+    isStalled()
+    {
+        return stalled;
+    }
+
   public:
     typedef typename CircularQueue<LQEntry>::iterator LQIterator;
     typedef typename CircularQueue<SQEntry>::iterator SQIterator;

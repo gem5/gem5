@@ -39,11 +39,11 @@ void
 sim_pybind(pybind11::module_ &m_internal)
 {
     pybind11::module_ m = m_internal.def_submodule("sim");
-    pybind11::class_<
-        Port, std::unique_ptr<Port, pybind11::nodelete>>(m, "Port")
-        .def("bind", &Port::bind)
-        ;
+    pybind11::class_<Port, std::unique_ptr<Port, pybind11::nodelete>>(m,
+                                                                      "Port")
+        .def("bind", &Port::bind);
 }
+
 EmbeddedPyBind embed_("sim", &sim_pybind);
 
 } // anonymous namespace

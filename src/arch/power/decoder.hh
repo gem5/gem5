@@ -77,8 +77,8 @@ class Decoder : public InstDecoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
-        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-                si->getName(), mach_inst);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+                mach_inst);
         return si;
     }
 

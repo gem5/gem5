@@ -54,7 +54,8 @@ namespace sc_gem5
 {
 
 class ScHalt
-{};
+{
+};
 
 class Process;
 class Reset;
@@ -63,20 +64,68 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 {
   public:
     virtual ::sc_core::sc_curr_proc_kind procKind() const = 0;
-    bool needsStart() const { return _needsStart; }
-    void needsStart(bool ns) { _needsStart = ns; }
-    bool dynamic() const { return _dynamic; }
-    bool isUnwinding() const { return _isUnwinding; }
-    void isUnwinding(bool v) { _isUnwinding = v; }
-    bool terminated() const { return _terminated; }
 
-    bool scheduled() const { return _scheduled; }
-    void scheduled(bool new_val) { _scheduled = new_val; }
+    bool
+    needsStart() const
+    {
+        return _needsStart;
+    }
+
+    void
+    needsStart(bool ns)
+    {
+        _needsStart = ns;
+    }
+
+    bool
+    dynamic() const
+    {
+        return _dynamic;
+    }
+
+    bool
+    isUnwinding() const
+    {
+        return _isUnwinding;
+    }
+
+    void
+    isUnwinding(bool v)
+    {
+        _isUnwinding = v;
+    }
+
+    bool
+    terminated() const
+    {
+        return _terminated;
+    }
+
+    bool
+    scheduled() const
+    {
+        return _scheduled;
+    }
+
+    void
+    scheduled(bool new_val)
+    {
+        _scheduled = new_val;
+    }
 
     void forEachKid(const std::function<void(Process *)> &work);
 
-    bool suspended() const { return _suspended; }
-    bool disabled() const { return _disabled; }
+    bool
+    suspended() const
+    {
+        return _suspended;
+    }
+
+    bool
+    disabled() const
+    {
+        return _disabled;
+    }
 
     void suspend(bool inc_kids);
     void resume(bool inc_kids);
@@ -95,19 +144,47 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     void signalReset(bool set, bool sync);
 
-    void incref() { refCount++; }
-    void decref() { refCount--; }
+    void
+    incref()
+    {
+        refCount++;
+    }
 
-    ::sc_core::sc_event &resetEvent() { return _resetEvent; }
-    ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
+    void
+    decref()
+    {
+        refCount--;
+    }
 
-    void setStackSize(size_t size) { stackSize = size; }
+    ::sc_core::sc_event &
+    resetEvent()
+    {
+        return _resetEvent;
+    }
+
+    ::sc_core::sc_event &
+    terminatedEvent()
+    {
+        return _terminatedEvent;
+    }
+
+    void
+    setStackSize(size_t size)
+    {
+        stackSize = size;
+    }
 
     void run();
 
     void addStatic(StaticSensitivity *);
     void setDynamic(DynamicSensitivity *);
-    void clearDynamic() { setDynamic(nullptr); }
+
+    void
+    clearDynamic()
+    {
+        setDynamic(nullptr);
+    }
+
     void addReset(Reset *);
 
     ScEvent timeoutEvent;
@@ -118,31 +195,79 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     void ready();
 
-    virtual gem5::Fiber *fiber() { return gem5::Fiber::primaryFiber(); }
+    virtual gem5::Fiber *
+    fiber()
+    {
+        return gem5::Fiber::primaryFiber();
+    }
 
-    static Process *newest() { return _newest; }
+    static Process *
+    newest()
+    {
+        return _newest;
+    }
 
     void lastReport(::sc_core::sc_report *report);
     ::sc_core::sc_report *lastReport() const;
 
-    bool hasStaticSensitivities() { return !staticSensitivities.empty(); }
-    bool internal() { return _internal; }
-    bool timedOut() { return _timedOut; }
-    bool inReset() { return _syncReset || syncResetCount || asyncResetCount; }
+    bool
+    hasStaticSensitivities()
+    {
+        return !staticSensitivities.empty();
+    }
 
-    bool dontInitialize() { return _dontInitialize; }
-    void dontInitialize(bool di) { _dontInitialize = di; }
+    bool
+    internal()
+    {
+        return _internal;
+    }
 
-    void joinWait(::sc_core::sc_join *join) { joinWaiters.push_back(join); }
+    bool
+    timedOut()
+    {
+        return _timedOut;
+    }
 
-    void waitCount(int count) { _waitCount = count; }
+    bool
+    inReset()
+    {
+        return _syncReset || syncResetCount || asyncResetCount;
+    }
 
-    const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
+    bool
+    dontInitialize()
+    {
+        return _dontInitialize;
+    }
+
+    void
+    dontInitialize(bool di)
+    {
+        _dontInitialize = di;
+    }
+
+    void
+    joinWait(::sc_core::sc_join *join)
+    {
+        joinWaiters.push_back(join);
+    }
+
+    void
+    waitCount(int count)
+    {
+        _waitCount = count;
+    }
+
+    const char *
+    uniqueName(const char *seed)
+    {
+        return nameGen.gen(seed);
+    }
 
   protected:
     void timeout();
 
-    Process(const char *name, ProcessFuncWrapper *func, bool internal=false);
+    Process(const char *name, ProcessFuncWrapper *func, bool internal = false);
 
     static Process *_newest;
 
@@ -150,7 +275,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     {
         popListNode();
         delete func;
-        for (auto s: staticSensitivities) {
+        for (auto s : staticSensitivities) {
             s->clear();
             delete s;
         }
@@ -206,8 +331,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 class Reset
 {
   public:
-    Reset(Process *p, bool s, bool v) :
-        _process(p), _signal(nullptr), _sync(s), _value(v)
+    Reset(Process *p, bool s, bool v)
+        : _process(p), _signal(nullptr), _sync(s), _value(v)
     {}
 
     bool
@@ -223,12 +348,36 @@ class Reset
         }
         return false;
     }
-    void update() { _process->signalReset(_signal->read() == _value, _sync); }
 
-    Process *process() { return _process; }
-    const sc_core::sc_signal_in_if<bool> *signal() { return _signal; }
-    bool sync() { return _sync; }
-    bool value() { return _value; }
+    void
+    update()
+    {
+        _process->signalReset(_signal->read() == _value, _sync);
+    }
+
+    Process *
+    process()
+    {
+        return _process;
+    }
+
+    const sc_core::sc_signal_in_if<bool> *
+    signal()
+    {
+        return _signal;
+    }
+
+    bool
+    sync()
+    {
+        return _sync;
+    }
+
+    bool
+    value()
+    {
+        return _value;
+    }
 
   private:
     Process *_process;
@@ -238,9 +387,9 @@ class Reset
 };
 
 void newReset(const sc_core::sc_port_base *pb, Process *p, bool s, bool v);
-void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p,
-        bool s, bool v);
+void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool s,
+              bool v);
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_PROCESS_HH__
+#endif //__SYSTEMC_CORE_PROCESS_HH__

@@ -46,53 +46,53 @@ BitUnion32(MVPControlReg)
 EndBitUnion(MVPControlReg)
 
 BitUnion32(MVPConf0Reg)
-    Bitfield<31>     m;
-    Bitfield<29>     tlbs;
-    Bitfield<28>     gs;
-    Bitfield<27>     pcp;
+    Bitfield<31> m;
+    Bitfield<29> tlbs;
+    Bitfield<28> gs;
+    Bitfield<27> pcp;
     Bitfield<25, 16> ptlbe;
-    Bitfield<15>     tca;
+    Bitfield<15> tca;
     Bitfield<13, 10> pvpe;
-    Bitfield<7,  0>  ptc;
+    Bitfield<7, 0> ptc;
 EndBitUnion(MVPConf0Reg)
 
 BitUnion32(VPEControlReg)
-    Bitfield<21>     ysi;
+    Bitfield<21> ysi;
     Bitfield<18, 16> excpt;
-    Bitfield<15>     te;
-    Bitfield<7,  0>  targTC;
+    Bitfield<15> te;
+    Bitfield<7, 0> targTC;
 EndBitUnion(VPEControlReg)
 
 BitUnion32(VPEConf0Reg)
-    Bitfield<31>     m;
+    Bitfield<31> m;
     Bitfield<28, 21> xtc;
-    Bitfield<19>     tcs;
-    Bitfield<18>     scs;
-    Bitfield<17>     dcs;
-    Bitfield<16>     ics;
-    Bitfield<1>      mvp;
-    Bitfield<0>      vpa;
+    Bitfield<19> tcs;
+    Bitfield<18> scs;
+    Bitfield<17> dcs;
+    Bitfield<16> ics;
+    Bitfield<1> mvp;
+    Bitfield<0> vpa;
 EndBitUnion(VPEConf0Reg)
 
 BitUnion32(TCBindReg)
     Bitfield<28, 21> curTC;
     Bitfield<20, 18> a0;
-    Bitfield<17>     tbe;
-    Bitfield<3,  0>  curVPE;
+    Bitfield<17> tbe;
+    Bitfield<3, 0> curVPE;
 EndBitUnion(TCBindReg)
 
 BitUnion32(TCStatusReg)
     Bitfield<31, 28> tcu;
-    Bitfield<27>     tmx;
+    Bitfield<27> tmx;
     Bitfield<24, 23> rnst;
-    Bitfield<21>     tds;
-    Bitfield<20>     dt;
+    Bitfield<21> tds;
+    Bitfield<20> dt;
     Bitfield<19, 16> impl;
-    Bitfield<15>     da;
-    Bitfield<13>     a;
+    Bitfield<15> da;
+    Bitfield<13> a;
     Bitfield<12, 11> tksu;
-    Bitfield<10>     ixmt;
-    Bitfield<7,  0>  asid;
+    Bitfield<10> ixmt;
+    Bitfield<7, 0> asid;
 EndBitUnion(TCStatusReg)
 
 BitUnion32(TCHaltReg)

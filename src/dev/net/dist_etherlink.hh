@@ -89,16 +89,35 @@ class DistEtherLink : public SimObject
         EthPacketPtr packet;
 
       public:
-        Link(const std::string &name, DistEtherLink *p,
-             EtherDump *d, Event *e) :
-            objName(name), parent(p), localIface(nullptr), dump(d),
-            distIface(nullptr), event(e) {}
+        Link(const std::string &name, DistEtherLink *p, EtherDump *d, Event *e)
+            : objName(name),
+              parent(p),
+              localIface(nullptr),
+              dump(d),
+              distIface(nullptr),
+              event(e)
+        {}
 
         ~Link() {}
 
-        const std::string name() const { return objName; }
-        bool busy() const { return (bool)packet; }
-        void setLocalInt(LocalIface *i) { assert(!localIface); localIface=i; }
+        const std::string
+        name() const
+        {
+            return objName;
+        }
+
+        bool
+        busy() const
+        {
+            return (bool)packet;
+        }
+
+        void
+        setLocalInt(LocalIface *i)
+        {
+            assert(!localIface);
+            localIface = i;
+        }
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
@@ -126,17 +145,26 @@ class DistEtherLink : public SimObject
         EventFunctionWrapper doneEvent;
 
       public:
-        TxLink(const std::string &name, DistEtherLink *p,
-               double invBW, Tick delay_var, EtherDump *d) :
-            Link(name, p, d, &doneEvent), ticksPerByte(invBW),
-            delayVar(delay_var), doneEvent([this]{ txDone(); }, name) {}
+        TxLink(const std::string &name, DistEtherLink *p, double invBW,
+               Tick delay_var, EtherDump *d)
+            : Link(name, p, d, &doneEvent),
+              ticksPerByte(invBW),
+              delayVar(delay_var),
+              doneEvent([this] { txDone(); }, name)
+        {}
+
         ~TxLink() {}
 
         /**
          * Register the dist interface to be used to talk to the
          * peer gem5 processes.
          */
-        void setDistInt(DistIface *m) { assert(!distIface); distIface=m; }
+        void
+        setDistInt(DistIface *m)
+        {
+            assert(!distIface);
+            distIface = m;
+        }
 
         /**
          * Initiate sending of a packet via this link.
@@ -152,7 +180,6 @@ class DistEtherLink : public SimObject
     class RxLink : public Link
     {
       protected:
-
         /**
          * Transmission delay for the simulated Ethernet link.
          */
@@ -165,21 +192,28 @@ class DistEtherLink : public SimObject
         EventFunctionWrapper _doneEvent;
 
       public:
+        RxLink(const std::string &name, DistEtherLink *p, Tick delay,
+               EtherDump *d)
+            : Link(name, p, d, &_doneEvent),
+              linkDelay(delay),
+              _doneEvent([this] { rxDone(); }, name)
+        {}
 
-        RxLink(const std::string &name, DistEtherLink *p,
-               Tick delay, EtherDump *d) :
-            Link(name, p, d, &_doneEvent), linkDelay(delay),
-            _doneEvent([this]{ rxDone(); }, name) {}
         ~RxLink() {}
 
         /**
          * Register our dist interface to talk to the peer gem5 processes.
          */
         void setDistInt(DistIface *m);
+
         /**
          * Done events will be scheduled by DistIface (so we need the accessor)
          */
-        const EventFunctionWrapper *doneEvent() const { return &_doneEvent; }
+        const EventFunctionWrapper *
+        doneEvent() const
+        {
+            return &_doneEvent;
+        }
     };
 
     /**
@@ -194,11 +228,24 @@ class DistEtherLink : public SimObject
         LocalIface(const std::string &name, TxLink *tx, RxLink *rx,
                    DistIface *m);
 
-        bool recvPacket(EthPacketPtr pkt) { return txLink->transmit(pkt); }
-        void sendDone() { peer->sendDone(); }
-        bool isBusy() { return txLink->busy(); }
-    };
+        bool
+        recvPacket(EthPacketPtr pkt)
+        {
+            return txLink->transmit(pkt);
+        }
 
+        void
+        sendDone()
+        {
+            peer->sendDone();
+        }
+
+        bool
+        isBusy()
+        {
+            return txLink->busy();
+        }
+    };
 
   protected:
     /**
@@ -223,7 +270,7 @@ class DistEtherLink : public SimObject
     ~DistEtherLink();
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;

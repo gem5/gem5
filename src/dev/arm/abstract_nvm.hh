@@ -55,10 +55,9 @@ namespace gem5
  */
 class AbstractNVM : public SimObject
 {
-
   public:
-    AbstractNVM(const AbstractNVMParams &p): SimObject(p) {};
-    virtual ~AbstractNVM() {};
+    AbstractNVM(const AbstractNVMParams &p) : SimObject(p){};
+    virtual ~AbstractNVM(){};
 
     /**
      * Initialize Memory.
@@ -81,8 +80,8 @@ class AbstractNVM : public SimObject
      * @param sector_size size of one sector in bytes; value is defined in
      * disk_image.hh
      */
-    virtual void initializeMemory(uint64_t disk_size, uint32_t sector_size) =
-        0;
+    virtual void initializeMemory(uint64_t disk_size,
+                                  uint32_t sector_size) = 0;
 
     /**
      * Access functions

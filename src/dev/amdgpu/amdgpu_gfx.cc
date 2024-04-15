@@ -48,16 +48,16 @@ void
 AMDGPUGfx::readMMIO(PacketPtr pkt, Addr offset)
 {
     switch (offset) {
-      case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB:
+    case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB:
         pkt->setLE<uint32_t>(captured_clock_count);
         break;
-      case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB:
+    case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB:
         pkt->setLE<uint32_t>(captured_clock_count >> 32);
         break;
-      case AMDGPU_MM_SCRATCH_REG0:
+    case AMDGPU_MM_SCRATCH_REG0:
         pkt->setLE<uint32_t>(scratchRegs[0]);
         break;
-      default:
+    default:
         break;
     }
 }
@@ -66,19 +66,19 @@ void
 AMDGPUGfx::writeMMIO(PacketPtr pkt, Addr offset)
 {
     switch (offset) {
-      case AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT:
+    case AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT:
         // Use gem5 Ticks in nanoseconds are the counter. The first capture
         // is expected to return zero.
         if (captured_clock_count == 1) {
-          captured_clock_count = 0;
+            captured_clock_count = 0;
         } else {
-          captured_clock_count = curTick() / sim_clock::as_int::ns;
+            captured_clock_count = curTick() / sim_clock::as_int::ns;
         }
         break;
-      case AMDGPU_MM_SCRATCH_REG0:
+    case AMDGPU_MM_SCRATCH_REG0:
         scratchRegs[0] = pkt->getLE<uint32_t>();
         break;
-      default:
+    default:
         break;
     }
 }

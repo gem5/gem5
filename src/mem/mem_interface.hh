@@ -85,7 +85,6 @@ class MemInterface : public AbstractMemory
      */
     class Bank
     {
-
       public:
         static const uint32_t NO_ROW = -1;
 
@@ -101,17 +100,23 @@ class MemInterface : public AbstractMemory
         uint32_t rowAccesses;
         uint32_t bytesAccessed;
 
-        Bank() :
-            openRow(NO_ROW), bank(0), bankgr(0),
-            rdAllowedAt(0), wrAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
-            rowAccesses(0), bytesAccessed(0)
-        { }
+        Bank()
+            : openRow(NO_ROW),
+              bank(0),
+              bankgr(0),
+              rdAllowedAt(0),
+              wrAllowedAt(0),
+              preAllowedAt(0),
+              actAllowedAt(0),
+              rowAccesses(0),
+              bytesAccessed(0)
+        {}
     };
 
     /**
      * A pointer to the parent memory controller instance
      */
-    MemCtrl* ctrl;
+    MemCtrl *ctrl;
 
     /**
      * Number of commands that can issue in the defined controller
@@ -153,26 +158,37 @@ class MemInterface : public AbstractMemory
     /*
      * @return delay between write and read commands
      */
-    virtual Tick writeToReadDelay() const { return tBURST + tWTR; }
+    virtual Tick
+    writeToReadDelay() const
+    {
+        return tBURST + tWTR;
+    }
 
     /*
      * @return delay between write and read commands
      */
-    Tick readToWriteDelay() const { return tBURST + tRTW; }
+    Tick
+    readToWriteDelay() const
+    {
+        return tBURST + tRTW;
+    }
 
     /*
      * @return delay between accesses to different ranks
      */
-    Tick rankToRankDelay() const { return tBURST + tCS; }
+    Tick
+    rankToRankDelay() const
+    {
+        return tBURST + tCS;
+    }
 
   public:
-
     /**
-      * Buffer sizes for read and write queues in the controller
-      * These are passed to the controller on instantiation
-      * Defining them here allows for buffers to be resized based
-      * on memory type / configuration.
-      */
+     * Buffer sizes for read and write queues in the controller
+     * These are passed to the controller on instantiation
+     * Defining them here allows for buffers to be resized based
+     * on memory type / configuration.
+     */
     const uint32_t readBufferSize;
     const uint32_t writeBufferSize;
 
@@ -205,7 +221,6 @@ class MemInterface : public AbstractMemory
     uint32_t readQueueSize = 0;
     uint32_t writeQueueSize = 0;
 
-
     MemCtrl::BusState busState = MemCtrl::READ;
 
     /** bus state for next request event triggered */
@@ -223,8 +238,8 @@ class MemInterface : public AbstractMemory
      *                       check command bandwidth
      *  @param pseudo_channel pseudo channel number
      */
-    void setCtrl(MemCtrl* _ctrl, unsigned int command_window,
-                                    uint8_t pseudo_channel = 0);
+    void setCtrl(MemCtrl *_ctrl, unsigned int command_window,
+                 uint8_t pseudo_channel = 0);
 
     /**
      * Get an address in a dense range which starts from 0. The input
@@ -235,7 +250,11 @@ class MemInterface : public AbstractMemory
      * @param addr The intput address which should be in the addrRange
      * @return An address in the continues range [0, max)
      */
-    Addr getCtrlAddr(Addr addr) { return range.getOffset(addr); }
+    Addr
+    getCtrlAddr(Addr addr)
+    {
+        return range.getOffset(addr);
+    }
 
     /**
      * Setup the rank based on packet received
@@ -265,7 +284,7 @@ class MemInterface : public AbstractMemory
      * @return the tick when the packet selected will issue
      */
     virtual std::pair<MemPacketQueue::iterator, Tick>
-    chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const = 0;
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const = 0;
 
     /*
      * Function to calulate unloaded latency
@@ -275,7 +294,11 @@ class MemInterface : public AbstractMemory
     /**
      * @return number of bytes in a burst for this interface
      */
-    uint32_t bytesPerBurst() const { return burstSize; }
+    uint32_t
+    bytesPerBurst() const
+    {
+        return burstSize;
+    }
 
     /*
      * @return time to offset next command
@@ -287,26 +310,38 @@ class MemInterface : public AbstractMemory
      *
      * @param Return true if RD/WR can issue
      */
-    virtual bool burstReady(MemPacket* pkt) const = 0;
+    virtual bool burstReady(MemPacket *pkt) const = 0;
 
     /**
      * Determine the required delay for an access to a different rank
      *
      * @return required rank to rank delay
      */
-    Tick rankDelay() const { return tCS; }
+    Tick
+    rankDelay() const
+    {
+        return tCS;
+    }
 
     /**
      *
      * @return minimum additional bus turnaround required for read-to-write
      */
-    Tick minReadToWriteDataGap() const { return std::min(tRTW, tCS); }
+    Tick
+    minReadToWriteDataGap() const
+    {
+        return std::min(tRTW, tCS);
+    }
 
     /**
      *
      * @return minimum additional bus turnaround required for write-to-read
      */
-    Tick minWriteToReadDataGap() const { return std::min(tWTR, tCS); }
+    Tick
+    minWriteToReadDataGap() const
+    {
+        return std::min(tWTR, tCS);
+    }
 
     /**
      * Address decoder to figure out physical mapping onto ranks,
@@ -321,9 +356,9 @@ class MemInterface : public AbstractMemory
      * @param pseudo_channel pseudo channel number of the packet
      * @return A MemPacket pointer with the decoded information
      */
-    virtual MemPacket* decodePacket(const PacketPtr pkt, Addr pkt_addr,
-                           unsigned int size, bool is_read,
-                           uint8_t pseudo_channel = 0)
+    virtual MemPacket *
+    decodePacket(const PacketPtr pkt, Addr pkt_addr, unsigned int size,
+                 bool is_read, uint8_t pseudo_channel = 0)
     {
         panic("MemInterface decodePacket should not be executed from here.\n");
         return nullptr;
@@ -347,13 +382,14 @@ class MemInterface : public AbstractMemory
      * This function performs the burst and update stats.
      */
     virtual std::pair<Tick, Tick>
-    doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
-                  const std::vector<MemPacketQueue>& queue) = 0;
+    doBurstAccess(MemPacket *mem_pkt, Tick next_burst_at,
+                  const std::vector<MemPacketQueue> &queue) = 0;
 
     /**
      * This function is DRAM specific.
      */
-    virtual void respondEvent(uint8_t rank)
+    virtual void
+    respondEvent(uint8_t rank)
     {
         panic("MemInterface respondEvent should not be executed from here.\n");
     };
@@ -361,61 +397,66 @@ class MemInterface : public AbstractMemory
     /**
      * This function is DRAM specific.
      */
-    virtual void checkRefreshState(uint8_t rank)
+    virtual void
+    checkRefreshState(uint8_t rank)
     {
         panic("MemInterface checkRefreshState (DRAM) should "
-        "not be executed from here.\n");
+              "not be executed from here.\n");
     };
 
     /**
      * This function is DRAM specific.
      */
-    virtual void drainRanks()
+    virtual void
+    drainRanks()
     {
         panic("MemInterface drainRanks (DRAM) should "
-        "not be executed from here.\n");
+              "not be executed from here.\n");
     }
 
     /**
      * This function is DRAM specific.
      */
-    virtual void suspend()
+    virtual void
+    suspend()
     {
         panic("MemInterface suspend (DRAM) should "
-        "not be executed from here.\n");
+              "not be executed from here.\n");
     }
 
     /**
      * This function is NVM specific.
      */
-    virtual bool readsWaitingToIssue() const
+    virtual bool
+    readsWaitingToIssue() const
     {
         panic("MemInterface readsWaitingToIssue (NVM) "
-        "should not be executed from here.\n");
+              "should not be executed from here.\n");
     };
 
     /**
      * This function is NVM specific.
      */
-    virtual void chooseRead(MemPacketQueue& queue)
+    virtual void
+    chooseRead(MemPacketQueue &queue)
     {
         panic("MemInterface chooseRead (NVM) should "
-        "not be executed from here.\n");
+              "not be executed from here.\n");
     };
 
     /**
      * This function is NVM specific.
      */
-    virtual bool writeRespQueueFull() const
+    virtual bool
+    writeRespQueueFull() const
     {
         panic("MemInterface writeRespQueueFull (NVM) "
-        "should not be executed from here.\n");
+              "should not be executed from here.\n");
     }
 
     typedef MemInterfaceParams Params;
     MemInterface(const Params &_p);
 };
-
 
 } // namespace memory
 } // namespace gem5

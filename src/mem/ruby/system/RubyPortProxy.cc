@@ -45,14 +45,9 @@ namespace gem5
 namespace ruby
 {
 
-RubyPortProxy::RubyPortProxy(const RubyPortProxyParams &p) :
-    RubyPort(p)
-{
-}
+RubyPortProxy::RubyPortProxy(const RubyPortProxyParams &p) : RubyPort(p) {}
 
-RubyPortProxy::~RubyPortProxy()
-{
-}
+RubyPortProxy::~RubyPortProxy() {}
 
 void
 RubyPortProxy::init()

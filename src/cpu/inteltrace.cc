@@ -36,7 +36,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 void
 IntelTraceRecord::dump()

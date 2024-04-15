@@ -51,7 +51,7 @@ class SimpleDisk : public SimObject
     typedef uint64_t baddr_t;
 
   protected:
-    System  *system;
+    System *system;
     DiskImage *image;
 
   public:

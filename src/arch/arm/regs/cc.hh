@@ -61,14 +61,7 @@ enum : RegIndex
     NumRegs
 };
 
-const char * const RegName[NumRegs] = {
-    "nz",
-    "c",
-    "v",
-    "ge",
-    "fp",
-    "zero"
-};
+const char *const RegName[NumRegs] = { "nz", "c", "v", "ge", "fp", "zero" };
 
 } // namespace cc_reg
 
@@ -84,25 +77,22 @@ class CCRegClassOps : public RegClassOps
 
 static inline CCRegClassOps ccRegClassOps;
 
-inline constexpr RegClass ccRegClass = RegClass(CCRegClass, CCRegClassName,
-        cc_reg::NumRegs, debug::CCRegs).ops(ccRegClassOps);
+inline constexpr RegClass ccRegClass =
+    RegClass(CCRegClass, CCRegClassName, cc_reg::NumRegs, debug::CCRegs)
+        .ops(ccRegClassOps);
 
 namespace cc_reg
 {
 
-inline constexpr RegId
-    Nz = ccRegClass[_NzIdx],
-    C = ccRegClass[_CIdx],
-    V = ccRegClass[_VIdx],
-    Ge = ccRegClass[_GeIdx],
-    Fp = ccRegClass[_FpIdx],
-    Zero = ccRegClass[_ZeroIdx];
+inline constexpr RegId Nz = ccRegClass[_NzIdx], C = ccRegClass[_CIdx],
+                       V = ccRegClass[_VIdx], Ge = ccRegClass[_GeIdx],
+                       Fp = ccRegClass[_FpIdx], Zero = ccRegClass[_ZeroIdx];
 
 } // namespace cc_reg
 
 enum ConditionCode
 {
-    COND_EQ  =   0,
+    COND_EQ = 0,
     COND_NE, //  1
     COND_CS, //  2
     COND_CC, //  3

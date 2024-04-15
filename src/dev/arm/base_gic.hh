@@ -69,11 +69,16 @@ struct ArmSPIParams;
 struct ArmSigInterruptPinParams;
 struct BaseGicParams;
 
-class BaseGic :  public PioDevice
+class BaseGic : public PioDevice
 {
   public:
     typedef BaseGicParams Params;
-    enum class GicVersion { GIC_V2, GIC_V3, GIC_V4 };
+    enum class GicVersion
+    {
+        GIC_V2,
+        GIC_V3,
+        GIC_V4
+    };
 
     BaseGic(const Params &p);
     virtual ~BaseGic();
@@ -113,7 +118,7 @@ class BaseGic :  public PioDevice
     ArmSystem *
     getSystem() const
     {
-        return (ArmSystem *) sys;
+        return (ArmSystem *)sys;
     }
 
     /** Check if version supported */
@@ -127,7 +132,11 @@ class BaseGic :  public PioDevice
      * be in an inconsistent state. We therefore disable side effects
      * by relying on the blockIntUpdate method.
      */
-    virtual bool blockIntUpdate() const { return false; }
+    virtual bool
+    blockIntUpdate() const
+    {
+        return false;
+    }
 
   protected:
     /** Platform this GIC belongs to. */
@@ -146,7 +155,7 @@ class ArmInterruptPinGen : public SimObject
   public:
     ArmInterruptPinGen(const ArmInterruptPinParams &p);
 
-    virtual ArmInterruptPin* get(ThreadContext *tc = nullptr) = 0;
+    virtual ArmInterruptPin *get(ThreadContext *tc = nullptr) = 0;
 };
 
 /**
@@ -159,9 +168,10 @@ class ArmSPIGen : public ArmInterruptPinGen
   public:
     ArmSPIGen(const ArmSPIParams &p);
 
-    ArmInterruptPin* get(ThreadContext *tc = nullptr) override;
+    ArmInterruptPin *get(ThreadContext *tc = nullptr) override;
+
   protected:
-    ArmSPI* pin;
+    ArmSPI *pin;
 };
 
 /**
@@ -175,9 +185,10 @@ class ArmPPIGen : public ArmInterruptPinGen
     PARAMS(ArmPPI);
     ArmPPIGen(const Params &p);
 
-    ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
+    ArmInterruptPin *get(ThreadContext *tc = nullptr) override;
+
   protected:
-    std::unordered_map<ContextID, ArmPPI*> pins;
+    std::unordered_map<ContextID, ArmPPI *> pins;
 };
 
 class ArmSigInterruptPinGen : public ArmInterruptPinGen
@@ -185,12 +196,12 @@ class ArmSigInterruptPinGen : public ArmInterruptPinGen
   public:
     ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p);
 
-    ArmInterruptPin* get(ThreadContext* tc = nullptr) override;
+    ArmInterruptPin *get(ThreadContext *tc = nullptr) override;
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
 
   protected:
-    ArmSigInterruptPin* pin;
+    ArmSigInterruptPin *pin;
 };
 
 /**
@@ -199,6 +210,7 @@ class ArmSigInterruptPinGen : public ArmInterruptPinGen
 class ArmInterruptPin : public Serializable
 {
     friend class ArmInterruptPinGen;
+
   protected:
     ArmInterruptPin(const ArmInterruptPinParams &p, ThreadContext *tc);
 
@@ -213,10 +225,18 @@ class ArmInterruptPin : public Serializable
     void setThreadContext(ThreadContext *tc);
 
     /** Get interrupt number */
-    uint32_t num() const { return intNum; }
+    uint32_t
+    num() const
+    {
+        return intNum;
+    }
 
     /** True if interrupt pin is active, false otherwise */
-    bool active() const { return _active; }
+    bool
+    active() const
+    {
+        return _active;
+    }
 
     /** Signal an interrupt */
     virtual void raise() = 0;
@@ -258,6 +278,7 @@ class ArmInterruptPin : public Serializable
 class ArmSPI : public ArmInterruptPin
 {
     friend class ArmSPIGen;
+
   private:
     ArmSPI(const ArmSPIParams &p);
 
@@ -269,6 +290,7 @@ class ArmSPI : public ArmInterruptPin
 class ArmPPI : public ArmInterruptPin
 {
     friend class ArmPPIGen;
+
   private:
     ArmPPI(const ArmPPIParams &p, ThreadContext *tc);
 
@@ -280,6 +302,7 @@ class ArmPPI : public ArmInterruptPin
 class ArmSigInterruptPin : public ArmInterruptPin
 {
     friend class ArmSigInterruptPinGen;
+
   private:
     ArmSigInterruptPin(const ArmSigInterruptPinParams &p);
 

@@ -44,13 +44,14 @@ typedef struct GEM5_PACKED
     uint32_t count : 30;
     uint32_t res0 : 2;
     uint32_t res1 : 16;
-    uint32_t sdw: 2;
+    uint32_t sdw : 2;
     uint32_t res2 : 6;
-    uint32_t ddw: 2;
+    uint32_t ddw : 2;
     uint32_t res3 : 6;
     uint64_t source;
     uint64_t dest;
-}  sdmaCopy;
+} sdmaCopy;
+
 static_assert(sizeof(sdmaCopy) == 24);
 
 typedef struct GEM5_PACKED
@@ -60,7 +61,8 @@ typedef struct GEM5_PACKED
     uint32_t reserved0 : 4;
     uint32_t sw : 2;
     uint32_t reserved1 : 6;
-}  sdmaWrite;
+} sdmaWrite;
+
 static_assert(sizeof(sdmaWrite) == 12);
 
 typedef struct GEM5_PACKED
@@ -72,12 +74,15 @@ typedef struct GEM5_PACKED
             uint32_t addrLo;
             uint32_t addrHi;
         };
+
         Addr addr;
     };
+
     uint32_t srcData;
     uint32_t unused : 10;
     uint32_t count : 22;
-}  sdmaConstFill;
+} sdmaConstFill;
+
 static_assert(sizeof(sdmaConstFill) == 16);
 
 typedef struct GEM5_PACKED
@@ -92,9 +97,11 @@ typedef struct GEM5_PACKED
             uint32_t res0 : 12;
             uint32_t fillsize : 2;
         };
+
         uint32_t ordinal;
     };
-}  sdmaConstFillHeader;
+} sdmaConstFillHeader;
+
 static_assert(sizeof(sdmaConstFillHeader) == 4);
 
 typedef struct GEM5_PACKED
@@ -107,7 +114,8 @@ typedef struct GEM5_PACKED
     uint32_t count1;
     uint32_t count2;
     uint32_t count3;
-}  sdmaAESKey;
+} sdmaAESKey;
+
 static_assert(sizeof(sdmaAESKey) == 32);
 
 typedef struct GEM5_PACKED
@@ -116,7 +124,8 @@ typedef struct GEM5_PACKED
     uint32_t countData1;
     uint32_t countData2;
     uint32_t countData3;
-}  sdmaAESCounter;
+} sdmaAESCounter;
+
 static_assert(sizeof(sdmaAESCounter) == 16);
 
 typedef struct GEM5_PACKED
@@ -125,14 +134,16 @@ typedef struct GEM5_PACKED
     uint32_t countKey1;
     uint32_t countKey2;
     uint32_t countKey3;
-}  sdmaAESLoad;
+} sdmaAESLoad;
+
 static_assert(sizeof(sdmaAESLoad) == 16);
 
 typedef struct GEM5_PACKED
 {
     uint32_t reserved : 6;
     uint32_t offset : 26;
-}  sdmaAESOffset;
+} sdmaAESOffset;
+
 static_assert(sizeof(sdmaAESOffset) == 4);
 
 typedef struct GEM5_PACKED
@@ -141,7 +152,8 @@ typedef struct GEM5_PACKED
     uint32_t size : 20;
     uint32_t reserved : 12;
     uint64_t csaAddr;
-}  sdmaIndirectBuffer;
+} sdmaIndirectBuffer;
+
 static_assert(sizeof(sdmaIndirectBuffer) == 20);
 
 typedef struct GEM5_PACKED
@@ -150,14 +162,16 @@ typedef struct GEM5_PACKED
     uint32_t reserved1 : 11;
     uint32_t vmid : 4;
     uint32_t reserved2 : 16;
-}  sdmaIndirectBufferHeader;
+} sdmaIndirectBufferHeader;
+
 static_assert(sizeof(sdmaIndirectBufferHeader) == 4);
 
 typedef struct GEM5_PACKED
 {
     uint64_t dest;
     uint32_t data;
-}  sdmaFence;
+} sdmaFence;
+
 static_assert(sizeof(sdmaFence) == 12);
 
 typedef struct GEM5_PACKED
@@ -167,13 +181,15 @@ typedef struct GEM5_PACKED
         struct
         {
             uint32_t contextId : 3;
-            uint32_t rbRptr: 13;
+            uint32_t rbRptr : 13;
             uint32_t ibOffset : 12;
             uint32_t reserved : 4;
         };
+
         uint32_t intrContext;
     };
-}  sdmaTrap;
+} sdmaTrap;
+
 static_assert(sizeof(sdmaTrap) == 4);
 
 typedef struct GEM5_PACKED
@@ -186,9 +202,11 @@ typedef struct GEM5_PACKED
             uint32_t addrLo : 29;
             uint32_t addrHi;
         };
+
         Addr addr;
     };
-}  sdmaSemaphore;
+} sdmaSemaphore;
+
 static_assert(sizeof(sdmaSemaphore) == 8);
 
 typedef struct GEM5_PACKED
@@ -201,9 +219,11 @@ typedef struct GEM5_PACKED
             uint32_t addrLo : 29;
             uint32_t addrHi;
         };
+
         Addr addr;
     };
-}  sdmaMemInc;
+} sdmaMemInc;
+
 static_assert(sizeof(sdmaMemInc) == 8);
 
 typedef struct GEM5_PACKED
@@ -212,14 +232,16 @@ typedef struct GEM5_PACKED
     uint32_t reserved : 2;
     uint32_t apertureId : 12;
     uint32_t data;
-}  sdmaSRBMWrite;
+} sdmaSRBMWrite;
+
 static_assert(sizeof(sdmaSRBMWrite) == 8);
 
 typedef struct GEM5_PACKED
 {
     uint32_t reserved : 28;
     uint32_t byteEnable : 4;
-}  sdmaSRBMWriteHeader;
+} sdmaSRBMWriteHeader;
+
 static_assert(sizeof(sdmaSRBMWriteHeader) == 4);
 
 typedef struct GEM5_PACKED
@@ -230,16 +252,18 @@ typedef struct GEM5_PACKED
     uint32_t pollInt : 16;
     uint32_t retryCount : 12;
     uint32_t reserved1 : 4;
-}  sdmaPollRegMem;
+} sdmaPollRegMem;
+
 static_assert(sizeof(sdmaPollRegMem) == 20);
 
 typedef struct GEM5_PACKED
 {
     uint32_t reserved : 26;
-    uint32_t op : 2;            // Operation
-    uint32_t func : 3;          // Comparison function
-    uint32_t mode : 1;          // Mode: register or memory polling
-}  sdmaPollRegMemHeader;
+    uint32_t op : 2;   // Operation
+    uint32_t func : 3; // Comparison function
+    uint32_t mode : 1; // Mode: register or memory polling
+} sdmaPollRegMemHeader;
+
 static_assert(sizeof(sdmaPollRegMemHeader) == 4);
 
 typedef struct GEM5_PACKED
@@ -251,9 +275,12 @@ typedef struct GEM5_PACKED
             uint32_t addrLo;
             uint32_t addrHi;
         };
+
         Addr addr;
     };
+
     uint32_t reference;
+
     union
     {
         struct
@@ -261,9 +288,11 @@ typedef struct GEM5_PACKED
             uint32_t execCount : 14;
             uint32_t unused : 18;
         };
+
         uint32_t ordinal;
     };
-}  sdmaCondExec;
+} sdmaCondExec;
+
 static_assert(sizeof(sdmaCondExec) == 16);
 
 typedef struct GEM5_PACKED
@@ -275,8 +304,10 @@ typedef struct GEM5_PACKED
             uint32_t addrLo;
             uint32_t addrHi;
         };
+
         Addr addr;
     };
+
     union
     {
         struct
@@ -284,8 +315,10 @@ typedef struct GEM5_PACKED
             uint32_t srcDataLo;
             uint32_t srdDataHi;
         };
+
         uint64_t srcData;
     };
+
     union
     {
         struct
@@ -293,11 +326,14 @@ typedef struct GEM5_PACKED
             uint32_t cmpDataLo;
             uint32_t cmpDataHi;
         };
+
         uint64_t cmpData;
     };
+
     uint32_t loopInt : 13;
     uint32_t reserved : 19;
-}  sdmaAtomic;
+} sdmaAtomic;
+
 static_assert(sizeof(sdmaAtomic) == 28);
 
 typedef struct GEM5_PACKED
@@ -306,7 +342,8 @@ typedef struct GEM5_PACKED
     int loop : 1;
     int unused1 : 8;
     int opcode : 7;
-}  sdmaAtomicHeader;
+} sdmaAtomicHeader;
+
 static_assert(sizeof(sdmaAtomicHeader) == 4);
 
 constexpr unsigned int SDMA_ATOMIC_ADD64 = 47;
@@ -317,9 +354,10 @@ typedef struct GEM5_PACKED
     uint64_t mask;
     uint64_t initValue;
     uint64_t increment;
-    uint32_t count: 19;
+    uint32_t count : 19;
     uint32_t reserved : 13;
-}  sdmaPtePde;
+} sdmaPtePde;
+
 static_assert(sizeof(sdmaPtePde) == 36);
 
 typedef struct GEM5_PACKED
@@ -331,16 +369,19 @@ typedef struct GEM5_PACKED
             uint32_t initDataLo;
             uint32_t initDataHi;
         };
+
         uint64_t initData;
     };
-}  sdmaTimestamp;
+} sdmaTimestamp;
+
 static_assert(sizeof(sdmaTimestamp) == 8);
 
 typedef struct GEM5_PACKED
 {
     uint32_t execCount : 14;
     uint32_t reserved : 18;
-}  sdmaPredExec;
+} sdmaPredExec;
+
 static_assert(sizeof(sdmaPredExec) == 4);
 
 typedef struct GEM5_PACKED
@@ -349,22 +390,25 @@ typedef struct GEM5_PACKED
     uint32_t subOpcode : 8;
     uint32_t device : 8;
     uint32_t unused : 8;
-}  sdmaPredExecHeader;
+} sdmaPredExecHeader;
+
 static_assert(sizeof(sdmaPredExecHeader) == 4);
 
 typedef struct GEM5_PACKED
 {
     uint32_t contextId : 3;
-    uint32_t rbRptr: 13;
+    uint32_t rbRptr : 13;
     uint32_t ibOffset : 12;
     uint32_t reserved : 4;
-}  sdmaDummyTrap;
+} sdmaDummyTrap;
+
 static_assert(sizeof(sdmaDummyTrap) == 4);
 
 typedef struct GEM5_PACKED
 {
     uint32_t byteStride;
     uint32_t dmaCount;
+
     union
     {
         struct
@@ -372,10 +416,13 @@ typedef struct GEM5_PACKED
             uint32_t destLo;
             uint32_t destHi;
         };
+
         uint64_t dest;
     };
+
     uint32_t byteCount : 26;
-}  sdmaDataFillMulti;
+} sdmaDataFillMulti;
+
 static_assert(sizeof(sdmaDataFillMulti) == 20);
 
 typedef struct GEM5_PACKED
@@ -385,7 +432,8 @@ typedef struct GEM5_PACKED
     uint16_t acqFenceScope : 2;
     uint16_t relFenceScope : 2;
     uint16_t reserved : 3;
-}  sdmaHeaderAgentDisp;
+} sdmaHeaderAgentDisp;
+
 static_assert(sizeof(sdmaHeaderAgentDisp) == 2);
 
 typedef struct GEM5_PACKED
@@ -393,6 +441,7 @@ typedef struct GEM5_PACKED
     sdmaHeaderAgentDisp header;
     uint16_t res0;
     uint32_t res1;
+
     union
     {
         struct
@@ -400,8 +449,10 @@ typedef struct GEM5_PACKED
             uint32_t retLo;
             uint32_t retHi;
         };
+
         Addr ret;
     };
+
     uint32_t count : 22;
     uint32_t res2 : 10;
     uint32_t res3 : 16;
@@ -409,6 +460,7 @@ typedef struct GEM5_PACKED
     uint32_t res4 : 6;
     uint32_t swSrc : 2;
     uint32_t unused : 6;
+
     union
     {
         struct
@@ -416,8 +468,10 @@ typedef struct GEM5_PACKED
             uint32_t srcLo;
             uint32_t srcHi;
         };
+
         Addr src;
     };
+
     union
     {
         struct
@@ -425,10 +479,13 @@ typedef struct GEM5_PACKED
             uint32_t destLo;
             uint32_t destHi;
         };
+
         Addr dest;
     };
+
     uint64_t res5;
     uint64_t res6;
+
     union
     {
         struct
@@ -436,9 +493,11 @@ typedef struct GEM5_PACKED
             uint32_t compSignalLo;
             uint32_t compSignalHi;
         };
+
         Addr compSignal;
     };
-}  sdmaAQLCopy;
+} sdmaAQLCopy;
+
 static_assert(sizeof(sdmaAQLCopy) == 64);
 
 typedef struct GEM5_PACKED
@@ -452,6 +511,7 @@ typedef struct GEM5_PACKED
     Addr depSignal3;
     Addr depSignal4;
     uint64_t res2;
+
     union
     {
         struct
@@ -459,9 +519,11 @@ typedef struct GEM5_PACKED
             uint32_t compSignalLo;
             uint32_t compSignalHi;
         };
+
         Addr compSignal;
     };
-}  sdmaAQLBarrierOr;
+} sdmaAQLBarrierOr;
+
 static_assert(sizeof(sdmaAQLBarrierOr) == 64);
 
 } // namespace gem5

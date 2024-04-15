@@ -48,17 +48,20 @@ namespace gem5
 {
 
 MathExpr::MathExpr(std::string expr)
- : ops(
-     std::array<OpSearch, uNeg + 1> {{
-      OpSearch {true, bAdd, 0, '+', [](double a, double b) { return a + b; }},
-      OpSearch {true, bSub, 0, '-', [](double a, double b) { return a - b; }},
-      OpSearch {true, bMul, 1, '*', [](double a, double b) { return a * b; }},
-      OpSearch {true, bDiv, 1, '/', [](double a, double b) { return a / b; }},
-      OpSearch {false,uNeg, 2, '-', [](double a, double b) { return -b; }},
-      OpSearch {true, bPow, 3, '^', [](double a, double b) {
-                 return std::pow(a,b); }
-      }},
-    })
+    : ops(std::array<OpSearch, uNeg + 1>{
+          { OpSearch{ true, bAdd, 0, '+',
+                      [](double a, double b) { return a + b; } },
+            OpSearch{ true, bSub, 0, '-',
+                      [](double a, double b) { return a - b; } },
+            OpSearch{ true, bMul, 1, '*',
+                      [](double a, double b) { return a * b; } },
+            OpSearch{ true, bDiv, 1, '/',
+                      [](double a, double b) { return a / b; } },
+            OpSearch{ false, uNeg, 2, '-',
+                      [](double a, double b) { return -b; } },
+            OpSearch{ true, bPow, 3, '^',
+                      [](double a, double b) { return std::pow(a, b); } } },
+      })
 {
     // Cleanup
     expr.erase(remove_if(expr.begin(), expr.end(), isspace), expr.end());
@@ -75,7 +78,8 @@ MathExpr::MathExpr(std::string expr)
  * variables are essentially [A-Za-z0-9\.$\\]+
  */
 MathExpr::Node *
-MathExpr::parse(std::string expr) {
+MathExpr::parse(std::string expr)
+{
     if (expr.size() == 0)
         return NULL;
 
@@ -88,11 +92,14 @@ MathExpr::parse(std::string expr) {
             if (expr[i] == '(')
                 par--;
 
-            if (par < 0) return NULL;
-            if (par > 0) continue;
+            if (par < 0)
+                return NULL;
+            if (par > 0)
+                continue;
 
             for (unsigned opt = 0; opt < ops.size(); opt++) {
-                if (ops[opt].priority != p) continue;
+                if (ops[opt].priority != p)
+                    continue;
                 if (ops[opt].c == expr[i]) {
                     // Try to parse each side
                     Node *l = NULL;
@@ -131,15 +138,15 @@ MathExpr::parse(std::string expr) {
     // Match a variable
     {
         bool contains_non_alpha = false;
-        for (auto & c: expr)
-            contains_non_alpha = contains_non_alpha or
-                !( (c >= 'a' && c <= 'z') ||
-                   (c >= 'A' && c <= 'Z') ||
-                   (c >= '0' && c <= '9') ||
-                   c == '$' || c == '\\' || c == '.' || c == '_');
+        for (auto &c : expr)
+            contains_non_alpha =
+                contains_non_alpha or
+                !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                  (c >= '0' && c <= '9') || c == '$' || c == '\\' ||
+                  c == '.' || c == '_');
 
         if (!contains_non_alpha) {
-            Node * n = new Node();
+            Node *n = new Node();
             n->op = sVariable;
             n->variable = expr;
             return n;
@@ -150,7 +157,8 @@ MathExpr::parse(std::string expr) {
 }
 
 double
-MathExpr::eval(const Node *n, EvalCallback fn) const {
+MathExpr::eval(const Node *n, EvalCallback fn) const
+{
     if (!n)
         return 0;
     else if (n->op == sValue)
@@ -158,16 +166,17 @@ MathExpr::eval(const Node *n, EvalCallback fn) const {
     else if (n->op == sVariable)
         return fn(n->variable);
 
-    for (auto & opt : ops)
+    for (auto &opt : ops)
         if (opt.op == n->op)
-            return opt.fn( eval(n->l, fn), eval(n->r, fn) );
+            return opt.fn(eval(n->l, fn), eval(n->r, fn));
 
     panic("Invalid node!\n");
     return 0;
 }
 
 std::string
-MathExpr::toStr(Node *n, std::string prefix) const {
+MathExpr::toStr(Node *n, std::string prefix) const
+{
     std::string ret;
     ret += prefix + "|-- " + n->toStr() + "\n";
     if (n->r)

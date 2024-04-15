@@ -129,7 +129,11 @@ class Decode
     bool isDrained() const;
 
     /** Takes over from another CPU's thread. */
-    void takeOverFrom() { resetStage(); }
+    void
+    takeOverFrom()
+    {
+        resetStage();
+    }
 
     /** Ticks decode, processing all input signals and decoding as many
      * instructions as possible.

@@ -38,7 +38,7 @@ namespace gem5
 namespace RiscvISA
 {
 
-//FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
+// FIXME RISCV needs to handle 64 bit arguments in its 32 bit ISA.
 struct RegABI64 : public GenericSyscallABI64
 {
     static const std::vector<RegId> ArgumentRegs;
@@ -54,15 +54,13 @@ struct RegABI32 : public GenericSyscallABI32
 namespace guest_abi
 {
 
-
 // This method will be used if the size of argument type of function is
 // greater than 4 byte for Riscv 32.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if_t<
-        std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
-        std::is_integral_v<Arg> &&
-        ABI::template IsWideV<Arg>>>
+                typename std::enable_if_t<
+                    std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
+                    std::is_integral_v<Arg> && ABI::template IsWideV<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
@@ -87,13 +85,13 @@ struct Argument<RiscvISA::RegABI32, pseudo_inst::GuestAddr>
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
 
         return (Arg)bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };
 
-}
+} // namespace guest_abi
 
 } // namespace gem5
 

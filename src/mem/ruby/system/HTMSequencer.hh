@@ -62,12 +62,11 @@ class HTMSequencer : public Sequencer
 
     // callback to acknowledge HTM requests and
     // notify cpu core when htm transaction fails in cache
-    void htmCallback(Addr,
-                     const HtmCallbackMode,
+    void htmCallback(Addr, const HtmCallbackMode,
                      const HtmFailedInCacheReason);
 
     bool empty() const override;
-    void print(std::ostream& out) const override;
+    void print(std::ostream &out) const override;
     void wakeup() override;
 
   private:
@@ -79,22 +78,21 @@ class HTMSequencer : public Sequencer
      * (HtmCacheFailure). This is needed since the cpu code would
      * otherwise have to include the ruby generated headers in order
      * to handle the htm return code.
-    */
+     */
     HtmCacheFailure htmRetCodeConversion(const HtmFailedInCacheReason rc);
 
     void rubyHtmCallback(PacketPtr pkt, const HtmFailedInCacheReason fail_r);
 
-    RequestStatus insertRequest(PacketPtr pkt,
-                                RubyRequestType primary_type,
+    RequestStatus insertRequest(PacketPtr pkt, RubyRequestType primary_type,
                                 RubyRequestType secondary_type) override;
 
     // Private copy constructor and assignment operator
-    HTMSequencer(const HTMSequencer& obj);
-    HTMSequencer& operator=(const HTMSequencer& obj);
+    HTMSequencer(const HTMSequencer &obj);
+    HTMSequencer &operator=(const HTMSequencer &obj);
 
     // table/queue for hardware transactional memory commands
     // these do not have an address so a deque/queue is used instead.
-    std::deque<SequencerRequest*> m_htmCmdRequestTable;
+    std::deque<SequencerRequest *> m_htmCmdRequestTable;
 
     Tick m_htmstart_tick;
     Counter m_htmstart_instruction;
@@ -107,8 +105,8 @@ class HTMSequencer : public Sequencer
     statistics::Vector m_htm_transaction_abort_cause;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const HTMSequencer& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const HTMSequencer &obj)
 {
     obj.print(out);
     out << std::flush;

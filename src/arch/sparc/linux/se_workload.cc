@@ -78,32 +78,31 @@ LinuxLoader linuxLoader;
 namespace SparcISA
 {
 
-EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
-{}
+EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
 void
 EmuLinux::handleTrap(ThreadContext *tc, int trapNum)
 {
     if (is64(tc)) {
         switch (trapNum) {
-          // case 0x10: // Linux 32 bit syscall trap
-          case 0x6d: // Linux 64 bit syscall trap
+        // case 0x10: // Linux 32 bit syscall trap
+        case 0x6d: // Linux 64 bit syscall trap
             syscall64(tc);
             return;
-          case 0x6e: // Linux 64 bit getcontext trap
+        case 0x6e: // Linux 64 bit getcontext trap
             warn("The getcontext trap is not implemented on SPARC");
             return;
-          case 0x6f: // Linux 64 bit setcontext trap
+        case 0x6f: // Linux 64 bit setcontext trap
             panic("The setcontext trap is not implemented on SPARC");
-          default:
+        default:
             break;
         }
     } else {
         switch (trapNum) {
-          case 0x10: //Linux 32 bit syscall trap
+        case 0x10: // Linux 32 bit syscall trap
             syscall32(tc);
             return;
-          default:
+        default:
             break;
         }
     }

@@ -45,11 +45,10 @@ namespace gem5
 namespace partitioning_policy
 {
 
-BasePartitioningPolicy::BasePartitioningPolicy
-    (const BasePartitioningPolicyParams &params): SimObject(params)
-{
-
-}
+BasePartitioningPolicy::BasePartitioningPolicy(
+    const BasePartitioningPolicyParams &params)
+    : SimObject(params)
+{}
 
 } // namespace partitioning_policy
 

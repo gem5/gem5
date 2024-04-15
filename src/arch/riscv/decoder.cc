@@ -41,13 +41,14 @@ namespace RiscvISA
 
 Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
 {
-    ISA *isa = dynamic_cast<ISA*>(p.isa);
+    ISA *isa = dynamic_cast<ISA *>(p.isa);
     vlen = isa->getVecLenInBits();
     elen = isa->getVecElemLenInBits();
     reset();
 }
 
-void Decoder::reset()
+void
+Decoder::reset()
 {
     aligned = true;
     mid = false;
@@ -101,8 +102,8 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 
     si->size(compressed(mach_inst) ? 2 : 4);
 
-    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-            si->getName(), mach_inst);
+    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+            mach_inst);
     return si;
 }
 
@@ -123,9 +124,9 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
-    emi.vl      = next_pc.vl();
-    emi.vtype8  = next_pc.vtype() & 0xff;
-    emi.vill    = next_pc.vtype().vill;
+    emi.vl = next_pc.vl();
+    emi.vtype8 = next_pc.vtype() & 0xff;
+    emi.vill = next_pc.vtype().vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
 
     return decode(emi, next_pc.instAddr());

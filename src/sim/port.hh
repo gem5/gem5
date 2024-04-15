@@ -60,15 +60,14 @@ namespace gem5
  */
 class Port
 {
-
   private:
-
     /** Descriptive name (for DPRINTF output) */
     const std::string portName;
 
   protected:
-
-    class UnboundPortException {};
+    class UnboundPortException
+    {
+    };
 
     [[noreturn]] void reportUnbound() const;
 
@@ -83,7 +82,6 @@ class Port
      */
     Port *_peer;
 
-
     /**
      * Whether this port is currently connected to a peer port.
      */
@@ -95,23 +93,34 @@ class Port
      * @param _name Port name including the owners name
      * @param _id A port identifier for vector ports
      */
-    Port(const std::string& _name, PortID _id);
+    Port(const std::string &_name, PortID _id);
 
   public:
-
     /**
      * Virtual destructor due to inheritance.
      */
     virtual ~Port();
 
     /** Return a reference to this port's peer. */
-    Port &getPeer() { return *_peer; }
+    Port &
+    getPeer()
+    {
+        return *_peer;
+    }
 
     /** Return port name (for DPRINTF). */
-    const std::string name() const { return portName; }
+    const std::string
+    name() const
+    {
+        return portName;
+    }
 
     /** Get the port id. */
-    PortID getId() const { return id; }
+    PortID
+    getId() const
+    {
+        return id;
+    }
 
     /** Attach to a peer port. */
     virtual void
@@ -130,7 +139,11 @@ class Port
     }
 
     /** Is this port currently connected to a peer? */
-    bool isConnected() const { return _connected; }
+    bool
+    isConnected() const
+    {
+        return _connected;
+    }
 
     /** A utility function to make it easier to swap out ports. */
     void
@@ -153,7 +166,7 @@ class Port
 };
 
 static inline std::ostream &
-operator << (std::ostream &os, const Port &port)
+operator<<(std::ostream &os, const Port &port)
 {
     os << port.name();
     return os;

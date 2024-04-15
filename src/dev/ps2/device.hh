@@ -79,7 +79,11 @@ class Device : public SimObject
      * @return true if there is data pending that can be read using
      * the readData() method.
      */
-    bool hostDataAvailable() const  { return !outBuffer.empty(); }
+    bool
+    hostDataAvailable() const
+    {
+        return !outBuffer.empty();
+    }
 
     /**
      * Read a character from the device.
@@ -119,7 +123,10 @@ class Device : public SimObject
      * @param size Size of the data array
      */
     void send(const uint8_t *data, size_t size);
-    void send(const std::vector<uint8_t> &data) {
+
+    void
+    send(const std::vector<uint8_t> &data)
+    {
         send(data.data(), data.size());
     }
 
@@ -128,7 +135,11 @@ class Device : public SimObject
      *
      * @param data Byte to send
      */
-    void send(uint8_t data) { send(&data, 1); }
+    void
+    send(uint8_t data)
+    {
+        send(&data, 1);
+    }
 
     /** Send an ACK byte to the host */
     void sendAck();
@@ -139,7 +150,11 @@ class Device : public SimObject
      * Device models may use this method to query the size of the
      * output buffer to do rate limiting.
      */
-    size_t sendPending() const { return outBuffer.size(); }
+    size_t
+    sendPending() const
+    {
+        return outBuffer.size();
+    }
 
   private:
     /** Device -> host FIFO */

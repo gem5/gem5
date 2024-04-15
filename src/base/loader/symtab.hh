@@ -81,41 +81,61 @@ class Symbol
     };
 
     Symbol(const Binding binding, const SymbolType type,
-           const std::string & name, const Addr addr, const size_t size)
-        : _binding(binding), _type(type), _name(name), _address(addr),
-          _size(size), _sizeIsValid(true)
+           const std::string &name, const Addr addr, const size_t size)
+        : _binding(binding),
+          _type(type),
+          _name(name),
+          _address(addr),
+          _size(size),
+          _sizeIsValid(true)
     {}
 
     Symbol(const Binding binding, const SymbolType type,
-           const std::string & name, const Addr addr)
-        : _binding(binding), _type(type), _name(name), _address(addr),
-          _size(0x0), _sizeIsValid(false)
+           const std::string &name, const Addr addr)
+        : _binding(binding),
+          _type(type),
+          _name(name),
+          _address(addr),
+          _size(0x0),
+          _sizeIsValid(false)
     {}
 
-    Symbol(const Symbol & other) = default;
-    Symbol & operator=(const Symbol & other) = default;
+    Symbol(const Symbol &other) = default;
+    Symbol &operator=(const Symbol &other) = default;
 
-    Binding binding() const {
+    Binding
+    binding() const
+    {
         return _binding;
     }
 
-    SymbolType type() const {
+    SymbolType
+    type() const
+    {
         return _type;
     }
 
-    std::string name() const {
+    std::string
+    name() const
+    {
         return _name;
     }
 
-    void rename(const std::string & new_name) {
+    void
+    rename(const std::string &new_name)
+    {
         _name = new_name;
     }
 
-    Addr address() const {
+    Addr
+    address() const
+    {
         return _address;
     }
 
-    void relocate(const Addr new_addr) {
+    void
+    relocate(const Addr new_addr)
+    {
         _address = new_addr;
     }
 
@@ -127,14 +147,18 @@ class Symbol
      * that the `SymbolTable` may contain `Symbol`s that do not have
      * valid sizes.
      */
-    size_t sizeOrDefault(const size_t default_size) const {
+    size_t
+    sizeOrDefault(const size_t default_size) const
+    {
         return _sizeIsValid ? _size : default_size;
     }
 
     /**
      * Return whether the Symbol size is valid or not.
      */
-    bool sizeIsValid() const {
+    bool
+    sizeIsValid() const
+    {
         return _sizeIsValid;
     }
 
@@ -146,7 +170,6 @@ class Symbol
     size_t _size;
     bool _sizeIsValid;
 };
-
 
 class SymbolTable
 {
@@ -190,8 +213,8 @@ class SymbolTable
      * symbol table. The operation can, for example, simply add the symbol
      * to the table; modify and insert the symbol; do nothing at all; etc.
      */
-    typedef std::function<void(SymbolTable &symtab,
-                               const Symbol &symbol)> SymTabOp;
+    typedef std::function<void(SymbolTable &symtab, const Symbol &symbol)>
+        SymTabOp;
 
     /**
      * Create a derived symbol table by applying an operation on the symbols
@@ -204,7 +227,7 @@ class SymbolTable
     operate(SymTabOp op) const
     {
         SymbolTablePtr symtab(new SymbolTable);
-        for (const auto &symbol: symbols)
+        for (const auto &symbol : symbols)
             op(*symtab, symbol);
         return symtab;
     }
@@ -226,8 +249,8 @@ class SymbolTable
     SymbolTablePtr
     filter(SymTabFilter filter) const
     {
-        SymTabOp apply_filter =
-            [filter](SymbolTable &symtab, const Symbol &symbol) {
+        SymTabOp apply_filter = [filter](SymbolTable &symtab,
+                                         const Symbol &symbol) {
             if (filter(symbol)) {
                 symtab.insert(symbol);
             }
@@ -259,7 +282,7 @@ class SymbolTable
      * @return A new table, filtered by type.
      */
     SymbolTablePtr
-    filterBySymbolType(const Symbol::SymbolType& symbol_type) const
+    filterBySymbolType(const Symbol::SymbolType &symbol_type) const
     {
         auto filt = [symbol_type](const Symbol &symbol) {
             return symbol.type() == symbol_type;
@@ -272,10 +295,18 @@ class SymbolTable
     typedef SymbolVector::const_iterator const_iterator;
 
     /** @return An iterator to the beginning of the symbol vector. */
-    const_iterator begin() const { return symbols.begin(); }
+    const_iterator
+    begin() const
+    {
+        return symbols.begin();
+    }
 
     /** @return An iterator to the end of the symbol vector. */
-    const_iterator end() const { return symbols.end(); }
+    const_iterator
+    end() const
+    {
+        return symbols.end();
+    }
 
     /** Clears the table. */
     void clear();
@@ -303,7 +334,11 @@ class SymbolTable
      *
      * @return Whether the symbol table is empty.
      */
-    bool empty() const { return symbols.empty(); }
+    bool
+    empty() const
+    {
+        return symbols.empty();
+    }
 
     /**
      * Generate a new table by applying an offset to the symbols of the
@@ -315,12 +350,12 @@ class SymbolTable
     SymbolTablePtr
     offset(Addr addr_offset) const
     {
-        SymTabOp op =
-            [addr_offset](SymbolTable &symtab, const Symbol &symbol) {
-                symtab.insert(
-                    Symbol(symbol.binding(), symbol.type(), symbol.name(),
-                           symbol.address() + addr_offset));
-            };
+        SymTabOp op = [addr_offset](SymbolTable &symtab,
+                                    const Symbol &symbol) {
+            symtab.insert(Symbol(symbol.binding(), symbol.type(),
+                                 symbol.name(),
+                                 symbol.address() + addr_offset));
+        };
         return operate(op);
     }
 
@@ -335,9 +370,8 @@ class SymbolTable
     mask(Addr m) const
     {
         SymTabOp op = [m](SymbolTable &symtab, const Symbol &symbol) {
-            symtab.insert(
-                Symbol(symbol.binding(), symbol.type(), symbol.name(),
-                       symbol.address() & m));
+            symtab.insert(Symbol(symbol.binding(), symbol.type(),
+                                 symbol.name(), symbol.address() & m));
         };
         return operate(op);
     }
@@ -350,7 +384,7 @@ class SymbolTable
      * @retval SymbolTablePtr A pointer to the modified SymbolTable copy.
      */
     SymbolTablePtr
-    rename(std::function<std::string (const std::string&)> func) const
+    rename(std::function<std::string(const std::string &)> func) const
     {
         SymTabOp op = [func](SymbolTable &symtab, const Symbol &symbol) {
             Symbol sym = symbol;
@@ -420,8 +454,9 @@ class SymbolTable
      * @param default_binding The binding to be used if an unserialized
      *                        symbol's binding is not found.
      */
-    void unserialize(const std::string &base, CheckpointIn &cp,
-                     Symbol::Binding default_binding=Symbol::Binding::Global);
+    void
+    unserialize(const std::string &base, CheckpointIn &cp,
+                Symbol::Binding default_binding = Symbol::Binding::Global);
 
     /**
      * Search for a symbol by its address. Since many symbols can map to the

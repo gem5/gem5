@@ -40,44 +40,41 @@ namespace gem5
 namespace replacement_policy
 {
 
-MRU::MRU(const Params &p)
-  : Base(p)
-{
-}
+MRU::MRU(const Params &p) : Base(p) {}
 
 void
-MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+MRU::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Reset last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
-        replacement_data)->lastTouchTick = Tick(0);
+    std::static_pointer_cast<MRUReplData>(replacement_data)->lastTouchTick =
+        Tick(0);
 }
 
 void
-MRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+MRU::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Update last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
-        replacement_data)->lastTouchTick = curTick();
+    std::static_pointer_cast<MRUReplData>(replacement_data)->lastTouchTick =
+        curTick();
 }
 
 void
-MRU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+MRU::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Set last touch timestamp
-    std::static_pointer_cast<MRUReplData>(
-        replacement_data)->lastTouchTick = curTick();
+    std::static_pointer_cast<MRUReplData>(replacement_data)->lastTouchTick =
+        curTick();
 }
 
-ReplaceableEntry*
-MRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+MRU::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
-    for (const auto& candidate : candidates) {
+    ReplaceableEntry *victim = candidates[0];
+    for (const auto &candidate : candidates) {
         std::shared_ptr<MRUReplData> candidate_replacement_data =
             std::static_pointer_cast<MRUReplData>(candidate->replacementData);
 
@@ -86,8 +83,9 @@ MRU::getVictim(const ReplacementCandidates& candidates) const
             victim = candidate;
             break;
         } else if (candidate_replacement_data->lastTouchTick >
-                std::static_pointer_cast<MRUReplData>(
-                    victim->replacementData)->lastTouchTick) {
+                   std::static_pointer_cast<MRUReplData>(
+                       victim->replacementData)
+                       ->lastTouchTick) {
             victim = candidate;
         }
     }

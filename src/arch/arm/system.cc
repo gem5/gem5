@@ -58,12 +58,11 @@ namespace gem5
 using namespace linux;
 using namespace ArmISA;
 
-ArmRelease::ArmRelease(const ArmReleaseParams &p)
-  : SimObject(p)
+ArmRelease::ArmRelease(const ArmReleaseParams &p) : SimObject(p)
 {
     for (auto ext : p.extensions) {
         fatal_if(_extensions.find(ext) != _extensions.end(),
-            "Duplicated FEAT_\n");
+                 "Duplicated FEAT_\n");
 
         _extensions[ext] = true;
     }
@@ -95,17 +94,15 @@ ArmSystem::ArmSystem(const Params &p)
     bool wl_is_64 = (workload->getArch() == loader::Arm64);
     if (wl_is_64 != _highestELIs64) {
         warn("Highest ARM exception-level set to AArch%d but the workload "
-              "is for AArch%d. Assuming you wanted these to match.",
-              _highestELIs64 ? 64 : 32, wl_is_64 ? 64 : 32);
+             "is for AArch%d. Assuming you wanted these to match.",
+             _highestELIs64 ? 64 : 32, wl_is_64 ? 64 : 32);
         _highestELIs64 = wl_is_64;
     }
 
-    if (_highestELIs64 && (
-            _physAddrRange64 < 32 ||
-            _physAddrRange64 > MaxPhysAddrRange ||
-            (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42) ||
-            (_physAddrRange64 == 52 && !release->has(ArmExtension::FEAT_LPA))))
-    {
+    if (_highestELIs64 &&
+        (_physAddrRange64 < 32 || _physAddrRange64 > MaxPhysAddrRange ||
+         (_physAddrRange64 % 4 != 0 && _physAddrRange64 != 42) ||
+         (_physAddrRange64 == 52 && !release->has(ArmExtension::FEAT_LPA)))) {
         fatal("Invalid physical address range (%d)\n", _physAddrRange64);
     }
 }
@@ -113,33 +110,33 @@ ArmSystem::ArmSystem(const Params &p)
 bool
 ArmSystem::has(ArmExtension ext, ThreadContext *tc)
 {
-    return FullSystem? getArmSystem(tc)->has(ext) : false;
+    return FullSystem ? getArmSystem(tc)->has(ext) : false;
 }
 
 bool
 ArmSystem::highestELIs64(ThreadContext *tc)
 {
-    return FullSystem? getArmSystem(tc)->highestELIs64() : true;
+    return FullSystem ? getArmSystem(tc)->highestELIs64() : true;
 }
 
 ExceptionLevel
 ArmSystem::highestEL(ThreadContext *tc)
 {
-    return FullSystem? getArmSystem(tc)->highestEL() : EL1;
+    return FullSystem ? getArmSystem(tc)->highestEL() : EL1;
 }
 
 bool
 ArmSystem::haveEL(ThreadContext *tc, ExceptionLevel el)
 {
     switch (el) {
-      case EL0:
-      case EL1:
+    case EL0:
+    case EL1:
         return true;
-      case EL2:
+    case EL2:
         return has(ArmExtension::VIRTUALIZATION, tc);
-      case EL3:
+    case EL3:
         return has(ArmExtension::SECURITY, tc);
-      default:
+    default:
         warn("Unimplemented Exception Level\n");
         return false;
     }

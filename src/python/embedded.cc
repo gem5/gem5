@@ -55,7 +55,7 @@ namespace gem5
 {
 
 EmbeddedPython::EmbeddedPython(const char *abspath, const char *modpath,
-        const unsigned char *code, int zlen, int len)
+                               const unsigned char *code, int zlen, int len)
     : abspath(abspath), modpath(modpath), code(code), zlen(zlen), len(len)
 {
     getList().push_back(this);
@@ -103,7 +103,7 @@ int
 EmbeddedPython::initAll()
 {
     // Load the embedded python files into the embedded python importer.
-    for (auto *embedded: getList()) {
+    for (auto *embedded : getList()) {
         if (!embedded->addModule())
             return 1;
     }

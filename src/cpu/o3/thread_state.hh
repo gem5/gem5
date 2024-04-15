@@ -100,7 +100,11 @@ class ThreadState : public gem5::ThreadState
     gem5::ThreadContext *tc = nullptr;
 
     /** Returns a pointer to the TC of this thread. */
-    gem5::ThreadContext *getTC() { return tc; }
+    gem5::ThreadContext *
+    getTC()
+    {
+        return tc;
+    }
 };
 
 } // namespace o3

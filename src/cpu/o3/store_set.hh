@@ -66,7 +66,7 @@ class StoreSet
 
   public:
     /** Default constructor.  init() must be called prior to use. */
-    StoreSet() { };
+    StoreSet(){};
 
     /** Creates store set predictor with given table sizes. */
     StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
@@ -116,12 +116,18 @@ class StoreSet
 
   private:
     /** Calculates the index into the SSIT based on the PC. */
-    inline int calcIndex(Addr PC)
-    { return (PC >> offsetBits) & indexMask; }
+    inline int
+    calcIndex(Addr PC)
+    {
+        return (PC >> offsetBits) & indexMask;
+    }
 
     /** Calculates a Store Set ID based on the PC. */
-    inline SSID calcSSID(Addr PC)
-    { return ((PC ^ (PC >> 10)) % LFSTSize); }
+    inline SSID
+    calcSSID(Addr PC)
+    {
+        return ((PC ^ (PC >> 10)) % LFSTSize);
+    }
 
     /** The Store Set ID Table. */
     std::vector<SSID> SSIT;

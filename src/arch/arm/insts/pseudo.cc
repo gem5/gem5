@@ -50,7 +50,7 @@ using namespace ArmISA;
 DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
     : ArmStaticInst("gem5decoderFault", _machInst, No_OpClass),
       faultId(static_cast<DecoderFault>(
-                  static_cast<uint8_t>(_machInst.decoderFault)))
+          static_cast<uint8_t>(_machInst.decoderFault)))
 {
     // Don't call execute() if we're on a speculative path and the
     // fault is an internal panic fault.
@@ -63,20 +63,20 @@ DecoderFaultInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
     const Addr pc = xc->pcState().instAddr();
 
     switch (faultId) {
-      case DecoderFault::UNALIGNED:
+    case DecoderFault::UNALIGNED:
         if (machInst.aarch64) {
             return std::make_shared<PCAlignmentFault>(pc);
         } else {
             // TODO: We should check if we the receiving end is in
             // aarch64 mode and raise a PCAlignment fault instead.
-            return std::make_shared<PrefetchAbort>(
-                pc, ArmFault::AlignmentFault);
+            return std::make_shared<PrefetchAbort>(pc,
+                                                   ArmFault::AlignmentFault);
         }
 
-      case DecoderFault::PANIC:
+    case DecoderFault::PANIC:
         panic("Internal error in instruction decoder\n");
 
-      case DecoderFault::OK:
+    case DecoderFault::OK:
         panic("Decoder fault instruction without decoder fault.\n");
     }
 
@@ -87,13 +87,13 @@ const char *
 DecoderFaultInst::faultName() const
 {
     switch (faultId) {
-      case DecoderFault::OK:
+    case DecoderFault::OK:
         return "OK";
 
-      case DecoderFault::UNALIGNED:
+    case DecoderFault::UNALIGNED:
         return "UnalignedInstruction";
 
-      case DecoderFault::PANIC:
+    case DecoderFault::PANIC:
         return "DecoderPanic";
     }
 
@@ -101,13 +101,11 @@ DecoderFaultInst::faultName() const
 }
 
 std::string
-DecoderFaultInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DecoderFaultInst::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     return csprintf("gem5fault %s", faultName());
 }
-
-
 
 FailUnimplemented::FailUnimplemented(const char *_mnemonic,
                                      ExtMachInst _machInst)
@@ -120,7 +118,7 @@ FailUnimplemented::FailUnimplemented(const char *_mnemonic,
 
 FailUnimplemented::FailUnimplemented(const char *_mnemonic,
                                      ExtMachInst _machInst,
-                                     const std::string& _fullMnemonic)
+                                     const std::string &_fullMnemonic)
     : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
       fullMnemonic(_fullMnemonic)
 {
@@ -136,14 +134,12 @@ FailUnimplemented::execute(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 std::string
-FailUnimplemented::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+FailUnimplemented::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (unimplemented)",
                     fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
 }
-
-
 
 WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
                                      ExtMachInst _machInst)
@@ -156,8 +152,9 @@ WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
 
 WarnUnimplemented::WarnUnimplemented(const char *_mnemonic,
                                      ExtMachInst _machInst,
-                                     const std::string& _fullMnemonic)
-    : ArmStaticInst(_mnemonic, _machInst, No_OpClass), warned(false),
+                                     const std::string &_fullMnemonic)
+    : ArmStaticInst(_mnemonic, _machInst, No_OpClass),
+      warned(false),
       fullMnemonic(_fullMnemonic)
 {
     // don't call execute() (which panics) if we're on a
@@ -178,8 +175,8 @@ WarnUnimplemented::execute(ExecContext *xc, trace::InstRecord *traceData) const
 }
 
 std::string
-WarnUnimplemented::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+WarnUnimplemented::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (unimplemented)",
                     fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
@@ -197,7 +194,7 @@ IllegalExecInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 DebugStep::DebugStep(ExtMachInst _machInst)
     : ArmStaticInst("DebugStep", _machInst, No_OpClass)
-{ }
+{}
 
 Fault
 DebugStep::execute(ExecContext *xc, trace::InstRecord *traceData) const

@@ -41,35 +41,35 @@ namespace gem5
 {
 
 SysSecCtrl::SysSecCtrl(const Params &p)
-  : BasicPioDevice(p, 0x1000),
-    sscDbgcfgStat("ssc_dbgcfg_stat", p.ssc_dbgcfg_stat),
-    sscDbgcfgSet("ssc_dbgcfg_set"),
-    sscDbgcfgClr("ssc_dbgcfg_clr"),
-    space0("space0", 0x28 - 0x1c),
-    sscAuxDbgcfg("ssc_aux_dbgcfg"),
-    space1("space1", 0x4),
-    sscAuxGpretn("ssc_aux_gpretn"),
-    space2("space2", 0x40 - 0x34),
-    sscVersion("ssc_version", p.ssc_version),
-    space3("space3", 0x100 - 0x44),
-    sscSwScratch("ssc_sw_scratch"),
-    space4("space4", 0x200 - 0x180),
-    sscSwCap("ssc_sw_cap"),
-    sscSwCapCtrl("ssc_sw_capctrl"),
-    space5("space5", 0x500 - 0x304),
-    sscChipIdSt("ssc_chipid_st"),
-    space6("space6", 0xfd0 - 0x504),
-    sscPid4("ssc_pid4", p.ssc_pid4),
-    space7("space7", 0xfe0 - 0xfd4),
-    sscPid0("ssc_pid0", p.ssc_pid0),
-    sscPid1("ssc_pid1", p.ssc_pid1),
-    sscPid2("ssc_pid2", p.ssc_pid2),
-    space8("space8", 0xff0 - 0xfec),
-    compid0("compid0", p.compid0),
-    compid1("compid1", p.compid1),
-    compid2("compid2", p.compid2),
-    compid3("compid3", p.compid3),
-    regBank("ssc", 0x0010)
+    : BasicPioDevice(p, 0x1000),
+      sscDbgcfgStat("ssc_dbgcfg_stat", p.ssc_dbgcfg_stat),
+      sscDbgcfgSet("ssc_dbgcfg_set"),
+      sscDbgcfgClr("ssc_dbgcfg_clr"),
+      space0("space0", 0x28 - 0x1c),
+      sscAuxDbgcfg("ssc_aux_dbgcfg"),
+      space1("space1", 0x4),
+      sscAuxGpretn("ssc_aux_gpretn"),
+      space2("space2", 0x40 - 0x34),
+      sscVersion("ssc_version", p.ssc_version),
+      space3("space3", 0x100 - 0x44),
+      sscSwScratch("ssc_sw_scratch"),
+      space4("space4", 0x200 - 0x180),
+      sscSwCap("ssc_sw_cap"),
+      sscSwCapCtrl("ssc_sw_capctrl"),
+      space5("space5", 0x500 - 0x304),
+      sscChipIdSt("ssc_chipid_st"),
+      space6("space6", 0xfd0 - 0x504),
+      sscPid4("ssc_pid4", p.ssc_pid4),
+      space7("space7", 0xfe0 - 0xfd4),
+      sscPid0("ssc_pid0", p.ssc_pid0),
+      sscPid1("ssc_pid1", p.ssc_pid1),
+      sscPid2("ssc_pid2", p.ssc_pid2),
+      space8("space8", 0xff0 - 0xfec),
+      compid0("compid0", p.compid0),
+      compid1("compid1", p.compid1),
+      compid2("compid2", p.compid2),
+      compid3("compid3", p.compid3),
+      regBank("ssc", 0x0010)
 {
     // RO registers
     sscDbgcfgStat.readonly();
@@ -84,6 +84,7 @@ SysSecCtrl::SysSecCtrl(const Params &p)
     compid2.readonly();
     compid3.readonly();
 
+    /* clang-format off */
     regBank.addRegisters({
         sscDbgcfgStat, sscDbgcfgSet, sscDbgcfgClr,
         space0,
@@ -105,6 +106,7 @@ SysSecCtrl::SysSecCtrl(const Params &p)
         space8,
         compid0, compid1, compid2, compid3,
     });
+    /* clang-format on */
 }
 
 Tick
@@ -131,4 +133,4 @@ SysSecCtrl::write(PacketPtr pkt)
     return pioDelay;
 }
 
-}
+} // namespace gem5

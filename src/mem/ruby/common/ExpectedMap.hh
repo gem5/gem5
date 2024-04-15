@@ -55,17 +55,17 @@ namespace ruby
 //  - tracks segmented data messages (i.e. when a line transfer is split in
 //    multiple messages)
 
-template<typename RespType, typename DataType>
+template <typename RespType, typename DataType>
 class ExpectedMap
 {
   private:
-
-    template<typename Type>
+    template <typename Type>
     struct ExpectedState
     {
         struct EnumClassHash
         {
-            std::size_t operator()(Type t) const
+            std::size_t
+            operator()(Type t) const
             {
                 return static_cast<std::size_t>(t);
             }
@@ -81,9 +81,7 @@ class ExpectedMap
         std::unordered_map<Type, bool, EnumClassHash> expectedTypes;
 
       public:
-        ExpectedState()
-            :chunks(1), currChunk(0), numReceived(0)
-        {}
+        ExpectedState() : chunks(1), currChunk(0), numReceived(0) {}
 
         void
         clear(int msg_chunks)
@@ -100,7 +98,11 @@ class ExpectedMap
             expectedTypes[val] = false;
         }
 
-        int received() const { return numReceived; }
+        int
+        received() const
+        {
+            return numReceived;
+        }
 
         bool
         increaseReceived(const Type &val)
@@ -134,9 +136,7 @@ class ExpectedMap
     int totalExpected;
 
   public:
-    ExpectedMap()
-        :expectedData(), expectedResp(), totalExpected(0)
-    {}
+    ExpectedMap() : expectedData(), expectedResp(), totalExpected(0) {}
 
     // Clear the tracking state and specified the number of chunks are required
     // to receive a complete data message
@@ -163,9 +163,17 @@ class ExpectedMap
     }
 
     // Set the number of expected messages
-    void setExpectedCount(int val) { totalExpected = val; }
+    void
+    setExpectedCount(int val)
+    {
+        totalExpected = val;
+    }
 
-    void addExpectedCount(int val) { totalExpected += val; }
+    void
+    addExpectedCount(int val)
+    {
+        totalExpected += val;
+    }
 
     // Returns the number of messages received.
     // Notice that a data message counts as received only after all of
@@ -177,17 +185,32 @@ class ExpectedMap
     }
 
     // Returns the remaining number of expected messages
-    int expected() const { return totalExpected - received(); }
+    int
+    expected() const
+    {
+        return totalExpected - received();
+    }
 
     // Has any expected message ?
-    bool hasExpected() const { return expected() != 0; }
+    bool
+    hasExpected() const
+    {
+        return expected() != 0;
+    }
 
     // Has received any data ?
-    bool hasReceivedData() const { return expectedData.received() != 0; }
+    bool
+    hasReceivedData() const
+    {
+        return expectedData.received() != 0;
+    }
 
     // Has received any response ?
-    bool hasReceivedResp() const { return expectedResp.received() != 0; }
-
+    bool
+    hasReceivedResp() const
+    {
+        return expectedResp.received() != 0;
+    }
 
     // Notifies that a response message was received
     bool
@@ -220,15 +243,15 @@ class ExpectedMap
     }
 
     void
-    print(std::ostream& out) const
+    print(std::ostream &out) const
     {
         out << expected();
     }
 };
 
-template<typename RespType, typename DataType>
-inline std::ostream&
-operator<<(std::ostream& out, const ExpectedMap<RespType,DataType>& obj)
+template <typename RespType, typename DataType>
+inline std::ostream &
+operator<<(std::ostream &out, const ExpectedMap<RespType, DataType> &obj)
 {
     obj.print(out);
     return out;

@@ -39,7 +39,7 @@
 /**
  * @file
  * Floating-point library code, which will gradually replace vfp.hh. For
- * portability, this library does not use floating-point data types.  Currently,
+ * portability, this library does not use floating-point data types. Currently,
  * C's standard integer types are used in the API, though this could be changed
  * to something like class Fp32 { uint32_t x; }, etc.
  */
@@ -301,7 +301,7 @@ template <>
 uint16_t fplibRSqrtEstimate(uint16_t op, FPSCR &fpscr);
 template <>
 uint32_t fplibRSqrtEstimate(uint32_t op, FPSCR &fpscr);
-template<>
+template <>
 uint64_t fplibRSqrtEstimate(uint64_t op, FPSCR &fpscr);
 template <>
 uint16_t fplibRSqrtStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr);
@@ -356,7 +356,7 @@ template <>
 uint64_t fplibSub(uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
 uint16_t fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2,
-                       FPSCR &fpscr);
+                         FPSCR &fpscr);
 template <>
 uint32_t fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2,
                          FPSCR &fpscr);

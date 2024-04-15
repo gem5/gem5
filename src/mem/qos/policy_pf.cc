@@ -51,15 +51,13 @@ namespace memory
 namespace qos
 {
 
-PropFairPolicy::PropFairPolicy(const Params &p)
-  : Policy(p), weight(p.weight)
+PropFairPolicy::PropFairPolicy(const Params &p) : Policy(p), weight(p.weight)
 {
     fatal_if(weight < 0 || weight > 1,
-        "weight must be a value between 0 and 1");
+             "weight must be a value between 0 and 1");
 }
 
-PropFairPolicy::~PropFairPolicy()
-{}
+PropFairPolicy::~PropFairPolicy() {}
 
 template <typename Requestor>
 void
@@ -73,25 +71,27 @@ PropFairPolicy::initRequestor(const Requestor requestor, const double score)
     history.push_back(std::make_pair(id, score));
 
     fatal_if(history.size() > memCtrl->numPriorities(),
-        "Policy's maximum number of requestors is currently dictated "
-        "by the maximum number of priorities\n");
+             "Policy's maximum number of requestors is currently dictated "
+             "by the maximum number of priorities\n");
 }
 
 void
-PropFairPolicy::initRequestorName(const std::string requestor, const double score)
+PropFairPolicy::initRequestorName(const std::string requestor,
+                                  const double score)
 {
     initRequestor(requestor, score);
 }
 
 void
-PropFairPolicy::initRequestorObj(const SimObject* requestor, const double score)
+PropFairPolicy::initRequestorObj(const SimObject *requestor,
+                                 const double score)
 {
     initRequestor(requestor, score);
 }
 
 double
-PropFairPolicy::updateScore(
-    const double old_score, const uint64_t served_bytes) const
+PropFairPolicy::updateScore(const double old_score,
+                            const uint64_t served_bytes) const
 {
     return ((1.0 - weight) * old_score) + (weight * served_bytes);
 }
@@ -99,9 +99,10 @@ PropFairPolicy::updateScore(
 uint8_t
 PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
 {
-    auto sort_pred =
-    [] (const RequestorHistory& lhs, const RequestorHistory& rhs)
-    { return lhs.second > rhs.second; };
+    auto sort_pred = [](const RequestorHistory &lhs,
+                        const RequestorHistory &rhs) {
+        return lhs.second > rhs.second;
+    };
 
     // Sorting in reverse in base of personal history:
     // First elements have higher history/score -> lower priority.
@@ -112,9 +113,8 @@ PropFairPolicy::schedule(const RequestorID pkt_id, const uint64_t pkt_size)
 
     uint8_t pkt_priority = 0;
     for (auto m_hist = history.begin(); m_hist != history.end(); m_hist++) {
-
         RequestorID curr_id = m_hist->first;
-        double& curr_score = m_hist->second;
+        double &curr_score = m_hist->second;
 
         if (curr_id == pkt_id) {
             // The qos priority is the position in the sorted vector.

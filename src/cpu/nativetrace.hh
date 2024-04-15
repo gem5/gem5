@@ -56,17 +56,17 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 class NativeTrace;
 
 class NativeTraceRecord : public ExeTracerRecord
 {
   public:
-    NativeTraceRecord(NativeTrace *_parent,
-               Tick _when, ThreadContext *_thread,
-               const StaticInstPtr _staticInst, const PCStateBase &_pc,
-               const StaticInstPtr _macroStaticInst=nullptr);
+    NativeTraceRecord(NativeTrace *_parent, Tick _when, ThreadContext *_thread,
+                      const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                      const StaticInstPtr _macroStaticInst = nullptr);
 
     void dump();
 
@@ -82,27 +82,26 @@ class NativeTrace : public ExeTracer
     ListenSocketPtr native_listener;
 
   public:
-
     NativeTrace(const Params &p);
+
     virtual ~NativeTrace() {}
 
     NativeTraceRecord *
-    getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, const PCStateBase &pc,
-            const StaticInstPtr macroStaticInst=nullptr) override
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) override
     {
-        return new NativeTraceRecord(this, when, tc,
-                staticInst, pc, macroStaticInst);
+        return new NativeTraceRecord(this, when, tc, staticInst, pc,
+                                     macroStaticInst);
     }
 
-    template<class T>
+    template <class T>
     bool
-    checkReg(const char * regName, T &val, T &realVal)
+    checkReg(const char *regName, T &val, T &realVal)
     {
-        if (val != realVal)
-        {
-            DPRINTFN("Register %s should be %#x but is %#x.\n",
-                    regName, realVal, val);
+        if (val != realVal) {
+            DPRINTFN("Register %s should be %#x but is %#x.\n", regName,
+                     realVal, val);
             return false;
         }
         return true;
@@ -121,8 +120,7 @@ class NativeTrace : public ExeTracer
         }
     }
 
-    virtual void
-    check(NativeTraceRecord *record) = 0;
+    virtual void check(NativeTraceRecord *record) = 0;
 };
 
 } // namespace trace

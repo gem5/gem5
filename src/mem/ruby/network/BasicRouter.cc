@@ -34,8 +34,7 @@ namespace gem5
 namespace ruby
 {
 
-BasicRouter::BasicRouter(const Params &p)
-    : ClockedObject(p)
+BasicRouter::BasicRouter(const Params &p) : ClockedObject(p)
 {
     m_id = p.router_id;
     m_latency = p.latency;
@@ -43,11 +42,10 @@ BasicRouter::BasicRouter(const Params &p)
 
 void
 BasicRouter::init()
-{
-}
+{}
 
 void
-BasicRouter::print(std::ostream& out) const
+BasicRouter::print(std::ostream &out) const
 {
     out << name();
 }

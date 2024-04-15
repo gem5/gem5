@@ -52,15 +52,15 @@ Protocol::name() const
 }
 
 BaseProtocol::BaseProtocol(Platform &_platform)
-  : Protocol(_platform),
-    vendor(platform.params().base_vendor),
-    subvendor(platform.params().base_subvendor),
-    implementationVersion(platform.params().base_impl_version)
+    : Protocol(_platform),
+      vendor(platform.params().base_vendor),
+      subvendor(platform.params().base_subvendor),
+      implementationVersion(platform.params().base_impl_version)
 {
     fatal_if(vendor.length() > MAX_STRING_SIZE,
-        "Invalid BASE_PROTOCOL VENDOR size\n");
+             "Invalid BASE_PROTOCOL VENDOR size\n");
     fatal_if(subvendor.length() > MAX_STRING_SIZE,
-        "Invalid BASE_PROTOCOL SUBVENDOR size\n");
+             "Invalid BASE_PROTOCOL SUBVENDOR size\n");
 }
 
 void
@@ -73,35 +73,35 @@ BaseProtocol::handleMessage(Message &msg)
     DPRINTF(SCMI, "# Message ID = %u\n", message_id);
 
     switch (static_cast<Commands>(message_id)) {
-      case Commands::VERSION:
+    case Commands::VERSION:
         version(msg);
         break;
-      case Commands::ATTRIBUTES:
+    case Commands::ATTRIBUTES:
         attributes(msg);
         break;
-      case Commands::MESSAGE_ATTRIBUTES:
+    case Commands::MESSAGE_ATTRIBUTES:
         messageAttributes(msg);
         break;
-      case Commands::DISCOVER_VENDOR:
+    case Commands::DISCOVER_VENDOR:
         discoverVendor(msg);
         break;
-      case Commands::DISCOVER_SUB_VENDOR:
+    case Commands::DISCOVER_SUB_VENDOR:
         discoverSubVendor(msg);
         break;
-      case Commands::DISCOVER_IMPLEMENTATION_VERSION:
+    case Commands::DISCOVER_IMPLEMENTATION_VERSION:
         discoverImplVersion(msg);
         break;
-      case Commands::DISCOVER_LIST_PROTOCOLS:
+    case Commands::DISCOVER_LIST_PROTOCOLS:
         discoverListProtocols(msg);
         break;
-      case Commands::DISCOVER_AGENT:
+    case Commands::DISCOVER_AGENT:
         discoverAgent(msg);
         break;
-      case Commands::NOTIFY_ERRORS:
-      case Commands::SET_DEVICE_PERMISSIONS:
-      case Commands::SET_PROTOCOL_PERMISSIONS:
-      case Commands::RESET_AGENT_CONFIGURATION:
-      default:
+    case Commands::NOTIFY_ERRORS:
+    case Commands::SET_DEVICE_PERMISSIONS:
+    case Commands::SET_PROTOCOL_PERMISSIONS:
+    case Commands::RESET_AGENT_CONFIGURATION:
+    default:
         invalidCommand(msg);
         warn("Unimplemented SCMI command: %u\n", message_id);
     }
@@ -110,7 +110,7 @@ BaseProtocol::handleMessage(Message &msg)
 void
 BaseProtocol::version(Message &msg)
 {
-    auto& payload = msg.payload.baseProtocolVersion;
+    auto &payload = msg.payload.baseProtocolVersion;
     payload.status = SUCCESS;
     payload.version = PROTOCOL_VERSION;
 
@@ -126,7 +126,7 @@ BaseProtocol::attributes(Message &msg)
     replaceBits(_attributes, 15, 8, platform.numAgents());
     replaceBits(_attributes, 7, 0, platform.numProtocols());
 
-    auto& payload = msg.payload.baseProtocolAttributes;
+    auto &payload = msg.payload.baseProtocolAttributes;
     payload.status = SUCCESS;
     payload.attributes = _attributes;
 
@@ -138,16 +138,16 @@ bool
 BaseProtocol::implementedProtocol(Commands message_id) const
 {
     switch (message_id) {
-      case Commands::VERSION:
-      case Commands::ATTRIBUTES:
-      case Commands::MESSAGE_ATTRIBUTES:
-      case Commands::DISCOVER_VENDOR:
-      case Commands::DISCOVER_SUB_VENDOR:
-      case Commands::DISCOVER_IMPLEMENTATION_VERSION:
-      case Commands::DISCOVER_LIST_PROTOCOLS:
-      case Commands::DISCOVER_AGENT:
+    case Commands::VERSION:
+    case Commands::ATTRIBUTES:
+    case Commands::MESSAGE_ATTRIBUTES:
+    case Commands::DISCOVER_VENDOR:
+    case Commands::DISCOVER_SUB_VENDOR:
+    case Commands::DISCOVER_IMPLEMENTATION_VERSION:
+    case Commands::DISCOVER_LIST_PROTOCOLS:
+    case Commands::DISCOVER_AGENT:
         return true;
-      default:
+    default:
         return false;
     }
 }
@@ -155,9 +155,8 @@ BaseProtocol::implementedProtocol(Commands message_id) const
 void
 BaseProtocol::messageAttributes(Message &msg)
 {
-    auto& payload = msg.payload.baseProtocolMessageAttributes;
-    const auto message_id = static_cast<Commands>(
-        payload.messageId);
+    auto &payload = msg.payload.baseProtocolMessageAttributes;
+    const auto message_id = static_cast<Commands>(payload.messageId);
 
     if (!implementedProtocol(message_id)) {
         payload.status = NOT_FOUND;
@@ -175,11 +174,11 @@ BaseProtocol::messageAttributes(Message &msg)
 void
 BaseProtocol::discoverVendor(Message &msg)
 {
-    auto& payload = msg.payload.baseDiscoverVendor;
+    auto &payload = msg.payload.baseDiscoverVendor;
     payload.status = SUCCESS;
 
-    auto vendor_size = vendor.copy(
-        (char*)&payload.vendorIdentifier, MAX_STRING_SIZE);
+    auto vendor_size =
+        vendor.copy((char *)&payload.vendorIdentifier, MAX_STRING_SIZE);
 
     // header + status + payload
     msg.length = sizeof(uint32_t) * 2 + vendor_size;
@@ -188,11 +187,11 @@ BaseProtocol::discoverVendor(Message &msg)
 void
 BaseProtocol::discoverSubVendor(Message &msg)
 {
-    auto& payload = msg.payload.baseDiscoverSubVendor;
+    auto &payload = msg.payload.baseDiscoverSubVendor;
     payload.status = SUCCESS;
 
-    auto subvendor_size = subvendor.copy(
-        (char*)&payload.vendorIdentifier, MAX_STRING_SIZE);
+    auto subvendor_size =
+        subvendor.copy((char *)&payload.vendorIdentifier, MAX_STRING_SIZE);
 
     // header + status + payload
     msg.length = sizeof(uint32_t) * 2 + subvendor_size;
@@ -201,7 +200,7 @@ BaseProtocol::discoverSubVendor(Message &msg)
 void
 BaseProtocol::discoverImplVersion(Message &msg)
 {
-    auto& payload = msg.payload.baseDiscoverImplementationVersion;
+    auto &payload = msg.payload.baseDiscoverImplementationVersion;
     payload.status = SUCCESS;
     payload.implementationVersion = implementationVersion;
 
@@ -212,7 +211,7 @@ BaseProtocol::discoverImplVersion(Message &msg)
 void
 BaseProtocol::discoverListProtocols(Message &msg)
 {
-    auto& payload = msg.payload.baseDiscoverListProtocols;
+    auto &payload = msg.payload.baseDiscoverListProtocols;
     const uint32_t skip = payload.skip;
     const auto num_protocols = platform.numProtocols();
 
@@ -221,8 +220,8 @@ BaseProtocol::discoverListProtocols(Message &msg)
         msg.length = sizeof(uint32_t) * 2;
 
     } else {
-        const auto& protocol_list = platform.protocolList();
-        auto *protocols = (uint8_t*)payload.protocols;
+        const auto &protocol_list = platform.protocolList();
+        auto *protocols = (uint8_t *)payload.protocols;
         uint32_t num_implemented = 0;
 
         for (auto protoc_id = START + skip; protoc_id <= END; protoc_id++) {
@@ -246,7 +245,7 @@ BaseProtocol::discoverListProtocols(Message &msg)
 void
 BaseProtocol::discoverAgent(Message &msg)
 {
-    auto& payload = msg.payload.baseDiscoverAgent;
+    auto &payload = msg.payload.baseDiscoverAgent;
     const uint32_t agent_id = payload.agentId;
 
     if (agent_id > platform.numAgents()) {
@@ -257,7 +256,7 @@ BaseProtocol::discoverAgent(Message &msg)
         auto agent_size = 0;
         auto agent_name = std::string();
 
-        if (agent_id)  {
+        if (agent_id) {
             // Subtracting one to the agent_id, since agent_id 0 is reserved
             // for the platform.
             agent_name = platform.getAgent(agent_id - 1);
@@ -267,8 +266,7 @@ BaseProtocol::discoverAgent(Message &msg)
 
         agent_size = agent_name.length();
 
-        strncpy((char *)&payload.name,
-                agent_name.c_str(), agent_size);
+        strncpy((char *)&payload.name, agent_name.c_str(), agent_size);
 
         payload.status = SUCCESS;
         // header + status + payload
@@ -279,7 +277,7 @@ BaseProtocol::discoverAgent(Message &msg)
 void
 BaseProtocol::invalidCommand(Message &msg)
 {
-    auto& payload = msg.payload.invalidCommand;
+    auto &payload = msg.payload.invalidCommand;
     payload.status = NOT_FOUND;
     msg.length = sizeof(uint32_t) * 2;
 }

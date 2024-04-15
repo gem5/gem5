@@ -56,10 +56,7 @@ SimPoint::SimPoint(const SimPointParams &p)
         fatal("unable to open SimPoint profile_file");
 }
 
-SimPoint::~SimPoint()
-{
-    simout.close(simpointStream);
-}
+SimPoint::~SimPoint() { simout.close(simpointStream); }
 
 void
 SimPoint::init()
@@ -68,16 +65,17 @@ SimPoint::init()
 void
 SimPoint::regProbeListeners()
 {
-    typedef ProbeListenerArg<SimPoint, std::pair<SimpleThread*,StaticInstPtr>>
+    typedef ProbeListenerArg<SimPoint,
+                             std::pair<SimpleThread *, StaticInstPtr>>
         SimPointListener;
-    listeners.push_back(new SimPointListener(this, "Commit",
-                                             &SimPoint::profile));
+    listeners.push_back(
+        new SimPointListener(this, "Commit", &SimPoint::profile));
 }
 
 void
-SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
+SimPoint::profile(const std::pair<SimpleThread *, StaticInstPtr> &p)
 {
-    SimpleThread* thread = p.first;
+    SimpleThread *thread = p.first;
     const StaticInstPtr &inst = p.second;
 
     if (inst->isMicroop() && !inst->isLastMicroop())
@@ -94,7 +92,7 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         currentBBV.second = thread->pcState().instAddr();
 
         auto map_itr = bbMap.find(currentBBV);
-        if (map_itr == bbMap.end()){
+        if (map_itr == bbMap.end()) {
             // If a new (previously unseen) basic block is found,
             // add a new unique id, record num of insts and insert
             // into bbMap.
@@ -106,7 +104,7 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         } else {
             // If basic block is seen before, just increment the count by the
             // number of insts in basic block.
-            BBInfo& info = map_itr->second;
+            BBInfo &info = map_itr->second;
             info.count += currentBBVInstCount;
         }
         currentBBVInstCount = 0;
@@ -116,10 +114,10 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
         // interval (intervalDrift) is greater than/equal to the interval size.
         if (intervalCount + intervalDrift >= intervalSize) {
             // summarize interval and display BBV info
-            std::vector<std::pair<uint64_t, uint64_t> > counts;
+            std::vector<std::pair<uint64_t, uint64_t>> counts;
             for (auto map_itr = bbMap.begin(); map_itr != bbMap.end();
-                    ++map_itr) {
-                BBInfo& info = map_itr->second;
+                 ++map_itr) {
+                BBInfo &info = map_itr->second;
                 if (info.count != 0) {
                     counts.push_back(std::make_pair(info.id, info.count));
                     info.count = 0;
@@ -130,9 +128,9 @@ SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
             // Print output BBV info
             *simpointStream->stream() << "T";
             for (auto cnt_itr = counts.begin(); cnt_itr != counts.end();
-                    ++cnt_itr) {
-                *simpointStream->stream() << ":" << cnt_itr->first
-                                << ":" << cnt_itr->second << " ";
+                 ++cnt_itr) {
+                *simpointStream->stream()
+                    << ":" << cnt_itr->first << ":" << cnt_itr->second << " ";
             }
             *simpointStream->stream() << "\n";
 

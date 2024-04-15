@@ -27,50 +27,50 @@
  */
 
 #if defined __STATETRACE_ALPHA__
-    #if !defined __alpha__
-        #error "Alpha toolchain required."
-    #endif
+#if !defined __alpha__
+#error "Alpha toolchain required."
+#endif
 #elif defined __STATETRACE_AMD64__
-    #if !defined __amd64__
-        #error "Amd64 toolchain required."
-    #endif
+#if !defined __amd64__
+#error "Amd64 toolchain required."
+#endif
 #elif defined __STATETRACE_ARM__
-    #if !defined __arm__
-        #error "Arm toolchain required."
-    #endif
+#if !defined __arm__
+#error "Arm toolchain required."
+#endif
 #elif defined __STATETRACE_HPPA__
-    #if !defined __hppa__
-        #error "Hppa toolchain required."
-    #endif
+#if !defined __hppa__
+#error "Hppa toolchain required."
+#endif
 #elif defined __STATETRACE_I686__
-    #if !(defined __i386__ || defined __i486__ || \
-            defined __i586__ || defined __i686__)
-        #error "I686 toolchain required."
-    #endif
+#if !(defined __i386__ || defined __i486__ || defined __i586__ ||             \
+      defined __i686__)
+#error "I686 toolchain required."
+#endif
 #elif defined __STATETRACE_IA64__
-    #if !defined __ia64__
-        #error "IA64 toolchain required."
-    #endif
+#if !defined __ia64__
+#error "IA64 toolchain required."
+#endif
 #elif defined __STATETRACE_MIPS__
-    #if !defined __mips__
-        #error "Mips toolchain required."
-    #endif
+#if !defined __mips__
+#error "Mips toolchain required."
+#endif
 #elif defined __STATETRACE_POWERPC__
-    #if !defined __powerpc__
-        #error "PowerPC toolchain required."
-    #endif
+#if !defined __powerpc__
+#error "PowerPC toolchain required."
+#endif
 #elif defined __STATETRACE_SPARC__
-    #if !defined __sparc__
-        #error "Sparc toolchain required."
-    #endif
+#if !defined __sparc__
+#error "Sparc toolchain required."
+#endif
 #elif defined __STATETRACE_SH__
-    #if !defined __sh__
-        #error "SuperH toolchain required."
-    #endif
+#if !defined __sh__
+#error "SuperH toolchain required."
+#endif
 #elif defined __STATETRACE__S390__
-    #if !defined __s390__
-        #error "System/390 toolchain required."
-    #endif
+#if !defined __s390__
+#error "System/390 toolchain required."
+#endif
 #else
-    #error "Couldn't determine architecture."
+#error "Couldn't determine architecture."
 #endif

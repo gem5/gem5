@@ -66,20 +66,21 @@ namespace gem5
 
 using namespace X86ISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
-    BaseRemoteGDB(_system, _listen_config),
-    regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+      regCache32(this),
+      regCache64(this)
 {}
 
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
     if (FullSystem) {
-        Walker *walker = dynamic_cast<MMU *>(
-            context()->getMMUPtr())->getDataWalker();
+        Walker *walker =
+            dynamic_cast<MMU *>(context()->getMMUPtr())->getDataWalker();
         unsigned logBytes;
-        Fault fault = walker->startFunctional(context(), va, logBytes,
-                                              BaseMMU::Read);
+        Fault fault =
+            walker->startFunctional(context(), va, logBytes, BaseMMU::Read);
         if (fault != NoFault)
             return false;
 
@@ -87,15 +88,15 @@ RemoteGDB::acc(Addr va, size_t len)
         if ((va & ~mask(logBytes)) == (endVa & ~mask(logBytes)))
             return true;
 
-        fault = walker->startFunctional(context(), endVa, logBytes,
-                                        BaseMMU::Read);
+        fault =
+            walker->startFunctional(context(), endVa, logBytes, BaseMMU::Read);
         return fault == NoFault;
     } else {
         return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
     }
 }
 
-BaseGdbRegCache*
+BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
     // First, try to figure out which type of register cache to return based
@@ -108,7 +109,7 @@ RemoteGDB::gdbRegs()
             return &regCache32;
         } else if (arch != loader::UnknownArch) {
             panic("Unrecognized workload arch %s.",
-                    loader::archToString(arch));
+                  loader::archToString(arch));
         }
     }
 
@@ -119,8 +120,6 @@ RemoteGDB::gdbRegs()
     else
         return &regCache32;
 }
-
-
 
 void
 RemoteGDB::AMD64GdbRegCache::getRegs(ThreadContext *context)

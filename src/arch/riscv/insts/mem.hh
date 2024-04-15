@@ -58,8 +58,9 @@ class Load : public MemInst
   protected:
     using MemInst::MemInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class Store : public MemInst
@@ -67,8 +68,9 @@ class Store : public MemInst
   protected:
     using MemInst::MemInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

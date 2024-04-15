@@ -46,11 +46,9 @@ FuncUnit::FuncUnit()
     capabilityList.reset();
 }
 
-
 //  Copy constructor
 FuncUnit::FuncUnit(const FuncUnit &fu)
 {
-
     for (int i = 0; i < Num_OpClasses; ++i) {
         opLatencies[i] = fu.opLatencies[i];
         pipelined[i] = fu.pipelined[i];
@@ -58,7 +56,6 @@ FuncUnit::FuncUnit(const FuncUnit &fu)
 
     capabilityList = fu.capabilityList;
 }
-
 
 void
 FuncUnit::addCapability(OpClass cap, unsigned oplat, bool pipeline)

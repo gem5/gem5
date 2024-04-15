@@ -89,13 +89,6 @@ repos:
             args: [--py38-plus]
     - repo: local
       hooks:
-          - id: gem5-style-checker
-            name: gem5 style checker
-            entry: util/git-pre-commit.py
-            always_run: true
-            exclude: .*
-            language: system
-            description: The gem5 style checker hook.
           - id: gem5-commit-msg-checker
             name: gem5 commit msg checker
             entry: ext/git-commit-msg
@@ -108,3 +101,8 @@ repos:
             language: system
             stages: [commit-msg]
             description: Adds Change-ID to the commit message. Needed by Gerrit.
+    - repo: https://github.com/pre-commit/mirrors-clang-format
+      rev: v14.0.6
+      hooks:
+          - id: clang-format
+            types_or: [c, c++]

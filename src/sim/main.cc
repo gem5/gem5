@@ -54,8 +54,7 @@ main(int argc, char **argv)
     // Convert argv[0] to a wchar_t string, using python's locale and cleanup
     // functions.
     std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
-        Py_DecodeLocale(argv[0], nullptr),
-        &PyMem_RawFree);
+        Py_DecodeLocale(argv[0], nullptr), &PyMem_RawFree);
 
     // This can help python find libraries at run time relative to this binary.
     // It's probably not necessary, but is mostly harmless and might be useful.
@@ -69,8 +68,7 @@ main(int argc, char **argv)
     PyConfig_InitPythonConfig(&config);
 
     /* Set the program name. Implicitly preinitialize Python. */
-    status = PyConfig_SetBytesString(&config, &config.program_name,
-                                     argv[0]);
+    status = PyConfig_SetBytesString(&config, &config.program_name, argv[0]);
     if (PyStatus_Exception(status)) {
         PyConfig_Clear(&config);
         Py_ExitStatusException(status);

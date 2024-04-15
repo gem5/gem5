@@ -53,7 +53,6 @@ class LupV : public Platform
     int uartIntID;
 
   public:
-
     PARAMS(LupV);
     LupV(const Params &params);
 
@@ -74,4 +73,4 @@ class LupV : public Platform
 
 } // namespace gem5
 
-#endif  // __DEV_RISCV_LUPV_HH__
+#endif // __DEV_RISCV_LUPV_HH__

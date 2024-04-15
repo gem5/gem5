@@ -76,10 +76,9 @@ struct Argument<X86PseudoInstABI, uint64_t>
 
         using namespace X86ISA;
 
-        constexpr RegId int_reg_map[] = {
-            int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
-            int_reg::Rcx, int_reg::R8, int_reg::R9
-        };
+        constexpr RegId int_reg_map[] = { int_reg::Rdi, int_reg::Rsi,
+                                          int_reg::Rdx, int_reg::Rcx,
+                                          int_reg::R8,  int_reg::R9 };
 
         return tc->getReg(int_reg_map[state++]);
     }
@@ -100,10 +99,9 @@ struct Argument<X86PseudoInstABI, pseudo_inst::GuestAddr>
 
         using namespace X86ISA;
 
-        constexpr RegId int_reg_map[] = {
-            int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
-            int_reg::Rcx, int_reg::R8, int_reg::R9
-        };
+        constexpr RegId int_reg_map[] = { int_reg::Rdi, int_reg::Rsi,
+                                          int_reg::Rdx, int_reg::Rcx,
+                                          int_reg::R8,  int_reg::R9 };
 
         return (Arg)tc->getReg(int_reg_map[state++]);
     }

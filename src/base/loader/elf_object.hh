@@ -109,21 +109,63 @@ class ElfObject : public ObjectFile
     ElfObject(ImageFileDataPtr ifd);
     ~ElfObject();
 
-    MemoryImage buildImage() const override { return image; }
+    MemoryImage
+    buildImage() const override
+    {
+        return image;
+    }
 
-    ObjectFile *getInterpreter() const override { return interpreter; }
+    ObjectFile *
+    getInterpreter() const override
+    {
+        return interpreter;
+    }
+
     std::string getInterpPath(const GElf_Phdr &phdr) const;
 
-    Addr bias() const override { return ldBias; }
-    bool relocatable() const override { return relocate; }
-    Addr mapSize() const override { return ldMax - ldMin; }
+    Addr
+    bias() const override
+    {
+        return ldBias;
+    }
+
+    bool
+    relocatable() const override
+    {
+        return relocate;
+    }
+
+    Addr
+    mapSize() const override
+    {
+        return ldMax - ldMin;
+    }
+
     void updateBias(Addr bias_addr) override;
 
-    bool hasTLS() override { return sectionExists(".tbss"); }
+    bool
+    hasTLS() override
+    {
+        return sectionExists(".tbss");
+    }
 
-    Addr programHeaderTable() {return _programHeaderTable;}
-    uint16_t programHeaderSize() {return _programHeaderSize;}
-    uint16_t programHeaderCount() {return _programHeaderCount;}
+    Addr
+    programHeaderTable()
+    {
+        return _programHeaderTable;
+    }
+
+    uint16_t
+    programHeaderSize()
+    {
+        return _programHeaderSize;
+    }
+
+    uint16_t
+    programHeaderCount()
+    {
+        return _programHeaderCount;
+    }
 };
 
 /**

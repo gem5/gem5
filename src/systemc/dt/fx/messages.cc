@@ -49,17 +49,12 @@ namespace
 {
 
 sc_gem5::DefaultReportMessages predefinedMessages{
-    {300, SC_ID_INVALID_WL_},
-    {301, SC_ID_INVALID_N_BITS_},
-    {302, SC_ID_INVALID_DIV_WL_},
-    {303, SC_ID_INVALID_CTE_WL_},
-    {304, SC_ID_INVALID_MAX_WL_},
-    {305, SC_ID_INVALID_FX_VALUE_},
-    {306, SC_ID_INVALID_O_MODE_},
-    {307, SC_ID_OUT_OF_RANGE_},
-    {308, SC_ID_CONTEXT_BEGIN_FAILED_},
-    {309, SC_ID_CONTEXT_END_FAILED_},
-    {310, SC_ID_WRAP_SM_NOT_DEFINED_}
+    { 300, SC_ID_INVALID_WL_ },           { 301, SC_ID_INVALID_N_BITS_ },
+    { 302, SC_ID_INVALID_DIV_WL_ },       { 303, SC_ID_INVALID_CTE_WL_ },
+    { 304, SC_ID_INVALID_MAX_WL_ },       { 305, SC_ID_INVALID_FX_VALUE_ },
+    { 306, SC_ID_INVALID_O_MODE_ },       { 307, SC_ID_OUT_OF_RANGE_ },
+    { 308, SC_ID_CONTEXT_BEGIN_FAILED_ }, { 309, SC_ID_CONTEXT_END_FAILED_ },
+    { 310, SC_ID_WRAP_SM_NOT_DEFINED_ }
 };
 
 } // anonymous namespace

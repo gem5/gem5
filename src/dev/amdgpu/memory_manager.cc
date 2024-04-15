@@ -43,15 +43,15 @@ namespace gem5
 {
 
 AMDGPUMemoryManager::AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p)
-    : ClockedObject(p), _gpuMemPort(csprintf("%s-port", name()), *this),
+    : ClockedObject(p),
+      _gpuMemPort(csprintf("%s-port", name()), *this),
       cacheLineSize(p.system->cacheLineSize()),
       _requestorId(p.system->getRequestorId(this))
-{
-}
+{}
 
 void
 AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
-                               Request::Flags flag, Event *callback)
+                                  Request::Flags flag, Event *callback)
 {
     assert(data);
 
@@ -70,12 +70,12 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
 
         PacketPtr pkt = Packet::createWrite(req);
         uint8_t *dataPtr = new uint8_t[gen.size()];
-        std::memcpy(dataPtr, data + (gen.complete()/sizeof(uint8_t)),
+        std::memcpy(dataPtr, data + (gen.complete() / sizeof(uint8_t)),
                     gen.size());
         pkt->dataDynamic<uint8_t>(dataPtr);
 
         pkt->pushSenderState(
-                new GPUMemPort::SenderState(callback, addr, requestId));
+            new GPUMemPort::SenderState(callback, addr, requestId));
         requestStatus.at(requestId).outstandingChunks++;
         if (gen.last()) {
             requestStatus.at(requestId).sentLastChunk = true;
@@ -117,7 +117,7 @@ AMDGPUMemoryManager::readRequest(Addr addr, uint8_t *data, int size,
         dataPtr += gen.size();
 
         pkt->pushSenderState(
-                new GPUMemPort::SenderState(callback, addr, requestId));
+            new GPUMemPort::SenderState(callback, addr, requestId));
         requestStatus.at(requestId).outstandingChunks++;
         if (gen.last()) {
             requestStatus.at(requestId).sentLastChunk = true;
@@ -139,19 +139,20 @@ AMDGPUMemoryManager::GPUMemPort::recvTimingResp(PacketPtr pkt)
 {
     // Retrieve sender state
     [[maybe_unused]] SenderState *sender_state =
-        safe_cast<SenderState*>(pkt->senderState);
+        safe_cast<SenderState *>(pkt->senderState);
 
     // Check if all chunks have completed, the last chunk was sent, and there
     // is a callback, call the callback now.
     assert(gpu_mem.requestStatus.count(sender_state->_requestId));
-    auto& status = gpu_mem.requestStatus.at(sender_state->_requestId);
+    auto &status = gpu_mem.requestStatus.at(sender_state->_requestId);
 
     assert(status.outstandingChunks != 0);
     status.outstandingChunks--;
-    DPRINTF(AMDGPUMem, "Received Response for %#x. %d chunks remain, sent "
-            "last = %d, requestId = %ld\n", sender_state->_addr,
-            status.outstandingChunks, status.sentLastChunk,
-            sender_state->_requestId);
+    DPRINTF(AMDGPUMem,
+            "Received Response for %#x. %d chunks remain, sent "
+            "last = %d, requestId = %ld\n",
+            sender_state->_addr, status.outstandingChunks,
+            status.sentLastChunk, sender_state->_requestId);
 
     if (!status.outstandingChunks && status.sentLastChunk) {
         // Call and free the callback if there is one

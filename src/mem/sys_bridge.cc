@@ -37,16 +37,17 @@ SysBridge::BridgingPort::replaceReqID(PacketPtr pkt)
 {
     RequestPtr old_req = pkt->req;
     RequestPtr new_req = std::make_shared<Request>(
-            old_req->getPaddr(), old_req->getSize(), old_req->getFlags(), id);
+        old_req->getPaddr(), old_req->getSize(), old_req->getFlags(), id);
     pkt->req = new_req;
-    return {old_req};
+    return { old_req };
 }
 
-SysBridge::SysBridge(const SysBridgeParams &p) : SimObject(p),
-    sourcePort(p.name + ".source_port", &targetPort,
-            p.target->getRequestorId(this)),
-    targetPort(p.name + ".target_port", &sourcePort,
-            p.source->getRequestorId(this))
+SysBridge::SysBridge(const SysBridgeParams &p)
+    : SimObject(p),
+      sourcePort(p.name + ".source_port", &targetPort,
+                 p.target->getRequestorId(this)),
+      targetPort(p.name + ".target_port", &sourcePort,
+                 p.source->getRequestorId(this))
 {}
 
 Port &

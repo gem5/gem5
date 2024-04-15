@@ -95,15 +95,14 @@ class Decode : public Named
     {
         DecodeThreadInfo() {}
 
-        DecodeThreadInfo(const DecodeThreadInfo& other) :
-            inputIndex(other.inputIndex),
-            inMacroop(other.inMacroop),
-            execSeqNum(other.execSeqNum),
-            blocked(other.blocked)
+        DecodeThreadInfo(const DecodeThreadInfo &other)
+            : inputIndex(other.inputIndex),
+              inMacroop(other.inMacroop),
+              execSeqNum(other.execSeqNum),
+              blocked(other.blocked)
         {
             set(microopPC, other.microopPC);
         }
-
 
         /** Index into the inputBuffer's head marking the start of unhandled
          *  instructions */
@@ -137,13 +136,13 @@ class Decode : public Named
     /** Use the current threading policy to determine the next thread to
      *  decode from. */
     ThreadID getScheduledThread();
+
   public:
-    Decode(const std::string &name,
-        MinorCPU &cpu_,
-        const BaseMinorCPUParams &params,
-        Latch<ForwardInstData>::Output inp_,
-        Latch<ForwardInstData>::Input out_,
-        std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
+    Decode(const std::string &name, MinorCPU &cpu_,
+           const BaseMinorCPUParams &params,
+           Latch<ForwardInstData>::Output inp_,
+           Latch<ForwardInstData>::Input out_,
+           std::vector<InputBuffer<ForwardInstData>> &next_stage_input_buffer);
 
   public:
     /** Pass on input/buffer data to the output if you can */

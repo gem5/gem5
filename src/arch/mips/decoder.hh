@@ -49,16 +49,15 @@ namespace MipsISA
 class Decoder : public InstDecoder
 {
   protected:
-    //The extended machine instruction being generated
+    // The extended machine instruction being generated
     ExtMachInst emi;
     uint32_t machInst;
 
   public:
-    Decoder(const MipsDecoderParams &p) : InstDecoder(p, &machInst)
-    {}
+    Decoder(const MipsDecoderParams &p) : InstDecoder(p, &machInst) {}
 
-    //Use this to give data to the decoder. This should be used
-    //when there is control flow.
+    // Use this to give data to the decoder. This should be used
+    // when there is control flow.
     void
     moreBytes(const PCStateBase &pc, Addr fetchPC) override
     {
@@ -80,8 +79,8 @@ class Decoder : public InstDecoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
-        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-                si->getName(), mach_inst);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+                mach_inst);
         return si;
     }
 

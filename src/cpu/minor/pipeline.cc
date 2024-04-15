@@ -54,55 +54,53 @@ namespace gem5
 namespace minor
 {
 
-Pipeline::Pipeline(MinorCPU &cpu_, const BaseMinorCPUParams &params) :
-    Ticked(cpu_, &(cpu_.BaseCPU::baseStats.numCycles)),
-    cpu(cpu_),
-    allow_idling(params.enableIdling),
-    f1ToF2(cpu.name() + ".f1ToF2", "lines",
-        params.fetch1ToFetch2ForwardDelay),
-    f2ToF1(cpu.name() + ".f2ToF1", "prediction",
-        params.fetch1ToFetch2BackwardDelay, true),
-    f2ToD(cpu.name() + ".f2ToD", "insts",
-        params.fetch2ToDecodeForwardDelay),
-    dToE(cpu.name() + ".dToE", "insts",
-        params.decodeToExecuteForwardDelay),
-    eToF1(cpu.name() + ".eToF1", "branch",
-        params.executeBranchDelay),
-    execute(cpu.name() + ".execute", cpu, params,
-        dToE.output(), eToF1.input()),
-    decode(cpu.name() + ".decode", cpu, params,
-        f2ToD.output(), dToE.input(), execute.inputBuffer),
-    fetch2(cpu.name() + ".fetch2", cpu, params,
-        f1ToF2.output(), eToF1.output(), f2ToF1.input(), f2ToD.input(),
-        decode.inputBuffer),
-    fetch1(cpu.name() + ".fetch1", cpu, params,
-        eToF1.output(), f1ToF2.input(), f2ToF1.output(), fetch2.inputBuffer),
-    activityRecorder(cpu.name() + ".activity", Num_StageId,
-        /* The max depth of inter-stage FIFOs */
-        std::max(params.fetch1ToFetch2ForwardDelay,
-        std::max(params.fetch2ToDecodeForwardDelay,
-        std::max(params.decodeToExecuteForwardDelay,
-        params.executeBranchDelay)))),
-    needToSignalDrained(false)
+Pipeline::Pipeline(MinorCPU &cpu_, const BaseMinorCPUParams &params)
+    : Ticked(cpu_, &(cpu_.BaseCPU::baseStats.numCycles)),
+      cpu(cpu_),
+      allow_idling(params.enableIdling),
+      f1ToF2(cpu.name() + ".f1ToF2", "lines",
+             params.fetch1ToFetch2ForwardDelay),
+      f2ToF1(cpu.name() + ".f2ToF1", "prediction",
+             params.fetch1ToFetch2BackwardDelay, true),
+      f2ToD(cpu.name() + ".f2ToD", "insts", params.fetch2ToDecodeForwardDelay),
+      dToE(cpu.name() + ".dToE", "insts", params.decodeToExecuteForwardDelay),
+      eToF1(cpu.name() + ".eToF1", "branch", params.executeBranchDelay),
+      execute(cpu.name() + ".execute", cpu, params, dToE.output(),
+              eToF1.input()),
+      decode(cpu.name() + ".decode", cpu, params, f2ToD.output(), dToE.input(),
+             execute.inputBuffer),
+      fetch2(cpu.name() + ".fetch2", cpu, params, f1ToF2.output(),
+             eToF1.output(), f2ToF1.input(), f2ToD.input(),
+             decode.inputBuffer),
+      fetch1(cpu.name() + ".fetch1", cpu, params, eToF1.output(),
+             f1ToF2.input(), f2ToF1.output(), fetch2.inputBuffer),
+      activityRecorder(
+          cpu.name() + ".activity", Num_StageId,
+          /* The max depth of inter-stage FIFOs */
+          std::max(params.fetch1ToFetch2ForwardDelay,
+                   std::max(params.fetch2ToDecodeForwardDelay,
+                            std::max(params.decodeToExecuteForwardDelay,
+                                     params.executeBranchDelay)))),
+      needToSignalDrained(false)
 {
     if (params.fetch1ToFetch2ForwardDelay < 1) {
-        fatal("%s: fetch1ToFetch2ForwardDelay must be >= 1 (%d)\n",
-            cpu.name(), params.fetch1ToFetch2ForwardDelay);
+        fatal("%s: fetch1ToFetch2ForwardDelay must be >= 1 (%d)\n", cpu.name(),
+              params.fetch1ToFetch2ForwardDelay);
     }
 
     if (params.fetch2ToDecodeForwardDelay < 1) {
-        fatal("%s: fetch2ToDecodeForwardDelay must be >= 1 (%d)\n",
-            cpu.name(), params.fetch2ToDecodeForwardDelay);
+        fatal("%s: fetch2ToDecodeForwardDelay must be >= 1 (%d)\n", cpu.name(),
+              params.fetch2ToDecodeForwardDelay);
     }
 
     if (params.decodeToExecuteForwardDelay < 1) {
         fatal("%s: decodeToExecuteForwardDelay must be >= 1 (%d)\n",
-            cpu.name(), params.decodeToExecuteForwardDelay);
+              cpu.name(), params.decodeToExecuteForwardDelay);
     }
 
     if (params.executeBranchDelay < 1) {
-        fatal("%s: executeBranchDelay must be >= 1\n",
-            cpu.name(), params.executeBranchDelay);
+        fatal("%s: executeBranchDelay must be >= 1\n", cpu.name(),
+              params.executeBranchDelay);
     }
 }
 
@@ -201,7 +199,7 @@ bool
 Pipeline::drain()
 {
     DPRINTF(MinorCPU, "Draining pipeline by halting inst fetches. "
-        " Execution should drain naturally\n");
+                      " Execution should drain naturally\n");
 
     execute.drain();
 
@@ -238,21 +236,17 @@ Pipeline::isDrained()
     bool f2_to_d_drained = f2ToD.empty();
     bool d_to_e_drained = dToE.empty();
 
-    bool ret = fetch1_drained && fetch2_drained &&
-        decode_drained && execute_drained &&
-        f1_to_f2_drained && f2_to_f1_drained &&
-        f2_to_d_drained && d_to_e_drained;
+    bool ret = fetch1_drained && fetch2_drained && decode_drained &&
+               execute_drained && f1_to_f2_drained && f2_to_f1_drained &&
+               f2_to_d_drained && d_to_e_drained;
 
-    DPRINTF(MinorCPU, "Pipeline undrained stages state:%s%s%s%s%s%s%s%s\n",
-        (fetch1_drained ? "" : " Fetch1"),
-        (fetch2_drained ? "" : " Fetch2"),
-        (decode_drained ? "" : " Decode"),
-        (execute_drained ? "" : " Execute"),
+    DPRINTF(
+        MinorCPU, "Pipeline undrained stages state:%s%s%s%s%s%s%s%s\n",
+        (fetch1_drained ? "" : " Fetch1"), (fetch2_drained ? "" : " Fetch2"),
+        (decode_drained ? "" : " Decode"), (execute_drained ? "" : " Execute"),
         (f1_to_f2_drained ? "" : " F1->F2"),
-        (f2_to_f1_drained ? "" : " F2->F1"),
-        (f2_to_d_drained ? "" : " F2->D"),
-        (d_to_e_drained ? "" : " D->E")
-        );
+        (f2_to_f1_drained ? "" : " F2->F1"), (f2_to_d_drained ? "" : " F2->D"),
+        (d_to_e_drained ? "" : " D->E"));
 
     return ret;
 }

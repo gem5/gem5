@@ -70,8 +70,8 @@ IrregularStreamBuffer::IrregularStreamBuffer(
 
 void
 IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+                                         std::vector<AddrPriority> &addresses,
+                                         const CacheAccessor &cache)
 {
     // This prefetcher requires a PC
     if (!pfi.hasPC()) {
@@ -118,7 +118,7 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
                     // counter at 1
                     mapping_B.address = mapping_A.address + 1;
                     addStructuralToPhysicalEntry(mapping_B.address, is_secure,
-                            correlated_addr_B);
+                                                 correlated_addr_B);
                 } else {
                     mapping_B.counter--;
                 }
@@ -129,15 +129,15 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
                 mapping_A.counter++;
                 mapping_A.address = structuralAddressCounter;
                 structuralAddressCounter += chunkSize;
-                addStructuralToPhysicalEntry(mapping_A.address,
-                        is_secure, correlated_addr_A);
+                addStructuralToPhysicalEntry(mapping_A.address, is_secure,
+                                             correlated_addr_A);
             }
             mapping_B.counter.reset();
             mapping_B.counter++;
             mapping_B.address = mapping_A.address + 1;
             // update SP-AMC
             addStructuralToPhysicalEntry(mapping_B.address, is_secure,
-                    correlated_addr_B);
+                                         correlated_addr_B);
         }
     }
 
@@ -147,14 +147,14 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
     //   addresses in ascending order, as many as indicated by the degree
     //   (given the structured address S, prefetch S+1, S+2, .. up to S+degree)
     Addr amc_address = addr / prefetchCandidatesPerEntry;
-    Addr map_index   = addr % prefetchCandidatesPerEntry;
-    AddressMappingEntry *ps_am = psAddressMappingCache.findEntry(amc_address,
-                                                                 is_secure);
+    Addr map_index = addr % prefetchCandidatesPerEntry;
+    AddressMappingEntry *ps_am =
+        psAddressMappingCache.findEntry(amc_address, is_secure);
     if (ps_am != nullptr) {
         AddressMapping &mapping = ps_am->mappings[map_index];
         if (mapping.counter > 0) {
             Addr sp_address = mapping.address / prefetchCandidatesPerEntry;
-            Addr sp_index   = mapping.address % prefetchCandidatesPerEntry;
+            Addr sp_index = mapping.address % prefetchCandidatesPerEntry;
             AddressMappingEntry *sp_am =
                 spAddressMappingCache.findEntry(sp_address, is_secure);
             if (sp_am == nullptr) {
@@ -162,11 +162,10 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
                 return;
             }
             for (unsigned d = 1;
-                    d <= degree && (sp_index + d) < prefetchCandidatesPerEntry;
-                    d += 1)
-            {
+                 d <= degree && (sp_index + d) < prefetchCandidatesPerEntry;
+                 d += 1) {
                 AddressMapping &spm = sp_am->mappings[sp_index + d];
-                //generate prefetch
+                // generate prefetch
                 if (spm.counter > 0) {
                     Addr pf_addr = spm.address << lBlkSize;
                     addresses.push_back(AddrPriority(pf_addr, 0));
@@ -176,11 +175,11 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
     }
 }
 
-IrregularStreamBuffer::AddressMapping&
+IrregularStreamBuffer::AddressMapping &
 IrregularStreamBuffer::getPSMapping(Addr paddr, bool is_secure)
 {
     Addr amc_address = paddr / prefetchCandidatesPerEntry;
-    Addr map_index   = paddr % prefetchCandidatesPerEntry;
+    Addr map_index = paddr % prefetchCandidatesPerEntry;
     AddressMappingEntry *ps_entry =
         psAddressMappingCache.findEntry(amc_address, is_secure);
     if (ps_entry != nullptr) {
@@ -196,11 +195,12 @@ IrregularStreamBuffer::getPSMapping(Addr paddr, bool is_secure)
 }
 
 void
-IrregularStreamBuffer::addStructuralToPhysicalEntry(
-    Addr structural_address, bool is_secure, Addr physical_address)
+IrregularStreamBuffer::addStructuralToPhysicalEntry(Addr structural_address,
+                                                    bool is_secure,
+                                                    Addr physical_address)
 {
     Addr amc_address = structural_address / prefetchCandidatesPerEntry;
-    Addr map_index   = structural_address % prefetchCandidatesPerEntry;
+    Addr map_index = structural_address % prefetchCandidatesPerEntry;
     AddressMappingEntry *sp_entry =
         spAddressMappingCache.findEntry(amc_address, is_secure);
     if (sp_entry != nullptr) {

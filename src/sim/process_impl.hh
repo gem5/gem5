@@ -37,12 +37,11 @@
 namespace gem5
 {
 
-//This needs to be templated for cases where 32 bit pointers are needed.
-template<class AddrType>
+// This needs to be templated for cases where 32 bit pointers are needed.
+template <class AddrType>
 void
-copyStringArray(std::vector<std::string> &strings,
-        AddrType array_ptr, AddrType data_ptr,
-        const ByteOrder bo, PortProxy& memProxy)
+copyStringArray(std::vector<std::string> &strings, AddrType array_ptr,
+                AddrType data_ptr, const ByteOrder bo, PortProxy &memProxy)
 {
     AddrType data_ptr_swap;
     for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {

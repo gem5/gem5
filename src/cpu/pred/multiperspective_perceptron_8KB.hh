@@ -52,9 +52,10 @@ namespace branch_prediction
 class MultiperspectivePerceptron8KB : public MultiperspectivePerceptron
 {
     void createSpecs() override;
-    public:
+
+  public:
     MultiperspectivePerceptron8KB(
-            const MultiperspectivePerceptron8KBParams &p);
+        const MultiperspectivePerceptron8KBParams &p);
 };
 
 } // namespace branch_prediction

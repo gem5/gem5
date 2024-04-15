@@ -100,8 +100,8 @@ class DeltaCorrelatingPredictionTables : public SimObject
          */
         void getCandidates(std::vector<Queued::AddrPriority> &pfs,
                            unsigned int mask_bits) const;
-
     };
+
     /** The main table */
     AssociativeCache<DCPTEntry> table;
 
@@ -117,9 +117,8 @@ class DeltaCorrelatingPredictionTables : public SimObject
      * @param cache accessor for cache lookups
      */
     void calculatePrefetch(const Base::PrefetchInfo &pfi,
-        std::vector<Queued::AddrPriority> &addresses,
-        const CacheAccessor &cache);
-
+                           std::vector<Queued::AddrPriority> &addresses,
+                           const CacheAccessor &cache);
 };
 
 /** The prefetcher object using the DCPT */
@@ -127,16 +126,17 @@ class DCPT : public Queued
 {
     /** DCPT object */
     DeltaCorrelatingPredictionTables &dcpt;
+
   public:
     DCPT(const DCPTPrefetcherParams &p);
     ~DCPT() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_
+#endif //__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_

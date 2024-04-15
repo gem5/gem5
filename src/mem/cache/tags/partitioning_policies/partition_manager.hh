@@ -59,12 +59,12 @@ class PartitionManager : public SimObject
     PartitionManager(const Params &p);
 
     /**
-    * PartitionManager interface to retrieve PartitionID from a packet;
-    * This base implementation returns zero by default.
-    *
-    * @param pkt pointer to packet (PacketPtr)
-    * @return packet PartitionID.
-    */
+     * PartitionManager interface to retrieve PartitionID from a packet;
+     * This base implementation returns zero by default.
+     *
+     * @param pkt pointer to packet (PacketPtr)
+     * @return packet PartitionID.
+     */
     virtual uint64_t
     readPacketPartitionID(PacketPtr pkt) const
     {
@@ -72,15 +72,15 @@ class PartitionManager : public SimObject
     };
 
     /**
-    * Notify of acquisition of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
+     * Notify of acquisition of ownership of a cache line
+     * @param partition_id PartitionID of the upstream memory request
+     */
     void notifyAcquire(uint64_t partition_id);
 
     void notifyRelease(uint64_t partition_id);
 
     void filterByPartition(std::vector<ReplaceableEntry *> &entries,
-        const uint64_t partition_id) const;
+                           const uint64_t partition_id) const;
 
   protected:
     /** Partitioning policies */

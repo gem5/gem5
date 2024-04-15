@@ -76,15 +76,44 @@ class KernelWorkload : public Workload
   public:
     PARAMS(KernelWorkload);
 
-    Addr start() const { return _start; }
-    Addr end() const { return _end; }
-    Addr loadAddrMask() const { return _loadAddrMask; }
-    Addr loadAddrOffset() const { return _loadAddrOffset; }
+    Addr
+    start() const
+    {
+        return _start;
+    }
+
+    Addr
+    end() const
+    {
+        return _end;
+    }
+
+    Addr
+    loadAddrMask() const
+    {
+        return _loadAddrMask;
+    }
+
+    Addr
+    loadAddrOffset() const
+    {
+        return _loadAddrOffset;
+    }
 
     KernelWorkload(const Params &p);
 
-    Addr getEntry() const override { return kernelObj->entryPoint(); }
-    ByteOrder byteOrder() const override { return kernelObj->getByteOrder(); }
+    Addr
+    getEntry() const override
+    {
+        return kernelObj->entryPoint();
+    }
+
+    ByteOrder
+    byteOrder() const override
+    {
+        return kernelObj->getByteOrder();
+    }
+
     loader::Arch
     getArch() const override
     {
@@ -138,6 +167,7 @@ class KernelWorkload : public Workload
         panic_if(!e, "Failed to find kernel symbol '%s'", lbl);
         return e;
     }
+
     /** @} */
 };
 

@@ -41,21 +41,19 @@ int
 SCGIC::Terminator::countUnbound(const Initiators &inits)
 {
     int count = 0;
-    for (auto &init: inits)
+    for (auto &init : inits)
         if (!init.get_port_base().size())
             count++;
     return count;
 }
 
-SCGIC::Terminator::Terminator(
-        sc_core::sc_module_name _name, Initiators &inits) :
-    sc_core::sc_module(_name),
-    targets("targets", countUnbound(inits))
+SCGIC::Terminator::Terminator(sc_core::sc_module_name _name, Initiators &inits)
+    : sc_core::sc_module(_name), targets("targets", countUnbound(inits))
 {
     // For every unbound initiator socket, connected it to one
     // terminator target socket.
     int i = 0;
-    for (auto &init: inits) {
+    for (auto &init : inits) {
         if (!init.get_port_base().size()) {
             auto &term = targets.at(i++);
             term.bind(*this);
@@ -70,9 +68,9 @@ SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
     panic("Call to terminated interface!");
 }
 
-SCGIC::SCGIC(const SCFastModelGICParams &params,
-             sc_core::sc_module_name _name)
-    : scx_evs_GIC(_name), _params(params),
+SCGIC::SCGIC(const SCFastModelGICParams &params, sc_core::sc_module_name _name)
+    : scx_evs_GIC(_name),
+      _params(params),
       resetPort(params.name + ".reset", 0),
       poResetPort(params.name + ".po_reset", 0)
 {
@@ -106,8 +104,7 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.IIDR", params.IIDR);
     set_parameter("gic.gicv2-only", params.gicv2_only);
     set_parameter("gic.STATUSR-implemented", params.STATUSR_implemented);
-    set_parameter("gic.priority-bits",
-                  params.priority_bits_implemented);
+    set_parameter("gic.priority-bits", params.priority_bits_implemented);
     set_parameter("gic.GICD_ITARGETSR-RAZWI", params.itargets_razwi);
     set_parameter("gic.ICFGR-SGI-mask", params.icfgr_sgi_mask);
     set_parameter("gic.ICFGR-PPI-mask", params.icfgr_ppi_mask);
@@ -322,18 +319,17 @@ SCGIC::before_end_of_elaboration()
     terminator.reset(new Terminator("terminator", redistributor));
 }
 
-GIC::GIC(const FastModelGICParams &params) :
-    BaseGic(params),
-    ambaM(params.sc_gic->amba_m, params.name + ".amba_m", -1),
-    ambaS(params.sc_gic->amba_s, params.name + ".amba_s", -1),
-    redistributors(params.port_redistributor_connection_count),
-    scGIC(params.sc_gic)
+GIC::GIC(const FastModelGICParams &params)
+    : BaseGic(params),
+      ambaM(params.sc_gic->amba_m, params.name + ".amba_m", -1),
+      ambaS(params.sc_gic->amba_s, params.name + ".amba_s", -1),
+      redistributors(params.port_redistributor_connection_count),
+      scGIC(params.sc_gic)
 {
     for (int i = 0; i < params.port_wake_request_connection_count; i++) {
         wakeRequestPorts.emplace_back(new IntSourcePin<GIC>(
             csprintf("%s.wakerequestport[%d]", name(), i), i, this));
-        auto handler = [this, i](bool status)
-        {
+        auto handler = [this, i](bool status) {
             auto &port = wakeRequestPorts[i];
             status ? port->raise() : port->lower();
         };
@@ -351,9 +347,9 @@ GIC::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "redistributor") {
         auto &ptr = redistributors.at(idx);
         if (!ptr) {
-            ptr.reset(new TlmGicInitiator(scGIC->redistributor[idx],
-                                          csprintf("%s.redistributor[%d]",
-                                                   name(), idx), idx));
+            ptr.reset(new TlmGicInitiator(
+                scGIC->redistributor[idx],
+                csprintf("%s.redistributor[%d]", name(), idx), idx));
         }
         return *ptr;
     } else if (if_name == "wake_request") {

@@ -28,8 +28,8 @@
 
 //
 // This Directed Generator generates GETX requests for all nodes in the
-// system.  The GETX requests are generated one at a time in round-robin fashion
-// 0...1...2...etc.
+// system.  The GETX requests are generated one at a time in round-robin
+// fashion 0...1...2...etc.
 //
 
 #ifndef __CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__

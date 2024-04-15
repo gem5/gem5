@@ -43,10 +43,9 @@
 namespace gem5
 {
 
-DRAMPower::DRAMPower(const DRAMInterfaceParams &p, bool include_io) :
-    powerlib(libDRAMPower(getMemSpec(p), include_io))
-{
-}
+DRAMPower::DRAMPower(const DRAMInterfaceParams &p, bool include_io)
+    : powerlib(libDRAMPower(getMemSpec(p), include_io))
+{}
 
 Data::MemArchitectureSpec
 DRAMPower::getArchParams(const DRAMInterfaceParams &p)

@@ -54,7 +54,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 void
 ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
@@ -68,8 +69,8 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         return;
 
     if (debug::ExecAsid) {
-        outs << "A" << std::dec <<
-            thread->getIsaPtr()->getExecutingAsid() << " ";
+        outs << "A" << std::dec << thread->getIsaPtr()->getExecutingAsid()
+             << " ";
     }
 
     if (debug::ExecThread)
@@ -79,8 +80,8 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
     if (debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
-            (it = loader::debugSymbolTable.findNearest(cur_pc)) !=
-                loader::debugSymbolTable.end()) {
+        (it = loader::debugSymbolTable.findNearest(cur_pc)) !=
+            loader::debugSymbolTable.end()) {
         Addr delta = cur_pc - it->address();
         if (delta)
             ccprintf(outs, " @%s+%d", it->name(), delta);
@@ -142,9 +143,9 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
     outs << std::endl;
 
-    trace::getDebugLogger()->dprintf_flag(
-        when, thread->getCpuPtr()->name(), "ExecEnable", "%s",
-        outs.str().c_str());
+    trace::getDebugLogger()->dprintf_flag(when, thread->getCpuPtr()->name(),
+                                          "ExecEnable", "%s",
+                                          outs.str().c_str());
 }
 
 void
@@ -159,10 +160,10 @@ ExeTracerRecord::dump()
      * complete/print when they fault.
      */
     if (debug::ExecMacro && staticInst->isMicroop() &&
-        ((debug::ExecMicro &&
-            macroStaticInst && staticInst->isFirstMicroop()) ||
-            (!debug::ExecMicro &&
-             macroStaticInst && staticInst->isLastMicroop()))) {
+        ((debug::ExecMicro && macroStaticInst &&
+          staticInst->isFirstMicroop()) ||
+         (!debug::ExecMicro && macroStaticInst &&
+          staticInst->isLastMicroop()))) {
         traceInst(macroStaticInst, false);
     }
     if (debug::ExecMicro || !staticInst->isMicroop()) {

@@ -53,11 +53,15 @@ namespace gem5
 {
 
 VncInput::VncInput(const Params &p)
-    : SimObject(p), keyboard(NULL), mouse(NULL),
+    : SimObject(p),
+      keyboard(NULL),
+      mouse(NULL),
       fb(&FrameBuffer::dummy),
-      _videoWidth(fb->width()), _videoHeight(fb->height()),
+      _videoWidth(fb->width()),
+      _videoHeight(fb->height()),
       captureEnabled(p.frame_capture),
-      captureCurrentFrame(0), captureLastHash(0),
+      captureCurrentFrame(0),
+      captureLastHash(0),
       imgFormat(p.img_format)
 {
     if (captureEnabled) {
@@ -65,8 +69,8 @@ VncInput::VncInput(const Params &p)
         //   clean empty directory
         const std::string FRAME_OUTPUT_SUBDIR = "frames_" + name();
         simout.remove(FRAME_OUTPUT_SUBDIR, true);
-        captureOutputDirectory = simout.createSubdirectory(
-                                FRAME_OUTPUT_SUBDIR);
+        captureOutputDirectory =
+            simout.createSubdirectory(FRAME_OUTPUT_SUBDIR);
     }
 }
 
@@ -96,8 +100,8 @@ VncInput::setDirty()
     const unsigned height(fb->height());
 
     if (_videoWidth != width || _videoHeight != height) {
-        DPRINTF(VNC, "Updating video params: width: %d height: %d\n",
-                width, height);
+        DPRINTF(VNC, "Updating video params: width: %d height: %d\n", width,
+                height);
 
         _videoWidth = width;
         _videoHeight = height;
@@ -105,7 +109,7 @@ VncInput::setDirty()
         frameBufferResized();
     }
 
-     if (captureEnabled)
+    if (captureEnabled)
         captureFrameBuffer();
 }
 
@@ -123,8 +127,8 @@ VncInput::captureFrameBuffer()
     // get the filename for the current frame
     char frameFilenameBuffer[64];
     snprintf(frameFilenameBuffer, 64, "fb.%06d.%lld.%s.gz",
-            captureCurrentFrame, static_cast<long long int>(curTick()),
-            captureImage->getImgExtension());
+             captureCurrentFrame, static_cast<long long int>(curTick()),
+             captureImage->getImgExtension());
     const std::string frameFilename(frameFilenameBuffer);
 
     // create the compressed framebuffer file

@@ -54,10 +54,12 @@ class MediaOpBase : public X86MicroopBase
 
     // Constructor
     MediaOpBase(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, OpClass op_class,
-            uint8_t src_size, uint8_t dest_size, uint8_t _ext) :
-        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
-        srcSize(src_size), destSize(dest_size), ext(_ext)
+                uint64_t set_flags, OpClass op_class, uint8_t src_size,
+                uint8_t dest_size, uint8_t _ext)
+        : X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+          srcSize(src_size),
+          destSize(dest_size),
+          ext(_ext)
     {}
 
     bool
@@ -91,8 +93,17 @@ class MediaOpBase : public X86MicroopBase
     }
 
   public:
-    uint8_t getSrcSize() const { return srcSize; }
-    uint8_t getDestSize() const { return destSize; }
+    uint8_t
+    getSrcSize() const
+    {
+        return srcSize;
+    }
+
+    uint8_t
+    getDestSize() const
+    {
+        return destSize;
+    }
 };
 
 } // namespace X86ISA

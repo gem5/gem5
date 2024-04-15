@@ -66,38 +66,39 @@ namespace memory
  */
 class LockedAddr
 {
-
   private:
-
     // on alpha, minimum LL/SC granularity is 16 bytes, so lower
     // bits need to masked off.
     static const Addr Addr_Mask = 0xf;
 
   public:
-
     // locked address
     Addr addr;
 
     // locking hw context
     const ContextID contextId;
 
-    static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
+    static Addr
+    mask(Addr paddr)
+    {
+        return (paddr & ~Addr_Mask);
+    }
 
     // check for matching execution context
-    bool matchesContext(const RequestPtr &req) const
+    bool
+    matchesContext(const RequestPtr &req) const
     {
         assert(contextId != InvalidContextID);
         assert(req->hasContextId());
         return (contextId == req->contextId());
     }
 
-    LockedAddr(const RequestPtr &req) : addr(mask(req->getPaddr())),
-                                        contextId(req->contextId())
+    LockedAddr(const RequestPtr &req)
+        : addr(mask(req->getPaddr())), contextId(req->contextId())
     {}
 
     // constructor for unserialization use
-    LockedAddr(Addr _addr, int _cid) : addr(_addr), contextId(_cid)
-    {}
+    LockedAddr(Addr _addr, int _cid) : addr(_addr), contextId(_cid) {}
 };
 
 /**
@@ -110,12 +111,11 @@ class LockedAddr
 class AbstractMemory : public ClockedObject
 {
   protected:
-
     // Address range of this memory
     AddrRange range;
 
     // Pointer to host memory used to implement this memory
-    uint8_t* pmemAddr;
+    uint8_t *pmemAddr;
 
     // Backdoor to access this memory.
     MemBackdoor backdoor;
@@ -210,20 +210,18 @@ class AbstractMemory : public ClockedObject
         statistics::Formula bwTotal;
     } stats;
 
-
   private:
-
     // Prevent copying
-    AbstractMemory(const AbstractMemory&);
+    AbstractMemory(const AbstractMemory &);
 
     // Prevent assignment
-    AbstractMemory& operator=(const AbstractMemory&);
+    AbstractMemory &operator=(const AbstractMemory &);
 
   public:
-
     PARAMS(AbstractMemory);
 
     AbstractMemory(const Params &p);
+
     virtual ~AbstractMemory() {}
 
     void initState() override;
@@ -234,7 +232,11 @@ class AbstractMemory : public ClockedObject
      *
      * @return true if null
      */
-    bool isNull() const { return params().null; }
+    bool
+    isNull() const
+    {
+        return params().null;
+    }
 
     /**
      * Set the host memory backing store to be used by this memory
@@ -242,7 +244,7 @@ class AbstractMemory : public ClockedObject
      *
      * @param pmem_addr Pointer to a segment of host memory
      */
-    void setBackingStore(uint8_t* pmem_addr);
+    void setBackingStore(uint8_t *pmem_addr);
 
     void
     getBackdoor(MemBackdoorPtr &bd_ptr)
@@ -273,7 +275,11 @@ class AbstractMemory : public ClockedObject
     /** read the system pointer
      * Implemented for completeness with the setter
      * @return pointer to the system object */
-    System* system() const { return _system; }
+    System *
+    system() const
+    {
+        return _system;
+    }
 
     /** Set the system pointer on this memory
      * This can't be done via a python parameter because the system needs
@@ -281,7 +287,11 @@ class AbstractMemory : public ClockedObject
      * object graph. An init() this is set.
      * @param sys system pointer to set
      */
-    void system(System *sys) { _system = sys; }
+    void
+    system(System *sys)
+    {
+        _system = sys;
+    }
 
     /**
      * Get the address range
@@ -308,14 +318,22 @@ class AbstractMemory : public ClockedObject
      *
      * @return the size of the memory
      */
-    uint64_t size() const { return range.size(); }
+    uint64_t
+    size() const
+    {
+        return range.size();
+    }
 
     /**
      * Get the start address.
      *
      * @return the start address of the memory
      */
-    Addr start() const { return range.start(); }
+    Addr
+    start() const
+    {
+        return range.start();
+    }
 
     /**
      *  Should this memory be passed to the kernel and part of the OS
@@ -323,7 +341,11 @@ class AbstractMemory : public ClockedObject
      *
      * @return if this memory is reported
      */
-    bool isConfReported() const { return confTableReported; }
+    bool
+    isConfReported() const
+    {
+        return confTableReported;
+    }
 
     /**
      * Some memories are used as shadow memories or should for other
@@ -331,7 +353,11 @@ class AbstractMemory : public ClockedObject
      *
      * @return if this memory is part of the address map
      */
-    bool isInAddrMap() const { return inAddrMap; }
+    bool
+    isInAddrMap() const
+    {
+        return inAddrMap;
+    }
 
     /**
      * When shadow memories are in use, KVM may want to make one or the other,
@@ -339,7 +365,11 @@ class AbstractMemory : public ClockedObject
      *
      * @return if this memory should be mapped into the KVM guest address space
      */
-    bool isKvmMap() const { return kvmMap; }
+    bool
+    isKvmMap() const
+    {
+        return kvmMap;
+    }
 
     /**
      * Perform an untimed memory access and update all the state

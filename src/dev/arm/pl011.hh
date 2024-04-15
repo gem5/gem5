@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of a PL011 UART
  */
@@ -70,7 +69,6 @@ class Pl011 : public Uart, public AmbaDevice
   public: // Uart
     void dataAvailable() override;
 
-
   protected: // Interrupt handling
     /** Function to generate interrupt */
     void generateInterrupt();
@@ -87,30 +85,49 @@ class Pl011 : public Uart, public AmbaDevice
      * @param mask New interrupt mask
      */
     void setInterrupts(uint16_t ints, uint16_t mask);
+
     /**
      * Convenience function to update the interrupt mask
      *
      * @see setInterrupts
      * @param mask New interrupt mask
      */
-    void setInterruptMask(uint16_t mask) { setInterrupts(rawInt, mask); }
+    void
+    setInterruptMask(uint16_t mask)
+    {
+        setInterrupts(rawInt, mask);
+    }
+
     /**
      * Convenience function to raise a new interrupt
      *
      * @see setInterrupts
      * @param ints Set of interrupts to raise
      */
-    void raiseInterrupts(uint16_t ints) { setInterrupts(rawInt | ints, imsc); }
+    void
+    raiseInterrupts(uint16_t ints)
+    {
+        setInterrupts(rawInt | ints, imsc);
+    }
+
     /**
      * Convenience function to clear interrupts
      *
      * @see setInterrupts
      * @param ints Set of interrupts to clear
      */
-    void clearInterrupts(uint16_t ints) { setInterrupts(rawInt & ~ints, imsc); }
+    void
+    clearInterrupts(uint16_t ints)
+    {
+        setInterrupts(rawInt & ~ints, imsc);
+    }
 
     /** Masked interrupt status register */
-    inline uint16_t maskInt() const { return rawInt & imsc; }
+    inline uint16_t
+    maskInt() const
+    {
+        return rawInt & imsc;
+    }
 
     /** Wrapper to create an event out of the thing */
     EventFunctionWrapper intEvent;
@@ -121,7 +138,7 @@ class Pl011 : public Uart, public AmbaDevice
     static const int UART_RSR = 0x004;
     static const int UART_ECR = 0x004;
     static const int UART_FR = 0x018;
-    static const int UART_FR_CTS  = 0x001;
+    static const int UART_FR_CTS = 0x001;
     static const int UART_FR_RXFE = 0x010;
     static const int UART_FR_TXFF = 0x020;
     static const int UART_FR_RXFF = 0x040;
@@ -129,12 +146,12 @@ class Pl011 : public Uart, public AmbaDevice
     static const int UART_IBRD = 0x024;
     static const int UART_FBRD = 0x028;
     static const int UART_LCRH = 0x02C;
-    static const int UART_CR   = 0x030;
+    static const int UART_CR = 0x030;
     static const int UART_IFLS = 0x034;
     static const int UART_IMSC = 0x038;
-    static const int UART_RIS  = 0x03C;
-    static const int UART_MIS  = 0x040;
-    static const int UART_ICR  = 0x044;
+    static const int UART_RIS = 0x03C;
+    static const int UART_MIS = 0x040;
+    static const int UART_ICR = 0x044;
     static const int UART_DMACR = 0x048;
 
     static const uint16_t UART_RIINTR = 1 << 0;
@@ -177,7 +194,7 @@ class Pl011 : public Uart, public AmbaDevice
     /** Should the simulation end on an EOT */
     const bool endOnEOT;
 
-    ArmInterruptPin* const interrupt;
+    ArmInterruptPin *const interrupt;
 
     /** Delay before interrupting */
     const Tick intDelay;

@@ -56,9 +56,7 @@ namespace ps2
 {
 
 TouchKit::TouchKit(const PS2TouchKitParams &p)
-    : Device(p),
-      vnc(p.vnc),
-      enabled(false), touchKitEnabled(false)
+    : Device(p), vnc(p.vnc), enabled(false), touchKitEnabled(false)
 {
     if (vnc)
         vnc->setMouse(this);
@@ -86,7 +84,7 @@ bool
 TouchKit::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case Reset:
+    case Reset:
         DPRINTF(PS2, "Resetting device.\n");
         enabled = false;
         touchKitEnabled = false;
@@ -94,47 +92,47 @@ TouchKit::recv(const std::vector<uint8_t> &data)
         send(SelfTestPass);
         return true;
 
-      case ReadID:
+    case ReadID:
         sendAck();
         send(mouse::ID);
         return true;
 
-      case Disable:
+    case Disable:
         DPRINTF(PS2, "Disabling device.\n");
         enabled = false;
         sendAck();
         return true;
 
-      case Enable:
+    case Enable:
         DPRINTF(PS2, "Enabling device.\n");
         enabled = true;
         sendAck();
         return true;
 
-      case DefaultsAndDisable:
+    case DefaultsAndDisable:
         DPRINTF(PS2, "Setting defaults and disabling device.\n");
         enabled = false;
         sendAck();
         return true;
 
-      case mouse::Scale1to1:
-      case mouse::Scale2to1:
+    case mouse::Scale1to1:
+    case mouse::Scale2to1:
         sendAck();
         return true;
 
-      case mouse::SetResolution:
-      case mouse::SampleRate:
+    case mouse::SetResolution:
+    case mouse::SampleRate:
         sendAck();
         return data.size() == 2;
 
-      case mouse::GetStatus:
+    case mouse::GetStatus:
         sendAck();
         send(0);
-        send(2); // default resolution
+        send(2);   // default resolution
         send(100); // default sample rate
         return true;
 
-      case TpReadId:
+    case TpReadId:
         // We're not a trackpoint device, this should make the probe
         // go away
         sendAck();
@@ -143,10 +141,10 @@ TouchKit::recv(const std::vector<uint8_t> &data)
         sendAck();
         return true;
 
-      case TouchKitDiag:
+    case TouchKitDiag:
         return recvTouchKit(data);
 
-      default:
+    default:
         panic("Unknown byte received: %#x\n", data[0]);
     }
 }
@@ -169,14 +167,13 @@ TouchKit::recvTouchKit(const std::vector<uint8_t> &data)
     // command. Enabled TouchKit reports.
     touchKitEnabled = true;
 
-
     switch (cmd) {
-      case TouchKitActive:
+    case TouchKitActive:
         warn_if(len != 1, "Unexpected activate packet length: %u\n", len);
         sendTouchKit('A');
         return true;
 
-      default:
+    default:
         panic("Unimplemented touchscreen command: %#x\n", cmd);
     }
 }
@@ -189,7 +186,6 @@ TouchKit::sendTouchKit(const uint8_t *data, size_t size)
     for (int i = 0; i < size; ++i)
         send(data[i]);
 }
-
 
 void
 TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
@@ -207,8 +203,10 @@ TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
 
     const uint8_t resp[] = {
         buttons,
-        (uint8_t)(_x >> 7), (uint8_t)(_x & 0x7f),
-        (uint8_t)(_y >> 7), (uint8_t)(_y & 0x7f),
+        (uint8_t)(_x >> 7),
+        (uint8_t)(_x & 0x7f),
+        (uint8_t)(_y >> 7),
+        (uint8_t)(_y & 0x7f),
     };
 
     send(resp, sizeof(resp));

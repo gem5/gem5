@@ -42,10 +42,9 @@ MemOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return csprintf("%-10s", mnemonic);
 }
 
-
 std::string
-MemDispOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+MemDispOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -54,11 +53,10 @@ MemDispOp::generateDisassembly(
     // Print the destination only for a load
     if (!flags[IsStore]) {
         if (_numDestRegs > 0) {
-
             // If the instruction updates the source register with the
             // EA, then this source register is placed in position 0,
             // therefore we print the last destination register.
-            printReg(ss, destRegIdx(_numDestRegs-1));
+            printReg(ss, destRegIdx(_numDestRegs - 1));
         }
     }
 
@@ -102,10 +100,9 @@ MemDispOp::generateDisassembly(
     return ss.str();
 }
 
-
 std::string
-MemDispShiftOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+MemDispShiftOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -114,11 +111,10 @@ MemDispShiftOp::generateDisassembly(
     // Print the destination only for a load
     if (!flags[IsStore]) {
         if (_numDestRegs > 0) {
-
             // If the instruction updates the source register with the
             // EA, then this source register is placed in position 0,
             // therefore we print the last destination register.
-            printReg(ss, destRegIdx(_numDestRegs-1));
+            printReg(ss, destRegIdx(_numDestRegs - 1));
         }
     }
 
@@ -163,8 +159,8 @@ MemDispShiftOp::generateDisassembly(
 }
 
 std::string
-MemIndexOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+MemIndexOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -173,11 +169,10 @@ MemIndexOp::generateDisassembly(
     // Print the destination only for a load
     if (!flags[IsStore]) {
         if (_numDestRegs > 0) {
-
             // If the instruction updates the source register with the
             // EA, then this source register is placed in position 0,
             // therefore we print the last destination register.
-            printReg(ss, destRegIdx(_numDestRegs-1));
+            printReg(ss, destRegIdx(_numDestRegs - 1));
         }
     }
 

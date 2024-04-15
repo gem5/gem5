@@ -53,24 +53,25 @@ class RegOpBase : public X86MicroopBase
     const uint16_t ext;
 
     RegOpBase(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, OpClass op_class, uint8_t data_size,
-            uint16_t _ext) :
-        X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
-        ext(_ext), dataSize(data_size),
-        foldOBit((data_size == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
+              uint64_t set_flags, OpClass op_class, uint8_t data_size,
+              uint16_t _ext)
+        : X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+          ext(_ext),
+          dataSize(data_size),
+          foldOBit((data_size == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
     {}
 
-    //Figure out what the condition code flags should be.
-    uint64_t genFlags(uint64_t old_flags, uint64_t flag_mask,
-            uint64_t _dest, uint64_t _src1, uint64_t _src2,
-            bool subtract=false)const ;
+    // Figure out what the condition code flags should be.
+    uint64_t genFlags(uint64_t old_flags, uint64_t flag_mask, uint64_t _dest,
+                      uint64_t _src1, uint64_t _src2,
+                      bool subtract = false) const;
 
   public:
     const uint8_t dataSize;
     const RegIndex foldOBit;
 };
 
-template <typename ...Operands>
+template <typename... Operands>
 using RegOpT = InstOperands<RegOpBase, Operands...>;
 
 } // namespace X86ISA

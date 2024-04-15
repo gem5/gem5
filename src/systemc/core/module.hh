@@ -91,9 +91,23 @@ class Module
 
     void finish(Object *this_obj);
 
-    const char *name() const { return _name; }
-    void endModule() { _ended = true; }
-    void deprecatedConstructor() { _deprecatedConstructor = true; }
+    const char *
+    name() const
+    {
+        return _name;
+    }
+
+    void
+    endModule()
+    {
+        _ended = true;
+    }
+
+    void
+    deprecatedConstructor()
+    {
+        _deprecatedConstructor = true;
+    }
 
     sc_core::sc_module *
     sc_mod() const
@@ -118,7 +132,11 @@ class Module
 
     void pop();
 
-    const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
+    const char *
+    uniqueName(const char *seed)
+    {
+        return nameGen.gen(seed);
+    }
 
     void bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies);
 
@@ -146,11 +164,13 @@ pickParentModule()
         return nullptr;
     return Module::fromScModule(mod);
 }
+
 static inline void
 pushParentModule(Module *m)
 {
     pushParentObj(m->obj()->sc_obj());
 }
+
 static inline void
 popParentModule()
 {
@@ -162,4 +182,4 @@ extern std::list<Module *> allModules;
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_MODULE_HH__
+#endif //__SYSTEMC_CORE_MODULE_HH__

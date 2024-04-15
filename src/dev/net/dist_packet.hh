@@ -62,10 +62,17 @@ class DistHeaderPkt
 {
   private:
     DistHeaderPkt() {}
+
     ~DistHeaderPkt() {}
 
   public:
-    enum class ReqType { immediate, collective, pending, none };
+    enum class ReqType
+    {
+        immediate,
+        collective,
+        pending,
+        none
+    };
     /**
      *  The msg type defines what information a dist header packet carries.
      */
@@ -92,11 +99,13 @@ class DistHeaderPkt
          * (from EthPacketData::simLength).
          */
         unsigned simLength;
+
         union
         {
             Tick sendDelay;
             Tick syncRepeat;
         };
+
         union
         {
             /**
@@ -104,6 +113,7 @@ class DistHeaderPkt
              * (from EthPacketData::length).
              */
             unsigned dataPacketLength;
+
             struct
             {
                 ReqType needCkpt;

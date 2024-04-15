@@ -96,7 +96,11 @@ class SysBridge : public SimObject
       public:
         SysBridgeSenderState(const PacketData &data) : pData(data) {}
 
-        const PacketData &data() const { return pData; }
+        const PacketData &
+        data() const
+        {
+            return pData;
+        }
     };
 
     class BridgingPort
@@ -107,6 +111,7 @@ class SysBridge : public SimObject
         // Replace the requestor ID in pkt, and return any scratch data we'll
         // need going back the other way.
         PacketData replaceReqID(PacketPtr pkt);
+
         // Restore pkt to use its original requestor ID.
         static void
         restoreReqID(PacketPtr pkt, const PacketData &data)
@@ -131,9 +136,8 @@ class SysBridge : public SimObject
 
       public:
         SysBridgeTargetPort(const std::string &_name,
-                SysBridgeSourcePort *source_port, RequestorID _id) :
-            RequestPort(_name), BridgingPort(_id),
-            sourcePort(source_port)
+                            SysBridgeSourcePort *source_port, RequestorID _id)
+            : RequestPort(_name), BridgingPort(_id), sourcePort(source_port)
         {
             DPRINTF(SysBridge, "Target side requestor ID = %s.\n", _id);
         }
@@ -163,8 +167,8 @@ class SysBridge : public SimObject
         bool
         recvTimingResp(PacketPtr pkt) override
         {
-            auto *state = dynamic_cast<SysBridgeSenderState *>(
-                    pkt->popSenderState());
+            auto *state =
+                dynamic_cast<SysBridgeSenderState *>(pkt->popSenderState());
             PacketData backup;
             DPRINTF(SysBridge, "recvTimingResp incoming ID %d.\n",
                     pkt->requestorId());
@@ -195,7 +199,12 @@ class SysBridge : public SimObject
             sourcePort->sendTimingSnoopReq(pkt);
         }
 
-        void recvReqRetry() override { sourcePort->sendRetryReq(); }
+        void
+        recvReqRetry() override
+        {
+            sourcePort->sendRetryReq();
+        }
+
         void
         recvRetrySnoopResp() override
         {
@@ -224,9 +233,8 @@ class SysBridge : public SimObject
 
       public:
         SysBridgeSourcePort(const std::string &_name,
-                SysBridgeTargetPort *target_port, RequestorID _id) :
-            ResponsePort(_name), BridgingPort(_id),
-            targetPort(target_port)
+                            SysBridgeTargetPort *target_port, RequestorID _id)
+            : ResponsePort(_name), BridgingPort(_id), targetPort(target_port)
         {
             DPRINTF(SysBridge, "Source side requestor ID = %s.\n", _id);
         }
@@ -275,8 +283,8 @@ class SysBridge : public SimObject
         bool
         recvTimingSnoopResp(PacketPtr pkt) override
         {
-            auto *state = dynamic_cast<SysBridgeSenderState *>(
-                    pkt->popSenderState());
+            auto *state =
+                dynamic_cast<SysBridgeSenderState *>(pkt->popSenderState());
             DPRINTF(SysBridge, "recvTimingSnoopResp incoming ID %d.\n",
                     pkt->requestorId());
             restoreReqID(pkt, state->data());
@@ -285,7 +293,11 @@ class SysBridge : public SimObject
             return targetPort->sendTimingSnoopResp(pkt);
         }
 
-        void recvRespRetry() override { targetPort->sendRetryResp(); }
+        void
+        recvRespRetry() override
+        {
+            targetPort->sendRetryResp();
+        }
 
         Tick
         recvAtomic(PacketPtr pkt) override
@@ -333,7 +345,7 @@ class SysBridge : public SimObject
 
         void
         recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override
+                           MemBackdoorPtr &backdoor) override
         {
             targetPort->sendMemBackdoorReq(req, backdoor);
         }
@@ -350,7 +362,7 @@ class SysBridge : public SimObject
 
   public:
     Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     SysBridge(const SysBridgeParams &p);
 };

@@ -76,14 +76,17 @@ class RubyTester : public ClockedObject
 
         CpuPort(const std::string &_name, RubyTester *_tester, PortID _id,
                 PortID _index)
-            : RequestPort(_name, _id), tester(_tester),
-              globalIdx(_index)
+            : RequestPort(_name, _id), tester(_tester), globalIdx(_index)
         {}
 
       protected:
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual void recvReqRetry()
-        { panic("%s does not expect a retry\n", name()); }
+
+        virtual void
+        recvReqRetry()
+        {
+            panic("%s does not expect a retry\n", name());
+        }
     };
 
     struct SenderState : public Packet::SenderState
@@ -91,7 +94,6 @@ class RubyTester : public ClockedObject
         ruby::SubBlock subBlock;
 
         SenderState(Addr addr, int size) : subBlock(addr, size) {}
-
     };
 
     typedef RubyTesterParams Params;
@@ -99,49 +101,71 @@ class RubyTester : public ClockedObject
     ~RubyTester();
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     bool isInstOnlyCpuPort(int idx);
     bool isInstDataCpuPort(int idx);
 
-    RequestPort* getReadableCpuPort(int idx);
-    RequestPort* getWritableCpuPort(int idx);
+    RequestPort *getReadableCpuPort(int idx);
+    RequestPort *getWritableCpuPort(int idx);
 
     void init() override;
 
     void wakeup();
 
-    void incrementCheckCompletions() { m_checks_completed++; }
+    void
+    incrementCheckCompletions()
+    {
+        m_checks_completed++;
+    }
 
-    void printStats(std::ostream& out) const {}
-    void clearStats() {}
-    void printConfig(std::ostream& out) const {}
+    void
+    printStats(std::ostream &out) const
+    {}
 
-    void print(std::ostream& out) const;
-    bool getCheckFlush() { return m_check_flush; }
+    void
+    clearStats()
+    {}
 
-    RequestorID requestorId() { return _requestorId; }
+    void
+    printConfig(std::ostream &out) const
+    {}
+
+    void print(std::ostream &out) const;
+
+    bool
+    getCheckFlush()
+    {
+        return m_check_flush;
+    }
+
+    RequestorID
+    requestorId()
+    {
+        return _requestorId;
+    }
+
   protected:
     EventFunctionWrapper checkStartEvent;
 
     RequestorID _requestorId;
 
   private:
-    void hitCallback(ruby::NodeID proc, ruby::SubBlock* data);
+    void hitCallback(ruby::NodeID proc, ruby::SubBlock *data);
 
     void checkForDeadlock();
 
     // Private copy constructor and assignment operator
-    RubyTester(const RubyTester& obj);
-    RubyTester& operator=(const RubyTester& obj);
+    RubyTester(const RubyTester &obj);
+    RubyTester &operator=(const RubyTester &obj);
 
-    CheckTable* m_checkTable_ptr;
+    CheckTable *m_checkTable_ptr;
     std::vector<Cycles> m_last_progress_vector;
 
     int m_num_cpus;
     uint64_t m_checks_completed;
-    std::vector<RequestPort*> writePorts;
-    std::vector<RequestPort*> readPorts;
+    std::vector<RequestPort *> writePorts;
+    std::vector<RequestPort *> readPorts;
     uint64_t m_checks_to_complete;
     int m_deadlock_threshold;
     int m_num_writers;
@@ -152,8 +176,8 @@ class RubyTester : public ClockedObject
     int m_num_inst_data_ports;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const RubyTester& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const RubyTester &obj)
 {
     obj.print(out);
     out << std::flush;

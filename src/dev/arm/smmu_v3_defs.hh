@@ -55,54 +55,54 @@ enum
 
 enum
 {
-    STE_CONFIG_ABORT        = 0x0,
-    STE_CONFIG_BYPASS       = 0x4,
-    STE_CONFIG_STAGE1_ONLY  = 0x5,
-    STE_CONFIG_STAGE2_ONLY  = 0x6,
+    STE_CONFIG_ABORT = 0x0,
+    STE_CONFIG_BYPASS = 0x4,
+    STE_CONFIG_STAGE1_ONLY = 0x5,
+    STE_CONFIG_STAGE2_ONLY = 0x6,
     STE_CONFIG_STAGE1_AND_2 = 0x7,
 };
 
 enum
 {
-    STAGE1_CFG_1L     = 0x0,
-    STAGE1_CFG_2L_4K  = 0x1,
+    STAGE1_CFG_1L = 0x0,
+    STAGE1_CFG_2L_4K = 0x1,
     STAGE1_CFG_2L_64K = 0x2,
 };
 
 enum
 {
     ST_CFG_SPLIT_SHIFT = 6,
-    ST_CD_ADDR_SHIFT   = 6,
-    CD_TTB_SHIFT       = 4,
-    STE_S2TTB_SHIFT    = 4,
+    ST_CD_ADDR_SHIFT = 6,
+    CD_TTB_SHIFT = 4,
+    STE_S2TTB_SHIFT = 4,
 };
 
 enum
 {
-    TRANS_GRANULE_4K      = 0x0,
-    TRANS_GRANULE_64K     = 0x1,
-    TRANS_GRANULE_16K     = 0x2,
+    TRANS_GRANULE_4K = 0x0,
+    TRANS_GRANULE_64K = 0x1,
+    TRANS_GRANULE_16K = 0x2,
     TRANS_GRANULE_INVALID = 0x3,
 };
 
 enum
 {
-    ST_BASE_ADDR_MASK  = 0x0000ffffffffffe0ULL,
-    ST_CFG_SIZE_MASK   = 0x000000000000003fULL,
-    ST_CFG_SPLIT_MASK  = 0x00000000000007c0ULL,
-    ST_CFG_FMT_MASK    = 0x0000000000030000ULL,
-    ST_CFG_FMT_LINEAR  = 0x0000000000000000ULL,
-    ST_CFG_FMT_2LEVEL  = 0x0000000000010000ULL,
-    ST_L2_SPAN_MASK    = 0x000000000000001fULL,
-    ST_L2_ADDR_MASK    = 0x0000ffffffffffe0ULL,
+    ST_BASE_ADDR_MASK = 0x0000ffffffffffe0ULL,
+    ST_CFG_SIZE_MASK = 0x000000000000003fULL,
+    ST_CFG_SPLIT_MASK = 0x00000000000007c0ULL,
+    ST_CFG_FMT_MASK = 0x0000000000030000ULL,
+    ST_CFG_FMT_LINEAR = 0x0000000000000000ULL,
+    ST_CFG_FMT_2LEVEL = 0x0000000000010000ULL,
+    ST_L2_SPAN_MASK = 0x000000000000001fULL,
+    ST_L2_ADDR_MASK = 0x0000ffffffffffe0ULL,
 
     VMT_BASE_ADDR_MASK = 0x0000ffffffffffe0ULL,
     VMT_BASE_SIZE_MASK = 0x000000000000001fULL,
 
-    Q_BASE_ADDR_MASK   = 0x0000ffffffffffe0ULL,
-    Q_BASE_SIZE_MASK   = 0x000000000000001fULL,
+    Q_BASE_ADDR_MASK = 0x0000ffffffffffe0ULL,
+    Q_BASE_SIZE_MASK = 0x000000000000001fULL,
 
-    E_BASE_ADDR_MASK   = 0x0000fffffffffffcULL,
+    E_BASE_ADDR_MASK = 0x0000fffffffffffcULL,
 };
 
 BitUnion32(IDR0)
@@ -193,66 +193,66 @@ union SMMURegs
         uint32_t _pad10;          // 0x00c8
         uint32_t _pad11;          // 0x00cc
 
-        uint64_t priq_irq_cfg0;   // 0x00d0
-        uint32_t priq_irq_cfg1;   // 0x00d8
-        uint32_t priq_irq_cfg2;   // 0x00dc
+        uint64_t priq_irq_cfg0; // 0x00d0
+        uint32_t priq_irq_cfg1; // 0x00d8
+        uint32_t priq_irq_cfg2; // 0x00dc
 
-        uint32_t _pad12[8];       // 0x00e0 - 0x0100
-        uint32_t gatos_ctrl;      // 0x0100
-        uint32_t _pad13;          // 0x0104
-        uint64_t gatos_sid;       // 0x0108
-        uint64_t gatos_addr;      // 0x0110
-        uint64_t gatos_par;       // 0x0118
-        uint32_t _pad14[24];      // 0x0120
-        uint32_t vatos_sel;       // 0x0180
+        uint32_t _pad12[8];  // 0x00e0 - 0x0100
+        uint32_t gatos_ctrl; // 0x0100
+        uint32_t _pad13;     // 0x0104
+        uint64_t gatos_sid;  // 0x0108
+        uint64_t gatos_addr; // 0x0110
+        uint64_t gatos_par;  // 0x0118
+        uint32_t _pad14[24]; // 0x0120
+        uint32_t vatos_sel;  // 0x0180
 
-        uint32_t _pad15[8095];    // 0x184 - 0x7ffc
+        uint32_t _pad15[8095]; // 0x184 - 0x7ffc
 
-        uint8_t  _secure_regs[SMMU_SECURE_SZ]; // 0x8000 - 0x8180
+        uint8_t _secure_regs[SMMU_SECURE_SZ]; // 0x8000 - 0x8180
 
-        uint32_t _pad16[8095];    // 0x8184 - 0x10000
+        uint32_t _pad16[8095]; // 0x8184 - 0x10000
 
         // Page 1
-        uint32_t _pad17[42];      // 0x10000
-        uint32_t eventq_prod;     // 0x100A8
-        uint32_t eventq_cons;     // 0x100AC
+        uint32_t _pad17[42];  // 0x10000
+        uint32_t eventq_prod; // 0x100A8
+        uint32_t eventq_cons; // 0x100AC
 
-        uint32_t _pad18[6];       // 0x100B0
-        uint32_t priq_prod;       // 0x100C8
-        uint32_t priq_cons;       // 0x100CC
+        uint32_t _pad18[6]; // 0x100B0
+        uint32_t priq_prod; // 0x100C8
+        uint32_t priq_cons; // 0x100CC
     };
 };
 
 struct StreamTableEntry
 {
     BitUnion64(DWORD0)
-        Bitfield<0>       valid;
-        Bitfield<3, 1>    config;
-        Bitfield<5, 4>    s1fmt;
-        Bitfield<51, 6>   s1ctxptr;
-        Bitfield<63, 59>  s1cdmax;
+        Bitfield<0> valid;
+        Bitfield<3, 1> config;
+        Bitfield<5, 4> s1fmt;
+        Bitfield<51, 6> s1ctxptr;
+        Bitfield<63, 59> s1cdmax;
     EndBitUnion(DWORD0)
     DWORD0 dw0;
 
     BitUnion64(DWORD1)
-        Bitfield<1, 0>   s1dss;
-        Bitfield<3, 2>   s1cir;
-        Bitfield<5, 4>   s1cor;
-        Bitfield<7, 6>   s1csh;
-        Bitfield<8>      s2hwu59;
-        Bitfield<9>      s2hwu60;
-        Bitfield<10>     s2hwu61;
-        Bitfield<11>     s2hwu62;
-        Bitfield<12>     dre;
+        Bitfield<1, 0> s1dss;
+        Bitfield<3, 2> s1cir;
+        Bitfield<5, 4> s1cor;
+        Bitfield<7, 6> s1csh;
+        Bitfield<8> s2hwu59;
+        Bitfield<9> s2hwu60;
+        Bitfield<10> s2hwu61;
+        Bitfield<11> s2hwu62;
+        Bitfield<12> dre;
         Bitfield<16, 13> cont;
-        Bitfield<17>     dcp;
-        Bitfield<18>     ppar;
-        Bitfield<19>     mev;
-        Bitfield<27>     s1stalld;
+        Bitfield<17> dcp;
+        Bitfield<18> ppar;
+        Bitfield<19> mev;
+        Bitfield<27> s1stalld;
         Bitfield<29, 28> eats;
         Bitfield<31, 30> strw;
         Bitfield<35, 32> memattr;
-        Bitfield<36>     mtcfg;
+        Bitfield<36> mtcfg;
         Bitfield<40, 37> alloccfg;
         Bitfield<45, 44> shcfg;
         Bitfield<47, 46> nscfg;
@@ -262,7 +262,7 @@ struct StreamTableEntry
     DWORD1 dw1;
 
     BitUnion64(DWORD2)
-        Bitfield<15, 0>  s2vmid;
+        Bitfield<15, 0> s2vmid;
         Bitfield<37, 32> s2t0sz;
         Bitfield<39, 38> s2sl0;
         Bitfield<41, 40> s2ir0;
@@ -270,14 +270,14 @@ struct StreamTableEntry
         Bitfield<45, 44> s2sh0;
         Bitfield<47, 46> s2tg;
         Bitfield<50, 48> s2ps;
-        Bitfield<51>     s2aa64;
-        Bitfield<52>     s2endi;
-        Bitfield<53>     s2affd;
-        Bitfield<54>     s2ptw;
-        Bitfield<55>     s2hd;
-        Bitfield<56>     s2ha;
-        Bitfield<57>     s2s;
-        Bitfield<58>     s2r;
+        Bitfield<51> s2aa64;
+        Bitfield<52> s2endi;
+        Bitfield<53> s2affd;
+        Bitfield<54> s2ptw;
+        Bitfield<55> s2hd;
+        Bitfield<56> s2ha;
+        Bitfield<57> s2s;
+        Bitfield<58> s2r;
     EndBitUnion(DWORD2)
     DWORD2 dw2;
 
@@ -292,56 +292,56 @@ struct StreamTableEntry
 struct ContextDescriptor
 {
     BitUnion64(DWORD0)
-        Bitfield<5, 0>   t0sz;
-        Bitfield<7, 6>   tg0;
-        Bitfield<9, 8>   ir0;
+        Bitfield<5, 0> t0sz;
+        Bitfield<7, 6> tg0;
+        Bitfield<9, 8> ir0;
         Bitfield<11, 10> or0;
         Bitfield<13, 12> sh0;
-        Bitfield<14>     epd0;
-        Bitfield<15>     endi;
+        Bitfield<14> epd0;
+        Bitfield<15> endi;
         Bitfield<21, 16> t1sz;
         Bitfield<23, 22> tg1;
         Bitfield<25, 24> ir1;
         Bitfield<27, 26> or1;
         Bitfield<29, 28> sh1;
-        Bitfield<30>     epd1;
-        Bitfield<31>     valid;
+        Bitfield<30> epd1;
+        Bitfield<31> valid;
         Bitfield<34, 32> ips;
-        Bitfield<35>     affd;
-        Bitfield<36>     wxn;
-        Bitfield<37>     uwxn;
+        Bitfield<35> affd;
+        Bitfield<36> wxn;
+        Bitfield<37> uwxn;
         Bitfield<39, 38> tbi;
-        Bitfield<40>     pan;
-        Bitfield<41>     aa64;
-        Bitfield<42>     hd;
-        Bitfield<43>     ha;
-        Bitfield<44>     s;
-        Bitfield<45>     r;
-        Bitfield<46>     a;
-        Bitfield<47>     aset;
+        Bitfield<40> pan;
+        Bitfield<41> aa64;
+        Bitfield<42> hd;
+        Bitfield<43> ha;
+        Bitfield<44> s;
+        Bitfield<45> r;
+        Bitfield<46> a;
+        Bitfield<47> aset;
         Bitfield<63, 48> asid;
     EndBitUnion(DWORD0)
     DWORD0 dw0;
 
     BitUnion64(DWORD1)
-        Bitfield<0>      nscfg0;
-        Bitfield<1>      had0;
-        Bitfield<51, 4>  ttb0;
-        Bitfield<60>     hwu0g59;
-        Bitfield<61>     hwu0g60;
-        Bitfield<62>     hwu0g61;
-        Bitfield<63>     hwu0g62;
+        Bitfield<0> nscfg0;
+        Bitfield<1> had0;
+        Bitfield<51, 4> ttb0;
+        Bitfield<60> hwu0g59;
+        Bitfield<61> hwu0g60;
+        Bitfield<62> hwu0g61;
+        Bitfield<63> hwu0g62;
     EndBitUnion(DWORD1)
     DWORD1 dw1;
 
     BitUnion64(DWORD2)
-        Bitfield<0>      nscfg1;
-        Bitfield<1>      had1;
-        Bitfield<51, 4>  ttb1;
-        Bitfield<60>     hwu1g59;
-        Bitfield<61>     hwu1g60;
-        Bitfield<62>     hwu1g61;
-        Bitfield<63>     hwu1g62;
+        Bitfield<0> nscfg1;
+        Bitfield<1> had1;
+        Bitfield<51, 4> ttb1;
+        Bitfield<60> hwu1g59;
+        Bitfield<61> hwu1g60;
+        Bitfield<62> hwu1g61;
+        Bitfield<63> hwu1g62;
     EndBitUnion(DWORD2)
     DWORD2 dw2;
 
@@ -362,38 +362,38 @@ enum
 
 enum SMMUCommandType
 {
-    CMD_PRF_CONFIG     = 0x01,
-    CMD_PRF_ADDR       = 0x02,
-    CMD_CFGI_STE       = 0x03,
+    CMD_PRF_CONFIG = 0x01,
+    CMD_PRF_ADDR = 0x02,
+    CMD_CFGI_STE = 0x03,
     CMD_CFGI_STE_RANGE = 0x04,
-    CMD_CFGI_CD        = 0x05,
-    CMD_CFGI_CD_ALL    = 0x06,
-    CMD_TLBI_NH_ALL    = 0x10,
-    CMD_TLBI_NH_ASID   = 0x11,
-    CMD_TLBI_NH_VAA    = 0x13,
-    CMD_TLBI_NH_VA     = 0x12,
-    CMD_TLBI_EL3_ALL   = 0x18,
-    CMD_TLBI_EL3_VA    = 0x1A,
-    CMD_TLBI_EL2_ALL   = 0x20,
-    CMD_TLBI_EL2_ASID  = 0x21,
-    CMD_TLBI_EL2_VA    = 0x22,
-    CMD_TLBI_EL2_VAA   = 0x23,
-    CMD_TLBI_S2_IPA    = 0x2a,
+    CMD_CFGI_CD = 0x05,
+    CMD_CFGI_CD_ALL = 0x06,
+    CMD_TLBI_NH_ALL = 0x10,
+    CMD_TLBI_NH_ASID = 0x11,
+    CMD_TLBI_NH_VAA = 0x13,
+    CMD_TLBI_NH_VA = 0x12,
+    CMD_TLBI_EL3_ALL = 0x18,
+    CMD_TLBI_EL3_VA = 0x1A,
+    CMD_TLBI_EL2_ALL = 0x20,
+    CMD_TLBI_EL2_ASID = 0x21,
+    CMD_TLBI_EL2_VA = 0x22,
+    CMD_TLBI_EL2_VAA = 0x23,
+    CMD_TLBI_S2_IPA = 0x2a,
     CMD_TLBI_S12_VMALL = 0x28,
-    CMD_TLBI_NSNH_ALL  = 0x30,
-    CMD_ATC_INV        = 0x40,
-    CMD_PRI_RESP       = 0x41,
-    CMD_RESUME         = 0x44,
-    CMD_STALL_TERM     = 0x45,
-    CMD_SYNC           = 0x46,
+    CMD_TLBI_NSNH_ALL = 0x30,
+    CMD_ATC_INV = 0x40,
+    CMD_PRI_RESP = 0x41,
+    CMD_RESUME = 0x44,
+    CMD_STALL_TERM = 0x45,
+    CMD_SYNC = 0x46,
 };
 
 struct SMMUCommand
 {
     BitUnion64(DWORD0)
-        Bitfield<7, 0>   type;
-        Bitfield<10>     ssec;
-        Bitfield<11>     ssv;
+        Bitfield<7, 0> type;
+        Bitfield<10> ssec;
+        Bitfield<11> ssv;
         Bitfield<31, 12> ssid;
         Bitfield<47, 32> vmid;
         Bitfield<63, 48> asid;
@@ -402,14 +402,15 @@ struct SMMUCommand
     DWORD0 dw0;
 
     BitUnion64(DWORD1)
-        Bitfield<0>      leaf;
-        Bitfield<4, 0>   size;
-        Bitfield<4, 0>   range;
+        Bitfield<0> leaf;
+        Bitfield<4, 0> size;
+        Bitfield<4, 0> range;
         Bitfield<63, 12> address;
     EndBitUnion(DWORD1)
     DWORD1 dw1;
 
-    uint64_t addr() const
+    uint64_t
+    addr() const
     {
         uint64_t address = (uint64_t)(dw1.address) << 12;
         return address;
@@ -418,7 +419,8 @@ struct SMMUCommand
 
 struct SMMUEvent
 {
-    struct Data {
+    struct Data
+    {
         BitUnion64(DWORD0)
             Bitfield<7, 0> eventType;
             Bitfield<11> ssv;

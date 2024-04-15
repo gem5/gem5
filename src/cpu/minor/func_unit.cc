@@ -49,30 +49,29 @@
 namespace gem5
 {
 
-MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
-    SimObject(params),
-    opClasses(params.opClasses),
-    /* Initialise to true for an empty list so that 'fully capable' is
-     *  the default */
-    capabilityList(Num_OpClasses, (opClasses.empty() ? true : false))
+MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params)
+    : SimObject(params),
+      opClasses(params.opClasses),
+      /* Initialise to true for an empty list so that 'fully capable' is
+       *  the default */
+      capabilityList(Num_OpClasses, (opClasses.empty() ? true : false))
 {
     for (unsigned int i = 0; i < opClasses.size(); i++)
         capabilityList[opClasses[i]->opClass] = true;
 }
 
-MinorFUTiming::MinorFUTiming(
-    const MinorFUTimingParams &params) :
-    SimObject(params),
-    mask(params.mask),
-    match(params.match),
-    description(params.description),
-    suppress(params.suppress),
-    extraCommitLat(params.extraCommitLat),
-    extraCommitLatExpr(params.extraCommitLatExpr),
-    extraAssumedLat(params.extraAssumedLat),
-    srcRegsRelativeLats(params.srcRegsRelativeLats),
-    opClasses(params.opClasses)
-{ }
+MinorFUTiming::MinorFUTiming(const MinorFUTimingParams &params)
+    : SimObject(params),
+      mask(params.mask),
+      match(params.match),
+      description(params.description),
+      suppress(params.suppress),
+      extraCommitLat(params.extraCommitLat),
+      extraCommitLatExpr(params.extraCommitLatExpr),
+      extraAssumedLat(params.extraAssumedLat),
+      srcRegsRelativeLats(params.srcRegsRelativeLats),
+      opClasses(params.opClasses)
+{}
 
 namespace minor
 {
@@ -84,11 +83,11 @@ QueuedInst::reportData(std::ostream &os) const
 }
 
 FUPipeline::FUPipeline(const std::string &name, const MinorFU &description_,
-    ClockedObject &timeSource_) :
-    FUPipelineBase(name, "insts", description_.opLat),
-    description(description_),
-    timeSource(timeSource_),
-    nextInsertCycle(Cycles(0))
+                       ClockedObject &timeSource_)
+    : FUPipelineBase(name, "insts", description_.opLat),
+      description(description_),
+      timeSource(timeSource_),
+      nextInsertCycle(Cycles(0))
 {
     /* Issue latencies are set to 1 in calls to addCapability here.
      * Issue latencies are associated with the pipeline as a whole,
@@ -99,10 +98,9 @@ FUPipeline::FUPipeline(const std::string &name, const MinorFU &description_,
 
     /* Add the capabilities listed in the MinorFU for this functional unit */
     for (unsigned int i = 0; i < description.opClasses->opClasses.size();
-         i++)
-    {
+         i++) {
         addCapability(description.opClasses->opClasses[i]->opClass,
-            description.opLat, 1);
+                      description.opLat, 1);
     }
 
     for (unsigned int i = 0; i < description.timings.size(); i++) {
@@ -122,9 +120,9 @@ FUPipeline::FUPipeline(const std::string &name, const MinorFU &description_,
             }
 
             DPRINTFS(MinorTiming, static_cast<Named *>(this),
-                "Adding extra timing decode pattern %d to FU"
-                " mask: %016x match: %016x srcRegLatencies: %s\n",
-                i, timing.mask, timing.match, lats.str());
+                     "Adding extra timing decode pattern %d to FU"
+                     " mask: %016x match: %016x srcRegLatencies: %s\n",
+                     i, timing.mask, timing.match, lats.str());
         }
     }
 
@@ -182,21 +180,19 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
      */
     uint64_t mach_inst = inst->getEMI();
 
-    const std::vector<MinorFUTiming *> &timings =
-        description.timings;
+    const std::vector<MinorFUTiming *> &timings = description.timings;
     unsigned int num_timings = timings.size();
 
     for (unsigned int i = 0; i < num_timings; i++) {
         MinorFUTiming &timing = *timings[i];
 
         if (timing.provides(inst->opClass()) &&
-            (mach_inst & timing.mask) == timing.match)
-        {
+            (mach_inst & timing.mask) == timing.match) {
             DPRINTFS(MinorTiming, static_cast<Named *>(this),
-                "Found extra timing match (pattern %d '%s')"
-                " %s %16x (type %s)\n",
-                i, timing.description, inst->disassemble(0), mach_inst,
-                typeid(inst).name());
+                     "Found extra timing match (pattern %d '%s')"
+                     " %s %16x (type %s)\n",
+                     i, timing.description, inst->disassemble(0), mach_inst,
+                     typeid(inst).name());
 
             return &timing;
         }
@@ -204,9 +200,9 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
 
     if (num_timings != 0) {
         DPRINTFS(MinorTiming, static_cast<Named *>(this),
-            "No extra timing info. found for inst: %s"
-            " mach_inst: %16x\n",
-            inst->disassemble(0), mach_inst);
+                 "No extra timing info. found for inst: %s"
+                 " mach_inst: %16x\n",
+                 inst->disassemble(0), mach_inst);
     }
 
     return NULL;

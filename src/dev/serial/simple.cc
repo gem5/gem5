@@ -47,8 +47,7 @@ namespace gem5
 
 SimpleUart::SimpleUart(const SimpleUartParams &p)
     : Uart(p, p.pio_size), byteOrder(p.byte_order), endOnEOT(p.end_on_eot)
-{
-}
+{}
 
 Tick
 SimpleUart::read(PacketPtr pkt)
@@ -69,7 +68,6 @@ SimpleUart::read(PacketPtr pkt)
 Tick
 SimpleUart::write(PacketPtr pkt)
 {
-
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     uint8_t data = (uint8_t)pkt->getUintX(byteOrder);

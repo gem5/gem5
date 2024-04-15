@@ -35,19 +35,19 @@
 namespace gem5
 {
 
-GoodbyeObject::GoodbyeObject(const GoodbyeObjectParams &params) :
-    SimObject(params), event([this]{ processEvent(); }, name() + ".event"),
-    bandwidth(params.write_bandwidth), bufferSize(params.buffer_size),
-    buffer(nullptr), bufferUsed(0)
+GoodbyeObject::GoodbyeObject(const GoodbyeObjectParams &params)
+    : SimObject(params),
+      event([this] { processEvent(); }, name() + ".event"),
+      bandwidth(params.write_bandwidth),
+      bufferSize(params.buffer_size),
+      buffer(nullptr),
+      bufferUsed(0)
 {
     buffer = new char[bufferSize]();
     DPRINTF(HelloExample, "Created the goodbye object\n");
 }
 
-GoodbyeObject::~GoodbyeObject()
-{
-    delete[] buffer;
-}
+GoodbyeObject::~GoodbyeObject() { delete[] buffer; }
 
 void
 GoodbyeObject::processEvent()

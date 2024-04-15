@@ -45,7 +45,8 @@ SimplePoolManager::minAllocatedElements(uint32_t size)
              size);
 
     return size % minAllocation() > 0 ?
-        (minAllocation() - (size % minAllocation())) + size : size;
+               (minAllocation() - (size % minAllocation())) + size :
+               size;
 }
 
 std::string

@@ -58,7 +58,7 @@
 namespace gem5
 {
 
-class EventQueue;       // forward declaration
+class EventQueue; // forward declaration
 class BaseGlobalEvent;
 
 //! Simulation Quantum for multiple eventq simulation.
@@ -88,7 +88,12 @@ extern bool inParallelMode;
 //! is with in bounds.
 EventQueue *getEventQueue(uint32_t index);
 
-inline EventQueue *curEventQueue() { return _curEventQueue; }
+inline EventQueue *
+curEventQueue()
+{
+    return _curEventQueue;
+}
+
 inline void curEventQueue(EventQueue *q);
 
 /**
@@ -102,22 +107,22 @@ class EventBase
     typedef unsigned short FlagsType;
     typedef ::gem5::Flags<FlagsType> Flags;
 
-    static const FlagsType PublicRead    = 0x003f; // public readable flags
-    static const FlagsType PublicWrite   = 0x001d; // public writable flags
-    static const FlagsType Squashed      = 0x0001; // has been squashed
-    static const FlagsType Scheduled     = 0x0002; // has been scheduled
-    static const FlagsType Managed       = 0x0004; // Use life cycle manager
-    static const FlagsType AutoDelete    = Managed; // delete after dispatch
+    static const FlagsType PublicRead = 0x003f;  // public readable flags
+    static const FlagsType PublicWrite = 0x001d; // public writable flags
+    static const FlagsType Squashed = 0x0001;    // has been squashed
+    static const FlagsType Scheduled = 0x0002;   // has been scheduled
+    static const FlagsType Managed = 0x0004;     // Use life cycle manager
+    static const FlagsType AutoDelete = Managed; // delete after dispatch
     /**
      * This used to be AutoSerialize. This value can't be reused
      * without changing the checkpoint version since the flag field
      * gets serialized.
      */
-    static const FlagsType Reserved0     = 0x0008;
-    static const FlagsType IsExitEvent   = 0x0010; // special exit event
-    static const FlagsType IsMainQueue   = 0x0020; // on main event queue
-    static const FlagsType Initialized   = 0x7a40; // somewhat random bits
-    static const FlagsType InitMask      = 0xffc0; // mask for init bits
+    static const FlagsType Reserved0 = 0x0008;
+    static const FlagsType IsExitEvent = 0x0010; // special exit event
+    static const FlagsType IsMainQueue = 0x0020; // on main event queue
+    static const FlagsType Initialized = 0x7a40; // somewhat random bits
+    static const FlagsType InitMask = 0xffc0;    // mask for init bits
 
   public:
     /**
@@ -135,7 +140,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Minimum_Pri =          SCHAR_MIN;
+    static const Priority Minimum_Pri = SCHAR_MIN;
 
     /**
      * If we enable tracing on a particular cycle, do that as the
@@ -144,7 +149,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Debug_Enable_Pri =          -101;
+    static const Priority Debug_Enable_Pri = -101;
 
     /**
      * Breakpoints should happen before anything else (except
@@ -153,7 +158,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Debug_Break_Pri =           -100;
+    static const Priority Debug_Break_Pri = -100;
 
     /**
      * CPU switches schedule the new CPU's tick event for the
@@ -163,7 +168,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority CPU_Switch_Pri =             -31;
+    static const Priority CPU_Switch_Pri = -31;
 
     /**
      * For some reason "delayed" inter-cluster writebacks are
@@ -172,14 +177,14 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Delayed_Writeback_Pri =       -1;
+    static const Priority Delayed_Writeback_Pri = -1;
 
     /**
      * Default is zero for historical reasons.
      *
      * @ingroup api_eventq
      */
-    static const Priority Default_Pri =                  0;
+    static const Priority Default_Pri = 0;
 
     /**
      * DVFS update event leads to stats dump therefore given a lower priority
@@ -187,7 +192,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority DVFS_Update_Pri =             31;
+    static const Priority DVFS_Update_Pri = 31;
 
     /**
      * Serailization needs to occur before tick events also, so
@@ -196,7 +201,7 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Serialize_Pri =               32;
+    static const Priority Serialize_Pri = 32;
 
     /**
      * CPU ticks must come after other associated CPU events
@@ -204,14 +209,14 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority CPU_Tick_Pri =                50;
+    static const Priority CPU_Tick_Pri = 50;
 
     /**
      * If we want to exit a thread in a CPU, it comes after CPU_Tick_Pri
      *
      * @ingroup api_eventq
      */
-    static const Priority CPU_Exit_Pri =                64;
+    static const Priority CPU_Exit_Pri = 64;
 
     /**
      * Statistics events (dump, reset, etc.) come after
@@ -219,14 +224,14 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Stat_Event_Pri =              90;
+    static const Priority Stat_Event_Pri = 90;
 
     /**
      * Progress events come at the end.
      *
      * @ingroup api_eventq
      */
-    static const Priority Progress_Event_Pri =          95;
+    static const Priority Progress_Event_Pri = 95;
 
     /**
      * If we want to exit on this cycle, it's the very last thing
@@ -234,14 +239,14 @@ class EventBase
      *
      * @ingroup api_eventq
      */
-    static const Priority Sim_Exit_Pri =               100;
+    static const Priority Sim_Exit_Pri = 100;
 
     /**
      * Maximum priority
      *
      * @ingroup api_eventq
      */
-    static const Priority Maximum_Pri =          SCHAR_MAX;
+    static const Priority Maximum_Pri = SCHAR_MAX;
 };
 
 /*
@@ -352,7 +357,7 @@ class Event : public EventBase, public Serializable
      *
      * @ingroup api_eventq
      */
-    virtual void trace(const char *action);     //!< trace event activity
+    virtual void trace(const char *action); //!< trace event activity
 
     /// Return the instance number as a string.
     const std::string instanceString() const;
@@ -397,7 +402,6 @@ class Event : public EventBase, public Serializable
     /** @} */
 
   public:
-
     /*
      * Event constructor
      * @param queue that the event gets scheduled on
@@ -405,7 +409,10 @@ class Event : public EventBase, public Serializable
      * @ingroup api_eventq
      */
     Event(Priority p = Default_Pri, Flags f = 0)
-        : nextBin(nullptr), nextInBin(nullptr), _when(0), _priority(p),
+        : nextBin(nullptr),
+          nextInBin(nullptr),
+          _when(0),
+          _priority(p),
           flags(Initialized | f)
     {
         assert(f.noneSet(~PublicWrite));
@@ -433,7 +440,7 @@ class Event : public EventBase, public Serializable
 
     /// Dump the current event data
     void dump() const;
-    /** @}*/ //end of api group
+    /** @}*/ // end of api group
 
   public:
     /*
@@ -455,35 +462,55 @@ class Event : public EventBase, public Serializable
      *
      * @ingroup api_eventq
      */
-    bool scheduled() const { return flags.isSet(Scheduled); }
+    bool
+    scheduled() const
+    {
+        return flags.isSet(Scheduled);
+    }
 
     /**
      * Squash the current event
      *
      * @ingroup api_eventq
      */
-    void squash() { flags.set(Squashed); }
+    void
+    squash()
+    {
+        flags.set(Squashed);
+    }
 
     /**
      * Check whether the event is squashed
      *
      * @ingroup api_eventq
      */
-    bool squashed() const { return flags.isSet(Squashed); }
+    bool
+    squashed() const
+    {
+        return flags.isSet(Squashed);
+    }
 
     /**
      * See if this is a SimExitEvent (without resorting to RTTI)
      *
      * @ingroup api_eventq
      */
-    bool isExitEvent() const { return flags.isSet(IsExitEvent); }
+    bool
+    isExitEvent() const
+    {
+        return flags.isSet(IsExitEvent);
+    }
 
     /**
      * Check whether this event will auto-delete
      *
      * @ingroup api_eventq
      */
-    bool isManaged() const { return flags.isSet(Managed); }
+    bool
+    isManaged() const
+    {
+        return flags.isSet(Managed);
+    }
 
     /**
      * The function returns true if the object is automatically
@@ -491,26 +518,42 @@ class Event : public EventBase, public Serializable
      *
      * @ingroup api_eventq
      */
-    bool isAutoDelete() const { return isManaged(); }
+    bool
+    isAutoDelete() const
+    {
+        return isManaged();
+    }
 
     /**
      * Get the time that the event is scheduled
      *
      * @ingroup api_eventq
      */
-    Tick when() const { return _when; }
+    Tick
+    when() const
+    {
+        return _when;
+    }
 
     /**
      * Get the event priority
      *
      * @ingroup api_eventq
      */
-    Priority priority() const { return _priority; }
+    Priority
+    priority() const
+    {
+        return _priority;
+    }
 
     //! If this is part of a GlobalEvent, return the pointer to the
     //! Global Event.  By default, there is no GlobalEvent, so return
     //! NULL.  (Overridden in GlobalEvent::BarrierEvent.)
-    virtual BaseGlobalEvent *globalEvent() { return NULL; }
+    virtual BaseGlobalEvent *
+    globalEvent()
+    {
+        return NULL;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -523,7 +566,7 @@ inline bool
 operator<(const Event &l, const Event &r)
 {
     return l.when() < r.when() ||
-        (l.when() == r.when() && l.priority() < r.priority());
+           (l.when() == r.when() && l.priority() < r.priority());
 }
 
 /**
@@ -533,7 +576,7 @@ inline bool
 operator>(const Event &l, const Event &r)
 {
     return l.when() > r.when() ||
-        (l.when() == r.when() && l.priority() > r.priority());
+           (l.when() == r.when() && l.priority() > r.priority());
 }
 
 /**
@@ -543,7 +586,7 @@ inline bool
 operator<=(const Event &l, const Event &r)
 {
     return l.when() < r.when() ||
-        (l.when() == r.when() && l.priority() <= r.priority());
+           (l.when() == r.when() && l.priority() <= r.priority());
 }
 
 /**
@@ -553,7 +596,7 @@ inline bool
 operator>=(const Event &l, const Event &r)
 {
     return l.when() > r.when() ||
-        (l.when() == r.when() && l.priority() >= r.priority());
+           (l.when() == r.when() && l.priority() >= r.priority());
 }
 
 /**
@@ -625,7 +668,7 @@ class EventQueue
     UncontendedMutex async_queue_mutex;
 
     //! List of events added by other threads to this event queue.
-    std::list<Event*> async_queue;
+    std::list<Event *> async_queue;
 
     /**
      * Lock protecting event handling.
@@ -665,7 +708,7 @@ class EventQueue
     class ScopedMigration
     {
       public:
-         /**
+        /**
          * Temporarily migrate execution to a different event queue.
          *
          * An instance of this class temporarily migrates execution to
@@ -680,10 +723,11 @@ class EventQueue
          * @ingroup api_eventq
          */
         ScopedMigration(EventQueue *_new_eq, bool _doMigrate = true)
-            :new_eq(*_new_eq), old_eq(*curEventQueue()),
-             doMigrate((&new_eq != &old_eq)&&_doMigrate)
+            : new_eq(*_new_eq),
+              old_eq(*curEventQueue()),
+              doMigrate((&new_eq != &old_eq) && _doMigrate)
         {
-            if (doMigrate){
+            if (doMigrate) {
                 old_eq.unlock();
                 new_eq.lock();
                 curEventQueue(&new_eq);
@@ -692,7 +736,7 @@ class EventQueue
 
         ~ScopedMigration()
         {
-            if (doMigrate){
+            if (doMigrate) {
                 new_eq.unlock();
                 old_eq.lock();
                 curEventQueue(&old_eq);
@@ -704,7 +748,6 @@ class EventQueue
         EventQueue &old_eq;
         bool doMigrate;
     };
-
 
     class ScopedRelease
     {
@@ -720,16 +763,9 @@ class EventQueue
          *
          * @group api_eventq
          */
-        ScopedRelease(EventQueue *_eq)
-            :  eq(*_eq)
-        {
-            eq.unlock();
-        }
+        ScopedRelease(EventQueue *_eq) : eq(*_eq) { eq.unlock(); }
 
-        ~ScopedRelease()
-        {
-            eq.lock();
-        }
+        ~ScopedRelease() { eq.lock(); }
 
       private:
         EventQueue &eq;
@@ -744,9 +780,19 @@ class EventQueue
      * @ingroup api_eventq
      * @{
      */
-    virtual const std::string name() const { return objName; }
-    void name(const std::string &st) { objName = st; }
-    /** @}*/ //end of api_eventq group
+    virtual const std::string
+    name() const
+    {
+        return objName;
+    }
+
+    void
+    name(const std::string &st)
+    {
+        objName = st;
+    }
+
+    /** @}*/ // end of api_eventq group
 
     /**
      * Schedule the given event on this queue. Safe to call from any thread.
@@ -754,7 +800,7 @@ class EventQueue
      * @ingroup api_eventq
      */
     void
-    schedule(Event *event, Tick when, bool global=false)
+    schedule(Event *event, Tick when, bool global = false)
     {
         assert(when >= getCurTick());
         assert(!event->scheduled());
@@ -811,7 +857,7 @@ class EventQueue
      * @ingroup api_eventq
      */
     void
-    reschedule(Event *event, Tick when, bool always=false)
+    reschedule(Event *event, Tick when, bool always = false)
     {
         assert(when >= getCurTick());
         assert(always || event->scheduled());
@@ -833,8 +879,17 @@ class EventQueue
             event->trace("rescheduled");
     }
 
-    Tick nextTick() const { return head->when(); }
-    void setCurTick(Tick newVal) { _curTick = newVal; }
+    Tick
+    nextTick() const
+    {
+        return head->when();
+    }
+
+    void
+    setCurTick(Tick newVal)
+    {
+        _curTick = newVal;
+    }
 
     /**
      * While curTick() is useful for any object assigned to this event queue,
@@ -847,8 +902,17 @@ class EventQueue
      * @return Tick The current tick of this event queue.
      * @ingroup api_eventq
      */
-    Tick getCurTick() const { return _curTick; }
-    Event *getHead() const { return head; }
+    Tick
+    getCurTick() const
+    {
+        return _curTick;
+    }
+
+    Event *
+    getHead() const
+    {
+        return head;
+    }
 
     Event *serviceOne();
 
@@ -876,7 +940,7 @@ class EventQueue
              * @todo this assert is a good bug catcher.  I need to
              * make it true again.
              */
-            //assert(head->when() >= when && "event scheduled in the past");
+            // assert(head->when() >= when && "event scheduled in the past");
             serviceOne();
         }
 
@@ -888,7 +952,11 @@ class EventQueue
      *
      * @ingroup api_eventq
      */
-    bool empty() const { return head == NULL; }
+    bool
+    empty() const
+    {
+        return head == NULL;
+    }
 
     /**
      * This is a debugging function which will print everything on the event
@@ -920,7 +988,9 @@ class EventQueue
      *
      *  @ingroup api_eventq
      */
-    virtual void wakeup(Tick when = (Tick)-1) { }
+    virtual void
+    wakeup(Tick when = (Tick)-1)
+    {}
 
     /**
      *  function for replacing the head of the event queue, so that a
@@ -930,7 +1000,7 @@ class EventQueue
      *  USING THIS FUNCTION CAN BE DANGEROUS TO THE HEALTH OF THE SIMULATOR.
      *  NOT RECOMMENDED FOR USE.
      */
-    Event* replaceHead(Event* s);
+    Event *replaceHead(Event *s);
 
     /**@{*/
     /**
@@ -944,8 +1014,18 @@ class EventQueue
      * @see EventQueue::ScopedRelease
      * @see EventQueue
      */
-    void lock() { service_mutex.lock(); }
-    void unlock() { service_mutex.unlock(); }
+    void
+    lock()
+    {
+        service_mutex.lock();
+    }
+
+    void
+    unlock()
+    {
+        service_mutex.unlock();
+    }
+
     /**@}*/
 
     /**
@@ -992,9 +1072,12 @@ class EventManager
      * @{
      */
     EventManager(EventManager &em) : eventq(em.eventq) {}
+
     EventManager(EventManager *em) : eventq(em->eventq) {}
+
     EventManager(EventQueue *eq) : eventq(eq) {}
-    /** @}*/ //end of api_eventq group
+
+    /** @}*/ // end of api_eventq group
 
     /**
      * @ingroup api_eventq
@@ -1065,12 +1148,17 @@ class EventManager
      * on other schedulers.
      * @ingroup api_eventq
      */
-    void wakeupEventQueue(Tick when = (Tick)-1)
+    void
+    wakeupEventQueue(Tick when = (Tick)-1)
     {
         eventq->wakeup(when);
     }
 
-    void setCurTick(Tick newVal) { eventq->setCurTick(newVal); }
+    void
+    setCurTick(Tick newVal)
+    {
+        eventq->setCurTick(newVal);
+    }
 };
 
 /**
@@ -1088,18 +1176,18 @@ class EventManager
  * @tparam F Pointer to the member function wrapped in this event.
  */
 template <auto F>
-class MemberEventWrapper final: public Event, public Named
+class MemberEventWrapper final : public Event, public Named
 {
     using CLASS = MemberFunctionClass_t<F>;
     static_assert(std::is_same_v<void, MemberFunctionReturn_t<F>>);
     static_assert(std::is_same_v<MemberFunctionArgsTuple_t<F>, std::tuple<>>);
 
-public:
-    [[deprecated("Use reference version of this constructor instead")]]
-    MemberEventWrapper(CLASS *object,
-                       bool del = false,
-                       Priority p = Default_Pri):
-        MemberEventWrapper{*object, del, p}
+  public:
+    [[deprecated("Use reference version of this constructor "
+                 "instead")]] MemberEventWrapper(CLASS *object,
+                                                 bool del = false,
+                                                 Priority p = Default_Pri)
+        : MemberEventWrapper{ *object, del, p }
     {}
 
     /**
@@ -1109,35 +1197,40 @@ public:
      * @param del if true, flag this event as AutoDelete
      * @param p priority of this event
      */
-    MemberEventWrapper(CLASS &object,
-                       bool del = false,
-                       Priority p = Default_Pri):
-        Event(p),
-        Named(object.name() + ".wrapped_event"),
-        mObject(&object)
+    MemberEventWrapper(CLASS &object, bool del = false,
+                       Priority p = Default_Pri)
+        : Event(p), Named(object.name() + ".wrapped_event"), mObject(&object)
     {
-        if (del) setFlags(AutoDelete);
+        if (del)
+            setFlags(AutoDelete);
         gem5_assert(mObject);
     }
 
-    void process() override {
+    void
+    process() override
+    {
         (mObject->*F)();
     }
 
-    const char *description() const override { return "EventWrapped"; }
-private:
+    const char *
+    description() const override
+    {
+        return "EventWrapped";
+    }
+
+  private:
     CLASS *mObject;
 };
 
-template <class T, void (T::* F)()>
-using EventWrapper [[deprecated("Use MemberEventWrapper instead")]]
-    = MemberEventWrapper<F>;
+template <class T, void (T::*F)()>
+using EventWrapper [[deprecated("Use MemberEventWrapper instead")]] =
+    MemberEventWrapper<F>;
 
 class EventFunctionWrapper : public Event
 {
   private:
-      std::function<void(void)> callback;
-      std::string _name;
+    std::function<void(void)> callback;
+    std::string _name;
 
   public:
     /**
@@ -1147,8 +1240,7 @@ class EventFunctionWrapper : public Event
      * @ingroup api_eventq
      */
     EventFunctionWrapper(const std::function<void(void)> &callback,
-                         const std::string &name,
-                         bool del = false,
+                         const std::string &name, bool del = false,
                          Priority p = Default_Pri)
         : Event(p), callback(callback), _name(name)
     {
@@ -1156,10 +1248,14 @@ class EventFunctionWrapper : public Event
             setFlags(AutoDelete);
     }
 
-   /**
-    * @ingroup api_eventq
-    */
-    void process() { callback(); }
+    /**
+     * @ingroup api_eventq
+     */
+    void
+    process()
+    {
+        callback();
+    }
 
     /**
      * @ingroup api_eventq
@@ -1173,7 +1269,11 @@ class EventFunctionWrapper : public Event
     /**
      * @ingroup api_eventq
      */
-    const char *description() const { return "EventFunctionWrapped"; }
+    const char *
+    description() const
+    {
+        return "EventFunctionWrapped";
+    }
 };
 
 /**
@@ -1188,10 +1288,10 @@ class EventFunctionWrapper : public Event
  *
  * @ingroup api_serialize
  */
-#define UNSERIALIZE_EVENT(event)                        \
-    do {                                                \
-        event.unserializeSection(cp, #event);           \
-        eventQueue()->checkpointReschedule(&event);     \
+#define UNSERIALIZE_EVENT(event)                                              \
+    do {                                                                      \
+        event.unserializeSection(cp, #event);                                 \
+        eventQueue()->checkpointReschedule(&event);                           \
     } while (0)
 
 } // namespace gem5

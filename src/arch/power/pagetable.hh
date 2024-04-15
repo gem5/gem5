@@ -59,15 +59,15 @@ struct PTE
     bool G;
 
     /* Contents of Entry Lo0 */
-    Addr PFN0; // Physical Frame Number - Even
-    bool D0;   // Even entry Dirty Bit
-    bool V0;   // Even entry Valid Bit
+    Addr PFN0;  // Physical Frame Number - Even
+    bool D0;    // Even entry Dirty Bit
+    bool V0;    // Even entry Valid Bit
     uint8_t C0; // Cache Coherency Bits - Even
 
     /* Contents of Entry Lo1 */
-    Addr PFN1; // Physical Frame Number - Odd
-    bool D1;   // Odd entry Dirty Bit
-    bool V1;   // Odd entry Valid Bit
+    Addr PFN1;  // Physical Frame Number - Odd
+    bool D1;    // Odd entry Dirty Bit
+    bool V1;    // Odd entry Valid Bit
     uint8_t C1; // Cache Coherency Bits (3 bits)
 
     // The next few variables are put in as optimizations to reduce TLB

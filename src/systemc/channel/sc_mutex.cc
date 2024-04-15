@@ -32,12 +32,12 @@
 namespace sc_core
 {
 
-sc_mutex::sc_mutex() : sc_interface(), sc_mutex_if(),
-        sc_object(sc_gen_unique_name("mutex"))
+sc_mutex::sc_mutex()
+    : sc_interface(), sc_mutex_if(), sc_object(sc_gen_unique_name("mutex"))
 {}
 
-sc_mutex::sc_mutex(const char *name) :
-        sc_interface(), sc_mutex_if(), sc_object(name)
+sc_mutex::sc_mutex(const char *name)
+    : sc_interface(), sc_mutex_if(), sc_object(name)
 {}
 
 int

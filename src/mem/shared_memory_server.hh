@@ -51,21 +51,21 @@ class SharedMemoryServer : public SimObject
         kGetPhysRange = 0,
     };
 
-    explicit SharedMemoryServer(const SharedMemoryServerParams& params);
+    explicit SharedMemoryServer(const SharedMemoryServerParams &params);
     ~SharedMemoryServer();
 
   private:
     class BaseShmPollEvent : public PollEvent
     {
       public:
-        BaseShmPollEvent(int fd, SharedMemoryServer* shm_server);
+        BaseShmPollEvent(int fd, SharedMemoryServer *shm_server);
 
-        const std::string& name() const;
+        const std::string &name() const;
 
       protected:
-        bool tryReadAll(void* buffer, size_t size);
+        bool tryReadAll(void *buffer, size_t size);
 
-        SharedMemoryServer* shmServer;
+        SharedMemoryServer *shmServer;
         std::string eventName;
     };
 
@@ -83,7 +83,7 @@ class SharedMemoryServer : public SimObject
         void process(int revent) override;
     };
 
-    System* system;
+    System *system;
 
     ListenSocketPtr listener;
 
@@ -95,4 +95,4 @@ class SharedMemoryServer : public SimObject
 } // namespace memory
 } // namespace gem5
 
-#endif  // __MEM_SHARED_MEMORY_SERVER_HH__
+#endif // __MEM_SHARED_MEMORY_SERVER_HH__

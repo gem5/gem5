@@ -46,11 +46,12 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace ArmISAInst {
+namespace ArmISAInst
+{
 
 std::string
-TmeImmOp64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+TmeImmOp64::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -59,8 +60,8 @@ TmeImmOp64::generateDisassembly(
 }
 
 std::string
-TmeRegNone64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+TmeRegNone64::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -69,8 +70,8 @@ TmeRegNone64::generateDisassembly(
 }
 
 std::string
-MicroTmeBasic64::generateDisassembly(
-    Addr pc, const loader::SymbolTable *symtab) const
+MicroTmeBasic64::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -88,15 +89,13 @@ MicroTfence64::MicroTfence64(ExtMachInst machInst)
 }
 
 Fault
-MicroTfence64::execute(
-    ExecContext *xc, trace::InstRecord *traceData) const
+MicroTfence64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     return NoFault;
 }
 
 Fault
-MicroTfence64::initiateAcc(ExecContext *xc,
-                           trace::InstRecord *traceData) const
+MicroTfence64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("tfence should not have memory semantics");
 
@@ -116,10 +115,9 @@ Tstart64::Tstart64(ExtMachInst machInst, RegIndex _dest)
     : TmeRegNone64("tstart", machInst, MemReadOp, _dest)
 {
     setRegIdxArrays(
-        nullptr,
-        reinterpret_cast<RegIdArrayPtr>(
-            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
-            ;
+        nullptr, reinterpret_cast<RegIdArrayPtr>(
+                     &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+    ;
 
     _numSrcRegs = 0;
     _numDestRegs = 0;
@@ -133,8 +131,7 @@ Tstart64::Tstart64(ExtMachInst machInst, RegIndex _dest)
 }
 
 Fault
-Tstart64::execute(
-    ExecContext *xc, trace::InstRecord *traceData) const
+Tstart64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("TME is not supported with atomic memory");
 
@@ -145,10 +142,9 @@ Ttest64::Ttest64(ExtMachInst machInst, RegIndex _dest)
     : TmeRegNone64("ttest", machInst, MemReadOp, _dest)
 {
     setRegIdxArrays(
-        nullptr,
-        reinterpret_cast<RegIdArrayPtr>(
-            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
-            ;
+        nullptr, reinterpret_cast<RegIdArrayPtr>(
+                     &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+    ;
 
     _numSrcRegs = 0;
     _numDestRegs = 0;
@@ -170,18 +166,17 @@ Tcancel64::Tcancel64(ExtMachInst machInst, uint64_t _imm)
 }
 
 Fault
-Tcancel64::execute(
-    ExecContext *xc, trace::InstRecord *traceData) const
+Tcancel64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("TME is not supported with atomic memory");
 
     return NoFault;
 }
 
-MacroTmeOp::MacroTmeOp(const char *mnem,
-                       ExtMachInst _machInst,
-                       OpClass __opClass) :
-  PredMacroOp(mnem, machInst, __opClass) {
+MacroTmeOp::MacroTmeOp(const char *mnem, ExtMachInst _machInst,
+                       OpClass __opClass)
+    : PredMacroOp(mnem, machInst, __opClass)
+{
     _numSrcRegs = 0;
     _numDestRegs = 0;
 
@@ -208,8 +203,8 @@ MicroTcommit64::execute(ExecContext *xc, trace::InstRecord *traceData) const
     return NoFault;
 }
 
-Tcommit64::Tcommit64(ExtMachInst _machInst) :
-                     MacroTmeOp("tcommit", machInst, MemReadOp)
+Tcommit64::Tcommit64(ExtMachInst _machInst)
+    : MacroTmeOp("tcommit", machInst, MemReadOp)
 {
     numMicroops = 2;
     microOps = new StaticInstPtr[numMicroops];

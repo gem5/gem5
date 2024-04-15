@@ -55,9 +55,7 @@ namespace gem5
 
 class DramRotGen : public DramGen
 {
-
   public:
-
     /**
      * Create a DRAM address sequence generator.
      * This sequence generator will rotate through:
@@ -86,29 +84,26 @@ class DramRotGen : public DramGen
      *                     assumes single channel system
      */
     DramRotGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-            Addr start_addr, Addr end_addr,
-            Addr _blocksize, Addr cacheline_size,
-            Tick min_period, Tick max_period,
-            uint8_t read_percent, Addr data_limit,
-            unsigned int num_seq_pkts, unsigned int page_size,
-            unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
-            enums::AddrMap addr_mapping,
-            unsigned int nbr_of_ranks,
-            unsigned int max_seq_count_per_rank)
+               Addr start_addr, Addr end_addr, Addr _blocksize,
+               Addr cacheline_size, Tick min_period, Tick max_period,
+               uint8_t read_percent, Addr data_limit,
+               unsigned int num_seq_pkts, unsigned int page_size,
+               unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+               enums::AddrMap addr_mapping, unsigned int nbr_of_ranks,
+               unsigned int max_seq_count_per_rank)
         : DramGen(obj, requestor_id, _duration, start_addr, end_addr,
-          _blocksize, cacheline_size, min_period, max_period,
-          read_percent, data_limit,
-          num_seq_pkts, page_size, nbr_of_banks_DRAM,
-          nbr_of_banks_util, addr_mapping,
-          nbr_of_ranks),
+                  _blocksize, cacheline_size, min_period, max_period,
+                  read_percent, data_limit, num_seq_pkts, page_size,
+                  nbr_of_banks_DRAM, nbr_of_banks_util, addr_mapping,
+                  nbr_of_ranks),
           maxSeqCountPerRank(max_seq_count_per_rank),
           nextSeqCount(0)
     {
         // Rotating traffic generation can only support a read
         // percentage of 0, 50, or 100
-        if (readPercent != 50  && readPercent != 100 && readPercent != 0) {
-           fatal("%s: Unsupported read percentage for DramRotGen: %d",
-                 _name, readPercent);
+        if (readPercent != 50 && readPercent != 100 && readPercent != 0) {
+            fatal("%s: Unsupported read percentage for DramRotGen: %d", _name,
+                  readPercent);
         }
     }
 

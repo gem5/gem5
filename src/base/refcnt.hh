@@ -95,7 +95,11 @@ class RefCounted
     virtual ~RefCounted() {}
 
     /// Increment the reference count
-    void incref() const { ++count; }
+    void
+    incref() const
+    {
+        ++count;
+    }
 
     /// Decrement the reference count and destroy the object if all
     /// references are gone.
@@ -126,19 +130,19 @@ template <class T>
 class RefCountingPtr
 {
   public:
-    using PtrType = T*;
+    using PtrType = T *;
 
   protected:
     /** Convenience aliases for const/non-const versions of T w/ friendship. */
     /** @{ */
     static constexpr auto TisConst = std::is_const_v<T>;
-    using ConstT = typename std::conditional_t<TisConst,
-            RefCountingPtr<T>,
-            RefCountingPtr<typename std::add_const<T>::type>>;
+    using ConstT = typename std::conditional_t<
+        TisConst, RefCountingPtr<T>,
+        RefCountingPtr<typename std::add_const<T>::type>>;
     friend ConstT;
-    using NonConstT = typename std::conditional_t<TisConst,
-            RefCountingPtr<typename std::remove_const<T>::type>,
-            RefCountingPtr<T>>;
+    using NonConstT = typename std::conditional_t<
+        TisConst, RefCountingPtr<typename std::remove_const<T>::type>,
+        RefCountingPtr<T>>;
     friend NonConstT;
     /** @} */
     /// The stored pointer.
@@ -201,14 +205,17 @@ class RefCountingPtr
     /** Move-constructor.
      * Does not add a reference.
      */
-    RefCountingPtr(RefCountingPtr&& r)
+    RefCountingPtr(RefCountingPtr &&r)
     {
         data = r.data;
         r.data = nullptr;
     }
 
     template <bool B = TisConst>
-    RefCountingPtr(const NonConstT &r) { copy(r.data); }
+    RefCountingPtr(const NonConstT &r)
+    {
+        copy(r.data);
+    }
 
     /// Destroy the pointer and any reference it may hold.
     ~RefCountingPtr() { del(); }
@@ -218,13 +225,25 @@ class RefCountingPtr
     // what is pointed to.  This is analagous to a "Foo * const".
 
     /// Access a member variable.
-    T *operator->() const { return data; }
+    T *
+    operator->() const
+    {
+        return data;
+    }
 
     /// Dereference the pointer.
-    T &operator*() const { return *data; }
+    T &
+    operator*() const
+    {
+        return *data;
+    }
 
     /// Directly access the pointer itself without taking a reference.
-    T *get() const { return data; }
+    T *
+    get() const
+    {
+        return data;
+    }
 
     template <bool B = TisConst>
     operator RefCountingPtr<typename std::enable_if_t<!B, ConstT>>()
@@ -233,7 +252,12 @@ class RefCountingPtr
     }
 
     /// Assign a new value to the pointer
-    const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+    const RefCountingPtr &
+    operator=(T *p)
+    {
+        set(p);
+        return *this;
+    }
 
     /// Copy the pointer from another RefCountingPtr
     const RefCountingPtr &
@@ -244,7 +268,7 @@ class RefCountingPtr
 
     /// Move-assign the pointer from another RefCountingPtr
     const RefCountingPtr &
-    operator=(RefCountingPtr&& r)
+    operator=(RefCountingPtr &&r)
     {
         /* This happens regardless of whether the pointer is the same or not,
          * because of the move semantics, the rvalue needs to be 'destroyed'.
@@ -256,14 +280,18 @@ class RefCountingPtr
     }
 
     /// Check if the pointer is empty
-    bool operator!() const { return data == 0; }
+    bool
+    operator!() const
+    {
+        return data == 0;
+    }
 
     /// Check if the pointer is non-empty
     operator bool() const { return data != 0; }
 };
 
 /// Check for equality of two reference counting pointers.
-template<class T>
+template <class T>
 inline bool
 operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 {
@@ -272,7 +300,7 @@ operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 
 /// Check for equality of of a reference counting pointers and a
 /// regular pointer
-template<class T>
+template <class T>
 inline bool
 operator==(const RefCountingPtr<T> &l, const T *r)
 {
@@ -281,7 +309,7 @@ operator==(const RefCountingPtr<T> &l, const T *r)
 
 /// Check for equality of of a reference counting pointers and a
 /// regular pointer
-template<class T>
+template <class T>
 inline bool
 operator==(const T *l, const RefCountingPtr<T> &r)
 {
@@ -289,7 +317,7 @@ operator==(const T *l, const RefCountingPtr<T> &r)
 }
 
 /// Check for inequality of two reference counting pointers.
-template<class T>
+template <class T>
 inline bool
 operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 {
@@ -298,7 +326,7 @@ operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 
 /// Check for inequality of of a reference counting pointers and a
 /// regular pointer
-template<class T>
+template <class T>
 inline bool
 operator!=(const RefCountingPtr<T> &l, const T *r)
 {
@@ -307,7 +335,7 @@ operator!=(const RefCountingPtr<T> &l, const T *r)
 
 /// Check for inequality of of a reference counting pointers and a
 /// regular pointer
-template<class T>
+template <class T>
 inline bool
 operator!=(const T *l, const RefCountingPtr<T> &r)
 {

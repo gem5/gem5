@@ -76,8 +76,10 @@ FVPBasePwrCtrl::setStandByWfi(ThreadContext *const tc)
     PwrStatus *pwrs = getCorePwrStatus(tc);
 
     if (!pwrs->pwfi)
-        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::setStandByWfi: STANDBYWFI "
-                "asserted for core %d\n", tc->contextId());
+        DPRINTF(FVPBasePwrCtrl,
+                "FVPBasePwrCtrl::setStandByWfi: STANDBYWFI "
+                "asserted for core %d\n",
+                tc->contextId());
     pwrs->pwfi = 1;
     if (pwrs->l0 && (pwrs->pp || pwrs->pc))
         powerCoreOff(tc, pwrs);
@@ -89,8 +91,10 @@ FVPBasePwrCtrl::clearStandByWfi(ThreadContext *const tc)
     PwrStatus *pwrs = getCorePwrStatus(tc);
 
     if (pwrs->pwfi)
-        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::clearStandByWfi: STANDBYWFI "
-                "deasserted for core %d\n", tc->contextId());
+        DPRINTF(FVPBasePwrCtrl,
+                "FVPBasePwrCtrl::clearStandByWfi: STANDBYWFI "
+                "deasserted for core %d\n",
+                tc->contextId());
     pwrs->pwfi = 0;
 }
 
@@ -100,8 +104,10 @@ FVPBasePwrCtrl::setWakeRequest(ThreadContext *const tc)
     PwrStatus *pwrs = getCorePwrStatus(tc);
 
     if (!pwrs->pwk)
-        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::setWakeRequest: WakeRequest "
-                "asserted for core %d\n", tc->contextId());
+        DPRINTF(FVPBasePwrCtrl,
+                "FVPBasePwrCtrl::setWakeRequest: WakeRequest "
+                "asserted for core %d\n",
+                tc->contextId());
     pwrs->pwk = 1;
     if (!pwrs->l0 && pwrs->wen) {
         pwrs->wk = WK_GICWR;
@@ -117,8 +123,10 @@ FVPBasePwrCtrl::clearWakeRequest(ThreadContext *const tc)
     PwrStatus *pwrs = getCorePwrStatus(tc);
 
     if (pwrs->pwk)
-        DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::clearWakeRequest: "
-                "WakeRequest deasserted for core %d\n", tc->contextId());
+        DPRINTF(FVPBasePwrCtrl,
+                "FVPBasePwrCtrl::clearWakeRequest: "
+                "WakeRequest deasserted for core %d\n",
+                tc->contextId());
     pwrs->pwk = 0;
 }
 
@@ -131,24 +139,25 @@ FVPBasePwrCtrl::read(PacketPtr pkt)
 
     uint64_t resp = 0;
     switch (addr) {
-      case PPOFFR:
+    case PPOFFR:
         resp = regs.ppoffr;
         break;
-      case PPONR:
+    case PPONR:
         resp = regs.pponr;
         break;
-      case PCOFFR:
+    case PCOFFR:
         resp = regs.pcoffr;
         break;
-      case PWKUPR:
+    case PWKUPR:
         resp = regs.pwkupr;
         break;
-      case PSYSR:
+    case PSYSR:
         resp = regs.psysr;
         break;
-      default:
+    default:
         warn("FVPBasePwrCtrl::read: Unexpected address (0x%x:%i), "
-             "assuming RAZ\n", addr, size);
+             "assuming RAZ\n",
+             addr, size);
     }
 
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::read: 0x%x<-0x%x(%i)\n", resp,
@@ -173,7 +182,7 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
     ThreadContext *tc = getThreadContextByMPID(data & MPID_MSK);
     PwrStatus *pwrs = tc ? getCorePwrStatus(tc) : nullptr;
     switch (addr) {
-      case PPOFFR:
+    case PPOFFR:
         if (!tc) {
             regs.ppoffr = ~0;
         } else if (pwrs->l0) {
@@ -184,7 +193,7 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
             regs.ppoffr = ~0 & MPID_MSK;
         }
         break;
-      case PPONR:
+    case PPONR:
         if (!tc) {
             regs.pponr = ~0;
         } else {
@@ -198,7 +207,7 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
             }
         }
         break;
-      case PCOFFR:
+    case PCOFFR:
         if (!tc) {
             regs.pcoffr = ~0;
         } else if (pwrs->l0) {
@@ -216,7 +225,7 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
             regs.pcoffr = ~0 & MPID_MSK;
         }
         break;
-      case PWKUPR:
+    case PWKUPR:
         if (!tc) {
             regs.pwkupr = ~0;
         } else {
@@ -231,15 +240,16 @@ FVPBasePwrCtrl::write(PacketPtr pkt)
             regs.pwkupr = data & (MPID_MSK | (1 << 31));
         }
         break;
-      case PSYSR:
+    case PSYSR:
         if (!tc)
             regs.psysr = ~0;
         else
-            regs.psysr = (data & MPID_MSK) | (((uint32_t) *pwrs) & ~MPID_MSK);
+            regs.psysr = (data & MPID_MSK) | (((uint32_t)*pwrs) & ~MPID_MSK);
         break;
-      default:
+    default:
         warn("FVPBasePwrCtrl::write: Unexpected address (0x%x:%i), "
-             "assuming WI\n", addr, size);
+             "assuming WI\n",
+             addr, size);
     }
 
     DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::write: 0x%x->0x%x(%i)\n", data,
@@ -270,8 +280,10 @@ FVPBasePwrCtrl::getThreadContextByMPID(uint32_t mpid) const
 void
 FVPBasePwrCtrl::powerCoreOn(ThreadContext *const tc, PwrStatus *const pwrs)
 {
-    DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::powerCoreOn: Powering ON "
-            "core %d\n", tc->contextId());
+    DPRINTF(FVPBasePwrCtrl,
+            "FVPBasePwrCtrl::powerCoreOn: Powering ON "
+            "core %d\n",
+            tc->contextId());
     pwrs->l0 = 1;
     poweredCoresPerCluster[tc->socketId()]++;
     // Clear pending power-offs to the core
@@ -289,8 +301,10 @@ FVPBasePwrCtrl::powerCoreOn(ThreadContext *const tc, PwrStatus *const pwrs)
 void
 FVPBasePwrCtrl::powerCoreOff(ThreadContext *const tc, PwrStatus *const pwrs)
 {
-    DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::powerCoreOff: Powering OFF "
-            "core %d\n", tc->contextId());
+    DPRINTF(FVPBasePwrCtrl,
+            "FVPBasePwrCtrl::powerCoreOff: Powering OFF "
+            "core %d\n",
+            tc->contextId());
     pwrs->l0 = 0;
     poweredCoresPerCluster[tc->socketId()]--;
     // Clear pending power-offs to the core
@@ -304,8 +318,10 @@ FVPBasePwrCtrl::powerCoreOff(ThreadContext *const tc, PwrStatus *const pwrs)
 void
 FVPBasePwrCtrl::startCoreUp(ThreadContext *const tc)
 {
-    DPRINTF(FVPBasePwrCtrl, "FVPBasePwrCtrl::startCoreUp: Starting core %d "
-            "from the power controller\n", tc->contextId());
+    DPRINTF(FVPBasePwrCtrl,
+            "FVPBasePwrCtrl::startCoreUp: Starting core %d "
+            "from the power controller\n",
+            tc->contextId());
     clearStandByWfi(tc);
     clearWakeRequest(tc);
 

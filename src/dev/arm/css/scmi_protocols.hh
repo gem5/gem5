@@ -75,9 +75,7 @@ class Protocol
     // 16th byte is used for the NULL terminator
     static const uint32_t MAX_STRING_SIZE = 15;
 
-    Protocol(Platform &_platform)
-      : platform(_platform)
-    {}
+    Protocol(Platform &_platform) : platform(_platform) {}
 
     virtual ~Protocol() {}
 
@@ -150,7 +148,6 @@ class BaseProtocol : public Protocol
     const std::string vendor;
     const std::string subvendor;
     const uint32_t implementationVersion;
-
 };
 
 } // namespace scmi

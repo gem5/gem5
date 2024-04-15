@@ -79,27 +79,28 @@ std::string filename;
 void
 usage(const std::string &prog_name)
 {
-    std::cerr << "Usage: " << prog_name << (
-        " <config_file.ini> [ <option> ]\n\n"
-        "OPTIONS:\n"
-        "    -p <object> <param> <value>  -- set a parameter\n"
-        "    -v <object> <param> <values> -- set a vector parameter from"
-        " a comma\n"
-        "                                    separated values string\n"
-        "    -d <flag>                    -- set a debug flag (-<flag>\n"
-        "                                    clear a flag)\n"
-        "    -s <dir> <ticks>             -- save checkpoint to dir after"
-        " the given\n"
-        "                                    number of ticks\n"
-        "    -r <dir>                     -- restore checkpoint to dir\n"
-        "    -c <from> <to> <ticks>       -- switch from cpu 'from' to cpu"
-        " 'to' after\n"
-        "                                    the given number of ticks\n"
-        "    -n <#cpus>                      the number of cpus to switch\n"
-        "                                    (appended to 'to' and 'from'"
-        " cpus above)\n"
-        "\n"
-        );
+    std::cerr
+        << "Usage: " << prog_name
+        << (" <config_file.ini> [ <option> ]\n\n"
+            "OPTIONS:\n"
+            "    -p <object> <param> <value>  -- set a parameter\n"
+            "    -v <object> <param> <values> -- set a vector parameter from"
+            " a comma\n"
+            "                                    separated values string\n"
+            "    -d <flag>                    -- set a debug flag (-<flag>\n"
+            "                                    clear a flag)\n"
+            "    -s <dir> <ticks>             -- save checkpoint to dir after"
+            " the given\n"
+            "                                    number of ticks\n"
+            "    -r <dir>                     -- restore checkpoint to dir\n"
+            "    -c <from> <to> <ticks>       -- switch from cpu 'from' to cpu"
+            " 'to' after\n"
+            "                                    the given number of ticks\n"
+            "    -n <#cpus>                      the number of cpus to "
+            "switch\n"
+            "                                    (appended to 'to' and 'from'"
+            " cpus above)\n"
+            "\n");
 
     std::exit(EXIT_FAILURE);
 }
@@ -128,6 +129,7 @@ class SimControl : public Gem5SystemC::Module
     SimControl(sc_core::sc_module_name name, int argc_, char **argv_);
 
     void run();
+
   private:
     /**
      * Switch a single CPU
@@ -139,14 +141,10 @@ class SimControl : public Gem5SystemC::Module
      * @param The total number of CPUs in the system
      */
     void switchCpu(unsigned cpuNum, unsigned numTotalCpus);
-
 };
 
-SimControl::SimControl(sc_core::sc_module_name name,
-    int argc_, char **argv_) :
-    Gem5SystemC::Module(name),
-    argc(argc_),
-    argv(argv_)
+SimControl::SimControl(sc_core::sc_module_name name, int argc_, char **argv_)
+    : Gem5SystemC::Module(name), argc(argc_), argv(argv_)
 {
     SC_THREAD(run);
 
@@ -167,8 +165,7 @@ SimControl::SimControl(sc_core::sc_module_name name,
     Gem5SystemC::Module::setupEventQueues(*this);
 
     if (sc_core::sc_get_time_resolution() !=
-        sc_core::sc_time(1, sc_core::SC_PS))
-    {
+        sc_core::sc_time(1, sc_core::SC_PS)) {
         fatal("Time resolution must be set to 1 ps for gem5 to work");
     }
 
@@ -213,7 +210,7 @@ SimControl::SimControl(sc_core::sc_module_name name,
                 if (num_args < 3)
                     usage(prog_name);
                 config_manager->setParam(argv[arg_ptr], argv[arg_ptr + 1],
-                    argv[arg_ptr + 2]);
+                                         argv[arg_ptr + 2]);
                 arg_ptr += 3;
             } else if (option == "-v") {
                 std::vector<std::string> values;
@@ -221,8 +218,8 @@ SimControl::SimControl(sc_core::sc_module_name name,
                 if (num_args < 3)
                     usage(prog_name);
                 tokenize(values, argv[2], ',');
-                config_manager->setParamVector(argv[arg_ptr],
-                    argv[arg_ptr], values);
+                config_manager->setParamVector(argv[arg_ptr], argv[arg_ptr],
+                                               values);
                 arg_ptr += 3;
             } else if (option == "-d") {
                 if (num_args < 1)
@@ -268,7 +265,7 @@ SimControl::SimControl(sc_core::sc_module_name name,
 
     if (checkpoint_save && checkpoint_restore) {
         fatal("Don't try to save and restore a checkpoint in the same"
-                "run");
+              "run");
     }
 
     CxxConfig::statsEnable();
@@ -281,14 +278,15 @@ SimControl::SimControl(sc_core::sc_module_name name,
     }
 }
 
-void SimControl::run()
+void
+SimControl::run()
 {
     EventQueue *eventq = getEventQueue(0);
     GlobalSimLoopExitEvent *exit_event = NULL;
 
     /* There *must* be no scheduled events yet */
     fatal_if(!eventq->empty(), "There must be no posted events"
-        " before SimControl::run");
+                               " before SimControl::run");
 
     try {
         if (checkpoint_restore) {
@@ -309,8 +307,9 @@ void SimControl::run()
             if (curTick() > systemc_time) {
                 Tick wait_period = curTick() - systemc_time;
 
-                std::cerr << "Waiting for " << wait_period << "ps for"
-                    " SystemC to catch up to gem5\n";
+                std::cerr << "Waiting for " << wait_period
+                          << "ps for"
+                             " SystemC to catch up to gem5\n";
                 wait(sc_core::sc_time::from_value(wait_period));
             }
 
@@ -344,7 +343,7 @@ void SimControl::run()
         } while (drain_count > 0);
 
         std::cerr << "Simulation stop at tick " << curTick()
-            << ", cause: " << exit_event->getCause() << '\n';
+                  << ", cause: " << exit_event->getCause() << '\n';
 
         std::cerr << "Checkpointing\n";
 
@@ -377,13 +376,12 @@ void SimControl::run()
         }
 
         config_manager->drainResume();
-
     }
 
     exit_event = simulate();
 
     std::cerr << "Exit at tick " << curTick()
-        << ", cause: " << exit_event->getCause() << '\n';
+              << ", cause: " << exit_event->getCause() << '\n';
 
     getEventQueue(0)->dump();
 
@@ -407,7 +405,8 @@ sc_main(int argc, char **argv)
 }
 
 void
-SimControl::switchCpu(unsigned cpuNum, unsigned numTotalCpus) {
+SimControl::switchCpu(unsigned cpuNum, unsigned numTotalCpus)
+{
     assert(cpuNum < numTotalCpus);
     std::ostringstream from_cpu_name;
     std::ostringstream to_cpu_name;
@@ -420,8 +419,8 @@ SimControl::switchCpu(unsigned cpuNum, unsigned numTotalCpus) {
         to_cpu_name << cpuNum;
     }
 
-    std::cerr << "Switching CPU "<< cpuNum << "(from='" << from_cpu_name.str()
-        <<"' to '"<< to_cpu_name.str() << "')\n";
+    std::cerr << "Switching CPU " << cpuNum << "(from='" << from_cpu_name.str()
+              << "' to '" << to_cpu_name.str() << "')\n";
 
     /* Assume the system is called system */
     System &system = config_manager->getObject<System>("system");
@@ -438,6 +437,5 @@ SimControl::switchCpu(unsigned cpuNum, unsigned numTotalCpus) {
 
     new_cpu.takeOverFrom(&old_cpu);
 
-
-    std::cerr << "Switched CPU"<<cpuNum<<"\n";
+    std::cerr << "Switched CPU" << cpuNum << "\n";
 }

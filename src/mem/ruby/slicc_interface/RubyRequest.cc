@@ -51,20 +51,22 @@ namespace ruby
 {
 
 void
-RubyRequest::print(std::ostream& out) const
+RubyRequest::print(std::ostream &out) const
 {
-  out << "[RubyRequest: ";
-  out << std::hex << "LineAddress = 0x" << m_LineAddress << std::dec << " ";
-  out << std::hex << "PhysicalAddress = 0x" << m_PhysicalAddress;
-  out << std::dec << " " << "Type = " << m_Type << " ";
-  out << std::hex << "ProgramCounter = 0x" << m_ProgramCounter << std::dec;
-  out << " " << "AccessMode = " << m_AccessMode << " ";
-  out << "Size = " << m_Size << " ";
-  out << "Prefetch = " << m_Prefetch << " ";
-  out << "isGLCSet = " << m_isGLCSet << "";
-  out << "isSLCSet = " << m_isSLCSet << "";
-  //  out << "Time = " << getTime() << " ";
-  out << "]";
+    out << "[RubyRequest: ";
+    out << std::hex << "LineAddress = 0x" << m_LineAddress << std::dec << " ";
+    out << std::hex << "PhysicalAddress = 0x" << m_PhysicalAddress;
+    out << std::dec << " "
+        << "Type = " << m_Type << " ";
+    out << std::hex << "ProgramCounter = 0x" << m_ProgramCounter << std::dec;
+    out << " "
+        << "AccessMode = " << m_AccessMode << " ";
+    out << "Size = " << m_Size << " ";
+    out << "Prefetch = " << m_Prefetch << " ";
+    out << "isGLCSet = " << m_isGLCSet << "";
+    out << "isSLCSet = " << m_isSLCSet << "";
+    //  out << "Time = " << getTime() << " ";
+    out << "]";
 }
 
 bool
@@ -96,12 +98,12 @@ RubyRequest::functionalWrite(Packet *pkt)
     if (!pkt->hasData() || !m_pkt->hasData())
         return false;
 
-    uint8_t *data =  m_pkt->getPtr<uint8_t>();
+    uint8_t *data = m_pkt->getPtr<uint8_t>();
 
     if (pkt->isMaskedWrite() || m_pkt->isMaskedWrite()) {
         warn("Skiping functional write to/from a masked write packet"
-            " (addr: %#x, other addr: %#x).\n", m_PhysicalAddress,
-              pkt->getAddr());
+             " (addr: %#x, other addr: %#x).\n",
+             m_PhysicalAddress, pkt->getAddr());
         return false;
     }
 
@@ -110,7 +112,7 @@ RubyRequest::functionalWrite(Packet *pkt)
     Addr mBase = m_PhysicalAddress;
     Addr mTail = mBase + m_Size;
 
-    const uint8_t * pktData = pkt->getConstPtr<uint8_t>();
+    const uint8_t *pktData = pkt->getConstPtr<uint8_t>();
 
     Addr cBase = std::max(wBase, mBase);
     Addr cTail = std::min(wTail, mTail);
@@ -126,13 +128,13 @@ RubyRequest::functionalWrite(Packet *pkt)
 }
 
 void
-RubyRequest::setWriteMask(uint32_t offset, uint32_t len,
-        std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps)
+RubyRequest::setWriteMask(
+    uint32_t offset, uint32_t len,
+    std::vector<std::pair<int, AtomicOpFunctor *>> atomicOps)
 {
     m_writeMask.setMask(offset, len);
     m_writeMask.setAtomicOps(atomicOps);
 }
-
 
 } // namespace ruby
 } // namespace gem5

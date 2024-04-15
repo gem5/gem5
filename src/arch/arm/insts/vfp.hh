@@ -61,23 +61,22 @@ enum VfpMicroMode
     VfpLastMicroop
 };
 
-template<class T>
+template <class T>
 static inline void
 setVfpMicroFlags(VfpMicroMode mode, T &flags)
 {
     switch (mode) {
-      case VfpMicroop:
+    case VfpMicroop:
         flags[StaticInst::IsMicroop] = true;
         break;
-      case VfpFirstMicroop:
-        flags[StaticInst::IsMicroop] =
-            flags[StaticInst::IsFirstMicroop] = true;
+    case VfpFirstMicroop:
+        flags[StaticInst::IsMicroop] = flags[StaticInst::IsFirstMicroop] =
+            true;
         break;
-      case VfpLastMicroop:
-        flags[StaticInst::IsMicroop] =
-            flags[StaticInst::IsLastMicroop] = true;
+    case VfpLastMicroop:
+        flags[StaticInst::IsMicroop] = flags[StaticInst::IsLastMicroop] = true;
         break;
-      case VfpNotAMicroop:
+    case VfpNotAMicroop:
         break;
     }
     if (mode == VfpMicroop || mode == VfpFirstMicroop) {
@@ -164,6 +163,7 @@ fpToBits(float fp)
         float fp;
         uint32_t bits;
     } val;
+
     val.fp = fp;
     return val.bits;
 }
@@ -176,6 +176,7 @@ fpToBits(double fp)
         double fp;
         uint64_t bits;
     } val;
+
     val.fp = fp;
     return val.bits;
 }
@@ -188,6 +189,7 @@ bitsToFp(uint64_t bits, float junk)
         float fp;
         uint32_t bits;
     } val;
+
     val.bits = bits;
     return val.fp;
 }
@@ -200,6 +202,7 @@ bitsToFp(uint64_t bits, double junk)
         double fp;
         uint64_t bits;
     } val;
+
     val.bits = bits;
     return val.fp;
 }
@@ -209,15 +212,15 @@ static inline bool
 isSnan(fpType val)
 {
     const bool single = (sizeof(fpType) == sizeof(float));
-    const uint64_t qnan =
-        single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+    const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
     return std::isnan(val) && ((fpToBits(val) & qnan) != qnan);
 }
 
 typedef int VfpSavedState;
 
 VfpSavedState prepFpState(uint32_t rMode);
-void finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush, FPSCR mask = FpscrExcMask);
+void finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush,
+               FPSCR mask = FpscrExcMask);
 
 template <class fpType>
 fpType fixDest(FPSCR fpscr, fpType val, fpType op1);
@@ -231,12 +234,12 @@ fpType fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2);
 float fixFpDFpSDest(FPSCR fpscr, double val);
 double fixFpSFpDDest(FPSCR fpscr, float val);
 
-uint16_t vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-                    uint32_t rMode, bool ahp, float op);
-uint16_t vcvtFpDFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-                    uint32_t rMode, bool ahp, double op);
+uint16_t vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan, uint32_t rMode,
+                    bool ahp, float op);
+uint16_t vcvtFpDFpH(FPSCR &fpscr, bool flush, bool defaultNan, uint32_t rMode,
+                    bool ahp, double op);
 
-float  vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op);
+float vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op);
 double vcvtFpHFpD(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op);
 
 static inline double
@@ -259,57 +262,57 @@ highFromDouble(double val)
 }
 
 static inline void
-setFPExceptions(int exceptions) {
+setFPExceptions(int exceptions)
+{
     feclearexcept(FeAllExceptions);
     feraiseexcept(exceptions);
 }
 
 template <typename T>
 uint64_t
-vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
-             useRmode = true, VfpRoundingMode roundMode = VfpRoundZero,
+vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm,
+             bool useRmode = true, VfpRoundingMode roundMode = VfpRoundZero,
              bool aarch64 = false)
 {
-    int  rmode;
+    int rmode;
     bool roundAwayFix = false;
 
     if (!useRmode) {
         rmode = fegetround();
     } else {
-        switch (roundMode)
-        {
-          case VfpRoundNearest:
+        switch (roundMode) {
+        case VfpRoundNearest:
             rmode = FeRoundNearest;
             break;
-          case VfpRoundUpward:
+        case VfpRoundUpward:
             rmode = FeRoundUpward;
             break;
-          case VfpRoundDown:
+        case VfpRoundDown:
             rmode = FeRoundDown;
             break;
-          case VfpRoundZero:
+        case VfpRoundZero:
             rmode = FeRoundZero;
             break;
-          case VfpRoundAway:
+        case VfpRoundAway:
             // There is no equivalent rounding mode, use round down and we'll
             // fix it later
-            rmode        = FeRoundDown;
+            rmode = FeRoundDown;
             roundAwayFix = true;
             break;
-          default:
+        default:
             panic("Unsupported roundMode %d\n", roundMode);
         }
     }
-    __asm__ __volatile__("" : "=m" (rmode) : "m" (rmode));
+    __asm__ __volatile__("" : "=m"(rmode) : "m"(rmode));
     fesetround(FeRoundNearest);
     val = val * pow(2.0, imm);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    __asm__ __volatile__("" : "=m"(val) : "m"(val));
     fesetround(rmode);
     feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    __asm__ __volatile__("" : "=m"(val) : "m"(val));
     T origVal = val;
     val = rint(val);
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    __asm__ __volatile__("" : "=m"(val) : "m"(val));
 
     int exceptions = fetestexcept(FeAllExceptions);
 
@@ -321,13 +324,13 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
         val = 0.0;
     } else if (origVal != val) {
         switch (rmode) {
-          case FeRoundNearest:
+        case FeRoundNearest:
             if (origVal - val > 0.5)
                 val += 1.0;
             else if (val - origVal > 0.5)
                 val -= 1.0;
             break;
-          case FeRoundDown:
+        case FeRoundDown:
             if (roundAwayFix) {
                 // The ordering on the subtraction looks a bit odd in that we
                 // don't do the obvious origVal - val, instead we do
@@ -336,15 +339,14 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
                 volatile T error = val;
                 error -= origVal;
                 error = -error;
-                if ( (error >  0.5) ||
-                    ((error == 0.5) && (val >= 0)) )
+                if ((error > 0.5) || ((error == 0.5) && (val >= 0)))
                     val += 1.0;
             } else {
                 if (origVal < val)
                     val -= 1.0;
             }
             break;
-          case FeRoundUpward:
+        case FeRoundUpward:
             if (origVal > val)
                 val += 1.0;
             break;
@@ -352,18 +354,18 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
         exceptions |= FeInexact;
     }
 
-    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    __asm__ __volatile__("" : "=m"(val) : "m"(val));
 
     if (isSigned) {
-        bool     outOfRange = false;
-        int64_t  result     = (int64_t) val;
+        bool outOfRange = false;
+        int64_t result = (int64_t)val;
         uint64_t finalVal;
 
         if (!aarch64) {
             if (width == 16) {
                 finalVal = (int16_t)val;
             } else if (width == 32) {
-                finalVal =(int32_t)val;
+                finalVal = (int32_t)val;
             } else if (width == 64) {
                 finalVal = result;
             } else {
@@ -371,12 +373,12 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
             }
 
             // check if value is in range
-            int64_t minVal = ~mask(width-1);
+            int64_t minVal = ~mask(width - 1);
             if ((double)val < minVal) {
                 outOfRange = true;
                 finalVal = minVal;
             }
-            int64_t maxVal = mask(width-1);
+            int64_t maxVal = mask(width - 1);
             if ((double)val > maxVal) {
                 outOfRange = true;
                 finalVal = maxVal;
@@ -387,8 +389,8 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
             // If the result is supposed to be less than 64 bits check that the
             // upper bits that got thrown away are just sign extension bits
             if (width != 64) {
-                outOfRange = ((uint64_t) result >> (width - 1)) !=
-                             (isNeg ? mask(64-width+1) : 0);
+                outOfRange = ((uint64_t)result >> (width - 1)) !=
+                             (isNeg ? mask(64 - width + 1) : 0);
             }
             // Check if the original floating point value doesn't matches the
             // integer version we are also out of range. So create a saturated
@@ -396,12 +398,12 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
             if (isNeg) {
                 outOfRange |= val < result;
                 if (outOfRange) {
-                    finalVal = 1LL << (width-1);
+                    finalVal = 1LL << (width - 1);
                 }
             } else {
                 outOfRange |= val > result;
                 if (outOfRange) {
-                    finalVal = mask(width-1);
+                    finalVal = mask(width - 1);
                 }
             }
         }
@@ -421,7 +423,7 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
             return 0;
         }
 
-        uint64_t result = ((uint64_t) val) & mask(width);
+        uint64_t result = ((uint64_t)val) & mask(width);
         if (val > result) {
             exceptions |= FeInvalid;
             exceptions &= ~FeInexact;
@@ -434,16 +436,15 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
     }
 };
 
+float vfpUFixedToFpS(bool flush, bool defaultNan, uint64_t val, uint8_t width,
+                     uint8_t imm);
+float vfpSFixedToFpS(bool flush, bool defaultNan, int64_t val, uint8_t width,
+                     uint8_t imm);
 
-float vfpUFixedToFpS(bool flush, bool defaultNan,
-        uint64_t val, uint8_t width, uint8_t imm);
-float vfpSFixedToFpS(bool flush, bool defaultNan,
-        int64_t val, uint8_t width, uint8_t imm);
-
-double vfpUFixedToFpD(bool flush, bool defaultNan,
-        uint64_t val, uint8_t width, uint8_t imm);
-double vfpSFixedToFpD(bool flush, bool defaultNan,
-        int64_t val, uint8_t width, uint8_t imm);
+double vfpUFixedToFpD(bool flush, bool defaultNan, uint64_t val, uint8_t width,
+                      uint8_t imm);
+double vfpSFixedToFpD(bool flush, bool defaultNan, int64_t val, uint8_t width,
+                      uint8_t imm);
 
 float fprSqrtEstimate(FPSCR &fpscr, float op);
 uint32_t unsignedRSqrtEstimate(uint32_t op);
@@ -466,9 +467,9 @@ class VfpMacroOp : public PredMacroOp
   protected:
     bool wide;
 
-    VfpMacroOp(const char *mnem, ExtMachInst _machInst,
-            OpClass __opClass, bool _wide) :
-        PredMacroOp(mnem, _machInst, __opClass), wide(_wide)
+    VfpMacroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+               bool _wide)
+        : PredMacroOp(mnem, _machInst, __opClass), wide(_wide)
     {}
 
     RegIndex addStride(RegIndex idx, unsigned stride);
@@ -544,14 +545,14 @@ fpMulX(T a, T b)
     const bool single = (sizeof(T) == sizeof(float));
     if (single) {
         opData = (fpToBits(a));
-        sign1 = opData>>31;
+        sign1 = opData >> 31;
         opData = (fpToBits(b));
-        sign2 = opData>>31;
+        sign2 = opData >> 31;
     } else {
         opData = (fpToBits(a));
-        sign1 = opData>>63;
+        sign1 = opData >> 63;
         opData = (fpToBits(b));
-        sign2 = opData>>63;
+        sign2 = opData >> 63;
     }
     bool inf1 = (std::fpclassify(a) == FP_INFINITE);
     bool inf2 = (std::fpclassify(b) == FP_INFINITE);
@@ -566,7 +567,6 @@ fpMulX(T a, T b)
         return (a * b);
     }
 };
-
 
 template <typename T>
 static inline T
@@ -589,7 +589,8 @@ fpMulD(double a, double b)
 
 template <typename T>
 static inline T
-// @todo remove this when all calls to it have been replaced with the new fplib implementation
+// @todo remove this when all calls to it have been replaced with the new fplib
+// implementation
 fpMulAdd(T op1, T op2, T addend)
 {
     T result;
@@ -599,10 +600,10 @@ fpMulAdd(T op1, T op2, T addend)
     else
         result = fma(op1, op2, addend);
 
-    // ARM doesn't generate signed nan's from this opperation, so fix up the result
-    if (std::isnan(result) && !std::isnan(op1) &&
-        !std::isnan(op2) && !std::isnan(addend))
-    {
+    // ARM doesn't generate signed nan's from this opperation, so fix up the
+    // result
+    if (std::isnan(result) && !std::isnan(op1) && !std::isnan(op2) &&
+        !std::isnan(addend)) {
         uint64_t bitMask = 0x1ULL << ((sizeof(T) * 8) - 1);
         result = bitsToFp(fpToBits(result) & ~bitMask, op1);
     }
@@ -625,8 +626,8 @@ template <typename T>
 static inline T
 fpMaxNum(T a, T b)
 {
-    const bool     single = (sizeof(T) == sizeof(float));
-    const uint64_t qnan   = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+    const bool single = (sizeof(T) == sizeof(float));
+    const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
 
     if (std::isnan(a))
         return ((fpToBits(a) & qnan) == qnan) ? b : a;
@@ -653,8 +654,8 @@ template <typename T>
 static inline T
 fpMinNum(T a, T b)
 {
-    const bool     single = (sizeof(T) == sizeof(float));
-    const uint64_t qnan   = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+    const bool single = (sizeof(T) == sizeof(float));
+    const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
 
     if (std::isnan(a))
         return ((fpToBits(a) & qnan) == qnan) ? b : a;
@@ -690,11 +691,11 @@ fpRSqrts(T a, T b)
         (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
         return 1.5;
     }
-    aXb = a*b;
+    aXb = a * b;
     fpClassAxB = std::fpclassify(aXb);
     if (fpClassAxB == FP_SUBNORMAL) {
-       feraiseexcept(FeUnderflow);
-       return 1.5;
+        feraiseexcept(FeUnderflow);
+        return 1.5;
     }
     return (3.0 - (a * b)) / 2.0;
 };
@@ -712,15 +713,14 @@ fpRecps(T a, T b)
         (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
         return 2.0;
     }
-    aXb = a*b;
+    aXb = a * b;
     fpClassAxB = std::fpclassify(aXb);
     if (fpClassAxB == FP_SUBNORMAL) {
-       feraiseexcept(FeUnderflow);
-       return 2.0;
+        feraiseexcept(FeUnderflow);
+        return 2.0;
     }
     return 2.0 - (a * b);
 };
-
 
 static inline float
 fpRSqrtsS(float a, float b)
@@ -734,11 +734,11 @@ fpRSqrtsS(float a, float b)
         (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
         return 1.5;
     }
-    aXb = a*b;
+    aXb = a * b;
     fpClassAxB = std::fpclassify(aXb);
     if (fpClassAxB == FP_SUBNORMAL) {
-       feraiseexcept(FeUnderflow);
-       return 1.5;
+        feraiseexcept(FeUnderflow);
+        return 1.5;
     }
     return (3.0 - (a * b)) / 2.0;
 }
@@ -755,37 +755,37 @@ fpRecpsS(float a, float b)
         (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
         return 2.0;
     }
-    aXb = a*b;
+    aXb = a * b;
     fpClassAxB = std::fpclassify(aXb);
     if (fpClassAxB == FP_SUBNORMAL) {
-       feraiseexcept(FeUnderflow);
-       return 2.0;
+        feraiseexcept(FeUnderflow);
+        return 2.0;
     }
     return 2.0 - (a * b);
 }
 
 template <typename T>
 static inline T
-roundNEven(T a) {
+roundNEven(T a)
+{
     T val;
 
     val = round(a);
     if (a - val == 0.5) {
-        if ( (((int) a) & 1) == 0 ) val += 1.0;
-    }
-    else if (a - val == -0.5) {
-        if ( (((int) a) & 1) == 0 ) val -= 1.0;
+        if ((((int)a) & 1) == 0)
+            val += 1.0;
+    } else if (a - val == -0.5) {
+        if ((((int)a) & 1) == 0)
+            val -= 1.0;
     }
     return val;
 }
 
-
-
 class FpOp : public PredOp
 {
   protected:
-    FpOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        PredOp(mnem, _machInst, __opClass)
+    FpOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass)
     {}
 
     virtual float
@@ -832,27 +832,22 @@ class FpOp : public PredOp
     }
 
     template <class fpType>
-    fpType
-    processNans(FPSCR &fpscr, bool &done, bool defaultNan,
-                fpType op1, fpType op2) const;
+    fpType processNans(FPSCR &fpscr, bool &done, bool defaultNan, fpType op1,
+                       fpType op2) const;
 
     template <class fpType>
-    fpType
-    ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
-              fpType (*func)(fpType, fpType, fpType),
-              bool flush, bool defaultNan, uint32_t rMode) const;
+    fpType ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
+                     fpType (*func)(fpType, fpType, fpType), bool flush,
+                     bool defaultNan, uint32_t rMode) const;
 
     template <class fpType>
-    fpType
-    binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
-            fpType (*func)(fpType, fpType),
-            bool flush, bool defaultNan, uint32_t rMode) const;
+    fpType binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
+                    fpType (*func)(fpType, fpType), bool flush,
+                    bool defaultNan, uint32_t rMode) const;
 
     template <class fpType>
-    fpType
-    unaryOp(FPSCR &fpscr, fpType op1,
-            fpType (*func)(fpType),
-            bool flush, uint32_t rMode) const;
+    fpType unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
+                   bool flush, uint32_t rMode) const;
 
     void
     advancePC(PCStateBase &pcState) const override
@@ -882,19 +877,15 @@ class FpOp : public PredOp
     }
 
     float
-    fpSqrt (FPSCR fpscr,float x) const
+    fpSqrt(FPSCR fpscr, float x) const
     {
-
-        return unaryOp(fpscr,x,sqrtf,fpscr.fz,fpscr.rMode);
-
+        return unaryOp(fpscr, x, sqrtf, fpscr.fz, fpscr.rMode);
     }
 
     double
-    fpSqrt (FPSCR fpscr,double x) const
+    fpSqrt(FPSCR fpscr, double x) const
     {
-
-        return unaryOp(fpscr,x,sqrt,fpscr.fz,fpscr.rMode);
-
+        return unaryOp(fpscr, x, sqrt, fpscr.fz, fpscr.rMode);
     }
 };
 
@@ -905,15 +896,19 @@ class FpCondCompRegOp : public FpOp
     ConditionCode condCode;
     uint8_t defCc;
 
-    FpCondCompRegOp(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, RegIndex _op1, RegIndex _op2,
-                       ConditionCode _condCode, uint8_t _defCc) :
-        FpOp(mnem, _machInst, __opClass),
-        op1(_op1), op2(_op2), condCode(_condCode), defCc(_defCc)
+    FpCondCompRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                    RegIndex _op1, RegIndex _op2, ConditionCode _condCode,
+                    uint8_t _defCc)
+        : FpOp(mnem, _machInst, __opClass),
+          op1(_op1),
+          op2(_op2),
+          condCode(_condCode),
+          defCc(_defCc)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpCondSelOp : public FpOp
@@ -924,13 +919,17 @@ class FpCondSelOp : public FpOp
 
     FpCondSelOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                 RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                ConditionCode _condCode) :
-        FpOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), condCode(_condCode)
+                ConditionCode _condCode)
+        : FpOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          condCode(_condCode)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegOp : public FpOp
@@ -941,14 +940,15 @@ class FpRegRegOp : public FpOp
 
     FpRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                RegIndex _dest, RegIndex _op1,
-               VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
+               VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegImmOp : public FpOp
@@ -959,14 +959,15 @@ class FpRegImmOp : public FpOp
 
     FpRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                RegIndex _dest, uint64_t _imm,
-               VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
+               VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegImmOp : public FpOp
@@ -977,15 +978,16 @@ class FpRegRegImmOp : public FpOp
     uint64_t imm;
 
     FpRegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  RegIndex _dest, RegIndex _op1,
-                  uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), imm(_imm)
+                  RegIndex _dest, RegIndex _op1, uint64_t _imm,
+                  VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegRegOp : public FpOp
@@ -997,14 +999,15 @@ class FpRegRegRegOp : public FpOp
 
     FpRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                  VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2)
+                  VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegRegCondOp : public FpOp
@@ -1018,15 +1021,19 @@ class FpRegRegRegCondOp : public FpOp
     FpRegRegRegCondOp(const char *mnem, ExtMachInst _machInst,
                       OpClass __opClass, RegIndex _dest, RegIndex _op1,
                       RegIndex _op2, ConditionCode _cond,
-                      VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2),
-        cond(_cond)
+                      VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          cond(_cond)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegRegRegOp : public FpOp
@@ -1037,17 +1044,22 @@ class FpRegRegRegRegOp : public FpOp
     RegIndex op2;
     RegIndex op3;
 
-    FpRegRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                     RegIndex _op3, VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2),
-        op3(_op3)
+    FpRegRegRegRegOp(const char *mnem, ExtMachInst _machInst,
+                     OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                     RegIndex _op2, RegIndex _op3,
+                     VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          op3(_op3)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class FpRegRegRegImmOp : public FpOp
@@ -1059,17 +1071,21 @@ class FpRegRegRegImmOp : public FpOp
     uint64_t imm;
 
     FpRegRegRegImmOp(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, RegIndex _dest,
-                     RegIndex _op1, RegIndex _op2,
-                     uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
-        FpOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), imm(_imm)
+                     OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                     RegIndex _op2, uint64_t _imm,
+                     VfpMicroMode mode = VfpNotAMicroop)
+        : FpOp(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace ArmISA

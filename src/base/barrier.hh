@@ -50,7 +50,8 @@ class Barrier
     std::mutex bMutex;
     /// Condition variable for waiting on barrier
     std::condition_variable bCond;
-    /// Number of threads we should be waiting for before completing the barrier
+    /// Number of threads we should be waiting for before completing the
+    /// barrier
     unsigned numWaiting;
     /// Generation of this barrier
     unsigned generation;

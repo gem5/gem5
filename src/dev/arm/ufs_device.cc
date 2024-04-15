@@ -76,23 +76,24 @@ namespace gem5
  * Constructor and destructor functions of UFSHCM device
  */
 UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams &p,
-                             uint32_t lun_id, const Callback &transfer_cb,
-                             const Callback &read_cb):
-    SimObject(p),
-    flashDisk(p.image[lun_id]),
-    flashDevice(p.internalflash[lun_id]),
-    blkSize(p.img_blk_size),
-    lunAvail(p.image.size()),
-    diskSize(flashDisk->size()),
-    capacityLower((diskSize - 1) & 0xffffffff),
-    capacityUpper((diskSize - SectorSize) >> 32),
-    lunID(lun_id),
-    transferCompleted(false),
-    readCompleted(false),
-    totalRead(0),
-    totalWrite(0),
-    amountOfWriteTransfers(0),
-    amountOfReadTransfers(0)
+                                            uint32_t lun_id,
+                                            const Callback &transfer_cb,
+                                            const Callback &read_cb)
+    : SimObject(p),
+      flashDisk(p.image[lun_id]),
+      flashDevice(p.internalflash[lun_id]),
+      blkSize(p.img_blk_size),
+      lunAvail(p.image.size()),
+      diskSize(flashDisk->size()),
+      capacityLower((diskSize - 1) & 0xffffffff),
+      capacityUpper((diskSize - SectorSize) >> 32),
+      lunID(lun_id),
+      transferCompleted(false),
+      readCompleted(false),
+      totalRead(0),
+      totalWrite(0),
+      amountOfWriteTransfers(0),
+      amountOfReadTransfers(0)
 {
     /**
      * These callbacks are used to communicate the events that are
@@ -109,39 +110,39 @@ UFSHostDevice::UFSSCSIDevice::UFSSCSIDevice(const UFSHostDeviceParams &p,
      * UFS allows up to 8 logic units, so the numbering should work out
      */
     uint32_t temp_id = ((lun_id | 0x30) << 24) | 0x3A4449;
-    lunInfo.dWord0 = 0x02060000;   //data
+    lunInfo.dWord0 = 0x02060000; // data
     lunInfo.dWord1 = 0x0200001F;
-    lunInfo.vendor0 = 0x484D5241;  //ARMH (HMRA)
-    lunInfo.vendor1 = 0x424D4143;  //CAMB (BMAC)
-    lunInfo.product0 = 0x356D6567; //gem5  (5meg)
-    lunInfo.product1 = 0x4D534655; //UFSM (MSFU)
-    lunInfo.product2 = 0x4C45444F; //ODEL (LEDO)
-    lunInfo.product3 = temp_id;    // ID:"lun_id" ("lun_id":DI)
-    lunInfo.productRevision = 0x01000000; //0x01
+    lunInfo.vendor0 = 0x484D5241;         // ARMH (HMRA)
+    lunInfo.vendor1 = 0x424D4143;         // CAMB (BMAC)
+    lunInfo.product0 = 0x356D6567;        // gem5  (5meg)
+    lunInfo.product1 = 0x4D534655;        // UFSM (MSFU)
+    lunInfo.product2 = 0x4C45444F;        // ODEL (LEDO)
+    lunInfo.product3 = temp_id;           // ID:"lun_id" ("lun_id":DI)
+    lunInfo.productRevision = 0x01000000; // 0x01
 
-    DPRINTF(UFSHostDevice, "Logic unit %d assumes that %d logic units are"
-            " present in the system\n", lunID, lunAvail);
-    DPRINTF(UFSHostDevice,"The disksize of lun: %d should be %d blocks\n",
+    DPRINTF(UFSHostDevice,
+            "Logic unit %d assumes that %d logic units are"
+            " present in the system\n",
+            lunID, lunAvail);
+    DPRINTF(UFSHostDevice, "The disksize of lun: %d should be %d blocks\n",
             lunID, diskSize);
     flashDevice->initializeMemory(diskSize, SectorSize);
 }
-
 
 /**
  * These pages are SCSI specific. For more information refer to:
  * Universal Flash Storage (UFS) JESD220 FEB 2011 (JEDEC)
  * http://www.jedec.org/standards-documents/results/jesd220
  */
-const unsigned int UFSHostDevice::UFSSCSIDevice::controlPage[3] =
-                                                {0x01400A0A, 0x00000000,
-                                                 0x0000FFFF};
-const unsigned int UFSHostDevice::UFSSCSIDevice::recoveryPage[3] =
-                                                {0x03800A01, 0x00000000,
-                                                 0xFFFF0003};
-const unsigned int UFSHostDevice::UFSSCSIDevice::cachingPage[5] =
-                                                {0x00011208, 0x00000000,
-                                                 0x00000000, 0x00000020,
-                                                 0x00000000};
+const unsigned int UFSHostDevice::UFSSCSIDevice::controlPage[3] = {
+    0x01400A0A, 0x00000000, 0x0000FFFF
+};
+const unsigned int UFSHostDevice::UFSSCSIDevice::recoveryPage[3] = {
+    0x03800A01, 0x00000000, 0xFFFF0003
+};
+const unsigned int UFSHostDevice::UFSSCSIDevice::cachingPage[5] = {
+    0x00011208, 0x00000000, 0x00000000, 0x00000020, 0x00000000
+};
 
 UFSHostDevice::UFSSCSIDevice::~UFSSCSIDevice() {}
 
@@ -157,7 +158,7 @@ UFSHostDevice::UFSSCSIDevice::~UFSSCSIDevice() {}
  */
 
 struct UFSHostDevice::SCSIReply
-UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t* SCSI_msg)
+UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t *SCSI_msg)
 {
     struct SCSIReply scsi_out;
     scsi_out.reset();
@@ -166,8 +167,7 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t* SCSI_msg)
      * Create the standard SCSI reponse information
      * These values might changes over the course of a transfer
      */
-    scsi_out.message.header.dWord0 = UPIUHeaderDataIndWord0 |
-        lunID << 16;
+    scsi_out.message.header.dWord0 = UPIUHeaderDataIndWord0 | lunID << 16;
     scsi_out.message.header.dWord1 = UPIUHeaderDataIndWord1;
     scsi_out.message.header.dWord2 = UPIUHeaderDataIndWord2;
     statusCheck(SCSIGood, scsi_out.senseCode);
@@ -179,486 +179,483 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t* SCSI_msg)
     /**Determine what the message is and fill the response packet*/
 
     switch (SCSI_msg[4] & 0xFF) {
+    case SCSIInquiry: {
+        /**
+         * SCSI inquiry: tell about this specific logic unit
+         */
+        scsi_out.msgSize = 36;
+        scsi_out.message.dataMsg.resize(9);
 
-      case SCSIInquiry: {
-          /**
-           * SCSI inquiry: tell about this specific logic unit
-           */
-          scsi_out.msgSize = 36;
-          scsi_out.message.dataMsg.resize(9);
+        for (uint8_t count = 0; count < 9; count++)
+            scsi_out.message.dataMsg[count] =
+                (reinterpret_cast<uint32_t *>(&lunInfo))[count];
+    } break;
 
-          for (uint8_t count = 0; count < 9; count++)
-              scsi_out.message.dataMsg[count] =
-                  (reinterpret_cast<uint32_t*> (&lunInfo))[count];
-      } break;
+    case SCSIRead6: {
+        /**
+         * Read command. Number indicates the length of the command.
+         */
+        scsi_out.expectMore = 0x02;
+        scsi_out.msgSize = 0;
 
-      case SCSIRead6: {
-          /**
-           * Read command. Number indicates the length of the command.
-           */
-          scsi_out.expectMore = 0x02;
-          scsi_out.msgSize = 0;
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
 
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned. Apart from that it only has
-           * information in five bits of the first byte that is relevant
-           * for this field.
-           */
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(tempptr);
-          uint64_t read_offset = betoh(tmp) & 0x1FFFFF;
-
-          uint32_t read_size = tempptr[4];
-
-
-          scsi_out.msgSize =  read_size * blkSize;
-          scsi_out.offset = read_offset * blkSize;
-
-          if ((read_offset + read_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Read6 offset: 0x%8x, for %d blocks\n",
-                  read_offset, read_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIRead10: {
-          scsi_out.expectMore = 0x02;
-          scsi_out.msgSize = 0;
-
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t read_offset = betoh(tmp);
-
-          uint16_t tmpsize = *reinterpret_cast<uint16_t*>(&tempptr[7]);
-          uint32_t read_size = betoh(tmpsize);
-
-          scsi_out.msgSize =  read_size * blkSize;
-          scsi_out.offset = read_offset * blkSize;
-
-          if ((read_offset + read_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Read10 offset: 0x%8x, for %d blocks\n",
-                  read_offset, read_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIRead16: {
-          scsi_out.expectMore = 0x02;
-          scsi_out.msgSize = 0;
-
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t read_offset = betoh(tmp);
-
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[6]);
-          read_offset = (read_offset << 32) | betoh(tmp);
-
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[10]);
-          uint32_t read_size = betoh(tmp);
-
-          scsi_out.msgSize =  read_size * blkSize;
-          scsi_out.offset = read_offset * blkSize;
-
-          if ((read_offset + read_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Read16 offset: 0x%8x, for %d blocks\n",
-                  read_offset, read_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIReadCapacity10: {
-          /**
-           * read the capacity of the device
-           */
-          scsi_out.msgSize = 8;
-          scsi_out.message.dataMsg.resize(2);
-          scsi_out.message.dataMsg[0] =
-              betoh(capacityLower);//last block
-          scsi_out.message.dataMsg[1] = betoh(blkSize);//blocksize
-
-      } break;
-      case SCSIReadCapacity16: {
-          scsi_out.msgSize = 32;
-          scsi_out.message.dataMsg.resize(8);
-          scsi_out.message.dataMsg[0] =
-              betoh(capacityUpper);//last block
-          scsi_out.message.dataMsg[1] =
-              betoh(capacityLower);//last block
-          scsi_out.message.dataMsg[2] = betoh(blkSize);//blocksize
-          scsi_out.message.dataMsg[3] = 0x00;//
-          scsi_out.message.dataMsg[4] = 0x00;//reserved
-          scsi_out.message.dataMsg[5] = 0x00;//reserved
-          scsi_out.message.dataMsg[6] = 0x00;//reserved
-          scsi_out.message.dataMsg[7] = 0x00;//reserved
-
-      } break;
-
-      case SCSIReportLUNs: {
-          /**
-           * Find out how many Logic Units this device has.
-           */
-          scsi_out.msgSize = (lunAvail * 8) + 8;//list + overhead
-          scsi_out.message.dataMsg.resize(2 * lunAvail + 2);
-          scsi_out.message.dataMsg[0] = (lunAvail * 8) << 24;//LUN listlength
-          scsi_out.message.dataMsg[1] = 0x00;
-
-          for (uint8_t count = 0; count < lunAvail; count++) {
-              //LUN "count"
-              scsi_out.message.dataMsg[2 + 2 * count] = (count & 0x7F) << 8;
-              scsi_out.message.dataMsg[3 + 2 * count] = 0x00;
-          }
-
-      } break;
-
-      case SCSIStartStop: {
-          //Just acknowledge; not deemed relevant ATM
-          scsi_out.msgSize = 0;
-
-      } break;
-
-      case SCSITestUnitReady: {
-          //Just acknowledge; not deemed relevant ATM
-          scsi_out.msgSize = 0;
-
-      } break;
-
-      case SCSIVerify10: {
-          /**
-           * See if the blocks that the host plans to request are in range of
-           * the device.
-           */
-          scsi_out.msgSize = 0;
-
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t read_offset = betoh(tmp);
-
-          uint16_t tmpsize = *reinterpret_cast<uint16_t*>(&tempptr[7]);
-          uint32_t read_size = betoh(tmpsize);
-
-          if ((read_offset + read_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIWrite6: {
-          /**
-           * Write command.
-           */
-
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned. Apart from that it only has
-           * information in five bits of the first byte that is relevant
-           * for this field.
-           */
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(tempptr);
-          uint64_t write_offset = betoh(tmp) & 0x1FFFFF;
-
-          uint32_t write_size = tempptr[4];
-
-          scsi_out.msgSize =  write_size * blkSize;
-          scsi_out.offset = write_offset * blkSize;
-          scsi_out.expectMore = 0x01;
-
-          if ((write_offset + write_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Write6 offset: 0x%8x, for %d blocks\n",
-                  write_offset, write_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIWrite10: {
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t write_offset = betoh(tmp);
-
-          uint16_t tmpsize = *reinterpret_cast<uint16_t*>(&tempptr[7]);
-          uint32_t write_size = betoh(tmpsize);
-
-          scsi_out.msgSize =  write_size * blkSize;
-          scsi_out.offset = write_offset * blkSize;
-          scsi_out.expectMore = 0x01;
-
-          if ((write_offset + write_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Write10 offset: 0x%8x, for %d blocks\n",
-                  write_offset, write_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIWrite16: {
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
-
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t write_offset = betoh(tmp);
-
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[6]);
-          write_offset = (write_offset << 32) | betoh(tmp);
-
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[10]);
-          uint32_t write_size = betoh(tmp);
-
-          scsi_out.msgSize = write_size * blkSize;
-          scsi_out.offset = write_offset * blkSize;
-          scsi_out.expectMore = 0x01;
-
-          if ((write_offset + write_size) > diskSize)
-              scsi_out.status = SCSIIllegalRequest;
-
-          DPRINTF(UFSHostDevice, "Write16 offset: 0x%8x, for %d blocks\n",
-                  write_offset, write_size);
-
-          /**
-           * Renew status check, for the request may have been illegal
-           */
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-
-      } break;
-
-      case SCSIFormatUnit: {//not yet verified
-          scsi_out.msgSize = 0;
-          scsi_out.expectMore = 0x01;
-
-      } break;
-
-      case SCSISendDiagnostic: {//not yet verified
-          scsi_out.msgSize = 0;
-
-      } break;
-
-      case SCSISynchronizeCache: {
-          //do we have cache (we don't have cache at this moment)
-          //TODO: here will synchronization happen when cache is modelled
-          scsi_out.msgSize = 0;
-
-      } break;
-
-        //UFS SCSI additional command set for full functionality
-      case SCSIModeSelect10:
-        //TODO:
-        //scsi_out.expectMore = 0x01;//not supported due to modepage support
-        //code isn't dead, code suggest what is to be done when implemented
+        /**BE and not nicely aligned. Apart from that it only has
+         * information in five bits of the first byte that is relevant
+         * for this field.
+         */
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(tempptr);
+        uint64_t read_offset = betoh(tmp) & 0x1FFFFF;
+
+        uint32_t read_size = tempptr[4];
+
+        scsi_out.msgSize = read_size * blkSize;
+        scsi_out.offset = read_offset * blkSize;
+
+        if ((read_offset + read_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Read6 offset: 0x%8x, for %d blocks\n",
+                read_offset, read_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIRead10: {
+        scsi_out.expectMore = 0x02;
+        scsi_out.msgSize = 0;
+
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t read_offset = betoh(tmp);
+
+        uint16_t tmpsize = *reinterpret_cast<uint16_t *>(&tempptr[7]);
+        uint32_t read_size = betoh(tmpsize);
+
+        scsi_out.msgSize = read_size * blkSize;
+        scsi_out.offset = read_offset * blkSize;
+
+        if ((read_offset + read_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Read10 offset: 0x%8x, for %d blocks\n",
+                read_offset, read_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIRead16: {
+        scsi_out.expectMore = 0x02;
+        scsi_out.msgSize = 0;
+
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t read_offset = betoh(tmp);
+
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[6]);
+        read_offset = (read_offset << 32) | betoh(tmp);
+
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[10]);
+        uint32_t read_size = betoh(tmp);
+
+        scsi_out.msgSize = read_size * blkSize;
+        scsi_out.offset = read_offset * blkSize;
+
+        if ((read_offset + read_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Read16 offset: 0x%8x, for %d blocks\n",
+                read_offset, read_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIReadCapacity10: {
+        /**
+         * read the capacity of the device
+         */
+        scsi_out.msgSize = 8;
+        scsi_out.message.dataMsg.resize(2);
+        scsi_out.message.dataMsg[0] = betoh(capacityLower); // last block
+        scsi_out.message.dataMsg[1] = betoh(blkSize);       // blocksize
+
+    } break;
+    case SCSIReadCapacity16: {
+        scsi_out.msgSize = 32;
+        scsi_out.message.dataMsg.resize(8);
+        scsi_out.message.dataMsg[0] = betoh(capacityUpper); // last block
+        scsi_out.message.dataMsg[1] = betoh(capacityLower); // last block
+        scsi_out.message.dataMsg[2] = betoh(blkSize);       // blocksize
+        scsi_out.message.dataMsg[3] = 0x00;                 //
+        scsi_out.message.dataMsg[4] = 0x00;                 // reserved
+        scsi_out.message.dataMsg[5] = 0x00;                 // reserved
+        scsi_out.message.dataMsg[6] = 0x00;                 // reserved
+        scsi_out.message.dataMsg[7] = 0x00;                 // reserved
+
+    } break;
+
+    case SCSIReportLUNs: {
+        /**
+         * Find out how many Logic Units this device has.
+         */
+        scsi_out.msgSize = (lunAvail * 8) + 8; // list + overhead
+        scsi_out.message.dataMsg.resize(2 * lunAvail + 2);
+        scsi_out.message.dataMsg[0] = (lunAvail * 8) << 24; // LUN listlength
+        scsi_out.message.dataMsg[1] = 0x00;
+
+        for (uint8_t count = 0; count < lunAvail; count++) {
+            // LUN "count"
+            scsi_out.message.dataMsg[2 + 2 * count] = (count & 0x7F) << 8;
+            scsi_out.message.dataMsg[3 + 2 * count] = 0x00;
+        }
+
+    } break;
+
+    case SCSIStartStop: {
+        // Just acknowledge; not deemed relevant ATM
+        scsi_out.msgSize = 0;
+
+    } break;
+
+    case SCSITestUnitReady: {
+        // Just acknowledge; not deemed relevant ATM
+        scsi_out.msgSize = 0;
+
+    } break;
+
+    case SCSIVerify10: {
+        /**
+         * See if the blocks that the host plans to request are in range of
+         * the device.
+         */
+        scsi_out.msgSize = 0;
+
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t read_offset = betoh(tmp);
+
+        uint16_t tmpsize = *reinterpret_cast<uint16_t *>(&tempptr[7]);
+        uint32_t read_size = betoh(tmpsize);
+
+        if ((read_offset + read_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIWrite6: {
+        /**
+         * Write command.
+         */
+
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned. Apart from that it only has
+         * information in five bits of the first byte that is relevant
+         * for this field.
+         */
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(tempptr);
+        uint64_t write_offset = betoh(tmp) & 0x1FFFFF;
+
+        uint32_t write_size = tempptr[4];
+
+        scsi_out.msgSize = write_size * blkSize;
+        scsi_out.offset = write_offset * blkSize;
+        scsi_out.expectMore = 0x01;
+
+        if ((write_offset + write_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Write6 offset: 0x%8x, for %d blocks\n",
+                write_offset, write_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIWrite10: {
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t write_offset = betoh(tmp);
+
+        uint16_t tmpsize = *reinterpret_cast<uint16_t *>(&tempptr[7]);
+        uint32_t write_size = betoh(tmpsize);
+
+        scsi_out.msgSize = write_size * blkSize;
+        scsi_out.offset = write_offset * blkSize;
+        scsi_out.expectMore = 0x01;
+
+        if ((write_offset + write_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Write10 offset: 0x%8x, for %d blocks\n",
+                write_offset, write_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIWrite16: {
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
+
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t write_offset = betoh(tmp);
+
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[6]);
+        write_offset = (write_offset << 32) | betoh(tmp);
+
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[10]);
+        uint32_t write_size = betoh(tmp);
+
+        scsi_out.msgSize = write_size * blkSize;
+        scsi_out.offset = write_offset * blkSize;
+        scsi_out.expectMore = 0x01;
+
+        if ((write_offset + write_size) > diskSize)
+            scsi_out.status = SCSIIllegalRequest;
+
+        DPRINTF(UFSHostDevice, "Write16 offset: 0x%8x, for %d blocks\n",
+                write_offset, write_size);
+
+        /**
+         * Renew status check, for the request may have been illegal
+         */
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+
+    } break;
+
+    case SCSIFormatUnit: { // not yet verified
+        scsi_out.msgSize = 0;
+        scsi_out.expectMore = 0x01;
+
+    } break;
+
+    case SCSISendDiagnostic: { // not yet verified
+        scsi_out.msgSize = 0;
+
+    } break;
+
+    case SCSISynchronizeCache: {
+        // do we have cache (we don't have cache at this moment)
+        // TODO: here will synchronization happen when cache is modelled
+        scsi_out.msgSize = 0;
+
+    } break;
+
+        // UFS SCSI additional command set for full functionality
+    case SCSIModeSelect10:
+        // TODO:
+        // scsi_out.expectMore = 0x01;//not supported due to modepage support
+        // code isn't dead, code suggest what is to be done when implemented
         break;
 
-      case SCSIModeSense6: case SCSIModeSense10: {
-          /**
-           * Get more discriptive information about the SCSI functionality
-           * within this logic unit.
-           */
-          if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x0A) {//control page
-              scsi_out.message.dataMsg.resize((sizeof(controlPage) >> 2) + 2);
-              scsi_out.message.dataMsg[0] = 0x00000A00;//control page code
-              scsi_out.message.dataMsg[1] = 0x00000000;//See JEDEC220 ch8
+    case SCSIModeSense6:
+    case SCSIModeSense10: {
+        /**
+         * Get more discriptive information about the SCSI functionality
+         * within this logic unit.
+         */
+        if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x0A) { // control page
+            scsi_out.message.dataMsg.resize((sizeof(controlPage) >> 2) + 2);
+            scsi_out.message.dataMsg[0] = 0x00000A00; // control page code
+            scsi_out.message.dataMsg[1] = 0x00000000; // See JEDEC220 ch8
 
-              for (uint8_t count = 0; count < 3; count++)
-                  scsi_out.message.dataMsg[2 + count] = controlPage[count];
+            for (uint8_t count = 0; count < 3; count++)
+                scsi_out.message.dataMsg[2 + count] = controlPage[count];
 
-              scsi_out.msgSize = 20;
-              DPRINTF(UFSHostDevice, "CONTROL page\n");
+            scsi_out.msgSize = 20;
+            DPRINTF(UFSHostDevice, "CONTROL page\n");
 
-          } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x01) {//recovery page
-              scsi_out.message.dataMsg.resize((sizeof(recoveryPage) >> 2)
-                                              + 2);
+        } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x01) { // recovery page
+            scsi_out.message.dataMsg.resize((sizeof(recoveryPage) >> 2) + 2);
 
-              scsi_out.message.dataMsg[0] = 0x00000100;//recovery page code
-              scsi_out.message.dataMsg[1] = 0x00000000;//See JEDEC220 ch8
+            scsi_out.message.dataMsg[0] = 0x00000100; // recovery page code
+            scsi_out.message.dataMsg[1] = 0x00000000; // See JEDEC220 ch8
 
-              for (uint8_t count = 0; count < 3; count++)
-                  scsi_out.message.dataMsg[2 + count] = recoveryPage[count];
+            for (uint8_t count = 0; count < 3; count++)
+                scsi_out.message.dataMsg[2 + count] = recoveryPage[count];
 
-              scsi_out.msgSize = 20;
-              DPRINTF(UFSHostDevice, "RECOVERY page\n");
+            scsi_out.msgSize = 20;
+            DPRINTF(UFSHostDevice, "RECOVERY page\n");
 
-          } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x08) {//caching page
+        } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x08) { // caching page
 
-              scsi_out.message.dataMsg.resize((sizeof(cachingPage) >> 2) + 2);
-              scsi_out.message.dataMsg[0] = 0x00001200;//caching page code
-              scsi_out.message.dataMsg[1] = 0x00000000;//See JEDEC220 ch8
+            scsi_out.message.dataMsg.resize((sizeof(cachingPage) >> 2) + 2);
+            scsi_out.message.dataMsg[0] = 0x00001200; // caching page code
+            scsi_out.message.dataMsg[1] = 0x00000000; // See JEDEC220 ch8
 
-              for (uint8_t count = 0; count < 5; count++)
-                  scsi_out.message.dataMsg[2 + count] = cachingPage[count];
+            for (uint8_t count = 0; count < 5; count++)
+                scsi_out.message.dataMsg[2 + count] = cachingPage[count];
 
-              scsi_out.msgSize = 20;
-              DPRINTF(UFSHostDevice, "CACHE page\n");
+            scsi_out.msgSize = 20;
+            DPRINTF(UFSHostDevice, "CACHE page\n");
 
-          } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x3F) {//ALL the pages!
+        } else if ((SCSI_msg[4] & 0x3F0000) >> 16 == 0x3F) { // ALL the pages!
 
-              scsi_out.message.dataMsg.resize(((sizeof(controlPage) +
-                                                sizeof(recoveryPage) +
-                                                sizeof(cachingPage)) >> 2)
-                                              + 2);
-              scsi_out.message.dataMsg[0] = 0x00003200;//all page code
-              scsi_out.message.dataMsg[1] = 0x00000000;//See JEDEC220 ch8
+            scsi_out.message.dataMsg.resize(
+                ((sizeof(controlPage) + sizeof(recoveryPage) +
+                  sizeof(cachingPage)) >>
+                 2) +
+                2);
+            scsi_out.message.dataMsg[0] = 0x00003200; // all page code
+            scsi_out.message.dataMsg[1] = 0x00000000; // See JEDEC220 ch8
 
-              for (uint8_t count = 0; count < 3; count++)
-                  scsi_out.message.dataMsg[2 + count] = recoveryPage[count];
+            for (uint8_t count = 0; count < 3; count++)
+                scsi_out.message.dataMsg[2 + count] = recoveryPage[count];
 
-              for (uint8_t count = 0; count < 5; count++)
-                  scsi_out.message.dataMsg[5 + count] = cachingPage[count];
+            for (uint8_t count = 0; count < 5; count++)
+                scsi_out.message.dataMsg[5 + count] = cachingPage[count];
 
-              for (uint8_t count = 0; count < 3; count++)
-                  scsi_out.message.dataMsg[10 + count] = controlPage[count];
+            for (uint8_t count = 0; count < 3; count++)
+                scsi_out.message.dataMsg[10 + count] = controlPage[count];
 
-              scsi_out.msgSize = 52;
-              DPRINTF(UFSHostDevice, "Return ALL the pages!!!\n");
+            scsi_out.msgSize = 52;
+            DPRINTF(UFSHostDevice, "Return ALL the pages!!!\n");
 
-          } else inform("Wrong mode page requested\n");
+        } else
+            inform("Wrong mode page requested\n");
 
-          scsi_out.message.dataCount = scsi_out.msgSize << 24;
-      } break;
+        scsi_out.message.dataCount = scsi_out.msgSize << 24;
+    } break;
 
-      case SCSIRequestSense: {
-          scsi_out.msgSize = 0;
+    case SCSIRequestSense: {
+        scsi_out.msgSize = 0;
 
-      } break;
+    } break;
 
-      case SCSIUnmap:break;//not yet verified
+    case SCSIUnmap:
+        break; // not yet verified
 
-      case SCSIWriteBuffer: {
-          scsi_out.expectMore = 0x01;
+    case SCSIWriteBuffer: {
+        scsi_out.expectMore = 0x01;
 
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
 
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t write_offset = betoh(tmp) & 0xFFFFFF;
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t write_offset = betoh(tmp) & 0xFFFFFF;
 
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[5]);
-          uint32_t write_size = betoh(tmp) & 0xFFFFFF;
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[5]);
+        uint32_t write_size = betoh(tmp) & 0xFFFFFF;
 
-          scsi_out.msgSize =  write_size;
-          scsi_out.offset = write_offset;
+        scsi_out.msgSize = write_size;
+        scsi_out.offset = write_offset;
 
-      } break;
+    } break;
 
-      case SCSIReadBuffer: {
-          /**
-           * less trivial than normal read. Size is in bytes instead
-           * of blocks, and it is assumed (though not guaranteed) that
-           * reading is from cache.
-           */
-          scsi_out.expectMore = 0x02;
+    case SCSIReadBuffer: {
+        /**
+         * less trivial than normal read. Size is in bytes instead
+         * of blocks, and it is assumed (though not guaranteed) that
+         * reading is from cache.
+         */
+        scsi_out.expectMore = 0x02;
 
-          uint8_t* tempptr = reinterpret_cast<uint8_t*>(&SCSI_msg[4]);
+        uint8_t *tempptr = reinterpret_cast<uint8_t *>(&SCSI_msg[4]);
 
-          /**BE and not nicely aligned.*/
-          uint32_t tmp = *reinterpret_cast<uint32_t*>(&tempptr[2]);
-          uint64_t read_offset = betoh(tmp) & 0xFFFFFF;
+        /**BE and not nicely aligned.*/
+        uint32_t tmp = *reinterpret_cast<uint32_t *>(&tempptr[2]);
+        uint64_t read_offset = betoh(tmp) & 0xFFFFFF;
 
-          tmp = *reinterpret_cast<uint32_t*>(&tempptr[5]);
-          uint32_t read_size = betoh(tmp) & 0xFFFFFF;
+        tmp = *reinterpret_cast<uint32_t *>(&tempptr[5]);
+        uint32_t read_size = betoh(tmp) & 0xFFFFFF;
 
-          scsi_out.msgSize = read_size;
-          scsi_out.offset = read_offset;
+        scsi_out.msgSize = read_size;
+        scsi_out.offset = read_offset;
 
-          if ((read_offset + read_size) > capacityLower * blkSize)
-              scsi_out.status = SCSIIllegalRequest;
+        if ((read_offset + read_size) > capacityLower * blkSize)
+            scsi_out.status = SCSIIllegalRequest;
 
-          DPRINTF(UFSHostDevice, "Read buffer location: 0x%8x\n",
-                  read_offset);
-          DPRINTF(UFSHostDevice, "Number of bytes: 0x%8x\n", read_size);
+        DPRINTF(UFSHostDevice, "Read buffer location: 0x%8x\n", read_offset);
+        DPRINTF(UFSHostDevice, "Number of bytes: 0x%8x\n", read_size);
 
-          statusCheck(scsi_out.status, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
+        statusCheck(scsi_out.status, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
 
-      } break;
+    } break;
 
-      case SCSIMaintenanceIn: {
-          /**
-           * linux sends this command three times from kernel 3.9 onwards,
-           * UFS does not support it, nor does this model. Linux knows this,
-           * but tries anyway (useful for some SD card types).
-           * Lets make clear we don't want it and just ignore it.
-           */
-          DPRINTF(UFSHostDevice, "Ignoring Maintenance In command\n");
-          statusCheck(SCSIIllegalRequest, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-          scsi_out.msgSize = 0;
-      } break;
+    case SCSIMaintenanceIn: {
+        /**
+         * linux sends this command three times from kernel 3.9 onwards,
+         * UFS does not support it, nor does this model. Linux knows this,
+         * but tries anyway (useful for some SD card types).
+         * Lets make clear we don't want it and just ignore it.
+         */
+        DPRINTF(UFSHostDevice, "Ignoring Maintenance In command\n");
+        statusCheck(SCSIIllegalRequest, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+        scsi_out.msgSize = 0;
+    } break;
 
-      default: {
-          statusCheck(SCSIIllegalRequest, scsi_out.senseCode);
-          scsi_out.senseSize = scsi_out.senseCode[0];
-          scsi_out.status = (scsi_out.status == SCSIGood) ? SCSIGood :
-              SCSICheckCondition;
-          scsi_out.msgSize = 0;
-          inform("Unsupported scsi message type: %2x\n", SCSI_msg[4] & 0xFF);
-          inform("0x%8x\n", SCSI_msg[0]);
-          inform("0x%8x\n", SCSI_msg[1]);
-          inform("0x%8x\n", SCSI_msg[2]);
-          inform("0x%8x\n", SCSI_msg[3]);
-          inform("0x%8x\n", SCSI_msg[4]);
-      } break;
+    default: {
+        statusCheck(SCSIIllegalRequest, scsi_out.senseCode);
+        scsi_out.senseSize = scsi_out.senseCode[0];
+        scsi_out.status =
+            (scsi_out.status == SCSIGood) ? SCSIGood : SCSICheckCondition;
+        scsi_out.msgSize = 0;
+        inform("Unsupported scsi message type: %2x\n", SCSI_msg[4] & 0xFF);
+        inform("0x%8x\n", SCSI_msg[0]);
+        inform("0x%8x\n", SCSI_msg[1]);
+        inform("0x%8x\n", SCSI_msg[2]);
+        inform("0x%8x\n", SCSI_msg[3]);
+        inform("0x%8x\n", SCSI_msg[4]);
+    } break;
     }
 
     return scsi_out;
@@ -672,15 +669,15 @@ UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t* SCSI_msg)
 
 void
 UFSHostDevice::UFSSCSIDevice::statusCheck(uint8_t status,
-                                uint8_t* sensecodelist)
+                                          uint8_t *sensecodelist)
 {
     for (uint8_t count = 0; count < 19; count++)
         sensecodelist[count] = 0;
 
-    sensecodelist[0] = 18; //sense length
-    sensecodelist[1] = 0x70; //we send a valid frame
-    sensecodelist[3] = status & 0xF; //mask to be sure + sensecode
-    sensecodelist[8] = 0x1F; //data length
+    sensecodelist[0] = 18;           // sense length
+    sensecodelist[1] = 0x70;         // we send a valid frame
+    sensecodelist[3] = status & 0xF; // mask to be sure + sensecode
+    sensecodelist[8] = 0x1F;         // data length
 }
 
 /**
@@ -688,13 +685,13 @@ UFSHostDevice::UFSSCSIDevice::statusCheck(uint8_t status,
  */
 
 void
-UFSHostDevice::UFSSCSIDevice::readFlash(uint8_t* readaddr, uint64_t offset,
-                                   uint32_t size)
+UFSHostDevice::UFSSCSIDevice::readFlash(uint8_t *readaddr, uint64_t offset,
+                                        uint32_t size)
 {
     /** read from image, and get to memory */
     for (int count = 0; count < (size / SectorSize); count++)
-        flashDisk->read(&(readaddr[SectorSize*count]), (offset /
-                                                        SectorSize) + count);
+        flashDisk->read(&(readaddr[SectorSize * count]),
+                        (offset / SectorSize) + count);
 }
 
 /**
@@ -702,8 +699,8 @@ UFSHostDevice::UFSSCSIDevice::readFlash(uint8_t* readaddr, uint64_t offset,
  */
 
 void
-UFSHostDevice::UFSSCSIDevice::writeFlash(uint8_t* writeaddr, uint64_t offset,
-                                    uint32_t size)
+UFSHostDevice::UFSSCSIDevice::writeFlash(uint8_t *writeaddr, uint64_t offset,
+                                         uint32_t size)
 {
     /** Get from fifo and write to image*/
     for (int count = 0; count < (size / SectorSize); count++)
@@ -715,40 +712,39 @@ UFSHostDevice::UFSSCSIDevice::writeFlash(uint8_t* writeaddr, uint64_t offset,
  * Constructor for the UFS Host device
  */
 
-UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
-    DmaDevice(p),
-    pioAddr(p.pio_addr),
-    pioSize(0x0FFF),
-    pioDelay(p.pio_latency),
-    intNum(p.int_num),
-    gic(p.gic),
-    lunAvail(p.image.size()),
-    UFSSlots(p.ufs_slots - 1),
-    readPendingNum(0),
-    writePendingNum(0),
-    activeDoorbells(0),
-    pendingDoorbells(0),
-    countInt(0),
-    transferTrack(0),
-    taskCommandTrack(0),
-    idlePhaseStart(0),
-    stats(this),
-    SCSIResumeEvent([this]{ SCSIStart(); }, name()),
-    UTPEvent([this]{ finalUTP(); }, name())
+UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p)
+    : DmaDevice(p),
+      pioAddr(p.pio_addr),
+      pioSize(0x0FFF),
+      pioDelay(p.pio_latency),
+      intNum(p.int_num),
+      gic(p.gic),
+      lunAvail(p.image.size()),
+      UFSSlots(p.ufs_slots - 1),
+      readPendingNum(0),
+      writePendingNum(0),
+      activeDoorbells(0),
+      pendingDoorbells(0),
+      countInt(0),
+      transferTrack(0),
+      taskCommandTrack(0),
+      idlePhaseStart(0),
+      stats(this),
+      SCSIResumeEvent([this] { SCSIStart(); }, name()),
+      UTPEvent([this] { finalUTP(); }, name())
 {
     DPRINTF(UFSHostDevice, "The hostcontroller hosts %d Logic units\n",
             lunAvail);
     UFSDevice.resize(lunAvail);
 
     for (int count = 0; count < lunAvail; count++) {
-        UFSDevice[count] = new UFSSCSIDevice(p, count,
-                [this]() { LUNSignal(); },
-                [this]() { readCallback(); });
+        UFSDevice[count] = new UFSSCSIDevice(
+            p, count, [this]() { LUNSignal(); }, [this]() { readCallback(); });
     }
 
     if (UFSSlots > 31)
-        warn("UFSSlots = %d, this will results in %d command slots",
-             UFSSlots, (UFSSlots & 0x1F));
+        warn("UFSSlots = %d, this will results in %d command slots", UFSSlots,
+             (UFSSlots & 0x1F));
 
     if ((UFSSlots & 0x1F) == 0)
         fatal("Number of UFS command slots should be between 1 and 32.");
@@ -756,8 +752,7 @@ UFSHostDevice::UFSHostDevice(const UFSHostDeviceParams &p) :
     setValues();
 }
 
-UFSHostDevice::
-UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
+UFSHostDevice::UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
     : statistics::Group(parent, "UFSDiskHost"),
       ADD_STAT(currentSCSIQueue, statistics::units::Count::get(),
                "Most up to date length of the command queue"),
@@ -779,22 +774,25 @@ UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
       ADD_STAT(totalWriteUFSTransactions, statistics::units::Count::get(),
                "Number of transactions to device"),
       /** Average bandwidth for reads and writes */
-      ADD_STAT(averageReadSSDBW, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
-               "Average read bandwidth",
-               totalReadSSD / simSeconds),
-      ADD_STAT(averageWriteSSDBW, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
-               "Average write bandwidth",
-               totalWrittenSSD / simSeconds),
-      ADD_STAT(averageSCSIQueue, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Tick>::get(),
+      ADD_STAT(averageReadSSDBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average read bandwidth", totalReadSSD / simSeconds),
+      ADD_STAT(averageWriteSSDBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average write bandwidth", totalWrittenSSD / simSeconds),
+      ADD_STAT(averageSCSIQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
                "Average command queue length"),
-      ADD_STAT(averageReadSSDQueue, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Tick>::get(),
+      ADD_STAT(averageReadSSDQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
                "Average read queue length"),
-      ADD_STAT(averageWriteSSDQueue, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Tick>::get(),
+      ADD_STAT(averageWriteSSDQueue,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
                "Average write queue length"),
       /** Number of doorbells rung*/
       ADD_STAT(curDoorbell, statistics::units::Count::get(),
@@ -802,78 +800,60 @@ UFSHostDeviceStats::UFSHostDeviceStats(UFSHostDevice *parent)
                parent->activeDoorbells),
       ADD_STAT(maxDoorbell, statistics::units::Count::get(),
                "Maximum number of doorbells utilized"),
-      ADD_STAT(averageDoorbell, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Tick>::get(),
+      ADD_STAT(averageDoorbell,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
                "Average number of Doorbells used"),
       /** Latency*/
       ADD_STAT(transactionLatency, statistics::units::Tick::get(),
                "Histogram of transaction times"),
-      ADD_STAT(idleTimes, statistics::units::Tick::get(), "Histogram of idle times")
+      ADD_STAT(idleTimes, statistics::units::Tick::get(),
+               "Histogram of idle times")
 {
     using namespace statistics;
 
     // Register the stats
     /** Queue lengths */
-    currentSCSIQueue
-        .flags(none);
-    currentReadSSDQueue
-        .flags(none);
-    currentWriteSSDQueue
-        .flags(none);
+    currentSCSIQueue.flags(none);
+    currentReadSSDQueue.flags(none);
+    currentWriteSSDQueue.flags(none);
 
     /** Amount of data read/written */
-    totalReadSSD
-        .flags(none);
+    totalReadSSD.flags(none);
 
-    totalWrittenSSD
-        .flags(none);
+    totalWrittenSSD.flags(none);
 
-    totalReadDiskTransactions
-        .flags(none);
-    totalWriteDiskTransactions
-        .flags(none);
-    totalReadUFSTransactions
-        .flags(none);
-    totalWriteUFSTransactions
-        .flags(none);
+    totalReadDiskTransactions.flags(none);
+    totalWriteDiskTransactions.flags(none);
+    totalReadUFSTransactions.flags(none);
+    totalWriteUFSTransactions.flags(none);
 
     /** Average bandwidth for reads and writes */
-    averageReadSSDBW
-        .flags(nozero);
+    averageReadSSDBW.flags(nozero);
 
-    averageWriteSSDBW
-        .flags(nozero);
+    averageWriteSSDBW.flags(nozero);
 
-    averageSCSIQueue
-        .flags(nozero);
-    averageReadSSDQueue
-        .flags(nozero);
-    averageWriteSSDQueue
-        .flags(nozero);
+    averageSCSIQueue.flags(nozero);
+    averageReadSSDQueue.flags(nozero);
+    averageWriteSSDQueue.flags(nozero);
 
     /** Number of doorbells rung*/
-    curDoorbell
-        .flags(none);
+    curDoorbell.flags(none);
 
-    maxDoorbell
-        .flags(none);
-    averageDoorbell
-        .flags(nozero);
+    maxDoorbell.flags(none);
+    averageDoorbell.flags(nozero);
 
     /** Latency*/
-    transactionLatency
-        .init(100)
-        .flags(pdf);
+    transactionLatency.init(100).flags(pdf);
 
-    idleTimes
-        .init(100)
-        .flags(pdf);
+    idleTimes.init(100).flags(pdf);
 }
 
 /**
  * Register init
  */
-void UFSHostDevice::setValues()
+void
+UFSHostDevice::setValues()
 {
     /**
      * The capability register is built up as follows:
@@ -881,9 +861,9 @@ void UFSHostDevice::setValues()
      * 23-19 RES; 18-16 #TM Req slots; 15-5 RES;4-0 # TR slots
      */
     UFSHCIMem.HCCAP = 0x06070000 | (UFSSlots & 0x1F);
-    UFSHCIMem.HCversion = 0x00010000; //version is 1.0
-    UFSHCIMem.HCHCDDID = 0xAA003C3C;// Arbitrary number
-    UFSHCIMem.HCHCPMID = 0x41524D48; //ARMH (not an official MIPI number)
+    UFSHCIMem.HCversion = 0x00010000; // version is 1.0
+    UFSHCIMem.HCHCDDID = 0xAA003C3C;  // Arbitrary number
+    UFSHCIMem.HCHCPMID = 0x41524D48;  // ARMH (not an official MIPI number)
     UFSHCIMem.TRUTRLDBR = 0x00;
     UFSHCIMem.TMUTMRLDBR = 0x00;
     UFSHCIMem.CMDUICCMDR = 0x00;
@@ -917,125 +897,123 @@ UFSHostDevice::read(PacketPtr pkt)
 {
     uint32_t data = 0;
 
-    switch (pkt->getAddr() & 0xFF)
-    {
-
-      case regControllerCapabilities:
+    switch (pkt->getAddr() & 0xFF) {
+    case regControllerCapabilities:
         data = UFSHCIMem.HCCAP;
         break;
 
-      case regUFSVersion:
+    case regUFSVersion:
         data = UFSHCIMem.HCversion;
         break;
 
-      case regControllerDEVID:
+    case regControllerDEVID:
         data = UFSHCIMem.HCHCDDID;
         break;
 
-      case regControllerPRODID:
+    case regControllerPRODID:
         data = UFSHCIMem.HCHCPMID;
         break;
 
-      case regInterruptStatus:
+    case regInterruptStatus:
         data = UFSHCIMem.ORInterruptStatus;
         UFSHCIMem.ORInterruptStatus = 0x00;
-        //TODO: Revise and extend
+        // TODO: Revise and extend
         clearInterrupt();
         break;
 
-      case regInterruptEnable:
+    case regInterruptEnable:
         data = UFSHCIMem.ORInterruptEnable;
         break;
 
-      case regControllerStatus:
+    case regControllerStatus:
         data = UFSHCIMem.ORHostControllerStatus;
         break;
 
-      case regControllerEnable:
+    case regControllerEnable:
         data = UFSHCIMem.ORHostControllerEnable;
         break;
 
-      case regUICErrorCodePHYAdapterLayer:
+    case regUICErrorCodePHYAdapterLayer:
         data = UFSHCIMem.ORUECPA;
         break;
 
-      case regUICErrorCodeDataLinkLayer:
+    case regUICErrorCodeDataLinkLayer:
         data = UFSHCIMem.ORUECDL;
         break;
 
-      case regUICErrorCodeNetworkLayer:
+    case regUICErrorCodeNetworkLayer:
         data = UFSHCIMem.ORUECN;
         break;
 
-      case regUICErrorCodeTransportLayer:
+    case regUICErrorCodeTransportLayer:
         data = UFSHCIMem.ORUECT;
         break;
 
-      case regUICErrorCodeDME:
+    case regUICErrorCodeDME:
         data = UFSHCIMem.ORUECDME;
         break;
 
-      case regUTPTransferREQINTAGGControl:
+    case regUTPTransferREQINTAGGControl:
         data = UFSHCIMem.ORUTRIACR;
         break;
 
-      case regUTPTransferREQListBaseL:
+    case regUTPTransferREQListBaseL:
         data = UFSHCIMem.TRUTRLBA;
         break;
 
-      case regUTPTransferREQListBaseH:
+    case regUTPTransferREQListBaseH:
         data = UFSHCIMem.TRUTRLBAU;
         break;
 
-      case regUTPTransferREQDoorbell:
+    case regUTPTransferREQDoorbell:
         data = UFSHCIMem.TRUTRLDBR;
         break;
 
-      case regUTPTransferREQListClear:
+    case regUTPTransferREQListClear:
         data = UFSHCIMem.TRUTRLCLR;
         break;
 
-      case regUTPTransferREQListRunStop:
+    case regUTPTransferREQListRunStop:
         data = UFSHCIMem.TRUTRLRSR;
         break;
 
-      case regUTPTaskREQListBaseL:
+    case regUTPTaskREQListBaseL:
         data = UFSHCIMem.TMUTMRLBA;
         break;
 
-      case regUTPTaskREQListBaseH:
+    case regUTPTaskREQListBaseH:
         data = UFSHCIMem.TMUTMRLBAU;
         break;
 
-      case regUTPTaskREQDoorbell:
+    case regUTPTaskREQDoorbell:
         data = UFSHCIMem.TMUTMRLDBR;
         break;
 
-      case regUTPTaskREQListClear:
+    case regUTPTaskREQListClear:
         data = UFSHCIMem.TMUTMRLCLR;
         break;
 
-      case regUTPTaskREQListRunStop:
+    case regUTPTaskREQListRunStop:
         data = UFSHCIMem.TMUTMRLRSR;
         break;
 
-      case regUICCommand:
+    case regUICCommand:
         data = UFSHCIMem.CMDUICCMDR;
         break;
 
-      case regUICCommandArg1:
+    case regUICCommandArg1:
         data = UFSHCIMem.CMDUCMDARG1;
         break;
 
-      case regUICCommandArg2:
+    case regUICCommandArg2:
         data = UFSHCIMem.CMDUCMDARG2;
         break;
 
-      case regUICCommandArg3:
+    case regUICCommandArg3:
         data = UFSHCIMem.CMDUCMDARG3;
         break;
 
-      default:
+    default:
         data = 0x00;
         break;
     }
@@ -1057,135 +1035,134 @@ UFSHostDevice::write(PacketPtr pkt)
 
     const uint32_t data = pkt->getUintX(ByteOrder::little);
 
-    switch (pkt->getAddr() & 0xFF)
-    {
-      case regControllerCapabilities://you shall not write to this
+    switch (pkt->getAddr() & 0xFF) {
+    case regControllerCapabilities: // you shall not write to this
         break;
 
-      case regUFSVersion://you shall not write to this
+    case regUFSVersion: // you shall not write to this
         break;
 
-      case regControllerDEVID://you shall not write to this
+    case regControllerDEVID: // you shall not write to this
         break;
 
-      case regControllerPRODID://you shall not write to this
+    case regControllerPRODID: // you shall not write to this
         break;
 
-      case regInterruptStatus://you shall not write to this
+    case regInterruptStatus: // you shall not write to this
         break;
 
-      case regInterruptEnable:
+    case regInterruptEnable:
         UFSHCIMem.ORInterruptEnable = data;
         break;
 
-      case regControllerStatus:
+    case regControllerStatus:
         UFSHCIMem.ORHostControllerStatus = data;
         break;
 
-      case regControllerEnable:
+    case regControllerEnable:
         UFSHCIMem.ORHostControllerEnable = data;
         break;
 
-      case regUICErrorCodePHYAdapterLayer:
+    case regUICErrorCodePHYAdapterLayer:
         UFSHCIMem.ORUECPA = data;
         break;
 
-      case regUICErrorCodeDataLinkLayer:
+    case regUICErrorCodeDataLinkLayer:
         UFSHCIMem.ORUECDL = data;
         break;
 
-      case regUICErrorCodeNetworkLayer:
+    case regUICErrorCodeNetworkLayer:
         UFSHCIMem.ORUECN = data;
         break;
 
-      case regUICErrorCodeTransportLayer:
+    case regUICErrorCodeTransportLayer:
         UFSHCIMem.ORUECT = data;
         break;
 
-      case regUICErrorCodeDME:
+    case regUICErrorCodeDME:
         UFSHCIMem.ORUECDME = data;
         break;
 
-      case regUTPTransferREQINTAGGControl:
+    case regUTPTransferREQINTAGGControl:
         UFSHCIMem.ORUTRIACR = data;
         break;
 
-      case regUTPTransferREQListBaseL:
+    case regUTPTransferREQListBaseL:
         UFSHCIMem.TRUTRLBA = data;
         if (((UFSHCIMem.TRUTRLBA | UFSHCIMem.TRUTRLBAU) != 0x00) &&
-            ((UFSHCIMem.TMUTMRLBA | UFSHCIMem.TMUTMRLBAU)!= 0x00))
+            ((UFSHCIMem.TMUTMRLBA | UFSHCIMem.TMUTMRLBAU) != 0x00))
             UFSHCIMem.ORHostControllerStatus |= UICCommandReady;
         break;
 
-      case regUTPTransferREQListBaseH:
+    case regUTPTransferREQListBaseH:
         UFSHCIMem.TRUTRLBAU = data;
         if (((UFSHCIMem.TRUTRLBA | UFSHCIMem.TRUTRLBAU) != 0x00) &&
             ((UFSHCIMem.TMUTMRLBA | UFSHCIMem.TMUTMRLBAU) != 0x00))
             UFSHCIMem.ORHostControllerStatus |= UICCommandReady;
         break;
 
-      case regUTPTransferREQDoorbell:
+    case regUTPTransferREQDoorbell:
         if (!(UFSHCIMem.TRUTRLDBR) && data)
             stats.idleTimes.sample(curTick() - idlePhaseStart);
         UFSHCIMem.TRUTRLDBR |= data;
         requestHandler();
         break;
 
-      case regUTPTransferREQListClear:
+    case regUTPTransferREQListClear:
         UFSHCIMem.TRUTRLCLR = data;
         break;
 
-      case regUTPTransferREQListRunStop:
+    case regUTPTransferREQListRunStop:
         UFSHCIMem.TRUTRLRSR = data;
         break;
 
-      case regUTPTaskREQListBaseL:
+    case regUTPTaskREQListBaseL:
         UFSHCIMem.TMUTMRLBA = data;
         if (((UFSHCIMem.TRUTRLBA | UFSHCIMem.TRUTRLBAU) != 0x00) &&
             ((UFSHCIMem.TMUTMRLBA | UFSHCIMem.TMUTMRLBAU) != 0x00))
             UFSHCIMem.ORHostControllerStatus |= UICCommandReady;
         break;
 
-      case regUTPTaskREQListBaseH:
+    case regUTPTaskREQListBaseH:
         UFSHCIMem.TMUTMRLBAU = data;
         if (((UFSHCIMem.TRUTRLBA | UFSHCIMem.TRUTRLBAU) != 0x00) &&
             ((UFSHCIMem.TMUTMRLBA | UFSHCIMem.TMUTMRLBAU) != 0x00))
             UFSHCIMem.ORHostControllerStatus |= UICCommandReady;
         break;
 
-      case regUTPTaskREQDoorbell:
+    case regUTPTaskREQDoorbell:
         UFSHCIMem.TMUTMRLDBR |= data;
         requestHandler();
         break;
 
-      case regUTPTaskREQListClear:
+    case regUTPTaskREQListClear:
         UFSHCIMem.TMUTMRLCLR = data;
         break;
 
-      case regUTPTaskREQListRunStop:
+    case regUTPTaskREQListRunStop:
         UFSHCIMem.TMUTMRLRSR = data;
         break;
 
-      case regUICCommand:
+    case regUICCommand:
         UFSHCIMem.CMDUICCMDR = data;
         requestHandler();
         break;
 
-      case regUICCommandArg1:
+    case regUICCommandArg1:
         UFSHCIMem.CMDUCMDARG1 = data;
         break;
 
-      case regUICCommandArg2:
+    case regUICCommandArg2:
         UFSHCIMem.CMDUCMDARG2 = data;
         break;
 
-      case regUICCommandArg3:
+    case regUICCommandArg3:
         UFSHCIMem.CMDUCMDARG3 = data;
         break;
 
-      default:break;//nothing happens, you try to access a register that
-                    //does not exist
-
+    default:
+        break; // nothing happens, you try to access a register that
+               // does not exist
     }
 
     pkt->makeResponse();
@@ -1215,8 +1192,7 @@ UFSHostDevice::requestHandler()
      */
     while (((UFSHCIMem.CMDUICCMDR > 0x00) |
             ((UFSHCIMem.TMUTMRLDBR ^ taskCommandTrack) > 0x00) |
-            ((UFSHCIMem.TRUTRLDBR ^ transferTrack) > 0x00)) ) {
-
+            ((UFSHCIMem.TRUTRLDBR ^ transferTrack) > 0x00))) {
         if (UFSHCIMem.CMDUICCMDR > 0x00) {
             /**
              * Command; general control of the Host controller.
@@ -1226,7 +1202,7 @@ UFSHostDevice::requestHandler()
             UFSHCIMem.ORInterruptStatus |= UICCommandCOMPL;
             generateInterrupt();
             UFSHCIMem.CMDUICCMDR = 0x00;
-            return; //command, nothing more we can do
+            return; // command, nothing more we can do
 
         } else if ((UFSHCIMem.TMUTMRLDBR ^ taskCommandTrack) > 0x00) {
             /**
@@ -1238,8 +1214,7 @@ UFSHostDevice::requestHandler()
             count = findLsbSet((UFSHCIMem.TMUTMRLDBR ^ taskCommandTrack));
             address = UFSHCIMem.TMUTMRLBAU;
             //<-64 bit
-            address = (count * size) + (address << 32) +
-                UFSHCIMem.TMUTMRLBA;
+            address = (count * size) + (address << 32) + UFSHCIMem.TMUTMRLBA;
             taskCommandTrack |= mask << count;
 
             inform("UFSmodel received a task from the system; this might"
@@ -1251,10 +1226,11 @@ UFSHostDevice::requestHandler()
             task_info.done = UFSHCIMem.TMUTMRLDBR;
             taskInfo.push_back(task_info);
             taskEventQueue.push_back(
-                EventFunctionWrapper([this]{ taskStart(); }, name()));
-            writeDevice(&taskEventQueue.back(), false, address, size,
-                        reinterpret_cast<uint8_t*>
-                        (&taskInfo.back().destination), 0, 0);
+                EventFunctionWrapper([this] { taskStart(); }, name()));
+            writeDevice(
+                &taskEventQueue.back(), false, address, size,
+                reinterpret_cast<uint8_t *>(&taskInfo.back().destination), 0,
+                0);
 
         } else if ((UFSHCIMem.TRUTRLDBR ^ transferTrack) > 0x00) {
             /**
@@ -1270,17 +1246,19 @@ UFSHostDevice::requestHandler()
             address = (count * size) + (address << 32) + UFSHCIMem.TRUTRLBA;
 
             transferTrack |= mask << count;
-            DPRINTF(UFSHostDevice, "Doorbell register: 0x%8x select #:"
-                    " 0x%8x completion info: 0x%8x\n", UFSHCIMem.TRUTRLDBR,
-                    count, transferstart_info.done);
+            DPRINTF(UFSHostDevice,
+                    "Doorbell register: 0x%8x select #:"
+                    " 0x%8x completion info: 0x%8x\n",
+                    UFSHCIMem.TRUTRLDBR, count, transferstart_info.done);
 
             transferstart_info.done = UFSHCIMem.TRUTRLDBR;
 
             /**stats**/
-            transactionStart[count] = curTick(); //note the start time
+            transactionStart[count] = curTick(); // note the start time
             ++activeDoorbells;
-            stats.maxDoorbell = (stats.maxDoorbell.value() < activeDoorbells)
-                ? activeDoorbells : stats.maxDoorbell.value();
+            stats.maxDoorbell = (stats.maxDoorbell.value() < activeDoorbells) ?
+                                    activeDoorbells :
+                                    stats.maxDoorbell.value();
             stats.averageDoorbell = stats.maxDoorbell.value();
 
             /**
@@ -1295,17 +1273,18 @@ UFSHostDevice::requestHandler()
             transferStartInfo.push_back(transferstart_info);
 
             /**Deleted in readDone, queued in finalUTP*/
-            transferStartInfo.back().destination = new struct
-                UTPTransferReqDesc;
+            transferStartInfo.back().destination =
+                new struct UTPTransferReqDesc;
             DPRINTF(UFSHostDevice, "Initial transfer start: 0x%8x\n",
                     transferstart_info.done);
             transferEventQueue.push_back(
-                EventFunctionWrapper([this]{ transferStart(); }, name()));
+                EventFunctionWrapper([this] { transferStart(); }, name()));
 
             if (transferEventQueue.size() < 2) {
-                writeDevice(&transferEventQueue.front(), false,
-                            address, size, reinterpret_cast<uint8_t*>
-                            (transferStartInfo.front().destination),0, 0);
+                writeDevice(&transferEventQueue.front(), false, address, size,
+                            reinterpret_cast<uint8_t *>(
+                                transferStartInfo.front().destination),
+                            0, 0);
                 DPRINTF(UFSHostDevice, "Transfer scheduled\n");
             }
         }
@@ -1334,15 +1313,16 @@ void
 UFSHostDevice::transferStart()
 {
     DPRINTF(UFSHostDevice, "Enter transfer event\n");
-    transferHandler(transferStartInfo.front().destination,
-                    transferStartInfo.front().mask,
-                    transferStartInfo.front().address,
-                    transferStartInfo.front().size,
-                    transferStartInfo.front().done);
+    transferHandler(
+        transferStartInfo.front().destination, transferStartInfo.front().mask,
+        transferStartInfo.front().address, transferStartInfo.front().size,
+        transferStartInfo.front().done);
 
     transferStartInfo.pop_front();
-    DPRINTF(UFSHostDevice, "Transfer queue size at end of event: "
-            "0x%8x\n", transferEventQueue.size());
+    DPRINTF(UFSHostDevice,
+            "Transfer queue size at end of event: "
+            "0x%8x\n",
+            transferEventQueue.size());
 }
 
 /**
@@ -1354,9 +1334,8 @@ void
 UFSHostDevice::commandHandler()
 {
     if (UFSHCIMem.CMDUICCMDR == 0x16) {
-        UFSHCIMem.ORHostControllerStatus |= 0x0F;//link startup
+        UFSHCIMem.ORHostControllerStatus |= 0x0F; // link startup
     }
-
 }
 
 /**
@@ -1365,9 +1344,8 @@ UFSHostDevice::commandHandler()
  */
 
 void
-UFSHostDevice::taskHandler(struct UTPUPIUTaskReq* request_in,
-                           uint32_t req_pos, Addr finaladdress, uint32_t
-                           finalsize)
+UFSHostDevice::taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
+                           Addr finaladdress, uint32_t finalsize)
 {
     /**
      * For now, just unpack and acknowledge the task without doing anything.
@@ -1384,9 +1362,8 @@ UFSHostDevice::taskHandler(struct UTPUPIUTaskReq* request_in,
     taskCommandTrack &= ~(req_pos);
     UFSHCIMem.ORInterruptStatus |= UTPTaskREQCOMPL;
 
-    readDevice(true, finaladdress, finalsize, reinterpret_cast<uint8_t*>
-               (request_in), true, NULL);
-
+    readDevice(true, finaladdress, finalsize,
+               reinterpret_cast<uint8_t *>(request_in), true, NULL);
 }
 
 /**
@@ -1401,23 +1378,22 @@ UFSHostDevice::taskHandler(struct UTPUPIUTaskReq* request_in,
  */
 
 void
-UFSHostDevice::transferHandler(struct UTPTransferReqDesc* request_in,
-                               int req_pos, Addr finaladdress, uint32_t
-                               finalsize, uint32_t done)
+UFSHostDevice::transferHandler(struct UTPTransferReqDesc *request_in,
+                               int req_pos, Addr finaladdress,
+                               uint32_t finalsize, uint32_t done)
 {
-
     Addr cmd_desc_addr = 0x00;
 
-
-    //acknowledge handling of the message
+    // acknowledge handling of the message
     DPRINTF(UFSHostDevice, "SCSI message detected\n");
     request_in->header.dWord2 &= 0xffffff00;
     SCSIInfo.RequestIn = request_in;
     SCSIInfo.reqPos = req_pos;
     SCSIInfo.finalAddress = finaladdress;
     SCSIInfo.finalSize = finalsize;
-    SCSIInfo.destination.resize(request_in->PRDTableOffset * 4
-        + request_in->PRDTableLength * sizeof(UFSHCDSGEntry));
+    SCSIInfo.destination.resize(request_in->PRDTableOffset * 4 +
+                                request_in->PRDTableLength *
+                                    sizeof(UFSHCDSGEntry));
     SCSIInfo.done = done;
 
     assert(!SCSIResumeEvent.scheduled());
@@ -1426,10 +1402,10 @@ UFSHostDevice::transferHandler(struct UTPTransferReqDesc* request_in,
      */
     cmd_desc_addr = request_in->commandDescBaseAddrHi;
     cmd_desc_addr = (cmd_desc_addr << 32) |
-        (request_in->commandDescBaseAddrLo & 0xffffffff);
+                    (request_in->commandDescBaseAddrLo & 0xffffffff);
 
     writeDevice(&SCSIResumeEvent, false, cmd_desc_addr,
-                SCSIInfo.destination.size(), &SCSIInfo.destination[0],0, 0);
+                SCSIInfo.destination.size(), &SCSIInfo.destination[0], 0, 0);
 
     DPRINTF(UFSHostDevice, "SCSI scheduled\n");
 
@@ -1454,27 +1430,27 @@ UFSHostDevice::SCSIStart()
             UFSDevice[LUN]->SCSIInfoQueue.size());
 
     /**There are 32 doorbells, so at max there can be 32 transactions*/
-    if (UFSDevice[LUN]->SCSIInfoQueue.size() < 2) //LUN is available
+    if (UFSDevice[LUN]->SCSIInfoQueue.size() < 2) // LUN is available
         SCSIResume(LUN);
 
     else if (UFSDevice[LUN]->SCSIInfoQueue.size() > 32)
-        panic("SCSI queue is getting too big %d\n", UFSDevice[LUN]->
-              SCSIInfoQueue.size());
+        panic("SCSI queue is getting too big %d\n",
+              UFSDevice[LUN]->SCSIInfoQueue.size());
 
     /**
      * First transfer is done, fetch the next;
      * At this point, the device is busy, not the HC
      */
     if (!transferEventQueue.empty()) {
-
         /**
          * loading next data packet in case Another LUN
          * is approached in the mean time
          */
-        writeDevice(&transferEventQueue.front(), false,
-                    transferStartInfo.front().address,
-                    transferStartInfo.front().size, reinterpret_cast<uint8_t*>
-                    (transferStartInfo.front().destination), 0, 0);
+        writeDevice(
+            &transferEventQueue.front(), false,
+            transferStartInfo.front().address, transferStartInfo.front().size,
+            reinterpret_cast<uint8_t *>(transferStartInfo.front().destination),
+            0, 0);
 
         DPRINTF(UFSHostDevice, "Transfer scheduled");
     }
@@ -1497,23 +1473,23 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
               UFSHCIMem.TRUTRLDBR);
 
     /**old info, lets form it such that we can understand it*/
-    struct UTPTransferReqDesc* request_in = UFSDevice[lun_id]->
-        SCSIInfoQueue.front().RequestIn;
+    struct UTPTransferReqDesc *request_in =
+        UFSDevice[lun_id]->SCSIInfoQueue.front().RequestIn;
 
     uint32_t req_pos = UFSDevice[lun_id]->SCSIInfoQueue.front().reqPos;
 
-    Addr finaladdress = UFSDevice[lun_id]->SCSIInfoQueue.front().
-        finalAddress;
+    Addr finaladdress = UFSDevice[lun_id]->SCSIInfoQueue.front().finalAddress;
 
     uint32_t finalsize = UFSDevice[lun_id]->SCSIInfoQueue.front().finalSize;
 
-    uint32_t* transfercommand = reinterpret_cast<uint32_t*>
-        (&(UFSDevice[lun_id]->SCSIInfoQueue.front().destination[0]));
+    uint32_t *transfercommand = reinterpret_cast<uint32_t *>(
+        &(UFSDevice[lun_id]->SCSIInfoQueue.front().destination[0]));
 
-    DPRINTF(UFSHostDevice, "Task tag: 0x%8x\n", transfercommand[0]>>24);
+    DPRINTF(UFSHostDevice, "Task tag: 0x%8x\n", transfercommand[0] >> 24);
     /**call logic unit to handle SCSI command*/
-    request_out_datain = UFSDevice[(transfercommand[0] & 0xFF0000) >> 16]->
-        SCSICMDHandle(transfercommand);
+    request_out_datain =
+        UFSDevice[(transfercommand[0] & 0xFF0000) >> 16]->SCSICMDHandle(
+            transfercommand);
 
     DPRINTF(UFSHostDevice, "LUN: %d\n", request_out_datain.LUN);
 
@@ -1521,23 +1497,23 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
      * build response stating that it was succesful
      * command completion, Logic unit number, and Task tag
      */
-    request_in->header.dWord0 = ((request_in->header.dWord0 >> 24) == 0x21)
-        ? 0x36 : 0x21;
+    request_in->header.dWord0 =
+        ((request_in->header.dWord0 >> 24) == 0x21) ? 0x36 : 0x21;
     UFSDevice[lun_id]->transferInfo.requestOut.header.dWord0 =
-        request_in->header.dWord0 | (request_out_datain.LUN << 8)
-        | (transfercommand[0] & 0xFF000000);
+        request_in->header.dWord0 | (request_out_datain.LUN << 8) |
+        (transfercommand[0] & 0xFF000000);
     /**SCSI status reply*/
-    UFSDevice[lun_id]->transferInfo.requestOut.header.dWord1 = 0x00000000 |
-        (request_out_datain.status << 24);
+    UFSDevice[lun_id]->transferInfo.requestOut.header.dWord1 =
+        0x00000000 | (request_out_datain.status << 24);
     /**segment size + EHS length (see UFS standard ch7)*/
-    UFSDevice[lun_id]->transferInfo.requestOut.header.dWord2 = 0x00000000 |
-        ((request_out_datain.senseSize + 2) << 24) | 0x05;
+    UFSDevice[lun_id]->transferInfo.requestOut.header.dWord2 =
+        0x00000000 | ((request_out_datain.senseSize + 2) << 24) | 0x05;
     /**amount of data that will follow*/
     UFSDevice[lun_id]->transferInfo.requestOut.senseDataLen =
         request_out_datain.senseSize;
 
-    //data
-    for (uint8_t count = 0; count<request_out_datain.senseSize; count++) {
+    // data
+    for (uint8_t count = 0; count < request_out_datain.senseSize; count++) {
         UFSDevice[lun_id]->transferInfo.requestOut.senseData[count] =
             request_out_datain.senseCode[count + 1];
     }
@@ -1547,24 +1523,25 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
      * words) in array "transfercommand" we have a scatter gather list, which
      * is usefull to us if we interpreted it as a UFSHCDSGEntry structure.
      */
-    struct UFSHCDSGEntry* sglist =  reinterpret_cast<UFSHCDSGEntry*>
-        (&(transfercommand[(request_in->PRDTableOffset)]));
+    struct UFSHCDSGEntry *sglist = reinterpret_cast<UFSHCDSGEntry *>(
+        &(transfercommand[(request_in->PRDTableOffset)]));
 
     uint32_t length = request_in->PRDTableLength;
     DPRINTF(UFSHostDevice, "# PRDT entries: %d\n", length);
 
     Addr response_addr = request_in->commandDescBaseAddrHi;
-    response_addr = (response_addr << 32) |
-        ((request_in->commandDescBaseAddrLo +
-          (request_in->responseUPIULength << 2)) & 0xffffffff);
+    response_addr =
+        (response_addr << 32) | ((request_in->commandDescBaseAddrLo +
+                                  (request_in->responseUPIULength << 2)) &
+                                 0xffffffff);
 
     /**transferdone information packet filling*/
     UFSDevice[lun_id]->transferInfo.responseStartAddr = response_addr;
     UFSDevice[lun_id]->transferInfo.reqPos = req_pos;
     UFSDevice[lun_id]->transferInfo.size = finalsize;
     UFSDevice[lun_id]->transferInfo.address = finaladdress;
-    UFSDevice[lun_id]->transferInfo.destination = reinterpret_cast<uint8_t*>
-        (UFSDevice[lun_id]->SCSIInfoQueue.front().RequestIn);
+    UFSDevice[lun_id]->transferInfo.destination = reinterpret_cast<uint8_t *>(
+        UFSDevice[lun_id]->SCSIInfoQueue.front().RequestIn);
     UFSDevice[lun_id]->transferInfo.finished = true;
     UFSDevice[lun_id]->transferInfo.lunID = request_out_datain.LUN;
 
@@ -1591,12 +1568,12 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
                 request_out_datain.msgSize);
 
         /**Transport the SCSI reponse data according to the SG list*/
-        while ((length > count) && size_accum
-               < (request_out_datain.msgSize - 1) &&
+        while ((length > count) &&
+               size_accum < (request_out_datain.msgSize - 1) &&
                (request_out_datain.msgSize != 0x00)) {
             Addr SCSI_start = sglist[count].upperAddr;
-            SCSI_start = (SCSI_start << 32) |
-                (sglist[count].baseAddr & 0xFFFFFFFF);
+            SCSI_start =
+                (SCSI_start << 32) | (sglist[count].baseAddr & 0xFFFFFFFF);
             DPRINTF(UFSHostDevice, "Data DMA start: 0x%8x\n", SCSI_start);
             DPRINTF(UFSHostDevice, "Data DMA size: 0x%8x\n",
                     (sglist[count].size + 1));
@@ -1613,23 +1590,25 @@ UFSHostDevice::SCSIResume(uint32_t lun_id)
                 size_to_send = request_out_datain.msgSize - size_accum;
 
             readDevice(false, SCSI_start, size_to_send,
-                       reinterpret_cast<uint8_t*>
-                       (&(request_out_datain.message.dataMsg[size_accum])),
+                       reinterpret_cast<uint8_t *>(
+                           &(request_out_datain.message.dataMsg[size_accum])),
                        false, NULL);
 
             size_accum += size_to_send;
-            DPRINTF(UFSHostDevice, "Total remaining: 0x%8x,accumulated so far"
-                    " : 0x%8x\n", (request_out_datain.msgSize - size_accum),
-                    size_accum);
+            DPRINTF(UFSHostDevice,
+                    "Total remaining: 0x%8x,accumulated so far"
+                    " : 0x%8x\n",
+                    (request_out_datain.msgSize - size_accum), size_accum);
 
             ++count;
             DPRINTF(UFSHostDevice, "Transfer #: %d\n", count);
         }
 
         /**Go to the next stage of the answering process*/
-        transferDone(response_addr, req_pos, UFSDevice[lun_id]->
-                     transferInfo.requestOut, finalsize, finaladdress,
-                     reinterpret_cast<uint8_t*>(request_in), true, lun_id);
+        transferDone(response_addr, req_pos,
+                     UFSDevice[lun_id]->transferInfo.requestOut, finalsize,
+                     finaladdress, reinterpret_cast<uint8_t *>(request_in),
+                     true, lun_id);
     }
 
     DPRINTF(UFSHostDevice, "SCSI resume done\n");
@@ -1645,14 +1624,14 @@ UFSHostDevice::LUNSignal()
 {
     uint8_t this_lun = 0;
 
-    //while we haven't found the right lun, keep searching
+    // while we haven't found the right lun, keep searching
     while ((this_lun < lunAvail) && !UFSDevice[this_lun]->finishedCommand())
         ++this_lun;
 
     if (this_lun < lunAvail) {
-        //Clear signal.
+        // Clear signal.
         UFSDevice[this_lun]->clearSignal();
-        //found it; call transferDone
+        // found it; call transferDone
         transferDone(UFSDevice[this_lun]->transferInfo.responseStartAddr,
                      UFSDevice[this_lun]->transferInfo.reqPos,
                      UFSDevice[this_lun]->transferInfo.requestOut,
@@ -1675,8 +1654,8 @@ UFSHostDevice::LUNSignal()
 void
 UFSHostDevice::transferDone(Addr responseStartAddr, uint32_t req_pos,
                             struct UTPUPIURSP request_out, uint32_t size,
-                            Addr address, uint8_t* destination,
-                            bool finished, uint32_t lun_id)
+                            Addr address, uint8_t *destination, bool finished,
+                            uint32_t lun_id)
 {
     /**Test whether SCSI queue hasn't popped prematurely*/
     if (UFSDevice[lun_id]->SCSIInfoQueue.empty())
@@ -1691,8 +1670,7 @@ UFSHostDevice::transferDone(Addr responseStartAddr, uint32_t req_pos,
     lastinfo.done = finished;
     lastinfo.address = address;
     lastinfo.size = size;
-    lastinfo.destination = reinterpret_cast<UTPTransferReqDesc*>
-        (destination);
+    lastinfo.destination = reinterpret_cast<UTPTransferReqDesc *>(destination);
     lastinfo.lun_id = lun_id;
 
     transferEnd.push_back(lastinfo);
@@ -1700,8 +1678,8 @@ UFSHostDevice::transferDone(Addr responseStartAddr, uint32_t req_pos,
     DPRINTF(UFSHostDevice, "Transfer done start\n");
 
     readDevice(false, responseStartAddr, sizeof(request_out),
-               reinterpret_cast<uint8_t*>
-               (&(UFSDevice[lun_id]->transferInfo.requestOut)),
+               reinterpret_cast<uint8_t *>(
+                   &(UFSDevice[lun_id]->transferInfo.requestOut)),
                true, &UTPEvent);
 }
 
@@ -1725,14 +1703,13 @@ UFSHostDevice::finalUTP()
         uint8_t count = 0;
         while (!(transferEnd.front().mask & (0x1 << count)))
             ++count;
-        stats.transactionLatency.sample(curTick() -
-                                        transactionStart[count]);
+        stats.transactionLatency.sample(curTick() - transactionStart[count]);
     }
 
     /**Last message that will be transfered*/
-    readDevice(true, transferEnd.front().address,
-               transferEnd.front().size, reinterpret_cast<uint8_t*>
-               (transferEnd.front().destination), true, NULL);
+    readDevice(true, transferEnd.front().address, transferEnd.front().size,
+               reinterpret_cast<uint8_t *>(transferEnd.front().destination),
+               true, NULL);
 
     /**clean and ensure that the tracker is updated*/
     transferTrack &= ~(transferEnd.front().mask);
@@ -1745,9 +1722,11 @@ UFSHostDevice::finalUTP()
     /**stats**/
     stats.averageDoorbell = stats.maxDoorbell.value();
 
-    DPRINTF(UFSHostDevice, "activeDoorbells: %d, pendingDoorbells: %d,"
-            " garbage: %d, TransferEvent: %d\n", activeDoorbells,
-            pendingDoorbells, garbage.size(), transferEventQueue.size());
+    DPRINTF(UFSHostDevice,
+            "activeDoorbells: %d, pendingDoorbells: %d,"
+            " garbage: %d, TransferEvent: %d\n",
+            activeDoorbells, pendingDoorbells, garbage.size(),
+            transferEventQueue.size());
 
     /**This is the moment that the device is available again*/
     if (!UFSDevice[lun_id]->SCSIInfoQueue.empty())
@@ -1767,14 +1746,13 @@ UFSHostDevice::readDone()
     if (garbage.size() > 0) {
         delete garbage.front();
         garbage.pop_front();
-        }
+    }
 
     /**done, generate interrupt if we havent got one already*/
     if (!(UFSHCIMem.ORInterruptStatus & 0x01)) {
         UFSHCIMem.ORInterruptStatus |= UTPTransferREQCOMPL;
         generateInterrupt();
     }
-
 
     if (!readDoneEvent.empty()) {
         readDoneEvent.pop_front();
@@ -1800,8 +1778,7 @@ UFSHostDevice::generateInterrupt()
 
     /**step6 raise interrupt*/
     gic->sendInt(intNum);
-    DPRINTF(UFSHostDevice, "Send interrupt @ transaction: 0x%8x!\n",
-            countInt);
+    DPRINTF(UFSHostDevice, "Send interrupt @ transaction: 0x%8x!\n", countInt);
 }
 
 /**
@@ -1839,7 +1816,6 @@ UFSHostDevice::clearInterrupt()
  * two has been made in the writeDevice and readDevice funtions.
  */
 
-
 /**
  * Dma transaction function: write device. Note that the dma action is
  * from a device perspective, while this function is from an initiator
@@ -1847,24 +1823,23 @@ UFSHostDevice::clearInterrupt()
  */
 
 void
-UFSHostDevice::writeDevice(Event* additional_action, bool toDisk, Addr
-                           start, int size, uint8_t* destination, uint64_t
-                           SCSIDiskOffset, uint32_t lun_id)
+UFSHostDevice::writeDevice(Event *additional_action, bool toDisk, Addr start,
+                           int size, uint8_t *destination,
+                           uint64_t SCSIDiskOffset, uint32_t lun_id)
 {
-    DPRINTF(UFSHostDevice, "Write transaction Start: 0x%8x; Size: %d\n",
-            start, size);
+    DPRINTF(UFSHostDevice, "Write transaction Start: 0x%8x; Size: %d\n", start,
+            size);
 
     /**check whether transfer is all the way to the flash*/
     if (toDisk) {
         ++writePendingNum;
 
-        while (!writeDoneEvent.empty() && (writeDoneEvent.front().when()
-                                          < curTick()))
+        while (!writeDoneEvent.empty() &&
+               (writeDoneEvent.front().when() < curTick()))
             writeDoneEvent.pop_front();
 
         writeDoneEvent.push_back(
-            EventFunctionWrapper([this]{ writeDone(); },
-                                 name()));
+            EventFunctionWrapper([this] { writeDone(); }, name()));
         assert(!writeDoneEvent.back().scheduled());
 
         /**destination is an offset here since we are writing to a disk*/
@@ -1879,16 +1854,15 @@ UFSHostDevice::writeDevice(Event* additional_action, bool toDisk, Addr
         SSDWriteinfo.back().buffer.resize(size);
 
         /**transaction*/
-        dmaPort.dmaAction(MemCmd::ReadReq, start, size,
-                          &writeDoneEvent.back(),
+        dmaPort.dmaAction(MemCmd::ReadReq, start, size, &writeDoneEvent.back(),
                           &SSDWriteinfo.back().buffer[0], 0);
-        //yes, a readreq at a write device function is correct.
+        // yes, a readreq at a write device function is correct.
         DPRINTF(UFSHostDevice, "Write to disk scheduled\n");
 
     } else {
         assert(!additional_action->scheduled());
-        dmaPort.dmaAction(MemCmd::ReadReq, start, size,
-                          additional_action, destination, 0);
+        dmaPort.dmaAction(MemCmd::ReadReq, start, size, additional_action,
+                          destination, 0);
         DPRINTF(UFSHostDevice, "Write scheduled\n");
     }
 }
@@ -1899,9 +1873,9 @@ UFSHostDevice::writeDevice(Event* additional_action, bool toDisk, Addr
  */
 
 void
-UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset, uint32_t
-                                   sg_table_length, struct UFSHCDSGEntry*
-                                   sglist)
+UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset,
+                                   uint32_t sg_table_length,
+                                   struct UFSHCDSGEntry *sglist)
 {
     struct writeToDiskBurst next_packet;
 
@@ -1915,8 +1889,8 @@ UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset, uint32_t
      */
     for (uint32_t count = 0; count < sg_table_length; count++) {
         next_packet.start = sglist[count].upperAddr;
-        next_packet.start = (next_packet.start << 32) |
-            (sglist[count].baseAddr & 0xFFFFFFFF);
+        next_packet.start =
+            (next_packet.start << 32) | (sglist[count].baseAddr & 0xFFFFFFFF);
         next_packet.LUN = LUN;
         DPRINTF(UFSHostDevice, "Write data DMA start: 0x%8x\n",
                 next_packet.start);
@@ -1925,15 +1899,15 @@ UFSHostDevice::manageWriteTransfer(uint8_t LUN, uint64_t offset, uint32_t
         assert(sglist[count].size > 0);
 
         if (count != 0)
-            next_packet.SCSIDiskOffset = next_packet.SCSIDiskOffset +
-                (sglist[count - 1].size + 1);
+            next_packet.SCSIDiskOffset =
+                next_packet.SCSIDiskOffset + (sglist[count - 1].size + 1);
 
         next_packet.size = sglist[count].size + 1;
 
         /**If the queue is empty, the transaction should be initiated*/
         if (dmaWriteInfo.empty())
-            writeDevice(NULL, true, next_packet.start, next_packet.size,
-                        NULL, next_packet.SCSIDiskOffset, next_packet.LUN);
+            writeDevice(NULL, true, next_packet.start, next_packet.size, NULL,
+                        next_packet.SCSIDiskOffset, next_packet.LUN);
         else
             DPRINTF(UFSHostDevice, "Write not initiated queue: %d\n",
                     dmaWriteInfo.size());
@@ -1994,7 +1968,7 @@ UFSHostDevice::writeDone()
     /**initiate the next dma action (if any)*/
     if (!dmaWriteInfo.empty())
         writeDevice(NULL, true, dmaWriteInfo.front().start,
-                    dmaWriteInfo.front().size,  NULL,
+                    dmaWriteInfo.front().size, NULL,
                     dmaWriteInfo.front().SCSIDiskOffset,
                     dmaWriteInfo.front().LUN);
     DPRINTF(UFSHostDevice, "Write done end\n");
@@ -2007,16 +1981,14 @@ void
 UFSHostDevice::UFSSCSIDevice::SSDWriteStart()
 {
     assert(SSDWriteDoneInfo.size() > 0);
-    flashDevice->writeMemory(
-        SSDWriteDoneInfo.front().offset,
-        SSDWriteDoneInfo.front().size, memWriteCallback);
+    flashDevice->writeMemory(SSDWriteDoneInfo.front().offset,
+                             SSDWriteDoneInfo.front().size, memWriteCallback);
 
     SSDWriteDoneInfo.pop_front();
 
     DPRINTF(UFSHostDevice, "Write is started; left in queue: %d\n",
             SSDWriteDoneInfo.size());
 }
-
 
 /**
  * SSDisk write done
@@ -2028,7 +2000,7 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
     DPRINTF(UFSHostDevice, "Write disk, aiming for %d messages, %d so far\n",
             totalWrite, amountOfWriteTransfers);
 
-    //we have done one extra transfer
+    // we have done one extra transfer
     ++amountOfWriteTransfers;
 
     /**test whether call was correct*/
@@ -2040,11 +2012,10 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
         totalWrite = 0;
         amountOfWriteTransfers = 0;
 
-        //Callback UFS Host
+        // Callback UFS Host
         setSignal();
         signalDone();
     }
-
 }
 
 /**
@@ -2054,8 +2025,8 @@ UFSHostDevice::UFSSCSIDevice::SSDWriteDone()
 
 void
 UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
-                          uint8_t* destination, bool no_cache, Event*
-                          additional_action)
+                          uint8_t *destination, bool no_cache,
+                          Event *additional_action)
 {
     DPRINTF(UFSHostDevice, "Read start: 0x%8x; Size: %d, data[0]: 0x%8x\n",
             start, size, (reinterpret_cast<uint32_t *>(destination))[0]);
@@ -2064,22 +2035,19 @@ UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
     if (lastTransfer) {
         ++readPendingNum;
         readDoneEvent.push_back(
-            EventFunctionWrapper([this]{ readDone(); },
-                                 name()));
+            EventFunctionWrapper([this] { readDone(); }, name()));
         assert(!readDoneEvent.back().scheduled());
-        dmaPort.dmaAction(MemCmd::WriteReq, start, size,
-                          &readDoneEvent.back(), destination, 0);
-        //yes, a writereq at a read device function is correct.
+        dmaPort.dmaAction(MemCmd::WriteReq, start, size, &readDoneEvent.back(),
+                          destination, 0);
+        // yes, a writereq at a read device function is correct.
 
     } else {
         if (additional_action != NULL)
             assert(!additional_action->scheduled());
 
-        dmaPort.dmaAction(MemCmd::WriteReq, start, size,
-                          additional_action, destination, 0);
-
+        dmaPort.dmaAction(MemCmd::WriteReq, start, size, additional_action,
+                          destination, 0);
     }
-
 }
 
 /**
@@ -2088,9 +2056,9 @@ UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
  */
 
 void
-UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t
-                                  offset, uint32_t sg_table_length,
-                                  struct UFSHCDSGEntry* sglist)
+UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
+                                  uint32_t sg_table_length,
+                                  struct UFSHCDSGEntry *sglist)
 {
     uint32_t size_accum = 0;
 
@@ -2104,7 +2072,7 @@ UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t
         struct transferInfo new_transfer;
         new_transfer.offset = sglist[count].upperAddr;
         new_transfer.offset = (new_transfer.offset << 32) |
-            (sglist[count].baseAddr & 0xFFFFFFFF);
+                              (sglist[count].baseAddr & 0xFFFFFFFF);
         new_transfer.filePointer = offset + size_accum;
         new_transfer.size = (sglist[count].size + 1);
         new_transfer.lunID = LUN;
@@ -2113,23 +2081,24 @@ UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t
                 new_transfer.offset, new_transfer.size);
 
         UFSDevice[LUN]->SSDReadInfo.push_back(new_transfer);
-        UFSDevice[LUN]->SSDReadInfo.back().buffer.resize(sglist[count].size
-                                                         + 1);
+        UFSDevice[LUN]->SSDReadInfo.back().buffer.resize(sglist[count].size +
+                                                         1);
 
         /**
          * The disk image is read here; but the action is simultated later
          * You can see this as the preparation stage, whereas later is the
          * simulation phase.
          */
-        UFSDevice[LUN]->readFlash(&UFSDevice[LUN]->
-                                  SSDReadInfo.back().buffer[0],
-                                  offset + size_accum,
-                                  sglist[count].size + 1);
+        UFSDevice[LUN]->readFlash(
+            &UFSDevice[LUN]->SSDReadInfo.back().buffer[0], offset + size_accum,
+            sglist[count].size + 1);
 
         size_accum += (sglist[count].size + 1);
 
-        DPRINTF(UFSHostDevice, "Transfer %d; Remaining: 0x%8x, Accumulated:"
-                " 0x%8x\n", (count + 1), (size-size_accum), size_accum);
+        DPRINTF(UFSHostDevice,
+                "Transfer %d; Remaining: 0x%8x, Accumulated:"
+                " 0x%8x\n",
+                (count + 1), (size - size_accum), size_accum);
 
         /** stats **/
         stats.totalReadSSD += (sglist[count].size + 1);
@@ -2141,10 +2110,7 @@ UFSHostDevice::manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t
 
     /** stats **/
     ++stats.totalReadUFSTransactions;
-
 }
-
-
 
 /**
  * SSDisk start read; this function was created to keep the interfaces
@@ -2165,9 +2131,7 @@ UFSHostDevice::UFSSCSIDevice::SSDReadStart(uint32_t total_read)
         flashDevice->readMemory(SSDReadInfo.front().filePointer,
                                 SSDReadInfo.front().size, memReadCallback);
     }
-
 }
-
 
 /**
  * SSDisk read done
@@ -2176,8 +2140,10 @@ UFSHostDevice::UFSSCSIDevice::SSDReadStart(uint32_t total_read)
 void
 UFSHostDevice::UFSSCSIDevice::SSDReadDone()
 {
-    DPRINTF(UFSHostDevice, "SSD read done at lun %d, Aiming for %d messages,"
-            " %d so far\n", lunID, totalRead, amountOfReadTransfers);
+    DPRINTF(UFSHostDevice,
+            "SSD read done at lun %d, Aiming for %d messages,"
+            " %d so far\n",
+            lunID, totalRead, amountOfReadTransfers);
 
     if (totalRead == amountOfReadTransfers) {
         totalRead = 0;
@@ -2187,7 +2153,6 @@ UFSHostDevice::UFSSCSIDevice::SSDReadDone()
         setSignal();
         signalDone();
     }
-
 }
 
 /**
@@ -2205,7 +2170,7 @@ UFSHostDevice::UFSSCSIDevice::readCallback()
     setReadSignal();
     deviceReadCallback();
 
-    //Are we done yet?
+    // Are we done yet?
     SSDReadDone();
 }
 
@@ -2220,7 +2185,7 @@ UFSHostDevice::readCallback()
     DPRINTF(UFSHostDevice, "Read Callback\n");
     uint8_t this_lun = 0;
 
-    //while we haven't found the right lun, keep searching
+    // while we haven't found the right lun, keep searching
     while ((this_lun < lunAvail) && !UFSDevice[this_lun]->finishedRead())
         ++this_lun;
 
@@ -2228,14 +2193,14 @@ UFSHostDevice::readCallback()
             this_lun, SSDReadPending.size());
 
     if (this_lun < lunAvail) {
-        //Clear signal.
+        // Clear signal.
         UFSDevice[this_lun]->clearReadSignal();
         SSDReadPending.push_back(UFSDevice[this_lun]->SSDReadInfo.front());
         UFSDevice[this_lun]->SSDReadInfo.pop_front();
         readGarbageEventQueue.push_back(
-            EventFunctionWrapper([this]{ readGarbage(); }, name()));
+            EventFunctionWrapper([this] { readGarbage(); }, name()));
 
-        //make sure the queue is popped a the end of the dma transaction
+        // make sure the queue is popped a the end of the dma transaction
         readDevice(false, SSDReadPending.front().offset,
                    SSDReadPending.front().size,
                    &SSDReadPending.front().buffer[0], false,
@@ -2243,8 +2208,7 @@ UFSHostDevice::readCallback()
 
         /**stats*/
         ++stats.totalReadDiskTransactions;
-    }
-    else
+    } else
         panic("no read finished in tick %d\n", curTick());
 }
 
@@ -2269,13 +2233,13 @@ UFSHostDevice::serialize(CheckpointOut &cp) const
 {
     DmaDevice::serialize(cp);
 
-    const uint8_t* temp_HCI_mem = reinterpret_cast<const uint8_t*>(&UFSHCIMem);
+    const uint8_t *temp_HCI_mem =
+        reinterpret_cast<const uint8_t *>(&UFSHCIMem);
     SERIALIZE_ARRAY(temp_HCI_mem, sizeof(HCIMem));
 
     uint32_t lun_avail = lunAvail;
     SERIALIZE_SCALAR(lun_avail);
 }
-
 
 /**
  * Unserialize; needed to restore from checkpoints
@@ -2285,14 +2249,13 @@ void
 UFSHostDevice::unserialize(CheckpointIn &cp)
 {
     DmaDevice::unserialize(cp);
-    uint8_t* temp_HCI_mem = reinterpret_cast<uint8_t*>(&UFSHCIMem);
+    uint8_t *temp_HCI_mem = reinterpret_cast<uint8_t *>(&UFSHCIMem);
     UNSERIALIZE_ARRAY(temp_HCI_mem, sizeof(HCIMem));
 
     uint32_t lun_avail;
     UNSERIALIZE_SCALAR(lun_avail);
     assert(lunAvail == lun_avail);
 }
-
 
 /**
  * Drain; needed to enable checkpoints
@@ -2321,8 +2284,10 @@ UFSHostDevice::checkDrain()
         return;
 
     if (UFSHCIMem.TRUTRLDBR) {
-        DPRINTF(UFSHostDevice, "UFSDevice is still draining; with %d active"
-            " doorbells\n", activeDoorbells);
+        DPRINTF(UFSHostDevice,
+                "UFSDevice is still draining; with %d active"
+                " doorbells\n",
+                activeDoorbells);
     } else {
         DPRINTF(UFSHostDevice, "UFSDevice is done draining\n");
         signalDrainDone();

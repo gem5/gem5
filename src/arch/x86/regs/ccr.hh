@@ -62,17 +62,14 @@ enum : RegIndex
 } // namespace cc_reg
 
 inline constexpr RegClass ccRegClass(CCRegClass, CCRegClassName,
-        cc_reg::NumRegs, debug::CCRegs);
+                                     cc_reg::NumRegs, debug::CCRegs);
 
 namespace cc_reg
 {
 
-inline constexpr RegId
-    Zaps = ccRegClass[_ZapsIdx],
-    Cfof = ccRegClass[_CfofIdx],
-    Df = ccRegClass[_DfIdx],
-    Ecf = ccRegClass[_EcfIdx],
-    Ezf = ccRegClass[_EzfIdx];
+inline constexpr RegId Zaps = ccRegClass[_ZapsIdx],
+                       Cfof = ccRegClass[_CfofIdx], Df = ccRegClass[_DfIdx],
+                       Ecf = ccRegClass[_EcfIdx], Ezf = ccRegClass[_EzfIdx];
 
 } // namespace cc_reg
 

@@ -50,48 +50,41 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace trace {
+namespace trace
+{
 
 TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
                                    const StaticInstPtr _staticInst,
                                    const PCStateBase &_pc,
                                    const StaticInstPtr _macroStaticInst)
     : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
-{
-}
+{}
 
-TarmacBaseRecord::InstEntry::InstEntry(
-    ThreadContext* thread,
-    const PCStateBase &pc,
-    const StaticInstPtr staticInst,
-    bool predicate)
-        : taken(predicate) ,
-          addr(pc.instAddr()) ,
-          opcode(staticInst->getEMI() & 0xffffffff),
-          isetstate(pcToISetState(pc)),
-          mode(MODE_USER)
+TarmacBaseRecord::InstEntry::InstEntry(ThreadContext *thread,
+                                       const PCStateBase &pc,
+                                       const StaticInstPtr staticInst,
+                                       bool predicate)
+    : taken(predicate),
+      addr(pc.instAddr()),
+      opcode(staticInst->getEMI() & 0xffffffff),
+      isetstate(pcToISetState(pc)),
+      mode(MODE_USER)
 {
-
     // Operating mode gained by reading the architectural register (CPSR)
     const CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
-    mode = (OperatingMode) (uint8_t)cpsr.mode;
+    mode = (OperatingMode)(uint8_t)cpsr.mode;
 }
 
 TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
-  : isetstate(pcToISetState(pc)),
-    values(2, 0)
+    : isetstate(pcToISetState(pc)), values(2, 0)
 {
     // values vector is constructed with size = 2, for
     // holding Lo and Hi values.
 }
 
-TarmacBaseRecord::MemEntry::MemEntry (
-    uint8_t _size,
-    Addr _addr,
-    uint64_t _data)
-      : size(_size), addr(_addr), data(_data)
-{
-}
+TarmacBaseRecord::MemEntry::MemEntry(uint8_t _size, Addr _addr, uint64_t _data)
+    : size(_size), addr(_addr), data(_data)
+{}
 
 TarmacBaseRecord::ISetState
 TarmacBaseRecord::pcToISetState(const PCStateBase &pc)

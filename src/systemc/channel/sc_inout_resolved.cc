@@ -36,8 +36,8 @@ namespace sc_core
 
 sc_inout_resolved::sc_inout_resolved() : sc_inout<sc_dt::sc_logic>() {}
 
-sc_inout_resolved::sc_inout_resolved(const char *name) :
-        sc_inout<sc_dt::sc_logic>(name)
+sc_inout_resolved::sc_inout_resolved(const char *name)
+    : sc_inout<sc_dt::sc_logic>(name)
 {}
 
 sc_inout_resolved::~sc_inout_resolved() {}
@@ -53,37 +53,37 @@ sc_inout_resolved::end_of_elaboration()
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_dt::sc_logic &l)
+sc_inout_resolved::operator=(const sc_dt::sc_logic &l)
 {
     (*this)->write(l);
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_signal_in_if<sc_dt::sc_logic> &i)
+sc_inout_resolved::operator=(const sc_signal_in_if<sc_dt::sc_logic> &i)
 {
     (*this)->write(i.read());
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (
-        const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &p)
+sc_inout_resolved::operator=(
+    const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &p)
 {
     (*this)->write(p->read());
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (
-        const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &p)
+sc_inout_resolved::operator=(
+    const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &p)
 {
     (*this)->write(p->read());
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_inout_resolved &p)
+sc_inout_resolved::operator=(const sc_inout_resolved &p)
 {
     (*this)->write(p->read());
     return *this;

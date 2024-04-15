@@ -54,19 +54,20 @@ namespace gem5
 namespace X86ISA
 {
 
-FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
-    smbiosTable(p.smbios_table),
-    mpFloatingPointer(p.intel_mp_pointer),
-    mpConfigTable(p.intel_mp_table),
-    rsdp(p.acpi_description_table_pointer),
-    enable_osxsave(p.enable_osxsave)
+FsWorkload::FsWorkload(const Params &p)
+    : KernelWorkload(p),
+      smbiosTable(p.smbios_table),
+      mpFloatingPointer(p.intel_mp_pointer),
+      mpConfigTable(p.intel_mp_table),
+      rsdp(p.acpi_description_table_pointer),
+      enable_osxsave(p.enable_osxsave)
 {}
 
 void
 installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc, bool longmode)
 {
-    bool honorBase = !longmode || seg == segment_idx::Fs ||
-                                  seg == segment_idx::Gs;
+    bool honorBase =
+        !longmode || seg == segment_idx::Fs || seg == segment_idx::Gs;
 
     SegAttr attr = 0;
 
@@ -108,7 +109,7 @@ FsWorkload::initState()
 {
     KernelWorkload::initState();
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         X86ISA::InitInterrupt(0).invoke(tc);
 
         if (tc->contextId() == 0) {
@@ -141,8 +142,7 @@ FsWorkload::initState()
 
     const Addr PageMapLevel4 = 0x70000;
     const Addr PageDirPtrTable = 0x71000;
-    const Addr PageDirTable[NumPDTs] =
-        {0x72000, 0x73000, 0x74000, 0x75000};
+    const Addr PageDirTable[NumPDTs] = { 0x72000, 0x73000, 0x74000, 0x75000 };
     const Addr GDTBase = 0x76000;
 
     const int PML4Bits = 9;
@@ -341,8 +341,8 @@ FsWorkload::initState()
 }
 
 void
-FsWorkload::writeOutSMBiosTable(Addr header,
-        Addr &headerSize, Addr &structSize, Addr table)
+FsWorkload::writeOutSMBiosTable(Addr header, Addr &headerSize,
+                                Addr &structSize, Addr table)
 {
     // If the table location isn't specified, just put it after the header.
     // The header size as of the 2.5 SMBios specification is 0x1F bytes.

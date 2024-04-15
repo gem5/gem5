@@ -68,7 +68,8 @@ class TLBCoalescer : public ClockedObject
   public:
     typedef TLBCoalescerParams Params;
     TLBCoalescer(const Params &p);
-    ~TLBCoalescer() { }
+
+    ~TLBCoalescer() {}
 
     // Number of TLB probes per cycle. Parameterizable - default 2.
     int TLBProbesPerCycle;
@@ -98,8 +99,7 @@ class TLBCoalescer : public ClockedObject
      * option is to change it to curTick(), so we coalesce based
      * on the receive time.
      */
-    typedef std::map<int64_t, std::vector<coalescedReq>>
-        CoalescingFIFO;
+    typedef std::map<int64_t, std::vector<coalescedReq>> CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
 
@@ -124,24 +124,34 @@ class TLBCoalescer : public ClockedObject
       public:
         CpuSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : ResponsePort(_name), coalescer(tlb_coalescer),
-              index(_index) { }
+            : ResponsePort(_name), coalescer(tlb_coalescer), index(_index)
+        {}
 
       protected:
         TLBCoalescer *coalescer;
         int index;
 
         virtual bool recvTimingReq(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
+
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
+
         virtual void recvFunctional(PacketPtr pkt);
-        virtual void recvRangeChange() { }
+
+        virtual void
+        recvRangeChange()
+        {}
+
         virtual void recvReqRetry();
 
         virtual void
         recvRespRetry()
         {
             fatal("recvRespRetry() is not implemented in the TLB "
-                "coalescer.\n");
+                  "coalescer.\n");
         }
 
         virtual AddrRangeList getAddrRanges() const;
@@ -152,8 +162,8 @@ class TLBCoalescer : public ClockedObject
       public:
         MemSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : RequestPort(_name), coalescer(tlb_coalescer),
-              index(_index) { }
+            : RequestPort(_name), coalescer(tlb_coalescer), index(_index)
+        {}
 
         std::deque<PacketPtr> retries;
 
@@ -162,9 +172,19 @@ class TLBCoalescer : public ClockedObject
         int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
+
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
+
         virtual void recvFunctional(PacketPtr pkt);
-        virtual void recvRangeChange() { }
+
+        virtual void
+        recvRangeChange()
+        {}
+
         virtual void recvReqRetry();
 
         virtual void
@@ -175,12 +195,12 @@ class TLBCoalescer : public ClockedObject
     };
 
     // Coalescer response ports on the cpu Side
-    std::vector<CpuSidePort*> cpuSidePort;
+    std::vector<CpuSidePort *> cpuSidePort;
     // Coalescer request ports on the memory side
-    std::vector<MemSidePort*> memSidePort;
+    std::vector<MemSidePort *> memSidePort;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     void processProbeTLBEvent();
     /// This event issues the TLB probes

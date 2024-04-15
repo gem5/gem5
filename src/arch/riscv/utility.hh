@@ -65,59 +65,120 @@ namespace gem5
 namespace RiscvISA
 {
 
-template<typename Type> struct double_width;
-template<> struct double_width<uint8_t>     { using type = uint16_t;};
-template<> struct double_width<uint16_t>    { using type = uint32_t;};
-template<> struct double_width<uint32_t>    { using type = uint64_t;};
-template<> struct double_width<uint64_t>    { using type = __uint128_t;};
-template<> struct double_width<int8_t>      { using type = int16_t; };
-template<> struct double_width<int16_t>     { using type = int32_t; };
-template<> struct double_width<int32_t>     { using type = int64_t; };
-template<> struct double_width<int64_t>     { using type = __int128_t; };
-template<> struct double_width<float32_t>   { using type = float64_t;};
+template <typename Type>
+struct double_width;
 
-template<typename Type> struct double_widthf;
-template<> struct double_widthf<uint32_t>    { using type = float64_t;};
-template<> struct double_widthf<int32_t>     { using type = float64_t;};
+template <>
+struct double_width<uint8_t>
+{
+    using type = uint16_t;
+};
 
-template<typename T> inline bool
+template <>
+struct double_width<uint16_t>
+{
+    using type = uint32_t;
+};
+
+template <>
+struct double_width<uint32_t>
+{
+    using type = uint64_t;
+};
+
+template <>
+struct double_width<uint64_t>
+{
+    using type = __uint128_t;
+};
+
+template <>
+struct double_width<int8_t>
+{
+    using type = int16_t;
+};
+
+template <>
+struct double_width<int16_t>
+{
+    using type = int32_t;
+};
+
+template <>
+struct double_width<int32_t>
+{
+    using type = int64_t;
+};
+
+template <>
+struct double_width<int64_t>
+{
+    using type = __int128_t;
+};
+
+template <>
+struct double_width<float32_t>
+{
+    using type = float64_t;
+};
+
+template <typename Type>
+struct double_widthf;
+
+template <>
+struct double_widthf<uint32_t>
+{
+    using type = float64_t;
+};
+
+template <>
+struct double_widthf<int32_t>
+{
+    using type = float64_t;
+};
+
+template <typename T>
+inline bool
 isquietnan(T val)
 {
     return false;
 }
 
-template<> inline bool
+template <>
+inline bool
 isquietnan<float>(float val)
 {
-    return std::isnan(val)
-        && (reinterpret_cast<uint32_t&>(val)&0x00400000);
+    return std::isnan(val) && (reinterpret_cast<uint32_t &>(val) & 0x00400000);
 }
 
-template<> inline bool
+template <>
+inline bool
 isquietnan<double>(double val)
 {
-    return std::isnan(val)
-        && (reinterpret_cast<uint64_t&>(val)&0x0008000000000000ULL);
+    return std::isnan(val) &&
+           (reinterpret_cast<uint64_t &>(val) & 0x0008000000000000ULL);
 }
 
-template<typename T> inline bool
+template <typename T>
+inline bool
 issignalingnan(T val)
 {
     return false;
 }
 
-template<> inline bool
+template <>
+inline bool
 issignalingnan<float>(float val)
 {
-    return std::isnan(val)
-        && (reinterpret_cast<uint32_t&>(val)&0x00200000);
+    return std::isnan(val) && (reinterpret_cast<uint32_t &>(val) & 0x00200000);
 }
 
-template<> inline bool
+template <>
+inline bool
 issignalingnan<double>(double val)
 {
-    return std::isnan(val)
-        && (reinterpret_cast<uint64_t&>(val)&0x0004000000000000ULL);
+    return std::isnan(val) &&
+           (reinterpret_cast<uint64_t &>(val) & 0x0004000000000000ULL);
 }
 
 inline std::string
@@ -153,7 +214,7 @@ registerName(RegId reg)
             return str.str();
         }
         return VecRegNames[reg.index()];
-    } else  {
+    } else {
         /* It must be an InvalidRegClass, in RISC-V we should treat it as a
          * zero register for the disassembler to work correctly.
          */
@@ -161,28 +222,32 @@ registerName(RegId reg)
     }
 }
 
-template <typename T> inline std::make_unsigned_t<T>
+template <typename T>
+inline std::make_unsigned_t<T>
 mulhu(std::make_unsigned_t<T> rs1, std::make_unsigned_t<T> rs2)
 {
     using WideT = typename double_width<std::make_unsigned_t<T>>::type;
     return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
-template <typename T> inline std::make_signed_t<T>
+template <typename T>
+inline std::make_signed_t<T>
 mulh(std::make_signed_t<T> rs1, std::make_signed_t<T> rs2)
 {
     using WideT = typename double_width<std::make_signed_t<T>>::type;
     return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
-template <typename T> inline std::make_signed_t<T>
+template <typename T>
+inline std::make_signed_t<T>
 mulhsu(std::make_signed_t<T> rs1, std::make_unsigned_t<T> rs2)
 {
     using WideT = typename double_width<std::make_signed_t<T>>::type;
     return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
-template<typename T> inline T
+template <typename T>
+inline T
 div(T rs1, T rs2)
 {
     constexpr T kRsMin = std::numeric_limits<T>::min();
@@ -195,7 +260,8 @@ div(T rs1, T rs2)
     }
 }
 
-template<typename T> inline T
+template <typename T>
+inline T
 divu(T rs1, T rs2)
 {
     if (rs2 == 0) {
@@ -205,7 +271,8 @@ divu(T rs1, T rs2)
     }
 }
 
-template<typename T> inline T
+template <typename T>
+inline T
 rem(T rs1, T rs2)
 {
     constexpr T kRsMin = std::numeric_limits<T>::min();
@@ -218,7 +285,8 @@ rem(T rs1, T rs2)
     }
 }
 
-template<typename T> inline T
+template <typename T>
+inline T
 remu(T rs1, T rs2)
 {
     return (rs2 == 0) ? rs1 : rs1 % rs2;
@@ -232,27 +300,27 @@ vtype_SEW(const uint64_t vtype)
 }
 
 /*
-* Encode LMUL to lmul as follows:
-*     LMUL    vlmul    lmul
-*      1       000       0
-*      2       001       1
-*      4       010       2
-*      8       011       3
-*      -       100       -
-*     1/8      101      -3
-*     1/4      110      -2
-*     1/2      111      -1
-*
-* then, we can calculate VLMAX = vlen >> (vsew + 3 - lmul)
-* e.g. vlen = 256 bits, SEW = 16, LMUL = 1/8
-*      => VLMAX = vlen >> (1 + 3 - (-3))
-*               = 256 >> 7
-*               = 2
-* Ref: https://github.com/qemu/qemu/blob/5e9d14f2/target/riscv/cpu.h
-*/
+ * Encode LMUL to lmul as follows:
+ *     LMUL    vlmul    lmul
+ *      1       000       0
+ *      2       001       1
+ *      4       010       2
+ *      8       011       3
+ *      -       100       -
+ *     1/8      101      -3
+ *     1/4      110      -2
+ *     1/2      111      -1
+ *
+ * then, we can calculate VLMAX = vlen >> (vsew + 3 - lmul)
+ * e.g. vlen = 256 bits, SEW = 16, LMUL = 1/8
+ *      => VLMAX = vlen >> (1 + 3 - (-3))
+ *               = 256 >> 7
+ *               = 2
+ * Ref: https://github.com/qemu/qemu/blob/5e9d14f2/target/riscv/cpu.h
+ */
 inline uint64_t
 vtype_VLMAX(const uint64_t vtype, const uint64_t vlen,
-    const bool per_reg = false)
+            const bool per_reg = false)
 {
     int64_t lmul = (int64_t)sext<3>(bits(vtype, 2, 0));
     lmul = per_reg ? std::min<int64_t>(0, lmul) : lmul;
@@ -274,7 +342,7 @@ vtype_regs_per_group(const uint64_t vtype)
 }
 
 inline void
-vtype_set_vill(uint64_t& vtype)
+vtype_set_vill(uint64_t &vtype)
 {
     vtype = (uint64_t)0 ^ (1UL << (sizeof(RegVal) * 8 - 1));
 }
@@ -283,387 +351,402 @@ inline uint64_t
 width_EEW(uint64_t width)
 {
     switch (width) {
-    case 0b000: return 8;
-    case 0b101: return 16;
-    case 0b110: return 32;
-    case 0b111: return 64;
-    default: GEM5_UNREACHABLE;
+    case 0b000:
+        return 8;
+    case 0b101:
+        return 16;
+    case 0b110:
+        return 32;
+    case 0b111:
+        return 64;
+    default:
+        GEM5_UNREACHABLE;
     }
 }
 
 /*
-  *  Spec Section 4.5
-  *  Ref:
-  *  https://github.com/qemu/qemu/blob/c7d773ae/target/riscv/vector_helper.c
-*/
-template<typename T>
+ *  Spec Section 4.5
+ *  Ref:
+ *  https://github.com/qemu/qemu/blob/c7d773ae/target/riscv/vector_helper.c
+ */
+template <typename T>
 inline int
-elem_mask(const T* vs, const int index)
+elem_mask(const T *vs, const int index)
 {
     static_assert(std::is_integral_v<T>);
-    int idx = index / (sizeof(T)*8);
-    int pos = index % (sizeof(T)*8);
+    int idx = index / (sizeof(T) * 8);
+    int pos = index % (sizeof(T) * 8);
     return (vs[idx] >> pos) & 1;
 }
 
-template<typename T>
+template <typename T>
 inline int
-elem_mask_vseg(const T* vs, const int elem, const int num_fields)
+elem_mask_vseg(const T *vs, const int elem, const int num_fields)
 {
     int index = floor(elem / num_fields);
     static_assert(std::is_integral_v<T>);
-    int idx = index / (sizeof(T)*8);
-    int pos = index % (sizeof(T)*8);
+    int idx = index / (sizeof(T) * 8);
+    int pos = index % (sizeof(T) * 8);
     return (vs[idx] >> pos) & 1;
 }
 
-template<typename FloatType, typename IntType = decltype(FloatType::v)> auto
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
+auto
 ftype(IntType a) -> FloatType
 {
-    if constexpr(std::is_same_v<uint32_t, IntType>)
+    if constexpr (std::is_same_v<uint32_t, IntType>)
         return f32(a);
-    else if constexpr(std::is_same_v<uint64_t, IntType>)
+    else if constexpr (std::is_same_v<uint64_t, IntType>)
         return f64(a);
     GEM5_UNREACHABLE;
 }
 
 // TODO: Consolidate ftype_freg(freg_t a) and ftype(IntType a) into a
 // single function
-template<typename FloatType, typename IntType = decltype(FloatType::v)> auto
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
+auto
 ftype_freg(freg_t a) -> FloatType
 {
-    if constexpr(std::is_same_v<uint32_t, IntType>)
+    if constexpr (std::is_same_v<uint32_t, IntType>)
         return f32(a);
-    else if constexpr(std::is_same_v<uint64_t, IntType>)
+    else if constexpr (std::is_same_v<uint64_t, IntType>)
         return f64(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fadd(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_add(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_add(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fsub(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_sub(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_sub(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fmin(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_min(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_min(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fmax(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_max(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_max(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fdiv(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_div(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_div(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fmul(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_mul(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_mul(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fsqrt(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_sqrt(a);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_sqrt(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 frsqrte7(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_rsqrte7(a);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_rsqrte7(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 frecip7(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_recip7(a);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_recip7(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fclassify(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32(f32_classify(a));
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64(f64_classify(a));
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fsgnj(FloatType a, FloatType b, bool n, bool x)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return fsgnj32(a, b, n, x);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return fsgnj64(a, b, n, x);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> bool
+template <typename FloatType>
+bool
 fle(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_le(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_le(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> bool
+template <typename FloatType>
+bool
 feq(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_eq(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_eq(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> bool
+template <typename FloatType>
+bool
 flt(FloatType a, FloatType b)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_lt(a, b);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_lt(a, b);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fmadd(FloatType a, FloatType b, FloatType c)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_mulAdd(a, b, c);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_mulAdd(a, b, c);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType> FloatType
+template <typename FloatType>
+FloatType
 fneg(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32(a.v ^ uint32_t(mask(31, 31)));
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64(a.v ^ mask(63, 63));
     GEM5_UNREACHABLE;
 }
 
-template<typename FT, typename WFT = typename double_width<FT>::type> WFT
+template <typename FT, typename WFT = typename double_width<FT>::type>
+WFT
 fwiden(FT a)
 {
-    if constexpr(std::is_same_v<float32_t, FT>)
+    if constexpr (std::is_same_v<float32_t, FT>)
         return f32_to_f64(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType, typename IntType = decltype(FloatType::v)> IntType
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
+IntType
 f_to_ui(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_to_ui32(a, mode, true);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_to_ui64(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)
-> IntType
+template <typename FloatType,
+          typename IntType = decltype(double_width<FloatType>::type::v)>
+IntType
 f_to_wui(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_to_ui64(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type
-> IntType
+template <typename IntType,
+          typename FloatType = typename double_widthf<IntType>::type>
+IntType
 f_to_nui(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float64_t, FloatType>)
+    if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_to_ui32(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType, typename IntType = decltype(FloatType::v)> IntType
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
+IntType
 f_to_i(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return (uint32_t)f32_to_i32(a, mode, true);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return (uint64_t)f64_to_i64(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)
-> IntType
+template <typename FloatType,
+          typename IntType = decltype(double_width<FloatType>::type::v)>
+IntType
 f_to_wi(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return (uint64_t)f32_to_i64(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type
-> IntType
+template <typename IntType,
+          typename FloatType = typename double_widthf<IntType>::type>
+IntType
 f_to_ni(FloatType a, uint_fast8_t mode)
 {
-    if constexpr(std::is_same_v<float64_t, FloatType>)
+    if constexpr (std::is_same_v<float64_t, FloatType>)
         return (uint32_t)f64_to_i32(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType, typename IntType = decltype(FloatType::v)>
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
 FloatType
 ui_to_f(IntType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return ui32_to_f32(a);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return ui64_to_f64(a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type
-> FloatType
+template <typename IntType,
+          typename FloatType = typename double_widthf<IntType>::type>
+FloatType
 ui_to_wf(IntType a)
 {
-    if constexpr(std::is_same_v<float64_t, FloatType>)
+    if constexpr (std::is_same_v<float64_t, FloatType>)
         return ui32_to_f64(a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatType,
-    typename IntType = decltype(double_width<FloatType>::type::v)
-> FloatType
+template <typename FloatType,
+          typename IntType = decltype(double_width<FloatType>::type::v)>
+FloatType
 ui_to_nf(IntType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return ui64_to_f32(a);
     GEM5_UNREACHABLE;
 }
 
-template<typename FloatType, typename IntType = decltype(FloatType::v)>
+template <typename FloatType, typename IntType = decltype(FloatType::v)>
 FloatType
 i_to_f(IntType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return i32_to_f32((int32_t)a);
-    else if constexpr(std::is_same_v<float64_t, FloatType>)
+    else if constexpr (std::is_same_v<float64_t, FloatType>)
         return i64_to_f64((int64_t)a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename IntType,
-    typename FloatType = typename double_widthf<IntType>::type
-> FloatType
+template <typename IntType,
+          typename FloatType = typename double_widthf<IntType>::type>
+FloatType
 i_to_wf(IntType a)
 {
-    if constexpr(std::is_same_v<float64_t, FloatType>)
+    if constexpr (std::is_same_v<float64_t, FloatType>)
         return i32_to_f64((int32_t)a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatType,
-    typename IntType = std::make_signed_t<
-        decltype(double_width<FloatType>::type::v)
-    >
-> FloatType
+template <typename FloatType, typename IntType = std::make_signed_t<
+                                  decltype(double_width<FloatType>::type::v)>>
+FloatType
 i_to_nf(IntType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return i64_to_f32(a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatType,
-    typename FloatWType = typename double_width<FloatType>::type
-> FloatWType
+template <typename FloatType,
+          typename FloatWType = typename double_width<FloatType>::type>
+FloatWType
 f_to_wf(FloatType a)
 {
-    if constexpr(std::is_same_v<float32_t, FloatType>)
+    if constexpr (std::is_same_v<float32_t, FloatType>)
         return f32_to_f64(a);
     GEM5_UNREACHABLE;
 }
 
-template<
-    typename FloatNType,
-    typename FloatType = typename double_width<FloatNType>::type
-> FloatNType
+template <typename FloatNType,
+          typename FloatType = typename double_width<FloatNType>::type>
+FloatNType
 f_to_nf(FloatType a)
 {
-    if constexpr(std::is_same_v<float64_t, FloatType>)
+    if constexpr (std::is_same_v<float64_t, FloatType>)
         return f64_to_f32(a);
     GEM5_UNREACHABLE;
 }
 
-//ref:  https://locklessinc.com/articles/sat_arithmetic/
-template<typename T> T
-sat_add(T x, T y, bool* sat)
+// ref:  https://locklessinc.com/articles/sat_arithmetic/
+template <typename T>
+T
+sat_add(T x, T y, bool *sat)
 {
     using UT = std::make_unsigned_t<T>;
     UT ux = x;
@@ -674,15 +757,16 @@ sat_add(T x, T y, bool* sat)
 
     ux = (ux >> sh) + (((UT)0x1 << sh) - 1);
 
-    if ((T) ((ux ^ uy) | ~(uy ^ res)) >= 0) {
-    res = ux;
-    *sat = true;
+    if ((T)((ux ^ uy) | ~(uy ^ res)) >= 0) {
+        res = ux;
+        *sat = true;
     }
     return res;
 }
 
-template<typename T> T
-sat_sub(T x, T y, bool* sat)
+template <typename T>
+T
+sat_sub(T x, T y, bool *sat)
 {
     using UT = std::make_unsigned_t<T>;
     UT ux = x;
@@ -693,35 +777,37 @@ sat_sub(T x, T y, bool* sat)
 
     ux = (ux >> sh) + (((UT)0x1 << sh) - 1);
 
-    if ((T) ((ux ^ uy) & (ux ^ res)) < 0) {
-    res = ux;
-    *sat = true;
+    if ((T)((ux ^ uy) & (ux ^ res)) < 0) {
+        res = ux;
+        *sat = true;
     }
     return res;
 }
 
-template<typename T> T
-sat_addu(T x, T y, bool* sat)
+template <typename T>
+T
+sat_addu(T x, T y, bool *sat)
 {
     T res = x + y;
 
     bool t = res < x;
-    if (false == *sat){
-    *sat = t;
+    if (false == *sat) {
+        *sat = t;
     }
     res |= -(res < x);
 
     return res;
 }
 
-template<typename T> T
-sat_subu(T x, T y, bool* sat)
+template <typename T>
+T
+sat_subu(T x, T y, bool *sat)
 {
     T res = x - y;
 
     bool t = !(res <= x);
-    if (false == *sat){
-    *sat = t;
+    if (false == *sat) {
+        *sat = t;
     }
 
     res &= -(res <= x);
@@ -733,8 +819,10 @@ sat_subu(T x, T y, bool* sat)
  * Ref:
  * https://github.com/riscv-software-src/riscv-isa-sim
  */
-template<typename T> T
-int_rounding(T result, uint8_t xrm, unsigned gb) {
+template <typename T>
+T
+int_rounding(T result, uint8_t xrm, unsigned gb)
+{
     const uint64_t lsb = 1UL << gb;
     const uint64_t lsb_half = lsb >> 1;
     switch (xrm) {

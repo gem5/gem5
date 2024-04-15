@@ -66,8 +66,7 @@ namespace gem5
 
 struct P9MsgInfo
 {
-    P9MsgInfo(P9MsgType _type, std::string _name)
-        : type(_type), name(_name) {}
+    P9MsgInfo(P9MsgType _type, std::string _name) : type(_type), name(_name) {}
 
     P9MsgType type;
     std::string name;
@@ -75,6 +74,7 @@ struct P9MsgInfo
 
 typedef std::map<P9MsgType, P9MsgInfo> P9MsgInfoMap;
 
+/* clang-format off */
 #define P9MSG(type, name)                               \
     { (type), P9MsgInfo((type), "T" # name ) },         \
     { (type + 1), P9MsgInfo((type + 1), "R" # name ) }
@@ -118,24 +118,21 @@ static const P9MsgInfoMap p9_msg_info {
 
 #undef P9MSG
 
+/* clang-format on */
+
 VirtIO9PBase::VirtIO9PBase(const Params &params)
-    : VirtIODeviceBase(params, ID_9P,
-                       sizeof(Config) + params.tag.size(),
+    : VirtIODeviceBase(params, ID_9P, sizeof(Config) + params.tag.size(),
                        F_MOUNT_TAG),
       queue(params.system->physProxy, byteOrder, params.queueSize, *this)
 {
-    config.reset((Config *)
-                 operator new(configSize));
+    config.reset((Config *)operator new(configSize));
     config->len = htog(params.tag.size(), byteOrder);
     memcpy(config->tag, params.tag.c_str(), params.tag.size());
 
     registerQueue(queue);
 }
 
-
-VirtIO9PBase::~VirtIO9PBase()
-{
-}
+VirtIO9PBase::~VirtIO9PBase() {}
 
 void
 VirtIO9PBase::readConfig(PacketPtr pkt, Addr cfgOffset)
@@ -147,7 +144,8 @@ void
 VirtIO9PBase::FSQueue::onNotifyDescriptor(VirtDescriptor *desc)
 {
     DPRINTF(VIO9P, "Got input data descriptor (len: %i)\n", desc->size());
-    DPRINTF(VIO9P, "\tPending transactions: %i\n", parent.pendingTransactions.size());
+    DPRINTF(VIO9P, "\tPending transactions: %i\n",
+            parent.pendingTransactions.size());
 
     P9MsgHeader header;
     desc->chainRead(0, (uint8_t *)&header, sizeof(header));
@@ -167,7 +165,8 @@ VirtIO9PBase::FSQueue::onNotifyDescriptor(VirtDescriptor *desc)
 }
 
 void
-VirtIO9PBase::sendRMsg(const P9MsgHeader &header, const uint8_t *data, size_t size)
+VirtIO9PBase::sendRMsg(const P9MsgHeader &header, const uint8_t *data,
+                       size_t size)
 {
     DPRINTF(VIO9P, "Sending RMsg\n");
     dumpMsg(header, data, size);
@@ -195,7 +194,8 @@ VirtIO9PBase::sendRMsg(const P9MsgHeader &header, const uint8_t *data, size_t si
 }
 
 void
-VirtIO9PBase::dumpMsg(const P9MsgHeader &header, const uint8_t *data, size_t size)
+VirtIO9PBase::dumpMsg(const P9MsgHeader &header, const uint8_t *data,
+                      size_t size)
 {
 #ifndef NDEBUG
     if (!debug::VIO9P)
@@ -214,24 +214,20 @@ VirtIO9PBase::dumpMsg(const P9MsgHeader &header, const uint8_t *data, size_t siz
 #endif
 }
 
-
 VirtIO9PProxy::VirtIO9PProxy(const Params &params)
-  : VirtIO9PBase(params), deviceUsed(false)
-{
-}
+    : VirtIO9PBase(params), deviceUsed(false)
+{}
 
-VirtIO9PProxy::~VirtIO9PProxy()
-{
-}
-
+VirtIO9PProxy::~VirtIO9PProxy() {}
 
 void
 VirtIO9PProxy::serialize(CheckpointOut &cp) const
 {
     if (deviceUsed) {
-        warn("Serializing VirtIO9Base device after device has been used. It is "
-             "likely that state will be lost, and that the device will cease "
-             "to work!");
+        warn(
+            "Serializing VirtIO9Base device after device has been used. It is "
+            "likely that state will be lost, and that the device will cease "
+            "to work!");
     }
     SERIALIZE_SCALAR(deviceUsed);
 
@@ -244,17 +240,17 @@ VirtIO9PProxy::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(deviceUsed);
 
     if (deviceUsed) {
-        warn("Unserializing VirtIO9Base device after device has been used. It is "
+        warn("Unserializing VirtIO9Base device after device has been used. It "
+             "is "
              "likely that state has been lost, and that the device will cease "
              "to work!");
     }
     VirtIO9PBase::unserialize(cp);
 }
 
-
 void
-VirtIO9PProxy::recvTMsg(const P9MsgHeader &header,
-                        const uint8_t *data, size_t size)
+VirtIO9PProxy::recvTMsg(const P9MsgHeader &header, const uint8_t *data,
+                        size_t size)
 {
     deviceUsed = true;
     assert(header.len == sizeof(header) + size);
@@ -282,7 +278,6 @@ VirtIO9PProxy::serverDataReady()
 
     sendRMsg(header, data, payload_len);
 }
-
 
 void
 VirtIO9PProxy::readAll(uint8_t *data, size_t len)
@@ -314,19 +309,14 @@ VirtIO9PProxy::writeAll(const uint8_t *data, size_t len)
     }
 }
 
-
-
 VirtIO9PDiod::VirtIO9PDiod(const Params &params)
-    : VirtIO9PProxy(params),
-      fd_to_diod(-1), fd_from_diod(-1), diod_pid(-1)
+    : VirtIO9PProxy(params), fd_to_diod(-1), fd_from_diod(-1), diod_pid(-1)
 {
     // Register an exit callback so we can kill the diod process
     registerExitCallback([this]() { terminateDiod(); });
 }
 
-VirtIO9PDiod::~VirtIO9PDiod()
-{
-}
+VirtIO9PDiod::~VirtIO9PDiod() {}
 
 void
 VirtIO9PDiod::startup()
@@ -346,9 +336,9 @@ VirtIO9PDiod::startDiod()
     DPRINTF(VIO9P, "Using diod at %s.\n", p.diod);
 
     panic_if(pipe(pipe_rfd) == -1, "Failed to create DIOD read pipe: %s",
-            strerror(errno));
+             strerror(errno));
     panic_if(pipe(pipe_wfd) == -1, "Failed to create DIOD write pipe: %s",
-            strerror(errno));
+             strerror(errno));
 
     fd_to_diod = pipe_rfd[1];
     fd_from_diod = pipe_wfd[0];
@@ -363,7 +353,8 @@ VirtIO9PDiod::startDiod()
     socket_address.sun_family = AF_UNIX;
 
     const std::string socket_path = simout.resolve(p.socketPath);
-    fatal_if(!OutputDirectory::isAbsolute(socket_path), "Please make the"
+    fatal_if(!OutputDirectory::isAbsolute(socket_path),
+             "Please make the"
              " output directory an absolute path, else diod will fail!");
 
     // Prevent overflow in strcpy
@@ -371,10 +362,11 @@ VirtIO9PDiod::startDiod()
              "Incorrect length of socket path");
     strncpy(socket_address.sun_path, socket_path.c_str(),
             sizeof(socket_address.sun_path) - 1);
-    panic_if(bind(socket_id, (struct sockaddr*)&socket_address,
-                sizeof(socket_address)) == -1,
-            "Socket binding to %i failed - most likely the output dir "
-            "and hence unused socket already exists.", socket_id);
+    panic_if(bind(socket_id, (struct sockaddr *)&socket_address,
+                  sizeof(socket_address)) == -1,
+             "Socket binding to %i failed - most likely the output dir "
+             "and hence unused socket already exists.",
+             socket_id);
 
     diod_pid = fork();
     panic_if(diod_pid == -1, "Fork failed: %s", strerror(errno));
@@ -389,23 +381,24 @@ VirtIO9PDiod::startDiod()
         auto diod_wfd_s = std::to_string(pipe_wfd[1]);
 
         // Start diod
-        execlp(p.diod.c_str(), p.diod.c_str(),
-               "-d", debug::VIO9P ? "1" : "0", // show debug output
-               "-f", // start in foreground
-               "-r", diod_rfd_s.c_str(), // setup read FD
-               "-w", diod_wfd_s.c_str(), // setup write FD
-               "-e", p.root.c_str(), // path to export
-               "-n", // disable security
-               "-S", // squash all users
+        execlp(p.diod.c_str(), p.diod.c_str(), "-d",
+               debug::VIO9P ? "1" : "0",  // show debug output
+               "-f",                      // start in foreground
+               "-r", diod_rfd_s.c_str(),  // setup read FD
+               "-w", diod_wfd_s.c_str(),  // setup write FD
+               "-e", p.root.c_str(),      // path to export
+               "-n",                      // disable security
+               "-S",                      // squash all users
                "-l", socket_path.c_str(), // pass the socket
                nullptr);
         panic("Failed to execute diod to %s: %s", socket_path,
-                strerror(errno));
+              strerror(errno));
     } else {
         close(pipe_rfd[0]);
         close(pipe_wfd[1]);
         inform("Started diod with PID %u, you might need to manually kill "
-                "diod if gem5 crashes", diod_pid);
+               "diod if gem5 crashes",
+               diod_pid);
     }
 }
 
@@ -471,15 +464,11 @@ VirtIO9PDiod::terminateDiod()
     }
 }
 
-
 VirtIO9PSocket::VirtIO9PSocket(const Params &params)
     : VirtIO9PProxy(params), fdSocket(-1)
-{
-}
+{}
 
-VirtIO9PSocket::~VirtIO9PSocket()
-{
-}
+VirtIO9PSocket::~VirtIO9PSocket() {}
 
 void
 VirtIO9PSocket::startup()
@@ -502,14 +491,13 @@ VirtIO9PSocket::connectSocket()
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
 
-    if ((ret = getaddrinfo(p.server.c_str(), p.port.c_str(),
-                           &hints, &result)) != 0)
+    if ((ret = getaddrinfo(p.server.c_str(), p.port.c_str(), &hints,
+                           &result)) != 0)
         panic("getaddrinfo: %s\n", gai_strerror(ret));
 
     DPRINTF(VIO9P, "Connecting to 9p server '%s'.\n", p.server);
     for (struct addrinfo *rp = result; rp; rp = rp->ai_next) {
-        fdSocket = socket(rp->ai_family, rp->ai_socktype,
-                     rp->ai_protocol);
+        fdSocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if (fdSocket == -1) {
             continue;
         } else if (connect(fdSocket, rp->ai_addr, rp->ai_addrlen) != -1) {

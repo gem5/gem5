@@ -72,7 +72,11 @@ class SerializationFixture : public ::testing::Test
     }
 
     /** Get the name of the directory we have created on SetUp. */
-    std::string getDirName() const { return dirName; }
+    std::string
+    getDirName() const
+    {
+        return dirName;
+    }
 
     /** Get the path to the checkpoint file. */
     std::string
@@ -114,6 +118,7 @@ class SerializationFixture : public ::testing::Test
         assert(success == 0);
     }
 };
+
 unsigned SerializationFixture::dirNumber = 0;
 
-} // anonymous namespace
+} // namespace gem5

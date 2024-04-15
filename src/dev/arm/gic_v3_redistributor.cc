@@ -54,7 +54,7 @@ using namespace ArmISA;
 const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(SGI_base + 0x0400,
                                                     SGI_base + 0x0420);
 
-Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
+Gicv3Redistributor::Gicv3Redistributor(Gicv3 *gic, uint32_t cpu_id)
     : gic(gic),
       distributor(nullptr),
       cpuInterface(nullptr),
@@ -78,8 +78,7 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       lpiIDBits(0),
       lpiPendingTablePtr(0),
       addrRangeSize(gic->params().gicv4 ? 0x40000 : 0x20000)
-{
-}
+{}
 
 void
 Gicv3Redistributor::init()
@@ -117,60 +116,60 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
     }
 
     switch (addr) {
-      case GICR_CTLR: { // Control Register
-          uint64_t value = 0;
+    case GICR_CTLR: { // Control Register
+        uint64_t value = 0;
 
-          if (DPG1S) {
-              value |= GICR_CTLR_DPG1S;
-          }
+        if (DPG1S) {
+            value |= GICR_CTLR_DPG1S;
+        }
 
-          if (DPG1NS) {
-              value |= GICR_CTLR_DPG1NS;
-          }
+        if (DPG1NS) {
+            value |= GICR_CTLR_DPG1NS;
+        }
 
-          if (DPG0) {
-              value |= GICR_CTLR_DPG0;
-          }
+        if (DPG0) {
+            value |= GICR_CTLR_DPG0;
+        }
 
-          if (EnableLPIs) {
-              value |= GICR_CTLR_ENABLE_LPIS;
-          }
+        if (EnableLPIs) {
+            value |= GICR_CTLR_ENABLE_LPIS;
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_IIDR: // Implementer Identification Register
-        //return 0x43b; // r0p0 GIC-500
+    case GICR_IIDR: // Implementer Identification Register
+        // return 0x43b; // r0p0 GIC-500
         return 0;
 
-      case GICR_TYPER: { // Type Register
-          /*
-           * Affinity_Value   [63:32] == X
-           * (The identity of the PE associated with this Redistributor)
-           * CommonLPIAff     [25:24] == 01
-           * (All Redistributors with the same Aff3 value must share an
-           * LPI Configuration table)
-           * Processor_Number [23:8]  == X
-           * (A unique identifier for the PE)
-           * DPGS             [5]     == 1
-           * (GICR_CTLR.DPG* bits are supported)
-           * Last             [4]     == X
-           * (This Redistributor is the highest-numbered Redistributor in
-           * a series of contiguous Redistributor pages)
-           * DirectLPI        [3]     == 1
-           * (direct injection of LPIs supported)
-           * VLPIS            [1]     == 0
-           * (virtual LPIs not supported)
-           * PLPIS            [0]     == 1
-           * (physical LPIs supported)
-           */
-          uint64_t affinity = getAffinity();
-          int last = cpuId == (gic->getSystem()->threads.size() - 1);
-          return (affinity << 32) | (1 << 24) | (cpuId << 8) |
-              (1 << 5) | (last << 4) | (1 << 3) | (1 << 0);
-      }
+    case GICR_TYPER: { // Type Register
+        /*
+         * Affinity_Value   [63:32] == X
+         * (The identity of the PE associated with this Redistributor)
+         * CommonLPIAff     [25:24] == 01
+         * (All Redistributors with the same Aff3 value must share an
+         * LPI Configuration table)
+         * Processor_Number [23:8]  == X
+         * (A unique identifier for the PE)
+         * DPGS             [5]     == 1
+         * (GICR_CTLR.DPG* bits are supported)
+         * Last             [4]     == X
+         * (This Redistributor is the highest-numbered Redistributor in
+         * a series of contiguous Redistributor pages)
+         * DirectLPI        [3]     == 1
+         * (direct injection of LPIs supported)
+         * VLPIS            [1]     == 0
+         * (virtual LPIs not supported)
+         * PLPIS            [0]     == 1
+         * (physical LPIs supported)
+         */
+        uint64_t affinity = getAffinity();
+        int last = cpuId == (gic->getSystem()->threads.size() - 1);
+        return (affinity << 32) | (1 << 24) | (cpuId << 8) | (1 << 5) |
+               (last << 4) | (1 << 3) | (1 << 0);
+    }
 
-      case GICR_WAKER: // Wake Register
+    case GICR_WAKER: // Wake Register
         if (!distributor->DS && !is_secure_access) {
             // RAZ/WI for non-secure accesses
             return 0;
@@ -182,168 +181,167 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
             return 0;
         }
 
-      case GICR_PIDR0: { // Peripheral ID0 Register
-          return 0x92; // Part number, bits[7:0]
-      }
+    case GICR_PIDR0: { // Peripheral ID0 Register
+        return 0x92;   // Part number, bits[7:0]
+    }
 
-      case GICR_PIDR1: { // Peripheral ID1 Register
-          uint8_t des_0 = 0xB; // JEP106 identification code, bits[3:0]
-          uint8_t part_1 = 0x4; // Part number, bits[11:8]
-          return (des_0 << 4) | (part_1 << 0);
-      }
+    case GICR_PIDR1: {        // Peripheral ID1 Register
+        uint8_t des_0 = 0xB;  // JEP106 identification code, bits[3:0]
+        uint8_t part_1 = 0x4; // Part number, bits[11:8]
+        return (des_0 << 4) | (part_1 << 0);
+    }
 
-      case GICR_PIDR2: { // Peripheral ID2 Register
-          return gic->getDistributor()->gicdPidr2;
-      }
+    case GICR_PIDR2: { // Peripheral ID2 Register
+        return gic->getDistributor()->gicdPidr2;
+    }
 
-      case GICR_PIDR3: // Peripheral ID3 Register
-        return 0x0; // Implementation defined
+    case GICR_PIDR3: // Peripheral ID3 Register
+        return 0x0;  // Implementation defined
 
-      case GICR_PIDR4: { // Peripheral ID4 Register
-          uint8_t size = 0x4; // 64 KB software visible page
-          uint8_t des_2 = 0x4; // ARM implementation
-          return (size << 4) | (des_2 << 0);
-      }
+    case GICR_PIDR4: {       // Peripheral ID4 Register
+        uint8_t size = 0x4;  // 64 KB software visible page
+        uint8_t des_2 = 0x4; // ARM implementation
+        return (size << 4) | (des_2 << 0);
+    }
 
-      case GICR_PIDR5: // Peripheral ID5 Register
-      case GICR_PIDR6: // Peripheral ID6 Register
-      case GICR_PIDR7: // Peripheral ID7 Register
-        return 0; // RES0
+    case GICR_PIDR5: // Peripheral ID5 Register
+    case GICR_PIDR6: // Peripheral ID6 Register
+    case GICR_PIDR7: // Peripheral ID7 Register
+        return 0;    // RES0
 
-      case GICR_IGROUPR0: { // Interrupt Group Register 0
-          uint64_t value = 0;
+    case GICR_IGROUPR0: { // Interrupt Group Register 0
+        uint64_t value = 0;
 
-          if (!distributor->DS && !is_secure_access) {
-              // RAZ/WI for non-secure accesses
-              return 0;
-          }
+        if (!distributor->DS && !is_secure_access) {
+            // RAZ/WI for non-secure accesses
+            return 0;
+        }
 
-          for (int int_id = 0; int_id < 8 * size; int_id++) {
-              value |= (irqGroup[int_id] << int_id);
-          }
+        for (int int_id = 0; int_id < 8 * size; int_id++) {
+            value |= (irqGroup[int_id] << int_id);
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_ISENABLER0: // Interrupt Set-Enable Register 0
-      case GICR_ICENABLER0: { // Interrupt Clear-Enable Register 0
-          uint64_t value = 0;
+    case GICR_ISENABLER0:   // Interrupt Set-Enable Register 0
+    case GICR_ICENABLER0: { // Interrupt Clear-Enable Register 0
+        uint64_t value = 0;
 
-          for (int int_id = 0; int_id < 8 * size; int_id++) {
-              if (!distributor->DS && !is_secure_access) {
-                  // RAZ/WI for non-secure accesses for secure interrupts
-                  if (getIntGroup(int_id) != Gicv3::G1NS) {
-                      continue;
-                  }
-              }
+        for (int int_id = 0; int_id < 8 * size; int_id++) {
+            if (!distributor->DS && !is_secure_access) {
+                // RAZ/WI for non-secure accesses for secure interrupts
+                if (getIntGroup(int_id) != Gicv3::G1NS) {
+                    continue;
+                }
+            }
 
-              if (irqEnabled[int_id]) {
-                  value |= (1 << int_id);
-              }
-          }
+            if (irqEnabled[int_id]) {
+                value |= (1 << int_id);
+            }
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_ISPENDR0: // Interrupt Set-Pending Register 0
-      case GICR_ICPENDR0: { // Interrupt Clear-Pending Register 0
-          uint64_t value = 0;
+    case GICR_ISPENDR0:   // Interrupt Set-Pending Register 0
+    case GICR_ICPENDR0: { // Interrupt Clear-Pending Register 0
+        uint64_t value = 0;
 
-          for (int int_id = 0; int_id < 8 * size; int_id++) {
-              if (!distributor->DS && !is_secure_access) {
-                  // RAZ/WI for non-secure accesses for secure interrupts
-                  if (getIntGroup(int_id) != Gicv3::G1NS) {
-                      continue;
-                  }
-              }
+        for (int int_id = 0; int_id < 8 * size; int_id++) {
+            if (!distributor->DS && !is_secure_access) {
+                // RAZ/WI for non-secure accesses for secure interrupts
+                if (getIntGroup(int_id) != Gicv3::G1NS) {
+                    continue;
+                }
+            }
 
-              value |= (irqPending[int_id] << int_id);
-          }
+            value |= (irqPending[int_id] << int_id);
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_ISACTIVER0: // Interrupt Set-Active Register 0
-      case GICR_ICACTIVER0: { // Interrupt Clear-Active Register 0
-          uint64_t value = 0;
+    case GICR_ISACTIVER0:   // Interrupt Set-Active Register 0
+    case GICR_ICACTIVER0: { // Interrupt Clear-Active Register 0
+        uint64_t value = 0;
 
-          for (int int_id = 0; int_id < 8 * size; int_id++) {
-              if (!distributor->DS && !is_secure_access) {
-                  // RAZ/WI for non-secure accesses for secure interrupts
-                  if (getIntGroup(int_id) != Gicv3::G1NS) {
-                      continue;
-                  }
-              }
+        for (int int_id = 0; int_id < 8 * size; int_id++) {
+            if (!distributor->DS && !is_secure_access) {
+                // RAZ/WI for non-secure accesses for secure interrupts
+                if (getIntGroup(int_id) != Gicv3::G1NS) {
+                    continue;
+                }
+            }
 
-              value |=  irqActive[int_id] << int_id;
-          }
+            value |= irqActive[int_id] << int_id;
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_ICFGR0: // SGI Configuration Register
-      case GICR_ICFGR1: { // PPI Configuration Register
-          uint64_t value = 0;
-          uint32_t first_int_id = addr == GICR_ICFGR0 ? 0 : Gicv3::SGI_MAX;
+    case GICR_ICFGR0:   // SGI Configuration Register
+    case GICR_ICFGR1: { // PPI Configuration Register
+        uint64_t value = 0;
+        uint32_t first_int_id = addr == GICR_ICFGR0 ? 0 : Gicv3::SGI_MAX;
 
-          for (int i = 0, int_id = first_int_id; i < 32;
-               i = i + 2, int_id++) {
-              if (!distributor->DS && !is_secure_access) {
-                  // RAZ/WI for non-secure accesses for secure interrupts
-                  if (getIntGroup(int_id) != Gicv3::G1NS) {
-                      continue;
-                  }
-              }
+        for (int i = 0, int_id = first_int_id; i < 32; i = i + 2, int_id++) {
+            if (!distributor->DS && !is_secure_access) {
+                // RAZ/WI for non-secure accesses for secure interrupts
+                if (getIntGroup(int_id) != Gicv3::G1NS) {
+                    continue;
+                }
+            }
 
-              if (irqConfig[int_id] == Gicv3::INT_EDGE_TRIGGERED) {
-                  value |= (0x2) << i;
-              }
-          }
+            if (irqConfig[int_id] == Gicv3::INT_EDGE_TRIGGERED) {
+                value |= (0x2) << i;
+            }
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_IGRPMODR0: { // Interrupt Group Modifier Register 0
-          uint64_t value = 0;
+    case GICR_IGRPMODR0: { // Interrupt Group Modifier Register 0
+        uint64_t value = 0;
 
-          if (distributor->DS) {
-              value = 0;
-          } else {
-              if (!is_secure_access) {
-                  // RAZ/WI for non-secure accesses
-                  value = 0;
-              } else {
-                  for (int int_id = 0; int_id < 8 * size; int_id++) {
-                      value |= irqGrpmod[int_id] << int_id;
-                  }
-              }
-          }
+        if (distributor->DS) {
+            value = 0;
+        } else {
+            if (!is_secure_access) {
+                // RAZ/WI for non-secure accesses
+                value = 0;
+            } else {
+                for (int int_id = 0; int_id < 8 * size; int_id++) {
+                    value |= irqGrpmod[int_id] << int_id;
+                }
+            }
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_NSACR: { // Non-secure Access Control Register
-          uint64_t value = 0;
+    case GICR_NSACR: { // Non-secure Access Control Register
+        uint64_t value = 0;
 
-          if (distributor->DS) {
-              // RAZ/WI
-              value = 0;
-          } else {
-              if (!is_secure_access) {
-                  // RAZ/WI
-                  value = 0;
-              } else {
-                  for (int i = 0, int_id = 0; i < 8 * size;
-                       i = i + 2, int_id++) {
-                      value |= irqNsacr[int_id] << i;
-                  }
-              }
-          }
+        if (distributor->DS) {
+            // RAZ/WI
+            value = 0;
+        } else {
+            if (!is_secure_access) {
+                // RAZ/WI
+                value = 0;
+            } else {
+                for (int i = 0, int_id = 0; i < 8 * size;
+                     i = i + 2, int_id++) {
+                    value |= irqNsacr[int_id] << i;
+                }
+            }
+        }
 
-          return value;
-      }
+        return value;
+    }
 
-      case GICR_PROPBASER: // Redistributor Properties Base Address Register
+    case GICR_PROPBASER: // Redistributor Properties Base Address Register
         // OuterCache, bits [58:56]
         //   000 Memory type defined in InnerCache field
         // Physical_Address, bits [51:12]
@@ -357,8 +355,8 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
         //   limited by GICD_TYPER.IDbits
         return lpiConfigurationTablePtr | lpiIDBits;
 
-      // Redistributor LPI Pending Table Base Address Register
-      case GICR_PENDBASER:
+    // Redistributor LPI Pending Table Base Address Register
+    case GICR_PENDBASER:
         // PTZ, bit [62]
         //   Pending Table Zero
         // OuterCache, bits [58:56]
@@ -372,12 +370,13 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
         //   000 Device-nGnRnE
         return lpiPendingTablePtr;
 
-      // Redistributor Synchronize Register
-      case GICR_SYNCR:
+    // Redistributor Synchronize Register
+    case GICR_SYNCR:
         return 0;
 
-      default:
-        gic->reserved("Gicv3Redistributor::read(): invalid offset %#x\n", addr);
+    default:
+        gic->reserved("Gicv3Redistributor::read(): invalid offset %#x\n",
+                      addr);
         return 0; // RES0
     }
 }
@@ -403,25 +402,27 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
             }
 
             irqPriority[int_id] = prio;
-            DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                    "int_id %d priority %d\n", int_id, irqPriority[int_id]);
+            DPRINTF(GIC,
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d priority %d\n",
+                    int_id, irqPriority[int_id]);
         }
 
         return;
     }
 
     switch (addr) {
-      case GICR_CTLR: {
-          // GICR_TYPER.LPIS is 0 so EnableLPIs is RES0
-          EnableLPIs = data & GICR_CTLR_ENABLE_LPIS;
-          DPG1S = data & GICR_CTLR_DPG1S;
-          DPG1NS = data & GICR_CTLR_DPG1NS;
-          DPG0 = data & GICR_CTLR_DPG0;
-          break;
-      }
+    case GICR_CTLR: {
+        // GICR_TYPER.LPIS is 0 so EnableLPIs is RES0
+        EnableLPIs = data & GICR_CTLR_ENABLE_LPIS;
+        DPG1S = data & GICR_CTLR_DPG1S;
+        DPG1NS = data & GICR_CTLR_DPG1NS;
+        DPG0 = data & GICR_CTLR_DPG0;
+        break;
+    }
 
-      case GICR_WAKER: // Wake Register
-      {
+    case GICR_WAKER: // Wake Register
+    {
         if (!distributor->DS && !is_secure_access) {
             // RAZ/WI for non-secure accesses
             return;
@@ -431,7 +432,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         peInLowPowerState = data & GICR_WAKER_ProcessorSleep;
         if (!pe_was_low_power && peInLowPowerState) {
             DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                    "PE entering in low power state\n");
+                         "PE entering in low power state\n");
             updateDistributor();
         } else if (pe_was_low_power && !peInLowPowerState) {
             DPRINTF(GIC, "Gicv3Redistributor::write(): powering up PE\n");
@@ -439,9 +440,9 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
             updateDistributor();
         }
         break;
-      }
+    }
 
-      case GICR_IGROUPR0: // Interrupt Group Register 0
+    case GICR_IGROUPR0: // Interrupt Group Register 0
         if (!distributor->DS && !is_secure_access) {
             // RAZ/WI for non-secure accesses
             return;
@@ -449,13 +450,15 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             irqGroup[int_id] = data & (1 << int_id) ? 1 : 0;
-            DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                    "int_id %d group %d\n", int_id, irqGroup[int_id]);
+            DPRINTF(GIC,
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d group %d\n",
+                    int_id, irqGroup[int_id]);
         }
 
         break;
 
-      case GICR_ISENABLER0: // Interrupt Set-Enable Register 0
+    case GICR_ISENABLER0: // Interrupt Set-Enable Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -470,13 +473,15 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
                 irqEnabled[int_id] = true;
             }
 
-            DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                    "int_id %d enable %i\n", int_id, irqEnabled[int_id]);
+            DPRINTF(GIC,
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d enable %i\n",
+                    int_id, irqEnabled[int_id]);
         }
 
         break;
 
-      case GICR_ICENABLER0: // Interrupt Clear-Enable Register 0
+    case GICR_ICENABLER0: // Interrupt Clear-Enable Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -491,13 +496,15 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
                 irqEnabled[int_id] = false;
             }
 
-            DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                    "int_id %d enable %i\n", int_id, irqEnabled[int_id]);
+            DPRINTF(GIC,
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d enable %i\n",
+                    int_id, irqEnabled[int_id]);
         }
 
         break;
 
-      case GICR_ISPENDR0: // Interrupt Set-Pending Register 0
+    case GICR_ISPENDR0: // Interrupt Set-Pending Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -509,9 +516,11 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
             bool pending = data & (1 << int_id) ? 1 : 0;
 
             if (pending) {
-                DPRINTF(GIC, "Gicv3Redistributor::write() "
+                DPRINTF(GIC,
+                        "Gicv3Redistributor::write() "
                         "(GICR_ISPENDR0): int_id %d (PPI) "
-                        "pending bit set\n", int_id);
+                        "pending bit set\n",
+                        int_id);
                 irqPending[int_id] = true;
                 irqPendingIspendr[int_id] = true;
             }
@@ -520,7 +529,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         updateDistributor();
         break;
 
-      case GICR_ICPENDR0:// Interrupt Clear-Pending Register 0
+    case GICR_ICPENDR0: // Interrupt Clear-Pending Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -538,7 +547,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
         break;
 
-      case GICR_ISACTIVER0: // Interrupt Set-Active Register 0
+    case GICR_ISACTIVER0: // Interrupt Set-Active Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -551,8 +560,10 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
             if (activate) {
                 if (!irqActive[int_id]) {
-                    DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                            "int_id %d active set\n", int_id);
+                    DPRINTF(GIC,
+                            "Gicv3Redistributor::write(): "
+                            "int_id %d active set\n",
+                            int_id);
                 }
 
                 irqActive[int_id] = true;
@@ -561,7 +572,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
         break;
 
-      case GICR_ICACTIVER0: // Interrupt Clear-Active Register 0
+    case GICR_ICACTIVER0: // Interrupt Clear-Active Register 0
         for (int int_id = 0; int_id < 8 * size; int_id++) {
             if (!distributor->DS && !is_secure_access) {
                 // RAZ/WI for non-secure accesses for secure interrupts
@@ -574,8 +585,10 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
             if (clear) {
                 if (irqActive[int_id]) {
-                    DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                            "int_id %d active cleared\n", int_id);
+                    DPRINTF(GIC,
+                            "Gicv3Redistributor::write(): "
+                            "int_id %d active cleared\n",
+                            int_id);
                 }
 
                 irqActive[int_id] = false;
@@ -584,101 +597,101 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
         break;
 
-      case GICR_ICFGR0: // SGI Configuration Register
+    case GICR_ICFGR0: // SGI Configuration Register
         // WI
         return;
-      case GICR_ICFGR1: { // PPI Configuration Register
-          int first_intid = Gicv3::SGI_MAX;
+    case GICR_ICFGR1: { // PPI Configuration Register
+        int first_intid = Gicv3::SGI_MAX;
 
-          for (int i = 0, int_id = first_intid; i < 8 * size;
-               i = i + 2, int_id++) {
-              if (!distributor->DS && !is_secure_access) {
-                  // RAZ/WI for non-secure accesses for secure interrupts
-                  if (getIntGroup(int_id) != Gicv3::G1NS) {
-                      continue;
-                  }
-              }
+        for (int i = 0, int_id = first_intid; i < 8 * size;
+             i = i + 2, int_id++) {
+            if (!distributor->DS && !is_secure_access) {
+                // RAZ/WI for non-secure accesses for secure interrupts
+                if (getIntGroup(int_id) != Gicv3::G1NS) {
+                    continue;
+                }
+            }
 
-              irqConfig[int_id] = data & (0x2 << i) ?
-                                  Gicv3::INT_EDGE_TRIGGERED :
-                                  Gicv3::INT_LEVEL_SENSITIVE;
-              DPRINTF(GIC, "Gicv3Redistributor::write(): "
-                      "int_id %d (PPI) config %d\n",
-                      int_id, irqConfig[int_id]);
-          }
+            irqConfig[int_id] = data & (0x2 << i) ? Gicv3::INT_EDGE_TRIGGERED :
+                                                    Gicv3::INT_LEVEL_SENSITIVE;
+            DPRINTF(GIC,
+                    "Gicv3Redistributor::write(): "
+                    "int_id %d (PPI) config %d\n",
+                    int_id, irqConfig[int_id]);
+        }
 
-          break;
-      }
+        break;
+    }
 
-      case GICR_IGRPMODR0: { // Interrupt Group Modifier Register 0
-          if (distributor->DS) {
-              // RAZ/WI if secutiry disabled
-          } else {
-              for (int int_id = 0; int_id < 8 * size; int_id++) {
-                  if (!is_secure_access) {
-                      // RAZ/WI for non-secure accesses
-                      continue;
-                  }
+    case GICR_IGRPMODR0: { // Interrupt Group Modifier Register 0
+        if (distributor->DS) {
+            // RAZ/WI if secutiry disabled
+        } else {
+            for (int int_id = 0; int_id < 8 * size; int_id++) {
+                if (!is_secure_access) {
+                    // RAZ/WI for non-secure accesses
+                    continue;
+                }
 
-                  irqGrpmod[int_id] = data & (1 << int_id);
-              }
-          }
+                irqGrpmod[int_id] = data & (1 << int_id);
+            }
+        }
 
-          break;
-      }
+        break;
+    }
 
-      case GICR_NSACR: { // Non-secure Access Control Register
-          if (distributor->DS) {
-              // RAZ/WI
-          } else {
-              if (!is_secure_access) {
-                  // RAZ/WI
-              } else {
-                  for (int i = 0, int_id = 0; i < 8 * size;
-                       i = i + 2, int_id++) {
-                      irqNsacr[int_id] = (data >> i) & 0x3;
-                  }
-              }
-          }
+    case GICR_NSACR: { // Non-secure Access Control Register
+        if (distributor->DS) {
+            // RAZ/WI
+        } else {
+            if (!is_secure_access) {
+                // RAZ/WI
+            } else {
+                for (int i = 0, int_id = 0; i < 8 * size;
+                     i = i + 2, int_id++) {
+                    irqNsacr[int_id] = (data >> i) & 0x3;
+                }
+            }
+        }
 
-          break;
-      }
+        break;
+    }
 
-      case GICR_SETLPIR: // Set LPI Pending Register
+    case GICR_SETLPIR: // Set LPI Pending Register
         setClrLPI(data, true);
         break;
 
-      case GICR_CLRLPIR: // Clear LPI Pending Register
+    case GICR_CLRLPIR: // Clear LPI Pending Register
         setClrLPI(data, false);
         break;
 
-      case GICR_PROPBASER: { // Redistributor Properties Base Address Register
-          // OuterCache, bits [58:56]
-          //   000 Memory type defined in InnerCache field
-          // Physical_Address, bits [51:12]
-          //   Bits [51:12] of the physical address containing the LPI
-          //   Configuration table
-          // Shareability, bits [11:10]
-          //   00 Non-shareable
-          // InnerCache, bits [9:7]
-          //   000 Device-nGnRnE
-          // IDbits, bits [4:0]
-          //   limited by GICD_TYPER.IDbits (= 0xf)
-          lpiConfigurationTablePtr = data & 0xFFFFFFFFFF000;
-          lpiIDBits = data & 0x1f;
+    case GICR_PROPBASER: { // Redistributor Properties Base Address Register
+        // OuterCache, bits [58:56]
+        //   000 Memory type defined in InnerCache field
+        // Physical_Address, bits [51:12]
+        //   Bits [51:12] of the physical address containing the LPI
+        //   Configuration table
+        // Shareability, bits [11:10]
+        //   00 Non-shareable
+        // InnerCache, bits [9:7]
+        //   000 Device-nGnRnE
+        // IDbits, bits [4:0]
+        //   limited by GICD_TYPER.IDbits (= 0xf)
+        lpiConfigurationTablePtr = data & 0xFFFFFFFFFF000;
+        lpiIDBits = data & 0x1f;
 
-          // 0xf here matches the value of GICD_TYPER.IDbits.
-          // TODO - make GICD_TYPER.IDbits a parameter instead of a hardcoded
-          // value
-          if (lpiIDBits > 0xf) {
-              lpiIDBits = 0xf;
-          }
+        // 0xf here matches the value of GICD_TYPER.IDbits.
+        // TODO - make GICD_TYPER.IDbits a parameter instead of a hardcoded
+        // value
+        if (lpiIDBits > 0xf) {
+            lpiIDBits = 0xf;
+        }
 
-          break;
-      }
+        break;
+    }
 
-      // Redistributor LPI Pending Table Base Address Register
-      case GICR_PENDBASER:
+    // Redistributor LPI Pending Table Base Address Register
+    case GICR_PENDBASER:
         // PTZ, bit [62]
         //   Pending Table Zero
         // OuterCache, bits [58:56]
@@ -693,18 +706,19 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         lpiPendingTablePtr = data & 0xFFFFFFFFF0000;
         break;
 
-      case GICR_INVLPIR: { // Redistributor Invalidate LPI Register
-          // Do nothing: no caching supported
-          break;
-      }
+    case GICR_INVLPIR: { // Redistributor Invalidate LPI Register
+        // Do nothing: no caching supported
+        break;
+    }
 
-      case GICR_INVALLR: { // Redistributor Invalidate All Register
-          // Do nothing: no caching supported
-          break;
-      }
+    case GICR_INVALLR: { // Redistributor Invalidate All Register
+        // Do nothing: no caching supported
+        break;
+    }
 
-      default:
-        gic->reserved("Gicv3Redistributor::write(): invalid offset %#x\n", addr);
+    default:
+        gic->reserved("Gicv3Redistributor::write(): invalid offset %#x\n",
+                      addr);
         break;
     }
 }
@@ -716,8 +730,10 @@ Gicv3Redistributor::sendPPInt(uint32_t int_id)
            (int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX));
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
-    DPRINTF(GIC, "Gicv3Redistributor::sendPPInt(): "
-            "int_id %d (PPI) pending bit set\n", int_id);
+    DPRINTF(GIC,
+            "Gicv3Redistributor::sendPPInt(): "
+            "int_id %d (PPI) pending bit set\n",
+            int_id);
     updateDistributor();
 }
 
@@ -744,12 +760,11 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
         // Non-Secure EL1 and EL2 access
         int nsaccess = irqNsacr[int_id];
         if (int_group == Gicv3::G0S) {
-
             forward = distributor->DS || (nsaccess >= 1);
 
         } else if (int_group == Gicv3::G1S) {
-            forward = ((group == Gicv3::G1S || group == Gicv3::G1NS ) &&
-                      nsaccess == 2);
+            forward = ((group == Gicv3::G1S || group == Gicv3::G1NS) &&
+                       nsaccess == 2);
         } else {
             // G1NS
             forward = group == Gicv3::G1NS;
@@ -757,16 +772,19 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
     } else {
         // Secure EL1 and EL3 access
         forward = (group == int_group) ||
-            (group == Gicv3::G1S && int_group == Gicv3::G0S &&
-            distributor->DS);
+                  (group == Gicv3::G1S && int_group == Gicv3::G0S &&
+                   distributor->DS);
     }
 
-    if (!forward) return;
+    if (!forward)
+        return;
 
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
-    DPRINTF(GIC, "Gicv3ReDistributor::sendSGI(): "
-            "int_id %d (SGI) pending bit set\n", int_id);
+    DPRINTF(GIC,
+            "Gicv3ReDistributor::sendSGI(): "
+            "int_id %d (SGI) pending bit set\n",
+            int_id);
     updateDistributor();
 }
 
@@ -808,8 +826,8 @@ Gicv3Redistributor::update()
         Gicv3::GroupId int_group = getIntGroup(int_id);
         bool group_enabled = distributor->groupEnabled(int_group);
 
-        if (irqPending[int_id] && irqEnabled[int_id] &&
-                !irqActive[int_id] && group_enabled) {
+        if (irqPending[int_id] && irqEnabled[int_id] && !irqActive[int_id] &&
+            group_enabled) {
             if ((irqPriority[int_id] < cpuInterface->hppi.prio) ||
                 /*
                  * Multiple pending ints with same priority.
@@ -827,23 +845,19 @@ Gicv3Redistributor::update()
 
     // Check LPIs
     if (EnableLPIs) {
-
         const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
         const uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
 
         uint8_t lpi_pending_table[largest_lpi_id / 8];
         uint8_t lpi_config_table[number_lpis];
 
-        memProxy->readBlob(lpiPendingTablePtr,
-                           lpi_pending_table,
+        memProxy->readBlob(lpiPendingTablePtr, lpi_pending_table,
                            sizeof(lpi_pending_table));
 
-        memProxy->readBlob(lpiConfigurationTablePtr,
-                           lpi_config_table,
+        memProxy->readBlob(lpiConfigurationTablePtr, lpi_config_table,
                            sizeof(lpi_config_table));
 
-        for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
-             lpi_id++) {
+        for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id; lpi_id++) {
             uint32_t lpi_pending_entry_byte = lpi_id / 8;
             uint8_t lpi_pending_entry_bit_position = lpi_id % 8;
             bool lpi_is_pending = lpi_pending_table[lpi_pending_entry_byte] &
@@ -890,8 +904,7 @@ Gicv3Redistributor::readEntryLPI(uint32_t lpi_id)
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
     uint8_t lpi_pending_entry;
-    memProxy->readBlob(lpi_pending_entry_ptr,
-                       &lpi_pending_entry,
+    memProxy->readBlob(lpi_pending_entry_ptr, &lpi_pending_entry,
                        sizeof(lpi_pending_entry));
 
     return lpi_pending_entry;
@@ -902,8 +915,7 @@ Gicv3Redistributor::writeEntryLPI(uint32_t lpi_id, uint8_t lpi_pending_entry)
 {
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
-    memProxy->writeBlob(lpi_pending_entry_ptr,
-                        &lpi_pending_entry,
+    memProxy->writeBlob(lpi_pending_entry_ptr, &lpi_pending_entry,
                         sizeof(lpi_pending_entry));
 }
 
@@ -1063,8 +1075,8 @@ Gicv3Redistributor::copy(Gicv3Registers *from, Gicv3Registers *to)
     gic->copyRedistRegister(from, to, affinity, GICR_IGRPMODR0);
     gic->copyRedistRegister(from, to, affinity, GICR_NSACR);
 
-    gic->copyRedistRange(from, to, affinity,
-        GICR_IPRIORITYR.start(), GICR_IPRIORITYR.size());
+    gic->copyRedistRange(from, to, affinity, GICR_IPRIORITYR.start(),
+                         GICR_IPRIORITYR.size());
 
     // RD_Base regs
     gic->copyRedistRegister(from, to, affinity, GICR_PROPBASER);
@@ -1072,7 +1084,7 @@ Gicv3Redistributor::copy(Gicv3Registers *from, Gicv3Registers *to)
 }
 
 void
-Gicv3Redistributor::serialize(CheckpointOut & cp) const
+Gicv3Redistributor::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(peInLowPowerState);
     SERIALIZE_CONTAINER(irqGroup);
@@ -1094,7 +1106,7 @@ Gicv3Redistributor::serialize(CheckpointOut & cp) const
 }
 
 void
-Gicv3Redistributor::unserialize(CheckpointIn & cp)
+Gicv3Redistributor::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(peInLowPowerState);
     UNSERIALIZE_CONTAINER(irqGroup);

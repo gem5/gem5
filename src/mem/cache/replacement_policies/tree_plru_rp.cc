@@ -55,7 +55,7 @@ namespace replacement_policy
 static uint64_t
 parentIndex(const uint64_t index)
 {
-    return std::floor((index-1)/2);
+    return std::floor((index - 1) / 2);
 }
 
 /**
@@ -67,7 +67,7 @@ parentIndex(const uint64_t index)
 static uint64_t
 leftSubtreeIndex(const uint64_t index)
 {
-    return 2*index + 1;
+    return 2 * index + 1;
 }
 
 /**
@@ -79,7 +79,7 @@ leftSubtreeIndex(const uint64_t index)
 static uint64_t
 rightSubtreeIndex(const uint64_t index)
 {
-    return 2*index + 2;
+    return 2 * index + 2;
 }
 
 /**
@@ -92,29 +92,28 @@ rightSubtreeIndex(const uint64_t index)
 static bool
 isRightSubtree(const uint64_t index)
 {
-    return index%2 == 0;
+    return index % 2 == 0;
 }
 
-TreePLRU::TreePLRUReplData::TreePLRUReplData(
-    const uint64_t index, std::shared_ptr<PLRUTree> tree)
-  : index(index), tree(tree)
-{
-}
+TreePLRU::TreePLRUReplData::TreePLRUReplData(const uint64_t index,
+                                             std::shared_ptr<PLRUTree> tree)
+    : index(index), tree(tree)
+{}
 
 TreePLRU::TreePLRU(const Params &p)
-  : Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
+    : Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
 {
     fatal_if(!isPowerOf2(numLeaves),
              "Number of leaves must be non-zero and a power of 2");
 }
 
 void
-TreePLRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+TreePLRU::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Cast replacement data
     std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =
         std::static_pointer_cast<TreePLRUReplData>(replacement_data);
-    PLRUTree* tree = treePLRU_replacement_data->tree.get();
+    PLRUTree *tree = treePLRU_replacement_data->tree.get();
 
     // Index of the tree entry we are currently checking
     // Make this entry the new LRU entry
@@ -134,13 +133,12 @@ TreePLRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-TreePLRU::touch(const std::shared_ptr<ReplacementData>& replacement_data)
-const
+TreePLRU::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Cast replacement data
     std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =
         std::static_pointer_cast<TreePLRUReplData>(replacement_data);
-    PLRUTree* tree = treePLRU_replacement_data->tree.get();
+    PLRUTree *tree = treePLRU_replacement_data->tree.get();
 
     // Index of the tree entry we are currently checking
     // Make this entry the MRU entry
@@ -160,22 +158,22 @@ const
 }
 
 void
-TreePLRU::reset(const std::shared_ptr<ReplacementData>& replacement_data)
-const
+TreePLRU::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // A reset has the same functionality of a touch
     touch(replacement_data);
 }
 
-ReplaceableEntry*
-TreePLRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+TreePLRU::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Get tree
-    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
-            candidates[0]->replacementData)->tree.get();
+    const PLRUTree *tree = std::static_pointer_cast<TreePLRUReplData>(
+                               candidates[0]->replacementData)
+                               ->tree.get();
 
     // Index of the tree entry we are currently checking. Start with root.
     uint64_t tree_index = 0;
@@ -204,9 +202,9 @@ TreePLRU::instantiateEntry()
     }
 
     // Create replacement data using current tree instance
-    TreePLRUReplData* treePLRUReplData = new TreePLRUReplData(
-        (count % numLeaves) + numLeaves - 1,
-        std::shared_ptr<PLRUTree>(treeInstance));
+    TreePLRUReplData *treePLRUReplData =
+        new TreePLRUReplData((count % numLeaves) + numLeaves - 1,
+                             std::shared_ptr<PLRUTree>(treeInstance));
 
     // Update instance counter
     count++;

@@ -37,31 +37,46 @@
 using namespace std;
 
 int64_t
-I686TraceChild::getRegs(user_regs_struct & myregs, int num)
+I686TraceChild::getRegs(user_regs_struct &myregs, int num)
 {
     assert(num < numregs && num >= 0);
     switch (num) {
-      //GPRs
-      case EAX: return myregs.eax;
-      case EBX: return myregs.ebx;
-      case ECX: return myregs.ecx;
-      case EDX: return myregs.edx;
-      //Index registers
-      case ESI: return myregs.esi;
-      case EDI: return myregs.edi;
-      //Base pointer and stack pointer
-      case EBP: return myregs.ebp;
-      case ESP: return myregs.esp;
-      //Segmentation registers
-      case CS: return myregs.xcs;
-      case DS: return myregs.xds;
-      case ES: return myregs.xes;
-      case FS: return myregs.xfs;
-      case GS: return myregs.xgs;
-      case SS: return myregs.xss;
-      //PC
-      case EIP: return myregs.eip;
-      default:
+    // GPRs
+    case EAX:
+        return myregs.eax;
+    case EBX:
+        return myregs.ebx;
+    case ECX:
+        return myregs.ecx;
+    case EDX:
+        return myregs.edx;
+    // Index registers
+    case ESI:
+        return myregs.esi;
+    case EDI:
+        return myregs.edi;
+    // Base pointer and stack pointer
+    case EBP:
+        return myregs.ebp;
+    case ESP:
+        return myregs.esp;
+    // Segmentation registers
+    case CS:
+        return myregs.xcs;
+    case DS:
+        return myregs.xds;
+    case ES:
+        return myregs.xes;
+    case FS:
+        return myregs.xfs;
+    case GS:
+        return myregs.xgs;
+    case SS:
+        return myregs.xss;
+    // PC
+    case EIP:
+        return myregs.eip;
+    default:
         assert(0);
         return 0;
     }

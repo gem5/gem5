@@ -36,73 +36,73 @@ namespace gem5
 
 namespace X86ISA
 {
-    enum ApicRegIndex
-    {
-        APIC_ID,
-        APIC_VERSION,
-        APIC_TASK_PRIORITY,
-        APIC_ARBITRATION_PRIORITY,
-        APIC_PROCESSOR_PRIORITY,
-        APIC_EOI,
-        APIC_LOGICAL_DESTINATION,
-        APIC_DESTINATION_FORMAT,
-        APIC_SPURIOUS_INTERRUPT_VECTOR,
+enum ApicRegIndex
+{
+    APIC_ID,
+    APIC_VERSION,
+    APIC_TASK_PRIORITY,
+    APIC_ARBITRATION_PRIORITY,
+    APIC_PROCESSOR_PRIORITY,
+    APIC_EOI,
+    APIC_LOGICAL_DESTINATION,
+    APIC_DESTINATION_FORMAT,
+    APIC_SPURIOUS_INTERRUPT_VECTOR,
 
-        APIC_IN_SERVICE_BASE,
+    APIC_IN_SERVICE_BASE,
 
-        APIC_TRIGGER_MODE_BASE = APIC_IN_SERVICE_BASE + 16,
+    APIC_TRIGGER_MODE_BASE = APIC_IN_SERVICE_BASE + 16,
 
-        APIC_INTERRUPT_REQUEST_BASE = APIC_TRIGGER_MODE_BASE + 16,
+    APIC_INTERRUPT_REQUEST_BASE = APIC_TRIGGER_MODE_BASE + 16,
 
-        APIC_ERROR_STATUS = APIC_INTERRUPT_REQUEST_BASE + 16,
-        APIC_INTERRUPT_COMMAND_LOW,
-        APIC_INTERRUPT_COMMAND_HIGH,
-        APIC_LVT_TIMER,
-        APIC_LVT_THERMAL_SENSOR,
-        APIC_LVT_PERFORMANCE_MONITORING_COUNTERS,
-        APIC_LVT_LINT0,
-        APIC_LVT_LINT1,
-        APIC_LVT_ERROR,
-        APIC_INITIAL_COUNT,
-        APIC_CURRENT_COUNT,
-        APIC_DIVIDE_CONFIGURATION,
+    APIC_ERROR_STATUS = APIC_INTERRUPT_REQUEST_BASE + 16,
+    APIC_INTERRUPT_COMMAND_LOW,
+    APIC_INTERRUPT_COMMAND_HIGH,
+    APIC_LVT_TIMER,
+    APIC_LVT_THERMAL_SENSOR,
+    APIC_LVT_PERFORMANCE_MONITORING_COUNTERS,
+    APIC_LVT_LINT0,
+    APIC_LVT_LINT1,
+    APIC_LVT_ERROR,
+    APIC_INITIAL_COUNT,
+    APIC_CURRENT_COUNT,
+    APIC_DIVIDE_CONFIGURATION,
 
-        APIC_INTERNAL_STATE,
+    APIC_INTERNAL_STATE,
 
-        NUM_APIC_REGS
-    };
+    NUM_APIC_REGS
+};
 
-    static inline ApicRegIndex
-    APIC_IN_SERVICE(int index)
-    {
-        return (ApicRegIndex)(APIC_IN_SERVICE_BASE + index);
-    }
+static inline ApicRegIndex
+APIC_IN_SERVICE(int index)
+{
+    return (ApicRegIndex)(APIC_IN_SERVICE_BASE + index);
+}
 
-    static inline ApicRegIndex
-    APIC_TRIGGER_MODE(int index)
-    {
-        return (ApicRegIndex)(APIC_TRIGGER_MODE_BASE + index);
-    }
+static inline ApicRegIndex
+APIC_TRIGGER_MODE(int index)
+{
+    return (ApicRegIndex)(APIC_TRIGGER_MODE_BASE + index);
+}
 
-    static inline ApicRegIndex
-    APIC_INTERRUPT_REQUEST(int index)
-    {
-        return (ApicRegIndex)(APIC_INTERRUPT_REQUEST_BASE + index);
-    }
+static inline ApicRegIndex
+APIC_INTERRUPT_REQUEST(int index)
+{
+    return (ApicRegIndex)(APIC_INTERRUPT_REQUEST_BASE + index);
+}
 
-    BitUnion32(InterruptCommandRegLow)
-        Bitfield<7, 0> vector;
-        Bitfield<10, 8> deliveryMode;
-        Bitfield<11> destMode;
-        Bitfield<12> deliveryStatus;
-        Bitfield<14> level;
-        Bitfield<15> trigger;
-        Bitfield<19, 18> destShorthand;
-    EndBitUnion(InterruptCommandRegLow)
+BitUnion32(InterruptCommandRegLow)
+    Bitfield<7, 0> vector;
+    Bitfield<10, 8> deliveryMode;
+    Bitfield<11> destMode;
+    Bitfield<12> deliveryStatus;
+    Bitfield<14> level;
+    Bitfield<15> trigger;
+    Bitfield<19, 18> destShorthand;
+EndBitUnion(InterruptCommandRegLow)
 
-    BitUnion32(InterruptCommandRegHigh)
-        Bitfield<31, 24> destination;
-    EndBitUnion(InterruptCommandRegHigh)
+BitUnion32(InterruptCommandRegHigh)
+    Bitfield<31, 24> destination;
+EndBitUnion(InterruptCommandRegHigh)
 
 } // namespace X86ISA
 } // namespace gem5

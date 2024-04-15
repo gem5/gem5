@@ -40,11 +40,31 @@ class TestInfo : public statistics::Info
 
     int value = 0;
 
-    bool check() const override { return true; }
-    void prepare() override {}
-    void reset() override { value = 0; }
-    bool zero() const override { return false; }
-    void visit(statistics::Output &visitor) override {}
+    bool
+    check() const override
+    {
+        return true;
+    }
+
+    void
+    prepare() override
+    {}
+
+    void
+    reset() override
+    {
+        value = 0;
+    }
+
+    bool
+    zero() const override
+    {
+        return false;
+    }
+
+    void
+    visit(statistics::Output &visitor) override
+    {}
 };
 
 /** Test that a name is properly assigned under the new style. */

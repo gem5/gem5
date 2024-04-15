@@ -43,70 +43,53 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace ArmISAInst {
+namespace ArmISAInst
+{
 
 Fault
-Tstart64::initiateAcc(ExecContext *xc,
-                      trace::InstRecord *traceData) const
+Tstart64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
 Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
                       trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
-Ttest64::execute(
-    ExecContext *xc, trace::InstRecord *traceData) const
+Ttest64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
-Tcancel64::initiateAcc(ExecContext *xc,
-                       trace::InstRecord *traceData) const
+Tcancel64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
 Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
                        trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
 MicroTcommit64::initiateAcc(ExecContext *xc,
                             trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 Fault
 MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
                             trace::InstRecord *traceData) const
 {
-    return std::make_shared<UndefinedInstruction>(machInst,
-                                                  false,
-                                                  mnemonic);
-
+    return std::make_shared<UndefinedInstruction>(machInst, false, mnemonic);
 }
 
 } // namespace ArmISAInst

@@ -51,14 +51,16 @@ class InstDecoder : public SimObject
 
   public:
     template <typename MoreBytesType>
-    InstDecoder(const InstDecoderParams &params, MoreBytesType *mb_buf) :
-        SimObject(params), _moreBytesPtr(mb_buf),
-        _moreBytesSize(sizeof(MoreBytesType)),
-        _pcMask(~mask(floorLog2(_moreBytesSize)))
+    InstDecoder(const InstDecoderParams &params, MoreBytesType *mb_buf)
+        : SimObject(params),
+          _moreBytesPtr(mb_buf),
+          _moreBytesSize(sizeof(MoreBytesType)),
+          _pcMask(~mask(floorLog2(_moreBytesSize)))
     {}
 
-    virtual StaticInstPtr fetchRomMicroop(
-            MicroPC micropc, StaticInstPtr curMacroop);
+    virtual StaticInstPtr fetchRomMicroop(MicroPC micropc,
+                                          StaticInstPtr curMacroop);
+
     virtual void
     reset()
     {
@@ -92,9 +94,23 @@ class InstDecoder : public SimObject
         outOfBytes = old->outOfBytes;
     }
 
-    void *moreBytesPtr() const { return _moreBytesPtr; }
-    size_t moreBytesSize() const { return _moreBytesSize; }
-    Addr pcMask() const { return _pcMask; }
+    void *
+    moreBytesPtr() const
+    {
+        return _moreBytesPtr;
+    }
+
+    size_t
+    moreBytesSize() const
+    {
+        return _moreBytesSize;
+    }
+
+    Addr
+    pcMask() const
+    {
+        return _pcMask;
+    }
 
     /**
      * Is an instruction ready to be decoded?
@@ -104,7 +120,11 @@ class InstDecoder : public SimObject
      * returns false if the decoder hasn't received enough data to
      * decode a full instruction.
      */
-    bool instReady() const { return instDone; }
+    bool
+    instReady() const
+    {
+        return instDone;
+    }
 
     /**
      * Can the decoder accept more data?
@@ -113,7 +133,11 @@ class InstDecoder : public SimObject
      * accept more data. Note that an instruction can be ready (see
      * instReady() even if this method returns true.
      */
-    bool needMoreBytes() const { return outOfBytes; }
+    bool
+    needMoreBytes() const
+    {
+        return outOfBytes;
+    }
 
     /**
      * Feed data to the decoder.

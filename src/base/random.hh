@@ -60,9 +60,7 @@ class Checkpoint;
 
 class Random : public Serializable
 {
-
   public:
-
     /**
      * @ingroup api_base_utils
      */
@@ -105,6 +103,7 @@ class Random : public Serializable
         std::uniform_real_distribution<T> dist;
         return dist(gen);
     }
+
     /**
      * @ingroup api_base_utils
      */

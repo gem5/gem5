@@ -52,8 +52,8 @@ namespace gem5
 
 using namespace PowerISA;
 
-PowerProcess::PowerProcess(
-       const ProcessParams &params, loader::ObjectFile *objFile)
+PowerProcess::PowerProcess(const ProcessParams &params,
+                           loader::ObjectFile *objFile)
     : Process(params,
               new EmulationPageTable(params.name, params.pid, PageBytes),
               objFile)
@@ -73,9 +73,9 @@ PowerProcess::PowerProcess(
     // Set up region for mmaps. For now, start at bottom of kuseg space.
     Addr mmap_end = 0x70000000L;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -150,15 +150,15 @@ PowerProcess::argsInit(int pageSize)
     else
         filename = argv[0];
 
-    //We want 16 byte alignment
+    // We want 16 byte alignment
     uint64_t align = 16;
 
     // load object file into target memory
     image.write(*initVirtMem);
     interpImage.write(*initVirtMem);
 
-    //Setup the auxilliary vectors. These will already have endian conversion.
-    //Auxilliary vectors are loaded only for elf formatted executables.
+    // Setup the auxilliary vectors. These will already have endian conversion.
+    // Auxilliary vectors are loaded only for elf formatted executables.
     auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
         IntType features = HWCAP_FEATURE_32;
@@ -171,12 +171,12 @@ PowerProcess::argsInit(int pageSize)
         if (isLittleEndian)
             features |= HWCAP_FEATURE_PPC_LE | HWCAP_FEATURE_TRUE_LE;
 
-        //Bits which describe the system hardware capabilities
-        //XXX Figure out what these should be
+        // Bits which describe the system hardware capabilities
+        // XXX Figure out what these should be
         auxv.emplace_back(gem5::auxv::Hwcap, features);
-        //The system page size
+        // The system page size
         auxv.emplace_back(gem5::auxv::Pagesz, pageSize);
-        //Frequency at which times() increments
+        // Frequency at which times() increments
         auxv.emplace_back(gem5::auxv::Clktck, 0x64);
         // For statically linked executables, this is the virtual address of
         // the program header tables if they appear in the executable image
@@ -189,26 +189,26 @@ PowerProcess::argsInit(int pageSize)
         // zero for static executables or contain the base address for
         // dynamic executables.
         auxv.emplace_back(gem5::auxv::Base, getBias());
-        //XXX Figure out what this should be.
+        // XXX Figure out what this should be.
         auxv.emplace_back(gem5::auxv::Flags, 0);
-        //The entry point to the program
+        // The entry point to the program
         auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
-        //Different user and group IDs
+        // Different user and group IDs
         auxv.emplace_back(gem5::auxv::Uid, uid());
         auxv.emplace_back(gem5::auxv::Euid, euid());
         auxv.emplace_back(gem5::auxv::Gid, gid());
         auxv.emplace_back(gem5::auxv::Egid, egid());
-        //Whether to enable "secure mode" in the executable
+        // Whether to enable "secure mode" in the executable
         auxv.emplace_back(gem5::auxv::Secure, 0);
-        //The address of 16 "random" bytes
+        // The address of 16 "random" bytes
         auxv.emplace_back(gem5::auxv::Random, 0);
-        //The filename of the program
+        // The filename of the program
         auxv.emplace_back(gem5::auxv::Execfn, 0);
-        //The string "v51" with unknown meaning
+        // The string "v51" with unknown meaning
         auxv.emplace_back(gem5::auxv::Platform, 0);
     }
 
-    //Figure out how big the initial stack nedes to be
+    // Figure out how big the initial stack nedes to be
 
     // A sentry NULL void pointer at the top of the stack.
     int sentry_size = intSize;
@@ -234,11 +234,10 @@ PowerProcess::argsInit(int pageSize)
         arg_data_size += argv[i].size() + 1;
     }
 
-    int info_block_size =
-        sentry_size + env_data_size + arg_data_size +
-        aux_data_size + platform_size;
+    int info_block_size = sentry_size + env_data_size + arg_data_size +
+                          aux_data_size + platform_size;
 
-    //Each auxilliary vector is two 4 byte words
+    // Each auxilliary vector is two 4 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
 
     int envp_array_size = intSize * (envp.size() + 1);
@@ -246,16 +245,12 @@ PowerProcess::argsInit(int pageSize)
 
     int argc_size = intSize;
 
-    //Figure out the size of the contents of the actual initial frame
-    int frame_size =
-        info_block_size +
-        aux_array_size +
-        envp_array_size +
-        argv_array_size +
-        argc_size;
+    // Figure out the size of the contents of the actual initial frame
+    int frame_size = info_block_size + aux_array_size + envp_array_size +
+                     argv_array_size + argc_size;
 
-    //There needs to be padding after the auxiliary vector data so that the
-    //very bottom of the stack is aligned properly.
+    // There needs to be padding after the auxiliary vector data so that the
+    // very bottom of the stack is aligned properly.
     int partial_size = frame_size;
     int aligned_partial_size = roundUp(partial_size, align);
     int aux_padding = aligned_partial_size - partial_size;
@@ -299,11 +294,11 @@ PowerProcess::argsInit(int pageSize)
     IntType argc = argv.size();
     IntType guestArgc = htog(argc, byteOrder);
 
-    //Write out the sentry void *
+    // Write out the sentry void *
     IntType sentry_NULL = 0;
     initVirtMem->writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
-    //Fix up the aux vectors which point to other data
+    // Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
         if (auxv[i].type == gem5::auxv::Platform) {
             auxv[i].val = platform_base;
@@ -316,34 +311,34 @@ PowerProcess::argsInit(int pageSize)
         }
     }
 
-    //Copy the aux stuff
+    // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
-    for (const auto &aux: auxv) {
+    for (const auto &aux : auxv) {
         initVirtMem->write(auxv_array_end, aux, byteOrder);
         auxv_array_end += sizeof(aux);
     }
-    //Write out the terminating zeroed auxilliary vector
+    // Write out the terminating zeroed auxilliary vector
     const gem5::auxv::AuxVector<uint64_t> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(envp, envp_array_base, env_data_base,
-                    byteOrder, *initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base,
-                    byteOrder, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, byteOrder,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, byteOrder,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
     ThreadContext *tc = system->threads[contextIds[0]];
 
-    //Set the stack pointer register
+    // Set the stack pointer register
     tc->setReg(StackPointerReg, stack_min);
 
-    //Reset the special-purpose registers
+    // Reset the special-purpose registers
     for (int i = int_reg::NumArchRegs; i < int_reg::NumRegs; i++)
         tc->setReg(intRegClass[i], (RegVal)0);
 
-    //Set the machine status for a typical userspace
+    // Set the machine status for a typical userspace
     Msr msr = 0;
     msr.sf = is64bit;
     msr.hv = 1;
@@ -361,7 +356,7 @@ PowerProcess::argsInit(int pageSize)
     pc.byteOrder(byteOrder);
     tc->pcState(pc);
 
-    //Align the "stack_min" to a page boundary.
+    // Align the "stack_min" to a page boundary.
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
 

@@ -50,28 +50,28 @@ typedef uint16_t FlagsType;
 typedef gem5::Flags<FlagsType> Flags;
 
 /** Nothing extra to print. */
-const FlagsType none =          0x0000;
+const FlagsType none = 0x0000;
 /** This Stat is Initialized */
-const FlagsType init =          0x0001;
+const FlagsType init = 0x0001;
 /** Print this stat. */
-const FlagsType display =       0x0002;
+const FlagsType display = 0x0002;
 /** Print the total. */
-const FlagsType total =         0x0010;
+const FlagsType total = 0x0010;
 /** Print the percent of the total that this entry represents. */
-const FlagsType pdf =           0x0020;
+const FlagsType pdf = 0x0020;
 /** Print the cumulative percentage of total upto this entry. */
-const FlagsType cdf =           0x0040;
+const FlagsType cdf = 0x0040;
 /** Print the distribution. */
-const FlagsType dist =          0x0080;
+const FlagsType dist = 0x0080;
 /** Don't print if this is zero. */
-const FlagsType nozero =        0x0100;
+const FlagsType nozero = 0x0100;
 /** Don't print if this is NAN */
-const FlagsType nonan =         0x0200;
+const FlagsType nonan = 0x0200;
 /** Print all values on a single line. Useful only for histograms. */
-const FlagsType oneline =       0x0400;
+const FlagsType oneline = 0x0400;
 
 /** Mask of flags that can't be set directly */
-const FlagsType __reserved =    init | display;
+const FlagsType __reserved = init | display;
 
 struct StorageParams;
 struct Output;
@@ -84,7 +84,7 @@ class Info
     /** The separator string used for vectors, dist, etc. */
     static std::string separatorString;
     /** The unit of the stat. */
-    const units::Base* unit = units::Unspecified::get();
+    const units::Base *unit = units::Unspecified::get();
     /** The description of the stat. */
     std::string desc;
     /** The formatting flags. */
@@ -114,16 +114,20 @@ class Info
      * @param name The new name.
      * @param old_style Whether we are using the old style.
      */
-    void setName(const std::string &name, bool old_style=true);
+    void setName(const std::string &name, bool old_style = true);
 
-    void setSeparator(std::string _sep) { separatorString = _sep;}
+    void
+    setSeparator(std::string _sep)
+    {
+        separatorString = _sep;
+    }
 
     /**
      * Getter for the storage params. These parameters should only be modified
      * using the respective setter.
      * @sa setStorageParams
      */
-    StorageParams const* getStorageParams() const;
+    StorageParams const *getStorageParams() const;
     /** Setter for the storage params. */
     void setStorageParams(const StorageParams *const params);
 

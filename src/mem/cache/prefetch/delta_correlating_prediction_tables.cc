@@ -61,13 +61,13 @@ DeltaCorrelatingPredictionTables::DCPTEntry::invalidate()
 }
 
 void
-DeltaCorrelatingPredictionTables::DCPTEntry::addAddress(Addr address,
-    unsigned int delta_bits)
+DeltaCorrelatingPredictionTables::DCPTEntry::addAddress(
+    Addr address, unsigned int delta_bits)
 {
     if ((address - lastAddress) != 0) {
         Addr delta = address - lastAddress;
         // Account for the sign bit
-        Addr max_positive_delta = (1 << (delta_bits-1)) - 1;
+        Addr max_positive_delta = (1 << (delta_bits - 1)) - 1;
         if (address > lastAddress) {
             // check positive delta overflow
             if (delta > max_positive_delta) {
@@ -126,8 +126,7 @@ DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
 void
 DeltaCorrelatingPredictionTables::calculatePrefetch(
     const Base::PrefetchInfo &pfi,
-    std::vector<Queued::AddrPriority> &addresses,
-    const CacheAccessor &cache)
+    std::vector<Queued::AddrPriority> &addresses, const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -139,7 +138,7 @@ DeltaCorrelatingPredictionTables::calculatePrefetch(
     DCPTEntry *entry = table.findEntry(pc);
     if (entry != nullptr) {
         entry->addAddress(address, deltaBits);
-        //Delta correlating
+        // Delta correlating
         entry->getCandidates(addresses, deltaMaskBits);
     } else {
         entry = table.findVictim(pc);
@@ -150,15 +149,12 @@ DeltaCorrelatingPredictionTables::calculatePrefetch(
     }
 }
 
-DCPT::DCPT(const DCPTPrefetcherParams &p)
-  : Queued(p), dcpt(*p.dcpt)
-{
-}
+DCPT::DCPT(const DCPTPrefetcherParams &p) : Queued(p), dcpt(*p.dcpt) {}
 
 void
 DCPT::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+                        std::vector<AddrPriority> &addresses,
+                        const CacheAccessor &cache)
 {
     dcpt.calculatePrefetch(pfi, addresses, cache);
 }

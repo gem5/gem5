@@ -45,14 +45,12 @@ namespace gem5
 namespace partitioning_policy
 {
 
-WayPolicyAllocation::WayPolicyAllocation
-    (const WayPolicyAllocationParams &params): SimObject(params),
-    _ways(params.ways),_partitionId(params.partition_id)
-{
+WayPolicyAllocation::WayPolicyAllocation(
+    const WayPolicyAllocationParams &params)
+    : SimObject(params), _ways(params.ways), _partitionId(params.partition_id)
+{}
 
-}
-
-std::vector< uint64_t >
+std::vector<uint64_t>
 WayPolicyAllocation::getWays() const
 {
     return this->_ways;

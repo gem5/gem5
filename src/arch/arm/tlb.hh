@@ -41,7 +41,6 @@
 #ifndef __ARCH_ARM_TLB_HH__
 #define __ARCH_ARM_TLB_HH__
 
-
 #include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
@@ -57,7 +56,8 @@ namespace gem5
 
 class ThreadContext;
 
-namespace ArmISA {
+namespace ArmISA
+{
 
 class TableWalker;
 class TLB;
@@ -67,6 +67,7 @@ class TlbTestInterface
 {
   public:
     TlbTestInterface() {}
+
     virtual ~TlbTestInterface() {}
 
     /**
@@ -102,7 +103,7 @@ class TlbTestInterface
 class TLB : public BaseTLB
 {
   protected:
-    TlbEntry* table;
+    TlbEntry *table;
 
     /** TLB Size */
     int size;
@@ -153,7 +154,7 @@ class TLB : public BaseTLB
     /** PMU probe for TLB refills */
     probing::PMUUPtr ppRefills;
 
-    int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
+    int rangeMRU; // On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;
 
   public:
@@ -183,13 +184,29 @@ class TLB : public BaseTLB
 
     void setTableWalker(TableWalker *table_walker);
 
-    TableWalker *getTableWalker() { return tableWalker; }
+    TableWalker *
+    getTableWalker()
+    {
+        return tableWalker;
+    }
 
-    int getsize() const { return size; }
+    int
+    getsize() const
+    {
+        return size;
+    }
 
-    bool walkCache() const { return _walkCache; }
+    bool
+    walkCache() const
+    {
+        return _walkCache;
+    }
 
-    void setVMID(vmid_t _vmid) { vmid = _vmid; }
+    void
+    setVMID(vmid_t _vmid)
+    {
+        vmid = _vmid;
+    }
 
     /** Insert a PTE in the current TLB */
     void insert(TlbEntry &pte);
@@ -202,14 +219,14 @@ class TLB : public BaseTLB
      */
     void flushAll() override;
 
-
     /** Flush TLB entries
      */
     void flush(const TLBIOp &tlbi_op);
 
     void printTlb() const;
 
-    void demapPage(Addr vaddr, uint64_t asn) override
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         // needed for x86 only
         panic("demapPage() is not implemented.\n");
@@ -265,9 +282,8 @@ class TLB : public BaseTLB
      * @param in_host if hcr.e2h == 1 and hcr.tge == 1 for VHE.
      * @param entry_type type of entry to flush (instruction/data/unified)
      */
-    void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
-                   bool ignore_asn, ExceptionLevel target_el,
-                   bool in_host, TypeTLB entry_type);
+    void _flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool ignore_asn,
+                   ExceptionLevel target_el, bool in_host, TypeTLB entry_type);
 
     /** Check if the tlb entry passed as an argument needs to
      * be "promoted" as a unified entry:

@@ -49,7 +49,6 @@ namespace gem5
 class SimpleCache : public ClockedObject
 {
   private:
-
     /**
      * Port on the CPU-side that receives requests.
      * Mostly just forwards requests to the cache (owner)
@@ -73,10 +72,13 @@ class SimpleCache : public ClockedObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        CPUSidePort(const std::string& name, int id, SimpleCache *owner) :
-            ResponsePort(name), id(id), owner(owner), needRetry(false),
-            blockedPacket(nullptr)
-        { }
+        CPUSidePort(const std::string &name, int id, SimpleCache *owner)
+            : ResponsePort(name),
+              id(id),
+              owner(owner),
+              needRetry(false),
+              blockedPacket(nullptr)
+        {}
 
         /**
          * Send a packet across this port. This is called by the owner and
@@ -107,8 +109,11 @@ class SimpleCache : public ClockedObject
          * Receive an atomic request packet from the request port.
          * No need to implement in this simple cache.
          */
-        Tick recvAtomic(PacketPtr pkt) override
-        { panic("recvAtomic unimpl."); }
+        Tick
+        recvAtomic(PacketPtr pkt) override
+        {
+            panic("recvAtomic unimpl.");
+        }
 
         /**
          * Receive a functional request packet from the request port.
@@ -153,9 +158,9 @@ class SimpleCache : public ClockedObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        MemSidePort(const std::string& name, SimpleCache *owner) :
-            RequestPort(name), owner(owner), blockedPacket(nullptr)
-        { }
+        MemSidePort(const std::string &name, SimpleCache *owner)
+            : RequestPort(name), owner(owner), blockedPacket(nullptr)
+        {}
 
         /**
          * Send a packet across this port. This is called by the owner and
@@ -292,7 +297,7 @@ class SimpleCache : public ClockedObject
     Tick missTime;
 
     /// An incredibly simple cache storage. Maps block addresses to data
-    std::unordered_map<Addr, uint8_t*> cacheStore;
+    std::unordered_map<Addr, uint8_t *> cacheStore;
 
     /// Cache statistics
   protected:
@@ -306,7 +311,6 @@ class SimpleCache : public ClockedObject
     } stats;
 
   public:
-
     /** constructor
      */
     SimpleCache(const SimpleCacheParams &params);
@@ -322,8 +326,7 @@ class SimpleCache : public ClockedObject
      * @return A reference to the given port
      */
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
-
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

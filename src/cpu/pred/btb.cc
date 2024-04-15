@@ -47,14 +47,11 @@ namespace branch_prediction
 {
 
 BranchTargetBuffer::BranchTargetBuffer(const Params &params)
-    : ClockedObject(params),
-      numThreads(params.numThreads),
-      stats(this)
-{
-}
+    : ClockedObject(params), numThreads(params.numThreads), stats(this)
+{}
 
 BranchTargetBuffer::BranchTargetBufferStats::BranchTargetBufferStats(
-                                                statistics::Group *parent)
+    statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(lookups, statistics::units::Count::get(),
                "Number of BTB lookups"),
@@ -69,21 +66,13 @@ BranchTargetBuffer::BranchTargetBufferStats::BranchTargetBufferStats(
                "Number of BTB evictions")
 {
     using namespace statistics;
-    lookups
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
+    lookups.init(enums::Num_BranchType).flags(total | pdf);
 
-    misses
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
+    misses.init(enums::Num_BranchType).flags(total | pdf);
 
-    updates
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
+    updates.init(enums::Num_BranchType).flags(total | pdf);
 
-    mispredict
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
+    mispredict.init(enums::Num_BranchType).flags(total | pdf);
 
     evictions.flags(nozero);
 

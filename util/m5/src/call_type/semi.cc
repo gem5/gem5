@@ -39,8 +39,17 @@ class SemiCallType : public CallType
   public:
     SemiCallType() : CallType("semi") {}
 
-    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
-    const DispatchTable &getDispatch() const override { return semi_dispatch; }
+    bool
+    isDefault() const override
+    {
+        return CALL_TYPE_IS_DEFAULT;
+    }
+
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return semi_dispatch;
+    }
 
     void
     printDesc(std::ostream &os) const override

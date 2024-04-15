@@ -29,7 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 
 #include "base/trace.hh"
@@ -46,11 +45,16 @@ namespace garnet
 {
 
 NetworkLink::NetworkLink(const Params &p)
-    : ClockedObject(p), Consumer(this), m_id(p.link_id),
+    : ClockedObject(p),
+      Consumer(this),
+      m_id(p.link_id),
       m_type(NUM_LINK_TYPES_),
-      m_latency(p.link_latency), m_link_utilized(0),
-      m_virt_nets(p.virt_nets), linkBuffer(),
-      link_consumer(nullptr), link_srcQueue(nullptr)
+      m_latency(p.link_latency),
+      m_link_utilized(0),
+      m_virt_nets(p.virt_nets),
+      linkBuffer(),
+      link_consumer(nullptr),
+      link_srcQueue(nullptr)
 {
     int num_vnets = (p.supported_vnets).size();
     mVnets.resize(num_vnets);
@@ -83,7 +87,7 @@ void
 NetworkLink::wakeup()
 {
     DPRINTF(RubyNetwork, "Woke up to transfer flits from %s\n",
-        src_object->name());
+            src_object->name());
     assert(link_srcQueue != nullptr);
     assert(curTick() == clockEdge());
     if (link_srcQueue->isReady(curTick())) {
@@ -94,8 +98,8 @@ NetworkLink::wakeup()
             // Only for assertions and debug messages
             assert(t_flit->m_width == bitWidth);
             assert((std::find(mVnets.begin(), mVnets.end(),
-                t_flit->get_vnet()) != mVnets.end()) ||
-                (mVnets.size() == 0));
+                              t_flit->get_vnet()) != mVnets.end()) ||
+                   (mVnets.size() == 0));
         }
         t_flit->set_time(clockEdge(m_latency));
         linkBuffer.insert(t_flit);

@@ -82,5 +82,5 @@ class ThreadBridge : public SimObject
     OutgoingPort out_port_;
 };
 
-}  // namespace gem5
-#endif  // __MEM_THREAD_BRIDGE_HH__
+} // namespace gem5
+#endif // __MEM_THREAD_BRIDGE_HH__

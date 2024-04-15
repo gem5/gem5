@@ -53,22 +53,23 @@ struct PybindModuleInit
 
 } // namespace gem5
 
-#define GEM5_PYBIND_MODULE_INIT(name, func) \
-namespace { \
- \
-::PyObject * \
-initializer() \
-{ \
-    static ::pybind11::module_::module_def mod_def; \
-    static auto m = ::pybind11::module_::create_extension_module( \
-            #name, nullptr, &mod_def); \
-    func(m); \
-    m.inc_ref(); \
-    return m.ptr(); \
-} \
- \
-::gem5::PybindModuleInit modInit(#name, initializer); \
- \
-} // anonymous namespace
+#define GEM5_PYBIND_MODULE_INIT(name, func)                                   \
+    namespace                                                                 \
+    {                                                                         \
+                                                                              \
+    ::PyObject *                                                              \
+    initializer()                                                             \
+    {                                                                         \
+        static ::pybind11::module_::module_def mod_def;                       \
+        static auto m = ::pybind11::module_::create_extension_module(         \
+            #name, nullptr, &mod_def);                                        \
+        func(m);                                                              \
+        m.inc_ref();                                                          \
+        return m.ptr();                                                       \
+    }                                                                         \
+                                                                              \
+    ::gem5::PybindModuleInit modInit(#name, initializer);                     \
+                                                                              \
+    } // anonymous namespace
 
 #endif // __PYTHON_PYBIND_INIT_HH__

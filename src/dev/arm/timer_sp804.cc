@@ -55,18 +55,20 @@ Sp804::Sp804(const Params &p)
     : AmbaPioDevice(p, 0x1000),
       timer0(name() + ".timer0", this, p.int0->get(), p.clock0),
       timer1(name() + ".timer1", this, p.int1->get(), p.clock1)
-{
-}
+{}
 
 Sp804::Timer::Timer(std::string __name, Sp804 *_parent,
                     ArmInterruptPin *_interrupt, Tick _clock)
-    : _name(__name), parent(_parent), interrupt(_interrupt),
-      clock(_clock), control(0x20),
-      rawInt(false), pendingInt(false), loadValue(0xffffffff),
-      zeroEvent([this]{ counterAtZero(); }, name())
-{
-}
-
+    : _name(__name),
+      parent(_parent),
+      interrupt(_interrupt),
+      clock(_clock),
+      control(0x20),
+      rawInt(false),
+      pendingInt(false),
+      loadValue(0xffffffff),
+      zeroEvent([this] { counterAtZero(); }, name())
+{}
 
 Tick
 Sp804::read(PacketPtr pkt)
@@ -86,15 +88,14 @@ Sp804::read(PacketPtr pkt)
     return pioDelay;
 }
 
-
 void
 Sp804::Timer::read(PacketPtr pkt, Addr daddr)
 {
-    switch(daddr) {
-      case LoadReg:
+    switch (daddr) {
+    case LoadReg:
         pkt->setLE<uint32_t>(loadValue);
         break;
-      case CurrentReg:
+    case CurrentReg:
         DPRINTF(Timer, "Event schedule for %d, clock=%d, prescale=%d\n",
                 zeroEvent.when(), clock, control.timerPrescale);
         Tick time;
@@ -103,19 +104,19 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->setLE<uint32_t>(time);
         break;
-      case ControlReg:
+    case ControlReg:
         pkt->setLE<uint32_t>(control);
         break;
-      case RawISR:
+    case RawISR:
         pkt->setLE<uint32_t>(rawInt);
         break;
-      case MaskedISR:
+    case MaskedISR:
         pkt->setLE<uint32_t>(pendingInt);
         break;
-      case BGLoad:
+    case BGLoad:
         pkt->setLE<uint32_t>(loadValue);
         break;
-      default:
+    default:
         panic("Tried to read SP804 timer at offset %#x\n", daddr);
         break;
     }
@@ -136,7 +137,8 @@ Sp804::write(PacketPtr pkt)
     else if ((daddr - Timer::Size) < Timer::Size)
         timer1.write(pkt, daddr - Timer::Size);
     else if (!readId(pkt, ambaId, pioAddr))
-        panic("Tried to write SP804 at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to write SP804 at offset %#x that doesn't exist\n",
+              daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -147,21 +149,21 @@ Sp804::Timer::write(PacketPtr pkt, Addr daddr)
     DPRINTF(Timer, "Writing %#x to Timer at offset: %#x\n",
             pkt->getLE<uint32_t>(), daddr);
     switch (daddr) {
-      case LoadReg:
+    case LoadReg:
         loadValue = pkt->getLE<uint32_t>();
         restartCounter(loadValue);
         break;
-      case CurrentReg:
+    case CurrentReg:
         // Spec says this value can't be written, but linux writes it anyway
         break;
-      case ControlReg:
+    case ControlReg:
         bool old_enable;
         old_enable = control.timerEnable;
         control = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && control.timerEnable)
             restartCounter(loadValue);
         break;
-      case IntClear:
+    case IntClear:
         rawInt = false;
         if (pendingInt) {
             pendingInt = false;
@@ -169,10 +171,10 @@ Sp804::Timer::write(PacketPtr pkt, Addr daddr)
             interrupt->clear();
         }
         break;
-      case BGLoad:
+    case BGLoad:
         loadValue = pkt->getLE<uint32_t>();
         break;
-      default:
+    default:
         panic("Tried to write SP804 timer at offset %#x\n", daddr);
         break;
     }
@@ -189,7 +191,7 @@ Sp804::Timer::restartCounter(uint32_t val)
     if (control.timerSize)
         time *= val;
     else
-        time *= bits(val,15,0);
+        time *= bits(val, 15, 0);
 
     if (zeroEvent.scheduled()) {
         DPRINTF(Timer, "-- Event was already schedule, de-scheduling\n");
@@ -242,7 +244,7 @@ Sp804::Timer::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(is_in_event);
 
     Tick event_time;
-    if (is_in_event){
+    if (is_in_event) {
         event_time = zeroEvent.when();
         SERIALIZE_SCALAR(event_time);
     }
@@ -265,13 +267,11 @@ Sp804::Timer::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(is_in_event);
 
     Tick event_time;
-    if (is_in_event){
+    if (is_in_event) {
         UNSERIALIZE_SCALAR(event_time);
         parent->schedule(zeroEvent, event_time);
     }
 }
-
-
 
 void
 Sp804::serialize(CheckpointOut &cp) const

@@ -54,8 +54,8 @@
  * FMT is the message to be appended to the header information. The header
  * information contains the cpuid and thread id.
  */
-#define DPRINTF_SYSCALL(FLAGEXT, FMT, ...)                                  \
-    DPRINTFS(Syscall##FLAGEXT, tc->getCpuPtr(), "T%d : syscall " FMT,       \
+#define DPRINTF_SYSCALL(FLAGEXT, FMT, ...)                                    \
+    DPRINTFS(Syscall##FLAGEXT, tc->getCpuPtr(), "T%d : syscall " FMT,         \
              tc->threadId(), __VA_ARGS__)
 
 #endif // __SIM_SYSCALL_DEBUG_MACROS_HH__

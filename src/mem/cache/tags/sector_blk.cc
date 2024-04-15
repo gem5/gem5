@@ -42,13 +42,13 @@ namespace gem5
 {
 
 void
-SectorSubBlk::setSectorBlock(SectorBlk* sector_blk)
+SectorSubBlk::setSectorBlock(SectorBlk *sector_blk)
 {
     assert(sector_blk != nullptr);
     _sectorBlk = sector_blk;
 }
 
-SectorBlk*
+SectorBlk *
 SectorSubBlk::getSectorBlock() const
 {
     return _sectorBlk;
@@ -87,7 +87,8 @@ SectorSubBlk::insert(const Addr tag, const bool is_secure)
 {
     // Make sure it is not overwriting another sector
     panic_if(_sectorBlk && _sectorBlk->isValid() &&
-        !_sectorBlk->matchTag(tag, is_secure), "Overwriting valid sector!");
+                 !_sectorBlk->matchTag(tag, is_secure),
+             "Overwriting valid sector!");
 
     // If the sector is not valid, insert the new tag. The sector block
     // handles its own tag's invalidation, so do not attempt to insert MaxAddr.
@@ -111,10 +112,7 @@ SectorSubBlk::print() const
                     getSectorOffset());
 }
 
-SectorBlk::SectorBlk()
-    : TaggedEntry(), _validCounter(0)
-{
-}
+SectorBlk::SectorBlk() : TaggedEntry(), _validCounter(0) {}
 
 bool
 SectorBlk::isValid() const
@@ -149,7 +147,7 @@ void
 SectorBlk::setPosition(const uint32_t set, const uint32_t way)
 {
     ReplaceableEntry::setPosition(set, way);
-    for (auto& blk : blks) {
+    for (auto &blk : blks) {
         blk->setPosition(set, way);
     }
 }
@@ -158,13 +156,13 @@ std::string
 SectorBlk::print() const
 {
     std::string sub_blk_print;
-    for (const auto& sub_blk : blks) {
+    for (const auto &sub_blk : blks) {
         if (sub_blk->isValid()) {
             sub_blk_print += "\t[" + sub_blk->print() + "]\n";
         }
     }
-    return csprintf("%s valid sub-blks (%d):\n%s",
-        TaggedEntry::print(), getNumValid(), sub_blk_print);
+    return csprintf("%s valid sub-blks (%d):\n%s", TaggedEntry::print(),
+                    getNumValid(), sub_blk_print);
 }
 
 } // namespace gem5

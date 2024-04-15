@@ -53,18 +53,18 @@ class PL031 : public AmbaIntDevice
   protected:
     enum
     {
-        DataReg    = 0x00,
-        MatchReg   = 0x04,
-        LoadReg    = 0x08,
+        DataReg = 0x00,
+        MatchReg = 0x04,
+        LoadReg = 0x08,
         ControlReg = 0x0C,
-        IntMask    = 0x10,
-        RawISR     = 0x14,
-        MaskedISR  = 0x18,
-        IntClear   = 0x1C,
+        IntMask = 0x10,
+        RawISR = 0x14,
+        MaskedISR = 0x18,
+        IntClear = 0x1C,
     };
 
-    /* Seconds since epoch that correspond to time simulation was started at the
-     * begining of simulation and is then updated if ever written. */
+    /* Seconds since epoch that correspond to time simulation was started at
+     * the begining of simulation and is then updated if ever written. */
     uint32_t timeVal;
 
     /* Time when the timeVal register was written */
@@ -104,9 +104,9 @@ class PL031 : public AmbaIntDevice
     using Params = PL031Params;
 
     /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for RealView just registers itself with the MMU.
+     * @param p params structure
+     */
     PL031(const Params &p);
 
     /**

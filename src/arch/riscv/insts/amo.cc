@@ -44,24 +44,24 @@ namespace RiscvISA
 
 // memfence micro instruction
 std::string
-MemFenceMicro::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+MemFenceMicro::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << csprintf("0x%08x", machInst.instBits) << ' ' << mnemonic;
     return ss.str();
 }
 
-Fault MemFenceMicro::execute(ExecContext *xc,
-    trace::InstRecord *traceData) const
+Fault
+MemFenceMicro::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     return NoFault;
 }
 
 // load-reserved
 std::string
-LoadReserved::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+LoadReserved::generateDisassembly(Addr pc,
+                                  const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic;
@@ -72,24 +72,24 @@ LoadReserved::generateDisassembly(
     if (machInst.rl)
         ss << "rl";
     ss << ' ' << registerName(intRegClass[machInst.rd]) << ", ("
-            << registerName(intRegClass[machInst.rs1]) << ')';
+       << registerName(intRegClass[machInst.rs1]) << ')';
     return ss.str();
 }
 
 std::string
-LoadReservedMicro::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+LoadReservedMicro::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ("
-            << registerName(srcRegIdx(0)) << ')';
+       << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
 // store-conditional
 std::string
-StoreCond::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+StoreCond::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic;
@@ -100,26 +100,26 @@ StoreCond::generateDisassembly(
     if (machInst.rl)
         ss << "rl";
     ss << ' ' << registerName(intRegClass[machInst.rd]) << ", "
-            << registerName(intRegClass[machInst.rs2]) << ", ("
-            << registerName(intRegClass[machInst.rs1]) << ')';
+       << registerName(intRegClass[machInst.rs2]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
     return ss.str();
 }
 
 std::string
-StoreCondMicro::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+StoreCondMicro::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(1)) << ", ("
-            << registerName(srcRegIdx(0)) << ')';
+       << registerName(srcRegIdx(1)) << ", (" << registerName(srcRegIdx(0))
+       << ')';
     return ss.str();
 }
 
 // AMOs
 std::string
-AtomicMemOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+AtomicMemOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic;
@@ -130,19 +130,19 @@ AtomicMemOp::generateDisassembly(
     if (machInst.rl)
         ss << "rl";
     ss << ' ' << registerName(intRegClass[machInst.rd]) << ", "
-            << registerName(intRegClass[machInst.rs2]) << ", ("
-            << registerName(intRegClass[machInst.rs1]) << ')';
+       << registerName(intRegClass[machInst.rs2]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
     return ss.str();
 }
 
 std::string
-AtomicMemOpMicro::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+AtomicMemOpMicro::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(1)) << ", ("
-            << registerName(srcRegIdx(0)) << ')';
+       << registerName(srcRegIdx(1)) << ", (" << registerName(srcRegIdx(0))
+       << ')';
     return ss.str();
 }
 

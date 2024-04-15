@@ -50,39 +50,43 @@ namespace gem5
 namespace partitioning_policy
 {
 
-WayPartitioningPolicy::WayPartitioningPolicy
-    (const WayPartitioningPolicyParams &params): BasePartitioningPolicy(params)
+WayPartitioningPolicy::WayPartitioningPolicy(
+    const WayPartitioningPolicyParams &params)
+    : BasePartitioningPolicy(params)
 {
     // get cache associativity and check it is usable for this policy
     const auto cache_assoc = params.cache_associativity;
     assert(cache_assoc > 0);
 
     // iterate over all provided allocations
-    for (const auto allocation: params.allocations) {
+    for (const auto allocation : params.allocations) {
         const auto alloc_id = allocation->getPartitionId();
 
         // save way allocations in policy
-        for (const auto way: allocation->getWays()) {
-
+        for (const auto way : allocation->getWays()) {
             // check if allocations are valid
-            fatal_if(way >= cache_assoc, "Way Partitioning Policy allocation "
+            fatal_if(
+                way >= cache_assoc,
+                "Way Partitioning Policy allocation "
                 "for PartitionID: %d, Way: %d cannot be fullfiled as cache "
-                "associativity is %d", alloc_id, way, cache_assoc);
+                "associativity is %d",
+                alloc_id, way, cache_assoc);
 
             if (this->partitionIdWays[alloc_id].count(way) == 0) {
                 this->partitionIdWays[alloc_id].emplace(way);
             } else {
                 // do not add duplicate allocation to policy and warn
                 warn("Duplicate Way Partitioning Policy allocation for "
-                    "PartitionID: %d, Way: %d",
-                    alloc_id, way);
+                     "PartitionID: %d, Way: %d",
+                     alloc_id, way);
             }
         }
 
         // report allocation of policies
-        DPRINTF(PartitionPolicy, "Allocated %d ways in WayPartitioningPolicy "
-            "for PartitionID: %d \n", allocation->getWays().size(),
-            alloc_id);
+        DPRINTF(PartitionPolicy,
+                "Allocated %d ways in WayPartitioningPolicy "
+                "for PartitionID: %d \n",
+                allocation->getWays().size(), alloc_id);
     }
 }
 
@@ -91,22 +95,19 @@ WayPartitioningPolicy::filterByPartition(
     std::vector<ReplaceableEntry *> &entries,
     const uint64_t partition_id) const
 {
-    if (// No entries to filter
+    if ( // No entries to filter
         entries.empty() ||
         // This partition_id is not policed
         partitionIdWays.find(partition_id) == partitionIdWays.end()) {
         return;
     } else {
-        const auto entries_to_remove = std::remove_if(
-            entries.begin(),
-            entries.end(),
-            [this, partition_id]
-            (ReplaceableEntry *entry)
-            {
-                return partitionIdWays.at(partition_id).find(entry->getWay())
-                    == partitionIdWays.at(partition_id).end();
-            }
-        );
+        const auto entries_to_remove =
+            std::remove_if(entries.begin(), entries.end(),
+                           [this, partition_id](ReplaceableEntry *entry) {
+                               return partitionIdWays.at(partition_id)
+                                          .find(entry->getWay()) ==
+                                      partitionIdWays.at(partition_id).end();
+                           });
 
         entries.erase(entries_to_remove, entries.end());
     }

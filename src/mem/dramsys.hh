@@ -46,14 +46,14 @@ class DRAMSys : public AbstractMemory
     sc_gem5::TlmTargetWrapper<> tlmWrapper;
 
   public:
-    DRAMSys(Params const& params);
+    DRAMSys(Params const &params);
 
-    gem5::Port& getPort(const std::string& if_name, PortID idx) override;
+    gem5::Port &getPort(const std::string &if_name, PortID idx) override;
 
     DrainState drain() override;
 
-    void serialize(CheckpointOut& cp) const override;
-    void unserialize(CheckpointIn& cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
   private:
     ::DRAMSys::Config::Configuration config;

@@ -126,12 +126,17 @@ class InstructionQueue
 
         virtual void process();
         virtual const char *description() const;
-        void setFreeFU() { freeFU = true; }
+
+        void
+        setFreeFU()
+        {
+            freeFU = true;
+        }
     };
 
     /** Constructs an IQ. */
     InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
-            const BaseO3CPUParams &params);
+                     const BaseO3CPUParams &params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();
@@ -272,7 +277,11 @@ class InstructionQueue
     void squash(ThreadID tid);
 
     /** Returns the number of used entries for a thread. */
-    unsigned getCount(ThreadID tid) { return count[tid]; };
+    unsigned
+    getCount(ThreadID tid)
+    {
+        return count[tid];
+    };
 
     /** Debug function to print all instructions. */
     void printInsts();
@@ -317,7 +326,8 @@ class InstructionQueue
     // Instruction lists, ready queues, and ordering
     //////////////////////////////////////
 
-    /** List of all the instructions in the IQ (some of which may be issued). */
+    /** List of all the instructions in the IQ (some of which may be issued).
+     */
     std::list<DynInstPtr> instList[MaxThreads];
 
     /** List of instructions that are ready to be executed. */
@@ -332,7 +342,8 @@ class InstructionQueue
     std::list<DynInstPtr> blockedMemInsts;
 
     /** List of instructions that were cache blocked, but a retry has been seen
-     * since, so they can now be retried. May fail again go on the blocked list.
+     * since, so they can now be retried. May fail again go on the blocked
+     * list.
      */
     std::list<DynInstPtr> retryMemInsts;
 
@@ -348,8 +359,8 @@ class InstructionQueue
         bool operator()(const DynInstPtr &lhs, const DynInstPtr &rhs) const;
     };
 
-    typedef std::priority_queue<
-        DynInstPtr, std::vector<DynInstPtr>, PqCompare> ReadyInstQueue;
+    typedef std::priority_queue<DynInstPtr, std::vector<DynInstPtr>, PqCompare>
+        ReadyInstQueue;
 
     /** List of ready instructions, per op class.  They are separated by op
      *  class to allow for easy mapping to FUs.
@@ -543,7 +554,7 @@ class InstructionQueue
         statistics::Formula fuBusyRate;
     } iqStats;
 
-   public:
+  public:
     struct IQIOStats : public statistics::Group
     {
         IQIOStats(statistics::Group *parent);

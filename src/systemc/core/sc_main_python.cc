@@ -44,7 +44,7 @@ sc_main(pybind11::args args)
 {
     using namespace gem5;
     panic_if(::sc_gem5::scMainFiber.called(),
-            "sc_main called more than once.");
+             "sc_main called more than once.");
 
     int argc = args.size();
     char **argv = new char *[argc];
@@ -67,8 +67,8 @@ sc_main(pybind11::args args)
         // If that didn't work for some reason (probably a conversion error)
         // blow away argv and argc and pass on the exception.
         for (int idx = 0; idx < argc; idx++)
-            delete [] argv[idx];
-        delete [] argv;
+            delete[] argv[idx];
+        delete[] argv;
         argc = 0;
         throw;
     }

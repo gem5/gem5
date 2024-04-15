@@ -46,11 +46,10 @@ namespace prefetch
 {
 
 Multi::Multi(const MultiPrefetcherParams &p)
-  : Base(p),
-    prefetchers(p.prefetchers.begin(), p.prefetchers.end()),
-    lastChosenPf(0)
-{
-}
+    : Base(p),
+      prefetchers(p.prefetchers.begin(), p.prefetchers.end()),
+      lastChosenPf(0)
+{}
 
 void
 Multi::setParentInfo(System *sys, ProbeManager *pm, unsigned blk_size)
@@ -76,7 +75,7 @@ Multi::getPacket()
     lastChosenPf = (lastChosenPf + 1) % prefetchers.size();
     uint8_t pf_turn = lastChosenPf;
 
-    for (int pf = 0 ;  pf < prefetchers.size(); pf++) {
+    for (int pf = 0; pf < prefetchers.size(); pf++) {
         if (prefetchers[pf_turn]->nextPrefetchReadyTime() <= curTick()) {
             PacketPtr pkt = prefetchers[pf_turn]->getPacket();
             panic_if(!pkt, "Prefetcher is ready but didn't return a packet.");

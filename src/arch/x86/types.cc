@@ -38,7 +38,7 @@ using namespace X86ISA;
 template <>
 void
 paramOut(CheckpointOut &cp, const std::string &name,
-        ExtMachInst const &machInst)
+         ExtMachInst const &machInst)
 {
     // Prefixes
     paramOut(cp, name + ".legacy", (uint8_t)machInst.legacy);
@@ -92,7 +92,8 @@ paramIn(CheckpointIn &cp, const std::string &name, ExtMachInst &machInst)
     paramIn(cp, name + ".modRM", temp8);
     machInst.modRM = temp8;
     paramIn(cp, name + ".sib", temp8);
-    machInst.sib = temp8;;
+    machInst.sib = temp8;
+    ;
 
     // Immediate fields
     paramIn(cp, name + ".immediate", machInst.immediate);

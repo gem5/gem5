@@ -74,11 +74,12 @@ class SimpleRenameMap
     using Arch2PhysMap = std::vector<PhysRegIdPtr>;
     /** The acutal arch-to-phys register map */
     Arch2PhysMap map;
+
   public:
     using iterator = Arch2PhysMap::iterator;
     using const_iterator = Arch2PhysMap::const_iterator;
-  private:
 
+  private:
     /**
      * Pointer to the free list from which new physical registers
      * should be allocated in rename()
@@ -86,7 +87,6 @@ class SimpleRenameMap
     SimpleFreeList *freeList;
 
   public:
-
     SimpleRenameMap();
 
     /**
@@ -111,7 +111,7 @@ class SimpleRenameMap
      * @return A RenameInfo pair indicating both the new and previous
      * physical registers.
      */
-    RenameInfo rename(const RegId& arch_reg);
+    RenameInfo rename(const RegId &arch_reg);
 
     /**
      * Look up the physical register mapped to an architectural register.
@@ -119,7 +119,7 @@ class SimpleRenameMap
      * @return The physical register it is currently mapped to.
      */
     PhysRegIdPtr
-    lookup(const RegId& arch_reg) const
+    lookup(const RegId &arch_reg) const
     {
         assert(arch_reg.index() <= map.size());
         return map[arch_reg.index()];
@@ -132,29 +132,67 @@ class SimpleRenameMap
      * @param phys_reg The physical register to remap it to.
      */
     void
-    setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
+    setEntry(const RegId &arch_reg, PhysRegIdPtr phys_reg)
     {
         assert(arch_reg.index() <= map.size());
         map[arch_reg.index()] = phys_reg;
     }
 
     /** Return the number of free entries on the associated free list. */
-    unsigned numFreeEntries() const { return freeList->numFreeRegs(); }
+    unsigned
+    numFreeEntries() const
+    {
+        return freeList->numFreeRegs();
+    }
 
-    size_t numArchRegs() const { return map.size(); }
+    size_t
+    numArchRegs() const
+    {
+        return map.size();
+    }
 
     /** Forward begin/cbegin to the map. */
     /** @{ */
-    iterator begin() { return map.begin(); }
-    const_iterator begin() const { return map.begin(); }
-    const_iterator cbegin() const { return map.cbegin(); }
+    iterator
+    begin()
+    {
+        return map.begin();
+    }
+
+    const_iterator
+    begin() const
+    {
+        return map.begin();
+    }
+
+    const_iterator
+    cbegin() const
+    {
+        return map.cbegin();
+    }
+
     /** @} */
 
     /** Forward end/cend to the map. */
     /** @{ */
-    iterator end() { return map.end(); }
-    const_iterator end() const { return map.end(); }
-    const_iterator cend() const { return map.cend(); }
+    iterator
+    end()
+    {
+        return map.end();
+    }
+
+    const_iterator
+    end() const
+    {
+        return map.end();
+    }
+
+    const_iterator
+    cend() const
+    {
+        return map.cend();
+    }
+
     /** @} */
 };
 
@@ -179,20 +217,19 @@ class UnifiedRenameMap
     PhysRegFile *regFile;
 
   public:
-
     typedef SimpleRenameMap::RenameInfo RenameInfo;
 
     typedef std::array<UnifiedRenameMap, MaxThreads> PerThreadUnifiedRenameMap;
 
     /** Default constructor.  init() must be called prior to use. */
-    UnifiedRenameMap() : regFile(nullptr) {};
+    UnifiedRenameMap() : regFile(nullptr){};
 
     /** Destructor. */
-    ~UnifiedRenameMap() {};
+    ~UnifiedRenameMap(){};
 
     /** Initializes rename map with given parameters. */
-    void init(const BaseISA::RegClasses &regClasses,
-              PhysRegFile *_regFile, UnifiedFreeList *freeList);
+    void init(const BaseISA::RegClasses &regClasses, PhysRegFile *_regFile,
+              UnifiedFreeList *freeList);
 
     /**
      * Tell rename map to get a new free physical register to remap
@@ -203,7 +240,7 @@ class UnifiedRenameMap
      * physical registers.
      */
     RenameInfo
-    rename(const RegId& arch_reg)
+    rename(const RegId &arch_reg)
     {
         if (!arch_reg.isRenameable()) {
             // misc regs aren't really renamed, just remapped
@@ -224,7 +261,7 @@ class UnifiedRenameMap
      * @return The physical register it is currently mapped to.
      */
     PhysRegIdPtr
-    lookup(const RegId& arch_reg) const
+    lookup(const RegId &arch_reg) const
     {
         auto reg_class = arch_reg.classValue();
         if (reg_class == InvalidRegClass) {
@@ -246,7 +283,7 @@ class UnifiedRenameMap
      * @param phys_reg The physical register to remap it to.
      */
     void
-    setEntry(const RegId& arch_reg, PhysRegIdPtr phys_reg)
+    setEntry(const RegId &arch_reg, PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->is(arch_reg.classValue()));
         if (!arch_reg.isRenameable()) {
@@ -271,7 +308,7 @@ class UnifiedRenameMap
     minFreeEntries() const
     {
         auto min_free = std::numeric_limits<unsigned>::max();
-        for (auto &map: renameMaps) {
+        for (auto &map : renameMaps) {
             // If this map isn't empty (not used)...
             if (map.numArchRegs())
                 min_free = std::min(min_free, map.numFreeEntries());

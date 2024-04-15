@@ -86,7 +86,7 @@ Iris::Interrupts::serialize(CheckpointOut &cp) const
     bool interrupts[ArmISA::NumInterruptTypes];
     uint64_t intStatus = 0;
 
-    for (bool &i: interrupts)
+    for (bool &i : interrupts)
         i = false;
 
     interrupts[ArmISA::INT_ABT] = phys_abort;
@@ -107,7 +107,6 @@ Iris::Interrupts::serialize(CheckpointOut &cp) const
 
 void
 Iris::Interrupts::unserialize(CheckpointIn &cp)
-{
-}
+{}
 
 } // namespace gem5

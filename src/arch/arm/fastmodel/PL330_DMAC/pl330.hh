@@ -77,11 +77,13 @@ class PL330 : public scx_evs_PL330
 
   public:
     PL330(const FastModelPL330Params &params, sc_core::sc_module_name _name);
-    PL330(const FastModelPL330Params &params) :
-        PL330(params, params.name.c_str())
+
+    PL330(const FastModelPL330Params &params)
+        : PL330(params, params.name.c_str())
     {}
 
-    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(const std::string &if_name,
+                             int idx = -1) override;
 
     void
     end_of_elaboration() override
@@ -89,6 +91,7 @@ class PL330 : public scx_evs_PL330
         scx_evs_PL330::end_of_elaboration();
         scx_evs_PL330::start_of_simulation();
     }
+
     void start_of_simulation() override;
 };
 

@@ -50,14 +50,13 @@ void
 Uart8250::processIntrEvent(int intrBit)
 {
     if (intrBit & registers.ier.get()) {
-       DPRINTF(Uart, "UART InterEvent, interrupting\n");
-       platform->postConsoleInt();
-       status |= intrBit;
-       lastTxInt = curTick();
+        DPRINTF(Uart, "UART InterEvent, interrupting\n");
+        platform->postConsoleInt();
+        status |= intrBit;
+        lastTxInt = curTick();
     } else {
-       DPRINTF(Uart, "UART InterEvent, not interrupting\n");
+        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
     }
-
 }
 
 /* The linux serial driver (8250.c about line 1182) loops reading from
@@ -84,18 +83,20 @@ Uart8250::scheduleIntr(Event *event)
         reschedule(event, curTick() + interval);
 }
 
-
 Uart8250::Uart8250(const Params &p)
-    : Uart(p, p.pio_size), registers(this, name() + ".registers"),
+    : Uart(p, p.pio_size),
+      registers(this, name() + ".registers"),
       lastTxInt(0),
-      txIntrEvent([this]{ processIntrEvent(TX_INT); }, "TX"),
-      rxIntrEvent([this]{ processIntrEvent(RX_INT); }, "RX")
-{
-}
+      txIntrEvent([this] { processIntrEvent(TX_INT); }, "TX"),
+      rxIntrEvent([this] { processIntrEvent(RX_INT); }, "RX")
+{}
 
-Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name) :
-    RegisterBankLE(new_name, 0), rbrThr(rbr, thr), rbrThrDll(rbrThr, dll),
-    ierDlh(ier, dlh), iirFcr(iir, fcr)
+Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name)
+    : RegisterBankLE(new_name, 0),
+      rbrThr(rbr, thr),
+      rbrThrDll(rbrThr, dll),
+      ierDlh(ier, dlh),
+      iirFcr(iir, fcr)
 {
     rbr.reader(uart, &Uart8250::readRbr);
     thr.writer(uart, &Uart8250::writeThr);
@@ -103,29 +104,28 @@ Uart8250::Registers::Registers(Uart8250 *uart, const std::string &new_name) :
     iir.reader(uart, &Uart8250::readIir);
 
     lcr.writer([this](auto &reg, const auto &value) {
-            reg.update(value);
-            rbrThrDll.select(value.dlab);
-            ierDlh.select(value.dlab);
-        });
+        reg.update(value);
+        rbrThrDll.select(value.dlab);
+        ierDlh.select(value.dlab);
+    });
 
     mcr.writer([](auto &reg, const auto &value) {
-            if (value == (UART_MCR_LOOP | 0x0A))
-                reg.update(0x9A);
-        });
+        if (value == (UART_MCR_LOOP | 0x0A))
+            reg.update(0x9A);
+    });
 
-    lsr.readonly().
-        reader([device = uart->device](auto &reg) {
-            Lsr lsr = 0;
-            if (device->dataAvailable())
-                lsr.rdr = 1;
-            lsr.tbe = 1;
-            lsr.txEmpty = 1;
-            return lsr;
-        });
+    lsr.readonly().reader([device = uart->device](auto &reg) {
+        Lsr lsr = 0;
+        if (device->dataAvailable())
+            lsr.rdr = 1;
+        lsr.tbe = 1;
+        lsr.txEmpty = 1;
+        return lsr;
+    });
 
     msr.readonly();
 
-    addRegisters({rbrThrDll, ierDlh, iirFcr, lcr, mcr, lsr, msr, sr});
+    addRegisters({ rbrThrDll, ierDlh, iirFcr, lcr, mcr, lsr, msr, sr });
 }
 
 uint8_t
@@ -183,12 +183,12 @@ Uart8250::writeIer(Register<Ier> &reg, const Ier &ier)
     if (ier.thri) {
         DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
         if (curTick() - lastTxInt > 225 * sim_clock::as_int::ns) {
-            DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
-                    curTick(), lastTxInt);
+            DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n", curTick(),
+                    lastTxInt);
             txIntrEvent.process();
         } else {
-            DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
-                    curTick(), lastTxInt);
+            DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n", curTick(),
+                    lastTxInt);
             scheduleIntr(&txIntrEvent);
         }
     } else {
@@ -248,7 +248,6 @@ Uart8250::dataAvailable()
         platform->postConsoleInt();
         status |= RX_INT;
     }
-
 }
 
 AddrRangeList
@@ -276,8 +275,8 @@ Uart8250::serialize(CheckpointOut &cp) const
         txintrwhen = txIntrEvent.when();
     else
         txintrwhen = 0;
-     SERIALIZE_SCALAR(rxintrwhen);
-     SERIALIZE_SCALAR(txintrwhen);
+    SERIALIZE_SCALAR(rxintrwhen);
+    SERIALIZE_SCALAR(txintrwhen);
 }
 
 void

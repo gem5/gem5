@@ -48,9 +48,7 @@ using namespace gem5;
  */
 TEST(Coroutine, Unstarted)
 {
-    auto yielding_task =
-    [] (Coroutine<void, void>::CallerType& yield)
-    {
+    auto yielding_task = [](Coroutine<void, void>::CallerType &yield) {
         yield();
     };
 
@@ -66,9 +64,7 @@ TEST(Coroutine, Unstarted)
  */
 TEST(Coroutine, Unfinished)
 {
-    auto yielding_task =
-    [] (Coroutine<void, void>::CallerType& yield)
-    {
+    auto yielding_task = [](Coroutine<void, void>::CallerType &yield) {
         yield();
     };
 
@@ -88,15 +84,14 @@ TEST(Coroutine, Passing)
     const std::vector<int> expected_values = input;
 
     auto passing_task =
-    [&expected_values] (Coroutine<int, void>::CallerType& yield)
-    {
-        int argument;
+        [&expected_values](Coroutine<int, void>::CallerType &yield) {
+            int argument;
 
-        for (const auto expected : expected_values) {
-            argument = yield.get();
-            ASSERT_EQ(argument, expected);
-        }
-    };
+            for (const auto expected : expected_values) {
+                argument = yield.get();
+                ASSERT_EQ(argument, expected);
+            }
+        };
 
     Coroutine<int, void> coro(passing_task);
     ASSERT_TRUE(coro);
@@ -117,9 +112,7 @@ TEST(Coroutine, Returning)
     const std::vector<int> output{ 1, 2, 3 };
     const std::vector<int> expected_values = output;
 
-    auto returning_task =
-    [&output] (Coroutine<void, int>::CallerType& yield)
-    {
+    auto returning_task = [&output](Coroutine<void, int>::CallerType &yield) {
         for (const auto ret : output) {
             yield(ret);
         }
@@ -143,14 +136,12 @@ TEST(Coroutine, Returning)
  */
 TEST(Coroutine, Fibonacci)
 {
-    const std::vector<int> expected_values{
-        1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 };
+    const std::vector<int> expected_values{ 1,  2,  3,  5,  8,   13,
+                                            21, 34, 55, 89, 144, 233 };
 
     const int steps = expected_values.size();
 
-    auto fibonacci_task =
-    [steps] (Coroutine<void, int>::CallerType& yield)
-    {
+    auto fibonacci_task = [steps](Coroutine<void, int>::CallerType &yield) {
         int prev = 0;
         int current = 1;
 
@@ -189,18 +180,17 @@ TEST(Coroutine, Cooperative)
     const std::string expected("Hello World!");
 
     auto cooperative_task =
-    [&coro_str] (Coroutine<std::string, std::string>::CallerType& yield)
-    {
-        for (auto& appended_c : coro_str) {
-            auto old_str = yield.get();
-            yield(old_str + appended_c);
-        }
-    };
+        [&coro_str](Coroutine<std::string, std::string>::CallerType &yield) {
+            for (auto &appended_c : coro_str) {
+                auto old_str = yield.get();
+                yield(old_str + appended_c);
+            }
+        };
 
     Coroutine<std::string, std::string> coro(cooperative_task);
 
     std::string result;
-    for (auto& c : caller_str) {
+    for (auto &c : caller_str) {
         ASSERT_TRUE(coro);
         result += c;
         result = coro(result).get();
@@ -220,23 +210,19 @@ TEST(Coroutine, Nested)
     const std::string wrong("Inner");
     const std::string expected("Inner + Outer");
 
-    auto inner_task =
-    [] (Coroutine<void, std::string>::CallerType& yield)
-    {
+    auto inner_task = [](Coroutine<void, std::string>::CallerType &yield) {
         std::string inner_string("Inner");
         yield(inner_string);
     };
 
     auto outer_task =
-    [&inner_task] (Coroutine<void, std::string>::CallerType& yield)
-    {
-        Coroutine<void, std::string> coro(inner_task);
-        std::string inner_string = coro.get();
+        [&inner_task](Coroutine<void, std::string>::CallerType &yield) {
+            Coroutine<void, std::string> coro(inner_task);
+            std::string inner_string = coro.get();
 
-        std::string outer_string("Outer");
-        yield(inner_string + " + " + outer_string);
-    };
-
+            std::string outer_string("Outer");
+            yield(inner_string + " + " + outer_string);
+        };
 
     Coroutine<void, std::string> coro(outer_task);
     ASSERT_TRUE(coro);
@@ -260,20 +246,20 @@ TEST(Coroutine, TwoCallers)
 {
     bool valid_return = false;
 
-    Coroutine<void, void> callee{[]
-        (Coroutine<void, void>::CallerType& yield)
-    {
-        yield();
-        yield();
-    }};
+    Coroutine<void, void> callee{
+        [](Coroutine<void, void>::CallerType &yield) {
+            yield();
+            yield();
+        }
+    };
 
-    Coroutine<void, void> other_caller{[&callee, &valid_return]
-        (Coroutine<void, void>::CallerType& yield)
-    {
-        callee();
-        valid_return = true;
-        yield();
-    }};
+    Coroutine<void, void> other_caller{
+        [&callee, &valid_return](Coroutine<void, void>::CallerType &yield) {
+            callee();
+            valid_return = true;
+            yield();
+        }
+    };
 
     ASSERT_TRUE(valid_return);
 }

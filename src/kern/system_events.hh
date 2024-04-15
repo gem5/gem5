@@ -40,8 +40,8 @@ class SkipFuncBase : public PCEvent
     virtual void returnFromFuncIn(ThreadContext *tc) = 0;
 
   public:
-    SkipFuncBase(PCEventScope *s, const std::string &desc, Addr addr) :
-        PCEvent(s, desc, addr)
+    SkipFuncBase(PCEventScope *s, const std::string &desc, Addr addr)
+        : PCEvent(s, desc, addr)
     {}
 
     void process(ThreadContext *tc) override;

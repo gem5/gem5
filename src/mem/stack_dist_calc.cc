@@ -47,8 +47,7 @@ namespace gem5
 {
 
 StackDistCalc::StackDistCalc(bool verify_stack)
-    : index(0),
-      verifyStack(verify_stack)
+    : index(0), verifyStack(verify_stack)
 {
     // Instantiate a new root and leaf layer
     // Map type variable, representing a layer in the tree
@@ -61,7 +60,7 @@ StackDistCalc::StackDistCalc(bool verify_stack)
     tree.push_back(tree_level);
 
     // Create a root node. Node type variable in the topmost layer
-    Node* root_node = new Node();
+    Node *root_node = new Node();
 
     // Initialize tree count for root
     nextIndex.push_back(1);
@@ -76,8 +75,8 @@ StackDistCalc::StackDistCalc(bool verify_stack)
 StackDistCalc::~StackDistCalc()
 {
     // Walk through each layer and destroy the nodes
-    for (auto& layer : tree) {
-        for (auto& index_node : layer) {
+    for (auto &layer : tree) {
+        for (auto &index_node : layer) {
             // each map entry contains an index and a node
             delete index_node.second;
         }
@@ -98,9 +97,9 @@ StackDistCalc::~StackDistCalc()
 // the node sums till the root. It also deletes the nodes that
 // are not used anymore.
 uint64_t
-StackDistCalc::updateSum(Node* node, bool from_left,
-                         uint64_t sum_from_below, uint64_t level,
-                         uint64_t stack_dist, bool discard_node)
+StackDistCalc::updateSum(Node *node, bool from_left, uint64_t sum_from_below,
+                         uint64_t level, uint64_t stack_dist,
+                         bool discard_node)
 {
     ++level;
 
@@ -112,7 +111,7 @@ StackDistCalc::updateSum(Node* node, bool from_left,
     bool node_discard_left = node->discardLeft;
     bool node_discard_right = node->discardRight;
     uint64_t node_n_index = node->nodeIndex;
-    Node* node_parent_ptr = node->parent;
+    Node *node_parent_ptr = node->parent;
 
     // For verification
     if (verifyStack) {
@@ -124,11 +123,13 @@ StackDistCalc::updateSum(Node* node, bool from_left,
         // thus left_sum and right_sum should be <= 4
         panic_if(node_sum_l > (1 << (level - 1)),
                  "Error in sum left of level %ul, node index %ull, "
-                 "Sum =  %ull \n", level, node_n_index, node_sum_l);
+                 "Sum =  %ull \n",
+                 level, node_n_index, node_sum_l);
 
         panic_if(node_sum_r > (1 << (level - 1)),
                  "Error in sum right of level %ul, node index %ull, "
-                 "Sum =  %ull \n", level, node_n_index, node_sum_r);
+                 "Sum =  %ull \n",
+                 level, node_n_index, node_sum_r);
     }
 
     // Update the left sum or the right sum depending on the
@@ -137,7 +138,7 @@ StackDistCalc::updateSum(Node* node, bool from_left,
     if (from_left) {
         // update sumLeft
         node_sum_l = sum_from_below;
-        stack_dist +=  node_sum_r;
+        stack_dist += node_sum_r;
     } else {
         // update sum_r
         node_sum_r = sum_from_below;
@@ -160,8 +161,8 @@ StackDistCalc::updateSum(Node* node, bool from_left,
     node->discardRight = node_discard_right;
 
     // Delete the node if it is not required anymore
-    if (node_discard_left && node_discard_right &&
-        discard_node && node_parent_ptr && !sum_from_below) {
+    if (node_discard_left && node_discard_right && discard_node &&
+        node_parent_ptr && !sum_from_below) {
         delete node;
         tree[level].erase(node_n_index);
         discard_node = true;
@@ -174,9 +175,9 @@ StackDistCalc::updateSum(Node* node, bool from_left,
     // Recursively call the updateSum operation till the
     // root node is reached
     if (node_parent_ptr) {
-        stack_dist = updateSum(node_parent_ptr, node_left,
-                               node_sum_l + node_sum_r,
-                               level, stack_dist, discard_node);
+        stack_dist =
+            updateSum(node_parent_ptr, node_left, node_sum_l + node_sum_r,
+                      level, stack_dist, discard_node);
     }
 
     return stack_dist;
@@ -187,23 +188,21 @@ StackDistCalc::updateSum(Node* node, bool from_left,
 // removed from the tree. In both cases the tree is updated using
 // the updateSum operation.
 uint64_t
-StackDistCalc::updateSumsLeavesToRoot(Node* node, bool is_new_leaf)
+StackDistCalc::updateSumsLeavesToRoot(Node *node, bool is_new_leaf)
 {
     uint64_t level = 0;
     uint64_t stack_dist = 0;
 
     if (is_new_leaf) {
         node->sumLeft = 1;
-        updateSum(node->parent,
-                  node->isLeftNode, node->sumLeft,
-                  level, 0, false);
+        updateSum(node->parent, node->isLeftNode, node->sumLeft, level, 0,
+                  false);
 
         stack_dist = Infinity;
     } else {
         node->sumLeft = 0;
-        stack_dist = updateSum(node->parent,
-                                  node->isLeftNode, 0,
-                                  level, stack_dist, true);
+        stack_dist = updateSum(node->parent, node->isLeftNode, 0, level,
+                               stack_dist, true);
     }
 
     return stack_dist;
@@ -212,7 +211,7 @@ StackDistCalc::updateSumsLeavesToRoot(Node* node, bool is_new_leaf)
 // This method is a recursive function which calculates
 // the node sums till the root.
 uint64_t
-StackDistCalc::getSum(Node* node, bool from_left, uint64_t sum_from_below,
+StackDistCalc::getSum(Node *node, bool from_left, uint64_t sum_from_below,
                       uint64_t stack_dist, uint64_t level) const
 {
     ++level;
@@ -226,8 +225,7 @@ StackDistCalc::getSum(Node* node, bool from_left, uint64_t sum_from_below,
     // root node is reached
     if (node->parent) {
         stack_dist = getSum(node->parent, node->isLeftNode,
-                            node->sumLeft + node->sumRight,
-                            stack_dist, level);
+                            node->sumLeft + node->sumRight, stack_dist, level);
     }
 
     return stack_dist;
@@ -235,9 +233,9 @@ StackDistCalc::getSum(Node* node, bool from_left, uint64_t sum_from_below,
 
 // This function is called by the calcStackDistance function
 uint64_t
-StackDistCalc::getSumsLeavesToRoot(Node* node) const
+StackDistCalc::getSumsLeavesToRoot(Node *node) const
 {
-    return  getSum(node->parent, node->isLeftNode, 0, 0, 0);
+    return getSum(node->parent, node->isLeftNode, 0, 0, 0);
 }
 
 // Update tree is a tree balancing operation which maintains
@@ -268,15 +266,15 @@ StackDistCalc::updateTree()
         // above the leaf layer)
 
         // Create a new root node
-        Node* newRootNode = new Node();
+        Node *newRootNode = new Node();
 
         // Update its sum_l as the sum_l+sum_r from below
         newRootNode->sumLeft = tree[getTreeDepth()][0]->sumRight +
-            tree[getTreeDepth()][0]->sumLeft;
+                               tree[getTreeDepth()][0]->sumLeft;
         // Update its discard left flag if the node below has
         // has both discardLeft and discardRight set.
         newRootNode->discardLeft = tree[getTreeDepth()][0]->discardLeft &&
-            tree[getTreeDepth()][0]->discardRight;
+                                   tree[getTreeDepth()][0]->discardRight;
 
         // Map type variable, representing a layer in the tree
         IndexNodeMap treeLevel;
@@ -292,7 +290,7 @@ StackDistCalc::updateTree()
         // Add intermediate nodes from root till bottom (one layer above the
         // leaf layer)
         for (i = getTreeDepth() - 1; i >= 1; --i) {
-            Node* newINode = new Node();
+            Node *newINode = new Node();
             // newNode is left or right child depending on the number of nodes
             // in that layer
             if (nextIndex[i] % 2 == 0) {
@@ -329,7 +327,7 @@ StackDistCalc::updateTree()
             if ((index % (1 << i)) == 0) {
                 // Checks if current (index % 2^treeDepth) == 0 if true
                 // a new node at that layer is created
-                Node* newINode = new Node();
+                Node *newINode = new Node();
 
                 // newNode is left or right child depending on the
                 // number of nodes in that layer.
@@ -357,15 +355,15 @@ StackDistCalc::updateTree()
 // isMarked flag would be True. This would give some insight on how
 // the BackInvalidates policy of the lower level affect the read/write
 // accesses in an application.
-std::pair< uint64_t, bool>
+std::pair<uint64_t, bool>
 StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
 {
-    Node* newLeafNode;
+    Node *newLeafNode;
 
     auto ai = aiMap.lower_bound(r_address);
 
     // Default value of flag indicating as the left or right leaf
-    bool isLeft     = true;
+    bool isLeft = true;
     // Default value of isMarked flag for each node.
     bool _mark = false;
     // By default stackDistacne is treated as infinity
@@ -384,7 +382,7 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
 
         if (addNewNode) {
             // Update aiMap aiMap(Address) = current index
-            ai->second   = index;
+            ai->second = index;
         } else {
             aiMap.erase(r_address);
         }
@@ -422,8 +420,8 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
         // set n_index = current index
         newLeafNode = new Node();
         ++nextIndex[0];
-        newLeafNode->nodeIndex=index;
-        newLeafNode->isLeftNode=isLeft;
+        newLeafNode->nodeIndex = index;
+        newLeafNode->isLeftNode = isLeft;
         // Point the parent pointer to the intermediate node above
         newLeafNode->parent = tree[1][nextIndex[1] - 1];
         tree[0][index] = newLeafNode;
@@ -459,7 +457,7 @@ StackDistCalc::calcStackDistAndUpdate(const Addr r_address, bool addNewNode)
 // This function is called everytime to get the stack distance
 // no new node is added. It can be used to mark a previous access
 // and inspect the value of the mark flag.
-std::pair< uint64_t, bool>
+std::pair<uint64_t, bool>
 StackDistCalc::calcStackDist(const Addr r_address, bool mark)
 {
     // Default value of isMarked flag for each node.
@@ -513,9 +511,9 @@ StackDistCalc::calcStackDist(const Addr r_address, bool mark)
 // For verification
 // Simple sanity check for the tree
 void
-StackDistCalc::sanityCheckTree(const Node* node, uint64_t level) const
+StackDistCalc::sanityCheckTree(const Node *node, uint64_t level) const
 {
-    const Node* next_up = node->parent;
+    const Node *next_up = node->parent;
 
     for (uint64_t i = level + 1; i < getTreeDepth() - level; ++i) {
         next_up = next_up->parent;
@@ -566,7 +564,7 @@ StackDistCalc::verifyStackDist(const Addr r_address, bool update_stack)
 void
 StackDistCalc::printStack(int n) const
 {
-    Node* node;
+    Node *node;
     int count = 0;
 
     DPRINTF(StackDist, "Printing last %d entries in tree\n", n);
@@ -580,17 +578,17 @@ StackDistCalc::printStack(int n) const
         // Lookup aiMap using the index returned by the leaf iterator
         for (auto ai = aiMap.rbegin(); ai != aiMap.rend(); ++ai) {
             if (ai->second == r_index) {
-                DPRINTF(StackDist,"Tree leaves, Rightmost-[%d] = %#lx\n",
+                DPRINTF(StackDist, "Tree leaves, Rightmost-[%d] = %#lx\n",
                         count, ai->first);
                 break;
             }
         }
     }
 
-    DPRINTF(StackDist,"Tree depth = %#ld\n", getTreeDepth());
+    DPRINTF(StackDist, "Tree depth = %#ld\n", getTreeDepth());
 
     if (verifyStack) {
-        DPRINTF(StackDist,"Printing Last %d entries in VerifStack \n", n);
+        DPRINTF(StackDist, "Printing Last %d entries in VerifStack \n", n);
         count = 0;
         for (auto a = stack.rbegin(); (count < n) && (a != stack.rend());
              ++a, ++count) {

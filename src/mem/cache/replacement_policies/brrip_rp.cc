@@ -42,14 +42,13 @@ namespace replacement_policy
 {
 
 BRRIP::BRRIP(const Params &p)
-  : Base(p), numRRPVBits(p.num_bits), hitPriority(p.hit_priority),
-    btp(p.btp)
+    : Base(p), numRRPVBits(p.num_bits), hitPriority(p.hit_priority), btp(p.btp)
 {
     fatal_if(numRRPVBits <= 0, "There should be at least one bit per RRPV.\n");
 }
 
 void
-BRRIP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+BRRIP::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -59,7 +58,7 @@ BRRIP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+BRRIP::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -75,7 +74,7 @@ BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+BRRIP::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -92,21 +91,21 @@ BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     casted_replacement_data->valid = true;
 }
 
-ReplaceableEntry*
-BRRIP::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+BRRIP::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Use first candidate as dummy victim
-    ReplaceableEntry* victim = candidates[0];
+    ReplaceableEntry *victim = candidates[0];
 
     // Store victim->rrpv in a variable to improve code readability
-    int victim_RRPV = std::static_pointer_cast<BRRIPReplData>(
-                        victim->replacementData)->rrpv;
+    int victim_RRPV =
+        std::static_pointer_cast<BRRIPReplData>(victim->replacementData)->rrpv;
 
     // Visit all candidates to find victim
-    for (const auto& candidate : candidates) {
+    for (const auto &candidate : candidates) {
         std::shared_ptr<BRRIPReplData> candidate_repl_data =
             std::static_pointer_cast<BRRIPReplData>(
                 candidate->replacementData);
@@ -126,15 +125,15 @@ BRRIP::getVictim(const ReplacementCandidates& candidates) const
 
     // Get difference of victim's RRPV to the highest possible RRPV in
     // order to update the RRPV of all the other entries accordingly
-    int diff = std::static_pointer_cast<BRRIPReplData>(
-        victim->replacementData)->rrpv.saturate();
+    int diff = std::static_pointer_cast<BRRIPReplData>(victim->replacementData)
+                   ->rrpv.saturate();
 
     // No need to update RRPV if there is no difference
-    if (diff > 0){
+    if (diff > 0) {
         // Update RRPV of all candidates
-        for (const auto& candidate : candidates) {
-            std::static_pointer_cast<BRRIPReplData>(
-                candidate->replacementData)->rrpv += diff;
+        for (const auto &candidate : candidates) {
+            std::static_pointer_cast<BRRIPReplData>(candidate->replacementData)
+                ->rrpv += diff;
         }
     }
 

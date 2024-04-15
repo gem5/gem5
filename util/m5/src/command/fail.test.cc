@@ -55,22 +55,22 @@ TEST(Fail, Arguments)
     // Called with no arguments.
     test_ns_delay = 50;
     test_code = 40;
-    EXPECT_FALSE(run({"fail"}));
+    EXPECT_FALSE(run({ "fail" }));
 
     // Called with one argument.
     test_ns_delay = 50;
     test_code = 40;
-    EXPECT_TRUE(run({"fail", "1"}));
+    EXPECT_TRUE(run({ "fail", "1" }));
     EXPECT_EQ(test_ns_delay, 0);
     EXPECT_EQ(test_code, 1);
 
     // Called with two arguments.
     test_ns_delay = 50;
     test_code = 40;
-    EXPECT_TRUE(run({"fail", "1", "2"}));
+    EXPECT_TRUE(run({ "fail", "1", "2" }));
     EXPECT_EQ(test_ns_delay, 2);
     EXPECT_EQ(test_code, 1);
 
     // Called with three arguments.
-    EXPECT_FALSE(run({"fail", "1", "2", "3"}));
+    EXPECT_FALSE(run({ "fail", "1", "2", "3" }));
 }

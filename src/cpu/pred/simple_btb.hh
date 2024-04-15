@@ -60,12 +60,11 @@ class SimpleBTB : public BranchTargetBuffer
     void memInvalidate() override;
     bool valid(ThreadID tid, Addr instPC) override;
     const PCStateBase *lookup(ThreadID tid, Addr instPC,
-                           BranchType type = BranchType::NoBranch) override;
+                              BranchType type = BranchType::NoBranch) override;
     void update(ThreadID tid, Addr instPC, const PCStateBase &target_pc,
-                           BranchType type = BranchType::NoBranch,
-                           StaticInstPtr inst = nullptr) override;
+                BranchType type = BranchType::NoBranch,
+                StaticInstPtr inst = nullptr) override;
     const StaticInstPtr getInst(ThreadID tid, Addr instPC) override;
-
 
   private:
     struct BTBEntry
@@ -86,7 +85,6 @@ class SimpleBTB : public BranchTargetBuffer
         StaticInstPtr inst = nullptr;
     };
 
-
     /** Returns the index into the BTB, based on the branch's PC.
      *  @param inst_PC The branch to look up.
      *  @return Returns the index into the BTB.
@@ -102,7 +100,7 @@ class SimpleBTB : public BranchTargetBuffer
     /** Internal call to find an address in the BTB
      * @param instPC The branch's address.
      * @return Returns a pointer to the BTB entry if found, nullptr otherwise.
-    */
+     */
     BTBEntry *findEntry(Addr instPC, ThreadID tid);
 
     /** The actual BTB. */

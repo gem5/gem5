@@ -45,15 +45,12 @@ namespace PowerISA
 class FloatOp : public PowerStaticInst
 {
   protected:
-
     bool rc;
 
     /// Constructor
     FloatOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass),
-        rc(machInst.rc)
-    {
-    }
+        : PowerStaticInst(mnem, _machInst, __opClass), rc(machInst.rc)
+    {}
 
     // Test for NaN (maximum biased exponent & non-zero fraction)
     inline bool
@@ -72,7 +69,7 @@ class FloatOp : public PowerStaticInst
     isNan(float val) const
     {
         void *val_ptr = &val;
-        uint32_t val_bits = *(uint32_t *) val_ptr;
+        uint32_t val_bits = *(uint32_t *)val_ptr;
         return isNan(val_bits);
     }
 
@@ -80,7 +77,7 @@ class FloatOp : public PowerStaticInst
     isNan(double val) const
     {
         void *val_ptr = &val;
-        uint64_t val_bits = *(uint64_t *) val_ptr;
+        uint64_t val_bits = *(uint64_t *)val_ptr;
         return isNan(val_bits);
     }
 
@@ -139,15 +136,21 @@ class FloatOp : public PowerStaticInst
     makeCRField(double a, double b) const
     {
         uint32_t c = 0;
-        if (isNan(a) || isNan(b)) { c = 0x1; }
-        else if (a < b)           { c = 0x8; }
-        else if (a > b)           { c = 0x4; }
-        else                      { c = 0x2; }
+        if (isNan(a) || isNan(b)) {
+            c = 0x1;
+        } else if (a < b) {
+            c = 0x8;
+        } else if (a > b) {
+            c = 0x4;
+        } else {
+            c = 0x2;
+        }
         return c;
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

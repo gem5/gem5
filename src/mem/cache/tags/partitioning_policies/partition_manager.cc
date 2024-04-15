@@ -46,15 +46,14 @@ namespace partitioning_policy
 {
 
 PartitionManager::PartitionManager(const Params &p)
-  : SimObject(p),
-    partitioningPolicies(p.partitioning_policies)
+    : SimObject(p), partitioningPolicies(p.partitioning_policies)
 {}
 
 void
 PartitionManager::notifyAcquire(uint64_t partition_id)
 {
     // Notify partitioning policies of acquisition of ownership
-    for (auto & partitioning_policy : partitioningPolicies) {
+    for (auto &partitioning_policy : partitioningPolicies) {
         // get partitionId from Packet
         partitioning_policy->notifyAcquire(partition_id);
     }
@@ -70,9 +69,8 @@ PartitionManager::notifyRelease(uint64_t partition_id)
 }
 
 void
-PartitionManager::filterByPartition(
-    std::vector<ReplaceableEntry *> &entries,
-    const uint64_t partition_id) const
+PartitionManager::filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                                    const uint64_t partition_id) const
 {
     // Filter entries based on PartitionID
     for (auto partitioning_policy : partitioningPolicies) {

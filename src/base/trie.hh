@@ -72,9 +72,8 @@ class Trie
         Node *parent;
         std::unique_ptr<Node> kids[2];
 
-        Node(Key _key, Key _mask, Value *_val) :
-            key(_key & _mask), mask(_mask), value(_val),
-            parent(NULL)
+        Node(Key _key, Key _mask, Value *_val)
+            : key(_key & _mask), mask(_mask), value(_val), parent(NULL)
         {
             kids[0] = NULL;
             kids[1] = NULL;
@@ -97,8 +96,8 @@ class Trie
                 ccprintf(os, "Root ");
             else
                 ccprintf(os, "+ ");
-            ccprintf(os, "(%p, %p, %#X, %#X, %p)\n",
-                     parent, this, key, mask, value);
+            ccprintf(os, "(%p, %p, %#X, %#X, %p)\n", parent, this, key, mask,
+                     value);
             if (kids[0])
                 kids[0]->dump(os, level + 1);
             if (kids[1])
@@ -118,8 +117,7 @@ class Trie
     /**
      * @ingroup api_base_utils
      */
-    Trie() : head(0, 0, NULL)
-    {}
+    Trie() : head(0, 0, NULL) {}
 
     /**
      * @ingroup api_base_utils
@@ -218,8 +216,7 @@ class Trie
         // can be ignored for the purposes of this function.
         Node *node = &head;
         while (goesAfter(&node, node->kids[0].get(), key, new_mask) ||
-               goesAfter(&node, node->kids[1].get(), key, new_mask))
-        {}
+               goesAfter(&node, node->kids[1].get(), key, new_mask)) {}
         assert(node);
 
         Key cur_mask = node->mask;
@@ -231,7 +228,7 @@ class Trie
         }
 
         for (unsigned int i = 0; i < 2; i++) {
-            auto& kid = node->kids[i];
+            auto &kid = node->kids[i];
             if (!kid) {
                 // No kid. Add a new one.
                 auto new_node = std::make_unique<Node>(key, new_mask, val);
@@ -248,7 +245,7 @@ class Trie
                 last_mask = cur_mask;
                 cur_mask = extendMask(cur_mask);
                 done = ((key & cur_mask) != (kid->key & cur_mask)) ||
-                    last_mask == new_mask;
+                       last_mask == new_mask;
             } while (!done);
             cur_mask = last_mask;
 
@@ -375,7 +372,7 @@ class Trie
      * @param title An identifying title to put in the dump header.
      */
     void
-    dump(const char *title, std::ostream &os=std::cout)
+    dump(const char *title, std::ostream &os = std::cout)
     {
         ccprintf(os, "**************************************************\n");
         ccprintf(os, "*** Start of Trie: %s\n", title);

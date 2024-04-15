@@ -69,7 +69,7 @@ TLB::TLB(const Params &p) : BaseTLB(p), size(p.size), nlu(0)
 TLB::~TLB()
 {
     if (table)
-        delete [] table;
+        delete[] table;
 }
 
 // look up an entry in the TLB
@@ -85,10 +85,9 @@ TLB::lookup(Addr vpn, uint8_t asn) const
             PowerISA::PTE *pte = &table[index];
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
-            if (((vpn & InvMask) == (VPN & InvMask))
-               && (pte->G  || (asn == pte->asid))) {
-
+            Addr VPN = pte->VPN;
+            if (((vpn & InvMask) == (VPN & InvMask)) &&
+                (pte->G || (asn == pte->asid))) {
                 // We have a VPN + ASID Match
                 retval = pte;
                 break;
@@ -102,16 +101,16 @@ TLB::lookup(Addr vpn, uint8_t asn) const
     return retval;
 }
 
-PowerISA::PTE*
+PowerISA::PTE *
 TLB::getEntry(unsigned Index) const
 {
     // Make sure that Index is valid
-    assert(Index<size);
+    assert(Index < size);
     return &table[Index];
 }
 
 int
-TLB::probeEntry(Addr vpn,uint8_t asn) const
+TLB::probeEntry(Addr vpn, uint8_t asn) const
 {
     // assume not found...
     int Ind = -1;
@@ -122,10 +121,9 @@ TLB::probeEntry(Addr vpn,uint8_t asn) const
             PowerISA::PTE *pte = &table[index];
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
-            if (((vpn & InvMask) == (VPN & InvMask))
-                && (pte->G  || (asn == pte->asid))) {
-
+            Addr VPN = pte->VPN;
+            if (((vpn & InvMask) == (VPN & InvMask)) &&
+                (pte->G || (asn == pte->asid))) {
                 // We have a VPN + ASID Match
                 Ind = index;
                 break;
@@ -143,7 +141,6 @@ TLB::checkCacheability(const RequestPtr &req)
 {
     Addr VAddrUncacheable = 0xA0000000;
     if ((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
-
         // mark request as uncacheable
         req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
     }
@@ -153,20 +150,18 @@ TLB::checkCacheability(const RequestPtr &req)
 void
 TLB::insertAt(PowerISA::PTE &pte, unsigned Index, int _smallPages)
 {
-    smallPages=_smallPages;
-    if (Index > size){
-        warn("Attempted to write at index (%d) beyond TLB size (%d)",
-             Index, size);
+    smallPages = _smallPages;
+    if (Index > size) {
+        warn("Attempted to write at index (%d) beyond TLB size (%d)", Index,
+             size);
     } else {
-
         // Update TLB
         if (table[Index].V0 || table[Index].V1) {
-
             // Previous entry is valid
             PageTable::iterator i = lookupTable.find(table[Index].VPN);
             lookupTable.erase(i);
         }
-        table[Index]=pte;
+        table[Index] = pte;
 
         // Update fast lookup table
         lookupTable.insert(std::make_pair(table[Index].VPN, Index));
@@ -241,7 +236,7 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
                      BaseMMU::Mode mode)
 {
     panic_if(FullSystem,
-            "translateAtomic not yet implemented for full system.");
+             "translateAtomic not yet implemented for full system.");
 
     if (mode == BaseMMU::Execute)
         return translateInst(req, tc);
@@ -254,7 +249,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
                          BaseMMU::Mode mode)
 {
     panic_if(FullSystem,
-            "translateFunctional not implemented for full system.");
+             "translateFunctional not implemented for full system.");
     return tc->getProcessPtr()->pTable->translate(req);
 }
 
@@ -267,8 +262,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }

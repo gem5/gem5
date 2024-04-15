@@ -57,7 +57,11 @@ class EtherDump : public SimObject
     typedef EtherDumpParams Params;
     EtherDump(const Params &p);
 
-    inline void dump(EthPacketPtr &pkt) { dumpPacket(pkt); }
+    inline void
+    dump(EthPacketPtr &pkt)
+    {
+        dumpPacket(pkt);
+    }
 };
 
 } // namespace gem5

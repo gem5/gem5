@@ -70,7 +70,6 @@ class NVMInterface : public MemInterface
     class Rank : public EventManager
     {
       public:
-
         /**
          * Current Rank index
          */
@@ -82,8 +81,7 @@ class NVMInterface : public MemInterface
          */
         std::vector<Bank> banks;
 
-        Rank(const NVMInterfaceParams &_p, int _rank,
-             NVMInterface& _nvm);
+        Rank(const NVMInterfaceParams &_p, int _rank, NVMInterface &_nvm);
     };
 
     /**
@@ -141,6 +139,7 @@ class NVMInterface : public MemInterface
         statistics::Histogram pendingWrites;
         statistics::Histogram bytesPerBank;
     };
+
     NVMStats stats;
 
     void processWriteRespondEvent();
@@ -150,9 +149,9 @@ class NVMInterface : public MemInterface
     EventFunctionWrapper readReadyEvent;
 
     /**
-      * Vector of nvm ranks
-      */
-    std::vector<Rank*> ranks;
+     * Vector of nvm ranks
+     */
+    std::vector<Rank *> ranks;
 
     /**
      * Holding queue for non-deterministic write commands, which
@@ -171,7 +170,11 @@ class NVMInterface : public MemInterface
      *
      * @param Return true if empty
      */
-    bool writeRespQueueEmpty() const { return writeRespQueue.empty(); }
+    bool
+    writeRespQueueEmpty() const
+    {
+        return writeRespQueue.empty();
+    }
 
     /**
      * Till when must we wait before issuing next read command?
@@ -200,9 +203,9 @@ class NVMInterface : public MemInterface
      */
     void setupRank(const uint8_t rank, const bool is_read) override;
 
-    MemPacket* decodePacket(const PacketPtr pkt, Addr pkt_addr,
-                           unsigned int size, bool is_read,
-                           uint8_t pseudo_channel = 0) override;
+    MemPacket *decodePacket(const PacketPtr pkt, Addr pkt_addr,
+                            unsigned int size, bool is_read,
+                            uint8_t pseudo_channel = 0) override;
 
     /**
      * Check drain state of NVM interface
@@ -210,12 +213,20 @@ class NVMInterface : public MemInterface
      * @return true if write response queue is empty
      *
      */
-    bool allRanksDrained() const override { return writeRespQueueEmpty(); }
+    bool
+    allRanksDrained() const override
+    {
+        return writeRespQueueEmpty();
+    }
 
     /*
      * @return time to offset next command
      */
-    Tick commandOffset() const override { return tBURST; }
+    Tick
+    commandOffset() const override
+    {
+        return tBURST;
+    }
 
     /**
      * Check if a burst operation can be issued to the NVM
@@ -225,7 +236,7 @@ class NVMInterface : public MemInterface
      *                    has been updated to a non-zero value to
      *                    account for race conditions between events
      */
-    bool burstReady(MemPacket* pkt) const override;
+    bool burstReady(MemPacket *pkt) const override;
 
     /**
      * This function checks if ranks are busy.
@@ -249,7 +260,7 @@ class NVMInterface : public MemInterface
      * @return the tick when the packet selected will issue
      */
     std::pair<MemPacketQueue::iterator, Tick>
-    chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const override;
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const override;
 
     /**
      *  Add rank to rank delay to bus timing to all NVM banks in alli ranks
@@ -263,19 +274,23 @@ class NVMInterface : public MemInterface
     /**
      * Following two functions are not required for nvm interface
      */
-    void respondEvent(uint8_t rank) override { };
+    void respondEvent(uint8_t rank) override{};
 
-    void checkRefreshState(uint8_t rank) override { };
+    void checkRefreshState(uint8_t rank) override{};
 
     /**
      * Select read command to issue asynchronously
      */
-    void chooseRead(MemPacketQueue& queue) override;
+    void chooseRead(MemPacketQueue &queue) override;
 
     /*
      * Function to calulate unloaded access latency
      */
-    Tick accessLatency() const override { return (tREAD + tSEND); }
+    Tick
+    accessLatency() const override
+    {
+        return (tREAD + tSEND);
+    }
 
     /**
      * Check if the write response queue has reached defined threshold
@@ -291,8 +306,7 @@ class NVMInterface : public MemInterface
     bool
     readsWaitingToIssue() const override
     {
-        return ((numReadsToIssue != 0) &&
-                (numPendingReads < maxPendingReads));
+        return ((numReadsToIssue != 0) && (numPendingReads < maxPendingReads));
     }
 
     /**
@@ -304,15 +318,23 @@ class NVMInterface : public MemInterface
      *               tick when next burst can issue
      */
     std::pair<Tick, Tick>
-    doBurstAccess(MemPacket* pkt, Tick next_burst_at,
-                  const std::vector<MemPacketQueue>& queue) override;
+    doBurstAccess(MemPacket *pkt, Tick next_burst_at,
+                  const std::vector<MemPacketQueue> &queue) override;
 
     /**
      * The next three functions are DRAM-specific and will be ignored by NVM.
      */
-    void drainRanks() override { }
-    void suspend() override { }
-    void startup() override { }
+    void
+    drainRanks() override
+    {}
+
+    void
+    suspend() override
+    {}
+
+    void
+    startup() override
+    {}
 
     NVMInterface(const NVMInterfaceParams &_p);
 };

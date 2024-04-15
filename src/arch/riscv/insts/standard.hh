@@ -52,14 +52,15 @@ class RegOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
  * Base class for operations with immediates (I is the type of immediate)
  */
-template<typename I>
+template <typename I>
 class ImmOp : public RiscvStaticInst
 {
   protected:
@@ -78,8 +79,9 @@ class SystemOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -94,15 +96,17 @@ class CSROp : public RiscvStaticInst
     /// Constructor
     CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
-          csr(_machInst.funct12), uimm(_machInst.csrimm)
+          csr(_machInst.funct12),
+          uimm(_machInst.csrimm)
     {
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;
         }
     }
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

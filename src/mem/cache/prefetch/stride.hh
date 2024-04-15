@@ -64,9 +64,10 @@ namespace gem5
 {
 
 class BaseIndexingPolicy;
+
 namespace replacement_policy
 {
-    class Base;
+class Base;
 }
 struct StridePrefetcherParams;
 
@@ -86,9 +87,9 @@ class StridePrefetcherHashedSetAssociative : public SetAssociative
   public:
     StridePrefetcherHashedSetAssociative(
         const StridePrefetcherHashedSetAssociativeParams &p)
-      : SetAssociative(p)
-    {
-    }
+        : SetAssociative(p)
+    {}
+
     ~StridePrefetcherHashedSetAssociative() = default;
 };
 
@@ -121,8 +122,8 @@ class Stride : public Queued
         const int assoc;
         const int numEntries;
 
-        BaseIndexingPolicy* const indexingPolicy;
-        replacement_policy::Base* const replacementPolicy;
+        BaseIndexingPolicy *const indexingPolicy;
+        replacement_policy::Base *const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
                     BaseIndexingPolicy* indexing_policy,
@@ -136,7 +137,7 @@ class Stride : public Queued
     /** Tagged by hashed PCs. */
     struct StrideEntry : public TaggedEntry
     {
-        StrideEntry(const SatCounter8& init_confidence);
+        StrideEntry(const SatCounter8 &init_confidence);
 
         void invalidate() override;
 
@@ -144,6 +145,7 @@ class Stride : public Queued
         int stride;
         SatCounter8 confidence;
     };
+
     typedef AssociativeSet<StrideEntry> PCTable;
     std::unordered_map<int, PCTable> pcTables;
 
@@ -154,7 +156,7 @@ class Stride : public Queued
      * @param context The context to be searched for.
      * @return The table corresponding to the given context.
      */
-    PCTable* findTable(int context);
+    PCTable *findTable(int context);
 
     /**
      * Create a PC table for the given context.
@@ -162,7 +164,7 @@ class Stride : public Queued
      * @param context The context of the new PC table.
      * @return The new PC table
      */
-    PCTable* allocateNewContext(int context);
+    PCTable *allocateNewContext(int context);
 
   public:
     Stride(const StridePrefetcherParams &p);

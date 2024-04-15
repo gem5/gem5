@@ -61,33 +61,30 @@ class WriteMask;
 class DataBlock
 {
   public:
-    DataBlock()
-    {
-        alloc();
-    }
+    DataBlock() { alloc(); }
 
     DataBlock(const DataBlock &cp);
 
     ~DataBlock()
     {
         if (m_alloc)
-            delete [] m_data;
+            delete[] m_data;
 
         // If data block involved in atomic
         // operations, free all meta data
         for (auto log : m_atomicLog) {
-            delete [] log;
+            delete[] log;
         }
     }
 
-    DataBlock& operator=(const DataBlock& obj);
+    DataBlock &operator=(const DataBlock &obj);
 
     void assign(uint8_t *data);
 
     void clear();
     uint8_t getByte(int whichByte) const;
     const uint8_t *getData(int offset, int len) const;
-    uint8_t* popAtomicLogEntryFront();
+    uint8_t *popAtomicLogEntryFront();
     int numAtomicLogEntries() const;
     void clearAtomicLogEntries();
     uint8_t *getDataMod(int offset);
@@ -96,10 +93,10 @@ class DataBlock
     void setData(PacketPtr pkt);
     void copyPartial(const DataBlock &dblk, int offset, int len);
     void copyPartial(const DataBlock &dblk, const WriteMask &mask);
-    void atomicPartial(const DataBlock & dblk, const WriteMask & mask,
-            bool isAtomicNoReturn=true);
-    bool equal(const DataBlock& obj) const;
-    void print(std::ostream& out) const;
+    void atomicPartial(const DataBlock &dblk, const WriteMask &mask,
+                       bool isAtomicNoReturn = true);
+    bool equal(const DataBlock &obj) const;
+    void print(std::ostream &out) const;
 
   private:
     void alloc();
@@ -107,7 +104,7 @@ class DataBlock
     bool m_alloc;
 
     // Tracks block changes when atomic ops are applied
-    std::deque<uint8_t*> m_atomicLog;
+    std::deque<uint8_t *> m_atomicLog;
 };
 
 inline void
@@ -115,7 +112,7 @@ DataBlock::assign(uint8_t *data)
 {
     assert(data != NULL);
     if (m_alloc) {
-        delete [] m_data;
+        delete[] m_data;
     }
     m_data = data;
     m_alloc = false;
@@ -134,13 +131,13 @@ DataBlock::setByte(int whichByte, uint8_t data)
 }
 
 inline void
-DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
+DataBlock::copyPartial(const DataBlock &dblk, int offset, int len)
 {
     setData(&dblk.m_data[offset], offset, len);
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const DataBlock& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const DataBlock &obj)
 {
     obj.print(out);
     out << std::flush;
@@ -148,7 +145,7 @@ operator<<(std::ostream& out, const DataBlock& obj)
 }
 
 inline bool
-operator==(const DataBlock& obj1,const DataBlock& obj2)
+operator==(const DataBlock &obj1, const DataBlock &obj2)
 {
     return obj1.equal(obj2);
 }

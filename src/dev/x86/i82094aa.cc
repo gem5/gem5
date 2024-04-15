@@ -43,7 +43,8 @@ namespace gem5
 {
 
 X86ISA::I82094AA::I82094AA(const Params &p)
-    : BasicPioDevice(p, 20), lowestPriorityOffset(0),
+    : BasicPioDevice(p, 20),
+      lowestPriorityOffset(0),
       intRequestPort(name() + ".int_request", this, this, p.int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
@@ -63,7 +64,7 @@ X86ISA::I82094AA::I82094AA(const Params &p)
 
     for (int i = 0; i < p.port_inputs_connection_count; i++)
         inputs.push_back(new IntSinkPin<I82094AA>(
-                    csprintf("%s.inputs[%d]", name(), i), i, this));
+            csprintf("%s.inputs[%d]", name(), i), i, this));
 }
 
 void
@@ -75,7 +76,7 @@ X86ISA::I82094AA::init()
 
     // If the request port isn't connected, we can't send interrupts anywhere.
     panic_if(!intRequestPort.isConnected(),
-            "Int port not connected to anything!");
+             "Int port not connected to anything!");
 }
 
 Port &
@@ -94,14 +95,14 @@ X86ISA::I82094AA::read(PacketPtr pkt)
 {
     assert(pkt->getSize() == 4);
     Addr offset = pkt->getAddr() - pioAddr;
-    switch(offset) {
-      case 0:
+    switch (offset) {
+    case 0:
         pkt->setLE<uint32_t>(regSel);
         break;
-      case 16:
+    case 16:
         pkt->setLE<uint32_t>(readReg(regSel));
         break;
-      default:
+    default:
         panic("Illegal read from I/O APIC.\n");
     }
     pkt->makeAtomicResponse();
@@ -113,14 +114,14 @@ X86ISA::I82094AA::write(PacketPtr pkt)
 {
     assert(pkt->getSize() == 4);
     Addr offset = pkt->getAddr() - pioAddr;
-    switch(offset) {
-      case 0:
+    switch (offset) {
+    case 0:
         regSel = pkt->getLE<uint32_t>();
         break;
-      case 16:
+    case 16:
         writeReg(regSel, pkt->getLE<uint32_t>());
         break;
-      default:
+    default:
         panic("Illegal write to I/O APIC.\n");
     }
     pkt->makeAtomicResponse();
@@ -148,8 +149,7 @@ X86ISA::I82094AA::writeReg(uint8_t offset, uint32_t value)
     } else {
         warn("Access to undefined I/O APIC register %#x.\n", offset);
     }
-    DPRINTF(I82094AA,
-            "Wrote %#x to I/O APIC register %#x .\n", value, offset);
+    DPRINTF(I82094AA, "Wrote %#x to I/O APIC register %#x .\n", value, offset);
 }
 
 uint32_t
@@ -172,8 +172,8 @@ X86ISA::I82094AA::readReg(uint8_t offset)
     } else {
         warn("Access to undefined I/O APIC register %#x.\n", offset);
     }
-    DPRINTF(I82094AA,
-            "Read %#x from I/O APIC register %#x.\n", result, offset);
+    DPRINTF(I82094AA, "Read %#x from I/O APIC register %#x.\n", result,
+            offset);
     return result;
 }
 
@@ -205,8 +205,7 @@ X86ISA::I82094AA::requestInterrupt(int line)
             signalInterrupt(msg_copy);
             delete pkt;
         };
-        intRequestPort.sendMessage(pkt, sys->isTimingMode(),
-                on_completion);
+        intRequestPort.sendMessage(pkt, sys->isTimingMode(), on_completion);
     } else {
         message.vector = entry.vector;
         signalInterrupt(message);
@@ -221,8 +220,8 @@ X86ISA::I82094AA::signalInterrupt(TriggerIntMessage message)
     if (message.destMode == 0) {
         if (message.deliveryMode == delivery_mode::LowestPriority) {
             panic("Lowest priority delivery mode from the "
-                    "IO APIC aren't supported in physical "
-                    "destination mode.\n");
+                  "IO APIC aren't supported in physical "
+                  "destination mode.\n");
         }
         if (message.destination == 0xFF) {
             for (int i = 0; i < numContexts; i++) {
@@ -233,16 +232,16 @@ X86ISA::I82094AA::signalInterrupt(TriggerIntMessage message)
         }
     } else {
         for (int i = 0; i < numContexts; i++) {
-            BaseInterrupts *base_int = sys->threads[i]->
-                getCpuPtr()->getInterruptController(0);
+            BaseInterrupts *base_int =
+                sys->threads[i]->getCpuPtr()->getInterruptController(0);
             auto *localApic = dynamic_cast<Interrupts *>(base_int);
             if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
-                    message.destination) {
+                message.destination) {
                 apics.push_back(localApic->getInitialApicId());
             }
         }
         if (message.deliveryMode == delivery_mode::LowestPriority &&
-                apics.size()) {
+            apics.size()) {
             // The manual seems to suggest that the chipset just does
             // something reasonable for these instead of actually using
             // state from the local APIC. We'll just rotate an offset
@@ -259,7 +258,7 @@ X86ISA::I82094AA::signalInterrupt(TriggerIntMessage message)
             apics.push_back(selected);
         }
     }
-    for (auto id: apics) {
+    for (auto id : apics) {
         PacketPtr pkt = buildIntTriggerPacket(id, message);
         intRequestPort.sendMessage(pkt, sys->isTimingMode());
     }
@@ -284,7 +283,7 @@ X86ISA::I82094AA::lowerInterruptPin(int number)
 void
 X86ISA::I82094AA::serialize(CheckpointOut &cp) const
 {
-    uint64_t* redirTableArray = (uint64_t*)redirTable;
+    uint64_t *redirTableArray = (uint64_t *)redirTable;
     SERIALIZE_SCALAR(regSel);
     SERIALIZE_SCALAR(initialApicId);
     SERIALIZE_SCALAR(id);

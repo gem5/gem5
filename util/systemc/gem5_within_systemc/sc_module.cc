@@ -79,8 +79,8 @@ setTickFrequency()
     ::gem5::fixClockFrequency();
 }
 
-Module::Module(sc_core::sc_module_name name) : sc_core::sc_channel(name),
-    in_simulate(false)
+Module::Module(sc_core::sc_module_name name)
+    : sc_core::sc_channel(name), in_simulate(false)
 {
     SC_METHOD(eventLoop);
     sensitive << eventLoopEnterEvent;
@@ -103,8 +103,8 @@ void
 Module::setupEventQueues(Module &module)
 {
     fatal_if(gem5::mainEventQueue.size() != 0,
-        "Gem5SystemC::Module::setupEventQueues must be called"
-        " before any gem5 event queues are set up");
+             "Gem5SystemC::Module::setupEventQueues must be called"
+             " before any gem5 event queues are set up");
 
     gem5::numMainEventQueues = 1;
     gem5::mainEventQueue.push_back(new SCEventQueue("events", module));
@@ -119,8 +119,10 @@ Module::catchup()
     gem5::Tick gem5_time = gem5::curTick();
 
     /* gem5 time *must* lag SystemC as SystemC is the master */
-    fatal_if(gem5_time > systemc_time, "gem5 time must lag SystemC time"
-        " gem5: %d SystemC: %d", gem5_time, systemc_time);
+    fatal_if(gem5_time > systemc_time,
+             "gem5 time must lag SystemC time"
+             " gem5: %d SystemC: %d",
+             gem5_time, systemc_time);
 
     eventq->setCurTick(systemc_time);
 
@@ -128,8 +130,8 @@ Module::catchup()
         gem5::Tick next_event_time M5_VAR_USED = eventq->nextTick();
 
         fatal_if(gem5_time > next_event_time,
-            "Missed an event at time %d gem5: %d, SystemC: %d",
-            next_event_time, gem5_time, systemc_time);
+                 "Missed an event at time %d gem5: %d, SystemC: %d",
+                 next_event_time, gem5_time, systemc_time);
     }
 }
 
@@ -197,7 +199,7 @@ Module::eventLoop()
     gem5::EventQueue *eventq = gem5::getEventQueue(0);
 
     fatal_if(!in_simulate, "Gem5SystemC event loop entered while"
-        " outside Gem5SystemC::Module::simulate");
+                           " outside Gem5SystemC::Module::simulate");
 
     if (gem5::async_event)
         serviceAsyncEvent();
@@ -221,12 +223,12 @@ Module::eventLoop()
             wait_exit_time = gem5_time + wait_period;
 
             DPRINTF(Event, "Waiting for %d ticks for next gem5 event\n",
-                wait_period);
+                    wait_period);
 
             /* The next event is scheduled in the future, wait until
              *  then or until externalSchedulingEvent */
-            eventLoopEnterEvent.notify(sc_core::sc_time::from_value(
-                sc_dt::uint64(wait_period)));
+            eventLoopEnterEvent.notify(
+                sc_core::sc_time::from_value(sc_dt::uint64(wait_period)));
 
             return;
         } else if (gem5_time > next_event_time) {
@@ -235,7 +237,7 @@ Module::eventLoop()
             /* Missed event, for some reason the above test didn't work
              *  or an event was scheduled in the past */
             fatal("Missed an event at time %d gem5: %d, SystemC: %d",
-                next_event_time, gem5_time, systemc_time);
+                  next_event_time, gem5_time, systemc_time);
         } else {
             /* Service an event */
             exitEvent = eventq->serviceOne();
@@ -254,16 +256,15 @@ gem5::GlobalSimLoopExitEvent *
 Module::simulate(gem5::Tick num_cycles)
 {
     inform("Entering event queue @ %d.  Starting simulation...",
-        gem5::curTick());
+           gem5::curTick());
 
     if (num_cycles < gem5::MaxTick - gem5::curTick())
         num_cycles = gem5::curTick() + num_cycles;
     else /* counter would roll over or be set to MaxTick anyhow */
         num_cycles = gem5::MaxTick;
 
-    gem5::GlobalEvent *limit_event =
-        new gem5::GlobalSimLoopExitEvent(num_cycles,
-            "simulate() limit reached", 0, 0);
+    gem5::GlobalEvent *limit_event = new gem5::GlobalSimLoopExitEvent(
+        num_cycles, "simulate() limit reached", 0, 0);
 
     exitEvent = NULL;
 

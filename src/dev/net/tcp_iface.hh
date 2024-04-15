@@ -49,7 +49,6 @@
 #ifndef __DEV_NET_TCP_IFACE_HH__
 #define __DEV_NET_TCP_IFACE_HH__
 
-
 #include <string>
 
 #include "dev/net/dist_iface.hh"
@@ -86,6 +85,7 @@ class TCPIface : public DistIface
         unsigned distIfaceId;
         unsigned distIfaceNum;
     };
+
     static std::vector<std::pair<NodeInfo, int> > nodes;
     /**
      * Storage for all opened sockets
@@ -93,7 +93,6 @@ class TCPIface : public DistIface
     static std::vector<int> sockRegistry;
 
   private:
-
     /**
      * Send out a message through a TCP stream socket.
      *
@@ -101,8 +100,7 @@ class TCPIface : public DistIface
      * @param buf Start address of the message.
      * @param length Size of the message in bytes.
      */
-    void
-    sendTCP(int sock, const void *buf, unsigned length);
+    void sendTCP(int sock, const void *buf, unsigned length);
 
     /**
      * Receive the next incoming message through a TCP stream socket.
@@ -115,15 +113,29 @@ class TCPIface : public DistIface
     bool listen(int port);
     void accept();
     void connect();
-    int getfdStatic() const { return fdStatic; }
-    bool islistening() const { return listening; }
-    bool anyislistening() const { return anyListening; }
+
+    int
+    getfdStatic() const
+    {
+        return fdStatic;
+    }
+
+    bool
+    islistening() const
+    {
+        return listening;
+    }
+
+    bool
+    anyislistening() const
+    {
+        return anyListening;
+    }
+
     void establishConnection();
 
   protected:
-
-    void sendPacket(const Header &header,
-                    const EthPacketPtr &packet) override;
+    void sendPacket(const Header &header, const EthPacketPtr &packet) override;
 
     void sendCmd(const Header &header) override;
 
@@ -145,10 +157,10 @@ class TCPIface : public DistIface
      * @param em The EventManager object associated with the simulated
      * Ethernet link.
      */
-    TCPIface(std::string server_name, unsigned server_port,
-             unsigned dist_rank, unsigned dist_size,
-             Tick sync_start, Tick sync_repeat, EventManager *em,
-             bool use_pseudo_op, bool is_switch, int num_nodes);
+    TCPIface(std::string server_name, unsigned server_port, unsigned dist_rank,
+             unsigned dist_size, Tick sync_start, Tick sync_repeat,
+             EventManager *em, bool use_pseudo_op, bool is_switch,
+             int num_nodes);
 
     ~TCPIface() override;
 };

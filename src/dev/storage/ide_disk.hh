@@ -59,15 +59,15 @@ namespace gem5
 
 class ChunkGenerator;
 
-#define DMA_BACKOFF_PERIOD      200
+#define DMA_BACKOFF_PERIOD 200
 
-#define MAX_DMA_SIZE            0x20000  // 128K
-#define MAX_SINGLE_DMA_SIZE     0x10000
-#define MAX_MULTSECT            (128)
+#define MAX_DMA_SIZE 0x20000 // 128K
+#define MAX_SINGLE_DMA_SIZE 0x10000
+#define MAX_MULTSECT (128)
 
-#define PRD_BASE_MASK  0xfffffffe
+#define PRD_BASE_MASK 0xfffffffe
 #define PRD_COUNT_MASK 0xfffe
-#define PRD_EOT_MASK   0x8000
+#define PRD_EOT_MASK 0x8000
 
 struct PrdEntry_t
 {
@@ -81,47 +81,50 @@ class PrdTableEntry
   public:
     PrdEntry_t entry;
 
-    uint32_t getBaseAddr()
+    uint32_t
+    getBaseAddr()
     {
         return (entry.baseAddr & PRD_BASE_MASK);
     }
 
-    uint32_t getByteCount()
+    uint32_t
+    getByteCount()
     {
         return ((entry.byteCount == 0) ? MAX_SINGLE_DMA_SIZE :
-                (entry.byteCount & PRD_COUNT_MASK));
+                                         (entry.byteCount & PRD_COUNT_MASK));
     }
 
-    uint16_t getEOT()
+    uint16_t
+    getEOT()
     {
         return (entry.endOfTable & PRD_EOT_MASK);
     }
 };
 
-#define DATA_OFFSET     (0)
-#define ERROR_OFFSET    (1)
+#define DATA_OFFSET (0)
+#define ERROR_OFFSET (1)
 #define FEATURES_OFFSET (1)
-#define NSECTOR_OFFSET  (2)
-#define SECTOR_OFFSET   (3)
-#define LCYL_OFFSET     (4)
-#define HCYL_OFFSET     (5)
-#define SELECT_OFFSET   (6)
-#define DRIVE_OFFSET    (6)
-#define STATUS_OFFSET   (7)
-#define COMMAND_OFFSET  (7)
+#define NSECTOR_OFFSET (2)
+#define SECTOR_OFFSET (3)
+#define LCYL_OFFSET (4)
+#define HCYL_OFFSET (5)
+#define SELECT_OFFSET (6)
+#define DRIVE_OFFSET (6)
+#define STATUS_OFFSET (7)
+#define COMMAND_OFFSET (7)
 
-#define CONTROL_OFFSET  (2)
-#define ALTSTAT_OFFSET  (2)
+#define CONTROL_OFFSET (2)
+#define ALTSTAT_OFFSET (2)
 
-#define SELECT_DEV_BIT  0x10
+#define SELECT_DEV_BIT 0x10
 #define CONTROL_RST_BIT 0x04
 #define CONTROL_IEN_BIT 0x02
-#define STATUS_BSY_BIT  0x80
+#define STATUS_BSY_BIT 0x80
 #define STATUS_DRDY_BIT 0x40
-#define STATUS_DRQ_BIT  0x08
+#define STATUS_DRQ_BIT 0x08
 #define STATUS_SEEK_BIT 0x10
-#define STATUS_DF_BIT   0x20
-#define DRIVE_LBA_BIT   0x40
+#define STATUS_DF_BIT 0x20
+#define DRIVE_LBA_BIT 0x40
 
 #define DEV0 (0)
 #define DEV1 (1)
@@ -134,11 +137,13 @@ struct CommandReg_t
     uint8_t sec_num;
     uint8_t cyl_low;
     uint8_t cyl_high;
+
     union
     {
         uint8_t drive;
         uint8_t head;
     };
+
     uint8_t command;
 };
 
@@ -354,8 +359,18 @@ class IdeDisk : public SimObject
     void updateState(DevAction_t action);
 
     // Utility functions
-    bool isBSYSet() { return (status & STATUS_BSY_BIT); }
-    bool isIENSet() { return nIENBit; }
+    bool
+    isBSYSet()
+    {
+        return (status & STATUS_BSY_BIT);
+    }
+
+    bool
+    isIENSet()
+    {
+        return nIENBit;
+    }
+
     bool isDEVSelect();
 
     void
@@ -372,10 +387,8 @@ class IdeDisk : public SimObject
     uint32_t
     getLBABase()
     {
-        return ((cmdReg.head & 0xf) << 24) |
-               (cmdReg.cyl_high << 16) |
-               (cmdReg.cyl_low << 8) |
-               (cmdReg.sec_num);
+        return ((cmdReg.head & 0xf) << 24) | (cmdReg.cyl_high << 16) |
+               (cmdReg.cyl_low << 8) | (cmdReg.sec_num);
     }
 
     inline Addr pciToDma(Addr pciAddr);

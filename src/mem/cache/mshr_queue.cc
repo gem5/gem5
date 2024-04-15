@@ -52,8 +52,7 @@
 namespace gem5
 {
 
-MSHRQueue::MSHRQueue(const std::string &_label,
-                     int num_entries, int reserve,
+MSHRQueue::MSHRQueue(const std::string &_label, int num_entries, int reserve,
                      int demand_reserve, std::string cache_name = "")
     : Queue<MSHR>(_label, num_entries, reserve, cache_name + ".mshr_queue"),
       demandReserve(demand_reserve)
@@ -80,15 +79,13 @@ MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
 }
 
 void
-MSHRQueue::deallocate(MSHR* mshr)
+MSHRQueue::deallocate(MSHR *mshr)
 {
-
     DPRINTF(MSHR, "Deallocating all targets: %s", mshr->print());
     Queue<MSHR>::deallocate(mshr);
     DPRINTF(MSHR, "MSHR deallocated. Number in use: %lu/%lu\n",
             allocatedList.size(), numEntries);
 }
-
 
 void
 MSHRQueue::moveToFront(MSHR *mshr)
@@ -105,9 +102,9 @@ MSHRQueue::delay(MSHR *mshr, Tick delay_ticks)
 {
     mshr->delay(delay_ticks);
     auto it = std::find_if(mshr->readyIter, readyList.end(),
-                            [mshr] (const MSHR* _mshr) {
-                                return mshr->readyTime >= _mshr->readyTime;
-                            });
+                           [mshr](const MSHR *_mshr) {
+                               return mshr->readyTime >= _mshr->readyTime;
+                           });
     readyList.splice(it, readyList, mshr->readyIter);
 }
 

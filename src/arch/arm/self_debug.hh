@@ -39,7 +39,6 @@
 #ifndef __ARCH_ARM_SELF_DEBUG_HH__
 #define __ARCH_ARM_SELF_DEBUG_HH__
 
-
 #include "arch/arm/faults.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
@@ -63,7 +62,7 @@ class BrkPoint
   private:
     MiscRegIndex ctrlRegIndex;
     MiscRegIndex valRegIndex;
-    SelfDebug * conf;
+    SelfDebug *conf;
     bool isCntxtAware;
     bool VMID16enabled;
     Addr activePc;
@@ -74,14 +73,17 @@ class BrkPoint
   public:
     friend class SelfDebug;
 
-    BrkPoint(MiscRegIndex ctrl_index, MiscRegIndex val_index,
-             SelfDebug* _conf, bool ctx_aw, bool lva,
-             bool vmid16, bool aarch32):
-                ctrlRegIndex(ctrl_index), valRegIndex(val_index),
-                conf(_conf), isCntxtAware(ctx_aw),
-                VMID16enabled(vmid16), activePc(0x0), enable(false)
+    BrkPoint(MiscRegIndex ctrl_index, MiscRegIndex val_index, SelfDebug *_conf,
+             bool ctx_aw, bool lva, bool vmid16, bool aarch32)
+        : ctrlRegIndex(ctrl_index),
+          valRegIndex(val_index),
+          conf(_conf),
+          isCntxtAware(ctx_aw),
+          VMID16enabled(vmid16),
+          activePc(0x0),
+          enable(false)
     {
-        maxAddrSize = lva ? 52: 48 ;
+        maxAddrSize = lva ? 52 : 48;
         maxAddrSize = aarch32 ? 31 : maxAddrSize;
         onUse = false;
     }
@@ -106,7 +108,6 @@ class BrkPoint
             return bits(tc->readMiscReg(valRegIndex), 63, 32);
     }
 
-
     vmid_t getVMIDfromReg(ThreadContext *tc, bool vs);
 
   public:
@@ -122,8 +123,8 @@ class BrkPoint
         return tc->readMiscReg(ctrlRegIndex);
     }
 
-    bool isEnabled(ThreadContext* tc, ExceptionLevel el,
-                   uint8_t hmc, uint8_t ssc, uint8_t pmc);
+    bool isEnabled(ThreadContext *tc, ExceptionLevel el, uint8_t hmc,
+                   uint8_t ssc, uint8_t pmc);
 
     bool
     isActive(Addr vaddr)
@@ -149,7 +150,7 @@ class WatchPoint
   private:
     MiscRegIndex ctrlRegIndex;
     MiscRegIndex valRegIndex;
-    SelfDebug * conf;
+    SelfDebug *conf;
     bool enable;
     int maxAddrSize;
 
@@ -157,16 +158,18 @@ class WatchPoint
     friend class SelfDebug;
 
     WatchPoint(MiscRegIndex ctrl_index, MiscRegIndex val_index,
-               SelfDebug* _conf, bool lva, bool aarch32) :
-               ctrlRegIndex(ctrl_index),
-               valRegIndex(val_index), conf(_conf), enable(false)
+               SelfDebug *_conf, bool lva, bool aarch32)
+        : ctrlRegIndex(ctrl_index),
+          valRegIndex(val_index),
+          conf(_conf),
+          enable(false)
     {
-        maxAddrSize = lva ? 52: 48 ;
+        maxAddrSize = lva ? 52 : 48;
         maxAddrSize = aarch32 ? 31 : maxAddrSize;
     }
 
-    bool compareAddress(ThreadContext *tc, Addr in_addr,
-                        uint8_t bas, uint8_t mask, unsigned size);
+    bool compareAddress(ThreadContext *tc, Addr in_addr, uint8_t bas,
+                        uint8_t mask, unsigned size);
 
     inline Addr
     getAddrfromReg(ThreadContext *tc)
@@ -186,9 +189,9 @@ class WatchPoint
         enable = val.e == 0x1;
     }
 
-    bool isEnabled(ThreadContext* tc, ExceptionLevel el, bool hmc,
-                   uint8_t ssc, uint8_t pac);
-    bool test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool& wrt,
+    bool isEnabled(ThreadContext *tc, ExceptionLevel el, bool hmc, uint8_t ssc,
+                   uint8_t pac);
+    bool test(ThreadContext *tc, Addr addr, ExceptionLevel el, bool &wrt,
               bool atomic, unsigned size);
 };
 
@@ -210,8 +213,7 @@ class SoftwareStep
     friend class SelfDebug;
 
     SoftwareStep(SelfDebug *s)
-      : bSS(false), stateSS(INACTIVE_STATE),
-        conf(s), steppedLdx(false)
+        : bSS(false), stateSS(INACTIVE_STATE), conf(s), steppedLdx(false)
     {}
 
     bool debugExceptionReturnSS(ThreadContext *tc, CPSR spsr,
@@ -244,13 +246,13 @@ class SelfDebug
   private:
     std::vector<BrkPoint> arBrkPoints;
     std::vector<WatchPoint> arWatchPoints;
-    SoftwareStep * softStep;
+    SoftwareStep *softStep;
 
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
 
-    bool mde; // MDSCR_EL1.MDE, DBGDSCRext.MDBGen
-    bool sdd; // MDCR_EL3.SDD
-    bool kde; // MDSCR_EL1.KDE
+    bool mde;  // MDSCR_EL1.MDE, DBGDSCRext.MDBGen
+    bool sdd;  // MDCR_EL3.SDD
+    bool kde;  // MDSCR_EL1.KDE
     bool oslk; // OS lock flag
 
     bool aarch32; // updates with stage1 aarch64/32
@@ -258,16 +260,17 @@ class SelfDebug
 
   public:
     SelfDebug()
-      : softStep(nullptr), enableTdeTge(false),
-        mde(false), sdd(false), kde(false), oslk(false)
+        : softStep(nullptr),
+          enableTdeTge(false),
+          mde(false),
+          sdd(false),
+          kde(false),
+          oslk(false)
     {
         softStep = new SoftwareStep(this);
     }
 
-    ~SelfDebug()
-    {
-        delete softStep;
-    }
+    ~SelfDebug() { delete softStep; }
 
     Fault testDebug(ThreadContext *tc, const RequestPtr &req,
                     BaseMMU::Mode mode);
@@ -277,13 +280,18 @@ class SelfDebug
     Fault testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
                           bool atomic, unsigned size, bool cm);
 
-    Fault triggerException(ThreadContext * tc, Addr vaddr);
-    Fault triggerWatchpointException(ThreadContext *tc, Addr vaddr,
-                                     bool write, bool cm);
-  public:
-    bool enabled() const { return mde || softStep->bSS; };
+    Fault triggerException(ThreadContext *tc, Addr vaddr);
+    Fault triggerWatchpointException(ThreadContext *tc, Addr vaddr, bool write,
+                                     bool cm);
 
-    inline BrkPoint*
+  public:
+    bool
+    enabled() const
+    {
+        return mde || softStep->bSS;
+    };
+
+    inline BrkPoint *
     getBrkPoint(uint8_t index)
     {
         return &arBrkPoints[index];
@@ -293,28 +301,31 @@ class SelfDebug
     securityStateMatch(ThreadContext *tc, uint8_t ssc, bool hmc)
     {
         switch (ssc) {
-            case 0x0: return true;
-            case 0x1: return !isSecure(tc);
-            case 0x2: return isSecure(tc);
-            case 0x3:
-                {
-                    bool b = hmc? true: isSecure(tc);
-                    return b;
-                }
-            default: panic("Unreachable value");
+        case 0x0:
+            return true;
+        case 0x1:
+            return !isSecure(tc);
+        case 0x2:
+            return isSecure(tc);
+        case 0x3: {
+            bool b = hmc ? true : isSecure(tc);
+            return b;
+        }
+        default:
+            panic("Unreachable value");
         }
         return false;
     }
 
     bool isDebugEnabledForEL64(ThreadContext *tc, ExceptionLevel el,
-                             bool secure, bool mask);
+                               bool secure, bool mask);
     bool isDebugEnabledForEL32(ThreadContext *tc, ExceptionLevel el,
-                             bool secure, bool mask);
+                               bool secure, bool mask);
 
     void
     activateDebug()
     {
-        for (auto &p: arBrkPoints){
+        for (auto &p : arBrkPoints) {
             p.onUse = false;
         }
     }
@@ -323,13 +334,13 @@ class SelfDebug
     isDebugEnabled(ThreadContext *tc)
     {
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-        ExceptionLevel el = (ExceptionLevel) currEL(tc);
+        ExceptionLevel el = (ExceptionLevel)currEL(tc);
         if (aarch32) {
             return isDebugEnabledForEL32(tc, el, isSecure(tc),
                                          (bool)cpsr.d == 1);
         } else {
             return isDebugEnabledForEL64(tc, el, isSecure(tc),
-                                         (bool)cpsr.d == 1 );
+                                         (bool)cpsr.d == 1);
         }
     }
 
@@ -392,7 +403,7 @@ class SelfDebug
     inline void
     setAArch32(ThreadContext *tc)
     {
-        ExceptionLevel from_el = (ExceptionLevel) currEL(tc);
+        ExceptionLevel from_el = (ExceptionLevel)currEL(tc);
         if (from_el == EL0)
             aarch32 = ELIs32(tc, EL0) && ELIs32(tc, EL1);
         else

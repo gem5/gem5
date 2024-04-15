@@ -69,36 +69,31 @@ LocalBP::LocalBP(const LocalBPParams &params)
 
     DPRINTF(Fetch, "index mask: %#x\n", indexMask);
 
-    DPRINTF(Fetch, "local predictor size: %i\n",
-            localPredictorSize);
+    DPRINTF(Fetch, "local predictor size: %i\n", localPredictorSize);
 
     DPRINTF(Fetch, "local counter bits: %i\n", localCtrBits);
 
-    DPRINTF(Fetch, "instruction shift amount: %i\n",
-            instShiftAmt);
+    DPRINTF(Fetch, "instruction shift amount: %i\n", instShiftAmt);
 }
 
 void
-LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken, Addr target, void * &bp_history)
+LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                         Addr target, void *&bp_history)
 {
-// Place holder for a function that is called to update predictor history
+    // Place holder for a function that is called to update predictor history
 }
 
-
 bool
-LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
+LocalBP::lookup(ThreadID tid, Addr branch_addr, void *&bp_history)
 {
     bool taken;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
 
-    DPRINTF(Fetch, "Looking up index %#x\n",
-            local_predictor_idx);
+    DPRINTF(Fetch, "Looking up index %#x\n", local_predictor_idx);
 
     uint8_t counter_val = localCtrs[local_predictor_idx];
 
-    DPRINTF(Fetch, "prediction is %i.\n",
-            (int)counter_val);
+    DPRINTF(Fetch, "prediction is %i.\n", (int)counter_val);
 
     taken = getPrediction(counter_val);
 
@@ -107,7 +102,7 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 
 void
 LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
-                bool squashed, const StaticInstPtr & inst, Addr target)
+                bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;
@@ -132,21 +127,18 @@ LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
     }
 }
 
-inline
-bool
+inline bool
 LocalBP::getPrediction(uint8_t &count)
 {
     // Get the MSB of the count
     return (count >> (localCtrBits - 1));
 }
 
-inline
-unsigned
+inline unsigned
 LocalBP::getLocalIndex(Addr &branch_addr)
 {
     return (branch_addr >> instShiftAmt) & indexMask;
 }
-
 
 } // namespace branch_prediction
 } // namespace gem5

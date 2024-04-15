@@ -44,13 +44,9 @@
 namespace gem5
 {
 
-SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p)
-{
-}
+SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p) {}
 
-SerialDevice::~SerialDevice()
-{
-}
+SerialDevice::~SerialDevice() {}
 
 void
 SerialDevice::regInterfaceCallback(const std::function<void()> &callback)
@@ -72,13 +68,9 @@ SerialDevice::notifyInterface()
         interfaceCallback();
 }
 
-
-
-
 SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams &p)
     : SerialDevice(p)
-{
-}
+{}
 
 uint8_t
 SerialNullDevice::readData()

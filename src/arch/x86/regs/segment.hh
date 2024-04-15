@@ -53,11 +53,11 @@ enum
     Ds,
     Fs,
     Gs,
-    Hs, // Temporary descriptor
+    Hs,  // Temporary descriptor
     Tsl, // Local descriptor table
     Tsg, // Global descriptor table
-    Ls, // Flat segment
-    Ms, // Emulation memory
+    Ls,  // Flat segment
+    Ms,  // Emulation memory
     // These shouldn't be used directly in a load or store since they
     // are likely accessed in other ways in a real machine. For instance,
     // they may be loaded into the temporary segment register on demand.

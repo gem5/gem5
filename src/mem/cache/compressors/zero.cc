@@ -44,10 +44,7 @@ namespace gem5
 namespace compression
 {
 
-Zero::Zero(const Params &p)
-    : DictionaryCompressor<uint64_t>(p)
-{
-}
+Zero::Zero(const Params &p) : DictionaryCompressor<uint64_t>(p) {}
 
 void
 Zero::addToDictionary(DictionaryEntry data)
@@ -57,8 +54,8 @@ Zero::addToDictionary(DictionaryEntry data)
 }
 
 std::unique_ptr<Base::CompressionData>
-Zero::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
-    Cycles& decomp_lat)
+Zero::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+               Cycles &decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
         DictionaryCompressor::compress(chunks);

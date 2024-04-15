@@ -48,14 +48,14 @@ namespace X86ISA
 std::string
 FlatIntRegClassOps::regName(const RegId &id) const
 {
-    constexpr const char *abcdFormats[9] =
-        {"", "%s",  "%sx",  "", "e%sx", "", "", "", "r%sx"};
-    constexpr const char *piFormats[9] =
-        {"", "%s",  "%s",   "", "e%s",  "", "", "", "r%s"};
-    constexpr const char *longFormats[9] =
-        {"", "r%sb", "r%sw", "", "r%sd", "", "", "", "r%s"};
-    constexpr const char *microFormats[9] =
-        {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
+    constexpr const char *abcdFormats[9] = { "", "%s", "%sx", "",    "e%sx",
+                                             "", "",   "",    "r%sx" };
+    constexpr const char *piFormats[9] = { "", "%s", "%s", "",   "e%s",
+                                           "", "",   "",   "r%s" };
+    constexpr const char *longFormats[9] = { "", "r%sb", "r%sw", "",   "r%sd",
+                                             "", "",     "",     "r%s" };
+    constexpr const char *microFormats[9] = { "", "t%db", "t%dw", "",   "t%dd",
+                                              "", "",     "",     "t%d" };
 
     // Fix size at 8 for now.
     constexpr unsigned size = 8;
@@ -64,7 +64,7 @@ FlatIntRegClassOps::regName(const RegId &id) const
 
     std::ostringstream ss;
 
-    const char * suffix = "";
+    const char *suffix = "";
     bool fold = reg_idx & IntFoldBit;
     reg_idx &= ~IntFoldBit;
 
@@ -74,57 +74,56 @@ FlatIntRegClassOps::regName(const RegId &id) const
         suffix = "l";
 
     switch (reg_idx) {
-      case int_reg::Rax:
+    case int_reg::Rax:
         ccprintf(ss, abcdFormats[size], "a");
         break;
-      case int_reg::Rbx:
+    case int_reg::Rbx:
         ccprintf(ss, abcdFormats[size], "b");
         break;
-      case int_reg::Rcx:
+    case int_reg::Rcx:
         ccprintf(ss, abcdFormats[size], "c");
         break;
-      case int_reg::Rdx:
+    case int_reg::Rdx:
         ccprintf(ss, abcdFormats[size], "d");
         break;
-      case int_reg::Rsp:
+    case int_reg::Rsp:
         ccprintf(ss, piFormats[size], "sp");
         break;
-      case int_reg::Rbp:
+    case int_reg::Rbp:
         ccprintf(ss, piFormats[size], "bp");
         break;
-      case int_reg::Rsi:
+    case int_reg::Rsi:
         ccprintf(ss, piFormats[size], "si");
         break;
-      case int_reg::Rdi:
+    case int_reg::Rdi:
         ccprintf(ss, piFormats[size], "di");
         break;
-      case int_reg::R8:
+    case int_reg::R8:
         ccprintf(ss, longFormats[size], "8");
         break;
-      case int_reg::R9:
+    case int_reg::R9:
         ccprintf(ss, longFormats[size], "9");
         break;
-      case int_reg::R10:
+    case int_reg::R10:
         ccprintf(ss, longFormats[size], "10");
         break;
-      case int_reg::R11:
+    case int_reg::R11:
         ccprintf(ss, longFormats[size], "11");
         break;
-      case int_reg::R12:
+    case int_reg::R12:
         ccprintf(ss, longFormats[size], "12");
         break;
-      case int_reg::R13:
+    case int_reg::R13:
         ccprintf(ss, longFormats[size], "13");
         break;
-      case int_reg::R14:
+    case int_reg::R14:
         ccprintf(ss, longFormats[size], "14");
         break;
-      case int_reg::R15:
+    case int_reg::R15:
         ccprintf(ss, longFormats[size], "15");
         break;
-      default:
-        ccprintf(ss, microFormats[size],
-                reg_idx - int_reg::MicroBegin);
+    default:
+        ccprintf(ss, microFormats[size], reg_idx - int_reg::MicroBegin);
     }
     ccprintf(ss, suffix);
 
@@ -134,7 +133,7 @@ FlatIntRegClassOps::regName(const RegId &id) const
 RegId
 IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
 {
-    return {flatIntRegClass, (RegIndex)(id.index() & ~IntFoldBit)};
+    return { flatIntRegClass, (RegIndex)(id.index() & ~IntFoldBit) };
 }
 
 } // namespace X86ISA

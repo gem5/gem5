@@ -53,126 +53,139 @@ class SyscallDesc;
 
 namespace X86ISA
 {
-    namespace auxv
+namespace auxv
+{
+
+enum X86AuxiliaryVectorTypes
+{
+    Sysinfo = 32,
+    SysinfoEhdr = 33
+};
+
+} // namespace auxv
+
+class X86Process : public Process
+{
+  protected:
+    Addr _gdtStart;
+    Addr _gdtSize;
+
+    X86Process(const ProcessParams &params, loader::ObjectFile *objFile);
+
+    template <class IntType>
+    void argsInit(int pageSize,
+                  std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs);
+
+  public:
+    Addr
+    gdtStart() const
     {
+        return _gdtStart;
+    }
 
-    enum X86AuxiliaryVectorTypes
+    Addr
+    gdtSize() const
     {
-        Sysinfo = 32,
-        SysinfoEhdr = 33
-    };
+        return _gdtSize;
+    }
 
-    } // namespace auxv
+    void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
+               RegVal flags) override;
 
-    class X86Process : public Process
+    X86Process &
+    operator=(const X86Process &in)
     {
-      protected:
-        Addr _gdtStart;
-        Addr _gdtSize;
+        if (this == &in)
+            return *this;
 
-        X86Process(const ProcessParams &params, loader::ObjectFile *objFile);
+        _gdtStart = in._gdtStart;
+        _gdtSize = in._gdtSize;
 
-        template<class IntType>
-        void argsInit(int pageSize,
-                      std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs);
+        return *this;
+    }
+};
 
+class X86_64Process : public X86Process
+{
+  protected:
+    class VSyscallPage
+    {
       public:
-        Addr gdtStart() const { return _gdtStart; }
-        Addr gdtSize() const { return _gdtSize; }
+        Addr base;
+        Addr size;
+        Addr vtimeOffset;
+        Addr vgettimeofdayOffset;
 
-        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, RegVal flags) override;
-
-        X86Process &
-        operator=(const X86Process &in)
+        VSyscallPage &
+        operator=(const VSyscallPage &in)
         {
             if (this == &in)
                 return *this;
 
-            _gdtStart = in._gdtStart;
-            _gdtSize = in._gdtSize;
+            base = in.base;
+            size = in.size;
+            vtimeOffset = in.vtimeOffset;
+            vgettimeofdayOffset = in.vgettimeofdayOffset;
 
             return *this;
         }
     };
 
-    class X86_64Process : public X86Process
+    VSyscallPage vsyscallPage;
+
+  public:
+    X86_64Process(const ProcessParams &params, loader::ObjectFile *objFile);
+
+    void argsInit(int pageSize);
+    void initState() override;
+
+    void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
+               RegVal flags) override;
+};
+
+class I386Process : public X86Process
+{
+  protected:
+    class VSyscallPage
     {
-      protected:
-        class VSyscallPage
-        {
-          public:
-            Addr base;
-            Addr size;
-            Addr vtimeOffset;
-            Addr vgettimeofdayOffset;
-
-            VSyscallPage &
-            operator=(const VSyscallPage &in)
-            {
-                if (this == &in)
-                    return *this;
-
-                base = in.base;
-                size = in.size;
-                vtimeOffset = in.vtimeOffset;
-                vgettimeofdayOffset = in.vgettimeofdayOffset;
-
-                return *this;
-            }
-        };
-        VSyscallPage vsyscallPage;
-
       public:
-        X86_64Process(const ProcessParams &params,
-                      loader::ObjectFile *objFile);
+        Addr base;
+        Addr size;
+        Addr vsyscallOffset;
+        Addr vsysexitOffset;
 
-        void argsInit(int pageSize);
-        void initState() override;
+        VSyscallPage &
+        operator=(const VSyscallPage &in)
+        {
+            if (this == &in)
+                return *this;
 
-        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, RegVal flags) override;
+            base = in.base;
+            size = in.size;
+            vsyscallOffset = in.vsyscallOffset;
+            vsysexitOffset = in.vsysexitOffset;
+
+            return *this;
+        }
     };
 
-    class I386Process : public X86Process
+    VSyscallPage vsyscallPage;
+
+  public:
+    I386Process(const ProcessParams &params, loader::ObjectFile *objFile);
+
+    const VSyscallPage &
+    getVSyscallPage() const
     {
-      protected:
-        class VSyscallPage
-        {
-          public:
-            Addr base;
-            Addr size;
-            Addr vsyscallOffset;
-            Addr vsysexitOffset;
+        return vsyscallPage;
+    }
 
-            VSyscallPage &
-            operator=(const VSyscallPage &in)
-            {
-                if (this == &in)
-                    return *this;
+    void argsInit(int pageSize);
+    void initState() override;
 
-                base = in.base;
-                size = in.size;
-                vsyscallOffset = in.vsyscallOffset;
-                vsysexitOffset = in.vsysexitOffset;
-
-                return *this;
-            }
-        };
-        VSyscallPage vsyscallPage;
-
-      public:
-        I386Process(const ProcessParams &params,
-                    loader::ObjectFile *objFile);
-
-        const VSyscallPage &getVSyscallPage() const { return vsyscallPage; }
-
-        void argsInit(int pageSize);
-        void initState() override;
-
-        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, RegVal flags) override;
-    };
+    void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *process,
+               RegVal flags) override;
+};
 
 } // namespace X86ISA
 } // namespace gem5

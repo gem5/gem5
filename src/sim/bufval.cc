@@ -42,16 +42,16 @@ getUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 {
     assert(buf);
     switch (bytes) {
-      case sizeof(std::uint64_t):
-        return {gtoh(*(const std::uint64_t *)buf, endian), true};
-      case sizeof(std::uint32_t):
-        return {gtoh(*(const std::uint32_t *)buf, endian), true};
-      case sizeof(std::uint16_t):
-        return {gtoh(*(const std::uint16_t *)buf, endian), true};
-      case sizeof(std::uint8_t):
-        return {gtoh(*(const std::uint8_t *)buf, endian), true};
-      default:
-        return {0, false};
+    case sizeof(std::uint64_t):
+        return { gtoh(*(const std::uint64_t *)buf, endian), true };
+    case sizeof(std::uint32_t):
+        return { gtoh(*(const std::uint32_t *)buf, endian), true };
+    case sizeof(std::uint16_t):
+        return { gtoh(*(const std::uint16_t *)buf, endian), true };
+    case sizeof(std::uint8_t):
+        return { gtoh(*(const std::uint8_t *)buf, endian), true };
+    default:
+        return { 0, false };
     }
 }
 
@@ -61,19 +61,19 @@ setUintX(std::uint64_t val, void *buf, std::size_t bytes, ByteOrder endian)
     assert(buf);
 
     switch (bytes) {
-      case sizeof(std::uint64_t):
+    case sizeof(std::uint64_t):
         *(std::uint64_t *)buf = htog<std::uint64_t>(val, endian);
         return true;
-      case sizeof(std::uint32_t):
+    case sizeof(std::uint32_t):
         *(std::uint32_t *)buf = htog<std::uint32_t>(val, endian);
         return true;
-      case sizeof(std::uint16_t):
+    case sizeof(std::uint16_t):
         *(std::uint16_t *)buf = htog<std::uint16_t>(val, endian);
         return true;
-      case sizeof(std::uint8_t):
+    case sizeof(std::uint8_t):
         *(std::uint8_t *)buf = htog<std::uint8_t>(val, endian);
         return true;
-      default:
+    default:
         return false;
     }
 }
@@ -83,7 +83,7 @@ printUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 {
     auto [val, success] = getUintX(buf, bytes, endian);
     if (!success)
-        return {"", false};
+        return { "", false };
 
     std::ostringstream out;
     out << "0x";
@@ -92,12 +92,12 @@ printUintX(const void *buf, std::size_t bytes, ByteOrder endian)
     out.setf(std::ios::hex, std::ios::basefield);
     out << val;
 
-    return {out.str(), true};
+    return { out.str(), true };
 }
 
 std::string
 printByteBuf(const void *buf, std::size_t bytes, ByteOrder endian,
-        std::size_t chunk_size)
+             std::size_t chunk_size)
 {
     assert(buf);
 

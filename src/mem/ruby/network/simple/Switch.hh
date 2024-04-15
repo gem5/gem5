@@ -78,7 +78,6 @@ class SimpleNetwork;
 class Switch : public BasicRouter
 {
   public:
-
     // Makes sure throttle sends messages to the links after the switch is
     // done forwarding the messages in the same cycle
     static constexpr Event::Priority PERFECTSWITCH_EV_PRI = Event::Default_Pri;
@@ -89,35 +88,47 @@ class Switch : public BasicRouter
     ~Switch() = default;
     void init();
 
-    void addInPort(const std::vector<MessageBuffer*>& in);
-    void addOutPort(const std::vector<MessageBuffer*>& out,
-                    const NetDest& routing_table_entry,
-                    Cycles link_latency, int link_weight, int bw_multiplier,
-                    bool is_external,
+    void addInPort(const std::vector<MessageBuffer *> &in);
+    void addOutPort(const std::vector<MessageBuffer *> &out,
+                    const NetDest &routing_table_entry, Cycles link_latency,
+                    int link_weight, int bw_multiplier, bool is_external,
                     PortDirection dst_inport = "");
 
     void resetStats();
     void collateStats();
     void regStats();
-    const statistics::Formula & getMsgCount(unsigned int type) const
-    { return *(switchStats.m_msg_counts[type]); }
 
-    void print(std::ostream& out) const;
-    void init_net_ptr(SimpleNetwork* net_ptr) { m_network_ptr = net_ptr; }
+    const statistics::Formula &
+    getMsgCount(unsigned int type) const
+    {
+        return *(switchStats.m_msg_counts[type]);
+    }
+
+    void print(std::ostream &out) const;
+
+    void
+    init_net_ptr(SimpleNetwork *net_ptr)
+    {
+        m_network_ptr = net_ptr;
+    }
 
     bool functionalRead(Packet *);
-    bool functionalRead(Packet *, WriteMask&);
+    bool functionalRead(Packet *, WriteMask &);
     uint32_t functionalWrite(Packet *);
 
-    BaseRoutingUnit& getRoutingUnit() { return m_routing_unit; }
+    BaseRoutingUnit &
+    getRoutingUnit()
+    {
+        return m_routing_unit;
+    }
 
   private:
     // Private copy constructor and assignment operator
-    Switch(const Switch& obj);
-    Switch& operator=(const Switch& obj);
+    Switch(const Switch &obj);
+    Switch &operator=(const Switch &obj);
 
     PerfectSwitch perfectSwitch;
-    SimpleNetwork* m_network_ptr;
+    SimpleNetwork *m_network_ptr;
     std::list<Throttle> throttles;
 
     const Cycles m_int_routing_latency;
@@ -126,8 +137,7 @@ class Switch : public BasicRouter
     BaseRoutingUnit &m_routing_unit;
 
     unsigned m_num_connected_buffers;
-    std::vector<MessageBuffer*> m_port_buffers;
-
+    std::vector<MessageBuffer *> m_port_buffers;
 
   public:
     struct SwitchStats : public statistics::Group
@@ -136,13 +146,13 @@ class Switch : public BasicRouter
 
         // Statistical variables
         statistics::Formula m_avg_utilization;
-        statistics::Formula* m_msg_counts[MessageSizeType_NUM];
-        statistics::Formula* m_msg_bytes[MessageSizeType_NUM];
+        statistics::Formula *m_msg_counts[MessageSizeType_NUM];
+        statistics::Formula *m_msg_bytes[MessageSizeType_NUM];
     } switchStats;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Switch& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Switch &obj)
 {
     obj.print(out);
     out << std::flush;

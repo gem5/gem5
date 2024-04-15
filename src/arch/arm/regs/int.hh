@@ -55,6 +55,7 @@ namespace gem5
 namespace ArmISA
 {
 
+/* clang-format off */
 BitUnion32(PackedIntReg)
     Bitfield<31, 16> uh1;
     Bitfield<15, 0> uh0;
@@ -657,6 +658,8 @@ inline constexpr auto
     &SyscallNumReg = ReturnValueReg,
     &SyscallPseudoReturnReg = ReturnValueReg,
     &SyscallSuccessReg = ReturnValueReg;
+
+/* clang-format on */
 
 } // namespace ArmISA
 } // namespace gem5

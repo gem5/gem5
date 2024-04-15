@@ -47,9 +47,12 @@ struct PciBusAddr
     PciBusAddr() = delete;
 
     constexpr PciBusAddr(uint8_t _bus, uint8_t _dev, uint8_t _func)
-        : bus(_bus), dev(_dev), func(_func) {}
+        : bus(_bus), dev(_dev), func(_func)
+    {}
 
-    constexpr bool operator<(const PciBusAddr &rhs) const {
+    constexpr bool
+    operator<(const PciBusAddr &rhs) const
+    {
         return sortValue() < rhs.sortValue();
     }
 
@@ -58,14 +61,16 @@ struct PciBusAddr
     uint8_t func;
 
   protected:
-    constexpr uint32_t sortValue() const {
+    constexpr uint32_t
+    sortValue() const
+    {
         return (bus << 16) | (dev << 8) | func;
     }
 };
 
 enum class PciIntPin : uint8_t
 {
-    NO_INT=0,
+    NO_INT = 0,
     INTA,
     INTB,
     INTC,

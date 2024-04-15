@@ -72,67 +72,79 @@ class PerfectSwitch : public Consumer
     PerfectSwitch(SwitchID sid, Switch *, uint32_t);
     ~PerfectSwitch();
 
-    std::string name()
-    { return csprintf("PerfectSwitch-%i", m_switch_id); }
+    std::string
+    name()
+    {
+        return csprintf("PerfectSwitch-%i", m_switch_id);
+    }
 
     void init(SimpleNetwork *);
-    void addInPort(const std::vector<MessageBuffer*>& in);
-    void addOutPort(const std::vector<MessageBuffer*>& out,
-                    const NetDest& routing_table_entry,
-                    const PortDirection &dst_inport,
-                    Tick routing_latency,
+    void addInPort(const std::vector<MessageBuffer *> &in);
+    void addOutPort(const std::vector<MessageBuffer *> &out,
+                    const NetDest &routing_table_entry,
+                    const PortDirection &dst_inport, Tick routing_latency,
                     int link_weight);
 
-    int getInLinks() const { return m_in.size(); }
-    int getOutLinks() const { return m_out.size(); }
+    int
+    getInLinks() const
+    {
+        return m_in.size();
+    }
+
+    int
+    getOutLinks() const
+    {
+        return m_out.size();
+    }
 
     void wakeup();
     void storeEventInfo(int info);
 
     void clearStats();
     void collateStats();
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
-    PerfectSwitch(const PerfectSwitch& obj);
-    PerfectSwitch& operator=(const PerfectSwitch& obj);
+    PerfectSwitch(const PerfectSwitch &obj);
+    PerfectSwitch &operator=(const PerfectSwitch &obj);
 
     void operateVnet(int vnet);
     void operateMessageBuffer(MessageBuffer *b, int vnet);
 
     const SwitchID m_switch_id;
-    Switch * const m_switch;
+    Switch *const m_switch;
 
     // Vector of queues associated to each port.
-    std::vector<std::vector<MessageBuffer*> > m_in;
+    std::vector<std::vector<MessageBuffer *>> m_in;
 
     // Each output port also has a latency for routing to that port
     struct OutputPort
     {
         Tick latency;
-        std::vector<MessageBuffer*> buffers;
+        std::vector<MessageBuffer *> buffers;
     };
+
     std::vector<OutputPort> m_out;
 
     // input ports ordered by priority; indexed by vnet first
-    std::vector<std::vector<MessageBuffer*> > m_in_prio;
+    std::vector<std::vector<MessageBuffer *>> m_in_prio;
     // input ports grouped by priority; indexed by vnet,prio_lv
-    std::vector<std::vector<std::vector<MessageBuffer*>>> m_in_prio_groups;
+    std::vector<std::vector<std::vector<MessageBuffer *>>> m_in_prio_groups;
 
-    void updatePriorityGroups(int vnet, MessageBuffer* buf);
+    void updatePriorityGroups(int vnet, MessageBuffer *buf);
 
     uint32_t m_virtual_networks;
     int m_wakeups_wo_switch;
 
-    SimpleNetwork* m_network_ptr;
+    SimpleNetwork *m_network_ptr;
     std::vector<int> m_pending_message_count;
 
-    MessageBuffer* inBuffer(int in_port, int vnet) const;
+    MessageBuffer *inBuffer(int in_port, int vnet) const;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const PerfectSwitch& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const PerfectSwitch &obj)
 {
     obj.print(out);
     out << std::flush;

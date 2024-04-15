@@ -77,127 +77,233 @@ AMD64TraceChild::sendState(int socket)
 }
 
 int64_t
-AMD64TraceChild::getRegs(user_regs_struct & myregs,
-        user_fpregs_struct & myfpregs, int num)
+AMD64TraceChild::getRegs(user_regs_struct &myregs,
+                         user_fpregs_struct &myfpregs, int num)
 {
     assert(num < numregs && num >= 0);
     switch (num) {
-      //GPRs
-      case RAX: return myregs.rax;
-      case RBX: return myregs.rbx;
-      case RCX: return myregs.rcx;
-      case RDX: return myregs.rdx;
-      //Index registers
-      case RSI: return myregs.rsi;
-      case RDI: return myregs.rdi;
-      //Base pointer and stack pointer
-      case RBP: return myregs.rbp;
-      case RSP: return myregs.rsp;
-      //New 64 bit mode registers
-      case R8: return myregs.r8;
-      case R9: return myregs.r9;
-      case R10: return myregs.r10;
-      case R11: return myregs.r11;
-      case R12: return myregs.r12;
-      case R13: return myregs.r13;
-      case R14: return myregs.r14;
-      case R15: return myregs.r15;
-      //Segmentation registers
-      case CS: return myregs.cs;
-      case DS: return myregs.ds;
-      case ES: return myregs.es;
-      case FS: return myregs.fs;
-      case GS: return myregs.gs;
-      case SS: return myregs.ss;
-      case FS_BASE: return myregs.fs_base;
-      case GS_BASE: return myregs.gs_base;
-      //PC
-      case RIP: return myregs.rip;
-      //Flags
-      case EFLAGS: return myregs.eflags;
-      //MMX
-      case MMX0_0: return myfpregs.st_space[0];
-      case MMX0_1: return myfpregs.st_space[1];
-      case MMX1_0: return myfpregs.st_space[2];
-      case MMX1_1: return myfpregs.st_space[3];
-      case MMX2_0: return myfpregs.st_space[4];
-      case MMX2_1: return myfpregs.st_space[5];
-      case MMX3_0: return myfpregs.st_space[6];
-      case MMX3_1: return myfpregs.st_space[7];
-      case MMX4_0: return myfpregs.st_space[8];
-      case MMX4_1: return myfpregs.st_space[9];
-      case MMX5_0: return myfpregs.st_space[10];
-      case MMX5_1: return myfpregs.st_space[11];
-      case MMX6_0: return myfpregs.st_space[12];
-      case MMX6_1: return myfpregs.st_space[13];
-      case MMX7_0: return myfpregs.st_space[14];
-      case MMX7_1: return myfpregs.st_space[15];
-      //XMM
-      case XMM0_0: return myfpregs.xmm_space[0];
-      case XMM0_1: return myfpregs.xmm_space[1];
-      case XMM0_2: return myfpregs.xmm_space[2];
-      case XMM0_3: return myfpregs.xmm_space[3];
-      case XMM1_0: return myfpregs.xmm_space[4];
-      case XMM1_1: return myfpregs.xmm_space[5];
-      case XMM1_2: return myfpregs.xmm_space[6];
-      case XMM1_3: return myfpregs.xmm_space[7];
-      case XMM2_0: return myfpregs.xmm_space[8];
-      case XMM2_1: return myfpregs.xmm_space[9];
-      case XMM2_2: return myfpregs.xmm_space[10];
-      case XMM2_3: return myfpregs.xmm_space[11];
-      case XMM3_0: return myfpregs.xmm_space[12];
-      case XMM3_1: return myfpregs.xmm_space[13];
-      case XMM3_2: return myfpregs.xmm_space[14];
-      case XMM3_3: return myfpregs.xmm_space[15];
-      case XMM4_0: return myfpregs.xmm_space[16];
-      case XMM4_1: return myfpregs.xmm_space[17];
-      case XMM4_2: return myfpregs.xmm_space[18];
-      case XMM4_3: return myfpregs.xmm_space[19];
-      case XMM5_0: return myfpregs.xmm_space[20];
-      case XMM5_1: return myfpregs.xmm_space[21];
-      case XMM5_2: return myfpregs.xmm_space[22];
-      case XMM5_3: return myfpregs.xmm_space[23];
-      case XMM6_0: return myfpregs.xmm_space[24];
-      case XMM6_1: return myfpregs.xmm_space[25];
-      case XMM6_2: return myfpregs.xmm_space[26];
-      case XMM6_3: return myfpregs.xmm_space[27];
-      case XMM7_0: return myfpregs.xmm_space[28];
-      case XMM7_1: return myfpregs.xmm_space[29];
-      case XMM7_2: return myfpregs.xmm_space[30];
-      case XMM7_3: return myfpregs.xmm_space[31];
-      case XMM8_0: return myfpregs.xmm_space[32];
-      case XMM8_1: return myfpregs.xmm_space[33];
-      case XMM8_2: return myfpregs.xmm_space[34];
-      case XMM8_3: return myfpregs.xmm_space[35];
-      case XMM9_0: return myfpregs.xmm_space[36];
-      case XMM9_1: return myfpregs.xmm_space[37];
-      case XMM9_2: return myfpregs.xmm_space[38];
-      case XMM9_3: return myfpregs.xmm_space[39];
-      case XMM10_0: return myfpregs.xmm_space[40];
-      case XMM10_1: return myfpregs.xmm_space[41];
-      case XMM10_2: return myfpregs.xmm_space[42];
-      case XMM10_3: return myfpregs.xmm_space[43];
-      case XMM11_0: return myfpregs.xmm_space[44];
-      case XMM11_1: return myfpregs.xmm_space[45];
-      case XMM11_2: return myfpregs.xmm_space[46];
-      case XMM11_3: return myfpregs.xmm_space[47];
-      case XMM12_0: return myfpregs.xmm_space[48];
-      case XMM12_1: return myfpregs.xmm_space[49];
-      case XMM12_2: return myfpregs.xmm_space[50];
-      case XMM12_3: return myfpregs.xmm_space[51];
-      case XMM13_0: return myfpregs.xmm_space[52];
-      case XMM13_1: return myfpregs.xmm_space[53];
-      case XMM13_2: return myfpregs.xmm_space[54];
-      case XMM13_3: return myfpregs.xmm_space[55];
-      case XMM14_0: return myfpregs.xmm_space[56];
-      case XMM14_1: return myfpregs.xmm_space[57];
-      case XMM14_2: return myfpregs.xmm_space[58];
-      case XMM14_3: return myfpregs.xmm_space[59];
-      case XMM15_0: return myfpregs.xmm_space[60];
-      case XMM15_1: return myfpregs.xmm_space[61];
-      case XMM15_2: return myfpregs.xmm_space[62];
-      case XMM15_3: return myfpregs.xmm_space[63];
-      default:
+    // GPRs
+    case RAX:
+        return myregs.rax;
+    case RBX:
+        return myregs.rbx;
+    case RCX:
+        return myregs.rcx;
+    case RDX:
+        return myregs.rdx;
+    // Index registers
+    case RSI:
+        return myregs.rsi;
+    case RDI:
+        return myregs.rdi;
+    // Base pointer and stack pointer
+    case RBP:
+        return myregs.rbp;
+    case RSP:
+        return myregs.rsp;
+    // New 64 bit mode registers
+    case R8:
+        return myregs.r8;
+    case R9:
+        return myregs.r9;
+    case R10:
+        return myregs.r10;
+    case R11:
+        return myregs.r11;
+    case R12:
+        return myregs.r12;
+    case R13:
+        return myregs.r13;
+    case R14:
+        return myregs.r14;
+    case R15:
+        return myregs.r15;
+    // Segmentation registers
+    case CS:
+        return myregs.cs;
+    case DS:
+        return myregs.ds;
+    case ES:
+        return myregs.es;
+    case FS:
+        return myregs.fs;
+    case GS:
+        return myregs.gs;
+    case SS:
+        return myregs.ss;
+    case FS_BASE:
+        return myregs.fs_base;
+    case GS_BASE:
+        return myregs.gs_base;
+    // PC
+    case RIP:
+        return myregs.rip;
+    // Flags
+    case EFLAGS:
+        return myregs.eflags;
+    // MMX
+    case MMX0_0:
+        return myfpregs.st_space[0];
+    case MMX0_1:
+        return myfpregs.st_space[1];
+    case MMX1_0:
+        return myfpregs.st_space[2];
+    case MMX1_1:
+        return myfpregs.st_space[3];
+    case MMX2_0:
+        return myfpregs.st_space[4];
+    case MMX2_1:
+        return myfpregs.st_space[5];
+    case MMX3_0:
+        return myfpregs.st_space[6];
+    case MMX3_1:
+        return myfpregs.st_space[7];
+    case MMX4_0:
+        return myfpregs.st_space[8];
+    case MMX4_1:
+        return myfpregs.st_space[9];
+    case MMX5_0:
+        return myfpregs.st_space[10];
+    case MMX5_1:
+        return myfpregs.st_space[11];
+    case MMX6_0:
+        return myfpregs.st_space[12];
+    case MMX6_1:
+        return myfpregs.st_space[13];
+    case MMX7_0:
+        return myfpregs.st_space[14];
+    case MMX7_1:
+        return myfpregs.st_space[15];
+    // XMM
+    case XMM0_0:
+        return myfpregs.xmm_space[0];
+    case XMM0_1:
+        return myfpregs.xmm_space[1];
+    case XMM0_2:
+        return myfpregs.xmm_space[2];
+    case XMM0_3:
+        return myfpregs.xmm_space[3];
+    case XMM1_0:
+        return myfpregs.xmm_space[4];
+    case XMM1_1:
+        return myfpregs.xmm_space[5];
+    case XMM1_2:
+        return myfpregs.xmm_space[6];
+    case XMM1_3:
+        return myfpregs.xmm_space[7];
+    case XMM2_0:
+        return myfpregs.xmm_space[8];
+    case XMM2_1:
+        return myfpregs.xmm_space[9];
+    case XMM2_2:
+        return myfpregs.xmm_space[10];
+    case XMM2_3:
+        return myfpregs.xmm_space[11];
+    case XMM3_0:
+        return myfpregs.xmm_space[12];
+    case XMM3_1:
+        return myfpregs.xmm_space[13];
+    case XMM3_2:
+        return myfpregs.xmm_space[14];
+    case XMM3_3:
+        return myfpregs.xmm_space[15];
+    case XMM4_0:
+        return myfpregs.xmm_space[16];
+    case XMM4_1:
+        return myfpregs.xmm_space[17];
+    case XMM4_2:
+        return myfpregs.xmm_space[18];
+    case XMM4_3:
+        return myfpregs.xmm_space[19];
+    case XMM5_0:
+        return myfpregs.xmm_space[20];
+    case XMM5_1:
+        return myfpregs.xmm_space[21];
+    case XMM5_2:
+        return myfpregs.xmm_space[22];
+    case XMM5_3:
+        return myfpregs.xmm_space[23];
+    case XMM6_0:
+        return myfpregs.xmm_space[24];
+    case XMM6_1:
+        return myfpregs.xmm_space[25];
+    case XMM6_2:
+        return myfpregs.xmm_space[26];
+    case XMM6_3:
+        return myfpregs.xmm_space[27];
+    case XMM7_0:
+        return myfpregs.xmm_space[28];
+    case XMM7_1:
+        return myfpregs.xmm_space[29];
+    case XMM7_2:
+        return myfpregs.xmm_space[30];
+    case XMM7_3:
+        return myfpregs.xmm_space[31];
+    case XMM8_0:
+        return myfpregs.xmm_space[32];
+    case XMM8_1:
+        return myfpregs.xmm_space[33];
+    case XMM8_2:
+        return myfpregs.xmm_space[34];
+    case XMM8_3:
+        return myfpregs.xmm_space[35];
+    case XMM9_0:
+        return myfpregs.xmm_space[36];
+    case XMM9_1:
+        return myfpregs.xmm_space[37];
+    case XMM9_2:
+        return myfpregs.xmm_space[38];
+    case XMM9_3:
+        return myfpregs.xmm_space[39];
+    case XMM10_0:
+        return myfpregs.xmm_space[40];
+    case XMM10_1:
+        return myfpregs.xmm_space[41];
+    case XMM10_2:
+        return myfpregs.xmm_space[42];
+    case XMM10_3:
+        return myfpregs.xmm_space[43];
+    case XMM11_0:
+        return myfpregs.xmm_space[44];
+    case XMM11_1:
+        return myfpregs.xmm_space[45];
+    case XMM11_2:
+        return myfpregs.xmm_space[46];
+    case XMM11_3:
+        return myfpregs.xmm_space[47];
+    case XMM12_0:
+        return myfpregs.xmm_space[48];
+    case XMM12_1:
+        return myfpregs.xmm_space[49];
+    case XMM12_2:
+        return myfpregs.xmm_space[50];
+    case XMM12_3:
+        return myfpregs.xmm_space[51];
+    case XMM13_0:
+        return myfpregs.xmm_space[52];
+    case XMM13_1:
+        return myfpregs.xmm_space[53];
+    case XMM13_2:
+        return myfpregs.xmm_space[54];
+    case XMM13_3:
+        return myfpregs.xmm_space[55];
+    case XMM14_0:
+        return myfpregs.xmm_space[56];
+    case XMM14_1:
+        return myfpregs.xmm_space[57];
+    case XMM14_2:
+        return myfpregs.xmm_space[58];
+    case XMM14_3:
+        return myfpregs.xmm_space[59];
+    case XMM15_0:
+        return myfpregs.xmm_space[60];
+    case XMM15_1:
+        return myfpregs.xmm_space[61];
+    case XMM15_2:
+        return myfpregs.xmm_space[62];
+    case XMM15_3:
+        return myfpregs.xmm_space[63];
+    default:
         assert(0);
         return 0;
     }
@@ -240,7 +346,7 @@ AMD64TraceChild::getOldRegVal(int num)
 }
 
 ostream &
-AMD64TraceChild::outputStartState(ostream & os)
+AMD64TraceChild::outputStartState(ostream &os)
 {
     uint64_t sp = getSP();
     uint64_t pc = getPC();
@@ -251,19 +357,19 @@ AMD64TraceChild::outputStartState(ostream & os)
     sprintf(obuf, "Initial program counter = 0x%016lx\n", pc);
     os << obuf;
 
-    //Output the argument count
+    // Output the argument count
     uint64_t cargc = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
     sprintf(obuf, "0x%016lx: Argc = 0x%016lx\n", sp, cargc);
     os << obuf;
     sp += 8;
 
-    //Output argv pointers
+    // Output argv pointers
     int argCount = 0;
     uint64_t cargv;
     do {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%016lx: argv[%d] = 0x%016lx\n",
-                sp, argCount++, cargv);
+        sprintf(obuf, "0x%016lx: argv[%d] = 0x%016lx\n", sp, argCount++,
+                cargv);
         if (cargv)
             if (highestInfo < cargv)
                 highestInfo = cargv;
@@ -271,13 +377,13 @@ AMD64TraceChild::outputStartState(ostream & os)
         sp += 8;
     } while (cargv);
 
-    //Output the envp pointers
+    // Output the envp pointers
     int envCount = 0;
     uint64_t cenvp;
     do {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%016lx: envp[%d] = 0x%016lx\n",
-                sp, envCount++, cenvp);
+        sprintf(obuf, "0x%016lx: envp[%d] = 0x%016lx\n", sp, envCount++,
+                cenvp);
         os << obuf;
         sp += 8;
     } while (cenvp);
@@ -291,20 +397,20 @@ AMD64TraceChild::outputStartState(ostream & os)
                 sp - 16, auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
-    //Print out the argument strings, environment strings, and file name.
+    // Print out the argument strings, environment strings, and file name.
     string current;
     uint64_t buf;
     uint64_t currentStart = sp;
     bool clearedInitialPadding = false;
     do {
         buf = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        char * cbuf = (char *)&buf;
+        char *cbuf = (char *)&buf;
         for (int x = 0; x < sizeof(uint64_t); x++) {
             if (cbuf[x])
                 current += cbuf[x];
             else {
-                sprintf(obuf, "0x%016lx: \"%s\"\n",
-                        currentStart, current.c_str());
+                sprintf(obuf, "0x%016lx: \"%s\"\n", currentStart,
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;
@@ -327,25 +433,25 @@ AMD64TraceChild::findSyscall()
         for (int i = 0; i < sizeof(uint64_t); i++) {
             unsigned char byte = buf & 0xFF;
             if (!foundOpcode) {
-                if (!(byte == 0x66 || //operand override
-                     byte == 0x67 || //address override
-                     byte == 0x2E || //cs
-                     byte == 0x3E || //ds
-                     byte == 0x26 || //es
-                     byte == 0x64 || //fs
-                     byte == 0x65 || //gs
-                     byte == 0x36 || //ss
-                     byte == 0xF0 || //lock
-                     byte == 0xF2 || //repe
-                     byte == 0xF3 || //repne
-                     (byte >= 0x40 && byte <= 0x4F) // REX
-                    )) {
+                if (!(byte == 0x66 ||                // operand override
+                      byte == 0x67 ||                // address override
+                      byte == 0x2E ||                // cs
+                      byte == 0x3E ||                // ds
+                      byte == 0x26 ||                // es
+                      byte == 0x64 ||                // fs
+                      byte == 0x65 ||                // gs
+                      byte == 0x36 ||                // ss
+                      byte == 0xF0 ||                // lock
+                      byte == 0xF2 ||                // repe
+                      byte == 0xF3 ||                // repne
+                      (byte >= 0x40 && byte <= 0x4F) // REX
+                      )) {
                     foundOpcode = true;
                 }
             }
             if (foundOpcode) {
                 if (twoByteOpcode) {
-                    //SYSCALL or SYSENTER
+                    // SYSCALL or SYSENTER
                     if (byte == 0x05 || byte == 0x34)
                         return rip + 1;
                     else
@@ -373,22 +479,22 @@ AMD64TraceChild::step()
 {
     uint64_t ripAfterSyscall = findSyscall();
     if (ripAfterSyscall) {
-        //Get the original contents of memory
+        // Get the original contents of memory
         uint64_t buf = ptrace(PTRACE_PEEKDATA, pid, ripAfterSyscall, 0);
-        //Patch the first two bytes of the memory immediately after this with
-        //jmp -2. Either single stepping will take over before this
-        //instruction, leaving the rip where it should be, or it will take
-        //over after this instruction, -still- leaving the rip where it should
-        //be.
+        // Patch the first two bytes of the memory immediately after this with
+        // jmp -2. Either single stepping will take over before this
+        // instruction, leaving the rip where it should be, or it will take
+        // over after this instruction, -still- leaving the rip where it should
+        // be.
         uint64_t newBuf = (buf & ~0xFFFF) | 0xFEEB;
-        //Write the patched memory to the processes address space
+        // Write the patched memory to the processes address space
         ptrace(PTRACE_POKEDATA, pid, ripAfterSyscall, newBuf);
-        //Step and hit it
+        // Step and hit it
         ptraceSingleStep();
-        //Put things back to the way they started
+        // Put things back to the way they started
         ptrace(PTRACE_POKEDATA, pid, ripAfterSyscall, buf);
     } else {
-        //Get all the way past repe and repne string instructions in one shot.
+        // Get all the way past repe and repne string instructions in one shot.
         uint64_t newPC, origPC = getPC();
         do {
             ptraceSingleStep();
@@ -397,7 +503,8 @@ AMD64TraceChild::step()
     }
 }
 
-TraceChild * genTraceChild()
+TraceChild *
+genTraceChild()
 {
     return new AMD64TraceChild;
 }

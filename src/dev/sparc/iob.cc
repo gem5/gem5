@@ -28,9 +28,9 @@
 
 /** @file
  * This device implemetns the niagara I/O bridge chip. It manages incomming
- * interrupts and posts them to the CPU when needed. It holds mask registers and
- * various status registers for CPUs to check what interrupts are pending as
- * well as facilities to send IPIs to other cpus.
+ * interrupts and posts them to the CPU when needed. It holds mask registers
+ * and various status registers for CPUs to check what interrupts are pending
+ * as well as facilities to send IPIs to other cpus.
  */
 
 #include "dev/sparc/iob.hh"
@@ -69,16 +69,16 @@ Iob::Iob(const Params &p) : PioDevice(p)
         intCtl[x].mask = true;
         intCtl[x].pend = false;
     }
-
 }
 
 Tick
 Iob::read(PacketPtr pkt)
 {
-
-    if (pkt->getAddr() >= iobManAddr && pkt->getAddr() < iobManAddr + iobManSize)
+    if (pkt->getAddr() >= iobManAddr &&
+        pkt->getAddr() < iobManAddr + iobManSize)
         readIob(pkt);
-    else if (pkt->getAddr() >= iobJBusAddr && pkt->getAddr() < iobJBusAddr+iobJBusSize)
+    else if (pkt->getAddr() >= iobJBusAddr &&
+             pkt->getAddr() < iobJBusAddr + iobJBusSize)
         readJBus(pkt);
     else
         panic("Invalid address reached Iob\n");
@@ -90,92 +90,89 @@ Iob::read(PacketPtr pkt)
 void
 Iob::readIob(PacketPtr pkt)
 {
-        Addr accessAddr = pkt->getAddr() - iobManAddr;
+    Addr accessAddr = pkt->getAddr() - iobManAddr;
 
-        assert(IntManAddr == 0);
-        if (accessAddr < IntManAddr + IntManSize) {
-            int index = (accessAddr - IntManAddr) >> 3;
-            uint64_t data = intMan[index].cpu << 8 | intMan[index].vector << 0;
-            pkt->setBE(data);
-            return;
-        }
+    assert(IntManAddr == 0);
+    if (accessAddr < IntManAddr + IntManSize) {
+        int index = (accessAddr - IntManAddr) >> 3;
+        uint64_t data = intMan[index].cpu << 8 | intMan[index].vector << 0;
+        pkt->setBE(data);
+        return;
+    }
 
-        if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
-            int index = (accessAddr - IntCtlAddr) >> 3;
-            uint64_t data = (intCtl[index].mask  ? (1 << 2) : 0) |
-                (intCtl[index].pend  ? (1 << 0) : 0);
-            pkt->setBE(data);
-            return;
-        }
+    if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
+        int index = (accessAddr - IntCtlAddr) >> 3;
+        uint64_t data = (intCtl[index].mask ? (1 << 2) : 0) |
+                        (intCtl[index].pend ? (1 << 0) : 0);
+        pkt->setBE(data);
+        return;
+    }
 
-        if (accessAddr == JIntVecAddr) {
-            pkt->setBE(jIntVec);
-            return;
-        }
+    if (accessAddr == JIntVecAddr) {
+        pkt->setBE(jIntVec);
+        return;
+    }
 
-        panic("Read to unknown IOB offset 0x%x\n", accessAddr);
+    panic("Read to unknown IOB offset 0x%x\n", accessAddr);
 }
 
 void
 Iob::readJBus(PacketPtr pkt)
 {
-        Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        ContextID cpuid = pkt->req->contextId();
-        int index;
-        uint64_t data;
+    Addr accessAddr = pkt->getAddr() - iobJBusAddr;
+    ContextID cpuid = pkt->req->contextId();
+    int index;
+    uint64_t data;
 
+    if (accessAddr >= JIntData0Addr && accessAddr < JIntData1Addr) {
+        index = (accessAddr - JIntData0Addr) >> 3;
+        pkt->setBE(jBusData0[index]);
+        return;
+    }
 
+    if (accessAddr >= JIntData1Addr && accessAddr < JIntDataA0Addr) {
+        index = (accessAddr - JIntData1Addr) >> 3;
+        pkt->setBE(jBusData1[index]);
+        return;
+    }
 
+    if (accessAddr == JIntDataA0Addr) {
+        pkt->setBE(jBusData0[cpuid]);
+        return;
+    }
 
-        if (accessAddr >= JIntData0Addr && accessAddr < JIntData1Addr) {
-            index = (accessAddr - JIntData0Addr) >> 3;
-            pkt->setBE(jBusData0[index]);
-            return;
-        }
+    if (accessAddr == JIntDataA1Addr) {
+        pkt->setBE(jBusData1[cpuid]);
+        return;
+    }
 
-        if (accessAddr >= JIntData1Addr && accessAddr < JIntDataA0Addr) {
-            index = (accessAddr - JIntData1Addr) >> 3;
-            pkt->setBE(jBusData1[index]);
-            return;
-        }
+    if (accessAddr >= JIntBusyAddr &&
+        accessAddr < JIntBusyAddr + JIntBusySize) {
+        index = (accessAddr - JIntBusyAddr) >> 3;
+        data = jIntBusy[index].busy ? 1 << 5 : 0 | jIntBusy[index].source;
+        pkt->setBE(data);
+        return;
+    }
+    if (accessAddr == JIntABusyAddr) {
+        data = jIntBusy[cpuid].busy ? 1 << 5 : 0 | jIntBusy[cpuid].source;
+        pkt->setBE(data);
+        return;
+    };
 
-        if (accessAddr == JIntDataA0Addr) {
-            pkt->setBE(jBusData0[cpuid]);
-            return;
-        }
-
-        if (accessAddr == JIntDataA1Addr) {
-            pkt->setBE(jBusData1[cpuid]);
-            return;
-        }
-
-        if (accessAddr >= JIntBusyAddr && accessAddr < JIntBusyAddr + JIntBusySize) {
-            index = (accessAddr - JIntBusyAddr) >> 3;
-            data = jIntBusy[index].busy ? 1 << 5 : 0 |
-                   jIntBusy[index].source;
-            pkt->setBE(data);
-            return;
-        }
-        if (accessAddr == JIntABusyAddr) {
-            data = jIntBusy[cpuid].busy ? 1 << 5 : 0 |
-                   jIntBusy[cpuid].source;
-            pkt->setBE(data);
-            return;
-        };
-
-        panic("Read to unknown JBus offset 0x%x\n", accessAddr);
+    panic("Read to unknown JBus offset 0x%x\n", accessAddr);
 }
 
 Tick
 Iob::write(PacketPtr pkt)
 {
-    if (pkt->getAddr() >= iobManAddr && pkt->getAddr() < iobManAddr + iobManSize)
+    if (pkt->getAddr() >= iobManAddr &&
+        pkt->getAddr() < iobManAddr + iobManSize)
         writeIob(pkt);
-    else if (pkt->getAddr() >= iobJBusAddr && pkt->getAddr() < iobJBusAddr+iobJBusSize)
+    else if (pkt->getAddr() >= iobJBusAddr &&
+             pkt->getAddr() < iobJBusAddr + iobJBusSize)
         writeJBus(pkt);
     else
         panic("Invalid address reached Iob\n");
-
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -184,79 +181,81 @@ Iob::write(PacketPtr pkt)
 void
 Iob::writeIob(PacketPtr pkt)
 {
-        Addr accessAddr = pkt->getAddr() - iobManAddr;
-        int index;
-        uint64_t data;
+    Addr accessAddr = pkt->getAddr() - iobManAddr;
+    int index;
+    uint64_t data;
 
-        assert(IntManAddr == 0);
-        if (accessAddr < IntManAddr + IntManSize) {
-            index = (accessAddr - IntManAddr) >> 3;
-            data = pkt->getBE<uint64_t>();
-            intMan[index].cpu = bits(data,12,8);
-            intMan[index].vector = bits(data,5,0);
-            DPRINTF(Iob, "Wrote IntMan %d cpu %d, vec %d\n", index,
-                    intMan[index].cpu, intMan[index].vector);
-            return;
-        }
+    assert(IntManAddr == 0);
+    if (accessAddr < IntManAddr + IntManSize) {
+        index = (accessAddr - IntManAddr) >> 3;
+        data = pkt->getBE<uint64_t>();
+        intMan[index].cpu = bits(data, 12, 8);
+        intMan[index].vector = bits(data, 5, 0);
+        DPRINTF(Iob, "Wrote IntMan %d cpu %d, vec %d\n", index,
+                intMan[index].cpu, intMan[index].vector);
+        return;
+    }
 
-        if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
-            index = (accessAddr - IntCtlAddr) >> 3;
-            data = pkt->getBE<uint64_t>();
-            intCtl[index].mask = bits(data,2,2);
-            if (bits(data,1,1))
-                intCtl[index].pend = false;
-            DPRINTF(Iob, "Wrote IntCtl %d pend %d cleared %d\n", index,
-                    intCtl[index].pend, bits(data,2,2));
-            return;
-        }
+    if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
+        index = (accessAddr - IntCtlAddr) >> 3;
+        data = pkt->getBE<uint64_t>();
+        intCtl[index].mask = bits(data, 2, 2);
+        if (bits(data, 1, 1))
+            intCtl[index].pend = false;
+        DPRINTF(Iob, "Wrote IntCtl %d pend %d cleared %d\n", index,
+                intCtl[index].pend, bits(data, 2, 2));
+        return;
+    }
 
-        if (accessAddr == JIntVecAddr) {
-            jIntVec = bits(pkt->getBE<uint64_t>(), 5,0);
-            DPRINTF(Iob, "Wrote jIntVec %d\n", jIntVec);
-            return;
-        }
+    if (accessAddr == JIntVecAddr) {
+        jIntVec = bits(pkt->getBE<uint64_t>(), 5, 0);
+        DPRINTF(Iob, "Wrote jIntVec %d\n", jIntVec);
+        return;
+    }
 
-        if (accessAddr >= IntVecDisAddr && accessAddr < IntVecDisAddr + IntVecDisSize) {
-            Type type;
-            int cpu_id;
-            int vector;
-            index = (accessAddr - IntManAddr) >> 3;
-            data = pkt->getBE<uint64_t>();
-            type = (Type)bits(data,17,16);
-            cpu_id = bits(data, 12,8);
-            vector = bits(data,5,0);
-            generateIpi(type,cpu_id, vector);
-            return;
-        }
+    if (accessAddr >= IntVecDisAddr &&
+        accessAddr < IntVecDisAddr + IntVecDisSize) {
+        Type type;
+        int cpu_id;
+        int vector;
+        index = (accessAddr - IntManAddr) >> 3;
+        data = pkt->getBE<uint64_t>();
+        type = (Type)bits(data, 17, 16);
+        cpu_id = bits(data, 12, 8);
+        vector = bits(data, 5, 0);
+        generateIpi(type, cpu_id, vector);
+        return;
+    }
 
-        panic("Write to unknown IOB offset 0x%x\n", accessAddr);
+    panic("Write to unknown IOB offset 0x%x\n", accessAddr);
 }
 
 void
 Iob::writeJBus(PacketPtr pkt)
 {
-        Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        ContextID cpuid = pkt->req->contextId();
-        int index;
-        uint64_t data;
+    Addr accessAddr = pkt->getAddr() - iobJBusAddr;
+    ContextID cpuid = pkt->req->contextId();
+    int index;
+    uint64_t data;
 
-        if (accessAddr >= JIntBusyAddr && accessAddr < JIntBusyAddr + JIntBusySize) {
-            index = (accessAddr - JIntBusyAddr) >> 3;
-            data = pkt->getBE<uint64_t>();
-            jIntBusy[index].busy = bits(data,5,5);
-            DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", index,
-                    jIntBusy[index].busy);
-            return;
-        }
-        if (accessAddr == JIntABusyAddr) {
-            data = pkt->getBE<uint64_t>();
-            jIntBusy[cpuid].busy = bits(data,5,5);
-            DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", cpuid,
-                    jIntBusy[cpuid].busy);
-            return;
-        };
+    if (accessAddr >= JIntBusyAddr &&
+        accessAddr < JIntBusyAddr + JIntBusySize) {
+        index = (accessAddr - JIntBusyAddr) >> 3;
+        data = pkt->getBE<uint64_t>();
+        jIntBusy[index].busy = bits(data, 5, 5);
+        DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", index,
+                jIntBusy[index].busy);
+        return;
+    }
+    if (accessAddr == JIntABusyAddr) {
+        data = pkt->getBE<uint64_t>();
+        jIntBusy[cpuid].busy = bits(data, 5, 5);
+        DPRINTF(Iob, "Wrote jIntBusy index %d busy: %d\n", cpuid,
+                jIntBusy[cpuid].busy);
+        return;
+    };
 
-        panic("Write to unknown JBus offset 0x%x\n", accessAddr);
+    panic("Write to unknown JBus offset 0x%x\n", accessAddr);
 }
 
 void
@@ -267,13 +266,12 @@ Iob::receiveDeviceInterrupt(DeviceId devid)
         return;
     intCtl[devid].mask = true;
     intCtl[devid].pend = true;
-    DPRINTF(Iob, "Receiving Device interrupt: %d for cpu %d vec %d\n",
-            devid, intMan[devid].cpu, intMan[devid].vector);
+    DPRINTF(Iob, "Receiving Device interrupt: %d for cpu %d vec %d\n", devid,
+            intMan[devid].cpu, intMan[devid].vector);
     auto tc = sys->threads[intMan[devid].cpu];
     tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
-            intMan[devid].vector);
+                                   intMan[devid].vector);
 }
-
 
 void
 Iob::generateIpi(Type type, int cpu_id, int vector)
@@ -285,30 +283,30 @@ Iob::generateIpi(Type type, int cpu_id, int vector)
 
     auto tc = sys->threads[cpu_id];
     switch (type) {
-      case 0: // interrupt
+    case 0: // interrupt
         DPRINTF(Iob,
                 "Generating interrupt because of I/O write to cpu: "
                 "%d vec %d\n",
                 cpu_id, vector);
-        tc->getCpuPtr()->postInterrupt(
-                tc->threadId(), SparcISA::IT_INT_VEC, vector);
+        tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+                                       vector);
         break;
-      case 1: // reset
+    case 1: // reset
         warn("Sending reset to CPU: %d\n", cpu_id);
         if (vector != por->trapType())
             panic("Don't know how to set non-POR reset to cpu\n");
         por->invoke(tc);
         tc->activate();
         break;
-      case 2: // idle -- this means stop executing and don't wake on interrupts
+    case 2: // idle -- this means stop executing and don't wake on interrupts
         DPRINTF(Iob, "Idling CPU because of I/O write cpu: %d\n", cpu_id);
         tc->halt();
         break;
-      case 3: // resume
+    case 3: // resume
         DPRINTF(Iob, "Resuming CPU because of I/O write cpu: %d\n", cpu_id);
         tc->activate();
         break;
-      default:
+    default:
         panic("Invalid type to generate ipi\n");
     }
 }
@@ -321,8 +319,8 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
     if (jIntBusy[cpu_id].busy)
         return false;
 
-    DPRINTF(Iob, "Receiving jBus interrupt: %d for cpu %d vec %d\n",
-            source, cpu_id, jIntVec);
+    DPRINTF(Iob, "Receiving jBus interrupt: %d for cpu %d vec %d\n", source,
+            cpu_id, jIntVec);
 
     jIntBusy[cpu_id].busy = true;
     jIntBusy[cpu_id].source = source;
@@ -330,8 +328,8 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
     jBusData1[cpu_id] = d1;
 
     auto tc = sys->threads[cpu_id];
-    tc->getCpuPtr()->postInterrupt(
-            tc->threadId(), SparcISA::IT_INT_VEC, jIntVec);
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), SparcISA::IT_INT_VEC,
+                                   jIntVec);
     return true;
 }
 
@@ -344,11 +342,9 @@ Iob::getAddrRanges() const
     return ranges;
 }
 
-
 void
 Iob::serialize(CheckpointOut &cp) const
 {
-
     SERIALIZE_SCALAR(jIntVec);
     SERIALIZE_ARRAY(jBusData0, MaxNiagaraProcs);
     SERIALIZE_ARRAY(jBusData1, MaxNiagaraProcs);

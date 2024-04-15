@@ -44,10 +44,11 @@ class I8254 : public BasicPioDevice
 {
   protected:
     Tick latency;
+
     class X86Intel8254Timer : public Intel8254Timer
     {
       protected:
-        I8254 * parent;
+        I8254 *parent;
 
         void
         counterInterrupt(unsigned int num)
@@ -56,11 +57,10 @@ class I8254 : public BasicPioDevice
         }
 
       public:
-        X86Intel8254Timer(const std::string &name, I8254 * _parent) :
-            Intel8254Timer(_parent, name), parent(_parent)
+        X86Intel8254Timer(const std::string &name, I8254 *_parent)
+            : Intel8254Timer(_parent, name), parent(_parent)
         {}
     };
-
 
     X86Intel8254Timer pit;
 
@@ -72,7 +72,7 @@ class I8254 : public BasicPioDevice
     using Params = I8254Params;
 
     Port &
-    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    getPort(const std::string &if_name, PortID idx = InvalidPortID) override
     {
         if (if_name == "int_pin")
             return *intPin.at(idx);
@@ -80,12 +80,12 @@ class I8254 : public BasicPioDevice
             return BasicPioDevice::getPort(if_name, idx);
     }
 
-    I8254(const Params &p) : BasicPioDevice(p, 4), latency(p.pio_latency),
-            pit(p.name, this)
+    I8254(const Params &p)
+        : BasicPioDevice(p, 4), latency(p.pio_latency), pit(p.name, this)
     {
         for (int i = 0; i < p.port_int_pin_connection_count; i++) {
-            intPin.push_back(new IntSourcePin<I8254>(csprintf(
-                            "%s.int_pin[%d]", name(), i), i, this));
+            intPin.push_back(new IntSourcePin<I8254>(
+                csprintf("%s.int_pin[%d]", name(), i), i, this));
         }
     }
 
@@ -120,7 +120,6 @@ class I8254 : public BasicPioDevice
     void unserialize(CheckpointIn &cp) override;
 
     void startup() override;
-
 };
 
 } // namespace X86ISA

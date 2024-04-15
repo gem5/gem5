@@ -94,14 +94,12 @@ init_drain(py::module_ &m_native)
     py::enum_<DrainState>(m, "DrainState")
         .value("Running", DrainState::Running)
         .value("Draining", DrainState::Draining)
-        .value("Drained", DrainState::Drained)
-        ;
+        .value("Drained", DrainState::Drained);
 
     py::class_<Drainable, std::unique_ptr<Drainable, py::nodelete>>(
         m, "Drainable")
         .def("drainState", &Drainable::drainState)
-        .def("notifyFork", &Drainable::notifyFork)
-        ;
+        .def("notifyFork", &Drainable::notifyFork);
 
     // The drain manager is a singleton with a private
     // destructor. Disable deallocation from the Python binding.
@@ -114,8 +112,7 @@ init_drain(py::module_ &m_native)
         .def("state", &DrainManager::state)
         .def("signalDrainDone", &DrainManager::signalDrainDone)
         .def_static("instance", &DrainManager::instance,
-                    py::return_value_policy::reference)
-        ;
+                    py::return_value_policy::reference);
 }
 
 static void
@@ -124,11 +121,9 @@ init_serialize(py::module_ &m_native)
     py::module_ m = m_native.def_submodule("serialize");
 
     py::class_<Serializable, std::unique_ptr<Serializable, py::nodelete>>(
-        m, "Serializable")
-        ;
+        m, "Serializable");
 
-    py::class_<CheckpointIn>(m, "CheckpointIn")
-        ;
+    py::class_<CheckpointIn>(m, "CheckpointIn");
 }
 
 static void
@@ -155,9 +150,9 @@ init_range(py::module_ &m_native)
         .def("mergesWith", &AddrRange::mergesWith)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
-        .def("exclude", static_cast<AddrRangeList (AddrRange::*)(
-                    const AddrRangeList &) const>(&AddrRange::exclude))
-        ;
+        .def("exclude",
+             static_cast<AddrRangeList (AddrRange::*)(const AddrRangeList &)
+                             const>(&AddrRange::exclude));
 
     m.def("RangeEx", &RangeEx);
     m.def("RangeIn", &RangeIn);
@@ -171,22 +166,23 @@ init_pc(py::module_ &m_native)
     py::class_<PcCountPair>(m, "PcCountPair")
         .def(py::init<>())
         .def(py::init<Addr, int>())
-        .def("__eq__", [](const PcCountPair& self, py::object other) {
-            py::int_ pyPC = other.attr("get_pc")();
-            py::int_ pyCount = other.attr("get_count")();
-            uint64_t cPC = pyPC.cast<uint64_t>();
-            int cCount = pyCount.cast<int>();
-            return (self.getPC() == cPC && self.getCount() == cCount);
-        })
-        .def("__hash__", [](const PcCountPair& self){
-            py::int_ pyPC = py::cast(self.getPC());
-            py::int_ pyCount = py::cast(self.getCount());
-            return py::hash(py::make_tuple(pyPC, pyCount));
-        })
+        .def("__eq__",
+             [](const PcCountPair &self, py::object other) {
+                 py::int_ pyPC = other.attr("get_pc")();
+                 py::int_ pyCount = other.attr("get_count")();
+                 uint64_t cPC = pyPC.cast<uint64_t>();
+                 int cCount = pyCount.cast<int>();
+                 return (self.getPC() == cPC && self.getCount() == cCount);
+             })
+        .def("__hash__",
+             [](const PcCountPair &self) {
+                 py::int_ pyPC = py::cast(self.getPC());
+                 py::int_ pyCount = py::cast(self.getCount());
+                 return py::hash(py::make_tuple(pyPC, pyCount));
+             })
         .def("__str__", &PcCountPair::to_string)
         .def("get_pc", &PcCountPair::getPC)
-        .def("get_count", &PcCountPair::getCount)
-        ;
+        .def("get_count", &PcCountPair::getCount);
 }
 
 static void
@@ -196,23 +192,19 @@ init_net(py::module_ &m_native)
 
     py::class_<networking::EthAddr>(m, "EthAddr")
         .def(py::init<>())
-        .def(py::init<const std::string &>())
-        ;
+        .def(py::init<const std::string &>());
 
     py::class_<networking::IpAddress>(m, "IpAddress")
         .def(py::init<>())
-        .def(py::init<uint32_t>())
-        ;
+        .def(py::init<uint32_t>());
 
     py::class_<networking::IpNetmask, networking::IpAddress>(m, "IpNetmask")
         .def(py::init<>())
-        .def(py::init<uint32_t, uint8_t>())
-        ;
+        .def(py::init<uint32_t, uint8_t>());
 
     py::class_<networking::IpWithPort, networking::IpAddress>(m, "IpWithPort")
         .def(py::init<>())
-        .def(py::init<uint32_t, uint16_t>())
-        ;
+        .def(py::init<uint32_t, uint16_t>());
 }
 
 static void
@@ -227,12 +219,11 @@ static void
 init_socket(py::module_ &m_native)
 {
     py::module_ m_socket = m_native.def_submodule("socket");
-    m_socket
-        .def("listenSocketEmptyConfig", &listenSocketEmptyConfig)
+    m_socket.def("listenSocketEmptyConfig", &listenSocketEmptyConfig)
         .def("listenSocketInetConfig", &listenSocketInetConfig)
         .def("listenSocketUnixFileConfig", &listenSocketUnixFileConfig)
         .def("listenSocketUnixAbstractConfig",
-                &listenSocketUnixAbstractConfig);
+             &listenSocketUnixAbstractConfig);
 
     py::class_<ListenSocketConfig>(m_socket, "ListenSocketConfig");
 }
@@ -247,8 +238,7 @@ pybind_init_core(py::module_ &m_native)
         .def(py::init<uint64_t>())
         .def("__int__", &Cycles::operator uint64_t)
         .def("__add__", &Cycles::operator+)
-        .def("__sub__", &Cycles::operator-)
-        ;
+        .def("__sub__", &Cycles::operator-);
 
     py::class_<Temperature>(m_core, "Temperature")
         .def(py::init<>())
@@ -270,17 +260,17 @@ pybind_init_core(py::module_ &m_native)
         .def(py::self * float())
         .def(float() * py::self)
         .def(py::self / float())
-        .def("__str__", [](const Temperature &t) {
-                std::stringstream s;
-                s << t;
-                return s.str();
-            })
+        .def("__str__",
+             [](const Temperature &t) {
+                 std::stringstream s;
+                 s << t;
+                 return s.str();
+             })
         .def("__repr__", [](const Temperature &t) {
-                std::stringstream s;
-                s << "Temperature(" << t.toKelvin() << ")";
-                return s.str();
-            })
-        ;
+            std::stringstream s;
+            s << "Temperature(" << t.toKelvin() << ")";
+            return s.str();
+        });
 
     py::class_<tm>(m_core, "tm")
         .def_static("gmtime", [](std::time_t t) { return *std::gmtime(&t); })
@@ -291,19 +281,16 @@ pybind_init_core(py::module_ &m_native)
         .def_readwrite("tm_mon", &tm::tm_mon)
         .def_readwrite("tm_wday", &tm::tm_wday)
         .def_readwrite("tm_yday", &tm::tm_yday)
-        .def_readwrite("tm_isdst", &tm::tm_isdst)
-        ;
+        .def_readwrite("tm_isdst", &tm::tm_isdst);
 
     py::enum_<Logger::LogLevel>(m_core, "LogLevel")
         .value("PANIC", Logger::PANIC)
         .value("FATAL", Logger::FATAL)
         .value("WARN", Logger::WARN)
         .value("INFO", Logger::INFO)
-        .value("HACK", Logger::HACK)
-        ;
+        .value("HACK", Logger::HACK);
 
-    m_core
-        .def("setLogLevel", &Logger::setLevel)
+    m_core.def("setLogLevel", &Logger::setLevel)
         .def("setOutputDir", &setOutputDir)
         .def("doExitCleanup", &doExitCleanup)
 
@@ -312,14 +299,12 @@ pybind_init_core(py::module_ &m_native)
         .def("listenersLoopbackOnly", &ListenSocket::loopbackOnly)
         .def("seedRandom", [](uint64_t seed) { random_mt.init(seed); })
 
-
         .def("fixClockFrequency", &fixClockFrequency)
         .def("clockFrequencyFixed", &clockFrequencyFixed)
 
         .def("setClockFrequency", &setClockFrequency)
         .def("getClockFrequency", &getClockFrequency)
-        .def("curTick", curTick)
-        ;
+        .def("curTick", curTick);
 
     /* TODO: These should be read-only */
     m_core.attr("compileDate") = py::cast(compileDate);
@@ -332,15 +317,14 @@ pybind_init_core(py::module_ &m_native)
     /*
      * Serialization helpers
      */
-    m_core
-        .def("serializeAll", &SimObject::serializeAll)
-        .def("getCheckpoint", [](const std::string &cpt_dir) {
-            SimObject::setSimObjectResolver(&pybindSimObjectResolver);
-            return new CheckpointIn(cpt_dir);
-        })
+    m_core.def("serializeAll", &SimObject::serializeAll)
+        .def("getCheckpoint",
+             [](const std::string &cpt_dir) {
+                 SimObject::setSimObjectResolver(&pybindSimObjectResolver);
+                 return new CheckpointIn(cpt_dir);
+             })
 
         ;
-
 
     init_drain(m_native);
     init_serialize(m_native);

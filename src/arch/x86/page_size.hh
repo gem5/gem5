@@ -45,8 +45,8 @@ namespace gem5
 
 namespace X86ISA
 {
-    const Addr PageShift = 12;
-    const Addr PageBytes = 1ULL << PageShift;
+const Addr PageShift = 12;
+const Addr PageBytes = 1ULL << PageShift;
 } // namespace X86ISA
 } // namespace gem5
 

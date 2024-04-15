@@ -46,7 +46,9 @@ class ImageFile
 {
   protected:
     ImageFileDataPtr imageData;
+
     ImageFile(ImageFileDataPtr data) : imageData(data) {}
+
     virtual ~ImageFile() {}
 
   public:

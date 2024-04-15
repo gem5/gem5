@@ -47,18 +47,18 @@ namespace gem5
 namespace RiscvISA
 {
 
-PMP::PMP(const Params &params) :
-    SimObject(params),
-    pmpEntries(params.pmp_entries),
-    numRules(0),
-    hasLockEntry(false)
+PMP::PMP(const Params &params)
+    : SimObject(params),
+      pmpEntries(params.pmp_entries),
+      numRules(0),
+      hasLockEntry(false)
 {
     pmpTable.resize(pmpEntries);
 }
 
 Fault
-PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-              PrivilegeMode pmode, ThreadContext *tc, Addr vaddr)
+PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode, PrivilegeMode pmode,
+              ThreadContext *tc, Addr vaddr)
 {
     // First determine if pmp table should be consulted
     if (!shouldCheckPMP(pmode, tc))
@@ -67,8 +67,7 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
     if (req->hasVaddr()) {
         DPRINTF(PMP, "Checking pmp permissions for va: %#x , pa: %#x\n",
                 req->getVaddr(), req->getPaddr());
-    }
-    else { // this access is corresponding to a page table walk
+    } else { // this access is corresponding to a page table walk
         DPRINTF(PMP, "Checking pmp permissions for pa: %#x\n",
                 req->getPaddr());
     }
@@ -82,28 +81,28 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
     for (int i = 0; i < pmpTable.size(); i++) {
         AddrRange pmp_range = pmpTable[i].pmpAddr;
         if (pmp_range.contains(req->getPaddr()) &&
-                pmp_range.contains(req->getPaddr() + req->getSize() - 1)) {
+            pmp_range.contains(req->getPaddr() + req->getSize() - 1)) {
             // according to specs address is only matched,
             // when (addr) and (addr + request_size - 1) are both
             // within the pmp range
             match_index = i;
         }
 
-        if ((match_index > -1)
-            && (PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))) {
+        if ((match_index > -1) &&
+            (PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))) {
             uint8_t this_cfg = pmpTable[match_index].pmpCfg;
 
             if ((pmode == PrivilegeMode::PRV_M) &&
-                                    (PMP_LOCK & this_cfg) == 0) {
+                (PMP_LOCK & this_cfg) == 0) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Read) &&
-                                        (PMP_READ & this_cfg)) {
+                       (PMP_READ & this_cfg)) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Write) &&
-                                        (PMP_WRITE & this_cfg)) {
+                       (PMP_WRITE & this_cfg)) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Execute) &&
-                                        (PMP_EXEC & this_cfg)) {
+                       (PMP_EXEC & this_cfg)) {
                 return NoFault;
             } else {
                 if (req->hasVaddr()) {
@@ -147,19 +146,19 @@ PMP::pmpGetAField(uint8_t cfg)
     return a & 0x03;
 }
 
-
 bool
 PMP::pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg)
 {
     if (pmp_index >= pmpEntries) {
-        DPRINTF(PMP, "Can't update pmp entry config %u"
+        DPRINTF(PMP,
+                "Can't update pmp entry config %u"
                 " because the index exceed the size of pmp entries %u",
                 pmp_index, pmpEntries);
         return false;
     }
 
     DPRINTF(PMP, "Update pmp config with %u for pmp entry: %u \n",
-                                    (unsigned)this_cfg, pmp_index);
+            (unsigned)this_cfg, pmp_index);
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
         DPRINTF(PMP, "Update pmp entry config %u failed because it locked\n",
                 pmp_index);
@@ -189,35 +188,35 @@ PMP::pmpUpdateRule(uint32_t pmp_index)
     AddrRange this_range;
 
     switch (pmpGetAField(this_cfg)) {
-      // checking the address matching mode of pmp entry
-      case PMP_OFF:
+    // checking the address matching mode of pmp entry
+    case PMP_OFF:
         // null region (pmp disabled)
         this_range = AddrRange(0, 0);
         break;
-      case PMP_TOR:
+    case PMP_TOR:
         // top of range mode
         this_range = AddrRange(prevAddr << 2, (this_addr << 2));
         break;
-      case PMP_NA4:
+    case PMP_NA4:
         // naturally aligned four byte region
         this_range = AddrRange(this_addr << 2, ((this_addr << 2) + 4));
         break;
-      case PMP_NAPOT:
+    case PMP_NAPOT:
         // naturally aligned power of two region, >= 8 bytes
         this_range = AddrRange(pmpDecodeNapot(this_addr));
         break;
-      default:
-        this_range = AddrRange(0,0);
+    default:
+        this_range = AddrRange(0, 0);
     }
 
     pmpTable[pmp_index].pmpAddr = this_range;
 
     for (int i = 0; i < pmpEntries; i++) {
         const uint8_t a_field = pmpGetAField(pmpTable[i].pmpCfg);
-      if (PMP_OFF != a_field) {
-          numRules++;
-      }
-      hasLockEntry |= ((pmpTable[i].pmpCfg & PMP_LOCK) != 0);
+        if (PMP_OFF != a_field) {
+            numRules++;
+        }
+        hasLockEntry |= ((pmpTable[i].pmpCfg & PMP_LOCK) != 0);
     }
 
     if (hasLockEntry) {
@@ -238,25 +237,27 @@ bool
 PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 {
     if (pmp_index >= pmpEntries) {
-        DPRINTF(PMP, "Can't update pmp entry address %u"
+        DPRINTF(PMP,
+                "Can't update pmp entry address %u"
                 " because the index exceed the size of pmp entries %u",
                 pmp_index, pmpEntries);
         return false;
     }
 
-    DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n",
-                                      (this_addr << 2), pmp_index);
+    DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n", (this_addr << 2),
+            pmp_index);
 
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
         DPRINTF(PMP, "Update pmp entry %u failed because the lock bit set\n",
                 pmp_index);
         return false;
     } else if (pmp_index < pmpTable.size() - 1 &&
-               ((pmpTable[pmp_index+1].pmpCfg & PMP_LOCK) != 0) &&
-               pmpGetAField(pmpTable[pmp_index+1].pmpCfg) == PMP_TOR) {
-        DPRINTF(PMP, "Update pmp entry %u failed because the entry %u lock bit"
+               ((pmpTable[pmp_index + 1].pmpCfg & PMP_LOCK) != 0) &&
+               pmpGetAField(pmpTable[pmp_index + 1].pmpCfg) == PMP_TOR) {
+        DPRINTF(PMP,
+                "Update pmp entry %u failed because the entry %u lock bit"
                 " set and A field is TOR\n",
-                pmp_index, pmp_index+1);
+                pmp_index, pmp_index + 1);
         return false;
     }
 
@@ -289,12 +290,12 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
         return this_range;
     } else {
         uint64_t t1 = ctz64(~pmpaddr);
-        uint64_t range = (1ULL << (t1+3));
+        uint64_t range = (1ULL << (t1 + 3));
 
         // pmpaddr reg encodes bits 55-2 of a
         // 56 bit physical address for RV64
         uint64_t base = mbits(pmpaddr, 63, t1) << 2;
-        AddrRange this_range(base, base+range);
+        AddrRange this_range(base, base + range);
         return this_range;
     }
 }

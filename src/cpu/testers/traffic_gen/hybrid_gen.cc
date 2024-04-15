@@ -47,69 +47,65 @@
 namespace gem5
 {
 
-HybridGen::HybridGen(SimObject &obj,
-               RequestorID requestor_id, Tick _duration,
-               Addr start_addr_dram, Addr end_addr_dram,
-               Addr blocksize_dram,
-               Addr start_addr_nvm, Addr end_addr_nvm,
-               Addr blocksize_nvm,
-               Addr cacheline_size,
-               Tick min_period, Tick max_period,
-               uint8_t read_percent, Addr data_limit,
-               unsigned int num_seq_pkts_dram, unsigned int page_size_dram,
-               unsigned int nbr_of_banks_dram,
-               unsigned int nbr_of_banks_util_dram,
-               unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
-               unsigned int nbr_of_banks_nvm,
-               unsigned int nbr_of_banks_util_nvm,
-               enums::AddrMap addr_mapping,
-               unsigned int nbr_of_ranks_dram,
-               unsigned int nbr_of_ranks_nvm,
-               uint8_t nvm_percent)
-       : BaseGen(obj, requestor_id, _duration),
-         startAddrDram(start_addr_dram),
-         endAddrDram(end_addr_dram),
-         blocksizeDram(blocksize_dram),
-         startAddrNvm(start_addr_nvm),
-         endAddrNvm(end_addr_nvm),
-         blocksizeNvm(blocksize_nvm),
-         cacheLineSize(cacheline_size),
-         minPeriod(min_period), maxPeriod(max_period),
-         readPercent(read_percent), dataLimit(data_limit),
-         numSeqPktsDram(num_seq_pkts_dram),
-         numSeqPktsNvm(num_seq_pkts_nvm),
-         countNumSeqPkts(0), addr(0),
-         pageSizeDram(page_size_dram),
-         pageBitsDram(floorLog2(pageSizeDram / blocksizeDram)),
-         bankBitsDram(floorLog2(nbr_of_banks_dram)),
-         blockBitsDram(floorLog2(blocksizeDram)),
-         nbrOfBanksDram(nbr_of_banks_dram),
-         nbrOfBanksUtilDram(nbr_of_banks_util_dram),
-         bufferSizeNvm(buffer_size_nvm),
-         pageBitsNvm(floorLog2(bufferSizeNvm / blocksizeNvm)),
-         bankBitsNvm(floorLog2(nbr_of_banks_nvm)),
-         blockBitsNvm(floorLog2(blocksizeNvm)),
-         nbrOfBanksNvm(nbr_of_banks_nvm),
-         nbrOfBanksUtilNvm(nbr_of_banks_util_nvm),
-         addrMapping(addr_mapping),
-         nbrOfRanksDram(nbr_of_ranks_dram),
-         rankBitsDram(floorLog2(nbrOfRanksDram)),
-         nbrOfRanksNvm(nbr_of_ranks_nvm),
-         rankBitsNvm(floorLog2(nbrOfRanksNvm)),
-         nvmPercent(nvm_percent),
-         isRead(true),
-         isNvm(false),
-         dataManipulated(0)
+HybridGen::HybridGen(
+    SimObject &obj, RequestorID requestor_id, Tick _duration,
+    Addr start_addr_dram, Addr end_addr_dram, Addr blocksize_dram,
+    Addr start_addr_nvm, Addr end_addr_nvm, Addr blocksize_nvm,
+    Addr cacheline_size, Tick min_period, Tick max_period,
+    uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts_dram,
+    unsigned int page_size_dram, unsigned int nbr_of_banks_dram,
+    unsigned int nbr_of_banks_util_dram, unsigned int num_seq_pkts_nvm,
+    unsigned int buffer_size_nvm, unsigned int nbr_of_banks_nvm,
+    unsigned int nbr_of_banks_util_nvm, enums::AddrMap addr_mapping,
+    unsigned int nbr_of_ranks_dram, unsigned int nbr_of_ranks_nvm,
+    uint8_t nvm_percent)
+    : BaseGen(obj, requestor_id, _duration),
+      startAddrDram(start_addr_dram),
+      endAddrDram(end_addr_dram),
+      blocksizeDram(blocksize_dram),
+      startAddrNvm(start_addr_nvm),
+      endAddrNvm(end_addr_nvm),
+      blocksizeNvm(blocksize_nvm),
+      cacheLineSize(cacheline_size),
+      minPeriod(min_period),
+      maxPeriod(max_period),
+      readPercent(read_percent),
+      dataLimit(data_limit),
+      numSeqPktsDram(num_seq_pkts_dram),
+      numSeqPktsNvm(num_seq_pkts_nvm),
+      countNumSeqPkts(0),
+      addr(0),
+      pageSizeDram(page_size_dram),
+      pageBitsDram(floorLog2(pageSizeDram / blocksizeDram)),
+      bankBitsDram(floorLog2(nbr_of_banks_dram)),
+      blockBitsDram(floorLog2(blocksizeDram)),
+      nbrOfBanksDram(nbr_of_banks_dram),
+      nbrOfBanksUtilDram(nbr_of_banks_util_dram),
+      bufferSizeNvm(buffer_size_nvm),
+      pageBitsNvm(floorLog2(bufferSizeNvm / blocksizeNvm)),
+      bankBitsNvm(floorLog2(nbr_of_banks_nvm)),
+      blockBitsNvm(floorLog2(blocksizeNvm)),
+      nbrOfBanksNvm(nbr_of_banks_nvm),
+      nbrOfBanksUtilNvm(nbr_of_banks_util_nvm),
+      addrMapping(addr_mapping),
+      nbrOfRanksDram(nbr_of_ranks_dram),
+      rankBitsDram(floorLog2(nbrOfRanksDram)),
+      nbrOfRanksNvm(nbr_of_ranks_nvm),
+      rankBitsNvm(floorLog2(nbrOfRanksNvm)),
+      nvmPercent(nvm_percent),
+      isRead(true),
+      isNvm(false),
+      dataManipulated(0)
 {
     if (blocksizeDram > cacheLineSize)
         fatal("TrafficGen %s Dram block size (%d) is larger than "
-              "cache line size (%d)\n", name(),
-              blocksizeDram, cacheLineSize);
+              "cache line size (%d)\n",
+              name(), blocksizeDram, cacheLineSize);
 
     if (blocksizeNvm > cacheLineSize)
         fatal("TrafficGen %s Nvm block size (%d) is larger than "
-              "cache line size (%d)\n", name(),
-              blocksizeNvm, cacheLineSize);
+              "cache line size (%d)\n",
+              name(), blocksizeNvm, cacheLineSize);
 
     if (readPercent > 100)
         fatal("%s cannot have more than 100% reads", name());
@@ -142,15 +138,14 @@ HybridGen::getNextPacket()
     // start counting again
     if (countNumSeqPkts == 0) {
         isNvm = nvmPercent != 0 &&
-            (nvmPercent == 100 || random_mt.random(0, 100) < nvmPercent);
+                (nvmPercent == 100 || random_mt.random(0, 100) < nvmPercent);
 
         // choose if we generate a read or a write here
-        isRead = readPercent != 0 &&
-            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+        isRead = readPercent != 0 && (readPercent == 100 ||
+                                      random_mt.random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
-               (readPercent == 100 && isRead) ||
-               readPercent != 100);
+               (readPercent == 100 && isRead) || readPercent != 100);
 
         if (isNvm) {
             // Select the appropriate parameters for this interface
@@ -197,7 +192,6 @@ HybridGen::getNextPacket()
         // bits updated for random traffic mode
         genStartAddr(new_bank, new_rank);
 
-
     } else {
         // increment the column by one
         if (addrMapping == enums::RoRaBaCoCh ||
@@ -208,15 +202,17 @@ HybridGen::getNextPacket()
 
         else if (addrMapping == enums::RoCoRaBaCh) {
             // Explicity increment the column bits
-            unsigned int new_col = ((addr / blocksize /
-                                       nbrOfBanks / nbrOfRanks) %
-                                   (pageSize / blocksize)) + 1;
+            unsigned int new_col =
+                ((addr / blocksize / nbrOfBanks / nbrOfRanks) %
+                 (pageSize / blocksize)) +
+                1;
             replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
                         blockBits + bankBits + rankBits, new_col);
         }
     }
 
-    DPRINTF(TrafficGen, "HybridGen::getNextPacket: %c to addr %x, "
+    DPRINTF(TrafficGen,
+            "HybridGen::getNextPacket: %c to addr %x, "
             "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
             isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 
@@ -261,14 +257,13 @@ HybridGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     unsigned int new_col =
         random_mt.random<unsigned int>(0, burst_per_page - numSeqPkts);
 
-    if (addrMapping == enums::RoRaBaCoCh ||
-        addrMapping == enums::RoRaBaChCo) {
+    if (addrMapping == enums::RoRaBaCoCh || addrMapping == enums::RoRaBaChCo) {
         // Block bits, then page bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + pageBits + bankBits - 1,
                     blockBits + pageBits, new_bank);
         replaceBits(addr, blockBits + pageBits - 1, blockBits, new_col);
         if (rankBits != 0) {
-            replaceBits(addr, blockBits + pageBits + bankBits +rankBits - 1,
+            replaceBits(addr, blockBits + pageBits + bankBits + rankBits - 1,
                         blockBits + pageBits + bankBits, new_rank);
         }
     } else if (addrMapping == enums::RoCoRaBaCh) {
@@ -289,8 +284,7 @@ HybridGen::nextPacketTick(bool elastic, Tick delay) const
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
     // generating requests for the entire residency in this state.
-    if (dataLimit && dataManipulated >= dataLimit)
-    {
+    if (dataLimit && dataManipulated >= dataLimit) {
         DPRINTF(TrafficGen, "Data limit for RandomGen reached.\n");
         // No more requests. Return MaxTick.
         return MaxTick;

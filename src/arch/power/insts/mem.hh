@@ -44,21 +44,18 @@ namespace PowerISA
 class MemOp : public PowerStaticInst
 {
   protected:
-
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
 
     /// Constructor
     MemOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass),
-        memAccessFlags(0)
-    {
-    }
+        : PowerStaticInst(mnem, _machInst, __opClass), memAccessFlags(0)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for memory operations with displacement.
@@ -66,18 +63,16 @@ class MemOp : public PowerStaticInst
 class MemDispOp : public MemOp
 {
   protected:
-
     int64_t d;
 
     /// Constructor
     MemDispOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : MemOp(mnem, _machInst, __opClass),
-        d(sext<16>(machInst.d))
-    {
-    }
+        : MemOp(mnem, _machInst, __opClass), d(sext<16>(machInst.d))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -86,20 +81,17 @@ class MemDispOp : public MemOp
 class MemDispShiftOp : public MemOp
 {
   protected:
-
     int64_t ds;
 
     /// Constructor
     MemDispShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : MemOp(mnem, _machInst, __opClass),
-        ds(sext<14>(machInst.ds))
-    {
-    }
+        : MemOp(mnem, _machInst, __opClass), ds(sext<14>(machInst.ds))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for memory operations with register indexed addressing.
@@ -107,15 +99,14 @@ class MemDispShiftOp : public MemOp
 class MemIndexOp : public MemOp
 {
   protected:
-
     /// Constructor
     MemIndexOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : MemOp(mnem, _machInst, __opClass)
-    {
-    }
+        : MemOp(mnem, _machInst, __opClass)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

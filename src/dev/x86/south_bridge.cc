@@ -35,9 +35,14 @@ namespace gem5
 
 using namespace X86ISA;
 
-SouthBridge::SouthBridge(const Params &p) : SimObject(p),
-    pit(p.pit), pic1(p.pic1), pic2(p.pic2), cmos(p.cmos), speaker(p.speaker),
-    ioApic(p.io_apic)
+SouthBridge::SouthBridge(const Params &p)
+    : SimObject(p),
+      pit(p.pit),
+      pic1(p.pic1),
+      pic2(p.pic2),
+      cmos(p.cmos),
+      speaker(p.speaker),
+      ioApic(p.io_apic)
 {}
 
 } // namespace gem5

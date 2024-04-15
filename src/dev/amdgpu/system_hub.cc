@@ -49,7 +49,7 @@ AMDGPUSystemHub::sendRequest(PacketPtr pkt, Event *callback)
     DeferredReq this_req(pkt, callback);
     outstandingReqs[pkt->getAddr()].push_back(this_req);
 
-    if (outstandingReqs[pkt->getAddr()].size () > 1) {
+    if (outstandingReqs[pkt->getAddr()].size() > 1) {
         // There is another request in progress, Delay this one.
         DPRINTF(AMDGPUSystemHub, "SystemHub deferring request for %#lx\n",
                 pkt->getAddr());
@@ -60,7 +60,7 @@ AMDGPUSystemHub::sendRequest(PacketPtr pkt, Event *callback)
 }
 
 void
-AMDGPUSystemHub::sendDeferredRequest(DeferredReq& deferredReq)
+AMDGPUSystemHub::sendDeferredRequest(DeferredReq &deferredReq)
 {
     PacketPtr pkt = deferredReq.first;
     Event *callback = deferredReq.second;
@@ -79,16 +79,14 @@ AMDGPUSystemHub::sendDeferredRequest(DeferredReq& deferredReq)
 
         req_type = "Atomic";
     } else if (pkt->isWrite()) {
-        ResponseEvent *dmaRespEvent =
-            new ResponseEvent(*this, callback, pkt);
+        ResponseEvent *dmaRespEvent = new ResponseEvent(*this, callback, pkt);
 
         dmaWrite(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
                  pkt->getPtr<uint8_t>(), 0, 0, delay);
 
         req_type = "Write";
     } else {
-        ResponseEvent *dmaRespEvent =
-            new ResponseEvent(*this, callback, pkt);
+        ResponseEvent *dmaRespEvent = new ResponseEvent(*this, callback, pkt);
 
         assert(pkt->isRead());
         dmaRead(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
@@ -107,7 +105,7 @@ AMDGPUSystemHub::sendNextRequest(Addr addr, const PacketPtr donePkt)
     // Remove our request
     assert(outstandingReqs.count(addr));
 
-    [[maybe_unused]] DeferredReq& frontPkt = outstandingReqs[addr].front();
+    [[maybe_unused]] DeferredReq &frontPkt = outstandingReqs[addr].front();
     assert(frontPkt.first == donePkt);
 
     outstandingReqs[addr].pop_front();
@@ -120,11 +118,12 @@ AMDGPUSystemHub::sendNextRequest(Addr addr, const PacketPtr donePkt)
 
         outstandingReqs.erase(addr);
     } else {
-        DeferredReq& nextPkt = outstandingReqs[addr].front();
+        DeferredReq &nextPkt = outstandingReqs[addr].front();
 
-        DPRINTF(AMDGPUSystemHub, "SystemHub sending deferred request for addr"
-                " %#lx size %d\n", nextPkt.first->getAddr(),
-                nextPkt.first->getSize());
+        DPRINTF(AMDGPUSystemHub,
+                "SystemHub sending deferred request for addr"
+                " %#lx size %d\n",
+                nextPkt.first->getAddr(), nextPkt.first->getSize());
 
         sendDeferredRequest(nextPkt);
     }
@@ -132,11 +131,10 @@ AMDGPUSystemHub::sendNextRequest(Addr addr, const PacketPtr donePkt)
 
 void
 AMDGPUSystemHub::dmaResponse(PacketPtr pkt)
-{
-}
+{}
 
-AMDGPUSystemHub::ResponseEvent::ResponseEvent(
-        AMDGPUSystemHub& _hub, Event *_callback, PacketPtr _pkt)
+AMDGPUSystemHub::ResponseEvent::ResponseEvent(AMDGPUSystemHub &_hub,
+                                              Event *_callback, PacketPtr _pkt)
     : systemHub(_hub), callback(_callback), pkt(_pkt)
 {
     // Delete this event after process is called
@@ -155,7 +153,7 @@ AMDGPUSystemHub::ResponseEvent::process()
 }
 
 AMDGPUSystemHub::AtomicResponseEvent::AtomicResponseEvent(
-        AMDGPUSystemHub& _hub, Event *_callback, PacketPtr _pkt)
+    AMDGPUSystemHub &_hub, Event *_callback, PacketPtr _pkt)
     : systemHub(_hub), callback(_callback), pkt(_pkt)
 {
     // Delete this event after process is called
@@ -170,9 +168,8 @@ AMDGPUSystemHub::AtomicResponseEvent::process()
     Tick delay = 0;
 
     // Create a new write packet which will be modifed then written
-    RequestPtr write_req =
-        std::make_shared<Request>(pkt->getAddr(), pkt->getSize(), 0,
-                                  pkt->requestorId());
+    RequestPtr write_req = std::make_shared<Request>(
+        pkt->getAddr(), pkt->getSize(), 0, pkt->requestorId());
 
     PacketPtr write_pkt = Packet::createWrite(write_req);
     uint8_t *write_data = new uint8_t[pkt->getSize()];
@@ -187,7 +184,8 @@ AMDGPUSystemHub::AtomicResponseEvent::process()
     // Write back the new value. The atomic is not considered done until
     // this packet's response event is triggered.
     systemHub.dmaWrite(write_pkt->getAddr(), write_pkt->getSize(),
-        dmaRespEvent, write_pkt->getPtr<uint8_t>(), 0, 0, delay);
+                       dmaRespEvent, write_pkt->getPtr<uint8_t>(), 0, 0,
+                       delay);
 
     // Atomics from the GPU are at most 64-bit and usually 32-bit.
     // We can take a peek at the data for debugging purposes.

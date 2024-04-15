@@ -45,7 +45,6 @@
 #ifndef __SERIALIZE_HANDLERS_HH__
 #define __SERIALIZE_HANDLERS_HH__
 
-
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -74,12 +73,12 @@ namespace gem5
  * which fills in value using the contents of s, and returns if that was
  * successful.
  */
-template <class T, class Enable=void>
+template <class T, class Enable = void>
 struct ParseParam;
 
 // Specialization for anything to_number can accept.
 template <class T>
-struct ParseParam<T, decltype(to_number("", std::declval<T&>()), void())>
+struct ParseParam<T, decltype(to_number("", std::declval<T &>()), void())>
 {
     static bool
     parse(const std::string &s, T &value)
@@ -121,10 +120,14 @@ struct ParseParam<std::string>
  * This default implementation falls back to the << operator which should work
  * for many types.
  */
-template <class T, class Enabled=void>
+template <class T, class Enabled = void>
 struct ShowParam
 {
-    static void show(std::ostream &os, const T &value) { os << value; }
+    static void
+    show(std::ostream &os, const T &value)
+    {
+        os << value;
+    }
 };
 
 // Handle characters specially so that we print their value, not the character

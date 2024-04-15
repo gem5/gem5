@@ -75,11 +75,11 @@ test_m5_read_file(void *buffer, uint64_t len, uint64_t offset)
 
     // The number of chunks are the number we cover fully, plus one for each
     // end were we partially overlap.
-    uint64_t num_chunks = remaining / chunk_size +
-        (at_start ? 1 : 0) + (at_end ? 1 : 0);
+    uint64_t num_chunks =
+        remaining / chunk_size + (at_start ? 1 : 0) + (at_end ? 1 : 0);
 
     // Build this part of the file.
-    uint32_t *chunks = new uint32_t [num_chunks];
+    uint32_t *chunks = new uint32_t[num_chunks];
 
     uint32_t chunk_idx = offset / chunk_size;
     for (uint64_t i = 0; i < num_chunks; i++)
@@ -89,7 +89,7 @@ test_m5_read_file(void *buffer, uint64_t len, uint64_t offset)
     std::memcpy(buffer, ((uint8_t *)chunks) + (chunk_size - at_start), len);
 
     // Clean up.
-    delete [] chunks;
+    delete[] chunks;
 
     test_total_read += len;
     return len;
@@ -100,7 +100,7 @@ DispatchTable dt = { .m5_read_file = &test_m5_read_file };
 std::string cout_output;
 
 bool
-run(std::initializer_list<std::string> arg_args, bool bad_file=false)
+run(std::initializer_list<std::string> arg_args, bool bad_file = false)
 {
     test_total_read = 0;
 
@@ -151,7 +151,7 @@ test_verify_data()
 TEST(Readfile, OneArgument)
 {
     // Call with an argument.
-    EXPECT_FALSE(run({"readfile", "foo"}));
+    EXPECT_FALSE(run({ "readfile", "foo" }));
     EXPECT_EQ(test_total_read, 0);
 }
 
@@ -160,7 +160,7 @@ TEST(Readfile, SmallFile)
     // Read a small "file".
     test_read_file_size = 16;
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"readfile"}));
+    EXPECT_TRUE(run({ "readfile" }));
     test_verify_data();
 }
 
@@ -169,7 +169,7 @@ TEST(Readfile, MultipleChunks)
     // Read a "file" which will need to be split into multiple whole chunks.
     test_read_file_size = 256 * 1024 * 4;
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"readfile"}));
+    EXPECT_TRUE(run({ "readfile" }));
     test_verify_data();
 }
 
@@ -178,7 +178,7 @@ TEST(Readfile, MultipleAndPartialChunks)
     // Read a "file" which will be split into some whole and one partial chunk.
     test_read_file_size = 256 * 1024 * 2 + 256;
     test_max_buf_size = 0;
-    EXPECT_TRUE(run({"readfile"}));
+    EXPECT_TRUE(run({ "readfile" }));
     test_verify_data();
 }
 
@@ -187,7 +187,7 @@ TEST(Readfile, OddSizedChunks)
     // Read a "file" in chunks that aren't nicely aligned.
     test_read_file_size = 256 * 1024;
     test_max_buf_size = 13;
-    EXPECT_TRUE(run({"readfile"}));
+    EXPECT_TRUE(run({ "readfile" }));
     test_verify_data();
 }
 
@@ -196,7 +196,7 @@ TEST(Readfile, CappedReadSize)
     // Read a "file", returning less than the requested amount of data.
     test_read_file_size = 256 * 1024 * 2 + 256;
     test_max_buf_size = 256;
-    EXPECT_TRUE(run({"readfile"}));
+    EXPECT_TRUE(run({ "readfile" }));
     test_verify_data();
 }
 
@@ -204,6 +204,6 @@ TEST(ReadfileDeathTest, BadFile)
 {
     test_read_file_size = 16;
     test_max_buf_size = 0;
-    EXPECT_EXIT(run({"readfile"}, true), ::testing::ExitedWithCode(2),
-            "Failed to write file");
+    EXPECT_EXIT(run({ "readfile" }, true), ::testing::ExitedWithCode(2),
+                "Failed to write file");
 }

@@ -58,10 +58,10 @@ ArmISA::HTMCheckpoint::reset()
     tcreason = 0;
     x.fill(0);
     for (auto i = 0; i < NumVecRegs; ++i) {
-      z[i].zero();
+        z[i].zero();
     }
     for (auto i = 0; i < NumVecPredRegs; ++i) {
-      p[i].reset();
+        p[i].reset();
     }
     pcstateckpt = PCState();
 
@@ -73,7 +73,7 @@ ArmISA::HTMCheckpoint::save(ThreadContext *tc)
 {
     sp = tc->getReg(int_reg::Spx);
     // below should be enabled on condition that GICV3 is enabled
-    //tme_checkpoint->iccPmrEl1 = tc->readMiscReg(MISCREG_ICC_PMR_EL1);
+    // tme_checkpoint->iccPmrEl1 = tc->readMiscReg(MISCREG_ICC_PMR_EL1);
     nzcv = tc->readMiscReg(MISCREG_NZCV);
     daif = tc->readMiscReg(MISCREG_DAIF);
     for (auto n = 0; n < int_reg::NumArchRegs; n++) {
@@ -96,7 +96,7 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
 {
     tc->setReg(int_reg::Spx, sp);
     // below should be enabled on condition that GICV3 is enabled
-    //tc->setMiscReg(MISCREG_ICC_PMR_EL1, tme_checkpoint->iccPmrEl1);
+    // tc->setMiscReg(MISCREG_ICC_PMR_EL1, tme_checkpoint->iccPmrEl1);
     tc->setMiscReg(MISCREG_NZCV, nzcv);
     tc->setMiscReg(MISCREG_DAIF, daif);
     for (auto n = 0; n < int_reg::NumArchRegs; n++)
@@ -117,31 +117,31 @@ ArmISA::HTMCheckpoint::restore(ThreadContext *tc, HtmFailureFaultCause cause)
     bool retry = false;
     uint64_t error_code = 0;
     switch (cause) {
-      case HtmFailureFaultCause::EXPLICIT:
+    case HtmFailureFaultCause::EXPLICIT:
         replaceBits(error_code, 14, 0, tcreason);
         replaceBits(error_code, 16, 1);
         retry = bits(tcreason, 15);
         break;
-      case HtmFailureFaultCause::MEMORY:
+    case HtmFailureFaultCause::MEMORY:
         replaceBits(error_code, 17, 1);
         retry = true;
         break;
-      case HtmFailureFaultCause::OTHER:
+    case HtmFailureFaultCause::OTHER:
         replaceBits(error_code, 18, 1);
         break;
-      case HtmFailureFaultCause::EXCEPTION:
+    case HtmFailureFaultCause::EXCEPTION:
         replaceBits(error_code, 19, 1);
         break;
-      case HtmFailureFaultCause::SIZE:
+    case HtmFailureFaultCause::SIZE:
         replaceBits(error_code, 20, 1);
         break;
-      case HtmFailureFaultCause::NEST:
+    case HtmFailureFaultCause::NEST:
         replaceBits(error_code, 21, 1);
         break;
         // case HtmFailureFaultCause_DEBUG:
         //     replaceBits(error_code, 22, 1);
         //     break;
-      default:
+    default:
         panic("Unknown HTM failure reason\n");
     }
     assert(!retry || !interrupt);

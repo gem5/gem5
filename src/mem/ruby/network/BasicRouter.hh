@@ -50,7 +50,8 @@ class BasicRouter : public ClockedObject
 
     void init();
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
+
   protected:
     //
     // ID in relation to other routers in the system
@@ -59,8 +60,8 @@ class BasicRouter : public ClockedObject
     uint32_t m_latency;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const BasicRouter& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const BasicRouter &obj)
 {
     obj.print(out);
     out << std::flush;

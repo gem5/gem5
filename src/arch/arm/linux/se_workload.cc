@@ -65,7 +65,7 @@ class LinuxLoader : public Process::Loader
         auto opsys = obj->getOpSys();
 
         if (arch != loader::Arm && arch != loader::Thumb &&
-                arch != loader::Arm64) {
+            arch != loader::Arm64) {
             return nullptr;
         }
 
@@ -76,7 +76,7 @@ class LinuxLoader : public Process::Loader
 
         if (opsys == loader::LinuxArmOABI) {
             fatal("gem5 does not support ARM OABI binaries. Please recompile "
-                    "with an EABI compiler.");
+                  "with an EABI compiler.");
         }
 
         if (opsys != loader::Linux)
@@ -130,8 +130,8 @@ unameFunc64(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 static SyscallReturn
 setTLSFunc32(SyscallDesc *desc, ThreadContext *tc, uint32_t tlsPtr)
 {
-    SETranslatingPortProxy(tc).writeBlob(
-            ArmLinuxProcess32::commPage + 0x0ff0, &tlsPtr, sizeof(tlsPtr));
+    SETranslatingPortProxy(tc).writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
+                                         &tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO, tlsPtr);
     return 0;
 }
@@ -146,6 +146,7 @@ setTLSFunc64(SyscallDesc *desc, ThreadContext *tc, uint32_t tlsPtr)
 class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
 {
   public:
+    /* clang-format off */
     SyscallTable32(int base) : SyscallDescTable<EmuLinux::SyscallABI32>({
         {  base + 0, "syscall" },
         {  base + 1, "exit", exitFunc },
@@ -491,6 +492,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 384, "getrandom", getrandomFunc<ArmLinux32> }
     })
     {}
+    /* clang-format on */
 };
 
 static SyscallTable32 syscallDescs32Low(0), syscallDescs32High(0x900000);
@@ -498,6 +500,7 @@ static SyscallTable32 syscallDescs32Low(0), syscallDescs32High(0x900000);
 class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
 {
   public:
+    /* clang-format off */
     SyscallTable64(int base) : SyscallDescTable<EmuLinux::SyscallABI64>({
         {    base + 0, "io_setup" },
         {    base + 1, "io_destroy" },
@@ -844,10 +847,12 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         { base + 1079, "fork" }
     })
     {}
+    /* clang-format on */
 };
 
 static SyscallTable64 syscallDescs64Low(0), syscallDescs64High(0x900000);
 
+/* clang-format off */
 static SyscallDescTable<EmuLinux::SyscallABI32> privSyscallDescs32 = {
     { 0xf0001, "breakpoint" },
     { 0xf0002, "cacheflush" },
@@ -855,12 +860,16 @@ static SyscallDescTable<EmuLinux::SyscallABI32> privSyscallDescs32 = {
     { 0xf0004, "usr32" },
     { 0xf0005, "set_tls", setTLSFunc32 },
 };
+/* clang-format on */
 
 // Indices 1, 3 and 4 are unallocated.
+/* clang-format off */
 static SyscallDescTable<EmuLinux::SyscallABI64> privSyscallDescs64 = {
     { 0x1002, "cacheflush" },
     { 0x1005, "set_tls", setTLSFunc64 }
 };
+
+/* clang-format on */
 
 void
 EmuLinux::syscall(ThreadContext *tc)

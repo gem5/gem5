@@ -55,32 +55,30 @@ class Gicv3Its;
 class Gicv3Redistributor : public Serializable
 {
   private:
-
     friend class Gicv3CPUInterface;
     friend class Gicv3Distributor;
     friend class Gicv3Its;
 
   protected:
-
-    Gicv3 * gic;
-    Gicv3Distributor * distributor;
-    Gicv3CPUInterface * cpuInterface;
+    Gicv3 *gic;
+    Gicv3Distributor *distributor;
+    Gicv3CPUInterface *cpuInterface;
     uint32_t cpuId;
-    PortProxy * memProxy;
+    PortProxy *memProxy;
 
     /*
      * GICv3 defines 2 contiguous 64KB frames for each redistributor.
      * Order of frames must be RD_base, SGI_base.
      */
-    static const uint32_t RD_base  = 0x0;
+    static const uint32_t RD_base = 0x0;
     static const uint32_t SGI_base = 0x10000;
 
     enum
     {
         // Control Register
-        GICR_CTLR  = RD_base + 0x0000,
+        GICR_CTLR = RD_base + 0x0000,
         // Implementer Identification Register
-        GICR_IIDR  = RD_base + 0x0004,
+        GICR_IIDR = RD_base + 0x0004,
         // Type Register
         GICR_TYPER = RD_base + 0x0008,
         // Wake Register
@@ -111,27 +109,27 @@ class Gicv3Redistributor : public Serializable
     enum
     {
         // Interrupt Group Register 0
-        GICR_IGROUPR0   = SGI_base + 0x0080,
+        GICR_IGROUPR0 = SGI_base + 0x0080,
         // Interrupt Set-Enable Register 0
         GICR_ISENABLER0 = SGI_base + 0x0100,
         // Interrupt Clear-Enable Register 0
         GICR_ICENABLER0 = SGI_base + 0x0180,
         // Interrupt Set-Pending Register 0
-        GICR_ISPENDR0   = SGI_base + 0x0200,
+        GICR_ISPENDR0 = SGI_base + 0x0200,
         // Interrupt Clear-Pending Register 0
-        GICR_ICPENDR0   = SGI_base + 0x0280,
+        GICR_ICPENDR0 = SGI_base + 0x0280,
         // Interrupt Set-Active Register 0
         GICR_ISACTIVER0 = SGI_base + 0x0300,
         // Interrupt Clear-Active Register 0
         GICR_ICACTIVER0 = SGI_base + 0x0380,
         // SGI Configuration Register
-        GICR_ICFGR0     = SGI_base + 0x0c00,
+        GICR_ICFGR0 = SGI_base + 0x0c00,
         // PPI Configuration Register
-        GICR_ICFGR1     = SGI_base + 0x0c04,
+        GICR_ICFGR1 = SGI_base + 0x0c04,
         // Interrupt Group Modifier Register 0
-        GICR_IGRPMODR0  = SGI_base + 0x0d00,
+        GICR_IGRPMODR0 = SGI_base + 0x0d00,
         // Non-secure Access Control Register
-        GICR_NSACR      = SGI_base + 0x0e00,
+        GICR_NSACR = SGI_base + 0x0e00,
     };
 
     // Interrupt Priority Registers
@@ -144,7 +142,7 @@ class Gicv3Redistributor : public Serializable
         GICR_SETLPIR = RD_base + 0x0040,
         // Clear LPI Pending Register
         GICR_CLRLPIR = RD_base + 0x0048,
-        //Redistributor Properties Base Address Register
+        // Redistributor Properties Base Address Register
         GICR_PROPBASER = RD_base + 0x0070,
         // Redistributor LPI Pending Table Base Address Register
         GICR_PENDBASER = RD_base + 0x0078,
@@ -156,15 +154,15 @@ class Gicv3Redistributor : public Serializable
         GICR_SYNCR = RD_base + 0x00C0,
     };
 
-    std::vector <uint8_t> irqGroup;
-    std::vector <bool> irqEnabled;
-    std::vector <bool> irqPending;
-    std::vector <bool> irqPendingIspendr;
-    std::vector <bool> irqActive;
-    std::vector <uint8_t> irqPriority;
-    std::vector <Gicv3::IntTriggerType> irqConfig;
-    std::vector <uint8_t> irqGrpmod;
-    std::vector <uint8_t> irqNsacr;
+    std::vector<uint8_t> irqGroup;
+    std::vector<bool> irqEnabled;
+    std::vector<bool> irqPending;
+    std::vector<bool> irqPendingIspendr;
+    std::vector<bool> irqActive;
+    std::vector<uint8_t> irqPriority;
+    std::vector<Gicv3::IntTriggerType> irqConfig;
+    std::vector<uint8_t> irqGrpmod;
+    std::vector<uint8_t> irqNsacr;
 
     bool DPG1S;
     bool DPG1NS;
@@ -182,12 +180,11 @@ class Gicv3Redistributor : public Serializable
     EndBitUnion(LPIConfigurationTableEntry)
 
     static const uint32_t GICR_CTLR_ENABLE_LPIS = 1 << 0;
-    static const uint32_t GICR_CTLR_DPG0   = 1 << 24;
+    static const uint32_t GICR_CTLR_DPG0 = 1 << 24;
     static const uint32_t GICR_CTLR_DPG1NS = 1 << 25;
-    static const uint32_t GICR_CTLR_DPG1S  = 1 << 26;
+    static const uint32_t GICR_CTLR_DPG1S = 1 << 26;
 
   public:
-
     /*
      * GICv3 defines only 2 64K consecutive frames for the redistributor
      * (RD_base and SGI_base) but we are using 2 extra 64K stride frames
@@ -198,7 +195,6 @@ class Gicv3Redistributor : public Serializable
     const uint32_t addrRangeSize;
 
     static const uint32_t SMALLEST_LPI_ID = 8192;
-
 
     void activateIRQ(uint32_t int_id);
     bool canBeSelectedFor1toNInterrupt(Gicv3::GroupId group) const;
@@ -223,14 +219,14 @@ class Gicv3Redistributor : public Serializable
     bool isPendingLPI(uint32_t intid);
     void setClrLPI(uint64_t data, bool set);
     void sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns);
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
     void update();
     void updateDistributor();
 
   protected:
-
-    bool isLevelSensitive(uint32_t int_id) const
+    bool
+    isLevelSensitive(uint32_t int_id) const
     {
         return irqConfig[int_id] == Gicv3::INT_LEVEL_SENSITIVE;
     }
@@ -246,14 +242,14 @@ class Gicv3Redistributor : public Serializable
      * which had been made pending via a write to ISPENDR, will be
      * treated as it if was edge triggered.
      */
-    bool treatAsEdgeTriggered(uint32_t int_id) const
+    bool
+    treatAsEdgeTriggered(uint32_t int_id) const
     {
         return !isLevelSensitive(int_id) || irqPendingIspendr[int_id];
     }
 
   public:
-
-    Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id);
+    Gicv3Redistributor(Gicv3 *gic, uint32_t cpu_id);
     uint32_t getAffinity() const;
     void init();
     uint64_t read(Addr addr, size_t size, bool is_secure_access);

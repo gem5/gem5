@@ -41,10 +41,10 @@ namespace gem5
 namespace fastmodel
 {
 
-typedef sc_gem5::TlmInitiatorWrapper<
-    64, amba_pv::amba_pv_protocol_types> AmbaInitiator;
-typedef sc_gem5::TlmTargetWrapper<
-    64, amba_pv::amba_pv_protocol_types> AmbaTarget;
+typedef sc_gem5::TlmInitiatorWrapper<64, amba_pv::amba_pv_protocol_types>
+    AmbaInitiator;
+typedef sc_gem5::TlmTargetWrapper<64, amba_pv::amba_pv_protocol_types>
+    AmbaTarget;
 
 } // namespace fastmodel
 } // namespace gem5

@@ -224,7 +224,8 @@ const std::string
 EmulationPageTable::externalize() const
 {
     std::stringstream ss;
-    for (PTable::const_iterator it=pTable.begin(); it != pTable.end(); ++it) {
+    for (PTable::const_iterator it = pTable.begin(); it != pTable.end();
+         ++it) {
         ss << std::hex << it->first << ":" << it->second.paddr << ";";
     }
     return ss.str();

@@ -138,7 +138,7 @@ class TimingResponseProtocol
      * @param pkt Packet to send.
      *
      * @return If the send was succesful or not.
-    */
+     */
     bool sendResp(TimingRequestProtocol *peer, PacketPtr pkt);
 
     /**

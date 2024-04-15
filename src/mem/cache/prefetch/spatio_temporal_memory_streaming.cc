@@ -61,7 +61,7 @@ STeMS::STeMS(const STeMSPrefetcherParams &p)
     lastTriggerCounter(0)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
-        "The spatial region size must be a power of 2.");
+             "The spatial region size must be a power of 2.");
 }
 
 void
@@ -82,10 +82,10 @@ STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
                     Addr cache_addr =
                         agt_entry.paddress + seq_entry.offset * blkSize;
                     if (!cache.inCache(cache_addr, sr_is_secure) &&
-                            !cache.inMissQueue(cache_addr, sr_is_secure)) {
+                        !cache.inMissQueue(cache_addr, sr_is_secure)) {
                         generation_ended = true;
-                        pst_addr = (agt_entry.pc << spatialRegionSizeBits)
-                                    + seq_entry.offset;
+                        pst_addr = (agt_entry.pc << spatialRegionSizeBits) +
+                                   seq_entry.offset;
                         break;
                     }
                 }
@@ -120,9 +120,8 @@ STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
     rmob_entry.delta = delta;
 
     if (!addDuplicateEntriesToRMOB) {
-        for (const auto& entry : rmob) {
-            if (entry.srAddress == sr_addr &&
-                entry.pstAddress == pst_addr &&
+        for (const auto &entry : rmob) {
+            if (entry.srAddress == sr_addr && entry.pstAddress == pst_addr &&
                 entry.delta == delta) {
                 return;
             }
@@ -134,8 +133,8 @@ STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 
 void
 STeMS::calculatePrefetch(const PrefetchInfo &pfi,
-                                   std::vector<AddrPriority> &addresses,
-                                   const CacheAccessor &cache)
+                         std::vector<AddrPriority> &addresses,
+                         const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -212,9 +211,9 @@ STeMS::reconstructSequence(
     // Process rmob entries from rmob_it (most recent with address = sr_addr)
     // to the latest one
     for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
-        it++) {
+         it++) {
         reconstruction[idx] = it->srAddress * spatialRegionSize;
-        idx += (it+1)->delta + 1;
+        idx += (it + 1)->delta + 1;
     }
 
     // Now query the PST with the PC of each RMOB entry
@@ -228,8 +227,8 @@ STeMS::reconstructSequence(
                 if (seq_entry.counter > 1) {
                     // 2-bit counter: high enough confidence with a
                     // value greater than 1
-                    Addr rec_addr = it->srAddress * spatialRegionSize +
-                        seq_entry.offset;
+                    Addr rec_addr =
+                        it->srAddress * spatialRegionSize + seq_entry.offset;
                     unsigned ridx = idx + seq_entry.delta;
                     // Try to use the corresponding position, if it has been
                     // already used, look the surrounding positions
@@ -237,24 +236,24 @@ STeMS::reconstructSequence(
                         reconstruction[ridx] == MaxAddr) {
                         reconstruction[ridx] = rec_addr;
                     } else if ((ridx + 1) < reconstructionEntries &&
-                        reconstruction[ridx + 1] == MaxAddr) {
+                               reconstruction[ridx + 1] == MaxAddr) {
                         reconstruction[ridx + 1] = rec_addr;
                     } else if ((ridx + 2) < reconstructionEntries &&
-                        reconstruction[ridx + 2] == MaxAddr) {
+                               reconstruction[ridx + 2] == MaxAddr) {
                         reconstruction[ridx + 2] = rec_addr;
                     } else if ((ridx > 0) &&
-                        ((ridx - 1) < reconstructionEntries) &&
-                        reconstruction[ridx - 1] == MaxAddr) {
+                               ((ridx - 1) < reconstructionEntries) &&
+                               reconstruction[ridx - 1] == MaxAddr) {
                         reconstruction[ridx - 1] = rec_addr;
                     } else if ((ridx > 1) &&
-                        ((ridx - 2) < reconstructionEntries) &&
-                        reconstruction[ridx - 2] == MaxAddr) {
+                               ((ridx - 2) < reconstructionEntries) &&
+                               reconstruction[ridx - 2] == MaxAddr) {
                         reconstruction[ridx - 2] = rec_addr;
                     }
                 }
             }
         }
-        idx += (it+1)->delta + 1;
+        idx += (it + 1)->delta + 1;
     }
 
     for (Addr pf_addr : reconstruction) {

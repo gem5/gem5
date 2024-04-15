@@ -60,9 +60,7 @@ namespace gem5
  */
 class NvmGen : public RandomGen
 {
-
   public:
-
     /**
      * Create a NVM address sequence generator.
      *
@@ -85,15 +83,12 @@ class NvmGen : public RandomGen
      * @param addr_mapping Address mapping to be used,
      *                     assumes single channel system
      */
-    NvmGen(SimObject &obj,
-           RequestorID requestor_id, Tick _duration,
-           Addr start_addr, Addr end_addr,
-           Addr _blocksize, Addr cacheline_size,
-           Tick min_period, Tick max_period,
-           uint8_t read_percent, Addr data_limit,
-           unsigned int num_seq_pkts, unsigned int buffer_size,
-           unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
-           enums::AddrMap addr_mapping,
+    NvmGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+           Addr start_addr, Addr end_addr, Addr _blocksize,
+           Addr cacheline_size, Tick min_period, Tick max_period,
+           uint8_t read_percent, Addr data_limit, unsigned int num_seq_pkts,
+           unsigned int buffer_size, unsigned int nbr_of_banks,
+           unsigned int nbr_of_banks_util, enums::AddrMap addr_mapping,
            unsigned int nbr_of_ranks);
 
     PacketPtr getNextPacket();
@@ -103,11 +98,10 @@ class NvmGen : public RandomGen
      *  series
      * @param new_bank Bank number of next packet series
      * @param new_rank Rank value of next packet series
-    */
+     */
     void genStartAddr(unsigned int new_bank, unsigned int new_rank);
 
   protected:
-
     /** Number of sequential NVM packets to be generated per cpu request */
     const unsigned int numSeqPkts;
 
@@ -146,7 +140,6 @@ class NvmGen : public RandomGen
 
     /** Number of ranks to be utilized for a given configuration */
     const unsigned int nbrOfRanks;
-
 };
 
 } // namespace gem5

@@ -53,14 +53,12 @@ namespace gem5
 class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
-
     TimingSimpleCPU(const BaseTimingSimpleCPUParams &params);
     virtual ~TimingSimpleCPU();
 
     void init() override;
 
   private:
-
     /*
      * If an access needs to be broken into fragments, currently at most two,
      * the the following two classes are used as the sender state of the
@@ -93,16 +91,17 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class SplitFragmentSenderState : public Packet::SenderState
     {
       public:
-        SplitFragmentSenderState(PacketPtr _bigPkt, int _index) :
-            bigPkt(_bigPkt), index(_index)
+        SplitFragmentSenderState(PacketPtr _bigPkt, int _index)
+            : bigPkt(_bigPkt), index(_index)
         {}
+
         PacketPtr bigPkt;
         int index;
 
         void
         clearFromParent()
         {
-            SplitMainSenderState * main_send_state =
+            SplitMainSenderState *main_send_state =
                 dynamic_cast<SplitMainSenderState *>(bigPkt->senderState);
             main_send_state->fragments[index] = NULL;
         }
@@ -114,9 +113,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         TimingSimpleCPU *cpu;
 
       public:
-        FetchTranslation(TimingSimpleCPU *_cpu)
-            : cpu(_cpu)
-        {}
+        FetchTranslation(TimingSimpleCPU *_cpu) : cpu(_cpu) {}
 
         void
         markDelayed()
@@ -132,22 +129,21 @@ class TimingSimpleCPU : public BaseSimpleCPU
             cpu->sendFetch(fault, req, tc);
         }
     };
+
     FetchTranslation fetchTranslation;
 
     void threadSnoop(PacketPtr pkt, ThreadID sender);
-    void sendData(const RequestPtr &req,
-                  uint8_t *data, uint64_t *res, bool read);
+    void sendData(const RequestPtr &req, uint8_t *data, uint64_t *res,
+                  bool read);
     void sendSplitData(const RequestPtr &req1, const RequestPtr &req2,
-                       const RequestPtr &req,
-                       uint8_t *data, bool read);
+                       const RequestPtr &req, uint8_t *data, bool read);
 
     void translationFault(const Fault &fault);
 
     PacketPtr buildPacket(const RequestPtr &req, bool read);
     void buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
-            const RequestPtr &req1, const RequestPtr &req2,
-            const RequestPtr &req,
-            uint8_t *data, bool read);
+                          const RequestPtr &req1, const RequestPtr &req2,
+                          const RequestPtr &req, uint8_t *data, bool read);
 
     bool handleReadPacket(PacketPtr pkt);
     // This function always implicitly uses dcache_pkt.
@@ -162,15 +158,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class TimingCPUPort : public RequestPort
     {
       public:
-
-        TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
-            : RequestPort(_name), cpu(_cpu),
-              retryRespEvent([this]{ sendRetryResp(); }, name())
-        { }
+        TimingCPUPort(const std::string &_name, TimingSimpleCPU *_cpu)
+            : RequestPort(_name),
+              cpu(_cpu),
+              retryRespEvent([this] { sendRetryResp(); }, name())
+        {}
 
       protected:
-
-        TimingSimpleCPU* cpu;
+        TimingSimpleCPU *cpu;
 
         struct TickEvent : public Event
         {
@@ -178,7 +173,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
             TimingSimpleCPU *cpu;
 
             TickEvent(TimingSimpleCPU *_cpu) : pkt(NULL), cpu(_cpu) {}
-            const char *description() const { return "Timing CPU tick"; }
+
+            const char *
+            description() const
+            {
+                return "Timing CPU tick";
+            }
+
             void schedule(PacketPtr _pkt, Tick t);
         };
 
@@ -188,45 +189,45 @@ class TimingSimpleCPU : public BaseSimpleCPU
     class IcachePort : public TimingCPUPort
     {
       public:
-
         IcachePort(TimingSimpleCPU *_cpu)
             : TimingCPUPort(_cpu->name() + ".icache_port", _cpu),
               tickEvent(_cpu)
-        { }
+        {}
 
       protected:
-
         virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvReqRetry();
 
         struct ITickEvent : public TickEvent
         {
+            ITickEvent(TimingSimpleCPU *_cpu) : TickEvent(_cpu) {}
 
-            ITickEvent(TimingSimpleCPU *_cpu)
-                : TickEvent(_cpu) {}
             void process();
-            const char *description() const { return "Timing CPU icache tick"; }
+
+            const char *
+            description() const
+            {
+                return "Timing CPU icache tick";
+            }
         };
 
         ITickEvent tickEvent;
-
     };
 
     class DcachePort : public TimingCPUPort
     {
       public:
-
         DcachePort(TimingSimpleCPU *_cpu)
             : TimingCPUPort(_cpu->name() + ".dcache_port", _cpu),
               tickEvent(_cpu)
         {
-           cacheBlockMask = ~(cpu->cacheLineSize() - 1);
+            cacheBlockMask = ~(cpu->cacheLineSize() - 1);
         }
 
         Addr cacheBlockMask;
-      protected:
 
+      protected:
         /** Snoop a coherence request, we need to check if this causes
          * a wakeup event on a cpu that is monitoring an address
          */
@@ -237,20 +238,26 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual void recvReqRetry();
 
-        virtual bool isSnooping() const {
+        virtual bool
+        isSnooping() const
+        {
             return true;
         }
 
         struct DTickEvent : public TickEvent
         {
-            DTickEvent(TimingSimpleCPU *_cpu)
-                : TickEvent(_cpu) {}
+            DTickEvent(TimingSimpleCPU *_cpu) : TickEvent(_cpu) {}
+
             void process();
-            const char *description() const { return "Timing CPU dcache tick"; }
+
+            const char *
+            description() const
+            {
+                return "Timing CPU dcache tick";
+            }
         };
 
         DTickEvent tickEvent;
-
     };
 
     void updateCycleCounts();
@@ -264,15 +271,21 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Cycles previousCycle;
 
   protected:
-
-     /** Return a reference to the data port. */
-    Port &getDataPort() override { return dcachePort; }
+    /** Return a reference to the data port. */
+    Port &
+    getDataPort() override
+    {
+        return dcachePort;
+    }
 
     /** Return a reference to the instruction port. */
-    Port &getInstPort() override { return icachePort; }
+    Port &
+    getInstPort() override
+    {
+        return icachePort;
+    }
 
   public:
-
     DrainState drain() override;
     void drainResume() override;
 
@@ -284,33 +297,36 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable =std::vector<bool>())
-        override;
+    Fault initiateMemRead(
+        Addr addr, unsigned size, Request::Flags flags,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byte_enable = std::vector<bool>())
-        override;
+    Fault writeMem(
+        uint8_t *data, unsigned size, Addr addr, Request::Flags flags,
+        uint64_t *res,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                          AtomicOpFunctorPtr amo_op) override;
 
     void fetch();
-    void sendFetch(const Fault &fault,
-                   const RequestPtr &req, ThreadContext *tc);
-    void completeIfetch(PacketPtr );
+    void sendFetch(const Fault &fault, const RequestPtr &req,
+                   ThreadContext *tc);
+    void completeIfetch(PacketPtr);
     void completeDataAccess(PacketPtr pkt);
     void advanceInst(const Fault &fault);
 
     /** This function is used by the page table walker to determine if it could
      * translate the a pending request or if the underlying request has been
-     * squashed. This always returns false for the simple timing CPU as it never
-     * executes any instructions speculatively.
+     * squashed. This always returns false for the simple timing CPU as it
+     * never executes any instructions speculatively.
      * @ return Is the current instruction squashed?
      */
-    bool isSquashed() const { return false; }
+    bool
+    isSquashed() const
+    {
+        return false;
+    }
 
     /**
      * Print state of address in memory system via PrintReq (for
@@ -331,7 +347,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
                             HtmFailureFaultCause) override;
 
   private:
-
     EventFunctionWrapper fetchEvent;
 
     struct IprEvent : Event
@@ -359,9 +374,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
      *     activated it can happen.
      * </ul>
      */
-    bool isCpuDrained() const {
-        SimpleExecContext& t_info = *threadInfo[curThread];
-        SimpleThread* thread = t_info.thread;
+    bool
+    isCpuDrained() const
+    {
+        SimpleExecContext &t_info = *threadInfo[curThread];
+        SimpleThread *thread = t_info.thread;
 
         return thread->pcState().microPC() == 0 && !t_info.stayAtPC &&
                !fetchEvent.scheduled();

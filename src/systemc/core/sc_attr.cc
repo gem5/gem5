@@ -33,10 +33,16 @@ namespace sc_core
 {
 
 sc_attr_base::sc_attr_base(const std::string &_name) : _name(_name) {}
+
 sc_attr_base::sc_attr_base(const sc_attr_base &other) : _name(other._name) {}
+
 sc_attr_base::~sc_attr_base() {}
 
-const std::string &sc_attr_base::name() const { return _name; }
+const std::string &
+sc_attr_base::name() const
+{
+    return _name;
+}
 
 sc_attr_cltn::iterator
 sc_attr_cltn::begin()
@@ -63,7 +69,9 @@ sc_attr_cltn::end() const
 }
 
 sc_attr_cltn::sc_attr_cltn() {}
+
 sc_attr_cltn::sc_attr_cltn(const sc_attr_cltn &other) : cltn(other.cltn) {}
+
 sc_attr_cltn::~sc_attr_cltn() {}
 
 bool
@@ -77,18 +85,18 @@ sc_attr_cltn::push_back(sc_attr_base *attr)
 }
 
 sc_attr_base *
-sc_attr_cltn::operator [] (const std::string &name)
+sc_attr_cltn::operator[](const std::string &name)
 {
-    for (auto &attr: cltn)
+    for (auto &attr : cltn)
         if (attr->name() == name)
             return attr;
     return nullptr;
 }
 
 const sc_attr_base *
-sc_attr_cltn::operator [] (const std::string &name) const
+sc_attr_cltn::operator[](const std::string &name) const
 {
-    for (auto &attr: cltn)
+    for (auto &attr : cltn)
         if (attr->name() == name)
             return attr;
     return nullptr;
@@ -97,7 +105,7 @@ sc_attr_cltn::operator [] (const std::string &name) const
 sc_attr_base *
 sc_attr_cltn::remove(const std::string &name)
 {
-    for (auto &attr: cltn) {
+    for (auto &attr : cltn) {
         if (attr->name() == name) {
             sc_attr_base *ret = attr;
             std::swap(attr, cltn.back());
@@ -108,8 +116,16 @@ sc_attr_cltn::remove(const std::string &name)
     return nullptr;
 }
 
-void sc_attr_cltn::remove_all() { cltn.clear(); }
+void
+sc_attr_cltn::remove_all()
+{
+    cltn.clear();
+}
 
-int sc_attr_cltn::size() const { return cltn.size(); }
+int
+sc_attr_cltn::size() const
+{
+    return cltn.size();
+}
 
 } // namespace sc_core

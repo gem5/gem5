@@ -69,10 +69,7 @@ sc_time::sc_time(double d, sc_time_unit tu)
     set(this, d, tu);
 }
 
-sc_time::sc_time(const sc_time &t)
-{
-    val = t.val;
-}
+sc_time::sc_time(const sc_time &t) { val = t.val; }
 
 sc_time::sc_time(double d, const char *unit)
 {
@@ -85,7 +82,7 @@ sc_time::sc_time(double d, const char *unit)
     }
 
     if (tu > SC_SEC) {
-        SC_REPORT_ERROR(SC_ID_TIME_CONVERSION_FAILED_,"invalid unit given");
+        SC_REPORT_ERROR(SC_ID_TIME_CONVERSION_FAILED_, "invalid unit given");
         val = 0;
         return;
     }
@@ -105,7 +102,7 @@ sc_time::sc_time(sc_dt::uint64 v, bool scale)
 }
 
 sc_time &
-sc_time::operator = (const sc_time &t)
+sc_time::operator=(const sc_time &t)
 {
     val = t.val;
     return *this;
@@ -122,6 +119,7 @@ sc_time::to_double() const
 {
     return static_cast<double>(val);
 }
+
 double
 sc_time::to_seconds() const
 {
@@ -137,64 +135,64 @@ sc_time::to_string() const
 }
 
 bool
-sc_time::operator == (const sc_time &t) const
+sc_time::operator==(const sc_time &t) const
 {
     return val == t.val;
 }
 
 bool
-sc_time::operator != (const sc_time &t) const
+sc_time::operator!=(const sc_time &t) const
 {
     return val != t.val;
 }
 
 bool
-sc_time::operator < (const sc_time &t) const
+sc_time::operator<(const sc_time &t) const
 {
     return val < t.val;
 }
 
 bool
-sc_time::operator <= (const sc_time &t) const
+sc_time::operator<=(const sc_time &t) const
 {
     return val <= t.val;
 }
 
 bool
-sc_time::operator > (const sc_time &t) const
+sc_time::operator>(const sc_time &t) const
 {
     return val > t.val;
 }
 
 bool
-sc_time::operator >= (const sc_time &t) const
+sc_time::operator>=(const sc_time &t) const
 {
     return val >= t.val;
 }
 
 sc_time &
-sc_time::operator += (const sc_time &t)
+sc_time::operator+=(const sc_time &t)
 {
     val += t.val;
     return *this;
 }
 
 sc_time &
-sc_time::operator -= (const sc_time &t)
+sc_time::operator-=(const sc_time &t)
 {
     val -= t.val;
     return *this;
 }
 
 sc_time &
-sc_time::operator *= (double d)
+sc_time::operator*=(double d)
 {
     val = static_cast<int64_t>(static_cast<double>(val) * d + 0.5);
     return *this;
 }
 
 sc_time &
-sc_time::operator /= (double d)
+sc_time::operator/=(double d)
 {
     val = static_cast<int64_t>(static_cast<double>(val) / d + 0.5);
     return *this;
@@ -242,46 +240,46 @@ sc_time::from_string(const char *str)
 }
 
 const sc_time
-operator + (const sc_time &a, const sc_time &b)
+operator+(const sc_time &a, const sc_time &b)
 {
     return sc_time::from_value(a.value() + b.value());
 }
 
 const sc_time
-operator - (const sc_time &a, const sc_time &b)
+operator-(const sc_time &a, const sc_time &b)
 {
     return sc_time::from_value(a.value() - b.value());
 }
 
 const sc_time
-operator * (const sc_time &t, double d)
+operator*(const sc_time &t, double d)
 {
     volatile double tmp = static_cast<double>(t.value()) * d + 0.5;
     return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 const sc_time
-operator * (double d, const sc_time &t)
+operator*(double d, const sc_time &t)
 {
     volatile double tmp = d * static_cast<double>(t.value()) + 0.5;
     return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 const sc_time
-operator / (const sc_time &t, double d)
+operator/(const sc_time &t, double d)
 {
     volatile double tmp = static_cast<double>(t.value()) / d + 0.5;
     return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 double
-operator / (const sc_time &t1, const sc_time &t2)
+operator/(const sc_time &t1, const sc_time &t2)
 {
     return t1.to_double() / t2.to_double();
 }
 
 std::ostream &
-operator << (std::ostream &os, const sc_time &t)
+operator<<(std::ostream &os, const sc_time &t)
 {
     t.print(os);
     return os;
@@ -298,7 +296,7 @@ sc_set_time_resolution(double d, sc_time_unit tu)
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
-                "value not a power of ten");
+                        "value not a power of ten");
     }
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "simulation running");
@@ -311,7 +309,7 @@ sc_set_time_resolution(double d, sc_time_unit tu)
     // it's at least some protection.
     if (gem5::clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
-                "sc_time object(s) constructed");
+                        "sc_time object(s) constructed");
     }
 
     double seconds = d * sc_gem5::TimeUnitScale[tu];
@@ -357,7 +355,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
-                "value not a power of ten");
+                        "value not a power of ten");
     }
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_, "simulation running");
@@ -370,7 +368,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     // it's at least some protection.
     if (gem5::clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
-                "sc_time object(s) constructed");
+                        "sc_time object(s) constructed");
     }
 
     // Normalize d to seconds.
@@ -382,7 +380,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
         resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
-                "value smaller than time resolution");
+                        "value smaller than time resolution");
     }
 }
 
@@ -392,8 +390,8 @@ sc_get_default_time_unit()
     return sc_time(defaultUnit, SC_SEC);
 }
 
-sc_time_tuple::sc_time_tuple(const sc_time &t) :
-    _value(), _unit(SC_SEC), _set(true)
+sc_time_tuple::sc_time_tuple(const sc_time &t)
+    : _value(), _unit(SC_SEC), _set(true)
 {
     if (!t.value())
         return;
@@ -433,7 +431,11 @@ sc_time_tuple::has_value() const
     return _set;
 }
 
-sc_dt::uint64 sc_time_tuple::value() const { return _value; }
+sc_dt::uint64
+sc_time_tuple::value() const
+{
+    return _value;
+}
 
 const char *
 sc_time_tuple::unit_symbol() const
@@ -441,7 +443,11 @@ sc_time_tuple::unit_symbol() const
     return sc_gem5::TimeUnitNames[_unit];
 }
 
-double sc_time_tuple::to_double() const { return static_cast<double>(_value); }
+double
+sc_time_tuple::to_double() const
+{
+    return static_cast<double>(_value);
+}
 
 std::string
 sc_time_tuple::to_string() const

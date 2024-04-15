@@ -54,14 +54,22 @@ class CacheEntry : public ReplaceableEntry
      *
      * @return True if the entry is valid.
      */
-    virtual bool isValid() const { return valid; }
+    virtual bool
+    isValid() const
+    {
+        return valid;
+    }
 
     /**
      * Get tag associated to this block.
      *
      * @return The tag value.
      */
-    virtual Addr getTag() const { return tag; }
+    virtual Addr
+    getTag() const
+    {
+        return tag;
+    }
 
     /**
      * Checks if the given tag information corresponds to this entry's.
@@ -99,8 +107,8 @@ class CacheEntry : public ReplaceableEntry
     std::string
     print() const override
     {
-        return csprintf("tag: %#x valid: %d | %s", getTag(),
-                        isValid(), ReplaceableEntry::print());
+        return csprintf("tag: %#x valid: %d | %s", getTag(), isValid(),
+                        ReplaceableEntry::print());
     }
 
   protected:
@@ -109,7 +117,11 @@ class CacheEntry : public ReplaceableEntry
      *
      * @param tag The tag value.
      */
-    virtual void setTag(Addr _tag) { tag = _tag; }
+    virtual void
+    setTag(Addr _tag)
+    {
+        tag = _tag;
+    }
 
     /** Set valid bit. The block must be invalid beforehand. */
     virtual void
@@ -125,10 +137,10 @@ class CacheEntry : public ReplaceableEntry
      * @sa invalidate()
      * @sa insert()
      */
-    bool valid{false};
+    bool valid{ false };
 
     /** The entry's tag. */
-    Addr tag{MaxAddr};
+    Addr tag{ MaxAddr };
 };
 
 } // namespace gem5

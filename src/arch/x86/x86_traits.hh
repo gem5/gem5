@@ -47,59 +47,59 @@ namespace gem5
 
 namespace X86ISA
 {
-    const int NumMicroIntRegs = 16;
+const int NumMicroIntRegs = 16;
 
-    const int NumMMXRegs = 8;
-    const int NumXMMRegs = 16;
-    const int NumMicroFpRegs = 8;
+const int NumMMXRegs = 8;
+const int NumXMMRegs = 16;
+const int NumMicroFpRegs = 8;
 
-    const int NumCRegs = 16;
-    const int NumDRegs = 8;
+const int NumCRegs = 16;
+const int NumDRegs = 8;
 
-    const int NumSegments = 6;
-    const int NumSysSegments = 4;
+const int NumSegments = 6;
+const int NumSysSegments = 4;
 
-    const Addr IntAddrPrefixMask = 0xffffffff00000000ULL;
-    const Addr IntAddrPrefixCPUID = 0x100000000ULL;
-    const Addr IntAddrPrefixMSR = 0x200000000ULL;
-    const Addr IntAddrPrefixIO = 0x300000000ULL;
+const Addr IntAddrPrefixMask = 0xffffffff00000000ULL;
+const Addr IntAddrPrefixCPUID = 0x100000000ULL;
+const Addr IntAddrPrefixMSR = 0x200000000ULL;
+const Addr IntAddrPrefixIO = 0x300000000ULL;
 
-    const Addr PhysAddrPrefixIO = 0x8000000000000000ULL;
-    const Addr PhysAddrPrefixPciConfig = 0xC000000000000000ULL;
-    const Addr PhysAddrPrefixLocalAPIC = 0x2000000000000000ULL;
-    const Addr PhysAddrPrefixInterrupts = 0xA000000000000000ULL;
-    // Each APIC gets two pages. One page is used for local apics to field
-    // accesses from the CPU, and the other is for all APICs to communicate.
-    const Addr PhysAddrAPICRangeSize = 1 << 12;
+const Addr PhysAddrPrefixIO = 0x8000000000000000ULL;
+const Addr PhysAddrPrefixPciConfig = 0xC000000000000000ULL;
+const Addr PhysAddrPrefixLocalAPIC = 0x2000000000000000ULL;
+const Addr PhysAddrPrefixInterrupts = 0xA000000000000000ULL;
+// Each APIC gets two pages. One page is used for local apics to field
+// accesses from the CPU, and the other is for all APICs to communicate.
+const Addr PhysAddrAPICRangeSize = 1 << 12;
 
-    // Put this in an unused part of the 16 bit IO port address space.
-    const Addr PhysAddrIntA = 0x8000000100000000ULL;
+// Put this in an unused part of the 16 bit IO port address space.
+const Addr PhysAddrIntA = 0x8000000100000000ULL;
 
-    static inline Addr
-    x86IOAddress(const uint32_t port)
-    {
-        return PhysAddrPrefixIO | port;
-    }
+static inline Addr
+x86IOAddress(const uint32_t port)
+{
+    return PhysAddrPrefixIO | port;
+}
 
-    static inline Addr
-    x86PciConfigAddress(const uint32_t addr)
-    {
-        return PhysAddrPrefixPciConfig | addr;
-    }
+static inline Addr
+x86PciConfigAddress(const uint32_t addr)
+{
+    return PhysAddrPrefixPciConfig | addr;
+}
 
-    static inline Addr
-    x86LocalAPICAddress(const uint8_t id, const uint16_t addr)
-    {
-        assert(addr < (1 << 12));
-        return PhysAddrPrefixLocalAPIC | (id * (1 << 12)) | addr;
-    }
+static inline Addr
+x86LocalAPICAddress(const uint8_t id, const uint16_t addr)
+{
+    assert(addr < (1 << 12));
+    return PhysAddrPrefixLocalAPIC | (id * (1 << 12)) | addr;
+}
 
-    static inline Addr
-    x86InterruptAddress(const uint8_t id, const uint16_t addr)
-    {
-        assert(addr < PhysAddrAPICRangeSize);
-        return PhysAddrPrefixInterrupts | (id * PhysAddrAPICRangeSize) | addr;
-    }
+static inline Addr
+x86InterruptAddress(const uint8_t id, const uint16_t addr)
+{
+    assert(addr < PhysAddrAPICRangeSize);
+    return PhysAddrPrefixInterrupts | (id * PhysAddrAPICRangeSize) | addr;
+}
 
 } // namespace X86ISA
 } // namespace gem5

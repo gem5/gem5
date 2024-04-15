@@ -59,7 +59,7 @@ class BaseTLB : public SimObject
 {
   protected:
     BaseTLB(const BaseTLBParams &p)
-      : SimObject(p), _type(p.entry_type), _nextLevel(p.next_level)
+        : SimObject(p), _type(p.entry_type), _nextLevel(p.next_level)
     {}
 
     TypeTLB _type;
@@ -69,11 +69,12 @@ class BaseTLB : public SimObject
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
-    virtual Fault translateAtomic(
-            const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) = 0;
-    virtual void translateTiming(
-            const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Translation *translation, BaseMMU::Mode mode) = 0;
+    virtual Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                                  BaseMMU::Mode mode) = 0;
+    virtual void translateTiming(const RequestPtr &req, ThreadContext *tc,
+                                 BaseMMU::Translation *translation,
+                                 BaseMMU::Mode mode) = 0;
+
     virtual Fault
     translateFunctional(const RequestPtr &req, ThreadContext *tc,
                         BaseMMU::Mode mode)
@@ -95,9 +96,8 @@ class BaseTLB : public SimObject
      * @param mode Request type (read/write/execute).
      * @return A fault on failure, NoFault otherwise.
      */
-    virtual Fault finalizePhysical(
-            const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Mode mode) const = 0;
+    virtual Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                                   BaseMMU::Mode mode) const = 0;
 
     /**
      * Remove all entries from the TLB
@@ -118,13 +118,29 @@ class BaseTLB : public SimObject
      *
      * @return A pointer to the walker port or NULL if not present
      */
-    virtual Port* getTableWalkerPort() { return NULL; }
+    virtual Port *
+    getTableWalkerPort()
+    {
+        return NULL;
+    }
 
-    void memInvalidate() { flushAll(); }
+    void
+    memInvalidate()
+    {
+        flushAll();
+    }
 
-    TypeTLB type() const { return _type; }
+    TypeTLB
+    type() const
+    {
+        return _type;
+    }
 
-    BaseTLB* nextLevel() const { return _nextLevel; }
+    BaseTLB *
+    nextLevel() const
+    {
+        return _nextLevel;
+    }
 };
 
 /** Implementing the "&" bitwise operator for TypeTLB allows us to handle

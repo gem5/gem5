@@ -57,6 +57,7 @@ class SMMURequestPort : public RequestPort
 
   public:
     SMMURequestPort(const std::string &_name, SMMUv3 &_smmu);
+
     virtual ~SMMURequestPort() {}
 };
 
@@ -71,6 +72,7 @@ class SMMUTableWalkPort : public RequestPort
 
   public:
     SMMUTableWalkPort(const std::string &_name, SMMUv3 &_smmu);
+
     virtual ~SMMUTableWalkPort() {}
 };
 
@@ -85,13 +87,16 @@ class SMMUDevicePort : public QueuedResponsePort
     virtual bool recvTimingReq(PacketPtr pkt);
 
   public:
-    SMMUDevicePort(const std::string &_name,
-                  SMMUv3DeviceInterface &_ifc,
-                  PortID _id = InvalidPortID);
+    SMMUDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc,
+                   PortID _id = InvalidPortID);
+
     virtual ~SMMUDevicePort() {}
 
-    virtual AddrRangeList getAddrRanges() const
-    { return AddrRangeList { AddrRange(0, UINT64_MAX) }; }
+    virtual AddrRangeList
+    getAddrRanges() const
+    {
+        return AddrRangeList{ AddrRange(0, UINT64_MAX) };
+    }
 };
 
 class SMMUControlPort : public SimpleTimingPort
@@ -106,6 +111,7 @@ class SMMUControlPort : public SimpleTimingPort
   public:
     SMMUControlPort(const std::string &_name, SMMUv3 &_smmu,
                     AddrRange _addrRange);
+
     virtual ~SMMUControlPort() {}
 };
 
@@ -120,6 +126,7 @@ class SMMUATSMemoryPort : public QueuedRequestPort
 
   public:
     SMMUATSMemoryPort(const std::string &_name, SMMUv3DeviceInterface &_ifc);
+
     virtual ~SMMUATSMemoryPort() {}
 };
 
@@ -133,11 +140,15 @@ class SMMUATSDevicePort : public QueuedResponsePort
     virtual Tick recvAtomic(PacketPtr pkt);
     virtual bool recvTimingReq(PacketPtr pkt);
 
-    virtual AddrRangeList getAddrRanges() const
-    { return AddrRangeList(); }
+    virtual AddrRangeList
+    getAddrRanges() const
+    {
+        return AddrRangeList();
+    }
 
   public:
     SMMUATSDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc);
+
     virtual ~SMMUATSDevicePort() {}
 };
 

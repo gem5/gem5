@@ -46,8 +46,7 @@ namespace gem5
 namespace ruby
 {
 
-SimpleExtLink::SimpleExtLink(const Params &p)
-    : BasicExtLink(p)
+SimpleExtLink::SimpleExtLink(const Params &p) : BasicExtLink(p)
 {
     // For the simple links, the bandwidth factor translates to the
     // bandwidth multiplier.  The multipiler, in combination with the
@@ -57,7 +56,7 @@ SimpleExtLink::SimpleExtLink(const Params &p)
 }
 
 void
-SimpleExtLink::print(std::ostream& out) const
+SimpleExtLink::print(std::ostream &out) const
 {
     out << name();
 }
@@ -66,12 +65,10 @@ SimpleIntLink::SimpleIntLink(const Params &p)
     : BasicIntLink(p),
       m_bw_multiplier(p.bandwidth_factor),
       m_buffers(p.buffers)
-{
-
-}
+{}
 
 void
-SimpleIntLink::print(std::ostream& out) const
+SimpleIntLink::print(std::ostream &out) const
 {
     out << name();
 }

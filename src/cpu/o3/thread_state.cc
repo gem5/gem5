@@ -48,9 +48,9 @@ namespace gem5
 namespace o3
 {
 
-ThreadState::ThreadState(CPU *_cpu, int _thread_num, Process *_process) :
-    gem5::ThreadState(_cpu, _thread_num, _process),
-    comInstEventQueue("instruction-based event queue")
+ThreadState::ThreadState(CPU *_cpu, int _thread_num, Process *_process)
+    : gem5::ThreadState(_cpu, _thread_num, _process),
+      comInstEventQueue("instruction-based event queue")
 {}
 
 void

@@ -51,7 +51,7 @@ namespace gem5
 {
 
 AMDGPUInterruptHandler::AMDGPUInterruptHandler(
-                                       const AMDGPUInterruptHandlerParams &p)
+    const AMDGPUInterruptHandlerParams &p)
     : DmaDevice(p)
 {
     memset(&regs, 0, sizeof(AMDGPUIHRegs));
@@ -73,10 +73,10 @@ AMDGPUInterruptHandler::intrPost()
 
 void
 AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
-                                                uint32_t ring_id,
-                                                uint32_t client_id,
-                                                uint32_t source_id,
-                                                unsigned node_id)
+                                               uint32_t ring_id,
+                                               uint32_t client_id,
+                                               uint32_t source_id,
+                                               unsigned node_id)
 {
     assert(client_id == SOC15_IH_CLIENTID_RLC ||
            client_id == SOC15_IH_CLIENTID_SDMA0 ||
@@ -156,7 +156,7 @@ AMDGPUInterruptHandler::submitInterruptCookie()
     Addr paddr = regs.baseAddr + regs.IH_Wptr;
 
     DPRINTF(AMDGPUDevice, "InterruptHandler rptr: 0x%x wptr: 0x%x\n",
-                          regs.IH_Rptr, regs.IH_Wptr);
+            regs.IH_Rptr, regs.IH_Wptr);
     dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 1);
     dmaWrite(paddr, cookieSize, dmaEvent, dataPtr);
 
@@ -167,35 +167,35 @@ void
 AMDGPUInterruptHandler::writeMMIO(PacketPtr pkt, Addr mmio_offset)
 {
     switch (mmio_offset) {
-      case mmIH_RB_CNTL:
+    case mmIH_RB_CNTL:
         setCntl(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_BASE:
+    case mmIH_RB_BASE:
         setBase(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_BASE_HI:
+    case mmIH_RB_BASE_HI:
         setBaseHi(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_RPTR:
+    case mmIH_RB_RPTR:
         setRptr(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_WPTR:
+    case mmIH_RB_WPTR:
         setWptr(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_WPTR_ADDR_LO:
+    case mmIH_RB_WPTR_ADDR_LO:
         setWptrAddrLo(pkt->getLE<uint32_t>());
         break;
-      case mmIH_RB_WPTR_ADDR_HI:
+    case mmIH_RB_WPTR_ADDR_HI:
         setWptrAddrHi(pkt->getLE<uint32_t>());
         break;
-      case mmIH_DOORBELL_RPTR:
+    case mmIH_DOORBELL_RPTR:
         setDoorbellOffset(pkt->getLE<uint32_t>());
         if (bits(pkt->getLE<uint32_t>(), 28, 28)) {
             gpuDevice->setDoorbellType(getDoorbellOffset() << 2,
                                        InterruptHandler);
         }
         break;
-      default:
+    default:
         DPRINTF(AMDGPUDevice, "IH Unknown MMIO %#x\n", mmio_offset);
         break;
     }

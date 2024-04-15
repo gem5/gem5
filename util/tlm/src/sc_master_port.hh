@@ -76,41 +76,39 @@ class SCMasterPort : public gem5::ExternalMaster::ExternalPort
   private:
     struct TlmSenderState : public gem5::Packet::SenderState
     {
-        tlm::tlm_generic_payload& trans;
-        TlmSenderState(tlm::tlm_generic_payload& trans)
-          : trans(trans)
-        {
-        }
+        tlm::tlm_generic_payload &trans;
+
+        TlmSenderState(tlm::tlm_generic_payload &trans) : trans(trans) {}
     };
 
     tlm_utils::peq_with_cb_and_phase<SCMasterPort> peq;
 
     bool waitForRetry;
-    tlm::tlm_generic_payload* pendingRequest;
+    tlm::tlm_generic_payload *pendingRequest;
     gem5::PacketPtr pendingPacket;
 
     bool needToSendRetry;
 
     bool responseInProgress;
 
-    Gem5MasterTransactor* transactor;
+    Gem5MasterTransactor *transactor;
 
-    gem5::System* system;
+    gem5::System *system;
 
-    Gem5SimControl& simControl;
+    Gem5SimControl &simControl;
 
   protected:
     // payload event call back
-    void peq_cb(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase);
+    void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
     // The TLM target interface
-    tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload& trans,
-                                       tlm::tlm_phase& phase,
-                                       sc_core::sc_time& t);
-    void b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& t);
-    unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
-    bool get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
-                            tlm::tlm_dmi& dmi_data);
+    tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &trans,
+                                       tlm::tlm_phase &phase,
+                                       sc_core::sc_time &t);
+    void b_transport(tlm::tlm_generic_payload &trans, sc_core::sc_time &t);
+    unsigned int transport_dbg(tlm::tlm_generic_payload &trans);
+    bool get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
+                            tlm::tlm_dmi &dmi_data);
 
     // Gem5 SCMasterPort interface
     bool recvTimingResp(gem5::PacketPtr pkt);
@@ -118,42 +116,40 @@ class SCMasterPort : public gem5::ExternalMaster::ExternalPort
     void recvRangeChange();
 
   public:
-    SCMasterPort(const std::string& name_,
-                 const std::string& systemc_name,
-                 gem5::ExternalMaster& owner_,
-                 Gem5SimControl& simControl);
+    SCMasterPort(const std::string &name_, const std::string &systemc_name,
+                 gem5::ExternalMaster &owner_, Gem5SimControl &simControl);
 
-    void bindToTransactor(Gem5MasterTransactor* transactor);
+    void bindToTransactor(Gem5MasterTransactor *transactor);
 
     friend PayloadEvent<SCMasterPort>;
 
   private:
-    void sendEndReq(tlm::tlm_generic_payload& trans);
-    void sendBeginResp(tlm::tlm_generic_payload& trans,
-                       sc_core::sc_time& delay);
+    void sendEndReq(tlm::tlm_generic_payload &trans);
+    void sendBeginResp(tlm::tlm_generic_payload &trans,
+                       sc_core::sc_time &delay);
 
-    void handleBeginReq(tlm::tlm_generic_payload& trans);
-    void handleEndResp(tlm::tlm_generic_payload& trans);
+    void handleBeginReq(tlm::tlm_generic_payload &trans);
+    void handleEndResp(tlm::tlm_generic_payload &trans);
 
-    gem5::PacketPtr generatePacket(tlm::tlm_generic_payload& trans);
+    gem5::PacketPtr generatePacket(tlm::tlm_generic_payload &trans);
     void destroyPacket(gem5::PacketPtr pkt);
 
-    void checkTransaction(tlm::tlm_generic_payload& trans);
+    void checkTransaction(tlm::tlm_generic_payload &trans);
 };
 
 class SCMasterPortHandler : public gem5::ExternalMaster::Handler
 {
   private:
-    Gem5SimControl& control;
+    Gem5SimControl &control;
 
   public:
-    SCMasterPortHandler(Gem5SimControl& control) : control(control) {}
+    SCMasterPortHandler(Gem5SimControl &control) : control(control) {}
 
     gem5::ExternalMaster::ExternalPort *
-        getExternalPort(const std::string &name, gem5::ExternalMaster &owner,
-                        const std::string &port_data);
+    getExternalPort(const std::string &name, gem5::ExternalMaster &owner,
+                    const std::string &port_data);
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif

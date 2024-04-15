@@ -53,15 +53,12 @@ VirtIORng::VirtIORng(const Params &params)
     registerQueue(qReq);
 }
 
-VirtIORng::~VirtIORng()
-{
-}
+VirtIORng::~VirtIORng() {}
 
 VirtIORng::RngQueue::RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-    VirtIORng &_parent)
+                              VirtIORng &_parent)
     : VirtQueue(proxy, bo, size), parent(_parent)
-{
-}
+{}
 
 void
 VirtIORng::readConfig(PacketPtr pkt, Addr cfgOffset)

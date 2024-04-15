@@ -83,10 +83,7 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams &p)
     cfg.ver_min = p.ver_min;
     cfg.ver_status = p.ver_status;
 
-    panicOnErr(
-        nomali_create(&nomali, &cfg),
-        "Failed to instantiate NoMali");
-
+    panicOnErr(nomali_create(&nomali, &cfg), "Failed to instantiate NoMali");
 
     /* Setup an interrupt callback */
     nomali_callback_t cbk_int;
@@ -102,16 +99,11 @@ NoMaliGpu::NoMaliGpu(const NoMaliGpuParams &p)
     cbk_rst.func.reset = NoMaliGpu::_reset;
     setCallback(cbk_rst);
 
-    panicOnErr(
-        nomali_get_info(nomali, &nomaliInfo),
-        "Failed to get NoMali information struct");
+    panicOnErr(nomali_get_info(nomali, &nomaliInfo),
+               "Failed to get NoMali information struct");
 }
 
-NoMaliGpu::~NoMaliGpu()
-{
-    nomali_destroy(nomali);
-}
-
+NoMaliGpu::~NoMaliGpu() { nomali_destroy(nomali); }
 
 void
 NoMaliGpu::init()
@@ -199,9 +191,7 @@ NoMaliGpu::reset()
 {
     DPRINTF(NoMali, "reset()\n");
 
-    panicOnErr(
-        nomali_reset(nomali),
-        "Failed to reset GPU");
+    panicOnErr(nomali_reset(nomali), "Failed to reset GPU");
 }
 
 uint32_t
@@ -209,26 +199,21 @@ NoMaliGpu::readReg(nomali_addr_t reg)
 {
     uint32_t value;
 
-    panicOnErr(
-        nomali_reg_read(nomali, &value, reg),
-        "GPU register read failed");
+    panicOnErr(nomali_reg_read(nomali, &value, reg),
+               "GPU register read failed");
 
-    DPRINTF(NoMali, "readReg(0x%x): 0x%x\n",
-            reg, value);
+    DPRINTF(NoMali, "readReg(0x%x): 0x%x\n", reg, value);
 
     return value;
 }
 
-
 void
 NoMaliGpu::writeReg(nomali_addr_t reg, uint32_t value)
 {
-    DPRINTF(NoMali, "writeReg(0x%x, 0x%x)\n",
-            reg, value);
+    DPRINTF(NoMali, "writeReg(0x%x, 0x%x)\n", reg, value);
 
-    panicOnErr(
-        nomali_reg_write(nomali, reg, value),
-        "GPU register write failed");
+    panicOnErr(nomali_reg_write(nomali, reg, value),
+               "GPU register write failed");
 }
 
 uint32_t
@@ -236,29 +221,25 @@ NoMaliGpu::readRegRaw(nomali_addr_t reg) const
 {
     uint32_t value;
 
-    panicOnErr(
-        nomali_reg_read_raw(nomali, &value, reg),
-        "GPU raw register read failed");
+    panicOnErr(nomali_reg_read_raw(nomali, &value, reg),
+               "GPU raw register read failed");
 
     return value;
 }
 
-
 void
 NoMaliGpu::writeRegRaw(nomali_addr_t reg, uint32_t value)
 {
-    panicOnErr(
-        nomali_reg_write_raw(nomali, reg, value),
-        "GPU raw register write failed");
+    panicOnErr(nomali_reg_write_raw(nomali, reg, value),
+               "GPU raw register write failed");
 }
 
 bool
 NoMaliGpu::intState(nomali_int_t intno)
 {
     int state = 0;
-    panicOnErr(
-        nomali_int_state(nomali, &state, intno),
-        "Failed to get interrupt state");
+    panicOnErr(nomali_int_state(nomali, &state, intno),
+               "Failed to get interrupt state");
 
     return !!state;
 }
@@ -269,7 +250,6 @@ NoMaliGpu::gpuPanic(nomali_error_t err, const char *msg)
     panic("%s: %s\n", msg, nomali_errstr(err));
 }
 
-
 void
 NoMaliGpu::onInterrupt(nomali_int_t intno, bool set)
 {
@@ -277,8 +257,7 @@ NoMaliGpu::onInterrupt(nomali_int_t intno, bool set)
     if (it_int == interruptMap.end())
         panic("Unhandled interrupt from NoMali: %i\n", intno);
 
-    DPRINTF(NoMali, "Interrupt %i->%i: %i\n",
-            intno, it_int->second, set);
+    DPRINTF(NoMali, "Interrupt %i->%i: %i\n", intno, it_int->second, set);
 
     assert(platform);
     assert(platform->gic);
@@ -298,17 +277,15 @@ NoMaliGpu::onReset()
 void
 NoMaliGpu::setCallback(const nomali_callback_t &callback)
 {
-    DPRINTF(NoMali, "Registering callback %i\n",
-            callback.type);
+    DPRINTF(NoMali, "Registering callback %i\n", callback.type);
 
-    panicOnErr(
-        nomali_set_callback(nomali, &callback),
-        "Failed to register callback");
+    panicOnErr(nomali_set_callback(nomali, &callback),
+               "Failed to register callback");
 }
 
 void
-NoMaliGpu::_interrupt(nomali_handle_t h, void *usr,
-                      nomali_int_t intno, int set)
+NoMaliGpu::_interrupt(nomali_handle_t h, void *usr, nomali_int_t intno,
+                      int set)
 {
     NoMaliGpu *_this(static_cast<NoMaliGpu *>(usr));
 
@@ -323,31 +300,32 @@ NoMaliGpu::_reset(nomali_handle_t h, void *usr)
     _this->onReset();
 }
 
-
 CustomNoMaliGpu::CustomNoMaliGpu(const CustomNoMaliGpuParams &p)
     : NoMaliGpu(p),
       idRegs{
-        { GPU_CONTROL_REG(GPU_ID), p.gpu_id },
-        { GPU_CONTROL_REG(L2_FEATURES), p.l2_features },
-        { GPU_CONTROL_REG(TILER_FEATURES), p.tiler_features },
-        { GPU_CONTROL_REG(MEM_FEATURES), p.mem_features },
-        { GPU_CONTROL_REG(MMU_FEATURES), p.mmu_features },
-        { GPU_CONTROL_REG(AS_PRESENT), p.as_present },
-        { GPU_CONTROL_REG(JS_PRESENT), p.js_present },
+          { GPU_CONTROL_REG(GPU_ID), p.gpu_id },
+          { GPU_CONTROL_REG(L2_FEATURES), p.l2_features },
+          { GPU_CONTROL_REG(TILER_FEATURES), p.tiler_features },
+          { GPU_CONTROL_REG(MEM_FEATURES), p.mem_features },
+          { GPU_CONTROL_REG(MMU_FEATURES), p.mmu_features },
+          { GPU_CONTROL_REG(AS_PRESENT), p.as_present },
+          { GPU_CONTROL_REG(JS_PRESENT), p.js_present },
 
-        { GPU_CONTROL_REG(THREAD_MAX_THREADS), p.thread_max_threads },
-        { GPU_CONTROL_REG(THREAD_MAX_WORKGROUP_SIZE),
-          p.thread_max_workgroup_size },
-        { GPU_CONTROL_REG(THREAD_MAX_BARRIER_SIZE),
-          p.thread_max_barrier_size },
-        { GPU_CONTROL_REG(THREAD_FEATURES), p.thread_features },
+          { GPU_CONTROL_REG(THREAD_MAX_THREADS), p.thread_max_threads },
+          { GPU_CONTROL_REG(THREAD_MAX_WORKGROUP_SIZE),
+            p.thread_max_workgroup_size },
+          { GPU_CONTROL_REG(THREAD_MAX_BARRIER_SIZE),
+            p.thread_max_barrier_size },
+          { GPU_CONTROL_REG(THREAD_FEATURES), p.thread_features },
 
-        { GPU_CONTROL_REG(SHADER_PRESENT_LO), bits(p.shader_present, 31, 0) },
-        { GPU_CONTROL_REG(SHADER_PRESENT_HI), bits(p.shader_present, 63, 32) },
-        { GPU_CONTROL_REG(TILER_PRESENT_LO), bits(p.tiler_present, 31, 0) },
-        { GPU_CONTROL_REG(TILER_PRESENT_HI), bits(p.tiler_present, 63, 32) },
-        { GPU_CONTROL_REG(L2_PRESENT_LO), bits(p.l2_present, 31, 0) },
-        { GPU_CONTROL_REG(L2_PRESENT_HI), bits(p.l2_present, 63, 32) },
+          { GPU_CONTROL_REG(SHADER_PRESENT_LO),
+            bits(p.shader_present, 31, 0) },
+          { GPU_CONTROL_REG(SHADER_PRESENT_HI),
+            bits(p.shader_present, 63, 32) },
+          { GPU_CONTROL_REG(TILER_PRESENT_LO), bits(p.tiler_present, 31, 0) },
+          { GPU_CONTROL_REG(TILER_PRESENT_HI), bits(p.tiler_present, 63, 32) },
+          { GPU_CONTROL_REG(L2_PRESENT_LO), bits(p.l2_present, 31, 0) },
+          { GPU_CONTROL_REG(L2_PRESENT_HI), bits(p.l2_present, 63, 32) },
       }
 {
     fatal_if(p.texture_features.size() > 3,
@@ -365,9 +343,7 @@ CustomNoMaliGpu::CustomNoMaliGpu(const CustomNoMaliGpuParams &p)
         idRegs[JS_FEATURES_REG(i)] = p.js_features[i];
 }
 
-CustomNoMaliGpu::~CustomNoMaliGpu()
-{
-}
+CustomNoMaliGpu::~CustomNoMaliGpu() {}
 
 void
 CustomNoMaliGpu::onReset()

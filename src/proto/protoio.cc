@@ -43,10 +43,12 @@
 
 using namespace google::protobuf;
 
-ProtoOutputStream::ProtoOutputStream(const std::string& filename) :
-    fileStream(filename.c_str(),
-            std::ios::out | std::ios::binary | std::ios::trunc),
-    wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
+ProtoOutputStream::ProtoOutputStream(const std::string &filename)
+    : fileStream(filename.c_str(),
+                 std::ios::out | std::ios::binary | std::ios::trunc),
+      wrappedFileStream(NULL),
+      gzipStream(NULL),
+      zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for writing\n", filename);
@@ -81,7 +83,7 @@ ProtoOutputStream::~ProtoOutputStream()
 }
 
 void
-ProtoOutputStream::write(const Message& msg)
+ProtoOutputStream::write(const Message &msg)
 {
     // Due to the byte limit of the coded stream we create it for
     // every single mesage (based on forum discussions around the size
@@ -89,28 +91,31 @@ ProtoOutputStream::write(const Message& msg)
     io::CodedOutputStream codedStream(zeroCopyStream);
 
     // Write the size of the message to the stream
-#   if GOOGLE_PROTOBUF_VERSION < 3001000
-        auto msg_size = msg.ByteSize();
-#   else
-        auto msg_size = msg.ByteSizeLong();
-#   endif
+#if GOOGLE_PROTOBUF_VERSION < 3001000
+    auto msg_size = msg.ByteSize();
+#else
+    auto msg_size = msg.ByteSizeLong();
+#endif
     codedStream.WriteVarint32(msg_size);
 
     // Write the message itself to the stream
     msg.SerializeWithCachedSizes(&codedStream);
 }
 
-ProtoInputStream::ProtoInputStream(const std::string& filename) :
-    fileStream(filename.c_str(), std::ios::in | std::ios::binary),
-    fileName(filename), useGzip(false),
-    wrappedFileStream(NULL), gzipStream(NULL), zeroCopyStream(NULL)
+ProtoInputStream::ProtoInputStream(const std::string &filename)
+    : fileStream(filename.c_str(), std::ios::in | std::ios::binary),
+      fileName(filename),
+      useGzip(false),
+      wrappedFileStream(NULL),
+      gzipStream(NULL),
+      zeroCopyStream(NULL)
 {
     if (!fileStream.good())
         panic("Could not open %s for reading\n", filename);
 
     // check the magic number to see if this is a gzip stream
     unsigned char bytes[2];
-    fileStream.read((char*) bytes, 2);
+    fileStream.read((char *)bytes, 2);
     useGzip = fileStream.good() && bytes[0] == 0x1f && bytes[1] == 0x8b;
 
     // seek to the start of the input file and clear any flags
@@ -142,8 +147,7 @@ ProtoInputStream::createStreams()
     io::CodedInputStream codedStream(zeroCopyStream);
     if (!codedStream.ReadLittleEndian32(&magic_check) ||
         magic_check != magicNumber)
-        panic("Input file %s is not a valid gem5 proto format.\n",
-              fileName);
+        panic("Input file %s is not a valid gem5 proto format.\n", fileName);
 }
 
 void
@@ -160,13 +164,11 @@ ProtoInputStream::destroyStreams()
     zeroCopyStream = NULL;
 }
 
-
 ProtoInputStream::~ProtoInputStream()
 {
     destroyStreams();
     fileStream.close();
 }
-
 
 void
 ProtoInputStream::reset()
@@ -179,7 +181,7 @@ ProtoInputStream::reset()
 }
 
 bool
-ProtoInputStream::read(Message& msg)
+ProtoInputStream::read(Message &msg)
 {
     // Read a message from the stream by getting the size, using it as
     // a limit when parsing the message, then popping the limit again
@@ -197,8 +199,7 @@ ProtoInputStream::read(Message& msg)
             // popped again
             return true;
         } else {
-            panic("Unable to read message from coded stream %s\n",
-                  fileName);
+            panic("Unable to read message from coded stream %s\n", fileName);
         }
     }
 

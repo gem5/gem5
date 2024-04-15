@@ -43,9 +43,11 @@ class OperandInfo
 {
   public:
     OperandInfo() = delete;
+
     OperandInfo(int opSelectorVal, int size, bool src, bool scalar_reg,
                 bool vector_reg, bool imm)
-        : _opSelectorVal(opSelectorVal), _size(size),
+        : _opSelectorVal(opSelectorVal),
+          _size(size),
           _numDWords(size <= 4 ? 1 : size / 4)
     {
         if (src)
@@ -70,32 +72,90 @@ class OperandInfo
             flags.set(POS_CONST);
     }
 
-    int numRegisters() const { return _numDWords / TheGpuISA::RegSizeDWords; }
-    int sizeInDWords() const { return _numDWords; }
+    int
+    numRegisters() const
+    {
+        return _numDWords / TheGpuISA::RegSizeDWords;
+    }
 
-    int size() const { return _size; }
+    int
+    sizeInDWords() const
+    {
+        return _numDWords;
+    }
+
+    int
+    size() const
+    {
+        return _size;
+    }
+
     // Certain opIdx's get changed in calls to opSelectorToRegIdx
     // This avoids that by returning the exact value
-    int rawRegisterIndex() const { return _opSelectorVal; }
+    int
+    rawRegisterIndex() const
+    {
+        return _opSelectorVal;
+    }
 
     int
     registerIndex(int numScalarRegs) const
     {
-      // Some regs (i.e. VSRC, VDST) are explicitly declared as vectors
-      // as opposed to checking if it's a vector through a function call, so
-      // they don't have an offset applied and can be returned immediately
-      if (isVectorReg() && _opSelectorVal < TheGpuISA::REG_VGPR_MIN)
-        return _opSelectorVal;
-      return TheGpuISA::opSelectorToRegIdx(_opSelectorVal, numScalarRegs);
+        // Some regs (i.e. VSRC, VDST) are explicitly declared as vectors
+        // as opposed to checking if it's a vector through a function call, so
+        // they don't have an offset applied and can be returned immediately
+        if (isVectorReg() && _opSelectorVal < TheGpuISA::REG_VGPR_MIN)
+            return _opSelectorVal;
+        return TheGpuISA::opSelectorToRegIdx(_opSelectorVal, numScalarRegs);
     }
-    bool isSrc() const { return flags.isSet(SRC); }
-    bool isDst() const { return !flags.isSet(SRC); }
-    bool isImm() const { return flags.isSet(IMMEDIATE); }
-    bool isScalarReg() const { return flags.isSet(SCALAR_REG); }
-    bool isVectorReg() const { return flags.isSet(VECTOR_REG); }
-    bool isVcc() const { return flags.isSet(VCC); }
-    bool isExec() const { return flags.isSet(EXEC); }
-    bool isFlatScratch() const { return flags.isSet(FLAT); }
+
+    bool
+    isSrc() const
+    {
+        return flags.isSet(SRC);
+    }
+
+    bool
+    isDst() const
+    {
+        return !flags.isSet(SRC);
+    }
+
+    bool
+    isImm() const
+    {
+        return flags.isSet(IMMEDIATE);
+    }
+
+    bool
+    isScalarReg() const
+    {
+        return flags.isSet(SCALAR_REG);
+    }
+
+    bool
+    isVectorReg() const
+    {
+        return flags.isSet(VECTOR_REG);
+    }
+
+    bool
+    isVcc() const
+    {
+        return flags.isSet(VCC);
+    }
+
+    bool
+    isExec() const
+    {
+        return flags.isSet(EXEC);
+    }
+
+    bool
+    isFlatScratch() const
+    {
+        return flags.isSet(FLAT);
+    }
 
     void
     setVirtToPhysMapping(std::vector<int> v, std::vector<int> p)
@@ -111,22 +171,31 @@ class OperandInfo
      * We typically only need the first virtual register for the operand
      * regardless of its size.
      */
-    int virtIdx(int reg_num=0) const { return _virtIndices.at(reg_num); }
-    int physIdx(int reg_num=0) const { return _physIndices.at(reg_num); }
+    int
+    virtIdx(int reg_num = 0) const
+    {
+        return _virtIndices.at(reg_num);
+    }
 
-    const std::vector<int>&
+    int
+    physIdx(int reg_num = 0) const
+    {
+        return _physIndices.at(reg_num);
+    }
+
+    const std::vector<int> &
     virtIndices() const
     {
         return _virtIndices;
     }
 
-    const std::vector<int>&
+    const std::vector<int> &
     physIndices() const
     {
         return _physIndices;
     }
 
-    std::vector<int>&
+    std::vector<int> &
     bankReadCounts() const
     {
         return _bankReadCounts;
@@ -136,37 +205,37 @@ class OperandInfo
     typedef gem5::Flags<FlagsType> Flags;
 
   private:
-
-    enum : FlagsType {
+    enum : FlagsType
+    {
         // If the operand is a src or not
-        SRC                 = 0x00000001,
+        SRC = 0x00000001,
 
         // If the operand is a scalar or not
-        SCALAR_REG          = 0x00000002,
+        SCALAR_REG = 0x00000002,
 
         // If the operand is a vector or not
-        VECTOR_REG          = 0x00000004,
+        VECTOR_REG = 0x00000004,
 
         // If the operand is an immediate or not
-        IMMEDIATE           = 0x00000008,
+        IMMEDIATE = 0x00000008,
 
         // If the operand is a VCC register
-        VCC                 = 0x00000010,
+        VCC = 0x00000010,
 
         // If the operand is an EXEC register
-        EXEC                = 0x00000020,
+        EXEC = 0x00000020,
 
         // If the operand is a FLAT/SCRATCH register
-        FLAT                = 0x00000040,
+        FLAT = 0x00000040,
 
         // If the operand is a literal
-        LITERAL             = 0x00000080,
+        LITERAL = 0x00000080,
 
         // If the operand is a constant value
-        CONSTANT            = 0x00000100,
+        CONSTANT = 0x00000100,
 
         // If the constant is positive or negative
-        POS_CONST           = 0x00000200
+        POS_CONST = 0x00000200
     };
 
     Flags flags;

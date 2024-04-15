@@ -100,7 +100,10 @@ class Pipeline : public Ticked
         /* A stage representing wakeup of the whole processor */
         CPUStageId = 0,
         /* Real pipeline stages */
-        Fetch1StageId, Fetch2StageId, DecodeStageId, ExecuteStageId,
+        Fetch1StageId,
+        Fetch2StageId,
+        DecodeStageId,
+        ExecuteStageId,
         Num_StageId /* Stage count */
     };
 
@@ -138,7 +141,11 @@ class Pipeline : public Ticked
     MinorCPU::MinorCPUPort &getDataPort();
 
     /** To give the activity recorder to the CPU */
-    MinorActivityRecorder *getActivityRecorder() { return &activityRecorder; }
+    MinorActivityRecorder *
+    getActivityRecorder()
+    {
+        return &activityRecorder;
+    }
 };
 
 } // namespace minor

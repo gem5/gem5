@@ -56,9 +56,8 @@ static inline unsigned int
 number_of_ones(int32_t val)
 {
     uint32_t ones = 0;
-    for (int i = 0; i < 32; i++ )
-    {
-        if ( val & (1<<i) )
+    for (int i = 0; i < 32; i++) {
+        if (val & (1 << i))
             ones++;
     }
     return ones;
@@ -71,9 +70,8 @@ class MicroOp : public PredOp
 {
   protected:
     MicroOp(const char *mnem, ExtMachInst machInst, OpClass __opClass)
-            : PredOp(mnem, machInst, __opClass)
-    {
-    }
+        : PredOp(mnem, machInst, __opClass)
+    {}
 
   public:
     void
@@ -108,7 +106,7 @@ class MicroOpX : public ArmStaticInst
 {
   protected:
     MicroOpX(const char *mnem, ExtMachInst machInst, OpClass __opClass)
-            : ArmStaticInst(mnem, machInst, __opClass)
+        : ArmStaticInst(mnem, machInst, __opClass)
     {}
 
   public:
@@ -152,10 +150,12 @@ class MicroNeonMemOp : public MicroOp
 
     MicroNeonMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                    RegIndex _dest, RegIndex _ura, uint32_t _imm)
-            : MicroOp(mnem, machInst, __opClass),
-              dest(_dest), ura(_ura), imm(_imm), memAccessFlags()
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          ura(_ura),
+          imm(_imm),
+          memAccessFlags()
+    {}
 };
 
 /**
@@ -169,10 +169,11 @@ class MicroNeonMixOp : public MicroOp
 
     MicroNeonMixOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                    RegIndex _dest, RegIndex _op1, uint32_t _step)
-            : MicroOp(mnem, machInst, __opClass),
-              dest(_dest), op1(_op1), step(_step)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          step(_step)
+    {}
 };
 
 class MicroNeonMixLaneOp : public MicroNeonMixOp
@@ -183,10 +184,9 @@ class MicroNeonMixLaneOp : public MicroNeonMixOp
     MicroNeonMixLaneOp(const char *mnem, ExtMachInst machInst,
                        OpClass __opClass, RegIndex _dest, RegIndex _op1,
                        uint32_t _step, unsigned _lane)
-            : MicroNeonMixOp(mnem, machInst, __opClass, _dest, _op1, _step),
-              lane(_lane)
-    {
-    }
+        : MicroNeonMixOp(mnem, machInst, __opClass, _dest, _op1, _step),
+          lane(_lane)
+    {}
 };
 
 /**
@@ -202,11 +202,15 @@ class MicroNeonMixOp64 : public MicroOp
                      RegIndex _dest, RegIndex _op1, uint8_t _eSize,
                      uint8_t _dataSize, uint8_t _numStructElems,
                      uint8_t _numRegs, uint8_t _step)
-        : MicroOp(mnem, machInst, __opClass), dest(_dest), op1(_op1),
-          eSize(_eSize), dataSize(_dataSize), numStructElems(_numStructElems),
-          numRegs(_numRegs), step(_step)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          eSize(_eSize),
+          dataSize(_dataSize),
+          numStructElems(_numStructElems),
+          numRegs(_numRegs),
+          step(_step)
+    {}
 };
 
 class MicroNeonMixLaneOp64 : public MicroOp
@@ -221,11 +225,16 @@ class MicroNeonMixLaneOp64 : public MicroOp
                          uint8_t _eSize, uint8_t _dataSize,
                          uint8_t _numStructElems, uint8_t _lane, uint8_t _step,
                          bool _replicate = false)
-        : MicroOp(mnem, machInst, __opClass), dest(_dest), op1(_op1),
-          eSize(_eSize), dataSize(_dataSize), numStructElems(_numStructElems),
-          lane(_lane), step(_step), replicate(_replicate)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          eSize(_eSize),
+          dataSize(_dataSize),
+          numStructElems(_numStructElems),
+          lane(_lane),
+          step(_step),
+          replicate(_replicate)
+    {}
 };
 
 /**
@@ -286,18 +295,17 @@ class VstSingleOp64 : public PredMacroOp
  */
 class MicroSetPCCPSR : public MicroOp
 {
-    protected:
+  protected:
     RegIndex ura, urb, urc;
 
     MicroSetPCCPSR(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                    RegIndex _ura, RegIndex _urb, RegIndex _urc)
-        : MicroOp(mnem, machInst, __opClass),
-          ura(_ura), urb(_urb), urc(_urc)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass), ura(_ura), urb(_urb), urc(_urc)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -309,14 +317,13 @@ class MicroIntMov : public MicroOp
     RegIndex ura, urb;
 
     MicroIntMov(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb)
-            : MicroOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb)
-    {
-    }
+                RegIndex _ura, RegIndex _urb)
+        : MicroOp(mnem, machInst, __opClass), ura(_ura), urb(_urb)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -330,13 +337,12 @@ class MicroIntImmOp : public MicroOp
 
     MicroIntImmOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                   RegIndex _ura, RegIndex _urb, int32_t _imm)
-            : MicroOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), imm(_imm)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass), ura(_ura), urb(_urb), imm(_imm)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class MicroIntImmXOp : public MicroOpX
@@ -347,13 +353,12 @@ class MicroIntImmXOp : public MicroOpX
 
     MicroIntImmXOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                    RegIndex _ura, RegIndex _urb, int64_t _imm)
-            : MicroOpX(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), imm(_imm)
-    {
-    }
+        : MicroOpX(mnem, machInst, __opClass), ura(_ura), urb(_urb), imm(_imm)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -366,13 +371,12 @@ class MicroIntOp : public MicroOp
 
     MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, RegIndex _urc)
-            : MicroOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), urc(_urc)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass), ura(_ura), urb(_urb), urc(_urc)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class MicroIntRegXOp : public MicroOp
@@ -385,14 +389,17 @@ class MicroIntRegXOp : public MicroOp
     MicroIntRegXOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                    RegIndex _ura, RegIndex _urb, RegIndex _urc,
                    ArmExtendType _type, uint32_t _shiftAmt)
-            : MicroOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), urc(_urc),
-              type(_type), shiftAmt(_shiftAmt)
-    {
-    }
+        : MicroOp(mnem, machInst, __opClass),
+          ura(_ura),
+          urb(_urb),
+          urc(_urc),
+          type(_type),
+          shiftAmt(_shiftAmt)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -406,13 +413,15 @@ class MicroIntRegOp : public MicroOp
     ArmShiftType shiftType;
 
     MicroIntRegOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb, RegIndex _urc,
-               int32_t _shiftAmt, ArmShiftType _shiftType)
-            : MicroOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), urc(_urc),
-              shiftAmt(_shiftAmt), shiftType(_shiftType)
-    {
-    }
+                  RegIndex _ura, RegIndex _urb, RegIndex _urc,
+                  int32_t _shiftAmt, ArmShiftType _shiftType)
+        : MicroOp(mnem, machInst, __opClass),
+          ura(_ura),
+          urb(_urb),
+          urc(_urc),
+          shiftAmt(_shiftAmt),
+          shiftType(_shiftType)
+    {}
 };
 
 /**
@@ -426,13 +435,14 @@ class MicroMemOp : public MicroIntImmOp
 
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
-            : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              up(_up), memAccessFlags(MMU::AlignWord)
-    {
-    }
+        : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
+          up(_up),
+          memAccessFlags(MMU::AlignWord)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class MicroMemPairOp : public MicroOp
@@ -444,16 +454,20 @@ class MicroMemPairOp : public MicroOp
     unsigned memAccessFlags;
 
     MicroMemPairOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-            RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
-            bool _up, uint8_t _imm)
+                   RegIndex _dreg1, RegIndex _dreg2, RegIndex _base, bool _up,
+                   uint8_t _imm)
         : MicroOp(mnem, machInst, __opClass),
-        dest(_dreg1), dest2(_dreg2), urb(_base), up(_up), imm(_imm),
-        memAccessFlags(MMU::AlignWord)
-    {
-    }
+          dest(_dreg1),
+          dest2(_dreg2),
+          urb(_base),
+          up(_up),
+          imm(_imm),
+          memAccessFlags(MMU::AlignWord)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -463,8 +477,8 @@ class MacroMemOp : public PredMacroOp
 {
   protected:
     MacroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex rn, bool index, bool up, bool user,
-               bool writeback, bool load, uint32_t reglist);
+               RegIndex rn, bool index, bool up, bool user, bool writeback,
+               bool load, uint32_t reglist);
 };
 
 /**
@@ -512,8 +526,8 @@ class BigFpMemRegOp : public PredMacroOp
 {
   protected:
     BigFpMemRegOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-                  bool load, RegIndex dest, RegIndex base,
-                  RegIndex offset, ArmExtendType type, int64_t imm);
+                  bool load, RegIndex dest, RegIndex base, RegIndex offset,
+                  ArmExtendType type, int64_t imm);
 };
 
 class BigFpMemLitOp : public PredMacroOp
@@ -539,8 +553,8 @@ class VldSingleOp : public PredMacroOp
   protected:
     VldSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 bool all, unsigned elems, RegIndex rn, RegIndex vd,
-                unsigned regs, unsigned inc, uint32_t size,
-                uint32_t align, RegIndex rm, unsigned lane);
+                unsigned regs, unsigned inc, uint32_t size, uint32_t align,
+                RegIndex rm, unsigned lane);
 };
 
 /**
@@ -559,8 +573,8 @@ class VstSingleOp : public PredMacroOp
   protected:
     VstSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 bool all, unsigned elems, RegIndex rn, RegIndex vd,
-                unsigned regs, unsigned inc, uint32_t size,
-                uint32_t align, RegIndex rm, unsigned lane);
+                unsigned regs, unsigned inc, uint32_t size, uint32_t align,
+                RegIndex rm, unsigned lane);
 };
 
 /**

@@ -50,8 +50,7 @@ class AMDGPUMemoryManager : public ClockedObject
       public:
         GPUMemPort(const std::string &_name, AMDGPUMemoryManager &_gpuMemMgr)
             : RequestPort(_name), gpu_mem(_gpuMemMgr)
-        {
-        }
+        {}
 
         bool recvTimingResp(PacketPtr pkt) override;
         void recvReqRetry() override;
@@ -77,8 +76,7 @@ class AMDGPUMemoryManager : public ClockedObject
 
     struct RequestStatus
     {
-        RequestStatus() : outstandingChunks(0), sentLastChunk(false)
-        { }
+        RequestStatus() : outstandingChunks(0), sentLastChunk(false) {}
 
         uint64_t outstandingChunks;
         bool sentLastChunk;
@@ -89,7 +87,7 @@ class AMDGPUMemoryManager : public ClockedObject
 
   public:
     AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p);
-    ~AMDGPUMemoryManager() {};
+    ~AMDGPUMemoryManager(){};
 
     /**
      * Write size amount of data to device memory at addr using flags and
@@ -101,8 +99,8 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param flag Additional request flags for write packets.
      * @param callback Event callback to call after all bytes are written.
      */
-    void writeRequest(Addr addr, uint8_t *data, int size,
-                      Request::Flags flag, Event *callback);
+    void writeRequest(Addr addr, uint8_t *data, int size, Request::Flags flag,
+                      Event *callback);
 
     /**
      * Read size amount of data from device memory at addr using flags and
@@ -114,8 +112,8 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param flag Additional request flags for read packets.
      * @param callback Event callback to call after all bytes are read.
      */
-    void readRequest(Addr addr, uint8_t *data, int size,
-                     Request::Flags flag, Event *callback);
+    void readRequest(Addr addr, uint8_t *data, int size, Request::Flags flag,
+                     Event *callback);
 
     /**
      * Get the requestorID for the memory manager. This ID is used for all
@@ -123,7 +121,11 @@ class AMDGPUMemoryManager : public ClockedObject
      *
      * @return requestorID of this object.
      */
-    RequestorID getRequestorID() const { return _requestorId; }
+    RequestorID
+    getRequestorID() const
+    {
+        return _requestorId;
+    }
 
     Port &
     getPort(const std::string &if_name, PortID idx) override

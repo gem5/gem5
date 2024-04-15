@@ -65,31 +65,28 @@ class WayPartitioningPolicy : public BasePartitioningPolicy
   public:
     WayPartitioningPolicy(const WayPartitioningPolicyParams &params);
 
-    void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                        const uint64_t partition_id) const override;
+    void filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                           const uint64_t partition_id) const override;
 
     /**
-    * Empty implementation as block allocations do not vary with number of
-    * allocated blocks for this policy
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    void
-    notifyAcquire(const uint64_t partition_id) override {};
+     * Empty implementation as block allocations do not vary with number of
+     * allocated blocks for this policy
+     * @param partition_id PartitionID of the upstream memory request
+     */
+    void notifyAcquire(const uint64_t partition_id) override{};
 
     /**
-    * Empty implementation as block allocations do not vary with number of
-    * allocated blocks for this policy
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    void
-    notifyRelease(const uint64_t partition_id) override {};
+     * Empty implementation as block allocations do not vary with number of
+     * allocated blocks for this policy
+     * @param partition_id PartitionID of the upstream memory request
+     */
+    void notifyRelease(const uint64_t partition_id) override{};
 
   private:
     /**
-    * Map of policied PartitionIDs and their associated cache ways
-    */
-    std::unordered_map< uint64_t, std::unordered_set< unsigned > >
+     * Map of policied PartitionIDs and their associated cache ways
+     */
+    std::unordered_map<uint64_t, std::unordered_set<unsigned> >
         partitionIdWays;
 };
 

@@ -50,8 +50,9 @@ class IntOp : public SparcStaticInst
   protected:
     using SparcStaticInst::SparcStaticInst;
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     virtual bool printPseudoOps(std::ostream &os, Addr pc,
                                 const loader::SymbolTable *symtab) const;
@@ -64,15 +65,16 @@ class IntOpImm : public IntOp
 {
   protected:
     // Constructor
-    IntOpImm(const char *mnem, ExtMachInst _machInst,
-             OpClass __opClass, int64_t _imm) :
-        IntOp(mnem, _machInst, __opClass), imm(_imm)
+    IntOpImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+             int64_t _imm)
+        : IntOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
     int64_t imm;
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     bool printPseudoOps(std::ostream &os, Addr pc,
                         const loader::SymbolTable *symtab) const override;
@@ -85,8 +87,8 @@ class IntOpImm10 : public IntOpImm
 {
   protected:
     // Constructor
-    IntOpImm10(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, szext<10>(_machInst))
+    IntOpImm10(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : IntOpImm(mnem, _machInst, __opClass, szext<10>(_machInst))
     {}
 };
 
@@ -96,8 +98,8 @@ class IntOpImm10 : public IntOpImm
 class IntOpImm11 : public IntOpImm
 {
   protected:
-    IntOpImm11(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, szext<11>(_machInst))
+    IntOpImm11(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : IntOpImm(mnem, _machInst, __opClass, szext<11>(_machInst))
     {}
 };
 
@@ -107,8 +109,8 @@ class IntOpImm11 : public IntOpImm
 class IntOpImm13 : public IntOpImm
 {
   protected:
-    IntOpImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, szext<13>(_machInst))
+    IntOpImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : IntOpImm(mnem, _machInst, __opClass, szext<13>(_machInst))
     {}
 };
 
@@ -119,12 +121,13 @@ class SetHi : public IntOpImm
 {
   protected:
     // Constructor
-    SetHi(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        IntOpImm(mnem, _machInst, __opClass, bits(_machInst, 21, 0) << 10)
+    SetHi(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : IntOpImm(mnem, _machInst, __opClass, bits(_machInst, 21, 0) << 10)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace SparcISA

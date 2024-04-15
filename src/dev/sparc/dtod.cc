@@ -47,8 +47,7 @@
 namespace gem5
 {
 
-DumbTOD::DumbTOD(const Params &p)
-    : BasicPioDevice(p, 0x08)
+DumbTOD::DumbTOD(const Params &p) : BasicPioDevice(p, 0x08)
 {
     struct tm tm = p.time;
     todTime = mkutctime(&tm);

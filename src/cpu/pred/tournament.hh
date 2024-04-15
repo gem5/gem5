@@ -72,13 +72,13 @@ class TournamentBP : public BPredUnit
     TournamentBP(const TournamentBPParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
+    bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
-    void squash(ThreadID tid, void * &bp_history) override;
+                         Addr target, void *&bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
+    void squash(ThreadID tid, void *&bp_history) override;
 
   private:
     /**
@@ -96,7 +96,7 @@ class TournamentBP : public BPredUnit
 
     /** Updates global history with the given direction
      * @param taken Whether or not the branch was taken
-    */
+     */
     inline void updateGlobalHist(ThreadID tid, bool taken);
 
     /**
@@ -116,10 +116,9 @@ class TournamentBP : public BPredUnit
     struct BPHistory
     {
 #ifdef GEM5_DEBUG
-        BPHistory()
-        { newCount++; }
-        ~BPHistory()
-        { newCount--; }
+        BPHistory() { newCount++; }
+
+        ~BPHistory() { newCount--; }
 
         static int newCount;
 #endif

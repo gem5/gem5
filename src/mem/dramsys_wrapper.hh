@@ -59,13 +59,12 @@ class DRAMSysWrapper : public sc_core::sc_module
     SC_HAS_PROCESS(DRAMSysWrapper);
     DRAMSysWrapper(sc_core::sc_module_name name,
                    ::DRAMSys::Config::Configuration const &config,
-                   bool recordable,
-                   AddrRange range);
+                   bool recordable, AddrRange range);
 
   private:
     static std::shared_ptr<::DRAMSys::DRAMSys>
     instantiateDRAMSys(bool recordable,
-        ::DRAMSys::Config::Configuration const &config);
+                       ::DRAMSys::Config::Configuration const &config);
 
     tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &payload,
                                        tlm::tlm_phase &phase,

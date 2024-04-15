@@ -48,7 +48,7 @@
 namespace gem5
 {
 
-int TESTER_NETWORK=0;
+int TESTER_NETWORK = 0;
 
 bool
 GarnetSyntheticTraffic::CpuPort::recvTimingResp(PacketPtr pkt)
@@ -74,8 +74,8 @@ GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
 
 GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p)
     : ClockedObject(p),
-      tickEvent([this]{ tick(); }, "GarnetSyntheticTraffic tick",
-                false, Event::CPU_Tick_Pri),
+      tickEvent([this] { tick(); }, "GarnetSyntheticTraffic tick", false,
+                Event::CPU_Tick_Pri),
       cachePort("GarnetSyntheticTraffic", this),
       retryPkt(NULL),
       size(p.memory_size),
@@ -104,8 +104,8 @@ GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p)
     traffic = trafficStringToEnum[trafficType];
 
     id = TESTER_NETWORK++;
-    DPRINTF(GarnetSyntheticTraffic,"Config Created: Name = %s , and id = %d\n",
-            name(), id);
+    DPRINTF(GarnetSyntheticTraffic,
+            "Config Created: Name = %s , and id = %d\n", name(), id);
 }
 
 Port &
@@ -123,20 +123,17 @@ GarnetSyntheticTraffic::init()
     numPacketsSent = 0;
 }
 
-
 void
 GarnetSyntheticTraffic::completeRequest(PacketPtr pkt)
 {
     DPRINTF(GarnetSyntheticTraffic,
             "Completed injection of %s packet for address %x\n",
-            pkt->isWrite() ? "write" : "read\n",
-            pkt->req->getPaddr());
+            pkt->isWrite() ? "write" : "read\n", pkt->req->getPaddr());
 
     assert(pkt->isResponse());
     noResponseCycles = 0;
     delete pkt;
 }
-
 
 void
 GarnetSyntheticTraffic::tick()
@@ -150,9 +147,9 @@ GarnetSyntheticTraffic::tick()
     // - generate a random number between 0 and 10^precision
     // - send pkt if this number is < injRate*(10^precision)
     bool sendAllowedThisCycle;
-    double injRange = pow((double) 10, (double) precision);
-    unsigned trySending = random_mt.random<unsigned>(0, (int) injRange);
-    if (trySending < injRate*injRange)
+    double injRange = pow((double)10, (double)precision);
+    unsigned trySending = random_mt.random<unsigned>(0, (int)injRange);
+    if (trySending < injRate * injRange)
         sendAllowedThisCycle = true;
     else
         sendAllowedThisCycle = false;
@@ -184,67 +181,64 @@ void
 GarnetSyntheticTraffic::generatePkt()
 {
     int num_destinations = numDestinations;
-    int radix = (int) sqrt(num_destinations);
+    int radix = (int)sqrt(num_destinations);
     unsigned destination = id;
     int dest_x = -1;
     int dest_y = -1;
     int source = id;
-    int src_x = id%radix;
-    int src_y = id/radix;
+    int src_x = id % radix;
+    int src_y = id / radix;
 
-    if (singleDest >= 0)
-    {
+    if (singleDest >= 0) {
         destination = singleDest;
     } else if (traffic == UNIFORM_RANDOM_) {
         destination = random_mt.random<unsigned>(0, num_destinations - 1);
     } else if (traffic == BIT_COMPLEMENT_) {
         dest_x = radix - src_x - 1;
         dest_y = radix - src_y - 1;
-        destination = dest_y*radix + dest_x;
+        destination = dest_y * radix + dest_x;
     } else if (traffic == BIT_REVERSE_) {
         unsigned int straight = source;
         unsigned int reverse = source & 1; // LSB
 
-        int num_bits = (int) log2(num_destinations);
+        int num_bits = (int)log2(num_destinations);
 
-        for (int i = 1; i < num_bits; i++)
-        {
+        for (int i = 1; i < num_bits; i++) {
             reverse <<= 1;
             straight >>= 1;
             reverse |= (straight & 1); // LSB
         }
         destination = reverse;
     } else if (traffic == BIT_ROTATION_) {
-        if (source%2 == 0)
-            destination = source/2;
+        if (source % 2 == 0)
+            destination = source / 2;
         else // (source%2 == 1)
-            destination = ((source/2) + (num_destinations/2));
+            destination = ((source / 2) + (num_destinations / 2));
     } else if (traffic == NEIGHBOR_) {
-            dest_x = (src_x + 1) % radix;
-            dest_y = src_y;
-            destination = dest_y*radix + dest_x;
-    } else if (traffic == SHUFFLE_) {
-        if (source < num_destinations/2)
-            destination = source*2;
-        else
-            destination = (source*2 - num_destinations + 1);
-    } else if (traffic == TRANSPOSE_) {
-            dest_x = src_y;
-            dest_y = src_x;
-            destination = dest_y*radix + dest_x;
-    } else if (traffic == TORNADO_) {
-        dest_x = (src_x + (int) ceil(radix/2) - 1) % radix;
+        dest_x = (src_x + 1) % radix;
         dest_y = src_y;
-        destination = dest_y*radix + dest_x;
-    }
-    else {
+        destination = dest_y * radix + dest_x;
+    } else if (traffic == SHUFFLE_) {
+        if (source < num_destinations / 2)
+            destination = source * 2;
+        else
+            destination = (source * 2 - num_destinations + 1);
+    } else if (traffic == TRANSPOSE_) {
+        dest_x = src_y;
+        dest_y = src_x;
+        destination = dest_y * radix + dest_x;
+    } else if (traffic == TORNADO_) {
+        dest_x = (src_x + (int)ceil(radix / 2) - 1) % radix;
+        dest_y = src_y;
+        destination = dest_y * radix + dest_x;
+    } else {
         fatal("Unknown Traffic Type: %s!\n", traffic);
     }
 
     // The source of the packets is a cache.
     // The destination of the packets is a directory.
     // The destination bits are embedded in the address after byte-offset.
-    Addr paddr =  destination;
+    Addr paddr = destination;
     paddr <<= blockSizeBits;
     unsigned access_size = 1; // Does not affect Ruby simulation
 
@@ -282,8 +276,7 @@ GarnetSyntheticTraffic::generatePkt()
     // Vnet 2 is for data packets (5-flit)
     int injReqType = injVnet;
 
-    if (injReqType < 0 || injReqType > 2)
-    {
+    if (injReqType < 0 || injReqType > 2) {
         // randomly inject in any vnet
         injReqType = random_mt.random(0, 2);
     }
@@ -291,26 +284,26 @@ GarnetSyntheticTraffic::generatePkt()
     if (injReqType == 0) {
         // generate packet for virtual network 0
         requestType = MemCmd::ReadReq;
-        req = std::make_shared<Request>(paddr, access_size, flags,
-                                        requestorId);
+        req =
+            std::make_shared<Request>(paddr, access_size, flags, requestorId);
     } else if (injReqType == 1) {
         // generate packet for virtual network 1
         requestType = MemCmd::ReadReq;
         flags.set(Request::INST_FETCH);
-        req = std::make_shared<Request>(
-            0x0, access_size, flags, requestorId, 0x0, 0);
+        req = std::make_shared<Request>(0x0, access_size, flags, requestorId,
+                                        0x0, 0);
         req->setPaddr(paddr);
-    } else {  // if (injReqType == 2)
+    } else { // if (injReqType == 2)
         // generate packet for virtual network 2
         requestType = MemCmd::WriteReq;
-        req = std::make_shared<Request>(paddr, access_size, flags,
-                                        requestorId);
+        req =
+            std::make_shared<Request>(paddr, access_size, flags, requestorId);
     }
 
     req->setContext(id);
 
-    //No need to do functional simulation
-    //We just do timing simulation of the network
+    // No need to do functional simulation
+    // We just do timing simulation of the network
 
     DPRINTF(GarnetSyntheticTraffic,
             "Generated packet with destination %d, embedded in address %x\n",

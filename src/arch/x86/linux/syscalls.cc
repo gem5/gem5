@@ -72,26 +72,25 @@ archPrctlFunc(SyscallDesc *desc, ThreadContext *tc, int code, uint64_t addr)
 
     uint64_t fsBase, gsBase;
     SETranslatingPortProxy p(tc);
-    switch(code)
-    {
-      // Each of these valid options should actually check addr.
-      case SetFS:
+    switch (code) {
+    // Each of these valid options should actually check addr.
+    case SetFS:
         tc->setMiscRegNoEffect(misc_reg::FsBase, addr);
         tc->setMiscRegNoEffect(misc_reg::FsEffBase, addr);
         return 0;
-      case GetFS:
+    case GetFS:
         fsBase = tc->readMiscRegNoEffect(misc_reg::FsBase);
         p.write(addr, fsBase);
         return 0;
-      case SetGS:
+    case SetGS:
         tc->setMiscRegNoEffect(misc_reg::GsBase, addr);
         tc->setMiscRegNoEffect(misc_reg::GsEffBase, addr);
         return 0;
-      case GetGS:
+    case GetGS:
         gsBase = tc->readMiscRegNoEffect(misc_reg::GsBase);
         p.write(addr, gsBase);
         return 0;
-      default:
+    default:
         return -EINVAL;
     }
 }
@@ -112,9 +111,9 @@ setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
 
     assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86p->gdtSize());
 
-    TypedBufferArg<uint64_t>
-        gdt(x86p->gdtStart() + minTLSEntry * sizeof(uint64_t),
-            numTLSEntries * sizeof(uint64_t));
+    TypedBufferArg<uint64_t> gdt(x86p->gdtStart() +
+                                     minTLSEntry * sizeof(uint64_t),
+                                 numTLSEntries * sizeof(uint64_t));
 
     if (!gdt.copyIn(proxy))
         panic("Failed to copy in GDT for %s.\n", desc->name());

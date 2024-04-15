@@ -36,31 +36,24 @@ namespace gem5
 {
 
 OutgoingRequestBridge::OutgoingRequestBridge(
-    const OutgoingRequestBridgeParams &params) :
-    SimObject(params),
-    outgoingPort(std::string(name()), this),
-    sstResponder(nullptr),
-    physicalAddressRanges(params.physical_address_ranges.begin(),
-                          params.physical_address_ranges.end())
-{
-}
+    const OutgoingRequestBridgeParams &params)
+    : SimObject(params),
+      outgoingPort(std::string(name()), this),
+      sstResponder(nullptr),
+      physicalAddressRanges(params.physical_address_ranges.begin(),
+                            params.physical_address_ranges.end())
+{}
 
-OutgoingRequestBridge::~OutgoingRequestBridge()
-{
-}
+OutgoingRequestBridge::~OutgoingRequestBridge() {}
 
-OutgoingRequestBridge::
-OutgoingRequestPort::OutgoingRequestPort(const std::string &name_,
-                                         OutgoingRequestBridge* owner_) :
-    ResponsePort(name_)
+OutgoingRequestBridge::OutgoingRequestPort::OutgoingRequestPort(
+    const std::string &name_, OutgoingRequestBridge *owner_)
+    : ResponsePort(name_)
 {
     owner = owner_;
 }
 
-OutgoingRequestBridge::
-OutgoingRequestPort::~OutgoingRequestPort()
-{
-}
+OutgoingRequestBridge::OutgoingRequestPort::~OutgoingRequestPort() {}
 
 void
 OutgoingRequestBridge::init()
@@ -88,7 +81,7 @@ OutgoingRequestBridge::getInitData() const
 }
 
 void
-OutgoingRequestBridge::setResponder(SSTResponderInterface* responder)
+OutgoingRequestBridge::setResponder(SSTResponderInterface *responder)
 {
     sstResponder = responder;
 }
@@ -108,45 +101,40 @@ OutgoingRequestBridge::sendTimingSnoopReq(gem5::PacketPtr pkt)
 void
 OutgoingRequestBridge::handleRecvFunctional(PacketPtr pkt)
 {
-    uint8_t* ptr = pkt->getPtr<uint8_t>();
+    uint8_t *ptr = pkt->getPtr<uint8_t>();
     uint64_t size = pkt->getSize();
-    std::vector<uint8_t> data(ptr, ptr+size);
+    std::vector<uint8_t> data(ptr, ptr + size);
     initData.push_back(std::make_pair(pkt->getAddr(), data));
 }
 
 Tick
-OutgoingRequestBridge::
-OutgoingRequestPort::recvAtomic(PacketPtr pkt)
+OutgoingRequestBridge::OutgoingRequestPort::recvAtomic(PacketPtr pkt)
 {
     assert(false && "OutgoingRequestPort::recvAtomic not implemented");
     return Tick();
 }
 
 void
-OutgoingRequestBridge::
-OutgoingRequestPort::recvFunctional(PacketPtr pkt)
+OutgoingRequestBridge::OutgoingRequestPort::recvFunctional(PacketPtr pkt)
 {
     owner->handleRecvFunctional(pkt);
 }
 
 bool
-OutgoingRequestBridge::
-OutgoingRequestPort::recvTimingReq(PacketPtr pkt)
+OutgoingRequestBridge::OutgoingRequestPort::recvTimingReq(PacketPtr pkt)
 {
     owner->sstResponder->handleRecvTimingReq(pkt);
     return true;
 }
 
 void
-OutgoingRequestBridge::
-OutgoingRequestPort::recvRespRetry()
+OutgoingRequestBridge::OutgoingRequestPort::recvRespRetry()
 {
     owner->sstResponder->handleRecvRespRetry();
 }
 
 AddrRangeList
-OutgoingRequestBridge::
-OutgoingRequestPort::getAddrRanges() const
+OutgoingRequestBridge::OutgoingRequestPort::getAddrRanges() const
 {
     return owner->physicalAddressRanges;
 }

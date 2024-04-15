@@ -79,7 +79,6 @@ class NVMInterface;
 class BurstHelper
 {
   public:
-
     /** Number of bursts requred for a system packet **/
     const unsigned int burstCount;
 
@@ -88,7 +87,7 @@ class BurstHelper
 
     BurstHelper(unsigned int _burstCount)
         : burstCount(_burstCount), burstsServiced(0)
-    { }
+    {}
 };
 
 /**
@@ -98,7 +97,6 @@ class BurstHelper
 class MemPacket
 {
   public:
-
     /** When did request enter the controller */
     const Tick entryTime;
 
@@ -149,7 +147,7 @@ class MemPacket
      * A pointer to the BurstHelper if this MemPacket is a split packet
      * If not a split packet (common case), this is set to NULL
      */
-    BurstHelper* burstHelper;
+    BurstHelper *burstHelper;
 
     /**
      * QoS value of the encapsulated packet read at queuing time
@@ -160,65 +158,105 @@ class MemPacket
      * Set the packet QoS value
      * (interface compatibility with Packet)
      */
-    inline void qosValue(const uint8_t qv) { _qosValue = qv; }
+    inline void
+    qosValue(const uint8_t qv)
+    {
+        _qosValue = qv;
+    }
 
     /**
      * Get the packet QoS value
      * (interface compatibility with Packet)
      */
-    inline uint8_t qosValue() const { return _qosValue; }
+    inline uint8_t
+    qosValue() const
+    {
+        return _qosValue;
+    }
 
     /**
      * Get the packet RequestorID
      * (interface compatibility with Packet)
      */
-    inline RequestorID requestorId() const { return _requestorId; }
+    inline RequestorID
+    requestorId() const
+    {
+        return _requestorId;
+    }
 
     /**
      * Get the packet size
      * (interface compatibility with Packet)
      */
-    inline unsigned int getSize() const { return size; }
+    inline unsigned int
+    getSize() const
+    {
+        return size;
+    }
 
     /**
      * Get the packet address
      * (interface compatibility with Packet)
      */
-    inline Addr getAddr() const { return addr; }
+    inline Addr
+    getAddr() const
+    {
+        return addr;
+    }
 
     /**
      * Return true if its a read packet
      * (interface compatibility with Packet)
      */
-    inline bool isRead() const { return read; }
+    inline bool
+    isRead() const
+    {
+        return read;
+    }
 
     /**
      * Return true if its a write packet
      * (interface compatibility with Packet)
      */
-    inline bool isWrite() const { return !read; }
+    inline bool
+    isWrite() const
+    {
+        return !read;
+    }
 
     /**
      * Return true if its a DRAM access
      */
-    inline bool isDram() const { return dram; }
+    inline bool
+    isDram() const
+    {
+        return dram;
+    }
 
     MemPacket(PacketPtr _pkt, bool is_read, bool is_dram, uint8_t _channel,
-               uint8_t _rank, uint8_t _bank, uint32_t _row, uint16_t bank_id,
-               Addr _addr, unsigned int _size)
-        : entryTime(curTick()), readyTime(curTick()), pkt(_pkt),
+              uint8_t _rank, uint8_t _bank, uint32_t _row, uint16_t bank_id,
+              Addr _addr, unsigned int _size)
+        : entryTime(curTick()),
+          readyTime(curTick()),
+          pkt(_pkt),
           _requestorId(pkt->requestorId()),
-          read(is_read), dram(is_dram), pseudoChannel(_channel), rank(_rank),
-          bank(_bank), row(_row), bankId(bank_id), addr(_addr), size(_size),
-          burstHelper(NULL), _qosValue(_pkt->qosValue())
-    { }
-
+          read(is_read),
+          dram(is_dram),
+          pseudoChannel(_channel),
+          rank(_rank),
+          bank(_bank),
+          row(_row),
+          bankId(bank_id),
+          addr(_addr),
+          size(_size),
+          burstHelper(NULL),
+          _qosValue(_pkt->qosValue())
+    {}
 };
 
 // The memory packets are store in a multiple dequeue structure,
 // based on their QoS priority
-typedef std::deque<MemPacket*> MemPacketQueue;
-
+typedef std::deque<MemPacket *> MemPacketQueue;
 
 /**
  * The memory controller is a single-channel memory controller capturing
@@ -246,34 +284,29 @@ typedef std::deque<MemPacket*> MemPacketQueue;
 class MemCtrl : public qos::MemCtrl
 {
   protected:
-
     // For now, make use of a queued response port to avoid dealing with
     // flow control for the responses being sent back
     class MemoryPort : public QueuedResponsePort
     {
-
         RespPacketQueue queue;
-        MemCtrl& ctrl;
+        MemCtrl &ctrl;
 
       public:
-
-        MemoryPort(const std::string& name, MemCtrl& _ctrl);
+        MemoryPort(const std::string &name, MemCtrl &_ctrl);
         void disableSanityCheck();
 
       protected:
-
         Tick recvAtomic(PacketPtr pkt) override;
-        Tick recvAtomicBackdoor(
-                PacketPtr pkt, MemBackdoorPtr &backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &backdoor) override;
 
         void recvFunctional(PacketPtr pkt) override;
         void recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override;
+                                MemBackdoorPtr &backdoor) override;
 
         bool recvTimingReq(PacketPtr) override;
 
         AddrRangeList getAddrRanges() const override;
-
     };
 
     /**
@@ -299,17 +332,17 @@ class MemCtrl : public qos::MemCtrl
      * processRespondEvent is called; no parameters are allowed
      * in these methods
      */
-    virtual void processNextReqEvent(MemInterface* mem_intr,
-                          MemPacketQueue& resp_queue,
-                          EventFunctionWrapper& resp_event,
-                          EventFunctionWrapper& next_req_event,
-                          bool& retry_wr_req);
+    virtual void processNextReqEvent(MemInterface *mem_intr,
+                                     MemPacketQueue &resp_queue,
+                                     EventFunctionWrapper &resp_event,
+                                     EventFunctionWrapper &next_req_event,
+                                     bool &retry_wr_req);
     EventFunctionWrapper nextReqEvent;
 
-    virtual void processRespondEvent(MemInterface* mem_intr,
-                        MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event,
-                        bool& retry_rd_req);
+    virtual void processRespondEvent(MemInterface *mem_intr,
+                                     MemPacketQueue &queue,
+                                     EventFunctionWrapper &resp_event,
+                                     bool &retry_rd_req);
     EventFunctionWrapper respondEvent;
 
     /**
@@ -344,7 +377,7 @@ class MemCtrl : public qos::MemCtrl
      * @return if all the read pkts are already serviced by wrQ
      */
     bool addToReadQueue(PacketPtr pkt, unsigned int pkt_count,
-                        MemInterface* mem_intr);
+                        MemInterface *mem_intr);
 
     /**
      * Decode the incoming pkt, create a mem_pkt and push to the
@@ -358,7 +391,7 @@ class MemCtrl : public qos::MemCtrl
      * eventually go to
      */
     void addToWriteQueue(PacketPtr pkt, unsigned int pkt_count,
-                         MemInterface* mem_intr);
+                         MemInterface *mem_intr);
 
     /**
      * Actually do the burst based on media specific access function.
@@ -369,7 +402,7 @@ class MemCtrl : public qos::MemCtrl
      * @return Time when the command was issued
      *
      */
-    virtual Tick doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr);
+    virtual Tick doBurstAccess(MemPacket *mem_pkt, MemInterface *mem_intr);
 
     /**
      * When a packet reaches its "readyTime" in the response Q,
@@ -382,14 +415,14 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr the memory interface to access
      */
     virtual void accessAndRespond(PacketPtr pkt, Tick static_latency,
-                                                MemInterface* mem_intr);
+                                  MemInterface *mem_intr);
 
     /**
      * Determine if there is a packet that can issue.
      *
      * @param pkt The packet to evaluate
      */
-    virtual bool packetReady(MemPacket* pkt, MemInterface* mem_intr);
+    virtual bool packetReady(MemPacket *pkt, MemInterface *mem_intr);
 
     /**
      * Calculate the minimum delay used when scheduling a read-to-write
@@ -417,8 +450,9 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr the memory interface to choose from
      * @return an iterator to the selected packet, else queue.end()
      */
-    virtual MemPacketQueue::iterator chooseNext(MemPacketQueue& queue,
-        Tick extra_col_delay, MemInterface* mem_intr);
+    virtual MemPacketQueue::iterator chooseNext(MemPacketQueue &queue,
+                                                Tick extra_col_delay,
+                                                MemInterface *mem_intr);
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
@@ -429,8 +463,8 @@ class MemCtrl : public qos::MemCtrl
      * @return an iterator to the selected packet, else queue.end()
      */
     virtual std::pair<MemPacketQueue::iterator, Tick>
-    chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay,
-                    MemInterface* mem_intr);
+    chooseNextFRFCFS(MemPacketQueue &queue, Tick extra_col_delay,
+                     MemInterface *mem_intr);
 
     /**
      * Calculate burst window aligned tick
@@ -453,7 +487,7 @@ class MemCtrl : public qos::MemCtrl
      *
      * @return An address aligned to a memory burst
      */
-    virtual Addr burstAlign(Addr addr, MemInterface* mem_intr) const;
+    virtual Addr burstAlign(Addr addr, MemInterface *mem_intr) const;
 
     /**
      * Check if mem pkt's size is sane
@@ -462,8 +496,8 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr memory interface
      * @return An address aligned to a memory burst
      */
-    virtual bool pktSizeCheck(MemPacket* mem_pkt,
-                              MemInterface* mem_intr) const;
+    virtual bool pktSizeCheck(MemPacket *mem_pkt,
+                              MemInterface *mem_intr) const;
 
     /**
      * The controller's main read and write queues,
@@ -489,7 +523,7 @@ class MemCtrl : public qos::MemCtrl
      * as sizing the read queue, this and the main read queue need to
      * be added together.
      */
-    std::deque<MemPacket*> respQueue;
+    std::deque<MemPacket *> respQueue;
 
     /**
      * Holds count of commands issued in burst window starting at
@@ -501,7 +535,7 @@ class MemCtrl : public qos::MemCtrl
     /**
 +    * Create pointer to interface of the actual memory media when connected
 +    */
-    MemInterface* dram;
+    MemInterface *dram;
 
     virtual AddrRangeList getAddrRanges();
 
@@ -633,12 +667,14 @@ class MemCtrl : public qos::MemCtrl
      * @param is_read The current burst is a read, select read queue
      * @return a reference to the appropriate queue
      */
-    std::vector<MemPacketQueue>& selQueue(bool is_read)
+    std::vector<MemPacketQueue> &
+    selQueue(bool is_read)
     {
         return (is_read ? readQueue : writeQueue);
     };
 
-    virtual bool respQEmpty()
+    virtual bool
+    respQEmpty()
     {
         return respQueue.empty();
     }
@@ -649,14 +685,14 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr memory interface to check
      * @return a boolean indicating if memory is busy
      */
-    virtual bool memBusy(MemInterface* mem_intr);
+    virtual bool memBusy(MemInterface *mem_intr);
 
     /**
      * Will access memory interface and select non-deterministic
      * reads to issue
      * @param mem_intr memory interface to use
      */
-    virtual void nonDetermReads(MemInterface* mem_intr);
+    virtual void nonDetermReads(MemInterface *mem_intr);
 
     /**
      * Will check if all writes are for nvm interface
@@ -666,7 +702,7 @@ class MemCtrl : public qos::MemCtrl
      * @param mem_intr memory interface to use
      * @return a boolean showing if nvm is blocked with writes
      */
-    virtual bool nvmWriteBlock(MemInterface* mem_intr);
+    virtual bool nvmWriteBlock(MemInterface *mem_intr);
 
     /**
      * Remove commands that have already issued from burstTicks
@@ -674,7 +710,6 @@ class MemCtrl : public qos::MemCtrl
     virtual void pruneBurstTick();
 
   public:
-
     MemCtrl(const MemCtrlParams &p);
 
     /**
@@ -700,7 +735,7 @@ class MemCtrl : public qos::MemCtrl
      * @return tick for command issue without contention
      */
     virtual Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst,
-                                bool row_cmd);
+                                 bool row_cmd);
 
     /**
      * Check for command bus contention for multi-cycle (2 currently)
@@ -717,14 +752,15 @@ class MemCtrl : public qos::MemCtrl
      * @return tick for command issue without contention
      */
     virtual Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
-                        Tick max_multi_cmd_split = 0);
+                                Tick max_multi_cmd_split = 0);
 
     /**
      * Is there a respondEvent scheduled?
      *
      * @return true if event is scheduled
      */
-    virtual bool respondEventScheduled(uint8_t pseudo_channel = 0) const
+    virtual bool
+    respondEventScheduled(uint8_t pseudo_channel = 0) const
     {
         assert(pseudo_channel == 0);
         return respondEvent.scheduled();
@@ -735,7 +771,8 @@ class MemCtrl : public qos::MemCtrl
      *
      * @return true if event is scheduled
      */
-    virtual bool requestEventScheduled(uint8_t pseudo_channel = 0) const
+    virtual bool
+    requestEventScheduled(uint8_t pseudo_channel = 0) const
     {
         assert(pseudo_channel == 0);
         return nextReqEvent.scheduled();
@@ -750,7 +787,8 @@ class MemCtrl : public qos::MemCtrl
      * needs to restart, will always be 0 for controllers which control
      * only a single channel
      */
-    virtual void restartScheduler(Tick tick, uint8_t pseudo_channel = 0)
+    virtual void
+    restartScheduler(Tick tick, uint8_t pseudo_channel = 0)
     {
         assert(pseudo_channel == 0);
         schedule(nextReqEvent, tick);
@@ -762,7 +800,7 @@ class MemCtrl : public qos::MemCtrl
      * @param next_state Check either the current or next bus state
      * @return True when bus is currently in a read state
      */
-    bool inReadBusState(bool next_state, const MemInterface* mem_intr) const;
+    bool inReadBusState(bool next_state, const MemInterface *mem_intr) const;
 
     /**
      * Check the current direction of the memory channel
@@ -770,27 +808,25 @@ class MemCtrl : public qos::MemCtrl
      * @param next_state Check either the current or next bus state
      * @return True when bus is currently in a write state
      */
-    bool inWriteBusState(bool next_state, const MemInterface* mem_intr) const;
+    bool inWriteBusState(bool next_state, const MemInterface *mem_intr) const;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;
     virtual void drainResume() override;
 
   protected:
-
     virtual Tick recvAtomic(PacketPtr pkt);
     virtual Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
     virtual void recvFunctional(PacketPtr pkt);
     virtual void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
+                                    MemBackdoorPtr &backdoor);
     virtual bool recvTimingReq(PacketPtr pkt);
 
-    bool recvFunctionalLogic(PacketPtr pkt, MemInterface* mem_intr);
-    Tick recvAtomicLogic(PacketPtr pkt, MemInterface* mem_intr);
-
+    bool recvFunctionalLogic(PacketPtr pkt, MemInterface *mem_intr);
+    Tick recvAtomicLogic(PacketPtr pkt, MemInterface *mem_intr);
 };
 
 } // namespace memory

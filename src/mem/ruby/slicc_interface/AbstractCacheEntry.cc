@@ -59,9 +59,7 @@ AbstractCacheEntry::AbstractCacheEntry() : ReplaceableEntry()
     m_htmInWriteSet = false;
 }
 
-AbstractCacheEntry::~AbstractCacheEntry()
-{
-}
+AbstractCacheEntry::~AbstractCacheEntry() {}
 
 // Get cache permission
 AccessPermission
@@ -83,7 +81,8 @@ AbstractCacheEntry::changePermission(AccessPermission new_perm)
 void
 AbstractCacheEntry::setLocked(int context)
 {
-    DPRINTF(RubyCache, "Setting Lock for addr: %#x to %d\n", m_Address, context);
+    DPRINTF(RubyCache, "Setting Lock for addr: %#x to %d\n", m_Address,
+            context);
     m_locked = context;
 }
 

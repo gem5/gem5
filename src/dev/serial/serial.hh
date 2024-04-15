@@ -152,8 +152,13 @@ class SerialNullDevice : public SerialDevice
     SerialNullDevice(const SerialNullDeviceParams &p);
 
   public:
-    bool dataAvailable() const override { return false; }
-    void writeData(uint8_t c) override {};
+    bool
+    dataAvailable() const override
+    {
+        return false;
+    }
+
+    void writeData(uint8_t c) override{};
     uint8_t readData() override;
 };
 

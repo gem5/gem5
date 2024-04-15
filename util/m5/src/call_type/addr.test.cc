@@ -55,11 +55,28 @@ class DefaultCallType : public CallType
     DefaultCallType() : CallType("default") {}
 
     bool initCalled = false;
-    void init() override { initCalled = true; }
 
-    bool isDefault() const override { return true; }
-    void printDesc(std::ostream &os) const override {}
-    const DispatchTable &getDispatch() const override { return dt; }
+    void
+    init() override
+    {
+        initCalled = true;
+    }
+
+    bool
+    isDefault() const override
+    {
+        return true;
+    }
+
+    void
+    printDesc(std::ostream &os) const override
+    {}
+
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return dt;
+    }
 };
 
 DefaultCallType defaultCallType;
@@ -104,7 +121,7 @@ TEST_F(AddrCallTypeTest, EmptyArgs)
 TEST_F(AddrCallTypeTest, OneArgMismatch)
 {
     // Addr should not be selected if --addr isn't the first argument.
-    Args one_arg({"one"});
+    Args one_arg({ "one" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(one_arg);
     EXPECT_EQ(ct, &defaultCallType);
@@ -115,7 +132,7 @@ TEST_F(AddrCallTypeTest, OneArgMismatch)
 TEST_F(AddrCallTypeTest, OneArgSelected)
 {
     // Addr should be selected if --addr is the first argument.
-    Args selected({"--addr=3"});
+    Args selected({ "--addr=3" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(selected);
     EXPECT_NE(ct, &defaultCallType);
@@ -126,7 +143,7 @@ TEST_F(AddrCallTypeTest, OneArgSelected)
 
 TEST_F(AddrCallTypeTest, SplitSelected)
 {
-    Args split({"--addr", "3"});
+    Args split({ "--addr", "3" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(split);
     EXPECT_NE(ct, &defaultCallType);
@@ -137,7 +154,7 @@ TEST_F(AddrCallTypeTest, SplitSelected)
 
 TEST_F(AddrCallTypeTest, OneArgSelectedExtra)
 {
-    Args selected_extra({"--addr=3", "foo"});
+    Args selected_extra({ "--addr=3", "foo" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(selected_extra);
     EXPECT_NE(ct, &defaultCallType);
@@ -148,7 +165,7 @@ TEST_F(AddrCallTypeTest, OneArgSelectedExtra)
 
 TEST_F(AddrCallTypeTest, SplitSelectedExtra)
 {
-    Args split_extra({"--addr", "3", "foo"});
+    Args split_extra({ "--addr", "3", "foo" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(split_extra);
     EXPECT_NE(ct, &defaultCallType);
@@ -161,7 +178,7 @@ TEST_F(AddrCallTypeTest, SupersetOneArg)
 {
     // Nothing should be selected if an argument starts with --addr which is
     // followed by something other than '=' and then a number.
-    Args no_equal({"--address"});
+    Args no_equal({ "--address" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(no_equal);
     EXPECT_EQ(ct, nullptr);
@@ -171,7 +188,7 @@ TEST_F(AddrCallTypeTest, SupersetOneArg)
 
 TEST_F(AddrCallTypeTest, NonNumberAddr)
 {
-    Args no_number({"--addr=foo"});
+    Args no_number({ "--addr=foo" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(no_number);
     EXPECT_EQ(ct, nullptr);
@@ -185,7 +202,7 @@ TEST_F(AddrCallTypeTest, DetectDefaultAddr)
         return;
 
     // Verify that the default address is set up in m5op_addr.
-    Args noaddr({"--addr"});
+    Args noaddr({ "--addr" });
     defaultCallType.initCalled = false;
     m5op_addr = DefaultAddress;
     ct = CallType::detect(noaddr);
@@ -200,7 +217,7 @@ TEST_F(AddrCallTypeTest, DetectDefaultAddrExtra)
     if (!DefaultAddrDefined)
         return;
 
-    Args noaddr_foo({"--addr", "foo"});
+    Args noaddr_foo({ "--addr", "foo" });
     defaultCallType.initCalled = false;
     m5op_addr = DefaultAddress;
     ct = CallType::detect(noaddr_foo);
@@ -216,7 +233,7 @@ TEST_F(AddrCallTypeTest, DetectNoDefault)
         return;
 
     // Verify that the address must be specified since there's no default.
-    Args noaddr({"--addr"});
+    Args noaddr({ "--addr" });
     defaultCallType.initCalled = false;
     m5op_addr = DefaultAddress + 1;
     ct = CallType::detect(noaddr);
@@ -230,7 +247,7 @@ TEST_F(AddrCallTypeTest, DetectNoDefaultExtra)
     if (DefaultAddrDefined)
         return;
 
-    Args noaddr_foo({"--addr", "foo"});
+    Args noaddr_foo({ "--addr", "foo" });
     defaultCallType.initCalled = false;
     m5op_addr = DefaultAddress + 1;
     ct = CallType::detect(noaddr_foo);
@@ -242,7 +259,7 @@ TEST_F(AddrCallTypeTest, DetectNoDefaultExtra)
 TEST_F(AddrCallTypeTest, NotFirstArg)
 {
     // Addr should not be selected if --addr isn't first.
-    Args not_first({"foo", "--addr"});
+    Args not_first({ "foo", "--addr" });
     defaultCallType.initCalled = false;
     ct = CallType::detect(not_first);
     EXPECT_EQ(ct, &defaultCallType);
@@ -289,7 +306,11 @@ class TempFile
         close(fd);
     }
 
-    const std::string &path() const { return _path; }
+    const std::string &
+    path() const
+    {
+        return _path;
+    }
 };
 
 // Sparse dummy mmap file if we're not in gem5.
@@ -306,8 +327,8 @@ verify_mmap()
     auto maps_path = os.str();
 
     if (access(maps_path.c_str(), R_OK) == -1) {
-        std::cout << "Unable to access " << maps_path <<
-            ", can't verify mmap." << std::endl;
+        std::cout << "Unable to access " << maps_path << ", can't verify mmap."
+                  << std::endl;
         return;
     }
 
@@ -323,8 +344,8 @@ verify_mmap()
     while (!maps.eof()) {
         std::string line;
         if (getline(maps, line).fail()) {
-            std::cout << "Error reading from \"" << maps_path << "\"." <<
-                std::endl;
+            std::cout << "Error reading from \"" << maps_path << "\"."
+                      << std::endl;
             return;
         }
 
@@ -347,9 +368,9 @@ verify_mmap()
     }
 
     if (maps.eof() && !found) {
-        std::cout << "Did not find entry for temp file \"" <<
-            mmapDummyFile.path() << "\" in \"" << maps_path <<
-            "\"." << std::endl;
+        std::cout << "Did not find entry for temp file \""
+                  << mmapDummyFile.path() << "\" in \"" << maps_path << "\"."
+                  << std::endl;
         ADD_FAILURE() << "No mapping for our mmapped file.";
         return;
     }
@@ -397,7 +418,7 @@ TEST(AddrCallType, Sum)
 
     // Get the addr call type, which is in an anonymous namespace. Set the
     // address to a well known constant that's nicely aligned.
-    Args args({"--addr=0x1000000"});
+    Args args({ "--addr=0x1000000" });
     if (!in_gem5) {
         // Change the file to be mmap-ed to something not dangerous, but only
         // if we're not in gem5. Otherwise we'll need this to really work.

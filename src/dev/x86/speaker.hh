@@ -54,15 +54,17 @@ class Speaker : public BasicPioDevice
 
     SpeakerControl controlVal;
 
-    I8254 * timer;
+    I8254 *timer;
 
   public:
     using Params = PcSpeakerParams;
 
-    Speaker(const Params &p) : BasicPioDevice(p, 1),
-        latency(p.pio_latency), controlVal(0), timer(p.i8254)
-    {
-    }
+    Speaker(const Params &p)
+        : BasicPioDevice(p, 1),
+          latency(p.pio_latency),
+          controlVal(0),
+          timer(p.i8254)
+    {}
 
     Tick read(PacketPtr pkt) override;
 

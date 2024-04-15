@@ -49,8 +49,9 @@ class CompRegOp : public RiscvStaticInst
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

@@ -90,7 +90,7 @@ class ISA : public BaseISA
 
     /** Length of each vector element in bits.
      *  ELEN in Ch. 2 of RISC-V vector spec
-    */
+     */
     unsigned elen;
 
     /** The combination of privilege modes
@@ -103,8 +103,8 @@ class ISA : public BaseISA
 
     void clear() override;
 
-    PCStateBase*
-    newPCState(Addr new_inst_addr=0) const override
+    PCStateBase *
+    newPCState(Addr new_inst_addr = 0) const override
     {
         unsigned vlenb = vlen >> 3;
         return new PCState(new_inst_addr, _rvType, vlenb);
@@ -120,12 +120,13 @@ class ISA : public BaseISA
     // components by overriding the two getCSRxxxMap here and properly
     // implementing the corresponding read/set function. However, customized
     // maps should always be compatible with the standard maps.
-    virtual const std::unordered_map<int, CSRMetadata>&
+    virtual const std::unordered_map<int, CSRMetadata> &
     getCSRDataMap() const
     {
         return CSRData;
     }
-    virtual const std::unordered_map<int, RegVal>&
+
+    virtual const std::unordered_map<int, RegVal> &
     getCSRMaskMap() const
     {
         return CSRMasks[_rvType][_privilegeModeSet];
@@ -142,7 +143,7 @@ class ISA : public BaseISA
     void handleLockedRead(const RequestPtr &req) override;
 
     bool handleLockedWrite(const RequestPtr &req,
-            Addr cacheBlockMask) override;
+                           Addr cacheBlockMask) override;
 
     void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
 
@@ -150,26 +151,52 @@ class ISA : public BaseISA
 
     void resetThread() override;
 
-    RiscvType rvType() const { return _rvType; }
+    RiscvType
+    rvType() const
+    {
+        return _rvType;
+    }
 
-    bool getEnableRvv() const { return enableRvv; }
+    bool
+    getEnableRvv() const
+    {
+        return enableRvv;
+    }
 
     void
     clearLoadReservation(ContextID cid)
     {
-        Addr& load_reservation_addr = load_reservation_addrs[cid];
+        Addr &load_reservation_addr = load_reservation_addrs[cid];
         load_reservation_addr = INVALID_RESERVATION_ADDR;
     }
 
     /** Methods for getting VLEN, VLENB and ELEN values */
-    unsigned getVecLenInBits() { return vlen; }
-    unsigned getVecLenInBytes() { return vlen >> 3; }
-    unsigned getVecElemLenInBits() { return elen; }
+    unsigned
+    getVecLenInBits()
+    {
+        return vlen;
+    }
 
-    PrivilegeModeSet getPrivilegeModeSet() { return _privilegeModeSet; }
+    unsigned
+    getVecLenInBytes()
+    {
+        return vlen >> 3;
+    }
 
-    virtual Addr getFaultHandlerAddr(
-        RegIndex idx, uint64_t cause, bool intr) const;
+    unsigned
+    getVecElemLenInBits()
+    {
+        return elen;
+    }
+
+    PrivilegeModeSet
+    getPrivilegeModeSet()
+    {
+        return _privilegeModeSet;
+    }
+
+    virtual Addr getFaultHandlerAddr(RegIndex idx, uint64_t cause,
+                                     bool intr) const;
 };
 
 } // namespace RiscvISA

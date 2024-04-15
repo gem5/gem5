@@ -67,17 +67,17 @@ class Sp805 : public AmbaIntDevice
   private:
     enum Offset : Addr
     {
-        WDOGLOAD      = 0x000,
-        WDOGVALUE     = 0x004,
-        WDOGCONTROL   = 0x008,
-        WDOGINTCLR    = 0x00c,
-        WDOGRIS       = 0x010,
-        WDOGMIS       = 0x014,
+        WDOGLOAD = 0x000,
+        WDOGVALUE = 0x004,
+        WDOGCONTROL = 0x008,
+        WDOGINTCLR = 0x00c,
+        WDOGRIS = 0x010,
+        WDOGMIS = 0x014,
         // 0x018 - 0xbfc -> Reserved
-        WDOGLOCK      = 0xc00,
+        WDOGLOCK = 0xc00,
         // 0xc04 - 0xefc -> Reserved
-        WDOGITCR      = 0xf00,
-        WDOGITOP      = 0xf04,
+        WDOGITCR = 0xf00,
+        WDOGITOP = 0xf04,
         // 0xf08 - 0xfdc -> Reserved
         // 0xfe0 - 0xfff -> CoreSight / Peripheral ID (AMBA ID)
     };

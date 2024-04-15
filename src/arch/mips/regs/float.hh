@@ -90,49 +90,32 @@ enum : RegIndex
 } // namespace float_reg
 
 inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
-        float_reg::NumRegs, debug::FloatRegs);
+                                        float_reg::NumRegs, debug::FloatRegs);
 
 namespace float_reg
 {
 
 inline constexpr RegId
     F0 = floatRegClass[_F0Idx],
-    F1 = floatRegClass[_F1Idx],
-    F2 = floatRegClass[_F2Idx],
-    F3 = floatRegClass[_F3Idx],
-    F4 = floatRegClass[_F4Idx],
-    F5 = floatRegClass[_F5Idx],
-    F6 = floatRegClass[_F6Idx],
-    F7 = floatRegClass[_F7Idx],
-    F8 = floatRegClass[_F8Idx],
-    F9 = floatRegClass[_F9Idx],
-    F10 = floatRegClass[_F10Idx],
-    F11 = floatRegClass[_F11Idx],
-    F12 = floatRegClass[_F12Idx],
-    F13 = floatRegClass[_F13Idx],
-    F14 = floatRegClass[_F14Idx],
-    F15 = floatRegClass[_F15Idx],
-    F16 = floatRegClass[_F16Idx],
-    F17 = floatRegClass[_F17Idx],
-    F18 = floatRegClass[_F18Idx],
-    F19 = floatRegClass[_F19Idx],
-    F20 = floatRegClass[_F20Idx],
-    F21 = floatRegClass[_F21Idx],
-    F22 = floatRegClass[_F22Idx],
-    F23 = floatRegClass[_F23Idx],
-    F24 = floatRegClass[_F24Idx],
-    F25 = floatRegClass[_F25Idx],
-    F26 = floatRegClass[_F26Idx],
-    F27 = floatRegClass[_F27Idx],
-    F28 = floatRegClass[_F28Idx],
-    F29 = floatRegClass[_F29Idx],
-    F30 = floatRegClass[_F30Idx],
+    F1 = floatRegClass[_F1Idx], F2 = floatRegClass[_F2Idx],
+    F3 = floatRegClass[_F3Idx], F4 = floatRegClass[_F4Idx],
+    F5 = floatRegClass[_F5Idx], F6 = floatRegClass[_F6Idx],
+    F7 = floatRegClass[_F7Idx], F8 = floatRegClass[_F8Idx],
+    F9 = floatRegClass[_F9Idx], F10 = floatRegClass[_F10Idx],
+    F11 = floatRegClass[_F11Idx], F12 = floatRegClass[_F12Idx],
+    F13 = floatRegClass[_F13Idx], F14 = floatRegClass[_F14Idx],
+    F15 = floatRegClass[_F15Idx], F16 = floatRegClass[_F16Idx],
+    F17 = floatRegClass[_F17Idx], F18 = floatRegClass[_F18Idx],
+    F19 = floatRegClass[_F19Idx], F20 = floatRegClass[_F20Idx],
+    F21 = floatRegClass[_F21Idx], F22 = floatRegClass[_F22Idx],
+    F23 = floatRegClass[_F23Idx], F24 = floatRegClass[_F24Idx],
+    F25 = floatRegClass[_F25Idx], F26 = floatRegClass[_F26Idx],
+    F27 = floatRegClass[_F27Idx], F28 = floatRegClass[_F28Idx],
+    F29 = floatRegClass[_F29Idx], F30 = floatRegClass[_F30Idx],
     F31 = floatRegClass[_F31Idx],
 
-    Fir = floatRegClass[_FirIdx],
-    Fccr = floatRegClass[_FccrIdx],
-    Fexr = floatRegClass[_FexrIdx],
-    Fenr = floatRegClass[_FenrIdx],
+    Fir = floatRegClass[_FirIdx], Fccr = floatRegClass[_FccrIdx],
+    Fexr = floatRegClass[_FexrIdx], Fenr = floatRegClass[_FenrIdx],
     Fcsr = floatRegClass[_FcsrIdx];
 
 } // namespace float_reg

@@ -47,7 +47,7 @@
 using namespace std;
 
 void
-printUsage(const char * execName)
+printUsage(const char *execName)
 {
     cout << execName << " <options> -- <command> <arguments>" << endl;
     cout << "options:" << endl;
@@ -58,13 +58,13 @@ printUsage(const char * execName)
 }
 
 int
-main(int argc, char * argv[], char * envp[])
+main(int argc, char *argv[], char *envp[])
 {
-    TraceChild * child = genTraceChild();
+    TraceChild *child = genTraceChild();
     string args;
     int startProgramArgs;
 
-    //Parse the command line arguments
+    // Parse the command line arguments
     bool printInitial = false;
     bool printTrace = true;
     string host = "localhost";
@@ -106,7 +106,7 @@ main(int argc, char * argv[], char * envp[])
         }
     }
     if (!child->startTracing(argv[startProgramArgs],
-                argv + startProgramArgs)) {
+                             argv + startProgramArgs)) {
         cerr << "Couldn't start target program" << endl;
         return 1;
     }
@@ -131,9 +131,8 @@ main(int argc, char * argv[], char * envp[])
         struct sockaddr_in serv_addr;
         bzero((char *)&serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
-        bcopy((char *)server->h_addr,
-                (char *)&serv_addr.sin_addr.s_addr,
-                server->h_length);
+        bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
+              server->h_length);
         serv_addr.sin_port = htons(8000);
         if (connect(sock, (sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
             cerr << "Couldn't connect to server! " << strerror(errno) << endl;

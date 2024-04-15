@@ -76,12 +76,12 @@ using VecPredRegContainer = VecPredReg::Container;
 // subsequent single register ones. This means we would use a index
 // bigger than 31 when accessing D16-D31.
 const int NumFloatV7ArchRegs = 64; // S0-S31, D0-D31
-const int NumVecV7ArchRegs  = 16; // Q0-Q15
-const int NumVecV8ArchRegs  = 32; // V0-V31
+const int NumVecV7ArchRegs = 16;   // Q0-Q15
+const int NumVecV8ArchRegs = 32;   // V0-V31
 const int NumVecSpecialRegs = 8;
 const int NumVecIntrlvRegs = 4;
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
-const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
+const int NumVecPredRegs = 18; // P0-P15, FFR, UREG0
 
 // Vec, PredVec indices
 const int VecSpecialElem = NumVecV8ArchRegs * NumVecElemPerNeonVecReg;
@@ -99,18 +99,18 @@ static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
 static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;
 
 inline constexpr RegClass vecRegClass =
-    RegClass(VecRegClass, VecRegClassName, NumVecRegs, debug::VecRegs).
-        ops(vecRegClassOps).
-        regType<VecRegContainer>();
+    RegClass(VecRegClass, VecRegClassName, NumVecRegs, debug::VecRegs)
+        .ops(vecRegClassOps)
+        .regType<VecRegContainer>();
 inline constexpr RegClass vecElemClass =
-    RegClass(VecElemClass, VecElemClassName, NumVecRegs * NumVecElemPerVecReg,
-            debug::VecRegs).
-        ops(vecRegElemClassOps);
+    RegClass(VecElemClass, VecElemClassName, NumVecRegs *NumVecElemPerVecReg,
+             debug::VecRegs)
+        .ops(vecRegElemClassOps);
 inline constexpr RegClass vecPredRegClass =
     RegClass(VecPredRegClass, VecPredRegClassName, NumVecPredRegs,
-            debug::VecPredRegs).
-        ops(vecPredRegClassOps).
-        regType<VecPredRegContainer>();
+             debug::VecPredRegs)
+        .ops(vecPredRegClassOps)
+        .regType<VecPredRegContainer>();
 
 } // namespace ArmISA
 } // namespace gem5

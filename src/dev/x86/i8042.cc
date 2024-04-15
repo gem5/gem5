@@ -46,11 +46,13 @@ namespace gem5
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
 
-
 X86ISA::I8042::I8042(const Params &p)
-    : PioDevice(p), latency(p.pio_latency),
-      dataPort(p.data_port), commandPort(p.command_port),
-      mouse(p.mouse), keyboard(p.keyboard)
+    : PioDevice(p),
+      latency(p.pio_latency),
+      dataPort(p.data_port),
+      commandPort(p.command_port),
+      mouse(p.mouse),
+      keyboard(p.keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
     fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
@@ -63,14 +65,13 @@ X86ISA::I8042::I8042(const Params &p)
 
     for (int i = 0; i < p.port_keyboard_int_pin_connection_count; i++) {
         keyboardIntPin.push_back(new IntSourcePin<I8042>(
-                    csprintf("%s.keyboard_int_pin[%d]", name(), i), i, this));
+            csprintf("%s.keyboard_int_pin[%d]", name(), i), i, this));
     }
     for (int i = 0; i < p.port_mouse_int_pin_connection_count; i++) {
         mouseIntPin.push_back(new IntSourcePin<I8042>(
-                    csprintf("%s.mouse_int_pin[%d]", name(), i), i, this));
+            csprintf("%s.mouse_int_pin[%d]", name(), i), i, this));
     }
 }
-
 
 AddrRangeList
 X86ISA::I8042::getAddrRanges() const
@@ -90,16 +91,16 @@ X86ISA::I8042::writeData(uint8_t newData, bool mouse)
     statusReg.mouseOutputFull = (mouse ? 1 : 0);
     if (!mouse && commandByte.keyboardFullInt) {
         DPRINTF(I8042, "Sending keyboard interrupt.\n");
-        for (auto *wire: keyboardIntPin) {
+        for (auto *wire : keyboardIntPin) {
             wire->raise();
-            //This is a hack
+            // This is a hack
             wire->lower();
         }
     } else if (mouse && commandByte.mouseFullInt) {
         DPRINTF(I8042, "Sending mouse interrupt.\n");
-        for (auto *wire: mouseIntPin) {
+        for (auto *wire : mouseIntPin) {
             wire->raise();
-            //This is a hack
+            // This is a hack
             wire->lower();
         }
     }
@@ -126,10 +127,10 @@ X86ISA::I8042::read(PacketPtr pkt)
     Addr addr = pkt->getAddr();
     if (addr == dataPort) {
         uint8_t data = readDataOut();
-        //DPRINTF(I8042, "Read from data port got %#02x.\n", data);
+        // DPRINTF(I8042, "Read from data port got %#02x.\n", data);
         pkt->setLE<uint8_t>(data);
     } else if (addr == commandPort) {
-        //DPRINTF(I8042, "Read status as %#02x.\n", (uint8_t)statusReg);
+        // DPRINTF(I8042, "Read status as %#02x.\n", (uint8_t)statusReg);
         pkt->setLE<uint8_t>((uint8_t)statusReg);
     } else {
         panic("Read from unrecognized port %#x.\n", addr);
@@ -147,41 +148,50 @@ X86ISA::I8042::write(PacketPtr pkt)
     if (addr == dataPort) {
         statusReg.commandLast = 0;
         switch (lastCommand) {
-          case NoCommand:
+        case NoCommand:
             keyboard->hostWrite(data);
             if (keyboard->hostDataAvailable())
                 writeData(keyboard->hostRead(), false);
             break;
-          case WriteToMouse:
+        case WriteToMouse:
             mouse->hostWrite(data);
             if (mouse->hostDataAvailable())
                 writeData(mouse->hostRead(), true);
             break;
-          case WriteCommandByte:
+        case WriteCommandByte:
             commandByte = data;
-            DPRINTF(I8042, "Got data %#02x for \"Write "
-                    "command byte\" command.\n", data);
+            DPRINTF(I8042,
+                    "Got data %#02x for \"Write "
+                    "command byte\" command.\n",
+                    data);
             statusReg.passedSelfTest = (uint8_t)commandByte.passedSelfTest;
             break;
-          case WriteMouseOutputBuff:
-            DPRINTF(I8042, "Got data %#02x for \"Write "
-                    "mouse output buffer\" command.\n", data);
+        case WriteMouseOutputBuff:
+            DPRINTF(I8042,
+                    "Got data %#02x for \"Write "
+                    "mouse output buffer\" command.\n",
+                    data);
             writeData(data, true);
             break;
-          case WriteKeyboardOutputBuff:
-            DPRINTF(I8042, "Got data %#02x for \"Write "
-                    "keyboad output buffer\" command.\n", data);
+        case WriteKeyboardOutputBuff:
+            DPRINTF(I8042,
+                    "Got data %#02x for \"Write "
+                    "keyboad output buffer\" command.\n",
+                    data);
             writeData(data, false);
             break;
-          case WriteOutputPort:
-            DPRINTF(I8042, "Got data %#02x for \"Write "
-                    "output port\" command.\n", data);
+        case WriteOutputPort:
+            DPRINTF(I8042,
+                    "Got data %#02x for \"Write "
+                    "output port\" command.\n",
+                    data);
             panic_if(bits(data, 0) != 1, "Reset bit should be 1");
             // Safe to ignore otherwise
             break;
-          default:
+        default:
             panic("Data written for unrecognized "
-                    "command %#02x\n", lastCommand);
+                  "command %#02x\n",
+                  lastCommand);
         }
         lastCommand = NoCommand;
     } else if (addr == commandPort) {
@@ -190,47 +200,50 @@ X86ISA::I8042::write(PacketPtr pkt)
         // These purposefully leave off the first byte of the controller RAM
         // so it can be handled specially.
         if (data > ReadControllerRamBase &&
-                data < ReadControllerRamBase + RamSize) {
+            data < ReadControllerRamBase + RamSize) {
             panic("Attempted to use i8042 read controller RAM command to "
-                    "get byte %d.\n", data - ReadControllerRamBase);
+                  "get byte %d.\n",
+                  data - ReadControllerRamBase);
         } else if (data > WriteControllerRamBase &&
-                data < WriteControllerRamBase + RamSize) {
+                   data < WriteControllerRamBase + RamSize) {
             panic("Attempted to use i8042 write controller RAM command to "
-                    "get byte %d.\n", data - WriteControllerRamBase);
+                  "get byte %d.\n",
+                  data - WriteControllerRamBase);
         } else if (data >= PulseOutputBitBase &&
-                data < PulseOutputBitBase + NumOutputBits) {
+                   data < PulseOutputBitBase + NumOutputBits) {
             panic("Attempted to use i8042 pulse output bit command to "
-                    "to pulse bit %d.\n", data - PulseOutputBitBase);
+                  "to pulse bit %d.\n",
+                  data - PulseOutputBitBase);
         }
         switch (data) {
-          case GetCommandByte:
+        case GetCommandByte:
             DPRINTF(I8042, "Getting command byte.\n");
             writeData(commandByte);
             break;
-          case WriteCommandByte:
+        case WriteCommandByte:
             DPRINTF(I8042, "Setting command byte.\n");
             lastCommand = WriteCommandByte;
             break;
-          case CheckForPassword:
+        case CheckForPassword:
             panic("i8042 \"Check for password\" command not implemented.\n");
-          case LoadPassword:
+        case LoadPassword:
             panic("i8042 \"Load password\" command not implemented.\n");
-          case CheckPassword:
+        case CheckPassword:
             panic("i8042 \"Check password\" command not implemented.\n");
-          case DisableMouse:
+        case DisableMouse:
             DPRINTF(I8042, "Disabling mouse at controller.\n");
             commandByte.disableMouse = 1;
             break;
-          case EnableMouse:
+        case EnableMouse:
             DPRINTF(I8042, "Enabling mouse at controller.\n");
             commandByte.disableMouse = 0;
             break;
-          case TestMouse:
+        case TestMouse:
             // The response to this is from the 8042, not the mouse.
             // Hard code no errors detected.
             writeData(0x00);
             break;
-          case SelfTest:
+        case SelfTest:
             // Exactly what this does is essentially undocumented, but this:
             // https://www.os2museum.com/wp/
             //          ibm-pcat-8042-keyboard-controller-commands/
@@ -242,53 +255,53 @@ X86ISA::I8042::write(PacketPtr pkt)
             statusReg.passedSelfTest = 1;
             writeData(0x55); // Self test passed.
             break;
-          case InterfaceTest:
+        case InterfaceTest:
             // Hard code no errors detected.
             writeData(0x00);
             break;
-          case DiagnosticDump:
+        case DiagnosticDump:
             panic("i8042 \"Diagnostic dump\" command not implemented.\n");
-          case DisableKeyboard:
+        case DisableKeyboard:
             DPRINTF(I8042, "Disabling keyboard at controller.\n");
             commandByte.disableKeyboard = 1;
             break;
-          case EnableKeyboard:
+        case EnableKeyboard:
             DPRINTF(I8042, "Enabling keyboard at controller.\n");
             commandByte.disableKeyboard = 0;
             break;
-          case ReadInputPort:
+        case ReadInputPort:
             panic("i8042 \"Read input port\" command not implemented.\n");
-          case ContinuousPollLow:
+        case ContinuousPollLow:
             panic("i8042 \"Continuous poll low\" command not implemented.\n");
-          case ContinuousPollHigh:
+        case ContinuousPollHigh:
             panic("i8042 \"Continuous poll high\" command not implemented.\n");
-          case ReadOutputPort:
+        case ReadOutputPort:
             panic("i8042 \"Read output port\" command not implemented.\n");
-          case WriteOutputPort:
+        case WriteOutputPort:
             lastCommand = WriteOutputPort;
             break;
-          case WriteKeyboardOutputBuff:
+        case WriteKeyboardOutputBuff:
             lastCommand = WriteKeyboardOutputBuff;
             break;
-          case WriteMouseOutputBuff:
+        case WriteMouseOutputBuff:
             DPRINTF(I8042, "Got command to write to mouse output buffer.\n");
             lastCommand = WriteMouseOutputBuff;
             break;
-          case WriteToMouse:
+        case WriteToMouse:
             DPRINTF(I8042, "Expecting mouse command.\n");
             lastCommand = WriteToMouse;
             break;
-          case DisableA20:
+        case DisableA20:
             panic("i8042 \"Disable A20\" command not implemented.\n");
-          case EnableA20:
+        case EnableA20:
             panic("i8042 \"Enable A20\" command not implemented.\n");
-          case ReadTestInputs:
+        case ReadTestInputs:
             panic("i8042 \"Read test inputs\" command not implemented.\n");
-          case SystemReset:
+        case SystemReset:
             panic("i8042 \"System reset\" command not implemented.\n");
-          default:
+        default:
             warn("Write to unknown i8042 "
-                    "(keyboard controller) command port.\n");
+                 "(keyboard controller) command port.\n");
         }
     } else {
         panic("Write to unrecognized port %#x.\n", addr);

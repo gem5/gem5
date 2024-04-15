@@ -116,6 +116,7 @@ regIsVfpReg(uint64_t id)
 {
     return regVfpReg(id) < 0x100;
 }
+
 constexpr bool
 regIsVfpCtrl(uint64_t id)
 {
@@ -127,7 +128,6 @@ regIsDemux(uint64_t id)
 {
     return regIsCp(id, KVM_REG_ARM_DEMUX);
 }
-
 
 // There is no constant in the kernel headers defining the mask to use
 // to get the core register index. We'll just do what they do
@@ -166,7 +166,7 @@ constexpr uint64_t
 regOpc2(uint64_t id)
 {
     return extractField(id, KVM_REG_ARM_32_OPC2_MASK,
-            KVM_REG_ARM_32_OPC2_SHIFT);
+                        KVM_REG_ARM_32_OPC2_SHIFT);
 }
 
 constexpr uint64_t
@@ -174,27 +174,25 @@ regCp32(uint64_t cpnum, uint64_t crn, uint64_t opc1, uint64_t crm,
         uint64_t opc2)
 {
     return KVM_REG_ARM | KVM_REG_SIZE_U32 |
-        (cpnum << KVM_REG_ARM_COPROC_SHIFT) |
-        (crn << KVM_REG_ARM_32_CRN_SHIFT) |
-        (opc1 << KVM_REG_ARM_OPC1_SHIFT) |
-        (crm << KVM_REG_ARM_CRM_SHIFT) |
-        (opc2 << KVM_REG_ARM_32_OPC2_SHIFT);
+           (cpnum << KVM_REG_ARM_COPROC_SHIFT) |
+           (crn << KVM_REG_ARM_32_CRN_SHIFT) |
+           (opc1 << KVM_REG_ARM_OPC1_SHIFT) | (crm << KVM_REG_ARM_CRM_SHIFT) |
+           (opc2 << KVM_REG_ARM_32_OPC2_SHIFT);
 }
 
 constexpr uint64_t
 regCp64(uint64_t cpnum, uint64_t opc1, uint64_t crm)
 {
     return KVM_REG_ARM | KVM_REG_SIZE_U64 |
-        (cpnum << KVM_REG_ARM_COPROC_SHIFT) |
-        (opc1 << KVM_REG_ARM_OPC1_SHIFT) |
-        (crm << KVM_REG_ARM_CRM_SHIFT);
+           (cpnum << KVM_REG_ARM_COPROC_SHIFT) |
+           (opc1 << KVM_REG_ARM_OPC1_SHIFT) | (crm << KVM_REG_ARM_CRM_SHIFT);
 }
 
 constexpr KvmIntRegInfo
 regCore32(off_t offset, RegIndex idx, const char *name)
 {
-    return { KVM_REG_ARM | KVM_REG_SIZE_U32 | KVM_REG_ARM_CORE | offset,
-             idx, name };
+    return { KVM_REG_ARM | KVM_REG_SIZE_U32 | KVM_REG_ARM_CORE | offset, idx,
+             name };
 }
 
 constexpr uint64_t
@@ -219,8 +217,7 @@ constexpr uint64_t
 interruptId(uint64_t type, uint64_t vcpu, uint64_t irq)
 {
     return (type << KVM_ARM_IRQ_TYPE_SHIFT) |
-        (vcpu << KVM_ARM_IRQ_VCPU_SHIFT) |
-        (irq << KVM_ARM_IRQ_NUM_SHIFT);
+           (vcpu << KVM_ARM_IRQ_VCPU_SHIFT) | (irq << KVM_ARM_IRQ_NUM_SHIFT);
 }
 
 constexpr uint64_t
@@ -279,10 +276,9 @@ static uint64_t invariant_reg_vector[] = {
 const static uint64_t KVM_REG64_TTBR0(regCp64(15, 0, 2));
 const static uint64_t KVM_REG64_TTBR1(regCp64(15, 1, 2));
 
-
-const std::set<uint64_t> ArmKvmCPU::invariant_regs(
-    std::begin(invariant_reg_vector), std::end(invariant_reg_vector));
-
+const std::set<uint64_t>
+    ArmKvmCPU::invariant_regs(std::begin(invariant_reg_vector),
+                              std::end(invariant_reg_vector));
 
 ArmKvmCPU::KvmIntRegInfo ArmKvmCPU::kvmIntRegs[] = {
     regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_r0), int_reg::R0, "R0"),
@@ -313,7 +309,6 @@ ArmKvmCPU::KvmIntRegInfo ArmKvmCPU::kvmIntRegs[] = {
     regCore32(KVM_REG_ARM_CORE_REG(irq_regs[0]), int_reg::SpIrq, "R13(IRQ)"),
     regCore32(KVM_REG_ARM_CORE_REG(irq_regs[1]), int_reg::LrIrq, "R14(IRQ)"),
 
-
     regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[0]), int_reg::R8Fiq, "R8(FIQ)"),
     regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[1]), int_reg::R9Fiq, "R9(FIQ)"),
     regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[2]), int_reg::R10Fiq, "R10(FIQ)"),
@@ -327,27 +322,23 @@ ArmKvmCPU::KvmIntRegInfo ArmKvmCPU::kvmIntRegs[] = {
 ArmKvmCPU::KvmCoreMiscRegInfo ArmKvmCPU::kvmCoreMiscRegs[] = {
     regCore32(KVM_REG_ARM_CORE_REG(usr_regs.ARM_cpsr), MISCREG_CPSR, "CPSR"),
     regCore32(KVM_REG_ARM_CORE_REG(svc_regs[2]), MISCREG_SPSR_SVC,
-            "SPSR(SVC)"),
+              "SPSR(SVC)"),
     regCore32(KVM_REG_ARM_CORE_REG(abt_regs[2]), MISCREG_SPSR_ABT,
-            "SPSR(ABT)"),
+              "SPSR(ABT)"),
     regCore32(KVM_REG_ARM_CORE_REG(und_regs[2]), MISCREG_SPSR_UND,
-            "SPSR(UND)"),
+              "SPSR(UND)"),
     regCore32(KVM_REG_ARM_CORE_REG(irq_regs[2]), MISCREG_SPSR_IRQ,
-            "SPSR(IRQ)"),
+              "SPSR(IRQ)"),
     regCore32(KVM_REG_ARM_CORE_REG(fiq_regs[2]), MISCREG_SPSR_FIQ,
-            "SPSR(FIQ)"),
+              "SPSR(FIQ)"),
     { 0, NUM_MISCREGS }
 };
 
 ArmKvmCPU::ArmKvmCPU(const ArmKvmCPUParams &params)
-    : BaseKvmCPU(params),
-      irqAsserted(false), fiqAsserted(false)
-{
-}
+    : BaseKvmCPU(params), irqAsserted(false), fiqAsserted(false)
+{}
 
-ArmKvmCPU::~ArmKvmCPU()
-{
-}
+ArmKvmCPU::~ArmKvmCPU() {}
 
 void
 ArmKvmCPU::startup()
@@ -414,19 +405,17 @@ const ArmKvmCPU::RegIndexVector &
 ArmKvmCPU::getRegList() const
 {
     if (_regIndexList.size() == 0) {
-        std::unique_ptr<struct kvm_reg_list, void(*)(void *p)>
-            regs(nullptr, [](void *p) { operator delete(p); });
+        std::unique_ptr<struct kvm_reg_list, void (*)(void *p)> regs(
+            nullptr, [](void *p) { operator delete(p); });
         uint64_t i = 1;
 
         do {
             i <<= 1;
-            regs.reset((struct kvm_reg_list *)
-                       operator new(sizeof(struct kvm_reg_list) +
-                                    i * sizeof(uint64_t)));
+            regs.reset((struct kvm_reg_list *)operator new(
+                sizeof(struct kvm_reg_list) + i * sizeof(uint64_t)));
             regs->n = i;
         } while (!getRegList(*regs));
-        _regIndexList.assign(regs->reg,
-                             regs->reg + regs->n);
+        _regIndexList.assign(regs->reg, regs->reg + regs->n);
     }
 
     return _regIndexList;
@@ -469,13 +458,13 @@ ArmKvmCPU::decodeCoProcReg(uint64_t id) const
 
     if (is_reg32) {
         switch (cp) {
-          case 14:
+        case 14:
             return decodeCP14Reg(crn, opc1, crm, opc2);
 
-          case 15:
+        case 15:
             return decodeCP15Reg(crn, opc1, crm, opc2);
 
-          default:
+        default:
             return NUM_MISCREGS;
         }
     } else if (is_reg64) {
@@ -494,18 +483,23 @@ ArmKvmCPU::decodeVFPCtrlReg(uint64_t id) const
 
     const unsigned vfp_reg = regVfpReg(id);
     switch (vfp_reg) {
-      case KVM_REG_ARM_VFP_FPSID: return MISCREG_FPSID;
-      case KVM_REG_ARM_VFP_FPSCR: return MISCREG_FPSCR;
-      case KVM_REG_ARM_VFP_MVFR0: return MISCREG_MVFR0;
-      case KVM_REG_ARM_VFP_MVFR1: return MISCREG_MVFR1;
-      case KVM_REG_ARM_VFP_FPEXC: return MISCREG_FPEXC;
+    case KVM_REG_ARM_VFP_FPSID:
+        return MISCREG_FPSID;
+    case KVM_REG_ARM_VFP_FPSCR:
+        return MISCREG_FPSCR;
+    case KVM_REG_ARM_VFP_MVFR0:
+        return MISCREG_MVFR0;
+    case KVM_REG_ARM_VFP_MVFR1:
+        return MISCREG_MVFR1;
+    case KVM_REG_ARM_VFP_FPEXC:
+        return MISCREG_FPEXC;
 
-      case KVM_REG_ARM_VFP_FPINST:
-      case KVM_REG_ARM_VFP_FPINST2:
+    case KVM_REG_ARM_VFP_FPINST:
+    case KVM_REG_ARM_VFP_FPINST2:
         warn_once("KVM: FPINST not implemented.\n");
         return NUM_MISCREGS;
 
-      default:
+    default:
         return NUM_MISCREGS;
     }
 }
@@ -544,16 +538,14 @@ ArmKvmCPU::dumpKvmStateCore()
     uint32_t pc = getOneRegU32(REG_CORE32(usr_regs.ARM_pc));
     inform("PC: 0x%x\n", pc);
 
-    for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != int_reg::NumRegs; ++ri) {
-
+    for (const KvmIntRegInfo *ri(kvmIntRegs); ri->idx != int_reg::NumRegs;
+         ++ri) {
         uint32_t value(getOneRegU32(ri->id));
         inform("%s: 0x%x\n", ri->name, value);
     }
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
          ri->idx != NUM_MISCREGS; ++ri) {
-
         uint32_t value(getOneRegU32(ri->id));
         inform("%s: 0x%x\n", miscRegName[ri->idx], value);
     }
@@ -574,18 +566,18 @@ ArmKvmCPU::dumpKvmStateMisc()
             dumpKvmStateVFP(id);
         } else if (regIsArm(id) && regIsDemux(id)) {
             switch (id & KVM_REG_ARM_DEMUX_ID_MASK) {
-              case KVM_REG_ARM_DEMUX_ID_CCSIDR:
+            case KVM_REG_ARM_DEMUX_ID_CCSIDR:
                 inform("CCSIDR [0x%x]: %s\n",
                        extractField(id, KVM_REG_ARM_DEMUX_VAL_MASK,
-                           KVM_REG_ARM_DEMUX_VAL_SHIFT),
+                                    KVM_REG_ARM_DEMUX_VAL_SHIFT),
                        getAndFormatOneReg(id));
                 break;
-              default:
+            default:
                 inform("DEMUX [0x%x, 0x%x]: %s\n",
                        extractField(id, KVM_REG_ARM_DEMUX_ID_MASK,
-                           KVM_REG_ARM_DEMUX_ID_SHIFT),
+                                    KVM_REG_ARM_DEMUX_ID_SHIFT),
                        extractField(id, KVM_REG_ARM_DEMUX_VAL_MASK,
-                           KVM_REG_ARM_DEMUX_VAL_SHIFT),
+                                    KVM_REG_ARM_DEMUX_VAL_SHIFT),
                        getAndFormatOneReg(id));
                 break;
             }
@@ -613,25 +605,24 @@ ArmKvmCPU::dumpKvmStateCoProc(uint64_t id)
             const unsigned m5_e = tc->readMiscReg(idx);
             inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i]: "
                    "[%s]: 0x%x/0x%x\n",
-                   regCp(id), regCrn(id), regOpc1(id), regCrm(id),
-                   regOpc2(id), isInvariantReg(id),
-                   name, value, m5_e);
+                   regCp(id), regCrn(id), regOpc1(id), regCrm(id), regOpc2(id),
+                   isInvariantReg(id), name, value, m5_e);
             if (m5_e != m5_ne) {
-                inform("readMiscReg: %x, readMiscRegNoEffect: %x\n",
-                       m5_e, m5_ne);
+                inform("readMiscReg: %x, readMiscRegNoEffect: %x\n", m5_e,
+                       m5_ne);
             }
         } else {
             const char *name = idx != NUM_MISCREGS ? miscRegName[idx] : "-";
             inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i]: "
-                    "[%s]: 0x%x\n",
-                   regCp(id), regCrn(id), regOpc1(id), regCrm(id),
-                   regOpc2(id), isInvariantReg(id), name, value);
+                   "[%s]: 0x%x\n",
+                   regCp(id), regCrn(id), regOpc1(id), regCrm(id), regOpc2(id),
+                   isInvariantReg(id), name, value);
         }
     } else {
         inform("CP%i: [CRn: c%i opc1: %.2i CRm: c%i opc2: %i inv: %i "
                "len: 0x%x]: %s\n",
-               regCp(id), regCrn(id), regOpc1(id), regCrm(id),
-               regOpc2(id), isInvariantReg(id),
+               regCp(id), regCrn(id), regOpc1(id), regCrm(id), regOpc2(id),
+               isInvariantReg(id),
                extractField(id, KVM_REG_SIZE_MASK, KVM_REG_SIZE_SHIFT),
                getAndFormatOneReg(id));
     }
@@ -661,9 +652,8 @@ ArmKvmCPU::dumpKvmStateVFP(uint64_t id)
 void
 ArmKvmCPU::updateKvmStateCore()
 {
-    for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != init_reg::NumRegs; ++ri) {
-
+    for (const KvmIntRegInfo *ri(kvmIntRegs); ri->idx != init_reg::NumRegs;
+         ++ri) {
         uint64_t value = tc->getReg(flatIntRegClass[ri->idx]);
         DPRINTF(KvmContext, "kvm(%s) := 0x%x\n", ri->name, value);
         setOneReg(ri->id, value);
@@ -674,7 +664,6 @@ ArmKvmCPU::updateKvmStateCore()
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
          ri->idx != NUM_MISCREGS; ++ri) {
-
         uint64_t value = tc->readMiscReg(ri->idx);
         DPRINTF(KvmContext, "kvm(%s) := 0x%x\n", ri->name, value);
         setOneReg(ri->id, value);
@@ -692,10 +681,8 @@ ArmKvmCPU::updateKvmStateMisc()
 
     const RegIndexVector &regs = getRegList();
 
-    for (RegIndexVector::const_iterator it(regs.begin());
-         it != regs.end();
+    for (RegIndexVector::const_iterator it(regs.begin()); it != regs.end();
          ++it) {
-
         if (!regIsArm(*it)) {
             if (!warned)
                 warn("Skipping non-ARM register: 0x%x\n", *it);
@@ -714,7 +701,6 @@ ArmKvmCPU::updateKvmStateMisc()
                      regCp(*it), *it);
             }
         }
-
     }
 
     warned = true;
@@ -743,8 +729,8 @@ ArmKvmCPU::updateKvmStateCoProc(uint64_t id, bool show_warnings)
                  id);
             warn("\t0x%x: [CP: %i 64: %i CRn: c%i opc1: %.2i CRm: c%i"
                  " opc2: %i]\n",
-                 id, regCp(id), regIs64Bit(id), regCrn(id),
-                 regOpc1(id), regCrm(id), regOpc2(id));
+                 id, regCp(id), regIs64Bit(id), regCrn(id), regOpc1(id),
+                 regCrm(id), regOpc2(id));
         }
     } else if (reg >= MISCREG_CP15_UNIMP_START && reg < MISCREG_CP15_END) {
         if (show_warnings)
@@ -754,7 +740,6 @@ ArmKvmCPU::updateKvmStateCoProc(uint64_t id, bool show_warnings)
         setOneReg(id, tc->readMiscRegNoEffect(reg));
     }
 }
-
 
 void
 ArmKvmCPU::updateKvmStateVFP(uint64_t id, bool show_warnings)
@@ -773,7 +758,7 @@ ArmKvmCPU::updateKvmStateVFP(uint64_t id, bool show_warnings)
         const unsigned idx_hi = idx_base + 1;
         const unsigned idx_lo = idx_base + 0;
         uint64_t value = (tc->getReg(floatRegClass[idx_hi]) << 32) |
-            tc->getReg(floatRegClass[idx_lo]);
+                         tc->getReg(floatRegClass[idx_lo]);
 
         setOneReg(id, value);
     } else if (regIsVfpCtrl(id)) {
@@ -800,15 +785,13 @@ ArmKvmCPU::updateKvmStateVFP(uint64_t id, bool show_warnings)
 void
 ArmKvmCPU::updateTCStateCore()
 {
-    for (const KvmIntRegInfo *ri(kvmIntRegs);
-         ri->idx != int_reg::NumRegs; ++ri) {
-
+    for (const KvmIntRegInfo *ri(kvmIntRegs); ri->idx != int_reg::NumRegs;
+         ++ri) {
         tc->setReg(intRegClass[ri->idx], getOneRegU32(ri->id));
     }
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
          ri->idx != NUM_MISCREGS; ++ri) {
-
         tc->setMiscRegNoEffect(ri->idx, getOneRegU32(ri->id));
     }
 
@@ -836,7 +819,6 @@ ArmKvmCPU::updateTCStateMisc()
     const RegIndexVector &reg_ids = getRegList();
     for (RegIndexVector::const_iterator it(reg_ids.begin());
          it != reg_ids.end(); ++it) {
-
         if (!regIsArm(*it)) {
             if (!warned)
                 warn("Skipping non-ARM register: 0x%x\n", *it);
@@ -871,9 +853,9 @@ ArmKvmCPU::updateTCStateCoProc(uint64_t id, bool show_warnings)
     if (id == KVM_REG64_TTBR0 || id == KVM_REG64_TTBR1) {
         // HACK HACK HACK: We don't currently support 64-bit TTBR0/TTBR1
         hack_once("KVM: 64-bit TTBRx workaround\n");
-        tc->setMiscRegNoEffect(
-            id == KVM_REG64_TTBR0 ? MISCREG_TTBR0 : MISCREG_TTBR1,
-            (uint32_t)(getOneRegU64(id) & 0xFFFFFFFF));
+        tc->setMiscRegNoEffect(id == KVM_REG64_TTBR0 ? MISCREG_TTBR0 :
+                                                       MISCREG_TTBR1,
+                               (uint32_t)(getOneRegU64(id) & 0xFFFFFFFF));
     } else if (reg == MISCREG_TTBCR) {
         uint32_t value = getOneRegU64(id);
         if (value & 0x80000000)
@@ -884,8 +866,8 @@ ArmKvmCPU::updateTCStateCoProc(uint64_t id, bool show_warnings)
             warn("KVM: Ignoring unknown KVM co-processor register:\n", id);
             warn("\t0x%x: [CP: %i 64: %i CRn: c%i opc1: %.2i CRm: c%i"
                  " opc2: %i]\n",
-                 id, regCp(id), regIs64Bit(id), regCrn(id),
-                 regOpc1(id), regCrm(id), regOpc2(id));
+                 id, regCp(id), regIs64Bit(id), regCrn(id), regOpc1(id),
+                 regCrm(id), regOpc2(id));
         }
     } else if (reg >= MISCREG_CP15_UNIMP_START && reg < MISCREG_CP15_END) {
         if (show_warnings)

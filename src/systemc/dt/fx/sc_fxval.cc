@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxval.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -100,7 +99,6 @@ sc_fxval::to_string(sc_numrep numrep, bool w_prefix, sc_fmt fmt) const
     return std::string(m_rep->to_string(numrep, (w_prefix ? 1 : 0), fmt));
 }
 
-
 const std::string
 sc_fxval::to_dec() const
 {
@@ -125,10 +123,13 @@ sc_fxval::to_hex() const
     return std::string(m_rep->to_string(SC_HEX, -1, SC_E));
 }
 
-
 // print or dump content
 
-void sc_fxval::print(::std::ostream &os) const { m_rep->print(os); }
+void
+sc_fxval::print(::std::ostream &os) const
+{
+    m_rep->print(os);
+}
 
 void
 sc_fxval::scan(::std::istream &is)
@@ -172,7 +173,6 @@ sc_fxval::unlock_observer(sc_fxval_observer *observer_) const
     m_observer = observer_;
 }
 
-
 // ----------------------------------------------------------------------------
 //  CLASS : sc_fxval_fast
 //
@@ -204,7 +204,7 @@ print_dec(scfx_string &s, scfx_ieee_double id, int w_prefix, sc_fmt fmt)
 
     // print integer part
     int int_digits = 0;
-    int int_zeros  = 0;
+    int int_zeros = 0;
 
     if (int_part != 0.0) {
         int_digits = (int)std::ceil(std::log10(int_part + 1.0));
@@ -240,7 +240,7 @@ print_dec(scfx_string &s, scfx_ieee_double id, int w_prefix, sc_fmt fmt)
 
     // print fractional part
     int frac_digits = 0;
-    int frac_zeros  = 0;
+    int frac_zeros = 0;
 
     if (frac_part != 0.0) {
         s += '.';
@@ -288,15 +288,14 @@ print_dec(scfx_string &s, scfx_ieee_double id, int w_prefix, sc_fmt fmt)
 
 static void
 print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
-             int w_prefix, sc_fmt fmt, const scfx_params *params)
+            int w_prefix, sc_fmt fmt, const scfx_params *params)
 {
     scfx_ieee_double id2 = id;
 
     sc_numrep numrep2 = numrep;
 
-    bool numrep_is_sm = (numrep == SC_BIN_SM ||
-                         numrep == SC_OCT_SM ||
-                         numrep == SC_HEX_SM);
+    bool numrep_is_sm =
+        (numrep == SC_BIN_SM || numrep == SC_OCT_SM || numrep == SC_HEX_SM);
 
     if (numrep_is_sm) {
         if (id2.negative() != 0) {
@@ -304,17 +303,16 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
             id2.negative(0);
         }
         switch (numrep) {
-          case SC_BIN_SM:
+        case SC_BIN_SM:
             numrep2 = SC_BIN_US;
             break;
-          case SC_OCT_SM:
+        case SC_OCT_SM:
             numrep2 = SC_OCT_US;
             break;
-          case SC_HEX_SM:
+        case SC_HEX_SM:
             numrep2 = SC_HEX_US;
             break;
-          default:
-            ;
+        default:;
         }
     }
 
@@ -333,17 +331,13 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
         lsb = params->iwl() - params->wl();
 
         if (params->enc() == SC_TC_ &&
-            (numrep == SC_BIN_US ||
-              numrep == SC_OCT_US ||
-              numrep == SC_HEX_US) &&
-            !numrep_is_sm &&
-            params->wl() > 1) {
+            (numrep == SC_BIN_US || numrep == SC_OCT_US ||
+             numrep == SC_HEX_US) &&
+            !numrep_is_sm && params->wl() > 1) {
             --msb;
         } else if (params->enc() == SC_US_ &&
-            (numrep == SC_BIN ||
-              numrep == SC_OCT ||
-              numrep == SC_HEX ||
-              numrep == SC_CSD)) {
+                   (numrep == SC_BIN || numrep == SC_OCT || numrep == SC_HEX ||
+                    numrep == SC_CSD)) {
             ++msb;
         }
     } else {
@@ -355,8 +349,7 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
             while (a.get_bit(msb) == a.get_bit(msb - 1))
                 --msb;
 
-            if (numrep == SC_BIN_US ||
-                numrep == SC_OCT_US ||
+            if (numrep == SC_BIN_US || numrep == SC_OCT_US ||
                 numrep == SC_HEX_US) {
                 --msb;
             }
@@ -370,22 +363,22 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
     int step;
 
     switch (numrep) {
-      case SC_BIN:
-      case SC_BIN_US:
-      case SC_CSD:
+    case SC_BIN:
+    case SC_BIN_US:
+    case SC_CSD:
         step = 1;
-       break;
-      case SC_OCT:
-      case SC_OCT_US:
+        break;
+    case SC_OCT:
+    case SC_OCT_US:
         step = 3;
         break;
-      case SC_HEX:
-      case SC_HEX_US:
+    case SC_HEX:
+    case SC_HEX_US:
         step = 4;
         break;
-      default:
+    default:
         SC_REPORT_FATAL(sc_core::SC_ID_ASSERTION_FAILED_,
-                "unexpected sc_numrep");
+                        "unexpected sc_numrep");
         sc_core::sc_abort();
     }
 
@@ -442,7 +435,7 @@ print_other(scfx_string &s, const scfx_ieee_double &id, sc_numrep numrep,
 
 const char *
 to_string(const scfx_ieee_double &id, sc_numrep numrep, int w_prefix,
-          sc_fmt fmt, const scfx_params *params=0)
+          sc_fmt fmt, const scfx_params *params = 0)
 {
     static scfx_string s;
 
@@ -453,9 +446,8 @@ to_string(const scfx_ieee_double &id, sc_numrep numrep, int w_prefix,
     } else if (id.is_inf()) {
         scfx_print_inf(s, static_cast<bool>(id.negative()));
     } else if (id.negative() && !id.is_zero() &&
-             (numrep == SC_BIN_US ||
-               numrep == SC_OCT_US ||
-               numrep == SC_HEX_US)) {
+               (numrep == SC_BIN_US || numrep == SC_OCT_US ||
+                numrep == SC_HEX_US)) {
         s += "negative";
     } else if (numrep == SC_DEC) {
         sc_dt::print_dec(s, id, w_prefix, fmt);
@@ -465,7 +457,6 @@ to_string(const scfx_ieee_double &id, sc_numrep numrep, int w_prefix,
 
     return s;
 }
-
 
 // explicit conversion to character string
 const std::string
@@ -483,8 +474,8 @@ sc_fxval_fast::to_string(sc_numrep numrep) const
 const std::string
 sc_fxval_fast::to_string(sc_numrep numrep, bool w_prefix) const
 {
-    return std::string(sc_dt::to_string(m_val, numrep, (w_prefix ? 1 : 0),
-                       SC_E));
+    return std::string(
+        sc_dt::to_string(m_val, numrep, (w_prefix ? 1 : 0), SC_E));
 }
 
 const std::string
@@ -502,8 +493,8 @@ sc_fxval_fast::to_string(sc_numrep numrep, sc_fmt fmt) const
 const std::string
 sc_fxval_fast::to_string(sc_numrep numrep, bool w_prefix, sc_fmt fmt) const
 {
-    return std::string(sc_dt::to_string(m_val, numrep, (w_prefix ? 1 : 0),
-                                        fmt));
+    return std::string(
+        sc_dt::to_string(m_val, numrep, (w_prefix ? 1 : 0), fmt));
 }
 
 const std::string
@@ -529,7 +520,6 @@ sc_fxval_fast::to_hex() const
 {
     return std::string(sc_dt::to_string(m_val, SC_HEX, -1, SC_E));
 }
-
 
 // print or dump content
 
@@ -563,7 +553,6 @@ sc_fxval_fast::dump(::std::ostream &os) const
     os << ")" << ::std::endl;
 }
 
-
 // internal use only;
 bool
 sc_fxval_fast::get_bit(int i) const
@@ -580,8 +569,8 @@ sc_fxval_fast::get_bit(int i) const
         m0 += 1U << 20;
 
     if (id.negative() != 0) {
-        m0 = ~ m0;
-        m1 = ~ m1;
+        m0 = ~m0;
+        m1 = ~m1;
         unsigned int tmp = m1;
         m1 += 1U;
         if (m1 <= tmp)
@@ -599,7 +588,6 @@ sc_fxval_fast::get_bit(int i) const
     else
         return false;
 }
-
 
 // protected methods and friend functions
 sc_fxval_fast_observer *
@@ -619,10 +607,10 @@ sc_fxval_fast::unlock_observer(sc_fxval_fast_observer *observer_) const
 }
 
 #define SCFX_FAIL_IF_(cnd)                                                    \
-{                                                                             \
-    if ((cnd))                                                             \
-        return static_cast<double>(scfx_ieee_double::nan());                \
-}
+    {                                                                         \
+        if ((cnd))                                                            \
+            return static_cast<double>(scfx_ieee_double::nan());              \
+    }
 
 double
 sc_fxval_fast::from_string(const char *s)
@@ -641,62 +629,54 @@ sc_fxval_fast::from_string(const char *s)
     int base = 0;
 
     switch (numrep) {
-      case SC_DEC:
-        {
-            base = 10;
-            if (scfx_is_nan(s)) // special case: NaN
-                return static_cast<double>(scfx_ieee_double::nan());
-            if (scfx_is_inf(s)) // special case: Infinity
-                return static_cast<double>(scfx_ieee_double::inf(sign));
-            break;
-        }
-      case SC_BIN:
-      case SC_BIN_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 2;
-            break;
-        }
+    case SC_DEC: {
+        base = 10;
+        if (scfx_is_nan(s)) // special case: NaN
+            return static_cast<double>(scfx_ieee_double::nan());
+        if (scfx_is_inf(s)) // special case: Infinity
+            return static_cast<double>(scfx_ieee_double::inf(sign));
+        break;
+    }
+    case SC_BIN:
+    case SC_BIN_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 2;
+        break;
+    }
 
-      case SC_BIN_SM:
-        {
-            base = 2;
-            break;
-        }
-      case SC_OCT:
-      case SC_OCT_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 8;
-            break;
-        }
-      case SC_OCT_SM:
-        {
-            base = 8;
-            break;
-        }
-      case SC_HEX:
-      case SC_HEX_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 16;
-            break;
-        }
-      case SC_HEX_SM:
-        {
-            base = 16;
-            break;
-        }
-      case SC_CSD:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 2;
-            scfx_csd2tc(s2);
-            s = (const char*) s2 + 4;
-            numrep = SC_BIN;
-            break;
-        }
-      default:;// Martin, what is default???
+    case SC_BIN_SM: {
+        base = 2;
+        break;
+    }
+    case SC_OCT:
+    case SC_OCT_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 8;
+        break;
+    }
+    case SC_OCT_SM: {
+        base = 8;
+        break;
+    }
+    case SC_HEX:
+    case SC_HEX_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 16;
+        break;
+    }
+    case SC_HEX_SM: {
+        base = 16;
+        break;
+    }
+    case SC_CSD: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 2;
+        scfx_csd2tc(s2);
+        s = (const char *)s2 + 4;
+        numrep = SC_BIN;
+        break;
+    }
+    default:; // Martin, what is default???
     }
 
     //
@@ -750,16 +730,14 @@ sc_fxval_fast::from_string(const char *s)
             if (first_digit) {
                 integer = scfx_to_digit(*s, numrep);
                 switch (numrep) {
-                  case SC_BIN:
-                  case SC_OCT:
-                  case SC_HEX:
-                    {
-                        if (integer >= (base >> 1))
-                            integer -= base; // two's complement
-                        break;
-                    }
-                  default:
-                    ;
+                case SC_BIN:
+                case SC_OCT:
+                case SC_HEX: {
+                    if (integer >= (base >> 1))
+                        integer -= base; // two's complement
+                    break;
+                }
+                default:;
                 }
                 first_digit = false;
             } else {
@@ -772,7 +750,7 @@ sc_fxval_fast::from_string(const char *s)
     // [ . fraction ]
     double fraction = 0.0;
     if (frac_digits != 0) {
-        s++;  // skip '.'
+        s++; // skip '.'
 
         bool first_digit = (int_digits == 0);
         double scale = 1.0;
@@ -782,16 +760,14 @@ sc_fxval_fast::from_string(const char *s)
             if (first_digit) {
                 fraction = scfx_to_digit(*s, numrep);
                 switch (numrep) {
-                  case SC_BIN:
-                  case SC_OCT:
-                  case SC_HEX:
-                    {
-                        if (fraction >= (base >> 1))
-                            fraction -= base; // two's complement
-                        break;
-                    }
-                  default:
-                    ;
+                case SC_BIN:
+                case SC_OCT:
+                case SC_HEX: {
+                    if (fraction >= (base >> 1))
+                        fraction -= base; // two's complement
+                    break;
+                }
+                default:;
                 }
                 fraction *= scale;
                 first_digit = false;
@@ -802,7 +778,7 @@ sc_fxval_fast::from_string(const char *s)
     }
 
     double exp =
-        (exponent != 0) ? std::pow((double) base, (double) exponent) : 1;
+        (exponent != 0) ? std::pow((double)base, (double)exponent) : 1;
 
     return (sign * (integer + fraction) * exp);
 }

@@ -74,8 +74,8 @@ class Random : public Base
      *
      * @param replacement_data Replacement data to be invalidated.
      */
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
+    void invalidate(
+        const std::shared_ptr<ReplacementData> &replacement_data) override;
 
     /**
      * Touch an entry to update its replacement data.
@@ -83,8 +83,8 @@ class Random : public Base
      *
      * @param replacement_data Replacement data to be touched.
      */
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Reset replacement data. Used when an entry is inserted.
@@ -92,8 +92,8 @@ class Random : public Base
      *
      * @param replacement_data Replacement data to be reset.
      */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Find replacement victim at random.
@@ -101,8 +101,8 @@ class Random : public Base
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
-                                                                     override;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const override;
 
     /**
      * Instantiate a replacement data entry.

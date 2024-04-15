@@ -39,20 +39,18 @@ struct Access
     Addr addr;
     Addr size;
 
-    Access(bool _read, Addr _addr, Addr _size) :
-        read(_read), addr(_addr), size(_size)
+    Access(bool _read, Addr _addr, Addr _size)
+        : read(_read), addr(_addr), size(_size)
     {}
 
     bool
-    operator == (const Access &other) const
+    operator==(const Access &other) const
     {
-        return read == other.read &&
-               addr == other.addr &&
-               size == other.size;
+        return read == other.read && addr == other.addr && size == other.size;
     }
 
     bool
-    operator != (const Access &other) const
+    operator!=(const Access &other) const
     {
         return !(*this == other);
     }
@@ -72,8 +70,8 @@ class BackingStore
     rangeCheck(Addr addr, Addr size)
     {
         panic_if(addr < base || addr + size > base + store.size(),
-                 "Range [%#x,%#x) outside of [%#x,%#x).",
-                 addr, addr + size, base, base + store.size());
+                 "Range [%#x,%#x) outside of [%#x,%#x).", addr, addr + size,
+                 base, base + store.size());
     }
 
     mutable Accesses accesses;
@@ -82,13 +80,14 @@ class BackingStore
     expect_access(size_t idx, const Access &other) const
     {
         if (idx >= accesses.size()) {
-            return ::testing::AssertionFailure() << "index " << idx <<
-                " out of bounds";
+            return ::testing::AssertionFailure()
+                   << "index " << idx << " out of bounds";
         }
 
         if (accesses[idx] != other) {
-            return ::testing::AssertionFailure() << "access[" << idx <<
-                "] was " << accesses[idx] << ", expected " << other;
+            return ::testing::AssertionFailure()
+                   << "access[" << idx << "] was " << accesses[idx]
+                   << ", expected " << other;
         }
         return ::testing::AssertionSuccess();
     }
@@ -97,9 +96,9 @@ class BackingStore
     expect_accesses(Accesses expected) const
     {
         if (accesses.size() != expected.size()) {
-            return ::testing::AssertionFailure() <<
-                "Wrong number of accesses, was " << accesses.size() <<
-                " expected " << expected.size();
+            return ::testing::AssertionFailure()
+                   << "Wrong number of accesses, was " << accesses.size()
+                   << " expected " << expected.size();
         }
 
         auto failure = ::testing::AssertionFailure();
@@ -138,24 +137,24 @@ class BackingStore
 };
 
 ::testing::AssertionResult
-accessed(const char *expr1, const char *expr2,
-         const BackingStore &store, const Accesses &expected)
+accessed(const char *expr1, const char *expr2, const BackingStore &store,
+         const Accesses &expected)
 {
     return store.expect_accesses(expected);
 }
 
-#define EXPECT_ACCESSES(store, ...) \
-    do { \
-        Accesses expected({__VA_ARGS__}); \
-        EXPECT_PRED_FORMAT2(accessed, store, expected); \
-        store.accesses.clear(); \
+#define EXPECT_ACCESSES(store, ...)                                           \
+    do {                                                                      \
+        Accesses expected({ __VA_ARGS__ });                                   \
+        EXPECT_PRED_FORMAT2(accessed, store, expected);                       \
+        store.accesses.clear();                                               \
     } while (false)
 
 std::ostream &
-operator << (std::ostream &os, const Access &access)
+operator<<(std::ostream &os, const Access &access)
 {
-    ccprintf(os, "%s(%#x, %d)", access.read ? "read" : "write",
-            access.addr, access.size);
+    ccprintf(os, "%s(%#x, %d)", access.read ? "read" : "write", access.addr,
+             access.size);
     return os;
 }
 
@@ -165,6 +164,7 @@ class TestProxy
     BackingStore &store;
 
     TestProxy(BackingStore &_store) : store(_store) {}
+
     // Sneaky constructor for testing guest_abi integration.
     TestProxy(ThreadContext *tc) : store(*(BackingStore *)tc) {}
 
@@ -230,7 +230,6 @@ TEST(ProxyPtr, Dirty)
     EXPECT_EQ(store.store[0x102], 0xa5);
     EXPECT_EQ(store.store[0x103], 0xa5);
 }
-
 
 TEST(ProxyPtr, LoadAndFlush)
 {

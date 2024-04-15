@@ -41,18 +41,19 @@ namespace compression
 {
 
 BaseDictionaryCompressor::BaseDictionaryCompressor(const Params &p)
-  : Base(p), dictionarySize(p.dictionary_size),
-    numEntries(0), dictionaryStats(stats, *this)
-{
-}
+    : Base(p),
+      dictionarySize(p.dictionary_size),
+      numEntries(0),
+      dictionaryStats(stats, *this)
+{}
 
 BaseDictionaryCompressor::DictionaryStats::DictionaryStats(
-    BaseStats& base_group, BaseDictionaryCompressor& _compressor)
-  : statistics::Group(&base_group), compressor(_compressor),
-    ADD_STAT(patterns, statistics::units::Count::get(),
-             "Number of data entries that were compressed to this pattern")
-{
-}
+    BaseStats &base_group, BaseDictionaryCompressor &_compressor)
+    : statistics::Group(&base_group),
+      compressor(_compressor),
+      ADD_STAT(patterns, statistics::units::Count::get(),
+               "Number of data entries that were compressed to this pattern")
+{}
 
 void
 BaseDictionaryCompressor::DictionaryStats::regStats()
@@ -64,8 +65,8 @@ BaseDictionaryCompressor::DictionaryStats::regStats()
     for (unsigned i = 0; i < compressor.getNumPatterns(); ++i) {
         const std::string name = compressor.getName(i);
         patterns.subname(i, name);
-        patterns.subdesc(i, "Number of data entries that match pattern " +
-            name);
+        patterns.subdesc(i,
+                         "Number of data entries that match pattern " + name);
     }
 }
 

@@ -62,13 +62,13 @@ class SimpleExtLink : public BasicExtLink
     SimpleExtLink(const Params &p);
 
     friend class Topology;
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     int m_bw_multiplier;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const SimpleExtLink& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const SimpleExtLink &obj)
 {
     obj.print(out);
     out << std::flush;
@@ -82,14 +82,14 @@ class SimpleIntLink : public BasicIntLink
     SimpleIntLink(const Params &p);
 
     friend class Topology;
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     int m_bw_multiplier;
-    const std::vector<MessageBuffer*> m_buffers;
+    const std::vector<MessageBuffer *> m_buffers;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const SimpleIntLink& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const SimpleIntLink &obj)
 {
     obj.print(out);
     out << std::flush;

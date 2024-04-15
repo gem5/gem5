@@ -52,32 +52,33 @@ class PortProxy;
 
 namespace X86ISA
 {
-    class E820Entry : public SimObject
-    {
-      public:
-        Addr addr;
-        Addr size;
-        uint32_t type;
+class E820Entry : public SimObject
+{
+  public:
+    Addr addr;
+    Addr size;
+    uint32_t type;
 
-      public:
-        typedef X86E820EntryParams Params;
-        E820Entry(const Params &p) :
-            SimObject(p), addr(p.addr), size(p.size), type(p.range_type)
-        {}
-    };
+  public:
+    typedef X86E820EntryParams Params;
 
-    class E820Table : public SimObject
-    {
-      public:
-        std::vector<E820Entry *> entries;
+    E820Entry(const Params &p)
+        : SimObject(p), addr(p.addr), size(p.size), type(p.range_type)
+    {}
+};
 
-      public:
-        typedef X86E820TableParams Params;
-        E820Table(const Params &p) : SimObject(p), entries(p.entries)
-        {}
+class E820Table : public SimObject
+{
+  public:
+    std::vector<E820Entry *> entries;
 
-        void writeTo(PortProxy& proxy, Addr countAddr, Addr addr);
-    };
+  public:
+    typedef X86E820TableParams Params;
+
+    E820Table(const Params &p) : SimObject(p), entries(p.entries) {}
+
+    void writeTo(PortProxy &proxy, Addr countAddr, Addr addr);
+};
 
 } // namespace X86ISA
 } // namespace gem5

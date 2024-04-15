@@ -52,16 +52,17 @@ class SMMUDeviceRetryEvent : public Event
     SMMUv3DeviceInterface &smmuIfc;
 
   public:
-    SMMUDeviceRetryEvent(SMMUv3DeviceInterface &ifc)
-        : smmuIfc(ifc)
-    {}
+    SMMUDeviceRetryEvent(SMMUv3DeviceInterface &ifc) : smmuIfc(ifc) {}
 
     void process();
 
     const std::string name() const;
 
-    const char *description() const
-    { return "DeviceRetryEvent"; }
+    const char *
+    description() const
+    {
+        return "DeviceRetryEvent";
+    }
 };
 
 } // namespace gem5

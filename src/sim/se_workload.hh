@@ -44,7 +44,7 @@ class SEWorkload : public Workload
   public:
     using Params = SEWorkloadParams;
 
-    SEWorkload(const Params &p, Addr page_shift=0);
+    SEWorkload(const Params &p, Addr page_shift = 0);
 
     void setSystem(System *sys) override;
 
@@ -87,11 +87,15 @@ class SEWorkload : public Workload
     void syscall(ThreadContext *tc) override;
 
     // For now, assume the only type of events are system calls.
-    void event(ThreadContext *tc) override { syscall(tc); }
+    void
+    event(ThreadContext *tc) override
+    {
+        syscall(tc);
+    }
 
-    Addr allocPhysPages(int npages, int pool_id=0);
-    Addr memSize(int pool_id=0) const;
-    Addr freeMemSize(int pool_id=0) const;
+    Addr allocPhysPages(int npages, int pool_id = 0);
+    Addr memSize(int pool_id = 0) const;
+    Addr freeMemSize(int pool_id = 0) const;
 };
 
 } // namespace gem5

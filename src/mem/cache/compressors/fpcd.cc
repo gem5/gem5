@@ -41,10 +41,7 @@ namespace gem5
 namespace compression
 {
 
-FPCD::FPCD(const Params &p)
-    : DictionaryCompressor<uint32_t>(p)
-{
-}
+FPCD::FPCD(const Params &p) : DictionaryCompressor<uint32_t>(p) {}
 
 void
 FPCD::addToDictionary(DictionaryEntry data)

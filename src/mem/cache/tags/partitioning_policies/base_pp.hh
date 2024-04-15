@@ -70,28 +70,26 @@ class BasePartitioningPolicy : public SimObject
     BasePartitioningPolicy(const BasePartitioningPolicyParams &params);
 
     /**
-    * Filters the allocatable cache blocks for a memory request based on its
-    * PartitionID and policy allocation
-    * @param entries candidate cache blocks for this request; filtered in place
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                      const uint64_t partition_id) const = 0;
+     * Filters the allocatable cache blocks for a memory request based on its
+     * PartitionID and policy allocation
+     * @param entries candidate cache blocks for this request; filtered in
+     * place
+     * @param partition_id PartitionID of the upstream memory request
+     */
+    virtual void filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                                   const uint64_t partition_id) const = 0;
 
     /**
-    * Notify of acquisition of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyAcquire(const uint64_t partition_id) = 0;
+     * Notify of acquisition of ownership of a cache line
+     * @param partition_id PartitionID of the upstream memory request
+     */
+    virtual void notifyAcquire(const uint64_t partition_id) = 0;
 
     /**
-    * Notify of release of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyRelease(const uint64_t partition_id) = 0;
+     * Notify of release of ownership of a cache line
+     * @param partition_id PartitionID of the upstream memory request
+     */
+    virtual void notifyRelease(const uint64_t partition_id) = 0;
 };
 
 } // namespace partitioning_policy

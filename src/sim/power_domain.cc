@@ -45,11 +45,11 @@
 namespace gem5
 {
 
-PowerDomain::PowerDomain(const PowerDomainParams &p) :
-    PowerState(p),
-    leaders(p.leaders),
-    pwrStateUpdateEvent(*this),
-    stats(*this)
+PowerDomain::PowerDomain(const PowerDomainParams &p)
+    : PowerState(p),
+      leaders(p.leaders),
+      pwrStateUpdateEvent(*this),
+      stats(*this)
 {
     // Check if there is at least one leader
     fatal_if(leaders.empty(), "No leaders registered in %s!)", name());
@@ -66,7 +66,7 @@ PowerDomain::PowerDomain(const PowerDomainParams &p) :
 }
 
 void
-PowerDomain::addFollower(PowerState* pwr_obj)
+PowerDomain::addFollower(PowerState *pwr_obj)
 {
     DPRINTF(PowerDomain, "%s is a follower in %s\n", pwr_obj->name(), name());
     followers.push_back(pwr_obj);
@@ -80,12 +80,12 @@ PowerDomain::startup()
     DPRINTF(PowerDomain, "Checking power state of leaders & followers\n");
     for (const auto &objs : { leaders, followers }) {
         for (const auto &obj : objs) {
-            const auto & states = obj->getPossibleStates();
+            const auto &states = obj->getPossibleStates();
             auto it = states.find(enums::PwrState::ON);
             fatal_if(it == states.end(),
                      "%s in %s does not have the required power states to be "
-                     "part of a PowerDomain i.e. the ON state!", obj->name(),
-                     name());
+                     "part of a PowerDomain i.e. the ON state!",
+                     obj->name(), name());
         }
     }
 
@@ -100,8 +100,10 @@ PowerDomain::startup()
     DPRINTF(PowerDomain, "Checking for double entries\n");
     for (auto follower : followers) {
         for (auto leader : leaders) {
-            fatal_if(leader == follower, "%s is both a leader and follower"
-                     " in %s\n!", leader->name(), name());
+            fatal_if(leader == follower,
+                     "%s is both a leader and follower"
+                     " in %s\n!",
+                     leader->name(), name());
         }
     }
     // Record the power states of the leaders and followers
@@ -110,7 +112,8 @@ PowerDomain::startup()
         enums::PwrState pws = leader->get();
         fatal_if(pws == enums::PwrState::UNDEFINED,
                  "%s is in the UNDEFINED power state, not acceptable as "
-                 "leader!", leader->name());
+                 "leader!",
+                 leader->name());
     }
 
     // Calculate the power state of the domain, only looking at leader
@@ -137,7 +140,7 @@ void
 PowerDomain::calculatePossiblePwrStates()
 {
     assert(possibleStates.empty());
-    for (auto p_state: leaders[0]->getPossibleStates()) {
+    for (auto p_state : leaders[0]->getPossibleStates()) {
         if (isPossiblePwrState(p_state)) {
             possibleStates.emplace(p_state);
             DPRINTF(PowerDomain, "%u/%s is a p-state\n", p_state,
@@ -162,21 +165,23 @@ PowerDomain::calculatePowerDomainState(
     }
     assert(most_perf_state != enums::PwrState::Num_PwrState);
     DPRINTF(PowerDomain, "Most performant leader is %s, at %u\n",
-                          most_perf_leader, most_perf_state);
+            most_perf_leader, most_perf_state);
 
     // If asked to check the power states of the followers (f_states contains
     // the power states of the followers)
     if (!f_states.empty()) {
-        for (enums::PwrState f_pw : f_states ) {
+        for (enums::PwrState f_pw : f_states) {
             // Ignore UNDEFINED state of follower, at startup the followers
             // might be in the UNDEFINED state, PowerDomain will pull them up
             if ((f_pw != enums::PwrState::UNDEFINED) &&
-                (f_pw  < most_perf_state)) {
+                (f_pw < most_perf_state)) {
                 most_perf_state = f_pw;
             }
         }
-        DPRINTF(PowerDomain, "Most performant state, including followers "
-                             "is %u\n", most_perf_state);
+        DPRINTF(PowerDomain,
+                "Most performant state, including followers "
+                "is %u\n",
+                most_perf_state);
     }
     return most_perf_state;
 }
@@ -193,8 +198,7 @@ PowerDomain::setFollowerPowerStates()
         matched_states.push_back(actual_pws);
         assert(actual_pws <= leaderTargetState);
         DPRINTF(PowerDomain, "%u matched domain power state (%u) with %u\n",
-                             follower->name(), leaderTargetState,
-                             actual_pws);
+                follower->name(), leaderTargetState, actual_pws);
     }
     // Now the power states of the follower have been changed recalculate the
     // power state of the domain as a whole, including followers
@@ -205,14 +209,14 @@ PowerDomain::setFollowerPowerStates()
         // state need to happen via set() so it can propagate to
         // overarching power domains (if there are any).
         DPRINTF(PowerDomain, "Updated power domain state to %u\n",
-                             new_power_state);
+                new_power_state);
         set(new_power_state);
     }
 }
 
 void
 PowerDomain::pwrStateChangeCallback(enums::PwrState new_pwr_state,
-                                    PowerState* leader)
+                                    PowerState *leader)
 {
     DPRINTF(PowerDomain, "PwrState update to %u by %s\n", new_pwr_state,
             leader->name());
@@ -230,15 +234,16 @@ PowerDomain::pwrStateChangeCallback(enums::PwrState new_pwr_state,
         // leaders only and change to that state.
         leaderTargetState = calculatePowerDomainState();
     }
-    if (old_target_state!= leaderTargetState) {
+    if (old_target_state != leaderTargetState) {
         // The followers will try to match that power state requested by the
         // leaders in in the update event, based upon the actual power state,
         // we will 'officially' change the power state of the domain by calling
         // set()
         schedule(pwrStateUpdateEvent, curTick() + updateLatency);
-        DPRINTF(PowerDomain, "TargetState change from %u to %u, followers will"
-                "be updated in %u ticks\n", old_target_state,
-                leaderTargetState, updateLatency);
+        DPRINTF(PowerDomain,
+                "TargetState change from %u to %u, followers will"
+                "be updated in %u ticks\n",
+                old_target_state, leaderTargetState, updateLatency);
         stats.numLeaderCallsChangingState++;
     }
     stats.numLeaderCalls++;
@@ -246,25 +251,21 @@ PowerDomain::pwrStateChangeCallback(enums::PwrState new_pwr_state,
 
 PowerDomain::PowerDomainStats::PowerDomainStats(PowerDomain &pd)
     : statistics::Group(&pd),
-    ADD_STAT(numLeaderCalls, statistics::units::Count::get(),
-             "Number of calls by leaders to change power domain state"),
-    ADD_STAT(numLeaderCallsChangingState, statistics::units::Count::get(),
-             "Number of calls by leader to change power domain state actually "
-             "resulting in a power state change")
-{
-}
+      ADD_STAT(numLeaderCalls, statistics::units::Count::get(),
+               "Number of calls by leaders to change power domain state"),
+      ADD_STAT(
+          numLeaderCallsChangingState, statistics::units::Count::get(),
+          "Number of calls by leader to change power domain state actually "
+          "resulting in a power state change")
+{}
 
 void
 PowerDomain::PowerDomainStats::regStats()
 {
     statistics::Group::regStats();
 
-    numLeaderCalls
-        .flags(statistics::nozero)
-        ;
-    numLeaderCallsChangingState
-        .flags(statistics::nozero)
-        ;
+    numLeaderCalls.flags(statistics::nozero);
+    numLeaderCallsChangingState.flags(statistics::nozero);
 }
 
 } // namespace gem5

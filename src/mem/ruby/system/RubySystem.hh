@@ -68,29 +68,80 @@ class RubySystem : public ClockedObject
     ~RubySystem();
 
     // config accessors
-    static int getRandomization() { return m_randomization; }
-    static uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
-    static uint32_t getBlockSizeBits() { return m_block_size_bits; }
-    static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
-    static bool getWarmupEnabled() { return m_warmup_enabled; }
-    static bool getCooldownEnabled() { return m_cooldown_enabled; }
+    static int
+    getRandomization()
+    {
+        return m_randomization;
+    }
 
-    memory::SimpleMemory *getPhysMem() { return m_phys_mem; }
-    Cycles getStartCycle() { return m_start_cycle; }
-    bool getAccessBackingStore() { return m_access_backing_store; }
+    static uint32_t
+    getBlockSizeBytes()
+    {
+        return m_block_size_bytes;
+    }
+
+    static uint32_t
+    getBlockSizeBits()
+    {
+        return m_block_size_bits;
+    }
+
+    static uint32_t
+    getMemorySizeBits()
+    {
+        return m_memory_size_bits;
+    }
+
+    static bool
+    getWarmupEnabled()
+    {
+        return m_warmup_enabled;
+    }
+
+    static bool
+    getCooldownEnabled()
+    {
+        return m_cooldown_enabled;
+    }
+
+    memory::SimpleMemory *
+    getPhysMem()
+    {
+        return m_phys_mem;
+    }
+
+    Cycles
+    getStartCycle()
+    {
+        return m_start_cycle;
+    }
+
+    bool
+    getAccessBackingStore()
+    {
+        return m_access_backing_store;
+    }
 
     // Public Methods
-    Profiler*
+    Profiler *
     getProfiler()
     {
         assert(m_profiler != NULL);
         return m_profiler;
     }
 
-    void regStats() override {
+    void
+    regStats() override
+    {
         ClockedObject::regStats();
     }
-    void collateStats() { m_profiler->collateStats(); }
+
+    void
+    collateStats()
+    {
+        m_profiler->collateStats();
+    }
+
     void resetStats() override;
 
     void memWriteback() override;
@@ -103,35 +154,41 @@ class RubySystem : public ClockedObject
     bool functionalRead(Packet *ptr);
     bool functionalWrite(Packet *ptr);
 
-    void registerNetwork(Network*);
-    void registerAbstractController(AbstractController*);
-    void registerMachineID(const MachineID& mach_id, Network* network);
+    void registerNetwork(Network *);
+    void registerAbstractController(AbstractController *);
+    void registerMachineID(const MachineID &mach_id, Network *network);
     void registerRequestorIDs();
 
-    bool eventQueueEmpty() { return eventq->empty(); }
-    void enqueueRubyEvent(Tick tick)
+    bool
+    eventQueueEmpty()
     {
-        auto e = new EventFunctionWrapper(
-            [this]{ processRubyEvent(); }, "RubyEvent");
+        return eventq->empty();
+    }
+
+    void
+    enqueueRubyEvent(Tick tick)
+    {
+        auto e = new EventFunctionWrapper([this] { processRubyEvent(); },
+                                          "RubyEvent");
         schedule(e, tick);
     }
 
   private:
     // Private copy constructor and assignment operator
-    RubySystem(const RubySystem& obj);
-    RubySystem& operator=(const RubySystem& obj);
+    RubySystem(const RubySystem &obj);
+    RubySystem &operator=(const RubySystem &obj);
 
     void makeCacheRecorder(uint8_t *uncompressed_trace,
                            uint64_t cache_trace_size,
                            uint64_t block_size_bytes);
 
-    static void readCompressedTrace(std::string filename,
-                                    uint8_t *&raw_data,
+    static void readCompressedTrace(std::string filename, uint8_t *&raw_data,
                                     uint64_t &uncompressed_trace_size);
     static void writeCompressedTrace(uint8_t *raw_data, std::string file,
                                      uint64_t uncompressed_trace_size);
 
     void processRubyEvent();
+
   private:
     // configuration parameters
     static bool m_randomization;
@@ -145,19 +202,19 @@ class RubySystem : public ClockedObject
     memory::SimpleMemory *m_phys_mem;
     const bool m_access_backing_store;
 
-    //std::vector<Network *> m_networks;
+    // std::vector<Network *> m_networks;
     std::vector<std::unique_ptr<Network>> m_networks;
     std::vector<AbstractController *> m_abs_cntrl_vec;
     Cycles m_start_cycle;
 
     std::unordered_map<MachineID, unsigned> machineToNetwork;
     std::unordered_map<RequestorID, unsigned> requestorToNetwork;
-    std::unordered_map<unsigned, std::vector<AbstractController*>> netCntrls;
+    std::unordered_map<unsigned, std::vector<AbstractController *>> netCntrls;
 
   public:
-    Profiler* m_profiler;
-    CacheRecorder* m_cache_recorder;
-    std::vector<std::map<uint32_t, AbstractController *> > m_abstract_controls;
+    Profiler *m_profiler;
+    CacheRecorder *m_cache_recorder;
+    std::vector<std::map<uint32_t, AbstractController *>> m_abstract_controls;
 };
 
 } // namespace ruby

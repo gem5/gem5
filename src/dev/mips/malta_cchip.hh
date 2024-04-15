@@ -58,25 +58,25 @@ class MaltaCChip : public BasicPioDevice
      * The dims are device interrupt mask registers.
      * One exists for each CPU, the DRIR X DIM = DIR
      */
-    //uint64_t dim[Malta::Max_CPUs];
+    // uint64_t dim[Malta::Max_CPUs];
 
     /**
      * The dirs are device interrupt registers.
      * One exists for each CPU, the DRIR X DIM = DIR
      */
-    //uint64_t dir[Malta::Max_CPUs];
+    // uint64_t dir[Malta::Max_CPUs];
 
     /**
      * This register contains bits for each PCI interrupt
      * that can occur.
      */
-    //uint64_t drir;
+    // uint64_t drir;
 
     /** Indicator of which CPUs have an IPI interrupt */
-    //uint64_t ipint;
+    // uint64_t ipint;
 
     /** Indicator of which CPUs have an RTC interrupt */
-    //uint64_t itint;
+    // uint64_t itint;
 
   public:
     using Params = MaltaCChipParams;

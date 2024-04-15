@@ -54,13 +54,16 @@ class DataXImmOp : public ArmStaticInst
     uint64_t imm;
 
     DataXImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               RegIndex _dest, RegIndex _op1, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm(_imm)
+               RegIndex _dest, RegIndex _op1, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXImmOnlyOp : public ArmStaticInst
@@ -70,13 +73,13 @@ class DataXImmOnlyOp : public ArmStaticInst
     uint64_t imm;
 
     DataXImmOnlyOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   RegIndex _dest, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), imm(_imm)
+                   RegIndex _dest, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXSRegOp : public ArmStaticInst
@@ -88,14 +91,18 @@ class DataXSRegOp : public ArmStaticInst
 
     DataXSRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                 RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                int32_t _shiftAmt, ArmShiftType _shiftType) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2),
-        shiftAmt(_shiftAmt), shiftType(_shiftType)
+                int32_t _shiftAmt, ArmShiftType _shiftType)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          shiftAmt(_shiftAmt),
+          shiftType(_shiftType)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXERegOp : public ArmStaticInst
@@ -107,14 +114,18 @@ class DataXERegOp : public ArmStaticInst
 
     DataXERegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                 RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                ArmExtendType _extendType, int32_t _shiftAmt) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2),
-        extendType(_extendType), shiftAmt(_shiftAmt)
+                ArmExtendType _extendType, int32_t _shiftAmt)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          extendType(_extendType),
+          shiftAmt(_shiftAmt)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX1RegOp : public ArmStaticInst
@@ -123,12 +134,13 @@ class DataX1RegOp : public ArmStaticInst
     RegIndex dest, op1;
 
     DataX1RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                RegIndex _dest, RegIndex _op1) :
-        ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
+                RegIndex _dest, RegIndex _op1)
+        : ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX1RegImmOp : public ArmStaticInst
@@ -138,13 +150,16 @@ class DataX1RegImmOp : public ArmStaticInst
     uint64_t imm;
 
     DataX1RegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   RegIndex _dest, RegIndex _op1, uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), op1(_op1),
-        imm(_imm)
+                   RegIndex _dest, RegIndex _op1, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX1Reg2ImmOp : public ArmStaticInst
@@ -155,13 +170,17 @@ class DataX1Reg2ImmOp : public ArmStaticInst
 
     DataX1Reg2ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _op1, uint64_t _imm1,
-                    uint64_t _imm2) :
-        ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), op1(_op1),
-        imm1(_imm1), imm2(_imm2)
+                    uint64_t _imm2)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          imm1(_imm1),
+          imm2(_imm2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX2RegOp : public ArmStaticInst
@@ -170,13 +189,16 @@ class DataX2RegOp : public ArmStaticInst
     RegIndex dest, op1, op2;
 
     DataX2RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                RegIndex _dest, RegIndex _op1, RegIndex _op2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2)
+                RegIndex _dest, RegIndex _op1, RegIndex _op2)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX2RegImmOp : public ArmStaticInst
@@ -186,14 +208,17 @@ class DataX2RegImmOp : public ArmStaticInst
     uint64_t imm;
 
     DataX2RegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                   uint64_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), imm(_imm)
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2, uint64_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataX3RegOp : public ArmStaticInst
@@ -202,14 +227,17 @@ class DataX3RegOp : public ArmStaticInst
     RegIndex dest, op1, op2, op3;
 
     DataX3RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                RegIndex _op3) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), op3(_op3)
+                RegIndex _dest, RegIndex _op1, RegIndex _op2, RegIndex _op3)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          op3(_op3)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXCondCompImmOp : public ArmStaticInst
@@ -221,14 +249,18 @@ class DataXCondCompImmOp : public ArmStaticInst
     uint8_t defCc;
 
     DataXCondCompImmOp(const char *mnem, ExtMachInst _machInst,
-                      OpClass __opClass, RegIndex _op1, uint64_t _imm,
-                      ConditionCode _condCode, uint8_t _defCc) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        op1(_op1), imm(_imm), condCode(_condCode), defCc(_defCc)
+                       OpClass __opClass, RegIndex _op1, uint64_t _imm,
+                       ConditionCode _condCode, uint8_t _defCc)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          op1(_op1),
+          imm(_imm),
+          condCode(_condCode),
+          defCc(_defCc)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXCondCompRegOp : public ArmStaticInst
@@ -240,13 +272,17 @@ class DataXCondCompRegOp : public ArmStaticInst
 
     DataXCondCompRegOp(const char *mnem, ExtMachInst _machInst,
                        OpClass __opClass, RegIndex _op1, RegIndex _op2,
-                       ConditionCode _condCode, uint8_t _defCc) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        op1(_op1), op2(_op2), condCode(_condCode), defCc(_defCc)
+                       ConditionCode _condCode, uint8_t _defCc)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          op1(_op1),
+          op2(_op2),
+          condCode(_condCode),
+          defCc(_defCc)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class DataXCondSelOp : public ArmStaticInst
@@ -257,13 +293,17 @@ class DataXCondSelOp : public ArmStaticInst
 
     DataXCondSelOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest, RegIndex _op1, RegIndex _op2,
-                   ConditionCode _condCode) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), condCode(_condCode)
+                   ConditionCode _condCode)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          op2(_op2),
+          condCode(_condCode)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace ArmISA

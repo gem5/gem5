@@ -46,13 +46,13 @@ namespace branch_prediction
 {
 
 MultiperspectivePerceptron8KB::MultiperspectivePerceptron8KB(
-        const MultiperspectivePerceptron8KBParams &p)
+    const MultiperspectivePerceptron8KBParams &p)
     : MultiperspectivePerceptron(p)
-{
-}
+{}
 
 void
-MultiperspectivePerceptron8KB::createSpecs() {
+MultiperspectivePerceptron8KB::createSpecs()
+{
     addSpec(new BIAS(2.40625, 0, 6, *this));
     addSpec(new GHIST(0, 19, 1.4375, 0, 6, *this));
     addSpec(new GHIST(0, 65, 1.0, 0, 6, *this));

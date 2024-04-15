@@ -53,18 +53,17 @@ class StreamGen
 {
   protected:
     StreamGen(const BaseTrafficGenParams &p)
-      : streamIds(p.sids), substreamIds(p.ssids)
+        : streamIds(p.sids), substreamIds(p.ssids)
     {
         // A non empty vector of StreamIDs must be provided.
         // SubstreamIDs are not mandatory hence having an empty
         // vector means that they are not used and no configuration
         // error must be thrown
-        fatal_if(streamIds.empty(),
-            "Must provide a vector of StreamIDs");
+        fatal_if(streamIds.empty(), "Must provide a vector of StreamIDs");
     }
 
   public:
-    virtual ~StreamGen() {};
+    virtual ~StreamGen(){};
 
     virtual uint32_t pickStreamID() = 0;
     virtual uint32_t pickSubstreamID() = 0;
@@ -78,7 +77,7 @@ class StreamGen
      *           the stream generator type is stored.
      * @return a pointer to the newly alocated StremGen
      */
-    static StreamGen* create(const BaseTrafficGenParams &p);
+    static StreamGen *create(const BaseTrafficGenParams &p);
 
     /**
      * Returns true if the substreamID generation is valid
@@ -88,7 +87,11 @@ class StreamGen
      *
      * @return true if ssid is valid, false otherwise
      */
-    bool ssidValid() const { return !substreamIds.empty(); }
+    bool
+    ssidValid() const
+    {
+        return !substreamIds.empty();
+    }
 
   protected:
     /**
@@ -105,8 +108,7 @@ class StreamGen
 class FixedStreamGen : public StreamGen
 {
   public:
-    FixedStreamGen(const BaseTrafficGenParams &p)
-      : StreamGen(p)
+    FixedStreamGen(const BaseTrafficGenParams &p) : StreamGen(p)
     {
         // For a fixed stream generator only one sid must be provided. The
         // ssid can have either 0 (not used) or 1 value.
@@ -114,25 +116,35 @@ class FixedStreamGen : public StreamGen
                  "Invalid sids/ssids configuration");
     }
 
-    uint32_t pickStreamID() override
-    { return streamIds[0]; }
+    uint32_t
+    pickStreamID() override
+    {
+        return streamIds[0];
+    }
 
-    uint32_t pickSubstreamID() override
-    { return substreamIds[0]; }
+    uint32_t
+    pickSubstreamID() override
+    {
+        return substreamIds[0];
+    }
 };
 
 class RandomStreamGen : public StreamGen
 {
   public:
-    RandomStreamGen(const BaseTrafficGenParams &p)
-      : StreamGen(p)
-    {}
+    RandomStreamGen(const BaseTrafficGenParams &p) : StreamGen(p) {}
 
-    uint32_t pickStreamID() override
-    { return randomPick(streamIds); }
+    uint32_t
+    pickStreamID() override
+    {
+        return randomPick(streamIds);
+    }
 
-    uint32_t pickSubstreamID() override
-    { return randomPick(substreamIds); }
+    uint32_t
+    pickSubstreamID() override
+    {
+        return randomPick(substreamIds);
+    }
 
   protected:
     /** Function to pick one of the preset Stream or Substream ID */

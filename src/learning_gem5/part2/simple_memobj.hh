@@ -45,7 +45,6 @@ namespace gem5
 class SimpleMemobj : public SimObject
 {
   private:
-
     /**
      * Port on the CPU-side that receives requests.
      * Mostly just forwards requests to the owner.
@@ -67,10 +66,12 @@ class SimpleMemobj : public SimObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        CPUSidePort(const std::string& name, SimpleMemobj *owner) :
-            ResponsePort(name), owner(owner), needRetry(false),
-            blockedPacket(nullptr)
-        { }
+        CPUSidePort(const std::string &name, SimpleMemobj *owner)
+            : ResponsePort(name),
+              owner(owner),
+              needRetry(false),
+              blockedPacket(nullptr)
+        {}
 
         /**
          * Send a packet across this port. This is called by the owner and
@@ -100,8 +101,11 @@ class SimpleMemobj : public SimObject
          * Receive an atomic request packet from the request port.
          * No need to implement in this simple memobj.
          */
-        Tick recvAtomic(PacketPtr pkt) override
-        { panic("recvAtomic unimpl."); }
+        Tick
+        recvAtomic(PacketPtr pkt) override
+        {
+            panic("recvAtomic unimpl.");
+        }
 
         /**
          * Receive a functional request packet from the request port.
@@ -146,9 +150,9 @@ class SimpleMemobj : public SimObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        MemSidePort(const std::string& name, SimpleMemobj *owner) :
-            RequestPort(name), owner(owner), blockedPacket(nullptr)
-        { }
+        MemSidePort(const std::string &name, SimpleMemobj *owner)
+            : RequestPort(name), owner(owner), blockedPacket(nullptr)
+        {}
 
         /**
          * Send a packet across this port. This is called by the owner and
@@ -231,7 +235,6 @@ class SimpleMemobj : public SimObject
     bool blocked;
 
   public:
-
     /** constructor
      */
     SimpleMemobj(const SimpleMemobjParams &params);
@@ -247,7 +250,7 @@ class SimpleMemobj : public SimObject
      * @return A reference to the given port
      */
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

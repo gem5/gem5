@@ -40,7 +40,8 @@
 namespace gem5
 {
 
-namespace RiscvISA {
+namespace RiscvISA
+{
 
 BitUnion64(SATP)
     Bitfield<63, 60> mode;
@@ -56,9 +57,9 @@ enum AddrXlateMode
 };
 
 // Sv39 paging
-const Addr VADDR_BITS  = 39;
-const Addr LEVEL_BITS  = 9;
-const Addr LEVEL_MASK  = (1 << LEVEL_BITS) - 1;
+const Addr VADDR_BITS = 39;
+const Addr LEVEL_BITS = 9;
+const Addr LEVEL_MASK = (1 << LEVEL_BITS) - 1;
 
 BitUnion64(PTESv39)
     Bitfield<53, 10> ppn;
@@ -98,12 +99,11 @@ struct TlbEntry : public Serializable
     // A sequence number to keep track of LRU.
     uint64_t lruSeq;
 
-    TlbEntry()
-        : paddr(0), vaddr(0), logBytes(0), pte(), lruSeq(0)
-    {}
+    TlbEntry() : paddr(0), vaddr(0), logBytes(0), pte(), lruSeq(0) {}
 
     // Return the page size in bytes
-    Addr size() const
+    Addr
+    size() const
     {
         return (static_cast<Addr>(1) << logBytes);
     }

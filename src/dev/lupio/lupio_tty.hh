@@ -39,6 +39,7 @@ namespace gem5
 {
 
 class Terminal;
+
 /**
  * LupioTTY:
  * The LupioTTY is a virtual terminal device that can both transmit characters
@@ -67,9 +68,9 @@ class LupioTTY : public BasicPioDevice
 
     uint64_t lupioTTYRead(const uint8_t addr);
     void lupioTTYWrite(const uint8_t addr, uint64_t c);
-   /**
-    * IRQ management
-    */
+    /**
+     * IRQ management
+     */
     void lupioTTYUpdateIRQ();
 
     SerialDevice *terminal;
@@ -92,6 +93,6 @@ class LupioTTY : public BasicPioDevice
     Tick write(PacketPtr pkt) override;
 };
 
-} //namespace gem5
+} // namespace gem5
 
 #endif // __LUPIO_TTY_HH__

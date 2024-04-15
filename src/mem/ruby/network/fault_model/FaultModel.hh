@@ -90,7 +90,8 @@ class FaultModel : public SimObject
         conf_record_buff_per_vc,
         conf_record_vcs,
         conf_record_first_fault_type,
-        conf_record_last_fault_type = conf_record_first_fault_type + number_of_fault_types - 1,
+        conf_record_last_fault_type =
+            conf_record_first_fault_type + number_of_fault_types - 1,
         fields_per_conf_record
     };
 
@@ -108,8 +109,7 @@ class FaultModel : public SimObject
         float fault_type[number_of_fault_types];
     };
 
-    int declare_router(int number_of_inputs,
-                       int number_of_outputs,
+    int declare_router(int number_of_inputs, int number_of_outputs,
                        int number_of_vcs_per_vnet,
                        int number_of_buff_per_data_vc,
                        int number_of_buff_per_ctrl_vc);
@@ -123,12 +123,9 @@ class FaultModel : public SimObject
     // Both functions also return a success flag (which is always true if
     // temperature ranges from 0C to 125C)
 
-    bool fault_vector(int routerID,
-                      int temperature,
-                      float fault_vector[]);
+    bool fault_vector(int routerID, int temperature, float fault_vector[]);
 
-    bool fault_prob(int routerID,
-                    int temperature,
+    bool fault_prob(int routerID, int temperature,
                     float *aggregate_fault_prob);
 
     // for debugging purposes
@@ -136,9 +133,9 @@ class FaultModel : public SimObject
     void print(void);
 
   private:
-    std::vector <system_conf> configurations;
-    std::vector <system_conf> routers;
-    std::vector <int> temperature_weights;
+    std::vector<system_conf> configurations;
+    std::vector<system_conf> routers;
+    std::vector<int> temperature_weights;
 };
 
 } // namespace ruby

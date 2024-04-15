@@ -39,20 +39,23 @@
 namespace gem5
 {
 
-X86ISA::I8259::I8259(const Params &p) : BasicPioDevice(p, 2),
-      latency(p.pio_latency), mode(p.mode), slave(p.slave)
+X86ISA::I8259::I8259(const Params &p)
+    : BasicPioDevice(p, 2),
+      latency(p.pio_latency),
+      mode(p.mode),
+      slave(p.slave)
 {
     for (int i = 0; i < p.port_output_connection_count; i++) {
         output.push_back(new IntSourcePin<I8259>(
-                    csprintf("%s.output[%d]", name(), i), i, this));
+            csprintf("%s.output[%d]", name(), i), i, this));
     }
 
     int in_count = p.port_inputs_connection_count;
     panic_if(in_count > NumLines,
-            "I8259 only supports 8 inputs, but there are %d.", in_count);
+             "I8259 only supports 8 inputs, but there are %d.", in_count);
     for (int i = 0; i < in_count; i++) {
         inputs.push_back(new IntSinkPin<I8259>(
-                    csprintf("%s.inputs[%d]", name(), i), i, this));
+            csprintf("%s.inputs[%d]", name(), i), i, this));
     }
 }
 
@@ -72,7 +75,7 @@ X86ISA::I8259::init()
 {
     BasicPioDevice::init();
 
-    for (auto *input: inputs)
+    for (auto *input : inputs)
         pinStates[input->getId()] = input->state();
 }
 
@@ -84,8 +87,8 @@ X86ISA::I8259::read(PacketPtr pkt)
         assert(mode == enums::I8259Master || mode == enums::I8259Single);
         pkt->setLE<uint8_t>(getVector());
     }
-    switch(pkt->getAddr() - pioAddr) {
-      case 0x0:
+    switch (pkt->getAddr() - pioAddr) {
+    case 0x0:
         if (readIRR) {
             DPRINTF(I8259, "Reading IRR as %#x.\n", IRR);
             pkt->setLE(IRR);
@@ -94,7 +97,7 @@ X86ISA::I8259::read(PacketPtr pkt)
             pkt->setLE(ISR);
         }
         break;
-      case 0x1:
+    case 0x1:
         DPRINTF(I8259, "Reading IMR as %#x.\n", IMR);
         pkt->setLE(IMR);
         break;
@@ -109,7 +112,7 @@ X86ISA::I8259::write(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     uint8_t val = pkt->getLE<uint8_t>();
     switch (pkt->getAddr() - pioAddr) {
-      case 0x0:
+    case 0x0:
         if (bits(val, 4)) {
             DPRINTF(I8259, "Received initialization command word 1.\n");
             IMR = 0;
@@ -117,8 +120,7 @@ X86ISA::I8259::write(PacketPtr pkt)
             DPRINTF(I8259, "%s triggered mode.\n",
                     edgeTriggered ? "Edge" : "Level");
             cascadeMode = !bits(val, 1);
-            DPRINTF(I8259, "%s mode.\n",
-                    cascadeMode ? "Cascade" : "Single");
+            DPRINTF(I8259, "%s mode.\n", cascadeMode ? "Cascade" : "Single");
             expectICW4 = bits(val, 0);
             if (!expectICW4) {
                 autoEOI = false;
@@ -128,41 +130,36 @@ X86ISA::I8259::write(PacketPtr pkt)
         } else if (bits(val, 4, 3) == 0) {
             DPRINTF(I8259, "Received operation command word 2.\n");
             switch (bits(val, 7, 5)) {
-              case 0x0:
+            case 0x0:
                 DPRINTF(I8259,
                         "Subcommand: Rotate in auto-EOI mode (clear).\n");
                 break;
-              case 0x1:
-                {
-                    int line = findMsbSet(ISR);
-                    DPRINTF(I8259, "Subcommand: Nonspecific EOI on line %d.\n",
-                            line);
-                    handleEOI(line);
-                }
-                break;
-              case 0x2:
+            case 0x1: {
+                int line = findMsbSet(ISR);
+                DPRINTF(I8259, "Subcommand: Nonspecific EOI on line %d.\n",
+                        line);
+                handleEOI(line);
+            } break;
+            case 0x2:
                 DPRINTF(I8259, "Subcommand: No operation.\n");
                 break;
-              case 0x3:
-                {
-                    int line = bits(val, 2, 0);
-                    DPRINTF(I8259, "Subcommand: Specific EIO on line %d.\n",
-                            line);
-                    handleEOI(line);
-                }
-                break;
-              case 0x4:
+            case 0x3: {
+                int line = bits(val, 2, 0);
+                DPRINTF(I8259, "Subcommand: Specific EIO on line %d.\n", line);
+                handleEOI(line);
+            } break;
+            case 0x4:
                 DPRINTF(I8259, "Subcommand: Rotate in auto-EOI mode (set).\n");
                 break;
-              case 0x5:
+            case 0x5:
                 DPRINTF(I8259, "Subcommand: Rotate on nonspecific EOI.\n");
                 break;
-              case 0x6:
+            case 0x6:
                 DPRINTF(I8259, "Subcommand: Set priority command.\n");
                 DPRINTF(I8259, "Lowest: IRQ%d   Highest IRQ%d.\n",
                         bits(val, 2, 0), (bits(val, 2, 0) + 1) % 8);
                 break;
-              case 0x7:
+            case 0x7:
                 DPRINTF(I8259, "Subcommand: Rotate on specific EOI.\n");
                 DPRINTF(I8259, "Lowest: IRQ%d   Highest IRQ%d.\n",
                         bits(val, 2, 0), (bits(val, 2, 0) + 1) % 8);
@@ -180,18 +177,18 @@ X86ISA::I8259::write(PacketPtr pkt)
             }
         }
         break;
-      case 0x1:
+    case 0x1:
         switch (initControlWord) {
-          case 0x0:
+        case 0x0:
             DPRINTF(I8259, "Received operation command word 1.\n");
             DPRINTF(I8259, "Wrote IMR value %#x.\n", val);
             IMR = val;
             break;
-          case 0x1:
+        case 0x1:
             DPRINTF(I8259, "Received initialization command word 2.\n");
             vectorOffset = val & ~mask(3);
-            DPRINTF(I8259, "Responsible for vectors %#x-%#x.\n",
-                    vectorOffset, vectorOffset | mask(3));
+            DPRINTF(I8259, "Responsible for vectors %#x-%#x.\n", vectorOffset,
+                    vectorOffset | mask(3));
             if (cascadeMode) {
                 initControlWord++;
             } else {
@@ -199,19 +196,16 @@ X86ISA::I8259::write(PacketPtr pkt)
                 initControlWord = 0;
             }
             break;
-          case 0x2:
+        case 0x2:
             DPRINTF(I8259, "Received initialization command word 3.\n");
             if (mode == enums::I8259Master) {
-                DPRINTF(I8259, "Responders attached to "
+                DPRINTF(I8259,
+                        "Responders attached to "
                         "IRQs:%s%s%s%s%s%s%s%s\n",
-                        bits(val, 0) ? " 0" : "",
-                        bits(val, 1) ? " 1" : "",
-                        bits(val, 2) ? " 2" : "",
-                        bits(val, 3) ? " 3" : "",
-                        bits(val, 4) ? " 4" : "",
-                        bits(val, 5) ? " 5" : "",
-                        bits(val, 6) ? " 6" : "",
-                        bits(val, 7) ? " 7" : "");
+                        bits(val, 0) ? " 0" : "", bits(val, 1) ? " 1" : "",
+                        bits(val, 2) ? " 2" : "", bits(val, 3) ? " 3" : "",
+                        bits(val, 4) ? " 4" : "", bits(val, 5) ? " 5" : "",
+                        bits(val, 6) ? " 6" : "", bits(val, 7) ? " 7" : "");
                 cascadeBits = val;
             } else {
                 DPRINTF(I8259, "Responder ID is %d.\n", val & mask(3));
@@ -222,7 +216,7 @@ X86ISA::I8259::write(PacketPtr pkt)
             else
                 initControlWord = 0;
             break;
-          case 0x3:
+        case 0x3:
             DPRINTF(I8259, "Received initialization command word 4.\n");
             if (bits(val, 4)) {
                 DPRINTF(I8259, "Special fully nested mode.\n");
@@ -266,14 +260,14 @@ X86ISA::I8259::requestInterrupt(int line)
     if (bits(ISR, 7, line) == 0) {
         if (!output.empty()) {
             DPRINTF(I8259, "Propogating interrupt.\n");
-            for (auto *wire: output) {
+            for (auto *wire : output) {
                 wire->raise();
-                //XXX This is a hack.
+                // XXX This is a hack.
                 wire->lower();
             }
         } else {
             warn("Received interrupt but didn't have "
-                    "anyone to tell about it.\n");
+                 "anyone to tell about it.\n");
         }
     }
 }
@@ -283,8 +277,8 @@ X86ISA::I8259::signalInterrupt(int line)
 {
     DPRINTF(I8259, "Interrupt requested for line %d.\n", line);
     if (line >= NumLines)
-        fatal("Line number %d doesn't exist. The max is %d.\n",
-                line, NumLines - 1);
+        fatal("Line number %d doesn't exist. The max is %d.\n", line,
+              NumLines - 1);
     if (bits(IMR, line)) {
         DPRINTF(I8259, "Interrupt %d was masked.\n", line);
     } else {
@@ -298,8 +292,8 @@ X86ISA::I8259::raiseInterruptPin(int number)
 {
     DPRINTF(I8259, "Interrupt signal raised for pin %d.\n", number);
     if (number >= NumLines)
-        fatal("Line number %d doesn't exist. The max is %d.\n",
-                number, NumLines - 1);
+        fatal("Line number %d doesn't exist. The max is %d.\n", number,
+              NumLines - 1);
     if (!pinStates[number])
         signalInterrupt(number);
     pinStates[number] = true;
@@ -310,8 +304,8 @@ X86ISA::I8259::lowerInterruptPin(int number)
 {
     DPRINTF(I8259, "Interrupt signal lowered for pin %d.\n", number);
     if (number >= NumLines)
-        fatal("Line number %d doesn't exist. The max is %d.\n",
-                number, NumLines - 1);
+        fatal("Line number %d doesn't exist. The max is %d.\n", number,
+              NumLines - 1);
     pinStates[number] = false;
 }
 
@@ -334,7 +328,7 @@ X86ISA::I8259::getVector()
     }
     if (slave && bits(cascadeBits, line)) {
         DPRINTF(I8259, "Interrupt was from responder who will "
-                "provide the vector.\n");
+                       "provide the vector.\n");
         return slave->getVector();
     }
     return line | vectorOffset;

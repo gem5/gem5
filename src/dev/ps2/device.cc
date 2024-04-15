@@ -55,8 +55,7 @@ namespace gem5
 namespace ps2
 {
 
-Device::Device(const PS2DeviceParams &p)
-    : SimObject(p)
+Device::Device(const PS2DeviceParams &p) : SimObject(p)
 {
     inBuffer.reserve(16);
 }

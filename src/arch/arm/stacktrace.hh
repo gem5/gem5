@@ -40,7 +40,7 @@ namespace ArmISA
 class StackTrace : public BaseStackTrace
 {
   protected:
-    void trace(ThreadContext *tc, bool is_call) override {};
+    void trace(ThreadContext *tc, bool is_call) override{};
 };
 
 } // Namespace ArmISA

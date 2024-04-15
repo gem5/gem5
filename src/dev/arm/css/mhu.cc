@@ -49,24 +49,23 @@ namespace gem5
 {
 
 Scp2ApDoorbell::Scp2ApDoorbell(const Scp2ApDoorbellParams &p)
-  : MhuDoorbell(p), interrupt(p.interrupt->get())
+    : MhuDoorbell(p), interrupt(p.interrupt->get())
 {}
 
-Ap2ScpDoorbell::Ap2ScpDoorbell(const Ap2ScpDoorbellParams &p)
-  : MhuDoorbell(p)
+Ap2ScpDoorbell::Ap2ScpDoorbell(const Ap2ScpDoorbellParams &p) : MhuDoorbell(p)
 {}
 
 MHU::MHU(const MHUParams &p)
-  : BasicPioDevice(p, p.pio_size),
-    scpLow(p.lowp_scp2ap),
-    scpHigh(p.highp_scp2ap),
-    scpSec(p.sec_scp2ap),
-    apLow(p.lowp_ap2scp),
-    apHigh(p.highp_ap2scp),
-    apSec(p.sec_ap2scp),
-    pid{ 0x98, 0xb0, 0x1b, 0x0, 0x4 },
-    compid{ 0x0d, 0xf0, 0x05, 0xb1 },
-    scfg(0)
+    : BasicPioDevice(p, p.pio_size),
+      scpLow(p.lowp_scp2ap),
+      scpHigh(p.highp_scp2ap),
+      scpSec(p.sec_scp2ap),
+      apLow(p.lowp_ap2scp),
+      apHigh(p.highp_ap2scp),
+      apSec(p.sec_ap2scp),
+      pid{ 0x98, 0xb0, 0x1b, 0x0, 0x4 },
+      compid{ 0x0d, 0xf0, 0x05, 0xb1 },
+      scfg(0)
 {
     apLow->setScp(p.scp);
     apHigh->setScp(p.scp);
@@ -98,15 +97,15 @@ uint32_t
 MHU::read32(const Addr addr, bool secure_access)
 {
     switch (addr) {
-      case SCP_INTR_L_STAT:
+    case SCP_INTR_L_STAT:
         return scpLow->channel;
-      case SCP_INTR_H_STAT:
+    case SCP_INTR_H_STAT:
         return scpHigh->channel;
-      case CPU_INTR_L_STAT:
+    case CPU_INTR_L_STAT:
         return apLow->channel;
-      case CPU_INTR_H_STAT:
+    case CPU_INTR_H_STAT:
         return apHigh->channel;
-      case SCP_INTR_S_STAT:
+    case SCP_INTR_S_STAT:
         if (secure_access) {
             return scpSec->channel;
         } else {
@@ -114,7 +113,7 @@ MHU::read32(const Addr addr, bool secure_access)
                 scpSec->set(SVI_INT);
             return 0;
         }
-      case CPU_INTR_S_STAT:
+    case CPU_INTR_S_STAT:
         if (secure_access) {
             return apSec->channel;
         } else {
@@ -122,27 +121,27 @@ MHU::read32(const Addr addr, bool secure_access)
                 scpSec->set(SVI_INT);
             return 0;
         }
-      case MHU_SCFG:
+    case MHU_SCFG:
         return scfg;
-      case PID4:
+    case PID4:
         return pid[4];
-      case PID0:
+    case PID0:
         return pid[0];
-      case PID1:
+    case PID1:
         return pid[1];
-      case PID2:
+    case PID2:
         return pid[2];
-      case PID3:
+    case PID3:
         return pid[3];
-      case COMPID0:
+    case COMPID0:
         return compid[0];
-      case COMPID1:
+    case COMPID1:
         return compid[1];
-      case COMPID2:
+    case COMPID2:
         return compid[2];
-      case COMPID3:
+    case COMPID3:
         return compid[3];
-      default:
+    default:
         panic("Invalid register read at address: %#x\n", addr);
     }
 }
@@ -158,46 +157,46 @@ MHU::write(PacketPtr pkt)
     DPRINTF(MHU, "Writing %#x at address: %#x\n", value, addr);
 
     switch (addr) {
-      case SCP_INTR_L_SET:
+    case SCP_INTR_L_SET:
         scpLow->set(value);
         break;
-      case SCP_INTR_L_CLEAR:
+    case SCP_INTR_L_CLEAR:
         scpLow->clear(value);
         break;
-      case SCP_INTR_H_SET:
+    case SCP_INTR_H_SET:
         scpHigh->set(value);
         break;
-      case SCP_INTR_H_CLEAR:
+    case SCP_INTR_H_CLEAR:
         scpHigh->clear(value);
         break;
-      case CPU_INTR_L_SET:
+    case CPU_INTR_L_SET:
         apLow->set(value);
         break;
-      case CPU_INTR_L_CLEAR:
+    case CPU_INTR_L_CLEAR:
         apLow->clear(value);
         break;
-      case CPU_INTR_H_SET:
+    case CPU_INTR_H_SET:
         apHigh->set(value);
         break;
-      case CPU_INTR_H_CLEAR:
+    case CPU_INTR_H_CLEAR:
         apHigh->clear(value);
         break;
-      case SCP_INTR_S_SET:
+    case SCP_INTR_S_SET:
         scpSec->set(value);
         break;
-      case SCP_INTR_S_CLEAR:
+    case SCP_INTR_S_CLEAR:
         scpSec->clear(value);
         break;
-      case CPU_INTR_S_SET:
+    case CPU_INTR_S_SET:
         apSec->set(value);
         break;
-      case CPU_INTR_S_CLEAR:
+    case CPU_INTR_S_CLEAR:
         apSec->clear(value);
         break;
-      case MHU_SCFG:
+    case MHU_SCFG:
         scfg = value;
         break;
-      default:
+    default:
         panic("Invalid register write at address: %#x\n", addr);
     }
 

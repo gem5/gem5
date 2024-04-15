@@ -47,7 +47,8 @@ DynPoolManager::minAllocatedElements(uint32_t size)
              size);
 
     return size % minAllocation() > 0 ?
-        (minAllocation() - (size % minAllocation())) + size : size;
+               (minAllocation() - (size % minAllocation())) + size :
+               size;
 }
 
 std::string
@@ -79,14 +80,15 @@ DynPoolManager::printRegion()
 
 // reset freeSpace and reservedSpace
 void
-DynPoolManager::resetRegion(const int & regsPerSimd){
+DynPoolManager::resetRegion(const int &regsPerSimd)
+{
     totalRegSpace = regsPerSimd;
     reservedSpaceRecord = 0;
     freeSpaceRecord.clear();
 
     // reset available free space
     _totRegSpaceAvailable = regsPerSimd;
-    freeSpaceRecord.push_back(std::make_pair(0,regsPerSimd));
+    freeSpaceRecord.push_back(std::make_pair(0, regsPerSimd));
 }
 
 bool
@@ -94,28 +96,31 @@ DynPoolManager::canAllocate(uint32_t numRegions, uint32_t size)
 {
     uint32_t actualSize = minAllocatedElements(size);
     uint32_t numAvailChunks = 0;
-    DPRINTF(GPUVRF, "Checking if we can allocate %d regions of size %d "
-                    "registers\n", numRegions, actualSize);
+    DPRINTF(GPUVRF,
+            "Checking if we can allocate %d regions of size %d "
+            "registers\n",
+            numRegions, actualSize);
     for (auto it : freeSpaceRecord) {
-        numAvailChunks += (it.second - it.first)/actualSize;
+        numAvailChunks += (it.second - it.first) / actualSize;
     }
 
     if (numAvailChunks >= numRegions) {
-        DPRINTF(GPUVRF, "Able to allocate %d regions of size %d; "
-                        "number of available regions: %d\n",
-                        numRegions, actualSize, numAvailChunks);
+        DPRINTF(GPUVRF,
+                "Able to allocate %d regions of size %d; "
+                "number of available regions: %d\n",
+                numRegions, actualSize, numAvailChunks);
         return true;
     } else {
-        DPRINTF(GPUVRF, "Unable to allocate %d regions of size %d; "
-                        "number of available regions: %d\n",
-                        numRegions, actualSize, numAvailChunks);
+        DPRINTF(GPUVRF,
+                "Unable to allocate %d regions of size %d; "
+                "number of available regions: %d\n",
+                numRegions, actualSize, numAvailChunks);
         return false;
     }
 }
 
 uint32_t
-DynPoolManager::allocateRegion(const uint32_t size,
-                                    uint32_t *reservedPoolSize)
+DynPoolManager::allocateRegion(const uint32_t size, uint32_t *reservedPoolSize)
 {
     uint32_t startIdx = (unsigned)-1;
     uint32_t actualSize = minAllocatedElements(size);
@@ -144,36 +149,35 @@ DynPoolManager::allocateRegion(const uint32_t size,
         }
         it++;
     }
-    DPRINTF(GPUVRF,"totRegSpace %d allocating Register at %d and"
-                " size %d\n",_totRegSpaceAvailable,startIdx,actualSize);
+    DPRINTF(GPUVRF,
+            "totRegSpace %d allocating Register at %d and"
+            " size %d\n",
+            _totRegSpaceAvailable, startIdx, actualSize);
     return startIdx;
 }
 
 void
-DynPoolManager::freeRegion(uint32_t firstIdx,
-                                uint32_t lastIdx)
+DynPoolManager::freeRegion(uint32_t firstIdx, uint32_t lastIdx)
 {
     // lastIdx-firstIdx should give the size of free space
-    DPRINTF(GPUVRF,"freeing Region at %d %d, size %d\n",
-                firstIdx,lastIdx,lastIdx-firstIdx);
+    DPRINTF(GPUVRF, "freeing Region at %d %d, size %d\n", firstIdx, lastIdx,
+            lastIdx - firstIdx);
 
     // Current dynamic register allocation does not handle wraparound
     assert(firstIdx < lastIdx);
-    _totRegSpaceAvailable += lastIdx-firstIdx;
+    _totRegSpaceAvailable += lastIdx - firstIdx;
 
     // Consolidate with other regions. Need to check if firstIdx or lastIdx
     // already exist
-    auto firstIt = std::find_if(
-            freeSpaceRecord.begin(),
-            freeSpaceRecord.end(),
-            [&](const std::pair<int, int>& element){
-                return element.second == firstIdx;} );
+    auto firstIt = std::find_if(freeSpaceRecord.begin(), freeSpaceRecord.end(),
+                                [&](const std::pair<int, int> &element) {
+                                    return element.second == firstIdx;
+                                });
 
-    auto lastIt = std::find_if(
-            freeSpaceRecord.begin(),
-            freeSpaceRecord.end(),
-            [&](const std::pair<int, int>& element){
-                return element.first == lastIdx;} );
+    auto lastIt = std::find_if(freeSpaceRecord.begin(), freeSpaceRecord.end(),
+                               [&](const std::pair<int, int> &element) {
+                                   return element.first == lastIdx;
+                               });
 
     if (firstIt != freeSpaceRecord.end() && lastIt != freeSpaceRecord.end()) {
         firstIt->second = lastIt->second;

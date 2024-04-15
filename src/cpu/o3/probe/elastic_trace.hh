@@ -79,20 +79,19 @@ class CPU;
  * relevant information about the instruction, e.g. timestamps and register
  * accesses, are captured and stored in temporary data structures. When the
  * instruction progresses through the commit stage, the timing as well as
- * dependency information about the instruction is finalised and encapsulated in
- * a struct called TraceInfo. TraceInfo objects are collected in a list instead
- * of writing them out to the trace file one a time. This is required as the
- * trace is processed in chunks to evaluate order dependencies and computational
- * delay in case an instruction does not have any register dependencies. By this
- * we achieve a simpler algorithm during replay because every record in the
- * trace can be hooked onto a record in its past. The trace is written out as
- * a protobuf format output file.
+ * dependency information about the instruction is finalised and encapsulated
+ * in a struct called TraceInfo. TraceInfo objects are collected in a list
+ * instead of writing them out to the trace file one a time. This is required
+ * as the trace is processed in chunks to evaluate order dependencies and
+ * computational delay in case an instruction does not have any register
+ * dependencies. By this we achieve a simpler algorithm during replay because
+ * every record in the trace can be hooked onto a record in its past. The trace
+ * is written out as a protobuf format output file.
  *
  * The output trace can be read in and played back by the TraceCPU.
  */
 class ElasticTrace : public ProbeListenerObject
 {
-
   public:
     typedef typename std::pair<InstSeqNum, RegIndex> SeqNumRegPair;
 
@@ -133,7 +132,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void recordExecTick(const DynInstConstPtr& dyn_inst);
+    void recordExecTick(const DynInstConstPtr &dyn_inst);
 
     /**
      * Populate the timestamp field in an InstExecInfo object for an
@@ -142,7 +141,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void recordToCommTick(const DynInstConstPtr& dyn_inst);
+    void recordToCommTick(const DynInstConstPtr &dyn_inst);
 
     /**
      * Record a Read After Write physical register dependency if there has
@@ -153,7 +152,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param dyn_inst pointer to dynamic instruction in flight
      */
-    void updateRegDep(const DynInstConstPtr& dyn_inst);
+    void updateRegDep(const DynInstConstPtr &dyn_inst);
 
     /**
      * When an instruction gets squashed the destination register mapped to it
@@ -170,14 +169,14 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param head_inst pointer to dynamic instruction to be squashed
      */
-    void addSquashedInst(const DynInstConstPtr& head_inst);
+    void addSquashedInst(const DynInstConstPtr &head_inst);
 
     /**
      * Add an instruction that is at the head of the ROB and is committed.
      *
      * @param head_inst pointer to dynamic instruction to be committed
      */
-    void addCommittedInst(const DynInstConstPtr& head_inst);
+    void addCommittedInst(const DynInstConstPtr &head_inst);
 
     /** Event to trigger registering this listener for all probe points. */
     EventFunctionWrapper regEtraceListenersEvent;
@@ -212,23 +211,21 @@ class ElasticTrace : public ProbeListenerObject
          * due to Read After Write data dependency based on physical register.
          */
         std::set<InstSeqNum> physRegDepSet;
+
         /** @} */
 
         /** Constructor */
-        InstExecInfo()
-          : executeTick(MaxTick),
-            toCommitTick(MaxTick)
-        { }
+        InstExecInfo() : executeTick(MaxTick), toCommitTick(MaxTick) {}
     };
 
     /**
      * Temporary store of InstExecInfo objects. Later on when an instruction
      * is processed for commit or retire, if it is chosen to be written to
-     * the output trace then this information is looked up using the instruction
-     * sequence number as the key. If it is not chosen then the entry for it in
-     * the store is cleared.
+     * the output trace then this information is looked up using the
+     * instruction sequence number as the key. If it is not chosen then the
+     * entry for it in the store is cleared.
      */
-    std::unordered_map<InstSeqNum, InstExecInfo*> tempStore;
+    std::unordered_map<InstSeqNum, InstExecInfo *> tempStore;
 
     /**
      * The last cleared instruction sequence number used to free up the memory
@@ -292,18 +289,33 @@ class ElasticTrace : public ProbeListenerObject
         Addr virtAddr;
         /* Request size in case of a load/store instruction */
         unsigned size;
+
         /** Default Constructor */
-        TraceInfo()
-          : type(Record::INVALID)
-        { }
+        TraceInfo() : type(Record::INVALID) {}
+
         /** Is the record a load */
-        bool isLoad() const { return (type == Record::LOAD); }
+        bool
+        isLoad() const
+        {
+            return (type == Record::LOAD);
+        }
+
         /** Is the record a store */
-        bool isStore() const { return (type == Record::STORE); }
+        bool
+        isStore() const
+        {
+            return (type == Record::STORE);
+        }
+
         /** Is the record a fetch triggering an Icache request */
-        bool isComp() const { return (type == Record::COMP); }
+        bool
+        isComp() const
+        {
+            return (type == Record::COMP);
+        }
+
         /** Return string specifying the type of the node */
-        const std::string& typeToStr() const;
+        const std::string &typeToStr() const;
         /** @} */
 
         /**
@@ -326,16 +338,16 @@ class ElasticTrace : public ProbeListenerObject
      * i.e. adding children as records are read from the trace in an efficient
      * manner.
      */
-    std::vector<TraceInfo*> depTrace;
+    std::vector<TraceInfo *> depTrace;
 
     /**
      * Map where the instruction sequence number is mapped to the pointer to
      * the TraceInfo object.
      */
-    std::unordered_map<InstSeqNum, TraceInfo*> traceInfoMap;
+    std::unordered_map<InstSeqNum, TraceInfo *> traceInfoMap;
 
     /** Typedef of iterator to the instruction dependency trace. */
-    typedef typename std::vector<TraceInfo*>::iterator depTraceItr;
+    typedef typename std::vector<TraceInfo *>::iterator depTraceItr;
 
     /** Typedef of the reverse iterator to the instruction dependency trace. */
     typedef typename std::reverse_iterator<depTraceItr> depTraceRevItr;
@@ -349,10 +361,10 @@ class ElasticTrace : public ProbeListenerObject
     uint32_t depWindowSize;
 
     /** Protobuf output stream for data dependency trace */
-    ProtoOutputStream* dataTraceStream;
+    ProtoOutputStream *dataTraceStream;
 
     /** Protobuf output stream for instruction fetch trace. */
-    ProtoOutputStream* instTraceStream;
+    ProtoOutputStream *instTraceStream;
 
     /** Number of instructions after which to enable tracing. */
     const InstSeqNum startTraceInst;
@@ -373,16 +385,16 @@ class ElasticTrace : public ProbeListenerObject
 
     /**
      * Add a record to the dependency trace depTrace which is a sequential
-     * container. A record is inserted per committed instruction and in the same
-     * order as the order in which instructions are committed.
+     * container. A record is inserted per committed instruction and in the
+     * same order as the order in which instructions are committed.
      *
      * @param head_inst     Pointer to the instruction which is head of the
      *                      ROB and ready to commit
      * @param exec_info_ptr Pointer to InstExecInfo for that instruction
      * @param commit        True if instruction is committed, false if squashed
      */
-    void addDepTraceRecord(const DynInstConstPtr& head_inst,
-                           InstExecInfo* exec_info_ptr, bool commit);
+    void addDepTraceRecord(const DynInstConstPtr &head_inst,
+                           InstExecInfo *exec_info_ptr, bool commit);
 
     /**
      * Clear entries in the temporary store of execution info objects to free
@@ -390,7 +402,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param head_inst pointer to dynamic instruction
      */
-    void clearTempStoreUntil(const DynInstConstPtr& head_inst);
+    void clearTempStoreUntil(const DynInstConstPtr &head_inst);
 
     /**
      * Calculate the computational delay between an instruction and a
@@ -402,7 +414,7 @@ class ElasticTrace : public ProbeListenerObject
      *                      dependency on the instruction pointed to by
      *                      past_record
      */
-    void compDelayRob(TraceInfo* past_record, TraceInfo* new_record);
+    void compDelayRob(TraceInfo *past_record, TraceInfo *new_record);
 
     /**
      * Calculate the computational delay between an instruction and a
@@ -415,7 +427,7 @@ class ElasticTrace : public ProbeListenerObject
      *                      Register dependency on the instruction pointed to
      *                      by past_record
      */
-    void compDelayPhysRegDep(TraceInfo* past_record, TraceInfo* new_record);
+    void compDelayPhysRegDep(TraceInfo *past_record, TraceInfo *new_record);
 
     /**
      * Write out given number of records to the trace starting with the first
@@ -428,7 +440,8 @@ class ElasticTrace : public ProbeListenerObject
 
     /**
      * Reverse iterate through the graph, search for a store-after-store or
-     * store-after-load dependency and update the new node's Rob dependency list.
+     * store-after-load dependency and update the new node's Rob dependency
+     * list.
      *
      * If a dependency is found, then call the assignRobDep() method that
      * updates the store with the dependency information. This function is only
@@ -438,7 +451,7 @@ class ElasticTrace : public ProbeListenerObject
      * @param find_load_not_store true for searching store-after-load and false
      *                          for searching store-after-store dependency
      */
-    void updateCommitOrderDep(TraceInfo* new_record, bool find_load_not_store);
+    void updateCommitOrderDep(TraceInfo *new_record, bool find_load_not_store);
 
     /**
      * Reverse iterate through the graph, search for an issue order dependency
@@ -451,7 +464,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @param new_record    pointer to new record to be added to the trace
      */
-    void updateIssueOrderDep(TraceInfo* new_record);
+    void updateIssueOrderDep(TraceInfo *new_record);
 
     /**
      * The new_record has an order dependency on a past_record, thus update the
@@ -462,7 +475,7 @@ class ElasticTrace : public ProbeListenerObject
      * @param past_record   pointer to record that new_record has a rob
      *                      dependency on
      */
-    void assignRobDep(TraceInfo* past_record, TraceInfo* new_record);
+    void assignRobDep(TraceInfo *past_record, TraceInfo *new_record);
 
     /**
      * Check if past record is a store sent earlier than the execute tick.
@@ -472,7 +485,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @return true if past record is store sent earlier
      */
-    bool hasStoreCommitted(TraceInfo* past_record, Tick execute_tick) const;
+    bool hasStoreCommitted(TraceInfo *past_record, Tick execute_tick) const;
 
     /**
      * Check if past record is a load that completed earlier than the execute
@@ -484,7 +497,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @return true if past record is load completed earlier
      */
-    bool hasLoadCompleted(TraceInfo* past_record, Tick execute_tick) const;
+    bool hasLoadCompleted(TraceInfo *past_record, Tick execute_tick) const;
 
     /**
      * Check if past record is a load sent earlier than the execute tick.
@@ -494,7 +507,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @return true if past record is load sent earlier
      */
-    bool hasLoadBeenSent(TraceInfo* past_record, Tick execute_tick) const;
+    bool hasLoadBeenSent(TraceInfo *past_record, Tick execute_tick) const;
 
     /**
      * Check if past record is a comp node that completed earlier than the
@@ -506,7 +519,7 @@ class ElasticTrace : public ProbeListenerObject
      *
      * @return true if past record is comp completed earlier
      */
-    bool hasCompCompleted(TraceInfo* past_record, Tick execute_tick) const;
+    bool hasCompCompleted(TraceInfo *past_record, Tick execute_tick) const;
 
     struct ElasticTraceStats : public statistics::Group
     {
@@ -557,10 +570,9 @@ class ElasticTrace : public ProbeListenerObject
          */
         statistics::Scalar maxPhysRegDepMapSize;
     } stats;
-
 };
 
 } // namespace o3
 } // namespace gem5
 
-#endif//__CPU_O3_PROBE_ELASTIC_TRACE_HH__
+#endif //__CPU_O3_PROBE_ELASTIC_TRACE_HH__

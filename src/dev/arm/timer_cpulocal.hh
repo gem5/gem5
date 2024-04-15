@@ -64,38 +64,37 @@ class CpuLocalTimer : public BasicPioDevice
   protected:
     class Timer : public Serializable
     {
-
       public:
         enum
         {
-            TimerLoadReg    	   = 0x00,
-            TimerCounterReg 	   = 0x04,
-            TimerControlReg 	   = 0x08,
-            TimerIntStatusReg      = 0x0C,
-            WatchdogLoadReg        = 0x20,
-            WatchdogCounterReg     = 0x24,
-            WatchdogControlReg     = 0x28,
-            WatchdogIntStatusReg   = 0x2C,
+            TimerLoadReg = 0x00,
+            TimerCounterReg = 0x04,
+            TimerControlReg = 0x08,
+            TimerIntStatusReg = 0x0C,
+            WatchdogLoadReg = 0x20,
+            WatchdogCounterReg = 0x24,
+            WatchdogControlReg = 0x28,
+            WatchdogIntStatusReg = 0x2C,
             WatchdogResetStatusReg = 0x30,
-            WatchdogDisableReg     = 0x34,
-            Size                   = 0x38
+            WatchdogDisableReg = 0x34,
+            Size = 0x38
         };
 
         BitUnion32(TimerCtrl)
-            Bitfield<0>   enable;
-            Bitfield<1>   autoReload;
-            Bitfield<2>   intEnable;
-            Bitfield<7,3> reserved;
-            Bitfield<15,8> prescalar;
+            Bitfield<0> enable;
+            Bitfield<1> autoReload;
+            Bitfield<2> intEnable;
+            Bitfield<7, 3> reserved;
+            Bitfield<15, 8> prescalar;
         EndBitUnion(TimerCtrl)
 
         BitUnion32(WatchdogCtrl)
-            Bitfield<0>   enable;
-            Bitfield<1>   autoReload;
-            Bitfield<2>   intEnable;
-            Bitfield<3>   watchdogMode;
-            Bitfield<7,4> reserved;
-            Bitfield<15,8> prescalar;
+            Bitfield<0> enable;
+            Bitfield<1> autoReload;
+            Bitfield<2> intEnable;
+            Bitfield<3> watchdogMode;
+            Bitfield<7, 4> reserved;
+            Bitfield<15, 8> prescalar;
         EndBitUnion(WatchdogCtrl)
 
       protected:
@@ -120,7 +119,7 @@ class CpuLocalTimer : public BasicPioDevice
         uint32_t watchdogDisableReg;
 
         /** If an interrupt is currently pending. Logical and of Timer or
-          * Watchdog Ctrl.enable and rawIntTimer or rawIntWatchdog */
+         * Watchdog Ctrl.enable and rawIntTimer or rawIntWatchdog */
         bool pendingIntTimer;
         bool pendingIntWatchdog;
 
@@ -134,18 +133,21 @@ class CpuLocalTimer : public BasicPioDevice
 
         void watchdogAtZero();
         EventFunctionWrapper watchdogZeroEvent;
+
       public:
         /** Restart the counter ticking at val
          * @param val the value to start at */
         void restartTimerCounter(uint32_t val);
         void restartWatchdogCounter(uint32_t val);
 
-        Timer(const std::string &name,
-              CpuLocalTimer* _parent,
-              ArmInterruptPin* int_timer,
-              ArmInterruptPin* int_watchdog);
+        Timer(const std::string &name, CpuLocalTimer *_parent,
+              ArmInterruptPin *int_timer, ArmInterruptPin *int_watchdog);
 
-        std::string name() const { return _name; }
+        std::string
+        name() const
+        {
+            return _name;
+        }
 
         /** Handle read for a single timer */
         void read(PacketPtr pkt, Addr daddr);
@@ -169,9 +171,9 @@ class CpuLocalTimer : public BasicPioDevice
     PARAMS(CpuLocalTimer);
 
     /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for RealView just registers itself with the MMU.
+     * @param p params structure
+     */
     CpuLocalTimer(const Params &p);
 
     /** Inits the local timers */

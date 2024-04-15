@@ -1,5 +1,6 @@
 #ifndef _VIRTIO_RING_H
 #define _VIRTIO_RING_H
+/* clang-format off */
 /* An interface for efficient virtio implementation, currently for use by KVM
  * and lguest, but hopefully others soon.  Do NOT change this since it will
  * break existing servers and clients.
@@ -31,32 +32,33 @@
  * SUCH DAMAGE.
  *
  * Copyright Rusty Russell IBM Corporation 2007. */
+/* clang-format on */
 #include <stdint.h>
 
 /* This marks a buffer as continuing via the next field. */
-#define VRING_DESC_F_NEXT	1
+#define VRING_DESC_F_NEXT 1
 /* This marks a buffer as write-only (otherwise read-only). */
-#define VRING_DESC_F_WRITE	2
+#define VRING_DESC_F_WRITE 2
 /* This means the buffer contains a list of buffer descriptors. */
-#define VRING_DESC_F_INDIRECT	4
+#define VRING_DESC_F_INDIRECT 4
 
 /* The Host uses this in used->flags to advise the Guest: don't kick me when
  * you add a buffer.  It's unreliable, so it's simply an optimization.  Guest
  * will still kick if it's out of buffers. */
-#define VRING_USED_F_NO_NOTIFY	1
+#define VRING_USED_F_NO_NOTIFY 1
 /* The Guest uses this in avail->flags to advise the Host: don't interrupt me
  * when you consume a buffer.  It's unreliable, so it's simply an
  * optimization.  */
-#define VRING_AVAIL_F_NO_INTERRUPT	1
+#define VRING_AVAIL_F_NO_INTERRUPT 1
 
 /* We support indirect buffer descriptors */
-#define VIRTIO_RING_F_INDIRECT_DESC	28
+#define VIRTIO_RING_F_INDIRECT_DESC 28
 
 /* The Guest publishes the used index for which it expects an interrupt
  * at the end of the avail ring. Host should ignore the avail->flags field. */
 /* The Host publishes the avail index for which it expects a kick
  * at the end of the used ring. Guest should ignore the used->flags field. */
-#define VIRTIO_RING_F_EVENT_IDX		29
+#define VIRTIO_RING_F_EVENT_IDX 29
 
 /* Virtio ring descriptors: 16 bytes.  These can chain together via "next". */
 struct vring_desc
@@ -134,28 +136,33 @@ struct vring
 #define vring_used_event(vr) ((vr)->avail->ring[(vr)->num])
 #define vring_avail_event(vr) (*(uint16_t *)&(vr)->used->ring[(vr)->num])
 
-static inline void vring_init(struct vring *vr, unsigned int num, void *p,
-                              unsigned long align)
+static inline void
+vring_init(struct vring *vr, unsigned int num, void *p, unsigned long align)
 {
     vr->num = num;
     vr->desc = (struct vring_desc *)p;
-    vr->avail = (struct vring_avail *)((uint8_t*)p + num*sizeof(struct vring_desc));
-    vr->used = (struct vring_used *)(((unsigned long)&vr->avail->ring[num] + sizeof(uint16_t)
-                         + align-1) & ~(align - 1));
+    vr->avail =
+        (struct vring_avail *)((uint8_t *)p + num * sizeof(struct vring_desc));
+    vr->used = (struct vring_used *)(((unsigned long)&vr->avail->ring[num] +
+                                      sizeof(uint16_t) + align - 1) &
+                                     ~(align - 1));
 }
 
-static inline unsigned vring_size(unsigned int num, unsigned long align)
+static inline unsigned
+vring_size(unsigned int num, unsigned long align)
 {
-    return ((sizeof(struct vring_desc) * num + sizeof(uint16_t) * (3 + num)
-             + align - 1) & ~(align - 1))
-        + sizeof(uint16_t) * 3 + sizeof(struct vring_used_elem) * num;
+    return ((sizeof(struct vring_desc) * num + sizeof(uint16_t) * (3 + num) +
+             align - 1) &
+            ~(align - 1)) +
+           sizeof(uint16_t) * 3 + sizeof(struct vring_used_elem) * num;
 }
 
 /* The following is used with USED_EVENT_IDX and AVAIL_EVENT_IDX */
 /* Assuming a given event_idx value from the other size, if
  * we have just incremented index from old to new_idx,
  * should we trigger an event? */
-static inline int vring_need_event(uint16_t event_idx, uint16_t new_idx, uint16_t old)
+static inline int
+vring_need_event(uint16_t event_idx, uint16_t new_idx, uint16_t old)
 {
     /* Note: Xen has similar logic for notification hold-off
      * in include/xen/interface/io/ring.h with req_event and req_prod

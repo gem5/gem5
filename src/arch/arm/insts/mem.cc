@@ -56,16 +56,16 @@ MemoryReg::printOffset(std::ostream &os) const
     printIntReg(os, index);
     if (shiftType != LSL || shiftAmt != 0) {
         switch (shiftType) {
-          case LSL:
+        case LSL:
             ccprintf(os, " LSL #%d", shiftAmt);
             break;
-          case LSR:
+        case LSR:
             ccprintf(os, " LSR #%d", (shiftAmt == 0) ? 32 : shiftAmt);
             break;
-          case ASR:
+        case ASR:
             ccprintf(os, " ASR #%d", (shiftAmt == 0) ? 32 : shiftAmt);
             break;
-          case ROR:
+        case ROR:
             if (shiftAmt == 0) {
                 ccprintf(os, " RRX");
             } else {
@@ -81,16 +81,16 @@ RfeOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     switch (mode) {
-      case DecrementAfter:
+    case DecrementAfter:
         printMnemonic(ss, "da");
         break;
-      case DecrementBefore:
+    case DecrementBefore:
         printMnemonic(ss, "db");
         break;
-      case IncrementAfter:
+    case IncrementAfter:
         printMnemonic(ss, "ia");
         break;
-      case IncrementBefore:
+    case IncrementBefore:
         printMnemonic(ss, "ib");
         break;
     }
@@ -106,16 +106,16 @@ SrsOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     switch (mode) {
-      case DecrementAfter:
+    case DecrementAfter:
         printMnemonic(ss, "da");
         break;
-      case DecrementBefore:
+    case DecrementBefore:
         printMnemonic(ss, "db");
         break;
-      case IncrementAfter:
+    case IncrementAfter:
         printMnemonic(ss, "ia");
         break;
-      case IncrementBefore:
+    case IncrementBefore:
         printMnemonic(ss, "ib");
         break;
     }
@@ -125,34 +125,34 @@ SrsOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     }
     ss << ", #";
     switch (regMode) {
-      case MODE_USER:
+    case MODE_USER:
         ss << "user";
         break;
-      case MODE_FIQ:
+    case MODE_FIQ:
         ss << "fiq";
         break;
-      case MODE_IRQ:
+    case MODE_IRQ:
         ss << "irq";
         break;
-      case MODE_SVC:
+    case MODE_SVC:
         ss << "supervisor";
         break;
-      case MODE_MON:
+    case MODE_MON:
         ss << "monitor";
         break;
-      case MODE_ABORT:
+    case MODE_ABORT:
         ss << "abort";
         break;
-      case MODE_HYP:
+    case MODE_HYP:
         ss << "hyp";
         break;
-      case MODE_UNDEFINED:
+    case MODE_UNDEFINED:
         ss << "undefined";
         break;
-      case MODE_SYSTEM:
+    case MODE_SYSTEM:
         ss << "system";
         break;
-      default:
+    default:
         ss << "unrecognized";
         break;
     }
@@ -176,7 +176,6 @@ Memory::printInst(std::ostream &os, AddrMode addrMode) const
     } else {
         os << "] ";
         printOffset(os);
-
     }
 }
 

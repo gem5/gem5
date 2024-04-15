@@ -41,13 +41,13 @@
 namespace gem5
 {
 
-Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
+Episode::Episode(ProtocolTester *_tester, TesterThread *_thread, int num_loads,
                  int num_stores)
-      : tester(_tester),
-        thread(_thread),
-        numLoads(num_loads),
-        numStores(num_stores),
-        nextActionIdx(0)
+    : tester(_tester),
+      thread(_thread),
+      numLoads(num_loads),
+      numStores(num_stores),
+      nextActionIdx(0)
 {
     assert(tester && thread);
 
@@ -68,13 +68,13 @@ Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
 
 Episode::~Episode()
 {
-    for (Episode::Action* action : actions) {
+    for (Episode::Action *action : actions) {
         assert(action);
         delete action;
     }
 }
 
-const Episode::Action*
+const Episode::Action *
 Episode::peekCurAction() const
 {
     if (nextActionIdx < actions.size())
@@ -102,22 +102,20 @@ Episode::initActions()
     int num_stores = numStores;
     while ((num_loads + num_stores) > 0) {
         switch (random_mt.random<unsigned int>() % 2) {
-            case 0: // Load
-                if (num_loads > 0) {
-                    actions.push_back(new Action(Action::Type::LOAD,
-                                                   numLanes));
-                    num_loads--;
-                }
-                break;
-            case 1: // Store
-                if (num_stores > 0) {
-                    actions.push_back(new Action(Action::Type::STORE,
-                                                   numLanes));
-                    num_stores--;
-                }
-                break;
-            default:
-                assert(false);
+        case 0: // Load
+            if (num_loads > 0) {
+                actions.push_back(new Action(Action::Type::LOAD, numLanes));
+                num_loads--;
+            }
+            break;
+        case 1: // Store
+            if (num_stores > 0) {
+                actions.push_back(new Action(Action::Type::STORE, numLanes));
+                num_stores--;
+            }
+            break;
+        default:
+            assert(false);
         }
     }
 
@@ -139,57 +137,55 @@ Episode::initActions()
         assert(atomicLocs[lane] >= 0);
 
         // go through each action in this lane and set its location
-        for (Action* action : actions) {
+        for (Action *action : actions) {
             assert(action);
 
             switch (action->getType()) {
-                case Action::Type::ATOMIC:
-                    action->setLocation(lane, atomicLocs[lane]);
-                    break;
-                case Action::Type::LOAD:
-                    // pick randomly a normal location
-                    normal_loc = addrManager->
-                                            getLoadLoc(atomicLocs[lane]);
-                    assert(normal_loc >= AddressManager::INVALID_LOCATION);
+            case Action::Type::ATOMIC:
+                action->setLocation(lane, atomicLocs[lane]);
+                break;
+            case Action::Type::LOAD:
+                // pick randomly a normal location
+                normal_loc = addrManager->getLoadLoc(atomicLocs[lane]);
+                assert(normal_loc >= AddressManager::INVALID_LOCATION);
 
-                    if (normal_loc != AddressManager::INVALID_LOCATION) {
-                        // check DRF
-                        if (!tester->checkDRF(atomicLocs[lane],
-                                                normal_loc, false) ||
-                            !this->checkDRF(atomicLocs[lane], normal_loc,
-                                            false, lane)) {
-                            panic("TestTh %d - Data race detected. STOPPED!\n",
-                                  thread->getTesterThreadId());
-                        }
+                if (normal_loc != AddressManager::INVALID_LOCATION) {
+                    // check DRF
+                    if (!tester->checkDRF(atomicLocs[lane], normal_loc,
+                                          false) ||
+                        !this->checkDRF(atomicLocs[lane], normal_loc, false,
+                                        lane)) {
+                        panic("TestTh %d - Data race detected. STOPPED!\n",
+                              thread->getTesterThreadId());
                     }
+                }
 
-                    action->setLocation(lane, normal_loc);
-                    break;
-                case Action::Type::STORE:
-                    // pick randomly a normal location
-                    normal_loc = addrManager->
-                                            getStoreLoc(atomicLocs[lane]);
-                    assert(normal_loc >= AddressManager::INVALID_LOCATION);
+                action->setLocation(lane, normal_loc);
+                break;
+            case Action::Type::STORE:
+                // pick randomly a normal location
+                normal_loc = addrManager->getStoreLoc(atomicLocs[lane]);
+                assert(normal_loc >= AddressManager::INVALID_LOCATION);
 
-                    if (normal_loc != AddressManager::INVALID_LOCATION) {
-                        // check DRF
-                        if (!tester->checkDRF(atomicLocs[lane],
-                                                normal_loc, true) ||
-                            !this->checkDRF(atomicLocs[lane], normal_loc,
-                                            true, lane)) {
-                            panic("TestTh %d - Data race detected. STOPPED!\n",
-                                  thread->getTesterThreadId());
-                        }
+                if (normal_loc != AddressManager::INVALID_LOCATION) {
+                    // check DRF
+                    if (!tester->checkDRF(atomicLocs[lane], normal_loc,
+                                          true) ||
+                        !this->checkDRF(atomicLocs[lane], normal_loc, true,
+                                        lane)) {
+                        panic("TestTh %d - Data race detected. STOPPED!\n",
+                              thread->getTesterThreadId());
                     }
+                }
 
-                    action->setLocation(lane, normal_loc);
-                    break;
-                case Action::Type::ACQUIRE:
-                case Action::Type::RELEASE:
-                    // no op
-                    break;
-                default:
-                    panic("Invalid action type\n");
+                action->setLocation(lane, normal_loc);
+                break;
+            case Action::Type::ACQUIRE:
+            case Action::Type::RELEASE:
+                // no op
+                break;
+            default:
+                panic("Invalid action type\n");
             }
         }
 
@@ -208,7 +204,7 @@ Episode::completeEpisode()
 
         std::unordered_set<Location> unique_loc_set;
 
-        for (Action* action : actions) {
+        for (Action *action : actions) {
             assert(action);
 
             if (action->isAtomicAction()) {
@@ -247,9 +243,8 @@ Episode::checkDRF(Location atomic_loc, Location loc, bool isStore,
 
     for (int lane = 0; lane < max_lane; ++lane) {
         if (atomic_loc == atomicLocs[lane]) {
-            for (const Action* action : actions) {
-                if (!action->isAtomicAction() &&
-                    !action->isMemFenceAction()) {
+            for (const Action *action : actions) {
+                if (!action->isAtomicAction() && !action->isMemFenceAction()) {
                     if (isStore && loc == action->getLocation(lane)) {
                         warn("ST at location %d races against thread %d\n",
                              loc, thread->getTesterThreadId());
@@ -270,13 +265,12 @@ Episode::checkDRF(Location atomic_loc, Location loc, bool isStore,
 }
 
 // -------------------- Action class ----------------------------
-Episode::Action::Action(Type t, int num_lanes)
-    : type(t),
-      numLanes(num_lanes)
+Episode::Action::Action(Type t, int num_lanes) : type(t), numLanes(num_lanes)
 {
     assert(numLanes > 0);
     locations.resize(numLanes);
-    for (Location &loc : locations) loc = AddressManager::INVALID_LOCATION;
+    for (Location &loc : locations)
+        loc = AddressManager::INVALID_LOCATION;
 }
 
 void

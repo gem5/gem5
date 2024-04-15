@@ -38,7 +38,7 @@ namespace Gem5SystemC
 {
 
 Gem5SlaveTransactor::Gem5SlaveTransactor(sc_core::sc_module_name name,
-                                         const std::string& portName)
+                                         const std::string &portName)
     : sc_core::sc_module(name),
       socket(portName.c_str()),
       sim_control("sim_control"),
@@ -52,9 +52,9 @@ Gem5SlaveTransactor::Gem5SlaveTransactor(sc_core::sc_module_name name,
 void
 Gem5SlaveTransactor::before_end_of_elaboration()
 {
-    auto* port = sim_control->getSlavePort(portName);
+    auto *port = sim_control->getSlavePort(portName);
 
     port->bindToTransactor(this);
 }
 
-}
+} // namespace Gem5SystemC

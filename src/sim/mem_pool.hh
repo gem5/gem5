@@ -97,13 +97,13 @@ class MemPools : public Serializable
 
     /// Allocate npages contiguous unused physical pages.
     /// @return Starting address of first page
-    Addr allocPhysPages(int npages, int pool_id=0);
+    Addr allocPhysPages(int npages, int pool_id = 0);
 
     /** Amount of physical memory that exists in a pool. */
-    Addr memSize(int pool_id=0) const;
+    Addr memSize(int pool_id = 0) const;
 
     /** Amount of physical memory that is still free in a pool. */
-    Addr freeMemSize(int pool_id=0) const;
+    Addr freeMemSize(int pool_id = 0) const;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

@@ -33,7 +33,7 @@ extern uint64_t m5_semi_argument_block[];
 
 void
 abi_verify_semi(const siginfo_t &info, int func,
-        const std::vector<uint64_t> &args)
+                const std::vector<uint64_t> &args)
 {
     // Extract the instruction that triggered the signal.
     uint32_t inst = *(uint32_t *)info.si_addr;
@@ -49,6 +49,6 @@ abi_verify_semi(const siginfo_t &info, int func,
 
     // Check that the arguments were correct.
     uint64_t *arg = &m5_semi_argument_block[1];
-    for (uint64_t expected: args)
+    for (uint64_t expected : args)
         EXPECT_EQ(*arg++, expected);
 }

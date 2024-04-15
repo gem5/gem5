@@ -49,40 +49,40 @@ namespace gem5
 {
 
 ProtocolTester::ProtocolTester(const Params &p)
-      : ClockedObject(p),
-        _requestorId(p.system->getRequestorId(this)),
-        numCpuPorts(p.port_cpu_ports_connection_count),
-        numDmaPorts(p.port_dma_ports_connection_count),
-        numVectorPorts(p.port_cu_vector_ports_connection_count),
-        numSqcPorts(p.port_cu_sqc_ports_connection_count),
-        numScalarPorts(p.port_cu_scalar_ports_connection_count),
-        numTokenPorts(p.port_cu_token_ports_connection_count),
-        numCusPerSqc(p.cus_per_sqc),
-        numCusPerScalar(p.cus_per_scalar),
-        numWfsPerCu(p.wavefronts_per_cu),
-        numWisPerWf(p.workitems_per_wavefront),
-        numCuTokens(p.max_cu_tokens),
-        numAtomicLocs(p.num_atomic_locations),
-        numNormalLocsPerAtomic(p.num_normal_locs_per_atomic),
-        episodeLength(p.episode_length),
-        maxNumEpisodes(p.max_num_episodes),
-        debugTester(p.debug_tester),
-        cpuThreads(p.cpu_threads),
-        dmaThreads(p.dma_threads),
-        wfs(p.wavefronts)
+    : ClockedObject(p),
+      _requestorId(p.system->getRequestorId(this)),
+      numCpuPorts(p.port_cpu_ports_connection_count),
+      numDmaPorts(p.port_dma_ports_connection_count),
+      numVectorPorts(p.port_cu_vector_ports_connection_count),
+      numSqcPorts(p.port_cu_sqc_ports_connection_count),
+      numScalarPorts(p.port_cu_scalar_ports_connection_count),
+      numTokenPorts(p.port_cu_token_ports_connection_count),
+      numCusPerSqc(p.cus_per_sqc),
+      numCusPerScalar(p.cus_per_scalar),
+      numWfsPerCu(p.wavefronts_per_cu),
+      numWisPerWf(p.workitems_per_wavefront),
+      numCuTokens(p.max_cu_tokens),
+      numAtomicLocs(p.num_atomic_locations),
+      numNormalLocsPerAtomic(p.num_normal_locs_per_atomic),
+      episodeLength(p.episode_length),
+      maxNumEpisodes(p.max_num_episodes),
+      debugTester(p.debug_tester),
+      cpuThreads(p.cpu_threads),
+      dmaThreads(p.dma_threads),
+      wfs(p.wavefronts)
 {
-    int idx = 0;  // global port index
+    int idx = 0; // global port index
 
-    numCpus = numCpuPorts;     // 1 cpu port per CPU
-    numDmas = numDmaPorts;     // 1 dma port per DMA
-    numCus = numVectorPorts;   // 1 vector port per CU
+    numCpus = numCpuPorts;   // 1 cpu port per CPU
+    numDmas = numDmaPorts;   // 1 dma port per DMA
+    numCus = numVectorPorts; // 1 vector port per CU
 
     // create all physical cpu's data ports
     for (int i = 0; i < numCpuPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
                 csprintf("%s-cpuPort%d", name(), i));
-        cpuPorts.push_back(new SeqPort(csprintf("%s-cpuPort%d", name(), i),
-                                       this, i, idx));
+        cpuPorts.push_back(
+            new SeqPort(csprintf("%s-cpuPort%d", name(), i), this, i, idx));
         idx++;
     }
 
@@ -90,8 +90,8 @@ ProtocolTester::ProtocolTester(const Params &p)
     for (int i = 0; i < numDmaPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
                 csprintf("%s-dmaPort%d", name(), i));
-        dmaPorts.push_back(new SeqPort(csprintf("%s-dmaPort%d", name(), i),
-                                       this, i, idx));
+        dmaPorts.push_back(
+            new SeqPort(csprintf("%s-dmaPort%d", name(), i), this, i, idx));
         idx++;
     }
 
@@ -99,45 +99,40 @@ ProtocolTester::ProtocolTester(const Params &p)
     for (int i = 0; i < numVectorPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
                 csprintf("%s-cuVectorPort%d", name(), i));
-        cuVectorPorts.push_back(new SeqPort(csprintf("%s-cuVectorPort%d",
-                                                     name(), i),
-                                            this, i, idx));
+        cuVectorPorts.push_back(new SeqPort(
+            csprintf("%s-cuVectorPort%d", name(), i), this, i, idx));
         idx++;
     }
 
     for (int i = 0; i < numScalarPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-                              csprintf("%s-cuScalarPort%d", name(), i));
-        cuScalarPorts.push_back(new SeqPort(csprintf("%s-cuScalarPort%d",
-                                                     name(), i),
-                                            this, i, idx));
+                csprintf("%s-cuScalarPort%d", name(), i));
+        cuScalarPorts.push_back(new SeqPort(
+            csprintf("%s-cuScalarPort%d", name(), i), this, i, idx));
         idx++;
     }
 
     for (int i = 0; i < numSqcPorts; ++i) {
         DPRINTF(ProtocolTest, "Creating %s\n",
-                              csprintf("%s-cuSqcPort%d", name(), i));
-        cuSqcPorts.push_back(new SeqPort(csprintf("%s-cuSqcPort%d",
-                                                  name(), i),
-                                         this, i, idx));
+                csprintf("%s-cuSqcPort%d", name(), i));
+        cuSqcPorts.push_back(
+            new SeqPort(csprintf("%s-cuSqcPort%d", name(), i), this, i, idx));
         idx++;
     }
 
     for (int i = 0; i < numTokenPorts; ++i) {
-        cuTokenPorts.push_back(new GMTokenPort(csprintf("%s-cuTokenPort%d",
-                                                        name(), i),
-                                               this, i));
+        cuTokenPorts.push_back(
+            new GMTokenPort(csprintf("%s-cuTokenPort%d", name(), i), this, i));
         cuTokenManagers.push_back(new TokenManager(numCuTokens));
         cuTokenPorts[i]->setTokenManager(cuTokenManagers[i]);
     }
 
     // create an address manager
-    addrManager = new AddressManager(numAtomicLocs,
-                                       numNormalLocsPerAtomic);
+    addrManager = new AddressManager(numAtomicLocs, numNormalLocsPerAtomic);
     nextEpisodeId = 0;
 
     if (!debugTester)
-      warn("Data race check is not enabled\n");
+        warn("Data race check is not enabled\n");
 
     sentExitSignal = false;
 
@@ -147,14 +142,12 @@ ProtocolTester::ProtocolTester(const Params &p)
     if (p.random_seed != 0) {
         random_mt.init(p.random_seed);
     } else {
-        warn(
-            "If `random_seed == 0` (or `random_seed` is unset) "
-            "ProtocolTester does not seed the RNG. This will NOT result in "
-            "the RNG generating different results each run. In this case the "
-            "RNG is seeded by a default value. This differs from behavior in "
-            "previous versions of gem5. Setting `random_seed` to a non-zero "
-            "value is strongly recommended."
-        );
+        warn("If `random_seed == 0` (or `random_seed` is unset) "
+             "ProtocolTester does not seed the RNG. This will NOT result in "
+             "the RNG generating different results each run. In this case the "
+             "RNG is seeded by a default value. This differs from behavior in "
+             "previous versions of gem5. Setting `random_seed` to a non-zero "
+             "value is strongly recommended.");
     }
 
     actionCount = 0;
@@ -177,8 +170,7 @@ ProtocolTester::ProtocolTester(const Params &p)
        << "\tEpisode length: " << episodeLength << std::endl
        << "\tTest length (max number of episodes): " << maxNumEpisodes
        << std::endl
-       << "\tRandom seed: " << p.random_seed
-       << std::endl;
+       << "\tRandom seed: " << p.random_seed << std::endl;
 
     ccprintf(*(logFile->stream()), "%s", ss.str());
     logFile->stream()->flush();
@@ -209,16 +201,16 @@ ProtocolTester::init()
 
     // connect cpu threads to cpu's ports
     for (int cpu_id = 0; cpu_id < numCpus; ++cpu_id) {
-        cpuThreads[cpu_id]->attachTesterThreadToPorts(this,
-                                      static_cast<SeqPort*>(cpuPorts[cpu_id]));
+        cpuThreads[cpu_id]->attachTesterThreadToPorts(
+            this, static_cast<SeqPort *>(cpuPorts[cpu_id]));
         cpuThreads[cpu_id]->scheduleWakeup();
         cpuThreads[cpu_id]->scheduleDeadlockCheckEvent();
     }
 
     // connect dma threads to dma's ports
     for (int dma_id = 0; dma_id < numDmas; ++dma_id) {
-        dmaThreads[dma_id]->attachTesterThreadToPorts(this,
-                                      static_cast<SeqPort*>(dmaPorts[dma_id]));
+        dmaThreads[dma_id]->attachTesterThreadToPorts(
+            this, static_cast<SeqPort *>(dmaPorts[dma_id]));
         dmaThreads[dma_id]->scheduleWakeup();
         dmaThreads[dma_id]->scheduleDeadlockCheckEvent();
     }
@@ -231,23 +223,23 @@ ProtocolTester::init()
 
     for (int cu_id = 0; cu_id < numCus; ++cu_id) {
         vectorPortId = cu_id;
-        sqcPortId = cu_id/numCusPerSqc;
-        scalarPortId = cu_id/numCusPerScalar;
+        sqcPortId = cu_id / numCusPerSqc;
+        scalarPortId = cu_id / numCusPerScalar;
 
         for (int i = 0; i < numWfsPerCu; ++i) {
             wfId = cu_id * numWfsPerCu + i;
-            wfs[wfId]->attachTesterThreadToPorts(this,
-                           static_cast<SeqPort*>(cuVectorPorts[vectorPortId]),
-                           cuTokenPorts[vectorPortId],
-                           static_cast<SeqPort*>(cuSqcPorts[sqcPortId]),
-                           static_cast<SeqPort*>(cuScalarPorts[scalarPortId]));
+            wfs[wfId]->attachTesterThreadToPorts(
+                this, static_cast<SeqPort *>(cuVectorPorts[vectorPortId]),
+                cuTokenPorts[vectorPortId],
+                static_cast<SeqPort *>(cuSqcPorts[sqcPortId]),
+                static_cast<SeqPort *>(cuScalarPorts[scalarPortId]));
             wfs[wfId]->scheduleWakeup();
             wfs[wfId]->scheduleDeadlockCheckEvent();
         }
     }
 }
 
-Port&
+Port &
 ProtocolTester::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpu_ports" && if_name != "dma_ports" &&
@@ -303,22 +295,21 @@ ProtocolTester::checkExit()
 }
 
 bool
-ProtocolTester::checkDRF(Location atomic_loc,
-                         Location loc, bool isStore) const
+ProtocolTester::checkDRF(Location atomic_loc, Location loc, bool isStore) const
 {
     if (debugTester) {
         // go through all active episodes in all threads
-        for (const TesterThread* th : wfs) {
+        for (const TesterThread *th : wfs) {
             if (!th->checkDRF(atomic_loc, loc, isStore))
                 return false;
         }
 
-        for (const TesterThread* th : cpuThreads) {
+        for (const TesterThread *th : cpuThreads) {
             if (!th->checkDRF(atomic_loc, loc, isStore))
                 return false;
         }
 
-        for (const TesterThread* th : dmaThreads) {
+        for (const TesterThread *th : dmaThreads) {
             if (!th->checkDRF(atomic_loc, loc, isStore))
                 return false;
         }
@@ -328,7 +319,7 @@ ProtocolTester::checkDRF(Location atomic_loc,
 }
 
 void
-ProtocolTester::dumpErrorLog(std::stringstream& ss)
+ProtocolTester::dumpErrorLog(std::stringstream &ss)
 {
     if (!sentExitSignal) {
         // go through all threads and dump their outstanding requests
@@ -359,8 +350,8 @@ bool
 ProtocolTester::SeqPort::recvTimingResp(PacketPtr pkt)
 {
     // get the requesting thread from the original sender state
-    ProtocolTester::SenderState* senderState =
-                    safe_cast<ProtocolTester::SenderState*>(pkt->senderState);
+    ProtocolTester::SenderState *senderState =
+        safe_cast<ProtocolTester::SenderState *>(pkt->senderState);
     TesterThread *th = senderState->th;
 
     th->hitCallback(pkt);

@@ -48,10 +48,10 @@ class TokenRequestPort : public RequestPort
     TokenManager *tokenManager;
 
   public:
-    TokenRequestPort(const std::string& name, SimObject* owner,
-                    PortID id = InvalidPortID) :
-        RequestPort(name, id), tokenManager(nullptr)
-    { }
+    TokenRequestPort(const std::string &name, SimObject *owner,
+                     PortID id = InvalidPortID)
+        : RequestPort(name, id), tokenManager(nullptr)
+    {}
 
     /**
      * Bind this request port to response port. Called by the response port in
@@ -62,7 +62,9 @@ class TokenRequestPort : public RequestPort
     /**
      * Unbind port. Handled by response port in token implementation.
      */
-    void unbind() override {}
+    void
+    unbind() override
+    {}
 
     /**
      * Receive tokens returned by the response port. This increments the number
@@ -98,11 +100,11 @@ class TokenResponsePort : public ResponsePort
     void recvRespRetry() override;
 
   public:
-    TokenResponsePort(const std::string& name,
-                   PortID id = InvalidPortID) :
-        ResponsePort(name, id), tokenRequestPort(nullptr)
-    { }
-    ~TokenResponsePort() { }
+    TokenResponsePort(const std::string &name, PortID id = InvalidPortID)
+        : ResponsePort(name, id), tokenRequestPort(nullptr)
+    {}
+
+    ~TokenResponsePort() {}
 
     /**
      * Bind this response port to a request port. This also does the mirror
@@ -124,7 +126,11 @@ class TokenResponsePort : public ResponsePort
     bool sendTimingResp(PacketPtr pkt);
 
     /* There is no storage here so the packet will not be found. */
-    bool trySatisfyFunctional(PacketPtr) { return false; }
+    bool
+    trySatisfyFunctional(PacketPtr)
+    {
+        return false;
+    }
 };
 
 class TokenManager
@@ -138,7 +144,8 @@ class TokenManager
 
   public:
     TokenManager(int init_tokens);
-    ~TokenManager() { }
+
+    ~TokenManager() {}
 
     /**
      * Return the maximum possible tokens.

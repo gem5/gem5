@@ -56,11 +56,9 @@ namespace ruby
 class MN_TBETable : public TBETable<MiscNode_TBE>
 {
   public:
-    MN_TBETable(int number_of_TBEs)
-      : TBETable(number_of_TBEs)
-    {}
+    MN_TBETable(int number_of_TBEs) : TBETable(number_of_TBEs) {}
 
-    MiscNode_TBE* chooseNewDistributor();
+    MiscNode_TBE *chooseNewDistributor();
 };
 
 } // namespace ruby

@@ -48,9 +48,7 @@ namespace memory
 namespace qos
 {
 
-Policy::Policy(const Params &p)
-  : SimObject(p)
-{}
+Policy::Policy(const Params &p) : SimObject(p) {}
 
 Policy::~Policy() {}
 

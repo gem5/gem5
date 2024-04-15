@@ -68,7 +68,8 @@ MemTest::CpuPort::recvReqRetry()
 }
 
 bool
-MemTest::sendPkt(PacketPtr pkt) {
+MemTest::sendPkt(PacketPtr pkt)
+{
     if (atomic) {
         port.sendAtomic(pkt);
         completeRequest(pkt);
@@ -83,9 +84,9 @@ MemTest::sendPkt(PacketPtr pkt) {
 
 MemTest::MemTest(const Params &p)
     : ClockedObject(p),
-      tickEvent([this]{ tick(); }, name()),
-      noRequestEvent([this]{ noRequest(); }, name()),
-      noResponseEvent([this]{ noResponse(); }, name()),
+      tickEvent([this] { tick(); }, name()),
+      noRequestEvent([this] { noRequest(); }, name()),
+      noResponseEvent([this] { noResponse(); }, name()),
       port("port", *this),
       retryPkt(nullptr),
       waitResponse(false),
@@ -107,7 +108,8 @@ MemTest::MemTest(const Params &p)
       nextProgressMessage(p.progress_interval),
       maxLoads(p.max_loads),
       atomic(p.system->isAtomicMode()),
-      suppressFuncErrors(p.suppress_func_errors), stats(this)
+      suppressFuncErrors(p.suppress_func_errors),
+      stats(this)
 {
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
@@ -152,24 +154,23 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 
     if (pkt->isError()) {
         if (!functional || !pkt->suppressFuncError() || !suppressFuncErrors)
-            panic( "%s access failed at %#x\n",
-                pkt->isWrite() ? "Write" : "Read", req->getPaddr());
+            panic("%s access failed at %#x\n",
+                  pkt->isWrite() ? "Write" : "Read", req->getPaddr());
     } else {
         if (pkt->isAtomicOp()) {
             uint8_t ref_data = referenceData[req->getPaddr()];
             if (pkt_data[0] != ref_data) {
                 panic("%s: read of %x (blk %x) @ cycle %d "
-                      "returns %x, expected %x\n", name(),
-                       req->getPaddr(), blockAlign(req->getPaddr()), curTick(),
-                       pkt_data[0], ref_data);
+                      "returns %x, expected %x\n",
+                      name(), req->getPaddr(), blockAlign(req->getPaddr()),
+                      curTick(), pkt_data[0], ref_data);
             }
             DPRINTF(MemTest,
                     "Completing atomic at address %x (blk %x) value %x\n",
-                    req->getPaddr(), blockAlign(req->getPaddr()),
-                    pkt_data[0]);
+                    req->getPaddr(), blockAlign(req->getPaddr()), pkt_data[0]);
 
             referenceData[req->getPaddr()] =
-                   atomicPendingData[req->getPaddr()];
+                atomicPendingData[req->getPaddr()];
 
             numAtomics++;
             stats.numAtomics++;
@@ -177,9 +178,9 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
             uint8_t ref_data = referenceData[req->getPaddr()];
             if (pkt_data[0] != ref_data) {
                 panic("%s: read of %x (blk %x) @ cycle %d "
-                      "returns %x, expected %x\n", name(),
-                      req->getPaddr(), blockAlign(req->getPaddr()), curTick(),
-                      pkt_data[0], ref_data);
+                      "returns %x, expected %x\n",
+                      name(), req->getPaddr(), blockAlign(req->getPaddr()),
+                      curTick(), pkt_data[0], ref_data);
             }
 
             numReads++;
@@ -187,10 +188,10 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 
             if (numReads == (uint64_t)nextProgressMessage) {
                 ccprintf(std::cerr,
-                        "%s: completed %d read, %d write, "
-                        "%d atomic accesses @%d\n",
-                        name(), numReads, numWrites, numAtomics, curTick());
-                        nextProgressMessage += progressInterval;
+                         "%s: completed %d read, %d write, "
+                         "%d atomic accesses @%d\n",
+                         name(), numReads, numWrites, numAtomics, curTick());
+                nextProgressMessage += progressInterval;
             }
 
             if (maxLoads != 0 && numReads >= maxLoads)
@@ -221,17 +222,16 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
         schedule(tickEvent, clockEdge(interval));
     }
 }
+
 MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
-      : statistics::Group(parent),
+    : statistics::Group(parent),
       ADD_STAT(numReads, statistics::units::Count::get(),
                "number of read accesses completed"),
       ADD_STAT(numWrites, statistics::units::Count::get(),
                "number of write accesses completed"),
       ADD_STAT(numAtomics, statistics::units::Count::get(),
                "number of atomic accesses completed")
-{
-
-}
+{}
 
 void
 MemTest::tick()
@@ -244,8 +244,8 @@ MemTest::tick()
     unsigned cmd = random_mt.random(0, 100);
     uint8_t data = random_mt.random<uint8_t>();
     bool uncacheable = random_mt.random(0, 100) < percentUncacheable;
-    bool do_atomic = (random_mt.random(0, 100) < percentAtomic) &&
-                     !uncacheable;
+    bool do_atomic =
+        (random_mt.random(0, 100) < percentAtomic) && !uncacheable;
     unsigned base = random_mt.random(0, 1);
     Request::Flags flags;
     Addr paddr;
@@ -268,13 +268,13 @@ MemTest::tick()
         if (uncacheable) {
             flags.set(Request::UNCACHEABLE);
             paddr = uncacheAddr + offset;
-        } else  {
+        } else {
             paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
         }
     } while (outstandingAddrs.find(paddr) != outstandingAddrs.end());
 
-    bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
-        !uncacheable;
+    bool do_functional =
+        (random_mt.random(0, 100) < percentFunctional) && !uncacheable;
     RequestPtr req = std::make_shared<Request>(paddr, 1, flags, requestorId);
     req->setContext(id);
 
@@ -312,11 +312,9 @@ MemTest::tick()
                     req->getPaddr(), blockAlign(req->getPaddr()), data);
 
             TypedAtomicOpFunctor<uint8_t> *_amo_op =
-                  new AtomicGeneric3Op<uint8_t>(
-                  data, data,
-                  [](uint8_t* b, uint8_t a, uint8_t c){
-                      *b = c;
-                  });
+                new AtomicGeneric3Op<uint8_t>(
+                    data, data,
+                    [](uint8_t *b, uint8_t a, uint8_t c) { *b = c; });
             assert(_amo_op);
             AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
             req->setAtomicOpFunctor(std::move(amo_op));

@@ -66,16 +66,17 @@
 namespace gem5
 {
 
-namespace X86ISA {
+namespace X86ISA
+{
 
 Fault
-Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
+Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
               const RequestPtr &_req, BaseMMU::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
     // another one (i.e. either coalesce or start walk)
-    WalkerState * newState = new WalkerState(this, _translation, _req);
+    WalkerState *newState = new WalkerState(this, _translation, _req);
     newState->initState(_tc, _mode, sys->isTimingMode());
     if (currStates.size()) {
         assert(newState->isTiming());
@@ -94,8 +95,8 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
-              BaseMMU::Mode _mode)
+Walker::startFunctional(ThreadContext *_tc, Addr &addr, unsigned &logBytes,
+                        BaseMMU::Mode _mode)
 {
     funcState.initState(_tc, _mode);
     return funcState.startFunctional(addr, logBytes);
@@ -110,15 +111,15 @@ Walker::WalkerPort::recvTimingResp(PacketPtr pkt)
 bool
 Walker::recvTimingResp(PacketPtr pkt)
 {
-    WalkerSenderState * senderState =
+    WalkerSenderState *senderState =
         dynamic_cast<WalkerSenderState *>(pkt->popSenderState());
-    WalkerState * senderWalk = senderState->senderWalk;
+    WalkerState *senderWalk = senderState->senderWalk;
     bool walkComplete = senderWalk->recvPacket(pkt);
     delete senderState;
     if (walkComplete) {
         std::list<WalkerState *>::iterator iter;
         for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-            WalkerState * walkerState = *(iter);
+            WalkerState *walkerState = *(iter);
             if (walkerState == senderWalk) {
                 iter = currStates.erase(iter);
                 break;
@@ -146,16 +147,17 @@ Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
     for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-        WalkerState * walkerState = *(iter);
+        WalkerState *walkerState = *(iter);
         if (walkerState->isRetrying()) {
             walkerState->retry();
         }
     }
 }
 
-bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
+bool
+Walker::sendTiming(WalkerState *sendingState, PacketPtr pkt)
 {
-    WalkerSenderState* walker_state = new WalkerSenderState(sendingState);
+    WalkerSenderState *walker_state = new WalkerSenderState(sendingState);
     pkt->pushSenderState(walker_state);
     if (port.sendTimingReq(pkt)) {
         return true;
@@ -166,7 +168,6 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
         delete walker_state;
         return false;
     }
-
 }
 
 Port &
@@ -179,8 +180,8 @@ Walker::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-Walker::WalkerState::initState(ThreadContext * _tc,
-        BaseMMU::Mode _mode, bool _isTiming)
+Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                               bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -195,17 +196,17 @@ Walker::startWalkWrapper()
     unsigned num_squashed = 0;
     WalkerState *currState = currStates.front();
     while ((num_squashed < numSquashable) && currState &&
-        currState->translation->squashed()) {
+           currState->translation->squashed()) {
         currStates.pop_front();
         num_squashed++;
 
         DPRINTF(PageTableWalker, "Squashing table walk for address %#x\n",
-            currState->req->getVaddr());
+                currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
         currState->translation->finish(
-            std::make_shared<UnimpFault>("Squashed Inst"),
-            currState->req, currState->tc, currState->mode);
+            std::make_shared<UnimpFault>("Squashed Inst"), currState->req,
+            currState->tc, currState->mode);
 
         // delete the current request if there are no inflight packets.
         // if there is something in flight, delete when the packets are
@@ -297,8 +298,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     bool doTLBInsert = false;
     bool doEndWalk = false;
     bool badNX = pte.nx && mode == BaseMMU::Execute && enableNX;
-    switch(state) {
-      case LongPML4:
+    switch (state) {
+    case LongPML4:
         DPRINTF(PageTableWalker, "Got long mode PML4 entry %#016x.\n", pte);
         nextRead = mbits(pte, 51, 12) + vaddr.longl3 * dataSize;
         doWrite = !pte.a;
@@ -313,7 +314,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         entry.noExec = pte.nx;
         nextState = LongPDP;
         break;
-      case LongPDP:
+    case LongPDP:
         DPRINTF(PageTableWalker, "Got long mode PDP entry %#016x.\n", pte);
         nextRead = mbits(pte, 51, 12) + vaddr.longl2 * dataSize;
         doWrite = !pte.a;
@@ -327,7 +328,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         nextState = LongPD;
         break;
-      case LongPD:
+    case LongPD:
         DPRINTF(PageTableWalker, "Got long mode PD entry %#016x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -356,7 +357,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             doEndWalk = true;
             break;
         }
-      case LongPTE:
+    case LongPTE:
         DPRINTF(PageTableWalker, "Got long mode PTE entry %#016x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -375,9 +376,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         doTLBInsert = true;
         doEndWalk = true;
         break;
-      case PAEPDP:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PAE PDP entry %#08x.\n", pte);
+    case PAEPDP:
+        DPRINTF(PageTableWalker, "Got legacy mode PAE PDP entry %#08x.\n",
+                pte);
         nextRead = mbits(pte, 51, 12) + vaddr.pael2 * dataSize;
         if (!pte.p) {
             doEndWalk = true;
@@ -386,7 +387,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         nextState = PAEPD;
         break;
-      case PAEPD:
+    case PAEPD:
         DPRINTF(PageTableWalker, "Got legacy mode PAE PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -415,9 +416,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             doEndWalk = true;
             break;
         }
-      case PAEPTE:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PAE PTE entry %#08x.\n", pte);
+    case PAEPTE:
+        DPRINTF(PageTableWalker, "Got legacy mode PAE PTE entry %#08x.\n",
+                pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -435,7 +436,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         doTLBInsert = true;
         doEndWalk = true;
         break;
-      case PSEPD:
+    case PSEPD:
         DPRINTF(PageTableWalker, "Got legacy mode PSE PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -464,7 +465,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             doEndWalk = true;
             break;
         }
-      case PD:
+    case PD:
         DPRINTF(PageTableWalker, "Got legacy mode PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -480,7 +481,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         nextRead = mbits(pte, 31, 12) + vaddr.norml1 * dataSize;
         nextState = PTE;
         break;
-      case PTE:
+    case PTE:
         DPRINTF(PageTableWalker, "Got legacy mode PTE entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
@@ -499,20 +500,18 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         doTLBInsert = true;
         doEndWalk = true;
         break;
-      default:
+    default:
         panic("Unknown page table walker state %d!\n");
     }
     if (doEndWalk) {
         if (doTLBInsert)
             if (!functional) {
-
                 // Check if PCIDE is set in CR4
                 CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
-                if (cr4.pcide){
+                if (cr4.pcide) {
                     CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
                     walker->tlb->insert(entry.vaddr, entry, cr3.pcid);
-                }
-                else{
+                } else {
                     // The current PCID is always 000H if PCIDE
                     // is not set [sec 4.10.1 of Intel's Software
                     // Developer Manual]
@@ -523,7 +522,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         endWalk();
     } else {
         PacketPtr oldRead = read;
-        //If we didn't return, we're setting up another read.
+        // If we didn't return, we're setting up another read.
         Request::Flags flags = oldRead->req->getFlags();
         flags.set(Request::UNCACHEABLE, uncacheable);
         RequestPtr request = std::make_shared<Request>(
@@ -601,8 +600,8 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     if (!cr4.pcide && cr3.pcd)
         flags.set(Request::UNCACHEABLE);
 
-    RequestPtr request = std::make_shared<Request>(
-        topAddr, dataSize, flags, walker->requestorId);
+    RequestPtr request = std::make_shared<Request>(topAddr, dataSize, flags,
+                                                   walker->requestorId);
 
     read = new Packet(request, MemCmd::ReadReq);
     read->allocate();
@@ -671,11 +670,11 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
 void
 Walker::WalkerState::sendPackets()
 {
-    //If we're already waiting for the port to become available, just return.
+    // If we're already waiting for the port to become available, just return.
     if (retrying)
         return;
 
-    //Reads always have priority
+    // Reads always have priority
     if (read) {
         PacketPtr pkt = read;
         read = NULL;
@@ -687,7 +686,7 @@ Walker::WalkerState::sendPackets()
             return;
         }
     }
-    //Send off as many of the writes as we can.
+    // Send off as many of the writes as we can.
     while (writes.size()) {
         PacketPtr write = writes.back();
         writes.pop_back();

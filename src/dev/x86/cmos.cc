@@ -39,9 +39,9 @@ namespace gem5
 void
 X86ISA::Cmos::X86RTC::handleEvent()
 {
-    for (auto *wire: intPin) {
+    for (auto *wire : intPin) {
         wire->raise();
-        //XXX This is a hack.
+        // XXX This is a hack.
         wire->lower();
     }
 }
@@ -50,15 +50,14 @@ Tick
 X86ISA::Cmos::read(PacketPtr pkt)
 {
     assert(pkt->getSize() == 1);
-    switch(pkt->getAddr() - pioAddr)
-    {
-      case 0x0:
+    switch (pkt->getAddr() - pioAddr) {
+    case 0x0:
         pkt->setLE(address);
         break;
-      case 0x1:
+    case 0x1:
         pkt->setLE(readRegister(address.regNum));
         break;
-      default:
+    default:
         panic("Read from undefined CMOS port.\n");
     }
     pkt->makeAtomicResponse();
@@ -69,16 +68,15 @@ Tick
 X86ISA::Cmos::write(PacketPtr pkt)
 {
     assert(pkt->getSize() == 1);
-    switch(pkt->getAddr() - pioAddr)
-    {
-      case 0x0:
+    switch (pkt->getAddr() - pioAddr) {
+    case 0x0:
         address = pkt->getLE<uint8_t>();
         break;
-      case 0x1:
+    case 0x1:
         // Ignore the NMI mask bit since we never try to generate one anyway.
         writeRegister(address.regNum, pkt->getLE<uint8_t>());
         break;
-      default:
+    default:
         panic("Write to undefined CMOS port.\n");
     }
     pkt->makeAtomicResponse();
@@ -92,12 +90,11 @@ X86ISA::Cmos::readRegister(uint8_t reg)
     uint8_t val;
     if (reg <= 0xD) {
         val = rtc.readData(reg);
-        DPRINTF(CMOS,
-            "Reading CMOS RTC reg %x as %x.\n", reg, val);
+        DPRINTF(CMOS, "Reading CMOS RTC reg %x as %x.\n", reg, val);
     } else {
         val = regs[reg];
-        DPRINTF(CMOS,
-            "Reading non-volitile CMOS address %x as %x.\n", reg, val);
+        DPRINTF(CMOS, "Reading non-volitile CMOS address %x as %x.\n", reg,
+                val);
     }
     return val;
 }
@@ -107,12 +104,11 @@ X86ISA::Cmos::writeRegister(uint8_t reg, uint8_t val)
 {
     assert(reg < numRegs);
     if (reg <= 0xD) {
-        DPRINTF(CMOS, "Writing CMOS RTC reg %x with %x.\n",
-                reg, val);
+        DPRINTF(CMOS, "Writing CMOS RTC reg %x with %x.\n", reg, val);
         rtc.writeData(reg, val);
     } else {
-        DPRINTF(CMOS, "Writing non-volitile CMOS address %x with %x.\n",
-                reg, val);
+        DPRINTF(CMOS, "Writing non-volitile CMOS address %x with %x.\n", reg,
+                val);
         regs[reg] = val;
     }
 }

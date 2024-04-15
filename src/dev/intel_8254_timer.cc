@@ -36,12 +36,12 @@
 namespace gem5
 {
 
-Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name) :
-    EventManager(em), _name(name), counters{{
-            {this, name + ".counter0", 0},
-            {this, name + ".counter1", 1},
-            {this, name + ".counter2", 2}
-        }}
+Intel8254Timer::Intel8254Timer(EventManager *em, const std::string &name)
+    : EventManager(em),
+      _name(name),
+      counters{ { { this, name + ".counter0", 0 },
+                  { this, name + ".counter1", 1 },
+                  { this, name + ".counter2", 2 } } }
 {}
 
 void
@@ -53,10 +53,10 @@ Intel8254Timer::writeControl(const CtrlReg data)
         ReadBackCommandVal rb_val = static_cast<uint8_t>(data);
 
         panic_if(!rb_val.status,
-                "Latching the PIT status byte is not implemented.");
+                 "Latching the PIT status byte is not implemented.");
 
         if (!rb_val.count) {
-            for (auto &counter: counters) {
+            for (auto &counter : counters) {
                 if (bits((uint8_t)rb_val.select, counter.index()))
                     counter.latchCount();
             }
@@ -99,12 +99,21 @@ Intel8254Timer::startup()
     counters[2].startup();
 }
 
-Intel8254Timer::Counter::Counter(Intel8254Timer *p,
-        const std::string &name, unsigned int _num)
-    : _name(name), num(_num), event(this), running(false),
-      initial_count(0), latched_count(0), period(0), mode(0),
-      output_high(false), latch_on(false), read_byte(LSB),
-      write_byte(LSB), parent(p)
+Intel8254Timer::Counter::Counter(Intel8254Timer *p, const std::string &name,
+                                 unsigned int _num)
+    : _name(name),
+      num(_num),
+      event(this),
+      running(false),
+      initial_count(0),
+      latched_count(0),
+      period(0),
+      mode(0),
+      output_high(false),
+      latch_on(false),
+      read_byte(LSB),
+      write_byte(LSB),
+      parent(p)
 {
     offset = period * event.getInterval();
 }
@@ -139,30 +148,30 @@ Intel8254Timer::Counter::read()
 {
     if (latch_on) {
         switch (read_byte) {
-          case LSB:
+        case LSB:
             read_byte = MSB;
             return (uint8_t)latched_count;
             break;
-          case MSB:
+        case MSB:
             read_byte = LSB;
             latch_on = false;
             return latched_count >> 8;
             break;
-          default:
+        default:
             panic("Shouldn't be here");
         }
     } else {
         uint16_t count = currentCount();
         switch (read_byte) {
-          case LSB:
+        case LSB:
             read_byte = MSB;
             return (uint8_t)count;
             break;
-          case MSB:
+        case MSB:
             read_byte = LSB;
             return count >> 8;
             break;
-          default:
+        default:
             panic("Shouldn't be here");
         }
     }
@@ -172,7 +181,7 @@ void
 Intel8254Timer::Counter::write(const uint8_t data)
 {
     switch (write_byte) {
-      case LSB:
+    case LSB:
         initial_count = (initial_count & 0xFF00) | data;
 
         if (event.scheduled())
@@ -181,7 +190,7 @@ Intel8254Timer::Counter::write(const uint8_t data)
         write_byte = MSB;
         break;
 
-      case MSB:
+    case MSB:
         initial_count = (initial_count & 0x00FF) | (data << 8);
         // In the RateGen or SquareWave modes, the timer wraps around and
         // triggers on a value of 1, not 0.
@@ -210,8 +219,7 @@ Intel8254Timer::Counter::setRW(int rw_val)
 void
 Intel8254Timer::Counter::setMode(int mode_val)
 {
-    if (mode_val != InitTc && mode_val != RateGen &&
-       mode_val != SquareWave)
+    if (mode_val != InitTc && mode_val != RateGen && mode_val != SquareWave)
         panic("PIT mode %#x is not implemented: \n", mode_val);
 
     mode = mode_val;
@@ -231,8 +239,8 @@ Intel8254Timer::Counter::outputHigh()
 }
 
 void
-Intel8254Timer::Counter::serialize(
-        const std::string &base, CheckpointOut &cp) const
+Intel8254Timer::Counter::serialize(const std::string &base,
+                                   CheckpointOut &cp) const
 {
     paramOut(cp, base + ".initial_count", initial_count);
     paramOut(cp, base + ".latched_count", latched_count);
@@ -271,13 +279,12 @@ void
 Intel8254Timer::Counter::startup()
 {
     running = true;
-    if ((period > 0) && (offset > 0))
-    {
+    if ((period > 0) && (offset > 0)) {
         parent->schedule(event, curTick() + offset);
     }
 }
 
-Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
+Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter *c_ptr)
 {
     interval = (Tick)(sim_clock::as_float::s / 1193180.0);
     counter = c_ptr;
@@ -287,14 +294,14 @@ void
 Intel8254Timer::Counter::CounterEvent::process()
 {
     switch (counter->mode) {
-      case InitTc:
+    case InitTc:
         counter->output_high = true;
         break;
-      case RateGen:
-      case SquareWave:
+    case RateGen:
+    case SquareWave:
         setTo(counter->period);
         break;
-      default:
+    default:
         panic("Unimplemented PITimer mode.\n");
     }
     counter->parent->counterInterrupt(counter->num);

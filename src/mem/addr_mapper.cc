@@ -44,8 +44,7 @@ AddrMapper::AddrMapper(const AddrMapperParams &p)
     : SimObject(p),
       memSidePort(name() + "-mem_side_port", *this),
       cpuSidePort(name() + "-cpu_side_port", *this)
-{
-}
+{}
 
 void
 AddrMapper::init()
@@ -102,7 +101,7 @@ AddrMapper::recvAtomic(PacketPtr pkt)
 {
     Addr orig_addr = pkt->getAddr();
     pkt->setAddr(remapAddr(orig_addr));
-    Tick ret_tick =  memSidePort.sendAtomic(pkt);
+    Tick ret_tick = memSidePort.sendAtomic(pkt);
     pkt->setAddr(orig_addr);
     return ret_tick;
 }
@@ -118,7 +117,7 @@ AddrMapper::recvAtomicSnoop(PacketPtr pkt)
 }
 
 Tick
-AddrMapper::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor)
+AddrMapper::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
     Addr orig_addr = pkt->getAddr();
     pkt->setAddr(remapAddr(orig_addr));
@@ -161,13 +160,12 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
 bool
 AddrMapper::recvTimingResp(PacketPtr pkt)
 {
-    AddrMapperSenderState* receivedState =
-        dynamic_cast<AddrMapperSenderState*>(pkt->senderState);
+    AddrMapperSenderState *receivedState =
+        dynamic_cast<AddrMapperSenderState *>(pkt->senderState);
 
     // Restore initial sender state
     if (receivedState == NULL)
-        panic("AddrMapper %s got a response without sender state\n",
-              name());
+        panic("AddrMapper %s got a response without sender state\n", name());
 
     Addr remapped_addr = pkt->getAddr();
 
@@ -229,11 +227,11 @@ AddrMapper::recvRangeChange()
     cpuSidePort.sendRangeChange();
 }
 
-RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p) :
-    AddrMapper(p),
-    originalRanges(p.original_ranges),
-    remappedRanges(p.remapped_ranges),
-    backdoorManager(originalRanges, remappedRanges)
+RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p)
+    : AddrMapper(p),
+      originalRanges(p.original_ranges),
+      remappedRanges(p.remapped_ranges),
+      backdoorManager(originalRanges, remappedRanges)
 {
     if (originalRanges.size() != remappedRanges.size())
         fatal("AddrMapper: original and shadowed range list must "

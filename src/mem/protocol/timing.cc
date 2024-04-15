@@ -53,16 +53,16 @@ TimingRequestProtocol::sendReq(TimingResponseProtocol *peer, PacketPtr pkt)
 }
 
 bool
-TimingRequestProtocol::trySend(
-        TimingResponseProtocol *peer, PacketPtr pkt) const
+TimingRequestProtocol::trySend(TimingResponseProtocol *peer,
+                               PacketPtr pkt) const
 {
-  assert(pkt->isRequest());
-  return peer->tryTiming(pkt);
+    assert(pkt->isRequest());
+    return peer->tryTiming(pkt);
 }
 
 bool
-TimingRequestProtocol::sendSnoopResp(
-        TimingResponseProtocol *peer, PacketPtr pkt)
+TimingRequestProtocol::sendSnoopResp(TimingResponseProtocol *peer,
+                                     PacketPtr pkt)
 {
     assert(pkt->isResponse());
     return peer->recvTimingSnoopResp(pkt);
@@ -84,8 +84,8 @@ TimingResponseProtocol::sendResp(TimingRequestProtocol *peer, PacketPtr pkt)
 }
 
 void
-TimingResponseProtocol::sendSnoopReq(
-        TimingRequestProtocol *peer, PacketPtr pkt)
+TimingResponseProtocol::sendSnoopReq(TimingRequestProtocol *peer,
+                                     PacketPtr pkt)
 {
     assert(pkt->isRequest());
     peer->recvTimingSnoopReq(pkt);

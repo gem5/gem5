@@ -46,39 +46,34 @@ namespace gem5
 {
 
 SMMUv3DeviceInterface::SMMUv3DeviceInterface(
-    const SMMUv3DeviceInterfaceParams &p) :
-    ClockedObject(p),
-    smmu(nullptr),
-    microTLB(new SMMUTLB(p.utlb_entries,
-                         p.utlb_assoc,
-                         p.utlb_policy,
-                         this, "utlb")),
-    mainTLB(new SMMUTLB(p.tlb_entries,
-                        p.tlb_assoc,
-                        p.tlb_policy,
-                        this, "maintlb")),
-    microTLBEnable(p.utlb_enable),
-    mainTLBEnable(p.tlb_enable),
-    devicePortSem(1),
-    microTLBSem(p.utlb_slots),
-    mainTLBSem(p.tlb_slots),
-    microTLBLat(p.utlb_lat),
-    mainTLBLat(p.tlb_lat),
-    devicePort(new SMMUDevicePort(csprintf("%s.device_port",
-                                            name()), *this)),
-    atsDevicePort(name() + ".atsDevicePort", *this),
-    atsMemPort(name() + ".atsMemPort", *this),
-    portWidth(p.port_width),
-    wrBufSlotsRemaining(p.wrbuf_slots),
-    xlateSlotsRemaining(p.xlate_slots),
-    pendingMemAccesses(0),
-    prefetchEnable(p.prefetch_enable),
-    prefetchReserveLastWay(
-        p.prefetch_reserve_last_way),
-    deviceNeedsRetry(false),
-    atsDeviceNeedsRetry(false),
-    sendDeviceRetryEvent(*this),
-    atsSendDeviceRetryEvent(*this)
+    const SMMUv3DeviceInterfaceParams &p)
+    : ClockedObject(p),
+      smmu(nullptr),
+      microTLB(new SMMUTLB(p.utlb_entries, p.utlb_assoc, p.utlb_policy, this,
+                           "utlb")),
+      mainTLB(new SMMUTLB(p.tlb_entries, p.tlb_assoc, p.tlb_policy, this,
+                          "maintlb")),
+      microTLBEnable(p.utlb_enable),
+      mainTLBEnable(p.tlb_enable),
+      devicePortSem(1),
+      microTLBSem(p.utlb_slots),
+      mainTLBSem(p.tlb_slots),
+      microTLBLat(p.utlb_lat),
+      mainTLBLat(p.tlb_lat),
+      devicePort(
+          new SMMUDevicePort(csprintf("%s.device_port", name()), *this)),
+      atsDevicePort(name() + ".atsDevicePort", *this),
+      atsMemPort(name() + ".atsMemPort", *this),
+      portWidth(p.port_width),
+      wrBufSlotsRemaining(p.wrbuf_slots),
+      xlateSlotsRemaining(p.xlate_slots),
+      pendingMemAccesses(0),
+      prefetchEnable(p.prefetch_enable),
+      prefetchReserveLastWay(p.prefetch_reserve_last_way),
+      deviceNeedsRetry(false),
+      atsDeviceNeedsRetry(false),
+      sendDeviceRetryEvent(*this),
+      atsSendDeviceRetryEvent(*this)
 {}
 
 void
@@ -93,7 +88,7 @@ SMMUv3DeviceInterface::sendRange()
     }
 }
 
-Port&
+Port &
 SMMUv3DeviceInterface::getPort(const std::string &name, PortID id)
 {
     if (name == "ats_mem_side_port") {
@@ -149,12 +144,10 @@ SMMUv3DeviceInterface::recvTimingReq(PacketPtr pkt)
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    unsigned nbeats =
-        (pkt->getSize() + (portWidth-1)) / portWidth;
+    unsigned nbeats = (pkt->getSize() + (portWidth - 1)) / portWidth;
 
-    if (xlateSlotsRemaining==0 ||
-        (pkt->isWrite() && wrBufSlotsRemaining < nbeats))
-    {
+    if (xlateSlotsRemaining == 0 ||
+        (pkt->isWrite() && wrBufSlotsRemaining < nbeats)) {
         deviceNeedsRetry = true;
         return false;
     }
@@ -180,8 +173,7 @@ SMMUv3DeviceInterface::atsRecvAtomic(PacketPtr pkt)
 
     std::string proc_name = csprintf("%s.atsport", name());
     const bool ats_request = true;
-    SMMUTranslationProcess proc(
-        proc_name, *smmu, *this);
+    SMMUTranslationProcess proc(proc_name, *smmu, *this);
     proc.beginTransaction(SMMUTranslRequest::fromPacket(pkt, ats_request));
 
     SMMUAction a = smmu->runProcessAtomic(&proc, pkt);
@@ -224,8 +216,7 @@ SMMUv3DeviceInterface::atsRecvTimingResp(PacketPtr pkt)
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    SMMUProcess *proc =
-        safe_cast<SMMUProcess *>(pkt->popSenderState());
+    SMMUProcess *proc = safe_cast<SMMUProcess *>(pkt->popSenderState());
 
     smmu->runProcessTiming(proc, pkt);
 

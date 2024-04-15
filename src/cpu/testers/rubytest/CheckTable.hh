@@ -45,36 +45,36 @@ class RubyTester;
 class CheckTable
 {
   public:
-    CheckTable(int _num_writers, int _num_readers, RubyTester* _tester);
+    CheckTable(int _num_writers, int _num_readers, RubyTester *_tester);
     ~CheckTable();
 
-    Check* getRandomCheck();
-    Check* getCheck(Addr address);
+    Check *getRandomCheck();
+    Check *getCheck(Addr address);
 
     //  bool isPresent(const Address& address) const;
     //  void removeCheckFromTable(const Address& address);
     //  bool isTableFull() const;
     // Need a method to select a check or retrieve a check
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     void addCheck(Addr address);
 
     // Private copy constructor and assignment operator
-    CheckTable(const CheckTable& obj);
-    CheckTable& operator=(const CheckTable& obj);
+    CheckTable(const CheckTable &obj);
+    CheckTable &operator=(const CheckTable &obj);
 
-    std::vector<Check*> m_check_vector;
-    std::unordered_map<Addr, Check*> m_lookup_map;
+    std::vector<Check *> m_check_vector;
+    std::unordered_map<Addr, Check *> m_lookup_map;
 
     int m_num_writers;
     int m_num_readers;
-    RubyTester* m_tester_ptr;
+    RubyTester *m_tester_ptr;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const CheckTable& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const CheckTable &obj)
 {
     obj.print(out);
     out << std::flush;

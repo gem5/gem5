@@ -63,7 +63,7 @@ class Flags
      *
      * @param flags The value to initialize the flags with.
      */
-    Flags(Type flags=0) : _flags(flags) {}
+    Flags(Type flags = 0) : _flags(flags) {}
 
     operator const Type() const { return _flags; }
 
@@ -80,7 +80,11 @@ class Flags
      * @param mask The mask containing the bits to verify.
      * @return True if any matching bit is set; false otherwise.
      */
-    bool isSet(Type mask) const { return (_flags & mask); }
+    bool
+    isSet(Type mask) const
+    {
+        return (_flags & mask);
+    }
 
     /**
      * Verifies whether no bits matching the given mask are set.
@@ -88,7 +92,11 @@ class Flags
      * @param mask The mask containing the bits to verify.
      * @return True if matching bits are set; false otherwise.
      */
-    bool allSet(Type mask) const { return (_flags & mask) == mask; }
+    bool
+    allSet(Type mask) const
+    {
+        return (_flags & mask) == mask;
+    }
 
     /**
      * Verifies whether no bits matching the given mask are set.
@@ -96,24 +104,40 @@ class Flags
      * @param mask The mask containing the bits to verify.
      * @return True if matching bits are cleared; false otherwise.
      */
-    bool noneSet(Type mask) const { return (_flags & mask) == 0; }
+    bool
+    noneSet(Type mask) const
+    {
+        return (_flags & mask) == 0;
+    }
 
     /** Clear all flag's bits. */
-    void clear() { _flags = 0; }
+    void
+    clear()
+    {
+        _flags = 0;
+    }
 
     /**
      * Clear all flag's bits matching the given mask.
      *
      * @param mask The mask containing the bits to be cleared.
      */
-    void clear(Type mask) { _flags &= ~mask; }
+    void
+    clear(Type mask)
+    {
+        _flags &= ~mask;
+    }
 
     /**
      * Set all flag's bits matching the given mask.
      *
      * @param mask The mask containing the bits to be set.
      */
-    void set(Type mask) { _flags |= mask; }
+    void
+    set(Type mask)
+    {
+        _flags |= mask;
+    }
 
     /**
      * Conditionally set or clear some bits of the flag, given a mask.
@@ -142,6 +166,7 @@ class Flags
     {
         _flags = (_flags & ~mask) | (flags & mask);
     }
+
     /** @} */ // end of api_flags
 };
 

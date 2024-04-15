@@ -62,8 +62,9 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
 
   public:
     PARAMS(FastModelCortexA76);
-    CortexA76(const Params &p) :
-        Base(p, scx::scx_get_iris_connection_interface())
+
+    CortexA76(const Params &p)
+        : Base(p, scx::scx_get_iris_connection_interface())
     {}
 
     void initState() override;
@@ -76,7 +77,7 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
     void setResetAddr(Addr addr, bool secure = false) override;
 
     Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 };
 
 class CortexA76Cluster : public SimObject
@@ -87,6 +88,7 @@ class CortexA76Cluster : public SimObject
 
   public:
     PARAMS(FastModelCortexA76Cluster);
+
     template <class T>
     void
     set_evs_param(const std::string &n, T val)
@@ -94,20 +96,29 @@ class CortexA76Cluster : public SimObject
         scx::scx_set_parameter(evs->name() + std::string(".") + n, val);
     }
 
-    CortexA76 *getCore(int num) const { return cores.at(num); }
-    sc_core::sc_module *getEvs() const { return evs; }
+    CortexA76 *
+    getCore(int num) const
+    {
+        return cores.at(num);
+    }
+
+    sc_core::sc_module *
+    getEvs() const
+    {
+        return evs;
+    }
 
     CortexA76Cluster(const Params &p);
 
     Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 };
 
 template <class T>
 inline void
 CortexA76::set_evs_param(const std::string &n, T val)
 {
-    for (auto &path: params().thread_paths)
+    for (auto &path : params().thread_paths)
         cluster->set_evs_param(path + "." + n, val);
 }
 

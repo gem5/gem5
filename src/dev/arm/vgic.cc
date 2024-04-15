@@ -50,14 +50,18 @@ namespace gem5
 {
 
 VGic::VGic(const Params &p)
-    : PioDevice(p), gicvIIDR(p.gicv_iidr), platform(p.platform),
-      gic(p.gic), vcpuAddr(p.vcpu_addr), hvAddr(p.hv_addr),
-      pioDelay(p.pio_delay), maintInt(p.maint_int)
+    : PioDevice(p),
+      gicvIIDR(p.gicv_iidr),
+      platform(p.platform),
+      gic(p.gic),
+      vcpuAddr(p.vcpu_addr),
+      hvAddr(p.hv_addr),
+      pioDelay(p.pio_delay),
+      maintInt(p.maint_int)
 {
     for (int x = 0; x < VGIC_CPU_MAX; x++) {
         postVIntEvent[x] = new EventFunctionWrapper(
-            [this, x]{ processPostVIntEvent(x); },
-            "Post VInterrupt to CPU");
+            [this, x] { processPostVIntEvent(x); }, "Post VInterrupt to CPU");
         maintIntPosted[x] = false;
         vIntPosted[x] = false;
     }
@@ -108,32 +112,32 @@ VGic::readVCpu(PacketPtr pkt)
     DPRINTF(VGIC, "VGIC VCPU read register %#x\n", daddr);
 
     switch (daddr) {
-      case GICV_CTLR:
+    case GICV_CTLR:
         pkt->setLE<uint32_t>(vid->vctrl);
         break;
-      case GICV_IAR: {
-          int i = findHighestPendingLR(vid);
-          if (i < 0 || !vid->vctrl.En) {
-              pkt->setLE<uint32_t>(1023); // "No int" marker
-          } else {
-              ListReg *lr = &vid->LR[i];
+    case GICV_IAR: {
+        int i = findHighestPendingLR(vid);
+        if (i < 0 || !vid->vctrl.En) {
+            pkt->setLE<uint32_t>(1023); // "No int" marker
+        } else {
+            ListReg *lr = &vid->LR[i];
 
-              pkt->setLE<uint32_t>(lr->VirtualID |
-                                 (((int)lr->CpuID) << 10));
-              // We don't support auto-EOI of HW interrupts via real GIC!
-              // Fortunately, KVM doesn't use this.  How about Xen...? Ulp!
-              if (lr->HW)
-                  panic("VGIC does not support 'HW' List Register feature (LR %#x)!\n",
-                        *lr);
-              lr->State = LR_ACTIVE;
-              DPRINTF(VGIC, "Consumed interrupt %d (cpu%d) from LR%d (EOI%d)\n",
-                      lr->VirtualID, lr->CpuID, i, lr->EOI);
-          }
-      } break;
-      case GICV_IIDR:
+            pkt->setLE<uint32_t>(lr->VirtualID | (((int)lr->CpuID) << 10));
+            // We don't support auto-EOI of HW interrupts via real GIC!
+            // Fortunately, KVM doesn't use this.  How about Xen...? Ulp!
+            if (lr->HW)
+                panic("VGIC does not support 'HW' List Register feature (LR "
+                      "%#x)!\n",
+                      *lr);
+            lr->State = LR_ACTIVE;
+            DPRINTF(VGIC, "Consumed interrupt %d (cpu%d) from LR%d (EOI%d)\n",
+                    lr->VirtualID, lr->CpuID, i, lr->EOI);
+        }
+    } break;
+    case GICV_IIDR:
         pkt->setLE<uint32_t>(gicvIIDR);
         break;
-      default:
+    default:
         panic("VGIC VCPU read of bad address %#x\n", daddr);
     }
 
@@ -165,71 +169,66 @@ VGic::readCtrl(PacketPtr pkt)
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
     switch (daddr) {
-      case GICH_HCR:
+    case GICH_HCR:
         pkt->setLE<uint32_t>(vid->hcr);
         break;
 
-      case GICH_VTR:
+    case GICH_VTR:
         pkt->setLE<uint32_t>(0x44000000 | (NUM_LR - 1));
         break;
 
-      case GICH_VMCR:
+    case GICH_VMCR:
         pkt->setLE<uint32_t>(
-            ((uint32_t)vid->VMPriMask << 27) |
-            ((uint32_t)vid->VMBP << 21) |
-            ((uint32_t)vid->VMABP << 18) |
-            ((uint32_t)vid->VEM << 9) |
-            ((uint32_t)vid->VMCBPR << 4) |
-            ((uint32_t)vid->VMFiqEn << 3) |
-            ((uint32_t)vid->VMAckCtl << 2) |
-            ((uint32_t)vid->VMGrp1En << 1) |
-            ((uint32_t)vid->VMGrp0En << 0)
-            );
+            ((uint32_t)vid->VMPriMask << 27) | ((uint32_t)vid->VMBP << 21) |
+            ((uint32_t)vid->VMABP << 18) | ((uint32_t)vid->VEM << 9) |
+            ((uint32_t)vid->VMCBPR << 4) | ((uint32_t)vid->VMFiqEn << 3) |
+            ((uint32_t)vid->VMAckCtl << 2) | ((uint32_t)vid->VMGrp1En << 1) |
+            ((uint32_t)vid->VMGrp0En << 0));
         break;
 
-      case GICH_MISR:
+    case GICH_MISR:
         pkt->setLE<uint32_t>(getMISR(vid));
         break;
 
-      case GICH_EISR0:
+    case GICH_EISR0:
         pkt->setLE<uint32_t>(vid->eisr & 0xffffffff);
         break;
 
-      case GICH_EISR1:
+    case GICH_EISR1:
         pkt->setLE<uint32_t>(vid->eisr >> 32);
         break;
 
-      case GICH_ELSR0: {
-          uint32_t bm = 0;
-          for (int i = 0; i < ((NUM_LR < 32) ? NUM_LR : 32); i++) {
-              if (!vid->LR[i].State)
-                  bm |= 1 << i;
-          }
-          pkt->setLE<uint32_t>(bm);
-      } break;
+    case GICH_ELSR0: {
+        uint32_t bm = 0;
+        for (int i = 0; i < ((NUM_LR < 32) ? NUM_LR : 32); i++) {
+            if (!vid->LR[i].State)
+                bm |= 1 << i;
+        }
+        pkt->setLE<uint32_t>(bm);
+    } break;
 
-      case GICH_ELSR1: {
-          uint32_t bm = 0;
-          for (int i = 32; i < NUM_LR; i++) {
-              if (!vid->LR[i].State)
-                  bm |= 1 << (i-32);
-          }
-          pkt->setLE<uint32_t>(bm);
-      } break;
+    case GICH_ELSR1: {
+        uint32_t bm = 0;
+        for (int i = 32; i < NUM_LR; i++) {
+            if (!vid->LR[i].State)
+                bm |= 1 << (i - 32);
+        }
+        pkt->setLE<uint32_t>(bm);
+    } break;
 
-      case GICH_APR0:
+    case GICH_APR0:
         warn_once("VGIC GICH_APR read!\n");
         pkt->setLE<uint32_t>(0);
         break;
 
-      case GICH_LR0:
-      case GICH_LR1:
-      case GICH_LR2:
-      case GICH_LR3:
+    case GICH_LR0:
+    case GICH_LR1:
+    case GICH_LR2:
+    case GICH_LR3:
         pkt->setLE<uint32_t>(vid->LR[(daddr - GICH_LR0) >> 2]);
         break;
 
-      default:
+    default:
         panic("VGIC HVCtrl read of bad address %#x\n", daddr);
     }
 
@@ -246,37 +245,38 @@ VGic::writeVCpu(PacketPtr pkt)
     assert(ctx_id < VGIC_CPU_MAX);
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
-    DPRINTF(VGIC, "VGIC VCPU write register %#x <= %#x\n",
-            daddr, pkt->getLE<uint32_t>());
+    DPRINTF(VGIC, "VGIC VCPU write register %#x <= %#x\n", daddr,
+            pkt->getLE<uint32_t>());
 
     switch (daddr) {
-      case GICV_CTLR:
+    case GICV_CTLR:
         vid->vctrl = pkt->getLE<uint32_t>();
         break;
-      case GICV_PMR:
+    case GICV_PMR:
         vid->VMPriMask = pkt->getLE<uint32_t>();
         break;
-      case GICV_EOIR: {
-          // We don't handle the split EOI-then-DIR mode.  Linux (guest)
-          // doesn't need it though.
-          assert(!vid->vctrl.EOImode);
-          uint32_t w = pkt->getLE<uint32_t>();
-          unsigned int virq = w & 0x3ff;
-          unsigned int vcpu = (w >> 10) & 7;
-          int i = findLRForVIRQ(vid, virq, vcpu);
-          if (i < 0) {
-              DPRINTF(VGIC, "EOIR: No LR for irq %d(cpu%d)\n", virq, vcpu);
-          } else {
-              DPRINTF(VGIC, "EOIR: Found LR%d for irq %d(cpu%d)\n", i, virq, vcpu);
-              ListReg *lr = &vid->LR[i];
-              lr->State = 0;
-              // Maintenance interrupt -- via eisr -- is flagged when
-              // LRs have EOI=1 and State=INVALID!
-          }
-      } break;
-      default:
+    case GICV_EOIR: {
+        // We don't handle the split EOI-then-DIR mode.  Linux (guest)
+        // doesn't need it though.
+        assert(!vid->vctrl.EOImode);
+        uint32_t w = pkt->getLE<uint32_t>();
+        unsigned int virq = w & 0x3ff;
+        unsigned int vcpu = (w >> 10) & 7;
+        int i = findLRForVIRQ(vid, virq, vcpu);
+        if (i < 0) {
+            DPRINTF(VGIC, "EOIR: No LR for irq %d(cpu%d)\n", virq, vcpu);
+        } else {
+            DPRINTF(VGIC, "EOIR: Found LR%d for irq %d(cpu%d)\n", i, virq,
+                    vcpu);
+            ListReg *lr = &vid->LR[i];
+            lr->State = 0;
+            // Maintenance interrupt -- via eisr -- is flagged when
+            // LRs have EOI=1 and State=INVALID!
+        }
+    } break;
+    default:
         panic("VGIC VCPU write %#x to unk address %#x\n",
-                pkt->getLE<uint32_t>(), daddr);
+              pkt->getLE<uint32_t>(), daddr);
     }
 
     // This updates the EISRs and flags IRQs:
@@ -293,8 +293,8 @@ VGic::writeCtrl(PacketPtr pkt)
 
     ContextID ctx_id = pkt->req->contextId();
 
-    DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n",
-            daddr, pkt->getLE<uint32_t>());
+    DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n", daddr,
+            pkt->getLE<uint32_t>());
 
     /* Munge the address: 0-0xfff is the usual space banked by requestor CPU.
      * Anything > that is 0x200-sized slices of 'per CPU' regs.
@@ -309,37 +309,37 @@ VGic::writeCtrl(PacketPtr pkt)
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
     switch (daddr) {
-      case GICH_HCR:
+    case GICH_HCR:
         vid->hcr = pkt->getLE<uint32_t>();
         // update int state
         break;
 
-      case GICH_VMCR: {
-          uint32_t d = pkt->getLE<uint32_t>();
-          vid->VMPriMask = d >> 27;
-          vid->VMBP = (d >> 21) & 7;
-          vid->VMABP = (d >> 18) & 7;
-          vid->VEM = (d >> 9) & 1;
-          vid->VMCBPR = (d >> 4) & 1;
-          vid->VMFiqEn = (d >> 3) & 1;
-          vid->VMAckCtl = (d >> 2) & 1;
-          vid->VMGrp1En = (d >> 1) & 1;
-          vid->VMGrp0En = d & 1;
-      } break;
+    case GICH_VMCR: {
+        uint32_t d = pkt->getLE<uint32_t>();
+        vid->VMPriMask = d >> 27;
+        vid->VMBP = (d >> 21) & 7;
+        vid->VMABP = (d >> 18) & 7;
+        vid->VEM = (d >> 9) & 1;
+        vid->VMCBPR = (d >> 4) & 1;
+        vid->VMFiqEn = (d >> 3) & 1;
+        vid->VMAckCtl = (d >> 2) & 1;
+        vid->VMGrp1En = (d >> 1) & 1;
+        vid->VMGrp0En = d & 1;
+    } break;
 
-      case GICH_APR0:
+    case GICH_APR0:
         warn_once("VGIC GICH_APR0 written, ignored\n");
         break;
 
-      case GICH_LR0:
-      case GICH_LR1:
-      case GICH_LR2:
-      case GICH_LR3:
+    case GICH_LR0:
+    case GICH_LR1:
+    case GICH_LR2:
+    case GICH_LR3:
         vid->LR[(daddr - GICH_LR0) >> 2] = pkt->getLE<uint32_t>();
         // update int state
         break;
 
-      default:
+    default:
         panic("VGIC HVCtrl write to bad address %#x\n", daddr);
     }
 
@@ -349,18 +349,17 @@ VGic::writeCtrl(PacketPtr pkt)
     return pioDelay;
 }
 
-
 uint32_t
 VGic::getMISR(struct vcpuIntData *vid)
 {
     return (!!vid->hcr.VGrp1DIE && !vid->VMGrp1En ? 0x80 : 0) |
-        (!!vid->hcr.VGrp1EIE &&  vid->VMGrp1En ? 0x40 : 0) |
-        (!!vid->hcr.VGrp0DIE && !vid->VMGrp0En ? 0x20 : 0) |
-        (!!vid->hcr.VGrp0EIE &&  vid->VMGrp0En ? 0x10 : 0) |
-        (!!vid->hcr.NPIE && !lrPending(vid) ? 0x08 : 0) |
-        (!!vid->hcr.LRENPIE && vid->hcr.EOICount ? 0x04 : 0) |
-        (!!vid->hcr.UIE && lrValid(vid) <= 1 ? 0x02 : 0) |
-        (vid->eisr ? 0x01 : 0);
+           (!!vid->hcr.VGrp1EIE && vid->VMGrp1En ? 0x40 : 0) |
+           (!!vid->hcr.VGrp0DIE && !vid->VMGrp0En ? 0x20 : 0) |
+           (!!vid->hcr.VGrp0EIE && vid->VMGrp0En ? 0x10 : 0) |
+           (!!vid->hcr.NPIE && !lrPending(vid) ? 0x08 : 0) |
+           (!!vid->hcr.LRENPIE && vid->hcr.EOICount ? 0x04 : 0) |
+           (!!vid->hcr.UIE && lrValid(vid) <= 1 ? 0x02 : 0) |
+           (vid->eisr ? 0x01 : 0);
 }
 
 void
@@ -385,7 +384,6 @@ VGic::processPostVIntEvent(uint32_t cpu)
     auto tc = platform->system->threads[cpu];
     tc->getCpuPtr()->postInterrupt(tc->threadId(), ArmISA::INT_VIRT_IRQ, 0);
 }
-
 
 void
 VGic::postMaintInt(uint32_t cpu)
@@ -518,7 +516,8 @@ VGic::vcpuIntData::serialize(CheckpointOut &cp) const
     }
 }
 
-void VGic::unserialize(CheckpointIn &cp)
+void
+VGic::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 

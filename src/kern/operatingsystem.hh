@@ -46,9 +46,7 @@ class ThreadContext;
 ///
 class OperatingSystem
 {
-
   public:
-
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
@@ -63,25 +61,25 @@ class OperatingSystem
     /// Interface struct for uname().
     struct utsname
     {
-        char sysname[_SYS_NMLN];        //!< System name.
-        char nodename[_SYS_NMLN];       //!< Node name.
-        char release[_SYS_NMLN];        //!< OS release.
-        char version[_SYS_NMLN];        //!< OS version.
-        char machine[_SYS_NMLN];        //!< Machine type.
+        char sysname[_SYS_NMLN];  //!< System name.
+        char nodename[_SYS_NMLN]; //!< Node name.
+        char release[_SYS_NMLN];  //!< OS release.
+        char version[_SYS_NMLN];  //!< OS version.
+        char machine[_SYS_NMLN];  //!< Machine type.
     };
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit
     {
-        uint64_t  rlim_cur;     //!< soft limit
-        uint64_t  rlim_max;     //!< hard limit
+        uint64_t rlim_cur; //!< soft limit
+        uint64_t rlim_max; //!< hard limit
     };
 
     /// For gettimeofday().
     struct timeval
     {
-        int64_t tv_sec;         //!< seconds
-        int64_t tv_usec;        //!< microseconds
+        int64_t tv_sec;  //!< seconds
+        int64_t tv_usec; //!< microseconds
     };
 
     // For writev/readv
@@ -91,32 +89,31 @@ class OperatingSystem
         uint64_t iov_len;
     };
 
-
     /// For getrusage().
     struct rusage
     {
-        timeval ru_utime;       //!< user time used
-        timeval ru_stime;       //!< system time used
-        int64_t ru_maxrss;              //!< max rss
-        int64_t ru_ixrss;               //!< integral shared memory size
-        int64_t ru_idrss;               //!< integral unshared data "
-        int64_t ru_isrss;               //!< integral unshared stack "
-        int64_t ru_minflt;              //!< page reclaims - total vmfaults
-        int64_t ru_majflt;              //!< page faults
-        int64_t ru_nswap;               //!< swaps
-        int64_t ru_inblock;             //!< block input operations
-        int64_t ru_oublock;             //!< block output operations
-        int64_t ru_msgsnd;              //!< messages sent
-        int64_t ru_msgrcv;              //!< messages received
-        int64_t ru_nsignals;            //!< signals received
-        int64_t ru_nvcsw;               //!< voluntary context switches
-        int64_t ru_nivcsw;              //!< involuntary "
+        timeval ru_utime;    //!< user time used
+        timeval ru_stime;    //!< system time used
+        int64_t ru_maxrss;   //!< max rss
+        int64_t ru_ixrss;    //!< integral shared memory size
+        int64_t ru_idrss;    //!< integral unshared data "
+        int64_t ru_isrss;    //!< integral unshared stack "
+        int64_t ru_minflt;   //!< page reclaims - total vmfaults
+        int64_t ru_majflt;   //!< page faults
+        int64_t ru_nswap;    //!< swaps
+        int64_t ru_inblock;  //!< block input operations
+        int64_t ru_oublock;  //!< block output operations
+        int64_t ru_msgsnd;   //!< messages sent
+        int64_t ru_msgrcv;   //!< messages received
+        int64_t ru_nsignals; //!< signals received
+        int64_t ru_nvcsw;    //!< voluntary context switches
+        int64_t ru_nivcsw;   //!< involuntary "
     };
 
     static int openSpecialFile(std::string path, Process *process,
                                ThreadContext *tc);
 
-};  // class OperatingSystem
+}; // class OperatingSystem
 
 } // namespace gem5
 

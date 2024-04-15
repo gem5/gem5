@@ -37,11 +37,18 @@ namespace sc_core
 {
 
 sc_report::sc_report(sc_severity _severity, const char *msg_type,
-        const char *msg, int _verbosity, const char *_fileName,
-        int _lineNumber, sc_time _time, const char *_processName, int _id) :
-    _severity(_severity), _msgType(msg_type), _msg(msg),
-    _verbosity(_verbosity), _fileName(_fileName), _lineNumber(_lineNumber),
-    _time(_time), _processName(_processName), _id(_id)
+                     const char *msg, int _verbosity, const char *_fileName,
+                     int _lineNumber, sc_time _time, const char *_processName,
+                     int _id)
+    : _severity(_severity),
+      _msgType(msg_type),
+      _msg(msg),
+      _verbosity(_verbosity),
+      _fileName(_fileName),
+      _lineNumber(_lineNumber),
+      _time(_time),
+      _processName(_processName),
+      _id(_id)
 {
     if (_msgType)
         _msgType = strdup(_msgType);
@@ -50,13 +57,13 @@ sc_report::sc_report(sc_severity _severity, const char *msg_type,
     _what = sc_report_compose_message(*this);
 }
 
-sc_report::sc_report(const sc_report &r) :
-    sc_report(r._severity, r._msgType, r._msg, r._verbosity, r._fileName,
-            r._lineNumber, r._time, r._processName, r._id)
+sc_report::sc_report(const sc_report &r)
+    : sc_report(r._severity, r._msgType, r._msg, r._verbosity, r._fileName,
+                r._lineNumber, r._time, r._processName, r._id)
 {}
 
 sc_report &
-sc_report::operator = (const sc_report &r)
+sc_report::operator=(const sc_report &r)
 {
     _severity = r._severity;
     free((void *)_msgType);
@@ -126,7 +133,7 @@ sc_report::register_id(int id, const char *msg)
         return;
     }
     auto p = sc_gem5::reportIdToMsgMap().insert(
-            std::pair<int, std::string>(id, msg));
+        std::pair<int, std::string>(id, msg));
     if (!p.second) {
         SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "report id already exists");
     } else {
@@ -142,15 +149,15 @@ sc_report::suppress_id(int id, bool suppress)
         return;
 
     if (suppress) {
-        sc_gem5::reportMsgInfoMap()[it->second].
-            sevActions[SC_INFO] = SC_DO_NOTHING;
-        sc_gem5::reportMsgInfoMap()[it->second].
-            sevActions[SC_WARNING] = SC_DO_NOTHING;
+        sc_gem5::reportMsgInfoMap()[it->second].sevActions[SC_INFO] =
+            SC_DO_NOTHING;
+        sc_gem5::reportMsgInfoMap()[it->second].sevActions[SC_WARNING] =
+            SC_DO_NOTHING;
     } else {
-        sc_gem5::reportMsgInfoMap()[it->second].
-            sevActions[SC_INFO] = SC_UNSPECIFIED;
-        sc_gem5::reportMsgInfoMap()[it->second].
-            sevActions[SC_WARNING] = SC_UNSPECIFIED;
+        sc_gem5::reportMsgInfoMap()[it->second].sevActions[SC_INFO] =
+            SC_UNSPECIFIED;
+        sc_gem5::reportMsgInfoMap()[it->second].sevActions[SC_WARNING] =
+            SC_UNSPECIFIED;
     }
 }
 

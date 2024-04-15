@@ -62,20 +62,22 @@ class PCStateBase : public Serializable
     MicroPC _upc = 0;
 
     PCStateBase(const PCStateBase &other) : _pc(other._pc), _upc(other._upc) {}
+
     PCStateBase &operator=(const PCStateBase &other) = default;
+
     PCStateBase() {}
 
   public:
     virtual ~PCStateBase() = default;
 
-    template<class Target>
+    template <class Target>
     Target &
     as()
     {
         return static_cast<Target &>(*this);
     }
 
-    template<class Target>
+    template <class Target>
     const Target &
     as() const
     {
@@ -83,13 +85,19 @@ class PCStateBase : public Serializable
     }
 
     virtual PCStateBase *clone() const = 0;
+
     virtual void
     update(const PCStateBase &other)
     {
         _pc = other._pc;
         _upc = other._upc;
     }
-    void update(const PCStateBase *ptr) { update(*ptr); }
+
+    void
+    update(const PCStateBase *ptr)
+    {
+        update(*ptr);
+    }
 
     virtual void output(std::ostream &os) const = 0;
 
@@ -153,7 +161,7 @@ class PCStateBase : public Serializable
 };
 
 static inline std::ostream &
-operator<<(std::ostream & os, const PCStateBase &pc)
+operator<<(std::ostream &os, const PCStateBase &pc)
 {
     pc.output(os);
     return os;
@@ -213,7 +221,7 @@ set(PCStateBase *&dest, const std::unique_ptr<PCStateBase> &src)
 
 inline void
 set(std::unique_ptr<PCStateBase> &dest,
-        const std::unique_ptr<PCStateBase> &src)
+    const std::unique_ptr<PCStateBase> &src)
 {
     PCStateBase *dest_ptr = dest.get();
     const PCStateBase *src_ptr = src.get();
@@ -261,24 +269,62 @@ class PCStateWithNext : public PCStateBase
 
     MicroPC _nupc = 1;
 
-    PCStateWithNext(const PCStateWithNext &other) : PCStateBase(other),
-        _npc(other._npc), _nupc(other._nupc)
+    PCStateWithNext(const PCStateWithNext &other)
+        : PCStateBase(other), _npc(other._npc), _nupc(other._nupc)
     {}
+
     PCStateWithNext &operator=(const PCStateWithNext &other) = default;
+
     PCStateWithNext() {}
 
   public:
-    Addr pc() const { return _pc; }
-    void pc(Addr val) { _pc = val; }
+    Addr
+    pc() const
+    {
+        return _pc;
+    }
 
-    Addr npc() const { return _npc; }
-    void npc(Addr val) { _npc = val; }
+    void
+    pc(Addr val)
+    {
+        _pc = val;
+    }
 
-    MicroPC upc() const { return _upc; }
-    void upc(MicroPC val) { _upc = val; }
+    Addr
+    npc() const
+    {
+        return _npc;
+    }
 
-    MicroPC nupc() const { return _nupc; }
-    void nupc(MicroPC val) { _nupc = val; }
+    void
+    npc(Addr val)
+    {
+        _npc = val;
+    }
+
+    MicroPC
+    upc() const
+    {
+        return _upc;
+    }
+
+    void
+    upc(MicroPC val)
+    {
+        _upc = val;
+    }
+
+    MicroPC
+    nupc() const
+    {
+        return _nupc;
+    }
+
+    void
+    nupc(MicroPC val)
+    {
+        _nupc = val;
+    }
 
     // Reset the macroop's upc without advancing the regular pc.
     void
@@ -313,8 +359,8 @@ class PCStateWithNext : public PCStateBase
     equals(const PCStateBase &other) const override
     {
         auto &ps = other.as<PCStateWithNext>();
-        return PCStateBase::equals(other) &&
-            _npc == ps._npc && _nupc == ps._nupc;
+        return PCStateBase::equals(other) && _npc == ps._npc &&
+               _nupc == ps._nupc;
     }
 
     void
@@ -342,7 +388,6 @@ class PCStateWithNext : public PCStateBase
     }
 };
 
-
 /*
  * Different flavors of PC state. Only ISA specific code should rely on
  * any particular type of PC state being available. All other code should
@@ -358,8 +403,11 @@ class SimplePCState : public PCStateWithNext
 
   public:
     SimplePCState(const SimplePCState &other) : Base(other) {}
+
     SimplePCState &operator=(const SimplePCState &other) = default;
+
     SimplePCState() {}
+
     explicit SimplePCState(Addr val) { set(val); }
 
     PCStateBase *
@@ -426,8 +474,11 @@ class UPCState : public SimplePCState<InstWidth>
     }
 
     UPCState(const UPCState &other) : Base(other) {}
+
     UPCState &operator=(const UPCState &other) = default;
+
     UPCState() {}
+
     explicit UPCState(Addr val) { set(val); }
 
     bool
@@ -485,8 +536,17 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
         _nnpc = pcstate._nnpc;
     }
 
-    Addr nnpc() const { return _nnpc; }
-    void nnpc(Addr val) { _nnpc = val; }
+    Addr
+    nnpc() const
+    {
+        return _nnpc;
+    }
+
+    void
+    nnpc(Addr val)
+    {
+        _nnpc = val;
+    }
 
     void
     set(Addr val) override
@@ -495,11 +555,14 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
         nnpc(val + 2 * InstWidth);
     }
 
-    DelaySlotPCState(const DelaySlotPCState &other) :
-        Base(other), _nnpc(other._nnpc)
+    DelaySlotPCState(const DelaySlotPCState &other)
+        : Base(other), _nnpc(other._nnpc)
     {}
+
     DelaySlotPCState &operator=(const DelaySlotPCState &other) = default;
+
     DelaySlotPCState() {}
+
     explicit DelaySlotPCState(Addr val) { set(val); }
 
     bool
@@ -571,8 +634,11 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     }
 
     DelaySlotUPCState(const DelaySlotUPCState &other) : Base(other) {}
+
     DelaySlotUPCState &operator=(const DelaySlotUPCState &other) = default;
+
     DelaySlotUPCState() {}
+
     explicit DelaySlotUPCState(Addr val) { set(val); }
 
     bool
@@ -599,7 +665,7 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     }
 };
 
-}
+} // namespace GenericISA
 
 } // namespace gem5
 

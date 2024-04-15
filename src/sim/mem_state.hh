@@ -68,10 +68,9 @@ class MemState : public Serializable
 {
   public:
     MemState(Process *owner, Addr brk_point, Addr stack_base,
-             Addr max_stack_size, Addr next_thread_stack_base,
-             Addr mmap_end);
+             Addr max_stack_size, Addr next_thread_stack_base, Addr mmap_end);
 
-    MemState& operator=(const MemState &in);
+    MemState &operator=(const MemState &in);
 
     /**
      * Change the Process owner in case this MemState is copied.
@@ -82,20 +81,89 @@ class MemState : public Serializable
      * Get/set base addresses and sizes for the stack and data segments of
      * the process' memory.
      */
-    Addr getBrkPoint() const { return _brkPoint; }
-    Addr getStackBase() const { return _stackBase; }
-    Addr getStackSize() const { return _stackSize; }
-    Addr getMaxStackSize() const { return _maxStackSize; }
-    Addr getStackMin() const { return _stackMin; }
-    Addr getNextThreadStackBase() const { return _nextThreadStackBase; }
-    Addr getMmapEnd() const { return _mmapEnd; }
-    void setBrkPoint(Addr brk_point) { _brkPoint = brk_point; }
-    void setStackBase(Addr stack_base) { _stackBase = stack_base; }
-    void setStackSize(Addr stack_size) { _stackSize = stack_size; }
-    void setMaxStackSize(Addr max_stack) { _maxStackSize = max_stack; }
-    void setStackMin(Addr stack_min) { _stackMin = stack_min; }
-    void setNextThreadStackBase(Addr ntsb) { _nextThreadStackBase = ntsb; }
-    void setMmapEnd(Addr mmap_end) { _mmapEnd = mmap_end; }
+    Addr
+    getBrkPoint() const
+    {
+        return _brkPoint;
+    }
+
+    Addr
+    getStackBase() const
+    {
+        return _stackBase;
+    }
+
+    Addr
+    getStackSize() const
+    {
+        return _stackSize;
+    }
+
+    Addr
+    getMaxStackSize() const
+    {
+        return _maxStackSize;
+    }
+
+    Addr
+    getStackMin() const
+    {
+        return _stackMin;
+    }
+
+    Addr
+    getNextThreadStackBase() const
+    {
+        return _nextThreadStackBase;
+    }
+
+    Addr
+    getMmapEnd() const
+    {
+        return _mmapEnd;
+    }
+
+    void
+    setBrkPoint(Addr brk_point)
+    {
+        _brkPoint = brk_point;
+    }
+
+    void
+    setStackBase(Addr stack_base)
+    {
+        _stackBase = stack_base;
+    }
+
+    void
+    setStackSize(Addr stack_size)
+    {
+        _stackSize = stack_size;
+    }
+
+    void
+    setMaxStackSize(Addr max_stack)
+    {
+        _maxStackSize = max_stack;
+    }
+
+    void
+    setStackMin(Addr stack_min)
+    {
+        _stackMin = stack_min;
+    }
+
+    void
+    setNextThreadStackBase(Addr ntsb)
+    {
+        _nextThreadStackBase = ntsb;
+    }
+
+    void
+    setMmapEnd(Addr mmap_end)
+    {
+        _mmapEnd = mmap_end;
+    }
 
     /*
      * Extend the end of the mmap region by length bytes. Once a contiguous
@@ -128,8 +196,8 @@ class MemState : public Serializable
      * @param offset Offset in file in which region starts.
      */
     void mapRegion(Addr start_addr, Addr length,
-                   const std::string& name="anon", int sim_fd=-1,
-                   Addr offset=0);
+                   const std::string &name = "anon", int sim_fd = -1,
+                   Addr offset = 0);
 
     /**
      * Unmap a pre-existing region. Depending on the range being unmapped
@@ -236,7 +304,8 @@ class MemState : public Serializable
                 host_fd = open(name.c_str(), O_RDONLY);
                 fatal_if(host_fd < 0,
                          "Failed to open %s file "
-                         "while unserializing file-backed VMA\n", name);
+                         "while unserializing file-backed VMA\n",
+                         name);
             }
             paramIn(cp, "addrRangeStart", start);
             paramIn(cp, "addrRangeEnd", end);
@@ -261,12 +330,12 @@ class MemState : public Serializable
     /**
      * @param
      */
-    System * system() const;
+    System *system() const;
 
     /**
      * Owner process of MemState. Used to manipulate page tables.
      */
-    Process * _ownerProcess;
+    Process *_ownerProcess;
 
     Addr _pageBytes;
     Addr _brkPoint;

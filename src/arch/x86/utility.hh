@@ -47,96 +47,96 @@ namespace gem5
 
 namespace X86ISA
 {
-    /**
-     * Reconstruct the rflags register from the internal gem5 register
-     * state.
-     *
-     * gem5 stores rflags in several different registers to avoid
-     * pipeline dependencies. In order to get the true rflags value,
-     * we can't simply read the value of misc_reg::Rflags. Instead, we
-     * need to read out various state from microcode registers and
-     * merge that with misc_reg::Rflags.
-     *
-     * @param tc Thread context to read rflags from.
-     * @return rflags as seen by the guest.
-     */
-    uint64_t getRFlags(ThreadContext *tc);
+/**
+ * Reconstruct the rflags register from the internal gem5 register
+ * state.
+ *
+ * gem5 stores rflags in several different registers to avoid
+ * pipeline dependencies. In order to get the true rflags value,
+ * we can't simply read the value of misc_reg::Rflags. Instead, we
+ * need to read out various state from microcode registers and
+ * merge that with misc_reg::Rflags.
+ *
+ * @param tc Thread context to read rflags from.
+ * @return rflags as seen by the guest.
+ */
+uint64_t getRFlags(ThreadContext *tc);
 
-    /**
-     * Set update the rflags register and internal gem5 state.
-     *
-     * @note This function does not update misc_reg::M5Reg. You might
-     * need to update this register by writing anything to
-     * misc_reg::M5Reg with side-effects.
-     *
-     * @see X86ISA::getRFlags()
-     *
-     * @param tc Thread context to update
-     * @param val New rflags value to store in TC
-     */
-    void setRFlags(ThreadContext *tc, uint64_t val);
+/**
+ * Set update the rflags register and internal gem5 state.
+ *
+ * @note This function does not update misc_reg::M5Reg. You might
+ * need to update this register by writing anything to
+ * misc_reg::M5Reg with side-effects.
+ *
+ * @see X86ISA::getRFlags()
+ *
+ * @param tc Thread context to update
+ * @param val New rflags value to store in TC
+ */
+void setRFlags(ThreadContext *tc, uint64_t val);
 
-    /**
-     * Convert an x87 tag word to abridged tag format.
-     *
-     * Convert from the x87 tag representation to the tag abridged
-     * representation used in the FXSAVE area. The classic format uses
-     * 2 bits per stack position to indicate if a position is valid,
-     * zero, special, or empty. The abridged format only stores
-     * whether a position is empty or not.
-     *
-     * @param ftw Tag word in classic x87 format.
-     * @return Tag word in the abridged format.
-     */
-    uint8_t convX87TagsToXTags(uint16_t ftw);
+/**
+ * Convert an x87 tag word to abridged tag format.
+ *
+ * Convert from the x87 tag representation to the tag abridged
+ * representation used in the FXSAVE area. The classic format uses
+ * 2 bits per stack position to indicate if a position is valid,
+ * zero, special, or empty. The abridged format only stores
+ * whether a position is empty or not.
+ *
+ * @param ftw Tag word in classic x87 format.
+ * @return Tag word in the abridged format.
+ */
+uint8_t convX87TagsToXTags(uint16_t ftw);
 
-    /**
-     * Convert an x87 xtag word to normal tags format.
-     *
-     * Convert from the abridged x87 tag representation used in the
-     * FXSAVE area to a full x87 tag. The classic format uses 2 bits
-     * per stack position to indicate if a position is valid, zero,
-     * special, or empty. The abridged format only stores whether a
-     * position is empty or not.
-     *
-     * @todo Reconstruct the correct state of stack positions instead
-     * of just valid/invalid.
-     *
-     * @param ftwx Tag word in the abridged format.
-     * @return Tag word in classic x87 format.
-     */
-    uint16_t convX87XTagsToTags(uint8_t ftwx);
+/**
+ * Convert an x87 xtag word to normal tags format.
+ *
+ * Convert from the abridged x87 tag representation used in the
+ * FXSAVE area to a full x87 tag. The classic format uses 2 bits
+ * per stack position to indicate if a position is valid, zero,
+ * special, or empty. The abridged format only stores whether a
+ * position is empty or not.
+ *
+ * @todo Reconstruct the correct state of stack positions instead
+ * of just valid/invalid.
+ *
+ * @param ftwx Tag word in the abridged format.
+ * @return Tag word in classic x87 format.
+ */
+uint16_t convX87XTagsToTags(uint8_t ftwx);
 
-    /**
-     * Generate and updated x87 tag register after a push/pop
-     * operation.
-     *
-     * @note There is currently no support for setting other tags than
-     * valid and invalid. A real x87 will set the tag value to zero or
-     * special for some special floating point values.
-     *
-     * @param ftw Current value of the FTW register.
-     * @param top Current x87 TOP value.
-     * @param spm Stack displacement.
-     * @return New value of the FTW register.
-     */
-    uint16_t genX87Tags(uint16_t ftw, uint8_t top, int8_t spm);
+/**
+ * Generate and updated x87 tag register after a push/pop
+ * operation.
+ *
+ * @note There is currently no support for setting other tags than
+ * valid and invalid. A real x87 will set the tag value to zero or
+ * special for some special floating point values.
+ *
+ * @param ftw Current value of the FTW register.
+ * @param top Current x87 TOP value.
+ * @param spm Stack displacement.
+ * @return New value of the FTW register.
+ */
+uint16_t genX87Tags(uint16_t ftw, uint8_t top, int8_t spm);
 
-    /**
-     * Load an 80-bit float from memory and convert it to double.
-     *
-     * @param mem Pointer to an 80-bit float.
-     * @return double representation of the 80-bit float.
-     */
-    double loadFloat80(const void *mem);
+/**
+ * Load an 80-bit float from memory and convert it to double.
+ *
+ * @param mem Pointer to an 80-bit float.
+ * @return double representation of the 80-bit float.
+ */
+double loadFloat80(const void *mem);
 
-    /**
-     * Convert and store a double as an 80-bit float.
-     *
-     * @param mem Pointer to destination for the 80-bit float.
-     * @param value Double precision float to store.
-     */
-    void storeFloat80(void *mem, double value);
+/**
+ * Convert and store a double as an 80-bit float.
+ *
+ * @param mem Pointer to destination for the 80-bit float.
+ * @param value Double precision float to store.
+ */
+void storeFloat80(void *mem, double value);
 
 } // namespace X86ISA
 } // namespace gem5

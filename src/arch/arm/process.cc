@@ -73,7 +73,7 @@ ArmProcess::ArmProcess(const ProcessParams &params,
 }
 
 ArmProcess32::ArmProcess32(const ProcessParams &params,
-        loader::ObjectFile *objFile, loader::Arch _arch)
+                           loader::ObjectFile *objFile, loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -82,14 +82,13 @@ ArmProcess32::ArmProcess32(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x40000000L;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
-ArmProcess64::ArmProcess64(
-        const ProcessParams &params, loader::ObjectFile *objFile,
-        loader::Arch _arch)
+ArmProcess64::ArmProcess64(const ProcessParams &params,
+                           loader::ObjectFile *objFile, loader::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
@@ -98,9 +97,9 @@ ArmProcess64::ArmProcess64(
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x4000000000L;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -108,7 +107,7 @@ ArmProcess32::initState()
 {
     Process::initState();
     argsInit<uint32_t>(PageBytes, int_reg::Sp);
-    for (auto id: contextIds) {
+    for (auto id : contextIds) {
         ThreadContext *tc = system->threads[id];
         CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
         // Enable the floating point coprocessors.
@@ -127,7 +126,7 @@ ArmProcess64::initState()
 {
     Process::initState();
     argsInit<uint64_t>(PageBytes, int_reg::Sp0);
-    for (auto id: contextIds) {
+    for (auto id : contextIds) {
         ThreadContext *tc = system->threads[id];
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
         cpsr.mode = MODE_EL0T;
@@ -168,9 +167,8 @@ ArmProcess32::armHwcapImpl() const
         Arm_Vfpv3d16 = 1 << 14
     };
 
-    return Arm_Swp | Arm_Half | Arm_Thumb | Arm_FastMult |
-           Arm_Vfp | Arm_Edsp | Arm_Neon |
-           Arm_Vfpv3 | Arm_Vfpv3d16;
+    return Arm_Swp | Arm_Half | Arm_Thumb | Arm_FastMult | Arm_Vfp | Arm_Edsp |
+           Arm_Neon | Arm_Vfpv3 | Arm_Vfpv3d16;
 }
 
 uint32_t
@@ -268,7 +266,7 @@ ArmProcess64::armHwcapImpl2() const
     {
         Arm_None = 0,
         Arm_Dcpodp = 1ULL << 0,
-        Arm_Sve2 = 1ULL<< 1,
+        Arm_Sve2 = 1ULL << 1,
         Arm_Sveaes = 1ULL << 2,
         Arm_Svepmull = 1ULL << 3,
         Arm_Svebitperm = 1ULL << 4,
@@ -345,32 +343,31 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     else
         filename = argv[0];
 
-    //We want 16 byte alignment
+    // We want 16 byte alignment
     uint64_t align = 16;
 
-    //Setup the auxilliary vectors. These will already have endian conversion.
-    //Auxilliary vectors are loaded only for elf formatted executables.
+    // Setup the auxilliary vectors. These will already have endian conversion.
+    // Auxilliary vectors are loaded only for elf formatted executables.
     auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
-
         if (objFile->getOpSys() == loader::Linux) {
-            //Bits which describe the system hardware capabilities
-            //XXX Figure out what these should be
+            // Bits which describe the system hardware capabilities
+            // XXX Figure out what these should be
             auxv.emplace_back(gem5::auxv::Hwcap, armHwcap<IntType>());
             auxv.emplace_back(gem5::auxv::Hwcap2, armHwcap2<IntType>());
-            //Frequency at which times() increments
+            // Frequency at which times() increments
             auxv.emplace_back(gem5::auxv::Clktck, 0x64);
-            //Whether to enable "secure mode" in the executable
+            // Whether to enable "secure mode" in the executable
             auxv.emplace_back(gem5::auxv::Secure, 0);
             // Pointer to 16 bytes of random data
             auxv.emplace_back(gem5::auxv::Random, 0);
-            //The filename of the program
+            // The filename of the program
             auxv.emplace_back(gem5::auxv::Execfn, 0);
-            //The string "v71" -- ARM v7 architecture
+            // The string "v71" -- ARM v7 architecture
             auxv.emplace_back(gem5::auxv::Platform, 0);
         }
 
-        //The system page size
+        // The system page size
         auxv.emplace_back(gem5::auxv::Pagesz, ArmISA::PageBytes);
         // For statically linked executables, this is the virtual address of
         // the program header tables if they appear in the executable image
@@ -383,18 +380,18 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
         // zero for static executables or contain the base address for
         // dynamic executables.
         auxv.emplace_back(gem5::auxv::Base, getBias());
-        //XXX Figure out what this should be.
+        // XXX Figure out what this should be.
         auxv.emplace_back(gem5::auxv::Flags, 0);
-        //The entry point to the program
+        // The entry point to the program
         auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
-        //Different user and group IDs
+        // Different user and group IDs
         auxv.emplace_back(gem5::auxv::Uid, uid());
         auxv.emplace_back(gem5::auxv::Euid, euid());
         auxv.emplace_back(gem5::auxv::Gid, gid());
         auxv.emplace_back(gem5::auxv::Egid, egid());
     }
 
-    //Figure out how big the initial stack nedes to be
+    // Figure out how big the initial stack nedes to be
 
     // A sentry NULL void pointer at the top of the stack.
     int sentry_size = intSize;
@@ -420,11 +417,10 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
         arg_data_size += argv[i].size() + 1;
     }
 
-    int info_block_size =
-        sentry_size + env_data_size + arg_data_size +
-        aux_data_size + platform_size + aux_random_size;
+    int info_block_size = sentry_size + env_data_size + arg_data_size +
+                          aux_data_size + platform_size + aux_random_size;
 
-    //Each auxilliary vector is two 4 byte words
+    // Each auxilliary vector is two 4 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
 
     int envp_array_size = intSize * (envp.size() + 1);
@@ -432,16 +428,12 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
 
     int argc_size = intSize;
 
-    //Figure out the size of the contents of the actual initial frame
-    int frame_size =
-        info_block_size +
-        aux_array_size +
-        envp_array_size +
-        argv_array_size +
-        argc_size;
+    // Figure out the size of the contents of the actual initial frame
+    int frame_size = info_block_size + aux_array_size + envp_array_size +
+                     argv_array_size + argc_size;
 
-    //There needs to be padding after the auxiliary vector data so that the
-    //very bottom of the stack is aligned properly.
+    // There needs to be padding after the auxiliary vector data so that the
+    // very bottom of the stack is aligned properly.
     int partial_size = frame_size;
     int aligned_partial_size = roundUp(partial_size, align);
     int aux_padding = aligned_partial_size - partial_size;
@@ -486,11 +478,11 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     IntType argc = argv.size();
     IntType guestArgc = htole(argc);
 
-    //Write out the sentry void *
+    // Write out the sentry void *
     IntType sentry_NULL = 0;
     initVirtMem->writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
-    //Fix up the aux vectors which point to other data
+    // Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
         if (auxv[i].type == gem5::auxv::Platform) {
             auxv[i].val = platform_base;
@@ -504,40 +496,40 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
         }
     }
 
-    //Copy the aux stuff
+    // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
-    for (const auto &aux: auxv) {
+    for (const auto &aux : auxv) {
         initVirtMem->write(auxv_array_end, aux, ByteOrder::little);
         auxv_array_end += sizeof(aux);
     }
-    //Write out the terminating zeroed auxillary vector
+    // Write out the terminating zeroed auxillary vector
     const gem5::auxv::AuxVector<IntType> zero(0, 0);
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    copyStringArray(envp, envp_array_base, env_data_base,
-                    ByteOrder::little, *initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base,
-                    ByteOrder::little, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::little,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::little,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
     ThreadContext *tc = system->threads[contextIds[0]];
-    //Set the stack pointer register
+    // Set the stack pointer register
     tc->setReg(spId, memState->getStackMin());
-    //A pointer to a function to run when the program exits. We'll set this
-    //to zero explicitly to make sure this isn't used.
+    // A pointer to a function to run when the program exits. We'll set this
+    // to zero explicitly to make sure this isn't used.
     tc->setReg(ArgumentReg0, (RegVal)0);
-    //Set argument regs 1 and 2 to argv[0] and envp[0] respectively
+    // Set argument regs 1 and 2 to argv[0] and envp[0] respectively
     if (argv.size() > 0) {
         tc->setReg(ArgumentReg1, arg_data_base + arg_data_size -
-                                 argv[argv.size() - 1].size() - 1);
+                                     argv[argv.size() - 1].size() - 1);
     } else {
         tc->setReg(ArgumentReg1, (RegVal)0);
     }
     if (envp.size() > 0) {
         tc->setReg(ArgumentReg2, env_data_base + env_data_size -
-                                 envp[envp.size() - 1].size() - 1);
+                                     envp[envp.size() - 1].size() - 1);
     } else {
         tc->setReg(ArgumentReg2, (RegVal)0);
     }
@@ -550,7 +542,7 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     pc.set(getStartPC() & ~mask(1));
     tc->pcState(pc);
 
-    //Align the "stackMin" to a page boundary.
+    // Align the "stackMin" to a page boundary.
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
 

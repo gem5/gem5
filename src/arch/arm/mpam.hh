@@ -56,27 +56,27 @@ class PartitionFieldExtension : public Extension<Request,
     PartitionFieldExtension() = default;
 
     /**
-    * _partitionID getter
-    * @return extension Partition ID
-    */
+     * _partitionID getter
+     * @return extension Partition ID
+     */
     uint64_t getPartitionID() const;
 
     /**
-    * _partitionMonitoringID getter
-    * @return extension Partition Monitoring ID
-    */
+     * _partitionMonitoringID getter
+     * @return extension Partition Monitoring ID
+     */
     uint64_t getPartitionMonitoringID() const;
 
     /**
-    * _partitionID setter
-    * @param id Partition ID to set for the extension
-    */
+     * _partitionID setter
+     * @param id Partition ID to set for the extension
+     */
     void setPartitionID(uint64_t id);
 
     /**
-    * _partitionMonitoringID setter
-    * @param id Partition Monitoring ID to set for the extension
-    */
+     * _partitionMonitoringID setter
+     * @param id Partition Monitoring ID to set for the extension
+     */
     void setPartitionMonitoringID(uint64_t id);
 
   private:

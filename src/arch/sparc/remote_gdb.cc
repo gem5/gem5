@@ -150,7 +150,8 @@ using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
     : BaseRemoteGDB(_system, _listen_config),
-    regCache32(this), regCache64(this)
+      regCache32(this),
+      regCache64(this)
 {}
 
 ///////////////////////////////////////////////////////////
@@ -204,11 +205,9 @@ RemoteGDB::SPARC64GdbRegCache::getRegs(ThreadContext *context)
     r.fprs = htobe(context->readMiscReg(MISCREG_FPRS));
     r.y = htobe(context->getReg(int_reg::Y));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
-    r.state = htobe(
-        context->readMiscReg(MISCREG_CWP) |
-        pstate << 8 |
-        context->readMiscReg(MISCREG_ASI) << 24 |
-        context->getReg(int_reg::Ccr) << 32);
+    r.state = htobe(context->readMiscReg(MISCREG_CWP) | pstate << 8 |
+                    context->readMiscReg(MISCREG_ASI) << 24 |
+                    context->getReg(int_reg::Ccr) << 32);
 }
 
 void
@@ -245,8 +244,7 @@ RemoteGDB::SPARC64GdbRegCache::setRegs(ThreadContext *context) const
     // are ignored as well.
 }
 
-
-BaseGdbRegCache*
+BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
     PSTATE pstate = context()->readMiscReg(MISCREG_PSTATE);

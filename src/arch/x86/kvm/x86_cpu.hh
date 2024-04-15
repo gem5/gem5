@@ -93,6 +93,7 @@ class X86KvmCPU : public BaseKvmCPU
     Tick kvmRunDrain() override;
 
     uint64_t getHostCycles() const override;
+
     void
     stutterPC(PCStateBase &pc) const override
     {

@@ -76,9 +76,9 @@ void
 HistStor::growOut()
 {
     int size = cvec.size();
-    int zero = size / 2; // round down!
+    int zero = size / 2;                         // round down!
     int top_half = zero + (size - zero + 1) / 2; // round up!
-    int bottom_half = (size - zero) / 2; // round down!
+    int bottom_half = (size - zero) / 2;         // round down!
 
     // grow down
     int low_pair = zero - 1;
@@ -193,8 +193,7 @@ HistStor::sample(Counter val, int number)
     }
 
     assert(bucket_size > 0);
-    size_type index =
-        (int64_t)std::floor((val - min_bucket) / bucket_size);
+    size_type index = (int64_t)std::floor((val - min_bucket) / bucket_size);
 
     assert(index < size());
     cvec[index] += number;

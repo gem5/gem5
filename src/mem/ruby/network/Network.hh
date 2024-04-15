@@ -87,43 +87,64 @@ class Network : public ClockedObject
 
     virtual ~Network();
 
-    static uint32_t getNumberOfVirtualNetworks() { return m_virtual_networks; }
-    int getNumNodes() const { return m_nodes; }
+    static uint32_t
+    getNumberOfVirtualNetworks()
+    {
+        return m_virtual_networks;
+    }
+
+    int
+    getNumNodes() const
+    {
+        return m_nodes;
+    }
 
     static uint32_t MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component
     void setToNetQueue(NodeID global_id, bool ordered, int netNumber,
-                               std::string vnet_type, MessageBuffer *b);
+                       std::string vnet_type, MessageBuffer *b);
     virtual void setFromNetQueue(NodeID global_id, bool ordered, int netNumber,
                                  std::string vnet_type, MessageBuffer *b);
 
     virtual void checkNetworkAllocation(NodeID local_id, bool ordered,
-                                       int network_num, std::string vnet_type);
+                                        int network_num,
+                                        std::string vnet_type);
 
-    virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             std::vector<NetDest>& routing_table_entry) = 0;
-    virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                            std::vector<NetDest>& routing_table_entry) = 0;
-    virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  std::vector<NetDest>& routing_table_entry,
+    virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
+                                std::vector<NetDest> &routing_table_entry) = 0;
+    virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
+                               std::vector<NetDest> &routing_table_entry) = 0;
+    virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                                  std::vector<NetDest> &routing_table_entry,
                                   PortDirection src_outport,
                                   PortDirection dst_inport) = 0;
 
     virtual void collateStats() = 0;
-    virtual void print(std::ostream& out) const = 0;
+    virtual void print(std::ostream &out) const = 0;
 
     /*
      * Virtual functions for functionally reading and writing packets in
      * the network. Each network needs to implement these for functional
      * accesses to work correctly.
      */
-    virtual bool functionalRead(Packet *pkt)
-    { fatal("Functional read not implemented.\n"); }
-    virtual bool functionalRead(Packet *pkt, WriteMask& mask)
-    { fatal("Masked functional read not implemented.\n"); }
-    virtual uint32_t functionalWrite(Packet *pkt)
-    { fatal("Functional write not implemented.\n"); }
+    virtual bool
+    functionalRead(Packet *pkt)
+    {
+        fatal("Functional read not implemented.\n");
+    }
+
+    virtual bool
+    functionalRead(Packet *pkt, WriteMask &mask)
+    {
+        fatal("Masked functional read not implemented.\n");
+    }
+
+    virtual uint32_t
+    functionalWrite(Packet *pkt)
+    {
+        fatal("Functional write not implemented.\n");
+    }
 
     /**
      * Map an address to the correct NodeID
@@ -140,7 +161,7 @@ class Network : public ClockedObject
     NodeID addressToNodeID(Addr addr, MachineType mtype);
 
     Port &
-    getPort(const std::string &, PortID idx=InvalidPortID) override
+    getPort(const std::string &, PortID idx = InvalidPortID) override
     {
         return RubyDummyPort::instance();
     }
@@ -149,19 +170,19 @@ class Network : public ClockedObject
 
   protected:
     // Private copy constructor and assignment operator
-    Network(const Network& obj);
-    Network& operator=(const Network& obj);
+    Network(const Network &obj);
+    Network &operator=(const Network &obj);
 
     uint32_t m_nodes;
     static uint32_t m_virtual_networks;
     std::vector<std::string> m_vnet_type_names;
-    Topology* m_topology_ptr;
+    Topology *m_topology_ptr;
     static uint32_t m_control_msg_size;
     static uint32_t m_data_msg_size;
 
     // vector of queues from the components
-    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+    std::vector<std::vector<MessageBuffer *> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer *> > m_fromNetQueues;
     std::vector<bool> m_ordered;
 
   private:
@@ -171,6 +192,7 @@ class Network : public ClockedObject
         NodeID id;
         AddrRangeList ranges;
     };
+
     std::unordered_multimap<MachineType, AddrMapNode> addrMap;
 
     // Global NodeID to local node map. If there are not multiple networks in
@@ -178,8 +200,8 @@ class Network : public ClockedObject
     std::unordered_map<NodeID, NodeID> globalToLocalMap;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Network& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Network &obj)
 {
     obj.print(out);
     out << std::flush;

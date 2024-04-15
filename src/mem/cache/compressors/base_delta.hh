@@ -86,22 +86,28 @@ class BaseDelta : public DictionaryCompressor<BaseType>
      */
     enum PatternNumber
     {
-        X, M, NUM_PATTERNS
+        X,
+        M,
+        NUM_PATTERNS
     };
 
-    uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
+    uint64_t
+    getNumPatterns() const override
+    {
+        return NUM_PATTERNS;
+    }
 
     /**
      * Convenience factory declaration. The templates must be organized by
      * size, with the smallest first, and "no-match" last.
      */
-    using PatternFactory = typename DictionaryCompressor<BaseType>::template
-        Factory<PatternM, PatternX>;
+    using PatternFactory =
+        typename DictionaryCompressor<BaseType>::template Factory<PatternM,
+                                                                  PatternX>;
 
     std::unique_ptr<typename DictionaryCompressor<BaseType>::Pattern>
-    getPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location) const override
+    getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
+               const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
@@ -109,9 +115,8 @@ class BaseDelta : public DictionaryCompressor<BaseType>
     std::string
     getName(int number) const override
     {
-        static std::map<int, std::string> pattern_names = {
-            {X, "X"}, {M, "M"}
-        };
+        static std::map<int, std::string> pattern_names = { { X, "X" },
+                                                            { M, "M" } };
 
         return pattern_names[number];
     }
@@ -120,9 +125,9 @@ class BaseDelta : public DictionaryCompressor<BaseType>
 
     void addToDictionary(DictionaryEntry data) override;
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk>& chunks,
-        Cycles& comp_lat, Cycles& decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
   public:
     typedef BaseDictionaryCompressorParams Params;
@@ -131,33 +136,32 @@ class BaseDelta : public DictionaryCompressor<BaseType>
 };
 
 template <class BaseType, std::size_t DeltaSizeBits>
-class BaseDelta<BaseType, DeltaSizeBits>::PatternX
-    : public DictionaryCompressor<BaseType>::UncompressedPattern
+class BaseDelta<BaseType, DeltaSizeBits>::PatternX :
+    public DictionaryCompressor<BaseType>::UncompressedPattern
 {
   public:
     // A delta entry containing the value 0 is added even if it is an entirely
     // new base
     PatternX(const DictionaryEntry bytes, const int match_location)
-        : DictionaryCompressor<BaseType>::UncompressedPattern(X, 0,
-          std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)) + DeltaSizeBits,
-          match_location, bytes)
-    {
-    }
+        : DictionaryCompressor<BaseType>::UncompressedPattern(
+              X, 0,
+              std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)) + DeltaSizeBits,
+              match_location, bytes)
+    {}
 };
 
 template <class BaseType, std::size_t DeltaSizeBits>
-class BaseDelta<BaseType, DeltaSizeBits>::PatternM : public
-    DictionaryCompressor<BaseType>::template DeltaPattern<DeltaSizeBits>
+class BaseDelta<BaseType, DeltaSizeBits>::PatternM :
+    public DictionaryCompressor<BaseType>::template DeltaPattern<DeltaSizeBits>
 {
   public:
     // The number of bits reserved for the bitmask entry is proportional to
     // the maximum number of bases
     PatternM(const DictionaryEntry bytes, const int match_location)
         : DictionaryCompressor<BaseType>::template DeltaPattern<DeltaSizeBits>(
-          M, 1, std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)), match_location,
-          bytes)
-    {
-    }
+              M, 1, std::ceil(std::log2(DEFAULT_MAX_NUM_BASES)),
+              match_location, bytes)
+    {}
 };
 
 class Base64Delta8 : public BaseDelta<uint64_t, 8>

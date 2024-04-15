@@ -89,16 +89,15 @@ class VncMouse
 class VncInput : public SimObject
 {
   public:
-
     /** Client -> Server message IDs */
     enum ClientMessages
     {
-        ClientSetPixelFormat    = 0,
-        ClientSetEncodings      = 2,
+        ClientSetPixelFormat = 0,
+        ClientSetEncodings = 2,
         ClientFrameBufferUpdate = 3,
-        ClientKeyEvent          = 4,
-        ClientPointerEvent      = 5,
-        ClientCutText           = 6
+        ClientKeyEvent = 4,
+        ClientPointerEvent = 5,
+        ClientCutText = 6
     };
 
     struct GEM5_PACKED PixelFormat
@@ -173,40 +172,56 @@ class VncInput : public SimObject
      */
     virtual void setFrameBuffer(const FrameBuffer *rfb);
 
-    /** Set up the device that would like to receive notifications when keys are
-     * pressed in the vnc client keyboard
+    /** Set up the device that would like to receive notifications when keys
+     * are pressed in the vnc client keyboard
      * @param _keyboard an object that derrives from VncKeyboard
      */
-    void setKeyboard(VncKeyboard *_keyboard) { keyboard = _keyboard; }
+    void
+    setKeyboard(VncKeyboard *_keyboard)
+    {
+        keyboard = _keyboard;
+    }
 
     /** Setup the device that would like to receive notifications when mouse
      * movements or button presses are received from the vnc client.
      * @param _mouse an object that derrives from VncMouse
      */
-    void setMouse(VncMouse *_mouse) { mouse = _mouse; }
+    void
+    setMouse(VncMouse *_mouse)
+    {
+        mouse = _mouse;
+    }
 
     /** What is the width of the screen we're displaying.
      * This is used for pointer/tablet devices that need to know to calculate
      * the correct value to send to the device driver.
      * @return the width of the simulated screen
      */
-    uint16_t videoWidth() const { return _videoWidth; }
+    uint16_t
+    videoWidth() const
+    {
+        return _videoWidth;
+    }
 
     /** What is the height of the screen we're displaying.
      * This is used for pointer/tablet devices that need to know to calculate
      * the correct value to send to the device driver.
      * @return the height of the simulated screen
      */
-    uint16_t videoHeight() const { return _videoHeight; }
+    uint16_t
+    videoHeight() const
+    {
+        return _videoHeight;
+    }
 
     /** The frame buffer uses this call to notify the vnc server that
-     * the frame buffer has been updated and a new image needs to be sent to the
-     * client
+     * the frame buffer has been updated and a new image needs to be sent to
+     * the client
      */
     virtual void setDirty();
 
   protected:
-    virtual void frameBufferResized() {};
+    virtual void frameBufferResized(){};
 
     /** The device to notify when we get key events */
     VncKeyboard *keyboard;

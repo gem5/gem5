@@ -57,10 +57,9 @@ namespace guest_abi
 
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if_t<
-        std::is_base_of_v<ArmISA::RegABI32, ABI> &&
-        std::is_integral_v<Arg> &&
-        ABI::template IsWideV<Arg>>>
+                typename std::enable_if_t<
+                    std::is_base_of_v<ArmISA::RegABI32, ABI> &&
+                    std::is_integral_v<Arg> && ABI::template IsWideV<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
@@ -69,7 +68,7 @@ struct Argument<ABI, Arg,
         if (state % 2)
             state++;
         panic_if(state + 1 >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
         auto low = ABI::ArgumentRegs[state++];
         auto high = ABI::ArgumentRegs[state++];
         return (Arg)ABI::mergeRegs(tc, low, high);
@@ -86,7 +85,7 @@ struct Argument<ArmISA::RegABI32, pseudo_inst::GuestAddr>
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state + 1 >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
+                 "Ran out of syscall argument registers.");
         return (Arg)bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };

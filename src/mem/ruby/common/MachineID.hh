@@ -55,18 +55,33 @@ namespace ruby
 
 struct MachineID
 {
-    MachineID() : type(MachineType_NUM), num(0) { }
+    MachineID() : type(MachineType_NUM), num(0) {}
+
     MachineID(MachineType mach_type, NodeID node_id)
-        : type(mach_type), num(node_id) { }
+        : type(mach_type), num(node_id)
+    {}
 
     MachineType type;
     //! range: 0 ... number of this machine's components in system - 1
     NodeID num;
 
-    MachineType getType() const { return type; }
-    NodeID getNum() const { return num; }
+    MachineType
+    getType() const
+    {
+        return type;
+    }
 
-    bool isValid() const { return type != MachineType_NUM; }
+    NodeID
+    getNum() const
+    {
+        return num;
+    }
+
+    bool
+    isValid() const
+    {
+        return type != MachineType_NUM;
+    }
 };
 
 inline std::string
@@ -76,22 +91,22 @@ MachineIDToString(MachineID machine)
 }
 
 inline bool
-operator==(const MachineID & obj1, const MachineID & obj2)
+operator==(const MachineID &obj1, const MachineID &obj2)
 {
     return (obj1.type == obj2.type && obj1.num == obj2.num);
 }
 
 inline bool
-operator!=(const MachineID & obj1, const MachineID & obj2)
+operator!=(const MachineID &obj1, const MachineID &obj2)
 {
     return (obj1.type != obj2.type || obj1.num != obj2.num);
 }
 
 // Output operator declaration
-::std::ostream& operator<<(::std::ostream& out, const MachineID& obj);
+::std::ostream &operator<<(::std::ostream &out, const MachineID &obj);
 
-inline ::std::ostream&
-operator<<(::std::ostream& out, const MachineID& obj)
+inline ::std::ostream &
+operator<<(::std::ostream &out, const MachineID &obj)
 {
     if ((obj.type < MachineType_NUM) && (obj.type >= MachineType_FIRST)) {
         out << MachineType_to_string(obj.type);
@@ -109,16 +124,17 @@ operator<<(::std::ostream& out, const MachineID& obj)
 
 namespace std
 {
-    template<>
-    struct hash<gem5::ruby::MachineID>
+template <>
+struct hash<gem5::ruby::MachineID>
+{
+    inline size_t
+    operator()(const gem5::ruby::MachineID &id) const
     {
-        inline size_t operator()(const gem5::ruby::MachineID& id) const
-        {
-            size_t hval = gem5::ruby::MachineType_base_level(
-                id.type) << 16 | id.num;
-            return hval;
-        }
-    };
+        size_t hval =
+            gem5::ruby::MachineType_base_level(id.type) << 16 | id.num;
+        return hval;
+    }
+};
 } // namespace std
 
 #endif // __MEM_RUBY_COMMON_MACHINEID_HH__

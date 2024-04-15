@@ -62,9 +62,9 @@ struct DisplayTimings : public Serializable
      * @param v_sync Vertical sync in scan lines.
      * @param vbp Vertical back porch in scan lines.
      */
-    DisplayTimings(unsigned width, unsigned height,
-                   unsigned hbp, unsigned h_sync, unsigned hfp,
-                   unsigned vbp, unsigned v_sync, unsigned vfp);
+    DisplayTimings(unsigned width, unsigned height, unsigned hbp,
+                   unsigned h_sync, unsigned hfp, unsigned vbp,
+                   unsigned v_sync, unsigned vfp);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -73,7 +73,7 @@ struct DisplayTimings : public Serializable
     Cycles
     cyclesPerLine() const
     {
-        return Cycles(hSync + hBackPorch +  width + hBackPorch);
+        return Cycles(hSync + hBackPorch + width + hBackPorch);
     }
 
     /** How many pixel clocks are required for one frame? */
@@ -160,9 +160,7 @@ struct DisplayTimings : public Serializable
  *   <li>Horizontal Front Porch
  * </ol>
  */
-class BasePixelPump
-    : public EventManager, public Clocked,
-      public Serializable
+class BasePixelPump : public EventManager, public Clocked, public Serializable
 {
   public:
     BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
@@ -186,24 +184,40 @@ class BasePixelPump
     void stop();
 
     /** Get a constant reference of the current display timings */
-    const DisplayTimings &timings() const { return _timings; }
+    const DisplayTimings &
+    timings() const
+    {
+        return _timings;
+    }
 
     /** Is the pixel pump active and refreshing the display? */
-    bool active() const { return evBeginLine.active(); }
+    bool
+    active() const
+    {
+        return evBeginLine.active();
+    }
 
     /** Did a buffer underrun occur within this refresh interval? */
-    bool underrun() const { return _underrun; }
+    bool
+    underrun() const
+    {
+        return _underrun;
+    }
 
     /** Is the current line within the visible range? */
     bool
     visibleLine() const
     {
         return line >= _timings.lineFirstVisible() &&
-            line < _timings.lineFrontPorchStart();
+               line < _timings.lineFrontPorchStart();
     }
 
     /** Current pixel position within the visible area */
-    unsigned posX() const { return _posX; }
+    unsigned
+    posX() const
+    {
+        return _posX;
+    }
 
     /** Current pixel position within the visible area */
     unsigned
@@ -247,13 +261,13 @@ class BasePixelPump
     }
 
     /** First pixel clock of the first VSync line. */
-    virtual void onVSyncBegin() {};
+    virtual void onVSyncBegin(){};
 
     /**
      * Callback on the first pixel of the line after the end VSync
      * region (typically the first pixel of the vertical back porch).
      */
-    virtual void onVSyncEnd() {};
+    virtual void onVSyncEnd(){};
 
     /**
      * Start of the HSync region.
@@ -261,7 +275,7 @@ class BasePixelPump
      * @note This is called even for scan lines outside of the visible
      * region.
      */
-    virtual void onHSyncBegin() {};
+    virtual void onHSyncBegin(){};
 
     /**
      * Start of the first pixel after the HSync region.
@@ -269,7 +283,7 @@ class BasePixelPump
      * @note This is called even for scan lines outside of the visible
      * region.
      */
-    virtual void onHSyncEnd() {};
+    virtual void onHSyncEnd(){};
 
     /**
      * Buffer underrun occurred on a frame.
@@ -281,10 +295,10 @@ class BasePixelPump
      * @param x Coordinate within the visible region.
      * @param y Coordinate within the visible region.
      */
-    virtual void onUnderrun(unsigned x, unsigned y) {};
+    virtual void onUnderrun(unsigned x, unsigned y){};
 
     /** Finished displaying the visible region of a frame */
-    virtual void onFrameDone() {};
+    virtual void onFrameDone(){};
 
   private: // Params
     /** Maximum number of pixels to handle per render callback */
@@ -302,7 +316,7 @@ class BasePixelPump
      */
     class PixelEvent : public Event, public Drainable
     {
-        typedef void (BasePixelPump::* CallbackType)();
+        typedef void (BasePixelPump::*CallbackType)();
 
       public:
         PixelEvent(const char *name, BasePixelPump *parent, CallbackType func);
@@ -313,7 +327,11 @@ class BasePixelPump
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
-        const std::string name() const override { return _name; }
+        const std::string
+        name() const override
+        {
+            return _name;
+        }
 
         void
         process() override
@@ -321,7 +339,11 @@ class BasePixelPump
             (parent.*func)();
         }
 
-        bool active() const { return scheduled() || suspended; }
+        bool
+        active() const
+        {
+            return scheduled() || suspended;
+        }
 
       private:
         void suspend();

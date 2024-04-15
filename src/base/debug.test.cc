@@ -45,7 +45,7 @@ TEST(DebugFlagTest, NameDesc)
     EXPECT_EQ("Kid B", flag_b.desc());
 
     debug::CompoundFlag compound_flag("FlagNameDescTest", "Compound Flag",
-        {&flag_a, &flag_b});
+                                      { &flag_a, &flag_b });
     EXPECT_EQ("FlagNameDescTest", compound_flag.name());
     EXPECT_EQ("Compound Flag", compound_flag.desc());
 }
@@ -56,7 +56,8 @@ TEST(DebugFlagDeathTest, UniqueNames)
     debug::SimpleFlag flag("FlagUniqueNamesTest", "A");
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(debug::SimpleFlag("FlagUniqueNamesTest", "B"));
-    const std::string expected = "panic: panic condition !result.second "
+    const std::string expected =
+        "panic: panic condition !result.second "
         "occurred: Flag FlagUniqueNamesTest already defined!\n";
     std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
@@ -109,7 +110,7 @@ TEST(DebugCompoundFlagTest, Enabled)
     debug::SimpleFlag flag_a("CompoundFlagEnabledTestKidA", "");
     debug::SimpleFlag flag_b("CompoundFlagEnabledTestKidB", "");
     debug::CompoundFlag flag("CompoundFlagEnabledTest", "",
-        {&flag_a, &flag_b});
+                             { &flag_a, &flag_b });
 
     // By default flags are initialized disabled
     ASSERT_FALSE(flag.tracing());
@@ -158,7 +159,7 @@ TEST(DebugCompoundFlagTest, EnabledKids)
     debug::SimpleFlag flag_a("CompoundFlagEnabledKidsTestKidA", "");
     debug::SimpleFlag flag_b("CompoundFlagEnabledKidsTestKidB", "");
     debug::CompoundFlag flag("CompoundFlagEnabledKidsTest", "",
-        {&flag_a, &flag_b});
+                             { &flag_a, &flag_b });
 
     // Test enabling only flag A
     ASSERT_FALSE(flag_a.tracing());
@@ -283,9 +284,9 @@ TEST(DebugFlagTest, DumpDebugFlags)
     debug::SimpleFlag flag_d("FlagDumpDebugFlagTestD", "");
     debug::SimpleFlag flag_e("FlagDumpDebugFlagTestE", "");
     debug::CompoundFlag compound_flag_a("CompoundFlagDumpDebugFlagTestA", "",
-        {&flag_d});
+                                        { &flag_d });
     debug::CompoundFlag compound_flag_b("CompoundFlagDumpDebugFlagTestB", "",
-        {&flag_e});
+                                        { &flag_e });
 
     // Enable a few flags
     ASSERT_FALSE(flag_a.tracing());
@@ -302,7 +303,7 @@ TEST(DebugFlagTest, DumpDebugFlags)
         std::ostringstream os;
         dumpDebugFlags(os);
         std::string output = os.str();
-        EXPECT_EQ(output, "FlagDumpDebugFlagTestA\nFlagDumpDebugFlagTestC\n" \
-            "FlagDumpDebugFlagTestE\n");
+        EXPECT_EQ(output, "FlagDumpDebugFlagTestA\nFlagDumpDebugFlagTestC\n"
+                          "FlagDumpDebugFlagTestE\n");
     }
 }

@@ -51,6 +51,7 @@ namespace ruby
 
 class Sequencer;
 class RubyPort;
+
 /*!
  * Class for recording cache contents. Note that the last element of the
  * class is an array of length zero. It is used for creating variable
@@ -67,7 +68,7 @@ class TraceRecord
     RubyRequestType m_type;
     uint8_t m_data[0];
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 };
 
 class CacheRecorder
@@ -76,12 +77,12 @@ class CacheRecorder
     CacheRecorder();
     ~CacheRecorder();
 
-    CacheRecorder(uint8_t* uncompressed_trace,
+    CacheRecorder(uint8_t *uncompressed_trace,
                   uint64_t uncompressed_trace_size,
-                  std::vector<RubyPort*>& ruby_port_map,
+                  std::vector<RubyPort *> &ruby_port_map,
                   uint64_t block_size_bytes);
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
-                   RubyRequestType type, Tick time, DataBlock& data);
+                   RubyRequestType type, Tick time, DataBlock &data);
 
     uint64_t aggregateRecords(uint8_t **data, uint64_t size);
 
@@ -108,13 +109,13 @@ class CacheRecorder
 
   private:
     // Private copy constructor and assignment operator
-    CacheRecorder(const CacheRecorder& obj);
-    CacheRecorder& operator=(const CacheRecorder& obj);
+    CacheRecorder(const CacheRecorder &obj);
+    CacheRecorder &operator=(const CacheRecorder &obj);
 
-    std::vector<TraceRecord*> m_records;
-    uint8_t* m_uncompressed_trace;
+    std::vector<TraceRecord *> m_records;
+    uint8_t *m_uncompressed_trace;
     uint64_t m_uncompressed_trace_size;
-    std::vector<RubyPort*> m_ruby_port_map;
+    std::vector<RubyPort *> m_ruby_port_map;
     uint64_t m_bytes_read;
     uint64_t m_records_read;
     uint64_t m_records_flushed;
@@ -122,13 +123,13 @@ class CacheRecorder
 };
 
 inline bool
-compareTraceRecords(const TraceRecord* n1, const TraceRecord* n2)
+compareTraceRecords(const TraceRecord *n1, const TraceRecord *n2)
 {
     return n1->m_time > n2->m_time;
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const TraceRecord& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const TraceRecord &obj)
 {
     obj.print(out);
     out << std::flush;

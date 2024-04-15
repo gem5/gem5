@@ -53,74 +53,57 @@ namespace gem5
 namespace ArmISA
 {
 
-  inline bool
-  upperAndLowerRange(ThreadContext* tc, ExceptionLevel el)
-  {
-      HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-      return (el == EL1 || el == EL0 || (el == EL2 && hcr.e2h == 1));
-  }
+inline bool
+upperAndLowerRange(ThreadContext *tc, ExceptionLevel el)
+{
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    return (el == EL1 || el == EL0 || (el == EL2 && hcr.e2h == 1));
+}
 
-  bool
-  calculateTBI(ThreadContext* tc, ExceptionLevel el, uint64_t ptr, bool data);
+bool calculateTBI(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
+                  bool data);
 
-  int
-  calculateBottomPACBit(ThreadContext* tc, ExceptionLevel el, bool top_bit);
+int calculateBottomPACBit(ThreadContext *tc, ExceptionLevel el, bool top_bit);
 
-  Fault
-  trapPACUse(ThreadContext *tc, ExceptionLevel el);
+Fault trapPACUse(ThreadContext *tc, ExceptionLevel el);
 
+// AddPAC()
+// ========
+// Calculates the pointer authentication code for a 64-bit quantity
+// and then inserts that into pointer authentication code field of that
+// 64-bit quantity.
 
+uint64_t addPAC(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
+                uint64_t modifier, uint64_t k1, uint64_t k0, bool data);
 
-  // AddPAC()
-  // ========
-  // Calculates the pointer authentication code for a 64-bit quantity
-  // and then inserts that into pointer authentication code field of that
-  // 64-bit quantity.
+uint64_t auth(ThreadContext *tc, ExceptionLevel el, uint64_t ptr,
+              uint64_t modifier, uint64_t k1, uint64_t K0, bool data,
+              uint8_t errorcode);
 
-  uint64_t
-  addPAC (ThreadContext* tc, ExceptionLevel el, uint64_t  ptr,
-          uint64_t modifier, uint64_t k1, uint64_t k0, bool data);
+Fault authDA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
+Fault authDB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  uint64_t
-  auth(ThreadContext *tc, ExceptionLevel el, uint64_t ptr, uint64_t modifier,
-       uint64_t k1, uint64_t K0, bool data, uint8_t errorcode);
+Fault authIA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  authDA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
+Fault authIB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  authDB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
+Fault addPACDA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
+Fault addPACDB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  authIA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
+Fault addPACGA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  authIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
+Fault addPACIA(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  addPACDA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
+Fault addPACIB(ThreadContext *tc, uint64_t X, uint64_t Y, uint64_t *out);
 
-  Fault
-  addPACDB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
-
-  Fault
-  addPACGA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
-
-  Fault
-  addPACIA(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
-
-  Fault
-  addPACIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
-
-  // stripPAC returns a 64-bit value containing A, but replacing the
-  // pointer authentication code field bits with the extension of the
-  // address bits. This can apply to either instructions or data, where,
-  // as the use of tagged pointers is distinct, it might be
-  // handled differently.
-  void
-  stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out);
+// stripPAC returns a 64-bit value containing A, but replacing the
+// pointer authentication code field bits with the extension of the
+// address bits. This can apply to either instructions or data, where,
+// as the use of tagged pointers is distinct, it might be
+// handled differently.
+void stripPAC(ThreadContext *tc, uint64_t A, bool data, uint64_t *out);
 
 } // namespace ArmISA
 } // namespace gem5

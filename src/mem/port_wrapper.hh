@@ -80,7 +80,7 @@ class RequestPortWrapper : public RequestPort
     using RecvTimingRespCallback = std::function<bool(PacketPtr)>;
     using RecvReqRetryCallback = std::function<void()>;
 
-    RequestPortWrapper(const std::string& name, PortID id = InvalidPortID);
+    RequestPortWrapper(const std::string &name, PortID id = InvalidPortID);
 
     void recvRangeChange() override;
 
@@ -110,16 +110,16 @@ class ResponsePortWrapper : public ResponsePort
     // Atomic Protocol
     using RecvAtomicCallback = std::function<Tick(PacketPtr)>;
     using RecvAtomicBackdoorCallback =
-        std::function<Tick(PacketPtr, MemBackdoorPtr&)>;
+        std::function<Tick(PacketPtr, MemBackdoorPtr &)>;
 
     // Functional Protocol
     using RecvFunctionalCallback = std::function<void(PacketPtr)>;
     using RecvMemBackdoorReqCallback =
-        std::function<void(const MemBackdoorReq&, MemBackdoorPtr&)>;
+        std::function<void(const MemBackdoorReq &, MemBackdoorPtr &)>;
 
     using RecvRespRetryCallback = std::function<void()>;
 
-    ResponsePortWrapper(const std::string& name, PortID id = InvalidPortID);
+    ResponsePortWrapper(const std::string &name, PortID id = InvalidPortID);
 
     AddrRangeList getAddrRanges() const override;
 
@@ -129,11 +129,11 @@ class ResponsePortWrapper : public ResponsePort
 
     // AtomicResponseProtocol
     Tick recvAtomic(PacketPtr) override;
-    Tick recvAtomicBackdoor(PacketPtr, MemBackdoorPtr&) override;
+    Tick recvAtomicBackdoor(PacketPtr, MemBackdoorPtr &) override;
 
     // FunctionalResponseProtocol
     void recvFunctional(PacketPtr) override;
-    void recvMemBackdoorReq(const MemBackdoorReq&, MemBackdoorPtr&) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &, MemBackdoorPtr &) override;
 
     void setGetAddrRangesCallback(GetAddrRangesCallback);
     void setTimingCallbacks(RecvTimingReqCallback, RecvRespRetryCallback);
@@ -152,6 +152,6 @@ class ResponsePortWrapper : public ResponsePort
     RecvMemBackdoorReqCallback recvMemBackdoorReqCb = nullptr;
 };
 
-}  // namespace gem5
+} // namespace gem5
 
-#endif  //__MEM_PORT_WRAPPER_HH__
+#endif //__MEM_PORT_WRAPPER_HH__

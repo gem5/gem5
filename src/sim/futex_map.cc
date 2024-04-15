@@ -32,7 +32,8 @@ namespace gem5
 {
 
 FutexKey::FutexKey(uint64_t addr_in, uint64_t tgid_in)
-        : addr(addr_in), tgid(tgid_in) {}
+    : addr(addr_in), tgid(tgid_in)
+{}
 
 bool
 FutexKey::operator==(const FutexKey &in) const
@@ -40,8 +41,9 @@ FutexKey::operator==(const FutexKey &in) const
     return addr == in.addr && tgid == in.tgid;
 }
 
-WaiterState::WaiterState(ThreadContext* _tc, int _bitmask)
-      : tc(_tc), bitmask(_bitmask) { }
+WaiterState::WaiterState(ThreadContext *_tc, int _bitmask)
+    : tc(_tc), bitmask(_bitmask)
+{}
 
 bool
 WaiterState::checkMask(int wakeup_bitmask) const
@@ -72,7 +74,7 @@ FutexMap::wakeup(Addr addr, uint64_t tgid, int count)
         // memory addresses outside of syscalls, so we
         // must only count threads that were actually
         // woken up by this syscall.
-        auto& tc = waiterList.front().tc;
+        auto &tc = waiterList.front().tc;
         tc->activate();
         woken_up++;
         waiterList.pop_front();
@@ -87,14 +89,14 @@ FutexMap::wakeup(Addr addr, uint64_t tgid, int count)
 
 void
 FutexMap::suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
-               int bitmask)
+                         int bitmask)
 {
     FutexKey key(addr, tgid);
     auto it = find(key);
 
     if (it == end()) {
-        WaiterList waiterList {WaiterState(tc, bitmask)};
-        insert({key, waiterList});
+        WaiterList waiterList{ WaiterState(tc, bitmask) };
+        insert({ key, waiterList });
     } else {
         it->second.push_back(WaiterState(tc, bitmask));
     }
@@ -119,7 +121,7 @@ FutexMap::wakeup_bitset(Addr addr, uint64_t tgid, int bitmask)
     auto iter = waiterList.begin();
 
     while (iter != waiterList.end()) {
-        WaiterState& waiter = *iter;
+        WaiterState &waiter = *iter;
 
         if (waiter.checkMask(bitmask)) {
             waiter.tc->activate();
@@ -159,20 +161,19 @@ FutexMap::requeue(Addr addr1, uint64_t tgid, int count, int count2, Addr addr2)
     int requeued = 0;
 
     while (!waiterList1.empty() && requeued < count2) {
-      auto w = waiterList1.front();
-      waiterList1.pop_front();
-      tmpList.push_back(w);
-      requeued++;
+        auto w = waiterList1.front();
+        waiterList1.pop_front();
+        tmpList.push_back(w);
+        requeued++;
     }
 
     FutexKey key2(addr2, tgid);
     auto it2 = find(key2);
 
     if (it2 == end() && requeued > 0) {
-        insert({key2, tmpList});
+        insert({ key2, tmpList });
     } else {
-        it2->second.insert(it2->second.end(),
-                           tmpList.begin(), tmpList.end());
+        it2->second.insert(it2->second.end(), tmpList.begin(), tmpList.end());
     }
 
     if (waiterList1.empty())

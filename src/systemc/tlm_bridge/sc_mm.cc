@@ -39,7 +39,7 @@ MemoryManager::MemoryManager() : numberOfAllocations(0), numberOfFrees(0) {}
 
 MemoryManager::~MemoryManager()
 {
-    for (gp *payload: freePayloads) {
+    for (gp *payload : freePayloads) {
         delete payload;
         numberOfFrees++;
     }

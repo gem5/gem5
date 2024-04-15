@@ -43,14 +43,14 @@ void
 T1000::postConsoleInt()
 {
     warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
+    // panic("Need implementation\n");
 }
 
 void
 T1000::clearConsoleInt()
 {
     warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
+    // panic("Need implementation\n");
 }
 
 void

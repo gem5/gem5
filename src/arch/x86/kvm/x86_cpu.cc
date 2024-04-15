@@ -78,9 +78,8 @@ using namespace X86ISA;
 // Some linux distro s(e.g., RHEL7) define the KVM macros using "BIT" but do
 // not include where BIT is defined, so define it here in that case.
 #ifndef BIT
-#define BIT(nr)         (1UL << (nr))
+#define BIT(nr) (1UL << (nr))
 #endif
-
 
 struct GEM5_PACKED FXSave
 {
@@ -89,6 +88,7 @@ struct GEM5_PACKED FXSave
     uint8_t ftwx;
     uint8_t pad0;
     uint16_t last_opcode;
+
     union
     {
         struct
@@ -107,6 +107,7 @@ struct GEM5_PACKED FXSave
             uint64_t fpu_dp;
         } ctrl64;
     };
+
     uint32_t mxcsr;
     uint32_t mxcsr_mask;
 
@@ -144,73 +145,72 @@ struct XSaveHeader
 
 static_assert(sizeof(XSaveHeader) == 64, "Unexpected size of XSaveHeader");
 
-#define FOREACH_IREG() \
-    do { \
-        APPLY_IREG(rax, int_reg::Rax); \
-        APPLY_IREG(rbx, int_reg::Rbx); \
-        APPLY_IREG(rcx, int_reg::Rcx); \
-        APPLY_IREG(rdx, int_reg::Rdx); \
-        APPLY_IREG(rsi, int_reg::Rsi); \
-        APPLY_IREG(rdi, int_reg::Rdi); \
-        APPLY_IREG(rsp, int_reg::Rsp); \
-        APPLY_IREG(rbp, int_reg::Rbp); \
-        APPLY_IREG(r8, int_reg::R8); \
-        APPLY_IREG(r9, int_reg::R9); \
-        APPLY_IREG(r10, int_reg::R10); \
-        APPLY_IREG(r11, int_reg::R11); \
-        APPLY_IREG(r12, int_reg::R12); \
-        APPLY_IREG(r13, int_reg::R13); \
-        APPLY_IREG(r14, int_reg::R14); \
-        APPLY_IREG(r15, int_reg::R15); \
+#define FOREACH_IREG()                                                        \
+    do {                                                                      \
+        APPLY_IREG(rax, int_reg::Rax);                                        \
+        APPLY_IREG(rbx, int_reg::Rbx);                                        \
+        APPLY_IREG(rcx, int_reg::Rcx);                                        \
+        APPLY_IREG(rdx, int_reg::Rdx);                                        \
+        APPLY_IREG(rsi, int_reg::Rsi);                                        \
+        APPLY_IREG(rdi, int_reg::Rdi);                                        \
+        APPLY_IREG(rsp, int_reg::Rsp);                                        \
+        APPLY_IREG(rbp, int_reg::Rbp);                                        \
+        APPLY_IREG(r8, int_reg::R8);                                          \
+        APPLY_IREG(r9, int_reg::R9);                                          \
+        APPLY_IREG(r10, int_reg::R10);                                        \
+        APPLY_IREG(r11, int_reg::R11);                                        \
+        APPLY_IREG(r12, int_reg::R12);                                        \
+        APPLY_IREG(r13, int_reg::R13);                                        \
+        APPLY_IREG(r14, int_reg::R14);                                        \
+        APPLY_IREG(r15, int_reg::R15);                                        \
     } while (0)
 
-#define FOREACH_SREG() \
-    do { \
-        APPLY_SREG(cr0, misc_reg::Cr0); \
-        APPLY_SREG(cr2, misc_reg::Cr2); \
-        APPLY_SREG(cr3, misc_reg::Cr3); \
-        APPLY_SREG(cr4, misc_reg::Cr4); \
-        APPLY_SREG(cr8, misc_reg::Cr8); \
-        APPLY_SREG(efer, misc_reg::Efer); \
-        APPLY_SREG(apic_base, misc_reg::ApicBase); \
+#define FOREACH_SREG()                                                        \
+    do {                                                                      \
+        APPLY_SREG(cr0, misc_reg::Cr0);                                       \
+        APPLY_SREG(cr2, misc_reg::Cr2);                                       \
+        APPLY_SREG(cr3, misc_reg::Cr3);                                       \
+        APPLY_SREG(cr4, misc_reg::Cr4);                                       \
+        APPLY_SREG(cr8, misc_reg::Cr8);                                       \
+        APPLY_SREG(efer, misc_reg::Efer);                                     \
+        APPLY_SREG(apic_base, misc_reg::ApicBase);                            \
     } while (0)
 
-#define FOREACH_DREG() \
-    do { \
-        APPLY_DREG(db[0], misc_reg::Dr0); \
-        APPLY_DREG(db[1], misc_reg::Dr1); \
-        APPLY_DREG(db[2], misc_reg::Dr2); \
-        APPLY_DREG(db[3], misc_reg::Dr3); \
-        APPLY_DREG(dr6, misc_reg::Dr6); \
-        APPLY_DREG(dr7, misc_reg::Dr7); \
+#define FOREACH_DREG()                                                        \
+    do {                                                                      \
+        APPLY_DREG(db[0], misc_reg::Dr0);                                     \
+        APPLY_DREG(db[1], misc_reg::Dr1);                                     \
+        APPLY_DREG(db[2], misc_reg::Dr2);                                     \
+        APPLY_DREG(db[3], misc_reg::Dr3);                                     \
+        APPLY_DREG(dr6, misc_reg::Dr6);                                       \
+        APPLY_DREG(dr7, misc_reg::Dr7);                                       \
     } while (0)
 
-#define FOREACH_SEGMENT() \
-    do { \
-        APPLY_SEGMENT(cs, misc_reg::Cs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ds, misc_reg::Ds - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(es, misc_reg::Es - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(fs, misc_reg::Fs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(gs, misc_reg::Gs - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ss, misc_reg::Ss - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(tr, misc_reg::Tr - misc_reg::SegSelBase); \
-        APPLY_SEGMENT(ldt, misc_reg::Tsl - misc_reg::SegSelBase); \
+#define FOREACH_SEGMENT()                                                     \
+    do {                                                                      \
+        APPLY_SEGMENT(cs, misc_reg::Cs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ds, misc_reg::Ds - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(es, misc_reg::Es - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(fs, misc_reg::Fs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(gs, misc_reg::Gs - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ss, misc_reg::Ss - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(tr, misc_reg::Tr - misc_reg::SegSelBase);               \
+        APPLY_SEGMENT(ldt, misc_reg::Tsl - misc_reg::SegSelBase);             \
     } while (0)
 
-#define FOREACH_DTABLE() \
-    do { \
-        APPLY_DTABLE(gdt, misc_reg::Tsg - misc_reg::SegSelBase); \
-        APPLY_DTABLE(idt, misc_reg::Idtr - misc_reg::SegSelBase); \
+#define FOREACH_DTABLE()                                                      \
+    do {                                                                      \
+        APPLY_DTABLE(gdt, misc_reg::Tsg - misc_reg::SegSelBase);              \
+        APPLY_DTABLE(idt, misc_reg::Idtr - misc_reg::SegSelBase);             \
     } while (0)
 
-template<typename Struct, typename Entry>
+template <typename Struct, typename Entry>
 static auto
 newVarStruct(size_t entries)
 {
     size_t size = sizeof(Struct) + entries * sizeof(Entry);
-    return std::unique_ptr<Struct, void(*)(Struct *)>(
-            (Struct *)operator new(size),
-            [](Struct *p) { operator delete(p); });
+    return std::unique_ptr<Struct, void (*)(Struct *)>(
+        (Struct *)operator new(size), [](Struct *p) { operator delete(p); });
 }
 
 static void
@@ -218,8 +218,7 @@ dumpKvm(const struct kvm_regs &regs)
 {
     inform("KVM register state:\n");
 
-#define APPLY_IREG(kreg, mreg) \
-    inform("\t" # kreg ": 0x%llx\n", regs.kreg)
+#define APPLY_IREG(kreg, mreg) inform("\t" #kreg ": 0x%llx\n", regs.kreg)
 
     FOREACH_IREG();
 
@@ -235,28 +234,22 @@ dumpKvm(const char *reg_name, const struct kvm_segment &seg)
     inform("\t%s: @0x%llx+%x [sel: 0x%x, type: 0x%x]\n"
            "\t\tpres.: %u, dpl: %u, db: %u, s: %u, l: %u, g: %u, avl: %u, "
            "unus.: %u\n",
-           reg_name,
-           seg.base, seg.limit, seg.selector, seg.type,
-           seg.present, seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl,
-           seg.unusable);
+           reg_name, seg.base, seg.limit, seg.selector, seg.type, seg.present,
+           seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl, seg.unusable);
 }
 
 static void
 dumpKvm(const char *reg_name, const struct kvm_dtable &dtable)
 {
-    inform("\t%s: @0x%llx+%x\n",
-           reg_name, dtable.base, dtable.limit);
+    inform("\t%s: @0x%llx+%x\n", reg_name, dtable.base, dtable.limit);
 }
 
 static void
 dumpKvm(const struct kvm_sregs &sregs)
 {
-#define APPLY_SREG(kreg, mreg)                          \
-    inform("\t" # kreg ": 0x%llx\n", sregs.kreg);
-#define APPLY_SEGMENT(kreg, idx)                \
-    dumpKvm(# kreg, sregs.kreg);
-#define APPLY_DTABLE(kreg, idx)                 \
-    dumpKvm(# kreg, sregs.kreg);
+#define APPLY_SREG(kreg, mreg) inform("\t" #kreg ": 0x%llx\n", sregs.kreg);
+#define APPLY_SEGMENT(kreg, idx) dumpKvm(#kreg, sregs.kreg);
+#define APPLY_DTABLE(kreg, idx) dumpKvm(#kreg, sregs.kreg);
 
     inform("Special registers:\n");
     FOREACH_SEGMENT();
@@ -278,8 +271,7 @@ dumpKvm(const struct kvm_debugregs &regs)
 {
     inform("KVM debug state:\n");
 
-#define APPLY_DREG(kreg, mreg)                  \
-    inform("\t" # kreg ": 0x%llx\n", regs.kreg)
+#define APPLY_DREG(kreg, mreg) inform("\t" #kreg ": 0x%llx\n", regs.kreg)
 
     FOREACH_DREG();
 
@@ -304,7 +296,7 @@ dumpFpuSpec(const struct kvm_fpu &fpu)
     inform("\tlast_dp: 0x%x\n", fpu.last_dp);
 }
 
-template<typename T>
+template <typename T>
 static void
 dumpFpuCommon(const T &fpu)
 {
@@ -315,22 +307,16 @@ dumpFpuCommon(const T &fpu)
            "conditions: %s%s%s%s, exceptions: %s%s%s%s%s%s %s%s%s)\n",
            fpu.fsw, top,
 
-           (fpu.fsw & CC0Bit) ? "C0" : "",
-           (fpu.fsw & CC1Bit) ? "C1" : "",
-           (fpu.fsw & CC2Bit) ? "C2" : "",
-           (fpu.fsw & CC3Bit) ? "C3" : "",
+           (fpu.fsw & CC0Bit) ? "C0" : "", (fpu.fsw & CC1Bit) ? "C1" : "",
+           (fpu.fsw & CC2Bit) ? "C2" : "", (fpu.fsw & CC3Bit) ? "C3" : "",
 
-           (fpu.fsw & IEBit) ? "I" : "",
-           (fpu.fsw & DEBit) ? "D" : "",
-           (fpu.fsw & ZEBit) ? "Z" : "",
-           (fpu.fsw & OEBit) ? "O" : "",
-           (fpu.fsw & UEBit) ? "U" : "",
-           (fpu.fsw & PEBit) ? "P" : "",
+           (fpu.fsw & IEBit) ? "I" : "", (fpu.fsw & DEBit) ? "D" : "",
+           (fpu.fsw & ZEBit) ? "Z" : "", (fpu.fsw & OEBit) ? "O" : "",
+           (fpu.fsw & UEBit) ? "U" : "", (fpu.fsw & PEBit) ? "P" : "",
 
            (fpu.fsw & StackFaultBit) ? "SF " : "",
            (fpu.fsw & ErrSummaryBit) ? "ES " : "",
-           (fpu.fsw & BusyBit) ? "BUSY " : ""
-        );
+           (fpu.fsw & BusyBit) ? "BUSY " : "");
     inform("\tftwx: 0x%x\n", fpu.ftwx);
     inform("\tlast_opcode: 0x%x\n", fpu.last_opcode);
     dumpFpuSpec(fpu);
@@ -342,15 +328,15 @@ dumpFpuCommon(const T &fpu)
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
         char hex[33];
         for (int j = 0; j < 10; ++j)
-            snprintf(&hex[j*2], 3, "%.2x", fpu.fpr[i][j]);
-        inform("\t\tST%i/%i: 0x%s (%f)%s\n", i, reg_idx,
-               hex, value, empty ? " (e)" : "");
+            snprintf(&hex[j * 2], 3, "%.2x", fpu.fpr[i][j]);
+        inform("\t\tST%i/%i: 0x%s (%f)%s\n", i, reg_idx, hex, value,
+               empty ? " (e)" : "");
     }
     inform("\tXMM registers:\n");
     for (int i = 0; i < 16; ++i) {
         char hex[33];
         for (int j = 0; j < 16; ++j)
-            snprintf(&hex[j*2], 3, "%.2x", fpu.xmm[i][j]);
+            snprintf(&hex[j * 2], 3, "%.2x", fpu.xmm[i][j]);
         inform("\t\t%i: 0x%s\n", i, hex);
     }
 }
@@ -388,9 +374,7 @@ dumpKvm(const struct kvm_xcrs &regs)
 
     inform("\tFlags: 0x%x\n", regs.flags);
     for (int i = 0; i < regs.nr_xcrs; ++i) {
-        inform("\tXCR[0x%x]: 0x%x\n",
-               regs.xcrs[i].xcr,
-               regs.xcrs[i].value);
+        inform("\tXCR[0x%x]: 0x%x\n", regs.xcrs[i].xcr, regs.xcrs[i].value);
     }
 }
 
@@ -407,9 +391,8 @@ dumpKvm(const struct kvm_vcpu_events &events)
            events.interrupt.injected, events.interrupt.nr,
            events.interrupt.soft);
 
-    inform("\tNMI: [inj: %i, pending: %i, masked: %i]\n",
-           events.nmi.injected, events.nmi.pending,
-           events.nmi.masked);
+    inform("\tNMI: [inj: %i, pending: %i, masked: %i]\n", events.nmi.injected,
+           events.nmi.pending, events.nmi.masked);
 
     inform("\tSIPI vector: 0x%x\n", events.sipi_vector);
     inform("\tFlags: 0x%x\n", events.flags);
@@ -432,21 +415,21 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
 {
     // Check the register base
     switch (idx) {
-      case misc_reg::Tsl:
-      case misc_reg::Tr:
-      case misc_reg::Fs:
-      case misc_reg::Gs:
+    case misc_reg::Tsl:
+    case misc_reg::Tr:
+    case misc_reg::Fs:
+    case misc_reg::Gs:
         if (!isCanonicalAddress(seg.base))
             warn("Illegal %s base: 0x%x\n", name, seg.base);
         break;
 
-      case misc_reg::Ss:
-      case misc_reg::Ds:
-      case misc_reg::Es:
+    case misc_reg::Ss:
+    case misc_reg::Ds:
+    case misc_reg::Es:
         if (seg.unusable)
             break;
         [[fallthrough]];
-      case misc_reg::Cs:
+    case misc_reg::Cs:
         if (seg.base & 0xffffffff00000000ULL)
             warn("Illegal %s base: 0x%x\n", name, seg.base);
         break;
@@ -454,64 +437,63 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
 
     // Check the type
     switch (idx) {
-      case misc_reg::Cs:
+    case misc_reg::Cs:
         switch (seg.type) {
-          case 3:
+        case 3:
             if (seg.dpl != 0)
                 warn("CS type is 3 but dpl != 0.\n");
             break;
-          case 9:
-          case 11:
+        case 9:
+        case 11:
             if (seg.dpl != sregs.ss.dpl)
                 warn("CS type is %i but CS DPL != SS DPL\n", seg.type);
             break;
-          case 13:
-          case 15:
+        case 13:
+        case 15:
             if (seg.dpl > sregs.ss.dpl)
                 warn("CS type is %i but CS DPL > SS DPL\n", seg.type);
             break;
-          default:
+        default:
             warn("Illegal CS type: %i\n", seg.type);
             break;
         }
         break;
 
-      case misc_reg::Ss:
+    case misc_reg::Ss:
         if (seg.unusable)
             break;
         switch (seg.type) {
-          case 3:
+        case 3:
             if (sregs.cs.type == 3 && seg.dpl != 0)
                 warn("CS type is 3, but SS DPL is != 0.\n");
             [[fallthrough]];
-          case 7:
+        case 7:
             if (!(sregs.cr0 & 1) && seg.dpl != 0)
                 warn("SS DPL is %i, but CR0 PE is 0\n", seg.dpl);
             break;
-          default:
+        default:
             warn("Illegal SS type: %i\n", seg.type);
             break;
         }
         break;
 
-      case misc_reg::Ds:
-      case misc_reg::Es:
-      case misc_reg::Fs:
-      case misc_reg::Gs:
+    case misc_reg::Ds:
+    case misc_reg::Es:
+    case misc_reg::Fs:
+    case misc_reg::Gs:
         if (seg.unusable)
             break;
-        if (!(seg.type & 0x1) ||
-            ((seg.type & 0x8) && !(seg.type & 0x2)))
+        if (!(seg.type & 0x1) || ((seg.type & 0x8) && !(seg.type & 0x2)))
             warn("%s has an illegal type field: %i\n", name, seg.type);
         break;
 
-      case misc_reg::Tr:
+    case misc_reg::Tr:
         // TODO: We should check the CPU mode
         if (seg.type != 3 && seg.type != 11)
             warn("%s: Illegal segment type (%i)\n", name, seg.type);
         break;
 
-      case misc_reg::Tsl:
+    case misc_reg::Tsl:
         if (seg.unusable)
             break;
         if (seg.type != 2)
@@ -520,48 +502,48 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
     }
 
     switch (idx) {
-      case misc_reg::Ss:
-      case misc_reg::Ds:
-      case misc_reg::Es:
-      case misc_reg::Fs:
-      case misc_reg::Gs:
+    case misc_reg::Ss:
+    case misc_reg::Ds:
+    case misc_reg::Es:
+    case misc_reg::Fs:
+    case misc_reg::Gs:
         if (seg.unusable)
             break;
         [[fallthrough]];
-      case misc_reg::Cs:
+    case misc_reg::Cs:
         if (!seg.s)
             warn("%s: S flag not set\n", name);
         break;
 
-      case misc_reg::Tsl:
+    case misc_reg::Tsl:
         if (seg.unusable)
             break;
         [[fallthrough]];
-      case misc_reg::Tr:
+    case misc_reg::Tr:
         if (seg.s)
             warn("%s: S flag is set\n", name);
         break;
     }
 
     switch (idx) {
-      case misc_reg::Ss:
-      case misc_reg::Ds:
-      case misc_reg::Es:
-      case misc_reg::Fs:
-      case misc_reg::Gs:
-      case misc_reg::Tsl:
+    case misc_reg::Ss:
+    case misc_reg::Ds:
+    case misc_reg::Es:
+    case misc_reg::Fs:
+    case misc_reg::Gs:
+    case misc_reg::Tsl:
         if (seg.unusable)
             break;
         [[fallthrough]];
-      case misc_reg::Tr:
-      case misc_reg::Cs:
+    case misc_reg::Tr:
+    case misc_reg::Cs:
         if (!seg.present)
             warn("%s: P flag not set\n", name);
 
         if (((seg.limit & 0xFFF) == 0 && seg.g) ||
             ((seg.limit & 0xFFF00000) != 0 && !seg.g)) {
-            warn("%s limit (0x%x) and g (%i) combination is illegal.\n",
-                 name, seg.limit, seg.g);
+            warn("%s limit (0x%x) and g (%i) combination is illegal.\n", name,
+                 seg.limit, seg.g);
         }
         break;
     }
@@ -570,8 +552,7 @@ checkSeg(const char *name, const int idx, const struct kvm_segment &seg,
 }
 
 X86KvmCPU::X86KvmCPU(const X86KvmCPUParams &params)
-    : BaseKvmCPU(params),
-      useXSave(params.useXSave)
+    : BaseKvmCPU(params), useXSave(params.useXSave)
 {}
 
 void
@@ -603,9 +584,7 @@ X86KvmCPU::init()
     }
 }
 
-X86KvmCPU::~X86KvmCPU()
-{
-}
+X86KvmCPU::~X86KvmCPU() {}
 
 void
 X86KvmCPU::startup()
@@ -711,7 +690,7 @@ X86KvmCPU::dumpMSRs() const
 {
     const Kvm::MSRIndexVector &supported_msrs = vm->kvm->getSupportedMSRs();
     auto msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
-            supported_msrs.size());
+        supported_msrs.size());
 
     msrs->nmsrs = supported_msrs.size();
     for (int i = 0; i < supported_msrs.size(); ++i) {
@@ -844,7 +823,6 @@ X86KvmCPU::updateKvmStateSRegs()
     if ((sregs.cs.type == SEG_CS_TYPE_ACCESSED ||
          sregs.cs.type == SEG_CS_TYPE_READ_ACCESSED) &&
         sregs.cs.dpl != sregs.ss.dpl) {
-
         hack("CS.DPL (%i) != SS.DPL (%i): Forcing SS.DPL to %i\n",
              sregs.cs.dpl, sregs.ss.dpl, sregs.cs.dpl);
         sregs.ss.dpl = sregs.cs.dpl;
@@ -858,8 +836,8 @@ X86KvmCPU::updateKvmStateSRegs()
         // 8086 mode.  We currently assume that unrestricted guest
         // mode is available.
 
-#define APPLY_SEGMENT(kreg, idx) \
-        checkSeg(# kreg, idx + misc_reg::SegSelBase, sregs.kreg, sregs)
+#define APPLY_SEGMENT(kreg, idx)                                              \
+    checkSeg(#kreg, idx + misc_reg::SegSelBase, sregs.kreg, sregs)
 
         FOREACH_SEGMENT();
 #undef APPLY_SEGMENT
@@ -886,20 +864,17 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
     const unsigned top((fpu.fsw >> 11) & 0x7);
     for (int i = 0; i < 8; ++i) {
         const unsigned reg_idx((i + top) & 0x7);
-        const double value(bitsToFloat64(
-                    tc->getReg(float_reg::fpr(reg_idx))));
-        DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n",
-                reg_idx, i, value);
+        const double value(bitsToFloat64(tc->getReg(float_reg::fpr(reg_idx))));
+        DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n", reg_idx,
+                i, value);
         X86ISA::storeFloat80(fpu.fpr[i], value);
     }
 
     // TODO: We should update the MMX state
 
     for (int i = 0; i < 16; ++i) {
-        *(uint64_t *)&fpu.xmm[i][0] =
-            tc->getReg(float_reg::xmmLow(i));
-        *(uint64_t *)&fpu.xmm[i][8] =
-            tc->getReg(float_reg::xmmHigh(i));
+        *(uint64_t *)&fpu.xmm[i][0] = tc->getReg(float_reg::xmmLow(i));
+        *(uint64_t *)&fpu.xmm[i][8] = tc->getReg(float_reg::xmmHigh(i));
     }
 }
 
@@ -947,8 +922,8 @@ X86KvmCPU::updateKvmStateFPUXSave()
      * the state component bits corresponding to the FPU and SSE
      * states.
      */
-    XSaveHeader& xsave_hdr =
-      * (XSaveHeader *) ((char *) &kxsave + sizeof(FXSave));
+    XSaveHeader &xsave_hdr =
+        *(XSaveHeader *)((char *)&kxsave + sizeof(FXSave));
     xsave_hdr.xstate_bv.fpu = 1;
     xsave_hdr.xstate_bv.sse = 1;
 
@@ -987,8 +962,8 @@ X86KvmCPU::updateKvmStateMSRs()
         e.index = *it;
         e.reserved = 0;
         e.data = tc->readMiscReg(msrMap.at(*it));
-        DPRINTF(KvmContext, "Adding MSR: idx: 0x%x, data: 0x%x\n",
-                e.index, e.data);
+        DPRINTF(KvmContext, "Adding MSR: idx: 0x%x, data: 0x%x\n", e.index,
+                e.data);
 
         msrs.push_back(e);
     }
@@ -1015,7 +990,7 @@ X86KvmCPU::updateThreadContext()
         struct kvm_xsave xsave;
         getXSave(xsave);
 
-       updateThreadContextXSave(xsave);
+        updateThreadContextXSave(xsave);
     } else {
         struct kvm_fpu fpu;
         getFPUState(fpu);
@@ -1046,7 +1021,6 @@ X86KvmCPU::updateThreadContextRegs(const struct kvm_regs &regs,
     // need some special care when updating them.
     X86ISA::setRFlags(tc, regs.rflags);
 }
-
 
 inline void
 setContextSegment(ThreadContext *tc, const struct kvm_segment &kvm_seg,
@@ -1101,7 +1075,7 @@ X86KvmCPU::updateThreadContextSRegs(const struct kvm_sregs &sregs)
 #undef APPLY_DTABLE
 }
 
-template<typename T>
+template <typename T>
 static void
 updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
 {
@@ -1110,8 +1084,8 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
     for (int i = 0; i < 8; ++i) {
         const unsigned reg_idx((i + top) & 0x7);
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
-        DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n",
-                reg_idx, i, value);
+        DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n", reg_idx,
+                i, value);
         tc->setReg(float_reg::fpr(reg_idx), floatToBits64(value));
     }
 
@@ -1164,8 +1138,8 @@ X86KvmCPU::updateThreadContextMSRs()
 {
     const Kvm::MSRIndexVector &msrs(getMsrIntersection());
 
-    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
-            msrs.size());
+    auto kvm_msrs =
+        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(msrs.size());
     struct kvm_msr_entry *entry;
 
     // Create a list of MSRs to read
@@ -1232,14 +1206,13 @@ X86KvmCPU::deliverInterrupts()
         struct kvm_interrupt kvm_int;
         kvm_int.irq = x86int->getVector();
 
-        DPRINTF(KvmInt, "Delivering interrupt: %s (%u)\n",
-                fault->name(), kvm_int.irq);
+        DPRINTF(KvmInt, "Delivering interrupt: %s (%u)\n", fault->name(),
+                kvm_int.irq);
 
         kvmInterrupt(kvm_int);
     } else {
         panic("KVM: Unknown interrupt type\n");
     }
-
 }
 
 Tick
@@ -1251,8 +1224,7 @@ X86KvmCPU::kvmRun(Tick ticks)
 
     if (lapic->checkInterruptsRaw()) {
         if (lapic->hasPendingUnmaskable()) {
-            DPRINTF(KvmInt,
-                    "Delivering unmaskable interrupt.\n");
+            DPRINTF(KvmInt, "Delivering unmaskable interrupt.\n");
             syncThreadContext();
             deliverInterrupts();
         } else if (kvm_run.ready_for_interrupt_injection) {
@@ -1273,9 +1245,8 @@ X86KvmCPU::kvmRun(Tick ticks)
                 kvm_run.request_interrupt_window = 1;
             }
         } else if (!kvm_run.request_interrupt_window) {
-            DPRINTF(KvmInt,
-                    "M5 has pending interrupts, requesting interrupt "
-                    "window.\n");
+            DPRINTF(KvmInt, "M5 has pending interrupts, requesting interrupt "
+                            "window.\n");
             kvm_run.request_interrupt_window = 1;
         }
     } else {
@@ -1330,13 +1301,13 @@ X86KvmCPU::handleIOMiscReg32(int miscreg)
     assert(kvm_run.exit_reason == KVM_EXIT_IO);
 
     if (kvm_run.io.size != 4) {
-        panic("Unexpected IO size (%u) for address 0x%x.\n",
-              kvm_run.io.size, port);
+        panic("Unexpected IO size (%u) for address 0x%x.\n", kvm_run.io.size,
+              port);
     }
 
     if (kvm_run.io.count != 1) {
-        panic("Unexpected IO count (%u) for address 0x%x.\n",
-              kvm_run.io.count, port);
+        panic("Unexpected IO count (%u) for address 0x%x.\n", kvm_run.io.count,
+              port);
     }
 
     uint32_t *data((uint32_t *)getGuestData(kvm_run.io.data_offset));
@@ -1376,8 +1347,8 @@ X86KvmCPU::handleKvmExitIO()
         handleIOMiscReg32(misc_reg::PciConfigAddress);
         return 0;
     } else if ((port & ~0x3) == IO_PCI_CONF_DATA_BASE) {
-        Addr pciConfigAddr(tc->readMiscRegNoEffect(
-                    misc_reg::PciConfigAddress));
+        Addr pciConfigAddr(
+            tc->readMiscRegNoEffect(misc_reg::PciConfigAddress));
         if (pciConfigAddr & 0x80000000) {
             pAddr = X86ISA::x86PciConfigAddress((pciConfigAddr & 0x7ffffffc) |
                                                 (port & 0x3));
@@ -1394,8 +1365,7 @@ X86KvmCPU::handleKvmExitIO()
     EventQueue::ScopedMigration migrate(deviceEventQueue());
     for (int i = 0; i < count; ++i) {
         RequestPtr io_req = std::make_shared<Request>(
-            pAddr, kvm_run.io.size,
-            Request::UNCACHEABLE, dataRequestorId());
+            pAddr, kvm_run.io.size, Request::UNCACHEABLE, dataRequestorId());
 
         io_req->setContext(tc->contextId());
 
@@ -1466,8 +1436,8 @@ X86KvmCPU::ioctlRun()
 }
 
 static struct kvm_cpuid_entry2
-makeKvmCpuid(uint32_t function, uint32_t index,
-             CpuidResult &result, uint32_t flags = 0)
+makeKvmCpuid(uint32_t function, uint32_t index, CpuidResult &result,
+             uint32_t flags = 0)
 {
     struct kvm_cpuid_entry2 e;
     e.function = function;
@@ -1499,12 +1469,12 @@ X86KvmCPU::updateCPUID()
             m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
         } else {
             while (true) {
-                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
-                    tc, function, idx, cpuid);
+                [[maybe_unused]] bool rv =
+                    isa->cpuid->doCpuid(tc, function, idx, cpuid);
                 assert(rv);
 
-                if (idx &&
-                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                if (idx && !cpuid.rax && !cpuid.rbx && !cpuid.rdx &&
+                    !cpuid.rcx) {
                     break;
                 }
 
@@ -1534,12 +1504,12 @@ X86KvmCPU::updateCPUID()
             m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
         } else {
             while (true) {
-                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
-                    tc, function, idx, cpuid);
+                [[maybe_unused]] bool rv =
+                    isa->cpuid->doCpuid(tc, function, idx, cpuid);
                 assert(rv);
 
-                if (idx &&
-                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                if (idx && !cpuid.rax && !cpuid.rbx && !cpuid.rdx &&
+                    !cpuid.rcx) {
                     break;
                 }
 
@@ -1564,15 +1534,14 @@ void
 X86KvmCPU::setCPUID(const struct kvm_cpuid2 &cpuid)
 {
     if (ioctl(KVM_SET_CPUID2, (void *)&cpuid) == -1)
-        panic("KVM: Failed to set guest CPUID2 (errno: %i)\n",
-              errno);
+        panic("KVM: Failed to set guest CPUID2 (errno: %i)\n", errno);
 }
 
 void
 X86KvmCPU::setCPUID(const Kvm::CPUIDVector &cpuid)
 {
-    auto kvm_cpuid = newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(
-            cpuid.size());
+    auto kvm_cpuid =
+        newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(cpuid.size());
 
     kvm_cpuid->nent = cpuid.size();
     std::copy(cpuid.begin(), cpuid.end(), kvm_cpuid->entries);
@@ -1584,15 +1553,14 @@ void
 X86KvmCPU::setMSRs(const struct kvm_msrs &msrs)
 {
     if (ioctl(KVM_SET_MSRS, (void *)&msrs) == -1)
-        panic("KVM: Failed to set guest MSRs (errno: %i)\n",
-              errno);
+        panic("KVM: Failed to set guest MSRs (errno: %i)\n", errno);
 }
 
 void
 X86KvmCPU::setMSRs(const KvmMSRVector &msrs)
 {
-    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
-            msrs.size());
+    auto kvm_msrs =
+        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(msrs.size());
 
     kvm_msrs->nmsrs = msrs.size();
     std::copy(msrs.begin(), msrs.end(), kvm_msrs->entries);
@@ -1604,10 +1572,8 @@ void
 X86KvmCPU::getMSRs(struct kvm_msrs &msrs) const
 {
     if (ioctl(KVM_GET_MSRS, (void *)&msrs) == -1)
-        panic("KVM: Failed to get guest MSRs (errno: %i)\n",
-              errno);
+        panic("KVM: Failed to get guest MSRs (errno: %i)\n", errno);
 }
-
 
 void
 X86KvmCPU::setMSR(uint32_t index, uint64_t value)
@@ -1708,7 +1674,6 @@ X86KvmCPU::setXSave(const struct kvm_xsave &xsave)
     if (ioctl(KVM_SET_XSAVE, (void *)&xsave) == -1)
         panic("KVM: Failed to set guest debug registers\n");
 }
-
 
 void
 X86KvmCPU::getVCpuEvents(struct kvm_vcpu_events &events) const

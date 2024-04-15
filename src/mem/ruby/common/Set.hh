@@ -64,10 +64,12 @@ class Set
                   NUMBER_BITS_PER_SET, size);
     }
 
-    Set(const Set& obj) : m_nSize(obj.m_nSize), bits(obj.bits) {}
+    Set(const Set &obj) : m_nSize(obj.m_nSize), bits(obj.bits) {}
+
     ~Set() {}
 
-    Set& operator=(const Set& obj)
+    Set &
+    operator=(const Set &obj)
     {
         m_nSize = obj.m_nSize;
         bits = obj.bits;
@@ -85,7 +87,7 @@ class Set
      * already set in the parameter set
      */
     void
-    addSet(const Set& obj)
+    addSet(const Set &obj)
     {
         assert(m_nSize == obj.m_nSize);
         bits |= obj.bits;
@@ -104,18 +106,23 @@ class Set
      * This function clears bits that are =1 in the parameter set
      */
     void
-    removeSet(const Set& obj)
+    removeSet(const Set &obj)
     {
         assert(m_nSize == obj.m_nSize);
         bits &= (~obj.bits);
     }
 
-    void clear() { bits.reset(); }
+    void
+    clear()
+    {
+        bits.reset();
+    }
 
     /*
      * this function sets all bits in the set
      */
-    void broadcast()
+    void
+    broadcast()
     {
         bits.set();
         for (int j = m_nSize; j < NUMBER_BITS_PER_SET; ++j) {
@@ -126,13 +133,17 @@ class Set
     /*
      * This function returns the population count of 1's in the set
      */
-    int count() const { return bits.count(); }
+    int
+    count() const
+    {
+        return bits.count();
+    }
 
     /*
      * This function checks for set equality
      */
     bool
-    isEqual(const Set& obj) const
+    isEqual(const Set &obj) const
     {
         assert(m_nSize == obj.m_nSize);
         return bits == obj.bits;
@@ -140,7 +151,7 @@ class Set
 
     // return the logical OR of this set and orSet
     Set
-    OR(const Set& obj) const
+    OR(const Set &obj) const
     {
         assert(m_nSize == obj.m_nSize);
         Set r(m_nSize);
@@ -150,7 +161,7 @@ class Set
 
     // return the logical AND of this set and andSet
     Set
-    AND(const Set& obj) const
+    AND(const Set &obj) const
     {
         assert(m_nSize == obj.m_nSize);
         Set r(m_nSize);
@@ -160,7 +171,7 @@ class Set
 
     // Returns true if the intersection of the two sets is empty
     bool
-    intersectionIsEmpty(const Set& obj) const
+    intersectionIsEmpty(const Set &obj) const
     {
         std::bitset<NUMBER_BITS_PER_SET> r = bits & obj.bits;
         return r.none();
@@ -171,16 +182,24 @@ class Set
      * in this set
      */
     bool
-    isSuperset(const Set& test) const
+    isSuperset(const Set &test) const
     {
         assert(m_nSize == test.m_nSize);
         std::bitset<NUMBER_BITS_PER_SET> r = bits | test.bits;
         return (r == bits);
     }
 
-    bool isSubset(const Set& test) const { return test.isSuperset(*this); }
+    bool
+    isSubset(const Set &test) const
+    {
+        return test.isSuperset(*this);
+    }
 
-    bool isElement(NodeID element) const { return bits.test(element); }
+    bool
+    isElement(NodeID element) const
+    {
+        return bits.test(element);
+    }
 
     /*
      * this function returns true iff all bits in use are set
@@ -191,9 +210,14 @@ class Set
         return (bits.count() == m_nSize);
     }
 
-    bool isEmpty() const { return bits.none(); }
+    bool
+    isEmpty() const
+    {
+        return bits.none();
+    }
 
-    NodeID smallestElement() const
+    NodeID
+    smallestElement() const
     {
         for (int i = 0; i < m_nSize; ++i) {
             if (bits.test(i)) {
@@ -203,9 +227,17 @@ class Set
         panic("No smallest element of an empty set.");
     }
 
-    bool elementAt(int index) const { return bits[index]; }
+    bool
+    elementAt(int index) const
+    {
+        return bits[index];
+    }
 
-    int getSize() const { return m_nSize; }
+    int
+    getSize() const
+    {
+        return m_nSize;
+    }
 
     void
     setSize(int size)
@@ -218,14 +250,15 @@ class Set
         bits.reset();
     }
 
-    void print(std::ostream& out) const
+    void
+    print(std::ostream &out) const
     {
         out << "[Set (" << m_nSize << "): " << bits << "]";
     }
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Set& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Set &obj)
 {
     obj.print(out);
     out << std::flush;

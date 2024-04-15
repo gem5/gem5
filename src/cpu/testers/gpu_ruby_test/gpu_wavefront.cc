@@ -36,18 +36,14 @@
 namespace gem5
 {
 
-GpuWavefront::GpuWavefront(const Params &p)
-      : TesterThread(p), cuId(p.cu_id)
+GpuWavefront::GpuWavefront(const Params &p) : TesterThread(p), cuId(p.cu_id)
 {
     threadName = "GpuWavefront(TesterThread ID = " + std::to_string(threadId) +
                  ", CU ID = " + std::to_string(cuId) + ")";
     threadEvent.setDesc("GpuWavefront tick");
 }
 
-GpuWavefront::~GpuWavefront()
-{
-
-}
+GpuWavefront::~GpuWavefront() {}
 
 void
 GpuWavefront::issueLoadOps()
@@ -74,16 +70,16 @@ GpuWavefront::issueLoadOps()
             // for now, assert address is 4-byte aligned
             assert(address % load_size == 0);
 
-            auto req = std::make_shared<Request>(address, load_size,
-                                                 0, tester->requestorId(),
-                                                 0, threadId, nullptr);
+            auto req = std::make_shared<Request>(address, load_size, 0,
+                                                 tester->requestorId(), 0,
+                                                 threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
             // set protocol-specific flags
             setExtraRequestFlags(req);
 
             PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-            uint8_t* data = new uint8_t[load_size];
+            uint8_t *data = new uint8_t[load_size];
             pkt->dataDynamic(data);
             pkt->senderState = new ProtocolTester::SenderState(this);
 
@@ -122,13 +118,14 @@ GpuWavefront::issueStoreOps()
             // must be aligned with store size
             assert(address % sizeof(Value) == 0);
 
-            DPRINTF(ProtocolTest, "%s Episode %d: Issuing Store - Addr %s - "
-                    "Value %d\n", this->getName(),
-                    curEpisode->getEpisodeId(), ruby::printAddress(address),
-                    new_value);
+            DPRINTF(ProtocolTest,
+                    "%s Episode %d: Issuing Store - Addr %s - "
+                    "Value %d\n",
+                    this->getName(), curEpisode->getEpisodeId(),
+                    ruby::printAddress(address), new_value);
 
-            auto req = std::make_shared<Request>(address, sizeof(Value),
-                                                 0, tester->requestorId(), 0,
+            auto req = std::make_shared<Request>(address, sizeof(Value), 0,
+                                                 tester->requestorId(), 0,
                                                  threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
@@ -138,7 +135,7 @@ GpuWavefront::issueStoreOps()
             PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
             uint8_t *writeData = new uint8_t[sizeof(Value)];
             for (int j = 0; j < sizeof(Value); ++j) {
-                writeData[j] = ((uint8_t*)&new_value)[j];
+                writeData[j] = ((uint8_t *)&new_value)[j];
             }
             pkt->dataDynamic(writeData);
             pkt->senderState = new ProtocolTester::SenderState(this);
@@ -183,17 +180,16 @@ GpuWavefront::issueAtomicOps()
         // must be aligned with store size
         assert(address % sizeof(Value) == 0);
         AtomicOpFunctor *amo_op = new AtomicOpInc<Value>();
-        auto req = std::make_shared<Request>(address, sizeof(Value),
-                                             flags, tester->requestorId(),
-                                             0, threadId,
-                                             AtomicOpFunctorPtr(amo_op));
+        auto req = std::make_shared<Request>(
+            address, sizeof(Value), flags, tester->requestorId(), 0, threadId,
+            AtomicOpFunctorPtr(amo_op));
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
         // set protocol-specific flags
         setExtraRequestFlags(req);
 
         PacketPtr pkt = new Packet(req, MemCmd::SwapReq);
-        uint8_t* data = new uint8_t[sizeof(Value)];
+        uint8_t *data = new uint8_t[sizeof(Value)];
         pkt->dataDynamic(data);
         pkt->senderState = new ProtocolTester::SenderState(this);
 
@@ -222,8 +218,7 @@ GpuWavefront::issueAcquireOp()
     assert(pendingLdStCount == 0);
     assert(pendingAtomicCount == 0);
 
-    auto acq_req = std::make_shared<Request>(0, 0, 0,
-                                             tester->requestorId(), 0,
+    auto acq_req = std::make_shared<Request>(0, 0, 0, tester->requestorId(), 0,
                                              threadId, nullptr);
     acq_req->setPaddr(0);
     acq_req->setReqInstSeqNum(tester->getActionSeqNum());
@@ -265,10 +260,11 @@ GpuWavefront::hitCallback(PacketPtr pkt)
     MemCmd resp_cmd = pkt->cmd;
     Addr addr = (resp_cmd == MemCmd::WriteCompleteResp) ? 0 : pkt->getAddr();
 
-    DPRINTF(ProtocolTest, "%s Episode %d: hitCallback - Command %s - "
-                    "Addr %s\n", this->getName(),
-                    curEpisode->getEpisodeId(), resp_cmd.toString(),
-                    ruby::printAddress(addr));
+    DPRINTF(ProtocolTest,
+            "%s Episode %d: hitCallback - Command %s - "
+            "Addr %s\n",
+            this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
+            ruby::printAddress(addr));
 
     // whether the transaction is done after this hitCallback
     bool isTransactionDone = true;
@@ -311,9 +307,7 @@ GpuWavefront::hitCallback(PacketPtr pkt)
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
                                     curEpisode->getEpisodeId(),
-                                    req.storedValue,
-                                    curTick(),
-                                    cuId);
+                                    req.storedValue, curTick(), cuId);
 
         // the transaction is not done yet. Waiting for write completion ack
         isTransactionDone = false;
@@ -333,8 +327,7 @@ GpuWavefront::hitCallback(PacketPtr pkt)
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
                                     curEpisode->getEpisodeId(), value,
-                                    curTick(),
-                                    cuId);
+                                    curTick(), cuId);
 
         // this Atomic is done
         pendingAtomicCount--;

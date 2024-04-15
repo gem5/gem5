@@ -59,24 +59,21 @@ namespace ruby
 class WriteMask
 {
   public:
-    typedef std::vector<std::pair<int, AtomicOpFunctor* >> AtomicOpVector;
+    typedef std::vector<std::pair<int, AtomicOpFunctor *>> AtomicOpVector;
 
     WriteMask();
 
-    WriteMask(int size)
-      : mSize(size), mMask(size, false), mAtomic(false)
-    {}
+    WriteMask(int size) : mSize(size), mMask(size, false), mAtomic(false) {}
 
-    WriteMask(int size, std::vector<bool> & mask)
-      : mSize(size), mMask(mask), mAtomic(false)
+    WriteMask(int size, std::vector<bool> &mask)
+        : mSize(size), mMask(mask), mAtomic(false)
     {}
 
     WriteMask(int size, std::vector<bool> &mask, AtomicOpVector atomicOp)
-      : mSize(size), mMask(mask), mAtomic(true), mAtomicOp(atomicOp)
+        : mSize(size), mMask(mask), mAtomic(true), mAtomicOp(atomicOp)
     {}
 
-    ~WriteMask()
-    {}
+    ~WriteMask() {}
 
     void
     clear()
@@ -99,6 +96,7 @@ class WriteMask
             mMask[offset + i] = val;
         }
     }
+
     void
     fillMask()
     {
@@ -144,7 +142,8 @@ class WriteMask
         return tmp;
     }
 
-    bool isEmpty() const
+    bool
+    isEmpty() const
     {
         for (int i = 0; i < mSize; i++) {
             if (mMask.at(i)) {
@@ -166,7 +165,7 @@ class WriteMask
     }
 
     void
-    andMask(const WriteMask & writeMask)
+    andMask(const WriteMask &writeMask)
     {
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
@@ -180,7 +179,7 @@ class WriteMask
     }
 
     void
-    orMask(const WriteMask & writeMask)
+    orMask(const WriteMask &writeMask)
     {
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
@@ -194,7 +193,7 @@ class WriteMask
     }
 
     void
-    setInvertedMask(const WriteMask & writeMask)
+    setInvertedMask(const WriteMask &writeMask)
     {
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
@@ -220,7 +219,7 @@ class WriteMask
         return count;
     }
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     /*
      * Performs atomic operations on the data block pointed to by p. The
@@ -229,18 +228,17 @@ class WriteMask
      * so that each individual atomic requestor may see the results of their
      * specific atomic operation.
      */
-    void performAtomic(uint8_t * p,
-            std::deque<uint8_t*>& atomicChangeLog,
-            bool isAtomicNoReturn=true) const;
+    void performAtomic(uint8_t *p, std::deque<uint8_t *> &atomicChangeLog,
+                       bool isAtomicNoReturn = true) const;
 
-    const AtomicOpVector&
+    const AtomicOpVector &
     getAtomicOps() const
     {
         return mAtomicOp;
     }
 
     void
-    setAtomicOps(const AtomicOpVector& atomicOps)
+    setAtomicOps(const AtomicOpVector &atomicOps)
     {
         mAtomic = true;
         mAtomicOp = std::move(atomicOps);
@@ -253,8 +251,8 @@ class WriteMask
     AtomicOpVector mAtomicOp;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const WriteMask& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const WriteMask &obj)
 {
     obj.print(out);
     out << std::flush;

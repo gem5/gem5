@@ -51,7 +51,6 @@ namespace gem5
 namespace statistics
 {
 
-
 void initSimStats();
 
 /**

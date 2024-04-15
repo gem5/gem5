@@ -85,13 +85,14 @@ class CircularQueue
     struct iterator
     {
       public:
-        CircularQueue* _cq = nullptr;
+        CircularQueue *_cq = nullptr;
         size_t _idx = 0;
 
         /**
          * @ingroup api_base_utils
          */
-        iterator(CircularQueue* cq, size_t idx) : _cq(cq), _idx(idx) {}
+        iterator(CircularQueue *cq, size_t idx) : _cq(cq), _idx(idx) {}
+
         iterator() = default;
 
         /**
@@ -102,29 +103,29 @@ class CircularQueue
          */
         using value_type = T;
         using difference_type = std::ptrdiff_t;
-        using reference = value_type&;
-        using const_reference = const value_type&;
-        using pointer = value_type*;
-        using const_pointer = const value_type*;
+        using reference = value_type &;
+        using const_reference = const value_type &;
+        using pointer = value_type *;
+        using const_pointer = const value_type *;
         using iterator_category = std::random_access_iterator_tag;
         /** @} */ // end of api_base_utils
 
         /** Trait reference type
          * iterator satisfies OutputIterator, therefore reference
          * must be T& */
-        static_assert(std::is_same_v<reference, T&>,
-                "reference type is not assignable as required");
+        static_assert(std::is_same_v<reference, T &>,
+                      "reference type is not assignable as required");
 
         /**
          * @ingroup api_base_utils
          */
-        iterator(const iterator& it) : _cq(it._cq), _idx(it._idx) {}
+        iterator(const iterator &it) : _cq(it._cq), _idx(it._idx) {}
 
         /**
          * @ingroup api_base_utils
          */
-        iterator&
-        operator=(const iterator& it)
+        iterator &
+        operator=(const iterator &it)
         {
             _cq = it._cq;
             _idx = it._idx;
@@ -155,7 +156,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         bool
-        operator==(const iterator& that) const
+        operator==(const iterator &that) const
         {
             return _cq == that._cq && _idx == that._idx;
         }
@@ -167,7 +168,11 @@ class CircularQueue
          *
          * @ingroup api_base_utils
          */
-        bool operator!=(const iterator& that) { return !(*this == that); }
+        bool
+        operator!=(const iterator &that)
+        {
+            return !(*this == that);
+        }
 
         /**
          * Dereference operator.
@@ -197,19 +202,27 @@ class CircularQueue
          *
          * @ingroup api_base_utils
          */
-        pointer operator->() { return &**this; }
+        pointer
+        operator->()
+        {
+            return &**this;
+        }
 
         /**
          * @ingroup api_base_utils
          */
-        const_pointer operator->() const { return &**this; }
+        const_pointer
+        operator->() const
+        {
+            return &**this;
+        }
 
         /**
          * Pre-increment operator.
          *
          * @ingroup api_base_utils
          */
-        iterator&
+        iterator &
         operator++()
         {
             ++_idx;
@@ -240,7 +253,7 @@ class CircularQueue
          *
          * @ingroup api_base_utils
          */
-        iterator&
+        iterator &
         operator--()
         {
             /* this has to be decrementable. */
@@ -267,8 +280,8 @@ class CircularQueue
          *
          * @ingroup api_base_utils
          */
-        iterator&
-        operator+=(const difference_type& t)
+        iterator &
+        operator+=(const difference_type &t)
         {
             _idx += t;
             return *this;
@@ -277,8 +290,8 @@ class CircularQueue
         /**
          * @ingroup api_base_utils
          */
-        iterator&
-        operator-=(const difference_type& t)
+        iterator &
+        operator-=(const difference_type &t)
         {
             assert(_cq && _idx >= _cq->head() + t);
             _idx -= t;
@@ -291,7 +304,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         iterator
-        operator+(const difference_type& t)
+        operator+(const difference_type &t)
         {
             iterator ret(*this);
             return ret += t;
@@ -301,7 +314,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         friend iterator
-        operator+(const difference_type& t, iterator& it)
+        operator+(const difference_type &t, iterator &it)
         {
             iterator ret = it;
             return ret += t;
@@ -313,7 +326,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         iterator
-        operator-(const difference_type& t)
+        operator-(const difference_type &t)
         {
             iterator ret(*this);
             return ret -= t;
@@ -323,7 +336,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         friend iterator
-        operator-(const difference_type& t, iterator& it)
+        operator-(const difference_type &t, iterator &it)
         {
             iterator ret = it;
             return ret -= t;
@@ -336,7 +349,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         difference_type
-        operator-(const iterator& that)
+        operator-(const iterator &that)
         {
             return (ssize_t)_idx - (ssize_t)that._idx;
         }
@@ -347,9 +360,9 @@ class CircularQueue
          *
          * @ingroup api_base_utils
          */
-        template<typename Idx>
+        template <typename Idx>
         typename std::enable_if_t<std::is_integral_v<Idx>, reference>
-        operator[](const Idx& index)
+        operator[](const Idx &index)
         {
             return *(*this + index);
         }
@@ -360,7 +373,7 @@ class CircularQueue
          * @ingroup api_base_utils
          */
         bool
-        operator<(const iterator& that) const
+        operator<(const iterator &that) const
         {
             return _idx < that._idx;
         }
@@ -368,22 +381,38 @@ class CircularQueue
         /**
          * @ingroup api_base_utils
          */
-        bool operator>(const iterator& that) const { return !(*this <= that); }
+        bool
+        operator>(const iterator &that) const
+        {
+            return !(*this <= that);
+        }
 
         /**
          * @ingroup api_base_utils
          */
-        bool operator>=(const iterator& that) const { return !(*this < that); }
+        bool
+        operator>=(const iterator &that) const
+        {
+            return !(*this < that);
+        }
 
         /**
          * @ingroup api_base_utils
          */
-        bool operator<=(const iterator& that) const { return !(that < *this); }
+        bool
+        operator<=(const iterator &that) const
+        {
+            return !(that < *this);
+        }
 
         /**
          * OutputIterator has no extra requirements.
          */
-        size_t idx() const { return _idx; }
+        size_t
+        idx() const
+        {
+            return _idx;
+        }
     };
 
   public:
@@ -392,7 +421,7 @@ class CircularQueue
      */
     template <typename Idx>
     typename std::enable_if_t<std::is_integral_v<Idx>, reference>
-    operator[](const Idx& index)
+    operator[](const Idx &index)
     {
         assert(index >= 0);
         return data[index % _capacity];
@@ -400,7 +429,7 @@ class CircularQueue
 
     template <typename Idx>
     typename std::enable_if_t<std::is_integral_v<Idx>, const_reference>
-    operator[](const Idx& index) const
+    operator[](const Idx &index) const
     {
         assert(index >= 0);
         return data[index % _capacity];
@@ -409,7 +438,7 @@ class CircularQueue
     /**
      * @ingroup api_base_utils
      */
-    explicit CircularQueue(size_t size=0) : data(size), _capacity(size) {}
+    explicit CircularQueue(size_t size = 0) : data(size), _capacity(size) {}
 
     /**
      * Remove all the elements in the queue.
@@ -438,32 +467,56 @@ class CircularQueue
     /**
      * @ingroup api_base_utils
      */
-    reference front() { return (*this)[head()]; }
+    reference
+    front()
+    {
+        return (*this)[head()];
+    }
 
     /**
      * @ingroup api_base_utils
      */
-    reference back() { return (*this)[tail()]; }
+    reference
+    back()
+    {
+        return (*this)[tail()];
+    }
 
     /**
      * @ingroup api_base_utils
      */
-    size_t head() const { return _head; }
+    size_t
+    head() const
+    {
+        return _head;
+    }
 
     /**
      * @ingroup api_base_utils
      */
-    size_t tail() const { return _head + _size - 1; }
+    size_t
+    tail() const
+    {
+        return _head + _size - 1;
+    }
 
     /**
      * @ingroup api_base_utils
      */
-    size_t capacity() const { return _capacity; }
+    size_t
+    capacity() const
+    {
+        return _capacity;
+    }
 
     /**
      * @ingroup api_base_utils
      */
-    size_t size() const { return _size; }
+    size_t
+    size() const
+    {
+        return _size;
+    }
 
     /** Circularly increase the head pointer.
      * By increasing the head pointer we are removing elements from
@@ -474,7 +527,7 @@ class CircularQueue
      * @ingroup api_base_utils
      */
     void
-    pop_front(size_t num_elem=1)
+    pop_front(size_t num_elem = 1)
     {
         assert(num_elem <= size());
         _head += num_elem;
@@ -545,7 +598,11 @@ class CircularQueue
      *
      * @ingroup api_base_utils
      */
-    bool empty() const { return _size == 0; }
+    bool
+    empty() const
+    {
+        return _size == 0;
+    }
 
     /**
      * Is the queue full?
@@ -555,14 +612,22 @@ class CircularQueue
      *
      * @ingroup api_base_utils
      */
-    bool full() const { return _size == _capacity; }
+    bool
+    full() const
+    {
+        return _size == _capacity;
+    }
 
     /**
      * Iterators.
      *
      * @ingroup api_base_utils
      */
-    iterator begin() { return iterator(this, _head); }
+    iterator
+    begin()
+    {
+        return iterator(this, _head);
+    }
 
     /* TODO: This should return a const_iterator. */
     /**
@@ -571,13 +636,17 @@ class CircularQueue
     iterator
     begin() const
     {
-        return iterator(const_cast<CircularQueue*>(this), _head);
+        return iterator(const_cast<CircularQueue *>(this), _head);
     }
 
     /**
      * @ingroup api_base_utils
      */
-    iterator end() { return iterator(this, tail() + 1); }
+    iterator
+    end()
+    {
+        return iterator(this, tail() + 1);
+    }
 
     /**
      * @ingroup api_base_utils
@@ -585,11 +654,15 @@ class CircularQueue
     iterator
     end() const
     {
-        return iterator(const_cast<CircularQueue*>(this), tail() + 1);
+        return iterator(const_cast<CircularQueue *>(this), tail() + 1);
     }
 
     /** Return an iterator to an index in the queue. */
-    iterator getIterator(size_t idx) { return iterator(this, idx); }
+    iterator
+    getIterator(size_t idx)
+    {
+        return iterator(this, idx);
+    }
 };
 
 } // namespace gem5

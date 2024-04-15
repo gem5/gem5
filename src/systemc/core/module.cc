@@ -48,9 +48,13 @@ Module *_new_module;
 
 UniqueNameGen globalNameGen;
 
-Module::Module(const char *name) :
-    _name(name), _sc_mod(nullptr), _obj(nullptr), _ended(false),
-    _deprecatedConstructor(false), bindingIndex(0)
+Module::Module(const char *name)
+    : _name(name),
+      _sc_mod(nullptr),
+      _obj(nullptr),
+      _ended(false),
+      _deprecatedConstructor(false),
+      bindingIndex(0)
 {
     using namespace gem5;
     panic_if(_new_module, "Previous module not finished.\n");
@@ -108,8 +112,8 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
 {
     using namespace gem5;
     panic_if(proxies.size() > ports.size(),
-            "Trying to bind %d interfaces/ports to %d ports.\n",
-            proxies.size(), ports.size());
+             "Trying to bind %d interfaces/ports to %d ports.\n",
+             proxies.size(), ports.size());
 
     auto proxyIt = proxies.begin();
     auto portIt = ports.begin();
@@ -131,7 +135,7 @@ Module::beforeEndOfElaboration()
     pushParentModule(this);
     try {
         _sc_mod->before_end_of_elaboration();
-        for (auto e: exports)
+        for (auto e : exports)
             e->before_end_of_elaboration();
     } catch (...) {
         popParentModule();
@@ -150,7 +154,7 @@ Module::endOfElaboration()
     pushParentModule(this);
     try {
         _sc_mod->end_of_elaboration();
-        for (auto e: exports)
+        for (auto e : exports)
             e->end_of_elaboration();
     } catch (...) {
         popParentModule();
@@ -165,7 +169,7 @@ Module::startOfSimulation()
     pushParentModule(this);
     try {
         _sc_mod->start_of_simulation();
-        for (auto e: exports)
+        for (auto e : exports)
             e->start_of_simulation();
     } catch (...) {
         popParentModule();
@@ -180,9 +184,9 @@ Module::endOfSimulation()
     pushParentModule(this);
     try {
         _sc_mod->end_of_simulation();
-        for (auto e: exports)
+        for (auto e : exports)
             e->end_of_simulation();
-    } catch(...) {
+    } catch (...) {
         popParentModule();
         throw;
     }

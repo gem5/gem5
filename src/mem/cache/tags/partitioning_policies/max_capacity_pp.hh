@@ -66,50 +66,47 @@ namespace partitioning_policy
 class MaxCapacityPartitioningPolicy : public BasePartitioningPolicy
 {
   public:
-    MaxCapacityPartitioningPolicy
-    (const MaxCapacityPartitioningPolicyParams &params);
+    MaxCapacityPartitioningPolicy(
+        const MaxCapacityPartitioningPolicyParams &params);
 
-    void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                      const uint64_t partition_id) const override;
+    void filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                           const uint64_t partition_id) const override;
 
-    void
-    notifyAcquire(const uint64_t partition_id) override;
+    void notifyAcquire(const uint64_t partition_id) override;
 
-    void
-    notifyRelease(const uint64_t partition_id) override;
+    void notifyRelease(const uint64_t partition_id) override;
 
   private:
     /**
-    * Cache size in number of bytes
-    */
+     * Cache size in number of bytes
+     */
     const uint64_t cacheSize;
 
     /**
-    * Cache block size in number of bytes
-    */
+     * Cache block size in number of bytes
+     */
     const uint64_t blkSize;
 
     /**
-    * Vector of partitionIDs the policy operates on
-    */
-    const std::vector< uint64_t > partitionIDs;
+     * Vector of partitionIDs the policy operates on
+     */
+    const std::vector<uint64_t> partitionIDs;
 
     /**
-    * Vector of capacity fractions to enforce on the policied partitionIDs
-    */
-    const std::vector< double > capacities;
+     * Vector of capacity fractions to enforce on the policied partitionIDs
+     */
+    const std::vector<double> capacities;
 
     /**
-    * Map of PartitionIDs and maximum allocatable cache block counts;
-    * On evictions full partitions are prioritized.
-    */
-    std::unordered_map< uint64_t, uint64_t > partitionIdMaxCapacity;
+     * Map of PartitionIDs and maximum allocatable cache block counts;
+     * On evictions full partitions are prioritized.
+     */
+    std::unordered_map<uint64_t, uint64_t> partitionIdMaxCapacity;
 
     /**
-    * Map of PartitionIDs and currently allocated blck coutns
-    */
-    std::unordered_map< uint64_t, uint64_t > partitionIdCurCapacity;
+     * Map of PartitionIDs and currently allocated blck coutns
+     */
+    std::unordered_map<uint64_t, uint64_t> partitionIdCurCapacity;
 };
 
 } // namespace partitioning_policy

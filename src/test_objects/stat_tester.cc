@@ -40,15 +40,10 @@ ScalarStatTester::setStats()
 }
 
 ScalarStatTester::ScalarStatTesterStats::ScalarStatTesterStats(
-    statistics::Group *parent,
-    const ScalarStatTesterParams &params
-) : statistics::Group(parent),
-    scalar(this,
-        params.name.c_str(),
-        statistics::units::Count::get(),
-        params.description.c_str()
-    )
-{
-}
+    statistics::Group *parent, const ScalarStatTesterParams &params)
+    : statistics::Group(parent),
+      scalar(this, params.name.c_str(), statistics::units::Count::get(),
+             params.description.c_str())
+{}
 
 } // namespace gem5

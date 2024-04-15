@@ -50,15 +50,19 @@ namespace gem5
 {
 
 PL031::PL031(const Params &p)
-    : AmbaIntDevice(p, 0x1000), lastWrittenTick(0), loadVal(0), matchVal(0),
-      rawInt(false), maskInt(false), pendingInt(false),
-      matchEvent([this]{ counterMatch(); }, name())
+    : AmbaIntDevice(p, 0x1000),
+      lastWrittenTick(0),
+      loadVal(0),
+      matchVal(0),
+      rawInt(false),
+      maskInt(false),
+      pendingInt(false),
+      matchEvent([this] { counterMatch(); }, name())
 {
     // Make a temporary copy so mkutctime can modify it.
     struct tm local_time = p.time;
     timeVal = mkutctime(&local_time);
 }
-
 
 Tick
 PL031::read(PacketPtr pkt)
@@ -71,29 +75,29 @@ PL031::read(PacketPtr pkt)
     DPRINTF(Timer, "Reading from RTC at offset: %#x\n", daddr);
 
     switch (daddr) {
-      case DataReg:
-        data = timeVal +
-            ((curTick() - lastWrittenTick) / sim_clock::as_int::s);
+    case DataReg:
+        data =
+            timeVal + ((curTick() - lastWrittenTick) / sim_clock::as_int::s);
         break;
-      case MatchReg:
+    case MatchReg:
         data = matchVal;
         break;
-      case LoadReg:
+    case LoadReg:
         data = loadVal;
         break;
-      case ControlReg:
+    case ControlReg:
         data = 1; // Always enabled otherwise there is no point
         break;
-      case IntMask:
+    case IntMask:
         data = maskInt;
         break;
-      case RawISR:
+    case RawISR:
         data = rawInt;
         break;
-      case MaskedISR:
+    case MaskedISR:
         data = pendingInt;
         break;
-      default:
+    default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable sized access
             data = pkt->getUintX(ByteOrder::little);
@@ -117,30 +121,30 @@ PL031::write(PacketPtr pkt)
     DPRINTF(Timer, "Writing to RTC at offset: %#x\n", daddr);
 
     switch (daddr) {
-      case DataReg:
+    case DataReg:
         break;
-      case MatchReg:
+    case MatchReg:
         matchVal = pkt->getLE<uint32_t>();
         resyncMatch();
         break;
-      case LoadReg:
+    case LoadReg:
         lastWrittenTick = curTick();
         timeVal = pkt->getLE<uint32_t>();
         loadVal = timeVal;
         resyncMatch();
         break;
-      case ControlReg:
+    case ControlReg:
         break; // Can't stop when started
-      case IntMask:
+    case IntMask:
         maskInt = pkt->getLE<uint32_t>();
         break;
-      case IntClear:
+    case IntClear:
         if (pkt->getLE<uint32_t>()) {
             rawInt = false;
             pendingInt = false;
         }
         break;
-      default:
+    default:
         if (readId(pkt, ambaId, pioAddr))
             break;
         panic("Tried to read PL031 at offset %#x that doesn't exist\n", daddr);
@@ -165,7 +169,8 @@ PL031::resyncMatch()
         deschedule(matchEvent);
     }
     schedule(matchEvent, curTick() + ticks_until);
-    DPRINTF(Timer, "-- Scheduling new event for: %d\n", curTick() + ticks_until);
+    DPRINTF(Timer, "-- Scheduling new event for: %d\n",
+            curTick() + ticks_until);
 }
 
 void
@@ -198,7 +203,7 @@ PL031::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(is_in_event);
 
     Tick event_time;
-    if (is_in_event){
+    if (is_in_event) {
         event_time = matchEvent.when();
         SERIALIZE_SCALAR(event_time);
     }
@@ -221,7 +226,7 @@ PL031::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(is_in_event);
 
     Tick event_time;
-    if (is_in_event){
+    if (is_in_event) {
         UNSERIALIZE_SCALAR(event_time);
         schedule(matchEvent, event_time);
     }

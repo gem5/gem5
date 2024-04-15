@@ -60,15 +60,12 @@ namespace gem5
  */
 class TraceGen : public BaseGen
 {
-
   private:
-
     /**
      * This struct stores a line in the trace file.
      */
     struct TraceElement
     {
-
         /** Specifies if the request is to be a read or a write */
         MemCmd cmd;
 
@@ -89,14 +86,18 @@ class TraceGen : public BaseGen
          *
          * @return if this element is valid
          */
-        bool isValid() const {
+        bool
+        isValid() const
+        {
             return cmd != MemCmd::InvalidCmd;
         }
 
         /**
          * Make this element invalid.
          */
-        void clear() {
+        void
+        clear()
+        {
             cmd = MemCmd::InvalidCmd;
         }
     };
@@ -108,20 +109,17 @@ class TraceGen : public BaseGen
      */
     class InputStream
     {
-
       private:
-
         /// Input file stream for the protobuf trace
         ProtoInputStream trace;
 
       public:
-
         /**
          * Create a trace input stream for a given file name.
          *
          * @param filename Path to the file to read from
          */
-        InputStream(const std::string& filename);
+        InputStream(const std::string &filename);
 
         /**
          * Reset the stream such that it can be played once
@@ -143,11 +141,10 @@ class TraceGen : public BaseGen
          * @param element Trace element to populate
          * @return True if an element could be read successfully
          */
-        bool read(TraceElement& element);
+        bool read(TraceElement &element);
     };
 
   public:
-
     /**
      * Create a trace generator.
      *
@@ -158,14 +155,13 @@ class TraceGen : public BaseGen
      * @param addr_offset Positive offset to add to trace address
      */
     TraceGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
-             const std::string& trace_file, Addr addr_offset)
+             const std::string &trace_file, Addr addr_offset)
         : BaseGen(obj, requestor_id, _duration),
           trace(trace_file),
           tickOffset(0),
           addrOffset(addr_offset),
           traceComplete(false)
-    {
-    }
+    {}
 
     void enter();
 
@@ -181,7 +177,6 @@ class TraceGen : public BaseGen
     Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
-
     /** Input stream used for reading the input trace file */
     InputStream trace;
 

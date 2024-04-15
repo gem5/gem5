@@ -47,29 +47,29 @@
 namespace gem5
 {
 
-NvmGen::NvmGen(SimObject &obj,
-               RequestorID requestor_id, Tick _duration,
-               Addr start_addr, Addr end_addr,
-               Addr _blocksize, Addr cacheline_size,
-               Tick min_period, Tick max_period,
+NvmGen::NvmGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+               Addr start_addr, Addr end_addr, Addr _blocksize,
+               Addr cacheline_size, Tick min_period, Tick max_period,
                uint8_t read_percent, Addr data_limit,
                unsigned int num_seq_pkts, unsigned int buffer_size,
-               unsigned int nbr_of_banks,
-               unsigned int nbr_of_banks_util,
-               enums::AddrMap addr_mapping,
-               unsigned int nbr_of_ranks)
-       : RandomGen(obj, requestor_id, _duration, start_addr, end_addr,
-         _blocksize, cacheline_size, min_period, max_period,
-         read_percent, data_limit),
-         numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
-         isRead(true), bufferSize(buffer_size),
-         bufferBits(floorLog2(buffer_size / _blocksize)),
-         bankBits(floorLog2(nbr_of_banks)),
-         blockBits(floorLog2(_blocksize)),
-         nbrOfBanksNVM(nbr_of_banks),
-         nbrOfBanksUtil(nbr_of_banks_util), addrMapping(addr_mapping),
-         rankBits(floorLog2(nbr_of_ranks)),
-         nbrOfRanks(nbr_of_ranks)
+               unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
+               enums::AddrMap addr_mapping, unsigned int nbr_of_ranks)
+    : RandomGen(obj, requestor_id, _duration, start_addr, end_addr, _blocksize,
+                cacheline_size, min_period, max_period, read_percent,
+                data_limit),
+      numSeqPkts(num_seq_pkts),
+      countNumSeqPkts(0),
+      addr(0),
+      isRead(true),
+      bufferSize(buffer_size),
+      bufferBits(floorLog2(buffer_size / _blocksize)),
+      bankBits(floorLog2(nbr_of_banks)),
+      blockBits(floorLog2(_blocksize)),
+      nbrOfBanksNVM(nbr_of_banks),
+      nbrOfBanksUtil(nbr_of_banks_util),
+      addrMapping(addr_mapping),
+      rankBits(floorLog2(nbr_of_ranks)),
+      nbrOfRanks(nbr_of_ranks)
 {
     if (nbr_of_banks_util > nbr_of_banks)
         fatal("Attempting to use more banks (%d) than "
@@ -86,12 +86,11 @@ NvmGen::getNextPacket()
         countNumSeqPkts = numSeqPkts;
 
         // choose if we generate a read or a write here
-        isRead = readPercent != 0 &&
-            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+        isRead = readPercent != 0 && (readPercent == 100 ||
+                                      random_mt.random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
-               (readPercent == 100 && isRead) ||
-               readPercent != 100);
+               (readPercent == 100 && isRead) || readPercent != 100);
 
         // pick a random bank
         unsigned int new_bank =
@@ -116,16 +115,17 @@ NvmGen::getNextPacket()
 
         else if (addrMapping == enums::RoCoRaBaCh) {
             // Explicity increment the column bits
-            unsigned int new_col = ((addr / blocksize /
-                                       nbrOfBanksNVM / nbrOfRanks) %
-                                   (bufferSize / blocksize)) + 1;
-            replaceBits(addr, blockBits + bankBits + rankBits +
-                              bufferBits - 1,
+            unsigned int new_col =
+                ((addr / blocksize / nbrOfBanksNVM / nbrOfRanks) %
+                 (bufferSize / blocksize)) +
+                1;
+            replaceBits(addr, blockBits + bankBits + rankBits + bufferBits - 1,
                         blockBits + bankBits + rankBits, new_col);
         }
     }
 
-    DPRINTF(TrafficGen, "NvmGen::getNextPacket: %c to addr %x, "
+    DPRINTF(TrafficGen,
+            "NvmGen::getNextPacket: %c to addr %x, "
             "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
             isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 
@@ -164,16 +164,14 @@ NvmGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     unsigned int new_col =
         random_mt.random<unsigned int>(0, burst_per_buffer - numSeqPkts);
 
-    if (addrMapping == enums::RoRaBaCoCh ||
-        addrMapping == enums::RoRaBaChCo) {
+    if (addrMapping == enums::RoRaBaCoCh || addrMapping == enums::RoRaBaChCo) {
         // Block bits, then buffer bits, then bank bits, then rank bits
         replaceBits(addr, blockBits + bufferBits + bankBits - 1,
                     blockBits + bufferBits, new_bank);
         replaceBits(addr, blockBits + bufferBits - 1, blockBits, new_col);
         if (rankBits != 0) {
-            replaceBits(addr, blockBits + bufferBits + bankBits +
-                        rankBits - 1, blockBits + bufferBits + bankBits,
-                        new_rank);
+            replaceBits(addr, blockBits + bufferBits + bankBits + rankBits - 1,
+                        blockBits + bufferBits + bankBits, new_rank);
         }
     } else if (addrMapping == enums::RoCoRaBaCh) {
         // Block bits, then bank bits, then rank bits, then buffer bits

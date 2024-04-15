@@ -44,24 +44,29 @@ class TLB : public BaseTLB
 
     TLB(const Params &p) : BaseTLB(p) {}
 
-    void demapPage(Addr vaddr, uint64_t asn) override {}
-    void flushAll() override {}
-    void takeOverFrom(BaseTLB *otlb) override {}
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
+    {}
 
-    Fault translateFunctional(
-        const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) override;
-    Fault translateAtomic(
-        const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) override;
-    void translateTiming(
-        const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
+    void
+    flushAll() override
+    {}
+
+    void
+    takeOverFrom(BaseTLB *otlb) override
+    {}
+
+    Fault translateFunctional(const RequestPtr &req, gem5::ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, gem5::ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    void translateTiming(const RequestPtr &req, gem5::ThreadContext *tc,
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
 
     Fault
-    finalizePhysical(
-        const RequestPtr &req, gem5::ThreadContext *tc,
-        BaseMMU::Mode mode) const override
+    finalizePhysical(const RequestPtr &req, gem5::ThreadContext *tc,
+                     BaseMMU::Mode mode) const override
     {
         return NoFault;
     }

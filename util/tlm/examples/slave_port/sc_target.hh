@@ -43,48 +43,43 @@
 using namespace sc_core;
 using namespace std;
 
-struct Target: sc_module
+struct Target : sc_module
 {
     /** TLM interface socket: */
     tlm_utils::simple_target_socket<Target> socket;
 
     /** TLM related member variables: */
-    tlm::tlm_generic_payload*  transaction_in_progress;
-    sc_event                   target_done_event;
-    bool                       response_in_progress;
-    bool                       debug;
-    tlm::tlm_generic_payload*  next_response_pending;
-    tlm::tlm_generic_payload*  end_req_pending;
+    tlm::tlm_generic_payload *transaction_in_progress;
+    sc_event target_done_event;
+    bool response_in_progress;
+    bool debug;
+    tlm::tlm_generic_payload *next_response_pending;
+    tlm::tlm_generic_payload *end_req_pending;
     tlm_utils::peq_with_cb_and_phase<Target> m_peq;
 
     /** Storage, may be implemented with a map for large devices */
     unsigned char *mem;
 
-    Target(sc_core::sc_module_name name,
-        bool debug,
-        unsigned long long int size,
-        unsigned int offset);
+    Target(sc_core::sc_module_name name, bool debug,
+           unsigned long long int size, unsigned int offset);
     SC_HAS_PROCESS(Target);
 
     /** TLM interface functions */
-    virtual void b_transport(tlm::tlm_generic_payload& trans,
-                             sc_time& delay);
-    virtual unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
-    virtual tlm::tlm_sync_enum nb_transport_fw(
-                tlm::tlm_generic_payload& trans,
-                tlm::tlm_phase& phase,
-                sc_time& delay);
+    virtual void b_transport(tlm::tlm_generic_payload &trans, sc_time &delay);
+    virtual unsigned int transport_dbg(tlm::tlm_generic_payload &trans);
+    virtual tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &trans,
+                                               tlm::tlm_phase &phase,
+                                               sc_time &delay);
 
     /** Callback of Payload Event Queue: */
-    void peq_cb(tlm::tlm_generic_payload& trans,
-                const tlm::tlm_phase& phase);
+    void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
     /** Helping function common to b_transport and nb_transport */
-    void execute_transaction(tlm::tlm_generic_payload& trans);
+    void execute_transaction(tlm::tlm_generic_payload &trans);
 
     /** Helping functions and processes: */
-    void send_end_req(tlm::tlm_generic_payload& trans);
-    void send_response(tlm::tlm_generic_payload& trans);
+    void send_end_req(tlm::tlm_generic_payload &trans);
+    void send_response(tlm::tlm_generic_payload &trans);
 
     /** Method process that runs on target_done_event */
     void execute_transaction_process();

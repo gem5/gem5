@@ -97,7 +97,7 @@ SymbolTable::insert(const SymbolTable &other)
         return false;
     }
 
-    for (const Symbol &symbol: other)
+    for (const Symbol &symbol : other)
         insert(symbol);
 
     return true;
@@ -109,7 +109,7 @@ SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
     paramOut(cp, base + ".size", symbols.size());
 
     int i = 0;
-    for (auto &symbol: symbols) {
+    for (auto &symbol : symbols) {
         paramOut(cp, csprintf("%s.addr_%d", base, i), symbol.address());
         if (symbol.sizeIsValid()) {
             paramOut(cp, csprintf("%s.size_%d", base, i),
@@ -138,8 +138,8 @@ SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
         Symbol::SymbolType type = Symbol::SymbolType::Other;
 
         paramIn(cp, csprintf("%s.addr_%d", base, i), address);
-        bool size_present = optParamIn(
-            cp, csprintf("%s.size_%d", base, i), size, false);
+        bool size_present =
+            optParamIn(cp, csprintf("%s.size_%d", base, i), size, false);
         paramIn(cp, csprintf("%s.symbol_%d", base, i), name);
         if (!optParamIn(cp, csprintf("%s.binding_%d", base, i), binding))
             binding = default_binding;

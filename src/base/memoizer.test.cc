@@ -47,25 +47,25 @@ namespace
 uint32_t
 fibonacci(uint32_t n)
 {
-    if (n == 0) return 0;
-    if (n == 1) return 1;
+    if (n == 0)
+        return 0;
+    if (n == 1)
+        return 1;
 
-    return fibonacci(n-1) + fibonacci(n-2);
+    return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
 using FibonacciMemoizer = decltype(Memoizer(fibonacci));
 
-class FibonacciMemoizerFixture : public FibonacciMemoizer,
-                                 public ::testing::Test
+class FibonacciMemoizerFixture :
+    public FibonacciMemoizer,
+    public ::testing::Test
 {
   public:
-    FibonacciMemoizerFixture()
-      : FibonacciMemoizer(fibonacci)
-    {}
-
+    FibonacciMemoizerFixture() : FibonacciMemoizer(fibonacci) {}
 };
 
-}
+} // namespace
 
 /**
  * Testing result cache before and after a memoized call

@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: scfx_rep.cpp,v $
 // Revision 1.4  2011/08/24 22:05:43  acg
 //  Torsten Maehne: initialization changes to remove warnings.
@@ -91,20 +90,30 @@ n_word(int x)
     return (x + bits_in_word - 1) / bits_in_word;
 }
 
-
 // ----------------------------------------------------------------------------
 //  CONSTRUCTORS
 // ----------------------------------------------------------------------------
 
-scfx_rep::scfx_rep() :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep()
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     set_zero();
 }
 
-scfx_rep::scfx_rep(int a) : m_mant(min_mant), m_wp(), m_sign(), m_state(),
-    m_msw(), m_lsw(), m_r_flag(false)
+scfx_rep::scfx_rep(int a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -122,8 +131,14 @@ scfx_rep::scfx_rep(int a) : m_mant(min_mant), m_wp(), m_sign(), m_state(),
     }
 }
 
-scfx_rep::scfx_rep(unsigned int a) : m_mant(min_mant), m_wp(), m_sign(),
-    m_state(), m_msw(), m_lsw(), m_r_flag(false)
+scfx_rep::scfx_rep(unsigned int a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -136,9 +151,14 @@ scfx_rep::scfx_rep(unsigned int a) : m_mant(min_mant), m_wp(), m_sign(),
     }
 }
 
-scfx_rep::scfx_rep(long a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(long a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -149,50 +169,59 @@ scfx_rep::scfx_rep(long a) :
             a = -a;
             m_sign = -1;
         }
-#       if SC_LONG_64
-            m_wp = 1;
-            m_mant[1] = static_cast<word>(a);
-            m_mant[2] = static_cast<word>(a >> bits_in_word);
-            find_sw();
-#       else
-            m_wp = 2;
-            m_msw = 2;
-            m_lsw = 2;
-            m_mant[2] = a;
-#       endif
+#if SC_LONG_64
+        m_wp = 1;
+        m_mant[1] = static_cast<word>(a);
+        m_mant[2] = static_cast<word>(a >> bits_in_word);
+        find_sw();
+#else
+        m_wp = 2;
+        m_msw = 2;
+        m_lsw = 2;
+        m_mant[2] = a;
+#endif
     } else {
         set_zero();
     }
 }
 
-scfx_rep::scfx_rep(unsigned long a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(unsigned long a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
         m_wp = m_msw = m_lsw = 2;
         m_state = normal;
-#       if SC_LONG_64
-            m_wp = 1;
-            m_mant[1] = static_cast<word>(a);
-            m_mant[2] = static_cast<word>(a >> bits_in_word);
-            find_sw();
-#       else
-            m_wp = 2;
-            m_msw = 2;
-            m_lsw = 2;
-            m_mant[2] = a;
-#       endif
+#if SC_LONG_64
+        m_wp = 1;
+        m_mant[1] = static_cast<word>(a);
+        m_mant[2] = static_cast<word>(a >> bits_in_word);
+        find_sw();
+#else
+        m_wp = 2;
+        m_msw = 2;
+        m_lsw = 2;
+        m_mant[2] = a;
+#endif
         m_sign = 1;
-    }
-    else
+    } else
         set_zero();
 }
 
-scfx_rep::scfx_rep(double a) :
-    m_mant(min_mant), m_wp(0), m_sign(), m_state(normal), m_msw(0),
-    m_lsw(0), m_r_flag(false)
+scfx_rep::scfx_rep(double a)
+    : m_mant(min_mant),
+      m_wp(0),
+      m_sign(),
+      m_state(normal),
+      m_msw(0),
+      m_lsw(0),
+      m_r_flag(false)
 {
     m_mant.clear();
 
@@ -215,9 +244,14 @@ scfx_rep::scfx_rep(double a) :
     }
 }
 
-scfx_rep::scfx_rep(int64 a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(int64 a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -238,9 +272,14 @@ scfx_rep::scfx_rep(int64 a) :
     }
 }
 
-scfx_rep::scfx_rep(uint64 a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(uint64 a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a != 0) {
         m_mant.clear();
@@ -255,9 +294,14 @@ scfx_rep::scfx_rep(uint64 a) :
     }
 }
 
-scfx_rep::scfx_rep(const sc_signed &a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(const sc_signed &a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a.iszero()) {
         set_zero();
@@ -290,9 +334,14 @@ scfx_rep::scfx_rep(const sc_signed &a) :
     }
 }
 
-scfx_rep::scfx_rep(const sc_unsigned &a) :
-    m_mant(min_mant), m_wp(), m_sign(), m_state(), m_msw(), m_lsw(),
-    m_r_flag(false)
+scfx_rep::scfx_rep(const sc_unsigned &a)
+    : m_mant(min_mant),
+      m_wp(),
+      m_sign(),
+      m_state(),
+      m_msw(),
+      m_lsw(),
+      m_r_flag(false)
 {
     if (a.iszero()) {
         set_zero();
@@ -315,11 +364,15 @@ scfx_rep::scfx_rep(const sc_unsigned &a) :
 }
 
 // copy constructor
-scfx_rep::scfx_rep(const scfx_rep &a) :
-    m_mant(a.m_mant), m_wp(a.m_wp), m_sign(a.m_sign), m_state(a.m_state),
-    m_msw(a.m_msw), m_lsw(a.m_lsw), m_r_flag(false)
+scfx_rep::scfx_rep(const scfx_rep &a)
+    : m_mant(a.m_mant),
+      m_wp(a.m_wp),
+      m_sign(a.m_sign),
+      m_state(a.m_state),
+      m_msw(a.m_msw),
+      m_lsw(a.m_lsw),
+      m_r_flag(false)
 {}
-
 
 // ----------------------------------------------------------------------------
 //  OPERATORS : new, delete
@@ -369,21 +422,20 @@ scfx_rep::operator delete(void *ptr, std::size_t size)
     list = node;
 }
 
-
 // ----------------------------------------------------------------------------
 //  METHOD : from_string
 //
 //  Convert from character string to sc_fxrep.
 // ----------------------------------------------------------------------------
 
-#define SCFX_FAIL_IF_(cnd) \
-{ \
-    if ((cnd)) { \
-        m_state = not_a_number; \
-        m_mant.clear(); /* to avoid Purify UMRs during assignment */ \
-        return; \
-    } \
-}
+#define SCFX_FAIL_IF_(cnd)                                                    \
+    {                                                                         \
+        if ((cnd)) {                                                          \
+            m_state = not_a_number;                                           \
+            m_mant.clear(); /* to avoid Purify UMRs during assignment */      \
+            return;                                                           \
+        }                                                                     \
+    }
 
 void
 scfx_rep::from_string(const char *s, int cte_wl)
@@ -402,69 +454,60 @@ scfx_rep::from_string(const char *s, int cte_wl)
     int base = 0;
 
     switch (numrep) {
-      case SC_DEC:
-        {
-            base = 10;
-            if (scfx_is_nan(s)) {   // special case: NaN
-                m_state = not_a_number;
-                m_mant.clear(); /* to avoid Purify UMRs during assignment */
-                return;
-            }
-            if (scfx_is_inf(s)) {   // special case: Infinity
-                m_state = infinity;
-                m_mant.clear(); /* to avoid Purify UMRs during assignment */
-                return;
-            }
-            break;
+    case SC_DEC: {
+        base = 10;
+        if (scfx_is_nan(s)) { // special case: NaN
+            m_state = not_a_number;
+            m_mant.clear(); /* to avoid Purify UMRs during assignment */
+            return;
         }
-      case SC_BIN:
-      case SC_BIN_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 2;
-            break;
+        if (scfx_is_inf(s)) { // special case: Infinity
+            m_state = infinity;
+            m_mant.clear(); /* to avoid Purify UMRs during assignment */
+            return;
         }
+        break;
+    }
+    case SC_BIN:
+    case SC_BIN_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 2;
+        break;
+    }
 
-      case SC_BIN_SM:
-        {
-            base = 2;
-            break;
-        }
-      case SC_OCT:
-      case SC_OCT_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 8;
-            break;
-        }
-      case SC_OCT_SM:
-        {
-            base = 8;
-            break;
-        }
-      case SC_HEX:
-      case SC_HEX_US:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 16;
-            break;
-        }
-      case SC_HEX_SM:
-        {
-            base = 16;
-            break;
-        }
-      case SC_CSD:
-        {
-            SCFX_FAIL_IF_(sign_char);
-            base = 2;
-            scfx_csd2tc(s2);
-            s = (const char *)s2 + 4;
-            numrep = SC_BIN;
-            break;
-        }
-      default:
-        ;
+    case SC_BIN_SM: {
+        base = 2;
+        break;
+    }
+    case SC_OCT:
+    case SC_OCT_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 8;
+        break;
+    }
+    case SC_OCT_SM: {
+        base = 8;
+        break;
+    }
+    case SC_HEX:
+    case SC_HEX_US: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 16;
+        break;
+    }
+    case SC_HEX_SM: {
+        base = 16;
+        break;
+    }
+    case SC_CSD: {
+        SCFX_FAIL_IF_(sign_char);
+        base = 2;
+        scfx_csd2tc(s2);
+        s = (const char *)s2 + 4;
+        numrep = SC_BIN;
+        break;
+    }
+    default:;
     }
 
     //
@@ -510,19 +553,17 @@ scfx_rep::from_string(const char *s, int cte_wl)
     //
     bool mant_is_neg = false;
     switch (numrep) {
-      case SC_BIN:
-      case SC_OCT:
-      case SC_HEX:
-        {
-            const char *p = s;
-            if (*p == '.')
-                ++p;
+    case SC_BIN:
+    case SC_OCT:
+    case SC_HEX: {
+        const char *p = s;
+        if (*p == '.')
+            ++p;
 
-            mant_is_neg = (scfx_to_digit(* p, numrep) >= (base >> 1));
-            break;
-        }
-      default:
-            ;
+        mant_is_neg = (scfx_to_digit(*p, numrep) >= (base >> 1));
+        break;
+    }
+    default:;
     }
 
     //
@@ -530,167 +571,192 @@ scfx_rep::from_string(const char *s, int cte_wl)
     //
 
     switch (base) {
-      case 2:
-        {
-            int bit_offset = exponent % bits_in_word;
-            int word_offset = exponent / bits_in_word;
+    case 2: {
+        int bit_offset = exponent % bits_in_word;
+        int word_offset = exponent / bits_in_word;
 
-            int_digits += bit_offset;
-            frac_digits -= bit_offset;
+        int_digits += bit_offset;
+        frac_digits -= bit_offset;
 
-            int words = n_word(int_digits) + n_word(frac_digits);
-            if (words > size())
-                resize_to(words);
-            m_mant.clear();
+        int words = n_word(int_digits) + n_word(frac_digits);
+        if (words > size())
+            resize_to(words);
+        m_mant.clear();
 
-            int j = n_word(frac_digits) * bits_in_word + int_digits - 1;
+        int j = n_word(frac_digits) * bits_in_word + int_digits - 1;
 
-            for (; s < end; s++) {
-                switch (*s) {
-                  case '1':
-                    set_bin(j);
-                    [[fallthrough]];
-                  case '0':
-                    j--;
-                    [[fallthrough]];
-                  case '.':
-                    break;
-                  default:
-                    SCFX_FAIL_IF_(true); // should not happen
-                }
+        for (; s < end; s++) {
+            switch (*s) {
+            case '1':
+                set_bin(j);
+                [[fallthrough]];
+            case '0':
+                j--;
+                [[fallthrough]];
+            case '.':
+                break;
+            default:
+                SCFX_FAIL_IF_(true); // should not happen
             }
-
-            m_wp = n_word(frac_digits) - word_offset;
-            break;
         }
-      case 8:
-        {
-            exponent *= 3;
-            int_digits *= 3;
-            frac_digits *= 3;
 
-            int bit_offset = exponent % bits_in_word;
-            int word_offset = exponent / bits_in_word;
+        m_wp = n_word(frac_digits) - word_offset;
+        break;
+    }
+    case 8: {
+        exponent *= 3;
+        int_digits *= 3;
+        frac_digits *= 3;
 
-            int_digits += bit_offset;
-            frac_digits -= bit_offset;
+        int bit_offset = exponent % bits_in_word;
+        int word_offset = exponent / bits_in_word;
 
-            int words = n_word(int_digits) + n_word(frac_digits);
-            if (words > size())
-                resize_to(words);
-            m_mant.clear();
+        int_digits += bit_offset;
+        frac_digits -= bit_offset;
 
-            int j = n_word(frac_digits) * bits_in_word + int_digits - 3;
+        int words = n_word(int_digits) + n_word(frac_digits);
+        if (words > size())
+            resize_to(words);
+        m_mant.clear();
 
-            for (; s < end; s++) {
-                switch (*s) {
-                  case '7': case '6': case '5': case '4':
-                  case '3': case '2': case '1':
-                    set_oct(j, *s - '0');
-                    [[fallthrough]];
-                  case '0':
-                    j -= 3;
-                    [[fallthrough]];
-                  case '.':
-                    break;
-                  default:
-                    SCFX_FAIL_IF_(true); // should not happen
-                }
+        int j = n_word(frac_digits) * bits_in_word + int_digits - 3;
+
+        for (; s < end; s++) {
+            switch (*s) {
+            case '7':
+            case '6':
+            case '5':
+            case '4':
+            case '3':
+            case '2':
+            case '1':
+                set_oct(j, *s - '0');
+                [[fallthrough]];
+            case '0':
+                j -= 3;
+                [[fallthrough]];
+            case '.':
+                break;
+            default:
+                SCFX_FAIL_IF_(true); // should not happen
             }
-
-            m_wp = n_word(frac_digits) - word_offset;
-            break;
         }
-      case 10:
-        {
-            word carry, temp;
-            int length = int_digits + frac_digits;
-            resize_to(sc_max(min_mant, n_word(4 * length)));
 
-            m_mant.clear();
-            m_msw = m_lsw = 0;
+        m_wp = n_word(frac_digits) - word_offset;
+        break;
+    }
+    case 10: {
+        word carry, temp;
+        int length = int_digits + frac_digits;
+        resize_to(sc_max(min_mant, n_word(4 * length)));
 
-            for (; s < end; s++) {
-                switch (*s) {
-                  case '9': case '8': case '7': case '6': case '5':
-                  case '4': case '3': case '2': case '1': case '0':
-                    multiply_by_ten();
-                    carry = *s - '0';
-                    for (int i = 0; carry && i < m_mant.size(); i++) {
-                        temp = m_mant[i];
-                        temp += carry;
-                        carry = temp < m_mant[i];
-                        m_mant[i] = temp;
-                    }
-                  case '.':
-                    break;
-                  default:
-                    SCFX_FAIL_IF_(true); // should not happen
+        m_mant.clear();
+        m_msw = m_lsw = 0;
+
+        for (; s < end; s++) {
+            switch (*s) {
+            case '9':
+            case '8':
+            case '7':
+            case '6':
+            case '5':
+            case '4':
+            case '3':
+            case '2':
+            case '1':
+            case '0':
+                multiply_by_ten();
+                carry = *s - '0';
+                for (int i = 0; carry && i < m_mant.size(); i++) {
+                    temp = m_mant[i];
+                    temp += carry;
+                    carry = temp < m_mant[i];
+                    m_mant[i] = temp;
                 }
+            case '.':
+                break;
+            default:
+                SCFX_FAIL_IF_(true); // should not happen
             }
-
-            m_wp = 0;
-            find_sw();
-
-            int denominator = frac_digits - exponent;
-
-            if (denominator) {
-                scfx_rep frac_num = pow10_fx(denominator);
-                scfx_rep *temp_num =
-                    div_scfx_rep(const_cast<const scfx_rep &>(*this),
-                                   frac_num, cte_wl);
-                *this = *temp_num;
-                delete temp_num;
-            }
-
-            break;
         }
-      case 16:
-        {
-            exponent *= 4;
-            int_digits *= 4;
-            frac_digits *= 4;
 
-            int bit_offset = exponent % bits_in_word;
-            int word_offset = exponent / bits_in_word;
+        m_wp = 0;
+        find_sw();
 
-            int_digits += bit_offset;
-            frac_digits -= bit_offset;
+        int denominator = frac_digits - exponent;
 
-            int words = n_word(int_digits) + n_word(frac_digits);
-            if (words > size())
-                resize_to(words);
-            m_mant.clear();
-
-            int j = n_word(frac_digits) * bits_in_word + int_digits - 4;
-
-            for (; s < end; s ++) {
-                switch (*s) {
-                  case 'f': case 'e': case 'd': case 'c': case 'b': case 'a':
-                    set_hex(j, *s - 'a' + 10);
-                    j -= 4;
-                    break;
-                  case 'F': case 'E': case 'D': case 'C': case 'B': case 'A':
-                    set_hex(j, *s - 'A' + 10);
-                    j -= 4;
-                    break;
-                  case '9': case '8': case '7': case '6': case '5':
-                  case '4': case '3': case '2': case '1':
-                    set_hex(j, *s - '0');
-                    [[fallthrough]];
-                  case '0':
-                    j -= 4;
-                    [[fallthrough]];
-                  case '.':
-                    break;
-                  default:
-                    SCFX_FAIL_IF_(true); // should not happen
-                }
-            }
-
-            m_wp = n_word(frac_digits) - word_offset;
-            break;
+        if (denominator) {
+            scfx_rep frac_num = pow10_fx(denominator);
+            scfx_rep *temp_num = div_scfx_rep(
+                const_cast<const scfx_rep &>(*this), frac_num, cte_wl);
+            *this = *temp_num;
+            delete temp_num;
         }
+
+        break;
+    }
+    case 16: {
+        exponent *= 4;
+        int_digits *= 4;
+        frac_digits *= 4;
+
+        int bit_offset = exponent % bits_in_word;
+        int word_offset = exponent / bits_in_word;
+
+        int_digits += bit_offset;
+        frac_digits -= bit_offset;
+
+        int words = n_word(int_digits) + n_word(frac_digits);
+        if (words > size())
+            resize_to(words);
+        m_mant.clear();
+
+        int j = n_word(frac_digits) * bits_in_word + int_digits - 4;
+
+        for (; s < end; s++) {
+            switch (*s) {
+            case 'f':
+            case 'e':
+            case 'd':
+            case 'c':
+            case 'b':
+            case 'a':
+                set_hex(j, *s - 'a' + 10);
+                j -= 4;
+                break;
+            case 'F':
+            case 'E':
+            case 'D':
+            case 'C':
+            case 'B':
+            case 'A':
+                set_hex(j, *s - 'A' + 10);
+                j -= 4;
+                break;
+            case '9':
+            case '8':
+            case '7':
+            case '6':
+            case '5':
+            case '4':
+            case '3':
+            case '2':
+            case '1':
+                set_hex(j, *s - '0');
+                [[fallthrough]];
+            case '0':
+                j -= 4;
+                [[fallthrough]];
+            case '.':
+                break;
+            default:
+                SCFX_FAIL_IF_(true); // should not happen
+            }
+        }
+
+        m_wp = n_word(frac_digits) - word_offset;
+        break;
+    }
     }
 
     m_state = normal;
@@ -700,7 +766,7 @@ scfx_rep::from_string(const char *s, int cte_wl)
     // two's complement of mantissa if it is negative
     //
     if (mant_is_neg) {
-        m_mant[m_msw] |=  ~0U << scfx_find_msb(m_mant[m_msw]);
+        m_mant[m_msw] |= ~0U << scfx_find_msb(m_mant[m_msw]);
         for (int i = m_msw + 1; i < m_mant.size(); ++i)
             m_mant[i] = static_cast<word>(-1);
         complement(m_mant, m_mant, m_mant.size());
@@ -751,9 +817,8 @@ scfx_rep::to_double() const
         return id;
     }
 
-    if (exp < SCFX_IEEE_DOUBLE_E_MIN -
-        static_cast<int>(SCFX_IEEE_DOUBLE_M_SIZE))
-    {
+    if (exp <
+        SCFX_IEEE_DOUBLE_E_MIN - static_cast<int>(SCFX_IEEE_DOUBLE_M_SIZE)) {
         id = 0.;
         return id;
     }
@@ -796,8 +861,8 @@ scfx_rep::to_double() const
         int subnormal_shift = SCFX_IEEE_DOUBLE_E_MIN - exp;
 
         if (subnormal_shift < bits_in_word) {
-            m1 = m1 >> subnormal_shift |
-                m0 << (bits_in_word - subnormal_shift);
+            m1 =
+                m1 >> subnormal_shift | m0 << (bits_in_word - subnormal_shift);
             m0 = m0 >> subnormal_shift;
         } else {
             m1 = m0 >> (subnormal_shift - bits_in_word);
@@ -821,7 +886,6 @@ scfx_rep::to_double() const
 
     return result;
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : to_uint64
@@ -851,7 +915,6 @@ scfx_rep::to_uint64() const
 
     return m_sign > 0 ? result : -result;
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : to_string
@@ -886,8 +949,7 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
     if (int_part.m_wp < int_part.m_lsw)
         int_part.resize_to(int_part.size() - int_part.m_wp, -1);
 
-    for (i = frac_part.m_msw;
-            i >= frac_part.m_lsw && i >= frac_part.m_wp; i--)
+    for (i = frac_part.m_msw; i >= frac_part.m_lsw && i >= frac_part.m_wp; i--)
         frac_part.m_mant[i] = 0;
     frac_part.find_sw();
     if (frac_part.m_msw == frac_part.size() - 1)
@@ -895,11 +957,11 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
 
     // print integer part
     int int_digits = 0;
-    int int_zeros  = 0;
+    int int_zeros = 0;
 
     if (!int_part.is_zero()) {
         double int_wl = (int_part.m_msw - int_part.m_wp) * bits_in_word +
-                         scfx_find_msb(int_part.m_mant[int_part.m_msw]) + 1;
+                        scfx_find_msb(int_part.m_mant[int_part.m_msw]) + 1;
         int_digits = (int)std::ceil(int_wl * std::log10(2.));
 
         int len = s.length();
@@ -931,7 +993,7 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
 
     // print fractional part
     int frac_digits = 0;
-    int frac_zeros  = 0;
+    int frac_zeros = 0;
 
     if (!frac_part.is_zero()) {
         s += '.';
@@ -939,7 +1001,7 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
         bool zero_digits = (int_digits == 0 && fmt != SC_F);
 
         double frac_wl = (frac_part.m_wp - frac_part.m_msw) * bits_in_word -
-                          scfx_find_msb(frac_part.m_mant[frac_part.m_msw]) - 1;
+                         scfx_find_msb(frac_part.m_mant[frac_part.m_msw]) - 1;
         frac_zeros = (int)std::floor(frac_wl * std::log10(2.));
 
         scfx_rep temp;
@@ -966,7 +1028,7 @@ print_dec(scfx_string &s, const scfx_rep &num, int w_prefix, sc_fmt fmt)
                     zero_digits = false;
             }
 
-            if (! zero_digits)
+            if (!zero_digits)
                 s += static_cast<char>('0' + n);
 
             frac_part.m_mant[frac_part.m_msw + 1] = 0;
@@ -991,9 +1053,8 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
 
     sc_numrep numrep2 = numrep;
 
-    bool numrep_is_sm = (numrep == SC_BIN_SM ||
-                         numrep == SC_OCT_SM ||
-                         numrep == SC_HEX_SM);
+    bool numrep_is_sm =
+        (numrep == SC_BIN_SM || numrep == SC_OCT_SM || numrep == SC_HEX_SM);
 
     if (numrep_is_sm) {
         if (b.is_neg()) {
@@ -1001,17 +1062,16 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
             b = *neg_scfx_rep(a);
         }
         switch (numrep) {
-          case SC_BIN_SM:
+        case SC_BIN_SM:
             numrep2 = SC_BIN_US;
             break;
-          case SC_OCT_SM:
+        case SC_OCT_SM:
             numrep2 = SC_OCT_US;
             break;
-          case SC_HEX_SM:
+        case SC_HEX_SM:
             numrep2 = SC_HEX_US;
             break;
-          default:
-            ;
+        default:;
         }
     }
 
@@ -1028,17 +1088,13 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
         lsb = params->iwl() - params->wl();
 
         if (params->enc() == SC_TC_ &&
-            (numrep == SC_BIN_US ||
-              numrep == SC_OCT_US ||
-              numrep == SC_HEX_US) &&
-            !numrep_is_sm &&
-            params->wl() > 1) {
+            (numrep == SC_BIN_US || numrep == SC_OCT_US ||
+             numrep == SC_HEX_US) &&
+            !numrep_is_sm && params->wl() > 1) {
             --msb;
         } else if (params->enc() == SC_US_ &&
-            (numrep == SC_BIN ||
-              numrep == SC_OCT ||
-              numrep == SC_HEX ||
-              numrep == SC_CSD)) {
+                   (numrep == SC_BIN || numrep == SC_OCT || numrep == SC_HEX ||
+                    numrep == SC_CSD)) {
             ++msb;
         }
     } else {
@@ -1046,42 +1102,40 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
             msb = 0;
             lsb = 0;
         } else {
-            msb = (b.m_msw - b.m_wp) * bits_in_word
-                + scfx_find_msb(b.m_mant[ b.m_msw ]) + 1;
+            msb = (b.m_msw - b.m_wp) * bits_in_word +
+                  scfx_find_msb(b.m_mant[b.m_msw]) + 1;
             while (b.get_bit(msb) == b.get_bit(msb - 1))
                 --msb;
 
-            if (numrep == SC_BIN_US ||
-                numrep == SC_OCT_US ||
+            if (numrep == SC_BIN_US || numrep == SC_OCT_US ||
                 numrep == SC_HEX_US) {
                 --msb;
             }
 
             lsb = (b.m_lsw - b.m_wp) * bits_in_word +
-                scfx_find_lsb(b.m_mant[b.m_lsw]);
-
+                  scfx_find_lsb(b.m_mant[b.m_lsw]);
         }
     }
 
     int step;
 
     switch (numrep) {
-      case SC_BIN:
-      case SC_BIN_US:
-      case SC_CSD:
+    case SC_BIN:
+    case SC_BIN_US:
+    case SC_CSD:
         step = 1;
-       break;
-      case SC_OCT:
-      case SC_OCT_US:
+        break;
+    case SC_OCT:
+    case SC_OCT_US:
         step = 3;
         break;
-      case SC_HEX:
-      case SC_HEX_US:
+    case SC_HEX:
+    case SC_HEX_US:
         step = 4;
         break;
-      default:
+    default:
         SC_REPORT_FATAL(sc_core::SC_ID_ASSERTION_FAILED_,
-                "unexpected sc_numrep");
+                        "unexpected sc_numrep");
         sc_core::sc_abort();
     }
 
@@ -1137,8 +1191,8 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
 }
 
 const char *
-scfx_rep::to_string(sc_numrep numrep, int w_prefix,
-                    sc_fmt fmt, const scfx_params *params) const
+scfx_rep::to_string(sc_numrep numrep, int w_prefix, sc_fmt fmt,
+                    const scfx_params *params) const
 {
     static scfx_string s;
 
@@ -1149,8 +1203,7 @@ scfx_rep::to_string(sc_numrep numrep, int w_prefix,
     } else if (is_inf()) {
         scfx_print_inf(s, is_neg());
     } else if (is_neg() && !is_zero() &&
-               (numrep == SC_BIN_US ||
-                numrep == SC_OCT_US ||
+               (numrep == SC_BIN_US || numrep == SC_OCT_US ||
                 numrep == SC_HEX_US)) {
         s += "negative";
     } else if (numrep == SC_DEC || numrep == SC_NOBASE) {
@@ -1161,7 +1214,6 @@ scfx_rep::to_string(sc_numrep numrep, int w_prefix,
 
     return s;
 }
-
 
 // ----------------------------------------------------------------------------
 //  ADD
@@ -1281,7 +1333,6 @@ add_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
     return &result;
 }
 
-
 // ----------------------------------------------------------------------------
 //  SUB
 //
@@ -1291,8 +1342,8 @@ add_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
 // ----------------------------------------------------------------------------
 
 static inline int
-sub_with_index(scfx_mant &a, int a_msw, int /*a_lsw*/,
-               const scfx_mant &b, int b_msw, int b_lsw)
+sub_with_index(scfx_mant &a, int a_msw, int /*a_lsw*/, const scfx_mant &b,
+               int b_msw, int b_lsw)
 {
     unsigned carry = 0;
 
@@ -1390,7 +1441,6 @@ sub_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
     return &result;
 }
 
-
 // ----------------------------------------------------------------------------
 //  MUL
 // ----------------------------------------------------------------------------
@@ -1398,6 +1448,7 @@ sub_scfx_rep(const scfx_rep &lhs, const scfx_rep &rhs, int max_wl)
 union word_short
 {
     word l;
+
     struct
     {
 #if defined(SC_BOOST_BIG_ENDIAN)
@@ -1423,8 +1474,7 @@ multiply(scfx_rep &result, const scfx_rep &lhs, const scfx_rep &rhs,
     //
     // check for special cases
     //
-    if (lhs.is_nan() || rhs.is_nan() ||
-        (lhs.is_inf() && rhs.is_zero()) ||
+    if (lhs.is_nan() || rhs.is_nan() || (lhs.is_inf() && rhs.is_zero()) ||
         (lhs.is_zero() && rhs.is_inf())) {
         result.set_nan();
         return;
@@ -1472,8 +1522,8 @@ multiply(scfx_rep &result, const scfx_rep &lhs, const scfx_rep &rhs,
 
         half_word v1 = s1[i1];
 
-        for (i2  = 0; i2 * half_word_incr < len_rhs; i2 += half_word_incr) {
-            ls.l  += v1 * s2[i2];
+        for (i2 = 0; i2 * half_word_incr < len_rhs; i2 += half_word_incr) {
+            ls.l += v1 * s2[i2];
             ls.s.l = ls.s.u + ((t[i2] += ls.s.l) < ls.s.l);
             ls.s.u = 0;
         }
@@ -1485,7 +1535,6 @@ multiply(scfx_rep &result, const scfx_rep &lhs, const scfx_rep &rhs,
     result.find_sw();
     result.round(max_wl);
 }
-
 
 // ----------------------------------------------------------------------------
 //  DIV
@@ -1646,7 +1695,6 @@ scfx_rep::rshift(int n)
     }
 }
 
-
 // ----------------------------------------------------------------------------
 //  FRIEND FUNCTION : compare_abs
 //
@@ -1768,7 +1816,6 @@ cmp_scfx_rep(const scfx_rep &a, const scfx_rep &b)
     return (a.m_sign * compare_abs(a, b));
 }
 
-
 // ----------------------------------------------------------------------------
 //  PRIVATE METHOD : quantization
 //
@@ -1789,69 +1836,67 @@ scfx_rep::quantization(const scfx_params &params, bool &q_flag)
     bool qb = q_bit(x);
     bool qz = q_zero(x);
 
-    q_flag = (qb || ! qz);
+    q_flag = (qb || !qz);
 
     if (q_flag) {
         switch (params.q_mode()) {
-          case SC_TRN: // truncation
-            {
-                if (is_neg())
-                    q_incr(x);
-                break;
-            }
-          case SC_RND: // rounding to plus infinity
-            {
-                if (!is_neg()) {
-                    if (qb)
-                        q_incr(x);
-                } else {
-                    if (qb && !qz)
-                        q_incr(x);
-                }
-                break;
-            }
-          case SC_TRN_ZERO: // truncation to zero
-            {
-                break;
-            }
-          case SC_RND_INF: // rounding to infinity
-            {
+        case SC_TRN: // truncation
+        {
+            if (is_neg())
+                q_incr(x);
+            break;
+        }
+        case SC_RND: // rounding to plus infinity
+        {
+            if (!is_neg()) {
                 if (qb)
                     q_incr(x);
-                break;
-            }
-          case SC_RND_CONV: // convergent rounding
-            {
-                if ((qb && !qz) || (qb && qz && q_odd(x)))
-                    q_incr(x);
-                break;
-            }
-          case SC_RND_ZERO: // rounding to zero
-            {
+            } else {
                 if (qb && !qz)
                     q_incr(x);
-                break;
             }
-          case SC_RND_MIN_INF: // rounding to minus infinity
-            {
-                if (!is_neg()) {
-                    if (qb && !qz)
-                        q_incr(x);
-                } else {
-                    if (qb)
-                        q_incr(x);
-                }
-                break;
+            break;
+        }
+        case SC_TRN_ZERO: // truncation to zero
+        {
+            break;
+        }
+        case SC_RND_INF: // rounding to infinity
+        {
+            if (qb)
+                q_incr(x);
+            break;
+        }
+        case SC_RND_CONV: // convergent rounding
+        {
+            if ((qb && !qz) || (qb && qz && q_odd(x)))
+                q_incr(x);
+            break;
+        }
+        case SC_RND_ZERO: // rounding to zero
+        {
+            if (qb && !qz)
+                q_incr(x);
+            break;
+        }
+        case SC_RND_MIN_INF: // rounding to minus infinity
+        {
+            if (!is_neg()) {
+                if (qb && !qz)
+                    q_incr(x);
+            } else {
+                if (qb)
+                    q_incr(x);
             }
-          default:
-            ;
+            break;
+        }
+        default:;
         }
         q_clear(x);
 
         find_sw();
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  PRIVATE METHOD : overflow
@@ -1886,9 +1931,9 @@ scfx_rep::overflow(const scfx_params &params, bool &o_flag)
             if (params.o_mode() == SC_SAT_SYM)
                 under = (!zero_left || bit_at);
             else
-                under = (!zero_left || (zero_left && bit_at && ! zero_right));
+                under = (!zero_left || (zero_left && bit_at && !zero_right));
         } else {
-            over = (! zero_left || bit_at);
+            over = (!zero_left || bit_at);
         }
     } else {
         if (is_neg())
@@ -1909,110 +1954,107 @@ scfx_rep::overflow(const scfx_params &params, bool &o_flag)
         }
 
         switch (params.o_mode()) {
-          case SC_WRAP: // wrap-around
-            {
-                int n_bits = params.n_bits();
+        case SC_WRAP: // wrap-around
+        {
+            int n_bits = params.n_bits();
 
-                if (n_bits == 0) {
-                    // wrap-around all 'wl' bits
-                    toggle_tc();
-                    o_extend(x, enc);
-                    toggle_tc();
-                } else if (n_bits < params.wl()) {
-                    scfx_index x3 = calc_indices(params.iwl() - 1 - n_bits);
+            if (n_bits == 0) {
+                // wrap-around all 'wl' bits
+                toggle_tc();
+                o_extend(x, enc);
+                toggle_tc();
+            } else if (n_bits < params.wl()) {
+                scfx_index x3 = calc_indices(params.iwl() - 1 - n_bits);
 
-                    // wrap-around least significant 'wl - n_bits' bits;
-                    // saturate most significant 'n_bits' bits
-                    toggle_tc();
-                    o_set(x, x3, enc, under);
-                    o_extend(x, enc);
-                    toggle_tc();
-                } else {
-                    // saturate all 'wl' bits
-                    if (under)
-                        o_set_low(x, enc);
-                    else
-                        o_set_high(x, x2, enc);
-                }
-                break;
-            }
-          case SC_SAT: // saturation
-            {
+                // wrap-around least significant 'wl - n_bits' bits;
+                // saturate most significant 'n_bits' bits
+                toggle_tc();
+                o_set(x, x3, enc, under);
+                o_extend(x, enc);
+                toggle_tc();
+            } else {
+                // saturate all 'wl' bits
                 if (under)
                     o_set_low(x, enc);
                 else
                     o_set_high(x, x2, enc);
-                break;
             }
-          case SC_SAT_SYM: // symmetrical saturation
-            {
-                if (under) {
-                    if (enc == SC_TC_)
-                        o_set_high(x, x2, SC_TC_, -1);
-                    else
-                        o_set_low(x, SC_US_);
-                } else {
-                    o_set_high(x, x2, enc);
-                }
-                break;
+            break;
+        }
+        case SC_SAT: // saturation
+        {
+            if (under)
+                o_set_low(x, enc);
+            else
+                o_set_high(x, x2, enc);
+            break;
+        }
+        case SC_SAT_SYM: // symmetrical saturation
+        {
+            if (under) {
+                if (enc == SC_TC_)
+                    o_set_high(x, x2, SC_TC_, -1);
+                else
+                    o_set_low(x, SC_US_);
+            } else {
+                o_set_high(x, x2, enc);
             }
-          case SC_SAT_ZERO: // saturation to zero
-            {
-                set_zero();
-                break;
+            break;
+        }
+        case SC_SAT_ZERO: // saturation to zero
+        {
+            set_zero();
+            break;
+        }
+        case SC_WRAP_SM: // sign magnitude wrap-around
+        {
+            SC_ERROR_IF_(enc == SC_US_, sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
+
+            int n_bits = params.n_bits();
+
+            if (n_bits == 0) {
+                scfx_index x4 = calc_indices(params.iwl());
+
+                if (x4.wi() >= size())
+                    resize_to(x4.wi() + 1, 1);
+
+                toggle_tc();
+                if (o_bit_at(x4) != o_bit_at(x))
+                    o_invert(x2);
+                o_extend(x, SC_TC_);
+                toggle_tc();
+            } else if (n_bits == 1) {
+                toggle_tc();
+                if (is_neg() != o_bit_at(x))
+                    o_invert(x2);
+                o_extend(x, SC_TC_);
+                toggle_tc();
+            } else if (n_bits < params.wl()) {
+                scfx_index x3 = calc_indices(params.iwl() - 1 - n_bits);
+                scfx_index x4 = calc_indices(params.iwl() - n_bits);
+
+                // wrap-around least significant 'wl - n_bits' bits;
+                // saturate most significant 'n_bits' bits
+                toggle_tc();
+                if (is_neg() == o_bit_at(x4))
+                    o_invert(x2);
+                o_set(x, x3, SC_TC_, under);
+                o_extend(x, SC_TC_);
+                toggle_tc();
+            } else {
+                if (under)
+                    o_set_low(x, SC_TC_);
+                else
+                    o_set_high(x, x2, SC_TC_);
             }
-          case SC_WRAP_SM: // sign magnitude wrap-around
-            {
-                SC_ERROR_IF_(enc == SC_US_,
-                             sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
-
-                int n_bits = params.n_bits();
-
-                if (n_bits == 0) {
-                    scfx_index x4 = calc_indices(params.iwl());
-
-                    if (x4.wi() >= size())
-                        resize_to(x4.wi() + 1, 1);
-
-                    toggle_tc();
-                    if (o_bit_at(x4) != o_bit_at(x))
-                        o_invert(x2);
-                    o_extend(x, SC_TC_);
-                    toggle_tc();
-                } else if (n_bits == 1) {
-                    toggle_tc();
-                    if (is_neg() != o_bit_at(x))
-                        o_invert(x2);
-                    o_extend(x, SC_TC_);
-                    toggle_tc();
-                } else if (n_bits < params.wl()) {
-                    scfx_index x3 = calc_indices(params.iwl() - 1 - n_bits);
-                    scfx_index x4 = calc_indices(params.iwl() - n_bits);
-
-                    // wrap-around least significant 'wl - n_bits' bits;
-                    // saturate most significant 'n_bits' bits
-                    toggle_tc();
-                    if (is_neg() == o_bit_at(x4))
-                        o_invert(x2);
-                    o_set(x, x3, SC_TC_, under);
-                    o_extend(x, SC_TC_);
-                    toggle_tc();
-                } else {
-                    if (under)
-                        o_set_low(x, SC_TC_);
-                    else
-                        o_set_high(x, x2, SC_TC_);
-                }
-                break;
-            }
-          default:
-            ;
+            break;
+        }
+        default:;
         }
 
         find_sw();
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  PUBLIC METHOD : cast
@@ -2042,14 +2084,13 @@ scfx_rep::cast(const scfx_params &params, bool &q_flag, bool &o_flag)
         m_sign = 1;
 }
 
-
 // ----------------------------------------------------------------------------
 //  make sure, the two mantissas are aligned
 // ----------------------------------------------------------------------------
 
 void
-align(const scfx_rep &lhs, const scfx_rep &rhs, int &new_wp,
-      int &len_mant, scfx_mant_ref &lhs_mant, scfx_mant_ref &rhs_mant)
+align(const scfx_rep &lhs, const scfx_rep &rhs, int &new_wp, int &len_mant,
+      scfx_mant_ref &lhs_mant, scfx_mant_ref &rhs_mant)
 {
     bool need_lhs = true;
     bool need_rhs = true;
@@ -2086,7 +2127,6 @@ align(const scfx_rep &lhs, const scfx_rep &rhs, int &new_wp,
     }
 }
 
-
 // ----------------------------------------------------------------------------
 //  compare two mantissas
 // ----------------------------------------------------------------------------
@@ -2095,7 +2135,7 @@ int
 compare_msw_ff(const scfx_rep &lhs, const scfx_rep &rhs)
 {
     // special case: rhs.m_mant[rhs.m_msw + 1] == 1
-    if (rhs.m_msw < rhs.size() - 1 && rhs.m_mant[rhs.m_msw + 1 ] != 0) {
+    if (rhs.m_msw < rhs.size() - 1 && rhs.m_mant[rhs.m_msw + 1] != 0) {
         return -1;
     }
 
@@ -2109,8 +2149,7 @@ compare_msw_ff(const scfx_rep &lhs, const scfx_rep &rhs)
 
     int i;
 
-    for (i = 0;
-         i < size && lhs.m_mant[lhs_index] == rhs.m_mant[rhs_index];
+    for (i = 0; i < size && lhs.m_mant[lhs_index] == rhs.m_mant[rhs_index];
          i++) {
         lhs_index--;
         rhs_index--;
@@ -2134,7 +2173,6 @@ compare_msw_ff(const scfx_rep &lhs, const scfx_rep &rhs)
         return 1;
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  divide the mantissa by ten
@@ -2169,7 +2207,6 @@ scfx_rep::divide_by_ten()
     return remainder;
 }
 
-
 // ----------------------------------------------------------------------------
 //  multiply the mantissa by ten
 // ----------------------------------------------------------------------------
@@ -2188,10 +2225,10 @@ scfx_rep::multiply_by_ten()
     mant2[size] = (m_mant[size - 1] >> (bits_in_word - 1));
 
     while (--size) {
-        mant8[size] = (m_mant[size] << 3) |
-                      (m_mant[size - 1] >> (bits_in_word - 3));
-        mant2[size] = (m_mant[size] << 1) |
-                      (m_mant[size - 1] >> (bits_in_word - 1));
+        mant8[size] =
+            (m_mant[size] << 3) | (m_mant[size - 1] >> (bits_in_word - 3));
+        mant2[size] =
+            (m_mant[size] << 1) | (m_mant[size - 1] >> (bits_in_word - 1));
     }
 
     mant8[0] = (m_mant[0] << 3);
@@ -2199,7 +2236,6 @@ scfx_rep::multiply_by_ten()
 
     add_mants(m_mant.size(), m_mant, mant8, mant2);
 }
-
 
 // ----------------------------------------------------------------------------
 //  normalize
@@ -2222,7 +2258,6 @@ scfx_rep::normalize(int exponent)
     m_wp = (shift - exponent) / bits_in_word;
 }
 
-
 // ----------------------------------------------------------------------------
 //  return a new mantissa that is aligned and resized
 // ----------------------------------------------------------------------------
@@ -2243,7 +2278,6 @@ scfx_rep::resize(int new_size, int new_wp) const
     return result;
 }
 
-
 // ----------------------------------------------------------------------------
 //  set a single bit
 // ----------------------------------------------------------------------------
@@ -2253,7 +2287,6 @@ scfx_rep::set_bin(int i)
 {
     m_mant[i >> 5] |= 1 << (i & 31);
 }
-
 
 // ----------------------------------------------------------------------------
 //  set three bits
@@ -2274,7 +2307,6 @@ scfx_rep::set_oct(int i, int n)
         m_mant[i >> 5] |= 1 << (i & 31);
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  set four bits
@@ -2300,7 +2332,6 @@ scfx_rep::set_hex(int i, int n)
     }
 }
 
-
 // ----------------------------------------------------------------------------
 //  PRIVATE METHOD : shift_left
 //
@@ -2318,13 +2349,12 @@ scfx_rep::shift_left(int n)
                    "shift_left overflow");
 
         for (int i = size() - 1; i > 0; i--) {
-            m_mant[i] = (m_mant[i] << shift_left) |
-                        (m_mant[i - 1] >> shift_right);
+            m_mant[i] =
+                (m_mant[i] << shift_left) | (m_mant[i - 1] >> shift_right);
         }
         m_mant[0] <<= shift_left;
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  PRIVATE METHOD : shift_right
@@ -2342,13 +2372,12 @@ scfx_rep::shift_right(int n)
         SC_ASSERT_(!(m_mant[0] << shift_left), "shift_right overflow");
 
         for (int i = 0; i < size() - 1; i++) {
-            m_mant[i] = (m_mant[i] >> shift_right) |
-                        (m_mant[i + 1] << shift_left);
+            m_mant[i] =
+                (m_mant[i] >> shift_right) | (m_mant[i + 1] << shift_left);
         }
         m_mant[size() - 1] >>= shift_right;
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : get_bit
@@ -2370,7 +2399,7 @@ scfx_rep::get_bit(int i) const
     if (x.wi() < 0)
         return false;
 
-    const_cast<scfx_rep*>(this)->toggle_tc();
+    const_cast<scfx_rep *>(this)->toggle_tc();
 
     bool result = (m_mant[x.wi()] & (1 << x.bi())) != 0;
 
@@ -2378,7 +2407,6 @@ scfx_rep::get_bit(int i) const
 
     return result;
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : set
@@ -2418,7 +2446,6 @@ scfx_rep::set(int i, const scfx_params &params)
     return true;
 }
 
-
 // ----------------------------------------------------------------------------
 //  METHOD : clear
 //
@@ -2455,7 +2482,6 @@ scfx_rep::clear(int i, const scfx_params &params)
 
     return true;
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : get_slice
@@ -2506,7 +2532,6 @@ scfx_rep::set_slice(int i, int j, const scfx_params &params,
     return true;
 }
 
-
 // ----------------------------------------------------------------------------
 //  METHOD : print
 // ----------------------------------------------------------------------------
@@ -2516,7 +2541,6 @@ scfx_rep::print(::std::ostream &os) const
 {
     os << to_string(SC_DEC, -1, SC_E);
 }
-
 
 // ----------------------------------------------------------------------------
 //  METHOD : dump
@@ -2531,8 +2555,8 @@ scfx_rep::dump(::std::ostream &os) const
     os << "mant  =" << ::std::endl;
     for (int i = size() - 1; i >= 0; i--) {
         char buf[BUFSIZ];
-        std::sprintf(buf, " %d: %10u (%8x)", i,
-                     (int)m_mant[i], (int)m_mant[i]);
+        std::sprintf(buf, " %d: %10u (%8x)", i, (int)m_mant[i],
+                     (int)m_mant[i]);
         os << buf << ::std::endl;
     }
 
@@ -2541,16 +2565,16 @@ scfx_rep::dump(::std::ostream &os) const
 
     os << "state = ";
     switch (m_state) {
-      case normal:
+    case normal:
         os << "normal";
         break;
-      case infinity:
+    case infinity:
         os << "infinity";
         break;
-      case not_a_number:
+    case not_a_number:
         os << "not_a_number";
         break;
-      default:
+    default:
         os << "unknown";
     }
     os << ::std::endl;
@@ -2561,7 +2585,6 @@ scfx_rep::dump(::std::ostream &os) const
     os << ")" << ::std::endl;
 }
 
-
 // ----------------------------------------------------------------------------
 //  METHOD : get_type
 // ----------------------------------------------------------------------------
@@ -2570,39 +2593,36 @@ void
 scfx_rep::get_type(int &wl, int &iwl, sc_enc &enc) const
 {
     if (is_nan() || is_inf()) {
-        wl  = 0;
+        wl = 0;
         iwl = 0;
         enc = SC_TC_;
         return;
     }
 
     if (is_zero()) {
-        wl  = 1;
+        wl = 1;
         iwl = 1;
         enc = SC_US_;
         return;
     }
 
-    int msb = (m_msw - m_wp) * bits_in_word +
-              scfx_find_msb(m_mant[ m_msw ]) + 1;
+    int msb = (m_msw - m_wp) * bits_in_word + scfx_find_msb(m_mant[m_msw]) + 1;
     while (get_bit(msb) == get_bit(msb - 1)) {
         --msb;
     }
 
-    int lsb = (m_lsw - m_wp) * bits_in_word +
-              scfx_find_lsb(m_mant[m_lsw]);
+    int lsb = (m_lsw - m_wp) * bits_in_word + scfx_find_lsb(m_mant[m_lsw]);
 
     if (is_neg()) {
-        wl  = msb - lsb + 1;
+        wl = msb - lsb + 1;
         iwl = msb + 1;
         enc = SC_TC_;
     } else {
-        wl  = msb - lsb;
+        wl = msb - lsb;
         iwl = msb;
         enc = SC_US_;
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  PRIVATE METHOD : round
@@ -2627,8 +2647,8 @@ scfx_rep::round(int wl)
     // calculate effective wordlength and compare
     int msb = scfx_find_msb(m_mant[m_msw]);
     int lsb = scfx_find_lsb(m_mant[m_lsw]);
-    wl_effective = (m_msw * bits_in_word + msb) -
-                   (m_lsw * bits_in_word + lsb) + 1;
+    wl_effective =
+        (m_msw * bits_in_word + msb) - (m_lsw * bits_in_word + lsb) + 1;
     if (wl_effective <= wl)
         return;
 
@@ -2642,7 +2662,7 @@ scfx_rep::round(int wl)
 
     scfx_index x(wi, bi);
 
-    if ((q_bit(x) && ! q_zero(x)) || (q_bit(x) && q_zero(x) && q_odd(x))) {
+    if ((q_bit(x) && !q_zero(x)) || (q_bit(x) && q_zero(x) && q_odd(x))) {
         q_incr(x);
     }
     q_clear(x);

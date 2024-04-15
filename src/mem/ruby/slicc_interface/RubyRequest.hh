@@ -85,10 +85,10 @@ class RubyRequest : public Message
     bool m_isGLCSet;
     bool m_isSLCSet;
 
-    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
-        uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
-        PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-        ContextID _proc_id = 100, ContextID _core_id = 99)
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len, uint64_t _pc,
+                RubyRequestType _type, RubyAccessMode _access_mode,
+                PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
+                ContextID _proc_id = 100, ContextID _core_id = 99)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -114,9 +114,9 @@ class RubyRequest : public Message
     }
 
     /** RubyRequest for memory management commands */
-    RubyRequest(Tick curTime,
-        uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
-        PacketPtr _pkt, ContextID _proc_id, ContextID _core_id)
+    RubyRequest(Tick curTime, uint64_t _pc, RubyRequestType _type,
+                RubyAccessMode _access_mode, PacketPtr _pkt,
+                ContextID _proc_id, ContextID _core_id)
         : Message(curTime),
           m_PhysicalAddress(0),
           m_Type(_type),
@@ -141,13 +141,11 @@ class RubyRequest : public Message
         }
     }
 
-    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
-        uint64_t _pc, RubyRequestType _type,
-        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
-        unsigned _proc_id, unsigned _core_id,
-        int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data,
-        uint64_t _instSeqNum = 0)
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len, uint64_t _pc,
+                RubyRequestType _type, RubyAccessMode _access_mode,
+                PacketPtr _pkt, PrefetchBit _pb, unsigned _proc_id,
+                unsigned _core_id, int _wm_size, std::vector<bool> &_wm_mask,
+                DataBlock &_Data, uint64_t _instSeqNum = 0)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -157,7 +155,7 @@ class RubyRequest : public Message
           m_Prefetch(_pb),
           m_pkt(_pkt),
           m_contextId(_core_id),
-          m_writeMask(_wm_size,_wm_mask),
+          m_writeMask(_wm_size, _wm_mask),
           m_WTData(_Data),
           m_wfid(_proc_id),
           m_instSeqNum(_instSeqNum),
@@ -176,14 +174,13 @@ class RubyRequest : public Message
         }
     }
 
-    RubyRequest(Tick curTime, uint64_t _paddr, int _len,
-        uint64_t _pc, RubyRequestType _type,
-        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
-        unsigned _proc_id, unsigned _core_id,
-        int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data,
-        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps,
-        uint64_t _instSeqNum = 0)
+    RubyRequest(Tick curTime, uint64_t _paddr, int _len, uint64_t _pc,
+                RubyRequestType _type, RubyAccessMode _access_mode,
+                PacketPtr _pkt, PrefetchBit _pb, unsigned _proc_id,
+                unsigned _core_id, int _wm_size, std::vector<bool> &_wm_mask,
+                DataBlock &_Data,
+                std::vector<std::pair<int, AtomicOpFunctor *>> _atomicOps,
+                uint64_t _instSeqNum = 0)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -193,7 +190,7 @@ class RubyRequest : public Message
           m_Prefetch(_pb),
           m_pkt(_pkt),
           m_contextId(_core_id),
-          m_writeMask(_wm_size,_wm_mask,_atomicOps),
+          m_writeMask(_wm_size, _wm_mask, _atomicOps),
           m_WTData(_Data),
           m_wfid(_proc_id),
           m_instSeqNum(_instSeqNum),
@@ -214,35 +211,79 @@ class RubyRequest : public Message
     }
 
     RubyRequest(Tick curTime) : Message(curTime) {}
-    MsgPtr clone() const
-    { return std::shared_ptr<Message>(new RubyRequest(*this)); }
 
-    Addr getLineAddress() const { return m_LineAddress; }
-    Addr getPhysicalAddress() const { return m_PhysicalAddress; }
-    const RubyRequestType& getType() const { return m_Type; }
-    Addr getProgramCounter() const { return m_ProgramCounter; }
-    const RubyAccessMode& getAccessMode() const { return m_AccessMode; }
-    const int& getSize() const { return m_Size; }
-    const PrefetchBit& getPrefetch() const { return m_Prefetch; }
-    RequestPtr getRequestPtr() const { return m_pkt->req; }
+    MsgPtr
+    clone() const
+    {
+        return std::shared_ptr<Message>(new RubyRequest(*this));
+    }
 
-    void setWriteMask(uint32_t offset, uint32_t len,
-        std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps);
-    void print(std::ostream& out) const;
+    Addr
+    getLineAddress() const
+    {
+        return m_LineAddress;
+    }
+
+    Addr
+    getPhysicalAddress() const
+    {
+        return m_PhysicalAddress;
+    }
+
+    const RubyRequestType &
+    getType() const
+    {
+        return m_Type;
+    }
+
+    Addr
+    getProgramCounter() const
+    {
+        return m_ProgramCounter;
+    }
+
+    const RubyAccessMode &
+    getAccessMode() const
+    {
+        return m_AccessMode;
+    }
+
+    const int &
+    getSize() const
+    {
+        return m_Size;
+    }
+
+    const PrefetchBit &
+    getPrefetch() const
+    {
+        return m_Prefetch;
+    }
+
+    RequestPtr
+    getRequestPtr() const
+    {
+        return m_pkt->req;
+    }
+
+    void
+    setWriteMask(uint32_t offset, uint32_t len,
+                 std::vector<std::pair<int, AtomicOpFunctor *>> atomicOps);
+    void print(std::ostream &out) const;
     bool functionalRead(Packet *pkt);
     bool functionalRead(Packet *pkt, WriteMask &mask);
     bool functionalWrite(Packet *pkt);
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const RubyRequest& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const RubyRequest &obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 } // namespace ruby
 } // namespace gem5
 
-#endif  //__MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__
+#endif //__MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__

@@ -39,15 +39,20 @@ namespace prefetch
 
 BOP::BOP(const BOPPrefetcherParams &p)
     : Queued(p),
-      scoreMax(p.score_max), roundMax(p.round_max),
-      badScore(p.bad_score), rrEntries(p.rr_size),
+      scoreMax(p.score_max),
+      roundMax(p.round_max),
+      badScore(p.bad_score),
+      rrEntries(p.rr_size),
       tagMask((1 << p.tag_bits) - 1),
       delayQueueEnabled(p.delay_queue_enable),
       delayQueueSize(p.delay_queue_size),
       delayTicks(cyclesToTicks(p.delay_queue_cycles)),
-      delayQueueEvent([this]{ delayQueueEventWrapper(); }, name()),
-      issuePrefetchRequests(false), bestOffset(1), phaseBestOffset(0),
-      bestScore(0), round(0)
+      delayQueueEvent([this] { delayQueueEventWrapper(); }, name()),
+      issuePrefetchRequests(false),
+      bestOffset(1),
+      phaseBestOffset(0),
+      bestScore(0),
+      round(0)
 {
     if (!isPowerOf2(rrEntries)) {
         fatal("%s: number of RR entries is not power of 2\n", name());
@@ -69,8 +74,7 @@ BOP::BOP(const BOPPrefetcherParams &p)
     unsigned int i = 0;
     int64_t offset_i = 1;
 
-    while (i < p.offset_list_size)
-    {
+    while (i < p.offset_list_size) {
         int64_t offset = offset_i;
 
         for (int n : factors) {
@@ -84,7 +88,7 @@ BOP::BOP(const BOPPrefetcherParams &p)
             i++;
             // If we want to use negative offsets, add also the negative value
             // of the offset just calculated
-            if (p.negative_offsets_enable)  {
+            if (p.negative_offsets_enable) {
                 offsetsList.push_back(OffsetListEntry(-offset_i, 0));
                 i++;
             }
@@ -100,8 +104,7 @@ void
 BOP::delayQueueEventWrapper()
 {
     while (!delayQueue.empty() &&
-            delayQueue.front().processTick <= curTick())
-    {
+           delayQueue.front().processTick <= curTick()) {
         Addr addr_x = delayQueue.front().baseAddr;
         insertIntoRR(addr_x, RRWay::Left);
         delayQueue.pop_front();
@@ -125,12 +128,12 @@ void
 BOP::insertIntoRR(Addr addr, unsigned int way)
 {
     switch (way) {
-        case RRWay::Left:
-            rrLeft[hash(addr, RRWay::Left)] = addr;
-            break;
-        case RRWay::Right:
-            rrRight[hash(addr, RRWay::Right)] = addr;
-            break;
+    case RRWay::Left:
+        rrLeft[hash(addr, RRWay::Left)] = addr;
+        break;
+    case RRWay::Right:
+        rrRight[hash(addr, RRWay::Right)] = addr;
+        break;
     }
 }
 
@@ -155,7 +158,7 @@ BOP::insertIntoDelayQueue(Addr x)
 void
 BOP::resetScores()
 {
-    for (auto& it : offsetsList) {
+    for (auto &it : offsetsList) {
         it.second = 0;
     }
 }
@@ -169,13 +172,13 @@ BOP::tag(Addr addr) const
 bool
 BOP::testRR(Addr addr) const
 {
-    for (auto& it : rrLeft) {
+    for (auto &it : rrLeft) {
         if (it == addr) {
             return true;
         }
     }
 
-    for (auto& it : rrRight) {
+    for (auto &it : rrRight) {
         if (it == addr) {
             return true;
         }
@@ -227,8 +230,8 @@ BOP::bestOffsetLearning(Addr x)
 
 void
 BOP::calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses,
-        const CacheAccessor &cache)
+                       std::vector<AddrPriority> &addresses,
+                       const CacheAccessor &cache)
 {
     Addr addr = pfi.getAddr();
     Addr tag_x = tag(addr);
@@ -255,10 +258,11 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
 void
 BOP::notifyFill(const CacheAccessProbeArg &arg)
 {
-    const PacketPtr& pkt = arg.pkt;
+    const PacketPtr &pkt = arg.pkt;
 
     // Only insert into the RR right way if it's the pkt is a HWP
-    if (!pkt->cmd.isHWPrefetch()) return;
+    if (!pkt->cmd.isHWPrefetch())
+        return;
 
     Addr tag_y = tag(pkt->getAddr());
 

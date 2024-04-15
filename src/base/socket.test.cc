@@ -49,15 +49,13 @@ class MockListenSocket : public ListenSocketInet
 {
   public:
     MockListenSocket(int port) : ListenSocketInet("mock", port) {}
+
     /*
      * This mock Listen Socket is used to ensure the static variables are reset
      * back to their default values after deconstruction (i.e., after a test
      * has completed).
      */
-    ~MockListenSocket()
-    {
-        cleanup();
-    }
+    ~MockListenSocket() { cleanup(); }
 };
 
 TEST(SocketTest, DefaultBehavior)
@@ -100,9 +98,8 @@ TEST(SocketTest, RelistenWithSameInstanceSamePort)
      */
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(listen_socket.listen());
-    std::string expected =
-        "panic: panic condition listening occurred: "
-        "Socket already listening!\n";
+    std::string expected = "panic: panic condition listening occurred: "
+                           "Socket already listening!\n";
     std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }

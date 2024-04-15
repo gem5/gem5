@@ -46,7 +46,8 @@
 #include "proto/protoio.hh"
 #include "sim/insttracer.hh"
 
-namespace ProtoMessage {
+namespace ProtoMessage
+{
 class Inst;
 }
 
@@ -55,7 +56,8 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 /**
  * This in an instruction tracer that records the flow of instructions through
@@ -66,35 +68,35 @@ namespace trace {
 class InstPBTraceRecord : public InstRecord
 {
   public:
-    InstPBTraceRecord(InstPBTrace& _tracer, Tick when, ThreadContext *tc,
+    InstPBTraceRecord(InstPBTrace &_tracer, Tick when, ThreadContext *tc,
                       const StaticInstPtr si, const PCStateBase &pc,
                       const StaticInstPtr mi = NULL)
         : InstRecord(when, tc, si, pc, mi), tracer(_tracer)
     {}
 
     /** called by the cpu when the instruction commits.
-     * This implementation of dump calls InstPBTrace to output the contents to a
-     * protobuf file
+     * This implementation of dump calls InstPBTrace to output the contents to
+     * a protobuf file
      */
     void dump() override;
 
   protected:
-    InstPBTrace& tracer;
-
+    InstPBTrace &tracer;
 };
 
 class InstPBTrace : public InstTracer
 {
- public:
+  public:
     InstPBTrace(const InstPBTraceParams &p);
     virtual ~InstPBTrace();
 
-    InstPBTraceRecord* getInstRecord(Tick when, ThreadContext *tc, const
-                                    StaticInstPtr si, const PCStateBase &pc,
-                                    const StaticInstPtr mi = NULL) override;
+    InstPBTraceRecord *getInstRecord(Tick when, ThreadContext *tc,
+                                     const StaticInstPtr si,
+                                     const PCStateBase &pc,
+                                     const StaticInstPtr mi = NULL) override;
 
   protected:
-    std::unique_ptr<uint8_t []> buf;
+    std::unique_ptr<uint8_t[]> buf;
     size_t bufSize;
 
     /** One output stream for the entire simulation.
@@ -102,9 +104,8 @@ class InstPBTrace : public InstTracer
      */
     static ProtoOutputStream *traceStream;
 
-
-    /** This is the message were working on writing. The majority of the message
-     * exists however the memory accesses will be delayed.
+    /** This is the message were working on writing. The majority of the
+     * message exists however the memory accesses will be delayed.
      */
     ProtoMessage::Inst *curMsg;
 
@@ -114,7 +115,8 @@ class InstPBTrace : public InstTracer
      */
     void createTraceFile(std::string filename);
 
-    /** If there is a pending message still write it out and then close the file
+    /** If there is a pending message still write it out and then close the
+     * file
      */
     void closeStreams();
 

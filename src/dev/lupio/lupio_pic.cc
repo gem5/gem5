@@ -37,14 +37,14 @@
 namespace gem5
 {
 
-LupioPIC::LupioPIC(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    nSrc(params.n_src),
-    nThread(params.num_threads),
-    intType(params.int_type),
-    mask{0},
-    enable{0}
+LupioPIC::LupioPIC(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      nSrc(params.n_src),
+      nThread(params.num_threads),
+      intType(params.int_type),
+      mask{ 0 },
+      enable{ 0 }
 {
     // CPU0 receives all IRQ sources by default
     enable[0] = 0xFFFFFFFF;
@@ -94,27 +94,27 @@ LupioPIC::lupioPicRead(uint8_t addr)
     int reg = addr % LUPIO_PIC_MAX;
 
     switch (reg) {
-        case LUPIO_PIC_PRIO:
-            // Value will be 32 if there is no unmasked pending IRQ
-            r = ctz32(pending & mask[cpu] & enable[cpu]);
-            DPRINTF(LupioPIC, "Read PIC_PRIO: %d\n", r);
-            break;
-        case LUPIO_PIC_MASK:
-            r = mask[cpu];
-            DPRINTF(LupioPIC, "Read PIC_MASK: %d\n", r);
-            break;
-        case LUPIO_PIC_PEND:
-            r = (enable[cpu] & pending);
-            DPRINTF(LupioPIC, "Read PIC_PEND: %d\n", r);
-            break;
-         case LUPIO_PIC_ENAB:
-            r = enable[cpu];
-            break;
+    case LUPIO_PIC_PRIO:
+        // Value will be 32 if there is no unmasked pending IRQ
+        r = ctz32(pending & mask[cpu] & enable[cpu]);
+        DPRINTF(LupioPIC, "Read PIC_PRIO: %d\n", r);
+        break;
+    case LUPIO_PIC_MASK:
+        r = mask[cpu];
+        DPRINTF(LupioPIC, "Read PIC_MASK: %d\n", r);
+        break;
+    case LUPIO_PIC_PEND:
+        r = (enable[cpu] & pending);
+        DPRINTF(LupioPIC, "Read PIC_PEND: %d\n", r);
+        break;
+    case LUPIO_PIC_ENAB:
+        r = enable[cpu];
+        break;
 
-        default:
-            panic("Unexpected read to the LupioPIC device at address %#llx!",
-                    addr);
-            break;
+    default:
+        panic("Unexpected read to the LupioPIC device at address %#llx!",
+              addr);
+        break;
     }
     return r;
 }
@@ -128,21 +128,21 @@ LupioPIC::lupioPicWrite(uint8_t addr, uint64_t val64)
     int reg = addr % LUPIO_PIC_MAX;
 
     switch (reg) {
-        case LUPIO_PIC_MASK:
-            mask[cpu] = val;
-            DPRINTF(LupioPIC, "Write PIC_MASK: %d\n", mask[cpu]);
-            lupioPicUpdateIRQ();
-            break;
-        case LUPIO_PIC_ENAB:
-            enable[cpu] = val;
-            DPRINTF(LupioPIC, "Write PIC_ENAB: %d\n", enable[cpu]);
-            lupioPicUpdateIRQ();
-            break;
+    case LUPIO_PIC_MASK:
+        mask[cpu] = val;
+        DPRINTF(LupioPIC, "Write PIC_MASK: %d\n", mask[cpu]);
+        lupioPicUpdateIRQ();
+        break;
+    case LUPIO_PIC_ENAB:
+        enable[cpu] = val;
+        DPRINTF(LupioPIC, "Write PIC_ENAB: %d\n", enable[cpu]);
+        lupioPicUpdateIRQ();
+        break;
 
-        default:
-            panic("Unexpected write to the LupioPIC device at address %#llx!",
-                    addr);
-            break;
+    default:
+        panic("Unexpected write to the LupioPIC device at address %#llx!",
+              addr);
+        break;
     }
 }
 
@@ -151,8 +151,8 @@ LupioPIC::read(PacketPtr pkt)
 {
     Addr pic_addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioPIC,
-        "Read request - addr: %#x, size: %#x\n", pic_addr, pkt->getSize());
+    DPRINTF(LupioPIC, "Read request - addr: %#x, size: %#x\n", pic_addr,
+            pkt->getSize());
 
     uint64_t read_val = lupioPicRead(pic_addr);
     DPRINTF(LupioPIC, "Packet Read: %#x\n", read_val);

@@ -50,8 +50,7 @@ namespace gem5
 
 RealViewCtrl::RealViewCtrl(const Params &p)
     : BasicPioDevice(p, 0xD4), flags(0), scData(0)
-{
-}
+{}
 
 Tick
 RealViewCtrl::read(PacketPtr pkt)
@@ -60,65 +59,65 @@ RealViewCtrl::read(PacketPtr pkt)
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    switch(daddr) {
-      case ProcId0:
+    switch (daddr) {
+    case ProcId0:
         pkt->setLE(params().proc_id0);
         break;
-      case ProcId1:
+    case ProcId1:
         pkt->setLE(params().proc_id1);
         break;
-      case Clock24:
+    case Clock24:
         Tick clk;
         clk = sim_clock::as_float::MHz * curTick() * 24;
         pkt->setLE((uint32_t)(clk));
         break;
-      case Clock100:
+    case Clock100:
         Tick clk100;
         clk100 = sim_clock::as_float::MHz * curTick() * 100;
         pkt->setLE((uint32_t)(clk100));
         break;
-      case Flash:
+    case Flash:
         pkt->setLE<uint32_t>(0);
         break;
-      case Clcd:
+    case Clcd:
         pkt->setLE<uint32_t>(0x00001F00);
         break;
-      case Osc0:
+    case Osc0:
         pkt->setLE<uint32_t>(0x00012C5C);
         break;
-      case Osc1:
+    case Osc1:
         pkt->setLE<uint32_t>(0x00002CC0);
         break;
-      case Osc2:
+    case Osc2:
         pkt->setLE<uint32_t>(0x00002C75);
         break;
-      case Osc3:
+    case Osc3:
         pkt->setLE<uint32_t>(0x00020211);
         break;
-      case Osc4:
+    case Osc4:
         pkt->setLE<uint32_t>(0x00002C75);
         break;
-      case Lock:
+    case Lock:
         pkt->setLE<uint32_t>(sysLock);
         break;
-      case Flags:
+    case Flags:
         pkt->setLE<uint32_t>(flags);
         break;
-      case IdReg:
+    case IdReg:
         pkt->setLE<uint32_t>(params().idreg);
         break;
-      case CfgStat:
+    case CfgStat:
         pkt->setLE<uint32_t>(1);
         break;
-      case CfgData:
+    case CfgData:
         pkt->setLE<uint32_t>(scData);
         DPRINTF(RVCTRL, "Read %#x from SCReg\n", scData);
         break;
-      case CfgCtrl:
+    case CfgCtrl:
         pkt->setLE<uint32_t>(0); // not busy
         DPRINTF(RVCTRL, "Read 0 from CfgCtrl\n");
         break;
-      default:
+    default:
         warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
              daddr);
         pkt->setLE<uint32_t>(0);
@@ -126,7 +125,6 @@ RealViewCtrl::read(PacketPtr pkt)
     }
     pkt->makeAtomicResponse();
     return pioDelay;
-
 }
 
 Tick
@@ -136,66 +134,65 @@ RealViewCtrl::write(PacketPtr pkt)
 
     Addr daddr = pkt->getAddr() - pioAddr;
     switch (daddr) {
-      case Flash:
-      case Clcd:
-      case Osc0:
-      case Osc1:
-      case Osc2:
-      case Osc3:
-      case Osc4:
+    case Flash:
+    case Clcd:
+    case Osc0:
+    case Osc1:
+    case Osc2:
+    case Osc3:
+    case Osc4:
         break;
-      case Lock:
+    case Lock:
         sysLock.lockVal = pkt->getLE<uint16_t>();
         break;
-      case ResetCtl:
+    case ResetCtl:
         // Ignore writes to reset control
         warn_once("Ignoring write to reset control\n");
         break;
-      case Flags:
+    case Flags:
         flags = pkt->getLE<uint32_t>();
         break;
-      case FlagsClr:
+    case FlagsClr:
         flags = 0;
         break;
-      case CfgData:
+    case CfgData:
         scData = pkt->getLE<uint32_t>();
         break;
-      case CfgCtrl: {
-          // A request is being submitted to read/write the system control
-          // registers.  See
-          // http://infocenter.arm.com/help/topic/com.arm.doc.dui0447h/CACDEFGH.html
-          CfgCtrlReg req = pkt->getLE<uint32_t>();
-          if (!req.start) {
-              DPRINTF(RVCTRL, "SCReg: write %#x to ctrl but not starting\n",
-                      req);
-              break;
-          }
+    case CfgCtrl: {
+        // A request is being submitted to read/write the system control
+        // registers.  See
+        // http://infocenter.arm.com/help/topic/com.arm.doc.dui0447h/CACDEFGH.html
+        CfgCtrlReg req = pkt->getLE<uint32_t>();
+        if (!req.start) {
+            DPRINTF(RVCTRL, "SCReg: write %#x to ctrl but not starting\n",
+                    req);
+            break;
+        }
 
-          auto it_dev(devices.find(req & CFG_CTRL_ADDR_MASK));
-          if (it_dev == devices.end()) {
-              warn_once("SCReg: Access to unknown device "
-                        "dcc%d:site%d:pos%d:fn%d:dev%d\n",
-                        req.dcc, req.site, req.pos, req.func, req.dev);
-              break;
-          }
+        auto it_dev(devices.find(req & CFG_CTRL_ADDR_MASK));
+        if (it_dev == devices.end()) {
+            warn_once("SCReg: Access to unknown device "
+                      "dcc%d:site%d:pos%d:fn%d:dev%d\n",
+                      req.dcc, req.site, req.pos, req.func, req.dev);
+            break;
+        }
 
-          // Service the request as a read or write depending on the
-          // wr bit in the control register.
-          Device &dev(*it_dev->second);
-          if (req.wr) {
-              DPRINTF(RVCTRL, "SCReg: Writing %#x (ctrlWr %#x)\n",
-                      scData, req);
-              dev.write(scData);
+        // Service the request as a read or write depending on the
+        // wr bit in the control register.
+        Device &dev(*it_dev->second);
+        if (req.wr) {
+            DPRINTF(RVCTRL, "SCReg: Writing %#x (ctrlWr %#x)\n", scData, req);
+            dev.write(scData);
 
-          } else {
-              scData = dev.read();
-              DPRINTF(RVCTRL, "SCReg: Reading %#x (ctrlRd %#x)\n",
-                      scData, req);
-          }
-      } break;
-      case CfgStat:     // Weird to write this
-      default:
-        warn("Tried to write RVIO at offset %#x (data %#x) that doesn't exist\n",
+        } else {
+            scData = dev.read();
+            DPRINTF(RVCTRL, "SCReg: Reading %#x (ctrlRd %#x)\n", scData, req);
+        }
+    } break;
+    case CfgStat: // Weird to write this
+    default:
+        warn("Tried to write RVIO at offset %#x (data %#x) that doesn't "
+             "exist\n",
              daddr, pkt->getLE<uint32_t>());
         break;
     }
@@ -217,8 +214,7 @@ RealViewCtrl::unserialize(CheckpointIn &cp)
 
 void
 RealViewCtrl::registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
-                             uint8_t dcc, uint16_t dev,
-                             Device *handler)
+                             uint8_t dcc, uint16_t dev, Device *handler)
 {
     CfgCtrlReg addr = 0;
     addr.func = func;
@@ -236,15 +232,14 @@ RealViewCtrl::registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
     devices[addr] = handler;
 }
 
-
 RealViewOsc::RealViewOsc(const RealViewOscParams &p)
     : ClockDomain(p, p.voltage_domain),
-      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_OSC,
-                           p.site, p.position, p.dcc, p.device)
+      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_OSC, p.site,
+                           p.position, p.dcc, p.device)
 {
-    if (sim_clock::as_float::s  / p.freq > UINT32_MAX) {
+    if (sim_clock::as_float::s / p.freq > UINT32_MAX) {
         fatal("Oscillator frequency out of range: %f\n",
-            sim_clock::as_float::s  / p.freq / 1E6);
+              sim_clock::as_float::s / p.freq / 1E6);
     }
 
     _clockPeriod = p.freq;
@@ -305,7 +300,7 @@ uint32_t
 RealViewTemperatureSensor::read() const
 {
     // Temperature reported in uC
-    ThermalModel * tm = system->getThermalModel();
+    ThermalModel *tm = system->getThermalModel();
     if (tm) {
         double t = tm->getTemperature().toCelsius();
         if (t < 0)

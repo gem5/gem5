@@ -55,8 +55,7 @@ TBEStorage::TBEStorageStats::TBEStorageStats(statistics::Group *parent)
       ADD_STAT(avg_size, "Avg. number of slots allocated"),
       ADD_STAT(avg_util, "Avg. utilization"),
       ADD_STAT(avg_reserved, "Avg. number of slots reserved")
-{
-}
+{}
 
 } // namespace ruby
 } // namespace gem5

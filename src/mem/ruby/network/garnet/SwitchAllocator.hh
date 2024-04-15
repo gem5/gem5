@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_SWITCHALLOCATOR_HH__
 
@@ -59,8 +58,8 @@ class SwitchAllocator : public Consumer
     void init();
     void clear_request_vector();
     void check_for_wakeup();
-    int get_vnet (int invc);
-    void print(std::ostream& out) const {};
+    int get_vnet(int invc);
+    void print(std::ostream &out) const {};
     void arbitrate_inports();
     void arbitrate_outports();
     bool send_allowed(int inport, int invc, int outport, int outvc);
@@ -71,6 +70,7 @@ class SwitchAllocator : public Consumer
     {
         return m_input_arbiter_activity;
     }
+
     inline double
     get_output_arbiter_activity()
     {

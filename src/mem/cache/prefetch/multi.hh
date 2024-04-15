@@ -56,8 +56,8 @@ class Multi : public Base
     Multi(const MultiPrefetcherParams &p);
 
   public:
-    void
-    setParentInfo(System *sys, ProbeManager *pm, unsigned blk_size) override;
+    void setParentInfo(System *sys, ProbeManager *pm,
+                       unsigned blk_size) override;
     PacketPtr getPacket() override;
     Tick nextPrefetchReadyTime() const override;
 
@@ -66,16 +66,15 @@ class Multi : public Base
      * Ignore notifications since each sub-prefetcher already gets a
      * notification through their probes-based interface.
      */
-    void
-    notify(const CacheAccessProbeArg &arg, const PrefetchInfo &pfi) override
-    {};
+    void notify(const CacheAccessProbeArg &arg,
+                const PrefetchInfo &pfi) override{};
 
-    void notifyFill(const CacheAccessProbeArg &arg) override {};
+    void notifyFill(const CacheAccessProbeArg &arg) override{};
     /** @} */
 
   protected:
     /** List of sub-prefetchers ordered by priority. */
-    std::vector<Base*> prefetchers;
+    std::vector<Base *> prefetchers;
     uint8_t lastChosenPf;
 };
 

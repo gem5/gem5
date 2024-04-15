@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_GARNETLINK_HH__
 
@@ -59,13 +58,13 @@ class GarnetIntLink : public BasicIntLink
 
     void init();
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     friend class GarnetNetwork;
 
   protected:
-    NetworkLink* m_network_link;
-    CreditLink* m_credit_link;
+    NetworkLink *m_network_link;
+    CreditLink *m_credit_link;
 
     bool srcBridgeEn;
     bool dstBridgeEn;
@@ -76,15 +75,15 @@ class GarnetIntLink : public BasicIntLink
     bool srcCdcEn;
     bool dstCdcEn;
 
-    NetworkBridge* srcNetBridge;
-    NetworkBridge* dstNetBridge;
+    NetworkBridge *srcNetBridge;
+    NetworkBridge *dstNetBridge;
 
-    NetworkBridge* srcCredBridge;
-    NetworkBridge* dstCredBridge;
+    NetworkBridge *srcCredBridge;
+    NetworkBridge *dstCredBridge;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const GarnetIntLink& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const GarnetIntLink &obj)
 {
     obj.print(out);
     out << std::flush;
@@ -99,7 +98,7 @@ class GarnetExtLink : public BasicExtLink
 
     void init();
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     friend class GarnetNetwork;
 
@@ -113,19 +112,18 @@ class GarnetExtLink : public BasicExtLink
     bool extCdcEn;
     bool intCdcEn;
 
-    NetworkLink* m_network_links[2];
-    CreditLink* m_credit_links[2];
+    NetworkLink *m_network_links[2];
+    CreditLink *m_credit_links[2];
 
-    NetworkBridge* extNetBridge[2];
-    NetworkBridge* intNetBridge[2];
+    NetworkBridge *extNetBridge[2];
+    NetworkBridge *intNetBridge[2];
 
-    NetworkBridge* extCredBridge[2];
-    NetworkBridge* intCredBridge[2];
-
+    NetworkBridge *extCredBridge[2];
+    NetworkBridge *intCredBridge[2];
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const GarnetExtLink& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const GarnetExtLink &obj)
 {
     obj.print(out);
     out << std::flush;

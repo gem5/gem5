@@ -84,14 +84,10 @@ process_loaders()
 
 } // anonymous namespace
 
-Process::Loader::Loader()
-{
-    process_loaders().emplace_back(this);
-}
+Process::Loader::Loader() { process_loaders().emplace_back(this); }
 
 Process *
-Process::tryLoaders(const ProcessParams &params,
-                    loader::ObjectFile *obj_file)
+Process::tryLoaders(const ProcessParams &params, loader::ObjectFile *obj_file)
 {
     for (auto &loader_it : process_loaders()) {
         Process *p = loader_it->load(params, obj_file);
@@ -103,7 +99,7 @@ Process::tryLoaders(const ProcessParams &params,
 }
 
 static std::string
-normalize(const std::string& directory)
+normalize(const std::string &directory)
 {
     if (directory.back() != '/')
         return directory + '/';
@@ -112,24 +108,30 @@ normalize(const std::string& directory)
 
 Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
                  loader::ObjectFile *obj_file)
-    : SimObject(params), system(params.system),
+    : SimObject(params),
+      system(params.system),
       seWorkload(dynamic_cast<SEWorkload *>(system->workload)),
       useArchPT(params.useArchPT),
       kvmInSE(params.kvmInSE),
       useForClone(false),
       pTable(pTable),
       objFile(obj_file),
-      argv(params.cmd), envp(params.env),
+      argv(params.cmd),
+      envp(params.env),
       executable(params.executable == "" ? params.cmd[0] : params.executable),
       tgtCwd(normalize(params.cwd)),
       hostCwd(checkPathRedirect(tgtCwd)),
       release(params.release),
-      _uid(params.uid), _euid(params.euid),
-      _gid(params.gid), _egid(params.egid),
-      _pid(params.pid), _ppid(params.ppid),
-      _pgid(params.pgid), drivers(params.drivers),
-      fds(std::make_shared<FDArray>(
-                  params.input, params.output, params.errout)),
+      _uid(params.uid),
+      _euid(params.euid),
+      _gid(params.gid),
+      _egid(params.egid),
+      _pid(params.pid),
+      _ppid(params.ppid),
+      _pgid(params.pgid),
+      drivers(params.drivers),
+      fds(std::make_shared<FDArray>(params.input, params.output,
+                                    params.errout)),
       childClearTID(0),
       ADD_STAT(numSyscalls, statistics::units::Count::get(),
                "Number of system calls")
@@ -164,8 +166,8 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
 }
 
 void
-Process::clone(ThreadContext *otc, ThreadContext *ntc,
-               Process *np, RegVal flags)
+Process::clone(ThreadContext *otc, ThreadContext *ntc, Process *np,
+               RegVal flags)
 {
 #ifndef CLONE_VM
 #define CLONE_VM 0
@@ -194,7 +196,7 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          * Duplicate the process memory address space. The state needs to be
          * copied over (rather than using pointers to share everything).
          */
-        typedef std::vector<std::pair<Addr,Addr>> MapVec;
+        typedef std::vector<std::pair<Addr, Addr>> MapVec;
         MapVec mappings;
         pTable->getMappings(&mappings);
 
@@ -298,8 +300,8 @@ Process::initState()
 
     pTable->initState();
 
-    initVirtMem.reset(new SETranslatingPortProxy(
-                tc, SETranslatingPortProxy::Always));
+    initVirtMem.reset(
+        new SETranslatingPortProxy(tc, SETranslatingPortProxy::Always));
 
     // load object file into target memory
     image.write(*initVirtMem);

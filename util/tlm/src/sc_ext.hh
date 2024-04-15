@@ -44,24 +44,24 @@
 namespace Gem5SystemC
 {
 
-class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
+class Gem5Extension : public tlm::tlm_extension<Gem5Extension>
 {
   public:
     Gem5Extension(gem5::PacketPtr packet);
 
-    virtual tlm_extension_base* clone() const;
-    virtual void copy_from(const tlm_extension_base& ext);
+    virtual tlm_extension_base *clone() const;
+    virtual void copy_from(const tlm_extension_base &ext);
 
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload *payload);
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload &payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload *payload);
+    static Gem5Extension &
+    getExtension(const tlm::tlm_generic_payload &payload);
     gem5::PacketPtr getPacket();
 
   private:
     gem5::PacketPtr Packet;
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif

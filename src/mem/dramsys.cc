@@ -34,56 +34,52 @@ namespace gem5
 namespace memory
 {
 
-DRAMSys::DRAMSys(Params const& params) :
-    AbstractMemory(params),
-    tlmWrapper(dramSysWrapper.tSocket, params.name + ".tlm", InvalidPortID),
-    config(::DRAMSys::Config::from_path(params.configuration,
-                                        params.resource_directory)),
-    dramSysWrapper(
-        params.name.c_str(), config, params.recordable, params.range)
+DRAMSys::DRAMSys(Params const &params)
+    : AbstractMemory(params),
+      tlmWrapper(dramSysWrapper.tSocket, params.name + ".tlm", InvalidPortID),
+      config(::DRAMSys::Config::from_path(params.configuration,
+                                          params.resource_directory)),
+      dramSysWrapper(params.name.c_str(), config, params.recordable,
+                     params.range)
 {
-    dramSysWrapper.dramsys->registerIdleCallback(
-        [this]
-        {
-            if (dramSysWrapper.dramsys->idle())
-            {
-                signalDrainDone();
-            }
-        });
+    dramSysWrapper.dramsys->registerIdleCallback([this] {
+        if (dramSysWrapper.dramsys->idle()) {
+            signalDrainDone();
+        }
+    });
 }
 
-gem5::Port& DRAMSys::getPort(const std::string& if_name, PortID idx)
+gem5::Port &
+DRAMSys::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name != "tlm")
-    {
+    if (if_name != "tlm") {
         return AbstractMemory::getPort(if_name, idx);
     }
 
     return tlmWrapper;
 }
 
-DrainState DRAMSys::drain()
+DrainState
+DRAMSys::drain()
 {
-    return dramSysWrapper.dramsys->idle() ? DrainState::Drained
-                                          : DrainState::Draining;
+    return dramSysWrapper.dramsys->idle() ? DrainState::Drained :
+                                            DrainState::Draining;
 }
 
-void DRAMSys::serialize(CheckpointOut& cp) const
+void
+DRAMSys::serialize(CheckpointOut &cp) const
 {
     std::filesystem::path checkpointPath = CheckpointIn::dir();
 
     auto topLevelObjects = sc_core::sc_get_top_level_objects();
-    for (auto const* object : topLevelObjects)
-    {
-        std::function<void(sc_core::sc_object const*)> serialize;
-        serialize =
-            [&serialize, &checkpointPath](sc_core::sc_object const* object)
-        {
-            auto const* serializableObject =
-                dynamic_cast<::DRAMSys::Serialize const*>(object);
+    for (auto const *object : topLevelObjects) {
+        std::function<void(sc_core::sc_object const *)> serialize;
+        serialize = [&serialize,
+                     &checkpointPath](sc_core::sc_object const *object) {
+            auto const *serializableObject =
+                dynamic_cast<::DRAMSys::Serialize const *>(object);
 
-            if (serializableObject != nullptr)
-            {
+            if (serializableObject != nullptr) {
                 std::string dumpFileName(object->name());
                 dumpFileName += ".pmem";
                 std::ofstream stream(checkpointPath / dumpFileName,
@@ -91,8 +87,7 @@ void DRAMSys::serialize(CheckpointOut& cp) const
                 serializableObject->serialize(stream);
             }
 
-            for (auto const* childObject : object->get_child_objects())
-            {
+            for (auto const *childObject : object->get_child_objects()) {
                 serialize(childObject);
             }
         };
@@ -101,22 +96,20 @@ void DRAMSys::serialize(CheckpointOut& cp) const
     }
 }
 
-void DRAMSys::unserialize(CheckpointIn& cp)
+void
+DRAMSys::unserialize(CheckpointIn &cp)
 {
     std::filesystem::path checkpointPath = CheckpointIn::dir();
 
     auto topLevelObjects = sc_core::sc_get_top_level_objects();
-    for (auto* object : topLevelObjects)
-    {
-        std::function<void(sc_core::sc_object*)> deserialize;
-        deserialize =
-            [&deserialize, &checkpointPath](sc_core::sc_object* object)
-        {
-            auto* deserializableObject =
-                dynamic_cast<::DRAMSys::Deserialize*>(object);
+    for (auto *object : topLevelObjects) {
+        std::function<void(sc_core::sc_object *)> deserialize;
+        deserialize = [&deserialize,
+                       &checkpointPath](sc_core::sc_object *object) {
+            auto *deserializableObject =
+                dynamic_cast<::DRAMSys::Deserialize *>(object);
 
-            if (deserializableObject != nullptr)
-            {
+            if (deserializableObject != nullptr) {
                 std::string dumpFileName(object->name());
                 dumpFileName += ".pmem";
                 std::ifstream stream(checkpointPath / dumpFileName,
@@ -124,8 +117,7 @@ void DRAMSys::unserialize(CheckpointIn& cp)
                 deserializableObject->deserialize(stream);
             }
 
-            for (auto* childObject : object->get_child_objects())
-            {
+            for (auto *childObject : object->get_child_objects()) {
                 deserialize(childObject);
             }
         };

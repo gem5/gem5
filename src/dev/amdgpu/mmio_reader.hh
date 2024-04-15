@@ -70,13 +70,13 @@ class AMDMMIOReader
     const uint64_t BAR0 = 0x2400000000;
     const uint64_t BAR2 = 0x2200000000;
     const uint32_t BAR5 = 0xecf00000;
-    const uint32_t ROM  = 0xc0000;
+    const uint32_t ROM = 0xc0000;
 
     /* Sizes based on Vega Frontier Edition */
-    const uint64_t BAR0_SIZE = 0x400000000;  // 16GB
-    const uint64_t BAR2_SIZE = 0x200000;     // 2MB
-    const uint32_t BAR5_SIZE = 0x80000;      // 512kB
-    const uint32_t ROM_SIZE  = 0x20000;      // 128kB
+    const uint64_t BAR0_SIZE = 0x400000000; // 16GB
+    const uint64_t BAR2_SIZE = 0x200000;    // 2MB
+    const uint32_t BAR5_SIZE = 0x80000;     // 512kB
+    const uint32_t ROM_SIZE = 0x20000;      // 128kB
 
     /**
      * The information we want from each relevant line of trace are:
@@ -114,37 +114,37 @@ class AMDMMIOReader
 
     /* Lines in the MMIO trace we care about begin with R, W, or UNKNOWN. */
     bool
-    traceIsRead(std::vector <std::string> tokens) const
+    traceIsRead(std::vector<std::string> tokens) const
     {
         return tokens[0] == "R";
     }
 
     bool
-    traceIsWrite(std::vector <std::string> tokens) const
+    traceIsWrite(std::vector<std::string> tokens) const
     {
         return tokens[0] == "W";
     }
 
     bool
-    traceIsUnknown(std::vector <std::string> tokens) const
+    traceIsUnknown(std::vector<std::string> tokens) const
     {
         return tokens[0] == "UNKNOWN";
     }
 
     /* Checks if this line of trace is W/R/UNKNOWN */
     bool
-    isIO(std::vector <std::string> tokens) const
+    isIO(std::vector<std::string> tokens) const
     {
         return tokens[0] == "R" || tokens[0] == "W" || tokens[0] == "UNKNOWN";
     }
 
     /* Checks if this line of trace is in a BAR we care about (0, 2, 5) */
     bool
-    isRelevant(std::vector <std::string> tokens)
+    isRelevant(std::vector<std::string> tokens)
     {
-       uint64_t addr = strtoull(tokens[4].c_str(), nullptr, 16);
-       uint16_t bar = traceGetBAR(addr);
-       return (bar == 0 || bar == 2 || bar == 5);
+        uint64_t addr = strtoull(tokens[4].c_str(), nullptr, 16);
+        uint16_t bar = traceGetBAR(addr);
+        return (bar == 0 || bar == 2 || bar == 5);
     }
 
     uint8_t
@@ -180,15 +180,14 @@ class AMDMMIOReader
     }
 
     void
-    traceParseTokens(std::vector <std::string> tokens)
+    traceParseTokens(std::vector<std::string> tokens)
     {
         if (traceIsRead(tokens) || traceIsWrite(tokens)) {
             mtrace.event = traceIsRead(tokens) ? 'R' : 'W';
             mtrace.size = strtoul(tokens[1].c_str(), nullptr, 10);
             mtrace.addr = strtoull(tokens[4].c_str(), nullptr, 16);
             mtrace.data = strtoull(tokens[5].c_str(), nullptr, 16);
-        }
-        else if (traceIsUnknown(tokens)) {
+        } else if (traceIsUnknown(tokens)) {
             mtrace.event = 'U';
             mtrace.size = 0;
             mtrace.addr = strtoull(tokens[3].c_str(), nullptr, 16);
@@ -204,8 +203,8 @@ class AMDMMIOReader
     recordMtrace()
     {
         trace_entry_t trace_entry;
-        trace_entry = std::make_tuple(mtrace.index,
-                      std::make_tuple(mtrace.event, mtrace.data));
+        trace_entry = std::make_tuple(
+            mtrace.index, std::make_tuple(mtrace.event, mtrace.data));
 
         uint16_t barnum = mtrace.bar;
         uint64_t offset = traceGetOffset(mtrace.addr);
@@ -214,8 +213,9 @@ class AMDMMIOReader
     }
 
   public:
-    AMDMMIOReader() { }
-    ~AMDMMIOReader() { }
+    AMDMMIOReader() {}
+
+    ~AMDMMIOReader() {}
 
     /**
      * Read an MMIO trace gathered from a real system and place the MMIO

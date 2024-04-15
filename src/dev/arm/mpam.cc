@@ -48,7 +48,7 @@ MSC::readPacketPartitionID(PacketPtr pkt) const
     auto ext = pkt->req->getExtension<ArmISA::mpam::PartitionFieldExtension>();
     // use default value if extension is not set
     return (ext != nullptr) ? ext->getPartitionID() :
-        ArmISA::mpam::DEFAULT_PARTITION_ID;
+                              ArmISA::mpam::DEFAULT_PARTITION_ID;
 }
 
 } // namespace gem5::mpam

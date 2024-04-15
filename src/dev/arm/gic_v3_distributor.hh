@@ -51,20 +51,18 @@ namespace gem5
 class Gicv3Distributor : public Serializable
 {
   private:
-
     friend class Gicv3Redistributor;
     friend class Gicv3CPUInterface;
     friend class Gicv3Its;
 
   protected:
-
-    Gicv3 * gic;
+    Gicv3 *gic;
     const uint32_t itLines;
 
     enum
     {
         // Control Register
-        GICD_CTLR  = 0x0000,
+        GICD_CTLR = 0x0000,
         // Interrupt Controller Type Register
         GICD_TYPER = 0x0004,
         // Implementer Identification Register
@@ -135,35 +133,35 @@ class Gicv3Distributor : public Serializable
     BitUnion64(IROUTER)
         Bitfield<63, 40> res0_1;
         Bitfield<39, 32> Aff3;
-        Bitfield<31>     IRM;
+        Bitfield<31> IRM;
         Bitfield<30, 24> res0_2;
         Bitfield<23, 16> Aff2;
-        Bitfield<15, 8>  Aff1;
-        Bitfield<7, 0>   Aff0;
+        Bitfield<15, 8> Aff1;
+        Bitfield<7, 0> Aff0;
     EndBitUnion(IROUTER)
 
-    static const uint32_t GICD_CTLR_ENABLEGRP0   = 1 << 0;
-    static const uint32_t GICD_CTLR_ENABLEGRP1   = 1 << 0;
+    static const uint32_t GICD_CTLR_ENABLEGRP0 = 1 << 0;
+    static const uint32_t GICD_CTLR_ENABLEGRP1 = 1 << 0;
     static const uint32_t GICD_CTLR_ENABLEGRP1NS = 1 << 1;
-    static const uint32_t GICD_CTLR_ENABLEGRP1A  = 1 << 1;
-    static const uint32_t GICD_CTLR_ENABLEGRP1S  = 1 << 2;
-    static const uint32_t GICD_CTLR_DS           = 1 << 6;
+    static const uint32_t GICD_CTLR_ENABLEGRP1A = 1 << 1;
+    static const uint32_t GICD_CTLR_ENABLEGRP1S = 1 << 2;
+    static const uint32_t GICD_CTLR_DS = 1 << 6;
 
     bool ARE;
     bool DS;
     bool EnableGrp1S;
     bool EnableGrp1NS;
     bool EnableGrp0;
-    std::vector <uint8_t> irqGroup;
-    std::vector <bool> irqEnabled;
-    std::vector <bool> irqPending;
-    std::vector <bool> irqPendingIspendr;
-    std::vector <bool> irqActive;
-    std::vector <uint8_t> irqPriority;
-    std::vector <Gicv3::IntTriggerType> irqConfig;
-    std::vector <uint8_t> irqGrpmod;
-    std::vector <uint8_t> irqNsacr;
-    std::vector <IROUTER> irqAffinityRouting;
+    std::vector<uint8_t> irqGroup;
+    std::vector<bool> irqEnabled;
+    std::vector<bool> irqPending;
+    std::vector<bool> irqPendingIspendr;
+    std::vector<bool> irqActive;
+    std::vector<uint8_t> irqPriority;
+    std::vector<Gicv3::IntTriggerType> irqConfig;
+    std::vector<uint8_t> irqGrpmod;
+    std::vector<uint8_t> irqNsacr;
+    std::vector<IROUTER> irqAffinityRouting;
 
     uint32_t gicdTyper;
     uint32_t gicdPidr0;
@@ -173,12 +171,10 @@ class Gicv3Distributor : public Serializable
     uint32_t gicdPidr4;
 
   public:
-
     static const uint32_t ADDR_RANGE_SIZE = 0x10000;
     static const uint32_t IDBITS = 0xf;
 
   protected:
-
     void activateIRQ(uint32_t int_id);
     void deactivateIRQ(uint32_t int_id);
     void fullUpdate();
@@ -189,38 +185,39 @@ class Gicv3Distributor : public Serializable
     {
         if (DS == 0) {
             switch (group) {
-              case Gicv3::G0S:
+            case Gicv3::G0S:
                 return EnableGrp0;
 
-              case Gicv3::G1S:
+            case Gicv3::G1S:
                 return EnableGrp1S;
 
-              case Gicv3::G1NS:
+            case Gicv3::G1NS:
                 return EnableGrp1NS;
 
-              default:
+            default:
                 panic("Gicv3Distributor::groupEnabled(): "
-                        "invalid group!\n");
+                      "invalid group!\n");
             }
         } else {
             switch (group) {
-              case Gicv3::G0S:
+            case Gicv3::G0S:
                 return EnableGrp0;
 
-              case Gicv3::G1S:
-              case Gicv3::G1NS:
+            case Gicv3::G1S:
+            case Gicv3::G1NS:
                 return EnableGrp1NS;
 
-              default:
+            default:
                 panic("Gicv3Distributor::groupEnabled(): "
-                        "invalid group!\n");
+                      "invalid group!\n");
             }
         }
     }
 
     Gicv3::IntStatus intStatus(uint32_t int_id) const;
 
-    inline bool isNotSPI(uint32_t int_id) const
+    inline bool
+    isNotSPI(uint32_t int_id) const
     {
         if (int_id < (Gicv3::SGI_MAX + Gicv3::PPI_MAX) || int_id >= itLines) {
             return true;
@@ -229,7 +226,8 @@ class Gicv3Distributor : public Serializable
         }
     }
 
-    bool isLevelSensitive(uint32_t int_id) const
+    bool
+    isLevelSensitive(uint32_t int_id) const
     {
         return irqConfig[int_id] == Gicv3::INT_LEVEL_SENSITIVE;
     }
@@ -245,23 +243,24 @@ class Gicv3Distributor : public Serializable
      * which had been made pending via a write to ISPENDR, will be
      * treated as it if was edge triggered.
      */
-    bool treatAsEdgeTriggered(uint32_t int_id) const
+    bool
+    treatAsEdgeTriggered(uint32_t int_id) const
     {
         return !isLevelSensitive(int_id) || irqPendingIspendr[int_id];
     }
 
-    inline bool nsAccessToSecInt(uint32_t int_id, bool is_secure_access) const
+    inline bool
+    nsAccessToSecInt(uint32_t int_id, bool is_secure_access) const
     {
         return !DS && !is_secure_access && getIntGroup(int_id) != Gicv3::G1NS;
     }
 
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
-    Gicv3CPUInterface* route(uint32_t int_id);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    Gicv3CPUInterface *route(uint32_t int_id);
 
   public:
-
-    Gicv3Distributor(Gicv3 * gic, uint32_t it_lines);
+    Gicv3Distributor(Gicv3 *gic, uint32_t it_lines);
 
     void sendInt(uint32_t int_id);
     void clearInt(uint32_t int_id);
@@ -269,8 +268,7 @@ class Gicv3Distributor : public Serializable
     void clearIrqCpuInterface(uint32_t int_id);
     void init();
     uint64_t read(Addr addr, size_t size, bool is_secure_access);
-    void write(Addr addr, uint64_t data, size_t size,
-               bool is_secure_access);
+    void write(Addr addr, uint64_t data, size_t size, bool is_secure_access);
 
     void copy(Gicv3Registers *from, Gicv3Registers *to);
     void update();

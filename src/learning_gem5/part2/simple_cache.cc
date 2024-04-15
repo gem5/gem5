@@ -36,13 +36,16 @@
 namespace gem5
 {
 
-SimpleCache::SimpleCache(const SimpleCacheParams &params) :
-    ClockedObject(params),
-    latency(params.latency),
-    blockSize(params.system->cacheLineSize()),
-    capacity(params.size / blockSize),
-    memPort(params.name + ".mem_side", this),
-    blocked(false), originalPacket(nullptr), waitingPortId(-1), stats(this)
+SimpleCache::SimpleCache(const SimpleCacheParams &params)
+    : ClockedObject(params),
+      latency(params.latency),
+      blockSize(params.system->cacheLineSize()),
+      capacity(params.size / blockSize),
+      memPort(params.name + ".mem_side", this),
+      blocked(false),
+      originalPacket(nullptr),
+      waitingPortId(-1),
+      stats(this)
 {
     // Since the CPU side ports are a vector of ports, create an instance of
     // the CPUSidePort for each connection. This member of params is
@@ -208,7 +211,7 @@ SimpleCache::handleRequest(PacketPtr pkt, int port_id)
     waitingPortId = port_id;
 
     // Schedule an event after cache access latency to actually access
-    schedule(new EventFunctionWrapper([this, pkt]{ accessTiming(pkt); },
+    schedule(new EventFunctionWrapper([this, pkt] { accessTiming(pkt); },
                                       name() + ".accessEvent", true),
              clockEdge(latency));
 
@@ -246,7 +249,8 @@ SimpleCache::handleResponse(PacketPtr pkt)
     return true;
 }
 
-void SimpleCache::sendResponse(PacketPtr pkt)
+void
+SimpleCache::sendResponse(PacketPtr pkt)
 {
     assert(blocked);
     DPRINTF(SimpleCache, "Sending resp for addr %#x\n", pkt->getAddr());
@@ -265,7 +269,7 @@ void SimpleCache::sendResponse(PacketPtr pkt)
 
     // For each of the cpu ports, if it needs to send a retry, it should do it
     // now since this memory object may be unblocked now.
-    for (auto& port : cpuPorts) {
+    for (auto &port : cpuPorts) {
         port.trySendRetry();
     }
 }
@@ -362,7 +366,7 @@ void
 SimpleCache::insert(PacketPtr pkt)
 {
     // The packet should be aligned.
-    assert(pkt->getAddr() ==  pkt->getBlockAddr(blockSize));
+    assert(pkt->getAddr() == pkt->getBlockAddr(blockSize));
     // The address should not be in the cache
     assert(cacheStore.find(pkt->getAddr()) == cacheStore.end());
     // The pkt should be a response
@@ -374,7 +378,7 @@ SimpleCache::insert(PacketPtr pkt)
         int bucket, bucket_size;
         do {
             bucket = random_mt.random(0, (int)cacheStore.bucket_count() - 1);
-        } while ( (bucket_size = cacheStore.bucket_size(bucket)) == 0 );
+        } while ((bucket_size = cacheStore.bucket_size(bucket)) == 0);
         auto block = std::next(cacheStore.begin(bucket),
                                random_mt.random(0, bucket_size - 1));
 
@@ -382,8 +386,8 @@ SimpleCache::insert(PacketPtr pkt)
 
         // Write back the data.
         // Create a new request-packet pair
-        RequestPtr req = std::make_shared<Request>(
-            block->first, blockSize, 0, 0);
+        RequestPtr req =
+            std::make_shared<Request>(block->first, blockSize, 0, 0);
 
         PacketPtr new_pkt = new Packet(req, MemCmd::WritebackDirty, blockSize);
         new_pkt->dataDynamic(block->second); // This will be deleted later
@@ -420,13 +424,13 @@ SimpleCache::getAddrRanges() const
 void
 SimpleCache::sendRangeChange() const
 {
-    for (auto& port : cpuPorts) {
+    for (auto &port : cpuPorts) {
         port.sendRangeChange();
     }
 }
 
 SimpleCache::SimpleCacheStats::SimpleCacheStats(statistics::Group *parent)
-      : statistics::Group(parent),
+    : statistics::Group(parent),
       ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
       ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
       ADD_STAT(missLatency, statistics::units::Tick::get(),

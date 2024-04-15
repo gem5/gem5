@@ -48,70 +48,282 @@ namespace gem5
 namespace MipsISA
 {
 
-std::string
-ISA::miscRegNames[misc_reg::NumRegs] =
-{
-    "Index", "MVPControl", "MVPConf0", "MVPConf1", "", "", "", "",
-    "Random", "VPEControl", "VPEConf0", "VPEConf1",
-        "YQMask", "VPESchedule", "VPEScheFBack", "VPEOpt",
-    "EntryLo0", "TCStatus", "TCBind", "TCRestart",
-        "TCHalt", "TCContext", "TCSchedule", "TCScheFBack",
-    "EntryLo1", "", "", "", "", "", "", "",
-    "Context", "ContextConfig", "", "", "", "", "", "",
-    "PageMask", "PageGrain", "", "", "", "", "", "",
-    "Wired", "SRSConf0", "SRCConf1", "SRSConf2",
-        "SRSConf3", "SRSConf4", "", "",
-    "HWREna", "", "", "", "", "", "", "",
-    "BadVAddr", "", "", "", "", "", "", "",
-    "Count", "", "", "", "", "", "", "",
-    "EntryHi", "", "", "", "", "", "", "",
-    "Compare", "", "", "", "", "", "", "",
-    "Status", "IntCtl", "SRSCtl", "SRSMap", "", "", "", "",
-    "Cause", "", "", "", "", "", "", "",
-    "EPC", "", "", "", "", "", "", "",
-    "PRId", "EBase", "", "", "", "", "", "",
-    "Config", "Config1", "Config2", "Config3", "", "", "", "",
-    "LLAddr", "", "", "", "", "", "", "",
-    "WatchLo0", "WatchLo1", "WatchLo2", "WatchLo3",
-        "WatchLo4", "WatchLo5", "WatchLo6", "WatchLo7",
-    "WatchHi0", "WatchHi1", "WatchHi2", "WatchHi3",
-        "WatchHi4", "WatchHi5", "WatchHi6", "WatchHi7",
-    "XCContext64", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "",
-    "Debug", "TraceControl1", "TraceControl2", "UserTraceData",
-        "TraceBPC", "", "", "",
-    "DEPC", "", "", "", "", "", "", "",
-    "PerfCnt0", "PerfCnt1", "PerfCnt2", "PerfCnt3",
-        "PerfCnt4", "PerfCnt5", "PerfCnt6", "PerfCnt7",
-    "ErrCtl", "", "", "", "", "", "", "",
-    "CacheErr0", "CacheErr1", "CacheErr2", "CacheErr3", "", "", "", "",
-    "TagLo0", "DataLo1", "TagLo2", "DataLo3",
-        "TagLo4", "DataLo5", "TagLo6", "DataLo7",
-    "TagHi0", "DataHi1", "TagHi2", "DataHi3",
-        "TagHi4", "DataHi5", "TagHi6", "DataHi7",
-    "ErrorEPC", "", "", "", "", "", "", "",
-    "DESAVE", "", "", "", "", "", "", "",
-    "LLFlag"
-};
+std::string ISA::miscRegNames[misc_reg::NumRegs] = { "Index",
+                                                     "MVPControl",
+                                                     "MVPConf0",
+                                                     "MVPConf1",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Random",
+                                                     "VPEControl",
+                                                     "VPEConf0",
+                                                     "VPEConf1",
+                                                     "YQMask",
+                                                     "VPESchedule",
+                                                     "VPEScheFBack",
+                                                     "VPEOpt",
+                                                     "EntryLo0",
+                                                     "TCStatus",
+                                                     "TCBind",
+                                                     "TCRestart",
+                                                     "TCHalt",
+                                                     "TCContext",
+                                                     "TCSchedule",
+                                                     "TCScheFBack",
+                                                     "EntryLo1",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Context",
+                                                     "ContextConfig",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "PageMask",
+                                                     "PageGrain",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Wired",
+                                                     "SRSConf0",
+                                                     "SRCConf1",
+                                                     "SRSConf2",
+                                                     "SRSConf3",
+                                                     "SRSConf4",
+                                                     "",
+                                                     "",
+                                                     "HWREna",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "BadVAddr",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Count",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "EntryHi",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Compare",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Status",
+                                                     "IntCtl",
+                                                     "SRSCtl",
+                                                     "SRSMap",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Cause",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "EPC",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "PRId",
+                                                     "EBase",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Config",
+                                                     "Config1",
+                                                     "Config2",
+                                                     "Config3",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "LLAddr",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "WatchLo0",
+                                                     "WatchLo1",
+                                                     "WatchLo2",
+                                                     "WatchLo3",
+                                                     "WatchLo4",
+                                                     "WatchLo5",
+                                                     "WatchLo6",
+                                                     "WatchLo7",
+                                                     "WatchHi0",
+                                                     "WatchHi1",
+                                                     "WatchHi2",
+                                                     "WatchHi3",
+                                                     "WatchHi4",
+                                                     "WatchHi5",
+                                                     "WatchHi6",
+                                                     "WatchHi7",
+                                                     "XCContext64",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "Debug",
+                                                     "TraceControl1",
+                                                     "TraceControl2",
+                                                     "UserTraceData",
+                                                     "TraceBPC",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "DEPC",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "PerfCnt0",
+                                                     "PerfCnt1",
+                                                     "PerfCnt2",
+                                                     "PerfCnt3",
+                                                     "PerfCnt4",
+                                                     "PerfCnt5",
+                                                     "PerfCnt6",
+                                                     "PerfCnt7",
+                                                     "ErrCtl",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "CacheErr0",
+                                                     "CacheErr1",
+                                                     "CacheErr2",
+                                                     "CacheErr3",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "TagLo0",
+                                                     "DataLo1",
+                                                     "TagLo2",
+                                                     "DataLo3",
+                                                     "TagLo4",
+                                                     "DataLo5",
+                                                     "TagLo6",
+                                                     "DataLo7",
+                                                     "TagHi0",
+                                                     "DataHi1",
+                                                     "TagHi2",
+                                                     "DataHi3",
+                                                     "TagHi4",
+                                                     "DataHi5",
+                                                     "TagHi6",
+                                                     "DataHi7",
+                                                     "ErrorEPC",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "DESAVE",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     "LLFlag" };
 
 namespace
 {
 
 /* Not applicable to MIPS. */
 constexpr RegClass vecRegClass(VecRegClass, VecRegClassName, 1,
-        debug::IntRegs);
+                               debug::IntRegs);
 constexpr RegClass vecElemClass(VecElemClass, VecElemClassName, 2,
-        debug::IntRegs);
+                                debug::IntRegs);
 constexpr RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
-        debug::IntRegs);
-constexpr RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
+                                   debug::IntRegs);
+constexpr RegClass matRegClass(MatRegClass, MatRegClassName, 0,
+                               debug::MatRegs);
 constexpr RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p, "mips"), numThreads(p.num_threads),
-    numVpes(p.num_vpes)
+ISA::ISA(const Params &p)
+    : BaseISA(p, "mips"), numThreads(p.num_threads), numVpes(p.num_vpes)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -137,15 +349,13 @@ ISA::ISA(const Params &p) : BaseISA(p, "mips"), numThreads(p.num_threads),
     }
 
     // Initialize all Per-VPE regs
-    uint32_t per_vpe_regs[] = { misc_reg::VpeControl,
-                                misc_reg::VpeConf0, misc_reg::VpeConf1,
-                                misc_reg::Yqmask,
+    uint32_t per_vpe_regs[] = { misc_reg::VpeControl,  misc_reg::VpeConf0,
+                                misc_reg::VpeConf1,    misc_reg::Yqmask,
                                 misc_reg::VpeSchedule, misc_reg::VpeSchefback,
-                                misc_reg::VpeOpt, misc_reg::SrsConf0,
-                                misc_reg::SrsConf1, misc_reg::SrsConf2,
-                                misc_reg::SrsConf3, misc_reg::SrsConf4,
-                                misc_reg::Ebase
-                              };
+                                misc_reg::VpeOpt,      misc_reg::SrsConf0,
+                                misc_reg::SrsConf1,    misc_reg::SrsConf2,
+                                misc_reg::SrsConf3,    misc_reg::SrsConf4,
+                                misc_reg::Ebase };
     uint32_t num_vpe_regs = sizeof(per_vpe_regs) / 4;
     for (int i = 0; i < num_vpe_regs; i++) {
         if (numVpes > 1) {
@@ -155,14 +365,12 @@ ISA::ISA(const Params &p) : BaseISA(p, "mips"), numThreads(p.num_threads),
     }
 
     // Initialize all Per-TC regs
-    uint32_t per_tc_regs[] = { misc_reg::Status,
-                               misc_reg::TcStatus, misc_reg::TcBind,
-                               misc_reg::TcRestart, misc_reg::TcHalt,
-                               misc_reg::TcContext, misc_reg::TcSchedule,
-                               misc_reg::TcSchefback,
-                               misc_reg::Debug, misc_reg::Lladdr
-                             };
-    uint32_t num_tc_regs = sizeof(per_tc_regs) /  4;
+    uint32_t per_tc_regs[] = { misc_reg::Status,     misc_reg::TcStatus,
+                               misc_reg::TcBind,     misc_reg::TcRestart,
+                               misc_reg::TcHalt,     misc_reg::TcContext,
+                               misc_reg::TcSchedule, misc_reg::TcSchefback,
+                               misc_reg::Debug,      misc_reg::Lladdr };
+    uint32_t num_tc_regs = sizeof(per_tc_regs) / 4;
 
     for (int i = 0; i < num_tc_regs; i++) {
         miscRegFile[per_tc_regs[i]].resize(numThreads);
@@ -188,11 +396,11 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     // First loop through the integer registers.
-    for (auto &id: intRegClass)
+    for (auto &id : intRegClass)
         tc->setReg(id, src->getReg(id));
 
     // Then loop through the floating point registers.
-    for (auto &id: floatRegClass)
+    for (auto &id : floatRegClass)
         tc->setReg(id, src->getReg(id));
 
     // Copy misc. registers
@@ -202,7 +410,6 @@ ISA::copyRegsFrom(ThreadContext *src)
     // Copy over the PC State
     tc->pcState(src->pcState());
 }
-
 
 void
 ISA::configCP()
@@ -265,7 +472,7 @@ ISA::configCP()
     setMiscRegNoEffect(misc_reg::Config1, cfg1);
     // Now, create Write Mask for Config register
     RegVal cfg1_Mask = 0; // Read Only Register
-    replaceBits(cfg1_Mask, 32,0 , 0);
+    replaceBits(cfg1_Mask, 32, 0, 0);
     setRegMask(misc_reg::Config1, cfg1_Mask);
 
     // Config2
@@ -298,7 +505,7 @@ ISA::configCP()
     setMiscRegNoEffect(misc_reg::Config3, cfg3);
     // Now, create Write Mask for Config register
     RegVal cfg3_Mask = 0; // Read Only Register
-    replaceBits(cfg3_Mask, 32,0 , 0);
+    replaceBits(cfg3_Mask, 32, 0, 0);
     setRegMask(misc_reg::Config3, cfg3_Mask);
 
     // EBase - CPUNum
@@ -307,7 +514,7 @@ ISA::configCP()
     replaceBits(eBase, 31, 31, 1);
     setMiscRegNoEffect(misc_reg::Ebase, eBase);
     // Now, create Write Mask for Config register
-    RegVal EB_Mask = 0x3FFFF000;// Except Exception Base, the
+    RegVal EB_Mask = 0x3FFFF000; // Except Exception Base, the
                                  // entire register is read only
     replaceBits(EB_Mask, 32, 0, 0);
     setRegMask(misc_reg::Ebase, EB_Mask);
@@ -385,7 +592,6 @@ ISA::configCP()
     replaceBits(stat_Mask, 32, 0, 0);
     setRegMask(misc_reg::Status, stat_Mask);
 
-
     // MVPConf0
     MVPConf0Reg mvpConf0 = readMiscRegNoEffect(misc_reg::MvpConf0);
     mvpConf0.tca = 1;
@@ -422,7 +628,6 @@ ISA::configCP()
         setMiscRegNoEffect(misc_reg::TcStatus, tcStatus, tid);
     }
 
-
     RegVal mask = 0x7FFFFFFF;
 
     // Now, create Write Mask for the Index register
@@ -450,7 +655,6 @@ ISA::configCP()
     mask = 0x08C00300;
     replaceBits(mask, 32, 0, 0);
     setRegMask(misc_reg::Cause, mask);
-
 }
 
 inline unsigned
@@ -463,8 +667,8 @@ ISA::getVPENum(ThreadID tid) const
 RegVal
 ISA::readMiscRegNoEffect(RegIndex idx, ThreadID tid) const
 {
-    unsigned reg_sel = (bankType[idx] == perThreadContext)
-        ? tid : getVPENum(tid);
+    unsigned reg_sel =
+        (bankType[idx] == perThreadContext) ? tid : getVPENum(tid);
     DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) (%lx).\n",
             idx / 8, idx % 8, miscRegNames[idx], miscRegFile[idx][reg_sel]);
     return miscRegFile[idx][reg_sel];
@@ -472,12 +676,12 @@ ISA::readMiscRegNoEffect(RegIndex idx, ThreadID tid) const
 
 //@TODO: MIPS MT's register view automatically connects
 //       Status to TCStatus depending on current thread
-//template <class TC>
+// template <class TC>
 RegVal
 ISA::readMiscReg(RegIndex idx, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[idx] == perThreadContext)
-        ? tid : getVPENum(tid);
+    unsigned reg_sel =
+        (bankType[idx] == perThreadContext) ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
             idx / 8, idx % 8, miscRegNames[idx], miscRegFile[idx][reg_sel]);
@@ -488,8 +692,8 @@ ISA::readMiscReg(RegIndex idx, ThreadID tid)
 void
 ISA::setMiscRegNoEffect(RegIndex idx, RegVal val, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[idx] == perThreadContext)
-        ? tid : getVPENum(tid);
+    unsigned reg_sel =
+        (bankType[idx] == perThreadContext) ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "[tid:%i] Setting (direct set) CP0 Register:%u "
             "Select:%u (%s) to %#x.\n",
@@ -501,11 +705,11 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val, ThreadID tid)
 void
 ISA::setRegMask(RegIndex idx, RegVal val, ThreadID tid)
 {
-    unsigned reg_sel = (bankType[idx] == perThreadContext)
-        ? tid : getVPENum(tid);
+    unsigned reg_sel =
+        (bankType[idx] == perThreadContext) ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
-            "[tid:%i] Setting CP0 Register: %u Select: %u (%s) to %#x\n",
-            tid, idx / 8, idx % 8, miscRegNames[idx], val);
+            "[tid:%i] Setting CP0 Register: %u Select: %u (%s) to %#x\n", tid,
+            idx / 8, idx % 8, miscRegNames[idx], val);
     miscRegFile_WriteMask[idx][reg_sel] = val;
 }
 
@@ -516,8 +720,7 @@ ISA::setRegMask(RegIndex idx, RegVal val, ThreadID tid)
 void
 ISA::setMiscReg(RegIndex idx, RegVal val, ThreadID tid)
 {
-    int reg_sel = (bankType[idx] == perThreadContext)
-        ? tid : getVPENum(tid);
+    int reg_sel = (bankType[idx] == perThreadContext) ? tid : getVPENum(tid);
 
     DPRINTF(MipsPRA,
             "[tid:%i] Setting CP0 Register:%u "
@@ -535,7 +738,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val, ThreadID tid)
  * This method doesn't need to adjust the Control Register Offset
  * since it has already been done in the calling method
  * (setRegWithEffect)
-*/
+ */
 RegVal
 ISA::filterCP0Write(RegIndex idx, int reg_sel, RegVal val)
 {
@@ -551,8 +754,8 @@ ISA::filterCP0Write(RegIndex idx, int reg_sel, RegVal val)
             "filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, "
             "current val: %lx, written val: %x\n",
             miscRegFile_WriteMask[idx][reg_sel],
-            ~miscRegFile_WriteMask[idx][reg_sel],
-            val, miscRegFile[idx][reg_sel], retVal);
+            ~miscRegFile_WriteMask[idx][reg_sel], val,
+            miscRegFile[idx][reg_sel], retVal);
     return retVal;
 }
 
@@ -562,9 +765,9 @@ ISA::scheduleCP0Update(BaseCPU *cpu, Cycles delay)
     if (!cp0Updated) {
         cp0Updated = true;
 
-        //schedule UPDATE
+        // schedule UPDATE
         auto cp0_event = new EventFunctionWrapper(
-            [this, cpu]{ processCP0Event(cpu, UpdateCP0); },
+            [this, cpu] { processCP0Event(cpu, UpdateCP0); },
             "Coprocessor-0 event", true, Event::CPU_Tick_Pri);
         cpu->schedule(cp0_event, cpu->clockEdge(delay));
     }
@@ -586,7 +789,7 @@ ISA::updateCPU(BaseCPU *cpu)
         TCHaltReg tcHalt = readMiscRegNoEffect(misc_reg::TcHalt, tid);
 
         //@todo: add vpe/mt check here thru mvpcontrol & vpecontrol regs
-        if (tcHalt.h == 1 || tcStatus.a == 0)  {
+        if (tcHalt.h == 1 || tcStatus.a == 0) {
             haltThread(cpu->getContext(tid));
         } else if (tcHalt.h == 0 && tcStatus.a == 1) {
             restoreThread(cpu->getContext(tid));
@@ -602,9 +805,8 @@ ISA::updateCPU(BaseCPU *cpu)
 void
 ISA::processCP0Event(BaseCPU *cpu, CP0EventType cp0EventType)
 {
-    switch (cp0EventType)
-    {
-      case UpdateCP0:
+    switch (cp0EventType) {
+    case UpdateCP0:
         updateCPU(cpu);
         break;
     }

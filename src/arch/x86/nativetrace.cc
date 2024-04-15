@@ -39,7 +39,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 void
 X86NativeTrace::ThreadState::update(NativeTrace *parent)
@@ -62,7 +63,7 @@ X86NativeTrace::ThreadState::update(NativeTrace *parent)
     r14 = letoh(r14);
     r15 = letoh(r15);
     rip = letoh(rip);
-    //This should be expanded if x87 registers are considered
+    // This should be expanded if x87 registers are considered
     for (int i = 0; i < 8; i++)
         mmx[i] = letoh(mmx[i]);
     for (int i = 0; i < 32; i++)
@@ -89,13 +90,12 @@ X86NativeTrace::ThreadState::update(ThreadContext *tc)
     r14 = tc->getReg(X86ISA::int_reg::R14);
     r15 = tc->getReg(X86ISA::int_reg::R15);
     rip = tc->pcState().as<X86ISA::PCState>().npc();
-    //This should be expanded if x87 registers are considered
+    // This should be expanded if x87 registers are considered
     for (int i = 0; i < 8; i++)
         mmx[i] = tc->getReg(X86ISA::float_reg::mmx(i));
     for (int i = 0; i < 32; i++)
         xmm[i] = tc->getReg(X86ISA::float_reg::xmm(i));
 }
-
 
 X86NativeTrace::X86NativeTrace(const Params &p) : NativeTrace(p)
 {
@@ -104,7 +104,7 @@ X86NativeTrace::X86NativeTrace(const Params &p) : NativeTrace(p)
 }
 
 bool
-X86NativeTrace::checkRcxReg(const char * name, uint64_t &mVal, uint64_t &nVal)
+X86NativeTrace::checkRcxReg(const char *name, uint64_t &mVal, uint64_t &nVal)
 {
     if (!checkRcx)
         checkRcx = (mVal != oldRcxVal || nVal != oldRealRcxVal);
@@ -114,7 +114,7 @@ X86NativeTrace::checkRcxReg(const char * name, uint64_t &mVal, uint64_t &nVal)
 }
 
 bool
-X86NativeTrace::checkR11Reg(const char * name, uint64_t &mVal, uint64_t &nVal)
+X86NativeTrace::checkR11Reg(const char *name, uint64_t &mVal, uint64_t &nVal)
 {
     if (!checkR11)
         checkR11 = (mVal != oldR11Val || nVal != oldRealR11Val);
@@ -126,12 +126,12 @@ X86NativeTrace::checkR11Reg(const char * name, uint64_t &mVal, uint64_t &nVal)
 bool
 X86NativeTrace::checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[])
 {
-    if (mXmmBuf[num * 2]     != nXmmBuf[num * 2] ||
+    if (mXmmBuf[num * 2] != nXmmBuf[num * 2] ||
         mXmmBuf[num * 2 + 1] != nXmmBuf[num * 2 + 1]) {
         DPRINTF(ExecRegDelta,
                 "Register xmm%d should be 0x%016x%016x but is 0x%016x%016x.\n",
                 num, nXmmBuf[num * 2 + 1], nXmmBuf[num * 2],
-                     mXmmBuf[num * 2 + 1], mXmmBuf[num * 2]);
+                mXmmBuf[num * 2 + 1], mXmmBuf[num * 2]);
         return false;
     }
     return true;
@@ -143,8 +143,7 @@ X86NativeTrace::check(NativeTraceRecord *record)
     nState.update(this);
     mState.update(record->getThread());
 
-    if (record->getStaticInst()->isSyscall())
-    {
+    if (record->getStaticInst()->isSyscall()) {
         checkRcx = false;
         checkR11 = false;
         oldRcxVal = mState.rcx;
@@ -161,8 +160,8 @@ X86NativeTrace::check(NativeTraceRecord *record)
     checkReg("rbp", mState.rbp, nState.rbp);
     checkReg("rsi", mState.rsi, nState.rsi);
     checkReg("rdi", mState.rdi, nState.rdi);
-    checkReg("r8",  mState.r8,  nState.r8);
-    checkReg("r9",  mState.r9,  nState.r9);
+    checkReg("r8", mState.r8, nState.r8);
+    checkReg("r9", mState.r9, nState.r9);
     checkReg("r10", mState.r10, nState.r10);
     checkR11Reg("r11", mState.r11, nState.r11);
     checkReg("r12", mState.r12, nState.r12);

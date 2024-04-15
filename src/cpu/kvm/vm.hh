@@ -87,13 +87,22 @@ class Kvm
     Kvm *create();
 
     /** Get the version of the KVM API implemented by the kernel. */
-    int getAPIVersion() const { return apiVersion; }
+    int
+    getAPIVersion() const
+    {
+        return apiVersion;
+    }
+
     /**
      * Get the size of the MMAPed parameter area used to communicate
      * vCPU parameters between the kernel and userspace. This area,
      * amongst other things, contains the kvm_run data structure.
      */
-    int getVCPUMMapSize() const { return vcpuMMapSize; }
+    int
+    getVCPUMMapSize() const
+    {
+        return vcpuMMapSize;
+    }
 
     /** @{ */
     /** Support for KvmVM::setUserMemoryRegion() */
@@ -206,7 +215,6 @@ class Kvm
     /** Cached vector of supported MSRs. */
     mutable MSRIndexVector supportedMSRCache;
 
-
     /** @} */
 #endif
 
@@ -237,12 +245,19 @@ class Kvm
      * value otherwise.
      */
     int ioctl(int request, long p1) const;
-    int ioctl(int request, void *p1) const {
+
+    int
+    ioctl(int request, void *p1) const
+    {
         return ioctl(request, (long)p1);
     }
-    int ioctl(int request) const {
+
+    int
+    ioctl(int request) const
+    {
         return ioctl(request, 0L);
     }
+
     /** @} */
 
   private:
@@ -360,7 +375,11 @@ class KvmVM : public SimObject
     /**
      * Is in-kernel IRQ chip emulation enabled?
      */
-    bool hasKernelIRQChip() const { return _hasKernelIRQChip; }
+    bool
+    hasKernelIRQChip() const
+    {
+        return _hasKernelIRQChip;
+    }
 
     /**
      * Tell the VM and VCPUs to use an in-kernel IRQ chip for
@@ -369,15 +388,19 @@ class KvmVM : public SimObject
      * @note This is set automatically if the IRQ chip is created
      * using the KvmVM::createIRQChip() API.
      */
-    void enableKernelIRQChip() { _hasKernelIRQChip = true; }
+    void
+    enableKernelIRQChip()
+    {
+        _hasKernelIRQChip = true;
+    }
+
     /** @} */
 
     struct MemSlot
     {
-        MemSlot(uint32_t _num) : num(_num)
-        {}
-        MemSlot() : num(-1)
-        {}
+        MemSlot(uint32_t _num) : num(_num) {}
+
+        MemSlot() : num(-1) {}
 
         int32_t num;
     };
@@ -424,8 +447,8 @@ class KvmVM : public SimObject
     bool validEnvironment() const;
 
     /**
-      * Get the VCPUID for a given context
-      */
+     * Get the VCPUID for a given context
+     */
     long contextIdToVCpuId(ContextID ctx) const;
 
 #if defined(__aarch64__)
@@ -469,7 +492,6 @@ class KvmVM : public SimObject
      */
     void delayedStartup();
 
-
     /** @{ */
     /**
      * Setup a region of physical memory in the guest
@@ -480,8 +502,7 @@ class KvmVM : public SimObject
      * @param len Size of the allocation in bytes
      * @param flags Flags (see the KVM API documentation)
      */
-    void setUserMemoryRegion(uint32_t slot,
-                             void *host_addr, Addr guest_addr,
+    void setUserMemoryRegion(uint32_t slot, void *host_addr, Addr guest_addr,
                              uint64_t len, uint32_t flags);
     /** @} */
 
@@ -517,12 +538,19 @@ class KvmVM : public SimObject
      * value otherwise.
      */
     int ioctl(int request, long p1) const;
-    int ioctl(int request, void *p1) const {
+
+    int
+    ioctl(int request, void *p1) const
+    {
         return ioctl(request, (long)p1);
     }
-    int ioctl(int request) const {
+
+    int
+    ioctl(int request) const
+    {
         return ioctl(request, 0L);
     }
+
     /**@}*/
 
   private:
@@ -555,6 +583,7 @@ class KvmVM : public SimObject
         uint32_t slot;
         bool active;
     };
+
     std::vector<MemorySlot> memorySlots;
     uint32_t maxMemorySlot;
 };

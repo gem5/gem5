@@ -103,13 +103,16 @@ class NoMaliGpu : public PioDevice
      * @param msg Message to print.
      */
     [[noreturn]] static void gpuPanic(nomali_error_t err, const char *msg);
+
     /**
      * Panic if the NoMali returned an error, do nothing otherwise.
      *
      * @param err Error code from the NoMali library.
      * @param msg Message to print when panicking.
      */
-    static void panicOnErr(nomali_error_t err, const char *msg) {
+    static void
+    panicOnErr(nomali_error_t err, const char *msg)
+    {
         if (err != NOMALI_E_OK)
             gpuPanic(err, msg);
     }
@@ -155,8 +158,8 @@ class NoMaliGpu : public PioDevice
      * @param intno GPU interrupt type
      * @param set Was the interrupt raised (1) or lowered (0)?
      */
-    static void _interrupt(nomali_handle_t h, void *usr,
-                           nomali_int_t intno, int set);
+    static void _interrupt(nomali_handle_t h, void *usr, nomali_int_t intno,
+                           int set);
 
     /**
      * Reset callback from the NoMali library.
@@ -186,7 +189,6 @@ class NoMaliGpu : public PioDevice
     /** Handle of a NoMali library instance */
     nomali_handle_t nomali;
 };
-
 
 class CustomNoMaliGpu : public NoMaliGpu
 {

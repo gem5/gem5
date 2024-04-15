@@ -50,22 +50,20 @@
 namespace gem5
 {
 
-RealView::RealView(const Params &p)
-    : Platform(p), gic(nullptr)
-{}
+RealView::RealView(const Params &p) : Platform(p), gic(nullptr) {}
 
 void
 RealView::postConsoleInt()
 {
     warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
+    // panic("Need implementation\n");
 }
 
 void
 RealView::clearConsoleInt()
 {
     warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
+    // panic("Need implementation\n");
 }
 
 void

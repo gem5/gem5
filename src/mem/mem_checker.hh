@@ -70,7 +70,7 @@ namespace gem5
  * on the particular location, and we do not consider the effect of multi-byte
  * reads or writes. This precludes us from discovering single-copy atomicity
  * violations.
-*/
+ */
 class MemChecker : public SimObject
 {
   public:
@@ -81,24 +81,24 @@ class MemChecker : public SimObject
      */
     typedef uint64_t Serial;
 
-    static const Serial  SERIAL_INITIAL = 0; //!< Initial serial
+    static const Serial SERIAL_INITIAL = 0; //!< Initial serial
 
     /**
      * The initial tick the system starts with. Must not be larger than the
      * minimum value that curTick() could return at any time in the system's
      * execution.
      */
-    static const Tick    TICK_INITIAL   = 0;
+    static const Tick TICK_INITIAL = 0;
 
     /**
      * The maximum value that curTick() could ever return.
      */
-    static const Tick    TICK_FUTURE  = MaxTick;
+    static const Tick TICK_FUTURE = MaxTick;
 
     /**
      * Initial data value. No requirements.
      */
-    static const uint8_t DATA_INITIAL   = 0x00;
+    static const uint8_t DATA_INITIAL = 0x00;
 
     /**
      * The Transaction class captures the lifetimes of read and write
@@ -107,13 +107,9 @@ class MemChecker : public SimObject
     class Transaction
     {
       public:
-
-        Transaction(Serial _serial,
-                    Tick _start, Tick _complete,
+        Transaction(Serial _serial, Tick _start, Tick _complete,
                     uint8_t _data = DATA_INITIAL)
-            : serial(_serial),
-              start(_start), complete(_complete),
-              data(_data)
+            : serial(_serial), start(_start), complete(_complete), data(_data)
         {}
 
       public:
@@ -131,8 +127,11 @@ class MemChecker : public SimObject
         /**
          * Orders Transactions for use with std::map.
          */
-        bool operator<(const Transaction& rhs) const
-        { return serial < rhs.serial; }
+        bool
+        operator<(const Transaction &rhs) const
+        {
+            return serial < rhs.serial;
+        }
     };
 
     /**
@@ -144,8 +143,10 @@ class MemChecker : public SimObject
     {
       public:
         WriteCluster()
-            : start(TICK_FUTURE), complete(TICK_FUTURE),
-              completeMax(TICK_INITIAL), numIncomplete(0)
+            : start(TICK_FUTURE),
+              complete(TICK_FUTURE),
+              completeMax(TICK_INITIAL),
+              numIncomplete(0)
         {}
 
         /**
@@ -177,11 +178,15 @@ class MemChecker : public SimObject
         /**
          * @return true if this cluster's write all completed, false otherwise.
          */
-        bool isComplete() const { return complete != TICK_FUTURE; }
+        bool
+        isComplete() const
+        {
+            return complete != TICK_FUTURE;
+        }
 
       public:
-        Tick start;     //!< Start of earliest write in cluster
-        Tick complete;  //!< Completion of last write in cluster
+        Tick start;    //!< Start of earliest write in cluster
+        Tick complete; //!< Completion of last write in cluster
 
         /**
          * Map of Serial --> Transaction of all writes in cluster; contains
@@ -199,23 +204,21 @@ class MemChecker : public SimObject
 
     /**
      * The ByteTracker keeps track of transactions for the *same byte* -- all
-     * outstanding reads, the completed reads (and what they observed) and write
-     * clusters (see WriteCluster).
+     * outstanding reads, the completed reads (and what they observed) and
+     * write clusters (see WriteCluster).
      */
     class ByteTracker : public Named
     {
       public:
-
         ByteTracker(Addr addr = 0, const MemChecker *parent = NULL)
             : Named((parent != NULL ? parent->name() : "") +
-                     csprintf(".ByteTracker@%#llx", addr))
+                    csprintf(".ByteTracker@%#llx", addr))
         {
             // The initial transaction has start == complete == TICK_INITIAL,
             // indicating that there has been no real write to this location;
             // therefore, upon checking, we do not expect any particular value.
-            readObservations.emplace_back(
-                    Transaction(SERIAL_INITIAL, TICK_INITIAL, TICK_INITIAL,
-                                DATA_INITIAL));
+            readObservations.emplace_back(Transaction(
+                SERIAL_INITIAL, TICK_INITIAL, TICK_INITIAL, DATA_INITIAL));
         }
 
         /**
@@ -240,8 +243,8 @@ class MemChecker : public SimObject
          *
          * 2. The data produced by write transactions with a completion after
          *    the last observed read start time. Only data produced in the
-         *    closest overlapping / earlier write cluster relative to this check
-         *    request is considered, as writes in separate clusters are not
+         *    closest overlapping / earlier write cluster relative to this
+         * check request is considered, as writes in separate clusters are not
          *    reordered.
          *
          * @param start     Start time of transaction to validate.
@@ -298,11 +301,13 @@ class MemChecker : public SimObject
          * @return Reference to internally maintained vector maintaining last
          *         expected data that inExpectedData iterated through.
          */
-        const std::vector<uint8_t>& lastExpectedData() const
-        { return _lastExpectedData; }
+        const std::vector<uint8_t> &
+        lastExpectedData() const
+        {
+            return _lastExpectedData;
+        }
 
       private:
-
         /**
          * Convenience function to return the most recent incomplete write
          * cluster. Instantiates new write cluster if the most recent one has
@@ -310,7 +315,7 @@ class MemChecker : public SimObject
          *
          * @return The most recent incomplete write cluster.
          */
-        WriteCluster* getIncompleteWriteCluster();
+        WriteCluster *getIncompleteWriteCluster();
 
         /**
          * Helper function to return an iterator to the entry of a container of
@@ -322,7 +327,8 @@ class MemChecker : public SimObject
          * @return Iterator into container.
          */
         template <class TList>
-        typename TList::iterator lastCompletedTransaction(TList *l, Tick before)
+        typename TList::iterator
+        lastCompletedTransaction(TList *l, Tick before)
         {
             assert(!l->empty());
 
@@ -330,7 +336,8 @@ class MemChecker : public SimObject
             // quicker.
             auto it = l->end();
 
-            for (--it; it != l->begin() && it->complete >= before; --it);
+            for (--it; it != l->begin() && it->complete >= before; --it)
+                ;
 
             return it;
         }
@@ -347,7 +354,6 @@ class MemChecker : public SimObject
         void pruneTransactions();
 
       private:
-
         /**
          * Maintains a map of Serial -> Transaction for all outstanding reads.
          *
@@ -373,10 +379,8 @@ class MemChecker : public SimObject
     };
 
   public:
-
     MemChecker(const MemCheckerParams &p)
-        : SimObject(p),
-          nextSerial(SERIAL_INITIAL)
+        : SimObject(p), nextSerial(SERIAL_INITIAL)
     {}
 
     virtual ~MemChecker() {}
@@ -409,7 +413,8 @@ class MemChecker : public SimObject
      *
      * @param serial    A serial of a read that was previously started and
      *                  matches the address of the previously started read.
-     * @param complete  Tick we received the response from the memory subsystem.
+     * @param complete  Tick we received the response from the memory
+     * subsystem.
      * @param addr      Address for read.
      * @param size      Size of data received.
      * @param data      Pointer to size bytes, containing data received.
@@ -417,8 +422,8 @@ class MemChecker : public SimObject
      * @return True if the data we received is in the expected set, false
      *         otherwise.
      */
-    bool completeRead(Serial serial, Tick complete,
-                      Addr addr, size_t size, uint8_t *data);
+    bool completeRead(Serial serial, Tick complete, Addr addr, size_t size,
+                      uint8_t *data);
 
     /**
      * Completes a previously started write transaction.
@@ -451,8 +456,11 @@ class MemChecker : public SimObject
      * same serial S and then receive a completion of the transaction before
      * the reset with serial S.
      */
-    void reset()
-    { byte_trackers.clear(); }
+    void
+    reset()
+    {
+        byte_trackers.clear();
+    }
 
     /**
      * Resets an address-range. This may be useful in case other unmonitored
@@ -473,18 +481,24 @@ class MemChecker : public SimObject
      *
      * @return Reference to string of error message.
      */
-    const std::string& getErrorMessage() const { return errorMessage; }
+    const std::string &
+    getErrorMessage() const
+    {
+        return errorMessage;
+    }
 
   private:
     /**
      * Returns the instance of ByteTracker for the requested location.
      */
-    ByteTracker* getByteTracker(Addr addr)
+    ByteTracker *
+    getByteTracker(Addr addr)
     {
         auto it = byte_trackers.find(addr);
         if (it == byte_trackers.end()) {
-            it = byte_trackers.insert(
-                std::make_pair(addr, ByteTracker(addr, this))).first;
+            it = byte_trackers
+                     .insert(std::make_pair(addr, ByteTracker(addr, this)))
+                     .first;
         }
         return &it->second;
     };
@@ -506,9 +520,9 @@ class MemChecker : public SimObject
      * initialized as needed.
      *
      * The required space for this obviously grows with the number of distinct
-     * addresses used for a particular workload. The used size is independent on
-     * the number of nodes in the system, those may affect the size of per-byte
-     * tracking information.
+     * addresses used for a particular workload. The used size is independent
+     * on the number of nodes in the system, those may affect the size of
+     * per-byte tracking information.
      *
      * Access via getByteTracker()!
      */
@@ -520,7 +534,8 @@ MemChecker::startRead(Tick start, Addr addr, size_t size)
 {
     DPRINTF(MemChecker,
             "starting read: serial = %d, start = %d, addr = %#llx, "
-            "size = %d\n", nextSerial, start, addr , size);
+            "size = %d\n",
+            nextSerial, start, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->startRead(nextSerial, start);
@@ -534,7 +549,8 @@ MemChecker::startWrite(Tick start, Addr addr, size_t size, const uint8_t *data)
 {
     DPRINTF(MemChecker,
             "starting write: serial = %d, start = %d, addr = %#llx, "
-            "size = %d\n", nextSerial, start, addr, size);
+            "size = %d\n",
+            nextSerial, start, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->startWrite(nextSerial, start, data[i]);
@@ -544,12 +560,13 @@ MemChecker::startWrite(Tick start, Addr addr, size_t size, const uint8_t *data)
 }
 
 inline void
-MemChecker::completeWrite(MemChecker::Serial serial, Tick complete,
-                          Addr addr, size_t size)
+MemChecker::completeWrite(MemChecker::Serial serial, Tick complete, Addr addr,
+                          size_t size)
 {
     DPRINTF(MemChecker,
             "completing write: serial = %d, complete = %d, "
-            "addr = %#llx, size = %d\n", serial, complete, addr, size);
+            "addr = %#llx, size = %d\n",
+            serial, complete, addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->completeWrite(serial, complete);
@@ -560,8 +577,8 @@ inline void
 MemChecker::abortWrite(MemChecker::Serial serial, Addr addr, size_t size)
 {
     DPRINTF(MemChecker,
-            "aborting write: serial = %d, addr = %#llx, size = %d\n",
-            serial, addr, size);
+            "aborting write: serial = %d, addr = %#llx, size = %d\n", serial,
+            addr, size);
 
     for (size_t i = 0; i < size; ++i) {
         getByteTracker(addr + i)->abortWrite(serial);

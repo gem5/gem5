@@ -55,12 +55,15 @@ namespace gem5
 class LinearEquation
 {
   public:
-    LinearEquation(unsigned unknowns) {
-        eq = std::vector <double> (unknowns + 1, 0);
+    LinearEquation(unsigned unknowns)
+    {
+        eq = std::vector<double>(unknowns + 1, 0);
     }
 
     // Add two equations
-    LinearEquation operator+ (const LinearEquation& rhs) {
+    LinearEquation
+    operator+(const LinearEquation &rhs)
+    {
         assert(this->eq.size() == rhs.eq.size());
 
         LinearEquation res(this->eq.size() - 1);
@@ -72,21 +75,27 @@ class LinearEquation
     }
 
     // Multiply the equation by a constant
-    LinearEquation & operator*= (const double cnt) {
-        for (auto & c: eq)
+    LinearEquation &
+    operator*=(const double cnt)
+    {
+        for (auto &c : eq)
             c *= cnt;
 
         return *this;
     }
 
     // Access a certain equation coefficient
-    double & operator[] (unsigned unkw) {
+    double &
+    operator[](unsigned unkw)
+    {
         assert(unkw < eq.size());
         return eq[unkw];
     }
 
     // Get a string representation
-    std::string toStr() const {
+    std::string
+    toStr() const
+    {
         std::ostringstream oss;
         for (unsigned i = 0; i < eq.size(); i++) {
             if (i)
@@ -100,38 +109,46 @@ class LinearEquation
     }
 
     // Index for the constant term
-    unsigned cnt() const { return eq.size() - 1; }
+    unsigned
+    cnt() const
+    {
+        return eq.size() - 1;
+    }
 
   private:
-
     /** Coefficients */
-    std::vector <double> eq;
+    std::vector<double> eq;
 };
 
 class LinearSystem
 {
   public:
-    LinearSystem(unsigned unknowns) {
+    LinearSystem(unsigned unknowns)
+    {
         for (unsigned i = 0; i < unknowns; i++)
             matrix.push_back(LinearEquation(unknowns));
     }
 
-    LinearEquation & operator[] (unsigned eq) {
+    LinearEquation &
+    operator[](unsigned eq)
+    {
         assert(eq < matrix.size());
         return matrix[eq];
     }
 
-    std::string toStr() const {
+    std::string
+    toStr() const
+    {
         std::string r;
-        for (auto & eq: matrix)
+        for (auto &eq : matrix)
             r += eq.toStr() + "\n";
         return r;
     }
 
-    std::vector <double> solve() const;
+    std::vector<double> solve() const;
 
   private:
-    std::vector < LinearEquation > matrix;
+    std::vector<LinearEquation> matrix;
 };
 
 } // namespace gem5

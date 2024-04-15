@@ -47,51 +47,50 @@ namespace gem5
 namespace QARMA
 {
 
-  BitUnion64(BIT64)
-      Bitfield<63, 60> b15;
-      Bitfield<59, 56> b14;
-      Bitfield<55, 52> b13;
-      Bitfield<51, 48> b12;
-      Bitfield<47, 44> b11;
-      Bitfield<43, 40> b10;
-      Bitfield<39, 36> b9;
-      Bitfield<35, 32> b8;
-      Bitfield<31, 28> b7;
-      Bitfield<27, 24> b6;
-      Bitfield<23, 20> b5;
-      Bitfield<19, 16> b4;
-      Bitfield<15, 12> b3;
-      Bitfield<11, 8>  b2;
-      Bitfield<7, 4>   b1;
-      Bitfield<3, 0>   b0;
-  EndBitUnion(BIT64)
+BitUnion64(BIT64)
+    Bitfield<63, 60> b15;
+    Bitfield<59, 56> b14;
+    Bitfield<55, 52> b13;
+    Bitfield<51, 48> b12;
+    Bitfield<47, 44> b11;
+    Bitfield<43, 40> b10;
+    Bitfield<39, 36> b9;
+    Bitfield<35, 32> b8;
+    Bitfield<31, 28> b7;
+    Bitfield<27, 24> b6;
+    Bitfield<23, 20> b5;
+    Bitfield<19, 16> b4;
+    Bitfield<15, 12> b3;
+    Bitfield<11, 8> b2;
+    Bitfield<7, 4> b1;
+    Bitfield<3, 0> b0;
+EndBitUnion(BIT64)
 
+uint8_t rotCell(uint8_t incell, int amount);
 
-  uint8_t rotCell(uint8_t incell, int amount);
+uint8_t tweakCellInvRot(uint8_t incell);
 
-  uint8_t tweakCellInvRot(uint8_t incell);
+uint8_t tweakCellRot(uint8_t incell);
 
-  uint8_t tweakCellRot(uint8_t incell);
+BIT64 tweakInvShuffle(BIT64 indata);
 
-  BIT64 tweakInvShuffle(BIT64 indata);
+BIT64
+tweakShuffle(BIT64 indata);
 
-  BIT64
-  tweakShuffle(BIT64 indata);
+BIT64
+PACCellInvShuffle(BIT64 indata);
 
-  BIT64
-  PACCellInvShuffle(BIT64 indata);
+BIT64
+PACCellShuffle(BIT64 indata);
 
-  BIT64
-  PACCellShuffle(BIT64 indata);
+uint64_t PACInvSub(uint64_t tInput);
 
-  uint64_t PACInvSub(uint64_t tInput);
+uint64_t PACSub(uint64_t tInput);
 
-  uint64_t PACSub(uint64_t tInput);
+uint64_t PACMult(uint64_t tInput);
 
-  uint64_t PACMult(uint64_t tInput);
-
-  BIT64
-  computePAC(BIT64 data, BIT64 modifier, BIT64 key0, BIT64 key1);
+BIT64
+computePAC(BIT64 data, BIT64 modifier, BIT64 key0, BIT64 key1);
 
 } // namespace QARMA
 } // namespace gem5

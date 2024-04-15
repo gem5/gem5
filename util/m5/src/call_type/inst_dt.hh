@@ -35,7 +35,7 @@ namespace
 
 DispatchTable inst_dispatch = {
 #define M5OP(name, func) .name = &::name,
-M5OP_FOREACH
+    M5OP_FOREACH
 #undef M5OP
 };
 

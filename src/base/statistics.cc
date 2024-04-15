@@ -74,8 +74,7 @@ statsMap()
 void
 InfoAccess::setInfo(Group *parent, Info *info)
 {
-    panic_if(statsMap().find(this) != statsMap().end() ||
-             _info != nullptr,
+    panic_if(statsMap().find(this) != statsMap().end() || _info != nullptr,
              "shouldn't register stat twice!");
 
     // New-style stats are reachable through the hierarchy and
@@ -142,22 +141,20 @@ InfoAccess::newStyleStats() const
 }
 
 Formula::Formula(Group *parent, const char *name, const char *desc)
-    : DataWrapVec<Formula, FormulaInfoProxy>(
-            parent, name, units::Unspecified::get(), desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name,
+                                             units::Unspecified::get(), desc)
 
-{
-}
+{}
 
 Formula::Formula(Group *parent, const char *name, const units::Base *unit,
                  const char *desc)
     : DataWrapVec<Formula, FormulaInfoProxy>(parent, name, unit, desc)
-{
-}
+{}
 
 Formula::Formula(Group *parent, const char *name, const char *desc,
                  const Temp &r)
-    : DataWrapVec<Formula, FormulaInfoProxy>(
-            parent, name, units::Unspecified::get(), desc)
+    : DataWrapVec<Formula, FormulaInfoProxy>(parent, name,
+                                             units::Unspecified::get(), desc)
 {
     *this = r;
 }
@@ -196,13 +193,12 @@ Formula::operator+=(Temp r)
 const Formula &
 Formula::operator/=(Temp r)
 {
-    assert (root);
+    assert(root);
     root = NodePtr(new BinaryNode<std::divides<Result> >(root, r));
 
     assert(size());
     return *this;
 }
-
 
 void
 Formula::result(VResult &vec) const
@@ -228,8 +224,7 @@ Formula::size() const
 
 void
 Formula::reset()
-{
-}
+{}
 
 bool
 Formula::zero() const

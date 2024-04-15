@@ -68,16 +68,43 @@ class DefaultRequestPort : public RequestPort
     DefaultRequestPort() : RequestPort("default_request_port") {}
 
     // Atomic protocol.
-    Tick recvAtomicSnoop(PacketPtr) override { blowUp(); }
+    Tick
+    recvAtomicSnoop(PacketPtr) override
+    {
+        blowUp();
+    }
 
     // Timing protocol.
-    bool recvTimingResp(PacketPtr) override { blowUp(); }
-    void recvTimingSnoopReq(PacketPtr) override { blowUp(); }
-    void recvReqRetry() override { blowUp(); }
-    void recvRetrySnoopResp() override { blowUp(); }
+    bool
+    recvTimingResp(PacketPtr) override
+    {
+        blowUp();
+    }
+
+    void
+    recvTimingSnoopReq(PacketPtr) override
+    {
+        blowUp();
+    }
+
+    void
+    recvReqRetry() override
+    {
+        blowUp();
+    }
+
+    void
+    recvRetrySnoopResp() override
+    {
+        blowUp();
+    }
 
     // Functional protocol.
-    void recvFunctionalSnoop(PacketPtr) override { blowUp(); }
+    void
+    recvFunctionalSnoop(PacketPtr) override
+    {
+        blowUp();
+    }
 };
 
 class DefaultResponsePort : public ResponsePort
@@ -93,16 +120,44 @@ class DefaultResponsePort : public ResponsePort
     DefaultResponsePort() : ResponsePort("default_response_port") {}
 
     // Atomic protocol.
-    Tick recvAtomic(PacketPtr) override { blowUp(); }
+    Tick
+    recvAtomic(PacketPtr) override
+    {
+        blowUp();
+    }
 
     // Timing protocol.
-    bool recvTimingReq(PacketPtr) override { blowUp(); }
-    bool tryTiming(PacketPtr) override { blowUp(); }
-    bool recvTimingSnoopResp(PacketPtr) override { blowUp(); }
-    void recvRespRetry() override { blowUp(); }
+    bool
+    recvTimingReq(PacketPtr) override
+    {
+        blowUp();
+    }
+
+    bool
+    tryTiming(PacketPtr) override
+    {
+        blowUp();
+    }
+
+    bool
+    recvTimingSnoopResp(PacketPtr) override
+    {
+        blowUp();
+    }
+
+    void
+    recvRespRetry() override
+    {
+        blowUp();
+    }
 
     // Functional protocol.
-    void recvFunctional(PacketPtr) override { blowUp(); }
+    void
+    recvFunctional(PacketPtr) override
+    {
+        blowUp();
+    }
+
     void
     recvMemBackdoorReq(const MemBackdoorReq &, MemBackdoorPtr &) override
     {
@@ -110,7 +165,11 @@ class DefaultResponsePort : public ResponsePort
     }
 
     // General.
-    AddrRangeList getAddrRanges() const override { return AddrRangeList(); }
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return AddrRangeList();
+    }
 };
 
 DefaultRequestPort defaultRequestPort;
@@ -121,13 +180,10 @@ DefaultResponsePort defaultResponsePort;
 /**
  * Request port
  */
-[[deprecated]]
-RequestPort::RequestPort(const std::string& name,
-                         SimObject* _owner,
-                         PortID _id):
-    Port(name, _id), _responsePort(&defaultResponsePort), owner{*_owner}
-{
-}
+[[deprecated]] RequestPort::RequestPort(const std::string &name,
+                                        SimObject *_owner, PortID _id)
+    : Port(name, _id), _responsePort(&defaultResponsePort), owner{ *_owner }
+{}
 
 /*** FIXME:
  * The owner reference member is going through a deprecation path. In the
@@ -135,15 +191,13 @@ RequestPort::RequestPort(const std::string& name,
  * Using 1 instead of nullptr prevents warning upon dereference. It should be
  * OK until definitive removal of owner.
  */
-RequestPort::RequestPort(const std::string& name, PortID _id) :
-    Port(name, _id), _responsePort(&defaultResponsePort),
-    owner{*reinterpret_cast<SimObject*>(1)}
-{
-}
+RequestPort::RequestPort(const std::string &name, PortID _id)
+    : Port(name, _id),
+      _responsePort(&defaultResponsePort),
+      owner{ *reinterpret_cast<SimObject *>(1) }
+{}
 
-RequestPort::~RequestPort()
-{
-}
+RequestPort::~RequestPort() {}
 
 void
 RequestPort::bind(Port &peer)
@@ -161,8 +215,10 @@ RequestPort::bind(Port &peer)
 void
 RequestPort::unbind()
 {
-    panic_if(!isConnected(), "Can't unbind request port %s which is "
-    "not bound.", name());
+    panic_if(!isConnected(),
+             "Can't unbind request port %s which is "
+             "not bound.",
+             name());
     _responsePort->responderUnbind();
     _responsePort = &defaultResponsePort;
     Port::unbind();
@@ -177,8 +233,7 @@ RequestPort::getAddrRanges() const
 void
 RequestPort::printAddr(Addr a)
 {
-    auto req = std::make_shared<Request>(
-        a, 1, 0, Request::funcRequestorId);
+    auto req = std::make_shared<Request>(a, 1, 0, Request::funcRequestorId);
 
     Packet pkt(req, MemCmd::PrintReq);
     Packet::PrintReqState prs(std::cerr);
@@ -214,17 +269,13 @@ RequestPort::removeTrace(PacketPtr pkt) const
  * Response port
  */
 
-[[deprecated]]
-ResponsePort::ResponsePort(const std::string& name,
-                           SimObject* _owner,
-                           PortID _id):
-    Port(name, _id),
-    _requestPort(&defaultRequestPort),
-    defaultBackdoorWarned(false),
-    owner{*_owner}
-{
-}
-
+[[deprecated]] ResponsePort::ResponsePort(const std::string &name,
+                                          SimObject *_owner, PortID _id)
+    : Port(name, _id),
+      _requestPort(&defaultRequestPort),
+      defaultBackdoorWarned(false),
+      owner{ *_owner }
+{}
 
 /*** FIXME:
  * The owner reference member is going through a deprecation path. In the
@@ -232,17 +283,14 @@ ResponsePort::ResponsePort(const std::string& name,
  * Using 1 instead of nullptr prevents warning upon dereference. It should be
  * OK until definitive removal of owner.
  */
-ResponsePort::ResponsePort(const std::string& name, PortID id) :
-    Port(name, id),
-    _requestPort(&defaultRequestPort),
-    defaultBackdoorWarned(false),
-    owner{*reinterpret_cast<SimObject*>(1)}
-{
-}
+ResponsePort::ResponsePort(const std::string &name, PortID id)
+    : Port(name, id),
+      _requestPort(&defaultRequestPort),
+      defaultBackdoorWarned(false),
+      owner{ *reinterpret_cast<SimObject *>(1) }
+{}
 
-ResponsePort::~ResponsePort()
-{
-}
+ResponsePort::~ResponsePort() {}
 
 void
 ResponsePort::responderUnbind()
@@ -252,7 +300,7 @@ ResponsePort::responderUnbind()
 }
 
 void
-ResponsePort::responderBind(RequestPort& request_port)
+ResponsePort::responderBind(RequestPort &request_port)
 {
     _requestPort = &request_port;
     Port::bind(request_port);
@@ -271,7 +319,7 @@ ResponsePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 
 void
 ResponsePort::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
+                                 MemBackdoorPtr &backdoor)
 {
     if (!defaultBackdoorWarned) {
         DPRINTF(ResponsePort,

@@ -57,19 +57,19 @@ getMem(PacketPtr pkt, uint64_t &mem, unsigned dataSize,
        trace::InstRecord *traceData)
 {
     switch (dataSize) {
-      case 1:
+    case 1:
         mem = pkt->getLE<uint8_t>();
         break;
-      case 2:
+    case 2:
         mem = pkt->getLE<uint16_t>();
         break;
-      case 4:
+    case 4:
         mem = pkt->getLE<uint32_t>();
         break;
-      case 8:
+    case 8:
         mem = pkt->getLE<uint64_t>();
         break;
-      default:
+    default:
         panic("Unhandled size in getMem.\n");
     }
     if (traceData)
@@ -91,19 +91,18 @@ getMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize,
        trace::InstRecord *traceData)
 {
     switch (dataSize) {
-      case 4:
+    case 4:
         getPackedMem<uint32_t, N>(pkt, mem, dataSize);
         break;
-      case 8:
+    case 8:
         getPackedMem<uint64_t, N>(pkt, mem, dataSize);
         break;
-      default:
+    default:
         panic("Unhandled element size in getMem.\n");
     }
     if (traceData)
         traceData->setData(mem[0]);
 }
-
 
 static Fault
 readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
@@ -111,8 +110,8 @@ readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
 {
     memset(&mem, 0, sizeof(mem));
     const std::vector<bool> byte_enable(dataSize, true);
-    Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize,
-                              flags, byte_enable);
+    Fault fault =
+        xc->readMem(addr, (uint8_t *)&mem, dataSize, flags, byte_enable);
     if (fault == NoFault) {
         // If LE to LE, this is a nop, if LE to BE, the actual data ends up
         // in the right place because the LSBs where at the low addresses on
@@ -133,8 +132,8 @@ readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
     // Size is fixed at compilation time. Make a static vector.
     constexpr auto size = sizeof(T) * N;
     static const std::vector<bool> byte_enable(size, true);
-    Fault fault = xc->readMem(addr, (uint8_t *)&real_mem,
-                              size, flags, byte_enable);
+    Fault fault =
+        xc->readMem(addr, (uint8_t *)&real_mem, size, flags, byte_enable);
     if (fault == NoFault) {
         real_mem = letoh(real_mem);
         for (int i = 0; i < N; i++)
@@ -146,19 +145,18 @@ readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
 template <size_t N>
 static Fault
 readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
-              std::array<uint64_t, N> &mem, unsigned dataSize,
-              unsigned flags)
+              std::array<uint64_t, N> &mem, unsigned dataSize, unsigned flags)
 {
     Fault fault = NoFault;
 
     switch (dataSize) {
-      case 4:
+    case 4:
         fault = readPackedMemAtomic<uint32_t, N>(xc, addr, mem, flags);
         break;
-      case 8:
+    case 8:
         fault = readPackedMemAtomic<uint64_t, N>(xc, addr, mem, flags);
         break;
-      default:
+    default:
         panic("Unhandled element size in readMemAtomic\n");
     }
     if (fault == NoFault && traceData)
@@ -178,8 +176,8 @@ writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
     // Size is fixed at compilation time. Make a static vector.
     constexpr auto size = sizeof(T) * N;
     static const std::vector<bool> byte_enable(size, true);
-    return xc->writeMem((uint8_t *)&real_mem, size,
-                        addr, flags, res, byte_enable);
+    return xc->writeMem((uint8_t *)&real_mem, size, addr, flags, res,
+                        byte_enable);
 }
 
 static Fault
@@ -191,25 +189,25 @@ writeMemTiming(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
         traceData->setData(mem);
     mem = htole(mem);
     const std::vector<bool> byte_enable(dataSize, true);
-    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags,
-                        res, byte_enable);
+    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res,
+                        byte_enable);
 }
 
 template <size_t N>
 static Fault
 writeMemTiming(ExecContext *xc, trace::InstRecord *traceData,
-               std::array<uint64_t, N> &mem, unsigned dataSize,
-               Addr addr, unsigned flags, uint64_t *res)
+               std::array<uint64_t, N> &mem, unsigned dataSize, Addr addr,
+               unsigned flags, uint64_t *res)
 {
     if (traceData)
         traceData->setData(mem[0]);
 
     switch (dataSize) {
-      case 4:
+    case 4:
         return writePackedMem<uint32_t, N>(xc, mem, addr, flags, res);
-      case 8:
+    case 8:
         return writePackedMem<uint64_t, N>(xc, mem, addr, flags, res);
-      default:
+    default:
         panic("Unhandled element size in writeMemTiming.\n");
     }
 }
@@ -223,8 +221,8 @@ writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
         traceData->setData(mem);
     uint64_t host_mem = htole(mem);
     const std::vector<bool> byte_enable(dataSize, true);
-    Fault fault = xc->writeMem((uint8_t *)&host_mem, dataSize, addr,
-                               flags, res, byte_enable);
+    Fault fault = xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags,
+                               res, byte_enable);
     if (fault == NoFault && res)
         *res = letoh(*res);
     return fault;
@@ -233,21 +231,21 @@ writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
 template <size_t N>
 static Fault
 writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData,
-               std::array<uint64_t, N> &mem, unsigned dataSize,
-               Addr addr, unsigned flags, uint64_t *res)
+               std::array<uint64_t, N> &mem, unsigned dataSize, Addr addr,
+               unsigned flags, uint64_t *res)
 {
     if (traceData)
         traceData->setData(mem[0]);
 
     Fault fault;
     switch (dataSize) {
-      case 4:
+    case 4:
         fault = writePackedMem<uint32_t, N>(xc, mem, addr, flags, res);
         break;
-      case 8:
+    case 8:
         fault = writePackedMem<uint64_t, N>(xc, mem, addr, flags, res);
         break;
-      default:
+    default:
         panic("Unhandled element size in writeMemAtomic.\n");
     }
 

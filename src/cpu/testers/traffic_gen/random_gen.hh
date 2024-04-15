@@ -59,9 +59,7 @@ namespace gem5
  */
 class RandomGen : public StochasticGen
 {
-
   public:
-
     /**
      * Create a random address sequence generator. Set
      * min_period == max_period for a fixed inter-transaction
@@ -79,17 +77,15 @@ class RandomGen : public StochasticGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    RandomGen(SimObject &obj,
-              RequestorID requestor_id, Tick _duration,
-              Addr start_addr, Addr end_addr,
-              Addr _blocksize, Addr cacheline_size,
-              Tick min_period, Tick max_period,
+    RandomGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+              Addr start_addr, Addr end_addr, Addr _blocksize,
+              Addr cacheline_size, Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
         : StochasticGen(obj, requestor_id, _duration, start_addr, end_addr,
                         _blocksize, cacheline_size, min_period, max_period,
                         read_percent, data_limit),
           dataManipulated(0)
-    { }
+    {}
 
     void enter();
 

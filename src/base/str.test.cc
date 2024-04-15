@@ -115,7 +115,7 @@ TEST(StrTest, SplitFirst)
     std::string lhs;
     std::string rhs;
 
-    split_first(val , lhs, rhs, 'f');
+    split_first(val, lhs, rhs, 'f');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("abcde", lhs);
     EXPECT_EQ("g abcdefg", rhs);
@@ -127,7 +127,7 @@ TEST(StrTest, SplitFirstNoChar)
     std::string lhs;
     std::string rhs;
 
-    split_first(val , lhs, rhs, 'h');
+    split_first(val, lhs, rhs, 'h');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("abcdefg abcdefg", lhs);
     EXPECT_EQ("", rhs);
@@ -139,7 +139,7 @@ TEST(StrTest, SplitFirstOnFirstChar)
     std::string lhs;
     std::string rhs;
 
-    split_first(val , lhs, rhs, 'a');
+    split_first(val, lhs, rhs, 'a');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("", lhs);
     EXPECT_EQ("bcdefg abcdefg", rhs);
@@ -151,7 +151,7 @@ TEST(StrTest, SplitLast)
     std::string lhs;
     std::string rhs;
 
-    split_last(val , lhs, rhs, 'f');
+    split_last(val, lhs, rhs, 'f');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("abcdefg abcde", lhs);
     EXPECT_EQ("g", rhs);
@@ -163,7 +163,7 @@ TEST(StrTest, SplitLastNoChar)
     std::string lhs;
     std::string rhs;
 
-    split_last(val , lhs, rhs, 'h');
+    split_last(val, lhs, rhs, 'h');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("abcdefg abcdefg", lhs);
     EXPECT_EQ("", rhs);
@@ -175,12 +175,11 @@ TEST(StrTest, SplitLastOnLastChar)
     std::string lhs;
     std::string rhs;
 
-    split_last(val , lhs, rhs, 'g');
+    split_last(val, lhs, rhs, 'g');
     EXPECT_EQ("abcdefg abcdefg", val);
     EXPECT_EQ("abcdefg abcdef", lhs);
     EXPECT_EQ("", rhs);
 }
-
 
 /*
  * str.cc's "tokenize" function splits a string into its constituent tokens.
@@ -359,8 +358,9 @@ TEST(StrTest, ToNumberEnum)
 {
     enum Number
     {
-        TWO=2,
+        TWO = 2,
     };
+
     Number output;
     std::string input = "2";
     ASSERT_TRUE(to_number(input, output));
@@ -372,8 +372,9 @@ TEST(StrTest, DISABLED_ToNumberEnumInvalid)
 {
     enum Number
     {
-        TWO=2,
+        TWO = 2,
     };
+
     Number output;
     std::string input = "3";
     EXPECT_FALSE(to_number(input, output));
@@ -455,7 +456,8 @@ TEST(StrTest, ToBoolTrue)
     EXPECT_TRUE(output);
 }
 
-TEST(StrTest, ToBoolFalse){
+TEST(StrTest, ToBoolFalse)
+{
     bool output = true;
     EXPECT_TRUE(to_bool("fAlSe", output));
     EXPECT_FALSE(output);
@@ -471,10 +473,7 @@ TEST(StrTest, ToBoolInvalidInput)
  * The "quote" function take a string and returns that string quoted (i.e.,
  * between double-quotes) if the string contains a space.
  */
-TEST(StrTest, QuoteStringNoSpace)
-{
-    EXPECT_EQ("hello", quote("hello"));
-}
+TEST(StrTest, QuoteStringNoSpace) { EXPECT_EQ("hello", quote("hello")); }
 
 TEST(StrTest, QuoteStringWithSpace)
 {
@@ -520,28 +519,28 @@ TEST(StrTest, StartswithDoubleStringDoesNotStartWith)
 
 TEST(StrTest, StartswithDoubleCharArrayDoesStartWith)
 {
-    const char* s = "abcdefg";
-    const char* prefix = "ab";
+    const char *s = "abcdefg";
+    const char *prefix = "ab";
     EXPECT_TRUE(startswith(s, prefix));
 }
 
 TEST(StrTest, StartswithDoubleCharArrayDoesNotStartWith)
 {
-    const char* s = " abcdefg";
-    const char* prefix = "a";
+    const char *s = " abcdefg";
+    const char *prefix = "a";
     EXPECT_FALSE(startswith(s, prefix));
 }
 
 TEST(StrTest, StartswithStringCharArrayDoesStartWith)
 {
     std::string s = "foobarr";
-    const char* prefix = "f";
+    const char *prefix = "f";
     EXPECT_TRUE(startswith(s, prefix));
 }
 
 TEST(StrTest, StartswithStringCharArrayDoesNotStartWith)
 {
     std::string s = "foobarr";
-    const char* prefix = "barr";
+    const char *prefix = "barr";
     EXPECT_FALSE(startswith(s, prefix));
 }

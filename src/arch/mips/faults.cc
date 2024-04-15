@@ -45,56 +45,73 @@ namespace MipsISA
 
 typedef MipsFaultBase::FaultVals FaultVals;
 
-template <> FaultVals MipsFault<SystemCallFault>::vals =
-    { "Syscall", 0x180, ExcCodeSys };
+template <>
+FaultVals MipsFault<SystemCallFault>::vals = { "Syscall", 0x180, ExcCodeSys };
 
-template <> FaultVals MipsFault<ReservedInstructionFault>::vals =
-    { "Reserved Instruction Fault", 0x180, ExcCodeRI };
+template <>
+FaultVals MipsFault<ReservedInstructionFault>::vals = {
+    "Reserved Instruction Fault", 0x180, ExcCodeRI
+};
 
-template <> FaultVals MipsFault<ThreadFault>::vals =
-    { "Thread Fault", 0x180, ExcCodeDummy };
+template <>
+FaultVals MipsFault<ThreadFault>::vals = { "Thread Fault", 0x180,
+                                           ExcCodeDummy };
 
-template <> FaultVals MipsFault<IntegerOverflowFault>::vals =
-    { "Integer Overflow Exception", 0x180, ExcCodeOv };
+template <>
+FaultVals MipsFault<IntegerOverflowFault>::vals = {
+    "Integer Overflow Exception", 0x180, ExcCodeOv
+};
 
-template <> FaultVals MipsFault<TrapFault>::vals =
-    { "Trap", 0x180, ExcCodeTr };
+template <>
+FaultVals MipsFault<TrapFault>::vals = { "Trap", 0x180, ExcCodeTr };
 
-template <> FaultVals MipsFault<BreakpointFault>::vals =
-    { "Breakpoint", 0x180, ExcCodeBp };
+template <>
+FaultVals MipsFault<BreakpointFault>::vals = { "Breakpoint", 0x180,
+                                               ExcCodeBp };
 
-template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
-    { "DSP Disabled Fault", 0x180, ExcCodeDummy };
+template <>
+FaultVals MipsFault<DspStateDisabledFault>::vals = { "DSP Disabled Fault",
+                                                     0x180, ExcCodeDummy };
 
-template <> FaultVals MipsFault<MachineCheckFault>::vals =
-    { "Machine Check", 0x180, ExcCodeMCheck };
+template <>
+FaultVals MipsFault<MachineCheckFault>::vals = { "Machine Check", 0x180,
+                                                 ExcCodeMCheck };
 
-template <> FaultVals MipsFault<ResetFault>::vals =
-    { "Reset Fault", 0x000, ExcCodeDummy };
+template <>
+FaultVals MipsFault<ResetFault>::vals = { "Reset Fault", 0x000, ExcCodeDummy };
 
-template <> FaultVals MipsFault<SoftResetFault>::vals =
-    { "Soft Reset Fault", 0x000, ExcCodeDummy };
+template <>
+FaultVals MipsFault<SoftResetFault>::vals = { "Soft Reset Fault", 0x000,
+                                              ExcCodeDummy };
 
-template <> FaultVals MipsFault<NonMaskableInterrupt>::vals =
-    { "Non Maskable Interrupt", 0x000, ExcCodeDummy };
+template <>
+FaultVals MipsFault<NonMaskableInterrupt>::vals = { "Non Maskable Interrupt",
+                                                    0x000, ExcCodeDummy };
 
-template <> FaultVals MipsFault<CoprocessorUnusableFault>::vals =
-    { "Coprocessor Unusable Fault", 0x180, ExcCodeCpU };
+template <>
+FaultVals MipsFault<CoprocessorUnusableFault>::vals = {
+    "Coprocessor Unusable Fault", 0x180, ExcCodeCpU
+};
 
-template <> FaultVals MipsFault<InterruptFault>::vals =
-    { "Interrupt", 0x000, ExcCodeInt };
+template <>
+FaultVals MipsFault<InterruptFault>::vals = { "Interrupt", 0x000, ExcCodeInt };
 
-template <> FaultVals MipsFault<AddressErrorFault>::vals =
-    { "Address Error", 0x180, ExcCodeDummy };
+template <>
+FaultVals MipsFault<AddressErrorFault>::vals = { "Address Error", 0x180,
+                                                 ExcCodeDummy };
 
-template <> FaultVals MipsFault<TlbInvalidFault>::vals =
-    { "Invalid TLB Entry Exception", 0x180, ExcCodeDummy };
+template <>
+FaultVals MipsFault<TlbInvalidFault>::vals = { "Invalid TLB Entry Exception",
+                                               0x180, ExcCodeDummy };
 
-template <> FaultVals MipsFault<TlbRefillFault>::vals =
-    { "TLB Refill Exception", 0x180, ExcCodeDummy };
+template <>
+FaultVals MipsFault<TlbRefillFault>::vals = { "TLB Refill Exception", 0x180,
+                                              ExcCodeDummy };
 
-template <> MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals =
-    { "TLB Modified Exception", 0x180, ExcCodeMod };
+template <>
+MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals = {
+    "TLB Modified Exception", 0x180, ExcCodeMod
+};
 
 void
 MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
@@ -118,7 +135,7 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
     DPRINTF(MipsPRA, "PC: %s\n", pc);
     bool delay_slot = pc.pc() + sizeof(MachInst) != pc.npc();
     tc->setMiscRegNoEffect(misc_reg::Epc,
-            pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
+                           pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
 
     // Set Cause_EXCCODE field
     CauseReg cause = tc->readMiscReg(misc_reg::Cause);

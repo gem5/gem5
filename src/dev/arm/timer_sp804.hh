@@ -61,27 +61,26 @@ class Sp804 : public AmbaPioDevice
   protected:
     class Timer : public Serializable
     {
-
       public:
         enum
         {
-            LoadReg    = 0x00,
+            LoadReg = 0x00,
             CurrentReg = 0x04,
             ControlReg = 0x08,
-            IntClear   = 0x0C,
-            RawISR     = 0x10,
-            MaskedISR  = 0x14,
-            BGLoad     = 0x18,
-            Size       = 0x20
+            IntClear = 0x0C,
+            RawISR = 0x10,
+            MaskedISR = 0x14,
+            BGLoad = 0x18,
+            Size = 0x20
         };
 
         BitUnion32(CTRL)
-            Bitfield<0>   oneShot;
-            Bitfield<1>   timerSize;
-            Bitfield<3,2> timerPrescale;
-            Bitfield<5>   intEnable;
-            Bitfield<6>   timerMode;
-            Bitfield<7>   timerEnable;
+            Bitfield<0> oneShot;
+            Bitfield<1> timerSize;
+            Bitfield<3, 2> timerPrescale;
+            Bitfield<5> intEnable;
+            Bitfield<6> timerMode;
+            Bitfield<7> timerEnable;
         EndBitUnion(CTRL)
 
       protected:
@@ -91,7 +90,7 @@ class Sp804 : public AmbaPioDevice
         Sp804 *parent;
 
         /** Pointer to the interrupt pin */
-        ArmInterruptPin * const interrupt;
+        ArmInterruptPin *const interrupt;
 
         /** Number of ticks in a clock input */
         const Tick clock;
@@ -122,7 +121,11 @@ class Sp804 : public AmbaPioDevice
         Timer(std::string __name, Sp804 *parent, ArmInterruptPin *_interrupt,
               Tick clock);
 
-        std::string name() const { return _name; }
+        std::string
+        name() const
+        {
+            return _name;
+        }
 
         /** Handle read for a single timer */
         void read(PacketPtr pkt, Addr daddr);
@@ -142,9 +145,9 @@ class Sp804 : public AmbaPioDevice
     using Params = Sp804Params;
 
     /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for RealView just registers itself with the MMU.
+     * @param p params structure
+     */
     Sp804(const Params &p);
 
     /**
@@ -160,7 +163,6 @@ class Sp804 : public AmbaPioDevice
      * @param data the data
      */
     Tick write(PacketPtr pkt) override;
-
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

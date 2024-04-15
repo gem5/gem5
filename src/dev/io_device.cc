@@ -51,9 +51,7 @@ PioDevice::PioDevice(const Params &p)
     : ClockedObject(p), sys(p.system), pioPort(this)
 {}
 
-PioDevice::~PioDevice()
-{
-}
+PioDevice::~PioDevice() {}
 
 void
 PioDevice::init()
@@ -73,8 +71,7 @@ PioDevice::getPort(const std::string &if_name, PortID idx)
 }
 
 BasicPioDevice::BasicPioDevice(const Params &p, Addr size)
-    : PioDevice(p), pioAddr(p.pio_addr), pioSize(size),
-      pioDelay(p.pio_latency)
+    : PioDevice(p), pioAddr(p.pio_addr), pioSize(size), pioDelay(p.pio_latency)
 {}
 
 AddrRangeList

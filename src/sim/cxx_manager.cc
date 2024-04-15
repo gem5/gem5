@@ -49,15 +49,15 @@
 namespace gem5
 {
 
-CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_) :
-    configFile(configFile_), flags(configFile_.getFlags()),
-    simObjectResolver(*this)
-{
-}
+CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_)
+    : configFile(configFile_),
+      flags(configFile_.getFlags()),
+      simObjectResolver(*this)
+{}
 
 const CxxConfigDirectoryEntry &
 CxxConfigManager::findObjectType(const std::string &object_name,
-    std::string &object_type)
+                                 std::string &object_type)
 {
     if (!configFile.objectExists(object_name))
         throw Exception(object_name, "Can't find sim object");
@@ -65,11 +65,10 @@ CxxConfigManager::findObjectType(const std::string &object_name,
     if (!configFile.getParam(object_name, "type", object_type))
         throw Exception(object_name, "Sim object has no 'type' field");
 
-    if (cxxConfigDirectory().find(object_type) ==
-        cxxConfigDirectory().end())
-    {
-        throw Exception(object_name, csprintf(
-            "No sim object type %s is available", object_type));
+    if (cxxConfigDirectory().find(object_type) == cxxConfigDirectory().end()) {
+        throw Exception(
+            object_name,
+            csprintf("No sim object type %s is available", object_type));
     }
 
     const CxxConfigDirectoryEntry *entry = cxxConfigDirectory()[object_type];
@@ -80,12 +79,12 @@ CxxConfigManager::findObjectType(const std::string &object_name,
 std::string
 CxxConfigManager::rename(const std::string &from_name)
 {
-    for (auto i = renamings.begin(); i != renamings.end(); ++ i) {
+    for (auto i = renamings.begin(); i != renamings.end(); ++i) {
         const Renaming &renaming = *i;
 
         if (from_name.find(renaming.fromPrefix) == 0) {
             return renaming.toPrefix +
-                from_name.substr(renaming.fromPrefix.length());
+                   from_name.substr(renaming.fromPrefix.length());
         }
     }
 
@@ -95,20 +94,20 @@ CxxConfigManager::rename(const std::string &from_name)
 std::string
 CxxConfigManager::unRename(const std::string &to_name)
 {
-    for (auto i = renamings.begin(); i != renamings.end(); ++ i) {
+    for (auto i = renamings.begin(); i != renamings.end(); ++i) {
         const Renaming &renaming = *i;
 
         if (to_name.find(renaming.toPrefix) == 0) {
             return renaming.fromPrefix +
-                to_name.substr(renaming.toPrefix.length());
+                   to_name.substr(renaming.toPrefix.length());
         }
     }
 
     return to_name;
 }
 
-static
-std::string formatParamList(const std::vector<std::string> &param_values)
+static std::string
+formatParamList(const std::vector<std::string> &param_values)
 {
     std::ostringstream params;
 
@@ -130,7 +129,7 @@ std::string formatParamList(const std::vector<std::string> &param_values)
 
 SimObject *
 CxxConfigManager::findObject(const std::string &object_name,
-    bool visit_children)
+                             bool visit_children)
 {
     std::string instance_name = rename(object_name);
 
@@ -153,18 +152,18 @@ CxxConfigManager::findObject(const std::string &object_name,
     CxxConfigParams *object_params = findObjectParams(object_name);
 
     try {
-        DPRINTF(CxxConfig, "Configuring sim object references for: %s"
-            " (%s from object %s)\n", instance_name, object_type,
-            object_name);
+        DPRINTF(CxxConfig,
+                "Configuring sim object references for: %s"
+                " (%s from object %s)\n",
+                instance_name, object_type, object_name);
 
         /* Remember the path back to the top of the recursion to detect
          *  cycles */
         inVisit.insert(instance_name);
 
         /* Resolve pointed-to SimObjects by recursing into them */
-        for (auto i = entry.parameters.begin();
-            i != entry.parameters.end(); ++i)
-        {
+        for (auto i = entry.parameters.begin(); i != entry.parameters.end();
+             ++i) {
             const CxxConfigDirectoryEntry::ParamDesc *param = (*i).second;
 
             if (param->isSimObject) {
@@ -172,61 +171,64 @@ CxxConfigManager::findObject(const std::string &object_name,
                     std::vector<std::string> sub_object_names;
 
                     if (!configFile.getParamVector(object_name, param->name,
-                        sub_object_names))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found: %s", param->name));
+                                                   sub_object_names)) {
+                        throw Exception(
+                            object_name,
+                            csprintf("Element not found: %s", param->name));
                     }
 
                     std::vector<SimObject *> sub_objects;
 
                     for (auto n = sub_object_names.begin();
-                        n != sub_object_names.end(); ++n)
-                    {
-                        SimObject *sub_object = findObject(*n,
-                            visit_children);
+                         n != sub_object_names.end(); ++n) {
+                        SimObject *sub_object = findObject(*n, visit_children);
 
                         if (sub_object)
                             sub_objects.push_back(sub_object);
                     }
 
                     if (!object_params->setSimObjectVector(param->name,
-                        sub_objects))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Can't assign sim object element %s from \"%s\"",
-                            param->name, formatParamList(sub_object_names)));
+                                                           sub_objects)) {
+                        throw Exception(
+                            object_name,
+                            csprintf("Can't assign sim object element %s from "
+                                     "\"%s\"",
+                                     param->name,
+                                     formatParamList(sub_object_names)));
                     }
 
                     DPRINTF(CxxConfig, "Setting sim object(s): %s.%s=%s\n",
-                        object_name, param->name,
-                        formatParamList(sub_object_names));
+                            object_name, param->name,
+                            formatParamList(sub_object_names));
                 } else {
                     std::string sub_object_name;
 
                     if (!configFile.getParam(object_name, param->name,
-                        sub_object_name))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found: %s", param->name));
+                                             sub_object_name)) {
+                        throw Exception(
+                            object_name,
+                            csprintf("Element not found: %s", param->name));
                     }
 
-                    SimObject *sub_object = findObject(sub_object_name,
-                        visit_children);
+                    SimObject *sub_object =
+                        findObject(sub_object_name, visit_children);
 
                     if (sub_object) {
                         if (!object_params->setSimObject(param->name,
-                            sub_object))
-                        {
-                            throw Exception(object_name, csprintf(
-                                "Can't assign sim object element %s from"
-                                " \"%s\"", param->name, sub_object_name));
+                                                         sub_object)) {
+                            throw Exception(
+                                object_name,
+                                csprintf(
+                                    "Can't assign sim object element %s from"
+                                    " \"%s\"",
+                                    param->name, sub_object_name));
                         }
                     }
 
-                    DPRINTF(CxxConfig, "Setting sim object(s):"
-                        " %s.%s=%s\n", object_name, param->name,
-                        sub_object_name);
+                    DPRINTF(CxxConfig,
+                            "Setting sim object(s):"
+                            " %s.%s=%s\n",
+                            object_name, param->name, sub_object_name);
                 }
             }
         }
@@ -236,7 +238,8 @@ CxxConfigManager::findObject(const std::string &object_name,
 
         if (!object) {
             throw Exception(object_name, csprintf("Couldn't create object of"
-                " type: %s", object_type));
+                                                  " type: %s",
+                                                  object_type));
         }
 
         objectsByName[instance_name] = object;
@@ -276,7 +279,7 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
         findObjectType(object_name, object_type);
 
     DPRINTF(CxxConfig, "Configuring parameters of object: %s (%s)\n",
-        instance_name, object_type);
+            instance_name, object_type);
 
     CxxConfigParams *object_params = entry.makeParamsObject();
 
@@ -286,9 +289,8 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
         object_params->setName(instance_name);
 
         /* Fill in parameters */
-        for (auto i = entry.parameters.begin();
-            i != entry.parameters.end(); ++i)
-        {
+        for (auto i = entry.parameters.begin(); i != entry.parameters.end();
+             ++i) {
             const CxxConfigDirectoryEntry::ParamDesc *param = (*i).second;
 
             if (!param->isSimObject) {
@@ -298,45 +300,48 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
                     std::vector<std::string> param_values;
 
                     if (!configFile.getParamVector(object_name, param->name,
-                        param_values))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found for parameter: %s",
-                            param->name));
+                                                   param_values)) {
+                        throw Exception(
+                            object_name,
+                            csprintf("Element not found for parameter: %s",
+                                     param->name));
                     }
 
                     if (!object_params->setParamVector(param->name,
-                        param_values, flags))
-                    {
-                        throw Exception(instance_name, csprintf(
-                            "Bad parameter value: .%s=X=\"%s\"",
-                            param->name, formatParamList(param_values)));
+                                                       param_values, flags)) {
+                        throw Exception(
+                            instance_name,
+                            csprintf("Bad parameter value: .%s=X=\"%s\"",
+                                     param->name,
+                                     formatParamList(param_values)));
                     }
 
-                    DPRINTF(CxxConfig, "Setting parameter"
-                        " %s.%s=%s\n", instance_name, param->name,
-                        formatParamList(param_values));
+                    DPRINTF(CxxConfig,
+                            "Setting parameter"
+                            " %s.%s=%s\n",
+                            instance_name, param->name,
+                            formatParamList(param_values));
                 } else {
                     std::string param_value;
 
                     if (!configFile.getParam(object_name, param->name,
-                        param_value))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found for parameter: %s",
-                            param->name));
+                                             param_value)) {
+                        throw Exception(
+                            object_name,
+                            csprintf("Element not found for parameter: %s",
+                                     param->name));
                     }
 
                     if (!object_params->setParam(param->name, param_value,
-                        flags))
-                    {
-                        throw Exception(instance_name, csprintf(
-                            "Bad parameter value: .%s=X=\"%s\"",
-                            param->name, param_value));
+                                                 flags)) {
+                        throw Exception(
+                            instance_name,
+                            csprintf("Bad parameter value: .%s=X=\"%s\"",
+                                     param->name, param_value));
                     }
 
                     DPRINTF(CxxConfig, "Setting parameter %s.%s=%s\n",
-                        instance_name, param->name, param_value);
+                            instance_name, param->name, param_value);
                 }
             }
         }
@@ -348,9 +353,10 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
             std::vector<std::string> peers;
 
             if (!configFile.getPortPeers(object_name, port->name, peers)) {
-                DPRINTF(CxxConfig, "Port not found: %s.%s,"
-                    " assuming there are no connections\n",
-                    instance_name, port->name);
+                DPRINTF(CxxConfig,
+                        "Port not found: %s.%s,"
+                        " assuming there are no connections\n",
+                        instance_name, port->name);
             }
 
             unsigned int peer_count = peers.size();
@@ -361,42 +367,42 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
              *  hold for little performance increase */
 
             if (!object_params->setPortConnectionCount(port->name,
-                peer_count))
-            {
-                throw Exception(instance_name, csprintf(
-                    "Unconnected port: %s", port->name));
+                                                       peer_count)) {
+                throw Exception(instance_name,
+                                csprintf("Unconnected port: %s", port->name));
             }
 
-            DPRINTF(CxxConfig, "Setting port connection count"
-                " for: %s.%s to %d\n",
-                instance_name, port->name, peer_count);
+            DPRINTF(CxxConfig,
+                    "Setting port connection count"
+                    " for: %s.%s to %d\n",
+                    instance_name, port->name, peer_count);
         }
 
         /* Set pointed-to SimObjects to NULL */
-        for (auto i = entry.parameters.begin();
-            i != entry.parameters.end(); ++i)
-        {
+        for (auto i = entry.parameters.begin(); i != entry.parameters.end();
+             ++i) {
             const CxxConfigDirectoryEntry::ParamDesc *param = (*i).second;
 
             if (param->isSimObject) {
                 bool ret;
 
                 DPRINTF(CxxConfig, "Nulling sim object reference: %s.%s\n",
-                    instance_name, param->name);
+                        instance_name, param->name);
 
                 if (param->isVector) {
                     /* Clear the reference list. */
                     std::vector<SimObject *> empty;
-                    ret = object_params->setSimObjectVector(param->name,
-                        empty);
+                    ret =
+                        object_params->setSimObjectVector(param->name, empty);
                 } else {
                     ret = object_params->setSimObject(param->name, NULL);
                 }
 
                 if (!ret) {
-                    throw Exception(instance_name, csprintf(
-                        "Error nulling sim object reference(s): %s",
-                        param->name));
+                    throw Exception(
+                        instance_name,
+                        csprintf("Error nulling sim object reference(s): %s",
+                                 param->name));
                 }
             }
         }
@@ -446,73 +452,74 @@ CxxConfigManager::bindAllPorts()
 }
 
 void
-CxxConfigManager::bindPort(
-    SimObject *requestor_object, const std::string &request_port_name,
-    PortID request_port_index,
-    SimObject *responder_object, const std::string &response_port_name,
-    PortID response_port_index)
+CxxConfigManager::bindPort(SimObject *requestor_object,
+                           const std::string &request_port_name,
+                           PortID request_port_index,
+                           SimObject *responder_object,
+                           const std::string &response_port_name,
+                           PortID response_port_index)
 {
     /* FIXME, check response_port_index against connection_count
      *  defined for port, need getPortConnectionCount and a
      *  getCxxConfigDirectoryEntry for each object. */
 
     /* It would be nice to be able to catch the errors from these calls. */
-    Port &request_port = requestor_object->getPort(
-        request_port_name, request_port_index);
-    Port &response_port = responder_object->getPort(
-        response_port_name, response_port_index);
+    Port &request_port =
+        requestor_object->getPort(request_port_name, request_port_index);
+    Port &response_port =
+        responder_object->getPort(response_port_name, response_port_index);
 
     if (request_port.isConnected()) {
-        throw Exception(requestor_object->name(), csprintf(
-            "Request port: %s[%d] is already connected\n", request_port_name,
-            request_port_index));
+        throw Exception(requestor_object->name(),
+                        csprintf("Request port: %s[%d] is already connected\n",
+                                 request_port_name, request_port_index));
     }
 
     if (response_port.isConnected()) {
-        throw Exception(responder_object->name(), csprintf(
-            "Response port: %s[%d] is already connected\n", response_port_name,
-            response_port_index));
+        throw Exception(
+            responder_object->name(),
+            csprintf("Response port: %s[%d] is already connected\n",
+                     response_port_name, response_port_index));
     }
 
-    DPRINTF(CxxConfig, "Binding port %s.%s[%d]"
-        " to %s:%s[%d]\n",
-        requestor_object->name(), request_port_name, request_port_index,
-        responder_object->name(), response_port_name, response_port_index);
+    DPRINTF(CxxConfig,
+            "Binding port %s.%s[%d]"
+            " to %s:%s[%d]\n",
+            requestor_object->name(), request_port_name, request_port_index,
+            responder_object->name(), response_port_name, response_port_index);
 
     request_port.bind(response_port);
 }
 
 void
-CxxConfigManager::bindRequestPort(SimObject *object,
-    const CxxConfigDirectoryEntry::PortDesc &port,
+CxxConfigManager::bindRequestPort(
+    SimObject *object, const CxxConfigDirectoryEntry::PortDesc &port,
     const std::vector<std::string> &peers)
 {
     unsigned int request_port_index = 0;
 
-    for (auto peer_i = peers.begin(); peer_i != peers.end();
-        ++peer_i)
-    {
+    for (auto peer_i = peers.begin(); peer_i != peers.end(); ++peer_i) {
         const std::string &peer = *peer_i;
         std::string response_object_name;
         std::string response_port_name;
         unsigned int response_port_index;
 
         parsePort(peer, response_object_name, response_port_name,
-            response_port_index);
+                  response_port_index);
 
         std::string response_instance_name = rename(response_object_name);
 
-        if (objectsByName.find(response_instance_name)
-            == objectsByName.end()) {
-            throw Exception(object->name(), csprintf(
-                "Can't find response port object: %s",
-                response_instance_name));
+        if (objectsByName.find(response_instance_name) ==
+            objectsByName.end()) {
+            throw Exception(object->name(),
+                            csprintf("Can't find response port object: %s",
+                                     response_instance_name));
         }
 
         SimObject *responder_object = objectsByName[response_instance_name];
 
-        bindPort(object, port.name, request_port_index,
-            responder_object, response_port_name, response_port_index);
+        bindPort(object, port.name, request_port_index, responder_object,
+                 response_port_name, response_port_index);
 
         request_port_index++;
     }
@@ -531,14 +538,13 @@ CxxConfigManager::bindObjectPorts(SimObject *object)
     const CxxConfigDirectoryEntry &entry =
         findObjectType(object_name, object_type);
 
-    DPRINTF(CxxConfig, "Binding ports of object: %s (%s)\n",
-        instance_name, object_type);
+    DPRINTF(CxxConfig, "Binding ports of object: %s (%s)\n", instance_name,
+            object_type);
 
     for (auto i = entry.ports.begin(); i != entry.ports.end(); ++i) {
         const CxxConfigDirectoryEntry::PortDesc *port = (*i).second;
 
-        DPRINTF(CxxConfig, "Binding port: %s.%s\n", instance_name,
-            port->name);
+        DPRINTF(CxxConfig, "Binding port: %s.%s\n", instance_name, port->name);
 
         std::vector<std::string> peers;
         configFile.getPortPeers(object_name, port->name, peers);
@@ -547,9 +553,11 @@ CxxConfigManager::bindObjectPorts(SimObject *object)
          *  for each observed pair of ports */
         if (port->isRequestor) {
             if (!port->isVector && peers.size() > 1) {
-                throw Exception(instance_name, csprintf(
-                    "Too many connections to non-vector port %s (%d)\n",
-                    port->name, peers.size()));
+                throw Exception(
+                    instance_name,
+                    csprintf(
+                        "Too many connections to non-vector port %s (%d)\n",
+                        port->name, peers.size()));
             }
 
             bindRequestPort(object, *port, peers);
@@ -558,8 +566,8 @@ CxxConfigManager::bindObjectPorts(SimObject *object)
 }
 
 void
-CxxConfigManager::parsePort(const std::string &inp,
-    std::string &path, std::string &port, unsigned int &index)
+CxxConfigManager::parsePort(const std::string &inp, std::string &path,
+                            std::string &port, unsigned int &index)
 {
     std::size_t dot_i = inp.rfind('.');
     std::size_t open_square_i = inp.rfind('[');
@@ -641,7 +649,7 @@ CxxConfigManager::drainResume()
 void
 CxxConfigManager::serialize(std::ostream &os)
 {
-    for (auto i = objectsInOrder.begin(); i != objectsInOrder.end(); ++ i) {
+    for (auto i = objectsInOrder.begin(); i != objectsInOrder.end(); ++i) {
         // (*i)->nameOut(os); FIXME, change access spec. for nameOut
         os << '[' << (*i)->name() << "]\n";
         (*i)->serialize(os);
@@ -651,7 +659,7 @@ CxxConfigManager::serialize(std::ostream &os)
 void
 CxxConfigManager::loadState(CheckpointIn &checkpoint)
 {
-    for (auto i = objectsInOrder.begin(); i != objectsInOrder.end(); ++ i)
+    for (auto i = objectsInOrder.begin(); i != objectsInOrder.end(); ++i)
         (*i)->loadState(checkpoint);
 }
 
@@ -663,13 +671,12 @@ CxxConfigManager::deleteObjects()
         delete *i;
     }
 
-    for (auto i = objectParamsByName.rbegin();
-        i != objectParamsByName.rend(); ++i)
-    {
+    for (auto i = objectParamsByName.rbegin(); i != objectParamsByName.rend();
+         ++i) {
         CxxConfigParams *params = (*i).second;
 
         DPRINTF(CxxConfig, "Freeing sim object params: %s\n",
-            params->getName());
+                params->getName());
         delete params;
     }
 
@@ -679,40 +686,45 @@ CxxConfigManager::deleteObjects()
 
 void
 CxxConfigManager::setParam(const std::string &object_name,
-    const std::string &param_name, const std::string &param_value)
+                           const std::string &param_name,
+                           const std::string &param_value)
 {
     CxxConfigParams *params = findObjectParams(object_name);
 
     if (!params->setParam(param_name, param_value, flags)) {
         throw Exception(object_name, csprintf("Bad parameter value:"
-            " .%s=X=\"%s\"", param_name, param_value));
+                                              " .%s=X=\"%s\"",
+                                              param_name, param_value));
     } else {
         std::string instance_name = rename(object_name);
 
-        DPRINTF(CxxConfig, "Setting parameter %s.%s=%s\n",
-            instance_name, param_name, param_value);
+        DPRINTF(CxxConfig, "Setting parameter %s.%s=%s\n", instance_name,
+                param_name, param_value);
     }
 }
 
 void
 CxxConfigManager::setParamVector(const std::string &object_name,
-    const std::string &param_name,
-    const std::vector<std::string> &param_values)
+                                 const std::string &param_name,
+                                 const std::vector<std::string> &param_values)
 {
     CxxConfigParams *params = findObjectParams(object_name);
 
     if (!params->setParamVector(param_name, param_values, flags)) {
-        throw Exception(object_name, csprintf("Bad vector parameter value:"
-            " .%s=X=\"%s\"", param_name, formatParamList(param_values)));
+        throw Exception(object_name,
+                        csprintf("Bad vector parameter value:"
+                                 " .%s=X=\"%s\"",
+                                 param_name, formatParamList(param_values)));
     } else {
         std::string instance_name = rename(object_name);
 
-        DPRINTF(CxxConfig, "Setting parameter %s.%s=\"%s\"\n",
-            instance_name, param_name, formatParamList(param_values));
+        DPRINTF(CxxConfig, "Setting parameter %s.%s=\"%s\"\n", instance_name,
+                param_name, formatParamList(param_values));
     }
 }
 
-void CxxConfigManager::addRenaming(const Renaming &renaming)
+void
+CxxConfigManager::addRenaming(const Renaming &renaming)
 {
     renamings.push_back(renaming);
 }

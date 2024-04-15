@@ -77,19 +77,71 @@ class Process : public SimObject
     void initState() override;
     DrainState drain() override;
 
-    virtual void syscall(ThreadContext *tc) { numSyscalls++; }
+    virtual void
+    syscall(ThreadContext *tc)
+    {
+        numSyscalls++;
+    }
 
-    inline uint64_t uid() { return _uid; }
-    inline uint64_t euid() { return _euid; }
-    inline uint64_t gid() { return _gid; }
-    inline uint64_t egid() { return _egid; }
-    inline uint64_t pid() { return _pid; }
-    inline uint64_t ppid() { return _ppid; }
-    inline uint64_t pgid() { return _pgid; }
-    inline void pgid(uint64_t pgid) { _pgid = pgid; }
-    inline uint64_t tgid() { return _tgid; }
+    inline uint64_t
+    uid()
+    {
+        return _uid;
+    }
 
-    const char *progName() const { return executable.c_str(); }
+    inline uint64_t
+    euid()
+    {
+        return _euid;
+    }
+
+    inline uint64_t
+    gid()
+    {
+        return _gid;
+    }
+
+    inline uint64_t
+    egid()
+    {
+        return _egid;
+    }
+
+    inline uint64_t
+    pid()
+    {
+        return _pid;
+    }
+
+    inline uint64_t
+    ppid()
+    {
+        return _ppid;
+    }
+
+    inline uint64_t
+    pgid()
+    {
+        return _pgid;
+    }
+
+    inline void
+    pgid(uint64_t pgid)
+    {
+        _pgid = pgid;
+    }
+
+    inline uint64_t
+    tgid()
+    {
+        return _tgid;
+    }
+
+    const char *
+    progName() const
+    {
+        return executable.c_str();
+    }
 
     /**
      * Find an emulated device driver.
@@ -118,7 +170,7 @@ class Process : public SimObject
     // align to page boundaries, it will be expanded in either direction until
     // it does. This function will therefore set up *at least* the range
     // requested, and may configure more if necessary.
-    void allocateMem(Addr vaddr, int64_t size, bool clobber=false);
+    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.
@@ -143,7 +195,11 @@ class Process : public SimObject
      * platforms grow downward, but a few (such as Alpha) grow upward
      * instead, so they can override this method to return false.
      */
-    virtual bool mmapGrowsDown() const { return true; }
+    virtual bool
+    mmapGrowsDown() const
+    {
+        return true;
+    }
 
     /**
      * Maps a contiguous range of virtual addresses in this process's

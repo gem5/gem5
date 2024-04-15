@@ -29,7 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_NETWORKLINK_HH__
 
@@ -63,23 +62,66 @@ class NetworkLink : public ClockedObject, public Consumer
     void setLinkConsumer(Consumer *consumer);
     void setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObject);
     virtual void setVcsPerVnet(uint32_t consumerVcs);
-    void setType(link_type type) { m_type = type; }
-    link_type getType() { return m_type; }
-    void print(std::ostream& out) const {}
-    int get_id() const { return m_id; }
-    flitBuffer *getBuffer() { return &linkBuffer;}
+
+    void
+    setType(link_type type)
+    {
+        m_type = type;
+    }
+
+    link_type
+    getType()
+    {
+        return m_type;
+    }
+
+    void
+    print(std::ostream &out) const
+    {}
+
+    int
+    get_id() const
+    {
+        return m_id;
+    }
+
+    flitBuffer *
+    getBuffer()
+    {
+        return &linkBuffer;
+    }
+
     virtual void wakeup();
 
-    unsigned int getLinkUtilization() const { return m_link_utilized; }
-    const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
+    unsigned int
+    getLinkUtilization() const
+    {
+        return m_link_utilized;
+    }
 
-    inline bool isReady(Tick curTime)
+    const std::vector<unsigned int> &
+    getVcLoad() const
+    {
+        return m_vc_load;
+    }
+
+    inline bool
+    isReady(Tick curTime)
     {
         return linkBuffer.isReady(curTime);
     }
 
-    inline flit* peekLink() { return linkBuffer.peekTopFlit(); }
-    inline flit* consumeLink() { return linkBuffer.getTopFlit(); }
+    inline flit *
+    peekLink()
+    {
+        return linkBuffer.peekTopFlit();
+    }
+
+    inline flit *
+    consumeLink()
+    {
+        return linkBuffer.getTopFlit();
+    }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *);
@@ -104,7 +146,6 @@ class NetworkLink : public ClockedObject, public Consumer
     flitBuffer linkBuffer;
     Consumer *link_consumer;
     flitBuffer *link_srcQueue;
-
 };
 
 } // namespace garnet

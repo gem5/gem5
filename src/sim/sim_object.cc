@@ -57,22 +57,19 @@ SimObjectResolver *SimObject::_objNameResolver = NULL;
 //
 SimObject::SimObject(const Params &p)
     : EventManager(getEventQueue(p.eventq_index)),
-      statistics::Group(nullptr), Named(p.name),
+      statistics::Group(nullptr),
+      Named(p.name),
       _params(p)
 {
     simObjectList.push_back(this);
     probeManager = new ProbeManager(this);
 }
 
-SimObject::~SimObject()
-{
-    delete probeManager;
-}
+SimObject::~SimObject() { delete probeManager; }
 
 void
 SimObject::init()
-{
-}
+{}
 
 void
 SimObject::loadState(CheckpointIn &cp)
@@ -89,29 +86,25 @@ SimObject::loadState(CheckpointIn &cp)
 
 void
 SimObject::initState()
-{
-}
+{}
 
 void
 SimObject::startup()
-{
-}
+{}
 
 /**
  * No probe points by default, so do nothing in base.
  */
 void
 SimObject::regProbePoints()
-{
-}
+{}
 
 /**
  * No probe listeners by default, so do nothing in base.
  */
 void
 SimObject::regProbeListeners()
-{
-}
+{}
 
 ProbeManager *
 SimObject::getProbeManager()
@@ -142,7 +135,7 @@ SimObject::serializeAll(const std::string &cpt_dir)
         // This works despite name() returning a fully qualified name
         // since we are at the top level.
         obj->serializeSection(cp, obj->name());
-   }
+    }
 }
 
 SimObject *
@@ -175,7 +168,7 @@ SimObject::getSimObjectResolver()
 }
 
 void
-objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param)
+objParamIn(CheckpointIn &cp, const std::string &name, SimObject *&param)
 {
     const std::string &section(Serializable::currentSection());
     std::string path;

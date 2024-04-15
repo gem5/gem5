@@ -44,8 +44,8 @@ namespace ArmISA
 {
 
 std::string
-DataXImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataXImmOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, false, /*XXX not really s*/ false, dest, op1,
@@ -54,8 +54,8 @@ DataXImmOp::generateDisassembly(
 }
 
 std::string
-DataXImmOnlyOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataXImmOnlyOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -65,28 +65,28 @@ DataXImmOnlyOp::generateDisassembly(
 }
 
 std::string
-DataXSRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataXSRegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1,
-                  op2, int_reg::Zero, shiftAmt, shiftType, 0);
+    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1, op2,
+                  int_reg::Zero, shiftAmt, shiftType, 0);
     return ss.str();
 }
 
 std::string
-DataXERegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataXERegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1,
-                  op2, int_reg::Zero, shiftAmt, LSL, 0);
+    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1, op2,
+                  int_reg::Zero, shiftAmt, LSL, 0);
     return ss.str();
 }
 
 std::string
-DataX1RegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX1RegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -97,8 +97,8 @@ DataX1RegOp::generateDisassembly(
 }
 
 std::string
-DataX1RegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX1RegImmOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -110,8 +110,8 @@ DataX1RegImmOp::generateDisassembly(
 }
 
 std::string
-DataX1Reg2ImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX1Reg2ImmOp::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -123,8 +123,8 @@ DataX1Reg2ImmOp::generateDisassembly(
 }
 
 std::string
-DataX2RegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX2RegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -137,8 +137,8 @@ DataX2RegOp::generateDisassembly(
 }
 
 std::string
-DataX2RegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX2RegImmOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -152,8 +152,8 @@ DataX2RegImmOp::generateDisassembly(
 }
 
 std::string
-DataX3RegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataX3RegOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -169,7 +169,7 @@ DataX3RegOp::generateDisassembly(
 
 std::string
 DataXCondCompImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -182,7 +182,7 @@ DataXCondCompImmOp::generateDisassembly(
 
 std::string
 DataXCondCompRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -196,8 +196,8 @@ DataXCondCompRegOp::generateDisassembly(
 }
 
 std::string
-DataXCondSelOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+DataXCondSelOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);

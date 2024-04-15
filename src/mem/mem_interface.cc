@@ -54,18 +54,21 @@ namespace memory
 MemInterface::MemInterface(const MemInterfaceParams &_p)
     : AbstractMemory(_p),
       addrMapping(_p.addr_mapping),
-      burstSize((_p.devices_per_rank * _p.burst_length *
-                 _p.device_bus_width) / 8),
+      burstSize((_p.devices_per_rank * _p.burst_length * _p.device_bus_width) /
+                8),
       deviceSize(_p.device_size),
       deviceRowBufferSize(_p.device_rowbuffer_size),
       devicesPerRank(_p.devices_per_rank),
       rowBufferSize(devicesPerRank * deviceRowBufferSize),
       burstsPerRowBuffer(rowBufferSize / burstSize),
-      burstsPerStripe(range.interleaved() ?
-                      range.granularity() / burstSize : 1),
+      burstsPerStripe(range.interleaved() ? range.granularity() / burstSize :
+                                            1),
       ranksPerChannel(_p.ranks_per_channel),
-      banksPerRank(_p.banks_per_rank), rowsPerBank(0),
-      tCK(_p.tCK), tCS(_p.tCS), tBURST(_p.tBURST),
+      banksPerRank(_p.banks_per_rank),
+      rowsPerBank(0),
+      tCK(_p.tCK),
+      tCS(_p.tCS),
+      tBURST(_p.tBURST),
       tRTW(_p.tRTW),
       tWTR(_p.tWTR),
       readBufferSize(_p.read_buffer_size),
@@ -74,8 +77,8 @@ MemInterface::MemInterface(const MemInterfaceParams &_p)
 {}
 
 void
-MemInterface::setCtrl(MemCtrl* _ctrl, unsigned int command_window,
-                                            uint8_t pseudo_channel)
+MemInterface::setCtrl(MemCtrl *_ctrl, unsigned int command_window,
+                      uint8_t pseudo_channel)
 {
     ctrl = _ctrl;
     maxCommandsPerWindow = command_window / tCK;

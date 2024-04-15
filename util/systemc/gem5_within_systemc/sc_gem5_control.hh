@@ -99,17 +99,19 @@ class Gem5System
   public:
     /** A constructor only used by Gem5Control */
     Gem5System(gem5::CxxConfigManager *manager_,
-        const std::string &system_name, const std::string &instance_name);
+               const std::string &system_name,
+               const std::string &instance_name);
 
     virtual ~Gem5System();
 
     /** Parameter setting functions callable before instantiate */
     virtual void setParam(const std::string &object,
-        const std::string &param_name, const std::string &param_value);
+                          const std::string &param_name,
+                          const std::string &param_value);
 
     virtual void setParamVector(const std::string &system_name,
-        const std::string &param_name,
-        const std::vector<std::string> &param_values);
+                                const std::string &param_name,
+                                const std::vector<std::string> &param_values);
 
     /** Build the system's gem5 infrastructure, bind its ports (note
      *  that all ports *must* be internal to the system), init and
@@ -148,18 +150,18 @@ class Gem5Control
     /** Make a System from the config file description for system
      *  system_name and call it instance_name in gem5 */
     virtual Gem5System *makeSystem(const std::string &system_name,
-        const std::string &top_instance);
+                                   const std::string &top_instance);
 
     /** set/get version string */
     virtual const std::string &getVersion() const;
     virtual void setVersion(const std::string &new_version);
 };
 
-}
+} // namespace Gem5SystemC
 
 /** Instantiate a Gem5Control.  This can be called using dlopen/dlsym
  *  to kick-start gem5 */
-extern "C" Gem5SystemC::Gem5Control *makeGem5Control(
-    const std::string &config_filename);
+extern "C" Gem5SystemC::Gem5Control *
+makeGem5Control(const std::string &config_filename);
 
 #endif // __SIM_SC_GEM5_CONTROL_HH__

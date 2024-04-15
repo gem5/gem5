@@ -56,34 +56,36 @@ IsaFake::read(PacketPtr pkt)
     pkt->makeAtomicResponse();
 
     if (params().warn_access != "")
-        warn("Device %s accessed by read to address %#x size=%d\n",
-                name(), pkt->getAddr(), pkt->getSize());
+        warn("Device %s accessed by read to address %#x size=%d\n", name(),
+             pkt->getAddr(), pkt->getSize());
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
-        assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-        DPRINTF(IsaFake, "read  va=%#x size=%d\n",
-                pkt->getAddr(), pkt->getSize());
+        assert(pkt->getAddr() >= pioAddr &&
+               pkt->getAddr() < pioAddr + pioSize);
+        DPRINTF(IsaFake, "read  va=%#x size=%d\n", pkt->getAddr(),
+                pkt->getSize());
         switch (pkt->getSize()) {
-          case sizeof(uint64_t):
-             pkt->setLE(retData64);
-             break;
-          case sizeof(uint32_t):
-             pkt->setLE(retData32);
-             break;
-          case sizeof(uint16_t):
-             pkt->setLE(retData16);
-             break;
-          case sizeof(uint8_t):
-             pkt->setLE(retData8);
-             break;
-          default:
-             if (params().fake_mem)
-                 std::memset(pkt->getPtr<uint8_t>(), 0, pkt->getSize());
-             else
-                 panic("invalid access size! Device being accessed by cache?\n");
+        case sizeof(uint64_t):
+            pkt->setLE(retData64);
+            break;
+        case sizeof(uint32_t):
+            pkt->setLE(retData32);
+            break;
+        case sizeof(uint16_t):
+            pkt->setLE(retData16);
+            break;
+        case sizeof(uint8_t):
+            pkt->setLE(retData8);
+            break;
+        default:
+            if (params().fake_mem)
+                std::memset(pkt->getPtr<uint8_t>(), 0, pkt->getSize());
+            else
+                panic(
+                    "invalid access size! Device being accessed by cache?\n");
         }
     }
     return pioDelay;
@@ -96,47 +98,47 @@ IsaFake::write(PacketPtr pkt)
     if (params().warn_access != "") {
         uint64_t data;
         switch (pkt->getSize()) {
-          case sizeof(uint64_t):
+        case sizeof(uint64_t):
             data = pkt->getLE<uint64_t>();
             break;
-          case sizeof(uint32_t):
+        case sizeof(uint32_t):
             data = pkt->getLE<uint32_t>();
             break;
-          case sizeof(uint16_t):
+        case sizeof(uint16_t):
             data = pkt->getLE<uint16_t>();
             break;
-          case sizeof(uint8_t):
+        case sizeof(uint8_t):
             data = pkt->getLE<uint8_t>();
             break;
-          default:
+        default:
             panic("invalid access size: %u\n", pkt->getSize());
         }
         warn("Device %s accessed by write to address %#x size=%d data=%#x\n",
-                name(), pkt->getAddr(), pkt->getSize(), data);
+             name(), pkt->getAddr(), pkt->getSize(), data);
     }
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "write to bad address va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
-        DPRINTF(IsaFake, "write - va=%#x size=%d \n",
-                pkt->getAddr(), pkt->getSize());
+        DPRINTF(IsaFake, "write - va=%#x size=%d \n", pkt->getAddr(),
+                pkt->getSize());
 
         if (params().update_data) {
             switch (pkt->getSize()) {
-              case sizeof(uint64_t):
+            case sizeof(uint64_t):
                 retData64 = pkt->getLE<uint64_t>();
                 break;
-              case sizeof(uint32_t):
+            case sizeof(uint32_t):
                 retData32 = pkt->getLE<uint32_t>();
                 break;
-              case sizeof(uint16_t):
+            case sizeof(uint16_t):
                 retData16 = pkt->getLE<uint16_t>();
                 break;
-              case sizeof(uint8_t):
+            case sizeof(uint8_t):
                 retData8 = pkt->getLE<uint8_t>();
                 break;
-              default:
+            default:
                 panic("invalid access size!\n");
             }
         }

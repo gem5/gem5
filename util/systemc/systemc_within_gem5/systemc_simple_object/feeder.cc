@@ -29,9 +29,13 @@
 #include "sim/sim_exit.hh"
 #include "systemc_simple_object/feeder.hh"
 
-Feeder::Feeder(const gem5::Gem5_FeederParams &params) :
-    gem5::SimObject(params), printer(params.printer), delay(params.delay),
-    strings(params.strings), index(0), event(this)
+Feeder::Feeder(const gem5::Gem5_FeederParams &params)
+    : gem5::SimObject(params),
+      printer(params.printer),
+      delay(params.delay),
+      strings(params.strings),
+      index(0),
+      event(this)
 {
     // Bind the printer objects "input" port to our sc_buffer. This will let
     // us feed it values. If some other object was responsible for the

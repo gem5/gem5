@@ -44,8 +44,7 @@
 namespace gem5
 {
 
-SubSystem::SubSystem(const Params &p)
- : SimObject(p)
+SubSystem::SubSystem(const Params &p) : SimObject(p)
 {
     // Link thermalDomain <-> SubSystem
     if (p.thermal_domain)
@@ -56,7 +55,7 @@ double
 SubSystem::getDynamicPower() const
 {
     double ret = 0.0f;
-    for (auto &obj: powerProducers)
+    for (auto &obj : powerProducers)
         ret += obj->getDynamicPower();
     return ret;
 }
@@ -65,7 +64,7 @@ double
 SubSystem::getStaticPower() const
 {
     double ret = 0.0f;
-    for (auto &obj: powerProducers)
+    for (auto &obj : powerProducers)
         ret += obj->getStaticPower();
     return ret;
 }

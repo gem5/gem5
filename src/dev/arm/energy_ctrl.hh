@@ -166,19 +166,25 @@ class EnergyCtrl : public BasicPioDevice
 
     uint32_t perfLevelToRead;
 
-    static uint32_t ticksTokHz(Tick period) {
+    static uint32_t
+    ticksTokHz(Tick period)
+    {
         return (uint32_t)(sim_clock::as_int::ms / period);
     }
 
-    static uint32_t toMicroVolt(double voltage) {
+    static uint32_t
+    toMicroVolt(double voltage)
+    {
         return (uint32_t)(voltage * 1000000);
     }
 
     /**
-      * Update the acknowledgment that is read back by the software to confirm
-      * newly requested performance level has been set.
+     * Update the acknowledgment that is read back by the software to confirm
+     * newly requested performance level has been set.
      */
-    void updatePLAck() {
+    void
+    updatePLAck()
+    {
         perfLevelAck = 1;
     }
 

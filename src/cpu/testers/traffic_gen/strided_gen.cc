@@ -46,17 +46,19 @@
 namespace gem5
 {
 
-StridedGen::StridedGen(SimObject& obj, RequestorID requestor_id,
-        Tick duration, Addr cacheline_size,
-        Addr start_addr, Addr end_addr, Addr offset,
-        Addr block_size, Addr superblock_size, Addr stride_size,
-        Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit)
+StridedGen::StridedGen(SimObject &obj, RequestorID requestor_id, Tick duration,
+                       Addr cacheline_size, Addr start_addr, Addr end_addr,
+                       Addr offset, Addr block_size, Addr superblock_size,
+                       Addr stride_size, Tick min_period, Tick max_period,
+                       uint8_t read_percent, Addr data_limit)
     : StochasticGen(obj, requestor_id, duration, start_addr, end_addr,
                     block_size, cacheline_size, min_period, max_period,
                     read_percent, data_limit),
-    offset(offset), superblockSize(superblock_size), strideSize(stride_size),
-    nextAddr(0), dataManipulated(0)
+      offset(offset),
+      superblockSize(superblock_size),
+      strideSize(stride_size),
+      nextAddr(0),
+      dataManipulated(0)
 {
     assert(superblock_size % block_size == 0);
     assert(offset % superblock_size == 0);
@@ -75,8 +77,8 @@ PacketPtr
 StridedGen::getNextPacket()
 {
     // choose if we generate a read or a write here
-    bool isRead = readPercent != 0 &&
-        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+    bool isRead = readPercent != 0 && (readPercent == 100 ||
+                                       random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
@@ -103,7 +105,7 @@ StridedGen::getNextPacket()
     // address to the start of the range
     if (nextAddr > endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
-                "the range\n");
+                            "the range\n");
         nextAddr = startAddr + offset;
     }
 

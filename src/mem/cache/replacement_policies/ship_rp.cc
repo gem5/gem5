@@ -40,9 +40,8 @@ namespace replacement_policy
 {
 
 SHiP::SHiPReplData::SHiPReplData(int num_bits)
-  : BRRIPReplData(num_bits), signature(0), outcome(false)
-{
-}
+    : BRRIPReplData(num_bits), signature(0), outcome(false)
+{}
 
 SHiP::SignatureType
 SHiP::SHiPReplData::getSignature() const
@@ -70,13 +69,13 @@ SHiP::SHiPReplData::wasReReferenced() const
 }
 
 SHiP::SHiP(const Params &p)
-  : BRRIP(p), insertionThreshold(p.insertion_threshold / 100.0),
-    SHCT(p.shct_size, SatCounter8(numRRPVBits))
-{
-}
+    : BRRIP(p),
+      insertionThreshold(p.insertion_threshold / 100.0),
+      SHCT(p.shct_size, SatCounter8(numRRPVBits))
+{}
 
 void
-SHiP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+SHiP::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -91,8 +90,8 @@ SHiP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+SHiP::touch(const std::shared_ptr<ReplacementData> &replacement_data,
+            const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -107,15 +106,14 @@ SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
 }
 
 void
-SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data)
-    const
+SHiP::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     panic("Cant train SHiP's predictor without access information.");
 }
 
 void
-SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+SHiP::reset(const std::shared_ptr<ReplacementData> &replacement_data,
+            const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -135,8 +133,7 @@ SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
 }
 
 void
-SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data)
-    const
+SHiP::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     panic("Cant train SHiP's predictor without access information.");
 }

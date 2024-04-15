@@ -59,8 +59,8 @@ namespace gem5
 namespace ruby
 {
 
-std::ostream&
-operator<<(std::ostream& out, const CacheMemory& obj)
+std::ostream &
+operator<<(std::ostream &out, const CacheMemory &obj)
 {
     obj.print(out);
     out << std::flush;
@@ -69,13 +69,13 @@ operator<<(std::ostream& out, const CacheMemory& obj)
 
 CacheMemory::CacheMemory(const Params &p)
     : SimObject(p),
-    dataArray(p.dataArrayBanks, p.dataAccessLatency,
-              p.start_index_bit, p.ruby_system),
-    tagArray(p.tagArrayBanks, p.tagAccessLatency,
-             p.start_index_bit, p.ruby_system),
-    atomicALUArray(p.atomicALUs, p.atomicLatency *
-             p.ruby_system->clockPeriod()),
-    cacheMemoryStats(this)
+      dataArray(p.dataArrayBanks, p.dataAccessLatency, p.start_index_bit,
+                p.ruby_system),
+      tagArray(p.tagArrayBanks, p.tagAccessLatency, p.start_index_bit,
+               p.ruby_system),
+      atomicALUArray(p.atomicALUs,
+                     p.atomicLatency * p.ruby_system->clockPeriod()),
+      cacheMemoryStats(this)
 {
     m_cache_size = p.size;
     m_cache_assoc = p.assoc;
@@ -83,9 +83,11 @@ CacheMemory::CacheMemory(const Params &p)
     m_start_index_bit = p.start_index_bit;
     m_is_instruction_only_cache = p.is_icache;
     m_resource_stalls = p.resourceStalls;
-    m_block_size = p.block_size;  // may be 0 at this point. Updated in init()
-    m_use_occupancy = dynamic_cast<replacement_policy::WeightedLRU*>(
-                                    m_replacementPolicy_ptr) ? true : false;
+    m_block_size = p.block_size; // may be 0 at this point. Updated in init()
+    m_use_occupancy = dynamic_cast<replacement_policy::WeightedLRU *>(
+                          m_replacementPolicy_ptr) ?
+                          true :
+                          false;
 }
 
 void
@@ -100,14 +102,14 @@ CacheMemory::init()
     assert(m_cache_num_set_bits > 0);
 
     m_cache.resize(m_cache_num_sets,
-                    std::vector<AbstractCacheEntry*>(m_cache_assoc, nullptr));
+                   std::vector<AbstractCacheEntry *>(m_cache_assoc, nullptr));
     replacement_data.resize(m_cache_num_sets,
-                               std::vector<ReplData>(m_cache_assoc, nullptr));
+                            std::vector<ReplData>(m_cache_assoc, nullptr));
     // instantiate all the replacement_data here
     for (int i = 0; i < m_cache_num_sets; i++) {
-        for ( int j = 0; j < m_cache_assoc; j++) {
+        for (int j = 0; j < m_cache_assoc; j++) {
             replacement_data[i][j] =
-                                m_replacementPolicy_ptr->instantiateEntry();
+                m_replacementPolicy_ptr->instantiateEntry();
         }
     }
 }
@@ -150,8 +152,7 @@ CacheMemory::findTagInSet(int64_t cacheSet, Addr tag) const
 // Given a cache index: returns the index of the tag in a set.
 // returns -1 if the tag is not found.
 int
-CacheMemory::findTagInSetIgnorePermissions(int64_t cacheSet,
-                                           Addr tag) const
+CacheMemory::findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const
 {
     assert(tag == makeLineAddress(tag));
     // search the set for the tags
@@ -173,11 +174,10 @@ CacheMemory::getAddressAtIdx(int idx) const
     assert(set < m_cache_num_sets);
 
     int way = idx - set * m_cache_assoc;
-    assert (way < m_cache_assoc);
+    assert(way < m_cache_assoc);
 
-    AbstractCacheEntry* entry = m_cache[set][way];
-    if (entry == NULL ||
-        entry->m_Permission == AccessPermission_Invalid ||
+    AbstractCacheEntry *entry = m_cache[set][way];
+    if (entry == NULL || entry->m_Permission == AccessPermission_Invalid ||
         entry->m_Permission == AccessPermission_NotPresent) {
         return tmp;
     }
@@ -186,10 +186,10 @@ CacheMemory::getAddressAtIdx(int idx) const
 
 bool
 CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
-                            DataBlock*& data_ptr)
+                            DataBlock *&data_ptr)
 {
     DPRINTF(RubyCache, "trying to access address: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     if (entry != nullptr) {
         // Do we even have a tag match?
         m_replacementPolicy_ptr->touch(entry->replacementData);
@@ -198,43 +198,41 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                        address);
+                    address);
             return true;
         }
         if ((entry->m_Permission == AccessPermission_Read_Only) &&
             (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                        address);
+                    address);
             return true;
         }
         // The line must not be accessible
     }
     DPRINTF(RubyCache, "Do not have permission to access address: %#x\n",
-                address);
+            address);
     data_ptr = NULL;
     return false;
 }
 
 bool
 CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
-                             DataBlock*& data_ptr)
+                             DataBlock *&data_ptr)
 {
     DPRINTF(RubyCache, "testing address: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     if (entry != nullptr) {
         // Do we even have a tag match?
         m_replacementPolicy_ptr->touch(entry->replacementData);
         entry->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
-        DPRINTF(RubyCache, "have permission for address %#x?: %d\n",
-                    address,
-                    entry->m_Permission != AccessPermission_NotPresent);
+        DPRINTF(RubyCache, "have permission for address %#x?: %d\n", address,
+                entry->m_Permission != AccessPermission_NotPresent);
         return entry->m_Permission != AccessPermission_NotPresent;
     }
 
-    DPRINTF(RubyCache, "do not have permission for address %#x\n",
-                address);
+    DPRINTF(RubyCache, "do not have permission for address %#x\n", address);
     data_ptr = NULL;
     return false;
 }
@@ -243,7 +241,7 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
 bool
 CacheMemory::isTagPresent(Addr address) const
 {
-    const AbstractCacheEntry* const entry = lookup(address);
+    const AbstractCacheEntry *const entry = lookup(address);
     if (entry == nullptr) {
         // We didn't find the tag
         DPRINTF(RubyCache, "No tag match for address: %#x\n", address);
@@ -264,7 +262,7 @@ CacheMemory::cacheAvail(Addr address) const
     int64_t cacheSet = addressToCacheSet(address);
 
     for (int i = 0; i < m_cache_assoc; i++) {
-        AbstractCacheEntry* entry = m_cache[cacheSet][i];
+        AbstractCacheEntry *entry = m_cache[cacheSet][i];
         if (entry != NULL) {
             if (entry->m_Address == address ||
                 entry->m_Permission == AccessPermission_NotPresent) {
@@ -278,7 +276,7 @@ CacheMemory::cacheAvail(Addr address) const
     return false;
 }
 
-AbstractCacheEntry*
+AbstractCacheEntry *
 CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
 {
     assert(address == makeLineAddress(address));
@@ -288,17 +286,19 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
 
     // Find the first open slot
     int64_t cacheSet = addressToCacheSet(address);
-    std::vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
+    std::vector<AbstractCacheEntry *> &set = m_cache[cacheSet];
     for (int i = 0; i < m_cache_assoc; i++) {
         if (!set[i] || set[i]->m_Permission == AccessPermission_NotPresent) {
             if (set[i] && (set[i] != entry)) {
-                warn_once("This protocol contains a cache entry handling bug: "
+                warn_once(
+                    "This protocol contains a cache entry handling bug: "
                     "Entries in the cache should never be NotPresent! If\n"
-                    "this entry (%#x) is not tracked elsewhere, it will memory "
+                    "this entry (%#x) is not tracked elsewhere, it will "
+                    "memory "
                     "leak here. Fix your protocol to eliminate these!",
                     address);
             }
-            set[i] = entry;  // Init entry
+            set[i] = entry; // Init entry
             set[i]->m_Address = address;
             set[i]->m_Permission = AccessPermission_Invalid;
             DPRINTF(RubyCache, "Allocate clearing lock for addr: 0x%x\n",
@@ -323,7 +323,7 @@ void
 CacheMemory::deallocate(Addr address)
 {
     DPRINTF(RubyCache, "deallocating address: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     assert(entry != nullptr);
     m_replacementPolicy_ptr->invalidate(entry->replacementData);
     uint32_t cache_set = entry->getSet();
@@ -341,34 +341,37 @@ CacheMemory::cacheProbe(Addr address) const
     assert(!cacheAvail(address));
 
     int64_t cacheSet = addressToCacheSet(address);
-    std::vector<ReplaceableEntry*> candidates;
+    std::vector<ReplaceableEntry *> candidates;
     for (int i = 0; i < m_cache_assoc; i++) {
-        candidates.push_back(static_cast<ReplaceableEntry*>(
-                                                       m_cache[cacheSet][i]));
+        candidates.push_back(
+            static_cast<ReplaceableEntry *>(m_cache[cacheSet][i]));
     }
-    return m_cache[cacheSet][m_replacementPolicy_ptr->
-                        getVictim(candidates)->getWay()]->m_Address;
+    return m_cache[cacheSet]
+                  [m_replacementPolicy_ptr->getVictim(candidates)->getWay()]
+                      ->m_Address;
 }
 
 // looks an address up in the cache
-AbstractCacheEntry*
+AbstractCacheEntry *
 CacheMemory::lookup(Addr address)
 {
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    if (loc == -1) return NULL;
+    if (loc == -1)
+        return NULL;
     return m_cache[cacheSet][loc];
 }
 
 // looks an address up in the cache
-const AbstractCacheEntry*
+const AbstractCacheEntry *
 CacheMemory::lookup(Addr address) const
 {
     assert(address == makeLineAddress(address));
     int64_t cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    if (loc == -1) return NULL;
+    if (loc == -1)
+        return NULL;
     return m_cache[cacheSet][loc];
 }
 
@@ -376,7 +379,7 @@ CacheMemory::lookup(Addr address) const
 void
 CacheMemory::setMRU(Addr address)
 {
-    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
+    AbstractCacheEntry *entry = lookup(makeLineAddress(address));
     if (entry != nullptr) {
         m_replacementPolicy_ptr->touch(entry->replacementData);
         entry->setLastAccess(curTick());
@@ -394,15 +397,15 @@ CacheMemory::setMRU(AbstractCacheEntry *entry)
 void
 CacheMemory::setMRU(Addr address, int occupancy)
 {
-    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
+    AbstractCacheEntry *entry = lookup(makeLineAddress(address));
     if (entry != nullptr) {
         // m_use_occupancy can decide whether we are using WeightedLRU
         // replacement policy. Depending on different replacement policies,
         // use different touch() function.
         if (m_use_occupancy) {
-            static_cast<replacement_policy::WeightedLRU*>(
-                m_replacementPolicy_ptr)->touch(
-                entry->replacementData, occupancy);
+            static_cast<replacement_policy::WeightedLRU *>(
+                m_replacementPolicy_ptr)
+                ->touch(entry->replacementData, occupancy);
         } else {
             m_replacementPolicy_ptr->touch(entry->replacementData);
         }
@@ -425,11 +428,11 @@ CacheMemory::getReplacementWeight(int64_t set, int64_t loc)
 }
 
 void
-CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
+CacheMemory::recordCacheContents(int cntrl, CacheRecorder *tr) const
 {
     uint64_t warmedUpBlocks = 0;
-    [[maybe_unused]] uint64_t totalBlocks = (uint64_t)m_cache_num_sets *
-                                         (uint64_t)m_cache_assoc;
+    [[maybe_unused]] uint64_t totalBlocks =
+        (uint64_t)m_cache_num_sets * (uint64_t)m_cache_assoc;
 
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
@@ -449,8 +452,8 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
                 if (request_type != RubyRequestType_NULL) {
                     Tick lastAccessTick;
                     lastAccessTick = m_cache[i][j]->getLastAccess();
-                    tr->addRecord(cntrl, m_cache[i][j]->m_Address,
-                                  0, request_type, lastAccessTick,
+                    tr->addRecord(cntrl, m_cache[i][j]->m_Address, 0,
+                                  request_type, lastAccessTick,
                                   m_cache[i][j]->getDataBlk());
                     warmedUpBlocks++;
                 }
@@ -458,32 +461,32 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
         }
     }
 
-    DPRINTF(RubyCacheTrace, "%s: %lli blocks of %lli total blocks"
-            "recorded %.2f%% \n", name().c_str(), warmedUpBlocks,
-            totalBlocks, (float(warmedUpBlocks) / float(totalBlocks)) * 100.0);
+    DPRINTF(RubyCacheTrace,
+            "%s: %lli blocks of %lli total blocks"
+            "recorded %.2f%% \n",
+            name().c_str(), warmedUpBlocks, totalBlocks,
+            (float(warmedUpBlocks) / float(totalBlocks)) * 100.0);
 }
 
 void
-CacheMemory::print(std::ostream& out) const
+CacheMemory::print(std::ostream &out) const
 {
     out << "Cache dump: " << name() << std::endl;
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
             if (m_cache[i][j] != NULL) {
-                out << "  Index: " << i
-                    << " way: " << j
+                out << "  Index: " << i << " way: " << j
                     << " entry: " << *m_cache[i][j] << std::endl;
             } else {
-                out << "  Index: " << i
-                    << " way: " << j
-                    << " entry: NULL" << std::endl;
+                out << "  Index: " << i << " way: " << j << " entry: NULL"
+                    << std::endl;
             }
         }
     }
 }
 
 void
-CacheMemory::printData(std::ostream& out) const
+CacheMemory::printData(std::ostream &out) const
 {
     out << "printData() not supported" << std::endl;
 }
@@ -492,7 +495,7 @@ void
 CacheMemory::setLocked(Addr address, int context)
 {
     DPRINTF(RubyCache, "Setting Lock for addr: %#x to %d\n", address, context);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     assert(entry != nullptr);
     entry->setLocked(context);
 }
@@ -501,7 +504,7 @@ void
 CacheMemory::clearLocked(Addr address)
 {
     DPRINTF(RubyCache, "Clear Lock for addr: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     assert(entry != nullptr);
     entry->clearLocked();
 }
@@ -511,12 +514,12 @@ CacheMemory::clearLockedAll(int context)
 {
     // iterate through every set and way to get a cache line
     for (auto i = m_cache.begin(); i != m_cache.end(); ++i) {
-        std::vector<AbstractCacheEntry*> set = *i;
+        std::vector<AbstractCacheEntry *> set = *i;
         for (auto j = set.begin(); j != set.end(); ++j) {
             AbstractCacheEntry *line = *j;
             if (line && line->isLocked(context)) {
                 DPRINTF(RubyCache, "Clear Lock for addr: %#x\n",
-                    line->m_Address);
+                        line->m_Address);
                 line->clearLocked();
             }
         }
@@ -526,15 +529,14 @@ CacheMemory::clearLockedAll(int context)
 bool
 CacheMemory::isLocked(Addr address, int context)
 {
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
     assert(entry != nullptr);
-    DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n",
-            address, entry->m_locked, context);
+    DPRINTF(RubyCache, "Testing Lock for addr: %#llx cur %d con %d\n", address,
+            entry->m_locked, context);
     return entry->isLocked(context);
 }
 
-CacheMemory::
-CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
+CacheMemory::CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(numDataArrayReads, "Number of data array reads"),
       ADD_STAT(numDataArrayWrites, "Number of data array writes"),
@@ -543,7 +545,8 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
       ADD_STAT(numTagArrayStalls, "Number of stalls caused by tag array"),
       ADD_STAT(numDataArrayStalls, "Number of stalls caused by data array"),
       ADD_STAT(numAtomicALUOperations, "Number of atomic ALU operations"),
-      ADD_STAT(numAtomicALUArrayStalls, "Number of stalls caused by atomic ALU array"),
+      ADD_STAT(numAtomicALUArrayStalls,
+               "Number of stalls caused by atomic ALU array"),
       ADD_STAT(htmTransCommitReadSet, "Read set size of a committed "
                                       "transaction"),
       ADD_STAT(htmTransCommitWriteSet, "Write set size of a committed "
@@ -561,68 +564,50 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
                m_prefetch_hits + m_prefetch_misses),
       ADD_STAT(m_accessModeType, "")
 {
-    numDataArrayReads
-        .flags(statistics::nozero);
+    numDataArrayReads.flags(statistics::nozero);
 
-    numDataArrayWrites
-        .flags(statistics::nozero);
+    numDataArrayWrites.flags(statistics::nozero);
 
-    numTagArrayReads
-        .flags(statistics::nozero);
+    numTagArrayReads.flags(statistics::nozero);
 
-    numTagArrayWrites
-        .flags(statistics::nozero);
+    numTagArrayWrites.flags(statistics::nozero);
 
-    numTagArrayStalls
-        .flags(statistics::nozero);
+    numTagArrayStalls.flags(statistics::nozero);
 
-    numDataArrayStalls
-        .flags(statistics::nozero);
+    numDataArrayStalls.flags(statistics::nozero);
 
-    numAtomicALUOperations
-        .flags(statistics::nozero);
+    numAtomicALUOperations.flags(statistics::nozero);
 
-    numAtomicALUArrayStalls
-        .flags(statistics::nozero);
+    numAtomicALUArrayStalls.flags(statistics::nozero);
 
-    htmTransCommitReadSet
-        .init(8)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan);
+    htmTransCommitReadSet.init(8).flags(statistics::pdf | statistics::dist |
+                                        statistics::nozero |
+                                        statistics::nonan);
 
-    htmTransCommitWriteSet
-        .init(8)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan);
+    htmTransCommitWriteSet.init(8).flags(statistics::pdf | statistics::dist |
+                                         statistics::nozero |
+                                         statistics::nonan);
 
-    htmTransAbortReadSet
-        .init(8)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan);
+    htmTransAbortReadSet.init(8).flags(statistics::pdf | statistics::dist |
+                                       statistics::nozero | statistics::nonan);
 
-    htmTransAbortWriteSet
-        .init(8)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan);
+    htmTransAbortWriteSet.init(8).flags(statistics::pdf | statistics::dist |
+                                        statistics::nozero |
+                                        statistics::nonan);
 
-    m_prefetch_hits
-        .flags(statistics::nozero);
+    m_prefetch_hits.flags(statistics::nozero);
 
-    m_prefetch_misses
-        .flags(statistics::nozero);
+    m_prefetch_misses.flags(statistics::nozero);
 
-    m_prefetch_accesses
-        .flags(statistics::nozero);
+    m_prefetch_accesses.flags(statistics::nozero);
 
-    m_accessModeType
-        .init(RubyRequestType_NUM)
+    m_accessModeType.init(RubyRequestType_NUM)
         .flags(statistics::pdf | statistics::total);
 
     for (int i = 0; i < RubyAccessMode_NUM; i++) {
         m_accessModeType
             .subname(i, RubyAccessMode_to_string(RubyAccessMode(i)))
-            .flags(statistics::nozero)
-            ;
+            .flags(statistics::nozero);
     }
 }
 
@@ -633,7 +618,7 @@ CacheMemory::recordRequestType(CacheRequestType requestType, Addr addr)
 {
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             CacheRequestType_to_string(requestType));
-    switch(requestType) {
+    switch (requestType) {
     case CacheRequestType_DataArrayRead:
         if (m_resource_stalls)
             dataArray.reserve(addressToCacheSet(addr));
@@ -673,25 +658,28 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
     }
 
     if (res == CacheResourceType_TagArray) {
-        if (tagArray.tryAccess(addressToCacheSet(addr))) return true;
+        if (tagArray.tryAccess(addressToCacheSet(addr)))
+            return true;
         else {
             DPRINTF(RubyResourceStalls,
-                    "Tag array stall on addr %#x in set %d\n",
-                    addr, addressToCacheSet(addr));
+                    "Tag array stall on addr %#x in set %d\n", addr,
+                    addressToCacheSet(addr));
             cacheMemoryStats.numTagArrayStalls++;
             return false;
         }
     } else if (res == CacheResourceType_DataArray) {
-        if (dataArray.tryAccess(addressToCacheSet(addr))) return true;
+        if (dataArray.tryAccess(addressToCacheSet(addr)))
+            return true;
         else {
             DPRINTF(RubyResourceStalls,
-                    "Data array stall on addr %#x in set %d\n",
-                    addr, addressToCacheSet(addr));
+                    "Data array stall on addr %#x in set %d\n", addr,
+                    addressToCacheSet(addr));
             cacheMemoryStats.numDataArrayStalls++;
             return false;
         }
     } else if (res == CacheResourceType_AtomicALUArray) {
-        if (atomicALUArray.tryAccess(addr)) return true;
+        if (atomicALUArray.tryAccess(addr))
+            return true;
         else {
             DPRINTF(RubyResourceStalls,
                     "Atomic ALU array stall on addr %#x in line address %#x\n",
@@ -707,13 +695,13 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
 bool
 CacheMemory::isBlockInvalid(int64_t cache_set, int64_t loc)
 {
-  return (m_cache[cache_set][loc]->m_Permission == AccessPermission_Invalid);
+    return (m_cache[cache_set][loc]->m_Permission == AccessPermission_Invalid);
 }
 
 bool
 CacheMemory::isBlockNotBusy(int64_t cache_set, int64_t loc)
 {
-  return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
+    return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
 }
 
 /* hardware transactional memory */
@@ -725,12 +713,10 @@ CacheMemory::htmAbortTransaction()
     uint64_t htmWriteSetSize = 0;
 
     // iterate through every set and way to get a cache line
-    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
-    {
-        std::vector<AbstractCacheEntry*> set = *i;
+    for (auto i = m_cache.begin(); i != m_cache.end(); ++i) {
+        std::vector<AbstractCacheEntry *> set = *i;
 
-        for (auto j = set.begin(); j != set.end(); ++j)
-        {
+        for (auto j = set.begin(); j != set.end(); ++j) {
             AbstractCacheEntry *line = *j;
 
             if (line != nullptr) {
@@ -749,7 +735,7 @@ CacheMemory::htmAbortTransaction()
     cacheMemoryStats.htmTransAbortReadSet.sample(htmReadSetSize);
     cacheMemoryStats.htmTransAbortWriteSet.sample(htmWriteSetSize);
     DPRINTF(HtmMem, "htmAbortTransaction: read set=%u write set=%u\n",
-        htmReadSetSize, htmWriteSetSize);
+            htmReadSetSize, htmWriteSetSize);
 }
 
 void
@@ -759,12 +745,10 @@ CacheMemory::htmCommitTransaction()
     uint64_t htmWriteSetSize = 0;
 
     // iterate through every set and way to get a cache line
-    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
-    {
-        std::vector<AbstractCacheEntry*> set = *i;
+    for (auto i = m_cache.begin(); i != m_cache.end(); ++i) {
+        std::vector<AbstractCacheEntry *> set = *i;
 
-        for (auto j = set.begin(); j != set.end(); ++j)
-        {
+        for (auto j = set.begin(); j != set.end(); ++j) {
             AbstractCacheEntry *line = *j;
             if (line != nullptr) {
                 htmReadSetSize += (line->getInHtmReadSet() ? 1 : 0);
@@ -772,14 +756,14 @@ CacheMemory::htmCommitTransaction()
                 line->setInHtmWriteSet(false);
                 line->setInHtmReadSet(false);
                 line->clearLocked();
-             }
+            }
         }
     }
 
     cacheMemoryStats.htmTransCommitReadSet.sample(htmReadSetSize);
     cacheMemoryStats.htmTransCommitWriteSet.sample(htmWriteSetSize);
     DPRINTF(HtmMem, "htmCommitTransaction: read set=%u write set=%u\n",
-        htmReadSetSize, htmWriteSetSize);
+            htmReadSetSize, htmWriteSetSize);
 }
 
 void

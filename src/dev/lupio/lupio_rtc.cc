@@ -36,9 +36,8 @@
 namespace gem5
 {
 
-LupioRTC::LupioRTC(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    time(params.time)
+LupioRTC::LupioRTC(const Params &params)
+    : BasicPioDevice(params, params.pio_size), time(params.time)
 {
     start = mktime(&time);
 }
@@ -54,7 +53,7 @@ LupioRTC::lupioRTCRead(uint8_t addr)
      * Get simulated time in seconds
      */
     time_sec = (curTick() / sim_clock::as_int::s);
-    total_time = (time_t) time_sec + start;
+    total_time = (time_t)time_sec + start;
 
     /**
      * Transform into broken-down time representation
@@ -62,33 +61,33 @@ LupioRTC::lupioRTCRead(uint8_t addr)
     gmtime_r(&total_time, &time);
 
     switch (addr) {
-        case LUPIO_RTC_SECD:
-            r = time.tm_sec;                 /* 0-60 (for leap seconds) */
-            break;
-        case LUPIO_RTC_MINT:
-            r = time.tm_min;                 /* 0-59 */
-            break;
-        case LUPIO_RTC_HOUR:
-            r = time.tm_hour;                /* 0-23 */
-            break;
-        case LUPIO_RTC_DYMO:
-            r = time.tm_mday;                /* 1-31 */
-            break;
-        case LUPIO_RTC_MNTH:
-            r = time.tm_mon + 1;             /* 1-12 */
-            break;
-        case LUPIO_RTC_YEAR:
-            r = (time.tm_year + 1900) % 100; /* 0-99 */
-            break;
-        case LUPIO_RTC_CENT:
-            r = (time.tm_year + 1900) / 100; /* 0-99 */
-            break;
-        case LUPIO_RTC_DYWK:
-            r = 1 + (time.tm_wday + 6) % 7;  /* 1-7 (Monday is 1) */
-            break;
-        case LUPIO_RTC_DYYR:
-            r = time.tm_yday + 1;            /* 1-366 (for leap years) */
-            break;
+    case LUPIO_RTC_SECD:
+        r = time.tm_sec; /* 0-60 (for leap seconds) */
+        break;
+    case LUPIO_RTC_MINT:
+        r = time.tm_min; /* 0-59 */
+        break;
+    case LUPIO_RTC_HOUR:
+        r = time.tm_hour; /* 0-23 */
+        break;
+    case LUPIO_RTC_DYMO:
+        r = time.tm_mday; /* 1-31 */
+        break;
+    case LUPIO_RTC_MNTH:
+        r = time.tm_mon + 1; /* 1-12 */
+        break;
+    case LUPIO_RTC_YEAR:
+        r = (time.tm_year + 1900) % 100; /* 0-99 */
+        break;
+    case LUPIO_RTC_CENT:
+        r = (time.tm_year + 1900) / 100; /* 0-99 */
+        break;
+    case LUPIO_RTC_DYWK:
+        r = 1 + (time.tm_wday + 6) % 7; /* 1-7 (Monday is 1) */
+        break;
+    case LUPIO_RTC_DYYR:
+        r = time.tm_yday + 1; /* 1-366 (for leap years) */
+        break;
     }
     return r;
 }
@@ -97,9 +96,8 @@ Tick
 LupioRTC::read(PacketPtr pkt)
 {
     bool is_atomic = pkt->isAtomicOp() && pkt->cmd == MemCmd::SwapReq;
-    DPRINTF(LupioRTC,
-        "Read request - addr: %#x, size: %#x, atomic:%d\n",
-        pkt->getAddr(), pkt->getSize(), is_atomic);
+    DPRINTF(LupioRTC, "Read request - addr: %#x, size: %#x, atomic:%d\n",
+            pkt->getAddr(), pkt->getSize(), is_atomic);
 
     Addr rtc_addr = pkt->getAddr() - pioAddr;
     uint8_t time_val = lupioRTCRead(rtc_addr);

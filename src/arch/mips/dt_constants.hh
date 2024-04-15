@@ -39,91 +39,91 @@ namespace MipsISA
 {
 
 BitUnion32(DebugReg)
-    Bitfield<31>     dbd;
-    Bitfield<30>     dm;
-    Bitfield<29>     nodcr;
-    Bitfield<28>     lsnm;
-    Bitfield<27>     doze;
-    Bitfield<26>     halt;
-    Bitfield<25>     conutdm;
-    Bitfield<24>     ibusep;
-    Bitfield<23>     mcheckep;
-    Bitfield<22>     cacheep;
-    Bitfield<21>     dbusep;
+    Bitfield<31> dbd;
+    Bitfield<30> dm;
+    Bitfield<29> nodcr;
+    Bitfield<28> lsnm;
+    Bitfield<27> doze;
+    Bitfield<26> halt;
+    Bitfield<25> conutdm;
+    Bitfield<24> ibusep;
+    Bitfield<23> mcheckep;
+    Bitfield<22> cacheep;
+    Bitfield<21> dbusep;
     Bitfield<20, 19> iexi;
-    Bitfield<19>     ddbsImpr;
-    Bitfield<18>     ddblImpr;
+    Bitfield<19> ddbsImpr;
+    Bitfield<18> ddblImpr;
     SubBitUnion(ejtagVer, 17, 15)
         Bitfield<17> ejtagVer2;
         Bitfield<16> ejtagVer1;
         Bitfield<15> ejtagVer0;
     EndSubBitUnion(ejtagVer)
     Bitfield<14, 10> dexcCode;
-    Bitfield<9>      nosst;
-    Bitfield<8>      sst;
-    Bitfield<7>      offline;
-    Bitfield<6>      dibimpr;
-    Bitfield<5>      dint;
-    Bitfield<4>      dib;
-    Bitfield<3>      ddbs;
-    Bitfield<2>      ddbl;
-    Bitfield<1>      dbp;
-    Bitfield<0>      dss;
+    Bitfield<9> nosst;
+    Bitfield<8> sst;
+    Bitfield<7> offline;
+    Bitfield<6> dibimpr;
+    Bitfield<5> dint;
+    Bitfield<4> dib;
+    Bitfield<3> ddbs;
+    Bitfield<2> ddbl;
+    Bitfield<1> dbp;
+    Bitfield<0> dss;
 EndBitUnion(DebugReg)
 
 BitUnion32(TraceControlReg)
-    Bitfield<31>     ts;
-    Bitfield<30>     ut;
-    Bitfield<27>     tb;
-    Bitfield<26>     io;
-    Bitfield<25>     d;
-    Bitfield<24>     e;
-    Bitfield<23>     k;
-    Bitfield<22>     s;
-    Bitfield<21>     u;
+    Bitfield<31> ts;
+    Bitfield<30> ut;
+    Bitfield<27> tb;
+    Bitfield<26> io;
+    Bitfield<25> d;
+    Bitfield<24> e;
+    Bitfield<23> k;
+    Bitfield<22> s;
+    Bitfield<21> u;
     Bitfield<20, 13> asidM;
-    Bitfield<12, 5>  asid;
-    Bitfield<4>      g;
-    Bitfield<3>      tfcr;
-    Bitfield<2>      tlsm;
-    Bitfield<1>      tim;
-    Bitfield<0>      on;
+    Bitfield<12, 5> asid;
+    Bitfield<4> g;
+    Bitfield<3> tfcr;
+    Bitfield<2> tlsm;
+    Bitfield<1> tim;
+    Bitfield<0> on;
 EndBitUnion(TraceControlReg)
 
 BitUnion32(TraceControl2Reg)
-    Bitfield<29>     cpuidv;
+    Bitfield<29> cpuidv;
     Bitfield<28, 21> cpuid;
-    Bitfield<20>     tcv;
+    Bitfield<20> tcv;
     Bitfield<19, 12> tcnum;
-    Bitfield<11, 7>  mode;
-    Bitfield<6,  5>  validModes;
-    Bitfield<4>      tbi;
-    Bitfield<3>      tbu;
-    Bitfield<2,  0>  syp;
+    Bitfield<11, 7> mode;
+    Bitfield<6, 5> validModes;
+    Bitfield<4> tbi;
+    Bitfield<3> tbu;
+    Bitfield<2, 0> syp;
 EndBitUnion(TraceControl2Reg)
 
 BitUnion32(TraceBPCReg)
-    Bitfield<31>     mb;
-    Bitfield<28>     e;
-    Bitfield<27>     ate;
+    Bitfield<31> mb;
+    Bitfield<28> e;
+    Bitfield<27> ate;
     Bitfield<26, 24> bpc8;
     Bitfield<23, 21> bpc7;
     Bitfield<20, 18> bpc6;
     Bitfield<17, 15> bpc5;
     Bitfield<14, 12> bpc4;
-    Bitfield<11, 9>  bpc3;
-    Bitfield<8,  6>  bpc2;
-    Bitfield<5,  3>  bpc1;
-    Bitfield<2,  0>  bpc0;
+    Bitfield<11, 9> bpc3;
+    Bitfield<8, 6> bpc2;
+    Bitfield<5, 3> bpc1;
+    Bitfield<2, 0> bpc0;
 EndBitUnion(TraceBPCReg)
 
 BitUnion32(TraceBPC2Reg)
     Bitfield<17, 15> bpc14;
     Bitfield<14, 12> bpc13;
-    Bitfield<11, 9>  bpc12;
-    Bitfield<8,  6>  bpc11;
-    Bitfield<5,  3>  bpc10;
-    Bitfield<2,  0>  bpc9;
+    Bitfield<11, 9> bpc12;
+    Bitfield<8, 6> bpc11;
+    Bitfield<5, 3> bpc10;
+    Bitfield<2, 0> bpc9;
 EndBitUnion(TraceBPC2Reg)
 
 BitUnion32(Debug2Reg)

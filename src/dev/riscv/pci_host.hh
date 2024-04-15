@@ -60,6 +60,6 @@ class GenericRiscvPciHost : public GenericPciHost
                              PciIntPin pin) const override;
 };
 
-}
+} // namespace gem5
 
 #endif // __DEV_RISCV_PCI_HOST_HH__

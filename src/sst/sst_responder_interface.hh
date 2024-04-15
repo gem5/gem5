@@ -24,7 +24,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 #ifndef __SST_RESPONDER_INTERFACE_HH__
 #define __SST_RESPONDER_INTERFACE_HH__
 
@@ -45,9 +44,8 @@ namespace gem5
 class SSTResponderInterface
 {
   public:
-
     SSTResponderInterface();
-    virtual ~SSTResponderInterface() {};
+    virtual ~SSTResponderInterface(){};
 
     // This function is called when OutgoingRequestBridge wants to forward
     // a gem5 request to SST, i.e. when OutgoingRequestPort::recvTimingReq()

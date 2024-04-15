@@ -55,8 +55,7 @@ uint32_t Network::m_virtual_networks;
 uint32_t Network::m_control_msg_size;
 uint32_t Network::m_data_msg_size;
 
-Network::Network(const Params &p)
-    : ClockedObject(p)
+Network::Network(const Params &p) : ClockedObject(p)
 {
     m_virtual_networks = p.number_of_virtual_networks;
     m_control_msg_size = p.control_msg_size;
@@ -100,9 +99,9 @@ Network::Network(const Params &p)
     assert(m_nodes != 0);
     assert(m_virtual_networks != 0);
 
-    m_topology_ptr = new Topology(m_nodes, p.routers.size(),
-                                  m_virtual_networks,
-                                  p.ext_links, p.int_links);
+    m_topology_ptr =
+        new Topology(m_nodes, p.routers.size(), m_virtual_networks,
+                     p.ext_links, p.int_links);
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -119,7 +118,7 @@ Network::Network(const Params &p)
     }
 
     // Initialize the controller's network pointers
-    for (std::vector<BasicExtLink*>::const_iterator i = p.ext_links.begin();
+    for (std::vector<BasicExtLink *>::const_iterator i = p.ext_links.begin();
          i != p.ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
         AbstractController *abs_cntrl = ext_link->params().ext_node;
@@ -127,10 +126,8 @@ Network::Network(const Params &p)
         const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
         if (!ranges.empty()) {
             MachineID mid = abs_cntrl->getMachineID();
-            AddrMapNode addr_map_node = {
-                .id = mid.getNum(),
-                .ranges = ranges
-            };
+            AddrMapNode addr_map_node = { .id = mid.getNum(),
+                                          .ranges = ranges };
             addrMap.emplace(mid.getType(), addr_map_node);
         }
     }
@@ -146,13 +143,12 @@ Network::Network(const Params &p)
 Network::~Network()
 {
     for (int node = 0; node < m_nodes; node++) {
-
         // Delete the Message Buffers
-        for (auto& it : m_toNetQueues[node]) {
+        for (auto &it : m_toNetQueues[node]) {
             delete it;
         }
 
-        for (auto& it : m_fromNetQueues[node]) {
+        for (auto &it : m_fromNetQueues[node]) {
             delete it;
         }
     }
@@ -163,36 +159,35 @@ Network::~Network()
 uint32_t
 Network::MessageSizeType_to_int(MessageSizeType size_type)
 {
-    switch(size_type) {
-      case MessageSizeType_Control:
-      case MessageSizeType_Request_Control:
-      case MessageSizeType_Reissue_Control:
-      case MessageSizeType_Response_Control:
-      case MessageSizeType_Writeback_Control:
-      case MessageSizeType_Broadcast_Control:
-      case MessageSizeType_Multicast_Control:
-      case MessageSizeType_Forwarded_Control:
-      case MessageSizeType_Invalidate_Control:
-      case MessageSizeType_Unblock_Control:
-      case MessageSizeType_Persistent_Control:
-      case MessageSizeType_Completion_Control:
+    switch (size_type) {
+    case MessageSizeType_Control:
+    case MessageSizeType_Request_Control:
+    case MessageSizeType_Reissue_Control:
+    case MessageSizeType_Response_Control:
+    case MessageSizeType_Writeback_Control:
+    case MessageSizeType_Broadcast_Control:
+    case MessageSizeType_Multicast_Control:
+    case MessageSizeType_Forwarded_Control:
+    case MessageSizeType_Invalidate_Control:
+    case MessageSizeType_Unblock_Control:
+    case MessageSizeType_Persistent_Control:
+    case MessageSizeType_Completion_Control:
         return m_control_msg_size;
-      case MessageSizeType_Data:
-      case MessageSizeType_Response_Data:
-      case MessageSizeType_ResponseLocal_Data:
-      case MessageSizeType_ResponseL2hit_Data:
-      case MessageSizeType_Writeback_Data:
+    case MessageSizeType_Data:
+    case MessageSizeType_Response_Data:
+    case MessageSizeType_ResponseLocal_Data:
+    case MessageSizeType_ResponseL2hit_Data:
+    case MessageSizeType_Writeback_Data:
         return m_data_msg_size;
-      default:
+    default:
         panic("Invalid range for type MessageSizeType");
         break;
     }
 }
 
 void
-Network::checkNetworkAllocation(NodeID local_id, bool ordered,
-                                        int network_num,
-                                        std::string vnet_type)
+Network::checkNetworkAllocation(NodeID local_id, bool ordered, int network_num,
+                                std::string vnet_type)
 {
     fatal_if(local_id >= m_nodes, "Node ID is out of range");
     fatal_if(network_num >= m_virtual_networks, "Network id is out of range");
@@ -204,10 +199,9 @@ Network::checkNetworkAllocation(NodeID local_id, bool ordered,
     m_vnet_type_names[network_num] = vnet_type;
 }
 
-
 void
 Network::setToNetQueue(NodeID global_id, bool ordered, int network_num,
-                                 std::string vnet_type, MessageBuffer *b)
+                       std::string vnet_type, MessageBuffer *b)
 {
     NodeID local_id = getLocalNodeID(global_id);
     checkNetworkAllocation(local_id, ordered, network_num, vnet_type);
@@ -220,7 +214,7 @@ Network::setToNetQueue(NodeID global_id, bool ordered, int network_num,
 
 void
 Network::setFromNetQueue(NodeID global_id, bool ordered, int network_num,
-                                   std::string vnet_type, MessageBuffer *b)
+                         std::string vnet_type, MessageBuffer *b)
 {
     NodeID local_id = getLocalNodeID(global_id);
     checkNetworkAllocation(local_id, ordered, network_num, vnet_type);
@@ -240,7 +234,7 @@ Network::addressToNodeID(Addr addr, MachineType mtype)
     for (auto it = matching_ranges.first; it != matching_ranges.second; it++) {
         AddrMapNode &node = it->second;
         auto &ranges = node.ranges;
-        for (AddrRange &range: ranges) {
+        for (AddrRange &range : ranges) {
             if (range.contains(addr)) {
                 return node.id;
             }

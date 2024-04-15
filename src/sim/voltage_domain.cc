@@ -51,12 +51,15 @@ namespace gem5
 VoltageDomain::VoltageDomain(const Params &p)
     : SimObject(p), voltageOpPoints(p.voltage), _perfLevel(0), stats(*this)
 {
-    fatal_if(voltageOpPoints.empty(), "DVFS: Empty set of voltages for "\
-             "voltage domain %s\n", name());
+    fatal_if(voltageOpPoints.empty(),
+             "DVFS: Empty set of voltages for "
+             "voltage domain %s\n",
+             name());
 
     // Voltages must be sorted in descending order.
     fatal_if(!std::is_sorted(voltageOpPoints.begin(), voltageOpPoints.end(),
-             std::greater<Voltages::value_type>()), "DVFS: Voltage operation "\
+                             std::greater<Voltages::value_type>()),
+             "DVFS: Voltage operation "
              "points not in descending order for voltage domain %s\n",
              name());
 }
@@ -65,8 +68,9 @@ void
 VoltageDomain::perfLevel(PerfLevel perf_level)
 {
     gem5_assert(perf_level < voltageOpPoints.size(),
-                "DVFS: Requested voltage ID %d is outside the known "\
-                "range for domain %s.\n", perf_level, name());
+                "DVFS: Requested voltage ID %d is outside the known "
+                "range for domain %s.\n",
+                perf_level, name());
 
     if (perf_level == _perfLevel) {
         // Silently ignore identical overwrites
@@ -89,16 +93,20 @@ VoltageDomain::sanitiseVoltages()
     // domain with it
     PerfLevel perf_max = (PerfLevel)-1;
     for (auto dit = srcClockChildren.begin(); dit != srcClockChildren.end();
-            ++dit) {
-        SrcClockDomain* d = *dit;
-        gem5_assert(d->voltageDomain() == this, "DVFS: Clock domain %s "\
-                    "(id: %d) should not be registered with voltage domain "\
-                    "%s\n", d->name(), d->domainID(), name());
+         ++dit) {
+        SrcClockDomain *d = *dit;
+        gem5_assert(d->voltageDomain() == this,
+                    "DVFS: Clock domain %s "
+                    "(id: %d) should not be registered with voltage domain "
+                    "%s\n",
+                    d->name(), d->domainID(), name());
 
         PerfLevel perf = d->perfLevel();
 
-        DPRINTF(VoltageDomain, "DVFS: Clock domain %s (id: %d) requests perf "\
-                "level %d\n", d->name(), d->domainID(), perf);
+        DPRINTF(VoltageDomain,
+                "DVFS: Clock domain %s (id: %d) requests perf "
+                "level %d\n",
+                d->name(), d->domainID(), perf);
 
         // NOTE: Descending sort of performance levels: 0 - fast, 5 - slow
         if (perf < perf_max) {
@@ -107,8 +115,10 @@ VoltageDomain::sanitiseVoltages()
             perf_max = perf;
         }
     }
-    DPRINTF(VoltageDomain, "DVFS: Setting perf level of voltage domain %s "\
-            "from %d to %d.\n", name(), perfLevel(), perf_max);
+    DPRINTF(VoltageDomain,
+            "DVFS: Setting perf level of voltage domain %s "
+            "from %d to %d.\n",
+            name(), perfLevel(), perf_max);
 
     // Set the performance level
     if (perf_max != perfLevel()) {
@@ -120,11 +130,13 @@ VoltageDomain::sanitiseVoltages()
 }
 
 void
-VoltageDomain::startup() {
+VoltageDomain::startup()
+{
     bool changed = sanitiseVoltages();
     if (changed) {
-        warn("DVFS: Perf level for voltage domain %s adapted to "\
-             "requested perf levels from source clock domains.\n", name());
+        warn("DVFS: Perf level for voltage domain %s adapted to "
+             "requested perf levels from source clock domains.\n",
+             name());
     }
 }
 
@@ -143,7 +155,7 @@ VoltageDomain::unserialize(CheckpointIn &cp)
 
 VoltageDomain::VoltageDomainStats::VoltageDomainStats(VoltageDomain &vd)
     : statistics::Group(&vd),
-    ADD_STAT(voltage, statistics::units::Volt::get(), "Voltage in Volts")
+      ADD_STAT(voltage, statistics::units::Volt::get(), "Voltage in Volts")
 {
     voltage.method(&vd, &VoltageDomain::voltage);
 }

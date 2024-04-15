@@ -44,11 +44,13 @@ class BasicDecodeCache
 {
   private:
     decode_cache::InstMap<EMI> instMap;
+
     struct AddrMapEntry
     {
         StaticInstPtr inst;
         EMI machInst;
     };
+
     decode_cache::AddrMap<AddrMapEntry> decodePages;
 
   public:

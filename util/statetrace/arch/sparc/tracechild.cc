@@ -70,95 +70,163 @@ SparcTraceChild::sendState(int socket)
 }
 
 int64_t
-getRegs(regs & myregs, fpu & myfpu, uint64_t * locals,
-        uint64_t * inputs, int num)
+getRegs(regs &myregs, fpu &myfpu, uint64_t *locals, uint64_t *inputs, int num)
 {
     assert(num < SparcTraceChild::numregs && num >= 0);
     switch (num) {
-      //Global registers
-      case SparcTraceChild::G0: return 0;
-      case SparcTraceChild::G1: return myregs.r_g1;
-      case SparcTraceChild::G2: return myregs.r_g2;
-      case SparcTraceChild::G3: return myregs.r_g3;
-      case SparcTraceChild::G4: return myregs.r_g4;
-      case SparcTraceChild::G5: return myregs.r_g5;
-      case SparcTraceChild::G6: return myregs.r_g6;
-      case SparcTraceChild::G7: return myregs.r_g7;
-      //Output registers
-      case SparcTraceChild::O0: return myregs.r_o0;
-      case SparcTraceChild::O1: return myregs.r_o1;
-      case SparcTraceChild::O2: return myregs.r_o2;
-      case SparcTraceChild::O3: return myregs.r_o3;
-      case SparcTraceChild::O4: return myregs.r_o4;
-      case SparcTraceChild::O5: return myregs.r_o5;
-      case SparcTraceChild::O6: return myregs.r_o6;
-      case SparcTraceChild::O7: return myregs.r_o7;
-      //Local registers
-      case SparcTraceChild::L0: return locals[0];
-      case SparcTraceChild::L1: return locals[1];
-      case SparcTraceChild::L2: return locals[2];
-      case SparcTraceChild::L3: return locals[3];
-      case SparcTraceChild::L4: return locals[4];
-      case SparcTraceChild::L5: return locals[5];
-      case SparcTraceChild::L6: return locals[6];
-      case SparcTraceChild::L7: return locals[7];
-      //Input registers
-      case SparcTraceChild::I0: return inputs[0];
-      case SparcTraceChild::I1: return inputs[1];
-      case SparcTraceChild::I2: return inputs[2];
-      case SparcTraceChild::I3: return inputs[3];
-      case SparcTraceChild::I4: return inputs[4];
-      case SparcTraceChild::I5: return inputs[5];
-      case SparcTraceChild::I6: return inputs[6];
-      case SparcTraceChild::I7: return inputs[7];
-      //Floating point
-      case SparcTraceChild::F0: return myfpu.f_fpstatus.fpu_fr[0];
-      case SparcTraceChild::F2: return myfpu.f_fpstatus.fpu_fr[1];
-      case SparcTraceChild::F4: return myfpu.f_fpstatus.fpu_fr[2];
-      case SparcTraceChild::F6: return myfpu.f_fpstatus.fpu_fr[3];
-      case SparcTraceChild::F8: return myfpu.f_fpstatus.fpu_fr[4];
-      case SparcTraceChild::F10: return myfpu.f_fpstatus.fpu_fr[5];
-      case SparcTraceChild::F12: return myfpu.f_fpstatus.fpu_fr[6];
-      case SparcTraceChild::F14: return myfpu.f_fpstatus.fpu_fr[7];
-      case SparcTraceChild::F16: return myfpu.f_fpstatus.fpu_fr[8];
-      case SparcTraceChild::F18: return myfpu.f_fpstatus.fpu_fr[9];
-      case SparcTraceChild::F20: return myfpu.f_fpstatus.fpu_fr[10];
-      case SparcTraceChild::F22: return myfpu.f_fpstatus.fpu_fr[11];
-      case SparcTraceChild::F24: return myfpu.f_fpstatus.fpu_fr[12];
-      case SparcTraceChild::F26: return myfpu.f_fpstatus.fpu_fr[13];
-      case SparcTraceChild::F28: return myfpu.f_fpstatus.fpu_fr[14];
-      case SparcTraceChild::F30: return myfpu.f_fpstatus.fpu_fr[15];
-      case SparcTraceChild::F32: return myfpu.f_fpstatus.fpu_fr[16];
-      case SparcTraceChild::F34: return myfpu.f_fpstatus.fpu_fr[17];
-      case SparcTraceChild::F36: return myfpu.f_fpstatus.fpu_fr[18];
-      case SparcTraceChild::F38: return myfpu.f_fpstatus.fpu_fr[19];
-      case SparcTraceChild::F40: return myfpu.f_fpstatus.fpu_fr[20];
-      case SparcTraceChild::F42: return myfpu.f_fpstatus.fpu_fr[21];
-      case SparcTraceChild::F44: return myfpu.f_fpstatus.fpu_fr[22];
-      case SparcTraceChild::F46: return myfpu.f_fpstatus.fpu_fr[23];
-      case SparcTraceChild::F48: return myfpu.f_fpstatus.fpu_fr[24];
-      case SparcTraceChild::F50: return myfpu.f_fpstatus.fpu_fr[25];
-      case SparcTraceChild::F52: return myfpu.f_fpstatus.fpu_fr[26];
-      case SparcTraceChild::F54: return myfpu.f_fpstatus.fpu_fr[27];
-      case SparcTraceChild::F56: return myfpu.f_fpstatus.fpu_fr[28];
-      case SparcTraceChild::F58: return myfpu.f_fpstatus.fpu_fr[29];
-      case SparcTraceChild::F60: return myfpu.f_fpstatus.fpu_fr[30];
-      case SparcTraceChild::F62: return myfpu.f_fpstatus.fpu_fr[31];
-      //Miscelaneous
-      case SparcTraceChild::FSR: return myfpu.f_fpstatus.Fpu_fsr;
-      case SparcTraceChild::FPRS: return myregs.r_fprs;
-      case SparcTraceChild::PC: return myregs.r_tpc;
-      case SparcTraceChild::NPC: return myregs.r_tnpc;
-      case SparcTraceChild::Y: return myregs.r_y;
-      case SparcTraceChild::CWP:
+    // Global registers
+    case SparcTraceChild::G0:
+        return 0;
+    case SparcTraceChild::G1:
+        return myregs.r_g1;
+    case SparcTraceChild::G2:
+        return myregs.r_g2;
+    case SparcTraceChild::G3:
+        return myregs.r_g3;
+    case SparcTraceChild::G4:
+        return myregs.r_g4;
+    case SparcTraceChild::G5:
+        return myregs.r_g5;
+    case SparcTraceChild::G6:
+        return myregs.r_g6;
+    case SparcTraceChild::G7:
+        return myregs.r_g7;
+    // Output registers
+    case SparcTraceChild::O0:
+        return myregs.r_o0;
+    case SparcTraceChild::O1:
+        return myregs.r_o1;
+    case SparcTraceChild::O2:
+        return myregs.r_o2;
+    case SparcTraceChild::O3:
+        return myregs.r_o3;
+    case SparcTraceChild::O4:
+        return myregs.r_o4;
+    case SparcTraceChild::O5:
+        return myregs.r_o5;
+    case SparcTraceChild::O6:
+        return myregs.r_o6;
+    case SparcTraceChild::O7:
+        return myregs.r_o7;
+    // Local registers
+    case SparcTraceChild::L0:
+        return locals[0];
+    case SparcTraceChild::L1:
+        return locals[1];
+    case SparcTraceChild::L2:
+        return locals[2];
+    case SparcTraceChild::L3:
+        return locals[3];
+    case SparcTraceChild::L4:
+        return locals[4];
+    case SparcTraceChild::L5:
+        return locals[5];
+    case SparcTraceChild::L6:
+        return locals[6];
+    case SparcTraceChild::L7:
+        return locals[7];
+    // Input registers
+    case SparcTraceChild::I0:
+        return inputs[0];
+    case SparcTraceChild::I1:
+        return inputs[1];
+    case SparcTraceChild::I2:
+        return inputs[2];
+    case SparcTraceChild::I3:
+        return inputs[3];
+    case SparcTraceChild::I4:
+        return inputs[4];
+    case SparcTraceChild::I5:
+        return inputs[5];
+    case SparcTraceChild::I6:
+        return inputs[6];
+    case SparcTraceChild::I7:
+        return inputs[7];
+    // Floating point
+    case SparcTraceChild::F0:
+        return myfpu.f_fpstatus.fpu_fr[0];
+    case SparcTraceChild::F2:
+        return myfpu.f_fpstatus.fpu_fr[1];
+    case SparcTraceChild::F4:
+        return myfpu.f_fpstatus.fpu_fr[2];
+    case SparcTraceChild::F6:
+        return myfpu.f_fpstatus.fpu_fr[3];
+    case SparcTraceChild::F8:
+        return myfpu.f_fpstatus.fpu_fr[4];
+    case SparcTraceChild::F10:
+        return myfpu.f_fpstatus.fpu_fr[5];
+    case SparcTraceChild::F12:
+        return myfpu.f_fpstatus.fpu_fr[6];
+    case SparcTraceChild::F14:
+        return myfpu.f_fpstatus.fpu_fr[7];
+    case SparcTraceChild::F16:
+        return myfpu.f_fpstatus.fpu_fr[8];
+    case SparcTraceChild::F18:
+        return myfpu.f_fpstatus.fpu_fr[9];
+    case SparcTraceChild::F20:
+        return myfpu.f_fpstatus.fpu_fr[10];
+    case SparcTraceChild::F22:
+        return myfpu.f_fpstatus.fpu_fr[11];
+    case SparcTraceChild::F24:
+        return myfpu.f_fpstatus.fpu_fr[12];
+    case SparcTraceChild::F26:
+        return myfpu.f_fpstatus.fpu_fr[13];
+    case SparcTraceChild::F28:
+        return myfpu.f_fpstatus.fpu_fr[14];
+    case SparcTraceChild::F30:
+        return myfpu.f_fpstatus.fpu_fr[15];
+    case SparcTraceChild::F32:
+        return myfpu.f_fpstatus.fpu_fr[16];
+    case SparcTraceChild::F34:
+        return myfpu.f_fpstatus.fpu_fr[17];
+    case SparcTraceChild::F36:
+        return myfpu.f_fpstatus.fpu_fr[18];
+    case SparcTraceChild::F38:
+        return myfpu.f_fpstatus.fpu_fr[19];
+    case SparcTraceChild::F40:
+        return myfpu.f_fpstatus.fpu_fr[20];
+    case SparcTraceChild::F42:
+        return myfpu.f_fpstatus.fpu_fr[21];
+    case SparcTraceChild::F44:
+        return myfpu.f_fpstatus.fpu_fr[22];
+    case SparcTraceChild::F46:
+        return myfpu.f_fpstatus.fpu_fr[23];
+    case SparcTraceChild::F48:
+        return myfpu.f_fpstatus.fpu_fr[24];
+    case SparcTraceChild::F50:
+        return myfpu.f_fpstatus.fpu_fr[25];
+    case SparcTraceChild::F52:
+        return myfpu.f_fpstatus.fpu_fr[26];
+    case SparcTraceChild::F54:
+        return myfpu.f_fpstatus.fpu_fr[27];
+    case SparcTraceChild::F56:
+        return myfpu.f_fpstatus.fpu_fr[28];
+    case SparcTraceChild::F58:
+        return myfpu.f_fpstatus.fpu_fr[29];
+    case SparcTraceChild::F60:
+        return myfpu.f_fpstatus.fpu_fr[30];
+    case SparcTraceChild::F62:
+        return myfpu.f_fpstatus.fpu_fr[31];
+    // Miscelaneous
+    case SparcTraceChild::FSR:
+        return myfpu.f_fpstatus.Fpu_fsr;
+    case SparcTraceChild::FPRS:
+        return myregs.r_fprs;
+    case SparcTraceChild::PC:
+        return myregs.r_tpc;
+    case SparcTraceChild::NPC:
+        return myregs.r_tnpc;
+    case SparcTraceChild::Y:
+        return myregs.r_y;
+    case SparcTraceChild::CWP:
         return (myregs.r_tstate >> 0) & ((1 << 5) - 1);
-      case SparcTraceChild::PSTATE:
+    case SparcTraceChild::PSTATE:
         return (myregs.r_tstate >> 8) & ((1 << 13) - 1);
-      case SparcTraceChild::ASI:
+    case SparcTraceChild::ASI:
         return (myregs.r_tstate >> 24) & ((1 << 8) - 1);
-      case SparcTraceChild::CCR:
+    case SparcTraceChild::CCR:
         return (myregs.r_tstate >> 32) & ((1 << 8) - 1);
-      default:
+    default:
         assert(0);
         return 0;
     }
@@ -179,14 +247,17 @@ SparcTraceChild::update(int pid)
     uint64_t stackBias = 2047;
     bool v9 = stackPointer % 2;
     for (unsigned int x = 0; x < 8; x++) {
-        uint64_t localAddr = stackPointer +
-            (v9 ? (stackBias + x * 8) : (x * 4));
+        uint64_t localAddr =
+            stackPointer + (v9 ? (stackBias + x * 8) : (x * 4));
         locals[x] = ptrace(PTRACE_PEEKTEXT, pid, localAddr, 0);
-        if (!v9) locals[x] >>= 32;
-        uint64_t inputAddr = stackPointer +
+        if (!v9)
+            locals[x] >>= 32;
+        uint64_t inputAddr =
+            stackPointer +
             (v9 ? (stackBias + x * 8 + (8 * 8)) : (x * 4 + 8 * 4));
         inputs[x] = ptrace(PTRACE_PEEKTEXT, pid, inputAddr, 0);
-        if (!v9) inputs[x] >>= 32;
+        if (!v9)
+            inputs[x] >>= 32;
     }
     if (ptrace(PTRACE_GETFPREGS, pid, &thefpregs, 0) != 0)
         return false;
@@ -205,23 +276,23 @@ int
 SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
                             uint64_t &target1, uint64_t &target2)
 {
-    //We can identify the instruction categories we care about using the top
-    //10 bits of the instruction, excluding the annul bit in the 3rd most
-    //significant bit position and the condition field. We'll call these
-    //bits the "sig" for signature.
+    // We can identify the instruction categories we care about using the top
+    // 10 bits of the instruction, excluding the annul bit in the 3rd most
+    // significant bit position and the condition field. We'll call these
+    // bits the "sig" for signature.
     uint32_t sig = (inst >> 22) & 0x307;
     uint32_t cond = (inst >> 25) & 0xf;
     bool annul = (inst & (1 << 29));
 
-    //Check if it's a ba...
+    // Check if it's a ba...
     bool ba = (cond == 0x8) &&
-        (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
-    //or a bn...
+              (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
+    // or a bn...
     bool bn = (cond == 0x0) &&
-        (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
-    //or a bcc
-    bool bcc = (cond & 0x7) &&
-        (sig == 0x1 || sig == 0x2 || sig == 0x3 || sig == 0x5 || sig == 0x6);
+              (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
+    // or a bcc
+    bool bcc = (cond & 0x7) && (sig == 0x1 || sig == 0x2 || sig == 0x3 ||
+                                sig == 0x5 || sig == 0x6);
 
     if (annul) {
         if (bcc) {
@@ -229,11 +300,11 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
             target2 = npc + 4;
             return 2;
         } else if (ba) {
-            //This branches immediately to the effective address of the branch
-            //which we'll have to calculate.
+            // This branches immediately to the effective address of the branch
+            // which we'll have to calculate.
             uint64_t disp = 0;
             int64_t extender = 0;
-            //Figure out how big the displacement field is, and grab the bits
+            // Figure out how big the displacement field is, and grab the bits
             if (sig == 0x1 || sig == 0x5) {
                 disp = inst & ((1 << 19) - 1);
                 extender = 1 << 18;
@@ -241,10 +312,10 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
                 disp = inst & ((1 << 22) - 1);
                 extender = 1 << 21;
             }
-            //This does sign extension, believe it or not.
+            // This does sign extension, believe it or not.
             disp = (disp ^ extender) - extender;
-            //Multiply the displacement by 4. I'm assuming the compiler is
-            //smart enough to turn this into a shift.
+            // Multiply the displacement by 4. I'm assuming the compiler is
+            // smart enough to turn this into a shift.
             disp *= 4;
             target1 = pc + disp;
         } else if (bn)
@@ -261,12 +332,12 @@ SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
 bool
 SparcTraceChild::step()
 {
-    //Increment the count of the number of instructions executed
+    // Increment the count of the number of instructions executed
     instructions++;
-    //Two important considerations are that the address of the instruction
-    //being breakpointed should be word (64bit) aligned, and that both the
-    //next instruction and the instruction after that need to be breakpointed
-    //so that annulled branches will still stop as well.
+    // Two important considerations are that the address of the instruction
+    // being breakpointed should be word (64bit) aligned, and that both the
+    // next instruction and the instruction after that need to be breakpointed
+    // so that annulled branches will still stop as well.
 
     /*
      * Useful constants
@@ -293,7 +364,7 @@ SparcTraceChild::step()
     bool unalignedNPC = nextPC & 7;
     uint64_t alignedNPC = nextPC & (~7);
 
-    //Get the current instruction
+    // Get the current instruction
     uint64_t curInst = ptrace(PTRACE_PEEKTEXT, pid, alignedPC);
     curInst = unalignedPC ? (curInst & 0xffffffffULL) : (curInst >> 32);
 
@@ -331,9 +402,9 @@ SparcTraceChild::step()
     /*
      * Restart the child process
      */
-    //Note that the "addr" parameter is supposed to be ignored, but in at
-    //least one version of the kernel, it must be 1 or it will set what
-    //pc to continue from
+    // Note that the "addr" parameter is supposed to be ignored, but in at
+    // least one version of the kernel, it must be 1 or it will set what
+    // pc to continue from
     if (ptrace(PTRACE_CONT, pid, 1, 0) != 0)
         cerr << "Cont failed" << endl;
     doWait();
@@ -368,7 +439,7 @@ SparcTraceChild::getOldRegVal(int num)
 }
 
 ostream &
-SparcTraceChild::outputStartState(ostream & os)
+SparcTraceChild::outputStartState(ostream &os)
 {
     bool v8 = false;
     uint64_t sp = getSP();
@@ -386,72 +457,78 @@ SparcTraceChild::outputStartState(ostream & os)
     sprintf(obuf, "Initial program counter = 0x%016llx\n", pc);
     os << obuf;
     if (!v8) {
-        //Take out the stack bias
+        // Take out the stack bias
         sp += 2047;
     }
-    //Output the window save area
+    // Output the window save area
     for (unsigned int x = 0; x < 16; x++) {
         uint64_t regspot = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        if (v8) regspot = regspot >> 32;
-        sprintf(obuf, "0x%016llx: Window save %d = 0x%016llx\n",
-                sp, x+1, regspot);
+        if (v8)
+            regspot = regspot >> 32;
+        sprintf(obuf, "0x%016llx: Window save %d = 0x%016llx\n", sp, x + 1,
+                regspot);
         os << obuf;
         sp += v8 ? 4 : 8;
     }
-    //Output the argument count
+    // Output the argument count
     uint64_t cargc = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-    if (v8) cargc = cargc >> 32;
+    if (v8)
+        cargc = cargc >> 32;
     sprintf(obuf, "0x%016llx: Argc = 0x%016llx\n", sp, cargc);
     os << obuf;
     sp += v8 ? 4 : 8;
-    //Output argv pointers
+    // Output argv pointers
     int argCount = 0;
     uint64_t cargv;
     do {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        if (v8) cargv = cargv >> 32;
-        sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n",
-                sp, argCount++, cargv);
+        if (v8)
+            cargv = cargv >> 32;
+        sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n", sp, argCount++,
+                cargv);
         os << obuf;
         sp += v8 ? 4 : 8;
     } while (cargv);
-    //Output the envp pointers
+    // Output the envp pointers
     int envCount = 0;
     uint64_t cenvp;
     do {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        if (v8) cenvp = cenvp >> 32;
-        sprintf(obuf, "0x%016llx: envp[%d] = 0x%016llx\n",
-                sp, envCount++, cenvp);
+        if (v8)
+            cenvp = cenvp >> 32;
+        sprintf(obuf, "0x%016llx: envp[%d] = 0x%016llx\n", sp, envCount++,
+                cenvp);
         os << obuf;
         sp += v8 ? 4 : 8;
     } while (cenvp);
     uint64_t auxType, auxVal;
     do {
         auxType = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        if (v8) auxType = auxType >> 32;
+        if (v8)
+            auxType = auxType >> 32;
         sp += (v8 ? 4 : 8);
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        if (v8) auxVal = auxVal >> 32;
+        if (v8)
+            auxVal = auxVal >> 32;
         sp += (v8 ? 4 : 8);
         sprintf(obuf, "0x%016llx: Auxiliary vector = {0x%016llx, 0x%016llx}\n",
                 sp - 8, auxType, auxVal);
         os << obuf;
     } while (auxType != 0 || auxVal != 0);
-    //Print out the argument strings, environment strings, and file name.
+    // Print out the argument strings, environment strings, and file name.
     string current;
     uint64_t buf;
     uint64_t currentStart = sp;
     bool clearedInitialPadding = false;
     do {
         buf = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        char * cbuf = (char *)&buf;
+        char *cbuf = (char *)&buf;
         for (int x = 0; x < sizeof(uint32_t); x++) {
             if (cbuf[x])
                 current += cbuf[x];
             else {
-                sprintf(obuf, "0x%016llx: \"%s\"\n",
-                        currentStart, current.c_str());
+                sprintf(obuf, "0x%016llx: \"%s\"\n", currentStart,
+                        current.c_str());
                 os << obuf;
                 current = "";
                 currentStart = sp + x + 1;

@@ -66,19 +66,21 @@ class ThermalResistor : public SimObject, public ThermalEntity
     typedef ThermalResistorParams Params;
     ThermalResistor(const Params &p);
 
-    void setNodes(ThermalNode * n1, ThermalNode * n2) {
+    void
+    setNodes(ThermalNode *n1, ThermalNode *n2)
+    {
         node1 = n1;
         node2 = n2;
     }
 
-    LinearEquation getEquation(ThermalNode * tn, unsigned n,
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
                                double step) const override;
 
   private:
     /* Resistance value in K/W */
     const double _resistance;
     /* Nodes connected to the resistor */
-    ThermalNode * node1, * node2;
+    ThermalNode *node1, *node2;
 };
 
 /**
@@ -92,10 +94,12 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
     typedef ThermalCapacitorParams Params;
     ThermalCapacitor(const Params &p);
 
-    LinearEquation getEquation(ThermalNode * tn, unsigned n,
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
                                double step) const override;
 
-    void setNodes(ThermalNode * n1, ThermalNode * n2) {
+    void
+    setNodes(ThermalNode *n1, ThermalNode *n2)
+    {
         node1 = n1;
         node2 = n2;
     }
@@ -104,7 +108,7 @@ class ThermalCapacitor : public SimObject, public ThermalEntity
     /* Capacitance value in J/K */
     const double _capacitance;
     /* Nodes connected to the resistor */
-    ThermalNode * node1, * node2;
+    ThermalNode *node1, *node2;
 };
 
 /**
@@ -123,15 +127,14 @@ class ThermalReference : public SimObject, public ThermalEntity
         node = n;
     }
 
-    LinearEquation getEquation(ThermalNode * tn, unsigned n,
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
                                double step) const override;
 
     /* Fixed temperature value */
     const Temperature _temperature;
     /* Nodes connected to the resistor */
-    ThermalNode * node;
+    ThermalNode *node;
 };
-
 
 /**
  * @sa \ref gem5PowerModel "gem5 Thermal Model"
@@ -147,12 +150,16 @@ class ThermalModel : public ClockedObject
     typedef ThermalModelParams Params;
     ThermalModel(const Params &p);
 
-    void addDomain(ThermalDomain * d);
-    void addReference(ThermalReference * r);
-    void addCapacitor(ThermalCapacitor * c);
-    void addResistor(ThermalResistor * r);
+    void addDomain(ThermalDomain *d);
+    void addReference(ThermalReference *r);
+    void addCapacitor(ThermalCapacitor *c);
+    void addResistor(ThermalResistor *r);
 
-    void addNode(ThermalNode * n) { nodes.push_back(n); }
+    void
+    addNode(ThermalNode *n)
+    {
+        nodes.push_back(n);
+    }
 
     Temperature getTemperature() const;
 
@@ -160,18 +167,17 @@ class ThermalModel : public ClockedObject
     void doStep();
 
   private:
-
     /* Keep track of all components used for the thermal model */
-    std::vector <ThermalDomain *> domains;
-    std::vector <ThermalReference *> references;
-    std::vector <ThermalCapacitor *> capacitors;
-    std::vector <ThermalResistor *> resistors;
+    std::vector<ThermalDomain *> domains;
+    std::vector<ThermalReference *> references;
+    std::vector<ThermalCapacitor *> capacitors;
+    std::vector<ThermalResistor *> resistors;
 
-    std::vector <ThermalEntity *> entities;
+    std::vector<ThermalEntity *> entities;
 
     /* Keep a list of the instantiated nodes */
-    std::vector <ThermalNode*> nodes;
-    std::vector <ThermalNode*> eq_nodes;
+    std::vector<ThermalNode *> nodes;
+    std::vector<ThermalNode *> eq_nodes;
 
     /** Stepping event to update the model values */
     EventFunctionWrapper stepEvent;

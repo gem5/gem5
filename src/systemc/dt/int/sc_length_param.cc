@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_length_param.cpp,v $
 // Revision 1.2  2011/02/18 20:19:15  acg
 //  Andy Goodrich: updating Copyright notice.

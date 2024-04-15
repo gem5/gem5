@@ -37,7 +37,8 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 class X86NativeTrace : public NativeTrace
 {
@@ -66,7 +67,7 @@ class X86NativeTrace : public NativeTrace
         uint64_t r14;
         uint64_t r15;
         uint64_t rip;
-        //This should be expanded to 16 if x87 registers are considered
+        // This should be expanded to 16 if x87 registers are considered
         uint64_t mmx[8];
         uint64_t xmm[32];
 
@@ -77,8 +78,8 @@ class X86NativeTrace : public NativeTrace
     ThreadState nState;
     ThreadState mState;
 
-    bool checkRcxReg(const char * regName, uint64_t &, uint64_t &);
-    bool checkR11Reg(const char * regName, uint64_t &, uint64_t &);
+    bool checkRcxReg(const char *regName, uint64_t &, uint64_t &);
+    bool checkR11Reg(const char *regName, uint64_t &, uint64_t &);
     bool checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[]);
 
   public:

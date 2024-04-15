@@ -37,7 +37,8 @@
 
 using namespace gem5;
 
-namespace {
+namespace
+{
 
 class TestRC;
 typedef std::list<TestRC *> LiveList;
@@ -61,13 +62,11 @@ class TestRC : public RefCounted
         liveIt = liveList.begin();
     }
 
-    ~TestRC()
-    {
-        liveList.erase(liveIt);
-    }
+    ~TestRC() { liveList.erase(liveIt); }
 
     int testVal;
 };
+
 typedef RefCountingPtr<TestRC> Ptr;
 
 } // anonymous namespace

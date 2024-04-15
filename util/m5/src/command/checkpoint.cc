@@ -45,8 +45,10 @@ do_checkpoint(const DispatchTable &dt, Args &args)
 }
 
 Command checkpoint = {
-    "checkpoint", 0, 2, do_checkpoint, "[delay [period]]\n"
-        "        After delay (default 0) take a checkpoint, and then "
-            "optionally every period after" };
+    "checkpoint", 0, 2, do_checkpoint,
+    "[delay [period]]\n"
+    "        After delay (default 0) take a checkpoint, and then "
+    "optionally every period after"
+};
 
 } // anonymous namespace
