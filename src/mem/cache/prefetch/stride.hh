@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015, 2022 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2022, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -145,7 +145,7 @@ class Stride : public Queued
         SatCounter8 confidence;
     };
     typedef AssociativeSet<StrideEntry> PCTable;
-    std::unordered_map<int, PCTable> pcTables;
+    std::unordered_map<int, std::unique_ptr<PCTable>> pcTables;
 
     /**
      * If this parameter is set to true, then the prefetcher will operate at
@@ -161,7 +161,7 @@ class Stride : public Queued
      * @param context The context to be searched for.
      * @return The table corresponding to the given context.
      */
-    PCTable* findTable(int context);
+    PCTable& findTable(int context);
 
     /**
      * Create a PC table for the given context.
@@ -169,7 +169,7 @@ class Stride : public Queued
      * @param context The context of the new PC table.
      * @return The new PC table
      */
-    PCTable* allocateNewContext(int context);
+    PCTable& allocateNewContext(int context);
 
   public:
     Stride(const StridePrefetcherParams &p);

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015, 2022-2023 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2022-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,36 +91,35 @@ Stride::Stride(const StridePrefetcherParams &p)
 {
 }
 
-Stride::PCTable*
+Stride::PCTable&
 Stride::findTable(int context)
 {
     // Check if table for given context exists
     auto it = pcTables.find(context);
     if (it != pcTables.end())
-        return &it->second;
+        return *(it->second);
 
     // If table does not exist yet, create one
     return allocateNewContext(context);
 }
 
-Stride::PCTable*
+Stride::PCTable&
 Stride::allocateNewContext(int context)
 {
     std::string table_name = name() + ".PCTable" + std::to_string(context);
     // Create new table
-    auto ins_result = pcTables.emplace(std::piecewise_construct,
-                           std::forward_as_tuple(context),
-                           std::forward_as_tuple(table_name.c_str(),
-                                                 pcTableInfo.numEntries,
-                                                 pcTableInfo.assoc,
-                                                 pcTableInfo.replacementPolicy,
-                                                 pcTableInfo.indexingPolicy,
-                                                 StrideEntry(initConfidence)));
+    pcTables[context].reset(new PCTable(
+        table_name.c_str(),
+        pcTableInfo.numEntries,
+        pcTableInfo.assoc,
+        pcTableInfo.replacementPolicy,
+        pcTableInfo.indexingPolicy,
+        StrideEntry(initConfidence)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
-    // Get iterator to new pc table, and then return a pointer to the new table
-    return &(ins_result.first->second);
+    // return a reference to the new table
+    return *(pcTables[context]);
 }
 
 void
@@ -141,13 +140,13 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     RequestorID requestor_id = useRequestorId ? pfi.getRequestorId() : 0;
 
     // Get corresponding pc table
-    PCTable* pcTable = findTable(requestor_id);
+    PCTable& pc_table = findTable(requestor_id);
 
     // Search for entry in the pc table
-    StrideEntry *entry = pcTable->findEntry(pc, is_secure);
+    StrideEntry *entry = pc_table.findEntry(pc, is_secure);
 
     if (entry != nullptr) {
-        pcTable->accessEntry(entry);
+        pc_table.accessEntry(entry);
 
         // Hit in table
         int new_stride = pf_addr - entry->lastAddr;
@@ -198,11 +197,11 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
                 is_secure ? "s" : "ns");
 
-        StrideEntry* entry = pcTable->findVictim(pc);
+        StrideEntry* entry = pc_table.findVictim(pc);
 
         // Insert new entry's data
         entry->lastAddr = pf_addr;
-        pcTable->insertEntry(pc, is_secure, entry);
+        pc_table.insertEntry(pc, is_secure, entry);
     }
 }
 
