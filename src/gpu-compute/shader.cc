@@ -607,31 +607,31 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
                "vector instruction destination operand distribution")
 {
     allLatencyDist
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     loadLatencyDist
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     storeLatencyDist
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     initToCoalesceLatency
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     rubyNetworkLatency
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     gmEnqueueLatency
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     gmToCompleteLatency
-        .init(0, 1600000, 10000)
+        .init(0, 1600000-1, 10000)
         .flags(statistics::pdf | statistics::oneline);
 
     coalsrLineAddresses
@@ -647,7 +647,7 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
         ccprintf(namestr, "%s.cacheBlockRoundTrip%d",
                  static_cast<Shader*>(parent)->name(), idx);
         cacheBlockRoundTrip[idx]
-            .init(0, 1600000, 10000)
+            .init(0, 1600000-1, 10000)
             .name(namestr.str())
             .desc("Coalsr-to-coalsr time for the Nth cache block in an inst")
             .flags(statistics::pdf | statistics::oneline);
