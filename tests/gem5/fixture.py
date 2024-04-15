@@ -199,6 +199,24 @@ class SConsFixture(UniqueFixture):
                 log.test_log, setconfig_command, time=None, stderr=sys.stderr
             )
 
+        setconfig_add_test_obj_command = [
+            "scons",
+            "-C",
+            self.directory,
+            "--ignore-style",
+            "--no-compress-debug",
+            "setconfig",
+            self.target_dir,
+            "USE_TEST_OBJECTS=y",
+        ]
+
+        log_call(
+            log.test_log,
+            setconfig_add_test_obj_command,
+            time=None,
+            stderr=sys.stderr,
+        )
+
         command = [
             "scons",
             "-C",

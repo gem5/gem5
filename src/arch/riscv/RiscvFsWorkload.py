@@ -43,6 +43,11 @@ class RiscvBareMetal(Workload):
     bootloader = Param.String("File, that contains the bootloader code")
     bare_metal = Param.Bool(True, "Using Bare Metal Application?")
     reset_vect = Param.Addr(0x0, "Reset vector")
+    auto_reset_vect = Param.Bool(
+        True,
+        "Use bootloader entry point as reset vector. "
+        "If `auto_reset_vect` is true, the `reset_vect` parameter is ignored.",
+    )
 
 
 class RiscvLinux(KernelWorkload):

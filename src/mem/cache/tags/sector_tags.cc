@@ -55,6 +55,7 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 
 namespace gem5
 {
@@ -78,9 +79,9 @@ SectorTags::SectorTags(const SectorTagsParams &p)
              "Block size must be at least 4 and a power of 2");
     fatal_if(!isPowerOf2(numBlocksPerSector),
              "# of blocks per sector must be non-zero and a power of 2");
-    warn_if((p.partitioning_policies.size() > 0),
-            "Using cache partitioning policies with sector and/or compressed "
-            "tags is not fully tested.");
+    warn_if(partitionManager,
+             "Using cache partitioning policies with sector and/or compressed "
+             "tags is not fully tested.");
 }
 
 void
@@ -297,8 +298,8 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
         indexingPolicy->getPossibleEntries(addr);
 
     // Filter entries based on PartitionID
-    for (auto partitioning_policy : partitioningPolicies)
-        partitioning_policy->filterByPartition(sector_entries, partition_id);
+    if (partitionManager)
+        partitionManager->filterByPartition(sector_entries, partition_id);
 
     // Check if the sector this address belongs to has been allocated
     Addr tag = extractTag(addr);

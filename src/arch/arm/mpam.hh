@@ -35,28 +35,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
-#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
+#ifndef __ARCH_ARM_MPAM_HH__
+#define __ARCH_ARM_MPAM_HH__
 
 #include "base/extensible.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
-namespace gem5
-{
-
-namespace partitioning_policy
+namespace gem5::ArmISA::mpam
 {
 
 const uint64_t DEFAULT_PARTITION_ID = 0;
 const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
-class PartitionFieldExtention :
-    public Extension<Request, PartitionFieldExtention>
+class PartitionFieldExtension : public Extension<Request,
+                                                 PartitionFieldExtension>
 {
   public:
     std::unique_ptr<ExtensionBase> clone() const override;
-    PartitionFieldExtention() = default;
+    PartitionFieldExtension() = default;
 
     /**
      * _partitionID getter
@@ -87,16 +84,6 @@ class PartitionFieldExtention :
     uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
 };
 
-/**
- * Helper function to retrieve PartitionID from a packet; Returns packet
- * PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
- * @param pkt pointer to packet (PacketPtr)
- * @return packet PartitionID.
- */
-uint64_t readPacketPartitionID(PacketPtr pkt);
+} // namespace gem5::ArmISA::mpam
 
-} // namespace partitioning_policy
-
-} // namespace gem5
-
-#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
+#endif // __ARCH_ARM_MPAM_HH__

@@ -287,6 +287,10 @@ class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
     // Currently time_t in glibc for riscv32 is 32-bits, but will be changed.
     typedef int64_t time_t;
 
+    // Linux types for RV32
+    typedef uint32_t size_t;
+    typedef int64_t off_t;
+
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit
     {

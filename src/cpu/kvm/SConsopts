@@ -61,5 +61,8 @@ with gem5_scons.Configure(main) as conf:
             warning("perf_event headers lack support for the exclude_host "
                     "attribute. KVM instruction counts will be inaccurate.")
 
-if not main['CONF']['KVM_ISA']:
-    warning("Can not enable KVM, host seems to lack KVM support")
+def create_use_kvm_var():
+    if not (main['CONF']['HAVE_KVM'] and main['CONF']['KVM_ISA']):
+        warning("Cannot enable KVM, host seems to lack KVM support")
+
+AfterSConsopts(create_use_kvm_var)

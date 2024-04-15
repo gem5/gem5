@@ -39,23 +39,26 @@ namespace prefetch
 {
 
 STeMS::STeMS(const STeMSPrefetcherParams &p)
-    : Queued(p),
-      spatialRegionSize(p.spatial_region_size),
-      spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
-      reconstructionEntries(p.reconstruction_entries),
-      activeGenerationTable(
-          p.active_generation_table_assoc, p.active_generation_table_entries,
-          p.active_generation_table_indexing_policy,
-          p.active_generation_table_replacement_policy,
-          ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
-      patternSequenceTable(
-          p.pattern_sequence_table_assoc, p.pattern_sequence_table_entries,
-          p.pattern_sequence_table_indexing_policy,
-          p.pattern_sequence_table_replacement_policy,
-          ActiveGenerationTableEntry(spatialRegionSize / blkSize)),
-      rmob(p.region_miss_order_buffer_entries),
-      addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
-      lastTriggerCounter(0)
+  : Queued(p), spatialRegionSize(p.spatial_region_size),
+    spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
+    reconstructionEntries(p.reconstruction_entries),
+    activeGenerationTable((name() + ".ActiveGenerationTable").c_str(),
+                          p.active_generation_table_entries,
+			  p.active_generation_table_assoc,
+                          p.active_generation_table_replacement_policy,
+                          p.active_generation_table_indexing_policy,
+                          ActiveGenerationTableEntry(
+                              spatialRegionSize / blkSize)),
+    patternSequenceTable((name() + ".PatternSequenceTable").c_str(),
+                         p.pattern_sequence_table_entries,
+			 p.pattern_sequence_table_assoc,
+                         p.pattern_sequence_table_replacement_policy,
+                         p.pattern_sequence_table_indexing_policy,
+                         ActiveGenerationTableEntry(
+                             spatialRegionSize / blkSize)),
+    rmob(p.region_miss_order_buffer_entries),
+    addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
+    lastTriggerCounter(0)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
              "The spatial region size must be a power of 2.");
@@ -89,14 +92,12 @@ STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
             }
             if (generation_ended) {
                 // PST is indexed using the PC (secure bit is unused)
-                ActiveGenerationTableEntry *pst_entry =
-                    patternSequenceTable.findEntry(pst_addr, false /*unused*/);
+                auto pst_entry = patternSequenceTable.findEntry(pst_addr);
                 if (pst_entry == nullptr) {
                     // Tipically an entry will not exist
                     pst_entry = patternSequenceTable.findVictim(pst_addr);
                     assert(pst_entry != nullptr);
-                    patternSequenceTable.insertEntry(
-                        pst_addr, false /*unused*/, pst_entry);
+                    patternSequenceTable.insertEntry(pst_addr, pst_entry);
                 } else {
                     patternSequenceTable.accessEntry(pst_entry);
                 }
@@ -218,9 +219,8 @@ STeMS::reconstructSequence(
     // Now query the PST with the PC of each RMOB entry
     idx = 0;
     for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
-         it++) {
-        ActiveGenerationTableEntry *pst_entry =
-            patternSequenceTable.findEntry(it->pstAddress, false /* unused */);
+        it++) {
+        auto pst_entry = patternSequenceTable.findEntry(it->pstAddress);
         if (pst_entry != nullptr) {
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {

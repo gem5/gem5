@@ -50,7 +50,7 @@ add_citation(
     r"""@inproceedings{Hauser:2024:LocalRiscvInterrupts,
     author = {Robert Hauser  and
               Lukas Steffen and
-              Florian Grützmacher and
+              Florian Gr{\"u}tzmacher and
               Christian Haubelt},
     title = {Analyzing Local RISC-V Interrupt Latencies with Virtual Prototyping},
     booktitle = {Workshop Methoden und Beschreibungssprachen zur Modellierung und Verifikation von Schaltungen und Systemen (MBMV24)},

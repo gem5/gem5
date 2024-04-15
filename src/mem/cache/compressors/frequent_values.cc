@@ -46,19 +46,15 @@ namespace compression
 {
 
 FrequentValues::FrequentValues(const Params &p)
-    : Base(p),
-      useHuffmanEncoding(p.max_code_length != 0),
-      indexEncoder(p.max_code_length),
-      counterBits(p.counter_bits),
-      codeGenerationTicks(p.code_generation_ticks),
-      checkSaturation(p.check_saturation),
-      numVFTEntries(p.vft_entries),
-      numSamples(p.num_samples),
-      takenSamples(0),
-      phase(SAMPLING),
-      VFT(p.vft_assoc, p.vft_entries, p.vft_indexing_policy,
-          p.vft_replacement_policy, VFTEntry(counterBits)),
-      codeGenerationEvent([this] { phase = COMPRESSING; }, name())
+  : Base(p), useHuffmanEncoding(p.max_code_length != 0),
+    indexEncoder(p.max_code_length), counterBits(p.counter_bits),
+    codeGenerationTicks(p.code_generation_ticks),
+    checkSaturation(p.check_saturation), numVFTEntries(p.vft_entries),
+    numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
+    VFT((name() + ".VFT").c_str(),
+        p.vft_entries, p.vft_assoc, p.vft_replacement_policy,
+        p.vft_indexing_policy, VFTEntry(counterBits)),
+    codeGenerationEvent([this]{ phase = COMPRESSING; }, name())
 {
     fatal_if((numVFTEntries - 1) > mask(chunkSizeBits),
              "There are more VFT entries than possible values.");
@@ -80,7 +76,7 @@ FrequentValues::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
         encoder::Code code;
         int length = 0;
         if (phase == COMPRESSING) {
-            VFTEntry *entry = VFT.findEntry(chunk, false);
+            VFTEntry* entry = VFT.findEntry(chunk);
 
             // Theoretically, the code would be the index of the entry;
             // however, there is no practical need to do so, and we simply
@@ -166,7 +162,7 @@ FrequentValues::decompress(const CompressionData *comp_data, uint64_t *data)
                 // The value at the given VFT entry must match the one stored,
                 // if it is not the uncompressed value
                 assert((comp_chunk.code.code == uncompressedValue) ||
-                       VFT.findEntry(comp_chunk.value, false));
+                       VFT.findEntry(comp_chunk.value));
             }
         }
 
@@ -184,8 +180,8 @@ FrequentValues::sampleValues(const std::vector<uint64_t> &data,
                              bool is_invalidation)
 {
     const std::vector<Chunk> chunks = toChunks(data.data());
-    for (const Chunk &chunk : chunks) {
-        VFTEntry *entry = VFT.findEntry(chunk, false);
+    for (const Chunk& chunk : chunks) {
+        VFTEntry* entry = VFT.findEntry(chunk);
         bool saturated = false;
         if (!is_invalidation) {
             // If a VFT hit, increase new value's counter; otherwise, insert
@@ -194,7 +190,7 @@ FrequentValues::sampleValues(const std::vector<uint64_t> &data,
                 entry = VFT.findVictim(chunk);
                 assert(entry != nullptr);
                 entry->value = chunk;
-                VFT.insertEntry(chunk, false, entry);
+                VFT.insertEntry(chunk, entry);
             } else {
                 VFT.accessEntry(entry);
             }
@@ -241,7 +237,7 @@ FrequentValues::generateCodes()
     // representing uncompressed values
     assert(uncompressed_values.size() >= 1);
     uncompressedValue = *uncompressed_values.begin();
-    assert(VFT.findEntry(uncompressedValue, false) == nullptr);
+    assert(VFT.findEntry(uncompressedValue) == nullptr);
 
     if (useHuffmanEncoding) {
         // Populate the queue, adding each entry as a tree with one node.

@@ -29,6 +29,9 @@
 #ifndef __CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
 #define __CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
 
+#include <type_traits>
+
+#include "base/cache/associative_cache.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/cache/tags/tagged_entry.hh"
@@ -41,39 +44,27 @@ namespace gem5
  * Each element is indexed by a key of type Addr, an additional
  * bool value is used as an additional tag data of the entry.
  */
-template <class Entry>
-class AssociativeSet
+template<class Entry>
+class AssociativeSet : public AssociativeCache<Entry>
 {
     static_assert(std::is_base_of_v<TaggedEntry, Entry>,
                   "Entry must derive from TaggedEntry");
 
-    /** Associativity of the container */
-    const int associativity;
-    /**
-     * Total number of entries, entries are organized in sets of the provided
-     * associativity. The number of associative sets is obtained by dividing
-     * numEntries by associativity.
-     */
-    const int numEntries;
-    /** Pointer to the indexing policy */
-    BaseIndexingPolicy *const indexingPolicy;
-    /** Pointer to the replacement policy */
-    replacement_policy::Base *const replacementPolicy;
-    /** Vector containing the entries of the container */
-    std::vector<Entry> entries;
-
   public:
     /**
      * Public constructor
-     * @param assoc number of elements in each associative set
+     * @param name Name of the cache
      * @param num_entries total number of entries of the container, the number
-     *   of sets can be calculated dividing this balue by the 'assoc' value
-     * @param idx_policy indexing policy
+     *        of sets can be calculated dividing this balue by the 'assoc' value
+     * @param assoc number of elements in each associative set
      * @param rpl_policy replacement policy
+     * @param idx_policy indexing policy
      * @param init_val initial value of the elements of the set
      */
-    AssociativeSet(int assoc, int num_entries, BaseIndexingPolicy *idx_policy,
-                   replacement_policy::Base *rpl_policy,
+    AssociativeSet(const char *name, const size_t num_entries,
+                   const size_t associativity_,
+                   replacement_policy::Base *repl_policy,
+                   BaseIndexingPolicy *indexing_policy,
                    Entry const &init_val = Entry());
 
     /**
@@ -86,28 +77,6 @@ class AssociativeSet
     Entry *findEntry(Addr addr, bool is_secure) const;
 
     /**
-     * Do an access to the entry, this is required to
-     * update the replacement information data.
-     * @param entry the accessed entry
-     */
-    void accessEntry(Entry *entry);
-
-    /**
-     * Find a victim to be replaced
-     * @param addr key to select the possible victim
-     * @result entry to be victimized
-     */
-    Entry *findVictim(Addr addr);
-
-    /**
-     * Find the set of entries that could be replaced given
-     * that we want to add a new entry with the provided key
-     * @param addr key to select the set of entries
-     * @result vector of candidates matching with the provided key
-     */
-    std::vector<Entry *> getPossibleEntries(const Addr addr) const;
-
-    /**
      * Indicate that an entry has just been inserted
      * @param addr key of the container
      * @param is_secure tag component of the container
@@ -115,58 +84,16 @@ class AssociativeSet
      */
     void insertEntry(Addr addr, bool is_secure, Entry *entry);
 
-    /**
-     * Invalidate an entry and its respective replacement data.
-     *
-     * @param entry Entry to be invalidated.
-     */
-    void invalidate(Entry *entry);
+  private:
+    // The following APIs are excluded since they lack the secure bit
+    using AssociativeCache<Entry>::getTag;
+    using AssociativeCache<Entry>::accessEntryByAddr;
+    using AssociativeCache<Entry>::findEntry;
+    using AssociativeCache<Entry>::insertEntry;
+    using AssociativeCache<Entry>::getPossibleEntries;
 
-    /** Iterator types */
-    using const_iterator = typename std::vector<Entry>::const_iterator;
-    using iterator = typename std::vector<Entry>::iterator;
-
-    /**
-     * Returns an iterator to the first entry of the dictionary
-     * @result iterator to the first element
-     */
-    iterator
-    begin()
-    {
-        return entries.begin();
-    }
-
-    /**
-     * Returns an iterator pointing to the end of the the dictionary
-     * (placeholder element, should not be accessed)
-     * @result iterator to the end element
-     */
-    iterator
-    end()
-    {
-        return entries.end();
-    }
-
-    /**
-     * Returns an iterator to the first entry of the dictionary
-     * @result iterator to the first element
-     */
-    const_iterator
-    begin() const
-    {
-        return entries.begin();
-    }
-
-    /**
-     * Returns an iterator pointing to the end of the the dictionary
-     * (placeholder element, should not be accessed)
-     * @result iterator to the end element
-     */
-    const_iterator
-    end() const
-    {
-        return entries.end();
-    }
+    using AssociativeCache<Entry>::replPolicy;
+    using AssociativeCache<Entry>::indexingPolicy;
 };
 
 } // namespace gem5

@@ -87,9 +87,9 @@ processor = SimpleSwitchableProcessor(
 )
 
 # The ArmBoard requires a `release` to be specified. This adds all the
-# extensions or features to the system. We are setting this to Armv8
-# (ArmDefaultRelease) in this example config script.
-release = ArmDefaultRelease()
+# extensions or features to the system. We are setting this to for_kvm()
+# to enable KVM simulation.
+release = ArmDefaultRelease.for_kvm()
 
 # The platform sets up the memory ranges of all the on-chip and off-chip
 # devices present on the ARM system. ARM KVM only works with VExpress_GEM5_V1
