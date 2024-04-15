@@ -31,7 +31,6 @@
 #include <utility>
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/PIFPrefetcher.hh"
 
 namespace gem5

@@ -32,7 +32,6 @@
 #include <climits>
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcher.hh"
 
 namespace gem5

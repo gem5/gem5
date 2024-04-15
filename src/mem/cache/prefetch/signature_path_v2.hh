@@ -41,7 +41,7 @@
 #ifndef __MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__
 #define __MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__
 
-#include "mem/cache/prefetch/associative_set.hh"
+#include "base/cache/associative_cache.hh"
 #include "mem/cache/prefetch/signature_path.hh"
 #include "mem/packet.hh"
 
@@ -68,7 +68,7 @@ class SignaturePathV2 : public SignaturePath
         {}
     };
     /** Global History Register */
-    AssociativeSet<GlobalHistoryEntry> globalHistoryRegister;
+    AssociativeCache<GlobalHistoryEntry> globalHistoryRegister;
 
     double calculateLookaheadConfidence(PatternEntry const &sig,
             PatternStrideEntry const &lookahead) const override;

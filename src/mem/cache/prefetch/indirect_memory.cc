@@ -29,7 +29,6 @@
  #include "mem/cache/prefetch/indirect_memory.hh"
 
  #include "mem/cache/base.hh"
- #include "mem/cache/prefetch/associative_set_impl.hh"
  #include "params/IndirectMemoryPrefetcher.hh"
 
 namespace gem5

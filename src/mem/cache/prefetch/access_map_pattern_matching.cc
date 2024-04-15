@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/access_map_pattern_matching.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/AMPMPrefetcher.hh"
 #include "params/AccessMapPatternMatching.hh"
 

@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/spatio_temporal_memory_streaming.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/STeMSPrefetcher.hh"
 
 namespace gem5

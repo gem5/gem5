@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/DCPTPrefetcher.hh"
 #include "params/DeltaCorrelatingPredictionTables.hh"
 

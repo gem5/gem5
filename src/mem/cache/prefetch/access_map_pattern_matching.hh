@@ -38,8 +38,9 @@
 #ifndef __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 #define __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 
-#include "mem/cache/prefetch/associative_set.hh"
+#include "base/cache/associative_cache.hh"
 #include "mem/cache/prefetch/queued.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "sim/clocked_object.hh"
 
@@ -109,7 +110,7 @@ class AccessMapPatternMatching : public ClockedObject
         }
     };
     /** Access map table */
-    AssociativeSet<AccessMapEntry> accessMapTable;
+    AssociativeCache<AccessMapEntry> accessMapTable;
 
     /**
      * Number of good prefetches

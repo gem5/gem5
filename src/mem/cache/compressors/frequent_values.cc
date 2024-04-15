@@ -36,7 +36,6 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "debug/CacheComp.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/FrequentValuesCompressor.hh"
 
 namespace gem5

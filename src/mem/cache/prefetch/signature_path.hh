@@ -40,9 +40,10 @@
 #ifndef __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
 #define __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
 
+#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 
 namespace gem5
@@ -84,7 +85,7 @@ class SignaturePath : public Queued
         {}
     };
     /** Signature table */
-    AssociativeSet<SignatureEntry> signatureTable;
+    AssociativeCache<SignatureEntry> signatureTable;
 
     /** A stride entry with its counter */
     struct PatternStrideEntry
@@ -150,7 +151,7 @@ class SignaturePath : public Queued
     };
 
     /** Pattern table */
-    AssociativeSet<PatternEntry> patternTable;
+    AssociativeCache<PatternEntry> patternTable;
 
     /**
      * Generates a new signature from an existing one and a new stride

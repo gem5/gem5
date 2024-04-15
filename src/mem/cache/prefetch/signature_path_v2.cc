@@ -43,7 +43,6 @@
 #include <cassert>
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcherV2.hh"
 
 namespace gem5

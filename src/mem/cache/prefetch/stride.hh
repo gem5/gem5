@@ -51,12 +51,13 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 
@@ -144,7 +145,7 @@ class Stride : public Queued
         int stride;
         SatCounter8 confidence;
     };
-    typedef AssociativeSet<StrideEntry> PCTable;
+    using PCTable = AssociativeCache<StrideEntry>;
     std::unordered_map<int, std::unique_ptr<PCTable>> pcTables;
 
     /**

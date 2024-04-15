@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/irregular_stream_buffer.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/IrregularStreamBufferPrefetcher.hh"
 
 namespace gem5

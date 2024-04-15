@@ -41,9 +41,10 @@
 
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5
 {
@@ -122,7 +123,7 @@ class IndirectMemory : public Queued
         }
     };
     /** Prefetch table */
-    AssociativeSet<PrefetchTableEntry> prefetchTable;
+    AssociativeCache<PrefetchTableEntry> prefetchTable;
 
     /** Indirect Pattern Detector entrt */
     struct IndirectPatternDetectorEntry : public TaggedEntry
