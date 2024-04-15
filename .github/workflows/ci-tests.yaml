@@ -184,12 +184,49 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
+    pyunit:
+        runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        needs: [pre-commit, check-for-change-id, testlib-quick-gem5-builds]
+        timeout-minutes: 30
+        steps:
+
+            # Checkout the repository then download the builds.
+            - uses: actions/checkout@v4
+            - uses: actions/download-artifact@v4
+              with:
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+
+            # Check that the gem5 binaries exist and are executable.
+            - name: Chmod gem5.{opt,debug,fast} to be executable
+              run: |
+                  find . -name "gem5.opt" -exec chmod u+x {} \;
+                  find . -name "gem5.debug" -exec chmod u+x {} \;
+                  find . -name "gem5.fast" -exec chmod u+x {} \;
+
+            # Run the pyunit tests.
+            # Note: these are all quick tests.
+            - name: Run The pyunit tests
+              id: run-tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --skip-build -vv -j$(nproc) pyunit
+
+            # Upload the tests/testing-results directory as an artifact.
+            - name: Upload pyunit test results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-pyunit-status-${{ steps.run-tests.outcome }}-output
+                  path: tests/testing-results
+                  retention-days: 30
+
     testlib-quick:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. The 'testlib-quick-execution' is a matrix job which runs all the
     # the testlib quick tests. This job is therefore a stub which will pass if
     # all the testlib-quick-execution jobs pass.
         runs-on: ubuntu-latest
-        needs: testlib-quick-execution
+        needs: [testlib-quick-execution, pyunit]
         steps:
             - run: echo "This job's status is ${{ job.status }}."
