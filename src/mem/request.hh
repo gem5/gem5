@@ -1096,6 +1096,7 @@ class Request : public Extensible<Request>
      * setting extraFlags should be done via setCacheCoherenceFlags().
      */
     bool isInvL1() const { return _cacheCoherenceFlags.isSet(INV_L1); }
+    bool isInvL2() const { return _cacheCoherenceFlags.isSet(GL2_CACHE_INV); }
 
     bool
     isGL2CacheFlush() const

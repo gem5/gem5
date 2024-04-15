@@ -104,6 +104,11 @@ class Shader : public ClockedObject
     // Set to true by the dispatcher if the current kernel is a blit kernel
     bool blitKernel = false;
 
+    // Number of pending non-instruction invalidates outstanding. The shader
+    // should wait for these to be done to ensure correctness.
+    int num_outstanding_invl2s = 0;
+    std::vector<std::tuple<void *, uint32_t, Addr>> deferred_dispatches;
+
   public:
     typedef ShaderParams Params;
     enum hsail_mode_e {SIMT,VECTOR_SCALAR};
@@ -329,6 +334,13 @@ class Shader : public ClockedObject
         kernelExitRequested = true;
         blitKernel = is_blit_kernel;
     }
+
+    void decNumOutstandingInvL2s();
+    void incNumOutstandingInvL2s() { num_outstanding_invl2s++; };
+    int getNumOutstandingInvL2s() const { return num_outstanding_invl2s; };
+
+    void addDeferredDispatch(void *raw_pkt, uint32_t queue_id,
+                             Addr host_pkt_addr);
 
   protected:
     struct ShaderStats : public statistics::Group

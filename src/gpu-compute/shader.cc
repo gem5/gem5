@@ -552,6 +552,29 @@ Shader::notifyCuSleep() {
     }
 }
 
+void
+Shader::decNumOutstandingInvL2s()
+{
+    num_outstanding_invl2s--;
+
+    if (num_outstanding_invl2s == 0 && !deferred_dispatches.empty()) {
+        for (auto &dispatch : deferred_dispatches) {
+            gpuCmdProc.submitDispatchPkt(std::get<0>(dispatch),
+                                         std::get<1>(dispatch),
+                                         std::get<2>(dispatch));
+        }
+        deferred_dispatches.clear();
+    }
+}
+
+void
+Shader::addDeferredDispatch(void *raw_pkt, uint32_t queue_id,
+                            Addr host_pkt_addr)
+{
+    deferred_dispatches.push_back(
+            std::make_tuple(raw_pkt, queue_id, host_pkt_addr));
+}
+
 /**
  * Forward the VRAM requestor ID needed for device memory from CP.
  */
