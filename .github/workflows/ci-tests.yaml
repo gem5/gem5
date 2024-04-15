@@ -50,7 +50,7 @@ jobs:
     unittests-all-opt:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
         timeout-minutes: 60
         steps:
@@ -65,7 +65,7 @@ jobs:
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id]
         steps:
             - uses: actions/checkout@v4
@@ -108,7 +108,7 @@ jobs:
     testlib-quick-gem5-builds:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id, testlib-quick-matrix]
         strategy:
             matrix:
@@ -138,7 +138,7 @@ jobs:
     testlib-quick-execution:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id, testlib-quick-matrix, testlib-quick-gem5-builds]
         timeout-minutes: 360 # 6 hours
         strategy:
