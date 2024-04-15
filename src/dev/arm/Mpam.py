@@ -38,6 +38,5 @@ from m5.objects.PartitioningPolicies import PartitionManager
 
 class MpamMSC(PartitionManager):
     type = "MpamMSC"
-    abstract = True
     cxx_header = "dev/arm/mpam.hh"
     cxx_class = "gem5::mpam::MSC"
