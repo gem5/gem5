@@ -162,11 +162,13 @@ system = configSystem()
 
 # create a cache to sit between the memory and traffic gen to enforce
 # partitioning policies
-partition_policy = generatePartPolicy(args)
+part_manager = PartitionManager(
+    partitioning_policies=[generatePartPolicy(args)]
+)
 system.cache = NoncoherentCache(
     size="64KiB",
     assoc=8,
-    partitioning_policies=[partition_policy],
+    partitioning_manager=part_manager,
     tag_latency=0,
     data_latency=0,
     response_latency=0,

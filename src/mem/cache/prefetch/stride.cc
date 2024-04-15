@@ -104,17 +104,19 @@ Stride::findTable(int context)
 Stride::PCTable *
 Stride::allocateNewContext(int context)
 {
+    std::string table_name = name() + ".PCTable" + std::to_string(context);
     // Create new table
-    auto insertion_result = pcTables.insert(std::make_pair(
-        context,
-        PCTable(pcTableInfo.assoc, pcTableInfo.numEntries,
-                pcTableInfo.indexingPolicy, pcTableInfo.replacementPolicy,
-                StrideEntry(initConfidence))));
+    auto ins_result = pcTables.emplace(
+        std::piecewise_construct, std::forward_as_tuple(context),
+        std::forward_as_tuple(table_name.c_str(), pcTableInfo.numEntries,
+                              pcTableInfo.assoc, pcTableInfo.replacementPolicy,
+                              pcTableInfo.indexingPolicy,
+                              StrideEntry(initConfidence)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
     // Get iterator to new pc table, and then return a pointer to the new table
-    return &(insertion_result.first->second);
+    return &(ins_result.first->second);
 }
 
 void

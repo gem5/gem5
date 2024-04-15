@@ -115,7 +115,11 @@ class PIF : public Queued
         void getPredictedAddresses(unsigned int log_blk_size,
                                    std::vector<AddrPriority> &addresses) const;
 
-      private:
+        struct IndexEntry : public TaggedEntry
+        {
+            HistoryBuffer::iterator historyIt;
+        };
+
         /**
          * Computes the distance, in cache blocks, from an address to the
          * trigger of the entry.
@@ -123,79 +127,78 @@ class PIF : public Queued
          * @param log_blk_distance log_2(block size of the cache)
          * @result distance in cache blocks from the address to the trigger
          */
-        Addr distanceFromTrigger(Addr addr, unsigned int log_blk_size) const;
-    };
+        AssociativeCache<IndexEntry> index;
 
-    CompactorEntry spatialCompactor;
-    std::deque<CompactorEntry> temporalCompactor;
+        CompactorEntry spatialCompactor;
+        std::deque<CompactorEntry> temporalCompactor;
 
-    /**
-     * History buffer is a circular buffer that stores the sequence of
-     * retired instructions in FIFO order.
-     */
-    using HistoryBuffer = CircularQueue<CompactorEntry>;
-    HistoryBuffer historyBuffer;
+        /**
+         * History buffer is a circular buffer that stores the sequence of
+         * retired instructions in FIFO order.
+         */
+        using HistoryBuffer = CircularQueue<CompactorEntry>;
+        HistoryBuffer historyBuffer;
 
-    struct IndexEntry : public TaggedEntry
-    {
-        HistoryBuffer::iterator historyIt;
-    };
+        struct IndexEntry : public TaggedEntry
+        {
+            HistoryBuffer::iterator historyIt;
+        };
 
-    /**
-     * The index table is a small cache-like structure that facilitates
-     * fast search of the history buffer.
-     */
-    AssociativeSet<IndexEntry> index;
+        /**
+         * The index table is a small cache-like structure that facilitates
+         * fast search of the history buffer.
+         */
+        AssociativeSet<IndexEntry> index;
 
-    /**
-     * A Stream Address Buffer (SAB) tracks a window of consecutive
-     * spatial regions. The SAB mantains a pointer to the sequence in the
-     * history buffer, initiallly set to the pointer taken from the index
-     * table
-     */
-    CircularQueue<HistoryBuffer::iterator> streamAddressBuffer;
+        /**
+         * A Stream Address Buffer (SAB) tracks a window of consecutive
+         * spatial regions. The SAB mantains a pointer to the sequence in the
+         * history buffer, initiallly set to the pointer taken from the index
+         * table
+         */
+        CircularQueue<HistoryBuffer::iterator> streamAddressBuffer;
 
-    /**
-     * Updates the prefetcher structures upon an instruction retired
-     * @param pc PC of the instruction being retired
-     */
-    void notifyRetiredInst(const Addr pc);
+        /**
+         * Updates the prefetcher structures upon an instruction retired
+         * @param pc PC of the instruction being retired
+         */
+        void notifyRetiredInst(const Addr pc);
 
-    /**
-     * Probe Listener to handle probe events from the CPU
-     */
-    class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
-    {
+        /**
+         * Probe Listener to handle probe events from the CPU
+         */
+        class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
+        {
+          public:
+            PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
+                               const std::string &name)
+                : ProbeListenerArgBase(pm, name), parent(_parent)
+            {}
+
+            void notify(const Addr &pc) override;
+
+          protected:
+            PIF &parent;
+        };
+
+        /** Array of probe listeners */
+        std::vector<PrefetchListenerPC *> listenersPC;
+
       public:
-        PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
-                           const std::string &name)
-            : ProbeListenerArgBase(pm, name), parent(_parent)
-        {}
+        PIF(const PIFPrefetcherParams &p);
+        ~PIF() = default;
 
-        void notify(const Addr &pc) override;
+        void calculatePrefetch(const PrefetchInfo &pfi,
+                               std::vector<AddrPriority> &addresses,
+                               const CacheAccessor &cache);
 
-      protected:
-        PIF &parent;
+        /**
+         * Add a SimObject and a probe name to monitor the retired instructions
+         * @param obj The SimObject pointer to listen from
+         * @param name The probe name
+         */
+        void addEventProbeRetiredInsts(SimObject *obj, const char *name);
     };
-
-    /** Array of probe listeners */
-    std::vector<PrefetchListenerPC *> listenersPC;
-
-  public:
-    PIF(const PIFPrefetcherParams &p);
-    ~PIF() = default;
-
-    void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses,
-                           const CacheAccessor &cache);
-
-    /**
-     * Add a SimObject and a probe name to monitor the retired instructions
-     * @param obj The SimObject pointer to listen from
-     * @param name The probe name
-     */
-    void addEventProbeRetiredInsts(SimObject *obj, const char *name);
-};
 
 } // namespace prefetch
 } // namespace gem5

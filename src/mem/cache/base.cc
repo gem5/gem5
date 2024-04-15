@@ -58,7 +58,7 @@
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
 #include "mem/cache/tags/compressed_tags.hh"
-#include "mem/cache/tags/partitioning_policies/partition_fields_extension.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
@@ -87,6 +87,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
       compressor(p.compressor),
+      partitionManager(p.partitioning_manager),
       prefetcher(p.prefetcher),
       writeAllocator(p.write_allocator),
       writebackClean(p.writeback_clean),
@@ -1648,7 +1649,8 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     }
 
     // get partitionId from Packet
-    const auto partition_id = partitioning_policy::readPacketPartitionID(pkt);
+    const auto partition_id =
+        partitionManager ? partitionManager->readPacketPartitionID(pkt) : 0;
     // Find replacement victim
     std::vector<CacheBlk *> evict_blks;
     CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,

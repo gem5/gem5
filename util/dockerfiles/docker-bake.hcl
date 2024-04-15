@@ -59,7 +59,7 @@ group "gcc-compilers" {
 target "common" {
   # Here we are enabling multi-platform builds. We are compiling to both ARM
   # amd X86.
-  platforms = ["linux/amd64", "linux/arm64"]
+  platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
 }
 
 target "gcn-gpu" {
@@ -95,6 +95,14 @@ target "ubuntu-22-04_all-dependencies" {
   dockerfile = "Dockerfile"
   context = "ubuntu-22.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
+}
+
+target "devcontainer" {
+  inherits = ["common"]
+  dependencies = ["devcontainer"]
+  dockerfile = "Dockerfile"
+  context = "devcontainer"
+  tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
 }
 
 target "ubuntu-20-04_all-dependencies" {

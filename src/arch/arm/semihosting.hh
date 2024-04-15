@@ -51,6 +51,7 @@
 #include "mem/port_proxy.hh"
 #include "sim/core.hh"
 #include "sim/guest_abi.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -635,26 +636,31 @@ namespace guest_abi
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi64, Arg,
-                typename std::enable_if_t<std::is_integral_v<Arg>>>
+                typename std::enable_if_t<(
+                    std::is_integral_v<Arg> ||
+                    std::is_same<Arg, pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
     {
-        return state.get(tc);
+        return (Arg)state.get(tc);
     }
 };
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi32, Arg,
-                typename std::enable_if_t<std::is_integral_v<Arg>>>
+                typename std::enable_if_t<(
+                    std::is_integral_v<Arg> ||
+                    std::is_same<Arg, pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)
     {
-        if (std::is_signed_v<Arg>)
-            return sext<32>(state.get(tc));
-        else
-            return state.get(tc);
+        if (std::is_signed_v<Arg>) {
+            return (Arg)sext<32>(state.get(tc));
+        } else {
+            return (Arg)state.get(tc);
+        }
     }
 };
 

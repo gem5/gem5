@@ -4426,19 +4426,19 @@ let {{
 
     # ADCLT
     adcltCode = 'res = srcElem1 + srcElem2 + carryIn;'
-    sveTerInstUnpred('adclt', 'Adclt', 'VectorIntegerArithOp', unsignedTypes,
+    sveTerInstUnpred('adclt', 'Adclt', 'SimdAddOp', unsignedTypes,
                        adcltCode, isTop=True, isAdd=True)
     # ADCLB
     adclbCode = 'res = srcElem1 + srcElem2 + carryIn;'
-    sveTerInstUnpred('adclb', 'Adclb', 'VectorIntegerArithOp', unsignedTypes,
+    sveTerInstUnpred('adclb', 'Adclb', 'SimdAddOp', unsignedTypes,
                       adclbCode, isTop=False, isAdd=True)
     # SBCLT
     sbcltCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
-    sveTerInstUnpred('sbclt', 'Sbclt', 'VectorIntegerArithOp', unsignedTypes,
+    sveTerInstUnpred('sbclt', 'Sbclt', 'SimdAddOp', unsignedTypes,
                       sbcltCode, isTop=True, isAdd=False)
     # SBCLB
     sbclbCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
-    sveTerInstUnpred('sbclb', 'Sbclb', 'VectorIntegerArithOp', unsignedTypes,
+    sveTerInstUnpred('sbclb', 'Sbclb', 'SimdAddOp', unsignedTypes,
                       sbclbCode, isTop=False, isAdd=False)
     mmlaCode = ('destElem += srcElemA * srcElemB')
     # SMMLA (vectors)

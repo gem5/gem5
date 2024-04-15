@@ -56,7 +56,6 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
-#include "mem/cache/tags/partitioning_policies/base_pp.hh"
 #include "mem/packet.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
@@ -89,9 +88,8 @@ class BaseTags : public ClockedObject
     /** Indexing policy */
     BaseIndexingPolicy *indexingPolicy;
 
-    /** Partitioning policies */
-    std::vector<partitioning_policy::BasePartitioningPolicy *>
-        partitioningPolicies;
+    /** Partitioning manager */
+    partitioning_policy::PartitionManager *partitionManager;
 
     /**
      * The number of tags that need to be touched to meet the warmup

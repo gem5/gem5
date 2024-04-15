@@ -108,36 +108,28 @@ static const OpClass MemReadOp = enums::MemRead;
 static const OpClass MemWriteOp = enums::MemWrite;
 static const OpClass FloatMemReadOp = enums::FloatMemRead;
 static const OpClass FloatMemWriteOp = enums::FloatMemWrite;
+static const OpClass SimdUnitStrideLoadOp = enums::SimdUnitStrideLoad;
+static const OpClass SimdUnitStrideStoreOp = enums::SimdUnitStrideStore;
+static const OpClass SimdUnitStrideMaskLoadOp = enums::SimdUnitStrideMaskLoad;
+static const OpClass SimdUnitStrideMaskStoreOp =
+    enums::SimdUnitStrideMaskStore;
+static const OpClass SimdStridedLoadOp = enums::SimdStridedLoad;
+static const OpClass SimdStridedStoreOp = enums::SimdStridedStore;
+static const OpClass SimdIndexedLoadOp = enums::SimdIndexedLoad;
+static const OpClass SimdIndexedStoreOp = enums::SimdIndexedStore;
+static const OpClass SimdUnitStrideFaultOnlyFirstLoadOp =
+    enums::SimdUnitStrideFaultOnlyFirstLoad;
+static const OpClass SimdWholeRegisterLoadOp = enums::SimdWholeRegisterLoad;
+static const OpClass SimdWholeRegisterStoreOp = enums::SimdWholeRegisterStore;
 static const OpClass IprAccessOp = enums::IprAccess;
 static const OpClass InstPrefetchOp = enums::InstPrefetch;
-static const OpClass VectorUnitStrideLoadOp = enums::VectorUnitStrideLoad;
-static const OpClass VectorUnitStrideStoreOp = enums::VectorUnitStrideStore;
-static const OpClass VectorUnitStrideMaskLoadOp =
-    enums::VectorUnitStrideMaskLoad;
-static const OpClass VectorUnitStrideMaskStoreOp =
-    enums::VectorUnitStrideMaskStore;
-static const OpClass VectorStridedLoadOp = enums::VectorStridedLoad;
-static const OpClass VectorStridedStoreOp = enums::VectorStridedStore;
-static const OpClass VectorIndexedLoadOp = enums::VectorIndexedLoad;
-static const OpClass VectorIndexedStoreOp = enums::VectorIndexedStore;
-static const OpClass VectorUnitStrideFaultOnlyFirstLoadOp =
-    enums::VectorUnitStrideFaultOnlyFirstLoad;
-static const OpClass VectorWholeRegisterLoadOp =
-    enums::VectorWholeRegisterLoad;
-static const OpClass VectorWholeRegisterStoreOp =
-    enums::VectorWholeRegisterStore;
-static const OpClass VectorIntegerArithOp = enums::VectorIntegerArith;
-static const OpClass VectorFloatArithOp = enums::VectorFloatArith;
-static const OpClass VectorFloatConvertOp = enums::VectorFloatConvert;
-static const OpClass VectorIntegerReduceOp = enums::VectorIntegerReduce;
-static const OpClass VectorFloatReduceOp = enums::VectorFloatReduce;
-static const OpClass VectorMiscOp = enums::VectorMisc;
-static const OpClass VectorIntegerExtensionOp = enums::VectorIntegerExtension;
-static const OpClass VectorUnitStrideSegmentedLoadOp =
-    enums::VectorUnitStrideSegmentedLoad;
-static const OpClass VectorConfigOp = enums::VectorConfig;
-static const OpClass VectorUnitStrideSegmentedStoreOp =
-    enums::VectorUnitStrideSegmentedStore;
+static const OpClass SimdUnitStrideSegmentedLoadOp =
+    enums::SimdUnitStrideSegmentedLoad;
+static const OpClass SimdUnitStrideSegmentedStoreOp =
+    enums::SimdUnitStrideSegmentedStore;
+static const OpClass SimdExtOp = enums::SimdExt;
+static const OpClass SimdFloatExtOp = enums::SimdFloatExt;
+static const OpClass SimdConfigOp = enums::SimdConfig;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
 
 } // namespace gem5

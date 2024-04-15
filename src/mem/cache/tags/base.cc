@@ -50,7 +50,7 @@
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
-#include "mem/cache/tags/partitioning_policies/partition_fields_extension.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"
@@ -67,7 +67,7 @@ BaseTags::BaseTags(const Params &p)
       lookupLatency(p.tag_latency),
       system(p.system),
       indexingPolicy(p.indexing_policy),
-      partitioningPolicies(p.partitioning_policies),
+      partitionManager(p.partitioning_manager),
       warmupBound((p.warmup_percentage / 100.0) * (p.size / p.block_size)),
       warmedUp(false),
       numBlocks(p.size / p.block_size),
@@ -119,7 +119,8 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.occupancies[requestor_id]++;
 
     // Insert block with tag, src requestor id, task id and PartitionId
-    const auto partition_id = partitioning_policy::readPacketPartitionID(pkt);
+    const auto partition_id =
+        partitionManager ? partitionManager->readPacketPartitionID(pkt) : 0;
     blk->insert(extractTag(pkt->getAddr()), pkt->isSecure(), requestor_id,
                 pkt->req->taskId(), partition_id);
 

@@ -36,80 +36,31 @@ namespace gem5
 {
 
 template <class Entry>
-AssociativeSet<Entry>::AssociativeSet(int assoc, int num_entries,
-                                      BaseIndexingPolicy *idx_policy,
-                                      replacement_policy::Base *rpl_policy,
-                                      Entry const &init_value)
-    : associativity(assoc),
-      numEntries(num_entries),
-      indexingPolicy(idx_policy),
-      replacementPolicy(rpl_policy),
-      entries(numEntries, init_value)
-{
-    fatal_if(!isPowerOf2(num_entries),
-             "The number of entries of an "
-             "AssociativeSet<> must be a power of 2");
-    fatal_if(!isPowerOf2(assoc), "The associativity of an AssociativeSet<> "
-                                 "must be a power of 2");
-    for (unsigned int entry_idx = 0; entry_idx < numEntries; entry_idx += 1) {
-        Entry *entry = &entries[entry_idx];
-        indexingPolicy->setEntry(entry, entry_idx);
-        entry->replacementData = replacementPolicy->instantiateEntry();
-    }
-}
+AssociativeSet<Entry>::AssociativeSet(const char *name,
+                                      const size_t num_entries,
+                                      const size_t associativity_,
+                                      replacement_policy::Base *repl_policy,
+                                      BaseIndexingPolicy *indexing_policy,
+                                      Entry const &init_val)
+    : AssociativeCache<Entry>(name, num_entries, associativity_, repl_policy,
+                              indexing_policy, init_val)
+{}
 
 template <class Entry>
 Entry *
 AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
 {
     Addr tag = indexingPolicy->extractTag(addr);
-    const std::vector<ReplaceableEntry *> selected_entries =
-        indexingPolicy->getPossibleEntries(addr);
+    auto candidates = indexingPolicy->getPossibleEntries(addr);
 
-    for (const auto &location : selected_entries) {
-        Entry *entry = static_cast<Entry *>(location);
-        if ((entry->getTag() == tag) && entry->isValid() &&
-            entry->isSecure() == is_secure) {
+    for (auto candidate : candidates) {
+        Entry *entry = static_cast<Entry *>(candidate);
+        if (entry->matchTag(tag, is_secure)) {
             return entry;
         }
     }
+
     return nullptr;
-}
-
-template <class Entry>
-void
-AssociativeSet<Entry>::accessEntry(Entry *entry)
-{
-    replacementPolicy->touch(entry->replacementData);
-}
-
-template <class Entry>
-Entry *
-AssociativeSet<Entry>::findVictim(Addr addr)
-{
-    // Get possible entries to be victimized
-    const std::vector<ReplaceableEntry *> selected_entries =
-        indexingPolicy->getPossibleEntries(addr);
-    Entry *victim =
-        static_cast<Entry *>(replacementPolicy->getVictim(selected_entries));
-    // There is only one eviction for this replacement
-    invalidate(victim);
-    return victim;
-}
-
-template <class Entry>
-std::vector<Entry *>
-AssociativeSet<Entry>::getPossibleEntries(const Addr addr) const
-{
-    std::vector<ReplaceableEntry *> selected_entries =
-        indexingPolicy->getPossibleEntries(addr);
-    std::vector<Entry *> entries(selected_entries.size(), nullptr);
-
-    unsigned int idx = 0;
-    for (auto &entry : selected_entries) {
-        entries[idx++] = static_cast<Entry *>(entry);
-    }
-    return entries;
 }
 
 template <class Entry>
@@ -117,15 +68,7 @@ void
 AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry *entry)
 {
     entry->insert(indexingPolicy->extractTag(addr), is_secure);
-    replacementPolicy->reset(entry->replacementData);
-}
-
-template <class Entry>
-void
-AssociativeSet<Entry>::invalidate(Entry *entry)
-{
-    entry->invalidate();
-    replacementPolicy->invalidate(entry->replacementData);
+    replPolicy->reset(entry->replacementData);
 }
 
 } // namespace gem5

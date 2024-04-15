@@ -39,7 +39,7 @@ def bitfield QUADRANT <1:0>;
 def bitfield OPCODE5 <6:2>;
 
 // R-Type
-def bitfield ALL	<31:0>;
+def bitfield ALL    <31:0>;
 def bitfield RD     <11:7>;
 def bitfield FUNCT3 <14:12>;
 def bitfield RS1    <19:15>;
