@@ -40,9 +40,10 @@ namespace gem5
 namespace RiscvISA
 {
 
-BareMetal::BareMetal(const Params &p) : Workload(p),
-    _isBareMetal(p.bare_metal),
-    bootloader(loader::createObjectFile(p.bootloader))
+BareMetal::BareMetal(const Params &p)
+    : Workload(p),
+      _isBareMetal(p.bare_metal),
+      bootloader(loader::createObjectFile(p.bootloader))
 {
     fatal_if(!bootloader, "Could not load bootloader file %s.", p.bootloader);
     bootloaderSymtab = bootloader->symtab();

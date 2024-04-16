@@ -137,7 +137,11 @@ class TaggedEntry : public CacheEntry
     bool _secure;
 
     /** Clear secure bit. Should be only used by the invalidation function. */
-    void clearSecure() { _secure = false; }
+    void
+    clearSecure()
+    {
+        _secure = false;
+    }
 
     /** Do not use API without is_secure flag. */
     using CacheEntry::insert;

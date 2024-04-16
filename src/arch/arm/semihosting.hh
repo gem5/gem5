@@ -636,9 +636,9 @@ namespace guest_abi
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi64, Arg,
-    typename std::enable_if_t<
-        (std::is_integral_v<Arg> ||
-         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
+                typename std::enable_if_t<(
+                    std::is_integral_v<Arg> ||
+                    std::is_same<Arg, pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
@@ -649,9 +649,9 @@ struct Argument<ArmSemihosting::Abi64, Arg,
 
 template <typename Arg>
 struct Argument<ArmSemihosting::Abi32, Arg,
-    typename std::enable_if_t<
-        (std::is_integral_v<Arg> ||
-         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
+                typename std::enable_if_t<(
+                    std::is_integral_v<Arg> ||
+                    std::is_same<Arg, pseudo_inst::GuestAddr>::value)>>
 {
     static Arg
     get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)

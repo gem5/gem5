@@ -60,12 +60,17 @@ namespace gem5
 {
 
 BaseTags::BaseTags(const Params &p)
-    : ClockedObject(p), blkSize(p.block_size), blkMask(blkSize - 1),
-      size(p.size), lookupLatency(p.tag_latency),
-      system(p.system), indexingPolicy(p.indexing_policy),
+    : ClockedObject(p),
+      blkSize(p.block_size),
+      blkMask(blkSize - 1),
+      size(p.size),
+      lookupLatency(p.tag_latency),
+      system(p.system),
+      indexingPolicy(p.indexing_policy),
       partitionManager(p.partitioning_manager),
-      warmupBound((p.warmup_percentage/100.0) * (p.size / p.block_size)),
-      warmedUp(false), numBlocks(p.size / p.block_size),
+      warmupBound((p.warmup_percentage / 100.0) * (p.size / p.block_size)),
+      warmedUp(false),
+      numBlocks(p.size / p.block_size),
       dataBlks(new uint8_t[p.size]), // Allocate data storage in one big chunk
       stats(*this)
 {

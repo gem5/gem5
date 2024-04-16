@@ -258,8 +258,8 @@ loadsymbol(ThreadContext *tc)
 void
 addsymbol(ThreadContext *tc, GuestAddr addr, GuestAddr symbolAddr)
 {
-    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n",
-            addr.addr, symbolAddr.addr);
+    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n", addr.addr,
+            symbolAddr.addr);
 
     std::string symbol;
     TranslatingPortProxy fs_proxy(tc);
@@ -272,12 +272,10 @@ addsymbol(ThreadContext *tc, GuestAddr addr, GuestAddr symbolAddr)
 
     tc->getSystemPtr()->workload->insertSymbol(
         { loader::Symbol::Binding::Global,
-          loader::Symbol::SymbolType::Function, symbol, addr.addr }
-    );
-    loader::debugSymbolTable.insert(
-        { loader::Symbol::Binding::Global,
-          loader::Symbol::SymbolType::Function, symbol, addr.addr }
-    );
+          loader::Symbol::SymbolType::Function, symbol, addr.addr });
+    loader::debugSymbolTable.insert({ loader::Symbol::Binding::Global,
+                                      loader::Symbol::SymbolType::Function,
+                                      symbol, addr.addr });
 }
 
 uint64_t
@@ -401,13 +399,13 @@ readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset)
     PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     virt_proxy.writeBlob(vaddr.addr, buf, result);
-    delete [] buf;
+    delete[] buf;
     return result;
 }
 
 uint64_t
 writefile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset,
-            GuestAddr filename_addr)
+          GuestAddr filename_addr)
 {
     DPRINTF(PseudoInst, "pseudo_inst::writefile(0x%x, 0x%x, 0x%x, 0x%x)\n",
             vaddr.addr, len, offset, filename_addr.addr);

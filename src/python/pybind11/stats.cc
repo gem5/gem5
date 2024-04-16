@@ -141,12 +141,14 @@ pybind_init_stats(py::module_ &m_native)
                                })
         .def_readonly("desc", &statistics::Info::desc)
         .def_readonly("id", &statistics::Info::id)
-        .def_property_readonly("flags", [](const statistics::Info &info) {
-                return (statistics::FlagsType)info.flags;
-            })
-        .def_property_readonly("is_nozero", [](const statistics::Info &info) {
-                return info.flags.isSet(statistics::nozero);
-            })
+        .def_property_readonly("flags",
+                               [](const statistics::Info &info) {
+                                   return (statistics::FlagsType)info.flags;
+                               })
+        .def_property_readonly("is_nozero",
+                               [](const statistics::Info &info) {
+                                   return info.flags.isSet(statistics::nozero);
+                               })
         .def("check", &statistics::Info::check)
         .def("baseCheck", &statistics::Info::baseCheck)
         .def("enable", &statistics::Info::enable)

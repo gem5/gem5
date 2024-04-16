@@ -137,9 +137,8 @@ class FrequentValues : public Base
         SatCounter32 counter;
 
         VFTEntry(std::size_t num_bits)
-          : CacheEntry(), value(0), counter(num_bits)
-        {
-        }
+            : CacheEntry(), value(0), counter(num_bits)
+        {}
 
         void
         invalidate() override
