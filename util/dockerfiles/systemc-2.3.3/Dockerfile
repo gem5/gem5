@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2024 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
-    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python3-dev python-is-python3 doxygen libboost-all-dev \
-    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config pip \
-    python3-venv wget
-
-RUN mkdir /systemc
-WORKDIR /systemc
-RUN wget https://www.accellera.org/images/downloads/standards/systemc/systemc-2.3.3.tar.gz; \
-    tar xf systemc-2.3.3.tar.gz
-
-WORKDIR /systemc/systemc-2.3.3
-RUN mkdir objdir
-WORKDIR objdir
 ENV CXX="g++"
 ENV CXXFLAGS="-std=c++17"
+ENV SYSTEMC_BUILD_TMP="/var/tmp/systemc"
+ENV SYSTEMC_PREFIX="/opt/systemc"
 
-RUN ../configure --prefix=/opt/systemc
-RUN make -j8 && make install
-RUN make clean
-
-WORKDIR /
-RUN rm -rf /systemc/systemc-2.3.3/objdir
+RUN mkdir -p "${SYSTEMC_BUILD_TMP}" && \
+    cd "${SYSTEMC_BUILD_TMP}" && \
+    wget https://www.accellera.org/images/downloads/standards/systemc/systemc-2.3.3.tar.gz && \
+    tar xf systemc-2.3.3.tar.gz && \
+    cd systemc-2.3.3 && \
+    ./configure --prefix="${SYSTEMC_PREFIX}" && \
+    make -j`nproc` && \
+    make install && \
+    rm -rf "${SYSTEMC_BUILD_TMP}"
