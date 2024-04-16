@@ -258,9 +258,9 @@ let {{
 
     class Movfp(Fp2Op):
         code = '''
-        if(dataSize == 4) {
-            FpDestReg_uqw = (0xFFFFFFFF00000000 & FpDestReg_uqw) |
-            (0x00000000FFFFFFFF & FpSrcReg1_uqw);
+        if (dataSize == 4) {
+            FpDestReg_uqw = mbits(FpDestReg_uqw, 63, 32) |
+                            mbits(FpSrcReg1_uqw, 31, 0);
         } else {
             FpDestReg_uqw = FpSrcReg1_uqw;
         }
