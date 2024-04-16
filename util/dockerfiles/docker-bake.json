@@ -64,12 +64,14 @@
         "gcn-gpu" : {
             "inherits" : ["common"],
             "dockerfile" : "Dockerfile",
+            "platforms" : ["linux/amd64"],
             "context" : "gcn-gpu",
             "tags" : ["${IMAGE_URI}/gcn-gpu:${TAG}"]
         },
         "gpu-fs" : {
             "inherits" : ["common"],
             "dockerfile" : "Dockerfile",
+            "platforms" : ["linux/amd64"],
             "context" : "gpu-fs",
             "tags" : ["${IMAGE_URI}/gpu-fs:${TAG}"]
         },
