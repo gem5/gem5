@@ -76,7 +76,7 @@ with open(Path(__file__).parent / "refs/mongo-dup-mock.json") as f:
     duplicate_mock_json = json.load(f)
 
 
-def mocked_requests_post(*args):
+def mocked_requests_post(*args, **kwargs):
     # mokcing urllib.request.urlopen
     class MockResponse:
         def __init__(self, json_data, status_code):
