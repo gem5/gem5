@@ -65,7 +65,10 @@ from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
 from gem5.components.memory import SingleChannelDDR4_2400
 from gem5.isas import ISA
-from gem5.resources.resource import AbstractResource
+from gem5.resources.resource import (
+    AbstractResource,
+    DiskImageResource,
+)
 from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
@@ -173,6 +176,9 @@ class RISCVMatchedBoard(
                 pio_size=4096,
                 pio_addr=0x10008000,
             )
+
+            # The additional disk images array
+            self._disks = []
 
             # The virtio rng
             self.rng = RiscvMmioVirtIO(
@@ -554,6 +560,21 @@ class RISCVMatchedBoard(
         disk_node.appendCompatible(["virtio,mmio"])
         soc_node.append(disk_node)
 
+        # VirtIO MMIO nodes for additional disk images
+        soc_node.append(disk_node)
+        for disk in self._disks:
+            disk_node = disk.generateBasicPioDeviceNode(
+                soc_state, "virtio_mmio", disk.pio_addr, disk.pio_size
+            )
+            disk_node.append(
+                FdtPropertyWords("interrupts", [disk.interrupt_id])
+            )
+            disk_node.append(
+                FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
+            )
+            disk_node.appendCompatible(["virtio,mmio"])
+            soc_node.append(disk_node)
+
         # VirtIO MMIO rng node
         rng = self.rng
         rng_node = rng.generateBasicPioDeviceNode(
@@ -578,12 +599,46 @@ class RISCVMatchedBoard(
         return "/dev/vda"
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource):
+    def _add_disk_to_board(
+        self,
+        disk_image: AbstractResource,
+    ):
         image = CowDiskImage(
             child=RawDiskImage(read_only=True), read_only=False
         )
         image.child.image_file = disk_image.get_local_path()
         self.disk.vio.image = image
+
+    @overrides(KernelDiskWorkload)
+    def _add_additional_disk_images_to_board(
+        self,
+        additional_disk_images: List[DiskImageResource],
+    ):
+        for elem in additional_disk_images:
+            image = CowDiskImage(
+                child=RawDiskImage(read_only=True), read_only=False
+            )
+
+            image.child.image_file = elem.get_local_path()
+
+            idx = len(self._disks)
+            new_disk_pio_addr = 0x10009000 + 0x1000 * len(self._disks)
+            new_disk = RiscvMmioVirtIO(
+                vio=VirtIOBlock(),
+                interrupt_id=0x8,
+                pio_size=0x1000,
+                pio_addr=new_disk_pio_addr,
+            )
+
+            new_disk.vio.image = image
+
+            setattr(self, f"disk_{idx}", new_disk)
+            disk = getattr(self, f"disk_{idx}")
+
+            self._disks.append(disk)
+
+        # Connect the additional disk images added to the board
+        self._off_chip_devices += self._disks
 
         # Note: The below is a bit of a hack. We need to wait to generate the
         # device tree until after the disk is set up. Now that the disk and
@@ -600,6 +655,10 @@ class RISCVMatchedBoard(
         )
 
     @overrides(KernelDiskWorkload)
+    def _supports_multiple_images(cls) -> bool:
+        return True
+
+    @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
         return [
             "console=ttyS0",
@@ -614,6 +673,7 @@ class RISCVMatchedBoard(
         kernel: AbstractResource,
         disk_image: AbstractResource,
         bootloader: Optional[AbstractResource] = None,
+        additional_disk_images: Optional[List[RiscvMmioVirtIO]] = [],
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -624,6 +684,7 @@ class RISCVMatchedBoard(
             self=self,
             kernel=kernel,
             disk_image=disk_image,
+            additional_disk_images=additional_disk_images,
             bootloader=bootloader,
             readfile=readfile,
             readfile_contents=readfile_contents,
