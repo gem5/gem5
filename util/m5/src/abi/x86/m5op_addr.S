@@ -55,3 +55,5 @@
 #define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
         M5OP_FOREACH
 #undef M5OP
+
+.section .note.GNU-stack
