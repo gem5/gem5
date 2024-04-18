@@ -24,7 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
 import os
 from abc import ABCMeta
 from functools import partial
@@ -734,8 +733,8 @@ class SuiteResource(AbstractResource):
         **kwargs,
     ) -> None:
         """
-        :param workloads: A Dict of Tuples containing the workload ID and
-                          version as the key and a set of input groups as the
+        :param workloads: A Dict of Tuples containing the WorkloadResource
+                          object as the key and a set of input groups as the
                           value. This Dict is created from the ``_workloads``
                           parameter.
         :param local_path: The path on the host system where this resource is

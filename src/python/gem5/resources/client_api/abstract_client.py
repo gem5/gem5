@@ -63,7 +63,7 @@ class AbstractClient(ABC):
         """
         :param client_queries: A list of client queries containing the
                                 information to query the resources. Each
-                                ClientQuery object can contain the following keys:
+                                ClientQuery object can contain the following information:
                                 - resource_id: The ID of the Resource.
                                 - resource_version: The version of the `Resource`.
                                 - gem5_version: The version of gem5.
@@ -156,7 +156,7 @@ class AbstractClient(ABC):
         """
         :param client_queries: A list of ClientQuery objects containing the
                             information to query the resources. Each
-                            ClientQuery object can contain the following keys:
+                            ClientQuery object can contain the following information:
                             - resource_id: The ID of the Resource.
                             - resource_version: The version of the `Resource`.
                             - gem5_version: The version of gem5.
