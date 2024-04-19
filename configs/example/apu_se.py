@@ -375,7 +375,7 @@ parser.add_argument(
 parser.add_argument(
     "--gfx-version",
     type=str,
-    default="gfx801",
+    default="gfx902",
     choices=GfxVersion.vals,
     help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
@@ -434,6 +434,7 @@ print(
 # shader is the GPU
 shader = Shader(
     n_wf=args.wfs_per_simd,
+    cu_per_sqc=args.cu_per_sqc,
     clk_domain=SrcClockDomain(
         clock=args.gpu_clock,
         voltage_domain=VoltageDomain(voltage=args.gpu_voltage),
@@ -951,19 +952,15 @@ root = Root(system=system, full_system=False)
 # knows what type of GPU hardware we are simulating
 if args.dgpu:
     assert args.gfx_version in [
-        "gfx803",
         "gfx900",
     ], "Incorrect gfx version for dGPU"
-    if args.gfx_version == "gfx803":
-        hsaTopology.createFijiTopology(args)
-    elif args.gfx_version == "gfx900":
+    if args.gfx_version == "gfx900":
         hsaTopology.createVegaTopology(args)
 else:
     assert args.gfx_version in [
-        "gfx801",
         "gfx902",
     ], "Incorrect gfx version for APU"
-    hsaTopology.createCarrizoTopology(args)
+    hsaTopology.createRavenTopology(args)
 
 m5.ticks.setGlobalFrequency("1THz")
 if args.abs_max_tick:

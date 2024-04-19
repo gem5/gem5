@@ -115,11 +115,19 @@ def makeGpuFSSystem(args):
         numHWQueues=args.num_hw_queues,
         walker=hsapp_pt_walker,
     )
-    dispatcher_exit_events = True if args.exit_at_gpu_kernel > -1 else False
+    dispatcher_exit_events = False
+    if args.exit_at_gpu_task > -1:
+        dispatcher_exit_events = True
+    if args.exit_after_gpu_kernel > -1:
+        dispatcher_exit_events = True
     dispatcher = GPUDispatcher(kernel_exit_events=dispatcher_exit_events)
     cp_pt_walker = VegaPagetableWalker()
+    target_kernel = args.skip_until_gpu_kernel
     gpu_cmd_proc = GPUCommandProcessor(
-        hsapp=gpu_hsapp, dispatcher=dispatcher, walker=cp_pt_walker
+        hsapp=gpu_hsapp,
+        dispatcher=dispatcher,
+        walker=cp_pt_walker,
+        target_non_blit_kernel_id=target_kernel,
     )
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
@@ -180,9 +188,15 @@ def makeGpuFSSystem(args):
 
     system.pc.south_bridge.gpu.sdmas = sdma_engines
 
-    # Setup PM4 packet processor
-    pm4_pkt_proc = PM4PacketProcessor()
-    system.pc.south_bridge.gpu.pm4_pkt_proc = pm4_pkt_proc
+    # Setup PM4 packet processors
+    pm4_procs = []
+    pm4_procs.append(
+        PM4PacketProcessor(
+            ip_id=0, mmio_range=AddrRange(start=0xC000, end=0xD000)
+        )
+    )
+
+    system.pc.south_bridge.gpu.pm4_pkt_procs = pm4_procs
 
     # GPU data path
     gpu_mem_mgr = AMDGPUMemoryManager()
@@ -199,7 +213,8 @@ def makeGpuFSSystem(args):
     for sdma in sdma_engines:
         system._dma_ports.append(sdma)
     system._dma_ports.append(device_ih)
-    system._dma_ports.append(pm4_pkt_proc)
+    for pm4_proc in pm4_procs:
+        system._dma_ports.append(pm4_proc)
     system._dma_ports.append(system_hub)
     system._dma_ports.append(gpu_mem_mgr)
     system._dma_ports.append(hsapp_pt_walker)
@@ -213,7 +228,8 @@ def makeGpuFSSystem(args):
     for sdma in sdma_engines:
         sdma.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports
-    pm4_pkt_proc.pio = system.iobus.mem_side_ports
+    for pm4_proc in pm4_procs:
+        pm4_proc.pio = system.iobus.mem_side_ports
     system_hub.pio = system.iobus.mem_side_ports
 
     # Full system needs special TLBs for SQC, Scalar, and vector data ports

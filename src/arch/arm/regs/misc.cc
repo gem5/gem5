@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2023 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -754,35 +754,35 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 0, 7, 10, 2), MISCREG_DC_CSW_Xt },
     { MiscRegNum64(1, 0, 7, 14, 2), MISCREG_DC_CISW_Xt },
     { MiscRegNum64(1, 0, 8, 1, 0), MISCREG_TLBI_VMALLE1OS },
-    { MiscRegNum64(1, 0, 8, 1, 1), MISCREG_TLBI_VAE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 1, 2), MISCREG_TLBI_ASIDE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 1, 3), MISCREG_TLBI_VAAE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 1, 5), MISCREG_TLBI_VALE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 1, 7), MISCREG_TLBI_VAALE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 2, 1), MISCREG_TLBI_RVAE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 2, 3), MISCREG_TLBI_RVAAE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 2, 5), MISCREG_TLBI_RVALE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 2, 7), MISCREG_TLBI_RVAALE1IS_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 1), MISCREG_TLBI_VAE1OS },
+    { MiscRegNum64(1, 0, 8, 1, 2), MISCREG_TLBI_ASIDE1OS },
+    { MiscRegNum64(1, 0, 8, 1, 3), MISCREG_TLBI_VAAE1OS },
+    { MiscRegNum64(1, 0, 8, 1, 5), MISCREG_TLBI_VALE1OS },
+    { MiscRegNum64(1, 0, 8, 1, 7), MISCREG_TLBI_VAALE1OS },
+    { MiscRegNum64(1, 0, 8, 2, 1), MISCREG_TLBI_RVAE1IS },
+    { MiscRegNum64(1, 0, 8, 2, 3), MISCREG_TLBI_RVAAE1IS },
+    { MiscRegNum64(1, 0, 8, 2, 5), MISCREG_TLBI_RVALE1IS },
+    { MiscRegNum64(1, 0, 8, 2, 7), MISCREG_TLBI_RVAALE1IS },
     { MiscRegNum64(1, 0, 8, 3, 0), MISCREG_TLBI_VMALLE1IS },
-    { MiscRegNum64(1, 0, 8, 3, 1), MISCREG_TLBI_VAE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 3, 2), MISCREG_TLBI_ASIDE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 3, 3), MISCREG_TLBI_VAAE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 3, 5), MISCREG_TLBI_VALE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 3, 7), MISCREG_TLBI_VAALE1IS_Xt },
-    { MiscRegNum64(1, 0, 8, 5, 1), MISCREG_TLBI_RVAE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 5, 3), MISCREG_TLBI_RVAAE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 5, 5), MISCREG_TLBI_RVALE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 5, 7), MISCREG_TLBI_RVAALE1OS_Xt },
-    { MiscRegNum64(1, 0, 8, 6, 1), MISCREG_TLBI_RVAE1_Xt },
-    { MiscRegNum64(1, 0, 8, 6, 3), MISCREG_TLBI_RVAAE1_Xt },
-    { MiscRegNum64(1, 0, 8, 6, 5), MISCREG_TLBI_RVALE1_Xt },
-    { MiscRegNum64(1, 0, 8, 6, 7), MISCREG_TLBI_RVAALE1_Xt },
+    { MiscRegNum64(1, 0, 8, 3, 1), MISCREG_TLBI_VAE1IS },
+    { MiscRegNum64(1, 0, 8, 3, 2), MISCREG_TLBI_ASIDE1IS },
+    { MiscRegNum64(1, 0, 8, 3, 3), MISCREG_TLBI_VAAE1IS },
+    { MiscRegNum64(1, 0, 8, 3, 5), MISCREG_TLBI_VALE1IS },
+    { MiscRegNum64(1, 0, 8, 3, 7), MISCREG_TLBI_VAALE1IS },
+    { MiscRegNum64(1, 0, 8, 5, 1), MISCREG_TLBI_RVAE1OS },
+    { MiscRegNum64(1, 0, 8, 5, 3), MISCREG_TLBI_RVAAE1OS },
+    { MiscRegNum64(1, 0, 8, 5, 5), MISCREG_TLBI_RVALE1OS },
+    { MiscRegNum64(1, 0, 8, 5, 7), MISCREG_TLBI_RVAALE1OS },
+    { MiscRegNum64(1, 0, 8, 6, 1), MISCREG_TLBI_RVAE1 },
+    { MiscRegNum64(1, 0, 8, 6, 3), MISCREG_TLBI_RVAAE1 },
+    { MiscRegNum64(1, 0, 8, 6, 5), MISCREG_TLBI_RVALE1 },
+    { MiscRegNum64(1, 0, 8, 6, 7), MISCREG_TLBI_RVAALE1 },
     { MiscRegNum64(1, 0, 8, 7, 0), MISCREG_TLBI_VMALLE1 },
-    { MiscRegNum64(1, 0, 8, 7, 1), MISCREG_TLBI_VAE1_Xt },
-    { MiscRegNum64(1, 0, 8, 7, 2), MISCREG_TLBI_ASIDE1_Xt },
-    { MiscRegNum64(1, 0, 8, 7, 3), MISCREG_TLBI_VAAE1_Xt },
-    { MiscRegNum64(1, 0, 8, 7, 5), MISCREG_TLBI_VALE1_Xt },
-    { MiscRegNum64(1, 0, 8, 7, 7), MISCREG_TLBI_VAALE1_Xt },
+    { MiscRegNum64(1, 0, 8, 7, 1), MISCREG_TLBI_VAE1 },
+    { MiscRegNum64(1, 0, 8, 7, 2), MISCREG_TLBI_ASIDE1 },
+    { MiscRegNum64(1, 0, 8, 7, 3), MISCREG_TLBI_VAAE1 },
+    { MiscRegNum64(1, 0, 8, 7, 5), MISCREG_TLBI_VALE1 },
+    { MiscRegNum64(1, 0, 8, 7, 7), MISCREG_TLBI_VAALE1 },
     { MiscRegNum64(1, 3, 7, 4, 1), MISCREG_DC_ZVA_Xt },
     { MiscRegNum64(1, 3, 7, 5, 1), MISCREG_IC_IVAU_Xt },
     { MiscRegNum64(1, 3, 7, 10, 1), MISCREG_DC_CVAC_Xt },
@@ -794,56 +794,56 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 4, 7, 8, 5), MISCREG_AT_S12E1W_Xt },
     { MiscRegNum64(1, 4, 7, 8, 6), MISCREG_AT_S12E0R_Xt },
     { MiscRegNum64(1, 4, 7, 8, 7), MISCREG_AT_S12E0W_Xt },
-    { MiscRegNum64(1, 4, 8, 0, 1), MISCREG_TLBI_IPAS2E1IS_Xt },
-    { MiscRegNum64(1, 4, 8, 0, 2), MISCREG_TLBI_RIPAS2E1IS_Xt },
-    { MiscRegNum64(1, 4, 8, 0, 5), MISCREG_TLBI_IPAS2LE1IS_Xt },
+    { MiscRegNum64(1, 4, 8, 0, 1), MISCREG_TLBI_IPAS2E1IS },
+    { MiscRegNum64(1, 4, 8, 0, 2), MISCREG_TLBI_RIPAS2E1IS },
+    { MiscRegNum64(1, 4, 8, 0, 5), MISCREG_TLBI_IPAS2LE1IS },
     { MiscRegNum64(1, 4, 8, 1, 0), MISCREG_TLBI_ALLE2OS },
-    { MiscRegNum64(1, 4, 8, 1, 1), MISCREG_TLBI_VAE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 1, 1), MISCREG_TLBI_VAE2OS },
     { MiscRegNum64(1, 4, 8, 1, 4), MISCREG_TLBI_ALLE1OS },
-    { MiscRegNum64(1, 4, 8, 1, 5), MISCREG_TLBI_VALE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 1, 5), MISCREG_TLBI_VALE2OS },
     { MiscRegNum64(1, 4, 8, 1, 6), MISCREG_TLBI_VMALLS12E1OS },
-    { MiscRegNum64(1, 4, 8, 0, 6), MISCREG_TLBI_RIPAS2LE1IS_Xt },
-    { MiscRegNum64(1, 4, 8, 2, 1), MISCREG_TLBI_RVAE2IS_Xt },
-    { MiscRegNum64(1, 4, 8, 2, 5), MISCREG_TLBI_RVALE2IS_Xt },
+    { MiscRegNum64(1, 4, 8, 0, 6), MISCREG_TLBI_RIPAS2LE1IS },
+    { MiscRegNum64(1, 4, 8, 2, 1), MISCREG_TLBI_RVAE2IS },
+    { MiscRegNum64(1, 4, 8, 2, 5), MISCREG_TLBI_RVALE2IS },
     { MiscRegNum64(1, 4, 8, 3, 0), MISCREG_TLBI_ALLE2IS },
-    { MiscRegNum64(1, 4, 8, 3, 1), MISCREG_TLBI_VAE2IS_Xt },
+    { MiscRegNum64(1, 4, 8, 3, 1), MISCREG_TLBI_VAE2IS },
     { MiscRegNum64(1, 4, 8, 3, 4), MISCREG_TLBI_ALLE1IS },
-    { MiscRegNum64(1, 4, 8, 3, 5), MISCREG_TLBI_VALE2IS_Xt },
+    { MiscRegNum64(1, 4, 8, 3, 5), MISCREG_TLBI_VALE2IS },
     { MiscRegNum64(1, 4, 8, 3, 6), MISCREG_TLBI_VMALLS12E1IS },
-    { MiscRegNum64(1, 4, 8, 4, 0), MISCREG_TLBI_IPAS2E1OS_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 1), MISCREG_TLBI_IPAS2E1_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 2), MISCREG_TLBI_RIPAS2E1_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 3), MISCREG_TLBI_RIPAS2E1OS_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 4), MISCREG_TLBI_IPAS2LE1OS_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 5), MISCREG_TLBI_IPAS2LE1_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 6), MISCREG_TLBI_RIPAS2LE1_Xt },
-    { MiscRegNum64(1, 4, 8, 4, 7), MISCREG_TLBI_RIPAS2LE1OS_Xt },
-    { MiscRegNum64(1, 4, 8, 5, 1), MISCREG_TLBI_RVAE2OS_Xt },
-    { MiscRegNum64(1, 4, 8, 5, 5), MISCREG_TLBI_RVALE2OS_Xt },
-    { MiscRegNum64(1, 4, 8, 6, 1), MISCREG_TLBI_RVAE2_Xt },
-    { MiscRegNum64(1, 4, 8, 6, 5), MISCREG_TLBI_RVALE2_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 0), MISCREG_TLBI_IPAS2E1OS },
+    { MiscRegNum64(1, 4, 8, 4, 1), MISCREG_TLBI_IPAS2E1 },
+    { MiscRegNum64(1, 4, 8, 4, 2), MISCREG_TLBI_RIPAS2E1 },
+    { MiscRegNum64(1, 4, 8, 4, 3), MISCREG_TLBI_RIPAS2E1OS },
+    { MiscRegNum64(1, 4, 8, 4, 4), MISCREG_TLBI_IPAS2LE1OS },
+    { MiscRegNum64(1, 4, 8, 4, 5), MISCREG_TLBI_IPAS2LE1 },
+    { MiscRegNum64(1, 4, 8, 4, 6), MISCREG_TLBI_RIPAS2LE1 },
+    { MiscRegNum64(1, 4, 8, 4, 7), MISCREG_TLBI_RIPAS2LE1OS },
+    { MiscRegNum64(1, 4, 8, 5, 1), MISCREG_TLBI_RVAE2OS },
+    { MiscRegNum64(1, 4, 8, 5, 5), MISCREG_TLBI_RVALE2OS },
+    { MiscRegNum64(1, 4, 8, 6, 1), MISCREG_TLBI_RVAE2 },
+    { MiscRegNum64(1, 4, 8, 6, 5), MISCREG_TLBI_RVALE2 },
     { MiscRegNum64(1, 4, 8, 7, 0), MISCREG_TLBI_ALLE2 },
-    { MiscRegNum64(1, 4, 8, 7, 1), MISCREG_TLBI_VAE2_Xt },
+    { MiscRegNum64(1, 4, 8, 7, 1), MISCREG_TLBI_VAE2 },
     { MiscRegNum64(1, 4, 8, 7, 4), MISCREG_TLBI_ALLE1 },
-    { MiscRegNum64(1, 4, 8, 7, 5), MISCREG_TLBI_VALE2_Xt },
+    { MiscRegNum64(1, 4, 8, 7, 5), MISCREG_TLBI_VALE2 },
     { MiscRegNum64(1, 4, 8, 7, 6), MISCREG_TLBI_VMALLS12E1 },
     { MiscRegNum64(1, 6, 7, 8, 0), MISCREG_AT_S1E3R_Xt },
     { MiscRegNum64(1, 6, 7, 8, 1), MISCREG_AT_S1E3W_Xt },
     { MiscRegNum64(1, 6, 8, 1, 0), MISCREG_TLBI_ALLE3OS },
-    { MiscRegNum64(1, 6, 8, 1, 1), MISCREG_TLBI_VAE3OS_Xt },
-    { MiscRegNum64(1, 6, 8, 1, 5), MISCREG_TLBI_VALE3OS_Xt },
-    { MiscRegNum64(1, 6, 8, 2, 1), MISCREG_TLBI_RVAE3IS_Xt },
-    { MiscRegNum64(1, 6, 8, 2, 5), MISCREG_TLBI_RVALE3IS_Xt },
+    { MiscRegNum64(1, 6, 8, 1, 1), MISCREG_TLBI_VAE3OS },
+    { MiscRegNum64(1, 6, 8, 1, 5), MISCREG_TLBI_VALE3OS },
+    { MiscRegNum64(1, 6, 8, 2, 1), MISCREG_TLBI_RVAE3IS },
+    { MiscRegNum64(1, 6, 8, 2, 5), MISCREG_TLBI_RVALE3IS },
     { MiscRegNum64(1, 6, 8, 3, 0), MISCREG_TLBI_ALLE3IS },
-    { MiscRegNum64(1, 6, 8, 3, 1), MISCREG_TLBI_VAE3IS_Xt },
-    { MiscRegNum64(1, 6, 8, 3, 5), MISCREG_TLBI_VALE3IS_Xt },
-    { MiscRegNum64(1, 6, 8, 5, 1), MISCREG_TLBI_RVAE3OS_Xt },
-    { MiscRegNum64(1, 6, 8, 5, 5), MISCREG_TLBI_RVALE3OS_Xt },
-    { MiscRegNum64(1, 6, 8, 6, 1), MISCREG_TLBI_RVAE3_Xt },
-    { MiscRegNum64(1, 6, 8, 6, 5), MISCREG_TLBI_RVALE3_Xt },
+    { MiscRegNum64(1, 6, 8, 3, 1), MISCREG_TLBI_VAE3IS },
+    { MiscRegNum64(1, 6, 8, 3, 5), MISCREG_TLBI_VALE3IS },
+    { MiscRegNum64(1, 6, 8, 5, 1), MISCREG_TLBI_RVAE3OS },
+    { MiscRegNum64(1, 6, 8, 5, 5), MISCREG_TLBI_RVALE3OS },
+    { MiscRegNum64(1, 6, 8, 6, 1), MISCREG_TLBI_RVAE3 },
+    { MiscRegNum64(1, 6, 8, 6, 5), MISCREG_TLBI_RVALE3 },
     { MiscRegNum64(1, 6, 8, 7, 0), MISCREG_TLBI_ALLE3 },
-    { MiscRegNum64(1, 6, 8, 7, 1), MISCREG_TLBI_VAE3_Xt },
-    { MiscRegNum64(1, 6, 8, 7, 5), MISCREG_TLBI_VALE3_Xt },
+    { MiscRegNum64(1, 6, 8, 7, 1), MISCREG_TLBI_VAE3 },
+    { MiscRegNum64(1, 6, 8, 7, 5), MISCREG_TLBI_VALE3 },
     { MiscRegNum64(2, 0, 0, 0, 2), MISCREG_OSDTRRX_EL1 },
     { MiscRegNum64(2, 0, 0, 0, 4), MISCREG_DBGBVR0_EL1 },
     { MiscRegNum64(2, 0, 0, 0, 5), MISCREG_DBGBCR0_EL1 },
@@ -1162,6 +1162,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 2, 6, 0), MISCREG_VSTTBR_EL2 },
     { MiscRegNum64(3, 4, 2, 6, 2), MISCREG_VSTCR_EL2 },
     { MiscRegNum64(3, 4, 3, 0, 0), MISCREG_DACR32_EL2 },
+    { MiscRegNum64(3, 4, 3, 1, 4), MISCREG_HDFGRTR_EL2 },
+    { MiscRegNum64(3, 4, 3, 1, 5), MISCREG_HDFGWTR_EL2 },
     { MiscRegNum64(3, 4, 4, 0, 0), MISCREG_SPSR_EL2 },
     { MiscRegNum64(3, 4, 4, 0, 1), MISCREG_ELR_EL2 },
     { MiscRegNum64(3, 4, 4, 1, 0), MISCREG_SP_EL1 },
@@ -1298,6 +1300,17 @@ fgtRegister(ThreadContext *tc)
     }
 }
 
+template <bool read>
+HDFGTR
+fgtDebugRegister(ThreadContext *tc)
+{
+    if constexpr (read) {
+        return tc->readMiscReg(MISCREG_HDFGRTR_EL2);
+    } else {
+        return tc->readMiscReg(MISCREG_HDFGWTR_EL2);
+    }
+}
+
 /**
  * Template helper for fine grained traps at EL0
  *
@@ -1349,6 +1362,24 @@ faultFgtInstEL1(const MiscRegLUTEntry &entry,
 {
     if (fgtEnabled(tc) &&
         static_cast<HFGITR>(tc->readMiscReg(MISCREG_HFGITR_EL2)).*r_bitfield) {
+        return inst.generateTrap(EL2);
+    } else {
+        return NoFault;
+    }
+}
+
+/**
+ * Template helper for fine grained traps at EL1
+ *
+ * @tparam read: is this a read access to the register?
+ * @tparam r_bitfield: register (HFGTR) bitfield
+ */
+template<bool read, auto r_bitfield>
+Fault
+faultFgtDebugEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (fgtEnabled(tc) && fgtDebugRegister<read>(tc).*r_bitfield) {
         return inst.generateTrap(EL2);
     } else {
         return NoFault;
@@ -1799,6 +1830,51 @@ faultDebugEL2(const MiscRegLUTEntry &entry,
 {
     const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && mdcr_el3.tda) {
+        return inst.generateTrap(EL3);
+    } else {
+        return NoFault;
+    }
+}
+
+template<bool read, auto r_bitfield>
+Fault
+faultDebugWithFgtEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (auto fault = faultFgtDebugEL1<read, r_bitfield>(entry, tc, inst);
+        fault != NoFault) {
+        return fault;
+    } else {
+        return faultDebugEL1(entry, tc, inst);
+    }
+}
+
+template<bool read, auto r_bitfield>
+Fault
+faultDebugOsEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HDCR mdcr_el2 = tc->readMiscReg(MISCREG_MDCR_EL2);
+    const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
+
+    if (auto fault = faultFgtDebugEL1<read, r_bitfield>(entry, tc, inst);
+        fault != NoFault) {
+        return fault;
+    } else if (EL2Enabled(tc) && (mdcr_el2.tde || mdcr_el2.tdosa)) {
+        return inst.generateTrap(EL2);
+    } else if (ArmSystem::haveEL(tc, EL3) && mdcr_el3.tdosa) {
+        return inst.generateTrap(EL3);
+    } else {
+        return NoFault;
+    }
+}
+
+Fault
+faultDebugOsEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HDCR mdcr_el3 = tc->readMiscReg(MISCREG_MDCR_EL3);
+    if (ArmSystem::haveEL(tc, EL3) && mdcr_el3.tdosa) {
         return inst.generateTrap(EL3);
     } else {
         return NoFault;
@@ -3181,17 +3257,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_ISAR5)
       .reset([p,release=release] () {
         ISAR5 isar5 = p.id_isar5;
-        if (release->has(ArmExtension::CRYPTO)) {
-            isar5.crc32 = 1;
-            isar5.sha2 = 1;
-            isar5.sha1 = 1;
-            isar5.aes = 2;
-        } else {
-            isar5.crc32 = 0;
-            isar5.sha2 = 0;
-            isar5.sha1 = 0;
-            isar5.aes = 0;
-        }
+        isar5.crc32 = release->has(ArmExtension::FEAT_CRC32) ? 0x1 : 0x0;
+        isar5.sha2 = release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
+        isar5.sha1 = release->has(ArmExtension::FEAT_SHA1) ? 0x1 : 0x0;
+        isar5.aes = release->has(ArmExtension::FEAT_PMULL) ?
+            0x2 : release->has(ArmExtension::FEAT_AES) ?
+                0x1 : 0x0;
         isar5.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
         isar5.vcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
         return isar5;
@@ -3922,331 +3993,401 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_DBGDTRRXext);
     InitReg(MISCREG_MDSCR_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::mdscrEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::mdscrEL1>)
+      .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGDSCRext);
     InitReg(MISCREG_OSDTRTX_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGDTRTXext);
     InitReg(MISCREG_OSECCR_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::oseccrEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::oseccrEL1>)
+      .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGOSECCR);
     InitReg(MISCREG_DBGBVR0_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR0, MISCREG_DBGBXVR0);
     InitReg(MISCREG_DBGBVR1_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR1, MISCREG_DBGBXVR1);
     InitReg(MISCREG_DBGBVR2_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR2, MISCREG_DBGBXVR2);
     InitReg(MISCREG_DBGBVR3_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR3, MISCREG_DBGBXVR3);
     InitReg(MISCREG_DBGBVR4_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR4, MISCREG_DBGBXVR4);
     InitReg(MISCREG_DBGBVR5_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR5, MISCREG_DBGBXVR5);
     InitReg(MISCREG_DBGBVR6_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR6, MISCREG_DBGBXVR6);
     InitReg(MISCREG_DBGBVR7_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR7, MISCREG_DBGBXVR7);
     InitReg(MISCREG_DBGBVR8_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR8, MISCREG_DBGBXVR8);
     InitReg(MISCREG_DBGBVR9_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR9, MISCREG_DBGBXVR9);
     InitReg(MISCREG_DBGBVR10_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR10, MISCREG_DBGBXVR10);
     InitReg(MISCREG_DBGBVR11_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR11, MISCREG_DBGBXVR11);
     InitReg(MISCREG_DBGBVR12_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR12, MISCREG_DBGBXVR12);
     InitReg(MISCREG_DBGBVR13_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR13, MISCREG_DBGBXVR13);
     InitReg(MISCREG_DBGBVR14_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR14, MISCREG_DBGBXVR14);
     InitReg(MISCREG_DBGBVR15_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBVR15, MISCREG_DBGBXVR15);
     InitReg(MISCREG_DBGBCR0_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR0);
     InitReg(MISCREG_DBGBCR1_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR1);
     InitReg(MISCREG_DBGBCR2_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR2);
     InitReg(MISCREG_DBGBCR3_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR3);
     InitReg(MISCREG_DBGBCR4_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR4);
     InitReg(MISCREG_DBGBCR5_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR5);
     InitReg(MISCREG_DBGBCR6_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR6);
     InitReg(MISCREG_DBGBCR7_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR7);
     InitReg(MISCREG_DBGBCR8_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR8);
     InitReg(MISCREG_DBGBCR9_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR9);
     InitReg(MISCREG_DBGBCR10_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR10);
     InitReg(MISCREG_DBGBCR11_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR11);
     InitReg(MISCREG_DBGBCR12_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR12);
     InitReg(MISCREG_DBGBCR13_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR13);
     InitReg(MISCREG_DBGBCR14_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR14);
     InitReg(MISCREG_DBGBCR15_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgbcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgbcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGBCR15);
     InitReg(MISCREG_DBGWVR0_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR0);
     InitReg(MISCREG_DBGWVR1_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR1);
     InitReg(MISCREG_DBGWVR2_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR2);
     InitReg(MISCREG_DBGWVR3_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR3);
     InitReg(MISCREG_DBGWVR4_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR4);
     InitReg(MISCREG_DBGWVR5_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR5);
     InitReg(MISCREG_DBGWVR6_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR6);
     InitReg(MISCREG_DBGWVR7_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR7);
     InitReg(MISCREG_DBGWVR8_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR8);
     InitReg(MISCREG_DBGWVR9_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR9);
     InitReg(MISCREG_DBGWVR10_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR10);
     InitReg(MISCREG_DBGWVR11_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR11);
     InitReg(MISCREG_DBGWVR12_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR12);
     InitReg(MISCREG_DBGWVR13_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR13);
     InitReg(MISCREG_DBGWVR14_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR14);
     InitReg(MISCREG_DBGWVR15_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwvrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwvrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWVR15);
     InitReg(MISCREG_DBGWCR0_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR0);
     InitReg(MISCREG_DBGWCR1_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR1);
     InitReg(MISCREG_DBGWCR2_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR2);
     InitReg(MISCREG_DBGWCR3_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR3);
     InitReg(MISCREG_DBGWCR4_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR4);
     InitReg(MISCREG_DBGWCR5_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR5);
     InitReg(MISCREG_DBGWCR6_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR6);
     InitReg(MISCREG_DBGWCR7_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR7);
     InitReg(MISCREG_DBGWCR8_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR8);
     InitReg(MISCREG_DBGWCR9_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR9);
     InitReg(MISCREG_DBGWCR10_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR10);
     InitReg(MISCREG_DBGWCR11_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR11);
     InitReg(MISCREG_DBGWCR12_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR12);
     InitReg(MISCREG_DBGWCR13_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR13);
     InitReg(MISCREG_DBGWCR14_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR14);
     InitReg(MISCREG_DBGWCR15_EL1)
       .allPrivileges().exceptUserMode()
-      .fault(EL1, faultDebugEL1)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgwcrnEL1>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgwcrnEL1>)
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGWCR15);
     InitReg(MISCREG_MDCCSR_EL0)
@@ -4267,27 +4408,47 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_DBGVCR);
     InitReg(MISCREG_MDRAR_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL1, faultDebugEL1)
+      .faultRead(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGDRAR);
     InitReg(MISCREG_OSLAR_EL1)
       .allPrivileges().exceptUserMode().reads(0)
+      .faultWrite(EL1, faultDebugOsEL1<false, &HDFGTR::oslarEL1>)
+      .faultWrite(EL2, faultDebugOsEL2)
       .mapsTo(MISCREG_DBGOSLAR);
     InitReg(MISCREG_OSLSR_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL1, faultDebugOsEL1<true, &HDFGTR::oslsrEL1>)
+      .faultRead(EL2, faultDebugOsEL2)
       .mapsTo(MISCREG_DBGOSLSR);
     InitReg(MISCREG_OSDLR_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugOsEL1<true, &HDFGTR::osdlrEL1>)
+      .faultWrite(EL1, faultDebugOsEL1<false, &HDFGTR::osdlrEL1>)
+      .fault(EL2, faultDebugOsEL2)
       .mapsTo(MISCREG_DBGOSDLR);
     InitReg(MISCREG_DBGPRCR_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugOsEL1<true, &HDFGTR::dbgprcrEL1>)
+      .faultWrite(EL1, faultDebugOsEL1<false, &HDFGTR::dbgprcrEL1>)
+      .fault(EL2, faultDebugOsEL2)
       .mapsTo(MISCREG_DBGPRCR);
     InitReg(MISCREG_DBGCLAIMSET_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgclaim>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgclaim>)
+      .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGCLAIMSET);
     InitReg(MISCREG_DBGCLAIMCLR_EL1)
       .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgclaim>)
+      .faultWrite(EL1, faultDebugWithFgtEL1<false, &HDFGTR::dbgclaim>)
+      .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGCLAIMCLR);
     InitReg(MISCREG_DBGAUTHSTATUS_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL1, faultDebugWithFgtEL1<true, &HDFGTR::dbgauthstatusEL1>)
+      .faultRead(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGAUTHSTATUS);
     InitReg(MISCREG_TEECR32_EL1);
     InitReg(MISCREG_TEEHBR32_EL1);
@@ -4451,17 +4612,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64ISAR0_EL1)
       .reset([p,release=release](){
           AA64ISAR0 isar0_el1 = p.id_aa64isar0_el1;
-          if (release->has(ArmExtension::CRYPTO)) {
-              isar0_el1.crc32 = 1;
-              isar0_el1.sha2 = 1;
-              isar0_el1.sha1 = 1;
-              isar0_el1.aes = 2;
-          } else {
-              isar0_el1.crc32 = 0;
-              isar0_el1.sha2 = 0;
-              isar0_el1.sha1 = 0;
-              isar0_el1.aes = 0;
-          }
+          isar0_el1.crc32 = release->has(ArmExtension::FEAT_CRC32) ? 0x1 : 0x0;
+          isar0_el1.sha2 = release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
+          isar0_el1.sha1 = release->has(ArmExtension::FEAT_SHA1) ? 0x1 : 0x0;
+          isar0_el1.aes = release->has(ArmExtension::FEAT_PMULL) ?
+              0x2 : release->has(ArmExtension::FEAT_AES) ?
+                  0x1 : 0x0;
           isar0_el1.dp = release->has(ArmExtension::FEAT_DOTPROD) ? 0x1 : 0x0;
           isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
@@ -5008,189 +5164,189 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBI_VMALLE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbivmalle1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAE1OS_Xt)
+    InitReg(MISCREG_TLBI_VAE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbivae1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_ASIDE1OS_Xt)
+    InitReg(MISCREG_TLBI_ASIDE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbiaside1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAAE1OS_Xt)
+    InitReg(MISCREG_TLBI_VAAE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbivaae1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VALE1OS_Xt)
+    InitReg(MISCREG_TLBI_VALE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbivale1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAALE1OS_Xt)
+    InitReg(MISCREG_TLBI_VAALE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbivaale1os>)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBI_VMALLE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbivmalle1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAE1IS_Xt)
+    InitReg(MISCREG_TLBI_VAE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbivae1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_ASIDE1IS_Xt)
+    InitReg(MISCREG_TLBI_ASIDE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbiaside1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAAE1IS_Xt)
+    InitReg(MISCREG_TLBI_VAAE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbivaae1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VALE1IS_Xt)
+    InitReg(MISCREG_TLBI_VALE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbivale1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAALE1IS_Xt)
+    InitReg(MISCREG_TLBI_VAALE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbivaale1is>)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBI_VMALLE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivmalle1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAE1_Xt)
+    InitReg(MISCREG_TLBI_VAE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivae1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_ASIDE1_Xt)
+    InitReg(MISCREG_TLBI_ASIDE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbiaside1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAAE1_Xt)
+    InitReg(MISCREG_TLBI_VAAE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivaae1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VALE1_Xt)
+    InitReg(MISCREG_TLBI_VALE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivale1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_VAALE1_Xt)
+    InitReg(MISCREG_TLBI_VAALE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivaale1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_IPAS2E1OS_Xt)
+    InitReg(MISCREG_TLBI_IPAS2E1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_IPAS2LE1OS_Xt)
+    InitReg(MISCREG_TLBI_IPAS2LE1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2OS)
       .monNonSecureWrite().hypWrite();
-    InitReg(MISCREG_TLBI_VAE2OS_Xt)
+    InitReg(MISCREG_TLBI_VAE2OS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE2OS_Xt)
+    InitReg(MISCREG_TLBI_VALE2OS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_IPAS2E1IS_Xt)
+    InitReg(MISCREG_TLBI_IPAS2E1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_IPAS2LE1IS_Xt)
+    InitReg(MISCREG_TLBI_IPAS2LE1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2IS)
       .monNonSecureWrite().hypWrite();
-    InitReg(MISCREG_TLBI_VAE2IS_Xt)
+    InitReg(MISCREG_TLBI_VAE2IS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE2IS_Xt)
+    InitReg(MISCREG_TLBI_VALE2IS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_IPAS2E1_Xt)
+    InitReg(MISCREG_TLBI_IPAS2E1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_IPAS2LE1_Xt)
+    InitReg(MISCREG_TLBI_IPAS2LE1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2)
       .monNonSecureWrite().hypWrite();
-    InitReg(MISCREG_TLBI_VAE2_Xt)
+    InitReg(MISCREG_TLBI_VAE2)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE2_Xt)
+    InitReg(MISCREG_TLBI_VALE2)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE3OS)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VAE3OS_Xt)
+    InitReg(MISCREG_TLBI_VAE3OS)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE3OS_Xt)
+    InitReg(MISCREG_TLBI_VALE3OS)
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE3IS)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VAE3IS_Xt)
+    InitReg(MISCREG_TLBI_VAE3IS)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE3IS_Xt)
+    InitReg(MISCREG_TLBI_VALE3IS)
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE3)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VAE3_Xt)
+    InitReg(MISCREG_TLBI_VAE3)
       .monSecureWrite().monNonSecureWrite();
-    InitReg(MISCREG_TLBI_VALE3_Xt)
+    InitReg(MISCREG_TLBI_VALE3)
       .monSecureWrite().monNonSecureWrite();
 
-    InitReg(MISCREG_TLBI_RVAE1_Xt)
+    InitReg(MISCREG_TLBI_RVAE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvae1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAAE1_Xt)
+    InitReg(MISCREG_TLBI_RVAAE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvaae1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVALE1_Xt)
+    InitReg(MISCREG_TLBI_RVALE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvale1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAALE1_Xt)
+    InitReg(MISCREG_TLBI_RVAALE1)
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvaale1>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RIPAS2E1_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2E1)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RIPAS2LE1_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2LE1)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE2_Xt)
+    InitReg(MISCREG_TLBI_RVAE2)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVALE2_Xt)
+    InitReg(MISCREG_TLBI_RVALE2)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE3_Xt)
+    InitReg(MISCREG_TLBI_RVAE3)
       .monWrite();
-    InitReg(MISCREG_TLBI_RVALE3_Xt)
+    InitReg(MISCREG_TLBI_RVALE3)
       .monWrite();
-    InitReg(MISCREG_TLBI_RVAE1IS_Xt)
+    InitReg(MISCREG_TLBI_RVAE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvae1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAAE1IS_Xt)
+    InitReg(MISCREG_TLBI_RVAAE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvaae1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVALE1IS_Xt)
+    InitReg(MISCREG_TLBI_RVALE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvale1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAALE1IS_Xt)
+    InitReg(MISCREG_TLBI_RVAALE1IS)
       .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvaale1is>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RIPAS2E1IS_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2E1IS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RIPAS2LE1IS_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2LE1IS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE2IS_Xt)
+    InitReg(MISCREG_TLBI_RVAE2IS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVALE2IS_Xt)
+    InitReg(MISCREG_TLBI_RVALE2IS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE3IS_Xt)
+    InitReg(MISCREG_TLBI_RVAE3IS)
       .monWrite();
-    InitReg(MISCREG_TLBI_RVALE3IS_Xt)
+    InitReg(MISCREG_TLBI_RVALE3IS)
       .monWrite();
-    InitReg(MISCREG_TLBI_RVAE1OS_Xt)
+    InitReg(MISCREG_TLBI_RVAE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvae1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAAE1OS_Xt)
+    InitReg(MISCREG_TLBI_RVAAE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvaae1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVALE1OS_Xt)
+    InitReg(MISCREG_TLBI_RVALE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvale1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RVAALE1OS_Xt)
+    InitReg(MISCREG_TLBI_RVAALE1OS)
       .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvaale1os>)
       .writes(1).exceptUserMode();
-    InitReg(MISCREG_TLBI_RIPAS2E1OS_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2E1OS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RIPAS2LE1OS_Xt)
+    InitReg(MISCREG_TLBI_RIPAS2LE1OS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE2OS_Xt)
+    InitReg(MISCREG_TLBI_RVAE2OS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVALE2OS_Xt)
+    InitReg(MISCREG_TLBI_RVALE2OS)
       .hypWrite().monWrite();
-    InitReg(MISCREG_TLBI_RVAE3OS_Xt)
+    InitReg(MISCREG_TLBI_RVAE3OS)
       .monWrite();
-    InitReg(MISCREG_TLBI_RVALE3OS_Xt)
+    InitReg(MISCREG_TLBI_RVALE3OS)
       .monWrite();
     InitReg(MISCREG_PMINTENSET_EL1)
       .allPrivileges().exceptUserMode()
@@ -6184,6 +6340,12 @@ ISA::initializeMiscRegMetadata()
       .fault(EL2, faultFgtCtrlRegs)
       .hyp().mon(release->has(ArmExtension::FEAT_FGT));
     InitReg(MISCREG_HFGITR_EL2)
+      .fault(EL2, faultFgtCtrlRegs)
+      .hyp().mon(release->has(ArmExtension::FEAT_FGT));
+    InitReg(MISCREG_HDFGRTR_EL2)
+      .fault(EL2, faultFgtCtrlRegs)
+      .hyp().mon(release->has(ArmExtension::FEAT_FGT));
+    InitReg(MISCREG_HDFGWTR_EL2)
       .fault(EL2, faultFgtCtrlRegs)
       .hyp().mon(release->has(ArmExtension::FEAT_FGT));
 

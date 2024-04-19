@@ -35,6 +35,7 @@
 #include <cmath>
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
+#include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 
 namespace gem5
 {
@@ -315,7 +316,8 @@ namespace VegaISA
      * 0x142: broadcast 15th thread of each row to next row
      * 0x143: broadcast thread 31 to rows 2 and 3
      */
-    int dppInstImpl(SqDPPVals dppCtrl, int currLane, int rowNum,
+    inline int
+    dppInstImpl(SqDPPVals dppCtrl, int currLane, int rowNum,
                     int rowOffset, bool & outOfBounds)
     {
         // local variables

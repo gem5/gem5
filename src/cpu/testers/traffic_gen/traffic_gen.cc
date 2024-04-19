@@ -287,6 +287,35 @@ TrafficGen::parseConfig()
                             DPRINTF(TrafficGen, "State: %d NvmGen\n", id);
                         }
                     }
+                } else if (mode == "STRIDED") {
+                    uint32_t read_percent;
+                    Addr start_addr;
+                    Addr end_addr;
+                    Addr offset;
+                    Addr blocksize;
+                    Addr superblock_size;
+                    Addr stride_size;
+                    Tick min_period;
+                    Tick max_period;
+                    Addr data_limit;
+
+                    is >> read_percent >> start_addr >> end_addr >> offset >>
+                        blocksize >> superblock_size >> stride_size >>
+                        min_period >> max_period >> data_limit;
+
+                    DPRINTF(TrafficGen, "%s, addr %x to %x with offset %x, "
+                            "size %d, super size %d, stride size %d, "
+                            "period %d to %d, %d%% reads\n",
+                            mode, start_addr, end_addr, offset, blocksize,
+                            superblock_size, stride_size, min_period,
+                            max_period, read_percent);
+
+                    states[id] = createStrided(
+                        duration, start_addr, end_addr, offset,
+                        blocksize, superblock_size, stride_size,
+                        min_period, max_period, read_percent, data_limit);
+
+                    DPRINTF(TrafficGen, "State: %d StridedGen\n", id);
                 } else {
                     fatal("%s: Unknown traffic generator mode: %s",
                           name(), mode);

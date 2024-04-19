@@ -102,14 +102,9 @@ class HSAQueueEntry
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
         }
 
-        // SGPR allocation granularies:
-        // - GFX8: 8
-        // - GFX9: 16
-        // Source: https://llvm.org/docs/.html
-        if (gfx_version == GfxVersion::gfx801 ||
-                gfx_version == GfxVersion::gfx803) {
-            numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
-        } else if (gfx_version == GfxVersion::gfx900 ||
+        // SGPR allocation granulary is 16 in GFX9
+        // Source: https://llvm.org/docs/AMDGPUUsage.html
+        if (gfx_version == GfxVersion::gfx900 ||
                 gfx_version == GfxVersion::gfx902 ||
                 gfx_version == GfxVersion::gfx908 ||
                 gfx_version == GfxVersion::gfx90a) {
@@ -127,6 +122,11 @@ class HSAQueueEntry
         }
 
         parseKernelCode(akc);
+
+        // Offset of a first AccVGPR in the unified register file.
+        // Granularity 4. Value 0-63. 0 - accum-offset = 4,
+        // 1 - accum-offset = 8, ..., 63 - accum-offset = 256.
+        _accumOffset = (akc->accum_offset + 1) * 4;
     }
 
     const GfxVersion&
@@ -399,6 +399,12 @@ class HSAQueueEntry
         assert(_outstandingWbs >= 0);
     }
 
+    unsigned
+    accumOffset() const
+    {
+        return _accumOffset;
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -494,6 +500,8 @@ class HSAQueueEntry
 
     std::bitset<NumVectorInitFields> initialVgprState;
     std::bitset<NumScalarInitFields> initialSgprState;
+
+    unsigned _accumOffset;
 };
 
 } // namespace gem5

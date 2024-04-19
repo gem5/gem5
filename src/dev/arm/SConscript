@@ -49,6 +49,7 @@ SimObject('Gic.py', sim_objects=[
     'BaseGic', 'ArmInterruptPin', 'ArmSPI', 'ArmPPI', 'ArmSigInterruptPin',
     'GicV2', 'Gicv2mFrame', 'Gicv2m', 'VGic', 'Gicv3Its', 'Gicv3'],
     enums=['ArmInterruptType'], tags='arm isa')
+SimObject('Mpam.py', sim_objects=['MpamMSC'], tags='arm isa')
 SimObject('RealView.py', sim_objects=[
     'AmbaPioDevice', 'AmbaIntDevice', 'AmbaDmaDevice', 'A9SCU',
     'GenericArmPciHost', 'RealViewCtrl', 'RealViewOsc',
@@ -80,6 +81,7 @@ Source('gic_v3_cpu_interface.cc', tags='arm isa')
 Source('gic_v3_distributor.cc', tags='arm isa')
 Source('gic_v3_redistributor.cc', tags='arm isa')
 Source('gic_v3_its.cc', tags='arm isa')
+Source('mpam.cc', tags='arm isa')
 Source('pl011.cc', tags='arm isa')
 Source('pl111.cc', tags='arm isa')
 Source('hdlcd.cc', tags='arm isa')
@@ -87,6 +89,7 @@ Source('kmi.cc', tags='arm isa')
 Source('smmu_v3.cc', tags='arm isa');
 Source('smmu_v3_caches.cc', tags='arm isa');
 Source('smmu_v3_cmdexec.cc', tags='arm isa');
+Source('smmu_v3_defs.cc', tags='arm isa');
 Source('smmu_v3_events.cc', tags='arm isa');
 Source('smmu_v3_ports.cc', tags='arm isa');
 Source('smmu_v3_proc.cc', tags='arm isa');

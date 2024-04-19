@@ -241,9 +241,6 @@ def template LoadReservedExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
-        }
         {
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
@@ -271,9 +268,6 @@ def template StoreCondExecute {{
 
         %(memacc_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
-        }
         {
             Fault fault =
                 writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
@@ -305,9 +299,6 @@ def template AtomicMemOpRMWExecute {{
 
         assert(amo_op);
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, AMO_ADDR_MISALIGNED);
-        }
         {
             Fault fault =
                 amoMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags, amo_op);
@@ -336,9 +327,6 @@ def template LoadReservedInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
-        }
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
@@ -355,9 +343,6 @@ def template StoreCondInitiateAcc {{
         %(ea_code)s;
         %(memacc_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
-        }
         {
             Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);
@@ -385,9 +370,6 @@ def template AtomicMemOpRMWInitiateAcc {{
 
         assert(amo_op);
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, AMO_ADDR_MISALIGNED);
-        }
         return initiateMemAMO(xc, traceData, EA, Mem, memAccessFlags, amo_op);
     }
 }};
@@ -463,8 +445,12 @@ def format LoadReserved(memacc_code, postacc_code={{ }},
     iop = InstObjParams(name, Name, 'LoadReservedMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
+    mem_flags = ['Request::%s' % flag for flag in mem_flags]
+    align_flag = getAlignFlag(iop)
+    if align_flag:
+        mem_flags.append(align_flag)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
-        '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
+        '|'.join(mem_flags) + ';'
 
     header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
@@ -490,8 +476,12 @@ def format StoreCond(memacc_code, postacc_code={{ }},
     iop = InstObjParams(name, Name, 'StoreCondMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
+    mem_flags = ['Request::%s' % flag for flag in mem_flags]
+    align_flag = getAlignFlag(iop)
+    if align_flag:
+        mem_flags.append(align_flag)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
-        '|'.join(['Request::%s' % flag for flag in mem_flags]) + ';'
+        '|'.join(mem_flags) + ';'
 
     header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
@@ -521,8 +511,12 @@ def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
                              'amoop_code': amoop_code},
                             rmw_inst_flags)
 
+    rmw_mem_flags = ['Request::%s' % flag for flag in rmw_mem_flags]
+    align_flag = getAlignFlag(rmw_iop)
+    if align_flag:
+        rmw_mem_flags.append(align_flag)
     rmw_iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
-          '|'.join(['Request::%s' % flag for flag in rmw_mem_flags]) + ';'
+          '|'.join(rmw_mem_flags) + ';'
 
     header_output += AtomicMemOpRMWDeclare.subst(rmw_iop)
     decoder_output += AtomicMemOpRMWConstructor.subst(rmw_iop)

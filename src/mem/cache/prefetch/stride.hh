@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -105,6 +105,14 @@ class Stride : public Queued
 
     const int degree;
 
+    /** How far ahead of the demand stream to start prefetching.
+     *
+     * Skip this number of strides ahead of the first identified
+     * prefetch, then generate `degree` prefetches at `stride`
+     * intervals. A value of zero indicates no skip.
+     */
+    const int distance;
+
     /**
      * Information used to create a new PC table. All of them behave equally.
      */
@@ -117,8 +125,8 @@ class Stride : public Queued
         replacement_policy::Base* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
-            BaseIndexingPolicy* indexing_policy,
-            replacement_policy::Base* repl_policy)
+                    BaseIndexingPolicy* indexing_policy,
+                    replacement_policy::Base* repl_policy)
           : assoc(assoc), numEntries(num_entries),
             indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
         {

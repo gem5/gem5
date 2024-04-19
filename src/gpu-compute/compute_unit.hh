@@ -412,6 +412,7 @@ class ComputeUnit : public ClockedObject
 
     void doInvalidate(RequestPtr req, int kernId);
     void doFlush(GPUDynInstPtr gpuDynInst);
+    void doSQCInvalidate(RequestPtr req, int kernId);
 
     void dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg);
     bool hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg);
@@ -473,6 +474,8 @@ class ComputeUnit : public ClockedObject
 
     void handleSQCReturn(PacketPtr pkt);
 
+    void sendInvL2(Addr paddr);
+
   protected:
     RequestorID _requestorId;
 
@@ -526,6 +529,7 @@ class ComputeUnit : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
+            ComputeUnit *computeUnit = nullptr;
             GPUDynInstPtr _gpuDynInst;
             PortID port_index;
             Packet::SenderState *saved;
@@ -533,6 +537,12 @@ class ComputeUnit : public ClockedObject
             SenderState(GPUDynInstPtr gpuDynInst, PortID _port_index,
                         Packet::SenderState *sender_state=nullptr)
                 : _gpuDynInst(gpuDynInst),
+                  port_index(_port_index),
+                  saved(sender_state) { }
+
+            SenderState(ComputeUnit *cu, PortID _port_index,
+                        Packet::SenderState *sender_state=nullptr)
+                : computeUnit(cu),
                   port_index(_port_index),
                   saved(sender_state) { }
         };
@@ -678,6 +688,23 @@ class ComputeUnit : public ClockedObject
                     *sender_state=nullptr, int _kernId=-1)
                 : wavefront(_wavefront), saved(sender_state),
                 kernId(_kernId){ }
+        };
+
+        class MemReqEvent : public Event
+        {
+          private:
+            SQCPort &sqcPort;
+            PacketPtr pkt;
+
+          public:
+            MemReqEvent(SQCPort &_sqc_port, PacketPtr _pkt)
+                : Event(), sqcPort(_sqc_port), pkt(_pkt)
+            {
+              setFlags(Event::AutoDelete);
+            }
+
+            void process();
+            const char *description() const;
         };
 
         std::deque<std::pair<PacketPtr, Wavefront*>> retries;

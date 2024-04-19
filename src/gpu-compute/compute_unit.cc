@@ -397,9 +397,9 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
 }
 
 /**
- * trigger invalidate operation in the cu
+ * trigger invalidate operation in the CU
  *
- * req: request initialized in shader, carrying the invlidate flags
+ * req: request initialized in shader, carrying the invalidate flags
  */
 void
 ComputeUnit::doInvalidate(RequestPtr req, int kernId){
@@ -423,6 +423,26 @@ ComputeUnit::doInvalidate(RequestPtr req, int kernId){
 void
 ComputeUnit::doFlush(GPUDynInstPtr gpuDynInst) {
     injectGlobalMemFence(gpuDynInst, true);
+}
+
+/**
+ * trigger SQCinvalidate operation in the CU
+ *
+ * req: request initialized in shader, carrying the invalidate flags
+ */
+void
+ComputeUnit::doSQCInvalidate(RequestPtr req, int kernId){
+    GPUDynInstPtr gpuDynInst
+        = std::make_shared<GPUDynInst>(this, nullptr,
+            new KernelLaunchStaticInst(), getAndIncSeqNum());
+
+    // kern_id will be used in inv responses
+    gpuDynInst->kern_id = kernId;
+    // update contextId field
+    req->setContext(gpuDynInst->wfDynId);
+
+    gpuDynInst->staticInstruction()->setFlag(GPUStaticInst::Scalar);
+    scalarMemoryPipe.injectScalarMemFence(gpuDynInst, true, req);
 }
 
 // reseting SIMD register pools
@@ -844,6 +864,25 @@ ComputeUnit::DataPort::handleResponse(PacketPtr pkt)
         //  - kernel end
         //  - non-kernel mem sync
 
+        // Non-kernel mem sync not from an instruction
+        if (!gpuDynInst) {
+            // If there is no dynamic instruction, a CU must be present.
+            ComputeUnit *cu = sender_state->computeUnit;
+            assert(cu != nullptr);
+
+            if (pkt->req->isInvL2()) {
+                cu->shader->decNumOutstandingInvL2s();
+                assert(cu->shader->getNumOutstandingInvL2s() >= 0);
+            } else {
+                panic("Unknown MemSyncResp not from an instruction");
+            }
+
+            // Cleanup and return, no other response events needed.
+            delete pkt->senderState;
+            delete pkt;
+            return true;
+        }
+
         // Kernel Launch
         // wavefront was nullptr when launching kernel, so it is meaningless
         // here (simdId=-1, wfSlotId=-1)
@@ -1012,7 +1051,14 @@ ComputeUnit::DataPort::recvReqRetry()
 bool
 ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
 {
-    computeUnit->handleSQCReturn(pkt);
+    SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
+    /** Process the response only if there is a wavefront associated with it.
+     * Otherwise, it is from SQC invalidate that was issued at kernel start
+     * and doesn't have a wavefront or instruction associated with it.
+     */
+    if (sender_state->wavefront != nullptr) {
+        computeUnit->handleSQCReturn(pkt);
+    }
 
     return true;
 }
@@ -1043,6 +1089,26 @@ ComputeUnit::SQCPort::recvReqRetry()
             DPRINTF(GPUFetch, "successful!\n");
             retries.pop_front();
         }
+    }
+}
+
+const char*
+ComputeUnit::SQCPort::MemReqEvent::description() const
+{
+    return "ComputeUnit SQC memory request event";
+}
+
+void
+ComputeUnit::SQCPort::MemReqEvent::process()
+{
+    SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
+    [[maybe_unused]] ComputeUnit *compute_unit = sqcPort.computeUnit;
+
+    assert(!pkt->req->systemReq());
+
+    if (!(sqcPort.sendTimingReq(pkt))) {
+        sqcPort.retries.push_back(std::pair<PacketPtr, Wavefront*>
+                (pkt, sender_state->wavefront));
     }
 }
 
@@ -1357,6 +1423,23 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
 }
 
 void
+ComputeUnit::sendInvL2(Addr paddr)
+{
+    auto req = std::make_shared<Request>(paddr, 64, 0, vramRequestorId());
+    req->setCacheCoherenceFlags(Request::GL2_CACHE_INV);
+
+    auto pkt = new Packet(req, MemCmd::MemSyncReq);
+    pkt->pushSenderState(
+       new ComputeUnit::DataPort::SenderState(this, 0, nullptr));
+
+    EventFunctionWrapper *mem_req_event = memPort[0].createMemReqEvent(pkt);
+
+    schedule(mem_req_event, curTick() + req_tick_latency);
+
+    shader->incNumOutstandingInvL2s();
+}
+
+void
 ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 {
     DataPort::SenderState *sender_state =
@@ -1654,16 +1737,20 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
     } else if (!(sendTimingReq(pkt))) {
         retries.push_back(std::make_pair(pkt, gpuDynInst));
 
-        DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
-                compute_unit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
-                id, pkt->req->getPaddr());
+        if (gpuDynInst) {
+            DPRINTF(GPUPort,
+                    "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
+                    compute_unit->cu_id, gpuDynInst->simdId,
+                    gpuDynInst->wfSlotId, id, pkt->req->getPaddr());
+        }
     } else {
-        DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data "
-                "req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, gpuDynInst->seqNum(), id,
-                pkt->req->getPaddr());
+        if (gpuDynInst) {
+            DPRINTF(GPUPort,
+                    "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data"
+                    " req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
+                    gpuDynInst->wfSlotId, gpuDynInst->seqNum(), id,
+                    pkt->req->getPaddr());
+        }
     }
 }
 
@@ -2389,15 +2476,15 @@ ComputeUnit::ComputeUnitStats::ComputeUnitStats(statistics::Group *parent,
     instCyclesLdsPerSimd.init(cu->numVectorALUs);
 
     hitsPerTLBLevel.init(4);
-    execRateDist.init(0, 10, 2);
-    ldsBankConflictDist.init(0, cu->wfSize(), 2);
+    execRateDist.init(0, 10-1, 2);
+    ldsBankConflictDist.init(0, cu->wfSize()-1, 2);
 
     pageDivergenceDist.init(1, cu->wfSize(), 4);
     controlFlowDivergenceDist.init(1, cu->wfSize(), 4);
     activeLanesPerGMemInstrDist.init(1, cu->wfSize(), 4);
     activeLanesPerLMemInstrDist.init(1, cu->wfSize(), 4);
 
-    headTailLatency.init(0, 1000000, 10000).flags(statistics::pdf |
+    headTailLatency.init(0, 1000000-1, 10000).flags(statistics::pdf |
         statistics::oneline);
     waveLevelParallelism.init(0, n_wf * cu->numVectorALUs, 1);
     instInterleave.init(cu->numVectorALUs, 0, 20, 1);

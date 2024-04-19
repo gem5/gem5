@@ -45,7 +45,7 @@ class PrefetchType(Enum):
 
 
 class GfxVersion(ScopedEnum):
-    vals = ["gfx801", "gfx803", "gfx900", "gfx902", "gfx908", "gfx90a"]
+    vals = ["gfx900", "gfx902", "gfx908", "gfx90a"]
 
 
 class PoolManager(SimObject):
@@ -294,6 +294,7 @@ class Shader(ClockedObject):
     dispatcher = Param.GPUDispatcher("GPU workgroup dispatcher")
     system_hub = Param.AMDGPUSystemHub(NULL, "GPU System Hub (FS Mode only)")
     n_wf = Param.Int(10, "Number of wavefront slots per SIMD")
+    cu_per_sqc = Param.Int(4, "Number of CUs that share an SQC")
     impl_kern_launch_acq = Param.Bool(
         True,
         """Insert acq packet into
@@ -320,7 +321,7 @@ class GPUComputeDriver(EmulatedDriver):
     cxx_header = "gpu-compute/gpu_compute_driver.hh"
     device = Param.GPUCommandProcessor("GPU controlled by this driver")
     isdGPU = Param.Bool(False, "Driver is for a dGPU")
-    gfxVersion = Param.GfxVersion("gfx801", "ISA of gpu to model")
+    gfxVersion = Param.GfxVersion("gfx902", "ISA of gpu to model")
     dGPUPoolID = Param.Int(0, "Pool ID for dGPU.")
     # Default Mtype for caches
     # --     1   1   1   C_RW_S  (Cached-ReadWrite-Shared)
@@ -358,6 +359,10 @@ class GPUCommandProcessor(DmaVirtDevice):
     hsapp = Param.HSAPacketProcessor("PP attached to this device")
     walker = Param.VegaPagetableWalker(
         VegaPagetableWalker(), "Page table walker"
+    )
+    target_non_blit_kernel_id = Param.Int(
+        0,
+        "Skip kernels until reaching this kernel (counting only non-blit kernels)",
     )
 
 

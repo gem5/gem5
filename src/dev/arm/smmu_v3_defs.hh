@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2019, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -102,9 +102,41 @@ enum
     Q_BASE_ADDR_MASK   = 0x0000ffffffffffe0ULL,
     Q_BASE_SIZE_MASK   = 0x000000000000001fULL,
 
-    E_BASE_ENABLE_MASK = 0x8000000000000000ULL,
     E_BASE_ADDR_MASK   = 0x0000fffffffffffcULL,
 };
+
+BitUnion32(IDR0)
+    Bitfield<0> s2p;
+    Bitfield<1> s1p;
+    Bitfield<3, 2> ttf;
+    Bitfield<4> cohacc;
+    Bitfield<5> btm;
+    Bitfield<7, 6> httu;
+    Bitfield<8> dormhint;
+    Bitfield<9> hyp;
+    Bitfield<10> ats;
+    Bitfield<11> ns1ats;
+    Bitfield<12> asid16;
+    Bitfield<13> msi;
+    Bitfield<14> sev;
+    Bitfield<15> atos;
+    Bitfield<16> pri;
+    Bitfield<17> vmw;
+    Bitfield<18> vmid16;
+    Bitfield<19> cd2l;
+    Bitfield<20> vatos;
+    Bitfield<22, 21> ttEndian;
+    Bitfield<23> atsRecErr;
+    Bitfield<25, 24> stallModel;
+    Bitfield<26> termModel;
+    Bitfield<28, 27> stLevel;
+EndBitUnion(IDR0)
+
+BitUnion32(IRQCtrl)
+    Bitfield<0> gerrorIrqEn;
+    Bitfield<1> priqIrqEn;
+    Bitfield<2> eventqIrqEn;
+EndBitUnion(IRQCtrl)
 
 union SMMURegs
 {
@@ -384,25 +416,41 @@ struct SMMUCommand
     }
 };
 
-enum SMMUEventTypes
-{
-    EVT_FAULT = 0x0001,
-};
-
-enum SMMUEventFlags
-{
-    EVF_WRITE = 0x0001,
-};
-
 struct SMMUEvent
 {
-    uint16_t type;
-    uint16_t stag;
-    uint32_t flags;
-    uint32_t streamId;
-    uint32_t substreamId;
-    uint64_t va;
-    uint64_t ipa;
+    struct Data {
+        BitUnion64(DWORD0)
+            Bitfield<7, 0> eventType;
+            Bitfield<11> ssv;
+            Bitfield<31, 12> substreamId;
+            Bitfield<63, 32> streamId;
+        EndBitUnion(DWORD0)
+        DWORD0 dw0;
+
+        BitUnion64(DWORD1)
+            Bitfield<16, 0> stag;
+            Bitfield<33> pnu;
+            Bitfield<34> ind;
+            Bitfield<35> rnw;
+            Bitfield<38> nsipa;
+            Bitfield<39> s2;
+            Bitfield<41, 40> clss;
+        EndBitUnion(DWORD1)
+        DWORD1 dw1;
+
+        BitUnion64(DWORD2)
+            Bitfield<63, 0> inputAddr;
+        EndBitUnion(DWORD2)
+        DWORD2 dw2;
+
+        BitUnion64(DWORD3)
+            Bitfield<51, 3> fetchAddr;
+            Bitfield<51, 12> ipa;
+        EndBitUnion(DWORD3)
+        DWORD3 dw3;
+    } data;
+
+    std::string print() const;
 };
 
 enum

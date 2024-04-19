@@ -57,6 +57,7 @@
 /// application on the host machine.
 
 #if defined(__linux__)
+#include <linux/kdev_t.h>
 #include <sched.h>
 #include <sys/eventfd.h>
 #include <sys/statfs.h>
@@ -675,6 +676,66 @@ copyOutStatfsBuf(TgtStatPtr tgt, HostStatPtr host)
      */
     memset(&tgt->f_spare, 0, sizeof(tgt->f_spare));
 #endif
+}
+
+template <typename OS, typename TgtStatPtr, typename HostStatPtr>
+void
+copyOutStatxBuf(TgtStatPtr tgt, HostStatPtr host, bool fakeTTY = false)
+{
+    constexpr ByteOrder bo = OS::byteOrder;
+
+    if (fakeTTY) {
+        tgt->stx_dev_major = 0x00;
+        tgt->stx_dev_minor = 0x0A;
+    } else {
+        tgt->stx_dev_major = host->st_dev >> 8;
+        tgt->stx_dev_minor = host->st_dev & 0xFF;
+    }
+    tgt->stx_dev_major = htog(tgt->stx_dev_major, bo);
+    tgt->stx_dev_minor = htog(tgt->stx_dev_minor, bo);
+    tgt->stx_ino = host->st_ino;
+    tgt->stx_ino = htog(tgt->stx_ino, bo);
+    tgt->stx_mode = host->st_mode;
+    if (fakeTTY) {
+      // Claim to be character device.
+      tgt->stx_mode &= ~S_IFMT;
+      tgt->stx_mode |= S_IFCHR;
+    }
+    tgt->stx_mode = htog(tgt->stx_mode, bo);
+    tgt->stx_nlink = host->st_nlink;
+    tgt->stx_nlink = htog(tgt->stx_nlink, bo);
+    tgt->stx_uid = host->st_uid;
+    tgt->stx_uid = htog(tgt->stx_uid, bo);
+    tgt->stx_gid = host->st_gid;
+    tgt->stx_gid = htog(tgt->stx_gid, bo);
+    if (fakeTTY) {
+        tgt->stx_rdev_major = 0x880d >> 8;
+        tgt->stx_rdev_minor = 0x880d & 0xFF;
+    } else {
+        tgt->stx_rdev_major = host->st_rdev >> 8;
+        tgt->stx_rdev_minor = host->st_rdev & 0xFF;
+    }
+    tgt->stx_rdev_major = htog(tgt->stx_rdev_major, bo);
+    tgt->stx_rdev_minor = htog(tgt->stx_rdev_minor, bo);
+    tgt->stx_size = host->st_size;
+    tgt->stx_size = htog(tgt->stx_size, bo);
+    tgt->stx_atimeX = host->st_atime;
+    tgt->stx_atimeX = htog(tgt->stx_atimeX, bo);
+    tgt->stx_ctimeX = host->st_ctime;
+    tgt->stx_ctimeX = htog(tgt->stx_ctimeX, bo);
+    tgt->stx_mtimeX = host->st_mtime;
+    tgt->stx_mtimeX = htog(tgt->stx_mtimeX, bo);
+    // Force the block size to be 8KB. This helps to ensure buffered io works
+    // consistently across different hosts.
+    tgt->stx_blksize = 0x2000;
+    tgt->stx_blksize = htog(tgt->stx_blksize, bo);
+    tgt->stx_blocks = host->st_blocks;
+    tgt->stx_blocks = htog(tgt->stx_blocks, bo);
+    tgt->stx_mask = 0x000007ffU; // STATX_BASIC_STATS on Linux.
+    tgt->stx_mask = htog(tgt->stx_mask, bo);
+    tgt->stx_attributes = 0;
+    tgt->stx_attributes_mask = 0;
+    tgt->stx_attributes_mask = htog(tgt->stx_attributes_mask, bo);
 }
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
@@ -1454,6 +1515,45 @@ stat64Func(SyscallDesc *desc, ThreadContext *tc,
            VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     return fstatat64Func<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_stat);
+}
+
+/// Target statx() handler.
+template <class OS>
+SyscallReturn
+statxFunc(SyscallDesc *desc, ThreadContext *tc,
+          int dirfd, VPtr<> pathname, int flags,
+          unsigned int mask, VPtr<typename OS::tgt_statx> tgt_statx)
+{
+    std::string path;
+
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    if (path.empty() && !(flags & OS::TGT_AT_EMPTY_PATH))
+        return -ENOENT;
+    flags = flags & ~OS::TGT_AT_EMPTY_PATH;
+
+    warn_if(flags != 0, "statx: Flag bits %#x not supported.", flags);
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
+
+    struct stat host_buf;
+    int result = stat(path.c_str(), &host_buf);
+
+    if (result < 0)
+        return -errno;
+
+    copyOutStatxBuf<OS>(tgt_statx, &host_buf);
+
+    return 0;
 }
 
 /// Target fstat64() handler.

@@ -449,6 +449,8 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
 
   tbe.atomic_op.clear();
   tbe.atomic_op.orMask(in_msg.atomic_op);
+  tbe.atomic_to_be_done := false;
+  tbe.atomic_to_be_wb := false;
 
   tbe.use_DMT := false;
   tbe.use_DCT := false;
@@ -814,7 +816,7 @@ bool needCacheEntry(CHIRequestType req_type,
                                  (req_type == CHIRequestType:AtomicStore))) ||
            (alloc_on_seq_line_write && (req_type == CHIRequestType:StoreLine)) ||
            (alloc_on_atomic && ((req_type == CHIRequestType:AtomicReturn) ||
-                               (req_type == CHIRequestType:AtomicNoReturn)));
+                                 (req_type == CHIRequestType:AtomicNoReturn)));
   }
 }
 
@@ -1274,13 +1276,17 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
   } else if (type == CHIRequestType:DvmSync_Initiate) {
     return Event:DvmSync_Initiate;
   } else if (type == CHIRequestType:AtomicReturn){
-    if (is_HN) {
+    if (is_HN && alloc_on_atomic) {
+      return Event:AtomicReturn_PoC_Alloc;
+    } else if (is_HN){
       return Event:AtomicReturn_PoC;
     } else {
       return Event:AtomicReturn;
     }
   } else if (type == CHIRequestType:AtomicNoReturn){
-    if (is_HN) {
+    if (is_HN && alloc_on_atomic) {
+      return Event:AtomicNoReturn_PoC_Alloc;
+    } else if (is_HN){
       return Event:AtomicNoReturn_PoC;
     } else {
       return Event:AtomicNoReturn;

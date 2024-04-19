@@ -54,13 +54,13 @@ if [[ $# -gt 1 ]]; then
 fi
 
 # The third argument is the GPU ISA to run. If no argument is given we default
-# to GCN3_X86.
-gpu_isa=GCN3_X86
+# to VEGA_X86.
+gpu_isa=VEGA_X86
 if [[ $# -gt 2 ]]; then
     gpu_isa=$3
 fi
 
-if [[ "$gpu_isa" != "GCN3_X86" ]] && [[ "$gpu_isa" != "VEGA_X86" ]]; then
+if [[ "$gpu_isa" != "VEGA_X86" ]]; then
     echo "Invalid GPU ISA: $gpu_isa"
     exit 1
 fi

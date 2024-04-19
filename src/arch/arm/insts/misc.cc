@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018, 2021 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2021, 2023 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -411,7 +411,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALL tlbiOp(EL1, secure);
+            TLBIALL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp(tc);
             return;
         }
@@ -421,7 +421,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALL tlbiOp(EL1, secure);
+            TLBIALL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -431,7 +431,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIALL tlbiOp(EL1, secure);
+            ITLBIALL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp(tc);
             return;
         }
@@ -441,7 +441,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIALL tlbiOp(EL1, secure);
+            DTLBIALL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp(tc);
             return;
         }
@@ -451,7 +451,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
+            TLBIMVA tlbiOp(TranslationRegime::EL10,
                            secure,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
@@ -466,7 +466,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
+            TLBIMVA tlbiOp(TranslationRegime::EL10,
                            secure,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
@@ -481,7 +481,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
+            TLBIMVA tlbiOp(TranslationRegime::EL10,
                            secure,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
@@ -496,7 +496,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
+            TLBIMVA tlbiOp(TranslationRegime::EL10,
                            secure,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
@@ -511,7 +511,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(EL1,
+            TLBIASID tlbiOp(TranslationRegime::EL10,
                             secure,
                             bits(value, 7, 0));
 
@@ -524,7 +524,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(EL1,
+            TLBIASID tlbiOp(TranslationRegime::EL10,
                             secure,
                             bits(value, 7, 0));
 
@@ -537,7 +537,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
                             mbits(value, 31, 12), false);
 
             tlbiOp(tc);
@@ -549,7 +549,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
                             mbits(value, 31, 12), true);
 
             tlbiOp(tc);
@@ -561,7 +561,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
                             mbits(value, 31, 12), false);
 
             tlbiOp.broadcast(tc);
@@ -573,7 +573,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
                             mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
@@ -585,7 +585,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                             mbits(value, 31, 12), false);
 
             tlbiOp(tc);
@@ -597,7 +597,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                             mbits(value, 31, 12), true);
 
             tlbiOp(tc);
@@ -609,7 +609,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                             mbits(value, 31, 12), false);
 
             tlbiOp.broadcast(tc);
@@ -621,7 +621,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                             mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
@@ -633,7 +633,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
+            TLBIIPA tlbiOp(TranslationRegime::EL10,
                            secure,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            false);
@@ -648,7 +648,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
+            TLBIIPA tlbiOp(TranslationRegime::EL10,
                            secure,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            true);
@@ -663,7 +663,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
+            TLBIIPA tlbiOp(TranslationRegime::EL10,
                            secure,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            false);
@@ -678,7 +678,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
+            TLBIIPA tlbiOp(TranslationRegime::EL10,
                            secure,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            true);
@@ -692,7 +692,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIMVA tlbiOp(EL1,
+            ITLBIMVA tlbiOp(TranslationRegime::EL10,
                             secure,
                             mbits(value, 31, 12),
                             bits(value, 7, 0));
@@ -706,7 +706,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIMVA tlbiOp(EL1,
+            DTLBIMVA tlbiOp(TranslationRegime::EL10,
                             secure,
                             mbits(value, 31, 12),
                             bits(value, 7, 0));
@@ -720,7 +720,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIASID tlbiOp(EL1,
+            ITLBIASID tlbiOp(TranslationRegime::EL10,
                              secure,
                              bits(value, 7, 0));
 
@@ -733,7 +733,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIASID tlbiOp(EL1,
+            DTLBIASID tlbiOp(TranslationRegime::EL10,
                              secure,
                              bits(value, 7, 0));
 
@@ -743,28 +743,28 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate All, Non-Secure Non-Hyp
       case MISCREG_TLBIALLNSNH:
         {
-            TLBIALLN tlbiOp(EL1);
+            TLBIALLN tlbiOp(TranslationRegime::EL10);
             tlbiOp(tc);
             return;
         }
       // TLB Invalidate All, Non-Secure Non-Hyp, Inner Shareable
       case MISCREG_TLBIALLNSNHIS:
         {
-            TLBIALLN tlbiOp(EL1);
+            TLBIALLN tlbiOp(TranslationRegime::EL10);
             tlbiOp.broadcast(tc);
             return;
         }
       // TLB Invalidate All, Hyp mode
       case MISCREG_TLBIALLH:
         {
-            TLBIALLN tlbiOp(EL2);
+            TLBIALLN tlbiOp(TranslationRegime::EL2);
             tlbiOp(tc);
             return;
         }
       // TLB Invalidate All, Hyp mode, Inner Shareable
       case MISCREG_TLBIALLHIS:
         {
-            TLBIALLN tlbiOp(EL2);
+            TLBIALLN tlbiOp(TranslationRegime::EL2);
             tlbiOp.broadcast(tc);
             return;
         }

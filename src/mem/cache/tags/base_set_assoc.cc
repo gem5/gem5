@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014, 2023-2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -88,6 +88,11 @@ BaseSetAssoc::tagsInit()
 void
 BaseSetAssoc::invalidate(CacheBlk *blk)
 {
+    // Notify partitioning policies of release of ownership
+    if (partitionManager) {
+        partitionManager->notifyRelease(blk->getPartitionId());
+    }
+
     BaseTags::invalidate(blk);
 
     // Decrease the number of tags in use

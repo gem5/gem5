@@ -36,10 +36,12 @@
 #include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
+#include "debug/GPUDisp.hh"
 #include "debug/GPUInitAbi.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 #include "mem/se_translating_port_proxy.hh"
@@ -48,6 +50,7 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
+#include "sim/sim_exit.hh"
 #include "sim/syscall_emul_buf.hh"
 
 namespace gem5
@@ -55,7 +58,8 @@ namespace gem5
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
-      walker(p.walker), hsaPP(p.hsapp)
+      walker(p.walker), hsaPP(p.hsapp),
+      target_non_blit_kernel_id(p.target_non_blit_kernel_id)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -118,7 +122,25 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                                        Addr host_pkt_addr)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
-    assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
+    // The kernel object should be aligned to a 64B boundary, but not
+    // necessarily a cache line boundary.
+    unsigned akc_alignment_granularity = 64;
+    assert(!(disp_pkt->kernel_object & (akc_alignment_granularity - 1)));
+
+    /**
+     * Make sure there is not a race condition with invalidates in the L2
+     * cache. The full system driver may write directly to memory using
+     * large BAR while the L2 cache is allowed to keep data in the valid
+     * state between kernel launches. This is a rare event but is required
+     * for correctness.
+     */
+    if (shader()->getNumOutstandingInvL2s() > 0) {
+        DPRINTF(GPUCommandProc,
+                "Deferring kernel launch due to outstanding L2 invalidates\n");
+        shader()->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
+
+        return;
+    }
 
     /**
      * Need to use a raw pointer for DmaVirtDevice API. This is deleted
@@ -201,7 +223,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
             // Read from GPU memory manager one cache line at a time to prevent
             // rare cases where the AKC spans two memory pages.
             ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                               system()->cacheLineSize());
+                               akc_alignment_granularity);
             for (; !gen.done(); gen.next()) {
                 Addr chunk_addr = gen.addr();
                 int vmid = 1;
@@ -212,10 +234,13 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
                 Request::Flags flags = Request::PHYSICAL;
                 RequestPtr request = std::make_shared<Request>(chunk_addr,
-                    system()->cacheLineSize(), flags,
+                    akc_alignment_granularity, flags,
                     walker->getDevRequestor());
                 Packet *readPkt = new Packet(request, MemCmd::ReadReq);
                 readPkt->dataStatic((uint8_t *)akc + gen.complete());
+                // If the request spans two device memories, the device memory
+                // returned will be null.
+                assert(system()->getDeviceMemory(readPkt) != nullptr);
                 system()->getDeviceMemory(readPkt)->access(readPkt);
                 delete readPkt;
             }
@@ -253,10 +278,13 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
      * APUs to implement asynchronous memcopy operations from 2 pointers in
      * host memory.  I have no idea what BLIT stands for.
      * */
+    bool is_blit_kernel;
     if (!disp_pkt->completion_signal) {
         kernel_name = "Some kernel";
+        is_blit_kernel = false;
     } else {
         kernel_name = "Blit kernel";
+        is_blit_kernel = true;
     }
 
     DPRINTF(GPUKernelInfo, "Kernel name: %s\n", kernel_name.c_str());
@@ -266,6 +294,38 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
     HSAQueueEntry *task = new HSAQueueEntry(kernel_name, queue_id,
         dynamic_task_id, raw_pkt, akc, host_pkt_addr, machine_code_addr,
         gfxVersion);
+
+    // The driver expects the start time to be in ns
+    Tick start_ts = curTick() / sim_clock::as_int::ns;
+    dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+
+    // Potentially skip a non-blit kernel
+    if (!is_blit_kernel && (non_blit_kernel_id < target_non_blit_kernel_id)) {
+        DPRINTF(GPUCommandProc, "Skipping non-blit kernel %i (Task ID: %i)\n",
+                non_blit_kernel_id, dynamic_task_id);
+
+        // Notify the HSA PP that this kernel is complete
+        hsaPacketProc().finishPkt(task->dispPktPtr(), task->queueId());
+        if (task->completionSignal()) {
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete with completion "
+                    "signal! Addr: %d\n", task->completionSignal());
+
+            sendCompletionSignal(task->completionSignal());
+        } else {
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete! No completion "
+                "signal\n");
+        }
+
+        ++dynamic_task_id;
+        ++non_blit_kernel_id;
+
+        delete akc;
+
+        // Notify the run script that a kernel has been skipped
+        exitSimLoop("Skipping GPU Kernel");
+
+        return;
+    }
 
     DPRINTF(GPUCommandProc, "Task ID: %i Got AQL: wg size (%dx%dx%d), "
         "grid size (%dx%dx%d) kernarg addr: %#x, completion "
@@ -282,10 +342,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
     initABI(task);
     ++dynamic_task_id;
-
-    // The driver expects the start time to be in ns
-    Tick start_ts = curTick() / sim_clock::as_int::ns;
-    dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+    if (!is_blit_kernel) ++non_blit_kernel_id;
 
     delete akc;
 }
@@ -723,7 +780,6 @@ GPUCommandProcessor::sanityCheckAKC(AMDKernelCode *akc)
     warn_if(akc->kernarg_preload_spec_length ||
             akc->kernarg_preload_spec_offset,
             "Kernarg preload not implemented\n");
-    warn_if(akc->accum_offset, "ACC offset not implemented\n");
     warn_if(akc->tg_split, "TG split not implemented\n");
 }
 

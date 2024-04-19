@@ -52,13 +52,16 @@
 #define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB                 0x13094
 #define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT             0x13098
 
+// Scratch registers used for GPU post
+#define AMDGPU_MM_SCRATCH_REG0                            0x08100
+
 namespace gem5
 {
 
 class AMDGPUGfx
 {
   public:
-    AMDGPUGfx() { }
+    AMDGPUGfx();
 
     void readMMIO(PacketPtr pkt, Addr offset);
     void writeMMIO(PacketPtr pkt, Addr offset);
@@ -68,6 +71,12 @@ class AMDGPUGfx
      * GPU clock count at the time capture MMIO is received.
      */
     uint64_t captured_clock_count = 1;
+
+    /*
+     * Scratch registers.
+     */
+    static constexpr int SCRATCH_REGS = 8;
+    std::array<uint32_t, SCRATCH_REGS> scratchRegs;
 };
 
 } // namespace gem5

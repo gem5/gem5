@@ -327,13 +327,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                  */
 
                 switch (gfxVersion) {
-                  case GfxVersion::gfx801:
-                  case GfxVersion::gfx803:
-                    args->process_apertures[i].scratch_base =
-                        scratchApeBase(i + 1);
-                    args->process_apertures[i].lds_base =
-                        ldsApeBase(i + 1);
-                    break;
                   case GfxVersion::gfx900:
                   case GfxVersion::gfx902:
                     args->process_apertures[i].scratch_base =
@@ -345,7 +338,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     fatal("Invalid gfx version\n");
                 }
 
-                // GFX8 and GFX9 set lds and scratch limits the same way
                 args->process_apertures[i].scratch_limit =
                     scratchApeLimit(args->process_apertures[i].scratch_base);
 
@@ -353,13 +345,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     ldsApeLimit(args->process_apertures[i].lds_base);
 
                 switch (gfxVersion) {
-                  case GfxVersion::gfx801:
-                    args->process_apertures[i].gpuvm_base =
-                        gpuVmApeBase(i + 1);
-                    args->process_apertures[i].gpuvm_limit =
-                        gpuVmApeLimit(args->process_apertures[i].gpuvm_base);
-                    break;
-                  case GfxVersion::gfx803:
                   case GfxVersion::gfx900:
                   case GfxVersion::gfx902:
                     // Taken from SVM_USE_BASE in Linux kernel
@@ -383,9 +368,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // id composed out of a non-zero base and an offset.
                 if (isdGPU) {
                     switch (gfxVersion) {
-                      case GfxVersion::gfx803:
-                        args->process_apertures[i].gpu_id = 50156;
-                        break;
                       case GfxVersion::gfx900:
                         args->process_apertures[i].gpu_id = 22124;
                         break;
@@ -394,7 +376,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     }
                 } else {
                     switch (gfxVersion) {
-                      case GfxVersion::gfx801:
                       case GfxVersion::gfx902:
                         args->process_apertures[i].gpu_id = 2765;
                         break;
@@ -630,11 +611,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     (ioc_args->kfd_process_device_apertures_ptr);
 
                 switch (gfxVersion) {
-                  case GfxVersion::gfx801:
-                  case GfxVersion::gfx803:
-                    ape_args->scratch_base = scratchApeBase(i + 1);
-                    ape_args->lds_base = ldsApeBase(i + 1);
-                    break;
                   case GfxVersion::gfx900:
                   case GfxVersion::gfx902:
                     ape_args->scratch_base = scratchApeBaseV9();
@@ -644,18 +620,11 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     fatal("Invalid gfx version\n");
                 }
 
-                // GFX8 and GFX9 set lds and scratch limits the same way
                 ape_args->scratch_limit =
                     scratchApeLimit(ape_args->scratch_base);
                 ape_args->lds_limit = ldsApeLimit(ape_args->lds_base);
 
                 switch (gfxVersion) {
-                  case GfxVersion::gfx801:
-                    ape_args->gpuvm_base = gpuVmApeBase(i + 1);
-                    ape_args->gpuvm_limit =
-                        gpuVmApeLimit(ape_args->gpuvm_base);
-                    break;
-                  case GfxVersion::gfx803:
                   case GfxVersion::gfx900:
                   case GfxVersion::gfx902:
                     // Taken from SVM_USE_BASE in Linux kernel
@@ -670,9 +639,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // NOTE: Must match ID populated by hsaTopology.py
                 if (isdGPU) {
                     switch (gfxVersion) {
-                      case GfxVersion::gfx803:
-                        ape_args->gpu_id = 50156;
-                        break;
                       case GfxVersion::gfx900:
                         ape_args->gpu_id = 22124;
                         break;
@@ -681,7 +647,6 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     }
                 } else {
                     switch (gfxVersion) {
-                      case GfxVersion::gfx801:
                       case GfxVersion::gfx902:
                         ape_args->gpu_id = 2765;
                         break;

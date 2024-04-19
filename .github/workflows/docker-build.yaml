@@ -6,15 +6,15 @@ on:
 jobs:
     obtain-dockerfiles:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/upload-artifact@v3
+            - uses: actions/upload-artifact@v4
               with:
                   name: dockerfiles
                   path: util/dockerfiles
@@ -28,7 +28,7 @@ jobs:
             contents: read
 
         steps:
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: dockerfiles
                   path: dockerfiles-docker-build

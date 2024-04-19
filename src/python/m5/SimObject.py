@@ -1199,6 +1199,21 @@ class SimObject(metaclass=MetaSimObject):
                     param,
                 )
 
+            if (not isinstance(value, EthernetAddr)) and isproxy(value):
+                # At the time of adding this error unproxying params happens
+                # in simulate.py at lines 103-104 (commit hash: f56459470a)
+                # To understand how attributes are handled for SimObjects
+                # refer to SimObject::__setattr__.
+                fatal(
+                    f"Param {param} for {self._name} has value = {value}. "
+                    "This value is a not a valid value. This could be caused "
+                    f"by {param} not having been unproxied correctly. "
+                    "One reason why this might happen is if you have "
+                    "mistakenly added a child SimObject as an attr and not a "
+                    "child by giving it a name that starts with an underscore "
+                    f"`_`. {self.path()} should not say 'orphan.'"
+                )
+
             value = value.getValue()
             if isinstance(self._params[param], VectorParamDesc):
                 assert isinstance(value, list)

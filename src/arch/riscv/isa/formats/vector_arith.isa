@@ -114,12 +114,10 @@ let {{
 
     def fflags_wrapper(code):
         return '''
-        RegVal FFLAGS = xc->readMiscReg(MISCREG_FFLAGS);
         std::feclearexcept(FE_ALL_EXCEPT);
         ''' + code + '''
-        FFLAGS |= softfloat_exceptionFlags;
+        xc->setMiscReg(MISCREG_FFLAGS_EXE, softfloat_exceptionFlags);
         softfloat_exceptionFlags = 0;
-        xc->setMiscReg(MISCREG_FFLAGS, FFLAGS);
         '''
 
     def declareVArithTemplate(
@@ -1049,7 +1047,7 @@ def format Vector1Vs1VdMaskFormat(code, category, *flags){{
          },
         flags)
 
-    header_output = Vector1Vs1RdMaskDeclare.subst(iop)
+    header_output = Vector1Vs1VdMaskDeclare.subst(iop)
     decoder_output = Vector1Vs1VdMaskConstructor.subst(iop)
     exec_output = Vector1Vs1VdMaskExecute.subst(iop)
     decode_block = VectorMaskDecodeBlock.subst(iop)
