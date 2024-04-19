@@ -101,9 +101,12 @@ class KernelDiskWorkload:
     def _add_disk_to_board(self, disk_image: DiskImageResource) -> None:
         """
         Sets the configuration needed to add the root disk image to the board.
+
         .. note::
+
             This will be executed at the end of the
             ``set_kernel_disk_workload`` function.
+
         :param disk_image: The disk image to add to the system.
         """
         raise NotImplementedError

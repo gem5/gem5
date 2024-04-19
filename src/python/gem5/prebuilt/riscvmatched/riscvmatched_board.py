@@ -599,10 +599,7 @@ class RISCVMatchedBoard(
         return "/dev/vda"
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(
-        self,
-        disk_image: AbstractResource,
-    ):
+    def _add_disk_to_board(self, disk_image: AbstractResource):
         image = CowDiskImage(
             child=RawDiskImage(read_only=True), read_only=False
         )
