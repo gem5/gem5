@@ -481,27 +481,48 @@ class SimpointResource(AbstractResource):
         self._warmup_interval = warmup_interval
         self._workload_name = workload_name
 
+        self._simpoint_start_insts = None
+
+    def _load_simpoints(self) -> None:
+        """As we cache downloading of resources until we require it, we may
+        not pass the simpoint data in the constructor. In this case we enforce
+        that the simpoint data is loaded via ths `_load_simpoints` function.
+        Ergo when functions like `get_simpoint_list` are called, the data is
+        loaded.
+        """
         self._simpoint_start_insts = list(
-            inst * simpoint_interval for inst in self.get_simpoint_list()
+            inst * self.get_simpoint_interval()
+            for inst in self.get_simpoint_list()
         )
 
-        if self._warmup_interval != 0:
+        if self.get_warmup_interval() != 0:
             self._warmup_list = self._set_warmup_list()
         else:
             self._warmup_list = [0] * len(self.get_simpoint_start_insts)
 
     def get_simpoint_list(self) -> List[int]:
         """Returns the a list containing all the SimPoints for the workload."""
+        if self._simpoint_list is None:
+            self._load_simpoints()
+        assert self._simpoint_list is not None, "SimPoint list is None"
         return self._simpoint_list
 
     def get_simpoint_start_insts(self) -> List[int]:
         """Returns a lst containing all the SimPoint starting instrunction
         points for the workload. This was calculated by multiplying the
         SimPoint with the SimPoint interval when it was generated."""
+        if self._simpoint_start_insts is None:
+            self._load_simpoints()
+        assert (
+            self._simpoint_start_insts is not None
+        ), "SimPoint start insts is None"
         return self._simpoint_start_insts
 
     def get_warmup_interval(self) -> int:
         """Returns the instruction length of the warmup interval."""
+        if self._warmup_interval is None:
+            self._load_simpoints()
+        assert self._warmup_interval is not None, "Warmup interval is None"
         return self._warmup_interval
 
     def get_weight_list(self) -> List[float]:
@@ -509,6 +530,9 @@ class SimpointResource(AbstractResource):
         order of the weights matches that of the list returned by
         ``get_simpoint_list()``. I.e. ``get_weight_list()[3]`` is the weight for
         SimPoint ``get_simpoint_list()[3]``."""
+        if self._weight_list is None:
+            self._load_simpoints()
+        assert self._weight_list is not None, "Weight list is None"
         return self._weight_list
 
     def get_simpoint_interval(self) -> int:
@@ -520,6 +544,9 @@ class SimpointResource(AbstractResource):
         Each warmup length in this list corresponds to the SimPoint at the same
         index in ``get_simpoint_list()``. I.e., ``get_warmup_list()[4]`` is the
         warmup length for SimPoint ``get_simpoint_list()[4]``."""
+        if self._warmup_list is None:
+            self._load_simpoints()
+        assert self._warmup_list is not None, "Warmup list is None"
         return self._warmup_list
 
     def get_workload_name(self) -> Optional[str]:
@@ -644,20 +671,8 @@ class SimpointDirectoryResource(SimpointResource):
         self._simpoint_file = simpoint_file
         self._weight_file = weight_file
 
-        # This is a little hack. The functions `get_simpoint_file` and
-        # `get_weight_file` use the local path, so we set it here despite it
-        # also being set in the `AbstractResource` constructor. This isn't
-        # elegant but does not harm.
-        self._local_path = local_path
-        (
-            simpoint_list,
-            weight_list,
-        ) = self._get_weights_and_simpoints_from_file()
-
         super().__init__(
             simpoint_interval=simpoint_interval,
-            simpoint_list=simpoint_list,
-            weight_list=weight_list,
             warmup_interval=warmup_interval,
             workload_name=workload_name,
             local_path=local_path,
@@ -668,13 +683,22 @@ class SimpointDirectoryResource(SimpointResource):
             resource_version=resource_version,
         )
 
+    def _load_simpoints(self) -> None:
+        (
+            simpoint_list,
+            weight_list,
+        ) = self._get_weights_and_simpoints_from_file()
+        self._simpoint_list = simpoint_list
+        self._weight_list = weight_list
+        super()._load_simpoints()
+
     def get_simpoint_file(self) -> Path:
         """Return the SimPoint File path."""
-        return Path(Path(self._local_path) / self._simpoint_file)
+        return Path(Path(self.get_local_path()) / self._simpoint_file)
 
     def get_weight_file(self) -> Path:
         """Returns the Weight File path."""
-        return Path(Path(self._local_path) / self._weight_file)
+        return Path(Path(self.get_local_path()) / self._weight_file)
 
     def _get_weights_and_simpoints_from_file(
         self,
