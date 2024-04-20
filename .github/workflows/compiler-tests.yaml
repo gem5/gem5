@@ -5,10 +5,10 @@ name: Compiler Tests
 
 on:
   # Runs every Friday from 7AM UTC
-  schedule:
-    - cron: 00 7 * * 5
+    schedule:
+        - cron: 00 7 * * 5
   # Allows us to manually start workflow for testing
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
   # replication of compiler-tests.sh
@@ -18,7 +18,7 @@ jobs:
             matrix:
                 image: [gcc-version-13, gcc-version-12, gcc-version-11, gcc-version-10, gcc-version-8, clang-version-16, clang-version-15, clang-version-14,
                     clang-version-13, clang-version-12, clang-version-11, clang-version-10, clang-version-9, clang-version-8, clang-version-7, ubuntu-20.04_all-dependencies,
-                    ubuntu-22.04_all-dependencies, ubuntu-22.04_min-dependencies]
+                    ubuntu-22.04_all-dependencies, ubuntu-24.04_all-dependencies, ubuntu-24.04_min-dependencies]
                 opts: [.opt, .fast]
         runs-on: [self-hosted, linux, x64]
         timeout-minutes: 2880 # 48 hours
@@ -55,15 +55,15 @@ jobs:
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
 
-  compiler-tests:
-    # The dummy job is used to indicate whether the compiler tests have
-    # passed or not. This can be used as status check for pull requests.
-    # I.e., if we want to stop pull requests from being merged if the
-    # compiler tests are failing, we can add this job as a required status
-    # check.
-    runs-on: ubuntu-latest
-    needs:
-      - latest-compilers-all-gem5-builds
-      - all-compilers
-    steps:
-      - run: echo "This compiler tests have passed."
+    compiler-tests:
+        # The dummy job is used to indicate whether the compiler tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # compiler tests are failing, we can add this job as a required status
+        # check.
+        runs-on: ubuntu-latest
+        needs:
+            - latest-compilers-all-gem5-builds
+            - all-compilers
+        steps:
+            - run: echo "This compiler tests have passed."

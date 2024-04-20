@@ -4,11 +4,11 @@
 name: Weekly Tests
 
 on:
-  # Runs every Sunday from 7AM UTC
-  schedule:
-    - cron: 00 7 * * 6
-  # Allows us to manually start workflow for testing
-  workflow_dispatch:
+    # Runs every Sunday from 7AM UTC
+    schedule:
+        - cron: 00 7 * * 6
+    # Allows us to manually start workflow for testing
+    workflow_dispatch:
 
 jobs:
     build-gcn-gpu-gem5:
@@ -50,16 +50,16 @@ jobs:
               # them again.
             - run: chmod u+x build/VEGA_X86/gem5.opt
 
-      - name: Obtain LULESH
-        # Obtains the latest LULESH compatible with this version of gem5 via
-        # gem5 Resources.
-        run: build/VEGA_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
+            - name: Obtain LULESH
+              # Obtains the latest LULESH compatible with this version of gem5 via
+              # gem5 Resources.
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
 
-      - name: Run LULUESH tests
-        working-directory: ${{ github.workspace }}
-        run: |
-          build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --dgpu --gfx-version=gfx900 -c \
-          lulesh --options="0.01 2"
+            - name: Run LULUESH tests
+              working-directory: ${{ github.workspace }}
+              run: |
+                  build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --dgpu --gfx-version=gfx900 -c \
+                  lulesh --options="0.01 2"
 
     HACC-tests:
         runs-on: [self-hosted, linux, x64]
@@ -92,7 +92,7 @@ jobs:
 
     build-gem5:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         outputs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
@@ -120,7 +120,7 @@ jobs:
             matrix:
                 test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [build-gem5]
         timeout-minutes: 4320 # 3 days
         steps:
@@ -157,7 +157,7 @@ jobs:
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         steps:
             - uses: actions/checkout@v4
@@ -166,32 +166,30 @@ jobs:
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
 
-      - name: Checkout DRAMSys
-        working-directory: ${{ github.workspace }}/ext/dramsys
-        run:
-          git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1
-          DRAMSys
+            - name: Checkout DRAMSys
+              working-directory: ${{ github.workspace }}/ext/dramsys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
 
-        # gem5 is built separately because it depends on the DRAMSys library
-      - name: Build gem5
-        working-directory: ${{ github.workspace }}
-        run: scons build/ALL/gem5.opt -j $(nproc)
+              # gem5 is built separately because it depends on the DRAMSys library
+            - name: Build gem5
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.opt -j $(nproc)
 
-      - name: Run DRAMSys Checks
-        working-directory: ${{ github.workspace }}
-        run: |
-          ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
-          ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
-          ./build/ALL/gem5.opt configs/example/dramsys.py
-  weekly-tests:
-    # The dummy job is used to indicate whether the weekly tests have
-    # passed or not. This can be used as status check for pull requests.
-    # I.e., if we want to stop pull requests from being merged if the
-    # weekly tests are failing we can add this job as a required status
-    # check.
-    runs-on: ubuntu-latest
-    needs:
-      - testlib-very-long-tests
-      - dramsys-tests
-    steps:
-      - run: echo "This weekly tests have passed."
+            - name: Run DRAMSys Checks
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
+                  ./build/ALL/gem5.opt configs/example/dramsys.py
+    weekly-tests:
+        # The dummy job is used to indicate whether the weekly tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # weekly tests are failing we can add this job as a required status
+        # check.
+        runs-on: ubuntu-latest
+        needs:
+            - testlib-very-long-tests
+            - dramsys-tests
+        steps:
+            - run: echo "This weekly tests have passed."
