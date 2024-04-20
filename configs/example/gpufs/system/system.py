@@ -263,7 +263,7 @@ def makeGpuFSSystem(args):
         0x00000340,
         0x00000000,
         0x00000340,
-        0x0000000F,
+        0x00000000,
         0x00000340,
         0x00000000,
         0x00000000,
@@ -281,7 +281,7 @@ def makeGpuFSSystem(args):
     # See: https://sandpile.org/x86/cpuid.htm#level_0000_0001h
     # Enables AVX, OSXSAVE, XSAVE, POPCNT, SSE4.2, SSE4.1, CMPXCHG16B,
     # and FMA.
-    avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
+    avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C803209]
 
     for i, cpu in enumerate(system.cpu):
         # Break once we reach the shader "CPU"
