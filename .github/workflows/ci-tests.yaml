@@ -175,7 +175,7 @@ jobs:
               run: echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
         # Upload the tests/testing-results directory as an artifact.
-            - name: Upload test results
+            - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
