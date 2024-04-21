@@ -245,6 +245,16 @@ class TimeBuffer
     {
         return size;
     }
+
+    int getPast() const
+    {
+        return past;
+    }
+
+    int getFuture() const
+    {
+        return future;
+    }
 };
 
 } // namespace gem5
