@@ -66,6 +66,9 @@ struct FetchStruct
     Fault fetchFault;
     InstSeqNum fetchFaultSN;
     bool clearFetchFault;
+
+    /** Remove any thread-specific state. */
+    void clearStates(ThreadID tid);
 };
 
 /** Struct that defines the information passed from decode to rename. */
@@ -74,6 +77,9 @@ struct DecodeStruct
     int size;
 
     DynInstPtr insts[MaxWidth];
+
+    /** Remove any thread-specific state. */
+    void clearStates(ThreadID tid);
 };
 
 /** Struct that defines the information passed from rename to IEW. */
@@ -82,6 +88,9 @@ struct RenameStruct
     int size;
 
     DynInstPtr insts[MaxWidth];
+
+    /** Remove any thread-specific state. */
+    void clearStates(ThreadID tid);
 };
 
 /** Struct that defines the information passed from IEW to commit. */
@@ -99,6 +108,9 @@ struct IEWStruct
     bool branchMispredict[MaxThreads];
     bool branchTaken[MaxThreads];
     bool includeSquashInst[MaxThreads];
+
+    /** Remove any thread-specific state. */
+    void clearStates(ThreadID tid);
 };
 
 struct IssueStruct
@@ -116,14 +128,14 @@ struct TimeStruct
         std::unique_ptr<PCStateBase> nextPC;
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
-        InstSeqNum doneSeqNum;
-        Addr mispredPC;
-        uint64_t branchAddr;
-        unsigned branchCount;
-        bool squash;
-        bool predIncorrect;
-        bool branchMispredict;
-        bool branchTaken;
+        InstSeqNum doneSeqNum = 0;
+        Addr mispredPC = 0;
+        uint64_t branchAddr = 0;
+        unsigned branchCount = 0;
+        bool squash = false;
+        bool predIncorrect = false;
+        bool branchMispredict = false;
+        bool branchTaken = false;
     };
 
     DecodeComm decodeInfo[MaxThreads];
@@ -135,18 +147,18 @@ struct TimeStruct
     struct IewComm
     {
         // Also eventually include skid buffer space.
-        unsigned freeIQEntries;
-        unsigned freeLQEntries;
-        unsigned freeSQEntries;
-        unsigned dispatchedToLQ;
-        unsigned dispatchedToSQ;
+        unsigned freeIQEntries = 0;
+        unsigned freeLQEntries = 0;
+        unsigned freeSQEntries = 0;
+        unsigned dispatchedToLQ = 0;
+        unsigned dispatchedToSQ = 0;
 
-        unsigned iqCount;
-        unsigned ldstqCount;
+        unsigned iqCount = 0;
+        unsigned ldstqCount = 0;
 
-        unsigned dispatched;
-        bool usedIQ;
-        bool usedLSQ;
+        unsigned dispatched = 0;
+        bool usedIQ = false;
+        bool usedLSQ = false;
     };
 
     IewComm iewInfo[MaxThreads];
@@ -183,35 +195,35 @@ struct TimeStruct
 
         /// Communication specifically to the IQ to tell the IQ that it can
         /// schedule a non-speculative instruction.
-        InstSeqNum nonSpecSeqNum; // *I
+        InstSeqNum nonSpecSeqNum = 0; // *I
 
         /// Represents the instruction that has either been retired or
         /// squashed.  Similar to having a single bus that broadcasts the
         /// retired or squashed sequence number.
-        InstSeqNum doneSeqNum; // *F, I
+        InstSeqNum doneSeqNum = 0; // *F, I
 
         /// Tell Rename how many free entries it has in the ROB
-        unsigned freeROBEntries; // *R
+        unsigned freeROBEntries = 0; // *R
 
-        bool squash; // *F, D, R, I
-        bool robSquashing; // *F, D, R, I
+        bool squash = false; // *F, D, R, I
+        bool robSquashing = false; // *F, D, R, I
 
         /// Rename should re-read number of free rob entries
-        bool usedROB; // *R
+        bool usedROB = false; // *R
 
         /// Notify Rename that the ROB is empty
-        bool emptyROB; // *R
+        bool emptyROB = false; // *R
 
         /// Was the branch taken or not
-        bool branchTaken; // *F
+        bool branchTaken = false; // *F
         /// If an interrupt is pending and fetch should stall
-        bool interruptPending; // *F
+        bool interruptPending = false; // *F
         /// If the interrupt ended up being cleared before being handled
-        bool clearInterrupt; // *F
+        bool clearInterrupt = false; // *F
 
         /// Hack for now to send back an strictly ordered access to
         /// the IEW stage.
-        bool strictlyOrdered; // *I
+        bool strictlyOrdered = false; // *I
 
     };
 
@@ -223,6 +235,9 @@ struct TimeStruct
     bool renameUnblock[MaxThreads];
     bool iewBlock[MaxThreads];
     bool iewUnblock[MaxThreads];
+
+    /** Remove any thread-specific state. */
+    void clearStates(ThreadID tid);
 };
 
 } // namespace o3
