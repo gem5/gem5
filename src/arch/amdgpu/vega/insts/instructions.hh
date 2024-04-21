@@ -6103,6 +6103,8 @@ namespace VegaISA
             }
         } // getOperandSize
 
+        void initiateAcc(GPUDynInstPtr gpuDynInst) override;
+        void completeAcc(GPUDynInstPtr gpuDynInst) override;
         void execute(GPUDynInstPtr) override;
     }; // Inst_SMEM__S_MEMTIME
 

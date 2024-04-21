@@ -30,6 +30,7 @@
  */
 
 #include "arch/amdgpu/vega/insts/instructions.hh"
+#include "instructions.hh"
 
 namespace gem5
 {
@@ -938,7 +939,9 @@ namespace VegaISA
         : Inst_SMEM(iFmt, "s_memtime")
     {
         // s_memtime does not issue a memory request
-        setFlag(ALU);
+        setFlag(Memtime);
+        setFlag(MemoryRef);
+        setFlag(Load);
     } // Inst_SMEM__S_MEMTIME
 
     Inst_SMEM__S_MEMTIME::~Inst_SMEM__S_MEMTIME()
@@ -950,10 +953,41 @@ namespace VegaISA
     void
     Inst_SMEM__S_MEMTIME::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarOperandU64 sdst(gpuDynInst, instData.SDATA);
-        sdst = (ScalarRegU64)gpuDynInst->computeUnit()->curCycle();
-        sdst.write();
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod()*41);
+        ScalarRegU32 offset(0);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, instData.SBASE);
+
+        rsrcDesc.read();
+
+        if (instData.IMM) {
+            offset = extData.OFFSET;
+        } else {
+            ConstScalarOperandU32 off_sgpr(gpuDynInst, extData.OFFSET);
+            off_sgpr.read();
+            offset = off_sgpr.rawData();
+        }
+
+        calcAddr(gpuDynInst, rsrcDesc, offset);
+
+        gpuDynInst->computeUnit()->scalarMemoryPipe
+            .issueRequest(gpuDynInst);
     } // execute
+
+    void Inst_SMEM__S_MEMTIME::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initMemRead<2>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_SMEM__S_MEMTIME::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        // use U64 because 2 requests, each size 32
+        ScalarOperandU64 sdst(gpuDynInst, instData.SDATA);
+        sdst.write();
+    } // completeAcc
     // --- Inst_SMEM__S_MEMREALTIME class methods ---
 
     Inst_SMEM__S_MEMREALTIME::Inst_SMEM__S_MEMREALTIME(InFmt_SMEM *iFmt)

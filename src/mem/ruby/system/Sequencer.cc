@@ -52,6 +52,7 @@
 #include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
 #include "debug/RubyStats.hh"
+#include "gpu-compute/gpu_dyn_inst.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/protocol/PrefetchBit.hh"
@@ -583,12 +584,14 @@ Sequencer::readCallback(Addr address, DataBlock& data,
         if (ruby_request) {
             assert((seq_req.m_type == RubyRequestType_LD) ||
                    (seq_req.m_type == RubyRequestType_Load_Linked) ||
+                   (seq_req.m_type == RubyRequestType_Memtime) ||
                    (seq_req.m_type == RubyRequestType_IFETCH));
         }
         if ((seq_req.m_type != RubyRequestType_LD) &&
             (seq_req.m_type != RubyRequestType_Load_Linked) &&
             (seq_req.m_type != RubyRequestType_IFETCH) &&
-            (seq_req.m_type != RubyRequestType_REPLACEMENT)) {
+            (seq_req.m_type != RubyRequestType_REPLACEMENT) &&
+            (seq_req.m_type != RubyRequestType_Memtime)) {
             // Write request: reissue request to the cache hierarchy
             issueRequest(seq_req.pkt, seq_req.m_second_type);
             break;
@@ -704,7 +707,14 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                          printAddress(request_address));
 
     // update the data unless it is a non-data-carrying flush
-    if (RubySystem::getWarmupEnabled()) {
+    if (type == RubyRequestType_Memtime) {
+        DPRINTF(RubySequencer, "Setting Memtime ticks\n");
+        Cycles curCycle =
+            pkt->findNextSenderState
+            <ComputeUnit::ScalarDataPort::SenderState>()
+            ->_gpuDynInst->computeUnit()->curCycle();
+        pkt->setData((const uint8_t *)&curCycle);
+    } else if (RubySystem::getWarmupEnabled()) {
         data.setData(pkt);
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
@@ -980,6 +990,8 @@ Sequencer::makeRequest(PacketPtr pkt)
 
         }
 #endif
+    } else if (pkt->req->isMemtime()) {
+        primary_type = secondary_type = RubyRequestType_Memtime;
     } else {
         //
         // To support SwapReq, we need to check isWrite() first: a SwapReq
