@@ -105,4 +105,5 @@ class GPUStaticInstFlags(Enum):
         "FMA",  # FMA
         "MAC",  # MAC
         "MAD",  # MAD
+        "Memtime",  # MAD
     ]
