@@ -253,15 +253,13 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
         if (need_retry) {
             blockingResponse = &trans;
         } else {
-            if (phase == tlm::BEGIN_RESP) {
-                // Send END_RESP and we're finished:
-                tlm::tlm_phase fw_phase = tlm::END_RESP;
-                sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
-                socket->nb_transport_fw(trans, fw_phase, delay);
-                // Release the transaction with all the extensions.
-                packetMap.erase(&trans);
-                trans.release();
-            }
+            // Send END_RESP and we're finished:
+            tlm::tlm_phase fw_phase = tlm::END_RESP;
+            sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
+            socket->nb_transport_fw(trans, fw_phase, delay);
+            // Release the transaction with all the extensions.
+            packetMap.erase(&trans);
+            trans.release();
         }
     }
 }
