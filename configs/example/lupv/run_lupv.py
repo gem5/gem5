@@ -49,8 +49,8 @@ from gem5.utils.requires import requires
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
 
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
 )
 
 parser = argparse.ArgumentParser(description="Runs Linux fs test with RISCV.")
@@ -72,7 +72,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
 )
 

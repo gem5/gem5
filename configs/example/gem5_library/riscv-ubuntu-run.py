@@ -57,12 +57,12 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.RISCV)
 
 # With RISCV, we use simple caches.
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
 )
 
 # Here we setup the parameters of the l1 and l2 caches.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
 )
 

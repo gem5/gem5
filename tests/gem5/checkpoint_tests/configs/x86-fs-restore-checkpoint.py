@@ -34,8 +34,8 @@ This configuration serves as a test of restoring a checkpoint with X86 ISA in fs
 """
 
 from gem5.components.boards.x86_board import X86Board
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
 )
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.cpu_types import CPUTypes
@@ -54,7 +54,7 @@ requires(isa_required=ISA.X86)
 # Setup the cache hierarchy.
 # For classic, PrivateL1PrivateL2 and NoCache have been tested.
 # For Ruby, MESI_Two_Level and MI_example have been tested.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="32kB", l1i_size="32kB", l2_size="512kB"
 )
 
@@ -74,9 +74,15 @@ board = X86Board(
 
 # Set the Full System workload.
 board.set_kernel_disk_workload(
-    kernel=obtain_resource("x86-linux-kernel-5.4.49"),
-    disk_image=obtain_resource("x86-ubuntu-18.04-img"),
-    checkpoint=obtain_resource("x86-fs-test-checkpoint-v24-0"),
+    kernel=obtain_resource(
+        "x86-linux-kernel-5.4.49", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource(
+        "x86-ubuntu-18.04-img", resource_version="1.0.0"
+    ),
+    checkpoint=obtain_resource(
+        "x86-fs-test-checkpoint-v24-0", resource_version="2.0.0"
+    ),
 )
 
 sim = Simulator(board=board, full_system=True)

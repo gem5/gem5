@@ -61,8 +61,10 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 board.set_se_binary_workload(
-    obtain_resource("power-hello"),
-    checkpoint=obtain_resource("power-hello-test-checkpoint-v24-0"),
+    obtain_resource("power-hello", resource_version="1.0.0"),
+    checkpoint=obtain_resource(
+        "power-hello-test-checkpoint-v24-0", resource_version="2.0.0"
+    ),
 )
 
 sim = Simulator(board=board, full_system=False)

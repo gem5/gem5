@@ -37,6 +37,13 @@
 namespace gem5
 {
 
+AMDGPUGfx::AMDGPUGfx()
+{
+    for (int i = 0; i < SCRATCH_REGS; ++i) {
+        scratchRegs[i] = 0;
+    }
+}
+
 void
 AMDGPUGfx::readMMIO(PacketPtr pkt, Addr offset)
 {
@@ -46,6 +53,9 @@ AMDGPUGfx::readMMIO(PacketPtr pkt, Addr offset)
         break;
       case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB:
         pkt->setLE<uint32_t>(captured_clock_count >> 32);
+        break;
+      case AMDGPU_MM_SCRATCH_REG0:
+        pkt->setLE<uint32_t>(scratchRegs[0]);
         break;
       default:
         break;
@@ -64,6 +74,9 @@ AMDGPUGfx::writeMMIO(PacketPtr pkt, Addr offset)
         } else {
           captured_clock_count = curTick() / sim_clock::as_int::ns;
         }
+        break;
+      case AMDGPU_MM_SCRATCH_REG0:
+        scratchRegs[0] = pkt->getLE<uint32_t>();
         break;
       default:
         break;

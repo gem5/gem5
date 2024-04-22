@@ -72,6 +72,7 @@ machine(MachineType:TCC, "TCC Cache")
     L2_Repl,                desc="L2 Replacement";
     // Probes
     PrbInv,                 desc="Invalidating probe";
+    InvCache,               desc="Invalidating probe from TCP";
     // Coming from Memory Controller
     WBAck,                  desc="writethrough ack from memory";
     Bypass,                 desc="Bypass the entire L2 cache";
@@ -413,6 +414,8 @@ machine(MachineType:TCC, "TCC Cache")
           }
         } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
             trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:InvCache) {
+            trigger(Event:InvCache, in_msg.addr, cache_entry, tbe);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -427,6 +430,19 @@ machine(MachineType:TCC, "TCC Cache")
         L2cache.deallocate(address);
     }
     unset_cache_entry();
+  }
+
+  action(ir_invL2Resp, "ir", desc="send L2 invalidate ack") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:InvL2Resp;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
   }
 
   action(sd_sendData, "sd", desc="send Shared response") {
@@ -1186,6 +1202,12 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition({A, IV, WI, WIB}, L2_Repl) {
     i_invL2;
+  }
+
+  transition({I, V}, InvCache, I) {TagArrayRead, TagArrayWrite} {
+    i_invL2;
+    ir_invL2Resp;
+    p_popRequestQueue;
   }
 
   transition({I, V}, PrbInv, I) {TagArrayRead, TagArrayWrite} {

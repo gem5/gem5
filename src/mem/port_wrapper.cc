@@ -120,7 +120,7 @@ void
 ResponsePortWrapper::recvFunctional(PacketPtr packet)
 {
     panic_if(!recvFunctionalCb, "RecvFunctionalCallback is empty.");
-    recvTimingReqCb(packet);
+    recvFunctionalCb(packet);
 }
 
 void

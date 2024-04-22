@@ -29,8 +29,8 @@
 #ifndef __MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_
 #define __MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_
 
+#include "base/cache/associative_cache.hh"
 #include "base/circular_queue.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
 namespace gem5
@@ -65,7 +65,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
     const unsigned int deltaMaskBits;
 
     /** DCPT Table entry datatype */
-    struct DCPTEntry : public TaggedEntry
+    struct DCPTEntry : public CacheEntry
     {
         /** Last accessed address */
         Addr lastAddress;
@@ -77,7 +77,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * @param num_deltas number of deltas stored in the entry
          */
         DCPTEntry(unsigned int num_deltas)
-          : TaggedEntry(), lastAddress(0), deltas(num_deltas)
+          : CacheEntry(), lastAddress(0), deltas(num_deltas)
         {
         }
 
@@ -103,7 +103,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
 
     };
     /** The main table */
-    AssociativeSet<DCPTEntry> table;
+    AssociativeCache<DCPTEntry> table;
 
   public:
     DeltaCorrelatingPredictionTables(

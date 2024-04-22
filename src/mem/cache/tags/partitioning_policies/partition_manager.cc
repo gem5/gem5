@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2022  Institute of Computing Technology, Chinese Academy
- *                     of Sciences
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -36,62 +35,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DEV_VIRTIO_RNG_HH__
-#define __DEV_VIRTIO_RNG_HH__
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 
-#include "base/compiler.hh"
-#include "dev/virtio/base.hh"
+#include "mem/cache/tags/partitioning_policies/base_pp.hh"
 
 namespace gem5
 {
 
-struct VirtIORngParams;
-
-/**
- * VirtIO Rng
- *
- * @see https://github.com/rustyrussell/virtio-spec
- * @see http://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html
- */
-class VirtIORng : public VirtIODeviceBase
+namespace partitioning_policy
 {
-  public:
-    typedef VirtIORngParams Params;
-    VirtIORng(const Params &params);
-    virtual ~VirtIORng();
 
-    void readConfig(PacketPtr pkt, Addr cfgOffset);
+PartitionManager::PartitionManager(const Params &p)
+  : SimObject(p),
+    partitioningPolicies(p.partitioning_policies)
+{}
 
-  protected:
-    /** VirtIO device ID */
-    static const DeviceId ID_RNG = 0x04;
+void
+PartitionManager::notifyAcquire(uint64_t partition_id)
+{
+    // Notify partitioning policies of acquisition of ownership
+    for (auto & partitioning_policy : partitioningPolicies) {
+        // get partitionId from Packet
+        partitioning_policy->notifyAcquire(partition_id);
+    }
+}
 
-  protected:
-    /**
-     * Virtqueue for data going from the host to the guest.
-     */
-    class RngQueue
-        : public VirtQueue
-    {
-      public:
-        RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-                 VirtIORng &_parent);
-        virtual ~RngQueue() {}
+void
+PartitionManager::notifyRelease(uint64_t partition_id)
+{
+    // Notify partitioning policies of release of ownership
+    for (auto partitioning_policy : partitioningPolicies) {
+        partitioning_policy->notifyRelease(partition_id);
+    }
+}
 
-        void onNotify() { trySend(); }
+void
+PartitionManager::filterByPartition(
+    std::vector<ReplaceableEntry *> &entries,
+    const uint64_t partition_id) const
+{
+    // Filter entries based on PartitionID
+    for (auto partitioning_policy : partitioningPolicies) {
+        partitioning_policy->filterByPartition(entries, partition_id);
+    }
+}
 
-        /** Try to send data pending data from the terminal. */
-        void trySend();
-
-        std::string name() const { return parent.name() + ".qRecv"; }
-
-      protected:
-        VirtIORng &parent;
-    };
-    /** Receive queue for port 0 */
-    RngQueue qReq;
-};
+} // namespace partitioning_policy
 
 } // namespace gem5
-
-#endif // __DEV_VIRTIO_RNG_HH__

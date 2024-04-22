@@ -258,3 +258,16 @@ def format VlSegOp(
         VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                  'VlSegMacroInst', exec_template_base='VlSeg')
 }};
+
+def format VsSegOp(
+    memacc_code,
+    ea_code={{
+        EA = Rs1 + mem_size * (microIdx + (field * numMicroops));
+    }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VsSegMacroInst', exec_template_base='VsSeg')
+}};

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2022  Institute of Computing Technology, Chinese Academy
- *                     of Sciences
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -36,59 +35,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dev/virtio/rng.hh"
+#ifndef __MEM_CACHE_TAGS_PARTITIONING_MANAGER_HH__
+#define __MEM_CACHE_TAGS_PARTITIONING_MANAGER_HH__
 
-#include "base/random.hh"
-#include "debug/VIORng.hh"
-#include "params/VirtIORng.hh"
-#include "sim/system.hh"
+#include "mem/packet.hh"
+#include "params/PartitionManager.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-VirtIORng::VirtIORng(const Params &params)
-    : VirtIODeviceBase(params, ID_RNG, 0, 0),
-      qReq(params.system->physProxy, byteOrder, params.qSize, *this)
+class ReplaceableEntry;
+
+namespace partitioning_policy
 {
-    registerQueue(qReq);
-}
 
-VirtIORng::~VirtIORng()
+class BasePartitioningPolicy;
+
+class PartitionManager : public SimObject
 {
-}
+  public:
+    PARAMS(PartitionManager);
+    PartitionManager(const Params &p);
 
-VirtIORng::RngQueue::RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-    VirtIORng &_parent)
-    : VirtQueue(proxy, bo, size), parent(_parent)
-{
-}
+    /**
+    * PartitionManager interface to retrieve PartitionID from a packet;
+    * This base implementation returns zero by default.
+    *
+    * @param pkt pointer to packet (PacketPtr)
+    * @return packet PartitionID.
+    */
+    virtual uint64_t
+    readPacketPartitionID(PacketPtr pkt) const
+    {
+        return 0;
+    };
 
-void
-VirtIORng::readConfig(PacketPtr pkt, Addr cfgOffset)
-{
-    // There are no configuration for RNG device
-    pkt->makeResponse();
-}
+    /**
+    * Notify of acquisition of ownership of a cache line
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    void notifyAcquire(uint64_t partition_id);
 
-void
-VirtIORng::RngQueue::trySend()
-{
-    DPRINTF(VIORng, "try send\n");
+    void notifyRelease(uint64_t partition_id);
 
-    VirtDescriptor *d;
-    while ((d = consumeDescriptor())) {
-        DPRINTF(VIORng, "Got descriptor (len: %i)\n", d->size());
-        size_t len = 0;
-        while (len < d->size()) {
-            uint8_t byte = gem5::random_mt.random<uint8_t>();
-            d->chainWrite(len, &byte, sizeof(uint8_t));
-            ++len;
-        }
+    void filterByPartition(std::vector<ReplaceableEntry *> &entries,
+        const uint64_t partition_id) const;
 
-        // Tell the guest that we are done with this descriptor.
-        produceDescriptor(d, len);
-        parent.kick();
-    }
-}
+  protected:
+    /** Partitioning policies */
+    std::vector<partitioning_policy::BasePartitioningPolicy *>
+        partitioningPolicies;
+};
+
+} // namespace partitioning_policy
 
 } // namespace gem5
+
+#endif // __MEM_CACHE_TAGS_PARTITIONING_MANAGER_HH__

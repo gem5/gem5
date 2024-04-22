@@ -35,6 +35,7 @@ from unittest.mock import patch
 
 from gem5.resources.client_api.client_wrapper import ClientWrapper
 from gem5.resources.resource import (
+    ShadowResource,
     SuiteResource,
     WorkloadResource,
     obtain_resource,
@@ -112,7 +113,7 @@ class SuiteResourceTestSuite(unittest.TestCase):
         self.assertIsInstance(filtered_suite, SuiteResource)
         self.assertEqual(len(filtered_suite), 1)
         for workload in filtered_suite:
-            self.assertIsInstance(workload, WorkloadResource)
+            self.assertIsInstance(workload, ShadowResource)
 
     @patch(
         "gem5.resources.client.clientwrapper",
@@ -124,7 +125,7 @@ class SuiteResourceTestSuite(unittest.TestCase):
         self.assertIsInstance(filtered_suite, SuiteResource)
         self.assertEqual(len(filtered_suite), 2)
         for workload in filtered_suite:
-            self.assertIsInstance(workload, WorkloadResource)
+            self.assertIsInstance(workload, ShadowResource)
 
     @patch(
         "gem5.resources.client.clientwrapper",

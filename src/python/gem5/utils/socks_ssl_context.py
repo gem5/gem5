@@ -1,5 +1,5 @@
-# Copyright (c) 2022 The Regents of the University of California
-# All Rights Reserved.
+# Copyright (c) 2024 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,8 +24,35 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
+import os
+import ssl
+from typing import Optional
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential m4 scons python3-dev
+_gem5_ssl_context = None
+
+
+def get_proxy_context() -> Optional[ssl.SSLContext]:
+    """
+    This function returns a SSL context for https connection with SOCKS proxy
+    support. It uses the environment variable GEM5_USE_PROXY to determine
+    the proxy server to use. If the environment variable is not set, it
+    returns None.
+    """
+
+    global _gem5_ssl_context
+    use_proxy = os.getenv("GEM5_USE_PROXY")
+    if use_proxy and not _gem5_ssl_context:
+        import socket
+
+        import socks
+
+        ip_addr, host_port = use_proxy.split(":")
+        port = int(host_port)
+        socks.set_default_proxy(socks.SOCKS5, ip_addr, port)
+        socket.socket = socks.socksocket
+
+        # base SSL context for https connection
+        _gem5_ssl_context = ssl.create_default_context()
+        _gem5_ssl_context.check_hostname = False
+        _gem5_ssl_context.verify_mode = ssl.CERT_NONE
+    return _gem5_ssl_context

@@ -375,7 +375,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 329, "pkey_mprotect" },
     { 330, "pkey_alloc" },
     { 331, "pkey_free" },
-    { 332, "statx" },
+    { 332, "statx", statxFunc<X86Linux64> },
     { 333, "io_pgetevents" },
     { 334, "rseq", ignoreFunc },
     { 424, "pidfd_send_signal" },

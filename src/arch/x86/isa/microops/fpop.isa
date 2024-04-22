@@ -257,7 +257,14 @@ let {{
             super().__init__(reg1, reg2, reg3, **kwargs)
 
     class Movfp(Fp2Op):
-        code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
+        code = '''
+        if (dataSize == 4) {
+            FpDestReg_uqw = mbits(FpDestReg_uqw, 63, 32) |
+                            mbits(FpSrcReg1_uqw, 31, 0);
+        } else {
+            FpDestReg_uqw = FpSrcReg1_uqw;
+        }
+        '''
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                      ecfBit | ezfBit, src1)"

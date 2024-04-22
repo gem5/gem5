@@ -48,6 +48,9 @@ class RiscvBareMetal(Workload):
         NULL,
         "Enable support for RISC-V semihosting by settings this parameter",
     )
+    auto_reset_vect = Param.Bool(
+        True, "Use bootloader entry point as reset vector. "
+    )
 
 
 class RiscvLinux(KernelWorkload):

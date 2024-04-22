@@ -75,6 +75,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     Evict,           desc="Evict if clean(invL1 for Load Acquire)";
     // Mem sys initiated
     Repl,            desc="Replacing block from cache";
+    InvL2,           desc="Invalidate to L2";
+    InvL2Resp,       desc="Invalidate L2 completed";
 
     // TCC initiated
     TCC_Ack,         desc="TCC Ack to Core Request";
@@ -286,9 +288,12 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
                      in_msg.Type == CoherenceResponseType:NBSysWBAck) {
             trigger(Event:TCC_AckWB, in_msg.addr, cache_entry, tbe);
             DPRINTF(RubySlicc, "Issuing TCC_AckWB\n");
-          } else {
-            error("Unexpected Response Message to Core");
-          }
+        } else if (in_msg.Type == CoherenceResponseType:InvL2Resp) {
+            DPRINTF(RubySlicc, "Issuing InvL2Resp\n");
+            trigger(Event:InvL2Resp, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unexpected Response Message to Core");
+        }
       }
     }
   }
@@ -333,6 +338,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
             trigger(Event:Flush, in_msg.LineAddress, cache_entry, tbe);
         } else if (in_msg.Type == RubyRequestType:REPLACEMENT){
             trigger(Event:Evict, in_msg.LineAddress, cache_entry, tbe);
+        } else if (in_msg.Type == RubyRequestType:InvL2){
+            trigger(Event:InvL2, in_msg.LineAddress, cache_entry, tbe);
         } else {
           error("Unexpected Request Message from VIC");
         }
@@ -609,6 +616,31 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     }
   }
 
+  action(il2_invL2, "il2", desc="Invalidate address in L2") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:InvCache;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+      peek(mandatoryQueue_in, RubyRequest) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
+    }
+  }
+
+  action(i2r_invL2Resp, "i2r", desc="Invalidate L2 completed") {
+    if (use_seq_not_coal) {
+        DPRINTF(RubySlicc, "Sequencer does not define invTCCCallback!\n");
+        assert(false);
+    } else {
+      coalescer.invTCCCallback(address);
+    }
+  }
+
   action(wd_wtDone, "wd", desc="writethrough done") {
     if (use_seq_not_coal) {
       DPRINTF(RubySlicc, "Sequencer does not define writeCompleteCallback!\n");
@@ -828,6 +860,22 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   transition(A, Evict) {TagArrayFlash} {
     inv_invDone;
     p_popMandatoryQueue;
+  }
+
+  transition(I, InvL2) {
+    il2_invL2;
+    p_popMandatoryQueue;
+  }
+
+  transition(V, InvL2, I) {
+    ic_invCache
+    il2_invL2;
+    p_popMandatoryQueue;
+  }
+
+  transition(I, InvL2Resp) {
+    i2r_invL2Resp;
+    pr_popResponseQueue;
   }
 
   // if a line is in IV and a TCC_AckWB comes back, we must have had a WT

@@ -69,7 +69,12 @@ board = SimpleBoard(
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
-board.set_se_binary_workload(obtain_resource("x86-hello64-static"))
+board.set_se_binary_workload(
+    obtain_resource(
+        "x86-hello64-static",
+        resource_version="1.0.0",
+    )
+)
 
 sim = Simulator(board=board, full_system=False)
 max_ticks = 10**6

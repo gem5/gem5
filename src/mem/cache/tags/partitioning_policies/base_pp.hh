@@ -54,12 +54,11 @@ namespace partitioning_policy
 /**
  * A Partitioning Policy is a cache partitioning mechanism that limits the
  * cache block allocations in a cache based on a PartitionID identifier. This
- * identifier may be set to any upstream memory request by attaching a
- * PartitionFieldExtention to it as so:
+ * identifier may be set to any upstream memory request by attaching the
+ * PartitionID to it. The way the partition ID is attached/extracted
+ * from the request depends on the partitioning manager.
  *
- * std::shared_ptr<PartitionFieldExtention> ext(PartitionFieldExtention);
- * ext->setPartitionID(PartitionID);
- * req->setExtension(ext);
+ * See the use of the PartitionFieldExtension in Arm as an example.
  *
  * When partitioning policies are in place, the allocatable cache blocks for
  * this memory request will be filtered based on its PartitionID.

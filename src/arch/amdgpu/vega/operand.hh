@@ -517,12 +517,23 @@ namespace VegaISA
             switch(_opIdx) {
               case REG_EXEC_LO:
                 {
-                    ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
-                        execMask().to_ullong();
-                    std::memcpy((void*)srfData.data(), (void*)&exec_mask,
-                        sizeof(exec_mask));
-                    DPRINTF(GPUSRF, "Read EXEC\n");
-                    DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    if constexpr (NumDwords == 2) {
+                        ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ullong();
+                        std::memcpy((void*)srfData.data(), (void*)&exec_mask,
+                            sizeof(exec_mask));
+                        DPRINTF(GPUSRF, "Read EXEC\n");
+                        DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    } else {
+                        ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ullong();
+
+                        ScalarRegU32 exec_mask_lo = bits(exec_mask, 31, 0);
+                        std::memcpy((void*)srfData.data(),
+                            (void*)&exec_mask_lo, sizeof(exec_mask_lo));
+                        DPRINTF(GPUSRF, "Read EXEC_LO\n");
+                        DPRINTF(GPUSRF, "EXEC_LO = %#x\n", exec_mask_lo);
+                    }
                 }
                 break;
               case REG_EXEC_HI:
@@ -550,39 +561,55 @@ namespace VegaISA
                 break;
               case REG_SHARED_BASE:
                 {
-                    ComputeUnit *cu = _gpuDynInst->computeUnit();
-                    ScalarRegU64 shared_base = cu->shader->ldsApe().base;
-                    std::memcpy((void*)srfData.data(), (void*)&shared_base,
-                            sizeof(shared_base));
-                    DPRINTF(GPUSRF, "Read SHARED_BASE = %#x\n", shared_base);
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 shared_base = cu->shader->ldsApe().base;
+                        std::memcpy((void*)srfData.data(), (void*)&shared_base,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read SHARED_BASE = %#x\n",
+                                shared_base);
+                    }
                 }
                 break;
               case REG_SHARED_LIMIT:
                 {
-                    ComputeUnit *cu = _gpuDynInst->computeUnit();
-                    ScalarRegU64 shared_limit = cu->shader->ldsApe().limit;
-                    std::memcpy((void*)srfData.data(), (void*)&shared_limit,
-                            sizeof(shared_limit));
-                    DPRINTF(GPUSRF, "Read SHARED_LIMIT = %#x\n", shared_limit);
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 shared_limit = cu->shader->ldsApe().limit;
+                        std::memcpy((void*)srfData.data(),
+                                (void*)&shared_limit, sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read SHARED_LIMIT = %#x\n",
+                                shared_limit);
+                    }
                 }
                 break;
               case REG_PRIVATE_BASE:
                 {
-                    ComputeUnit *cu = _gpuDynInst->computeUnit();
-                    ScalarRegU64 priv_base = cu->shader->scratchApe().base;
-                    std::memcpy((void*)srfData.data(), (void*)&priv_base,
-                            sizeof(priv_base));
-                    DPRINTF(GPUSRF, "Read PRIVATE_BASE = %#x\n", priv_base);
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 priv_base = cu->shader->scratchApe().base;
+                        std::memcpy((void*)srfData.data(), (void*)&priv_base,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read PRIVATE_BASE = %#x\n",
+                                priv_base);
+                    }
                 }
                 break;
               case REG_PRIVATE_LIMIT:
                 {
-                    ComputeUnit *cu = _gpuDynInst->computeUnit();
-                    ScalarRegU64 priv_limit = cu->shader->scratchApe().limit;
-                    std::memcpy((void*)srfData.data(), (void*)&priv_limit,
-                            sizeof(priv_limit));
-                    DPRINTF(GPUSRF, "Read PRIVATE_LIMIT = %#x\n",
-                            priv_limit);
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 priv_limit =
+                            cu->shader->scratchApe().limit;
+                        std::memcpy((void*)srfData.data(), (void*)&priv_limit,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read PRIVATE_LIMIT = %#x\n",
+                                priv_limit);
+                    }
                 }
                 break;
               case REG_POS_HALF:

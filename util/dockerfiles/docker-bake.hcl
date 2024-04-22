@@ -44,7 +44,7 @@ group "default" {
 }
 
 group "ubuntu-releases" {
-  targets=["ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-22-04_min-dependencies"]
+  targets=["ubuntu-24-04_all-dependencies", "ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-24-04_min-dependencies"]
 }
 
 group "clang-compilers" {
@@ -59,7 +59,7 @@ group "gcc-compilers" {
 target "common" {
   # Here we are enabling multi-platform builds. We are compiling to both ARM
   # amd X86.
-  platforms = ["linux/amd64", "linux/arm64"]
+  platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
 }
 
 target "gcn-gpu" {
@@ -90,11 +90,26 @@ target "systemc" {
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
+target "ubuntu-24-04_all-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-24.04_all-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
+}
+
 target "ubuntu-22-04_all-dependencies" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
   context = "ubuntu-22.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
+}
+
+target "devcontainer" {
+  inherits = ["common"]
+  dependencies = ["devcontainer"]
+  dockerfile = "Dockerfile"
+  context = "devcontainer"
+  tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
 }
 
 target "ubuntu-20-04_all-dependencies" {
@@ -104,11 +119,11 @@ target "ubuntu-20-04_all-dependencies" {
   tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
 }
 
-target "ubuntu-22-04_min-dependencies" {
+target "ubuntu-24-04_min-dependencies" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_min-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
+  context = "ubuntu-24.04_min-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
 }
 
 target "gcc-compilers-base-20-04" {
