@@ -30,7 +30,6 @@
  */
 
 #include "arch/amdgpu/vega/insts/instructions.hh"
-#include "instructions.hh"
 
 namespace gem5
 {
