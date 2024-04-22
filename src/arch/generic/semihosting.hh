@@ -67,10 +67,8 @@ class SerialDevice;
  * simulator. It is conceptually a simplified version of gem5's more
  * general syscall emulation mode.
  *
- * Note: While the current (as of Q1 2024) RISC-V semihosting specificion does
- * not explicitly define the calls that are required to be implemented
- * (https://github.com/riscv-non-isa/riscv-semihosting), the intention of the
- * spec is to reuse the Arm interfaces (which is what QEMU also does).
+ * Note: The RISC-V semihosting specification reuses the Arm semihosting
+ * interfaces (https://github.com/riscv-non-isa/riscv-semihosting).
  *
  * Exits calls (SYS_EXIT, SYS_EXIT_EXTENDED) from the guest get
  * translated into simualtion exits. Well-known exit codes are
