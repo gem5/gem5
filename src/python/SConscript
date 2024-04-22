@@ -297,9 +297,9 @@ PySource('gem5.resources.client_api',
 PySource('gem5.resources.client_api',
          'gem5/resources/client_api/atlasclient.py')
 PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/client_wrapper.py')
-PySource('gem5.resources.client_api',
          'gem5/resources/client_api/abstract_client.py')
+PySource('gem5.resources.client_api',
+            'gem5/resources/client_api/client_query.py')
 PySource('gem5', 'gem5_default_config.py')
 PySource('gem5.utils', 'gem5/utils/__init__.py')
 PySource('gem5.utils', 'gem5/utils/filelock.py')
