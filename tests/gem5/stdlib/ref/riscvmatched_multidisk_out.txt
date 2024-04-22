@@ -1,0 +1,14 @@
+Global frequency set at 1000000000000 ticks per second
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda     254:0    0  7.5G  0 disk 
+├─vda1  254:1    0  7.4G  0 part /
+├─vda12 254:12   0    4M  0 part 
+├─vda13 254:13   0    1M  0 part 
+├─vda14 254:14   0    4M  0 part 
+└─vda15 254:15   0  106M  0 part 
+vdb     254:16   0  7.5G  0 disk 
+├─vdb1  254:17   0  7.4G  0 part 
+├─vdb12 254:28   0    4M  0 part 
+├─vdb13 254:29   0    1M  0 part 
+├─vdb14 254:30   0    4M  0 part 
+└─vdb15 254:31   0  106M  0 part 
