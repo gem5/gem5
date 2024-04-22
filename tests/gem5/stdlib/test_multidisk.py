@@ -47,7 +47,7 @@ gem5_verify_config(
         "configs",
         "riscvmatched_multidisk.py",
     ),
-    config_args=["--resource-directtory", resource_path],
+    config_args=["--resource-directory", resource_path],
     valid_isas=(constants.riscv_tag,),
     # Run as part of the weekly tests (booting the RISCVMatchedBoard takes
     # hours).
