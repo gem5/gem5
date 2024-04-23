@@ -107,8 +107,9 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
 
     // If we use perf, we create new PerfKVMCounters
     if (usePerf) {
-        hwCycles = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
-        hwInstructions = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
+        hwCycles = std::unique_ptr<PerfKvmCounter>(PerfKvmCounter::create());
+        hwInstructions =
+          std::unique_ptr<PerfKvmCounter>(PerfKvmCounter::create());
     } else {
         inform("Using KVM CPU without perf. The stats related to the number "
                "of cycles and instructions executed by the KVM CPU will not "
@@ -1409,7 +1410,7 @@ BaseKvmCPU::setupInstCounter(uint64_t period)
     assert(hwCycles->attached());
     hwInstructions->attach(cfgInstructions,
                           0, // TID (0 => currentThread)
-                          *hwCycles);
+                           hwCycles.get());
 
     if (period)
         hwInstructions->enableSignals(KVM_KICK_SIGNAL);
