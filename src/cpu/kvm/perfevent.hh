@@ -183,7 +183,7 @@ class PerfKvmCounter
      * PerfKvmCounter, depending on whether the host has a hybrid architecture
      * (rare case) or not (common case).
      */
-    static PerfKvmCounter *create();
+    static PerfKvmCounter *create(bool allow_hybrid);
 
     /**
      * Attach a counter and optionally make it a member of an existing counter
@@ -196,7 +196,7 @@ class PerfKvmCounter
      * @param tid Thread to sample (0 indicates current thread)
      * @param parent Group leader (nullptr indicates no group leader)
      */
-    virtual void attach(PerfKvmCounterConfig &config,
+    virtual void attach(const PerfKvmCounterConfig &config,
                         pid_t tid, const PerfKvmCounter *parent = nullptr) = 0;
 
     /** Detach a counter from PerfEvent. */
@@ -234,6 +234,12 @@ class PerfKvmCounter
      * @warning This method doesn't work at all on some 2.6.3x kernels
      * since it has inverted check for the return value when copying
      * parameters from userspace.
+     *
+     * @note When using a hybrid perf counter, this actually sets
+     * the period to 1/2 of the value provided. This ensures that an
+     * overflow will always trigger before more than \p period events
+     * occur, even in the pathological case when the host execution is
+     * evenly split between a P-core and E-core.
      *
      * @param period Overflow period in events
      */
@@ -305,7 +311,7 @@ class SimplePerfKvmCounter final : public PerfKvmCounter
   public:
     ~SimplePerfKvmCounter();
 
-    void attach(PerfKvmCounterConfig &config,
+    void attach(const PerfKvmCounterConfig &config,
                 pid_t tid, const PerfKvmCounter *parent) override;
 
     void detach() override;
@@ -402,7 +408,7 @@ class HybridPerfKvmCounter : public PerfKvmCounter
     HybridPerfKvmCounter() = default;
 
   public:
-    void attach(PerfKvmCounterConfig &config, pid_t tid,
+    void attach(const PerfKvmCounterConfig &config, pid_t tid,
                 const PerfKvmCounter *parent) override;
     void detach() override;
     bool attached() const override;
@@ -417,7 +423,8 @@ class HybridPerfKvmCounter : public PerfKvmCounter
     SimplePerfKvmCounter coreCounter;
     SimplePerfKvmCounter atomCounter;
 
-    using Config = decltype(perf_event_attr::config);
+    using ConfigSubtype = decltype(perf_event_attr::config);
+    using SamplePeriod = decltype(perf_event_attr::sample_type);
 
     /** @{ */
     /**
@@ -425,9 +432,12 @@ class HybridPerfKvmCounter : public PerfKvmCounter
      * Linux perf's documentation (tools/perf/Documentation/intel-hybrid.txt
      * in the linux source tree).
      */
-    static inline constexpr Config ConfigCore = 0x4UL << 32;
-    static inline constexpr Config ConfigAtom = 0x8UL << 32;
+    static inline constexpr ConfigSubtype ConfigCore = 0x4UL << 32;
+    static inline constexpr ConfigSubtype ConfigAtom = 0x8UL << 32;
     /** @} */
+
+    static PerfKvmCounterConfig fixupConfig(const PerfKvmCounterConfig &in,
+                                            ConfigSubtype config_subtype);
 
     friend class PerfKvmCounter;
 };

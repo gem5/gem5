@@ -73,7 +73,7 @@ PerfKvmCounter::PerfKvmCounter()
 }
 
 PerfKvmCounter *
-PerfKvmCounter::create()
+PerfKvmCounter::create(bool allow_hybrid)
 {
     // Check if we're running on a hybrid host architecture. Linux exposes
     // this via sysfs. If the directory /sys/devices/cpu exists, then we are
@@ -82,22 +82,25 @@ PerfKvmCounter::create()
     // existence of /sys/devices/cpu_atom to indicate a hybrid host
     // architecture.
     const char *atom_path = "/sys/devices/cpu_atom";
-    if (DIR *atom_dir = opendir(atom_path)) {
-        closedir(atom_dir);
+    if (allow_hybrid) {
+        if (DIR *atom_dir = opendir(atom_path)) {
+            closedir(atom_dir);
 
-        // Since we're running on a hybrid architecture, use a hybrid
-        // performance counter. This uses two 'physical' performance counters
-        // to implement a 'logical' one which is the sum of the two.
-        return new HybridPerfKvmCounter();
-    } else {
+            // Since we're running on a hybrid architecture, use a hybrid
+            // performance counter. This uses two 'physical' performance
+            // counters to implement a 'logical' one which is the sum of the
+            // two.
+            return new HybridPerfKvmCounter();
+        }
+
         if (errno != ENOENT)
             warn("Unexpected error code from opendir(%s): %s\n",
                  atom_path, std::strerror(errno));
-
-        // We're running on a regular architecture, so use a regular
-        // performance counter.
-        return new SimplePerfKvmCounter();
     }
+
+    // We're running on a regular architecture, so use a regular
+    // performance counter.
+    return new SimplePerfKvmCounter();
 }
 
 SimplePerfKvmCounter::SimplePerfKvmCounter()
@@ -178,7 +181,7 @@ SimplePerfKvmCounter::enableSignals(pid_t tid, int signal)
 }
 
 void
-SimplePerfKvmCounter::attach(PerfKvmCounterConfig &config,
+SimplePerfKvmCounter::attach(const PerfKvmCounterConfig &config,
                              pid_t tid, const PerfKvmCounter *parent)
 {
     assert(!attached());
@@ -288,8 +291,19 @@ SimplePerfKvmCounter::read(void *buf, size_t size) const
     } while (_size);
 }
 
+PerfKvmCounterConfig
+HybridPerfKvmCounter::fixupConfig(const PerfKvmCounterConfig &in,
+                                  ConfigSubtype config_subtype)
+{
+    PerfKvmCounterConfig out = in;
+    out.attr.config |= config_subtype;
+    if (out.attr.sample_period > 1)
+        out.attr.sample_period /= 2;
+    return out;
+}
+
 void
-HybridPerfKvmCounter::attach(PerfKvmCounterConfig &config, pid_t tid,
+HybridPerfKvmCounter::attach(const PerfKvmCounterConfig &config, pid_t tid,
                              const PerfKvmCounter *parent)
 {
     // We should only be using hybrid performance counters for hardware
@@ -305,13 +319,10 @@ HybridPerfKvmCounter::attach(PerfKvmCounterConfig &config, pid_t tid,
         parent_atom_counter = &hybrid_parent.atomCounter;
     }
 
-    PerfKvmCounterConfig config_core = config;
-    config_core.attr.config |= ConfigCore;
-    coreCounter.attach(config_core, tid, parent_core_counter);
-
-    PerfKvmCounterConfig config_atom = config;
-    config_atom.attr.config |= ConfigAtom;
-    atomCounter.attach(config_atom, tid, parent_atom_counter);
+    coreCounter.attach(fixupConfig(config, ConfigCore), tid,
+                       parent_core_counter);
+    atomCounter.attach(fixupConfig(config, ConfigAtom), tid,
+                       parent_atom_counter);
 }
 
 void
@@ -345,6 +356,8 @@ HybridPerfKvmCounter::stop()
 void
 HybridPerfKvmCounter::period(uint64_t period)
 {
+    if (period > 1)
+        period /= 2;
     coreCounter.period(period);
     atomCounter.period(period);
 }
