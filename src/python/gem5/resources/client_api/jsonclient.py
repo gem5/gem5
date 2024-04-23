@@ -93,14 +93,26 @@ class JSONClient(AbstractClient):
                         resource_query.get_gem5_version()
                         in resource["gem5_versions"]
                     )
+                else:
+                    gem5_version_match = True
 
                 if resource_query.get_resource_version() is not None:
                     resource_version_match = (
                         resource["resource_version"]
                         == resource_query.get_resource_version()
                     )
+                else:
+                    resource_version_match = True
 
-                if gem5_version_match and resource_version_match:
+                resource_id_match = (
+                    resource_query.get_resource_id() == resource["id"]
+                )
+
+                if (
+                    gem5_version_match
+                    and resource_version_match
+                    and resource_id_match
+                ):
                     return True
 
             return False
@@ -112,10 +124,10 @@ class JSONClient(AbstractClient):
 
         resources_by_id = {}
         for resource in filtered_resources:
-            if resource["resource_id"] in resources_by_id.keys():
-                resources_by_id[resource["resource_id"]].append(resource)
+            if resource["id"] in resources_by_id.keys():
+                resources_by_id[resource["id"]].append(resource)
             else:
-                resources_by_id[resource["resource_id"]] = [resource]
+                resources_by_id[resource["id"]] = [resource]
 
         # Sort the resoruces by resoruce version and get the latest version.
         for id, resource_list in resources_by_id.items():
