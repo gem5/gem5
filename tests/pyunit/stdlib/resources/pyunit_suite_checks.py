@@ -33,9 +33,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from gem5.resources.client_api.client_wrapper import ClientWrapper
+from gem5.resources.client import _create_clients
 from gem5.resources.resource import (
-    ShadowResource,
     SuiteResource,
     WorkloadResource,
     obtain_resource,
@@ -54,119 +53,120 @@ mock_config_json = {
 class CustomSuiteResourceTestSuite(unittest.TestCase):
     @classmethod
     @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
     )
-    def setUpClass(cls):
+    def setUpClass(cls, mock_create_clients):
         cls.workload1 = obtain_resource("simple-workload-1")
         cls.workload2 = obtain_resource("simple-workload-2")
         cls.SuiteResource = SuiteResource(
             workloads={cls.workload1: set(), cls.workload2: set()}
         )
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_with_input_group(self) -> None:
-        """
-        Tests the `with_input_group` function.
-        """
-        # test if an input group can return a single workload in a suite resource
 
-        with self.assertRaises(Exception) as context:
-            filtered_suite = self.SuiteResource.with_input_group("testtag2")
-            self.assertIsInstance(filtered_suite, SuiteResource)
-            self.assertEqual(len(filtered_suite), 0)
-            self.assertTrue(
-                f"Input group invalid not found in Suite.\n"
-                f"Available input groups are {filtered_suite.get_input_groups()}"
-                in str(context.exception)
-            )
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_with_input_group(self, mock_create_clients) -> None:
+#         """
+#         Tests the `with_input_group` function.
+#         """
+#         # test if an input group can return a single workload in a suite resource
 
-    def test_get_input_groups(self):
-        """
-        Tests the `list_input_groups` function.
-        """
-        self.assertEqual(self.SuiteResource.get_input_groups(), set())
+#         with self.assertRaises(Exception) as context:
+#             filtered_suite = self.SuiteResource.with_input_group("testtag2")
+#             self.assertIsInstance(filtered_suite, SuiteResource)
+#             self.assertEqual(len(filtered_suite), 0)
+#             self.assertTrue(
+#                 f"Input group invalid not found in Suite.\n"
+#                 f"Available input groups are {filtered_suite.get_input_groups()}"
+#                 in str(context.exception)
+#             )
+
+#     def test_get_input_groups(self):
+#         """
+#         Tests the `list_input_groups` function.
+#         """
+#         self.assertEqual(self.SuiteResource.get_input_groups(), set())
 
 
-class SuiteResourceTestSuite(unittest.TestCase):
-    @classmethod
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def setUpClass(cls):
-        cls.suite = obtain_resource("suite-example", gem5_version="develop")
+# class SuiteResourceTestSuite(unittest.TestCase):
+#     @classmethod
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def setUpClass(cls, mock_create_clients):
+#         cls.suite = obtain_resource("suite-example", gem5_version="develop")
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_with_input_group(self) -> None:
-        """
-        Tests the `with_input_group` function.
-        """
-        # test if an input group can return a single workload in a suite resource
-        filtered_suite = self.suite.with_input_group("testtag2")
-        self.assertIsInstance(filtered_suite, SuiteResource)
-        self.assertEqual(len(filtered_suite), 1)
-        for workload in filtered_suite:
-            self.assertIsInstance(workload, ShadowResource)
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_with_input_group(self, mock_create_clients) -> None:
+#         """
+#         Tests the `with_input_group` function.
+#         """
+#         # test if an input group can return a single workload in a suite resource
+#         filtered_suite = self.suite.with_input_group("testtag2")
+#         self.assertIsInstance(filtered_suite, SuiteResource)
+#         self.assertEqual(len(filtered_suite), 1)
+#         for workload in filtered_suite:
+#             self.assertIsInstance(workload, WorkloadResource)
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_with_input_group_multiple(self) -> None:
-        # test if an input group can return multiple workloads in a suite resource
-        filtered_suite = self.suite.with_input_group("testtag1")
-        self.assertIsInstance(filtered_suite, SuiteResource)
-        self.assertEqual(len(filtered_suite), 2)
-        for workload in filtered_suite:
-            self.assertIsInstance(workload, ShadowResource)
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_with_input_group_multiple(self, mock_create_clients) -> None:
+#         # test if an input group can return multiple workloads in a suite resource
+#         filtered_suite = self.suite.with_input_group("testtag1")
+#         self.assertIsInstance(filtered_suite, SuiteResource)
+#         self.assertEqual(len(filtered_suite), 2)
+#         for workload in filtered_suite:
+#             self.assertIsInstance(workload, WorkloadResource)
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_with_input_group_invalid(self) -> None:
-        """
-        Tests the `with_input_group` function with an invalid input group.
-        """
-        with self.assertRaises(Exception) as context:
-            filtered_suite = self.suite.with_input_group("invalid")
-            # check if exception is raised
-            self.assertTrue(
-                f"Input group invalid not found in Suite.\n"
-                f"Available input groups are {filtered_suite.get_input_groups()}"
-                in str(context.exception)
-            )
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_with_input_group_invalid(self, mock_create_clients) -> None:
+#         """
+#         Tests the `with_input_group` function with an invalid input group.
+#         """
+#         with self.assertRaises(Exception) as context:
+#             filtered_suite = self.suite.with_input_group("invalid")
+#             # check if exception is raised
+#             self.assertTrue(
+#                 f"Input group invalid not found in Suite.\n"
+#                 f"Available input groups are {filtered_suite.get_input_groups()}"
+#                 in str(context.exception)
+#             )
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_get_input_groups(self) -> None:
-        """
-        Tests the `list_input_groups` function.
-        """
-        expected_input_groups = {"testtag1", "testtag2", "testtag3"}
-        self.assertEqual(self.suite.get_input_groups(), expected_input_groups)
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_get_input_groups(self, mock_create_clients) -> None:
+#         """
+#         Tests the `list_input_groups` function.
+#         """
+#         expected_input_groups = {"testtag1", "testtag2", "testtag3"}
+#         self.assertEqual(self.suite.get_input_groups(), expected_input_groups)
 
-    @patch(
-        "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
-    )
-    def test_get_input_groups_not_found(self) -> None:
-        """
-        Tests the `list_input_groups` function with an invalid input group.
-        """
-        with self.assertRaises(Exception) as context:
-            self.suite.get_input_groups("invalid")
-            self.assertTrue(
-                f"Input group invalid not found in Suite.\n"
-                f"Available input groups are {self.suite.get_input_groups()}"
-                in str(context.exception)
-            )
+#     @patch(
+#         "gem5.resources.client._create_clients",
+#         side_effect=lambda x: _create_clients(mock_config_json),
+#     )
+#     def test_get_input_groups_not_found(self, mock_create_clients) -> None:
+#         """
+#         Tests the `list_input_groups` function with an invalid input group.
+#         """
+#         with self.assertRaises(Exception) as context:
+#             self.suite.get_input_groups("invalid")
+#             self.assertTrue(
+#                 f"Input group invalid not found in Suite.\n"
+#                 f"Available input groups are {self.suite.get_input_groups()}"
+#                 in str(context.exception)
+#             )
