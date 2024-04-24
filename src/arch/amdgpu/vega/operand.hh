@@ -490,7 +490,7 @@ namespace VegaISA
         typename std::enable_if<Condition, void>::type
         setBit(int bit, int bit_val)
         {
-            DataType &sgpr = *((DataType*)srfData.data());
+            GEM5_ALIGNED(8) DataType &sgpr = *((DataType*)srfData.data());
             replaceBits(sgpr, bit, bit_val);
         }
 
@@ -739,7 +739,7 @@ namespace VegaISA
          * of a register is 1 dword. this class will take care to do the
          * proper packing/unpacking of sub-dword operands.
          */
-        std::array<ScalarRegU32, NumDwords> srfData;
+        GEM5_ALIGNED(8) std::array<ScalarRegU32, NumDwords> srfData;
     };
 
     // typedefs for the various sizes/types of scalar operands

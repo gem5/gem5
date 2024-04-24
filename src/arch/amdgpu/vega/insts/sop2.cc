@@ -1224,7 +1224,8 @@ namespace VegaISA
         src0.read();
         src1.read();
 
-        sdst = src0.rawData() * src1.rawData();
+        ScalarRegI64 tmp = src0.rawData() * src1.rawData();
+        sdst = tmp & mask(32);
 
         sdst.write();
     } // execute
