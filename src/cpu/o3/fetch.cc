@@ -691,7 +691,8 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
 
     set(pc[tid], new_pc);
     fetchOffset[tid] = 0;
-    if (squashInst && squashInst->pcState().instAddr() == new_pc.instAddr())
+    if (squashInst && squashInst->pcState().instAddr() == new_pc.instAddr() &&
+        !squashInst->isLastMicroop())
         macroop[tid] = squashInst->macroop;
     else
         macroop[tid] = NULL;
