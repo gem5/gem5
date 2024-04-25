@@ -35,6 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -67,33 +68,54 @@ PerfKvmCounterConfig::~PerfKvmCounterConfig()
 {
 }
 
-
-PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid)
-    : fd(-1), ringBuffer(NULL), pageSize(-1)
-{
-    attach(config, tid, -1);
-}
-
-PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config,
-                         pid_t tid, const PerfKvmCounter &parent)
-    : fd(-1), ringBuffer(NULL), pageSize(-1)
-{
-    attach(config, tid, parent);
-}
-
 PerfKvmCounter::PerfKvmCounter()
+{
+}
+
+PerfKvmCounter *
+PerfKvmCounter::create(bool allow_hybrid)
+{
+    // Check if we're running on a hybrid host architecture. Linux exposes
+    // this via sysfs. If the directory /sys/devices/cpu exists, then we are
+    // running on a regular architecture. Otherwise, /sys/devices/cpu_core and
+    // /sys/devices/cpu_atom should exist. For simplicity, we use the
+    // existence of /sys/devices/cpu_atom to indicate a hybrid host
+    // architecture.
+    const char *atom_path = "/sys/devices/cpu_atom";
+    if (allow_hybrid) {
+        if (DIR *atom_dir = opendir(atom_path)) {
+            closedir(atom_dir);
+
+            // Since we're running on a hybrid architecture, use a hybrid
+            // performance counter. This uses two 'physical' performance
+            // counters to implement a 'logical' one which is the sum of the
+            // two.
+            return new HybridPerfKvmCounter();
+        }
+
+        if (errno != ENOENT)
+            warn("Unexpected error code from opendir(%s): %s\n",
+                 atom_path, std::strerror(errno));
+    }
+
+    // We're running on a regular architecture, so use a regular
+    // performance counter.
+    return new SimplePerfKvmCounter();
+}
+
+SimplePerfKvmCounter::SimplePerfKvmCounter()
     : fd(-1), ringBuffer(NULL), pageSize(-1)
 {
 }
 
-PerfKvmCounter::~PerfKvmCounter()
+SimplePerfKvmCounter::~SimplePerfKvmCounter()
 {
     if (attached())
         detach();
 }
 
 void
-PerfKvmCounter::detach()
+SimplePerfKvmCounter::detach()
 {
     assert(attached());
 
@@ -107,35 +129,35 @@ PerfKvmCounter::detach()
 }
 
 void
-PerfKvmCounter::start()
+SimplePerfKvmCounter::start()
 {
     if (ioctl(PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP) == -1)
         panic("KVM: Failed to enable performance counters (%i)\n", errno);
 }
 
 void
-PerfKvmCounter::stop()
+SimplePerfKvmCounter::stop()
 {
     if (ioctl(PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP) == -1)
         panic("KVM: Failed to disable performance counters (%i)\n", errno);
 }
 
 void
-PerfKvmCounter::period(uint64_t period)
+SimplePerfKvmCounter::period(uint64_t period)
 {
     if (ioctl(PERF_EVENT_IOC_PERIOD, &period) == -1)
         panic("KVM: Failed to set period of performance counter (%i)\n", errno);
 }
 
 void
-PerfKvmCounter::refresh(int refresh)
+SimplePerfKvmCounter::refresh(int refresh)
 {
     if (ioctl(PERF_EVENT_IOC_REFRESH, refresh) == -1)
         panic("KVM: Failed to refresh performance counter (%i)\n", errno);
 }
 
 uint64_t
-PerfKvmCounter::read() const
+SimplePerfKvmCounter::read() const
 {
     uint64_t value;
 
@@ -144,7 +166,7 @@ PerfKvmCounter::read() const
 }
 
 void
-PerfKvmCounter::enableSignals(pid_t tid, int signal)
+SimplePerfKvmCounter::enableSignals(pid_t tid, int signal)
 {
     struct f_owner_ex sigowner;
 
@@ -159,10 +181,14 @@ PerfKvmCounter::enableSignals(pid_t tid, int signal)
 }
 
 void
-PerfKvmCounter::attach(PerfKvmCounterConfig &config,
-                    pid_t tid, int group_fd)
+SimplePerfKvmCounter::attach(const PerfKvmCounterConfig &config,
+                             pid_t tid, const PerfKvmCounter *parent)
 {
     assert(!attached());
+
+    int group_fd = -1;
+    if (parent)
+        group_fd = dynamic_cast<const SimplePerfKvmCounter &>(*parent).fd;
 
     fd = syscall(__NR_perf_event_open,
                  &config.attr, tid,
@@ -201,7 +227,7 @@ PerfKvmCounter::sysGettid()
 }
 
 void
-PerfKvmCounter::mmapPerf(int pages)
+SimplePerfKvmCounter::mmapPerf(int pages)
 {
     assert(attached());
     assert(ringBuffer == NULL);
@@ -224,21 +250,21 @@ PerfKvmCounter::mmapPerf(int pages)
 }
 
 int
-PerfKvmCounter::fcntl(int cmd, long p1)
+SimplePerfKvmCounter::fcntl(int cmd, long p1)
 {
     assert(attached());
     return ::fcntl(fd, cmd, p1);
 }
 
 int
-PerfKvmCounter::ioctl(int request, long p1)
+SimplePerfKvmCounter::ioctl(int request, long p1)
 {
     assert(attached());
     return ::ioctl(fd, request, p1);
 }
 
 void
-PerfKvmCounter::read(void *buf, size_t size) const
+SimplePerfKvmCounter::read(void *buf, size_t size) const
 {
     char *_buf = (char *)buf;
     size_t _size = size;
@@ -263,6 +289,99 @@ PerfKvmCounter::read(void *buf, size_t size) const
             break;
         }
     } while (_size);
+}
+
+PerfKvmCounterConfig
+HybridPerfKvmCounter::fixupConfig(const PerfKvmCounterConfig &in,
+                                  ConfigSubtype config_subtype)
+{
+    PerfKvmCounterConfig out = in;
+    out.attr.config |= config_subtype;
+    if (out.attr.sample_period > 1)
+        out.attr.sample_period /= 2;
+    return out;
+}
+
+void
+HybridPerfKvmCounter::attach(const PerfKvmCounterConfig &config, pid_t tid,
+                             const PerfKvmCounter *parent)
+{
+    // We should only be using hybrid performance counters for hardware
+    // events.
+    assert(config.attr.type == PERF_TYPE_HARDWARE);
+
+    const SimplePerfKvmCounter *parent_core_counter = nullptr;
+    const SimplePerfKvmCounter *parent_atom_counter = nullptr;
+    if (parent) {
+        const HybridPerfKvmCounter &hybrid_parent =
+            dynamic_cast<const HybridPerfKvmCounter &>(*parent);
+        parent_core_counter = &hybrid_parent.coreCounter;
+        parent_atom_counter = &hybrid_parent.atomCounter;
+    }
+
+    coreCounter.attach(fixupConfig(config, ConfigCore), tid,
+                       parent_core_counter);
+    atomCounter.attach(fixupConfig(config, ConfigAtom), tid,
+                       parent_atom_counter);
+}
+
+void
+HybridPerfKvmCounter::detach()
+{
+    coreCounter.detach();
+    atomCounter.detach();
+}
+
+bool
+HybridPerfKvmCounter::attached() const
+{
+    assert(coreCounter.attached() == atomCounter.attached());
+    return coreCounter.attached();
+}
+
+void
+HybridPerfKvmCounter::start()
+{
+    coreCounter.start();
+    atomCounter.start();
+}
+
+void
+HybridPerfKvmCounter::stop()
+{
+    coreCounter.stop();
+    atomCounter.stop();
+}
+
+void
+HybridPerfKvmCounter::period(uint64_t period)
+{
+    if (period > 1)
+        period /= 2;
+    coreCounter.period(period);
+    atomCounter.period(period);
+}
+
+void
+HybridPerfKvmCounter::refresh(int refresh)
+{
+    coreCounter.refresh(refresh);
+    atomCounter.refresh(refresh);
+}
+
+uint64_t
+HybridPerfKvmCounter::read() const
+{
+    // To get the logical counter value, we simply sum the individual physical
+    // counter values.
+    return coreCounter.read() + atomCounter.read();
+}
+
+void
+HybridPerfKvmCounter::enableSignals(pid_t tid, int signal)
+{
+    coreCounter.enableSignals(tid, signal);
+    atomCounter.enableSignals(tid, signal);
 }
 
 } // namespace gem5

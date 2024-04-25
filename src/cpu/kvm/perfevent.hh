@@ -170,46 +170,23 @@ class PerfKvmCounterConfig
  */
 class PerfKvmCounter
 {
-public:
-    /**
-     * Create and attach a new counter group.
-     *
-     * @param config Counter configuration
-     * @param tid Thread to sample (0 indicates current thread)
-     */
-    PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid);
-    /**
-     * Create and attach a new counter and make it a member of an
-     * exist counter group.
-     *
-     * @param config Counter configuration
-     * @param tid Thread to sample (0 indicates current thread)
-     * @param parent Group leader
-     */
-    PerfKvmCounter(PerfKvmCounterConfig &config,
-                pid_t tid, const PerfKvmCounter &parent);
-    /**
-     * Create a new counter, but don't attach it.
-     */
+  protected:
+    /** Don't create directly; use PerfKvmCounter::create(). */
     PerfKvmCounter();
-    ~PerfKvmCounter();
 
+  public:
+    virtual ~PerfKvmCounter() = default;
 
     /**
-     * Attach a counter.
-     *
-     * @note This operation is only supported if the counter isn't
-     * already attached.
-     *
-     * @param config Counter configuration
-     * @param tid Thread to sample (0 indicates current thread)
+     * Create a new performance counter.
+     * This automatically selects the appropriate implementation of
+     * PerfKvmCounter, depending on whether the host has a hybrid architecture
+     * (rare case) or not (common case).
      */
-    void attach(PerfKvmCounterConfig &config, pid_t tid) {
-        attach(config, tid, -1);
-    }
+    static PerfKvmCounter *create(bool allow_hybrid);
 
     /**
-     * Attach a counter and make it a member of an existing counter
+     * Attach a counter and optionally make it a member of an existing counter
      * group.
      *
      * @note This operation is only supported if the counter isn't
@@ -217,18 +194,16 @@ public:
      *
      * @param config Counter configuration
      * @param tid Thread to sample (0 indicates current thread)
-     * @param parent Group leader
+     * @param parent Group leader (nullptr indicates no group leader)
      */
-    void attach(PerfKvmCounterConfig &config,
-                pid_t tid, const PerfKvmCounter &parent) {
-        attach(config, tid, parent.fd);
-    }
+    virtual void attach(const PerfKvmCounterConfig &config,
+                        pid_t tid, const PerfKvmCounter *parent = nullptr) = 0;
 
     /** Detach a counter from PerfEvent. */
-    void detach();
+    virtual void detach() = 0;
 
     /** Check if a counter is attached. */
-    bool attached() const { return fd != -1; }
+    virtual bool attached() const = 0;
 
     /**
      * Start counting.
@@ -236,7 +211,7 @@ public:
      * @note If this counter is a group leader, it will start the
      * entire group.
      */
-    void start();
+    virtual void start() = 0;
 
     /**
      * Stop counting.
@@ -244,7 +219,7 @@ public:
      * @note If this counter is a group leader, it will stop the
      * entire group.
      */
-    void stop();
+    virtual void stop() = 0;
 
     /**
      * Update the period of an overflow counter.
@@ -260,9 +235,15 @@ public:
      * since it has inverted check for the return value when copying
      * parameters from userspace.
      *
+     * @note When using a hybrid perf counter, this actually sets
+     * the period to 1/2 of the value provided. This ensures that an
+     * overflow will always trigger before more than \p period events
+     * occur, even in the pathological case when the host execution is
+     * evenly split between a P-core and E-core.
+     *
      * @param period Overflow period in events
      */
-    void period(uint64_t period);
+    virtual void period(uint64_t period) = 0;
 
     /**
      * Enable a counter for a fixed number of events.
@@ -276,12 +257,12 @@ public:
      * @param refresh Number of overflows before disabling the
      * counter.
      */
-    void refresh(int refresh);
+    virtual void refresh(int refresh) = 0;
 
     /**
      * Read the current value of a counter.
      */
-    uint64_t read() const;
+    virtual uint64_t read() const = 0;
 
     /**
      * Enable signal delivery to a thread on counter overflow.
@@ -289,7 +270,7 @@ public:
      * @param tid Thread to deliver signal to
      * @param signal Signal to send upon overflow
      */
-    void enableSignals(pid_t tid, int signal);
+    virtual void enableSignals(pid_t tid, int signal) = 0;
 
     /**
      * Enable signal delivery on counter overflow. Identical to
@@ -306,15 +287,43 @@ private:
     // Disallow assignment
     PerfKvmCounter &operator=(const PerfKvmCounter &that);
 
-    void attach(PerfKvmCounterConfig &config, pid_t tid, int group_fd);
-
     /**
      * Get the TID of the current thread.
      *
      * @return Current thread's TID
      */
     pid_t sysGettid();
+};
 
+/**
+ * An instance of a single physical performance counter.
+ * In almost all cases, this is the PerfKvmCounter implementation to use. The
+ * only situation in which you should _not_ use this counter is for creating
+ a hardware event on a hybrid host architecture. In that case, use
+ * a HybridPerfKvmCounter.
+ */
+class SimplePerfKvmCounter final : public PerfKvmCounter
+{
+  private:
+    /** Don't create directly; use PerfKvmCounter::create(). */
+    SimplePerfKvmCounter();
+
+  public:
+    ~SimplePerfKvmCounter();
+
+    void attach(const PerfKvmCounterConfig &config,
+                pid_t tid, const PerfKvmCounter *parent) override;
+
+    void detach() override;
+    bool attached() const override { return fd != -1; }
+    void start() override;
+    void stop() override;
+    void period(uint64_t period) override;
+    void refresh(int refresh) override;
+    uint64_t read() const override;
+    void enableSignals(pid_t tid, int signal) override;
+
+  private:
     /**
      * MMAP the PerfEvent file descriptor.
      *
@@ -379,6 +388,58 @@ private:
 
     /** Cached host page size */
     long pageSize;
+
+    friend class PerfKvmCounter;
+    friend class HybridPerfKvmCounter;
+};
+
+/**
+ * Implements a single logical performance counter using two
+ * physical performance counters (i.e., SimplePerfKvmCounter).
+ * Use this for hardware counters (i.e., of type PERF_TYPE_HARDWARE)
+ * when running on a hybrid host architecture. Such architectures have
+ * multiple types of cores, each of which require their own individual
+ * performance counter.
+ */
+class HybridPerfKvmCounter : public PerfKvmCounter
+{
+  private:
+    /** Don't create directly; use PerfKvmCounter::create(). */
+    HybridPerfKvmCounter() = default;
+
+  public:
+    void attach(const PerfKvmCounterConfig &config, pid_t tid,
+                const PerfKvmCounter *parent) override;
+    void detach() override;
+    bool attached() const override;
+    void start() override;
+    void stop() override;
+    void period(uint64_t period) override;
+    void refresh(int refresh) override;
+    uint64_t read() const override;
+    void enableSignals(pid_t pid, int signal) override;
+
+  private:
+    SimplePerfKvmCounter coreCounter;
+    SimplePerfKvmCounter atomCounter;
+
+    using ConfigSubtype = decltype(perf_event_attr::config);
+    using SamplePeriod = decltype(perf_event_attr::sample_type);
+
+    /** @{ */
+    /**
+     * These constants for specifying core vs. atom events are taken from
+     * Linux perf's documentation (tools/perf/Documentation/intel-hybrid.txt
+     * in the linux source tree).
+     */
+    static inline constexpr ConfigSubtype ConfigCore = 0x4UL << 32;
+    static inline constexpr ConfigSubtype ConfigAtom = 0x8UL << 32;
+    /** @} */
+
+    static PerfKvmCounterConfig fixupConfig(const PerfKvmCounterConfig &in,
+                                            ConfigSubtype config_subtype);
+
+    friend class PerfKvmCounter;
 };
 
 } // namespace gem5
