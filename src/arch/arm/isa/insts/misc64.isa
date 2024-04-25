@@ -183,7 +183,7 @@ let {{
             return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     unknown64Iop = ArmInstObjParams("unknown", "Unknown64", "UnknownOp64",
-                                    unknownCode)
+                                    unknownCode, ['IsInvalid'])
     header_output += BasicDeclare.subst(unknown64Iop)
     decoder_output += BasicConstructor64.subst(unknown64Iop)
     exec_output += BasicExecute.subst(unknown64Iop)

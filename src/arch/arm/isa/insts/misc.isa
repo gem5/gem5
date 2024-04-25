@@ -848,7 +848,8 @@ let {{
     '''
     unknownIop = ArmInstObjParams("unknown", "Unknown", "UnknownOp", \
                                   { "code": unknownCode,
-                                    "predicate_test": predicateTest })
+                                    "predicate_test": predicateTest },
+                                  ['IsInvalid'])
     header_output += BasicDeclare.subst(unknownIop)
     decoder_output += BasicConstructor.subst(unknownIop)
     exec_output += PredOpExecute.subst(unknownIop)
