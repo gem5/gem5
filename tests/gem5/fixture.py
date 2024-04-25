@@ -171,17 +171,22 @@ class SConsFixture(UniqueFixture):
                 "You may want to use --skip-build, or use 'rerun'."
             )
 
+        # Create the KConfig configuration based on the ISA
+        defconfig_command = [
+            "scons",
+            "-C",
+            self.directory,
+            "--ignore-style",
+            "--no-compress-debug",
+            "defconfig",
+            self.target_dir,
+            joinpath(self.directory, "build_opts", self.isa.upper()),
+        ]
+        log_call(log.test_log, defconfig_command, time=None, stderr=sys.stderr)
+
+        # If there is a cache coherence protocol specified,
+        # set it to the config.
         if self.protocol:
-            defconfig_command = [
-                "scons",
-                "-C",
-                self.directory,
-                "--ignore-style",
-                "--no-compress-debug",
-                "defconfig",
-                self.target_dir,
-                joinpath(self.directory, "build_opts", self.isa.upper()),
-            ]
             setconfig_command = [
                 "scons",
                 "-C",
@@ -193,12 +198,11 @@ class SConsFixture(UniqueFixture):
                 f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
             ]
             log_call(
-                log.test_log, defconfig_command, time=None, stderr=sys.stderr
-            )
-            log_call(
                 log.test_log, setconfig_command, time=None, stderr=sys.stderr
             )
 
+        # Ensure the test objects are compiled into the binary by
+        # setting it in the config.
         setconfig_add_test_obj_command = [
             "scons",
             "-C",
