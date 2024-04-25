@@ -62,7 +62,7 @@ using namespace ArmISA;
 TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
       requestorId(p.sys->getRequestorId(this)),
-      port(new Port(*this, requestorId)),
+      port(new Port(*this)),
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),
@@ -78,7 +78,8 @@ TableWalker::TableWalker(const Params &p)
       doL3LongDescEvent([this]{ doL3LongDescriptorWrapper(); }, name()),
       LongDescEventByLevel { &doL0LongDescEvent, &doL1LongDescEvent,
                              &doL2LongDescEvent, &doL3LongDescEvent },
-      doProcessEvent([this]{ processWalkWrapper(); }, name())
+      doProcessEvent([this]{ processWalkWrapper(); }, name()),
+      test(nullptr)
 {
     sctlr = 0;
 
@@ -139,25 +140,20 @@ TableWalker::WalkerState::WalkerState() :
 {
 }
 
-TableWalker::Port::Port(TableWalker& _walker, RequestorID id)
+TableWalker::Port::Port(TableWalker& _walker)
   : QueuedRequestPort(_walker.name() + ".port", reqQueue, snoopRespQueue),
     owner{_walker},
     reqQueue(_walker, *this),
-    snoopRespQueue(_walker, *this),
-    requestorId(id)
+    snoopRespQueue(_walker, *this)
 {
 }
 
 PacketPtr
 TableWalker::Port::createPacket(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay,
+    const RequestPtr &req,
+    uint8_t *data, Tick delay,
     Event *event)
 {
-    RequestPtr req = std::make_shared<Request>(
-        desc_addr, size, flags, requestorId);
-    req->taskId(context_switch_task_id::DMA);
-
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     pkt->dataStatic(data);
 
@@ -171,10 +167,9 @@ TableWalker::Port::createPacket(
 
 void
 TableWalker::Port::sendFunctionalReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags)
+    const RequestPtr &req, uint8_t *data)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, 0, nullptr);
+    auto pkt = createPacket(req, data, 0, nullptr);
 
     sendFunctional(pkt);
 
@@ -183,10 +178,10 @@ TableWalker::Port::sendFunctionalReq(
 
 void
 TableWalker::Port::sendAtomicReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay)
+    const RequestPtr &req,
+    uint8_t *data, Tick delay)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, delay, nullptr);
+    auto pkt = createPacket(req, data, delay, nullptr);
 
     Tick lat = sendAtomic(pkt);
 
@@ -195,11 +190,11 @@ TableWalker::Port::sendAtomicReq(
 
 void
 TableWalker::Port::sendTimingReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay,
+    const RequestPtr &req,
+    uint8_t *data, Tick delay,
     Event *event)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, delay, event);
+    auto pkt = createPacket(req, data, delay, event);
 
     schedTimingReq(pkt, curTick());
 }
@@ -332,18 +327,15 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
 
     currState->startTime = curTick();
     currState->tc = _tc;
-    // ARM DDI 0487A.f (ARMv8 ARM) pg J8-5672
-    // aarch32/translation/translation/AArch32.TranslateAddress dictates
-    // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
+    currState->el =
+        MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
+            _tc->readMiscReg(MISCREG_SCR_EL3),
+            tranType);
+
     if (isStage2) {
-        currState->el = EL1;
         currState->regime = TranslationRegime::EL10;
         currState->aarch64 = ELIs64(_tc, EL2);
     } else {
-        currState->el =
-            MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
-                _tc->readMiscReg(MISCREG_SCR_EL3),
-                tranType);
         currState->regime =
             translationRegime(_tc, currState->el);
         currState->aarch64 =
@@ -442,40 +434,53 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         ++stats.walksShortDescriptor;
     }
 
-    if (!currState->timing) {
+    if (currState->timing && (pending || pendingQueue.size())) {
+        pendingQueue.push_back(currState);
+        currState = NULL;
+        pendingChange();
+        return NoFault;
+    } else {
+        if (currState->timing) {
+            pending = true;
+            pendingChange();
+        }
+
         Fault fault = NoFault;
-        if (currState->aarch64)
+        if (currState->aarch64) {
             fault = processWalkAArch64();
-        else if (long_desc_format)
+        } else if (long_desc_format) {
             fault = processWalkLPAE();
-        else
+        } else {
             fault = processWalk();
+        }
 
         // If this was a functional non-timing access restore state to
         // how we found it.
         if (currState->functional) {
             delete currState;
             currState = savedCurrState;
+        } else if (currState->timing) {
+            if (fault) {
+                pending = false;
+                nextWalk(currState->tc);
+                delete currState;
+                currState = NULL;
+            } else {
+                // Either we are using the long descriptor, which means we
+                // need to extract the queue index from longDesc, or we are
+                // using the short. In the latter we always start at L1
+                LookupLevel curr_lookup_level = long_desc_format ?
+                    currState->longDesc.lookupLevel : LookupLevel::L1;
+
+                stashCurrState(curr_lookup_level);
+            }
+        } else if (fault) {
+            currState->tc = NULL;
+            currState->req = NULL;
         }
+
         return fault;
     }
-
-    if (pending || pendingQueue.size()) {
-        pendingQueue.push_back(currState);
-        currState = NULL;
-        pendingChange();
-    } else {
-        pending = true;
-        pendingChange();
-        if (currState->aarch64)
-            return processWalkAArch64();
-        else if (long_desc_format)
-            return processWalkLPAE();
-        else
-            return processWalk();
-    }
-
-    return NoFault;
 }
 
 void
@@ -501,27 +506,36 @@ TableWalker::processWalkWrapper()
         // We've got a valid request, lets process it
         pending = true;
         pendingQueue.pop_front();
-        // Keep currState in case one of the processWalk... calls NULLs it
+
+        bool long_desc_format = currState->aarch64 || currState->el == EL2 ||
+            isStage2 || longDescFormatInUse(currState->tc);
 
         if (te && te->partial) {
             currState->walkEntry = *te;
         }
-        WalkerState *curr_state_copy = currState;
-        Fault f;
-        if (currState->aarch64)
-            f = processWalkAArch64();
-        else if (bool hyp = currState->el == EL2;
-                 longDescFormatInUse(currState->tc) ||
-                 hyp || isStage2)
-            f = processWalkLPAE();
-        else
-            f = processWalk();
+        Fault fault;
+        if (currState->aarch64) {
+            fault = processWalkAArch64();
+        } else if (long_desc_format) {
+            fault = processWalkLPAE();
+        } else {
+            fault = processWalk();
+        }
 
-        if (f != NoFault) {
-            curr_state_copy->transState->finish(f, curr_state_copy->req,
-                    curr_state_copy->tc, curr_state_copy->mode);
+        if (fault != NoFault) {
+            pending = false;
+            nextWalk(currState->tc);
 
-            delete curr_state_copy;
+            currState->transState->finish(fault, currState->req,
+                    currState->tc, currState->mode);
+
+            delete currState;
+            currState = NULL;
+        } else {
+            LookupLevel curr_lookup_level = long_desc_format ?
+                currState->longDesc.lookupLevel : LookupLevel::L1;
+
+            stashCurrState(curr_lookup_level);
         }
         return;
     }
@@ -648,23 +662,6 @@ TableWalker::processWalk()
     DPRINTF(TLB, " - Descriptor at address %#x (%s)\n", l1desc_addr,
             currState->isSecure ? "s" : "ns");
 
-    // Trickbox address check
-    Fault f;
-    f = testWalk(l1desc_addr, sizeof(uint32_t),
-                 TlbEntry::DomainType::NoAccess, LookupLevel::L1, isStage2);
-    if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-        return f;
-    }
-
     Request::Flags flag = Request::PT_WALK;
     if (currState->sctlr.c == 0 || currState->isUncacheable) {
         flag.set(Request::UNCACHEABLE);
@@ -674,16 +671,13 @@ TableWalker::processWalk()
         flag.set(Request::SECURE);
     }
 
-    bool delayed;
-    delayed = fetchDescriptor(l1desc_addr, (uint8_t*)&currState->l1Desc.data,
-                              sizeof(uint32_t), flag, LookupLevel::L1,
-                              &doL1DescEvent,
-                              &TableWalker::doL1Descriptor);
-    if (!delayed) {
-       f = currState->fault;
-    }
+    fetchDescriptor(
+        l1desc_addr, currState->l1Desc,
+        sizeof(uint32_t), flag, LookupLevel::L1,
+        &doL1DescEvent,
+        &TableWalker::doL1Descriptor);
 
-    return f;
+    return currState->fault;
 }
 
 Fault
@@ -824,23 +818,6 @@ TableWalker::processWalkLPAE()
                 desc_addr, currState->isSecure ? "s" : "ns");
     }
 
-    // Trickbox address check
-    Fault f = testWalk(desc_addr, sizeof(uint64_t),
-                       TlbEntry::DomainType::NoAccess, start_lookup_level,
-                       isStage2);
-    if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-        return f;
-    }
-
     if (currState->sctlr.c == 0 || currState->isUncacheable) {
         flag.set(Request::UNCACHEABLE);
     }
@@ -849,15 +826,13 @@ TableWalker::processWalkLPAE()
     currState->longDesc.aarch64 = false;
     currState->longDesc.grainSize = Grain4KB;
 
-    bool delayed = fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
-                                   sizeof(uint64_t), flag, start_lookup_level,
-                                   LongDescEventByLevel[start_lookup_level],
-                                   &TableWalker::doLongDescriptor);
-    if (!delayed) {
-        f = currState->fault;
-    }
+    fetchDescriptor(
+        desc_addr, currState->longDesc,
+        sizeof(uint64_t), flag, start_lookup_level,
+        LongDescEventByLevel[start_lookup_level],
+        &TableWalker::doLongDescriptor);
 
-    return f;
+    return currState->fault;
 }
 
 bool
@@ -1022,30 +997,19 @@ TableWalker::processWalkAArch64()
     const bool is_atomic = currState->req->isAtomic();
 
     if (fault) {
-        Fault f;
-        if (currState->isFetch)
-            f =  std::make_shared<PrefetchAbort>(
+        if (currState->isFetch) {
+            return std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::TranslationLL + LookupLevel::L0, isStage2,
                 ArmFault::LpaeTran);
-        else
-            f = std::make_shared<DataAbort>(
+        } else {
+            return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + LookupLevel::L0,
                 isStage2, ArmFault::LpaeTran);
-
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
         }
-        return f;
-
     }
 
     if (tg == ReservedGrain) {
@@ -1069,49 +1033,20 @@ TableWalker::processWalkAArch64()
     // necessary
     if (checkAddrSizeFaultAArch64(table_addr, currState->physAddrRange)) {
         DPRINTF(TLB, "Address size fault before any lookup\n");
-        Fault f;
         if (currState->isFetch)
-            f = std::make_shared<PrefetchAbort>(
+            return std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
                 ArmFault::LpaeTran);
         else
-            f = std::make_shared<DataAbort>(
+            return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
                 ArmFault::LpaeTran);
-
-
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-        return f;
-
-    }
-
-    // Trickbox address check
-    Fault f = testWalk(desc_addr, sizeof(uint64_t),
-                       TlbEntry::DomainType::NoAccess, start_lookup_level, isStage2);
-    if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-        return f;
     }
 
     Request::Flags flag = Request::PT_WALK;
@@ -1128,18 +1063,12 @@ TableWalker::processWalkAArch64()
     currState->longDesc.grainSize = tg;
     currState->longDesc.physAddrRange = _physAddrRange;
 
-    if (currState->timing) {
-        fetchDescriptor(desc_addr, (uint8_t*) &currState->longDesc.data,
-                        sizeof(uint64_t), flag, start_lookup_level,
-                        LongDescEventByLevel[start_lookup_level], NULL);
-    } else {
-        fetchDescriptor(desc_addr, (uint8_t*)&currState->longDesc.data,
-                        sizeof(uint64_t), flag, -1, NULL,
-                        &TableWalker::doLongDescriptor);
-        f = currState->fault;
-    }
+    fetchDescriptor(desc_addr, currState->longDesc,
+                    sizeof(uint64_t), flag, start_lookup_level,
+                    LongDescEventByLevel[start_lookup_level],
+                    &TableWalker::doLongDescriptor);
 
-    return f;
+    return currState->fault;
 }
 
 std::tuple<Addr, Addr, TableWalker::LookupLevel>
@@ -1690,19 +1619,6 @@ TableWalker::doL1Descriptor()
             DPRINTF(TLB, "L1 descriptor points to page table at: %#x (%s)\n",
                     l2desc_addr, currState->isSecure ? "s" : "ns");
 
-            // Trickbox address check
-            currState->fault = testWalk(l2desc_addr, sizeof(uint32_t),
-                                        currState->l1Desc.domain(),
-                                        LookupLevel::L2, isStage2);
-
-            if (currState->fault) {
-                if (!currState->timing) {
-                    currState->tc = NULL;
-                    currState->req = NULL;
-                }
-                return;
-            }
-
             Request::Flags flag = Request::PT_WALK;
 
             if (currState->sctlr.c == 0 || currState->isUncacheable) {
@@ -1712,14 +1628,13 @@ TableWalker::doL1Descriptor()
             if (currState->isSecure)
                 flag.set(Request::SECURE);
 
-            bool delayed;
-            delayed = fetchDescriptor(l2desc_addr,
-                                      (uint8_t*)&currState->l2Desc.data,
-                                      sizeof(uint32_t), flag, -1, &doL2DescEvent,
-                                      &TableWalker::doL2Descriptor);
-            if (delayed) {
-                currState->delayed = true;
-            }
+            fetchDescriptor(
+                l2desc_addr, currState->l2Desc,
+                sizeof(uint32_t), flag, LookupLevel::L2,
+                &doL2DescEvent,
+                &TableWalker::doL2Descriptor);
+
+            currState->delayed = currState->timing;
 
             return;
         }
@@ -1858,23 +1773,9 @@ TableWalker::doLongDescriptor()
                 return;
             }
 
-            // Trickbox address check
-            currState->fault = testWalk(
-                next_desc_addr, sizeof(uint64_t), TlbEntry::DomainType::Client,
-                toLookupLevel(currState->longDesc.lookupLevel +1), isStage2);
-
-            if (currState->fault) {
-                if (!currState->timing) {
-                    currState->tc = NULL;
-                    currState->req = NULL;
-                }
-                return;
-            }
-
             if (mmu->hasWalkCache()) {
                 insertPartialTableEntry(currState->longDesc);
             }
-
 
             Request::Flags flag = Request::PT_WALK;
             if (currState->secureLookup)
@@ -1899,13 +1800,12 @@ TableWalker::doLongDescriptor()
                 break;
             }
 
-            bool delayed;
-            delayed = fetchDescriptor(next_desc_addr, (uint8_t*)&currState->longDesc.data,
-                                      sizeof(uint64_t), flag, -1, event,
-                                      &TableWalker::doLongDescriptor);
-            if (delayed) {
-                 currState->delayed = true;
-            }
+            fetchDescriptor(
+                next_desc_addr, currState->longDesc,
+                sizeof(uint64_t), flag, L, event,
+                &TableWalker::doLongDescriptor);
+
+            currState->delayed = currState->timing;
         }
         return;
       default:
@@ -2026,7 +1926,7 @@ TableWalker::doL1DescriptorWrapper()
         delete currState;
     } else {
         // need to do L2 descriptor
-        stateQueues[LookupLevel::L2].push_back(currState);
+        stashCurrState(LookupLevel::L2);
     }
     currState = NULL;
 }
@@ -2152,7 +2052,7 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         if (curr_lookup_level >= LookupLevel::Num_ArmLookupLevel - 1)
             panic("Max. number of lookups already reached in table walk\n");
         // Need to perform additional lookups
-        stateQueues[currState->longDesc.lookupLevel].push_back(currState);
+        stashCurrState(currState->longDesc.lookupLevel);
     }
     currState = NULL;
 }
@@ -2167,75 +2067,85 @@ TableWalker::nextWalk(ThreadContext *tc)
         completeDrain();
 }
 
-bool
-TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
-    Request::Flags flags, int queueIndex, Event *event,
+void
+TableWalker::fetchDescriptor(Addr desc_addr,
+    DescriptorBase &descriptor, int num_bytes,
+    Request::Flags flags, LookupLevel lookup_level, Event *event,
     void (TableWalker::*doDescriptor)())
 {
-    bool isTiming = currState->timing;
+    uint8_t *data = descriptor.getRawPtr();
 
     DPRINTF(PageTableWalker,
             "Fetching descriptor at address: 0x%x stage2Req: %d\n",
-            descAddr, currState->stage2Req);
+            desc_addr, currState->stage2Req);
 
-    // If this translation has a stage 2 then we know descAddr is an IPA and
+    // If this translation has a stage 2 then we know desc_addr is an IPA and
     // needs to be translated before we can access the page table. Do that
     // check here.
     if (currState->stage2Req) {
         Fault fault;
 
-        if (isTiming) {
+        if (currState->timing) {
             auto *tran = new
                 Stage2Walk(*this, data, event, currState->vaddr,
                     currState->mode, currState->tranType);
             currState->stage2Tran = tran;
-            readDataTimed(currState->tc, descAddr, tran, numBytes, flags);
+            readDataTimed(currState->tc, desc_addr, tran, num_bytes, flags);
             fault = tran->fault;
+
+            if (fault != NoFault) {
+                currState->fault = fault;
+            }
         } else {
             fault = readDataUntimed(currState->tc,
-                currState->vaddr, descAddr, data, numBytes, flags,
+                currState->vaddr, desc_addr, data, num_bytes, flags,
                 currState->mode,
                 currState->tranType,
                 currState->functional);
-        }
 
-        if (fault != NoFault) {
-            currState->fault = fault;
-        }
-        if (isTiming) {
-            if (queueIndex >= 0) {
-                DPRINTF(PageTableWalker, "Adding to walker fifo: "
-                        "queue size before adding: %d\n",
-                        stateQueues[queueIndex].size());
-                stateQueues[queueIndex].push_back(currState);
-                currState = NULL;
+            if (fault != NoFault) {
+                currState->fault = fault;
             }
-        } else {
+
             (this->*doDescriptor)();
         }
     } else {
-        if (isTiming) {
-            port->sendTimingReq(descAddr, numBytes, data, flags,
+        RequestPtr req = std::make_shared<Request>(
+            desc_addr, num_bytes, flags, requestorId);
+        req->taskId(context_switch_task_id::DMA);
+
+        Fault fault = testWalk(req, descriptor.domain(),
+            lookup_level);
+
+        if (fault != NoFault) {
+            currState->fault = fault;
+            return;
+        }
+
+        if (currState->timing) {
+            port->sendTimingReq(req, data,
                 currState->tc->getCpuPtr()->clockPeriod(), event);
 
-            if (queueIndex >= 0) {
-                DPRINTF(PageTableWalker, "Adding to walker fifo: "
-                        "queue size before adding: %d\n",
-                        stateQueues[queueIndex].size());
-                stateQueues[queueIndex].push_back(currState);
-                currState = NULL;
-            }
         } else if (!currState->functional) {
-            port->sendAtomicReq(descAddr, numBytes, data, flags,
+            port->sendAtomicReq(req, data,
                 currState->tc->getCpuPtr()->clockPeriod());
 
             (this->*doDescriptor)();
         } else {
-            port->sendFunctionalReq(descAddr, numBytes, data, flags);
+            port->sendFunctionalReq(req, data);
             (this->*doDescriptor)();
         }
     }
-    return (isTiming);
+}
+
+void
+TableWalker::stashCurrState(int queue_idx)
+{
+    DPRINTF(PageTableWalker, "Adding to walker fifo: "
+            "queue size before adding: %d\n",
+            stateQueues[queue_idx].size());
+    stateQueues[queue_idx].push_back(currState);
+    currState = NULL;
 }
 
 void
@@ -2396,13 +2306,23 @@ TableWalker::pendingChange()
 }
 
 Fault
-TableWalker::testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
-                      LookupLevel lookup_level, bool stage2)
+TableWalker::testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
+                      LookupLevel lookup_level)
 {
-    return mmu->testWalk(pa, size, currState->vaddr, currState->isSecure,
-                         currState->mode, domain, lookup_level, stage2);
+    if (!test) {
+        return NoFault;
+    } else {
+        return test->walkCheck(walk_req, currState->vaddr, currState->isSecure,
+                               currState->el != EL0,
+                               currState->mode, domain, lookup_level);
+    }
 }
 
+void
+TableWalker::setTestInterface(TlbTestInterface *ti)
+{
+    test = ti;
+}
 
 uint8_t
 TableWalker::pageSizeNtoStatBin(uint8_t N)
@@ -2503,8 +2423,7 @@ TableWalker::Stage2Walk::finish(const Fault &_fault,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getTableWalkerPort().sendTimingReq(
-            req->getPaddr(), numBytes, data, req->getFlags(),
+        parent.getTableWalkerPort().sendTimingReq(req, data,
             tc->getCpuPtr()->clockPeriod(), event);
     } else {
         // We can't do the DMA access as there's been a problem, so tell the

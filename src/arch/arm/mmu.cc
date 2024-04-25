@@ -200,6 +200,26 @@ MMU::invalidateMiscReg()
 }
 
 Fault
+MMU::testAndFinalize(const RequestPtr &req,
+                     ThreadContext *tc, Mode mode,
+                     TlbEntry* te, CachedState &state) const
+{
+    // If we don't have a valid tlb entry it means virtual memory
+    // is not enabled
+    auto domain = te ? te-> domain : TlbEntry::DomainType::NoAccess;
+
+    // Check for a tester generated address fault
+    Fault fault = testTranslation(req, mode, domain, state);
+    if (fault != NoFault) {
+        return fault;
+    } else {
+        // Now that we checked no fault has been generated in the
+        // translation process, we can finalize the physical address
+        return finalizePhysical(req, tc, mode);
+    }
+}
+
+Fault
 MMU::finalizePhysical(const RequestPtr &req,
                       ThreadContext *tc, Mode mode) const
 {
@@ -848,7 +868,7 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
             state.isStage2);
     setAttr(temp_te.attributes);
 
-    return testTranslation(req, mode, TlbEntry::DomainType::NoAccess, state);
+    return testAndFinalize(req, tc, mode, nullptr, state);
 }
 
 Fault
@@ -909,18 +929,11 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
                     tranMethod);
         }
 
-        // Check for a trickbox generated address fault
         if (fault == NoFault)
-            fault = testTranslation(req, mode, te->domain, state);
+            fault = testAndFinalize(req, tc, mode, te, state);
     }
 
-    if (fault == NoFault) {
-        // Don't try to finalize a physical address unless the
-        // translation has completed (i.e., there is a table entry).
-        return te ? finalizePhysical(req, tc, mode) : NoFault;
-    } else {
-        return fault;
-    }
+    return fault;
 }
 
 Fault
@@ -1551,40 +1564,22 @@ MMU::setTestInterface(SimObject *_ti)
         TlbTestInterface *ti(dynamic_cast<TlbTestInterface *>(_ti));
         fatal_if(!ti, "%s is not a valid ARM TLB tester\n", _ti->name());
         test = ti;
+        itbWalker->setTestInterface(test);
+        dtbWalker->setTestInterface(test);
+        itbStage2Walker->setTestInterface(test);
+        dtbStage2Walker->setTestInterface(test);
     }
 }
 
 Fault
 MMU::testTranslation(const RequestPtr &req, Mode mode,
-                     TlbEntry::DomainType domain, CachedState &state)
+                     TlbEntry::DomainType domain, CachedState &state) const
 {
     if (!test || !req->hasSize() || req->getSize() == 0 ||
         req->isCacheMaintenance()) {
         return NoFault;
     } else {
         return test->translationCheck(req, state.isPriv, mode, domain);
-    }
-}
-
-Fault
-MMU::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-              TlbEntry::DomainType domain, LookupLevel lookup_level,
-              bool stage2)
-{
-    return testWalk(pa, size, va, is_secure, mode, domain, lookup_level,
-        stage2 ? s2State : s1State);
-}
-
-Fault
-MMU::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-              TlbEntry::DomainType domain, LookupLevel lookup_level,
-              CachedState &state)
-{
-    if (!test) {
-        return NoFault;
-    } else {
-        return test->walkCheck(pa, size, va, is_secure, state.isPriv, mode,
-                               domain, lookup_level);
     }
 }
 

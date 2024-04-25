@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2022 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2022, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,8 +84,7 @@ class TlbTestInterface
     /**
      * Check if a page table walker access should be forced to fail.
      *
-     * @param pa Physical address the walker is accessing
-     * @param size Walker access size
+     * @param req walk request bearing a valid phys address
      * @param va Virtual address that initiated the walk
      * @param is_secure Access from secure state
      * @param is_priv Access from a privileged mode (i.e., not EL0)
@@ -93,7 +92,8 @@ class TlbTestInterface
      * @param domain Domain type
      * @param lookup_level Page table walker level
      */
-    virtual Fault walkCheck(Addr pa, Addr size, Addr va, bool is_secure,
+    virtual Fault walkCheck(const RequestPtr &walk_req,
+                            Addr va, bool is_secure,
                             Addr is_priv, BaseMMU::Mode mode,
                             TlbEntry::DomainType domain,
                             enums::ArmLookupLevel lookup_level) = 0;
