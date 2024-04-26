@@ -81,7 +81,7 @@ board.set_kernel_disk_workload(
         "x86-ubuntu-18.04-img", resource_version="1.0.0"
     ),
     checkpoint=obtain_resource(
-        "x86-fs-test-checkpoint-v24-0", resource_version="2.0.0"
+        "x86-fs-test-checkpoint-v24-0", resource_version="3.0.0"
     ),
 )
 
