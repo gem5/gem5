@@ -35,89 +35,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ARM_SEMIHOSTING_HH__
-#define __ARCH_ARM_SEMIHOSTING_HH__
+#ifndef __ARCH_RISCV_SEMIHOSTING_HH__
+#define __ARCH_RISCV_SEMIHOSTING_HH__
 
-#include <cstdio>
-#include <functional>
-#include <map>
-#include <memory>
-#include <utility>
-#include <vector>
-
-#include "arch/arm/regs/int.hh"
-#include "arch/arm/utility.hh"
 #include "arch/generic/semihosting.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/int.hh"
 #include "cpu/thread_context.hh"
-#include "mem/port_proxy.hh"
-#include "sim/core.hh"
 #include "sim/guest_abi.hh"
-#include "sim/pseudo_inst.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-struct ArmSemihostingParams;
+struct RiscvSemihostingParams;
 class SerialDevice;
 
-/** Semihosting for AArch32 and AArch64. */
-class ArmSemihosting : public BaseSemihosting
+/** Semihosting for RV32 and RV64. */
+class RiscvSemihosting : public BaseSemihosting
 {
   public:
-    enum
+    enum class Opcode : uint32_t
     {
-        // Standard ARM immediate values which trigger semihosting.
-        T32Imm = 0xAB,
-        A32Imm = 0x123456,
-        A64Imm = 0xF000,
-
-        // The immediate value which enables gem5 semihosting calls. Use the
-        // standard value for thumb.
-        Gem5Imm = 0x5D57
+        // https://github.com/riscv-software-src/riscv-semihosting/blob/main/
+        // riscv-semihosting-spec.adoc#21-semihosting-trap-instruction-sequence
+        Prefix = 0x01f01013, // slli x0, x0, 0x1f Entry NOP
+        EBreak = 0x00100073, // ebreak            Break to debugger
+        Suffix = 0x40705013, // srai x0, x0, 7    NOP encoding semihosting
     };
-
     static PortProxy &portProxyImpl(ThreadContext *tc);
-    PortProxy &portProxy(ThreadContext *tc) const override
+    PortProxy &
+    portProxy(ThreadContext *tc) const override
     {
         return portProxyImpl(tc);
     }
-    ByteOrder byteOrder(ThreadContext *tc) const override
+    ByteOrder
+    byteOrder(ThreadContext *tc) const override
     {
-        return ArmISA::byteOrder(tc);
+        return ByteOrder::little;
     }
 
-    struct Abi64 : public AbiBase
+    template <typename ArgType>
+    struct RiscvSemihostingAbi : public AbiBase
     {
-        using UintPtr = uint64_t;
+        using UintPtr = ArgType;
 
-        class State : public StateBase<uint64_t, ArmSemihosting>
+        class State : public StateBase<ArgType, RiscvSemihosting>
         {
           public:
-            // For 64 bit semihosting, the params are pointer to by X1.
             explicit
             State(const ThreadContext *tc) :
-                StateBase<uint64_t, ArmSemihosting>(tc,
-                        tc->getReg(ArmISA::int_reg::X1), &ArmISA::byteOrder)
+                StateBase<ArgType, RiscvSemihosting>(tc,
+                        tc->getReg(RiscvISA::ArgumentRegs[1]),
+                        [](const ThreadContext *) {
+                            return ByteOrder::little;
+                        })
             {}
         };
     };
 
-    struct Abi32 : public AbiBase
-    {
-        using UintPtr = uint32_t;
-
-        class State : public StateBase<uint64_t, ArmSemihosting>
-        {
-          public:
-            // For 32 bit semihosting, the params are pointer to by R1.
-            explicit
-            State(const ThreadContext *tc) :
-                StateBase<uint64_t, ArmSemihosting>(tc,
-                        tc->getReg(ArmISA::int_reg::R1), &ArmISA::byteOrder)
-            {}
-        };
-    };
+    struct Abi64 : public RiscvSemihostingAbi<uint64_t>
+    {};
+    struct Abi32 : public RiscvSemihostingAbi<uint32_t>
+    {};
 
     enum Operation
     {
@@ -151,19 +131,16 @@ class ArmSemihosting : public BaseSemihosting
         SYS_GEM5_PSEUDO_OP = 0x100
     };
 
-    using SemiCall = SemiCallBase<ArmSemihosting, Abi32, Abi64>;
+    using SemiCall = SemiCallBase<RiscvSemihosting, Abi32, Abi64>;
 
-    explicit ArmSemihosting(const ArmSemihostingParams &p);
+    explicit RiscvSemihosting(const RiscvSemihostingParams &p);
 
-    /** Perform an Arm Semihosting call from aarch64 code. */
-    bool call64(ThreadContext *tc, bool gem5_ops);
-    /** Perform an Arm Semihosting call from aarch32 code. */
-    bool call32(ThreadContext *tc, bool gem5_ops);
-
+    /** Perform a RISC-V Semihosting call */
+    bool isSemihostingEBreak(ExecContext *xc);
+    bool call(ThreadContext *tc);
   protected:
-    RetErrno callGem5PseudoOp32(ThreadContext *tc, uint32_t encoded_func);
-    RetErrno callGem5PseudoOp64(ThreadContext *tc, uint64_t encoded_func);
-
+    bool call64(ThreadContext *tc);
+    bool call32(ThreadContext *tc);
     static const std::map<uint32_t, SemiCall> calls;
 };
 
@@ -171,69 +148,54 @@ namespace guest_abi
 {
 
 template <typename Arg>
-struct Argument<ArmSemihosting::Abi64, Arg,
-    typename std::enable_if_t<
-        (std::is_integral_v<Arg> ||
-         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
+struct Argument<RiscvSemihosting::Abi64, Arg,
+        typename std::enable_if_t<std::is_integral_v<Arg>>>
 {
     static Arg
-    get(ThreadContext *tc, ArmSemihosting::Abi64::State &state)
+    get(ThreadContext *tc, RiscvSemihosting::Abi64::State &state)
     {
-        return (Arg)state.get(tc);
+        return state.get(tc);
     }
 };
 
 template <typename Arg>
-struct Argument<ArmSemihosting::Abi32, Arg,
-    typename std::enable_if_t<
-        (std::is_integral_v<Arg> ||
-         std::is_same<Arg,pseudo_inst::GuestAddr>::value)>>
+struct Argument<RiscvSemihosting::Abi32, Arg,
+        typename std::enable_if_t<std::is_integral_v<Arg>>>
 {
     static Arg
-    get(ThreadContext *tc, ArmSemihosting::Abi32::State &state)
+    get(ThreadContext *tc, RiscvSemihosting::Abi32::State &state)
     {
-        if (std::is_signed_v<Arg>) {
-            return (Arg)sext<32>(state.get(tc));
-        }
-        else {
-            return (Arg)state.get(tc);
-        }
+        if (std::is_signed_v<Arg>)
+            return sext<32>(state.get(tc));
+        else
+            return state.get(tc);
     }
 };
 
 template <typename Abi>
-struct Argument<Abi, ArmSemihosting::InPlaceArg, typename std::enable_if_t<
-    std::is_base_of_v<ArmSemihosting::AbiBase, Abi>>>
+struct Argument<Abi, RiscvSemihosting::InPlaceArg,
+        typename std::enable_if_t<
+                std::is_base_of_v<RiscvSemihosting::AbiBase, Abi>>>
 {
-    static ArmSemihosting::InPlaceArg
+    static RiscvSemihosting::InPlaceArg
     get(ThreadContext *tc, typename Abi::State &state)
     {
-        return ArmSemihosting::InPlaceArg(
+        return RiscvSemihosting::InPlaceArg(
                 state.getAddr(), sizeof(typename Abi::State::ArgType));
     }
 };
 
-template <>
-struct Result<ArmSemihosting::Abi32, ArmSemihosting::RetErrno>
+template <typename Abi>
+struct Result<Abi, RiscvSemihosting::RetErrno>
 {
     static void
-    store(ThreadContext *tc, const ArmSemihosting::RetErrno &err)
+    store(ThreadContext *tc, const RiscvSemihosting::RetErrno &err)
     {
-        tc->setReg(ArmISA::int_reg::R0, err.first);
-    }
-};
-
-template <>
-struct Result<ArmSemihosting::Abi64, ArmSemihosting::RetErrno>
-{
-    static void
-    store(ThreadContext *tc, const ArmSemihosting::RetErrno &err)
-    {
-        tc->setReg(ArmISA::int_reg::X0, err.first);
+        tc->setReg(RiscvISA::ReturnValueReg, err.first);
     }
 };
 
 } // namespace guest_abi
 } // namespace gem5
 
-#endif // __ARCH_ARM_SEMIHOSTING_HH__
+#endif // __ARCH_RISCV_SEMIHOSTING_HH__
