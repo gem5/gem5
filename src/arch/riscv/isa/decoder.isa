@@ -1980,6 +1980,9 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = divu<uint64_t>(Rs1, Rs2);
                         }
                     }}, IntDivOp);
+                    0x7: czero_eqz({{
+                        Rd = rvSext(Rs2) == 0 ? 0 : rvSext(Rs1);
+                    }});
                     0x20: sra({{
                         Rd = rvSext(Rs1_sd) >> rvSelect(Rs2<4:0>, Rs2<5:0>);
                     }});
@@ -2036,6 +2039,9 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                     0x5: maxu({{
                         Rd = rvSext(std::max(rvZext(Rs1), rvZext(Rs2)));
+                    }});
+                    0x7: czero_nez({{
+                        Rd = rvSext(Rs2) != 0 ? 0 : rvSext(Rs1);
                     }});
                     0x20: andn({{
                         Rd = rvSext(Rs1 & (~Rs2));
