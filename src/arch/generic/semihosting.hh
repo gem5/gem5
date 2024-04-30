@@ -323,9 +323,10 @@ class BaseSemihosting : public SimObject
 
         int64_t read(uint8_t *buffer, uint64_t size) override;
         int64_t seek(uint64_t pos) override;
+        int64_t flen() override;
 
       protected:
-        size_t pos;
+        size_t pos = 0;
     };
 
     class File : public FileBase
@@ -540,7 +541,7 @@ class BaseSemihosting : public SimObject
 
     static const std::vector<const char *> fmodes;
     static const std::map<uint64_t, const char *> exitCodes;
-    static const std::vector<uint8_t> features;
+    static const std::array<uint8_t, 5> features;
     static const std::map<const std::string, FILE *> stdioMap;
 
     // used in callTmpNam() to deterministically generate a temp filename
