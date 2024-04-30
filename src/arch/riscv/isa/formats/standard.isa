@@ -422,20 +422,8 @@ def template CSRExecute {{
                 xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
                 xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
                 break;
-              case CSR_MIP: case CSR_MIE:
-              case CSR_SIP: case CSR_SIE:
-              case CSR_UIP: case CSR_UIE:
-              case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
-                if (newdata_all != olddata_all) {
-                    xc->setMiscReg(midx, newdata_all);
-                } else {
-                    return std::make_shared<IllegalInstFault>(
-                            "Only bits in mask are allowed to be set\n",
-                            machInst);
-                }
-                break;
               default:
-                xc->setMiscReg(midx, data);
+                xc->setMiscReg(midx, newdata_all);
                 break;
             }
         }
