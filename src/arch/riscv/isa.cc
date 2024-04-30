@@ -576,6 +576,11 @@ ISA::readMiscReg(RegIndex idx)
         {
             return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
         }
+      case MISCREG_FCSR:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) |
+                  (readMiscRegNoEffect(MISCREG_FRM) << FRM_OFFSET);
+        }
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -780,6 +785,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 RegVal new_val = readMiscRegNoEffect(MISCREG_FFLAGS);
                 new_val |= (val & FFLAGS_MASK);
                 setMiscRegNoEffect(MISCREG_FFLAGS, new_val);
+            }
+            break;
+          case MISCREG_FCSR:
+            {
+                setMiscRegNoEffect(MISCREG_FFLAGS, bits(val, 4, 0));
+                setMiscRegNoEffect(MISCREG_FRM, bits(val, 7, 5));
             }
             break;
           default:

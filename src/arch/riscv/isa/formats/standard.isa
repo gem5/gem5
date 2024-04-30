@@ -389,13 +389,7 @@ def template CSRExecute {{
             break;
         }
 
-        if (csr == CSR_FCSR) {
-            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
-                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
-        } else {
-            olddata = xc->readMiscReg(midx);
-        }
-        olddata = rvZext(olddata);
+        olddata = rvZext(xc->readMiscReg(midx));
         auto olddata_all = olddata;
 
         olddata &= maskVal;
@@ -417,15 +411,7 @@ def template CSRExecute {{
             newdata_all = (olddata_all & ~maskVal) | data;
             DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
                     newdata_all, csrName);
-            switch (csr) {
-              case CSR_FCSR:
-                xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
-                xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
-                break;
-              default:
-                xc->setMiscReg(midx, newdata_all);
-                break;
-            }
+            xc->setMiscReg(midx, newdata_all);
         }
         %(op_wb)s;
         return NoFault;

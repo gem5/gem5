@@ -250,6 +250,7 @@ enum MiscRegIndex
 
     // This CSR shared the same space with MISCREG_FFLAGS
     MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
+    MISCREG_FCSR,
 
     NUM_MISCREGS
 };
@@ -548,9 +549,8 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
          isaExtsFlags('f')}},
     {CSR_FRM,
         {"frm", MISCREG_FRM, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
-     // Actually FRM << 5 | FFLAGS
     {CSR_FCSR,
-        {"fcsr", MISCREG_FFLAGS, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
+        {"fcsr", MISCREG_FCSR, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
     {CSR_CYCLE,
         {"cycle", MISCREG_CYCLE, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_TIME,
