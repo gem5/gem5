@@ -333,7 +333,6 @@ def template CSRExecute {{
         // We assume a riscv instruction is always run with a riscv ISA.
         auto isa = static_cast<RiscvISA::ISA*>(xc->tcBase()->getIsaPtr());
         auto& csr_data = isa->getCSRDataMap();
-        auto& csr_masks = isa->getCSRMaskMap();
         MISA misa = isa->readMiscRegNoEffect(MISCREG_ISA);
 
         auto csr_data_it = csr_data.find(csr);
@@ -360,14 +359,10 @@ def template CSRExecute {{
                     machInst);
         }
 
-        auto mask_it = csr_masks.find(csr);
-        RegVal maskVal = (mask_it == csr_masks.end()) ? mask(64)
-                                                      : mask_it->second;
-
         %(op_decl)s;
         %(op_rd)s;
 
-        RegVal data, olddata;
+        RegVal data = 0;
         auto lowestAllowedMode = (PrivilegeMode)bits(csr, 9, 8);
         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
         if (pm < lowestAllowedMode) {
@@ -389,29 +384,20 @@ def template CSRExecute {{
             break;
         }
 
-        olddata = rvZext(xc->readMiscReg(midx));
-        auto olddata_all = olddata;
-
-        olddata &= maskVal;
-        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, olddata);
-        data = olddata;
+        if (%(read_cond)s) {
+            data = rvZext(xc->readMiscReg(midx));
+        }
 
         %(code)s;
 
-        data &= maskVal;
-        if (data != olddata) {
+        if (%(write_cond)s) {
             if (bits(csr, 11, 10) == 0x3) {
                 return std::make_shared<IllegalInstFault>(
                         csprintf("CSR %s is read-only\n", csrName), machInst);
             }
-            auto newdata_all = data;
-            // We must keep those original bits not in mask.
-            // olddata and data only contain the bits visable
-            // in current privilige level.
-            newdata_all = (olddata_all & ~maskVal) | data;
             DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
-                    newdata_all, csrName);
-            xc->setMiscReg(midx, newdata_all);
+                    data, csrName);
+            xc->setMiscReg(midx, data);
         }
         %(op_wb)s;
         return NoFault;
@@ -516,8 +502,10 @@ def format SystemOp(code, *opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format CSROp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'CSROp', code, opt_flags)
+def format CSROp(code, read_cond, write_cond, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CSROp',
+        {'code': code, 'read_cond': read_cond,
+         'write_cond': write_cond}, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
