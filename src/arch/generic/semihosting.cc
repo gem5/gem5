@@ -180,7 +180,8 @@ BaseSemihosting::callOpen(
         return retError(EINVAL);
 
     std::string fname = readString(tc, name_base, name_size);
-    if (!fname.empty() && fname.front() != '/')
+    if (!fname.empty() && fname.front() != '/' && fname != ":tt" &&
+            fname != ":semihosting-features")
         fname = filesRootDir + fname;
 
     std::unique_ptr<BaseSemihosting::FileBase> file =
