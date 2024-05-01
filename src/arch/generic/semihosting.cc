@@ -650,8 +650,6 @@ BaseSemihosting::FileBase::flen()
     return -EINVAL;
 }
 
-static const std::vector<uint8_t> features;
-
 BaseSemihosting::FileFeatures::
 FileFeatures(BaseSemihosting &_parent, const char *_name, const char *_mode) :
     FileBase(_parent, _name, _mode)
