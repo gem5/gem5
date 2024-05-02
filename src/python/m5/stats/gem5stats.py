@@ -41,6 +41,7 @@ from m5.ext.pystats.simstat import *
 from m5.ext.pystats.statistic import *
 from m5.ext.pystats.storagetype import *
 from m5.objects import *
+from m5.params import SimObjectVector
 
 import _m5.stats
 
@@ -81,33 +82,6 @@ class JsonOutputVistor:
         with open(self.file, "w") as fp:
             simstat = get_simstat(root=roots, prepare_stats=False)
             simstat.dump(fp=fp, **self.json_args)
-
-
-def get_stats_group(group: _m5.stats.Group) -> Group:
-    """
-    Translates a gem5 Group object into a Python stats Group object. A Python
-    statistic Group object is a dictionary of labeled Statistic objects. Any
-    gem5 object passed to this will have its ``getStats()`` and ``getStatGroups``
-    function called, and all the stats translated (inclusive of the stats
-    further down the hierarchy).
-
-    :param group: The gem5 _m5.stats.Group object to be translated to be a Python
-                  stats Group object. Typically this will be a gem5 SimObject.
-
-    :returns: The stats group object translated from the input gem5 object.
-    """
-
-    stats_dict = {}
-
-    for stat in group.getStats():
-        statistic = __get_statistic(stat)
-        if statistic is not None:
-            stats_dict[stat.name] = statistic
-
-    for key in group.getStatGroups():
-        stats_dict[key] = get_stats_group(group.getStatGroups()[key])
-
-    return Group(**stats_dict)
 
 
 def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
@@ -302,8 +276,84 @@ def _prepare_stats(group: _m5.stats.Group):
         _prepare_stats(child)
 
 
+def _process_simobject_object(simobject: SimObject) -> SimObjectGroup:
+    """
+    Processes the stats of a SimObject, and returns a dictionary of the stats
+    for the SimObject with PyStats objects when appropriate.
+
+    :param simobject: The SimObject to process the stats for.
+
+    :returns: A dictionary of the PyStats stats for the SimObject.
+    """
+
+    assert isinstance(
+        simobject, SimObject
+    ), "simobject param must be a SimObject."
+
+    stats = (
+        {
+            "name": simobject.get_name(),
+        }
+        if simobject.get_name()
+        else {}
+    )
+
+    for stat in simobject.getStats():
+        val = __get_statistic(stat)
+        if val:
+            stats[stat.name] = val
+
+    for name, child in simobject._children.items():
+        to_add = _process_simobject_stats(child)
+        if to_add:
+            stats[name] = to_add
+
+    for name, child in sorted(simobject.getStatGroups().items()):
+        # Note: We are using the name of the group to determine if we have
+        # already processed the group as a child simobject or a statistic.
+        # This is to avoid SimObjectVector's being processed twice. It is far
+        # from an ideal solution, but it works for now.
+        if not any(
+            re.compile(f"{to_match}" + r"\d*").search(name)
+            for to_match in stats.keys()
+        ):
+            stats[name] = Group(**_process_simobject_stats(child))
+
+    return SimObjectGroup(**stats)
+
+
+def _process_simobject_stats(
+    simobject: Union[
+        SimObject, SimObjectVector, List[Union[SimObject, SimObjectVector]]
+    ]
+) -> Union[List[Dict], Dict]:
+    """
+    Processes the stats of a SimObject, SimObjectVector, or List of either, and
+    returns a dictionary of the PySqtats for the SimObject.
+
+    :param simobject: The SimObject to process the stats for.
+
+    :returns: A dictionary of the stats for the SimObject.
+    """
+
+    if isinstance(simobject, SimObject):
+        return _process_simobject_object(simobject)
+
+    if isinstance(simobject, Union[List, SimObjectVector]):
+        stats_list = []
+        for obj in simobject:
+            stats_list.append(_process_simobject_stats(obj))
+        return SimObjectVectorGroup(value=stats_list)
+
+    return {}
+
+
 def get_simstat(
-    root: Union[SimObject, List[SimObject]], prepare_stats: bool = True
+    root: Union[
+        Union[SimObject, SimObjectVector],
+        List[Union[SimObject, SimObjectVector]],
+    ],
+    prepare_stats: bool = True,
 ) -> SimStat:
     """
     This function will return the SimStat object for a simulation given a
@@ -323,7 +373,7 @@ def get_simstat(
     :Returns: The SimStat Object of the current simulation.
 
     """
-    stats_map = {}
+
     creation_time = datetime.now()
     time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
     final_tick = Root.getInstance().resolveStat("finalTick").value
@@ -334,29 +384,19 @@ def get_simstat(
     if prepare_stats:
         _m5.stats.processDumpQueue()
 
-    for r in root:
-        if isinstance(r, Root):
-            # The Root is a special case, we jump directly into adding its
-            # constituent Groups.
-            if prepare_stats:
-                _prepare_stats(r)
-            for key in r.getStatGroups():
-                stats_map[key] = get_stats_group(r.getStatGroups()[key])
-        elif isinstance(r, SimObject):
-            if prepare_stats:
-                _prepare_stats(r)
-            stats_map[r.get_name()] = get_stats_group(r)
+    if prepare_stats:
+        if isinstance(root, list):
+            for obj in root:
+                _prepare_stats(obj)
         else:
-            raise TypeError(
-                "Object (" + str(r) + ") passed is not a "
-                "SimObject. " + __name__ + " only processes "
-                "SimObjects, or a list of  SimObjects."
-            )
+            _prepare_stats(root)
+
+    stats = _process_simobject_stats(root).__dict__
+    stats["name"] = root.get_name() if root.get_name() else "root"
 
     return SimStat(
         creation_time=creation_time,
-        time_conversion=time_converstion,
         simulated_begin_time=simulated_begin_time,
         simulated_end_time=simulated_end_time,
-        **stats_map,
+        **stats,
     )

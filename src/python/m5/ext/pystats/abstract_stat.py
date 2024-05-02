@@ -99,3 +99,6 @@ class AbstractStat(SerializableStat):
         return self.children(
             lambda _name: re.match(pattern, _name), recursive=True
         )
+
+    def __getitem__(self, item: str):
+        return getattr(self, item)

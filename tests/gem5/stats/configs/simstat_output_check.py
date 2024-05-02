@@ -67,7 +67,8 @@ stat_tester.name = args.name
 stat_tester.description = args.description
 stat_tester.value = args.value
 expected_output = {
-    "type": "Group",
+    "type": "SimObject",
+    "name": "system",
     "time_conversion": None,
     args.name: {
         "value": args.value,
@@ -84,7 +85,15 @@ m5.instantiate()
 m5.simulate()
 
 simstats = get_simstat(stat_tester)
-output = simstats.to_json()["system"]
+output = simstats.to_json()
+
+# Remove the time related fields from the outputs if they exist.
+# `creation_time` is not deterministic, and `simulated_begin_time` and
+# simulated_end_time are not under test here.
+for field in ["creation_time", "simulated_begin_time", "simulated_end_time"]:
+    for map in [output, expected_output]:
+        if field in map:
+            del map[field]
 
 if output != expected_output:
     print("Output statistics do not match expected:", file=sys.stderr)
