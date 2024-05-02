@@ -34,13 +34,13 @@ from m5.objects import (
 )
 from m5.stats.gem5stats import get_simstat
 
-"""This script is used for checking that statistics set in the simulation are
-correctly parsed through to the python SimStats. This script sets the
-statistics using the "StatTester" simobjects and ensures verifies correctness
-against the expected JSON output and that produced by the SimStats module.
+"""This script is used for checking that Scaler statistics set in the simulation are
+correctly parsed through to the python Pystats.
 """
 
-parser = argparse.ArgumentParser(description="Tests the output of a SimStat.")
+parser = argparse.ArgumentParser(
+    description="Tests the output of a Scaler Pystat."
+)
 
 parser.add_argument(
     "value", type=float, help="The value of the scalar statistic."
