@@ -66,16 +66,6 @@ namespace VegaISA
         src1.readSrc();
         vcc.read();
 
-        /**
-         * input modifiers are supported by FP operations only
-         */
-        assert(!(instData.ABS & 0x1));
-        assert(!(instData.ABS & 0x2));
-        assert(!(instData.ABS & 0x4));
-        assert(!(extData.NEG & 0x1));
-        assert(!(extData.NEG & 0x2));
-        assert(!(extData.NEG & 0x4));
-
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = bits(vcc.rawData(), lane)
@@ -8440,16 +8430,6 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
-        /**
-         * input modifiers are supported by FP operations only
-         */
-        assert(!(instData.ABS & 0x1));
-        assert(!(instData.ABS & 0x2));
-        assert(!(instData.ABS & 0x4));
-        assert(!(extData.NEG & 0x1));
-        assert(!(extData.NEG & 0x2));
-        assert(!(extData.NEG & 0x4));
-
         sdst = src0[src1.rawData() & 0x3f];
 
         sdst.write();
@@ -8483,16 +8463,6 @@ namespace VegaISA
         src0.read();
         src1.read();
         vdst.read();
-
-        /**
-         * input modifiers are supported by FP operations only
-         */
-        assert(!(instData.ABS & 0x1));
-        assert(!(instData.ABS & 0x2));
-        assert(!(instData.ABS & 0x4));
-        assert(!(extData.NEG & 0x1));
-        assert(!(extData.NEG & 0x2));
-        assert(!(extData.NEG & 0x4));
 
         vdst[src1.rawData() & 0x3f] = src0.rawData();
 
