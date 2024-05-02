@@ -49,9 +49,9 @@ RUN mkdir --parents --mode=0755 /etc/apt/keyrings
 RUN wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
     gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
 
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.0.2/ubuntu jammy main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.1/ubuntu jammy main" \
     | tee /etc/apt/sources.list.d/amdgpu.list
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.0.2 jammy main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.1 jammy main" \
     | tee --append /etc/apt/sources.list.d/rocm.list
 # Note: Need to remove 'echo -e' in docker.
 RUN echo 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' \
