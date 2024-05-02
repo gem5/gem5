@@ -27,7 +27,7 @@
 from testlib import *
 
 gem5_verify_config(
-    name="simstat-scaler-int-test",
+    name="pystat-scaler-int-test",
     fixtures=(),
     verifiers=[],
     config=joinpath(
@@ -36,7 +36,7 @@ gem5_verify_config(
         "gem5",
         "stats",
         "configs",
-        "simstat_output_check.py",
+        "pystat_scalar_check.py",
     ),
     config_args=[
         "42",
@@ -50,7 +50,7 @@ gem5_verify_config(
 )
 
 gem5_verify_config(
-    name="simstat-scaler-int-zero-test",
+    name="pystat-scaler-int-zero-test",
     fixtures=(),
     verifiers=[],
     config=joinpath(
@@ -59,7 +59,7 @@ gem5_verify_config(
         "gem5",
         "stats",
         "configs",
-        "simstat_output_check.py",
+        "pystat_scalar_check.py",
     ),
     config_args=[
         "0",
@@ -69,7 +69,7 @@ gem5_verify_config(
 )
 
 gem5_verify_config(
-    name="simstat-scaler-int-negative-test",
+    name="pystat-scaler-int-negative-test",
     fixtures=(),
     verifiers=[],
     config=joinpath(
@@ -78,7 +78,7 @@ gem5_verify_config(
         "gem5",
         "stats",
         "configs",
-        "simstat_output_check.py",
+        "pystat_scalar_check.py",
     ),
     config_args=[
         "-245",
@@ -88,7 +88,7 @@ gem5_verify_config(
 )
 
 gem5_verify_config(
-    name="simstat-scaler-float-test",
+    name="pystat-scaler-float-test",
     fixtures=(),
     verifiers=[],
     config=joinpath(
@@ -97,7 +97,7 @@ gem5_verify_config(
         "gem5",
         "stats",
         "configs",
-        "simstat_output_check.py",
+        "pystat_scalar_check.py",
     ),
     config_args=[
         "42.869",
