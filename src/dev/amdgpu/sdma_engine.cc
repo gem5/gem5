@@ -1132,7 +1132,7 @@ SDMAEngine::constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data)
 {
     DPRINTF(SDMAEngine, "ConstFill to %lx done\n", pkt->addr);
 
-    delete fill_data;
+    delete [] fill_data;
     delete pkt;
     decodeNext(q);
 }

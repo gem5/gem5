@@ -453,6 +453,8 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 
     auto system = cp->shader()->gpuCmdProc.system();
     system->getDeviceMemory(writePkt)->access(writePkt);
+
+    delete writePkt;
 }
 
 void
@@ -671,7 +673,10 @@ AMDGPUDevice::getRegVal(uint64_t addr)
     DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n",
             fixup_addr, pkt->getLE<uint32_t>());
 
-    return pkt->getLE<uint32_t>();
+    pkt_data = pkt->getLE<uint32_t>();
+    delete pkt;
+
+    return pkt_data;
 }
 
 void
@@ -686,6 +691,7 @@ AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
     PacketPtr pkt = Packet::createWrite(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     writeMMIO(pkt, addr);
+    delete pkt;
 }
 
 void
