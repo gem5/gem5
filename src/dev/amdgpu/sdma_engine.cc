@@ -1000,6 +1000,9 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
                                              sizeof(uint64_t) * pkt->count, 0,
                                              cb);
     } else {
+        if (q->priv()) {
+            pkt->dest = getGARTAddr(pkt->dest);
+        }
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { ptePdeDone(q, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->dest, sizeof(uint64_t) * pkt->count, cb,
