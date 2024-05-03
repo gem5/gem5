@@ -125,7 +125,7 @@ board.set_se_simpoint_workload(
         weight_list=[0.1, 0.2, 0.4, 0.3],
         warmup_interval=1000000,
     ),
-    checkpoint=obtain_resource("simpoints-se-checkpoints-v24-0"),
+    checkpoint=obtain_resource("simpoints-se-checkpoints"),
 )
 
 
