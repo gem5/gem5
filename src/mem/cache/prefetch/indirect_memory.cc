@@ -144,13 +144,11 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                         if (pt_entry->indirectCounter > prefetchThreshold) {
                             unsigned distance = maxPrefetchDistance *
                                 pt_entry->indirectCounter.calcSaturation();
-                            for (int delta = 1; delta < distance; delta += 1) {
-                                Addr pf_addr = pt_entry->baseAddr +
-                                    (pt_entry->index << pt_entry->shift);
-                                addresses.push_back(AddrPriority(pf_addr, 0));
-                                pf_addr = pt_entry->baseAddr + ((index + distance) << pt_entry->shift);
-                                addresses.push_back(AddrPriority(pf_addr, 0));
-                            }
+                            Addr pf_addr = pt_entry->baseAddr +
+                                (pt_entry->index << pt_entry->shift);
+                            addresses.push_back(AddrPriority(pf_addr, 0));
+                            pf_addr = pt_entry->baseAddr + ((index + distance) << pt_entry->shift);
+                            addresses.push_back(AddrPriority(pf_addr, 0));
                         }
                     }
                 }
