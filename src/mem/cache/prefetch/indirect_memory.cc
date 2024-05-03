@@ -148,6 +148,8 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                                 Addr pf_addr = pt_entry->baseAddr +
                                     (pt_entry->index << pt_entry->shift);
                                 addresses.push_back(AddrPriority(pf_addr, 0));
+                                pf_addr = pt_entry->baseAddr + ((index + distance) << pt_entry->shift);
+                                addresses.push_back(AddrPriority(pf_addr, 0));
                             }
                         }
                     }
