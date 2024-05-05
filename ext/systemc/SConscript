@@ -25,13 +25,16 @@
 
 import os
 from m5.util.terminal import get_termcap
-import gem5_scons
+import sys
 
 Import('env')
 systemc = env.Clone()
 
 build_root = Dir('.').abspath
 src_root = Dir('.').srcdir.abspath
+gem5_root = Dir('#../..').srcnode().abspath
+sys.path.append(os.path.join(gem5_root, 'site_scons'))
+import gem5_scons
 
 systemc.Prepend(CPPPATH=Dir('./src').srcnode())
 systemc.Prepend(CPATH=Dir('./src'))

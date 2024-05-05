@@ -44,6 +44,7 @@ env = Environment()
 
 #Make the gem5 root available in SConscripts
 env['GEM5_ROOT'] = gem5_root
+env['GEM5BUILD'] = os.path.join(gem5_root, 'build')
 
 shlibsuffix = env['SHLIBSUFFIX']
 
@@ -52,6 +53,7 @@ env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
                     gem5_root + '/util/systemc/gem5_within_systemc',
                     gem5_root + '/ext/systemc/src',
                     gem5_root + '/ext',
+                    gem5_root + '/src',
                     '#src',
                     '#examples/common',
                     ])
@@ -63,6 +65,12 @@ env.Append(CXXFLAGS=['-std=c++17',
 
 if gem5_variant == 'debug':
     env.Append(CXXFLAGS=['-g', '-DGEM5_DEBUG'])
+
+AddOption('--duplicate-sources', action='store_true', default=False,
+          dest='duplicate_sources',
+          help='Create symlinks to sources in the build directory')
+AddOption('--verbose', action='store_true',
+          help='Print full tool command lines')
 
 deps = [] # keep track of all dependencies required for building the binaries
 
