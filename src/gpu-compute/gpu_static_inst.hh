@@ -321,6 +321,9 @@ class GPUStaticInst : public GPUStaticInstFlags
     int _ipdInstNum;
 
     std::bitset<Num_Flags> _flags;
+
+    void generateVirtToPhysMap(Wavefront *wf, ComputeUnit *cu, OperandInfo& op,
+                               std::vector<OperandInfo>& opVec, OpType opType);
 };
 
 class KernelLaunchStaticInst : public GPUStaticInst

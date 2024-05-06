@@ -39,6 +39,7 @@
 #include <utility>
 #include <vector>
 
+#include "debug/GPULDS.hh"
 #include "gpu-compute/misc.hh"
 #include "mem/port.hh"
 #include "params/LdsState.hh"
@@ -75,10 +76,30 @@ class LdsChunk
          * chunk allocated to this WG we return 0.
          */
         if (index >= chunk.size()) {
+            DPRINTF(GPULDS, "LDS[%d][%d]: Read 0 beyond size (%ld)\n",
+                    dispatchId, wgId, chunk.size());
             return (T)0;
         }
 
         T *p0 = (T *) (&(chunk.at(index)));
+
+        if (sizeof(T) <= 4) {
+            [[maybe_unused]] uint32_t int_val =
+                *reinterpret_cast<uint32_t*>(p0);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Read %08x from index %d\n",
+                    dispatchId, wgId, int_val, index);
+        } else if (sizeof(T) <= 8) {
+            [[maybe_unused]] uint64_t int_val =
+                *reinterpret_cast<uint64_t*>(p0);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Read %016lx from index %d\n",
+                    dispatchId, wgId, int_val, index);
+        } else if (sizeof(T) <= 16) {
+            [[maybe_unused]] uint64_t *int_vals =
+                reinterpret_cast<uint64_t*>(p0);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Read %016lx%016lx from index %d\n",
+                    dispatchId, wgId, int_vals[1], int_vals[0], index);
+        }
+
         return *p0;
     }
 
@@ -94,10 +115,33 @@ class LdsChunk
          * chunk allocated to this WG are dropped.
          */
         if (index >= chunk.size()) {
+            DPRINTF(GPULDS, "LDS[%d][%d]: Ignoring write beyond size (%ld)\n",
+                    dispatchId, wgId, chunk.size());
             return;
         }
 
         T *p0 = (T *) (&(chunk.at(index)));
+
+        if (sizeof(T) <= 4) {
+            [[maybe_unused]] uint32_t prev_val =
+                *reinterpret_cast<uint32_t*>(p0);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Write %08lx to index %d (was "
+                    "%08lx)\n", dispatchId, wgId, value, index, prev_val);
+        } else if (sizeof(T) <= 8) {
+            [[maybe_unused]] uint64_t prev_val =
+                *reinterpret_cast<uint64_t*>(p0);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Write %016lx to index %d (was "
+                    "%016lx)\n", dispatchId, wgId, value, index, prev_val);
+        } else if (sizeof(T) <= 16) {
+            [[maybe_unused]] uint64_t *prev_vals =
+                reinterpret_cast<uint64_t*>(p0);
+            [[maybe_unused]] const uint64_t *next_vals =
+                reinterpret_cast<const uint64_t*>(&value);
+            DPRINTF(GPULDS, "LDS[%d][%d]: Write %016lx%016lx to index %d "
+                    "(was %016lx%016lx)\n", dispatchId, wgId, next_vals[1],
+                    next_vals[0], index, prev_vals[1], prev_vals[0]);
+        }
+
         *p0 = value;
     }
 
@@ -130,6 +174,9 @@ class LdsChunk
     {
         return chunk.size();
     }
+
+    uint32_t dispatchId;
+    uint32_t wgId;
 
   protected:
     // the actual data store for this slice of the LDS
@@ -401,6 +448,9 @@ class LdsState: public ClockedObject
 
             // make an entry for this workgroup
             refCounter[dispatchId][wgId] = 0;
+
+            chunkMap[dispatchId][wgId].dispatchId = dispatchId;
+            chunkMap[dispatchId][wgId].wgId = wgId;
 
             return &chunkMap[dispatchId][wgId];
         }
