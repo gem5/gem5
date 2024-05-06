@@ -313,6 +313,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     ReadUnique_PoC,              desc="", in_trans="yes";
     ReadOnce,                    desc="", in_trans="yes";
     CleanUnique,                 desc="", in_trans="yes";
+    MakeReadUnique,              desc="", in_trans="yes";
     Evict,                       desc="", in_trans="yes";
     WriteBackFull,               desc="", in_trans="yes";
     WriteEvictFull,              desc="", in_trans="yes";
@@ -464,6 +465,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendReadNoSnp,        out_trans="yes", desc="Send a SendReadNoSnp";
     SendReadNoSnpDMT,     out_trans="yes", desc="Send a SendReadNoSnp using DMT";
     SendReadUnique,       out_trans="yes", desc="Send a ReadUnique";
+    SendMakeReadUnique,   out_trans="yes", desc="Send a MakeReadUnique";
     SendCompAck,          desc="Send CompAck";
     // Read handling at the completer
     SendCompData,         desc="Send CompData";
@@ -505,6 +507,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCleanUnique,out_trans="yes", desc="Send a CleanUnique";
     SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
     SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
+    SendCompUDResp, desc="Ack MakeReadUnique with Comp_UD_PD";
 
     // Checks if an upgrade using a CleanUnique was sucessfull
     CheckUpgrade_FromStore, desc="Upgrade needed by a Store";
@@ -552,6 +555,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     TX_Data, desc="Transmit pending data messages";
     MaintainCoherence, desc="Queues a WriteBack or Evict before droping the only valid copy of the block";
     FinishCleanUnique, desc="Sends acks and perform any writeback after a CleanUnique";
+    FinishMakeReadUnique, desc="Return Comp or CompData to requestor at the end of MakeReadUnique";
     FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
     ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
     WriteZero, desc="Stall a trigger action because until finish handling snoop hazard";
