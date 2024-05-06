@@ -338,6 +338,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         break;
       case misc_reg::Cr8:
         break;
+      case misc_reg::Xcr0:
+        break;
       case misc_reg::Rflags:
         {
             RFLAGS rflags = val;

@@ -66,7 +66,7 @@ board.set_se_binary_workload(
         resource_version="1.0.0",
     ),
     checkpoint=obtain_resource(
-        "x86-hello-test-checkpoint-v24-0", resource_version="2.0.0"
+        "x86-hello-test-checkpoint-v24-0", resource_version="3.0.0"
     ),
 )
 
