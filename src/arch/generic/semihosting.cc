@@ -94,7 +94,7 @@ const std::map<uint64_t, const char *> BaseSemihosting::exitCodes{
         {0x20029, "semi:ADP_Stopped_DivisionByZero"},
 };
 
-const std::vector<uint8_t> BaseSemihosting::features{
+const std::array<uint8_t, 5> BaseSemihosting::features{
         0x53, 0x48, 0x46, 0x42, // Magic
         0x3, // EXT_EXIT_EXTENDED, EXT_STDOUT_STDERR
 };
@@ -656,12 +656,18 @@ FileFeatures(BaseSemihosting &_parent, const char *_name, const char *_mode) :
 {}
 
 int64_t
+BaseSemihosting::FileFeatures::flen()
+{
+    return features.size();
+}
+
+int64_t
 BaseSemihosting::FileFeatures::read(uint8_t *buffer, uint64_t size)
 {
     int64_t len = 0;
 
-    for (; pos < size && pos < BaseSemihosting::features.size(); pos++)
-        buffer[len++] = BaseSemihosting::features[pos];
+    for (; len < size && pos < features.size(); pos++)
+        buffer[len++] = features[pos];
 
     return len;
 }
