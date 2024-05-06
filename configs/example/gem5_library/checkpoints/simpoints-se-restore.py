@@ -128,6 +128,7 @@ board.set_se_simpoint_workload(
     checkpoint=obtain_resource(
         "simpoints-se-checkpoints", resource_version="3.0.0"
     ),
+)
 
 
 def max_inst():
