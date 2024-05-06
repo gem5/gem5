@@ -79,8 +79,10 @@ board = RiscvBoard(
 
 # Set the Full System workload.
 board.set_kernel_disk_workload(
-    kernel=obtain_resource("riscv-bootloader-vmlinux-5.10"),
-    disk_image=obtain_resource("riscv-disk-img"),
+    kernel=obtain_resource(
+        "riscv-bootloader-vmlinux-5.10", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource("riscv-disk-img", resource_version="1.0.0"),
 )
 
 simulator = Simulator(board=board)
