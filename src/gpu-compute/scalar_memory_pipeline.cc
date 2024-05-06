@@ -180,7 +180,7 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
     // invalidation request to 0 and handle it in the sequencer
     req->setPaddr(0);
 
-    PacketPtr pkt = nullptr;
+    PacketPtr sqc_pkt = nullptr;
 
     // If kernelMemSync is true, then the invalidation request is from
     // kernel launch and is an implicit invalidation.If false, then it is
@@ -189,8 +189,8 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         req->setCacheCoherenceFlags(Request::INV_L1);
         req->setReqInstSeqNum(gpuDynInst->seqNum());
         req->setFlags(Request::KERNEL);
-        pkt = new Packet(req, MemCmd::MemSyncReq);
-        pkt->pushSenderState(
+        sqc_pkt = new Packet(req, MemCmd::MemSyncReq);
+        sqc_pkt->pushSenderState(
                 new ComputeUnit::SQCPort::SenderState(
                     gpuDynInst->wavefront(), nullptr));
     } else {
@@ -198,17 +198,49 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
 
         req->setReqInstSeqNum(gpuDynInst->seqNum());
 
-        pkt = new Packet(req, MemCmd::MemSyncReq);
-        pkt->pushSenderState(
+        sqc_pkt = new Packet(req, MemCmd::MemSyncReq);
+        sqc_pkt->pushSenderState(
                 new ComputeUnit::SQCPort::SenderState(
                     gpuDynInst->wavefront(), nullptr));
     }
 
     ComputeUnit::SQCPort::MemReqEvent *sqc_event =
             new ComputeUnit::SQCPort::MemReqEvent
-            (computeUnit.sqcPort, pkt);
+            (computeUnit.sqcPort, sqc_pkt);
     computeUnit.schedule(
             sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
+
+    // When the SQC is invalidated, perform a scalar cache invalidate as well.
+    // The SQC and Scalar cache are implement using the same SLICC SM, so this
+    // invalidate is identical to the SQC invalidate, however we need to make
+    // a new packet and request as they have different cache destinations.
+    PacketPtr scalar_pkt = nullptr;
+    RequestPtr scalar_req(req);
+
+    if (kernelMemSync) {
+        scalar_req->setCacheCoherenceFlags(Request::INV_L1);
+        scalar_req->setReqInstSeqNum(gpuDynInst->seqNum());
+        scalar_req->setFlags(Request::KERNEL);
+        scalar_pkt = new Packet(scalar_req, MemCmd::MemSyncReq);
+        scalar_pkt->pushSenderState(
+                new ComputeUnit::ScalarDataPort::SenderState(
+                    gpuDynInst));
+    } else {
+        gpuDynInst->setRequestFlags(scalar_req);
+
+        scalar_req->setReqInstSeqNum(gpuDynInst->seqNum());
+
+        scalar_pkt = new Packet(scalar_req, MemCmd::MemSyncReq);
+        scalar_pkt->pushSenderState(
+                new ComputeUnit::ScalarDataPort::SenderState(
+                    gpuDynInst));
+    }
+
+    ComputeUnit::ScalarDataPort::MemReqEvent *scalar_event =
+            new ComputeUnit::ScalarDataPort::MemReqEvent
+            (computeUnit.scalarDataPort, scalar_pkt);
+    computeUnit.schedule(
+            scalar_event, curTick() + computeUnit.scalar_req_tick_latency);
 }
 
 } // namespace gem5

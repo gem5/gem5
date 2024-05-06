@@ -498,13 +498,6 @@ def define_options(parser):
         "--noL1", action="store_true", default=False, help="bypassL1"
     )
     parser.add_argument(
-        "--scalar-buffer-size",
-        type=int,
-        default=128,
-        help="Size of the mandatory queue in the GPU scalar "
-        "cache controller",
-    )
-    parser.add_argument(
         "--glc-atomic-latency", type=int, default=1, help="GLC Atomic Latency"
     )
     parser.add_argument(
@@ -841,9 +834,7 @@ def construct_scalars(options, system, ruby_system, network):
         scalar_cntrl.responseToSQC = MessageBuffer(ordered=True)
         scalar_cntrl.responseToSQC.in_port = network.out_port
 
-        scalar_cntrl.mandatoryQueue = MessageBuffer(
-            buffer_size=options.scalar_buffer_size
-        )
+        scalar_cntrl.mandatoryQueue = MessageBuffer()
 
     return (scalar_sequencers, scalar_cntrl_nodes)
 
