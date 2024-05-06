@@ -84,6 +84,7 @@ DebugFlag('GPUExec')
 DebugFlag('GPUFetch')
 DebugFlag('GPUInst')
 DebugFlag('GPUKernelInfo')
+DebugFlag('GPULDS')
 DebugFlag('GPUMem')
 DebugFlag('GPUPort')
 DebugFlag('GPUPrefetch')
@@ -106,4 +107,4 @@ DebugFlag('WavefrontStack')
 CompoundFlag('GPUALL', ['GPUCoalescer', 'GPUDisp', 'GPUExec', 'GPUFetch',
                         'GPUMem', 'GPUPort', 'GPUSched', 'GPUSRF', 'GPUSync',
                         'GPUTLB', 'GPUVRF', 'GPURFC', 'GPUWgLatency',
-                        'GPUKernelInfo', 'GPUInitAbi'])
+                        'GPUKernelInfo', 'GPUInitAbi', 'GPULDS'])

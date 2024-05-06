@@ -136,10 +136,12 @@ class AMDGPUInterruptHandler : public DmaDevice
       private:
         AMDGPUInterruptHandler *deviceIh;
         uint32_t data;
+        uint8_t *dataPtr;
 
       public:
-        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data)
-            : Event(), deviceIh(deviceIh), data(data)
+        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data,
+                 uint8_t* _dataPtr)
+            : Event(), deviceIh(deviceIh), data(data), dataPtr(_dataPtr)
         {
             setFlags(Event::AutoDelete);
         }

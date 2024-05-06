@@ -974,6 +974,14 @@ ComputeUnit::ScalarDataPort::recvTimingResp(PacketPtr pkt)
 bool
 ComputeUnit::ScalarDataPort::handleResponse(PacketPtr pkt)
 {
+    // From scalar cache invalidate that was issued at kernel start.
+    if (pkt->req->isKernel()) {
+        delete pkt->senderState;
+        delete pkt;
+
+        return true;
+    }
+
     assert(!pkt->req->isKernel());
 
     // retrieve sender state
@@ -1058,6 +1066,9 @@ ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
      */
     if (sender_state->wavefront != nullptr) {
         computeUnit->handleSQCReturn(pkt);
+    } else {
+        delete pkt->senderState;
+        delete pkt;
     }
 
     return true;
@@ -1735,7 +1746,7 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
         SystemHubEvent *resp_event = new SystemHubEvent(pkt, this);
         compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
     } else if (!(sendTimingReq(pkt))) {
-        retries.push_back(std::make_pair(pkt, gpuDynInst));
+        retries.emplace_back(pkt, gpuDynInst);
 
         if (gpuDynInst) {
             DPRINTF(GPUPort,
@@ -1772,7 +1783,7 @@ ComputeUnit::ScalarDataPort::MemReqEvent::process()
         SystemHubEvent *resp_event = new SystemHubEvent(pkt, &scalarDataPort);
         compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
     } else if (!(scalarDataPort.sendTimingReq(pkt))) {
-        scalarDataPort.retries.push_back(pkt);
+        scalarDataPort.retries.emplace_back(pkt);
 
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: addr %#x data req failed!\n",
