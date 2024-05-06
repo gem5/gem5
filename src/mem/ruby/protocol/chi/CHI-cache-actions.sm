@@ -682,6 +682,42 @@ action(Initiate_ReadUnique_Hit_InvUpstream, desc="") {
   tbe.actions.pushNB(Event:TagArrayWrite);
 }
 
+action(Initiate_MakeReadUnique_Hit_InvUpstream, desc="") {
+  assert(tbe.reqType == CHIRequestType:MakeReadUnique);
+  tbe.actions.push(Event:ReadHitPipe);
+  if (tbe.dir_sharers.count() > 1) {
+    tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
+  }
+  if (!tbe.dataUnique && !is_HN) {
+    tbe.actions.push(Event:SendMakeReadUnique);
+  }
+  tbe.actions.pushNB(Event:DataArrayRead);
+  tbe.actions.push(Event:FinishMakeReadUnique);
+}
+
+action(Finish_MakeReadUnique, desc="") {
+  // Choosing whether to send or not data back (CompData vs Comp)
+  // to the requestor. Data will be forwarded if the requestor
+  // lost the cacheline while the transaction was in progress
+  if (tbe.dataValid && tbe.dir_sharers.isElement(tbe.requestor) == false) {
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    if (tbe.dataDirty) {
+      // Got dirty data from snoopees
+      tbe.actions.pushNB(Event:SendCompUDResp);
+    } else {
+      tbe.actions.pushNB(Event:SendCompUCResp);
+    }
+  }
+  tbe.dataUnique := true;
+  tbe.dataMaybeDirtyUpstream := true;
+  tbe.requestorToBeExclusiveOwner := true;
+  tbe.dir_ownerExists := false;
+
+  tbe.actions.pushNB(Event:TagArrayWrite);
+  tbe.actions.push(Event:WaitCompAck);
+}
+
 action(Initiate_CleanUnique, desc="") {
   tbe.actions.push(Event:ReadMissPipe); // TODO need another latency pipe ??
 
@@ -1581,6 +1617,28 @@ action(Send_ReadUnique, desc="") {
 
   enqueue(reqOutPort, CHIRequestMsg, request_latency) {
     prepareRequest(tbe, CHIRequestType:ReadUnique, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_MakeReadUnique, desc="") {
+  assert((tbe.dataValid && tbe.dataUnique) == false);
+
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:DataSepResp_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UD_PD);
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_UC);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_UD_PD);
+  tbe.expected_req_resp.setExpectedCount(2);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:MakeReadUnique, out_msg);
     out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
     out_msg.dataToFwdRequestor := false;
     allowRequestRetry(tbe, out_msg);
@@ -2670,7 +2728,8 @@ action(Send_CompData, desc="") {
   bool is_rd_shared := (tbe.reqType == CHIRequestType:ReadShared) ||
                        (tbe.reqType == CHIRequestType:ReadNotSharedDirty);
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
-  bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
+  bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique ||
+                       tbe.reqType == CHIRequestType:MakeReadUnique;
 
   // Send UC/UD on ReadShared or ReadNotSharedDirty if the line has no sharers
   // and one of the followings are met
@@ -3092,6 +3151,18 @@ action(Send_CompUC_Stale, desc="") {
     // We don't know if this is a stale clean unique or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
+  }
+}
+
+action(Send_CompUD_PD, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UD_PD;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
