@@ -44145,6 +44145,39 @@ namespace VegaISA
         Inst_VOP3P_MAI__V_MFMA<2, 16, 16, 4, 1, ConstVecOperandF64,
                                VecOperandF64>;
 
+    class Inst_VOP3__V_CVT_PK_FP8_F32 : public Inst_VOP3A
+    {
+      public:
+        Inst_VOP3__V_CVT_PK_FP8_F32(InFmt_VOP3A*);
+        ~Inst_VOP3__V_CVT_PK_FP8_F32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP3__V_CVT_PK_FP8_F32
 } // namespace VegaISA
 } // namespace gem5
 
