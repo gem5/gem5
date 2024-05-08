@@ -103,7 +103,7 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt ? m_pkt->req->isSecure() : false)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
         if (_pkt) {
