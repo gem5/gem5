@@ -101,7 +101,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     // writebacks
     VicDirty,           desc="...";
     VicClean,           desc="...";
-    CPUData,            desc="WB data from CPU";
     StaleWB,         desc="Notification that WB has been superceded by a probe";
 
     // probe responses
@@ -361,8 +360,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(in_msg.addr));
         if (in_msg.Type == CoherenceResponseType:CPUPrbResp) {
           trigger(Event:CPUPrbResp, in_msg.addr, entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:CPUData) {
-          trigger(Event:CPUData, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceResponseType:StaleNotif) {
             trigger(Event:StaleWB, in_msg.addr, entry, tbe);
         } else {
@@ -968,7 +965,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(d_writeDataToMemory, "d", desc="Write data to memory") {
-    peek(responseNetwork_in, ResponseMsg) {
+    peek(requestNetwork_in, CPURequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
         out_msg.addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
@@ -1175,12 +1172,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(al_allocateL3Block, "al", desc="allocate the L3 block on WB") {
-    peek(responseNetwork_in, ResponseMsg) {
+    peek(requestNetwork_in, CPURequestMsg) {
       if (L3CacheMemory.isTagPresent(address)) {
         CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(address));
         APPEND_TRANSITION_COMMENT(" al wrote data to L3 (hit) ");
         entry.DataBlk := in_msg.DataBlk;
-        entry.LastSender := in_msg.Sender;
+        entry.LastSender := in_msg.Requestor;
         assert(is_valid(tbe));
         //The controller always allocates a TBE entry upon receipt of a request from L2 caches.
         //L3Hit flag is used by the hit profiling action pr_profileL3HitMiss to determine hit or miss.
@@ -1205,7 +1202,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" al wrote data to L3 ");
         entry.DataBlk := in_msg.DataBlk;
 
-        entry.LastSender := in_msg.Sender;
+        entry.LastSender := in_msg.Requestor;
       }
     }
   }
@@ -1397,15 +1394,25 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     p_popRequestQueue;
   }
 
-  transition(U, VicDirty, BL) {L3TagArrayRead} {
+  transition(U, VicDirty) {L3TagArrayRead, L3DataArrayWrite} {
     t_allocateTBE;
     w_sendResponseWBAck;
+    d_writeDataToMemory;
+    al_allocateL3Block;
+    pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
+    wada_wakeUpAllDependentsAddr;
+    dt_deallocateTBE;
     p_popRequestQueue;
   }
 
-  transition(U, VicClean, BL) {L3TagArrayRead} {
+  transition(U, VicClean) {L3TagArrayRead, L3DataArrayWrite} {
     t_allocateTBE;
     w_sendResponseWBAck;
+    d_writeDataToMemory;
+    al_allocateL3Block;
+    pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
+    wada_wakeUpAllDependentsAddr;
+    dt_deallocateTBE;
     p_popRequestQueue;
   }
 
@@ -1413,17 +1420,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     zz_recycleRequestQueue;
   }
 
-  transition(BL, CPUData, U) {L3TagArrayWrite, L3DataArrayWrite} {
-    d_writeDataToMemory;
-    al_allocateL3Block;
-    pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
+  transition(BL, StaleWB, U) {L3TagArrayWrite} {
     wada_wakeUpAllDependentsAddr;
-    dt_deallocateTBE;
     pr_popResponseQueue;
   }
 
-  transition(BL, StaleWB, U) {L3TagArrayWrite} {
-    dt_deallocateTBE;
+  transition(U, StaleWB, U) {L3TagArrayWrite} {
     wada_wakeUpAllDependentsAddr;
     pr_popResponseQueue;
   }

@@ -730,7 +730,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.DataBlk := cache_entry.DataBlk;
       assert(cache_entry.Dirty);
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
       out_msg.Type := CoherenceRequestType:VicDirty;
       out_msg.InitialRequestTime := curCycle();
       if (cache_entry.CacheState == State:O) {
@@ -1109,27 +1109,6 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Response_Control;
-        DPRINTF(RubySlicc, "%s\n", out_msg);
-      }
-    }
-  }
-
-  action(wb_data, "wb", desc="write back data") {
-    peek(responseToCore_in, ResponseMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
-        out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:CPUData;
-        out_msg.Sender := machineID;
-        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-        out_msg.DataBlk := tbe.DataBlk;
-        out_msg.Dirty := tbe.Dirty;
-        if (tbe.Shared) {
-          out_msg.NbReqShared := true;
-        } else {
-          out_msg.NbReqShared := false;
-        }
-        out_msg.State := CoherenceState:Shared; // faux info
-        out_msg.MessageSize := MessageSizeType:Writeback_Data;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -2427,19 +2406,16 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(MO_I, NB_AckWB, I) {L2TagArrayWrite} {
-    wb_data;
     d_deallocateTBE;
     pr_popResponseQueue;
   }
 
   transition(ES_I, NB_AckWB, I) {L2TagArrayWrite} {
-    wb_data;
     d_deallocateTBE;
     pr_popResponseQueue;
   }
 
   transition(MO_S0, NB_AckWB, S0) {L2TagArrayWrite} {
-    wb_data;
     i2_invL2;
     a2_allocateL2;
     d_deallocateTBE; // FOO
@@ -2448,7 +2424,6 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   }
 
   transition(MO_S1, NB_AckWB, S1) {L2TagArrayWrite} {
-    wb_data;
     i2_invL2;
     a2_allocateL2;
     d_deallocateTBE; // FOO
