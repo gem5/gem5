@@ -1245,7 +1245,7 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_SUB_I16,
         &Decoder::decode_OPU_VOP3__V_PACK_B32_F16,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OPU_VOP3__V_CVT_PK_FP8_F32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -7293,6 +7293,12 @@ namespace VegaISA
     {
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_CVT_PK_FP8_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_CVT_PK_FP8_F32(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
