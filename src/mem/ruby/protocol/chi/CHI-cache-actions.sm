@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 ARM Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -147,6 +147,7 @@ action(AllocateTBE_SeqRequest, desc="") {
       out_msg.is_local_pf := false;
       out_msg.is_remote_pf := false;
       out_msg.txnId := max_outstanding_transactions;
+      out_msg.ns := !in_msg.isSecure;
 
       out_msg.atomic_op.clear();
       out_msg.atomic_op.orMask(in_msg.writeMask);
@@ -1820,6 +1821,7 @@ action(Send_SnpCleanInvalid, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpCleanInvalid, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
   setExpectedForInvSnoop(tbe, false);
 }
@@ -1834,6 +1836,7 @@ action(Send_SnpCleanInvalid_NoReq, desc="") {
     // at least one sharer other than requestor
     assert(out_msg.Destination.count() > 0);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
     setExpectedForInvSnoop(tbe, false);
     tbe.expected_snp_resp.setExpectedCount(out_msg.Destination.count());
   }
@@ -1850,6 +1853,7 @@ action(Send_SnpUnique, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1871,6 +1875,7 @@ action(Send_SnpUnique_RetToSrc, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
     out_msg.Destination.add(dest);
     out_msg.retToSrc := true;
+    out_msg.ns := tbe.ns;
   }
   // if other sharers send with retToSrc=false to others
   if (tbe.dir_sharers.count() > 1) {
@@ -1879,6 +1884,7 @@ action(Send_SnpUnique_RetToSrc, desc="") {
       out_msg.Destination.addNetDest(tbe.dir_sharers);
       out_msg.Destination.remove(dest);
       out_msg.retToSrc := false;
+      out_msg.ns := tbe.ns;
     }
   }
 }
@@ -1898,6 +1904,7 @@ action(Send_SnpUniqueFwd, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUniqueFwd, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1919,6 +1926,7 @@ action(Send_SnpShared, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpShared, out_msg);
     out_msg.Destination.add(tbe.dir_owner);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1968,6 +1976,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
     }
     out_msg.Destination.add(tbe.dir_owner);
     out_msg.retToSrc := retToSrc;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1995,6 +2004,7 @@ action(Send_SnpSharedFwd_ToSharer, desc="") {
     // TODO should be random or the closest one to the fwd dest
     out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     out_msg.retToSrc := retToSrc;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -2028,6 +2038,7 @@ action(Send_SnpOnce, desc="") {
       out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     }
     out_msg.retToSrc := true;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -2061,6 +2072,7 @@ action(Send_SnpOnceFwd, desc="") {
       out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     }
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 

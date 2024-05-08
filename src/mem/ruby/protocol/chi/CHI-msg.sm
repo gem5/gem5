@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2023 Arm Limited
+ * Copyright (c) 2021, 2023-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -122,6 +122,7 @@ structure(CHIRequestMsg, desc="", interface="Message") {
 
   bool usesTxnId,       desc="True if using a Transaction ID", default="false";
   Addr txnId,           desc="Transaction ID", default="0";
+  bool ns,              desc="Secure State of the transaction. NS=NonSecure", default="true";
 
   MessageSizeType MessageSize, default="MessageSizeType_Control";
 

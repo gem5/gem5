@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 ARM Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -654,6 +654,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     int accSize,            desc="Access size for Load/Store/WriteUniquePtl; otherwisse == blockSize";
     CHIRequestType reqType, desc="Request type that initiated this transaction";
     Addr txnId,             desc="Transaction ID. We default to -1 for debug purposes", default="-1";
+    bool ns,                desc="Secure State of the transaction. NS=NonSecure", default="true";
     MachineID requestor,    desc="Requestor ID";
     MachineID fwdRequestor, desc="Requestor to receive data on fwding snoops";
     bool use_DMT,           desc="Use DMT for this transaction";

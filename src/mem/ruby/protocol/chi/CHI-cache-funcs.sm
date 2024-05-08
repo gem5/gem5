@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Arm Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -430,6 +430,7 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   } else {
     tbe.txnId := in_msg.txnId;
   }
+  tbe.ns := in_msg.ns;
 
   assert(tbe.is_snp_tbe == false);
   assert(tbe.is_repl_tbe == false);
