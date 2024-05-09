@@ -801,7 +801,7 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
     set_src_reg_idx += setSrcWrapper(src3_reg_id)
     set_src_reg_idx += setSrcVm()
     code = maskCondWrapper(code)
-    code = eiDeclarePrefix(code)
+    code = eiDeclarePrefix(code, widening=True)
     code = loopWrapper(code)
     code = fflags_wrapper(code)
 
@@ -858,7 +858,7 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     set_src_reg_idx += setSrcWrapper(src3_reg_id)
     set_src_reg_idx += setSrcVm()
     code = maskCondWrapper(code)
-    code = eiDeclarePrefix(code)
+    code = eiDeclarePrefix(code, widening=True)
     code = loopWrapper(code)
     code = fflags_wrapper(code)
     code = narrowingOpRegisterConstraintChecks(code)
