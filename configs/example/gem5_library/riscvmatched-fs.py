@@ -76,7 +76,7 @@ board = RISCVMatchedBoard(
 # In the case where the `-i` flag is passed, we add the kernel argument
 # `init=/root/exit.sh`. This means the simulation will exit after the Linux
 # Kernel has booted.
-workload = obtain_resource("riscv-ubuntu-20.04-boot")
+workload = obtain_resource("riscv-ubuntu-20.04-boot", resource_version="3.0.0")
 kernel_args = board.get_default_kernel_args()
 if args.to_init:
     kernel_args.append("init=/root/exit.sh")

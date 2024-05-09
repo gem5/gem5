@@ -88,7 +88,9 @@ board = RiscvBoard(
 # Ubuntu 20.04. Once the system successfully boots it encounters an `m5_exit`
 # instruction which stops the simulation. When the simulation has ended you may
 # inspect `m5out/system.pc.com_1.device` to see the stdout.
-board.set_workload(obtain_resource("riscv-ubuntu-20.04-boot"))
+board.set_workload(
+    obtain_resource("riscv-ubuntu-20.04-boot", resource_version="3.0.0")
+)
 
 simulator = Simulator(board=board)
 simulator.run()
