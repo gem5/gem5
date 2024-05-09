@@ -800,6 +800,142 @@ namespace VegaISA
     using ConstVecOperandU128 = VecOperand<VecElemU32, true, 4>;
     using ConstVecOperandU256 = VecOperand<VecElemU32, true, 8>;
     using ConstVecOperandU512 = VecOperand<VecElemU32, true, 16>;
+
+
+// Helper class for using multiple VecElemU32 to represent data types which
+// do not divide a dword evenly.
+template<int BITS, int ELEM_SIZE>
+class PackedReg
+{
+    // Logical view is:
+    // dword N, dword N - 1, ..., dword 1, dword 0.
+    // Within each dword, the element starts at [ELEM_SIZE:0]. For example,
+    // for ELEM_SIZE = 6 for fp6 types, [5:0] is the first value, [11:6] is
+    // the second, and so forth. For 6 bits specifically, the 6th element
+    // spans dword 0 and dword 1.
+    static_assert(BITS % 32 == 0);
+    static_assert(BITS % ELEM_SIZE == 0);
+    static_assert(ELEM_SIZE <= 32);
+
+    static constexpr int NumDwords = BITS / 32;
+    uint32_t dwords[NumDwords] = {};
+
+  public:
+    PackedReg() = default;
+
+    void
+    setDword(int dw, uint32_t value)
+    {
+        assert(dw < NumDwords);
+        dwords[dw] = value;
+    }
+
+    uint32_t
+    getDword(int dw)
+    {
+        assert(dw < NumDwords);
+        return dwords[dw];
+    }
+
+    uint32_t
+    getElem(int elem)
+    {
+        assert(elem < (BITS / ELEM_SIZE));
+
+        // Get the upper/lower *bit* location of the element.
+        int ubit, lbit;
+        ubit = elem * ELEM_SIZE + (ELEM_SIZE - 1);
+        lbit = elem * ELEM_SIZE;
+
+        // Convert the bit locations to upper/lower dwords. It is possible
+        // to span two dwords but this does not have to support spanning
+        // more than two dwords.
+        int udw, ldw;
+        udw = ubit / 32;
+        ldw = lbit / 32;
+        assert(udw == ldw || udw == ldw + 1);
+
+        if (udw == ldw) {
+            // Easy case, just shift the dword value and mask to get value.
+            int dw_lbit = lbit % 32;
+
+            uint32_t elem_mask = (1UL << ELEM_SIZE) - 1;
+            uint32_t rv = (dwords[ldw] >> dw_lbit) & elem_mask;
+
+            return rv;
+        }
+
+        // Harder case. To make it easier put into a quad word and shift
+        // that variable instead of trying to work with two.
+        uint64_t qword =
+            uint64_t(dwords[udw]) << 32 | uint64_t(dwords[ldw]);
+
+        int qw_lbit = lbit % 32;
+
+        uint64_t elem_mask = (1ULL << ELEM_SIZE) - 1;
+        uint32_t rv = uint32_t((qword >> qw_lbit) & elem_mask);
+
+        return rv;
+    }
+
+    void
+    setElem(int elem, uint32_t value)
+    {
+        assert(elem < (BITS / ELEM_SIZE));
+
+        // Get the upper/lower *bit* location of the element.
+        int ubit, lbit;
+        ubit = elem * ELEM_SIZE + (ELEM_SIZE - 1);
+        lbit = elem * ELEM_SIZE;
+
+        // Convert the bit locations to upper/lower dwords. It is possible
+        // to span two dwords but this does not have to support spanning
+        // more than two dwords.
+        int udw, ldw;
+        udw = ubit / 32;
+        ldw = lbit / 32;
+        assert(udw == ldw || udw == ldw + 1);
+
+        if (udw == ldw) {
+            // Easy case, just shift the dword value and mask to get value.
+            int dw_lbit = lbit % 32;
+
+            // Make sure the value is not going to clobber another element.
+            uint32_t elem_mask = (1UL << ELEM_SIZE) - 1;
+            value &= elem_mask;
+
+            // Clear the bits we are setting.
+            elem_mask <<= dw_lbit;
+            dwords[ldw] &= ~elem_mask;
+
+            value <<= dw_lbit;
+            dwords[ldw] |= value;
+
+            return;
+        }
+
+        // Harder case. Put the two dwords in a quad word and manipulate that.
+        // Then place the two new dwords back into the storage.
+        uint64_t qword =
+            uint64_t(dwords[udw]) << 32 | uint64_t(dwords[ldw]);
+
+        int qw_lbit = lbit % 32;
+
+        // Make sure the value is not going to clobber another element.
+        uint64_t elem_mask = (1ULL << ELEM_SIZE) - 1;
+        value &= elem_mask;
+
+        elem_mask <<= qw_lbit;
+        qword &= elem_mask;
+
+        value <<= qw_lbit;
+        qword |= value;
+
+        dwords[udw] = uint32_t(qword >> 32);
+        dwords[ldw] = uint32_t(qword & mask(32));
+    }
+};
+
 }
 
 } // namespace gem5
