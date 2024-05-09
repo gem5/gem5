@@ -45,7 +45,9 @@ requires(isa_required=ISA.RISCV)
 board = RISCVMatchedBoard()
 
 # obtain the RISC-V Vertical Microbenchmarks
-microbenchmarks = obtain_resource("riscv-vertical-microbenchmarks")
+microbenchmarks = obtain_resource(
+    "riscv-vertical-microbenchmarks", resource_version="1.0.0"
+)
 
 # list all the microbenchmarks present in the suite
 print("Microbenchmarks present in the suite:")

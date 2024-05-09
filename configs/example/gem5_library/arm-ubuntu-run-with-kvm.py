@@ -121,9 +121,13 @@ command = (
 # Ubuntu 20.04. We use arm64-bootloader (boot.arm64) as the bootloader to use
 # ARM KVM.
 board.set_kernel_disk_workload(
-    kernel=obtain_resource("arm64-linux-kernel-5.4.49"),
-    disk_image=obtain_resource("arm64-ubuntu-20.04-img"),
-    bootloader=obtain_resource("arm64-bootloader"),
+    kernel=obtain_resource(
+        "arm64-linux-kernel-5.4.49", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource(
+        "arm64-ubuntu-20.04-img", resource_version="1.0.0"
+    ),
+    bootloader=obtain_resource("arm64-bootloader", resource_version="1.0.0"),
     readfile_contents=command,
 )
 # We define the system with the aforementioned system defined.

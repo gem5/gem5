@@ -55,7 +55,9 @@ board = X86DemoBoard()
 # We then set the workload. Here we use the "x86-ubuntu-18.04-boot" workload.
 # This boots Ubuntu 18.04 with Linux 5.4.49. If the required resources are not
 # found locally, they will be downloaded.
-board.set_workload(obtain_resource("x86-ubuntu-18.04-boot"))
+board.set_workload(
+    obtain_resource("x86-ubuntu-18.04-boot", resource_version="2.0.0")
+)
 
 simulator = Simulator(board=board)
 simulator.run()
