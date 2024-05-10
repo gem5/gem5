@@ -701,7 +701,7 @@ namespace VegaISA
         if (sel < SDWA_WORD_0) { // we are selecting 1 byte
             // if we sign extended depends on upper-most bit of byte 0
             signExt = (signExt &&
-                       (bits(currDstVal, VegaISA::MSB_PER_WORD, 0) & 0x80));
+                       (bits(currDstVal, VegaISA::MSB_PER_BYTE, 0) & 0x80));
 
             for (int byte = 0; byte < 4; ++byte) {
                 low_bit = byte * VegaISA::BITS_PER_BYTE;
@@ -714,7 +714,7 @@ namespace VegaISA
                     3.  byte > sel && signExt: we're sign extending and
                     this byte is one of the bytes we need to sign extend
                 */
-                origBits_thisByte = bits(origDstVal, high_bit, low_bit);
+                origBits_thisByte = bits(origDstVal, VegaISA::MSB_PER_BYTE, 0);
                 currBits_thisByte = bits(currDstVal, high_bit, low_bit);
                 newBits = ((byte == sel) ? origBits_thisByte :
                            ((preserve) ? currBits_thisByte :
@@ -739,7 +739,7 @@ namespace VegaISA
                     3.  word > (sel & 1) && signExt: we're sign extending and
                     this word is one of the words we need to sign extend
                 */
-                origBits_thisWord = bits(origDstVal, high_bit, low_bit);
+                origBits_thisWord = bits(origDstVal, VegaISA::MSB_PER_WORD, 0);
                 currBits_thisWord = bits(currDstVal, high_bit, low_bit);
                 newBits = ((word == (sel & 0x1)) ? origBits_thisWord :
                            ((preserve) ? currBits_thisWord :
