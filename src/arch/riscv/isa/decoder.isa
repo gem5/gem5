@@ -5012,27 +5012,33 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: csrrw({{
                     Rd = rvSext(data);
                     data = rvZext(Rs1);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'RD != 0', 'true'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x2: csrrs({{
                     Rd = rvSext(data);
                     data = rvZext(data | Rs1);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'true', 'RS1 != 0'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x3: csrrc({{
                     Rd = rvSext(data);
                     data = rvZext(data & ~Rs1);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'true', 'RS1 != 0'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x5: csrrwi({{
                     Rd = rvSext(data);
                     data = rvZext(uimm);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'RD != 0', 'true'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x6: csrrsi({{
                     Rd = rvSext(data);
                     data = rvZext(data | uimm);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'true', 'uimm != 0'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x7: csrrci({{
                     Rd = rvSext(data);
                     data = rvZext(data & ~uimm);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                }}, 'true', 'uimm != 0'
+                  , IsSerializeAfter, IsNonSpeculative, No_OpClass);
             }
         }
 
