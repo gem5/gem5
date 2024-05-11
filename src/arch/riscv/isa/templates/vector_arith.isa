@@ -665,6 +665,7 @@ Fault
 def template VectorFloatDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<float16_t>(machInst, vlen);
 case 0b010: return new %(class_name)s<float32_t>(machInst, vlen);
 case 0b011: return new %(class_name)s<float64_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
@@ -821,6 +822,19 @@ Fault
 def template VectorFloatWideningDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<float16_t>(machInst, vlen);
+case 0b010: return new %(class_name)s<float32_t>(machInst, vlen);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+
+def template VectorFloatWideningAndNarrowingCvtDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b000: return new %(class_name)s<float8_t>(machInst, vlen);
+case 0b001: return new %(class_name)s<float16_t>(machInst, vlen);
 case 0b010: return new %(class_name)s<float32_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
 }
@@ -1605,6 +1619,7 @@ Fault
 def template VectorFloatNonSplitDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<float16_t>(machInst);
 case 0b010: return new %(class_name)s<float32_t>(machInst);
 case 0b011: return new %(class_name)s<float64_t>(machInst);
 default: GEM5_UNREACHABLE;

@@ -580,7 +580,7 @@ def format VectorFloatFormat(code, category, *flags) {{
         Name,
         'VectorArithMacroInst',
         {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 16)},
         flags
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
@@ -621,7 +621,7 @@ def format VectorFloatFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -650,7 +650,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
         Name,
         'VectorArithMacroInst',
         {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 16)},
         flags
     )
 
@@ -674,7 +674,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -698,7 +698,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
 }};
 
 def format VectorFloatWideningFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 16, 32)
     iop = InstObjParams(
         name,
         Name,
@@ -754,7 +754,7 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
     set_vlen = setVlen();
 
     varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 32, 32)
+        Name + "Micro", 'float', 16, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -779,7 +779,7 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
 }};
 
 def format VectorFloatWideningCvtFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
     iop = InstObjParams(
         name,
         Name,
@@ -811,7 +811,7 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
     set_vlen = setVlen();
 
     varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 32, 32)
+        Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -832,11 +832,11 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
         VectorFloatMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
     iop = InstObjParams(
         name,
         Name,
@@ -869,7 +869,7 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     set_vlen = setVlen();
 
     varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 32, 32)
+        Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -890,7 +890,7 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         VectorFloatMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatMaskFormat(code, category, *flags) {{
@@ -898,7 +898,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
         Name,
         'VectorArithMacroInst',
         {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 16)},
         flags
     )
     dest_reg_id = "vecRegClass[VecMemInternalReg0 + _microIdx]"
@@ -925,7 +925,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
     code = loopWrapper(code)
     code = fflags_wrapper(code)
 
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1083,7 +1083,7 @@ def format VectorNonSplitFormat(code, category, *flags) {{
         code = fflags_wrapper(code)
 
     if inst_name == "vfmv" :
-        varith_template = declareVArithTemplate(Name, 'float', 32)
+        varith_template = declareVArithTemplate(Name, 'float', 16)
         iop = InstObjParams(name,
             Name,
             'VectorNonSplitInst',
@@ -1217,7 +1217,7 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
         Name,
         'VectorArithMacroInst',
         {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 16)},
         flags
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
@@ -1243,7 +1243,7 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
 
     code = fflags_wrapper(code)
 
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1269,7 +1269,7 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
 }};
 
 def format VectorReduceFloatWideningFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 16, 32)
     iop = InstObjParams(
         name,
         Name,
@@ -1301,7 +1301,7 @@ def format VectorReduceFloatWideningFormat(code, category, *flags) {{
     '''
 
     varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 32, 32)
+        Name + "Micro", 'float', 16, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1448,7 +1448,7 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
     if decode_template is VectorIntDecodeBlock:
         varith_macro_declare = declareVArithTemplate(Name)
     elif decode_template is VectorFloatDecodeBlock:
-        varith_macro_declare = declareVArithTemplate(Name, 'float', 32)
+        varith_macro_declare = declareVArithTemplate(Name, 'float', 16)
 
     iop = InstObjParams(
         name,
@@ -1491,7 +1491,7 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
         varith_micro_declare = declareVArithTemplate(Name + "Micro")
     elif decode_template is VectorFloatDecodeBlock:
         varith_micro_declare = declareVArithTemplate(
-            Name + "Micro", 'float', 32)
+            Name + "Micro", 'float', 16)
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
