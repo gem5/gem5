@@ -1201,6 +1201,8 @@ class TableWalker : public ClockedObject
 
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
+    void mpamTagTableWalk(RequestPtr &req) const;
+
   public: /* Testing */
     TlbTestInterface *test;
 

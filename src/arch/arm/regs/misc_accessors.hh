@@ -59,6 +59,15 @@ struct FarAccessor
     static const MiscRegIndex el3 = MISCREG_FAR_EL3;
 };
 
+struct MpamAccessor
+{
+    using type = MPAM;
+    static const MiscRegIndex el0 = MISCREG_MPAM0_EL1;
+    static const MiscRegIndex el1 = MISCREG_MPAM1_EL1;
+    static const MiscRegIndex el2 = MISCREG_MPAM2_EL2;
+    static const MiscRegIndex el3 = MISCREG_MPAM3_EL3;
+};
+
 template <typename RegAccessor>
 MiscRegIndex
 getRegVersion(ExceptionLevel el)
