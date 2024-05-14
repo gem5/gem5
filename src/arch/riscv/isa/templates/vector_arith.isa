@@ -31,12 +31,14 @@ output header {{
 #define ASSIGN_VD_BIT(idx, bit) \
     ((Vd[(idx)/8] & ~(1 << (idx)%8)) | ((bit) << (idx)%8))
 
-#define COPY_OLD_VD(idx)                                             \
-    [[maybe_unused]] RiscvISA::vreg_t old_vd;                        \
-    [[maybe_unused]] decltype(Vd) old_Vd = nullptr;                  \
-    xc->getRegOperand(this, (idx), &old_vd);                           \
-    old_Vd = old_vd.as<std::remove_reference_t<decltype(Vd[0])> >();    \
-    memcpy(Vd, old_Vd, vlenb);
+#define COPY_OLD_VD(idx)                                                  \
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) { \
+        RiscvISA::vreg_t old_vd;                                          \
+        xc->getRegOperand(this, idx, &old_vd);                            \
+        tmp_d0 = old_vd;                                                  \
+    } else {                                                              \
+        tmp_d0.set(0xff);                                                 \
+    }                                                                     \
 
 #define VRM_REQUIRED                                                         \
         uint_fast8_t frm = xc->readMiscReg(MISCREG_FRM);                     \
@@ -987,7 +989,7 @@ def template Vector1Vs1VdMaskDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[2];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1040,7 +1042,6 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
@@ -1167,9 +1168,9 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, old_vd, v0 for *.vv[m] or *.vx[m]
-    // vs2, old_vd, v0 for *.vi[m]
-    RegId srcRegIdxArr[4];
+    // vs1(rs1), vs2, v0 for *.vv[m] or *.vx[m]
+    // vs2, v0 for *.vi[m]
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1228,7 +1229,6 @@ Fault
     %(set_vlenb)s;
     %(set_vlen)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
@@ -1293,8 +1293,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, old_vd, v0 for *.vv or *.vf
-    RegId srcRegIdxArr[4];
+    // vs1(rs1), vs2, v0 for *.vv or *.vf
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1353,7 +1353,6 @@ Fault
     %(set_vlenb)s;
     %(set_vlen)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
@@ -1470,7 +1469,7 @@ def template VectorMaskDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[2];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst);
@@ -1516,11 +1515,14 @@ Fault
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
 
+
     %(op_decl)s;
     %(op_rd)s;
-    // TODO: remove it
     %(set_vlenb)s;
-    %(copy_old_vd)s;
+
+    // mask tails are always treated as agnostic: writting 1s
+    tmp_d0.set(0xff);
+
     %(code)s;
     %(op_wb)s;
 
@@ -1773,7 +1775,7 @@ Fault
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            ElemType microop_result = this->microIdx != 0 ? old_Vd[0] : Vs1[0];
+            ElemType microop_result = Vs1[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -1821,8 +1823,6 @@ Fault
     %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
-
-    Vd[0] = this->microIdx != 0 ? old_Vd[0] : Vs1[0];
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
@@ -1874,8 +1874,6 @@ Fault
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    Vd[0] = this->microIdx != 0 ? old_Vd[0] : Vs1[0];
-
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             vwu tmp_val = Vd[0];
@@ -1923,10 +1921,9 @@ template<typename ElemType, typename IndexType>
     constexpr uint32_t vd_eewb = sizeof(ElemType);
     constexpr uint32_t vs2_eewb = sizeof(ElemType);
     constexpr uint32_t vs1_eewb = sizeof(IndexType);
-    constexpr bool vs1_split = vd_eewb > vs1_eewb;
     const int8_t lmul = vtype_vlmul(vtype);
-    const int8_t vs1_emul = lmul +
-        (vs1_split ? -(vs2_eewb / vs1_eewb) : vs1_eewb / vs2_eewb);
+    const int8_t vs1_emul = lmul + __builtin_ctz(vs1_eewb)
+                                 - __builtin_ctz(vs2_eewb);
     const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
     const uint8_t vs1_vregs = vs1_emul < 0 ? 1 : 1 << vs1_emul;
     const uint8_t vd_vregs = vs2_vregs;
@@ -1940,6 +1937,21 @@ template<typename ElemType, typename IndexType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    uint32_t vd_vlmax = vlenb / vd_eewb;
+    uint32_t vs1_vlmax = vlenb / vs1_eewb;
+    for (uint32_t i = 0; i < ceil((float) this->vl / vd_vlmax); i++) {
+        uint32_t pinvd_micro_vl = (vd_vlmax*(i+1) <= remaining_vl)
+                                  ? vd_vlmax : remaining_vl;
+        uint8_t num_vd_pins = ceil((float) pinvd_micro_vl/vs1_vlmax)*vs2_vregs;
+        microop = new VPinVdMicroInst(machInst, i, num_vd_pins);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+
+        remaining_vl -= pinvd_micro_vl;
+    }
+
+    remaining_vl = this->vl;
     for (uint32_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
             i++) {
         for (uint8_t j = 0; j < vs2_vregs; j++) {
@@ -1965,7 +1977,7 @@ template<typename ElemType, typename IndexType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs2, vs1, vd, vm
+    // vs2, vs1, vtmp0, vm
     RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
@@ -2037,7 +2049,6 @@ Fault
     %(set_vlenb)s;
     %(set_vlen)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     const uint32_t vlmax = vtype_VLMAX(vtype,vlen);
     constexpr uint32_t vd_eewb = sizeof(ElemType);
     constexpr uint32_t vs1_eewb = sizeof(IndexType);
@@ -2058,6 +2069,7 @@ Fault
         vs1_elems * (vd_idx % vs1_split_num) / vs1_split_num;
     [[maybe_unused]] const uint32_t vd_bias =
         vd_elems * (vs1_idx % vd_split_num) / vd_split_num;
+
 
     %(code)s;
     %(op_wb)s;
@@ -2216,8 +2228,6 @@ Fault
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    Vd[0] = this->microIdx != 0 ? old_Vd[0] : Vs1[0];
-
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             vwu tmp_val = Vd[0];
@@ -2271,6 +2281,13 @@ template<typename ElemType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    for (uint32_t i = 0; i < ceil((float) this->vl/micro_vlmax); i++) {
+        microop = new VPinVdMicroInst(machInst, i, i+1, true);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
     // Todo static filter out useless uop
     int micro_idx = 0;
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
@@ -2308,6 +2325,13 @@ template<typename ElemType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    for (uint32_t i = 0; i < ceil((float) this->vl / micro_vlmax); i++) {
+        microop = new VPinVdMicroInst(machInst, i, num_microops-i, false);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
     // Todo static filter out useless uop
     int micro_idx = 0;
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
@@ -2333,9 +2357,9 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs2, vs1, vs3(old_vd), vm for *.vv, *.vx
-    // vs2, (old_vd), vm for *.vi
-    RegId srcRegIdxArr[4];
+    // vs2, vs1, vm for *.vv, *.vx
+    // vs2, vm for *.vi
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -2398,7 +2422,6 @@ Fault
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
 
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
 
@@ -2439,7 +2462,6 @@ Fault
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
 
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
 
