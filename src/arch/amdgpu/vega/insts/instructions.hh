@@ -9890,6 +9890,38 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP1__V_CLREXCP
 
+    class Inst_VOP1__V_MOV_B64 : public Inst_VOP1
+    {
+      public:
+        Inst_VOP1__V_MOV_B64(InFmt_VOP1*);
+        ~Inst_VOP1__V_MOV_B64();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src
+                return 8;
+              case 1: //vdst
+                return 8;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP1__V_MOV_B64
+
     class Inst_VOP1__V_CVT_F16_U16 : public Inst_VOP1
     {
       public:

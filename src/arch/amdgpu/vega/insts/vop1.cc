@@ -1874,6 +1874,41 @@ namespace VegaISA
     {
         panicUnimplemented();
     } // execute
+    // --- Inst_VOP1__V_MOV_B64 class methods ---
+
+    Inst_VOP1__V_MOV_B64::Inst_VOP1__V_MOV_B64(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_mov_b64")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_MOV_B64
+
+    Inst_VOP1__V_MOV_B64::~Inst_VOP1__V_MOV_B64()
+    {
+    } // ~Inst_VOP1__V_MOV_B64
+
+    // --- description from .arch file ---
+    // D.u = S0.u.
+    // Input and output modifiers not supported; this is an untyped operation.
+    void
+    Inst_VOP1__V_MOV_B64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src(gpuDynInst, instData.SRC0);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP unimplemented for v_mov_b64");
+        panic_if(isSDWAInst(), "SDWA unimplemented for v_mov_b64");
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP1__V_CVT_F16_U16 class methods ---
 
     Inst_VOP1__V_CVT_F16_U16::Inst_VOP1__V_CVT_F16_U16(InFmt_VOP1 *iFmt)
