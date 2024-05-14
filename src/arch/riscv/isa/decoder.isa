@@ -3751,10 +3751,10 @@ decode QUADRANT default Unknown::unknown() {
                 0x0c: VectorGatherFormat::vrgather_vi({{
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        uint64_t zextImm = rvZext(SIMM5);
                         if (this->vm || elem_mask(v0, ei)) {
-                            const uint64_t idx =
-                                (uint64_t)sext<5>(SIMM5) - vs2_elems * vs2_idx;
-                            Vd_vu[i] = ((uint64_t)sext<5>(SIMM5) >= vlmax) ? 0
+                            const uint64_t idx = zextImm - vs2_elems * vs2_idx;
+                            Vd_vu[i] = (zextImm >= vlmax) ? 0
                                 : (idx < vs2_elems) ? Vs2_vu[idx]
                                 : Vs3_vu[i];
                         }
@@ -4086,9 +4086,10 @@ decode QUADRANT default Unknown::unknown() {
                 0x0c: VectorGatherFormat::vrgather_vx({{
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        uint64_t zextRs1 = rvZext(Rs1);
                         if (this->vm || elem_mask(v0, ei)) {
-                            const uint64_t idx = Rs1_vu - vs2_elems * vs2_idx;
-                            Vd_vu[i] = (Rs1_vu >= vlmax) ? 0
+                            const uint64_t idx = zextRs1 - vs2_elems * vs2_idx;
+                            Vd_vu[i] = (zextRs1 >= vlmax) ? 0
                                 : (idx < vs2_elems) ? Vs2_vu[idx]
                                 : Vs3_vu[i];
                         }
