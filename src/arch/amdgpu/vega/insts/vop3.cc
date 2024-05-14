@@ -2790,7 +2790,42 @@ namespace VegaISA
     void
     Inst_VOP3__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        vdst.read();
+
+        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        unsigned abs = instData.ABS;
+        unsigned neg = extData.NEG;
+        int opsel = instData.OPSEL;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                float tmp = src0[lane];
+
+                if ((abs & 1) && (tmp < 0)) tmp = -tmp;
+                if (neg & 1) tmp = -tmp;
+
+                tmp = omodModifier(tmp, extData.OMOD);
+                tmp = std::clamp(tmp, 0.0f, 1.0f);
+
+                AMDGPU::mxfloat16 out(tmp);
+
+                // If opsel[3] use upper 16-bits of dest, otherwise lower.
+                if (opsel & 8) {
+                    replaceBits(vdst[lane], 31, 16, (out.data >> 16));
+                } else {
+                    replaceBits(vdst[lane], 15, 0, (out.data >> 16));
+                }
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP3__V_CVT_F32_F16 class methods ---
 
@@ -2811,7 +2846,34 @@ namespace VegaISA
     void
     Inst_VOP3__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+
+        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+        panic_if(instData.OPSEL, "OPSEL not implemented for %s", _opcode);
+
+        unsigned abs = instData.ABS;
+        unsigned neg = extData.NEG;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat16 tmp(src0[lane]);
+
+                if ((abs & 1) && (tmp < 0)) tmp = -tmp;
+                if (neg & 1) tmp = -tmp;
+
+                float out = omodModifier(float(tmp), extData.OMOD);
+                out = std::clamp(out, 0.0f, 1.0f);
+
+                vdst[lane] = out;
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP3__V_CVT_RPI_I32_F32 class methods ---
 
