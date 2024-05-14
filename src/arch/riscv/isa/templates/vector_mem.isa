@@ -128,7 +128,9 @@ def template VleMicroConstructor {{
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    }
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
@@ -244,6 +246,9 @@ Fault
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
+
+    // tail/mask policy: both undisturbed if one is, 1s if none
+    %(tail_mask_policy_code)s
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
@@ -815,6 +820,17 @@ def template VlStrideConstructor {{
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    const uint8_t num_pinvd_microops = ceil((float) this->vl /
+                                                    num_elems_per_vreg);
+    for (uint32_t i = 0; i < num_pinvd_microops; i++) {
+        uint32_t vdNumElems = (vl >= num_elems_per_vreg*(i+1))
+                              ? num_elems_per_vreg : vl-num_elems_per_vreg*i;
+        microop = new VPinVdMicroInst(machInst, i, vdNumElems);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
     for (int i = 0; micro_vl > 0; ++i) {
         for (int j = 0; j < micro_vl; ++j) {
             microop = new %(class_name)sMicro(machInst, i, j, micro_vl);
@@ -838,7 +854,7 @@ def template VlStrideMicroDeclare {{
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // rs1, rs2, vd, vm
+    // rs1, rs2, vtmp0, vm
     RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
 public:
@@ -869,8 +885,8 @@ def template VlStrideMicroConstructor {{
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
-    // We treat agnostic as undistrubed
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _regIdx]);
+    // vtmp0 as dummy src reg to create dependency with pin vd micro
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0]);
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
@@ -983,30 +999,11 @@ Fault
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
 
-    constexpr uint8_t elem_size = sizeof(Vd[0]);
-
-    RiscvISA::vreg_t old_vd;
-    decltype(Vd) old_Vd = nullptr;
-    // We treat agnostic as undistrubed
-    xc->getRegOperand(this, 2, &old_vd);
-    old_Vd = old_vd.as<std::remove_reference_t<decltype(Vd[0])> >();
-
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
     if (!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
-    }
-
-    if (microIdx == 0) {
-        // treat vma as vmu
-        // if (machInst.vtype8.vma == 0)
-        memcpy(Vd, old_Vd, microVl * elem_size);
-        // treat vta as vtu
-        // if (machInst.vtype8.vta == 0)
-        memcpy(Vd + microVl, old_Vd + microVl, vlenb - microVl * elem_size);
-    } else {
-        memcpy(Vd, old_Vd, vlenb);
     }
 
     size_t ei = this->regIdx * vlenb / sizeof(Vd[0]) + this->microIdx;
@@ -1220,6 +1217,21 @@ template<typename ElemType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    const uint32_t vd_vlmax = vlenb / vd_eewb;
+    const uint8_t num_pinvdcpyvs_microops = ceil((float) this->vl/vd_vlmax);
+    for (uint32_t i = 0; i < num_pinvdcpyvs_microops; i++) {
+        uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
+
+        microop = new VCpyVsMicroInst(machInst, i, machInst.vs2);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+
+        microop = new VPinVdMicroInst(machInst, i, vdNumElems);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
     for (uint32_t i = 0; micro_vl > 0; i++) {
         for (uint32_t j = 0; j < micro_vl; ++j) {
             uint32_t vdRegIdx = i / vd_split_num;
@@ -1251,8 +1263,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // rs1, vs2, vd, vm
-    RegId srcRegIdxArr[4];
+    // rs1, vs2, vm
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst,
@@ -1283,9 +1295,7 @@ template<typename ElemType>
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _vs2RegIdx]);
-    // We treat agnostic as undistrubed
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + _vs2RegIdx]);
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
@@ -1408,20 +1418,12 @@ Fault
 
     constexpr uint8_t elem_size = sizeof(Vd[0]);
 
-    RiscvISA::vreg_t old_vd;;
-    decltype(Vd) old_Vd = nullptr;
-    // We treat agnostic as undistrubed
-    xc->getRegOperand(this, 2, &old_vd);
-    old_Vd = old_vd.as<std::remove_reference_t<decltype(Vd[0])> >();
-
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
     if (!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
     }
-
-    memcpy(Vd, old_Vd, vlenb);
 
     size_t ei = this->vdRegIdx * vlenb / elem_size + this->vdElemIdx;
     if (machInst.vm || elem_mask(v0, ei)) {
@@ -1690,8 +1692,8 @@ def template VlSegMicroDeclare {{
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // rs1, rs2, vd, vm
-    RegId srcRegIdxArr[4];
+    // rs1, vd, vm
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     uint32_t field;
     uint32_t numFields;
@@ -1724,8 +1726,10 @@ def template VlSegMicroConstructor {{
         (field * numMicroops)]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + _microIdx +
-        (field * numMicroops)]);
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx
+                                                + (field * numMicroops)]);
+    }
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
@@ -1842,6 +1846,9 @@ Fault
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
+
+    // tail/mask policy: both undisturbed if one is, 1s if none
+    %(tail_mask_policy_code)s
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
