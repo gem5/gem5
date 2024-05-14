@@ -3118,7 +3118,7 @@ namespace VegaISA
         &Decoder::decode_OP_VOP1__V_CLREXCP,
         &Decoder::decode_invalid,
         &Decoder::decode_OP_VOP1__V_SCREEN_PARTITION_4SE_B32,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP1__V_MOV_B64,
         &Decoder::decode_OP_VOP1__V_CVT_F16_U16,
         &Decoder::decode_OP_VOP1__V_CVT_F16_I16,
         &Decoder::decode_OP_VOP1__V_CVT_U16_F16,
@@ -11633,6 +11633,12 @@ namespace VegaISA
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
     }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP1__V_MOV_B64(MachInst iFmt)
+    {
+        return new Inst_VOP1__V_MOV_B64(&iFmt->iFmt_VOP1);
+    } // decode_OP_VOP1__V_MOV_B64
 
     GPUStaticInst*
     Decoder::decode_OP_VOP1__V_CVT_F16_U16(MachInst iFmt)
