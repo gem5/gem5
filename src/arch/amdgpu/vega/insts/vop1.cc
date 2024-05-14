@@ -433,7 +433,22 @@ namespace VegaISA
     void
     Inst_VOP1__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                float tmp = src[lane];
+                AMDGPU::mxfloat16 out(tmp);
+
+                vdst[lane] = (out.data >> 16);
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_CVT_F32_F16 class methods ---
 
@@ -454,7 +469,20 @@ namespace VegaISA
     void
     Inst_VOP1__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat16 tmp(src[lane]);
+                vdst[lane] = float(tmp);
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_CVT_RPI_I32_F32 class methods ---
 

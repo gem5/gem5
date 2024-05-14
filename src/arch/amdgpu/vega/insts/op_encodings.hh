@@ -455,6 +455,29 @@ namespace VegaISA
         // second instruction DWORD
         InFmt_VOP3_1 extData;
 
+        // Output modifier for VOP3 instructions. This 2-bit field can be set
+        // to "0" to do nothing, "1" to multiply output value by 2, "2" to
+        // multiply output value by 4, or "3" to divide output value by 2. If
+        // the instruction supports clamping, this is applied *before* clamp
+        // but after the abs and neg modifiers.
+        template<typename T>
+        T omodModifier(T val, unsigned omod)
+        {
+            assert(omod < 4);
+
+            if constexpr (std::is_floating_point_v<T>) {
+                if (omod == 1) return val * T(2.0f);
+                if (omod == 2) return val * T(4.0f);
+                if (omod == 3) return val / T(2.0f);
+            } else {
+                assert(std::is_integral_v<T>);
+                if (omod == 1) return val * T(2);
+                if (omod == 2) return val * T(4);
+                if (omod == 3) return val / T(2);
+            }
+
+            return val;
+        }
       private:
         bool hasSecondDword(InFmt_VOP3A *);
         /**
