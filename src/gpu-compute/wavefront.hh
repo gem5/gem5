@@ -92,6 +92,8 @@ class Wavefront : public SimObject
         S_BARRIER
     };
 
+    // gfx version wavefront is executing
+    GfxVersion gfxVersion;
     // HW slot id where the WF is mapped to inside a SIMD unit
     const int wfSlotId;
     int kernId;
