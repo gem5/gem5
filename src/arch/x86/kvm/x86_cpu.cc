@@ -1000,17 +1000,19 @@ X86KvmCPU::updateKvmStateMSRs()
 void
 X86KvmCPU::updateKvmStateXCRs()
 {
-    struct kvm_xcrs xcrs;
+    if (haveXCRs) {
+        struct kvm_xcrs xcrs;
 
-    xcrs.nr_xcrs = NumXCRegs;
-    xcrs.flags = 0;
+        xcrs.nr_xcrs = NumXCRegs;
+        xcrs.flags = 0;
 
-    for (int i = 0; i < xcrs.nr_xcrs; ++i) {
-        xcrs.xcrs[i].xcr = i;
-        xcrs.xcrs[i].value = tc->readMiscReg(misc_reg::xcr(i));
+        for (int i = 0; i < xcrs.nr_xcrs; ++i) {
+            xcrs.xcrs[i].xcr = i;
+            xcrs.xcrs[i].value = tc->readMiscReg(misc_reg::xcr(i));
+        }
+
+        setXCRs(xcrs);
     }
-
-    setXCRs(xcrs);
 }
 
 void
@@ -1210,12 +1212,15 @@ X86KvmCPU::updateThreadContextMSRs()
 void
 X86KvmCPU::updateThreadContextXCRs()
 {
-    struct kvm_xcrs xcrs;
+    if (haveXCRs) {
+        struct kvm_xcrs xcrs;
 
-    getXCRs(xcrs);
+        getXCRs(xcrs);
 
-    for (int i = 0; i < xcrs.nr_xcrs; ++i) {
-        tc->setMiscReg(misc_reg::xcr(xcrs.xcrs[i].xcr), xcrs.xcrs[i].value);
+        for (int i = 0; i < xcrs.nr_xcrs; ++i) {
+            tc->setMiscReg(misc_reg::xcr(xcrs.xcrs[i].xcr),
+                           xcrs.xcrs[i].value);
+        }
     }
 }
 
