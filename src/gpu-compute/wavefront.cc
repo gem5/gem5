@@ -442,7 +442,8 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
     // Default to false and set to true for gem5 supported ISAs.
     bool packed_work_item_id = false;
 
-    if (task->gfxVersion() == GfxVersion::gfx90a) {
+    if (task->gfxVersion() == GfxVersion::gfx90a ||
+        task->gfxVersion() == GfxVersion::gfx942) {
         packed_work_item_id = true;
     }
 
