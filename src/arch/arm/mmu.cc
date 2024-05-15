@@ -1015,6 +1015,17 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
                                functional, vaddr, tranMethod, state);
     }
 
+    // Prevent prefetching from I/O devices or uncacheable memory.
+    // Not rejecting such requests will result in panics/infinite loops since
+    // the memory and cache subsystem do not expect to receive them.
+    if (req->isPrefetch() && req->isUncacheable() && fault == NoFault) {
+        DPRINTF(TLBVerbose, "Rejecting uncacheable prefetch for %s=%#x\n",
+                state.isStage2 ? "IPA" : "VA", vaddr_tainted);
+        return std::make_shared<PrefetchAbort>(
+            vaddr, ArmFault::PrefetchUncacheable, state.isStage2, tranMethod);
+    }
+
+
     // Check for Debug Exceptions
     SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
 

@@ -418,6 +418,9 @@ void
 Cache::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(CacheTags, "%s tags:\n%s\n", __func__, tags->print());
+    panic_if(pkt->req->isUncacheable() && pkt->req->isPrefetch(),
+             "Uncacheable prefetches should be discarded by CPU: %s",
+             pkt->print());
 
     promoteWholeLineWrites(pkt);
 
@@ -683,6 +686,10 @@ Cache::recvAtomic(PacketPtr pkt)
 
         return memSidePort.sendAtomic(pkt);
     }
+
+    panic_if(pkt->req->isUncacheable() && pkt->req->isPrefetch(),
+             "Uncacheable prefetches should be discarded by CPU: %s",
+             pkt->print());
 
     return BaseCache::recvAtomic(pkt);
 }

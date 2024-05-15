@@ -490,6 +490,14 @@ def template LoadCompleteAcc {{
                                 trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
+        if (isPrefetch()) {
+            // We shouldn't actually need a response for prefetches and instead
+            // retire the instruction immediately, but changing that behaviour
+            // is an invasive change, so return early instead and ignore the
+            // reponse we got from the cache/memory.
+            // TODO: this should probably be a panic_if(isPrefetch(), ...)
+            return fault;
+        }
 
         %(op_decl)s;
         %(op_rd)s;

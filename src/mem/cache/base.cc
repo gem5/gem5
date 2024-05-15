@@ -406,6 +406,9 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
 void
 BaseCache::recvTimingReq(PacketPtr pkt)
 {
+    panic_if(pkt->req->isUncacheable() && pkt->req->isPrefetch(),
+             "Uncacheable prefetches should be discarded by CPU: %s",
+             pkt->print());
     // anything that is merely forwarded pays for the forward latency and
     // the delay provided by the crossbar
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
@@ -637,6 +640,9 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 Tick
 BaseCache::recvAtomic(PacketPtr pkt)
 {
+    panic_if(pkt->req->isUncacheable() && pkt->req->isPrefetch(),
+         "Uncacheable prefetches should be discarded by CPU: %s",
+         pkt->print());
     // should assert here that there are no outstanding MSHRs or
     // writebacks... that would mean that someone used an atomic
     // access in timing mode

@@ -384,6 +384,9 @@ AbstractMemory::access(PacketPtr pkt)
                 pkt->getAddr());
         return;
     }
+    panic_if(pkt->req->isUncacheable() && pkt->req->isPrefetch(),
+             "Uncacheable prefetches should be discarded by CPU: %s",
+             pkt->print());
 
     if (pkt->cmd == MemCmd::CleanEvict || pkt->cmd == MemCmd::WritebackClean) {
         DPRINTF(MemoryAccess, "CleanEvict  on 0x%x: not responding\n",
