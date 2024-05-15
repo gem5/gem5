@@ -9922,29 +9922,25 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORD(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORD(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX3(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX3(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX4(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_DWORDX4(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -9977,29 +9973,25 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORD(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORD(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX2(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX2(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX3(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX3(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX4(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_DWORDX4(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
