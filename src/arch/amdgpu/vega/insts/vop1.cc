@@ -2399,5 +2399,37 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP1__V_ACCVGPR_MOV_B32 class methods ---
+
+    Inst_VOP1__V_ACCVGPR_MOV_B32::
+        Inst_VOP1__V_ACCVGPR_MOV_B32(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_accvgpr_mov_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_ACCVGPR_MOV_B32
+
+    Inst_VOP1__V_ACCVGPR_MOV_B32::~Inst_VOP1__V_ACCVGPR_MOV_B32()
+    {
+    } // ~Inst_VOP1__V_ACCVGPR_MOV_B32
+
+    void
+    Inst_VOP1__V_ACCVGPR_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        unsigned accum_offset = wf->accumOffset;
+
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0+accum_offset);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST+accum_offset);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
 } // namespace VegaISA
 } // namespace gem5
