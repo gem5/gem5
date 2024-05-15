@@ -836,7 +836,15 @@ private:
     %(reg_idx_arr_decl)s;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
-    using %(base_class)s::generateDisassembly;
+    std::string generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+            << registerName(srcRegIdx(0));
+        if (machInst.vm == 0) ss << ", v0.t";
+        return ss.str();
+    }
 };
 
 }};
@@ -880,7 +888,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
     int* cnt;
@@ -888,7 +896,15 @@ public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
                    uint32_t _microIdx, int* cnt);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
-    using %(base_class)s::generateDisassembly;
+    std::string generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+            << registerName(srcRegIdx(0));
+        if (machInst.vm == 0) ss << ", v0.t";
+        return ss.str();
+    }
 };
 
 }};
@@ -908,7 +924,6 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2]);
 }
 
 %(declare_varith_template)s;
