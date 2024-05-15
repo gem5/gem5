@@ -13320,8 +13320,8 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_BF16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16(
+                &iFmt->iFmt_VOP3P_MAI);
     }
 
     GPUStaticInst*
