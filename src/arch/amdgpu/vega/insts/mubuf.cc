@@ -823,6 +823,209 @@ namespace VegaISA
     Inst_MUBUF__BUFFER_LOAD_SSHORT::completeAcc(GPUDynInstPtr gpuDynInst)
     {
     } // execute
+    // --- Inst_MUBUF__BUFFER_LOAD_SHORT_D16 class methods ---
+
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16
+        ::Inst_MUBUF__BUFFER_LOAD_SHORT_D16(InFmt_MUBUF *iFmt)
+        : Inst_MUBUF(iFmt, "buffer_load_short_d16")
+    {
+        setFlag(MemoryRef);
+        setFlag(Load);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+            warn("BUFFER.LDS not implemented!");
+        } else {
+            setFlag(GlobalSegment);
+        }
+    } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16
+
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16::~Inst_MUBUF__BUFFER_LOAD_SHORT_D16()
+    {
+    } // ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16
+
+    // --- description from .arch file ---
+    // RETURN_DATA[15 : 0].u16 = MEM[ADDR].u16;
+    // // RETURN_DATA[31:16] is preserved.
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+
+        rsrcDesc.read();
+        offset.read();
+
+        int inst_offset = instData.OFFSET;
+
+        // For explanation of buffer addressing, see section 9.1.5 in:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initMemRead<VecElemU16>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDATA);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if (!oobMask[lane]) {
+                    VecElemU16 buf_val = (reinterpret_cast<VecElemU16*>(
+                        gpuDynInst->d_data))[lane];
+                    replaceBits(vdst[lane], 15, 0, buf_val);
+                } else {
+                    vdst[lane] = 0;
+                }
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
+    // --- Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI class methods ---
+
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
+        ::Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI(InFmt_MUBUF *iFmt)
+        : Inst_MUBUF(iFmt, "buffer_load_short_d16_hi")
+    {
+        setFlag(MemoryRef);
+        setFlag(Load);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+            warn("BUFFER.LDS not implemented!");
+        } else {
+            setFlag(GlobalSegment);
+        }
+    } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
+
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::
+        ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI()
+    {
+    } // ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
+
+    // --- description from .arch file ---
+    // VDATA[31 : 16].b16 = MEM[ADDR].b16;
+    // // VDATA[15:0] is preserved.
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+
+        rsrcDesc.read();
+        offset.read();
+
+        int inst_offset = instData.OFFSET;
+
+        // For explanation of buffer addressing, see section 9.1.5 in:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initMemRead<VecElemU16>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDATA);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if (!oobMask[lane]) {
+                    VecElemU16 buf_val = (reinterpret_cast<VecElemU16*>(
+                        gpuDynInst->d_data))[lane];
+                    replaceBits(vdst[lane], 31, 16, buf_val);
+                } else {
+                    vdst[lane] = 0;
+                }
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
     // --- Inst_MUBUF__BUFFER_LOAD_DWORD class methods ---
 
     Inst_MUBUF__BUFFER_LOAD_DWORD
@@ -868,6 +1071,10 @@ namespace VegaISA
 
         int inst_offset = instData.OFFSET;
 
+        // For explanation of buffer addressing, see section 9.1.5 in:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
         if (!instData.IDXEN && !instData.OFFEN) {
             calcAddr<ConstVecOperandU32, ConstVecOperandU32,
                 ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,

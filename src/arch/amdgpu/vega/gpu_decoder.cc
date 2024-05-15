@@ -7808,15 +7808,13 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_DS__DS_READ_U16_D16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_DS__DS_READ_U16_D16(&iFmt->iFmt_DS);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_DS__DS_READ_U16_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_DS__DS_READ_U16_D16_HI(&iFmt->iFmt_DS);
     }
 
     GPUStaticInst*
@@ -10207,14 +10205,12 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_SHORT_D16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_MUBUF__BUFFER_LOAD_SHORT_D16(&iFmt->iFmt_MUBUF);
     }
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_SHORT_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI(&iFmt->iFmt_MUBUF);
     }
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_FORMAT_D16_HI_X(MachInst iFmt)
