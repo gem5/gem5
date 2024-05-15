@@ -42,6 +42,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -381,7 +382,9 @@ class BaseSemihosting : public SimObject
         return tick >> tickShift;
     }
     void semiExit(uint64_t code, uint64_t subcode);
-    std::string readString(ThreadContext *tc, Addr ptr, size_t len);
+
+    std::optional<std::string> readString(ThreadContext *tc,
+                                          Addr ptr, size_t len);
 
   public:
     typedef std::pair<uint64_t, SemiErrno> RetErrno;
