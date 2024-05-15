@@ -146,8 +146,8 @@ class PM4PacketProcessor : public DmaVirtDevice
     void unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt);
     void doneMQDWrite(Addr mqdAddr, Addr addr);
     void mapProcess(uint32_t pasid, uint64_t ptBase, uint32_t shMemBases);
-    void mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt);
-    void mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt);
+    void mapProcessV1(PM4Queue *q, PM4MapProcess *pkt);
+    void mapProcessV2(PM4Queue *q, PM4MapProcessV2 *pkt);
     void processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr, QueueDesc *mqd,
                     uint16_t vmid);
     void processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
