@@ -44394,6 +44394,12 @@ namespace VegaISA
         Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxfloat16,
                                     &MNEM__V_MFMA_F32_4X4X4_16B_F16>;
 
+    static const char *MNEM__V_MFMA_F32_32X32X8_BF16 =
+        "v_mfma_f32_32x32x8_bf16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxbfloat16,
+                                    &MNEM__V_MFMA_F32_32X32X8_BF16>;
+
 
     template <const int M, const int N, const int K,
               const int B, const char **MNEMONIC>
