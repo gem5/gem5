@@ -33126,6 +33126,74 @@ namespace VegaISA
         void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_U16
 
+    class Inst_DS__DS_READ_U16_D16 : public Inst_DS
+    {
+      public:
+        Inst_DS__DS_READ_U16_D16(InFmt_DS*);
+        ~Inst_DS__DS_READ_U16_D16();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 4;
+              case 1: //vgpr_rtn
+                return 2;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_DS__DS_READ_U16_D16
+
+    class Inst_DS__DS_READ_U16_D16_HI : public Inst_DS
+    {
+      public:
+        Inst_DS__DS_READ_U16_D16_HI(InFmt_DS*);
+        ~Inst_DS__DS_READ_U16_D16_HI();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 4;
+              case 1: //vgpr_rtn
+                return 2;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_DS__DS_READ_U16_D16_HI
+
     class Inst_DS__DS_SWIZZLE_B32 : public Inst_DS
     {
       public:
@@ -36809,6 +36877,82 @@ namespace VegaISA
         void initiateAcc(GPUDynInstPtr) override;
         void completeAcc(GPUDynInstPtr) override;
     }; // Inst_MUBUF__BUFFER_LOAD_SSHORT
+
+    class Inst_MUBUF__BUFFER_LOAD_SHORT_D16 : public Inst_MUBUF
+    {
+      public:
+        Inst_MUBUF__BUFFER_LOAD_SHORT_D16(InFmt_MUBUF*);
+        ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 8;
+              case 1: //sgpr_r
+                return 16;
+              case 2: //sgpr_o
+                return 4;
+              case 3: //vgpr_d
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_MUBUF__BUFFER_LOAD_SHORT_D16
+
+    class Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI : public Inst_MUBUF
+    {
+      public:
+        Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI(InFmt_MUBUF*);
+        ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 8;
+              case 1: //sgpr_r
+                return 16;
+              case 2: //sgpr_o
+                return 4;
+              case 3: //vgpr_d
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
 
     class Inst_MUBUF__BUFFER_LOAD_DWORD : public Inst_MUBUF
     {

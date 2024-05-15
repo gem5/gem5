@@ -1858,6 +1858,134 @@ namespace VegaISA
 
         vdst.write();
     } // completeAcc
+    // --- Inst_DS__DS_READ_U16_D16 class methods ---
+
+    Inst_DS__DS_READ_U16_D16::
+        Inst_DS__DS_READ_U16_D16(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_u16_d16_hi")
+    {
+        setFlag(MemoryRef);
+        setFlag(Load);
+    } // Inst_DS__DS_READ_U16_D16
+
+    Inst_DS__DS_READ_U16_D16::~Inst_DS__DS_READ_U16_D16()
+    {
+    } // ~Inst_DS__DS_READ_U16_D16
+
+    // --- description from .arch file ---
+    // RETURN_DATA[15 : 0].u16 = MEM[ADDR].u16;
+    // // RETURN_DATA[31:16] is preserved.
+    void
+    Inst_DS__DS_READ_U16_D16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+    void
+    Inst_DS__DS_READ_U16_D16::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemU16>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_U16_D16::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                VecElemU16 ds_val = reinterpret_cast<VecElemU16*>(
+                    gpuDynInst->d_data)[lane];
+                replaceBits(vdst[lane], 15, 0, ds_val);
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
+    // --- Inst_DS__DS_READ_U16_D16_HI class methods ---
+
+    Inst_DS__DS_READ_U16_D16_HI::
+        Inst_DS__DS_READ_U16_D16_HI(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_u16_d16_hi")
+    {
+        setFlag(MemoryRef);
+        setFlag(Load);
+    } // Inst_DS__DS_READ_U16_D16_HI
+
+    Inst_DS__DS_READ_U16_D16_HI::~Inst_DS__DS_READ_U16_D16_HI()
+    {
+    } // ~Inst_DS__DS_READ_U16_D16_HI
+
+    // --- description from .arch file ---
+    // RETURN_DATA[31 : 16].u16 = MEM[ADDR].u16;
+    // // RETURN_DATA[15:0] is preserved.
+    void
+    Inst_DS__DS_READ_U16_D16_HI::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+    void
+    Inst_DS__DS_READ_U16_D16_HI::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemU16>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_U16_D16_HI::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                VecElemU16 ds_val = reinterpret_cast<VecElemU16*>(
+                    gpuDynInst->d_data)[lane];
+                replaceBits(vdst[lane], 31, 16, ds_val);
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
     // --- Inst_DS__DS_SWIZZLE_B32 class methods ---
 
     Inst_DS__DS_SWIZZLE_B32::Inst_DS__DS_SWIZZLE_B32(InFmt_DS *iFmt)
