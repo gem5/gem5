@@ -211,6 +211,13 @@ const std::vector<std::string> RegNames = {
 
 } // namespace float_reg
 
+inline float16_t
+fsgnj16(float16_t a, float16_t b, bool n, bool x) {
+    if (n) b.v = ~b.v;
+    else if (x) b.v = a.v ^ b.v;
+    return f16(insertBits(b.v, 14, 0, a.v));
+}
+
 inline float32_t
 fsgnj32(float32_t a, float32_t b, bool n, bool x) {
     if (n) b.v = ~b.v;

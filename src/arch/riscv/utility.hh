@@ -75,10 +75,16 @@ template<> struct double_width<int16_t>     { using type = int32_t; };
 template<> struct double_width<int32_t>     { using type = int64_t; };
 template<> struct double_width<int64_t>     { using type = __int128_t; };
 template<> struct double_width<float32_t>   { using type = float64_t;};
+template<> struct double_width<float16_t>   { using type = float32_t;};
+template<> struct double_width<float8_t>    { using type = float16_t;};
 
 template<typename Type> struct double_widthf;
 template<> struct double_widthf<uint32_t>    { using type = float64_t;};
 template<> struct double_widthf<int32_t>     { using type = float64_t;};
+template<> struct double_widthf<uint16_t>    { using type = float32_t;};
+template<> struct double_widthf<int16_t>     { using type = float32_t;};
+template<> struct double_widthf<uint8_t>     { using type = float16_t;};
+template<> struct double_widthf<int8_t>      { using type = float16_t;};
 
 template<typename T> inline bool
 isquietnan(T val)
@@ -324,6 +330,8 @@ ftype(IntType a) -> FloatType
         return f32(a);
     else if constexpr(std::is_same_v<uint64_t, IntType>)
         return f64(a);
+    else if constexpr(std::is_same_v<uint16_t, IntType>)
+        return f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -336,6 +344,8 @@ ftype_freg(freg_t a) -> FloatType
         return f32(a);
     else if constexpr(std::is_same_v<uint64_t, IntType>)
         return f64(a);
+    else if constexpr(std::is_same_v<uint16_t, IntType>)
+        return f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -346,6 +356,8 @@ fadd(FloatType a, FloatType b)
         return f32_add(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_add(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_add(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -356,6 +368,8 @@ fsub(FloatType a, FloatType b)
         return f32_sub(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_sub(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_sub(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -366,6 +380,8 @@ fmin(FloatType a, FloatType b)
         return f32_min(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_min(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_min(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -376,6 +392,8 @@ fmax(FloatType a, FloatType b)
         return f32_max(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_max(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_max(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -386,6 +404,8 @@ fdiv(FloatType a, FloatType b)
         return f32_div(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_div(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_div(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -396,6 +416,8 @@ fmul(FloatType a, FloatType b)
         return f32_mul(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_mul(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_mul(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -406,6 +428,8 @@ fsqrt(FloatType a)
         return f32_sqrt(a);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_sqrt(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_sqrt(a);
     GEM5_UNREACHABLE;
 }
 
@@ -416,6 +440,8 @@ frsqrte7(FloatType a)
         return f32_rsqrte7(a);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_rsqrte7(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_rsqrte7(a);
     GEM5_UNREACHABLE;
 }
 
@@ -426,6 +452,8 @@ frecip7(FloatType a)
         return f32_recip7(a);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_recip7(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_recip7(a);
     GEM5_UNREACHABLE;
 }
 
@@ -436,6 +464,8 @@ fclassify(FloatType a)
         return f32(f32_classify(a));
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64(f64_classify(a));
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16(f16_classify(a));
     GEM5_UNREACHABLE;
 }
 
@@ -446,6 +476,8 @@ fsgnj(FloatType a, FloatType b, bool n, bool x)
         return fsgnj32(a, b, n, x);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return fsgnj64(a, b, n, x);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return fsgnj16(a, b, n, x);
     GEM5_UNREACHABLE;
 }
 
@@ -456,6 +488,8 @@ fle(FloatType a, FloatType b)
         return f32_le(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_le(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_le(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -466,6 +500,8 @@ feq(FloatType a, FloatType b)
         return f32_eq(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_eq(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_eq(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -476,6 +512,8 @@ flt(FloatType a, FloatType b)
         return f32_lt(a, b);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_lt(a, b);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_lt(a, b);
     GEM5_UNREACHABLE;
 }
 
@@ -486,6 +524,8 @@ fmadd(FloatType a, FloatType b, FloatType c)
         return f32_mulAdd(a, b, c);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_mulAdd(a, b, c);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_mulAdd(a, b, c);
     GEM5_UNREACHABLE;
 }
 
@@ -496,6 +536,8 @@ fneg(FloatType a)
         return f32(a.v ^ uint32_t(mask(31, 31)));
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64(a.v ^ mask(63, 63));
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16(a.v ^ uint16_t(mask(15, 15)));
     GEM5_UNREACHABLE;
 }
 
@@ -504,6 +546,8 @@ fwiden(FT a)
 {
     if constexpr(std::is_same_v<float32_t, FT>)
         return f32_to_f64(a);
+    else if constexpr(std::is_same_v<float16_t, FT>)
+        return f16_to_f32(a);
     GEM5_UNREACHABLE;
 }
 
@@ -514,6 +558,8 @@ f_to_ui(FloatType a, uint_fast8_t mode)
         return f32_to_ui32(a, mode, true);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_to_ui64(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_to_ui16(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -525,6 +571,8 @@ f_to_wui(FloatType a, uint_fast8_t mode)
 {
     if constexpr(std::is_same_v<float32_t, FloatType>)
         return f32_to_ui64(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_to_ui32(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -536,6 +584,10 @@ f_to_nui(FloatType a, uint_fast8_t mode)
 {
     if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_to_ui32(a, mode, true);
+    else if constexpr(std::is_same_v<float32_t, FloatType>)
+        return f32_to_ui16(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_to_ui8(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -546,6 +598,8 @@ f_to_i(FloatType a, uint_fast8_t mode)
         return (uint32_t)f32_to_i32(a, mode, true);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return (uint64_t)f64_to_i64(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return (uint16_t)f16_to_i16(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -557,6 +611,8 @@ f_to_wi(FloatType a, uint_fast8_t mode)
 {
     if constexpr(std::is_same_v<float32_t, FloatType>)
         return (uint64_t)f32_to_i64(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return (uint32_t)f16_to_i32(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -568,6 +624,10 @@ f_to_ni(FloatType a, uint_fast8_t mode)
 {
     if constexpr(std::is_same_v<float64_t, FloatType>)
         return (uint32_t)f64_to_i32(a, mode, true);
+    else if constexpr(std::is_same_v<float32_t, FloatType>)
+        return (uint16_t)f32_to_i16(a, mode, true);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return (uint8_t)f16_to_i8(a, mode, true);
     GEM5_UNREACHABLE;
 }
 
@@ -579,6 +639,8 @@ ui_to_f(IntType a)
         return ui32_to_f32(a);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return ui64_to_f64(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return ui32_to_f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -590,6 +652,10 @@ ui_to_wf(IntType a)
 {
     if constexpr(std::is_same_v<float64_t, FloatType>)
         return ui32_to_f64(a);
+    else if constexpr(std::is_same_v<float32_t, FloatType>)
+        return ui32_to_f32(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return ui32_to_f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -601,6 +667,8 @@ ui_to_nf(IntType a)
 {
     if constexpr(std::is_same_v<float32_t, FloatType>)
         return ui64_to_f32(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return ui32_to_f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -612,6 +680,8 @@ i_to_f(IntType a)
         return i32_to_f32((int32_t)a);
     else if constexpr(std::is_same_v<float64_t, FloatType>)
         return i64_to_f64((int64_t)a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return i32_to_f16((int16_t)a);
     GEM5_UNREACHABLE;
 }
 
@@ -623,6 +693,10 @@ i_to_wf(IntType a)
 {
     if constexpr(std::is_same_v<float64_t, FloatType>)
         return i32_to_f64((int32_t)a);
+    else if constexpr(std::is_same_v<float32_t, FloatType>)
+        return i32_to_f32((int16_t)a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return i32_to_f16((int8_t)a);
     GEM5_UNREACHABLE;
 }
 
@@ -636,6 +710,8 @@ i_to_nf(IntType a)
 {
     if constexpr(std::is_same_v<float32_t, FloatType>)
         return i64_to_f32(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return i32_to_f16(a);
     GEM5_UNREACHABLE;
 }
 
@@ -647,6 +723,8 @@ f_to_wf(FloatType a)
 {
     if constexpr(std::is_same_v<float32_t, FloatType>)
         return f32_to_f64(a);
+    else if constexpr(std::is_same_v<float16_t, FloatType>)
+        return f16_to_f32(a);
     GEM5_UNREACHABLE;
 }
 
@@ -658,6 +736,8 @@ f_to_nf(FloatType a)
 {
     if constexpr(std::is_same_v<float64_t, FloatType>)
         return f64_to_f32(a);
+    else if constexpr(std::is_same_v<float32_t, FloatType>)
+        return f32_to_f16(a);
     GEM5_UNREACHABLE;
 }
 
