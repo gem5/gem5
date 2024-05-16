@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+import json
 import sys
 
 import m5
@@ -174,8 +175,8 @@ if output != expected_output:
     print("Output statistics do not match expected:", file=sys.stderr)
     print("", file=sys.stderr)
     print("Expected:", file=sys.stderr)
-    print(expected_output, file=sys.stderr)
+    print(json.dumps(expected_output, indent=4), file=sys.stderr)
     print("", file=sys.stderr)
     print("Actual:", file=sys.stderr)
-    print(output, file=sys.stderr)
+    print(json.dumps(output, indent=4), file=sys.stderr)
     sys.exit(1)
