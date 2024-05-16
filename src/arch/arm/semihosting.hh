@@ -91,13 +91,13 @@ class ArmSemihosting : public BaseSemihosting
     {
         using UintPtr = uint64_t;
 
-        class State : public StateBase<uint64_t, ArmSemihosting>
+        class State : public StateBase<Abi64::UintPtr, ArmSemihosting>
         {
           public:
             // For 64 bit semihosting, the params are pointer to by X1.
             explicit
             State(const ThreadContext *tc) :
-                StateBase<uint64_t, ArmSemihosting>(tc,
+                StateBase<Abi64::UintPtr, ArmSemihosting>(tc,
                         tc->getReg(ArmISA::int_reg::X1), &ArmISA::byteOrder)
             {}
         };
@@ -107,13 +107,13 @@ class ArmSemihosting : public BaseSemihosting
     {
         using UintPtr = uint32_t;
 
-        class State : public StateBase<uint64_t, ArmSemihosting>
+        class State : public StateBase<Abi32::UintPtr, ArmSemihosting>
         {
           public:
             // For 32 bit semihosting, the params are pointer to by R1.
             explicit
             State(const ThreadContext *tc) :
-                StateBase<uint64_t, ArmSemihosting>(tc,
+                StateBase<Abi32::UintPtr, ArmSemihosting>(tc,
                         tc->getReg(ArmISA::int_reg::R1), &ArmISA::byteOrder)
             {}
         };
