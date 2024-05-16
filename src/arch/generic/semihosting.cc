@@ -157,9 +157,18 @@ BaseSemihosting::unserialize(CheckpointIn &cp)
         files[i] = FileBase::create(*this, cp, csprintf("file%i", i));
 }
 
-std::string
+std::optional<std::string>
 BaseSemihosting::readString(ThreadContext *tc, Addr ptr, size_t len)
 {
+    if (len > 65536) {
+      // If the semihosting call passes an incorrect argument, reject it rather
+      // than attempting to allocate a buffer of that size. We chose 64K as
+      // an arbitrary limit here since no valid program should be attempting
+      // to open a file with such a large filename.
+      warn("BaseSemihosting::readString(): attempting to read too large "
+           "(%d bytes) string from %#x", len, ptr);
+      return std::nullopt;
+    }
     std::vector<char> buf(len + 1);
 
     buf[len] = '\0';
@@ -179,7 +188,10 @@ BaseSemihosting::callOpen(
     if (!mode || !name_base)
         return retError(EINVAL);
 
-    std::string fname = readString(tc, name_base, name_size);
+    std::optional<std::string> fnameOpt = readString(tc, name_base, name_size);
+    if (!fnameOpt.has_value())
+        return retError(ERANGE);
+    std::string fname = *fnameOpt;
     if (!fname.empty() && fname.front() != '/' && fname != ":tt" &&
             fname != ":semihosting-features")
         fname = filesRootDir + fname;
@@ -364,9 +376,11 @@ BaseSemihosting::RetErrno
 BaseSemihosting::callRemove(
         ThreadContext *tc, Addr name_base, size_t name_size)
 {
-    std::string fname = readString(tc, name_base, name_size);
+    std::optional<std::string> fname = readString(tc, name_base, name_size);
 
-    if (remove(fname.c_str()) != 0) {
+    if (!fname.has_value()) {
+        return retError(ERANGE);
+    } else if (remove(fname->c_str()) != 0) {
         return retError(errno);
     } else {
         return retOK(0);
@@ -377,10 +391,11 @@ BaseSemihosting::RetErrno
 BaseSemihosting::callRename(ThreadContext *tc, Addr from_addr,
         size_t from_size, Addr to_addr, size_t to_size)
 {
-    std::string from = readString(tc, from_addr, from_size);
-    std::string to = readString(tc, to_addr, to_size);
-
-    if (rename(from.c_str(), to.c_str()) != 0) {
+    std::optional<std::string> from = readString(tc, from_addr, from_size);
+    std::optional<std::string> to = readString(tc, to_addr, to_size);
+    if (!from.has_value() || !to.has_value()) {
+        return retError(ERANGE);
+    } else if (rename(from->c_str(), to->c_str()) != 0) {
         return retError(errno);
     } else {
         return retOK(0);
@@ -402,9 +417,11 @@ BaseSemihosting::callTime(ThreadContext *tc)
 BaseSemihosting::RetErrno
 BaseSemihosting::callSystem(ThreadContext *tc, Addr cmd_addr, size_t cmd_size)
 {
-    const std::string cmd = readString(tc, cmd_addr, cmd_size);
+    const std::optional<std::string> cmd = readString(tc, cmd_addr, cmd_size);
+    if (!cmd.has_value())
+      return retError(ERANGE);
     warn("Semihosting: SYS_SYSTEM not implemented. Guest tried to run: %s\n",
-            cmd);
+            *cmd);
     return retError(EINVAL);
 }
 
