@@ -161,7 +161,7 @@ def makeGpuFSSystem(args):
             0x7D000,
         ]
         sdma_sizes = [0x1000] * 8
-    elif args.gpu_device == "MI200":
+    elif args.gpu_device == "MI200" or args.gpu_device == "MI300X":
         num_sdmas = 5
         sdma_bases = [
             0x4980,
