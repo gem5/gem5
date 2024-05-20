@@ -244,6 +244,10 @@ ISA::readMiscReg(RegIndex idx)
         return base;
     }
 
+    if (idx == misc_reg::Xcr0) {
+        return regVal[idx] | 1;
+    }
+
     return readMiscRegNoEffect(idx);
 }
 
