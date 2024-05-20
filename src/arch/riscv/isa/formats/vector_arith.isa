@@ -980,7 +980,7 @@ def format ViotaFormat(code, category, *flags){{
 
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
-    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+    src2_reg_id = "vecRegClass[_machInst.vs2]"
     # The tail of vector mask inst should be treated as tail-agnostic.
     # We treat it with tail-undisturbed policy, since
     # the test suits only support undisturbed policy.
@@ -989,10 +989,14 @@ def format ViotaFormat(code, category, *flags){{
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
     set_src_reg_idx += setSrcWrapper(old_dest_reg_id)
+    set_src_reg_idx += setSrcVm()
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     vm_decl_rd = vmDeclAndReadData()
     set_vm_idx = setSrcVm()
     set_vlenb = setVlenb()
+
+    code = eiDeclarePrefix(code)
+    code = loopWrapper(code)
 
     microiop = InstObjParams(name+"_micro",
         Name+"Micro",
