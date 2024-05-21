@@ -61,8 +61,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     auto pc_state = tc->pcState().as<PCState>();
 
-    DPRINTFS(Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n",
-             name(), pc_state);
+    DPRINTFS(Faults, tc->getCpuPtr(), "Fault (%s, %u) at PC: %s\n",
+             name(), exception(), pc_state);
 
     if (FullSystem) {
         PrivilegeMode pp = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
