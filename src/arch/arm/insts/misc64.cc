@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2023 Arm Limited
+ * Copyright (c) 2011-2013,2017-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -586,6 +586,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             return;
         }
       case MISCREG_TLBI_VALE1IS:
+      case MISCREG_TLBI_VALE1OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
             auto asid = asid_16bits ? bits(value, 63, 48) :
@@ -935,6 +936,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             return;
         }
       case MISCREG_TLBI_RIPAS2E1IS:
+      case MISCREG_TLBI_RIPAS2E1OS:
         {
             if (EL2Enabled(tc)) {
                 SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -963,6 +965,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             return;
         }
       case MISCREG_TLBI_RIPAS2LE1IS:
+      case MISCREG_TLBI_RIPAS2LE1OS:
         {
             if (EL2Enabled(tc)) {
                 SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
