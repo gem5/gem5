@@ -72,7 +72,6 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
       threadContextDirty(true),
       kvmStateDirty(false),
       usePerf(params.usePerf),
-      allowHybridPerf(params.allowHybridPerf),
       vcpuID(-1), vcpuFD(-1), vcpuMMapSize(0),
       _kvmRun(NULL), mmioRing(NULL),
       pageSize(sysconf(_SC_PAGE_SIZE)),
@@ -108,8 +107,8 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
 
     // If we use perf, we create new PerfKVMCounters
     if (usePerf) {
-        hwCycles.reset(PerfKvmCounter::create(allowHybridPerf));
-        hwInstructions.reset(PerfKvmCounter::create(allowHybridPerf));
+        hwCycles = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
+        hwInstructions = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
     } else {
         inform("Using KVM CPU without perf. The stats related to the number "
                "of cycles and instructions executed by the KVM CPU will not "
@@ -1410,7 +1409,7 @@ BaseKvmCPU::setupInstCounter(uint64_t period)
     assert(hwCycles->attached());
     hwInstructions->attach(cfgInstructions,
                           0, // TID (0 => currentThread)
-                           hwCycles.get());
+                          *hwCycles);
 
     if (period)
         hwInstructions->enableSignals(KVM_KICK_SIGNAL);
