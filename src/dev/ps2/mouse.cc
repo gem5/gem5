@@ -122,7 +122,9 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
       case mouse::ReadData:
         panic("Reading mouse data unimplemented.\n");
       case mouse::ResetWrapMode:
-        panic("Resetting mouse wrap mode unimplemented.\n");
+        DPRINTF(PS2, "Resetting Wrap Mode\n");
+        sendAck();
+        return true;
       case mouse::WrapMode:
         panic("Setting mouse wrap mode unimplemented.\n");
       case mouse::RemoteMode:
