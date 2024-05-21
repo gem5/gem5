@@ -656,12 +656,6 @@ class BaseKvmCPU : public BaseCPU
     /** True if using perf; False otherwise*/
     bool usePerf;
 
-    /**
-     * Whether to permit using hybrid performance counters if hybrid host
-     * architecture is auto-detected.
-     */
-    bool allowHybridPerf;
-
     /** KVM internal ID of the vCPU */
     long vcpuID;
 

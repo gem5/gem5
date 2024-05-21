@@ -72,12 +72,6 @@ class BaseKvmCPU(BaseCPU):
     usePerfOverflow = Param.Bool(
         False, "Use perf event overflow counters (EXPERIMENTAL)"
     )
-    allowHybridPerf = Param.Bool(
-        True,
-        "Enable hybrid performance counters if hybrid host architecture "
-        "detected. Required for accurate stats if gem5 may run on E-core on a "
-        "hybrid host architecture (uncommon).",
-    )
     alwaysSyncTC = Param.Bool(
         False, "Always sync thread contexts on entry/exit"
     )
