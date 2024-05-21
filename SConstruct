@@ -631,8 +631,8 @@ for variant_path in variant_paths:
               "src/SConscript to support that compiler.")))
 
     if env['GCC']:
-        if compareVersions(env['CXXVERSION'], "7") < 0:
-            error('gcc version 7 or newer required.\n'
+        if compareVersions(env['CXXVERSION'], "10") < 0:
+            error('gcc version 10 or newer required.\n'
                   'Installed version:', env['CXXVERSION'])
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
@@ -655,17 +655,6 @@ for variant_path in variant_paths:
         env.Append(TCMALLOC_CCFLAGS=[
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
-
-        if compareVersions(env['CXXVERSION'], "9") < 0:
-            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
-            # in GCC version 8. As of GCC version 9, this is not required.
-            #
-            # In GCC 7 the `libstdc++fs`` library explicit linkage is also
-            # required but the `std::filesystem` is under the `experimental`
-            # namespace(`std::experimental::filesystem`).
-            #
-            # Note: gem5 does not support GCC versions < 7.
-            env.Append(LIBS=['stdc++fs'])
 
     elif env['CLANG']:
         if compareVersions(env['CXXVERSION'], "6") < 0:
