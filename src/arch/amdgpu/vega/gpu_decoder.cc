@@ -1245,7 +1245,7 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_SUB_I16,
         &Decoder::decode_OPU_VOP3__V_PACK_B32_F16,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OPU_VOP3__V_CVT_PK_FP8_F32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -3118,7 +3118,7 @@ namespace VegaISA
         &Decoder::decode_OP_VOP1__V_CLREXCP,
         &Decoder::decode_invalid,
         &Decoder::decode_OP_VOP1__V_SCREEN_PARTITION_4SE_B32,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP1__V_MOV_B64,
         &Decoder::decode_OP_VOP1__V_CVT_F16_U16,
         &Decoder::decode_OP_VOP1__V_CVT_F16_I16,
         &Decoder::decode_OP_VOP1__V_CVT_U16_F16,
@@ -3644,70 +3644,70 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X1_2B_F32,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X1_4B_F32,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X1_16B_F32,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X2_F32,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_F32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_F16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_F16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_F16,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_F16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_F16,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X4_2B_I8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X4_4B_I8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_4X4X4_16B_I8,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X16I8,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X8_I8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X16_I8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X16_I8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X32_I8,
         &Decoder::decode_OP_VOP3P__V_ACCVGPR_READ,
         &Decoder::decode_OP_VOP3P__V_ACCVGPR_WRITE,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_BF16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_BF16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_BF16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_BF16,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_BF16,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_F16,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_F16,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_BF16,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_BF16,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_I32_16X16X64_I8,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_I32_32X32X32_I8,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4F64,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4_F64,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F64_4X4X4_4B_F64,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_BF8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_FP8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_BF8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_FP8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_BF8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_FP8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_BF8,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_FP8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_BF8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_FP8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_BF8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_FP8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_BF8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_FP8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_BF8,
+        &Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_FP8,
     };
 
     GPUStaticInst*
@@ -7296,6 +7296,12 @@ namespace VegaISA
     }
 
     GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_CVT_PK_FP8_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_CVT_PK_FP8_F32(&iFmt->iFmt_VOP3A);
+    }
+
+    GPUStaticInst*
     Decoder::decode_OP_DS__DS_ADD_U32(MachInst iFmt)
     {
         return new Inst_DS__DS_ADD_U32(&iFmt->iFmt_DS);
@@ -7802,15 +7808,13 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_DS__DS_READ_U16_D16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_DS__DS_READ_U16_D16(&iFmt->iFmt_DS);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_DS__DS_READ_U16_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_DS__DS_READ_U16_D16_HI(&iFmt->iFmt_DS);
     }
 
     GPUStaticInst*
@@ -10201,14 +10205,12 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_SHORT_D16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_MUBUF__BUFFER_LOAD_SHORT_D16(&iFmt->iFmt_MUBUF);
     }
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_SHORT_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI(&iFmt->iFmt_MUBUF);
     }
     GPUStaticInst*
     Decoder::decode_OP_MUBUF__BUFFER_LOAD_FORMAT_D16_HI_X(MachInst iFmt)
@@ -11627,6 +11629,12 @@ namespace VegaISA
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
     }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP1__V_MOV_B64(MachInst iFmt)
+    {
+        return new Inst_VOP1__V_MOV_B64(&iFmt->iFmt_VOP1);
+    } // decode_OP_VOP1__V_MOV_B64
 
     GPUStaticInst*
     Decoder::decode_OP_VOP1__V_CVT_F16_U16(MachInst iFmt)
@@ -13166,9 +13174,324 @@ namespace VegaISA
     }
 
     GPUStaticInst*
-    Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X16I8(MachInst iFmt)
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X1_2B_F32(MachInst iFmt)
     {
-        return new Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8(
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X1_2B_F32(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X1_4B_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X1_4B_F32(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X1_16B_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_4X4X1_16B_F32(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X2_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X2_F32(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_F32(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_F16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_F16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_F16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_F16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_F16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_F16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_F16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_F16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_F16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_F16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X4_2B_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X4_4B_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_4X4X4_16B_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X16_I8(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_I32_16X16X16_I8(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X8_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X16_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X32_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_BF16(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_F16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_F16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_BF16(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_I32_16X16X64_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_I32_32X32X32_I8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F64_4X4X4_4B_F64(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F64_4X4X4_4B_F64(
+                &iFmt->iFmt_VOP3P_MAI);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_BF8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_FP8(MachInst iFmt)
+    {
+        fatal("Trying to decode instruction without a class\n");
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4_F64(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F64_16X16X4_F64(
                 &iFmt->iFmt_VOP3P_MAI);
     }
 
@@ -13182,13 +13505,6 @@ namespace VegaISA
     Decoder::decode_OP_VOP3P__V_ACCVGPR_WRITE(MachInst iFmt)
     {
         return new Inst_VOP3P__V_ACCVGPR_WRITE(&iFmt->iFmt_VOP3P);
-    }
-
-    GPUStaticInst*
-    Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4F64(MachInst iFmt)
-    {
-        return new Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64(
-                &iFmt->iFmt_VOP3P_MAI);
     }
 
     GPUStaticInst*

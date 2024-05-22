@@ -32,6 +32,10 @@
 #ifndef __ARCH_VEGA_INSTS_INSTRUCTIONS_HH__
 #define __ARCH_VEGA_INSTS_INSTRUCTIONS_HH__
 
+#include <cstddef>
+#include <type_traits>
+
+#include "arch/amdgpu/common/dtype/mxfp_types.hh"
 #include "arch/amdgpu/vega/gpu_decoder.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/op_encodings.hh"
@@ -9885,6 +9889,38 @@ namespace VegaISA
 
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP1__V_CLREXCP
+
+    class Inst_VOP1__V_MOV_B64 : public Inst_VOP1
+    {
+      public:
+        Inst_VOP1__V_MOV_B64(InFmt_VOP1*);
+        ~Inst_VOP1__V_MOV_B64();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src
+                return 8;
+              case 1: //vdst
+                return 8;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP1__V_MOV_B64
 
     class Inst_VOP1__V_CVT_F16_U16 : public Inst_VOP1
     {
@@ -33090,6 +33126,74 @@ namespace VegaISA
         void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_U16
 
+    class Inst_DS__DS_READ_U16_D16 : public Inst_DS
+    {
+      public:
+        Inst_DS__DS_READ_U16_D16(InFmt_DS*);
+        ~Inst_DS__DS_READ_U16_D16();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 4;
+              case 1: //vgpr_rtn
+                return 2;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_DS__DS_READ_U16_D16
+
+    class Inst_DS__DS_READ_U16_D16_HI : public Inst_DS
+    {
+      public:
+        Inst_DS__DS_READ_U16_D16_HI(InFmt_DS*);
+        ~Inst_DS__DS_READ_U16_D16_HI();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 4;
+              case 1: //vgpr_rtn
+                return 2;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_DS__DS_READ_U16_D16_HI
+
     class Inst_DS__DS_SWIZZLE_B32 : public Inst_DS
     {
       public:
@@ -36773,6 +36877,82 @@ namespace VegaISA
         void initiateAcc(GPUDynInstPtr) override;
         void completeAcc(GPUDynInstPtr) override;
     }; // Inst_MUBUF__BUFFER_LOAD_SSHORT
+
+    class Inst_MUBUF__BUFFER_LOAD_SHORT_D16 : public Inst_MUBUF
+    {
+      public:
+        Inst_MUBUF__BUFFER_LOAD_SHORT_D16(InFmt_MUBUF*);
+        ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 8;
+              case 1: //sgpr_r
+                return 16;
+              case 2: //sgpr_o
+                return 4;
+              case 3: //vgpr_d
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_MUBUF__BUFFER_LOAD_SHORT_D16
+
+    class Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI : public Inst_MUBUF
+    {
+      public:
+        Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI(InFmt_MUBUF*);
+        ~Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //vgpr_a
+                return 8;
+              case 1: //sgpr_r
+                return 16;
+              case 2: //sgpr_o
+                return 4;
+              case 3: //vgpr_d
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
+    }; // Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
 
     class Inst_MUBUF__BUFFER_LOAD_DWORD : public Inst_MUBUF
     {
@@ -43916,11 +44096,668 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3P__V_PK_MOV_B32
 
-    class Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8 : public Inst_VOP3P_MAI
+    template <const int _delta, const int M, const int N, const int K,
+              const int B, typename T1, typename T2, const char **MNEMONIC>
+    class Inst_VOP3P_MAI__V_MFMA : public Inst_VOP3P_MAI
+    {
+
+    private:
+      static constexpr int gprs_a = M * K * B / 64, gprs_b = K * N * B / 64,
+                           gprs_c_d = M * N * B / 64;
+
+    public:
+      Inst_VOP3P_MAI__V_MFMA(InFmt_VOP3P_MAI *iFmt)
+          : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
+      {
+        setFlag(ALU);
+      }
+      ~Inst_VOP3P_MAI__V_MFMA() {}
+
+      int getNumOperands() override {
+        return numDstRegOperands() + numSrcRegOperands();
+      } // getNumOperands
+
+      int numDstRegOperands() override { return 1; }
+      int numSrcRegOperands() override { return 3; }
+
+      int getOperandSize(int opIdx) override {
+        switch (opIdx) {
+        case 0: // src0 "A"
+          return 4*gprs_a;
+        case 1: // src1 "B"
+          return 4*gprs_b;
+        case 2: // src2 "C"
+          return 4*gprs_c_d;
+        case 3: // dst
+          return 4*gprs_c_d;
+        default:
+          fatal("op idx %i out of bounds\n", opIdx);
+          return -1;
+        }
+      } // getOperandSize
+
+    void
+    execute(GPUDynInstPtr gpuDynInst) override
+    {
+        int acc_cd_off = 0;
+        int acc_a_off = 0;
+        int acc_b_off = 0;
+        if (instData.ACC_CD) {
+            acc_cd_off = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            int tmp_acc = extData.ACC;
+            if (tmp_acc & 0x1) {
+                acc_a_off = gpuDynInst->wavefront()->accumOffset;
+            }
+            if (tmp_acc & 0x2) {
+                acc_b_off = gpuDynInst->wavefront()->accumOffset;
+            }
+        }
+
+        alignas(T1) std::byte _src0[sizeof(T1) * gprs_a];
+        alignas(T1) std::byte _src1[sizeof(T1) * gprs_b];
+        alignas(T1) std::byte _src2[sizeof(T1) * gprs_c_d];
+        alignas(T2) std::byte _vdst[sizeof(T2) * gprs_c_d];
+        T1 *src0 = std::launder(reinterpret_cast<T1*>(&_src0));
+        T1 *src1 = std::launder(reinterpret_cast<T1*>(&_src1));
+        T1 *src2 = std::launder(reinterpret_cast<T1*>(&_src2));
+        T2 *vdst = std::launder(reinterpret_cast<T2*>(&_vdst));
+
+        // Handling of src2 is a bit tricky. The operator[] overload cannot
+        // be used for dword count > 2, and the dword count here is 4. Usually
+        // src2 is a VGPR/AccGPR, but it might also be constant. In order to
+        // use operator[] and handle constants, check for VGPR here and set
+        // a delta for each of the src2 GPRs.
+        int delta = isVectorReg(extData.SRC0) ? _delta : 0;
+        for (int i = 0; i < gprs_a; i++) {
+            new (&src0[i]) T1(gpuDynInst, extData.SRC0+acc_a_off+i*delta);
+            src0[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC1) ? _delta : 0;
+        for (int i = 0; i < gprs_b; i++) {
+            new (&src1[i]) T1(gpuDynInst, extData.SRC1+acc_b_off+i*delta);
+            src1[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC2) ? _delta : 0;
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&src2[i]) T1(gpuDynInst, extData.SRC2+acc_cd_off+i*delta);
+            src2[i].readSrc();
+        }
+
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&vdst[i]) T2(gpuDynInst, instData.VDST+acc_cd_off+i*_delta);
+        }
+
+        // These values and meanings are described in the MI300 ISA manual:
+        //
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        //
+        // in section 7.1.4.2. In theory, only the M, N, K, and H values change
+        // for each MFMA instruction.
+
+        // Output layout
+        constexpr int H = _delta == 2 ? 1 : 4;
+        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+        constexpr int M_I = (64 / B_I) / N;
+        constexpr int G = M / (H * M_I);
+
+        float result[M][N];
+
+        // Input layout
+        constexpr int K_L = K / (64 / (M * B));
+
+        for (int block = 0; block < B; block++) {
+            // Load src2 into result. src2 is row major
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    result[i][j] = src2[item][lane];
+                }
+            }
+
+            // Compute new result
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    for (int k = 0; k < K; ++k) {
+                        // src0 is column major, src1 is row major
+                        int lane_A = i + M * (block + B * (k / K_L));
+                        int lane_B = j + N * (block + B * (k / K_L));
+                        int item = k % K_L;
+                        result[i][j] +=
+                          src0[item][lane_A] * src1[item][lane_B];
+                    }
+                }
+            }
+
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    vdst[item][lane] = result[i][j];
+                }
+            }
+        }
+
+        for (int i = 0; i < gprs_c_d; ++i) {
+            vdst[i].write();
+        }
+
+        for (int i = 0; i < gprs_a; i++) {
+            std::destroy_at(&src0[i]);
+        }
+        for (int i = 0; i < gprs_b; i++) {
+            std::destroy_at(&src1[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&src2[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&vdst[i]);
+        }
+    } // execute
+    };
+
+    static const char *MNEM__V_MFMA_F32_4X4X1_16B_F32 =
+        "v_mfma_f32_4x4x1_16b_f32";
+    using Inst_VOP3P_MAI__V_MFMA_F32_4X4X1_16B_F32 =
+        Inst_VOP3P_MAI__V_MFMA<1, 4, 4, 1, 16, ConstVecOperandF32,
+                               VecOperandF32, &MNEM__V_MFMA_F32_4X4X1_16B_F32>;
+
+    static const char *MNEM__V_MFMA_F32_32X32X1_2B_F32 =
+        "v_mfma_f32_32x32x1_2b_f32";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X1_2B_F32 =
+        Inst_VOP3P_MAI__V_MFMA<1, 32, 32, 1, 2, ConstVecOperandF32,
+                               VecOperandF32,
+                               &MNEM__V_MFMA_F32_32X32X1_2B_F32>;
+
+    static const char *MNEM__V_MFMA_F32_32X32X2_F32 =
+        "v_mfma_f32_32x32x2_f32";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X2_F32 =
+        Inst_VOP3P_MAI__V_MFMA<1, 32, 32, 2, 1, ConstVecOperandF32,
+                               VecOperandF32, &MNEM__V_MFMA_F32_32X32X2_F32>;
+
+    static const char *MNEM__V_MFMA_F32_16X16X4_F32 =
+        "v_mfma_f32_16x16x4_f32";
+    using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_F32 =
+        Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 4, 1, ConstVecOperandF32,
+                               VecOperandF32, &MNEM__V_MFMA_F32_16X16X4_F32>;
+
+    static const char *MNEM__V_MFMA_F32_16X16X1_4B_F32 =
+        "v_mfma_f32_16x16x1_4b_f32";
+    using Inst_VOP3P_MAI__V_MFMA_F32_16X16X1_4B_F32 =
+        Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 1, 4, ConstVecOperandF32,
+                               VecOperandF32,
+                               &MNEM__V_MFMA_F32_16X16X1_4B_F32>;
+
+    static const char *MNEM__V_MFMA_F64_4X4X4_4B_F64 =
+        "v_mfma_f64_4x4x4_4b_f64";
+    using Inst_VOP3P_MAI__V_MFMA_F64_4X4X4_4B_F64 =
+        Inst_VOP3P_MAI__V_MFMA<2, 4, 4, 4, 4, ConstVecOperandF64,
+                               VecOperandF64, &MNEM__V_MFMA_F64_4X4X4_4B_F64>;
+
+    static const char *MNEM__V_MFMA_F64_16X16X4_F64 =
+        "v_mfma_f64_16x16x4_f64";
+    using Inst_VOP3P_MAI__V_MFMA_F64_16X16X4_F64 =
+        Inst_VOP3P_MAI__V_MFMA<2, 16, 16, 4, 1, ConstVecOperandF64,
+                               VecOperandF64, &MNEM__V_MFMA_F64_16X16X4_F64>;
+
+
+    template <const int M, const int N, const int K,
+              const int B, typename MXFPT, const char **MNEMONIC>
+    class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
+    {
+
+    private:
+      // Scale GPRs needed by elements / GPR (gpr_ratio)
+      static constexpr int gpr_ratio = 32 / MXFPT::size();
+      static constexpr int gprs_a = M * K * B / (64 * gpr_ratio);
+      static constexpr int gprs_b = K * N * B / (64 * gpr_ratio);
+
+      // Always F32 which has an effective gpr_ratio of 1
+      static constexpr int gprs_c_d = M * N * B / 64;
+
+    public:
+      Inst_VOP3P_MAI__V_MFMA_MXFP(InFmt_VOP3P_MAI *iFmt)
+          : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
+      {
+        setFlag(ALU);
+      }
+      ~Inst_VOP3P_MAI__V_MFMA_MXFP() {}
+
+      int getNumOperands() override {
+        return numDstRegOperands() + numSrcRegOperands();
+      } // getNumOperands
+
+      int numDstRegOperands() override { return 1; }
+      int numSrcRegOperands() override { return 3; }
+
+      int getOperandSize(int opIdx) override {
+        switch (opIdx) {
+        case 0: // src0 "A"
+          return 4*gprs_a;
+        case 1: // src1 "B"
+          return 4*gprs_b;
+        case 2: // src2 "C"
+          return 4*gprs_c_d;
+        case 3: // dst
+          return 4*gprs_c_d;
+        default:
+          fatal("op idx %i out of bounds\n", opIdx);
+          return -1;
+        }
+      } // getOperandSize
+
+    void
+    execute(GPUDynInstPtr gpuDynInst) override
+    {
+        int acc_cd_off = 0;
+        int acc_a_off = 0;
+        int acc_b_off = 0;
+        if (instData.ACC_CD) {
+            acc_cd_off = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            int tmp_acc = extData.ACC;
+            if (tmp_acc & 0x1) {
+                acc_a_off = gpuDynInst->wavefront()->accumOffset;
+            }
+            if (tmp_acc & 0x2) {
+                acc_b_off = gpuDynInst->wavefront()->accumOffset;
+            }
+        }
+
+        // Read the MXFP types as U32 - Consider this "untyped."
+        // A ConstVecOperand needs to be used for src2 as it could be an
+        // inline constant. The Const version provides an operator[] overload
+        // to read inline constants to each lane. The non-const type of src2
+        // should be used for vdst to make it writeable.
+        using T1 = ConstVecOperandU32;
+        using T2 = ConstVecOperandF32;
+        using T3 = VecOperandF32;
+
+        alignas(T1) std::byte _src0[sizeof(T1) * gprs_a];
+        alignas(T1) std::byte _src1[sizeof(T1) * gprs_b];
+        alignas(T2) std::byte _src2[sizeof(T2) * gprs_c_d];
+        alignas(T3) std::byte _vdst[sizeof(T3) * gprs_c_d];
+        T1 *src0 = std::launder(reinterpret_cast<T1*>(&_src0));
+        T1 *src1 = std::launder(reinterpret_cast<T1*>(&_src1));
+        T2 *src2 = std::launder(reinterpret_cast<T2*>(&_src2));
+        T3 *vdst = std::launder(reinterpret_cast<T3*>(&_vdst));
+
+        // Handling of src2 is a bit tricky. The operator[] overload cannot
+        // be used for dword count > 2, and the dword count here is 4. Usually
+        // src2 is a VGPR/AccGPR, but it might also be constant. In order to
+        // use operator[] and handle constants, check for VGPR here and set
+        // a delta for each of the src2 GPRs.
+
+        int delta = isVectorReg(extData.SRC0) ? 1 : 0;
+        for (int i = 0; i < gprs_a; i++) {
+            new (&src0[i]) T1(gpuDynInst, extData.SRC0+acc_a_off+i*delta);
+            src0[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC1) ? 1 : 0;
+        for (int i = 0; i < gprs_b; i++) {
+            new (&src1[i]) T1(gpuDynInst, extData.SRC1+acc_b_off+i*delta);
+            src1[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC2) ? 1 : 0;
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&src2[i]) T2(gpuDynInst, extData.SRC2+acc_cd_off+i*delta);
+            src2[i].readSrc();
+        }
+
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&vdst[i]) T3(gpuDynInst, instData.VDST+acc_cd_off+i);
+        }
+
+        // These values and meanings are described in the MI300 ISA manual:
+        //
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        //
+        // in section 7.1.4.2. In theory, only the M, N, K, and H values change
+        // for each MFMA instruction.
+
+        // Output layout
+        constexpr int H = 4;
+        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+        constexpr int M_I = (64 / B_I) / N;
+        constexpr int G = M / (H * M_I);
+
+        float result[M][N];
+
+        // Input layout
+        constexpr int K_L = K / (64 / (M * B));
+
+        for (int block = 0; block < B; block++) {
+            // Load src2 into result. src2 is row major
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    result[i][j] = src2[item][lane];
+                }
+            }
+
+            // Compute new result
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    for (int k = 0; k < K; ++k) {
+                        // src0 is column major, src1 is row major
+                        int lane_A = i + M * (block + B * (k / K_L));
+                        int lane_B = j + N * (block + B * (k / K_L));
+                        int item = k % K_L;
+
+                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> A_elems;
+                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> B_elems;
+
+                        for (int i = 0; i < gprs_a; ++i) {
+                            A_elems.setDword(i, src0[i][lane_A]);
+                        }
+                        for (int i = 0; i < gprs_b; ++i) {
+                            B_elems.setDword(i, src1[i][lane_B]);
+                        }
+
+                        MXFPT item_A(A_elems.getElem(item));
+                        MXFPT item_B(B_elems.getElem(item));
+
+                        result[i][j] += item_A * item_B;
+                    }
+                }
+            }
+
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    vdst[item][lane] = result[i][j];
+                }
+            }
+        }
+
+        for (int i = 0; i < gprs_c_d; ++i) {
+            vdst[i].write();
+        }
+
+        for (int i = 0; i < gprs_a; i++) {
+            std::destroy_at(&src0[i]);
+        }
+        for (int i = 0; i < gprs_b; i++) {
+            std::destroy_at(&src1[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&src2[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&vdst[i]);
+        }
+    } // execute
+    };
+
+
+    static const char *MNEM__V_MFMA_F32_16X16X16_F16 =
+        "v_mfma_f32_16x16x16_f16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_F16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 16, 1, AMDGPU::mxfloat16,
+                                    &MNEM__V_MFMA_F32_16X16X16_F16>;
+
+    static const char *MNEM__V_MFMA_F32_16X16X4_4B_F16 =
+        "v_mfma_f32_16x16x4_4b_f16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_F16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 4, 4, AMDGPU::mxfloat16,
+                                    &MNEM__V_MFMA_F32_16X16X4_4B_F16>;
+
+    static const char *MNEM__V_MFMA_F32_32X32X4_2B_F16 =
+        "v_mfma_f32_32x32x4_2b_f16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_F16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 4, 2, AMDGPU::mxfloat16,
+                                    &MNEM__V_MFMA_F32_32X32X4_2B_F16>;
+
+    static const char *NMEM__V_MFMA_F32_32X32X8_F16 =
+        "v_mfma_f32_32x32x8_f16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_F16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxfloat16,
+                                    &NMEM__V_MFMA_F32_32X32X8_F16>;
+
+    static const char *MNEM__V_MFMA_F32_4X4X4_16B_F16 =
+        "v_mfma_f32_4x4x4_16b_f16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_F16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxfloat16,
+                                    &MNEM__V_MFMA_F32_4X4X4_16B_F16>;
+
+    static const char *MNEM__V_MFMA_F32_32X32X8_BF16 =
+        "v_mfma_f32_32x32x8_bf16";
+    using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16 =
+        Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxbfloat16,
+                                    &MNEM__V_MFMA_F32_32X32X8_BF16>;
+
+
+    template <const int M, const int N, const int K,
+              const int B, const char **MNEMONIC>
+    class Inst_VOP3P_MAI__V_MFMA_I8 : public Inst_VOP3P_MAI
+    {
+
+    private:
+      // Only int8 exists at the moment, but make the type a parameter.
+      using DT = int8_t;
+      static constexpr int DT_bits = sizeof(DT) * 8;
+
+      // Scale GPRs needed by elements / GPR (gpr_ratio)
+      static constexpr int gpr_ratio = 32 / DT_bits;
+      static constexpr int gprs_a = M * K * B / (64 * gpr_ratio);
+      static constexpr int gprs_b = K * N * B / (64 * gpr_ratio);
+
+      // Always F32 which has an effective gpr_ratio of 1
+      static constexpr int gprs_c_d = M * N * B / 64;
+
+    public:
+      Inst_VOP3P_MAI__V_MFMA_I8(InFmt_VOP3P_MAI *iFmt)
+          : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
+      {
+        setFlag(ALU);
+      }
+      ~Inst_VOP3P_MAI__V_MFMA_I8() {}
+
+      int getNumOperands() override {
+        return numDstRegOperands() + numSrcRegOperands();
+      } // getNumOperands
+
+      int numDstRegOperands() override { return 1; }
+      int numSrcRegOperands() override { return 3; }
+
+      int getOperandSize(int opIdx) override {
+        switch (opIdx) {
+        case 0: // src0 "A"
+          return 4*gprs_a;
+        case 1: // src1 "B"
+          return 4*gprs_b;
+        case 2: // src2 "C"
+          return 4*gprs_c_d;
+        case 3: // dst
+          return 4*gprs_c_d;
+        default:
+          fatal("op idx %i out of bounds\n", opIdx);
+          return -1;
+        }
+      } // getOperandSize
+
+    void
+    execute(GPUDynInstPtr gpuDynInst) override
+    {
+        int acc_cd_off = 0;
+        int acc_a_off = 0;
+        int acc_b_off = 0;
+        if (instData.ACC_CD) {
+            acc_cd_off = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            int tmp_acc = extData.ACC;
+            if (tmp_acc & 0x1) {
+                acc_a_off = gpuDynInst->wavefront()->accumOffset;
+            }
+            if (tmp_acc & 0x2) {
+                acc_b_off = gpuDynInst->wavefront()->accumOffset;
+            }
+        }
+
+        // Read the packed types as U32 - Consider this "untyped."
+        // A ConstVecOperand needs to be used for src2 as it could be an
+        // inline constant. The Const version provides an operator[] overload
+        // to read inline constants to each lane. The non-const type of src2
+        // should be used for vdst to make it writeable.
+        using T1 = ConstVecOperandU32;
+        using T2 = ConstVecOperandI32;
+        using T3 = VecOperandI32;
+
+        alignas(T1) std::byte _src0[sizeof(T1) * gprs_a];
+        alignas(T1) std::byte _src1[sizeof(T1) * gprs_b];
+        alignas(T2) std::byte _src2[sizeof(T2) * gprs_c_d];
+        alignas(T3) std::byte _vdst[sizeof(T3) * gprs_c_d];
+        T1 *src0 = std::launder(reinterpret_cast<T1*>(&_src0));
+        T1 *src1 = std::launder(reinterpret_cast<T1*>(&_src1));
+        T2 *src2 = std::launder(reinterpret_cast<T2*>(&_src2));
+        T3 *vdst = std::launder(reinterpret_cast<T3*>(&_vdst));
+
+        // Handling of src2 is a bit tricky. The operator[] overload cannot
+        // be used for dword count > 2, and the dword count here is 4. Usually
+        // src2 is a VGPR/AccGPR, but it might also be constant. In order to
+        // use operator[] and handle constants, check for VGPR here and set
+        // a delta for each of the src2 GPRs.
+
+        int delta = isVectorReg(extData.SRC0) ? 1 : 0;
+        for (int i = 0; i < gprs_a; i++) {
+            new (&src0[i]) T1(gpuDynInst, extData.SRC0+acc_a_off+i*delta);
+            src0[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC1) ? 1 : 0;
+        for (int i = 0; i < gprs_b; i++) {
+            new (&src1[i]) T1(gpuDynInst, extData.SRC1+acc_b_off+i*delta);
+            src1[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC2) ? 1 : 0;
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&src2[i]) T2(gpuDynInst, extData.SRC2+acc_cd_off+i*delta);
+            src2[i].readSrc();
+        }
+
+        for (int i = 0; i < gprs_c_d; i++) {
+            new (&vdst[i]) T3(gpuDynInst, instData.VDST+acc_cd_off+i);
+        }
+
+        // These values and meanings are described in the MI300 ISA manual:
+        //
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        //
+        // in section 7.1.4.2. In theory, only the M, N, K, and H values change
+        // for each MFMA instruction.
+
+        // Output layout
+        constexpr int H = 4;
+        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+        constexpr int M_I = (64 / B_I) / N;
+        constexpr int G = M / (H * M_I);
+
+        int32_t result[M][N];
+
+        // Input layout
+        constexpr int K_L = K / (64 / (M * B));
+
+        for (int block = 0; block < B; block++) {
+            // Load src2 into result. src2 is row major
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    result[i][j] = src2[item][lane];
+                }
+            }
+
+            // Compute new result
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    for (int k = 0; k < K; ++k) {
+                        // src0 is column major, src1 is row major
+                        int lane_A = i + M * (block + B * (k / K_L));
+                        int lane_B = j + N * (block + B * (k / K_L));
+                        int item = k % K_L;
+
+                        PackedReg<K_L * DT_bits, DT_bits> A_elems;
+                        PackedReg<K_L * DT_bits, DT_bits> B_elems;
+
+                        for (int i = 0; i < gprs_a; ++i) {
+                            A_elems.setDword(i, src0[i][lane_A]);
+                        }
+                        for (int i = 0; i < gprs_b; ++i) {
+                            B_elems.setDword(i, src1[i][lane_B]);
+                        }
+
+                        DT item_A(A_elems.getElem(item));
+                        DT item_B(B_elems.getElem(item));
+
+                        result[i][j] += int32_t(item_A) * int32_t(item_B);
+                    }
+                }
+            }
+
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < N; ++j) {
+                    int item = (i % H) + H * (i/(H*M_I) + G * (block / B_I));
+                    int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                    vdst[item][lane] = result[i][j];
+                }
+            }
+        }
+
+        for (int i = 0; i < gprs_c_d; ++i) {
+            vdst[i].write();
+        }
+
+        for (int i = 0; i < gprs_a; i++) {
+            std::destroy_at(&src0[i]);
+        }
+        for (int i = 0; i < gprs_b; i++) {
+            std::destroy_at(&src1[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&src2[i]);
+        }
+        for (int i = 0; i < gprs_c_d; i++) {
+            std::destroy_at(&vdst[i]);
+        }
+    } // execute
+    };
+
+    static const char *MNEM__V_MFMA_I32_16X16X16_I8 =
+        "v_mfma_i32_16x16x16_i8";
+    using Inst_VOP3P_MAI__V_MFMA_I32_16X16X16_I8 =
+        Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 16, 1,
+                                  &MNEM__V_MFMA_I32_16X16X16_I8>;
+
+
+    class Inst_VOP3__V_CVT_PK_FP8_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8(InFmt_VOP3P_MAI*);
-        ~Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8();
+        Inst_VOP3__V_CVT_PK_FP8_F32(InFmt_VOP3A*);
+        ~Inst_VOP3__V_CVT_PK_FP8_F32();
 
         int
         getNumOperands() override
@@ -43929,20 +44766,18 @@ namespace VegaISA
         } // getNumOperands
 
         int numDstRegOperands() override { return 1; }
-        int numSrcRegOperands() override { return 3; }
+        int numSrcRegOperands() override { return 2; }
 
         int
         getOperandSize(int opIdx) override
         {
             switch (opIdx) {
-              case 0: // src0 "A"
+              case 0: //src_0
                 return 4;
-              case 1: // src1 "B"
+              case 1: //src_1
                 return 4;
-              case 2: // src2 "C"
-                return 16;
-              case 3: // dst
-                return 16;
+              case 2: //vdst
+                return 4;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
                 return -1;
@@ -43950,43 +44785,7 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
-    };
-
-    class Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64 : public Inst_VOP3P_MAI
-    {
-      public:
-        Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64(InFmt_VOP3P_MAI*);
-        ~Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64();
-
-        int
-        getNumOperands() override
-        {
-            return numDstRegOperands() + numSrcRegOperands();
-        } // getNumOperands
-
-        int numDstRegOperands() override { return 1; }
-        int numSrcRegOperands() override { return 3; }
-
-        int
-        getOperandSize(int opIdx) override
-        {
-            switch (opIdx) {
-              case 0: // src0 "A"
-                return 8;
-              case 1: // src1 "B"
-                return 8;
-              case 2: // src2 "C"
-                return 32;
-              case 3: // dst
-                return 32;
-              default:
-                fatal("op idx %i out of bounds\n", opIdx);
-                return -1;
-            }
-        } // getOperandSize
-
-        void execute(GPUDynInstPtr) override;
-    };
+    }; // Inst_VOP3__V_CVT_PK_FP8_F32
 } // namespace VegaISA
 } // namespace gem5
 

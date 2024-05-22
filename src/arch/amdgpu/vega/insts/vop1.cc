@@ -433,7 +433,22 @@ namespace VegaISA
     void
     Inst_VOP1__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                float tmp = src[lane];
+                AMDGPU::mxfloat16 out(tmp);
+
+                vdst[lane] = (out.data >> 16);
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_CVT_F32_F16 class methods ---
 
@@ -454,7 +469,20 @@ namespace VegaISA
     void
     Inst_VOP1__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat16 tmp(src[lane]);
+                vdst[lane] = float(tmp);
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_CVT_RPI_I32_F32 class methods ---
 
@@ -1873,6 +1901,41 @@ namespace VegaISA
     Inst_VOP1__V_CLREXCP::execute(GPUDynInstPtr gpuDynInst)
     {
         panicUnimplemented();
+    } // execute
+    // --- Inst_VOP1__V_MOV_B64 class methods ---
+
+    Inst_VOP1__V_MOV_B64::Inst_VOP1__V_MOV_B64(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_mov_b64")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_MOV_B64
+
+    Inst_VOP1__V_MOV_B64::~Inst_VOP1__V_MOV_B64()
+    {
+    } // ~Inst_VOP1__V_MOV_B64
+
+    // --- description from .arch file ---
+    // D.u = S0.u.
+    // Input and output modifiers not supported; this is an untyped operation.
+    void
+    Inst_VOP1__V_MOV_B64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src(gpuDynInst, instData.SRC0);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP unimplemented for v_mov_b64");
+        panic_if(isSDWAInst(), "SDWA unimplemented for v_mov_b64");
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src[lane];
+            }
+        }
+
+        vdst.write();
     } // execute
     // --- Inst_VOP1__V_CVT_F16_U16 class methods ---
 

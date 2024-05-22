@@ -29,13 +29,76 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/insts/instructions.hh"
-#include "arch/amdgpu/vega/insts/vop3p.hh"
+#include <gtest/gtest.h>
 
-namespace gem5
-{
+#include "arch/amdgpu/common/dtype/mxfp_types.hh"
 
-namespace VegaISA
+template<typename T>
+bool test_raw_mxfp(T raw_mxfp, int bits)
 {
-} // namespace VegaISA
-} // namespace gem5
+    float tmp = float(raw_mxfp);
+    T from_float(tmp);
+
+    // Simply check that casting to float and back yields the same bit values.
+    // Exclude inf/NaN as those have multiple values in some MXFP types.
+    if (raw_mxfp.data != from_float.data &&
+        !std::isnan(tmp) && !std::isinf(tmp)) {
+        return false;
+    }
+
+    return true;
+}
+
+template<typename T>
+int test_type(int bits)
+{
+    T raw_mxfp;
+    int errors = 0;
+
+    int max_val = 1 << bits;
+    for (int val = 0; val < max_val; ++val) {
+        // Raw data is aligned to MSb in MXFP types. Shift into place.
+        raw_mxfp.data = val << (32 - bits);
+        if (!test_raw_mxfp(raw_mxfp, bits)) {
+            errors++;
+        }
+    }
+
+    return errors;
+}
+
+TEST(MxfpTest, MxBf16Test)
+{
+    using T = gem5::AMDGPU::mxbfloat16;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, MxFp16Test)
+{
+    using T = gem5::AMDGPU::mxfloat16;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, MxBf8Test)
+{
+    using T = gem5::AMDGPU::mxbfloat8;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, MxFp8Test)
+{
+    using T = gem5::AMDGPU::mxfloat8;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}

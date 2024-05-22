@@ -29,13 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/insts/instructions.hh"
-#include "arch/amdgpu/vega/insts/vop3p.hh"
+#ifndef __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPE_INFO_HH__
+#define __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPE_INFO_HH__
 
-namespace gem5
-{
+#include "arch/amdgpu/common/dtype/binary32.hh"
+#include "arch/amdgpu/common/dtype/fp16_e5m10.hh"
+#include "arch/amdgpu/common/dtype/fp16_e8m7.hh"
+#include "arch/amdgpu/common/dtype/fp8_e4m3.hh"
+#include "arch/amdgpu/common/dtype/fp8_e5m2.hh"
 
-namespace VegaISA
-{
-} // namespace VegaISA
-} // namespace gem5
+#endif // __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPE_INFO_HH__
