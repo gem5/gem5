@@ -315,12 +315,8 @@ def template JumpExecute {{
             Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
-        ss << mnemonic << ' ';
-        if (QUADRANT == 0x3)
-            ss << registerName(destRegIdx(0)) << ", "
-               << imm << "(" << registerName(srcRegIdx(0)) << ")";
-        else
-            ss << registerName(srcRegIdx(0));
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+           << imm << "(" << registerName(srcRegIdx(0)) << ")";
         return ss.str();
     }
 }};
