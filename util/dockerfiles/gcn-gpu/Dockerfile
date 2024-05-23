@@ -31,6 +31,10 @@ RUN apt -y update && apt -y upgrade && \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb
 
+# gem5 requires gcc 10+
+RUN apt -y install gcc-10 g++-10 cpp-10
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
 # Requirements for ROCm
 RUN apt -y install cmake mesa-common-dev libgflags-dev libgoogle-glog-dev
 
