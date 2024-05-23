@@ -373,30 +373,37 @@ def get_simstat(
     :Returns: The SimStat Object of the current simulation.
 
     """
+    stats_map = {}
+    for r in root:
+        creation_time = datetime.now()
+        time_converstion = (
+            None  # TODO https://gem5.atlassian.net/browse/GEM5-846
+        )
+        final_tick = Root.getInstance().resolveStat("finalTick").value
+        sim_ticks = Root.getInstance().resolveStat("simTicks").value
+        simulated_begin_time = int(final_tick - sim_ticks)
+        simulated_end_time = int(final_tick)
 
-    creation_time = datetime.now()
-    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
-    final_tick = Root.getInstance().resolveStat("finalTick").value
-    sim_ticks = Root.getInstance().resolveStat("simTicks").value
-    simulated_begin_time = int(final_tick - sim_ticks)
-    simulated_end_time = int(final_tick)
+        if prepare_stats:
+            _m5.stats.processDumpQueue()
 
-    if prepare_stats:
-        _m5.stats.processDumpQueue()
+        if prepare_stats:
+            if isinstance(r, list):
+                for obj in r:
+                    _prepare_stats(obj)
+            else:
+                _prepare_stats(r)
 
-    if prepare_stats:
-        if isinstance(root, list):
-            for obj in root:
-                _prepare_stats(obj)
-        else:
-            _prepare_stats(root)
+        stats = _process_simobject_stats(r).__dict__
+        stats["name"] = r.get_name() if r.get_name() else "root"
+        stats_map[stats["name"]] = stats
 
-    stats = _process_simobject_stats(root).__dict__
-    stats["name"] = root.get_name() if root.get_name() else "root"
+    if len(stats_map) == 1:
+        stats_map = stats_map[next(iter(stats_map))]
 
     return SimStat(
         creation_time=creation_time,
         simulated_begin_time=simulated_begin_time,
         simulated_end_time=simulated_end_time,
-        **stats,
+        **stats_map,
     )
