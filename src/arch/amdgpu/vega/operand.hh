@@ -514,6 +514,29 @@ namespace VegaISA
         {
             assert(NumDwords == 1 || NumDwords == 2);
 
+            if (_opIdx >= REG_INT_CONST_POS_MIN &&
+                _opIdx <= REG_INT_CONST_NEG_MAX) {
+                assert(sizeof(DataType) <= sizeof(srfData));
+                DataType misc_val(0);
+                assert(isConstVal(_opIdx));
+                misc_val = (DataType)_gpuDynInst
+                    ->readConstVal<DataType>(_opIdx);
+                std::memcpy((void*)srfData.data(), (void*)&misc_val,
+                            sizeof(DataType));
+
+                return;
+            }
+
+            if (_opIdx == REG_M0 || _opIdx == REG_ZERO || _opIdx == REG_SCC) {
+                assert(sizeof(DataType) <= sizeof(srfData));
+                DataType misc_val(0);
+                misc_val = (DataType)_gpuDynInst->readMiscReg(_opIdx);
+                std::memcpy((void*)srfData.data(), (void*)&misc_val,
+                            sizeof(DataType));
+
+                return;
+            }
+
             switch(_opIdx) {
               case REG_EXEC_LO:
                 {
@@ -682,18 +705,8 @@ namespace VegaISA
                 }
                 break;
               default:
-                {
-                    assert(sizeof(DataType) <= sizeof(srfData));
-                    DataType misc_val(0);
-                    if (isConstVal(_opIdx)) {
-                        misc_val = (DataType)_gpuDynInst
-                            ->readConstVal<DataType>(_opIdx);
-                    } else {
-                        misc_val = (DataType)_gpuDynInst->readMiscReg(_opIdx);
-                    }
-                    std::memcpy((void*)srfData.data(), (void*)&misc_val,
-                                sizeof(DataType));
-                }
+                panic("Invalid special register index: %d\n", _opIdx);
+                break;
             }
         }
 
