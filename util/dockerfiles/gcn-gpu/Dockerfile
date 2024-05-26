@@ -81,7 +81,12 @@ RUN cmake -DOPENCL_DIR="/ROCm-OpenCL-Runtime" \
     make -j$(nproc) && make install
 WORKDIR /
 
-WORKDIR ROCm-OpenCL-Runtime/build
+# We apply a patch to avoid a linking error -- "multiple definition of 'ret_val'"
+# Issue here: https://github.com/ROCm/ROCm-OpenCL-Runtime/issues/113
+WORKDIR /ROCm-OpenCL-Runtime/khronos/icd
+RUN wget -q -O - https://github.com/KhronosGroup/OpenCL-ICD-Loader/pull/101/commits/319ba95eb08aa7c622efae50cb62c7cd7de14c1b.patch | patch -p1
+
+WORKDIR /ROCm-OpenCL-Runtime/build
 RUN cmake -DUSE_COMGR_LIBRARY=ON -DCMAKE_PREFIX_PATH="/opt/rocm" \
     -DCMAKE_BUILD_TYPE=Release .. && \
     make -j$(nproc) && make package
