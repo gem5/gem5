@@ -448,12 +448,12 @@ decode QUADRANT default Unknown::unknown() {
         }
         0x4: decode CFUNCT1 {
             0x0: decode RC2 {
-                0x0: Jump::c_jr({{
+                0x0: CJump::c_jr({{
                     if (RC1 == 0) {
                         return std::make_shared<IllegalInstFault>(
                                 "source reg x0", machInst);
                     }
-                    NPC = rvZext(Rc1);
+                    NPC = rvZext(Rc1 & (~0x1));
                 }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
                     // RC1 == 0 is HINT
@@ -468,9 +468,9 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<BreakpointFault>(
                             xc->pcState());
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                    default: Jump::c_jalr({{
+                    default: CJump::c_jalr({{
                         ra = rvSext(NPC);
-                        NPC = rvZext(Rc1);
+                        NPC = rvZext(Rc1 & (~0x1));
                     }}, IsIndirectControl, IsUncondControl, IsCall);
                 }
                 default: CompressedROp::c_add({{
