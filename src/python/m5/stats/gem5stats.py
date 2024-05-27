@@ -373,6 +373,10 @@ def get_simstat(
     :Returns: The SimStat Object of the current simulation.
 
     """
+
+    if prepare_stats:
+        _m5.stats.processDumpQueue()
+
     stats_map = {}
     for r in root:
         creation_time = datetime.now()
@@ -383,9 +387,6 @@ def get_simstat(
         sim_ticks = Root.getInstance().resolveStat("simTicks").value
         simulated_begin_time = int(final_tick - sim_ticks)
         simulated_end_time = int(final_tick)
-
-        if prepare_stats:
-            _m5.stats.processDumpQueue()
 
         if prepare_stats:
             if isinstance(r, list):
