@@ -398,8 +398,8 @@ let {{
     class LogicRegOp(BasicRegOp):
         abstract = True
         flag_code = '''
-            //Don't have genFlags handle the OF or CF bits
-            uint64_t mask = CFBit | ECFBit | OFBit;
+            //Don't have genFlags handle the OF, CF, or AF bits
+            uint64_t mask = CFBit | ECFBit | OFBit | AFBit;
             uint64_t newFlags = genFlags(PredccFlagBits | PreddfBit |
                     PredezfBit, ext & ~mask, result, PSrcReg1, op2);
             PredezfBit = newFlags & EZFBit;
@@ -407,7 +407,7 @@ let {{
             PredccFlagBits = newFlags & CcFlagMask;
 
             //If a logic microop wants to set these, it wants to set them to 0.
-            PredcfofBits = PredcfofBits & ~((CFBit | OFBit) & ext);
+            PredcfofBits = PredcfofBits & ~((CFBit | OFBit | AFBit) & ext);
             PredecfBit = PredecfBit & ~(ECFBit & ext);
         '''
 
