@@ -89,6 +89,15 @@ isSecureBelowEL3(ThreadContext *tc)
         static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns == 0;
 }
 
+bool
+isSecureAtEL(ThreadContext *tc, ExceptionLevel el)
+{
+    if (ArmSystem::haveEL(tc, EL3) && el == EL3)
+        return true;
+    else
+        return isSecureBelowEL3(tc);
+}
+
 ExceptionLevel
 debugTargetFrom(ThreadContext *tc, bool secure)
 {
