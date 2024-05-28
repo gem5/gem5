@@ -39,6 +39,7 @@ class ExitEvent(Enum):
     EXIT = "exit"  # A standard vanilla exit.
     WORKBEGIN = "workbegin"  # An exit because a ROI has been reached.
     WORKEND = "workend"  # An exit because a ROI has ended.
+    SPATTER_EXIT = "spatter exit"  # An exit because a spatter core has ended.
     SWITCHCPU = "switchcpu"  # An exit needed to switch CPU cores.
     FAIL = "fail"  # An exit because the simulation has failed.
     CHECKPOINT = "checkpoint"  # An exit to load a checkpoint.
@@ -115,6 +116,8 @@ class ExitEvent(Enum):
         elif exit_string.endswith("is finished updating the memory.\n"):
             # This is for the gups generator exit event
             return ExitEvent.EXIT
+        elif exit_string.endswith("received all expected responses."):
+            return ExitEvent.SPATTER_EXIT
         raise NotImplementedError(
             f"Exit event '{exit_string}' not implemented"
         )
