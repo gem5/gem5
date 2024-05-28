@@ -53,6 +53,7 @@ from .exit_event_generators import (
     reset_stats_generator,
     save_checkpoint_generator,
     skip_generator,
+    spatter_exit_generator,
     switch_generator,
     warn_default_decorator,
 )
@@ -281,6 +282,12 @@ class Simulator:
                 "creating a checkpoint and continuing",
             )(),
             ExitEvent.FAIL: exit_generator(),
+            ExitEvent.SPATTER_EXIT: warn_default_decorator(
+                spatter_exit_generator,
+                "spatter exit",
+                "dumping and resetting stats after each sync point. "
+                "Note that there will be num_cores*sync_points spatter_exits.",
+            )(spatter_gen=board.get_processor()),
             ExitEvent.SWITCHCPU: warn_default_decorator(
                 switch_generator,
                 "switch CPU",
@@ -518,9 +525,11 @@ class Simulator:
             self._board._pre_instantiate()
 
             root = Root(
-                full_system=self._full_system
-                if self._full_system is not None
-                else self._board.is_fullsystem(),
+                full_system=(
+                    self._full_system
+                    if self._full_system is not None
+                    else self._board.is_fullsystem()
+                ),
                 board=self._board,
             )
 
