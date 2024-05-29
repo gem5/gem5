@@ -134,7 +134,7 @@ TableWalker::WalkerState::WalkerState() :
     isWrite(false), isFetch(false), isSecure(false),
     isUncacheable(false),
     secureLookup(false), rwTable(false), userTable(false), xnTable(false),
-    pxnTable(false), hpd(false), stage2Req(false),
+    pxnTable(false), hpd(false), sh(0), irgn(0), orgn(0), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),
     mode(BaseMMU::Read), tranType(MMU::NormalTran), l2Desc(l1Desc),
     delayed(false), tableWalker(nullptr)
@@ -281,6 +281,15 @@ TableWalker::drainResume()
         currState = NULL;
         pendingChange();
     }
+}
+
+bool
+TableWalker::uncacheableWalk() const
+{
+    bool disable_cacheability = isStage2 ?
+        currState->hcr.cd :
+        currState->sctlr.c == 0;
+    return disable_cacheability || currState->isUncacheable;
 }
 
 Fault
@@ -664,7 +673,7 @@ TableWalker::processWalk()
             currState->isSecure ? "s" : "ns");
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -819,7 +828,7 @@ TableWalker::processWalkLPAE()
                 desc_addr, currState->isSecure ? "s" : "ns");
     }
 
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -898,7 +907,9 @@ TableWalker::processWalkAArch64()
             tg = GrainMap_tg0[currState->vtcr.tg0];
 
             ps = currState->vtcr.ps;
-            currState->isUncacheable = currState->vtcr.irgn0 == 0;
+            currState->sh = currState->vtcr.sh0;
+            currState->irgn = currState->vtcr.irgn0;
+            currState->orgn = currState->vtcr.orgn0;
         } else {
             switch (bits(currState->vaddr, top_bit)) {
               case 0:
@@ -907,7 +918,9 @@ TableWalker::processWalkAArch64()
                 tsz = 64 - currState->tcr.t0sz;
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd0;
-                currState->isUncacheable = currState->tcr.irgn0 == 0;
+                currState->sh = currState->tcr.sh0;
+                currState->irgn = currState->tcr.irgn0;
+                currState->orgn = currState->tcr.orgn0;
                 vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                     top_bit, tg, tsz, true);
 
@@ -920,7 +933,9 @@ TableWalker::processWalkAArch64()
                 tsz = 64 - currState->tcr.t1sz;
                 tg = GrainMap_tg1[currState->tcr.tg1];
                 currState->hpd = currState->tcr.hpd1;
-                currState->isUncacheable = currState->tcr.irgn1 == 0;
+                currState->sh = currState->tcr.sh1;
+                currState->irgn = currState->tcr.irgn1;
+                currState->orgn = currState->tcr.orgn1;
                 vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                     top_bit, tg, tsz, false);
 
@@ -944,7 +959,9 @@ TableWalker::processWalkAArch64()
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->hcr.e2h ?
                 currState->tcr.hpd0 : currState->tcr.hpd;
-            currState->isUncacheable = currState->tcr.irgn0 == 0;
+            currState->sh = currState->tcr.sh0;
+            currState->irgn = currState->tcr.irgn0;
+            currState->orgn = currState->tcr.orgn0;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, true);
 
@@ -958,7 +975,9 @@ TableWalker::processWalkAArch64()
             tsz = 64 - currState->tcr.t1sz;
             tg = GrainMap_tg1[currState->tcr.tg1];
             currState->hpd = currState->tcr.hpd1;
-            currState->isUncacheable = currState->tcr.irgn1 == 0;
+            currState->sh = currState->tcr.sh1;
+            currState->irgn = currState->tcr.irgn1;
+            currState->orgn = currState->tcr.orgn1;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, false);
 
@@ -980,7 +999,9 @@ TableWalker::processWalkAArch64()
             tsz = 64 - currState->tcr.t0sz;
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->tcr.hpd;
-            currState->isUncacheable = currState->tcr.irgn0 == 0;
+            currState->sh = currState->tcr.sh0;
+            currState->irgn = currState->tcr.irgn0;
+            currState->orgn = currState->tcr.orgn0;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, true);
 
@@ -994,6 +1015,9 @@ TableWalker::processWalkAArch64()
         ps = currState->tcr.ps;
         break;
     }
+
+    currState->isUncacheable = currState->irgn == 0 ||
+                               currState->orgn == 0;
 
     const bool is_atomic = currState->req->isAtomic();
 
@@ -1051,7 +1075,7 @@ TableWalker::processWalkAArch64()
     }
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -1549,6 +1573,24 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
             (1 << 11) |     // LPAE bit
             (te.ns << 9) |  // NS bit
             (sh << 7);
+    }
+}
+
+void
+TableWalker::memAttrsWalkAArch64(TlbEntry &te)
+{
+    te.mtype = TlbEntry::MemoryType::Normal;
+    if (uncacheableWalk()) {
+        te.shareable = 3;
+        te.outerAttrs = 0;
+        te.innerAttrs = 0;
+        te.nonCacheable = true;
+    } else {
+        te.shareable = currState->sh;
+        te.outerAttrs = currState->orgn;
+        te.innerAttrs = currState->irgn;
+        te.nonCacheable = (te.outerAttrs == 0 || te.outerAttrs == 2) &&
+            (te.innerAttrs == 0 || te.innerAttrs == 2);
     }
 }
 
@@ -2182,6 +2224,8 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.xn = currState->xnTable;
     te.pxn = currState->pxnTable;
     te.ap = (currState->rwTable << 1) | (currState->userTable);
+
+    memAttrsWalkAArch64(te);
 
     // Debug output
     DPRINTF(TLB, descriptor.dbgHeader().c_str());

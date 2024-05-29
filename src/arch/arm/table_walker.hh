@@ -905,6 +905,10 @@ class TableWalker : public ClockedObject
         /** Hierarchical access permission disable */
         bool hpd;
 
+        uint8_t sh;
+        uint8_t irgn;
+        uint8_t orgn;
+
         /** Flag indicating if a second stage of lookup is required */
         bool stage2Req;
 
@@ -1133,6 +1137,7 @@ class TableWalker : public ClockedObject
                       LongDescriptor &lDescriptor);
     void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                          LongDescriptor &lDescriptor);
+    void memAttrsWalkAArch64(TlbEntry &te);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 
@@ -1187,6 +1192,9 @@ class TableWalker : public ClockedObject
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting
     bool checkAddrSizeFaultAArch64(Addr addr, int pa_range);
+
+    /// Returns true if the table walk should be uncacheable
+    bool uncacheableWalk() const;
 
     Fault processWalkAArch64();
     void processWalkWrapper();
