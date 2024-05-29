@@ -67,6 +67,22 @@ jobs:
                   path: build/${{ matrix.image }}/gem5.opt
                   retention-days: 5
             - run: echo "This job's status is ${{ job.status }}."
+    # The actions/upload-artifact@v4 action has a special "merge" sub action
+    # which allows for the merging of multiple artifacts into a single one.
+    # This is otherwise not possible as artifacts are immutable after creation
+    # in v4. We createa a merged artifact here as we want to download all the
+    # gem5 build artifacts when running the long tests.
+    merge-gem5-build-artifacts:
+        runs-on: ubuntu-latest
+        needs: build-gem5
+        steps:
+            - name: Merge gem5 build artifacts
+              uses: actions/upload-artifact/merge@v4
+              with:
+                  name: ${{needs.name-artifacts.outputs.build-name}}
+                  path: ${{needs.name-artifacts.outputs.build-name}}*
+                  retention-days: 5
+
 
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
@@ -94,7 +110,7 @@ jobs:
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [name-artifacts, build-gem5]
+        needs: [name-artifacts, merge-gem5-build-artifacts]
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         steps:
             - name: Clean runner
@@ -104,55 +120,16 @@ jobs:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
                   ref: develop
-    # download all artifacts for each test
-    # since long tests can't start until the build matrix completes,
-    # we download all artifacts from the build for each test
-    # in this matrix
+            # download all artifacts for each test. Thoguh this is inelegant,
+            # it's simpler than figuring otu which long tests requires which
+            # binary.
             - uses: actions/download-artifact@v4
               with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}ALL
-                  path: build/ALL
-            - run: chmod u+x build/ALL/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}ALL_CHI
-                  path: build/ALL_CHI
-            - run: chmod u+x build/ALL_CHI/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}ARM
-                  path: build/ARM
-            - run: chmod u+x build/ARM/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}ALL_MSI
-                  path: build/ALL_MSI
-            - run: chmod u+x build/ALL_MSI/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}ALL_MESI_Two_Level
-                  path: build/ALL_MESI_Two_Level
-            - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}NULL
-                  path: build/NULL
-            - run: chmod u+x build/NULL/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}NULL_MI_example
-                  path: build/NULL_MI_example
-            - run: chmod u+x build/NULL_MI_example/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}RISCV
-                  path: build/RISCV
-            - run: chmod u+x build/RISCV/gem5.opt
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}VEGA_X86
-                  path: build/VEGA_X86
-            - run: chmod u+x build/VEGA_X86/gem5.opt
+                  name: ${{needs.name-artifacts.outputs.build-name}}
+            # The upload/download GitHub actions do not preserve the executable
+            # bit of the files. We need to set the executable bit for the
+            # gem5.opt binaries we've just downloaded.
+            - run: find build -name "gem5.opt" | xargs chmod u+x
     # run test
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
