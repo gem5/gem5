@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Arm Limited
+// Copyright (c) 2011-2024 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -553,7 +553,7 @@ namespace Aarch64
                               case MISCREG_TLBI_RVAE3:
                               case MISCREG_TLBI_RVALE3:
                                 return new Tlbi64LocalHub(
-                                  machInst, miscReg, rt);
+                                  machInst, miscReg, rt, dec.dvmEnabled);
                               case MISCREG_TLBI_ALLE3IS:
                               case MISCREG_TLBI_ALLE3OS:
                               case MISCREG_TLBI_ALLE2IS:

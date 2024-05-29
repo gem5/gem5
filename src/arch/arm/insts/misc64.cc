@@ -500,10 +500,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiVmall(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false); // shareable
+                shareable); // shareable
         }
     },
 
@@ -698,10 +703,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiVa(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 false); // last level only
         }
     },
@@ -776,10 +786,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiAsid(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false); // shareable
+                shareable); // shareable
         }
     },
 
@@ -812,10 +827,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiVaa(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 false); // last level
         }
     },
@@ -851,10 +871,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiVaa(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 true); // last level
         }
     },
@@ -950,10 +975,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             tlbiRva(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 false); // last level only
         }
     },
@@ -989,10 +1019,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiRvaa(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 false); // last level only
         }
     },
@@ -1028,10 +1063,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             tlbiRva(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 true); // last level only
         }
     },
@@ -1067,10 +1107,15 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
             const TranslationRegime regime = ELIsInHost(tc, EL0) ?
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
             TlbiOp64::tlbiRvaa(tc, value,
                 isSecureAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
-                false, // shareable
+                shareable, // shareable
                 true); // last level only
         }
     },
