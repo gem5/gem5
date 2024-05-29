@@ -24,22 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .abstract_stat import AbstractStat
-from .group import Group
-from .jsonloader import JsonLoader
-from .serializable_stat import SerializableStat
-from .simstat import SimStat
-from .statistic import Statistic
-from .storagetype import StorageType
-from .timeconversion import TimeConversion
-
-__all__ = [
-    "AbstractStat",
-    "Group",
-    "SimStat",
-    "Statistic",
-    "TimeConversion",
-    "StorageType",
-    "SerializableStat",
-    "JsonLoader",
-]
+from .abstract_stat import *
+from .group import *
+from .jsonloader import *
+from .serializable_stat import *
+from .simstat import *
+from .statistic import *
+from .storagetype import *
+from .timeconversion import *
