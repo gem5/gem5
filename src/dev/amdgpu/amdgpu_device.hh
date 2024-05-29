@@ -196,6 +196,7 @@ class AMDGPUDevice : public PciDevice
      * Set handles to GPU blocks.
      */
     void setDoorbellType(uint32_t offset, QueueType qt, int ip_id = 0);
+    void unsetDoorbell(uint32_t offset);
     void processPendingDoorbells(uint32_t offset);
     void setSDMAEngine(Addr offset, SDMAEngine *eng);
 

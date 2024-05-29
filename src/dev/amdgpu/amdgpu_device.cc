@@ -517,10 +517,13 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
              offset);
 
         // We have to ACK the PCI packet immediately, so create a copy of the
-        // packet here to send again.
+        // packet here to send again. The packet data contains the value of
+        // the doorbell to write so we need to copy that as the original
+        // packet gets deleted after the PCI write() method returns.
         RequestPtr pending_req(pkt->req);
         PacketPtr pending_pkt = Packet::createWrite(pending_req);
         uint8_t *pending_data = new uint8_t[pkt->getSize()];
+        memcpy(pending_data, pkt->getPtr<uint8_t>(), pkt->getSize());
         pending_pkt->dataDynamic(pending_data);
 
         pendingDoorbellPkts.emplace(offset, pending_pkt);
@@ -707,6 +710,12 @@ AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt, int ip_id)
     DPRINTF(AMDGPUDevice, "Setting doorbell type for %x\n", offset);
     doorbells[offset].qtype = qt;
     doorbells[offset].ip_id = ip_id;
+}
+
+void
+AMDGPUDevice::unsetDoorbell(uint32_t offset)
+{
+    doorbells.erase(offset);
 }
 
 void

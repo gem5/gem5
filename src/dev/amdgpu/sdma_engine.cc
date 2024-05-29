@@ -269,6 +269,7 @@ SDMAEngine::deallocateRLCQueues()
     for (auto doorbell: rlcInfo) {
         if (doorbell) {
             unregisterRLCQueue(doorbell);
+            gpuDevice->unsetDoorbell(doorbell);
         }
     }
 }
