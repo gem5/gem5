@@ -54,9 +54,7 @@ class Group(AbstractStat):
             str, Union["Group", Statistic, List["Group"], List["Statistic"]]
         ],
     ):
-        if type is None:
-            self.type = "Group"
-        else:
+        if type:
             self.type = type
 
         self.time_conversion = time_conversion
