@@ -44202,7 +44202,15 @@ namespace VegaISA
 
         // Output layout
         constexpr int H = _delta == 2 ? 1 : 4;
-        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+
+        // This replaces `constexpr int B_I = std::ceil(64.0f / (N * M / H));`
+        // which failed clang compiler tests as it's not a constant expression.
+        constexpr float B_I_f = 64.0f / (N * M / H);
+        constexpr int B_I =
+            (static_cast<float>(static_cast<int>(B_I_f)) == B_I_f)
+            ? static_cast<int32_t>(B_I_f)
+            : static_cast<int32_t>(B_I_f) + ((B_I_f > 0) ? 1 : 0);
+
         constexpr int M_I = (64 / B_I) / N;
         constexpr int G = M / (H * M_I);
 
@@ -44431,7 +44439,14 @@ namespace VegaISA
 
         // Output layout
         constexpr int H = 4;
-        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+
+        // This replaces `constexpr int B_I = std::ceil(64.0f / (N * M / H));`
+        // which failed clang compiler tests as it's not a constant expression.
+        constexpr float B_I_f = 64.0f / (N * M / H);
+        constexpr int B_I =
+            (static_cast<float>(static_cast<int>(B_I_f)) == B_I_f)
+            ? static_cast<int32_t>(B_I_f)
+            : static_cast<int32_t>(B_I_f) + ((B_I_f > 0) ? 1 : 0);
         constexpr int M_I = (64 / B_I) / N;
         constexpr int G = M / (H * M_I);
 
@@ -44670,7 +44685,15 @@ namespace VegaISA
 
         // Output layout
         constexpr int H = 4;
-        constexpr int B_I = std::ceil(64.0f / (N * M / H));
+
+        // This replaces `constexpr int B_I = std::ceil(64.0f / (N * M / H));`
+        // which failed clang compiler tests as it's not a constant expression.
+        constexpr float B_I_f = 64.0f / (N * M / H);
+        constexpr int B_I =
+            (static_cast<float>(static_cast<int>(B_I_f)) == B_I_f)
+            ? static_cast<int32_t>(B_I_f)
+            : static_cast<int32_t>(B_I_f) + ((B_I_f > 0) ? 1 : 0);
+
         constexpr int M_I = (64 / B_I) / N;
         constexpr int G = M / (H * M_I);
 
