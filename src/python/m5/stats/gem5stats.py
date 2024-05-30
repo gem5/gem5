@@ -379,15 +379,6 @@ def get_simstat(
 
     stats_map = {}
     for r in root:
-        creation_time = datetime.now()
-        time_converstion = (
-            None  # TODO https://gem5.atlassian.net/browse/GEM5-846
-        )
-        final_tick = Root.getInstance().resolveStat("finalTick").value
-        sim_ticks = Root.getInstance().resolveStat("simTicks").value
-        simulated_begin_time = int(final_tick - sim_ticks)
-        simulated_end_time = int(final_tick)
-
         if prepare_stats:
             if isinstance(r, list):
                 for obj in r:
@@ -401,6 +392,13 @@ def get_simstat(
 
     if len(stats_map) == 1:
         stats_map = stats_map[next(iter(stats_map))]
+
+    creation_time = datetime.now()
+    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
+    final_tick = Root.getInstance().resolveStat("finalTick").value
+    sim_ticks = Root.getInstance().resolveStat("simTicks").value
+    simulated_begin_time = int(final_tick - sim_ticks)
+    simulated_end_time = int(final_tick)
 
     return SimStat(
         creation_time=creation_time,
