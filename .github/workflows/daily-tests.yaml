@@ -85,7 +85,7 @@ jobs:
     # gem5 build artifacts when running the long tests.
     merge-gem5-build-artifacts:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latestt
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [build-gem5, name-artifacts]
         steps:
             - name: Merge gem5 build artifacts
@@ -94,6 +94,7 @@ jobs:
                   name: ${{needs.name-artifacts.outputs.build-name}}
                   pattern: ${{needs.name-artifacts.outputs.build-name}}*
                   retention-days: 1
+                  compression-level: 9
 
 
   # this builds both unittests.fast and unittests.debug
