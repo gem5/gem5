@@ -76,7 +76,7 @@ jobs:
               with:
                   name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
                   path: '*build/${{ matrix.image }}/gem5.opt'
-                  retention-days: 5
+                  retention-days: 1
             - run: echo "This job's status is ${{ job.status }}."
     # The actions/upload-artifact@v4 action has a special "merge" sub action
     # which allows for the merging of multiple artifacts into a single one.
@@ -84,7 +84,8 @@ jobs:
     # in v4. We createa a merged artifact here as we want to download all the
     # gem5 build artifacts when running the long tests.
     merge-gem5-build-artifacts:
-        runs-on: ubuntu-latest
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latestt
         needs: [build-gem5, name-artifacts]
         steps:
             - name: Merge gem5 build artifacts
@@ -92,7 +93,7 @@ jobs:
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}
                   pattern: ${{needs.name-artifacts.outputs.build-name}}*
-                  retention-days: 5
+                  retention-days: 1
 
 
   # this builds both unittests.fast and unittests.debug
@@ -184,7 +185,6 @@ jobs:
             - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
-                  path: build/ALL
             - run: chmod u+x build/ALL/gem5.opt
             - name: long ${{ matrix.test-type }} gem5_library_example_tests
               working-directory: ${{ github.workspace }}/tests
