@@ -26,6 +26,7 @@
 
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Optional,
@@ -62,6 +63,23 @@ class Group(AbstractStat):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for attr in self.__dict__:
+            obj = getattr(self, attr)
+            if isinstance(obj, AbstractStat):
+                if (predicate and predicate(attr)) or not predicate:
+                    to_return.append(obj)
+                if recursive:
+                    to_return = to_return + obj.children(
+                        predicate=predicate, recursive=True
+                    )
+        return to_return
+
 
 class SimObjectGroup(Group):
     """A group of statistics encapulated within a SimObject."""
@@ -93,30 +111,22 @@ class SimObjectVectorGroup(Group):
     def __len__(self):
         return len(self.value)
 
-    def get_all_stats_of_name(self, name: str) -> List[AbstractStat]:
-        """
-        Get all the stats in the vector of that name. Useful for performing
-        operations on all the stats of the same name in a vector.
-        """
-        to_return = []
-        for stat in self.value:
-            if hasattr(stat, name):
-                to_return.append(getattr(stat, name))
-
-        # If the name is in the format "sim.bla.whatever", we are looking for
-        # the "bla.whatever" stats in the "sim" group.
-        # This is messy, but it works.
-        name_split = name.split(".")
-        if len(name_split) == 1:
-            return to_return
-
-        if name_split[0] not in self:
-            return to_return
-
-        to_return.extend(
-            self[name_split[0]].get_all_stats_of_name(".".join(name_split[1:]))
-        )
-        return to_return
-
     def __getitem__(self, item: int):
         return self.value[item]
+
+    def __contains__(self, item):
+        if isinstance(item, int):
+            return item >= 0 and item < len(self)
+
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for child in self.value:
+            to_return = to_return + child.children(
+                predicate=predicate, recursive=recursive
+            )
+
+        return to_return
