@@ -27,8 +27,10 @@
 from abc import ABC
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
+    List,
     Optional,
     Union,
 )
@@ -102,16 +104,32 @@ class Vector(Statistic):
             description=description,
         )
 
-    def __getitem__(self, index: Union[int, str, float]) -> Scalar:
+    def __getitem__(self, item: Union[int, str, float]) -> Scalar:
         assert self.value != None
         # In the case of string, we cast strings to integers of floats if they
         # are numeric. This avoids users having to cast strings to integers.
-        if isinstance(index, str):
-            if index.isindex():
-                index = int(index)
-            elif index.isnumeric():
-                index = float(index)
-        return self.value[index]
+        if isinstance(item, str):
+            if item.isdigit():
+                item = int(item)
+            elif item.isnumeric():
+                item = float(item)
+        return self.value[item]
+
+    def __contains__(self, item) -> bool:
+        assert self.value != None
+        if isinstance(item, str):
+            if item.isdigit():
+                item = int(item)
+            elif item.isnumeric():
+                item = float(item)
+        return item in self.value
+
+    def __iner__(self) -> None:
+        return iter(self.value)
+
+    def __len__(self) -> int:
+        assert self.value != None
+        return len(self.value.values())
 
     def size(self) -> int:
         """
@@ -140,6 +158,26 @@ class Vector(Statistic):
         """
         assert self.value != None
         return sum(float(self.value[key]) for key in self.values)
+
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for attr in self.value.keys():
+            obj = self.value[attr]
+            if isinstance(obj, AbstractStat):
+                if (
+                    isinstance(attr, str)
+                    and (predicate and predicate(attr))
+                    or not predicate
+                ):
+                    to_return.append(obj)
+                to_return = to_return + obj.children(
+                    predicate=predicate, recursive=True
+                )
+        return to_return
 
 
 class Vector2d(Statistic):
@@ -179,6 +217,12 @@ class Vector2d(Statistic):
         """Returns the total number of elements."""
         return self.x_size() * self.y_size()
 
+    def __len__(self) -> int:
+        return self.x_size()
+
+    def __iter__(self):
+        return iter(self.keys())
+
     def total(self) -> int:
         """The total (sum) of all the entries in the 2d vector/"""
         assert self.value is not None
@@ -198,6 +242,34 @@ class Vector2d(Statistic):
             elif index.isnumeric():
                 index = float(index)
         return self.value[index]
+
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for attr in self.value.keys():
+            obj = self.value[attr]
+            if (
+                isinstance(attr, str)
+                and (predicate and predicate(attr))
+                or not predicate
+            ):
+                to_return.append(obj)
+            to_return = to_return + obj.children(
+                predicate=predicate, recursive=True
+            )
+        return to_return
+
+    def __contains__(self, item) -> bool:
+        assert self.value is not None
+        if isinstance(item, str):
+            if item.isdigit():
+                item = int(item)
+            elif item.isnumeric():
+                item = float(item)
+        return item in self.value
 
 
 class Distribution(Vector):
