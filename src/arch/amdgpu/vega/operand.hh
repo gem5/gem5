@@ -579,8 +579,30 @@ namespace VegaISA
               case REG_SRC_SWDA:
               case REG_SRC_DPP:
               case REG_SRC_LITERAL:
-                assert(NumDwords == 1);
+                /**
+                 * From the Vega specification:
+                 * When a literal constant is used with a 64 bit instruction,
+                 * the literal is expanded to 64 bits by: padding the LSBs
+                 * with zeros for floats, padding the MSBs with zeros for
+                 * unsigned ints, and by sign-extending signed ints.
+                 */
                 srfData[0] = _gpuDynInst->srcLiteral();
+                if constexpr (NumDwords == 2) {
+                    if constexpr (std::is_integral_v<DataType>) {
+                        if constexpr (std::is_signed_v<DataType>) {
+                            if (bits(srfData[0], 31, 31) == 1) {
+                                srfData[1] = 0xffffffff;
+                            } else {
+                                srfData[1] = 0;
+                            }
+                        } else {
+                            srfData[1] = 0;
+                        }
+                    } else {
+                        srfData[1] = _gpuDynInst->srcLiteral();
+                        srfData[0] = 0;
+                    }
+                }
                 break;
               case REG_SHARED_BASE:
                 {
