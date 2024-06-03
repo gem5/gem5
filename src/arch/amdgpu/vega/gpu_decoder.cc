@@ -3144,7 +3144,7 @@ namespace VegaISA
         &Decoder::decode_OP_VOP1__V_SAT_PK_U8_I16,
         &Decoder::decode_invalid,
         &Decoder::decode_OP_VOP1__V_SWAP_B32,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP1__V_ACCVGPR_MOV_B32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -8622,7 +8622,6 @@ namespace VegaISA
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORD(MachInst iFmt)
     {
         return new Inst_FLAT__FLAT_STORE_DWORD(&iFmt->iFmt_FLAT);
-        return nullptr;
     }
 
     GPUStaticInst*
@@ -9898,29 +9897,25 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_UBYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_SBYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_USHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_USHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SSHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_LOAD_SSHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -9950,8 +9945,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_BYTE(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_BYTE(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -9964,8 +9958,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_SHORT(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -11782,6 +11775,12 @@ namespace VegaISA
     {
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP1__V_ACCVGPR_MOV_B32(MachInst iFmt)
+    {
+        return new Inst_VOP1__V_ACCVGPR_MOV_B32(&iFmt->iFmt_VOP1);
     }
 
     GPUStaticInst*
