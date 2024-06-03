@@ -254,7 +254,7 @@ class DataTranslation : public BaseMMU::Translation
            BaseMMU::Mode mode)
     {
         assert(state);
-        assert(mode == state->mode);
+        assert(mode == state->mode || req->isCacheClean());
         if (state->finish(fault, index)) {
             if (state->getFault() == NoFault) {
                 // Don't access the request if faulted (due to squash)
