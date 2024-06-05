@@ -142,6 +142,7 @@ class SMMUTranslationProcess : public SMMUProcess
             addr(0), addrMask(0), writable(false)
         {}
 
+        TranslResult(const TranslResult&) = default;
         TranslResult& operator=(const TranslResult &rhs) = default;
 
         bool isFaulting() const { return fault.isFaulting(); }
