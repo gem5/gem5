@@ -238,6 +238,7 @@ BaseSemihosting::callWriteC(ThreadContext *tc, InPlaceArg arg)
 
     DPRINTF(Semihosting, "Semihosting SYS_WRITEC('%c')\n", c);
     std::cout.put(c);
+    std::cout.flush();
 
     return retOK(0);
 }
@@ -250,6 +251,7 @@ BaseSemihosting::callWrite0(ThreadContext *tc, InPlaceArg arg)
     std::string str;
     proxy.readString(str, arg.addr);
     std::cout.write(str.c_str(), str.size());
+    std::cout.flush();
 
     return retOK(0);
 }
