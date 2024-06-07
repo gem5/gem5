@@ -132,9 +132,8 @@ TableWalker::WalkerState::WalkerState() :
     sctlr(0), scr(0), cpsr(0), tcr(0),
     htcr(0), hcr(0), vtcr(0),
     isWrite(false), isFetch(false), isSecure(false),
-    isUncacheable(false),
-    secureLookup(false), rwTable(false), userTable(false), xnTable(false),
-    pxnTable(false), hpd(false), sh(0), irgn(0), orgn(0), stage2Req(false),
+    isUncacheable(false), longDescData(std::nullopt),
+    hpd(false), sh(0), irgn(0), orgn(0), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),
     mode(BaseMMU::Read), tranType(MMU::NormalTran), l2Desc(l1Desc),
     delayed(false), tableWalker(nullptr)
@@ -366,6 +365,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     currState->mode = _mode;
     currState->tranType = tranType;
     currState->isSecure = secure;
+    currState->secureLookup = secure;
     currState->physAddrRange = _physAddrRange;
 
     /** @todo These should be cached or grabbed from cached copies in
@@ -433,14 +433,14 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
 
     if (long_desc_format) {
         // Helper variables used for hierarchical permissions
-        currState->secureLookup = currState->isSecure;
-        currState->rwTable = true;
-        currState->userTable = true;
-        currState->xnTable = false;
-        currState->pxnTable = false;
-
+        currState->longDescData = WalkerState::LongDescData();
+        currState->longDescData->rwTable = true;
+        currState->longDescData->userTable = true;
+        currState->longDescData->xnTable = false;
+        currState->longDescData->pxnTable = false;
         ++stats.walksLongDescriptor;
     } else {
+        currState->longDescData = std::nullopt;
         ++stats.walksShortDescriptor;
     }
 
@@ -677,7 +677,7 @@ TableWalker::processWalk()
         flag.set(Request::UNCACHEABLE);
     }
 
-    if (currState->isSecure) {
+    if (currState->secureLookup) {
         flag.set(Request::SECURE);
     }
 
@@ -703,7 +703,7 @@ TableWalker::processWalkLPAE()
     stats.walkWaitTime.sample(curTick() - currState->startTime);
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->isSecure)
+    if (currState->secureLookup)
         flag.set(Request::SECURE);
 
     // work out which base address register to use, if in hyp mode we always
@@ -1079,7 +1079,7 @@ TableWalker::processWalkAArch64()
         flag.set(Request::UNCACHEABLE);
     }
 
-    if (currState->isSecure) {
+    if (currState->secureLookup) {
         flag.set(Request::SECURE);
     }
 
@@ -1112,10 +1112,12 @@ TableWalker::walkAddresses(Addr ttbr, GrainSize tg, int tsz, int pa_range)
                 "Walk Cache hit: va=%#x, level=%d, table address=%#x\n",
                 currState->vaddr, entry->lookupLevel, entry->pfn);
 
-        currState->xnTable = entry->xn;
-        currState->pxnTable = entry->pxn;
-        currState->rwTable = bits(entry->ap, 1);
-        currState->userTable = bits(entry->ap, 0);
+        if (currState->longDescData.has_value()) {
+            currState->longDescData->xnTable = entry->xn;
+            currState->longDescData->pxnTable = entry->pxn;
+            currState->longDescData->rwTable = bits(entry->ap, 1);
+            currState->longDescData->userTable = bits(entry->ap, 0);
+        }
 
         table_addr = entry->pfn;
         first_level = (LookupLevel)(entry->lookupLevel + 1);
@@ -1668,7 +1670,7 @@ TableWalker::doL1Descriptor()
                 flag.set(Request::UNCACHEABLE);
             }
 
-            if (currState->isSecure)
+            if (currState->secureLookup)
                 flag.set(Request::SECURE);
 
             fetchDescriptor(
@@ -1786,13 +1788,17 @@ TableWalker::doLongDescriptor()
             // Set hierarchical permission flags
             currState->secureLookup = currState->secureLookup &&
                 currState->longDesc.secureTable();
-            currState->rwTable = currState->rwTable &&
+            currState->longDescData->rwTable =
+                currState->longDescData->rwTable &&
                 (currState->longDesc.rwTable() || currState->hpd);
-            currState->userTable = currState->userTable &&
+            currState->longDescData->userTable =
+                currState->longDescData->userTable &&
                 (currState->longDesc.userTable() || currState->hpd);
-            currState->xnTable = currState->xnTable ||
+            currState->longDescData->xnTable =
+                currState->longDescData->xnTable ||
                 (currState->longDesc.xnTable() && !currState->hpd);
-            currState->pxnTable = currState->pxnTable ||
+            currState->longDescData->pxnTable =
+                currState->longDescData->pxnTable ||
                 (currState->longDesc.pxnTable() && !currState->hpd);
 
             // Set up next level lookup
@@ -2221,9 +2227,10 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
 
     te.regime = currState->regime;
 
-    te.xn = currState->xnTable;
-    te.pxn = currState->pxnTable;
-    te.ap = (currState->rwTable << 1) | (currState->userTable);
+    te.xn = currState->longDescData->xnTable;
+    te.pxn = currState->longDescData->pxnTable;
+    te.ap = (currState->longDescData->rwTable << 1) |
+            (currState->longDescData->userTable);
 
     memAttrsWalkAArch64(te);
 
@@ -2279,15 +2286,16 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
             dynamic_cast<LongDescriptor &>(descriptor);
 
         te.tg = l_descriptor.grainSize;
-        te.xn |= currState->xnTable;
-        te.pxn = currState->pxnTable || l_descriptor.pxn();
+        te.xn |= currState->longDescData->xnTable;
+        te.pxn = currState->longDescData->pxnTable || l_descriptor.pxn();
         if (isStage2) {
             // this is actually the HAP field, but its stored in the same bit
             // possitions as the AP field in a stage 1 translation.
             te.hap = l_descriptor.ap();
         } else {
-           te.ap = ((!currState->rwTable || descriptor.ap() >> 1) << 1) |
-               (currState->userTable && (descriptor.ap() & 0x1));
+           te.ap = ((!currState->longDescData->rwTable ||
+                     descriptor.ap() >> 1) << 1) |
+               (currState->longDescData->userTable && (descriptor.ap() & 0x1));
         }
         if (currState->aarch64)
             memAttrsAArch64(currState->tc, te, l_descriptor);
