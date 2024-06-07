@@ -890,17 +890,24 @@ class TableWalker : public ClockedObject
 
         /** If the access comes from the secure state. */
         bool isSecure;
+        /** Whether lookups should be treated as using the secure state.
+         * This is usually the same as isSecure, but can be set to false by the
+         * long descriptor table attributes. */
+        bool secureLookup = false;
 
         /** True if table walks are uncacheable (for table descriptors) */
         bool isUncacheable;
 
         /** Helper variables used to implement hierarchical access permissions
-         * when the long-desc. format is used (LPAE only) */
-        bool secureLookup;
-        bool rwTable;
-        bool userTable;
-        bool xnTable;
-        bool pxnTable;
+         * when the long-desc. format is used. */
+        struct LongDescData
+        {
+            bool rwTable = false;
+            bool userTable = false;
+            bool xnTable = false;
+            bool pxnTable = false;
+        };
+        std::optional<LongDescData> longDescData;
 
         /** Hierarchical access permission disable */
         bool hpd;
