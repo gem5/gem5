@@ -179,6 +179,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -650,6 +651,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -1224,6 +1226,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
@@ -1348,6 +1351,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 

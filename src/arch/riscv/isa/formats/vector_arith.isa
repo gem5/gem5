@@ -209,6 +209,7 @@ def format VectorIntFormat(code, category, *flags) {{
         vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb()
+    set_vlen = setVlen() if need_elem_idx else ""
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
@@ -217,6 +218,7 @@ def format VectorIntFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb' : set_vlenb,
+         'set_vlen' : set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
@@ -484,6 +486,7 @@ def format VectorIntMaskFormat(code, category, *flags) {{
         vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb()
+    set_vlen = setVlen() if need_elem_idx else ""
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
@@ -492,6 +495,7 @@ def format VectorIntMaskFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
@@ -620,6 +624,7 @@ def format VectorFloatFormat(code, category, *flags) {{
         vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb();
+    set_vlen = setVlen() if need_elem_idx else ""
 
     varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
@@ -629,6 +634,7 @@ def format VectorFloatFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(2),
          'declare_varith_template': varith_micro_declare},
@@ -673,6 +679,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
     vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb();
+    set_vlen = setVlen()
 
     varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
@@ -682,6 +689,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': varith_micro_declare},
@@ -919,6 +927,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
     set_src_reg_idx += setSrcVm()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
+    set_vlen = setVlen()
 
     code = maskCondWrapper(code)
     code = eiDeclarePrefix(code)
@@ -933,6 +942,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(2),
          'declare_varith_template': varith_micro_declare},
@@ -1364,6 +1374,7 @@ def format VectorIntVxsatFormat(code, category, *flags) {{
     vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb()
+    set_vlen = setVlen()
 
     code = maskCondWrapper(code)
     code = eiDeclarePrefix(code)
@@ -1376,6 +1387,7 @@ def format VectorIntVxsatFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
+         'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
