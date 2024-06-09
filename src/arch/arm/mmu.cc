@@ -813,7 +813,8 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
     // security state of the processor
     if (state.isSecure)
         req->setFlags(Request::SECURE);
-
+    else
+        req->clearFlags(Request::SECURE);
     if (state.aarch64) {
         bool selbit = bits(vaddr, 55);
         TCR tcr1 = tc->readMiscReg(MISCREG_TCR_EL1);
@@ -917,6 +918,8 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
 
         if (state.isSecure && !te->ns) {
             req->setFlags(Request::SECURE);
+        } else {
+            req->clearFlags(Request::SECURE);
         }
         if (!is_fetch && fault == NoFault &&
             (vaddr & mask(flags & AlignmentMask)) &&
