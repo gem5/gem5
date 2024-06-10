@@ -380,6 +380,16 @@ parser.add_argument(
     help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
 
+parser.add_argument("--tcp-rp", type=str, default="TreePLRURP", help="cache replacement policy"
+                    "policy for tcp")
+
+parser.add_argument("--tcc-rp", type=str, default="TreePLRURP", help="cache replacement policy"
+                    "policy for tcc")
+
+# sqc rp both changes sqc rp and scalar cache rp
+parser.add_argument("--sqc-rp", type=str, default="TreePLRURP", help="cache replacement policy"
+                    "policy for sqc")
+
 Ruby.define_options(parser)
 
 # add TLB options to the parser
