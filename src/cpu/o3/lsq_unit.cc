@@ -611,6 +611,12 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
     if (inst->isTranslationDelayed() && load_fault == NoFault)
         return load_fault;
 
+    // Partial Store-to-Load Forwarding condition marks the load to be
+    // reissued during LSQUnit::read(). In this case we shouldn't notify
+    // iewStage that the instruction is ready for commit.
+    if (!inst->isIssued() && !inst->effAddrValid())
+        return load_fault;
+
     if (load_fault != NoFault && inst->translationCompleted() &&
             inst->savedRequest->isPartialFault()
             && !inst->savedRequest->isComplete()) {
