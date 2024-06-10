@@ -1132,8 +1132,6 @@ def RP_choose(test_name):
         replacement_policy = LRURP()
     elif test_name == 'FIFORP':
         replacement_policy = FIFORP()
-    elif test_name == 'LRURP':
-        replacement_policy = LRURP()
     elif test_name == 'LFURP':
         replacement_policy = LFURP()
     elif test_name == 'LIPRP':
