@@ -380,15 +380,27 @@ parser.add_argument(
     help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
 
-parser.add_argument("--tcp-rp", type=str, default="TreePLRURP", help="cache replacement policy"
-                    "policy for tcp")
+parser.add_argument(
+    "--tcp-rp",
+    type=str,
+    default="TreePLRURP",
+    help="cache replacement policy" "policy for tcp",
+)
 
-parser.add_argument("--tcc-rp", type=str, default="TreePLRURP", help="cache replacement policy"
-                    "policy for tcc")
+parser.add_argument(
+    "--tcc-rp",
+    type=str,
+    default="TreePLRURP",
+    help="cache replacement policy" "policy for tcc",
+)
 
 # sqc rp both changes sqc rp and scalar cache rp
-parser.add_argument("--sqc-rp", type=str, default="TreePLRURP", help="cache replacement policy"
-                    "policy for sqc")
+parser.add_argument(
+    "--sqc-rp",
+    type=str,
+    default="TreePLRURP",
+    help="cache replacement policy" "policy for sqc",
+)
 
 Ruby.define_options(parser)
 
@@ -880,9 +892,9 @@ gpu_port_idx = gpu_port_idx - args.num_cp * 2
 token_port_idx = 0
 for i in range(len(system.ruby._cpu_ports)):
     if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
-        system.cpu[shader_idx].CUs[
-            token_port_idx
-        ].gmTokenPort = system.ruby._cpu_ports[i].gmTokenPort
+        system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = (
+            system.ruby._cpu_ports[i].gmTokenPort
+        )
         token_port_idx += 1
 
 wavefront_size = args.wf_size
