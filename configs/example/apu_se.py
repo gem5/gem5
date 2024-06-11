@@ -695,7 +695,7 @@ render_driver = GPURenderDriver(filename=f"dri/renderD{renderDriNum}")
 gpu_hsapp = HSAPacketProcessor(
     pioAddr=hsapp_gpu_map_paddr, numHWQueues=args.num_hw_queues
 )
-dispatcher = GPUDispatcher()
+dispatcher = GPUDispatcher(kernel_exit_events=True)
 gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp, dispatcher=dispatcher)
 gpu_driver.device = gpu_cmd_proc
 shader.dispatcher = dispatcher
@@ -821,6 +821,8 @@ if fast_forward:
 
 # configure the TLB hierarchy
 GPUTLBConfig.config_tlb_hierarchy(args, system, shader_idx)
+
+system.exit_on_work_items = True
 
 # create Ruby system
 system.piobus = IOXBar(
@@ -995,6 +997,47 @@ if args.fast_forward:
     print("Switch at instruction count: %d" % cpu_list[0].max_insts_any_thread)
 
 exit_event = m5.simulate(maxtick)
+
+while True:
+    if (
+        exit_event.getCause() == "m5_exit instruction encountered"
+        or exit_event.getCause() == "user interrupt received"
+        or exit_event.getCause() == "simulate() limit reached"
+        or  "exiting with last active thread context" in exit_event.getCause()
+    ):
+        print(f"breaking loop due to: {exit_event.getCause()}.")
+        break
+    elif "checkpoint" in exit_event.getCause():
+        assert args.checkpoint_dir is not None
+        m5.checkpoint(args.checkpoint_dir)
+        print("breaking loop with checkpoint")
+        break
+    elif "GPU Kernel Completed" in exit_event.getCause():
+        print("GPU Kernel Completed dump and reset")
+        m5.stats.dump()
+        m5.stats.reset()
+    elif "GPU Blit Kernel Completed" in exit_event.getCause():
+        print("GPU Blit Kernel Completed dump and reset")
+        m5.stats.dump()
+        m5.stats.reset()
+    elif "Skipping GPU Kernel" in exit_event.getCause():
+        print("Skipping GPU Kernel dump and reset")
+        m5.stats.dump()
+        m5.stats.reset()
+    elif "workbegin" in exit_event.getCause():
+        print("m5 work begin dump and reset")
+        m5.stats.dump()
+        m5.stats.reset()
+    elif "workend" in exit_event.getCause():
+        print("m5 work end dump and reset")
+        m5.stats.dump()
+        m5.stats.reset()
+    else:
+        print(
+            f"Unknown exit event: {exit_event.getCause()}. Continuing..."
+        )
+
+    exit_event = m5.simulate(maxtick - m5.curTick())
 
 if args.fast_forward:
     if exit_event.getCause() == "a thread reached the max instruction count":
