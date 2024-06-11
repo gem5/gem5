@@ -1,7 +1,7 @@
 ## rocm-build Dockerfile
 The Dockerfile in this directory is used to build applications to be run with GPU full system.
 Applications targeting AMD's ROCm GPU framework can be built using this docker (e.g., HIP, HSA, OpenCL, etc.).
-The current major ROCm version targeted is 6.0.2.
+The current major ROCm version targeted is 6.1.
 This version matches the disk image provided in gem5-resources.
 
 The purpose of this docker image is to allow building applications without requiring ROCm to be installed on the host machine.

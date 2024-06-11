@@ -44,6 +44,9 @@ env = Environment()
 
 #Make the gem5 root available in SConscripts
 env['GEM5_ROOT'] = gem5_root
+#This won't work with kconfig-based builds, where the build directory is
+# not necessarily named "build".
+env['GEM5BUILD'] = os.path.join(gem5_root, 'build')
 
 shlibsuffix = env['SHLIBSUFFIX']
 
@@ -52,6 +55,7 @@ env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
                     gem5_root + '/util/systemc/gem5_within_systemc',
                     gem5_root + '/ext/systemc/src',
                     gem5_root + '/ext',
+                    gem5_root + '/src',
                     '#src',
                     '#examples/common',
                     ])
@@ -63,6 +67,15 @@ env.Append(CXXFLAGS=['-std=c++17',
 
 if gem5_variant == 'debug':
     env.Append(CXXFLAGS=['-g', '-DGEM5_DEBUG'])
+
+# An option not to link source files in the build directory.
+# Not enabled by default.
+AddOption('--no-duplicate-sources', action='store_false', default=True,
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
+
+AddOption('--verbose', action='store_true',
+          help='Print full tool command lines')
 
 deps = [] # keep track of all dependencies required for building the binaries
 
@@ -79,12 +92,6 @@ deps += SConscript('examples/common/SConscript',
 sys.path.append(gem5_root + '/src/python')
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
-
-# An option not to link source files in the build directory.
-# Not enabled by default.
-AddOption('--no-duplicate-sources', action='store_false', default=True,
-          dest='duplicate_sources',
-          help='Do not create symlinks to sources in the build directory')
 
 env.SConsignFile('build/systemc/sconsign')
 SConscript(gem5_root + '/ext/systemc/SConscript',

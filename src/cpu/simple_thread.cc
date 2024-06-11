@@ -143,7 +143,8 @@ SimpleThread::activate()
 void
 SimpleThread::suspend()
 {
-    if (status() == ThreadContext::Suspended)
+    if (status() == ThreadContext::Suspended ||
+        status() == ThreadContext::Halted)
         return;
 
     lastActivate = curTick();

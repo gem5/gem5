@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 ARM Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -135,7 +135,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // All Near executes all Atomics at L1 (variable set to 0; default)
   // Unique Near executes Atomics at HNF for states I, SC, SD (set to 1)
   // Present Near execites all Atomics at L1 except when state is I (set to 2)
-  int policy_type := 1;
+  int policy_type := 0;
 
 
   // Use separate Comp/DBIDResp responses for WriteUnique
@@ -313,6 +313,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     ReadUnique_PoC,              desc="", in_trans="yes";
     ReadOnce,                    desc="", in_trans="yes";
     CleanUnique,                 desc="", in_trans="yes";
+    MakeReadUnique,              desc="", in_trans="yes";
     Evict,                       desc="", in_trans="yes";
     WriteBackFull,               desc="", in_trans="yes";
     WriteEvictFull,              desc="", in_trans="yes";
@@ -325,7 +326,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     AtomicReturn,                desc="", in_trans="yes";
     AtomicNoReturn,              desc="", in_trans="yes";
     AtomicReturn_PoC,            desc="", in_trans="yes";
+    AtomicReturn_PoC_Alloc,      desc="", in_trans="yes";
     AtomicNoReturn_PoC,          desc="", in_trans="yes";
+    AtomicNoReturn_PoC_Alloc,    desc="", in_trans="yes";
     SnpCleanInvalid,             desc="", in_trans="yes";
     SnpShared,                   desc="", in_trans="yes";
     SnpSharedFwd,                desc="", in_trans="yes";
@@ -462,6 +465,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendReadNoSnp,        out_trans="yes", desc="Send a SendReadNoSnp";
     SendReadNoSnpDMT,     out_trans="yes", desc="Send a SendReadNoSnp using DMT";
     SendReadUnique,       out_trans="yes", desc="Send a ReadUnique";
+    SendMakeReadUnique,   out_trans="yes", desc="Send a MakeReadUnique";
     SendCompAck,          desc="Send CompAck";
     // Read handling at the completer
     SendCompData,         desc="Send CompData";
@@ -487,7 +491,6 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
     // Send an atomic request downstream.
     SendAtomicReturn,          out_trans="yes", desc="Send atomic request with return";
-    SendAtomicReturn_NoWait,   out_trans="yes", desc="Send atomic request with return, but no DBID";
     SendAtomicNoReturn,        out_trans="yes", desc="Send atomic request without return";
     SendARData,                desc="Send atomic return request data";
     SendANRData,               desc="Send atomic no return request data";
@@ -504,6 +507,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCleanUnique,out_trans="yes", desc="Send a CleanUnique";
     SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
     SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
+    SendCompUDResp, desc="Ack MakeReadUnique with Comp_UD_PD";
 
     // Checks if an upgrade using a CleanUnique was sucessfull
     CheckUpgrade_FromStore, desc="Upgrade needed by a Store";
@@ -551,6 +555,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     TX_Data, desc="Transmit pending data messages";
     MaintainCoherence, desc="Queues a WriteBack or Evict before droping the only valid copy of the block";
     FinishCleanUnique, desc="Sends acks and perform any writeback after a CleanUnique";
+    FinishMakeReadUnique, desc="Return Comp or CompData to requestor at the end of MakeReadUnique";
     FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
     ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
     WriteZero, desc="Stall a trigger action because until finish handling snoop hazard";
@@ -649,6 +654,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     int accSize,            desc="Access size for Load/Store/WriteUniquePtl; otherwisse == blockSize";
     CHIRequestType reqType, desc="Request type that initiated this transaction";
     Addr txnId,             desc="Transaction ID. We default to -1 for debug purposes", default="-1";
+    bool ns,                desc="Secure State of the transaction. NS=NonSecure", default="true";
     MachineID requestor,    desc="Requestor ID";
     MachineID fwdRequestor, desc="Requestor to receive data on fwding snoops";
     bool use_DMT,           desc="Use DMT for this transaction";
@@ -662,6 +668,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // Atomic info associated with the transaction
     WriteMask atomic_op,    desc="Atomic Operation Wrapper";
     bool atomic_to_be_done, desc="We have yet to perform the atomic";
+    bool atomic_to_be_wb,   desc="We are writebacking the atomic";
 
     // NOTE: seqReq is a smart pointer pointing to original CPU request object
     // that triggers transactions associated with this TBE. seqReq carries some

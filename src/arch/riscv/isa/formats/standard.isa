@@ -199,7 +199,7 @@ def template BranchExecute {{
     {
         auto &rpc = branch_pc.as<RiscvISA::PCState>();
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
-        npc->set(rpc.pc() + imm);
+        npc->set(rvZext(rpc.pc() + imm));
         return npc;
     }
 
@@ -306,7 +306,8 @@ def template JumpExecute {{
     %(class_name)s::branchTarget(ThreadContext *tc) const
     {
         PCStateBase *pc_ptr = tc->pcState().clone();
-        pc_ptr->as<PCState>().set((tc->getReg(srcRegIdx(0)) + imm) & ~0x1);
+        pc_ptr->as<PCState>().set(
+            rvZext((tc->getReg(srcRegIdx(0)) + imm) & ~0x1));
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 
@@ -315,12 +316,8 @@ def template JumpExecute {{
             Addr pc, const loader::SymbolTable *symtab) const
     {
         std::stringstream ss;
-        ss << mnemonic << ' ';
-        if (QUADRANT == 0x3)
-            ss << registerName(destRegIdx(0)) << ", "
-               << imm << "(" << registerName(srcRegIdx(0)) << ")";
-        else
-            ss << registerName(srcRegIdx(0));
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+           << imm << "(" << registerName(srcRegIdx(0)) << ")";
         return ss.str();
     }
 }};
@@ -333,7 +330,6 @@ def template CSRExecute {{
         // We assume a riscv instruction is always run with a riscv ISA.
         auto isa = static_cast<RiscvISA::ISA*>(xc->tcBase()->getIsaPtr());
         auto& csr_data = isa->getCSRDataMap();
-        auto& csr_masks = isa->getCSRMaskMap();
         MISA misa = isa->readMiscRegNoEffect(MISCREG_ISA);
 
         auto csr_data_it = csr_data.find(csr);
@@ -360,14 +356,10 @@ def template CSRExecute {{
                     machInst);
         }
 
-        auto mask_it = csr_masks.find(csr);
-        RegVal maskVal = (mask_it == csr_masks.end()) ? mask(64)
-                                                      : mask_it->second;
-
         %(op_decl)s;
         %(op_rd)s;
 
-        RegVal data, olddata;
+        RegVal data = 0;
         auto lowestAllowedMode = (PrivilegeMode)bits(csr, 9, 8);
         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
         if (pm < lowestAllowedMode) {
@@ -389,55 +381,20 @@ def template CSRExecute {{
             break;
         }
 
-        if (csr == CSR_FCSR) {
-            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
-                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
-        } else {
-            olddata = xc->readMiscReg(midx);
+        if (%(read_cond)s) {
+            data = rvZext(xc->readMiscReg(midx));
         }
-        olddata = rvZext(olddata);
-        auto olddata_all = olddata;
-
-        olddata &= maskVal;
-        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", csrName, olddata);
-        data = olddata;
 
         %(code)s;
 
-        data &= maskVal;
-        if (data != olddata) {
+        if (%(write_cond)s) {
             if (bits(csr, 11, 10) == 0x3) {
                 return std::make_shared<IllegalInstFault>(
                         csprintf("CSR %s is read-only\n", csrName), machInst);
             }
-            auto newdata_all = data;
-            // We must keep those original bits not in mask.
-            // olddata and data only contain the bits visable
-            // in current privilige level.
-            newdata_all = (olddata_all & ~maskVal) | data;
             DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
-                    newdata_all, csrName);
-            switch (csr) {
-              case CSR_FCSR:
-                xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
-                xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
-                break;
-              case CSR_MIP: case CSR_MIE:
-              case CSR_SIP: case CSR_SIE:
-              case CSR_UIP: case CSR_UIE:
-              case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
-                if (newdata_all != olddata_all) {
-                    xc->setMiscReg(midx, newdata_all);
-                } else {
-                    return std::make_shared<IllegalInstFault>(
-                            "Only bits in mask are allowed to be set\n",
-                            machInst);
-                }
-                break;
-              default:
-                xc->setMiscReg(midx, data);
-                break;
-            }
+                    data, csrName);
+            xc->setMiscReg(midx, data);
         }
         %(op_wb)s;
         return NoFault;
@@ -542,8 +499,10 @@ def format SystemOp(code, *opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format CSROp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'CSROp', code, opt_flags)
+def format CSROp(code, read_cond, write_cond, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CSROp',
+        {'code': code, 'read_cond': read_cond,
+         'write_cond': write_cond}, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

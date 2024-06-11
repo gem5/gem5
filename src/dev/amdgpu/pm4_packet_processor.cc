@@ -290,18 +290,19 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
                     dmaBuffer);
         } break;
       case IT_MAP_PROCESS: {
-        if (gpuDevice->getGfxVersion() == GfxVersion::gfx90a) {
-            dmaBuffer = new PM4MapProcessMI200();
+        if (gpuDevice->getGfxVersion() == GfxVersion::gfx90a ||
+            gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+            dmaBuffer = new PM4MapProcessV2();
             cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &)
-                    { mapProcessGfx90a(q, (PM4MapProcessMI200 *)dmaBuffer); });
-            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessMI200),
+                    { mapProcessV2(q, (PM4MapProcessV2 *)dmaBuffer); });
+            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessV2),
                         cb, dmaBuffer);
         } else {
             dmaBuffer = new PM4MapProcess();
             cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &)
-                    { mapProcessGfx9(q, (PM4MapProcess *)dmaBuffer); });
+                    { mapProcessV1(q, (PM4MapProcess *)dmaBuffer); });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
                         dmaBuffer);
         }
@@ -456,8 +457,6 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
     } else {
         panic("Unknown engine for MQD: %d\n", pkt->engineSel);
     }
-
-    decodeNext(q);
 }
 
 void
@@ -494,6 +493,9 @@ PM4PacketProcessor::processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
             "hqdAQL %d.\n", mqd->base, mqd->mqdBase, mqd->aql);
 
     gpuDevice->processPendingDoorbells(offset);
+
+    delete pkt;
+    decodeNext(q);
 }
 
 void
@@ -524,6 +526,9 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     gpuDevice->setDoorbellType(pkt->doorbellOffset << 2, RLC, getIpId());
 
     gpuDevice->processPendingDoorbells(pkt->doorbellOffset << 2);
+
+    delete pkt;
+    decodeNext(q);
 }
 
 void
@@ -656,6 +661,7 @@ PM4PacketProcessor::unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt)
                 dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
                 queues.erase(id);
                 hsa_pp.unsetDeviceQueueDesc(id, 8);
+                delete mqd;
             }
         }
         gpuDevice->deallocateAllQueues();
@@ -696,7 +702,7 @@ PM4PacketProcessor::mapProcess(uint32_t pasid, uint64_t ptBase,
 }
 
 void
-PM4PacketProcessor::mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt)
+PM4PacketProcessor::mapProcessV1(PM4Queue *q, PM4MapProcess *pkt)
 {
     q->incRptr(sizeof(PM4MapProcess));
 
@@ -711,9 +717,9 @@ PM4PacketProcessor::mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt)
 }
 
 void
-PM4PacketProcessor::mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt)
+PM4PacketProcessor::mapProcessV2(PM4Queue *q, PM4MapProcessV2 *pkt)
 {
-    q->incRptr(sizeof(PM4MapProcessMI200));
+    q->incRptr(sizeof(PM4MapProcessV2));
 
     DPRINTF(PM4PacketProcessor, "PM4 map_process pasid: %p quantum: "
             "%d pt: %p signal: %p\n", pkt->pasid, pkt->processQuantum,
@@ -754,6 +760,7 @@ PM4PacketProcessor::indirectBuffer(PM4Queue *q, PM4IndirectBuf *pkt)
     q->ibBase(pkt->ibBase);
     q->wptr(pkt->ibSize * sizeof(uint32_t));
 
+    delete pkt;
     decodeNext(q);
 }
 
@@ -766,6 +773,7 @@ PM4PacketProcessor::switchBuffer(PM4Queue *q, PM4SwitchBuf *pkt)
     DPRINTF(PM4PacketProcessor, "PM4 switching buffer, rptr: %p.\n",
             q->wptr());
 
+    delete pkt;
     decodeNext(q);
 }
 
@@ -784,6 +792,7 @@ PM4PacketProcessor::setUconfigReg(PM4Queue *q, PM4SetUconfigReg *pkt)
     reg_addr += 0x40000 * getIpId();
     gpuDevice->setRegVal(reg_addr, pkt->data);
 
+    delete pkt;
     decodeNext(q);
 }
 
@@ -800,6 +809,7 @@ PM4PacketProcessor::waitRegMem(PM4Queue *q, PM4WaitRegMem *pkt)
     DPRINTF(PM4PacketProcessor, "    Mask: %lx\n", pkt->mask);
     DPRINTF(PM4PacketProcessor, "    Poll Interval: %lx\n", pkt->pollInterval);
 
+    delete pkt;
     decodeNext(q);
 }
 

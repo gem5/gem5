@@ -269,6 +269,7 @@ SDMAEngine::deallocateRLCQueues()
     for (auto doorbell: rlcInfo) {
         if (doorbell) {
             unregisterRLCQueue(doorbell);
+            gpuDevice->unsetDoorbell(doorbell);
         }
     }
 }
@@ -1000,6 +1001,9 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
                                              sizeof(uint64_t) * pkt->count, 0,
                                              cb);
     } else {
+        if (q->priv()) {
+            pkt->dest = getGARTAddr(pkt->dest);
+        }
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { ptePdeDone(q, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->dest, sizeof(uint64_t) * pkt->count, cb,
@@ -1132,7 +1136,7 @@ SDMAEngine::constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data)
 {
     DPRINTF(SDMAEngine, "ConstFill to %lx done\n", pkt->addr);
 
-    delete fill_data;
+    delete [] fill_data;
     delete pkt;
     decodeNext(q);
 }

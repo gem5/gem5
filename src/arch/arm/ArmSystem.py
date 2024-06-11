@@ -115,6 +115,7 @@ class ArmExtension(ScopedEnum):
         "LPAE",
         "VIRTUALIZATION",
         "TME",
+        "FEAT_MPAM",
     ]
 
 

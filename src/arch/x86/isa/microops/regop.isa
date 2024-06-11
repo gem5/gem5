@@ -84,6 +84,14 @@ def template MicroRegOpDeclare {{
             %(set_reg_idx_arr)s;
             %(constructor)s;
             %(cond_control_flag_init)s;
+
+            // In some cases, we need to invalidate some source registers
+            // to eliminate unnecessary input dependencies (e.g., for a
+            // 32-bit or 64-bit 'mov' micro-op) on the prior value of the
+            // destination register. (Such dependencies are required for
+            // 8-bit or 16-bit moves, however, since they don't completely
+            // overwrite the destination register.)
+            %(invalidate_srcs)s;
         }
 
         Fault execute(ExecContext *, trace::InstRecord *) const override;
@@ -182,7 +190,7 @@ let {{
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, code, big_code, \
                 flag_code, cond_check, else_code, cond_control_flag_init,
-                op_class, operand_types):
+                invalidate_srcs, op_class, operand_types):
 
             # Globals to stick the output in
             global header_output
@@ -191,9 +199,9 @@ let {{
 
             # Stick all the code together so it can be searched at once
             allCode = "|".join((code, flag_code, cond_check, else_code,
-                                cond_control_flag_init))
+                                cond_control_flag_init, invalidate_srcs))
             allBigCode = "|".join((big_code, flag_code, cond_check, else_code,
-                                   cond_control_flag_init))
+                                   cond_control_flag_init, invalidate_srcs))
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
@@ -219,6 +227,7 @@ let {{
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code),
                         matcher.sub(src2_name, cond_control_flag_init),
+                        matcher.sub(src2_name, invalidate_srcs),
                         op_class, operand_types)
                 imm_name = '(int8_t)imm8' if match.group("prefix") else 'imm8'
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
@@ -228,6 +237,7 @@ let {{
                         matcher.sub(imm_name, cond_check),
                         matcher.sub(imm_name, else_code),
                         matcher.sub(imm_name, cond_control_flag_init),
+                        matcher.sub(imm_name, invalidate_srcs),
                         op_class, imm_operand_types)
                 return
 
@@ -236,8 +246,8 @@ let {{
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
                         code, big_code, "", "true", else_code,
-                        "flags[IsUncondControl] = flags[IsControl];", op_class,
-                        operand_types)
+                        "flags[IsUncondControl] = flags[IsControl];",
+                        invalidate_srcs, op_class, operand_types)
                 suffix = "Flags" + suffix
 
             cxx_classes = list([op.cxx_class() for op in operand_types])
@@ -255,6 +265,7 @@ let {{
                      "cond_check" : cond_check,
                      "else_code" : else_code,
                      "cond_control_flag_init" : cond_control_flag_init,
+                     "invalidate_srcs": invalidate_srcs,
                      "op_class" : op_class})]
             if big_code != "":
                 iops += [InstObjParams(name, Name + suffix + "Big", base,
@@ -263,6 +274,7 @@ let {{
                           "cond_check" : cond_check,
                           "else_code" : else_code,
                           "cond_control_flag_init" : cond_control_flag_init,
+                          "invalidate_srcs": invalidate_srcs,
                           "op_class" : op_class})]
 
             # Generate the actual code (finally!)
@@ -292,20 +304,22 @@ let {{
             cond_check = cls.cond_check
             else_code = cls.else_code
             cond_control_flag_init = cls.cond_control_flag_init
+            invalidate_srcs = cls.invalidate_srcs
             op_class = cls.op_class
             operand_types = cls.operand_types
 
             # Set up the C++ classes
             mcls.buildCppClasses(cls, name, Name, "", code, big_code,
                     flag_code, cond_check, else_code,
-                    cond_control_flag_init, op_class, operand_types)
+                    cond_control_flag_init, invalidate_srcs, op_class,
+                    operand_types)
 
             # Hook into the microassembler dict
             global microopClasses
             microopClasses[name] = cls
 
             allCode = "|".join((code, flag_code, cond_check, else_code,
-                                cond_control_flag_init))
+                                cond_control_flag_init, invalidate_srcs))
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
@@ -326,6 +340,7 @@ let {{
         cond_check = "true"
         else_code = ";"
         cond_control_flag_init = ""
+        invalidate_srcs = ""
         op_class = "IntAluOp"
 
         def __init__(self, *ops, flags=None, dataSize="env.dataSize"):
@@ -398,8 +413,8 @@ let {{
     class LogicRegOp(BasicRegOp):
         abstract = True
         flag_code = '''
-            //Don't have genFlags handle the OF or CF bits
-            uint64_t mask = CFBit | ECFBit | OFBit;
+            //Don't have genFlags handle the OF, CF, or AF bits
+            uint64_t mask = CFBit | ECFBit | OFBit | AFBit;
             uint64_t newFlags = genFlags(PredccFlagBits | PreddfBit |
                     PredezfBit, ext & ~mask, result, PSrcReg1, op2);
             PredezfBit = newFlags & EZFBit;
@@ -407,7 +422,7 @@ let {{
             PredccFlagBits = newFlags & CcFlagMask;
 
             //If a logic microop wants to set these, it wants to set them to 0.
-            PredcfofBits = PredcfofBits & ~((CFBit | OFBit) & ext);
+            PredcfofBits = PredcfofBits & ~((CFBit | OFBit | AFBit) & ext);
             PredecfBit = PredecfBit & ~(ECFBit & ext);
         '''
 
@@ -702,6 +717,21 @@ let {{
     class Mov(BasicRegOp, CondRegOp):
         code = 'DestReg = merge(SrcReg1, dest, op2, dataSize)'
         else_code = 'DestReg = DestReg;'
+        invalidate_srcs = '''
+            // 4-byte and 8-byte register moves completely overwrites
+            // the destination register. Therefore, we can safely
+            // eliminate the destination register's original contents
+            // as a source dependency.
+            // Note: Source index 1 is actual architectural source register.
+            // Note: Because there are other variants of the 'mov' micro-op,
+            // we need to check the number of source registers to ensure
+            // we're operating on the register-register version, not the
+            // register-immediate version, 'movi', say.
+            if (numSrcRegs() == 3 && (dataSize == 4 || dataSize == 8)) {
+                setSrcRegIdx(0, RegId());
+                setSrcRegIdx(2, RegId());
+            }
+        '''
 
     # Shift instructions
 

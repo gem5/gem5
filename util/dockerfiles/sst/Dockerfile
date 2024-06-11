@@ -36,6 +36,17 @@ RUN apt -y update && apt -y upgrade && \
 
 ENV SST_CORE_HOME="/sst/"
 
+# Use GCC 10
+RUN apt update && apt -y install gcc-10 g++-10
+RUN update-alternatives --install \
+    /usr/bin/g++ g++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-10 100
+RUN update-alternatives --install \
+    /usr/bin/c++ c++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/cc cc /usr/bin/gcc-10 100
+
 # SST Stuff
 RUN mkdir /sst
 

@@ -86,6 +86,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         gfx_version = GfxVersion::gfx908;
     } else if (p.device_name == "MI200") {
         gfx_version = GfxVersion::gfx90a;
+    } else if (p.device_name == "MI300X") {
+        gfx_version = GfxVersion::gfx942;
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }
@@ -124,7 +126,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
         sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
-    } else if (p.device_name == "MI100" || p.device_name == "MI200") {
+    } else if (p.device_name == "MI100" || p.device_name == "MI200"
+            || p.device_name == "MI300X") {
         sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
         sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
@@ -192,6 +195,10 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     } else if (p.device_name == "MI200") {
         // This device can have either 64GB or 128GB of device memory.
         // This limits to 16GB for simulation.
+        setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI200_MEM_SIZE_REG, mem_size);
+    } else if (p.device_name == "MI300X") {
         setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI200_MEM_SIZE_REG, mem_size);
@@ -453,6 +460,8 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 
     auto system = cp->shader()->gpuCmdProc.system();
     system->getDeviceMemory(writePkt)->access(writePkt);
+
+    delete writePkt;
 }
 
 void
@@ -508,10 +517,13 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
              offset);
 
         // We have to ACK the PCI packet immediately, so create a copy of the
-        // packet here to send again.
+        // packet here to send again. The packet data contains the value of
+        // the doorbell to write so we need to copy that as the original
+        // packet gets deleted after the PCI write() method returns.
         RequestPtr pending_req(pkt->req);
         PacketPtr pending_pkt = Packet::createWrite(pending_req);
         uint8_t *pending_data = new uint8_t[pkt->getSize()];
+        memcpy(pending_data, pkt->getPtr<uint8_t>(), pkt->getSize());
         pending_pkt->dataDynamic(pending_data);
 
         pendingDoorbellPkts.emplace(offset, pending_pkt);
@@ -671,7 +683,10 @@ AMDGPUDevice::getRegVal(uint64_t addr)
     DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n",
             fixup_addr, pkt->getLE<uint32_t>());
 
-    return pkt->getLE<uint32_t>();
+    pkt_data = pkt->getLE<uint32_t>();
+    delete pkt;
+
+    return pkt_data;
 }
 
 void
@@ -686,6 +701,7 @@ AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
     PacketPtr pkt = Packet::createWrite(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     writeMMIO(pkt, addr);
+    delete pkt;
 }
 
 void
@@ -694,6 +710,12 @@ AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt, int ip_id)
     DPRINTF(AMDGPUDevice, "Setting doorbell type for %x\n", offset);
     doorbells[offset].qtype = qt;
     doorbells[offset].ip_id = ip_id;
+}
+
+void
+AMDGPUDevice::unsetDoorbell(uint32_t offset)
+{
+    doorbells.erase(offset);
 }
 
 void

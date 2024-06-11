@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 ARM Limited
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -68,6 +68,13 @@ class PartitionFieldExtension : public Extension<Request,
     uint64_t getPartitionMonitoringID() const;
 
     /**
+    * MPAM_NS getter
+    * @return True if targeting Non-Secure MPAM partition
+    */
+    bool getMpamNS() const;
+
+
+    /**
     * _partitionID setter
     * @param id Partition ID to set for the extension
     */
@@ -79,10 +86,30 @@ class PartitionFieldExtension : public Extension<Request,
     */
     void setPartitionMonitoringID(uint64_t id);
 
+    /**
+    * MPAM_NS setter
+    * @param ns True if targeting Non-Secure MPAM partition
+    */
+    void setMpamNS(bool ns);
+
   private:
     uint64_t _partitionID = DEFAULT_PARTITION_ID;
     uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
+    bool _ns = true;
 };
+
+/** Partition ID data type */
+using PartID = uint16_t;
+/** Partition Manager data type */
+using PMG = uint8_t;
+
+/** Tag a memory request with MPAM information
+ * @param tc pointer to the ThreadContext
+ * @param req reference to the pointer of the memory request to be tagged
+ * @param ind "instruction not data" to differentiate between
+ *            a fetch request and a data memory access
+ */
+void tagRequest(ThreadContext *tc, const RequestPtr &req, bool ind);
 
 } // namespace gem5::ArmISA::mpam
 

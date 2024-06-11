@@ -1,17 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2022  Institute of Computing Technology, Chinese
-#                     Academy of Sciences
+# Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,14 +24,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.VirtIO import VirtIODeviceBase
-from m5.params import *
-from m5.proxy import *
+from typing import Optional
+
+from _m5 import core
+
+"""
+This class is a data class that represents a query to the client.
+It encapsulates the fields required to query resources from the client.
+Right now, it only contains the resource_id, resource_version, and gem5_version
+fields, but it can be expanded to include more fields in the future, if needed.
+"""
 
 
-class VirtIORng(VirtIODeviceBase):
-    type = "VirtIORng"
-    cxx_header = "dev/virtio/rng.hh"
-    cxx_class = "gem5::VirtIORng"
+class ClientQuery:
+    def __init__(
+        self,
+        resource_id: str,
+        resource_version: Optional[str] = None,
+        gem5_version: Optional[str] = core.gem5Version,
+    ):
+        self.resource_id = resource_id
+        self.resource_version = resource_version
+        self.gem5_version = gem5_version
 
-    qSize = Param.Unsigned(16, "Request queue size")
+    def get_resource_id(self) -> str:
+        return self.resource_id
+
+    def get_resource_version(self) -> Optional[str]:
+        return self.resource_version
+
+    def get_gem5_version(self) -> Optional[str]:
+        return self.gem5_version

@@ -30,7 +30,10 @@ from pathlib import Path
 from typing import Dict
 from unittest.mock import patch
 
-from gem5.resources.client_api.client_wrapper import ClientWrapper
+from gem5.resources.client import (
+    _create_clients,
+    clientwrapper,
+)
 from gem5.resources.resource import (
     BinaryResource,
     DiskImageResource,
@@ -60,9 +63,13 @@ class CustomWorkloadTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def setUpClass(cls) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def setUpClass(cls, mock_create_client) -> None:
         cls.custom_workload = WorkloadResource(
             function="set_se_binary_workload",
             parameters={
@@ -134,9 +141,13 @@ class WorkloadTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        ClientWrapper(mock_config_json),
+        new=None,
     )
-    def setUpClass(cls):
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def setUpClass(cls, mock_create_client):
         cls.workload = obtain_resource("simple-boot", gem5_version="develop")
 
     def test_get_function_str(self) -> None:

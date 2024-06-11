@@ -94,9 +94,10 @@ class HSAQueueEntry
         // LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
         //     #code-object-v3-kernel-descriptor
         //
-        // Currently, the only supported gfx version in gem5 that computes
-        // VGPR count differently is gfx90a.
-        if (gfx_version == GfxVersion::gfx90a) {
+        // Currently, the only supported gfx versions in gem5 that compute
+        // VGPR count differently are gfx90a and gfx942.
+        if (gfx_version == GfxVersion::gfx90a ||
+            gfx_version == GfxVersion::gfx942) {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
         } else {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
@@ -107,7 +108,8 @@ class HSAQueueEntry
         if (gfx_version == GfxVersion::gfx900 ||
                 gfx_version == GfxVersion::gfx902 ||
                 gfx_version == GfxVersion::gfx908 ||
-                gfx_version == GfxVersion::gfx90a) {
+                gfx_version == GfxVersion::gfx90a ||
+                gfx_version == GfxVersion::gfx942) {
             numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
         } else {
             panic("Saw unknown gfx version setting up GPR counts\n");

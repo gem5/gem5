@@ -98,8 +98,12 @@ board = LupvBoard(
 # Set the Full System workload.
 
 board.set_kernel_disk_workload(
-    kernel=obtain_resource("riscv-lupio-linux-kernel"),
-    disk_image=obtain_resource("riscv-lupio-busybox-img"),
+    kernel=obtain_resource(
+        "riscv-lupio-linux-kernel", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource(
+        "riscv-lupio-busybox-img", resource_version="1.0.0"
+    ),
 )
 
 

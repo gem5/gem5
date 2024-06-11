@@ -157,6 +157,36 @@ def template CBasicExecute {{
     }
 }};
 
+def template CJumpExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
+
+    std::unique_ptr<PCStateBase>
+    %(class_name)s::branchTarget(ThreadContext *tc) const
+    {
+        PCStateBase *pc_ptr = tc->pcState().clone();
+        pc_ptr->as<PCState>().set(rvZext(tc->getReg(srcRegIdx(0)) & ~0x1));
+        return std::unique_ptr<PCStateBase>{pc_ptr};
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(srcRegIdx(0));
+        return ss.str();
+    }
+}};
+
 def format CompressedROp(code, *opt_flags) {{
     regs = ['destRegIdx(0)','srcRegIdx(1)']
     iop = InstObjParams(name, Name, 'RegOp',
@@ -165,4 +195,15 @@ def format CompressedROp(code, *opt_flags) {{
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = CBasicExecute.subst(iop)
+}};
+
+def format CJump(code, *opt_flags) {{
+    regs = ['srcRegIdx(0)']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': 'imm = 0;',
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = JumpDeclare.subst(iop)
+    decoder_output = JumpConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = CJumpExecute.subst(iop)
 }};

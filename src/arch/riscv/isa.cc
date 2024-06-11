@@ -482,11 +482,27 @@ ISA::readMiscReg(RegIndex idx)
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
             return ic->readIP();
         }
+      case MISCREG_UIP:
+        {
+            return readMiscReg(MISCREG_IP) & UI_MASK[getPrivilegeModeSet()];
+        }
+      case MISCREG_SIP:
+        {
+            return readMiscReg(MISCREG_IP) & SI_MASK[getPrivilegeModeSet()];
+        }
       case MISCREG_IE:
         {
             auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
             return ic->readIE();
+        }
+      case MISCREG_UIE:
+        {
+            return readMiscReg(MISCREG_IE) & UI_MASK[getPrivilegeModeSet()];
+        }
+      case MISCREG_SIE:
+        {
+            return readMiscReg(MISCREG_IE) & SI_MASK[getPrivilegeModeSet()];
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
@@ -551,6 +567,16 @@ ISA::readMiscReg(RegIndex idx)
 
             return readMiscRegNoEffect(idx);
         }
+      case MISCREG_USTATUS:
+        {
+           return readMiscReg(MISCREG_STATUS) &
+                  USTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+        }
+      case MISCREG_SSTATUS:
+        {
+           return readMiscReg(MISCREG_STATUS) &
+                  SSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+        }
       case MISCREG_VLENB:
         {
             auto rpc = tc->pcState().as<PCState>();
@@ -568,13 +594,18 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_VCSR:
         {
-            return readMiscRegNoEffect(MISCREG_VXSAT) &
+            return readMiscRegNoEffect(MISCREG_VXSAT) |
                   (readMiscRegNoEffect(MISCREG_VXRM) << 1);
         }
         break;
       case MISCREG_FFLAGS_EXE:
         {
             return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
+        }
+      case MISCREG_FCSR:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) |
+                  (readMiscRegNoEffect(MISCREG_FRM) << FRM_OFFSET);
         }
       default:
         // Try reading HPM counters
@@ -693,16 +724,46 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
           case MISCREG_IP:
             {
+                val = val & MI_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
                 ic->setIP(val);
             }
             break;
+          case MISCREG_UIP:
+            {
+                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
+                setMiscReg(MISCREG_IP, val);
+            }
+            break;
+          case MISCREG_SIP:
+            {
+                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
+                setMiscReg(MISCREG_IP, val);
+            }
+            break;
           case MISCREG_IE:
             {
+                val = val & MI_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
                 ic->setIE(val);
+            }
+            break;
+          case MISCREG_UIE:
+            {
+                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
+                setMiscReg(MISCREG_IE, val);
+            }
+            break;
+          case MISCREG_SIE:
+            {
+                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
+                setMiscReg(MISCREG_IE, val);
             }
             break;
           case MISCREG_SATP:
@@ -746,6 +807,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_STATUS:
             {
+                val = val & MSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
                 if (_rvType != RV32) {
                     // SXL and UXL are hard-wired to 64 bit
                     auto cur = readMiscRegNoEffect(idx);
@@ -757,6 +819,22 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     val &= ~STATUS_VS_MASK;
                 }
                 setMiscRegNoEffect(idx, val);
+            }
+            break;
+          case MISCREG_USTATUS:
+            {
+                RegVal mask = USTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+                val = (val & mask) |
+                      (readMiscRegNoEffect(MISCREG_STATUS) & ~mask);
+                setMiscReg(MISCREG_STATUS, val);
+            }
+            break;
+          case MISCREG_SSTATUS:
+            {
+                RegVal mask = SSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+                val = (val & mask) |
+                      (readMiscRegNoEffect(MISCREG_STATUS) & ~mask);
+                setMiscReg(MISCREG_STATUS, val);
             }
             break;
           case MISCREG_VXSAT:
@@ -780,6 +858,22 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 RegVal new_val = readMiscRegNoEffect(MISCREG_FFLAGS);
                 new_val |= (val & FFLAGS_MASK);
                 setMiscRegNoEffect(MISCREG_FFLAGS, new_val);
+            }
+            break;
+          case MISCREG_FFLAGS:
+            {
+                setMiscRegNoEffect(MISCREG_FFLAGS, val & FFLAGS_MASK);
+            }
+            break;
+          case MISCREG_FRM:
+            {
+                setMiscRegNoEffect(MISCREG_FRM, val & FRM_MASK);
+            }
+            break;
+          case MISCREG_FCSR:
+            {
+                setMiscRegNoEffect(MISCREG_FFLAGS, bits(val, 4, 0));
+                setMiscRegNoEffect(MISCREG_FRM, bits(val, 7, 5));
             }
             break;
           default:

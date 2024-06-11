@@ -910,35 +910,63 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
          *     #flat-addressing
          */
 
-        uint32_t numSgprs = wavefront()->maxSgprs;
-        uint32_t physSgprIdx =
-            wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 4);
-        uint32_t offset =
-            wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
-        physSgprIdx =
-            wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 3);
-        uint32_t size =
-            wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
-        for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
-            if (mask[lane]) {
-                addr[lane] = addr[lane] + lane * size + offset +
-                    wavefront()->computeUnit->shader->getHiddenPrivateBase() -
-                    wavefront()->computeUnit->shader->getScratchBase();
+        ComputeUnit *cu = wavefront()->computeUnit;
+
+        if (wavefront()->gfxVersion == GfxVersion::gfx942) {
+            // Architected flat scratch base address in FLAT_SCRATCH registers
+            uint32_t fs_lo = cu->srf[simdId]->read(
+                VegaISA::REG_FLAT_SCRATCH_LO);
+            uint32_t fs_hi = cu->srf[simdId]->read(
+                VegaISA::REG_FLAT_SCRATCH_HI);
+
+            Addr arch_flat_scratch = ((Addr)(fs_hi) << 32) | fs_lo;
+
+            for (int lane = 0; lane < cu->wfSize(); ++lane) {
+                if (mask[lane]) {
+                    // The scratch base is added for other gfx versions,
+                    // otherwise this would simply add the register base.
+                    addr[lane] = addr[lane] - cu->shader->getScratchBase()
+                        + arch_flat_scratch;
+                }
+            }
+        } else {
+            // In absolute flat scratch the program needs to place scratch
+            // address in SGPRn-3,4.
+            uint32_t numSgprs = wavefront()->maxSgprs;
+            uint32_t physSgprIdx =
+                cu->registerManager->mapSgpr(wavefront(), numSgprs - 4);
+            uint32_t offset = cu->srf[simdId]->read(physSgprIdx);
+            physSgprIdx =
+                cu->registerManager->mapSgpr(wavefront(), numSgprs - 3);
+            uint32_t size = cu->srf[simdId]->read(physSgprIdx);
+
+
+            for (int lane = 0; lane < cu->wfSize(); ++lane) {
+                if (mask[lane]) {
+                    addr[lane] = addr[lane] + lane * size + offset +
+                        cu->shader->getHiddenPrivateBase() -
+                        cu->shader->getScratchBase();
+                }
             }
         }
-        wavefront()->execUnitId =  wavefront()->flatLmUnitId;
-        wavefront()->decLGKMInstsIssued();
-        if (isLoad()) {
-            wavefront()->rdLmReqsInPipe--;
-        } else if (isStore()) {
-            wavefront()->wrLmReqsInPipe--;
-        } else if (isAtomic() || isMemSync()) {
-            wavefront()->wrLmReqsInPipe--;
-            wavefront()->rdLmReqsInPipe--;
-        } else {
-            panic("Invalid memory operation!\n");
+
+        wavefront()->execUnitId = wavefront()->flatLmUnitId;
+
+        // For FLAT the local memory pipe counters are incremented, but they
+        // are not incremented for explicit scratch_* instructions. Only
+        // decrement these counters if we are explicitly a FLAT instruction.
+        if (isFlat()) {
+            wavefront()->decLGKMInstsIssued();
+            if (isLoad()) {
+                wavefront()->rdLmReqsInPipe--;
+            } else if (isStore()) {
+                wavefront()->wrLmReqsInPipe--;
+            } else if (isAtomic() || isMemSync()) {
+                wavefront()->wrLmReqsInPipe--;
+                wavefront()->rdLmReqsInPipe--;
+            } else {
+                panic("Invalid memory operation!\n");
+            }
         }
     } else {
         for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {

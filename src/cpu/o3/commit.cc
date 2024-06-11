@@ -1403,6 +1403,24 @@ ThreadID
 Commit::getCommittingThread()
 {
     if (numThreads > 1) {
+        // If a thread is exiting, we need to ensure that *all* of its
+        // instructions will be retired in this cycle, because the
+        // thread will be removed from the CPU at the end of this cycle.
+        // To ensure this, we prioritize committing from exiting threads
+        // before we consider other threads using the specified SMT
+        // commit policy.
+        for (ThreadID tid : *activeThreads) {
+            if (cpu->isThreadExiting(tid) &&
+                !rob->isEmpty(tid) &&
+                (commitStatus[tid] == Running ||
+                 commitStatus[tid] == Idle ||
+                 commitStatus[tid] == FetchTrapPending)) {
+                assert(rob->isHeadReady(tid) &&
+                       rob->readHeadInst(tid)->isSquashed());
+                return tid;
+            }
+        }
+
         switch (commitPolicy) {
           case CommitPolicy::RoundRobin:
             return roundRobin();

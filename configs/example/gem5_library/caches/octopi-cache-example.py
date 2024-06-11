@@ -97,7 +97,9 @@ board = ArmBoard(
     platform=platform,
 )
 
-board.set_workload(obtain_resource("arm64-ubuntu-20.04-boot"))
+board.set_workload(
+    obtain_resource("arm64-ubuntu-20.04-boot", resource_version="2.0.0")
+)
 
 simulator = Simulator(board=board)
 simulator.run()

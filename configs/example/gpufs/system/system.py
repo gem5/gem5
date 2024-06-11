@@ -108,7 +108,7 @@ def makeGpuFSSystem(args):
     system.cpu.append(shader)
 
     # This arbitrary address is something in the X86 I/O hole
-    hsapp_gpu_map_paddr = 0xE00000000
+    hsapp_gpu_map_paddr = 0xE0000000
     hsapp_pt_walker = VegaPagetableWalker()
     gpu_hsapp = HSAPacketProcessor(
         pioAddr=hsapp_gpu_map_paddr,
@@ -161,7 +161,7 @@ def makeGpuFSSystem(args):
             0x7D000,
         ]
         sdma_sizes = [0x1000] * 8
-    elif args.gpu_device == "MI200":
+    elif args.gpu_device == "MI200" or args.gpu_device == "MI300X":
         num_sdmas = 5
         sdma_bases = [
             0x4980,
@@ -263,7 +263,7 @@ def makeGpuFSSystem(args):
         0x00000340,
         0x00000000,
         0x00000340,
-        0x0000000F,
+        0x00000000,
         0x00000340,
         0x00000000,
         0x00000000,
@@ -281,7 +281,7 @@ def makeGpuFSSystem(args):
     # See: https://sandpile.org/x86/cpuid.htm#level_0000_0001h
     # Enables AVX, OSXSAVE, XSAVE, POPCNT, SSE4.2, SSE4.1, CMPXCHG16B,
     # and FMA.
-    avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
+    avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C803209]
 
     for i, cpu in enumerate(system.cpu):
         # Break once we reach the shader "CPU"

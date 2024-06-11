@@ -244,6 +244,10 @@ ISA::readMiscReg(RegIndex idx)
         return base;
     }
 
+    if (idx == misc_reg::Xcr0) {
+        return regVal[idx] | 1;
+    }
+
     return readMiscRegNoEffect(idx);
 }
 
@@ -337,6 +341,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         }
         break;
       case misc_reg::Cr8:
+        break;
+      case misc_reg::Xcr0:
         break;
       case misc_reg::Rflags:
         {

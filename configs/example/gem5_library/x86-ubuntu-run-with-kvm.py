@@ -117,7 +117,7 @@ command = (
     + "m5 exit;"
 )
 
-workload = obtain_resource("x86-ubuntu-18.04-boot")
+workload = obtain_resource("x86-ubuntu-18.04-boot", resource_version="2.0.0")
 workload.set_parameter("readfile_contents", command)
 board.set_workload(workload)
 

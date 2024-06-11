@@ -455,6 +455,29 @@ namespace VegaISA
         // second instruction DWORD
         InFmt_VOP3_1 extData;
 
+        // Output modifier for VOP3 instructions. This 2-bit field can be set
+        // to "0" to do nothing, "1" to multiply output value by 2, "2" to
+        // multiply output value by 4, or "3" to divide output value by 2. If
+        // the instruction supports clamping, this is applied *before* clamp
+        // but after the abs and neg modifiers.
+        template<typename T>
+        T omodModifier(T val, unsigned omod)
+        {
+            assert(omod < 4);
+
+            if constexpr (std::is_floating_point_v<T>) {
+                if (omod == 1) return val * T(2.0f);
+                if (omod == 2) return val * T(4.0f);
+                if (omod == 3) return val / T(2.0f);
+            } else {
+                assert(std::is_integral_v<T>);
+                if (omod == 1) return val * T(2);
+                if (omod == 2) return val * T(4);
+                if (omod == 3) return val / T(2);
+            }
+
+            return val;
+        }
       private:
         bool hasSecondDword(InFmt_VOP3A *);
         /**
@@ -1258,13 +1281,12 @@ namespace VegaISA
             // If saddr = 0x7f there is no scalar reg to read and address will
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
-            if ((saddr == 0x7f && (isFlatGlobal() || isFlatScratch()))
-                || isFlat()) {
+            if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
                 ConstVecOperandU64 vbase(gpuDynInst, vaddr);
                 vbase.read();
 
                 calcAddrVgpr(gpuDynInst, vbase, offset);
-            } else {
+            } else if (isFlatGlobal()) {
                 // Assume we are operating in 64-bit mode and read a pair of
                 // SGPRs for the address base.
                 ConstScalarOperandU64 sbase(gpuDynInst, saddr);
@@ -1274,6 +1296,57 @@ namespace VegaISA
                 voffset.read();
 
                 calcAddrSgpr(gpuDynInst, voffset, sbase, offset);
+            // For scratch, saddr = 0x7f there is no scalar reg to read and
+            // a vgpr will be used for address offset. Otherwise, saddr is
+            // the sgpr index holding the address offset. For scratch
+            // instructions the offset GPR is always 32-bits.
+            } else if (saddr != 0x7f) {
+                assert(isFlatScratch());
+
+                ConstScalarOperandU32 soffset(gpuDynInst, saddr);
+                soffset.read();
+
+                Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
+
+                int elemSize;
+                auto staticInst = gpuDynInst->staticInstruction();
+                if (gpuDynInst->isLoad()) {
+                    elemSize = staticInst->getOperandSize(2);
+                } else {
+                    assert(gpuDynInst->isStore());
+                    elemSize = staticInst->getOperandSize(1);
+                }
+
+                unsigned swizzleOffset = soffset.rawData() + offset;
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        gpuDynInst->addr.at(lane) = flat_scratch_addr
+                            + swizzle(swizzleOffset, lane, elemSize);
+                    }
+                }
+            } else {
+                assert(isFlatScratch());
+
+                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+                voffset.read();
+
+                Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
+
+                int elemSize;
+                auto staticInst = gpuDynInst->staticInstruction();
+                if (gpuDynInst->isLoad()) {
+                    elemSize = staticInst->getOperandSize(2);
+                } else {
+                    assert(gpuDynInst->isStore());
+                    elemSize = staticInst->getOperandSize(1);
+                }
+
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        gpuDynInst->addr.at(lane) = flat_scratch_addr
+                            + swizzle(voffset[lane] + offset, lane, elemSize);
+                    }
+                }
             }
 
             if (isFlat()) {
@@ -1285,6 +1358,7 @@ namespace VegaISA
                 assert(isFlatScratch());
                 gpuDynInst->staticInstruction()->executed_as =
                     enums::SC_PRIVATE;
+                gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
             }
         }
 
@@ -1420,6 +1494,23 @@ namespace VegaISA
                     gpuDynInst->addr.at(lane) = addr[lane] + offset;
                 }
             }
+        }
+
+        VecElemU32
+        swizzle(VecElemU32 offset, int lane, int elem_size)
+        {
+            // This is not described in the spec. We use the swizzle from
+            // buffer memory instructions and fix the stride to 4. Multiply
+            // the thread ID by the storage size to avoid threads clobbering
+            // their data.
+            return ((offset / 4) * 4 * 64)
+                + (offset % 4) + (lane * elem_size);
+        }
+
+        Addr
+        readFlatScratch(GPUDynInstPtr gpuDynInst)
+        {
+            return gpuDynInst->computeUnit()->shader->getScratchBase();
         }
     }; // Inst_FLAT
 } // namespace VegaISA

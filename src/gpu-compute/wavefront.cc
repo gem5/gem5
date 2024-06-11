@@ -118,6 +118,7 @@ void
 Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 {
     int regInitIdx = 0;
+    gfxVersion = task->gfxVersion();
 
     // Iterate over all the init fields and check which
     // bits are enabled. Useful information can be found here:
@@ -378,8 +379,29 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                         wfSlotId, wfDynId, physSgprIdx, workGroupId[2]);
                 break;
               case PrivSegWaveByteOffset:
+
+                // For architected flat scratch, this enable is reused to set
+                // the FLAT_SCRATCH register pair to the scratch backing
+                // memory: https://llvm.org/docs/AMDGPUUsage.html#flat-scratch
+                if (task->gfxVersion() == GfxVersion::gfx942) {
+                    Addr arch_flat_scratch =
+                        task->amdQueue.scratch_backing_memory_location;
+                    computeUnit->srf[simdId]->write(
+                        VegaISA::REG_FLAT_SCRATCH_HI,
+                        bits(arch_flat_scratch, 63, 32));
+                    computeUnit->srf[simdId]->write(
+                        VegaISA::REG_FLAT_SCRATCH_LO,
+                        bits(arch_flat_scratch, 31, 0));
+
+                    break;
+                }
+
+                // Not architected flat scratch. Write the scratch wavefront
+                // offset: https://llvm.org/docs/AMDGPUUsage.html
+                //              #amdgpu-amdhsa-initial-kernel-execution-state
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
+
                 /**
                   * the compute_tmpring_size_wavesize specifies the number of
                   * kB allocated per wavefront, hence the multiplication by
@@ -442,7 +464,8 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
     // Default to false and set to true for gem5 supported ISAs.
     bool packed_work_item_id = false;
 
-    if (task->gfxVersion() == GfxVersion::gfx90a) {
+    if (task->gfxVersion() == GfxVersion::gfx90a ||
+        task->gfxVersion() == GfxVersion::gfx942) {
         packed_work_item_id = true;
     }
 

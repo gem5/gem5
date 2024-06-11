@@ -449,6 +449,28 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     }
   }
 
+  action(wtna_writeThroughNoAlloc, "wtna", desc="Write through without allocation") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      peek(mandatoryQueue_in, RubyRequest) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.DataBlk.copyPartial(in_msg.WTData, in_msg.writeMask);
+        out_msg.writeMask := in_msg.writeMask;
+        out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
+                                TCC_select_low_bit, TCC_select_num_bits));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:WriteThrough;
+        out_msg.InitialRequestTime := curCycle();
+        out_msg.Shared := false;
+
+        // forward inst sequence number to lower TCC
+        out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
+    }
+  }
+
   action(at_atomicThrough, "at", desc="send Atomic") {
     peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
@@ -595,6 +617,19 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       coalescer.writeCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
     }
     cache_entry.Dirty := true;
+  }
+
+  action(sna_storeDoneMissNoAlloc, "sna", desc="local store done (misses in TCP)") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      // writeCallback requires pass-by-reference and in_msg.WTData is a const value.
+      DataBlock tmp := in_msg.WTData;
+
+      if (use_seq_not_coal) {
+          sequencer.writeCallback(address, tmp, false, MachineType:L1Cache);
+      } else {
+          coalescer.writeCallback(address, MachineType:L1Cache, tmp);
+      }
+    }
   }
 
   action(f_flushDone, "f", desc="flush done") {
@@ -755,12 +790,9 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   }
 
   transition(I, StoreThrough) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    a_allocate;
-    dw_dirtyWrite;
-    s_storeDoneMiss;
+    sna_storeDoneMissNoAlloc;
     uu_profileDataMiss;
-    wt_writeThrough;
-    ic_invCache;
+    wtna_writeThroughNoAlloc;
     p_popMandatoryQueue;
   }
 

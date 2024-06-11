@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 ARM Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -147,6 +147,7 @@ action(AllocateTBE_SeqRequest, desc="") {
       out_msg.is_local_pf := false;
       out_msg.is_remote_pf := false;
       out_msg.txnId := max_outstanding_transactions;
+      out_msg.ns := !in_msg.isSecure;
 
       out_msg.atomic_op.clear();
       out_msg.atomic_op.orMask(in_msg.writeMask);
@@ -682,6 +683,42 @@ action(Initiate_ReadUnique_Hit_InvUpstream, desc="") {
   tbe.actions.pushNB(Event:TagArrayWrite);
 }
 
+action(Initiate_MakeReadUnique_Hit_InvUpstream, desc="") {
+  assert(tbe.reqType == CHIRequestType:MakeReadUnique);
+  tbe.actions.push(Event:ReadHitPipe);
+  if (tbe.dir_sharers.count() > 1) {
+    tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
+  }
+  if (!tbe.dataUnique && !is_HN) {
+    tbe.actions.push(Event:SendMakeReadUnique);
+  }
+  tbe.actions.pushNB(Event:DataArrayRead);
+  tbe.actions.push(Event:FinishMakeReadUnique);
+}
+
+action(Finish_MakeReadUnique, desc="") {
+  // Choosing whether to send or not data back (CompData vs Comp)
+  // to the requestor. Data will be forwarded if the requestor
+  // lost the cacheline while the transaction was in progress
+  if (tbe.dataValid && tbe.dir_sharers.isElement(tbe.requestor) == false) {
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    if (tbe.dataDirty) {
+      // Got dirty data from snoopees
+      tbe.actions.pushNB(Event:SendCompUDResp);
+    } else {
+      tbe.actions.pushNB(Event:SendCompUCResp);
+    }
+  }
+  tbe.dataUnique := true;
+  tbe.dataMaybeDirtyUpstream := true;
+  tbe.requestorToBeExclusiveOwner := true;
+  tbe.dir_ownerExists := false;
+
+  tbe.actions.pushNB(Event:TagArrayWrite);
+  tbe.actions.push(Event:WaitCompAck);
+}
+
 action(Initiate_CleanUnique, desc="") {
   tbe.actions.push(Event:ReadMissPipe); // TODO need another latency pipe ??
 
@@ -823,7 +860,8 @@ action(Initiate_AtomicReturn_I, desc="") {
     tbe.atomic_to_be_done := true;
   } else if ((policy_type == 1) || // UNIQUE NEAR
              (policy_type == 2)) { // PRESENT NEAR
-    tbe.actions.push(Event:SendAtomicReturn_NoWait);
+    tbe.actions.push(Event:SendAtomicReturn);
+    tbe.actions.push(Event:SendARData);
     tbe.dataToBeInvalid := true;
     tbe.doCacheFill := false;
     tbe.atomic_to_be_done := false;
@@ -840,7 +878,8 @@ action(Initiate_AtomicNoReturn_I, desc="") {
     tbe.actions.push(Event:WriteBEPipe);
     tbe.actions.push(Event:TagArrayWrite);
     tbe.atomic_to_be_done := true;
-  } else if (policy_type == 1) { // UNIQUE NEAR
+  } else if ((policy_type == 1) || // UNIQUE NEAR
+             (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendAtomicNoReturn);
     tbe.actions.push(Event:SendANRData);
     tbe.dataToBeInvalid := true;
@@ -852,7 +891,8 @@ action(Initiate_AtomicNoReturn_I, desc="") {
 }
 
 action(Initiate_AtomicReturn_SD, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -860,7 +900,8 @@ action(Initiate_AtomicReturn_SD, desc="") {
     tbe.actions.push(Event:TagArrayWrite);
     tbe.atomic_to_be_done := true;
   } else if (policy_type == 1) { // UNIQUE NEAR
-    tbe.actions.push(Event:SendAtomicReturn_NoWait);
+    tbe.actions.push(Event:SendAtomicReturn);
+    tbe.actions.push(Event:SendARData);
     tbe.dataToBeInvalid := true;
     tbe.doCacheFill := false;
     tbe.atomic_to_be_done := false;
@@ -870,7 +911,8 @@ action(Initiate_AtomicReturn_SD, desc="") {
 }
 
 action(Initiate_AtomicNoReturn_SD, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -889,7 +931,8 @@ action(Initiate_AtomicNoReturn_SD, desc="") {
 }
 
 action(Initiate_AtomicReturn_SC, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -897,7 +940,8 @@ action(Initiate_AtomicReturn_SC, desc="") {
     tbe.actions.push(Event:TagArrayWrite);
     tbe.atomic_to_be_done := true;
   } else if (policy_type == 1) { // UNIQUE NEAR
-    tbe.actions.push(Event:SendAtomicReturn_NoWait);
+    tbe.actions.push(Event:SendAtomicReturn);
+    tbe.actions.push(Event:SendARData);
     tbe.dataToBeInvalid := true;
     tbe.doCacheFill := false;
     tbe.atomic_to_be_done := false;
@@ -907,7 +951,8 @@ action(Initiate_AtomicReturn_SC, desc="") {
 }
 
 action(Initiate_AtomicNoReturn_SC, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -1049,14 +1094,30 @@ action(Initiate_AtomicReturn_LocalWrite, desc="") {
   }
   tbe.actions.push(Event:SendDBIDResp_AR);
   tbe.actions.pushNB(Event:WriteFEPipe);
-  tbe.actions.pushNB(Event:SendCompData_AR);
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:SendCompData_AR);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_AtomicReturn_WriteBack, desc="") {
+  if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+  } else if (tbe.dir_sharers.count() > 0){
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+  }
+  tbe.actions.push(Event:SendDBIDResp_AR);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
 
 action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
   if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
@@ -1073,37 +1134,56 @@ action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
   }
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_AtomicNoReturn_WriteBack, desc="") {
+  if ((tbe.dir_sharers.count() > 0) && tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+  } else if (tbe.dir_sharers.count() > 0){
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+  }
+  if (comp_anr) {
+    tbe.actions.push(Event:SendDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_ANR);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
 
 action(Initiate_AtomicReturn_Forward, desc="") {
-  if ((tbe.dir_sharers.count() > 0) &&
-     (tbe.dir_sharers.isElement(tbe.requestor))){
-    tbe.dir_sharers.remove(tbe.requestor);
-  }
   tbe.actions.push(Event:SendAtomicReturn);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendDBIDResp_AR);
+  tbe.actions.push(Event:SendARData);
   tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.pushNB(Event:TagArrayWrite);
 
   tbe.dataToBeInvalid := true;
 }
 
 action(Initiate_AtomicNoReturn_Forward, desc="") {
-  if ((tbe.dir_sharers.count() > 0) &&
-     (tbe.dir_sharers.isElement(tbe.requestor))){
-    tbe.dir_sharers.remove(tbe.requestor);
-  }
   if (comp_anr) {
     tbe.actions.push(Event:SendAtomicNoReturn);
+    tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:SendComp_ANR);
   } else {
     tbe.actions.push(Event:SendAtomicNoReturn);
+    tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
   }
   tbe.actions.push(Event:WriteBEPipe);
@@ -1113,18 +1193,47 @@ action(Initiate_AtomicNoReturn_Forward, desc="") {
   tbe.dataToBeInvalid := true;
 }
 
+action(Initiate_AtomicReturn_Miss_Alloc, desc="") {
+  tbe.actions.push(Event:SendReadNoSnp);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendDBIDResp_AR);
+  tbe.actions.push(Event:SendCompData_AR);
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
 action(Initiate_AtomicReturn_Miss, desc="") {
   tbe.actions.push(Event:SendReadNoSnp);
   tbe.actions.pushNB(Event:WriteFEPipe);
   tbe.actions.push(Event:SendDBIDResp_AR);
-  tbe.actions.pushNB(Event:WriteFEPipe);
-  tbe.actions.pushNB(Event:SendCompData_AR);
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:SendCompData_AR);
   tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_AtomicNoReturn_Miss_Alloc, desc="") {
+  assert(is_HN);
+  tbe.actions.push(Event:SendReadNoSnp);
+  if (comp_anr) {
+    tbe.actions.push(Event:SendDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_ANR);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_ANR);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:DelayAtomic);
+  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:TagArrayWrite);
 }
+
 
 action(Initiate_AtomicNoReturn_Miss, desc="") {
   assert(is_HN);
@@ -1137,12 +1246,12 @@ action(Initiate_AtomicNoReturn_Miss, desc="") {
     tbe.actions.push(Event:SendCompDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
   }
-
-  tbe.actions.push(Event:WriteFEPipe);
-  tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:DelayAtomic);
   tbe.actions.push(Event:WriteBEPipe);
-  tbe.actions.push(Event:TagArrayWrite);
+  tbe.actions.push(Event:SendWriteNoSnp);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
 }
 
 action(Initiate_CopyBack, desc="") {
@@ -1515,6 +1624,28 @@ action(Send_ReadUnique, desc="") {
   }
 }
 
+action(Send_MakeReadUnique, desc="") {
+  assert((tbe.dataValid && tbe.dataUnique) == false);
+
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:DataSepResp_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UD_PD);
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_UC);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_UD_PD);
+  tbe.expected_req_resp.setExpectedCount(2);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:MakeReadUnique, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
 action(Send_CleanUnique, desc="") {
   assert(tbe.dataValid || (tbe.dir_sharers.count() > 0));
   assert(tbe.dataUnique == false);
@@ -1611,6 +1742,9 @@ action(Send_WriteNoSnp, desc="") {
   // so addExpectedCount
   tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
   tbe.expected_req_resp.addExpectedCount(1);
+
+  // If we are WB after AtomicReturn/NoReturn
+  tbe.atomic_to_be_wb := true;
 }
 
 action(Send_WriteNoSnp_Partial, desc="") {
@@ -1664,18 +1798,6 @@ action(Send_AtomicReturn, desc="") {
   tbe.expected_req_resp.addExpectedCount(1);
 }
 
-action(Send_AtomicReturn_NoWait, desc="") {
-  assert(is_valid(tbe));
-
-  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
-    prepareRequestAtomic(tbe, CHIRequestType:AtomicReturn, out_msg);
-    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
-    allowRequestRetry(tbe, out_msg);
-  }
-
-  tbe.dataAMOValid := false;
-}
-
 action(Send_AtomicNoReturn, desc="") {
   assert(is_valid(tbe));
 
@@ -1699,6 +1821,7 @@ action(Send_SnpCleanInvalid, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpCleanInvalid, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
   setExpectedForInvSnoop(tbe, false);
 }
@@ -1713,6 +1836,7 @@ action(Send_SnpCleanInvalid_NoReq, desc="") {
     // at least one sharer other than requestor
     assert(out_msg.Destination.count() > 0);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
     setExpectedForInvSnoop(tbe, false);
     tbe.expected_snp_resp.setExpectedCount(out_msg.Destination.count());
   }
@@ -1729,6 +1853,7 @@ action(Send_SnpUnique, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1750,6 +1875,7 @@ action(Send_SnpUnique_RetToSrc, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
     out_msg.Destination.add(dest);
     out_msg.retToSrc := true;
+    out_msg.ns := tbe.ns;
   }
   // if other sharers send with retToSrc=false to others
   if (tbe.dir_sharers.count() > 1) {
@@ -1758,6 +1884,7 @@ action(Send_SnpUnique_RetToSrc, desc="") {
       out_msg.Destination.addNetDest(tbe.dir_sharers);
       out_msg.Destination.remove(dest);
       out_msg.retToSrc := false;
+      out_msg.ns := tbe.ns;
     }
   }
 }
@@ -1777,6 +1904,7 @@ action(Send_SnpUniqueFwd, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpUniqueFwd, out_msg);
     out_msg.Destination.addNetDest(tbe.dir_sharers);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1798,6 +1926,7 @@ action(Send_SnpShared, desc="") {
     prepareRequest(tbe, CHIRequestType:SnpShared, out_msg);
     out_msg.Destination.add(tbe.dir_owner);
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1847,6 +1976,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
     }
     out_msg.Destination.add(tbe.dir_owner);
     out_msg.retToSrc := retToSrc;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1874,6 +2004,7 @@ action(Send_SnpSharedFwd_ToSharer, desc="") {
     // TODO should be random or the closest one to the fwd dest
     out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     out_msg.retToSrc := retToSrc;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1907,6 +2038,7 @@ action(Send_SnpOnce, desc="") {
       out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     }
     out_msg.retToSrc := true;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -1940,6 +2072,7 @@ action(Send_SnpOnceFwd, desc="") {
       out_msg.Destination.add(tbe.dir_sharers.smallestElement());
     }
     out_msg.retToSrc := false;
+    out_msg.ns := tbe.ns;
   }
 }
 
@@ -2337,6 +2470,10 @@ action(UpdateDataState_FromADataResp, desc="") {
     tbe.dataDirty := true;
 
     DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
+  } else if ((tbe.expected_req_resp.hasReceivedData()) &&
+             ((tbe.reqType == CHIRequestType:AtomicReturn) ||
+             (tbe.reqType == CHIRequestType:AtomicNoReturn))){
+    tbe.dataMaybeDirtyUpstream := false;
   }
   printTBEState(tbe);
 }
@@ -2504,10 +2641,6 @@ action(Receive_ReqResp_WUNeedComp, desc="") {
   tbe.defer_expected_comp := true;
 }
 
-action(Receive_ReqResp_AR, desc="") {
-  tbe.actions.pushFrontNB(Event:SendARData);
-}
-
 action(Receive_ReqResp_WUComp, desc="") {
   if (tbe.defer_expected_comp) {
     tbe.defer_expected_comp := false;
@@ -2607,7 +2740,8 @@ action(Send_CompData, desc="") {
   bool is_rd_shared := (tbe.reqType == CHIRequestType:ReadShared) ||
                        (tbe.reqType == CHIRequestType:ReadNotSharedDirty);
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
-  bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
+  bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique ||
+                       tbe.reqType == CHIRequestType:MakeReadUnique;
 
   // Send UC/UD on ReadShared or ReadNotSharedDirty if the line has no sharers
   // and one of the followings are met
@@ -2730,16 +2864,17 @@ action(Send_ANRData, desc="") {
 
 action(CheckARComp, desc="") {
   assert(is_valid(tbe));
+  clearExpectedReqResp(tbe);
   tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_I);
   tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
-  tbe.expected_req_resp.addExpectedCount(2);
+  tbe.expected_req_resp.setExpectedCount(2);
 }
 
 action(CheckANRComp, desc="") {
   assert(is_valid(tbe));
   if (tbe.defer_expected_comp) {
     tbe.defer_expected_comp := false;
-    tbe.expected_req_resp.addExpectedCount(1);
+    tbe.expected_req_resp.setExpectedCount(1);
     tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
   }
 }
@@ -2955,7 +3090,8 @@ action(Send_Data, desc="") {
     }
     tbe.snd_pendBytes.setMask(offset, range, false);
 
-    if (tbe.reqType == CHIRequestType:AtomicReturn){
+    if ((tbe.reqType == CHIRequestType:AtomicReturn) &&
+        (tbe.atomic_to_be_wb == false)){
         out_msg.dataBlk := tbe.oldDataBlk;
     } else {
         out_msg.dataBlk := tbe.dataBlk;
@@ -3027,6 +3163,18 @@ action(Send_CompUC_Stale, desc="") {
     // We don't know if this is a stale clean unique or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
+  }
+}
+
+action(Send_CompUD_PD, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UD_PD;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3107,10 +3255,6 @@ action(Send_Comp_WU, desc="") {
 action(Send_CompData_AR, desc="") {
   assert(is_valid(tbe));
   assert(tbe.dataValid);
-
-  if (is_HN) {
-      tbe.oldDataBlk := tbe.dataBlk;
-  }
 
   tbe.snd_msgType := CHIDataType:CompData_I;
   tbe.dataMaybeDirtyUpstream := false;

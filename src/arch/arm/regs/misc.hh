@@ -1142,6 +1142,24 @@ namespace ArmISA
         MISCREG_HDFGRTR_EL2,
         MISCREG_HDFGWTR_EL2,
 
+        // FEAT_MPAM
+        MISCREG_MPAMIDR_EL1,
+        MISCREG_MPAM0_EL1,
+        MISCREG_MPAM1_EL1,
+        MISCREG_MPAM2_EL2,
+        MISCREG_MPAM3_EL3,
+        MISCREG_MPAM1_EL12,
+        MISCREG_MPAMHCR_EL2,
+        MISCREG_MPAMVPMV_EL2,
+        MISCREG_MPAMVPM0_EL2,
+        MISCREG_MPAMVPM1_EL2,
+        MISCREG_MPAMVPM2_EL2,
+        MISCREG_MPAMVPM3_EL2,
+        MISCREG_MPAMVPM4_EL2,
+        MISCREG_MPAMVPM5_EL2,
+        MISCREG_MPAMVPM6_EL2,
+        MISCREG_MPAMVPM7_EL2,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -2858,6 +2876,24 @@ namespace ArmISA
         "hfgwtr_el2",
         "hdfgrtr_el2",
         "hdfgwtr_el2",
+
+        // FEAT_MPAM
+        "mpamidr_el1",
+        "mpam0_el1",
+        "mpam1_el1",
+        "mpam2_el2",
+        "mpam3_el3",
+        "mpam1_el12",
+        "mpamhcr_el2",
+        "mpamvpmv_el2",
+        "mpamvpm0_el2",
+        "mpamvpm1_el2",
+        "mpamvpm2_el2",
+        "mpamvpm3_el2",
+        "mpamvpm4_el2",
+        "mpamvpm5_el2",
+        "mpamvpm6_el2",
+        "mpamvpm7_el2",
 
         "num_phys_regs",
 
