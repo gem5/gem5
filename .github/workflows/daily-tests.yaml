@@ -72,7 +72,7 @@ jobs:
               run: scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option }}
             - name: Build gem5
               run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v4.0.0
               with:
                   name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
                   path: '*build/${{ matrix.image }}/gem5.opt'
@@ -89,7 +89,7 @@ jobs:
         needs: [build-gem5, name-artifacts]
         steps:
             - name: Merge gem5 build artifacts
-              uses: actions/upload-artifact/merge@v4
+              uses: actions/upload-artifact/merge@v4.0.0
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}
                   pattern: ${{needs.name-artifacts.outputs.build-name}}*
@@ -136,7 +136,7 @@ jobs:
             # download all artifacts for each test. Thoguh this is inelegant,
             # it's simpler than figuring otu which long tests requires which
             # binary.
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v4.0.0
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}
             # The upload/download GitHub actions do not preserve the executable
@@ -154,7 +154,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v4.0.0
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
@@ -183,7 +183,7 @@ jobs:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v4.0.0
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
             - run: chmod u+x build/ALL/gem5.opt
@@ -198,7 +198,7 @@ jobs:
                   zip -r output.zip tests/testing-results
             - name: upload zip
               if: success() || failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v4.0.0
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
