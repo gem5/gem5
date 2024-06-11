@@ -43,6 +43,8 @@ from ruby import Ruby
 
 import m5
 
+from gem5.isas import ISA
+
 demo_runscript_without_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
@@ -91,9 +93,9 @@ def addDemoOptions(parser):
 def runVegaGPUFS(cpu_type):
     parser = argparse.ArgumentParser()
     runfs.addRunFSOptions(parser)
-    Options.addCommonOptions(parser)
+    Options.addCommonOptions(parser, ISA.X86)
     AmdGPUOptions.addAmdGPUOptions(parser)
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, ISA.X86)
     GPUTLBOptions.tlb_options(parser)
     addDemoOptions(parser)
 

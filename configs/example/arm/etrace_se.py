@@ -44,6 +44,11 @@ from m5.util import addToPath
 
 m5.util.addToPath("../..")
 
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 import devices
 from common import ObjectList
 

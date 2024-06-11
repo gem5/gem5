@@ -39,6 +39,7 @@ from m5.util import addToPath
 
 # gem5 options and objects
 addToPath("../../")
+
 from amd import AmdGPUOptions
 from common import (
     GPUTLBConfig,
@@ -51,6 +52,8 @@ from ruby import Ruby
 
 # GPU FS related
 from system.system import makeGpuFSSystem
+
+from gem5.isas import ISA
 
 
 def addRunFSOptions(parser):
@@ -302,8 +305,8 @@ if __name__ == "__m5_main__":
     # Add gpufs, common, ruby, amdgpu, and gpu tlb args
     parser = argparse.ArgumentParser()
     addRunFSOptions(parser)
-    Options.addCommonOptions(parser)
-    Ruby.define_options(parser)
+    Options.addCommonOptions(parser, ISA.X86)
+    Ruby.define_options(parser, ISA.X86)
     AmdGPUOptions.addAmdGPUOptions(parser)
     GPUTLBOptions.tlb_options(parser)
 

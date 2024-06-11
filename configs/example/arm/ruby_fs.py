@@ -43,6 +43,11 @@ from m5.util import addToPath
 
 m5.util.addToPath("../..")
 
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 import devices
 from common import (
     MemConfig,
@@ -63,8 +68,8 @@ default_root_device = "/dev/vda1"
 
 # Pre-defined CPU configurations.
 cpu_types = {
-    "noncaching": NonCachingSimpleCPU,
-    "minor": MinorCPU,
+    "noncaching": ArmNonCachingSimpleCPU,
+    "minor": ArmMinorCPU,
     "hpi": HPI.HPI,
     "o3": O3_ARM_v7a.O3_ARM_v7a_3,
 }
@@ -288,7 +293,7 @@ def main():
     parser.add_argument("--l3_assoc", type=int, default=16)
     parser.add_argument("--cacheline_size", type=int, default=64)
 
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, ISA.ARM)
     args = parser.parse_args()
 
     root = Root(full_system=True)

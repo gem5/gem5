@@ -39,6 +39,8 @@ addToPath("../")
 from common import Options
 from ruby import Ruby
 
+from gem5.isas import ISA
+
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
@@ -61,7 +63,7 @@ parser.add_argument(
 #
 # Add the ruby specific and protocol specific options
 #
-Ruby.define_options(parser)
+Ruby.define_options(parser, ISA.NULL)
 
 exec(
     compile(

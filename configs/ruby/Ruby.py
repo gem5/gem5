@@ -53,6 +53,7 @@ from gem5.runtime import get_supported_isas
 addToPath("../")
 
 from common import (
+    CpuConfig,
     FileSystemConfig,
     MemConfig,
     ObjectList,
@@ -60,10 +61,15 @@ from common import (
 from network import Network
 from topologies import *
 
+from gem5.isas import ISA
 
-def define_options(parser):
-    # By default, ruby uses the simple timing cpu and the X86 ISA
-    parser.set_defaults(cpu_type="X86TimingSimpleCPU")
+
+def define_options(parser, isa: ISA):
+    if isa != ISA.NULL:
+        # By default, ruby uses the simple timing cpu with given ISA
+        parser.set_defaults(
+            cpu_type=CpuConfig.isa_string_map[isa] + "TimingSimpleCPU"
+        )
 
     parser.add_argument(
         "--ruby-clock",
@@ -128,7 +134,7 @@ def define_options(parser):
     protocol = buildEnv["PROTOCOL"]
     exec(f"from . import {protocol}")
     eval(f"{protocol}.define_options(parser)")
-    Network.define_options(parser)
+    Network.define_options(parser, isa=isa)
 
 
 def setup_memory_controllers(system, ruby, dir_cntrls, options):

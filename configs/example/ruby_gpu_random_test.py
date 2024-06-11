@@ -41,12 +41,14 @@ addToPath("../")
 from common import Options
 from ruby import Ruby
 
+from gem5.isas import ISA
+
 #
 # Add the ruby specific and protocol specific options
 #
 parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
-Ruby.define_options(parser)
+Ruby.define_options(parser, ISA.NULL)
 
 # GPU Ruby tester options
 parser.add_argument(

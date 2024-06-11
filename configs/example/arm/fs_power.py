@@ -47,6 +47,11 @@ from m5.objects import (
     PowerModel,
 )
 
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 
 class CpuPowerOn(MathExprPowerModel):
     def __init__(self, cpu_path, **kwargs):

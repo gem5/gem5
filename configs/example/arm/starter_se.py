@@ -48,6 +48,11 @@ from m5.util import addToPath
 
 m5.util.addToPath("../..")
 
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 import devices
 from common import (
     MemConfig,
@@ -62,8 +67,8 @@ from common.cores.arm import (
 # l1_icache_class, l1_dcache_class, l2_Cache_class). Any of
 # the cache class may be 'None' if the particular cache is not present.
 cpu_types = {
-    "atomic": (AtomicSimpleCPU, None, None, None),
-    "minor": (MinorCPU, devices.L1I, devices.L1D, devices.L2),
+    "atomic": (ArmAtomicSimpleCPU, None, None, None),
+    "minor": (ArmMinorCPU, devices.L1I, devices.L1D, devices.L2),
     "hpi": (HPI.HPI, HPI.HPI_ICache, HPI.HPI_DCache, HPI.HPI_L2),
     "o3": (
         O3_ARM_v7a.O3_ARM_v7a_3,

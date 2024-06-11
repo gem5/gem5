@@ -55,6 +55,7 @@ from m5.util import (
 )
 
 from gem5.isas import ISA
+from gem5.runtime import get_supported_isas
 
 addToPath("../../")
 
@@ -131,7 +132,8 @@ warn(
 )
 
 parser = argparse.ArgumentParser()
-Options.addCommonOptions(parser)
+default_isa = list(get_supported_isas())[0]
+Options.addCommonOptions(parser, default_isa=default_isa)
 Options.addSEOptions(parser)
 
 if "--ruby" in sys.argv:

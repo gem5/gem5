@@ -33,6 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from common import ObjectList
+
 import m5.objects
 from m5 import fatal
 
@@ -49,7 +51,7 @@ isa_string_map = {
 
 
 def config_etrace(cpu_cls, cpu_list, options):
-    if issubclass(cpu_cls, m5.objects.DerivO3CPU):
+    if ObjectList.is_o3_cpu(cpu_cls):
         # Assign the same file name to all cpus for now. This must be
         # revisited when creating elastic traces for multi processor systems.
         for cpu in cpu_list:
@@ -72,6 +74,6 @@ def config_etrace(cpu_cls, cpu_list, options):
     else:
         fatal(
             "%s does not support data dependency tracing. Use a CPU model of"
-            " type or inherited from DerivO3CPU.",
+            " type or inherited from BaseO3CPU.",
             cpu_cls,
         )

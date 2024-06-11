@@ -29,4 +29,4 @@
 
 import vega10
 
-vega10.runVegaGPUFS("AtomicSimpleCPU")
+vega10.runVegaGPUFS("X86AtomicSimpleCPU")

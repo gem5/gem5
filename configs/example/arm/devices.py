@@ -214,7 +214,7 @@ class AtomicCluster(ArmCpuCluster):
             num_cpus,
             cpu_clock,
             cpu_voltage,
-            cpu_type=ObjectList.cpu_list.get("AtomicSimpleCPU"),
+            cpu_type=ObjectList.cpu_list.get("ArmAtomicSimpleCPU"),
             l1i_type=None,
             l1d_type=None,
             l2_type=None,
