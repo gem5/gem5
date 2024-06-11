@@ -149,7 +149,7 @@ class TCPCache(RubyCache):
         self.size = MemorySize(options.tcp_size)
         self.assoc = options.tcp_assoc
         self.resourceStalls = options.no_tcc_resource_stalls
-        self.replacement_policy = TreePLRURP()
+        self.replacement_policy = RP_choose(options.tcp_rp)
 
 
 class TCPCntrl(TCP_Controller, CntrlBase):
@@ -241,7 +241,7 @@ class SQCCache(RubyCache):
     def create(self, options):
         self.size = MemorySize(options.sqc_size)
         self.assoc = options.sqc_assoc
-        self.replacement_policy = TreePLRURP()
+        self.replacement_policy = RP_choose(options.tcp_rp)
 
 
 class SQCCntrl(SQC_Controller, CntrlBase):
@@ -303,7 +303,7 @@ class TCC(RubyCache):
         self.start_index_bit = math.log(options.cacheline_size, 2) + math.log(
             options.num_tccs, 2
         )
-        self.replacement_policy = TreePLRURP()
+        self.replacement_policy = RP_choose(options.tcp_rp)
 
 
 class TCCCntrl(TCC_Controller, CntrlBase):
@@ -1124,3 +1124,28 @@ def create_system(
     ruby_system.network.number_of_virtual_networks = 11
 
     return (cpu_sequencers, dir_cntrl_nodes, mainCluster)
+
+
+def RP_choose(test_name):
+    if test_name == "TreePLRURP":
+        replacement_policy = TreePLRURP()
+    elif test_name == "LRURP":
+        replacement_policy = LRURP()
+    elif test_name == "FIFORP":
+        replacement_policy = FIFORP()
+    elif test_name == "LFURP":
+        replacement_policy = LFURP()
+    elif test_name == "LIPRP":
+        replacement_policy = LIPRP()
+    elif test_name == "MRURP":
+        replacement_policy = MRURP()
+    elif test_name == "NRURP":
+        replacement_policy = NRURP()
+    elif test_name == "RRIPRP":
+        replacement_policy = RRIPRP()
+    elif test_name == "SecondChanceRP":
+        replacement_policy = SecondChanceRP()
+    elif test_name == "SHiPMemRP":
+        replacement_policy = SHiPMemRP()
+
+    return replacement_policy
