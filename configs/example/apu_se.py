@@ -1032,10 +1032,6 @@ while True:
         print("GPU Blit Kernel Completed dump and reset")
         m5.stats.dump()
         m5.stats.reset()
-    elif "Skipping GPU Kernel" in exit_event.getCause():
-        print("Skipping GPU Kernel dump and reset")
-        m5.stats.dump()
-        m5.stats.reset()
     elif "workbegin" in exit_event.getCause():
         print("m5 work begin dump and reset")
         m5.stats.dump()
