@@ -159,8 +159,10 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     )
 
     # Setup the multiprocessing pool. If the number of processes is not
-    # specifed (i.e. is `None`) the default is the number or available threads.
-    pool = multiprocessing.Pool(processes=processes, maxtasksperchild=1)
+    # specified (i.e. `None`) the default is the number or available threads.
+    from ..multiprocessing.context import gem5Context
+
+    pool = gem5Context().Pool(processes=processes, maxtasksperchild=1)
 
     # Use the starmap function to create N child processes each with same
     # module path (the config script specifying all simulations using MultiSim)
