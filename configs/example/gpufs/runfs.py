@@ -195,6 +195,28 @@ def addRunFSOptions(parser):
         help="Disable KVM perf counters (use this with LSF / ETX)",
     )
 
+    parser.add_argument(
+        "--tcp-rp",
+        type=str,
+        default="TreePLRURP",
+        help="cache replacement policy" "policy for tcp",
+    )
+
+    parser.add_argument(
+        "--tcc-rp",
+        type=str,
+        default="TreePLRURP",
+        help="cache replacement policy" "policy for tcc",
+    )
+
+    # sqc rp both changes sqc rp and scalar cache rp
+    parser.add_argument(
+        "--sqc-rp",
+        type=str,
+        default="TreePLRURP",
+        help="cache replacement policy" "policy for sqc",
+    )
+
 
 def runGpuFSSystem(args):
     """
