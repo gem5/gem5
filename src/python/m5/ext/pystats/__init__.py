@@ -25,21 +25,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .abstract_stat import AbstractStat
-from .group import Group
+from .group import (
+    Group,
+    SimObjectGroup,
+    SimObjectVectorGroup,
+)
 from .jsonloader import JsonLoader
 from .serializable_stat import SerializableStat
 from .simstat import SimStat
-from .statistic import Statistic
+from .statistic import (
+    Distribution,
+    Scalar,
+    SparseHist,
+    Statistic,
+    Vector,
+    Vector2d,
+)
 from .storagetype import StorageType
 from .timeconversion import TimeConversion
-
-__all__ = [
-    "AbstractStat",
-    "Group",
-    "SimStat",
-    "Statistic",
-    "TimeConversion",
-    "StorageType",
-    "SerializableStat",
-    "JsonLoader",
-]

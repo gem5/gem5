@@ -25,18 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import (
+    Any,
+    Callable,
     Dict,
     List,
-    Mapping,
     Optional,
     Union,
 )
 
 from .abstract_stat import AbstractStat
-from .statistic import (
-    Scalar,
-    Statistic,
-)
+from .statistic import Statistic
 from .timeconversion import TimeConversion
 
 
@@ -57,9 +55,7 @@ class Group(AbstractStat):
             str, Union["Group", Statistic, List["Group"], List["Statistic"]]
         ],
     ):
-        if type is None:
-            self.type = "Group"
-        else:
+        if type:
             self.type = type
 
         self.time_conversion = time_conversion
@@ -67,18 +63,70 @@ class Group(AbstractStat):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for attr in self.__dict__:
+            obj = getattr(self, attr)
+            if isinstance(obj, AbstractStat):
+                if (predicate and predicate(attr)) or not predicate:
+                    to_return.append(obj)
+                if recursive:
+                    to_return = to_return + obj.children(
+                        predicate=predicate, recursive=True
+                    )
+        return to_return
 
-class Vector(Group):
+
+class SimObjectGroup(Group):
+    """A group of statistics encapulated within a SimObject."""
+
+    def __init__(self, **kwargs: Dict[str, Union[Group, Statistic]]):
+        super().__init__(type="SimObject", **kwargs)
+
+
+class SimObjectVectorGroup(Group):
+    """A Vector of SimObject objects. I.e., that which would be constructed
+    from something like `system.cpu = [DerivO3CPU(), TimingSimpleCPU()]`.
     """
-    The Vector class is used to store vector information. However, in gem5
-    Vectors, in practise, hold information that is more like a dictionary of
-    Scalar Values. This class may change, and may be merged into Group in
-    accordance to decisions made in relation to
-    https://gem5.atlassian.net/browse/GEM5-867.
-    """
 
-    def __init__(self, scalar_map: Mapping[str, Scalar]):
-        super().__init__(type="Vector", time_conversion=None, **scalar_map)
+    def __init__(self, value: List[AbstractStat], **kwargs: Dict[str, Any]):
+        assert isinstance(value, list), "Value must be a list"
+        super().__init__(type="SimObjectVector", value=value, **kwargs)
 
-    def _repr_name(self) -> str:
-        return "Vector"
+    def __getitem__(self, index: Union[int, str, float]) -> AbstractStat:
+        if not isinstance(index, int):
+            raise KeyError(
+                f"Index {index} not found in int. Cannot index Array with "
+                "non-int"
+            )
+        return self.value[index]
+
+    def __iter__(self):
+        return iter(self.value)
+
+    def __len__(self):
+        return len(self.value)
+
+    def __getitem__(self, item: int):
+        return self.value[item]
+
+    def __contains__(self, item):
+        if isinstance(item, int):
+            return item >= 0 and item < len(self)
+
+    def children(
+        self,
+        predicate: Optional[Callable[[str], bool]] = None,
+        recursive: bool = False,
+    ) -> List["AbstractStat"]:
+        to_return = []
+        for child in self.value:
+            to_return = to_return + child.children(
+                predicate=predicate, recursive=recursive
+            )
+
+        return to_return

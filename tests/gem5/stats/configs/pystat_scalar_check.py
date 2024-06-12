@@ -25,8 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+import json
 import sys
-from typing import Union
 
 import m5
 from m5.objects import (
@@ -35,31 +35,25 @@ from m5.objects import (
 )
 from m5.stats.gem5stats import get_simstat
 
-"""This script is used for checking that statistics set in the simulation are
-correctly parsed through to the python SimStats. This script sets the
-statistics using the "StatTester" simobjects and ensures verifies correctness
-against the expected JSON output and that produced by the SimStats module.
+"""This script is used for checking that Scaler statistics set in the simulation are
+correctly parsed through to the python Pystats.
 """
 
-parser = argparse.ArgumentParser(description="Tests the output of a SimStat.")
-subparsers = parser.add_subparsers(
-    dest="statistic", help="SimStats statistic to test", required=True
+parser = argparse.ArgumentParser(
+    description="Tests the output of a Scaler Pystat."
 )
 
-scalar_parser = subparsers.add_parser(
-    "scalar", help="Test a scalar statistic."
-)
-scalar_parser.add_argument(
+parser.add_argument(
     "value", type=float, help="The value of the scalar statistic."
 )
-scalar_parser.add_argument(
+parser.add_argument(
     "--name",
     type=str,
     default="scalar",
     required=False,
     help="The name of the scalar statistic.",
 )
-scalar_parser.add_argument(
+parser.add_argument(
     "--description",
     type=str,
     default="",
@@ -69,27 +63,22 @@ scalar_parser.add_argument(
 
 args = parser.parse_args()
 
-expected_output = None
-stat_tester = None
-if args.statistic == "scalar":
-    stat_tester = ScalarStatTester()
-    stat_tester.name = args.name
-    stat_tester.description = args.description
-    stat_tester.value = args.value
-    expected_output = {
-        "type": "Group",
-        "time_conversion": None,
-        args.name: {
-            "value": args.value,
-            "type": "Scalar",
-            "unit": "Count",
-            "description": args.description,
-            "datatype": "f64",
-        },
-    }
-
-assert stat_tester is not None
-assert expected_output is not None
+stat_tester = ScalarStatTester()
+stat_tester.name = args.name
+stat_tester.description = args.description
+stat_tester.value = args.value
+expected_output = {
+    "type": "SimObject",
+    "name": "system",
+    "time_conversion": None,
+    args.name: {
+        "value": args.value,
+        "type": "Scalar",
+        "unit": "Count",
+        "description": args.description,
+        "datatype": "f64",
+    },
+}
 
 root = Root(full_system=False, system=stat_tester)
 
@@ -97,14 +86,22 @@ m5.instantiate()
 m5.simulate()
 
 simstats = get_simstat(stat_tester)
-output = simstats.to_json()["system"]
+output = simstats.to_json()
+
+# Remove the time related fields from the outputs if they exist.
+# `creation_time` is not deterministic, and `simulated_begin_time` and
+# simulated_end_time are not under test here.
+for field in ["creation_time", "simulated_begin_time", "simulated_end_time"]:
+    for map in [output, expected_output]:
+        if field in map:
+            del map[field]
 
 if output != expected_output:
     print("Output statistics do not match expected:", file=sys.stderr)
     print("", file=sys.stderr)
     print("Expected:", file=sys.stderr)
-    print(expected_output, file=sys.stderr)
+    print(json.dumps(expected_output, indent=4), file=sys.stderr)
     print("", file=sys.stderr)
     print("Actual:", file=sys.stderr)
-    print(output, file=sys.stderr)
+    print(json.dumps(output, indent=4), file=sys.stderr)
     sys.exit(1)

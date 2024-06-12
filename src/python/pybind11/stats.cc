@@ -76,7 +76,9 @@ cast_stat_info(const statistics::Info *info)
      */
     TRY_CAST(statistics::FormulaInfo);
     TRY_CAST(statistics::VectorInfo);
+    TRY_CAST(statistics::Vector2dInfo);
     TRY_CAST(statistics::DistInfo);
+    TRY_CAST(statistics::SparseHistInfo);
 
     return py::cast(info);
 
@@ -181,6 +183,26 @@ pybind_init_stats(py::module_ &m_native)
             [](const statistics::VectorInfo &info) { return info.result(); })
         .def_property_readonly("total",
             [](const statistics::VectorInfo &info) { return info.total(); })
+        ;
+
+    py::class_<statistics::Vector2dInfo, statistics::Info,
+               std::unique_ptr<statistics::Vector2dInfo, py::nodelete>>(
+                    m, "Vector2dInfo")
+        .def_readonly("x_size", &statistics::Vector2dInfo::x)
+        .def_readonly("y_size", &statistics::Vector2dInfo::y)
+        .def_readonly("subnames", &statistics::Vector2dInfo::subnames)
+        .def_readonly("subdescs", &statistics::Vector2dInfo::subdescs)
+        .def_readonly("ysubnames", &statistics::Vector2dInfo::y_subnames)
+        .def_readonly("value", &statistics::Vector2dInfo::cvec)
+        ;
+
+    py::class_<statistics::SparseHistInfo, statistics::Info,
+               std::unique_ptr<statistics::SparseHistInfo, py::nodelete>>(
+                    m, "SparseHistInfo")
+        .def_property_readonly("values", //A Dict[float, int] of sample & count
+            [](const statistics::SparseHistInfo &info) {
+                return info.data.cmap;
+            })
         ;
 
     py::class_<statistics::FormulaInfo, statistics::VectorInfo,
