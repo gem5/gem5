@@ -86,9 +86,7 @@ ThreadContext::suspend()
     DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == gem5::ThreadContext::Suspended ||
-        thread->status() == gem5::ThreadContext::Halting ||
-        thread->status() == gem5::ThreadContext::Halted)
+    if (thread->status() == gem5::ThreadContext::Suspended)
         return;
 
     if (cpu->isDraining()) {
