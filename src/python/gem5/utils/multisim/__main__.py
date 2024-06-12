@@ -56,6 +56,7 @@ def main():
         "--processes",
         type=int,
         required=False,
+        default=None,
         help="The maximum number of gem5 processes to be run in parallel."
         "If not set the number of processes will be equal to the number "
         "of available threads in the system.",

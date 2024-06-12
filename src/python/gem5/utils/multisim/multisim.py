@@ -90,7 +90,8 @@ def get_simulator_ids_child_process(
 
     _load_module(module_path)
     global _multi_sim
-
+    print(_multi_sim)
+    print([sim.get_id() for sim in _multi_sim])
     dict_return["ids"] = {sim.get_id() for sim in _multi_sim}
 
 
@@ -114,6 +115,7 @@ def get_simulator_ids(config_module_path: Path) -> Set[str]:
     )
     p.start()
     p.join()
+    print(dict_return)
     return dict_return["ids"]
 
 
