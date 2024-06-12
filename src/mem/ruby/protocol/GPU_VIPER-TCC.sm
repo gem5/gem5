@@ -606,6 +606,7 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.Sender := machineID;
           out_msg.MessageSize := MessageSizeType:Response_Data;
+          out_msg.instSeqNum := in_msg.instSeqNum;
           out_msg.DataBlk := cache_entry.DataBlk;
           out_msg.isGLCSet := in_msg.isGLCSet;
           out_msg.isSLCSet := in_msg.isSLCSet;
@@ -1299,6 +1300,7 @@ machine(MachineType:TCC, "TCC Cache")
     wardb_writeAtomicResponseDirtyBytes;
     pa_performAtomic;
     baplr_sendBypassedAtomicPerformedLocallyResponse;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pr_popResponseQueue;
   }
