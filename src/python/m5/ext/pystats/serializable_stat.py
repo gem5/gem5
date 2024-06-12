@@ -85,6 +85,11 @@ class SerializableStat:
             return value
         elif isinstance(value, datetime):
             return value.replace(microsecond=0).isoformat()
+        elif isinstance(value, Dict):
+            d = {}
+            for k, v in value.items():
+                d[self.__process_json_value(k)] = self.__process_json_value(v)
+            return d
         elif isinstance(value, list):
             return [self.__process_json_value(v) for v in value]
         elif isinstance(value, StorageType):

@@ -720,7 +720,7 @@ TEST(LoaderSymtabTest, FindNearestRoundWithNext)
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
 
-    Addr next_addr;
+    Addr next_addr = 0;
     const auto it = symtab.findNearest(symbols[0].address() + 0x1, next_addr);
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[0]);
@@ -741,7 +741,7 @@ TEST(LoaderSymtabTest, FindNearestRoundWithNextNonExistent)
             "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
-    Addr next_addr;
+    Addr next_addr = 0;
     const auto it = symtab.findNearest(symbol.address() + 0x1, next_addr);
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbol);
