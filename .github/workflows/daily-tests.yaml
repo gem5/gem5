@@ -78,7 +78,7 @@ jobs:
         needs: [build-gem5, name-artifacts]
         steps:
             - name: Merge gem5 build artifacts
-              uses: actions/upload-artifact/merge@v4.0.0
+              uses: actions/upload-artifact/merge@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}
                   pattern: ${{needs.name-artifacts.outputs.build-name}}*
