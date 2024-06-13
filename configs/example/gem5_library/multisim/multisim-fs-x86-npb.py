@@ -97,11 +97,6 @@ def handle_workend():
 # system twice: once with 1 core and once with 2 cores.
 for benchmark in obtain_resource("npb-benchmark-suite"):
     for num_cores in [1, 2]:
-        # Limit the number of simulators, so we don't run a massive amount of
-        # them in the proof-of-concept.
-        if multisim.num_simulators() >= 6:
-            break
-
         cache_hierarchy = MESITwoLevelCacheHierarchy(
             l1d_size="32kB",
             l1i_size="32kB",
