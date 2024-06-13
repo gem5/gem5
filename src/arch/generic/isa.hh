@@ -137,6 +137,15 @@ class BaseISA : public SimObject
     {
         SERIALIZE_SCALAR(isaName);
     }
+
+    /**
+     * This function returns the vector length of the Vector Length Agnostic
+     * extension of the ISA.
+     * For ARM ISA, this function returns the SVE/SVE2 vector length.
+     * For RISC-V ISA, this function returns the RVV vector length.
+     * For other ISAs, this function returns -1.
+     */
+    virtual int64_t getVectorLengthInBytes() const { return -1; }
 };
 
 } // namespace gem5
