@@ -57,7 +57,7 @@ class Temperature
   public:
     /** Explicit constructor assigning a value. */
     explicit constexpr Temperature(double _value=0.0)
-        : value(_value)   
+        : value(_value)
     {
     }
 
