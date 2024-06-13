@@ -1,0 +1,147 @@
+version: '2'
+
+services:
+  gcn-gpu:
+    build:
+      context: gcn-gpu
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/gcn-gpu:latest
+  gpu-fs:
+    build:
+      context: gpu-fs
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/gpu-fs:latest
+  sst:
+    build:
+      context: sst
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/sst-env:latest
+  systemc:
+    build:
+      context: systemc-2.3.3
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/systemc-env:latest
+  ubuntu-20.04_all-dependencies:
+    build:
+      context: ubuntu-20.04_all-dependencies
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/ubuntu-20.04_all-dependencies:latest
+  ubuntu-22.04_all-dependencies:
+    build:
+      context: ubuntu-22.04_all-dependencies
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+  ubuntu-24.04_all-dependencies:
+    build:
+      context: ubuntu-24.04_all-dependencies
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+  ubuntu-24.04_min-dependencies:
+    build:
+      context: ubuntu-24.04_min-dependencies
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/ubuntu-24.04_min-dependencies:latest
+  gcc-10:
+    build:
+      context: ubuntu-20.04_gcc-version
+      dockerfile: Dockerfile
+      args:
+      - version=10
+    image: ghcr.io/gem5/gcc-version-10:latest
+  gcc-11:
+    build:
+      context: ubuntu-22.04_gcc-version
+      dockerfile: Dockerfile
+      args:
+      - version=11
+    image: ghcr.io/gem5/gcc-version-11:latest
+  gcc-12:
+    build:
+      context: ubuntu-22.04_gcc-version
+      dockerfile: Dockerfile
+      args:
+      - version=12
+    image: ghcr.io/gem5/gcc-version-12:latest
+  gcc-13:
+    build:
+      context: ubuntu-22.04_gcc_13-version
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/gcc-version-13:latest
+  clang-7:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=7
+    image: ghcr.io/gem5/clang-version-7:latest
+  clang-8:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=8
+    image: ghcr.io/gem5/clang-version-8:latest
+  clang-9:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=9
+    image: ghcr.io/gem5/clang-version-9:latest
+  clang-10:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=10
+    image: ghcr.io/gem5/clang-version-10:latest
+  clang-11:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=11
+    image: ghcr.io/gem5/clang-version-11:latest
+  clang-12:
+    build:
+      context: ubuntu-20.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=12
+    image: ghcr.io/gem5/clang-version-12:latest
+  clang-13:
+    build:
+      context: ubuntu-22.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=13
+    image: ghcr.io/gem5/clang-version-13:latest
+  clang-14:
+    build:
+      context: ubuntu-22.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=14
+    image: ghcr.io/gem5/clang-version-14:latest
+  clang-15:
+    build:
+      context: ubuntu-22.04_clang-version
+      dockerfile: Dockerfile
+      args:
+      - version=15
+    image: ghcr.io/gem5/clang-version-15:latest
+  clang-16:
+    build:
+      context: ubuntu-22.04_clang-16
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/clang-version-16:latest
+  llvm-gnu-cross-compiler-riscv64:
+    build:
+      context: llvm-gnu-cross-compiler-riscv64
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/llvm-gnu-cross-compiler-riscv64:latest
+  gem5-all-min-dependencies:
+    build:
+      context: gem5-all-min-dependencies
+      dockerfile: Dockerfile
+    image: ghcr.io/gem5/gem5-all-min-dependencies:latest

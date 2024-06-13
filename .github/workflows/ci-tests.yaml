@@ -1,19 +1,18 @@
----
 # This workflow runs after a pull-request has been approved by a reviewer.
 
 name: CI Tests
 
 on:
-    pull_request:
-        types: [opened, edited, synchronize, ready_for_review]
+  pull_request:
+    types: [opened, edited, synchronize, ready_for_review]
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
 
-    get-date:
+  get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
     # request binary and date are the same as what is stored in the cache.
     # This essentially means the first job to run on a given day for a given
@@ -23,255 +22,253 @@ jobs:
     # `src` directory contents and use it as a hash. We found there to be bugs
     # with the hash function where this task would timeout. This approach is
     # simple, works, and still provides some level of caching.
-        runs-on: ubuntu-latest
-        outputs:
-            date: ${{ steps.date.outputs.date }}
-        steps:
-            - name: Get the current date
-              id: date
-              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+    steps:
+    - name: Get the current date
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-    unittests-all-opt:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: get-date
-        timeout-minutes: 60
-        steps:
-            - uses: actions/checkout@v4
+  unittests-all-opt:
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
+    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    needs: get-date
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v4
 
+      # Restore the cache if available. As this just builds the unittests
+      # we only obtain the cache and do not provide if if is not
+      # available.
+    - name: Cache build/ALL
+      uses: actions/cache/restore@v4
+      with:
+        path: build/ALL
+        key: testlib-build-all-${{ env.date }}
+        restore-keys: |
+          testlib-build-all
 
-            # Restore the cache if available. As this just builds the unittests
-            # we only obtain the cache and do not provide if if is not
-            # available.
-            - name: Cache build/ALL
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ env.date }}
-                  restore-keys: |
-                      testlib-build-all
+    - name: CI Unittests
+      working-directory: ${{ github.workspace }}
+      run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
+    - run: echo "This job's status is ${{ job.status }}."
 
-            - name: CI Unittests
-              working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
-            - run: echo "This job's status is ${{ job.status }}."
-
-    testlib-quick-matrix:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
+  testlib-quick-matrix:
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        steps:
-            - uses: actions/checkout@v4
+    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    steps:
+    - uses: actions/checkout@v4
 
-            # Unfortunately the image doesn't have jq installed.
-            # We therefore need to install it as a step here.
-            - name: Install jq
-              run: apt update && apt install -y jq
+      # Unfortunately the image doesn't have jq installed.
+      # We therefore need to install it as a step here.
+    - name: Install jq
+      run: apt update && apt install -y jq
 
-            - name: Get directories for testlib-quick
-              working-directory: ${{ github.workspace }}/tests
-              id: dir-matrix
-              run: echo "test-dirs-matrix=$(find gem5/* -type d -maxdepth 0 | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+    - name: Get directories for testlib-quick
+      working-directory: ${{ github.workspace }}/tests
+      id: dir-matrix
+      run: echo "test-dirs-matrix=$(find gem5/* -type d -maxdepth 0 | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
-            - name: Get the build targets for testlib-quick-gem5-builds
-              working-directory: ${{ github.workspace }}/tests
-              id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+    - name: Get the build targets for testlib-quick-gem5-builds
+      working-directory: ${{ github.workspace }}/tests
+      id: build-matrix
+      run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
-        outputs:
-            build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
-            test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
+    outputs:
+      build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
+      test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
 
-    clang-fast-compilation:
-        # gem5 binaries built in `quick-gem5-builds` always use GCC.
-        # Clang is more strict than GCC. This job checks that gem5 compiles
-        # with Clang. It compiles build/ALL/gem5.fast to maximize the change
-        # for compilation error to be exposed.
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-18:latest
-        timeout-minutes: 90
-        steps:
-            - uses: actions/checkout@v4
-            - name: Clang Compilation
-              working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.fast -j $(nproc)
+  clang-fast-compilation:
+    # gem5 binaries built in `quick-gem5-builds` always use GCC.
+    # Clang is more strict than GCC. This job checks that gem5 compiles
+    # with Clang. It compiles build/ALL/gem5.fast to maximize the change
+    # for compilation error to be exposed.
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
+    container: ghcr.io/gem5/clang-version-18:latest
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@v4
+    - name: Clang Compilation
+      working-directory: ${{ github.workspace }}
+      run: scons build/ALL/gem5.fast -j $(nproc)
 
-    testlib-quick-gem5-builds:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [check-for-change-id, testlib-quick-matrix]
-        strategy:
-            matrix:
-                build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
-        steps:
-            - uses: actions/checkout@v4
+  testlib-quick-gem5-builds:
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
+    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    needs: [check-for-change-id, testlib-quick-matrix]
+    strategy:
+      matrix:
+        build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
+    steps:
+    - uses: actions/checkout@v4
 
-            - name: Cache build/ALL
-              uses: actions/cache@v4
-              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ env.date }}
-                  restore-keys: |
-                      testlib-build-all
+    - name: Cache build/ALL
+      uses: actions/cache@v4
+      if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+      with:
+        path: build/ALL
+        key: testlib-build-all-${{ env.date }}
+        restore-keys: |
+          testlib-build-all
 
-            - name: Build gem5
-              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+    - name: Build gem5
+      run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
 
-        # Upload the gem5 binary as an artifact.
-        # Note: the "achor.txt" file is a hack to make sure the paths are
-        # preserverd in the artifact. The upload-artifact action finds the
-        # closest common directory and uploads everything relative to that.
-        # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
-        # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
-        # stripping the "build" directory. By adding the "anchor.txt" file, we
-        # ensure the "build" directory is preserved.
-            - run: echo "anchor" > anchor.txt
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
-                  path: |
-                      build/*/gem5.*
-                      anchor.txt
-                  retention-days: 7
+      # Upload the gem5 binary as an artifact.
+      # Note: the "achor.txt" file is a hack to make sure the paths are
+      # preserverd in the artifact. The upload-artifact action finds the
+      # closest common directory and uploads everything relative to that.
+      # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
+      # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
+      # stripping the "build" directory. By adding the "anchor.txt" file, we
+      # ensure the "build" directory is preserved.
+    - run: echo "anchor" > anchor.txt
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+        path: |
+          build/*/gem5.*
+          anchor.txt
+        retention-days: 7
 
-    testlib-quick-execution:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [testlib-quick-matrix, testlib-quick-gem5-builds]
-        timeout-minutes: 360 # 6 hours
-        strategy:
-            fail-fast: false
-            matrix:
-                test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
-        steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
+  testlib-quick-execution:
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
+    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    needs: [testlib-quick-matrix, testlib-quick-gem5-builds]
+    timeout-minutes: 360 # 6 hours
+    strategy:
+      fail-fast: false
+      matrix:
+        test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
+    steps:
+    - name: Clean runner
+      run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
 
-        # Checkout the repository then download the gem5.opt artifact.
-            - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+      # Checkout the repository then download the gem5.opt artifact.
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4
+      with:
+        name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
 
-        # Check that the gem5.opt artifact exists and is executable.
-            - name: Chmod gem5.{opt,debug,fast} to be executable
-              run: |
-                  find . -name "gem5.opt" -exec chmod u+x {} \;
-                  find . -name "gem5.debug" -exec chmod u+x {} \;
-                  find . -name "gem5.fast" -exec chmod u+x {} \;
+      # Check that the gem5.opt artifact exists and is executable.
+    - name: Chmod gem5.{opt,debug,fast} to be executable
+      run: |
+        find . -name "gem5.opt" -exec chmod u+x {} \;
+        find . -name "gem5.debug" -exec chmod u+x {} \;
+        find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
-            - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) ${{ matrix.test-dir }}
+    - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
+      id: run-tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --skip-build -vv -j$(nproc) ${{ matrix.test-dir }}
 
-        # Get the basename of the matrix.test-dir path (to name the artifact).
-            - name: Sanatize test-dir for artifact name
-              id: sanitize-test-dir
-              if: success() || failure()
-              run: echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+      # Get the basename of the matrix.test-dir path (to name the artifact).
+    - name: Sanatize test-dir for artifact name
+      id: sanitize-test-dir
+      if: success() || failure()
+      run: echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
-        # Upload the tests/testing-results directory as an artifact.
-            - name: upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanatized-test-dir
-                      }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-                  retention-days: 30
+      # Upload the tests/testing-results directory as an artifact.
+    - name: upload results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanatized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
+        path: tests/testing-results
+        retention-days: 30
 
-    pyunit:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: testlib-quick-gem5-builds
-        timeout-minutes: 30
-        steps:
+  pyunit:
+    runs-on: [self-hosted, linux, x64]
+    if: github.event.pull_request.draft == false
+    container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    needs: testlib-quick-gem5-builds
+    timeout-minutes: 30
+    steps:
 
-            # Checkout the repository then download the builds.
-            - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+      # Checkout the repository then download the builds.
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4
+      with:
+        name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
 
-            # Check that the gem5 binaries exist and are executable.
-            - name: Chmod gem5.{opt,debug,fast} to be executable
-              run: |
-                  find . -name "gem5.opt" -exec chmod u+x {} \;
-                  find . -name "gem5.debug" -exec chmod u+x {} \;
-                  find . -name "gem5.fast" -exec chmod u+x {} \;
+      # Check that the gem5 binaries exist and are executable.
+    - name: Chmod gem5.{opt,debug,fast} to be executable
+      run: |
+        find . -name "gem5.opt" -exec chmod u+x {} \;
+        find . -name "gem5.debug" -exec chmod u+x {} \;
+        find . -name "gem5.fast" -exec chmod u+x {} \;
 
             # Run the pyunit tests.
             # Note: these are all quick tests.
-            - name: Run The pyunit tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) pyunit
+    - name: Run The pyunit tests
+      id: run-tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --skip-build -vv -j$(nproc) pyunit
 
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload pyunit test results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-pyunit-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-                  retention-days: 30
+      # Upload the tests/testing-results directory as an artifact.
+    - name: Upload pyunit test results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-pyunit-status-${{ steps.run-tests.outcome }}-output
+        path: tests/testing-results
+        retention-days: 30
 
-    gpu-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 180
-        needs: [pre-commit, get-date]
-        steps:
-            - uses: actions/checkout@v4
+  gpu-tests:
+    runs-on: [self-hosted, linux, x64]
+    container: ghcr.io/gem5/gcn-gpu:latest
+    timeout-minutes: 180
+    needs: [pre-commit, get-date]
+    steps:
+    - uses: actions/checkout@v4
 
-            # Obtain the cache if available. If not available this will upload
-            # this job's instance of the cache.
-            - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ env.date }}
-                  restore-keys: |
-                      testlib-build-vega
+      # Obtain the cache if available. If not available this will upload
+      # this job's instance of the cache.
+    - name: Cache build/VEGA_X86
+      uses: actions/cache@v4
+      with:
+        path: build/VEGA_X86
+        key: testlib-build-vega-${{ env.date }}
+        restore-keys: |
+          testlib-build-vega
 
             # Build the VEGA_X86/gem5.opt binary.
-            - name: Build VEGA_X86/gem5.opt
-              run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j`nproc`
+    - name: Build VEGA_X86/gem5.opt
+      run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j`nproc`
 
-            # Run the GPU tests.
-            - name: Run Testlib GPU Tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
+      # Run the GPU tests.
+    - name: Run Testlib GPU Tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
 
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-                  retention-days: 30
+      # Upload the tests/testing-results directory as an artifact.
+    - name: Upload results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
+        path: tests/testing-results
+        retention-days: 30
 
-    ci-tests:
+  ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
-        runs-on: ubuntu-latest
-        needs:
-            - testlib-quick-execution
-            - pyunit
-            - clang-fast-compilation
-            - unittests-all-opt
-            - pre-commit
-            - gpu-tests
-        steps:
-            - run: echo "This job's status is ${{ job.status }}."
+    runs-on: ubuntu-latest
+    needs:
+    - testlib-quick-execution
+    - pyunit
+    - clang-fast-compilation
+    - unittests-all-opt
+    - pre-commit
+    - gpu-tests
+    steps:
+    - run: echo "This job's status is ${{ job.status }}."
