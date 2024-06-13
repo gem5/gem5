@@ -54,7 +54,9 @@ class Unknown : public RiscvStaticInst
   public:
     Unknown(ExtMachInst _machInst)
         : RiscvStaticInst("unknown", _machInst, No_OpClass)
-    {}
+    {
+        flags[IsInvalid] = true;
+    }
 
     Fault
     execute(ExecContext *, trace::InstRecord *) const override
