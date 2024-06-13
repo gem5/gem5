@@ -112,7 +112,7 @@ repos:
   rev: v2.13.0
   hooks:
   - id: pretty-format-yaml
-    args: [--autofix]
+    args: [--autofix, --line-width=79]
 - repo: https://github.com/psf/black
   rev: 24.10.0
   hooks:

@@ -6,49 +6,87 @@ on:
   workflow_dispatch:
 
 jobs:
-  # replication of compiler-tests.sh
   all-compilers:
+    # This job runs all the supported compilers against the default gem5
+    # 'build/ALL/gem5.{opt/fast}' compilation. The current Ubuntu LTS releases
+    # are also tested.
     strategy:
       fail-fast: false
       matrix:
-        image: [gcc-version-13, gcc-version-12, gcc-version-11, gcc-version-10, clang-version-18, clang-version-17, clang-version-16, clang-version-15, clang-version-14, ubuntu-22.04_all-dependencies, ubuntu-24.04_all-dependencies, ubuntu-24.04_min-dependencies]
-        opts: [.opt, .fast]
+        image:
+        - gcc-version-13
+        - gcc-version-12
+        - gcc-version-11
+        - gcc-version-10
+        - clang-version-18
+        - clang-version-17
+        - clang-version-16
+        - clang-version-15
+        - clang-version-14
+        - ubuntu-22.04_all-dependencies
+        - ubuntu-24.04_all-dependencies
+        - ubuntu-24.04_min-dependencies
+        opts:
+        - opt
+        - fast
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 2880 # 48 hours
+    timeout-minutes: 1080 # 18 hours total
     container: ghcr.io/gem5/${{ matrix.image }}:latest
     steps:
     - uses: actions/checkout@v4
-    - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
-      timeout-minutes: 600 # 10 hours
+    - name: Build ALL/{{ matrix.opts }} with ${{ matrix.image }}
+      run: |
+        /usr/bin/env python3 /usr/bin/scons --ignore-style \
+          build/ALL/gem5.${{ matrix.opts }} -j$(nproc)
+      timeout-minutes: 180 # 3 hours per job
 
-  # Tests the two latest gcc and clang supported compilers against all gem5
-  # compilations.
+
   latest-compilers-all-gem5-builds:
+    # Tests the two latest gcc and clang supported compilers against all gem5
+    # compilations (as defined in the "build_opts" directory).
     strategy:
       fail-fast: false
       matrix:
-        gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, MIPS, 'NULL', NULL_MESI_Two_Level, NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86]
+        gem5-compilation:
+        - ARM
+        - ARM_MESI_Three_Level
+        - ARM_MESI_Three_Level_HTM
+        - ARM_MOESI_hammer
+        - Garnet_standalone
+        - MIPS
+        - 'NULL'
+        - NULL_MESI_Two_Level
+        - NULL_MOESI_CMP_directory
+        - NULL_MOESI_CMP_token
+        - NULL_MOESI_hammer
+        - POWER
+        - RISCV
+        - SPARC
+        - X86
+        - X86_MESI_Two_Level
+        - X86_MI_example
+        - X86_MOESI_AMD_Base
+        - VEGA_X86
         image: [gcc-version-13, clang-version-18]
-        opts: [.opt]
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 2880 # 48 hours
     container: ghcr.io/gem5/${{ matrix.image }}:latest
     steps:
     - uses: actions/checkout@v4
-    - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
-      timeout-minutes: 600 # 10 hours
+    - name: Build ${{ matrix.gem5-compilation }}/opt with ${{ matrix.image }}
+      run: |
+        /usr/bin/env python3 /usr/bin/scons --ignore-style \
+          build/${{ matrix.gem5-compilation }}/gem5.opt \
+            -j$(nproc)
+      timeout-minutes: 180 # 3 hours
 
   compiler-tests:
     # The dummy job is used to indicate whether the compiler tests have
     # passed or not. This can be used as status check for pull requests.
-    # I.e., if we want to stop pull requests from being merged if the
-    # compiler tests are failing, we can add this job as a required status
-    # check.
     runs-on: ubuntu-latest
     needs:
     - latest-compilers-all-gem5-builds
     - all-compilers
+
     steps:
-    - run: echo "This compiler tests have passed."
+    - run: echo "The Compiler tests have passed."

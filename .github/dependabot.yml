@@ -8,9 +8,9 @@ updates:
   - Harshil2107
   commit-message:
     prefix: 'misc: '
-    # Raise pull requests for version updates
-    # to pip against the `develop` branch
+  # Raise pull requests for version updates
+  # to pip against the `develop` branch
   target-branch: develop
-    # Labels on pull requests for version updates only
+  # Labels on pull requests for version updates only
   labels:
   - misc

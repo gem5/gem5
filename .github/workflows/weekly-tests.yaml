@@ -1,4 +1,4 @@
-# This workflow runs all of the very-long tests within main.py
+# This workflow runs all the Weekly tests.
 
 name: Weekly Tests
 
@@ -15,18 +15,21 @@ jobs:
       id: date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-  testlib-very-long-tests:
+  testlib-v-long:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [gem5_library_example_tests, gem5_resources, stdlib, parsec_benchmarks, x86_boot_tests]
+        test-type:
+        - gem5_library_example_tests
+        - gem5_resources
+        - stdlib
+        - parsec_benchmarks
+        - x86_boot_tests
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
     timeout-minutes: 4320  # 3 days
     needs: get-date
     steps:
-    - name: Clean runner
-      run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
     - uses: actions/checkout@v4
 
     - name: Cache build/ALL
@@ -37,30 +40,33 @@ jobs:
         restore-keys: |
           testlib-build-all
 
-    - name: very-long ${{ matrix.test-type }}
+    - name: Run ${{ matrix.test-type }} testlib very-long tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/${{ matrix.test-type }} --length very-long -j$(nproc) -vv
-    - name: upload results
+      id: run-tests
+      run: |
+        ./main.py run gem5/${{ matrix.test-type }} --length very-long \
+        -j$(nproc) -vv
+
+    - name: Upload Results
       if: success() || failure()
       uses: actions/upload-artifact@v4
-      env:
-        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
-        name: ${{ env.MY_STEP_VAR }}
+        name: |
+          weekly-tests-run-${{ github.run_number }}-\
+          g${{ matrix.test-type }}-\
+          attempt-${{ github.run_attempt }}-\
+          status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
-        retention-days: 7
-    - run: echo "This job's status is ${{ job.status }}."
 
-  gpu-tests:
+  gpu-v-long-tests:
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/gcn-gpu:latest
     timeout-minutes: 4320 # 3 days
     needs: get-date
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: develop
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Cache build/VEGA_X86
       uses: actions/cache@v4
@@ -70,43 +76,53 @@ jobs:
         restore-keys: |
           testlib-build-vega
 
-    - name: Build VEGA_X86/gem5.opt
-      working-directory: ${{ github.workspace }}
-      run: scons build/VEGA_X86/gem5.opt -j $(nproc)
-
-    - name: Run Testlib GPU Tests
+    - name: Run Testlib very-long GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
+      id: run-tests
+      run: |
+        ./main.py run --length=very-long -vvv -t $(nproc) \
+        --host gcn_gpu  gem5/gpu
 
-    - name: Upload results
+    - name: Upload Results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: |
+          weekly-tests-run-${{ github.run_number }}-\
+          gpu-tests-\
+          attempt-${{ github.run_attempt }}-\
+          status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
-        retention-days: 7
 
   dramsys-tests:
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-    timeout-minutes: 4320     # 3 days
+    timeout-minutes: 4320 # 3 days
     steps:
     - uses: actions/checkout@v4
     - name: Checkout DRAMSys
       working-directory: ${{ github.workspace }}/ext/dramsys
-      run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
+      run: |
+        git clone https://github.com/tukl-msd/DRAMSys \
+          --branch v5.0 --depth 1 DRAMSys
 
-              # gem5 is built separately because it depends on the DRAMSys library
     - name: Build gem5
       working-directory: ${{ github.workspace }}
       run: scons build/ALL/gem5.opt -j $(nproc)
 
-    - name: Run DRAMSys Checks
-      working-directory: ${{ github.workspace }}
+    - name: DRAMSys Check (arm-hello-dramsys)
       run: |
-        ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
-        ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
-        ./build/ALL/gem5.opt configs/example/dramsys.py
+        ./build/ALL/gem5.opt \
+        configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+
+    - name: DRAMSys Check (dramsys-traffic)
+      run: |
+        ./build/ALL/gem5.opt \
+        configs/example/gem5_library/dramsys/dramsys-traffic.py
+
+    - name: DRAMSys Check (example/dramsys)
+      run: /build/ALL/gem5.opt configs/example/dramsys.py
+
   weekly-tests:
     # The dummy job is used to indicate whether the weekly tests have
     # passed or not. This can be used as status check for pull requests.
@@ -115,8 +131,8 @@ jobs:
     # check.
     runs-on: ubuntu-latest
     needs:
-    - testlib-very-long-tests
+    - testlib-v-long
     - dramsys-tests
-    - gpu-tests
+    - gpu-v-long-tests
     steps:
-    - run: echo "This weekly tests have passed."
+    - run: echo "The Weekly tests have passed."
