@@ -56,7 +56,8 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     cmake \
     doxygen \
     vim \
-    sudo
+    sudo \
+    jq
 
 # pre-commit, as installed via apt in 24.04, attempts to create a cache
 # directory at "${HOME}/.cache/pre-commit". If running docker with non-root,

@@ -64,11 +64,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-      # Unfortunately the image doesn't have jq installed.
-      # We therefore need to install it as a step here.
-    - name: Install jq
-      run: apt update && apt install -y jq
-
     - name: Get directories for testlib-quick
       working-directory: ${{ github.workspace }}/tests
       id: dir-matrix
