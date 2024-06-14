@@ -44142,6 +44142,12 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        if (_delta == 2) {
+            setFlag(F64);
+        } else if (_delta == 1) {
+            setFlag(F32);
+        }
       }
       ~Inst_VOP3P_MAI__V_MFMA() {}
 
@@ -44369,6 +44375,10 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        if (MXFPT::size() == 16) {
+            setFlag(F16);
+        }
       }
       ~Inst_VOP3P_MAI__V_MFMA_MXFP() {}
 
@@ -44615,6 +44625,8 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        setFlag(I8);
       }
       ~Inst_VOP3P_MAI__V_MFMA_I8() {}
 

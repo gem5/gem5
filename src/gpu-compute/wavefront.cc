@@ -1028,6 +1028,14 @@ Wavefront::exec()
         computeUnit->stats.controlFlowDivergenceDist.sample(num_active_lanes);
         computeUnit->stats.numVecOpsExecuted += num_active_lanes;
 
+        if (ii->isMFMA()) {
+            computeUnit->stats.numVecOpsExecutedMFMA += num_active_lanes;
+            if (ii->isI8()) {
+                computeUnit->stats.numVecOpsExecutedMFMAI8
+                    += num_active_lanes;
+            }
+        }
+
         if (ii->isF16() && ii->isALU()) {
             if (ii->isF32() || ii->isF64()) {
                 fatal("Instruction is tagged as both (1) F16, and (2)"
@@ -1047,6 +1055,10 @@ Wavefront::exec()
             else if (ii->isMAD()) {
                 computeUnit->stats.numVecOpsExecutedMAD16 += num_active_lanes;
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
+            }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF16
                     += num_active_lanes;
             }
         }
@@ -1071,6 +1083,10 @@ Wavefront::exec()
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
                     += num_active_lanes;
             }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF32
+                    += num_active_lanes;
+            }
         }
         if (ii->isF64() && ii->isALU()) {
             if (ii->isF16() || ii->isF32()) {
@@ -1091,6 +1107,10 @@ Wavefront::exec()
             else if (ii->isMAD()) {
                 computeUnit->stats.numVecOpsExecutedMAD64 += num_active_lanes;
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
+            }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF64
                     += num_active_lanes;
             }
         }
