@@ -29,4 +29,5 @@ from .multisim import (
     get_simulator_ids,
     num_simulators,
     run,
+    set_num_processes,
 )

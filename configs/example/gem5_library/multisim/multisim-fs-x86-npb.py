@@ -93,6 +93,9 @@ def handle_workend():
     yield True
 
 
+# Set the maximum number of concurrent processes to be 3.
+multisim.set_num_processes(3)
+
 # Here we imagine an experiment wanting to run each NPB benchmark on the same
 # system twice: once with 1 core and once with 2 cores.
 for benchmark in obtain_resource("npb-benchmark-suite"):

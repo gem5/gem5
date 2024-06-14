@@ -51,16 +51,6 @@ def main():
         type=str,
         help="The path to the config script specifying the simulations to run using multisim.",
     )
-    parser.add_argument(
-        "-p",
-        "--processes",
-        type=int,
-        required=False,
-        default=None,
-        help="The maximum number of gem5 processes to be run in parallel."
-        "If not set the number of processes will be equal to the number "
-        "of available threads in the system.",
-    )
 
     args = parser.parse_args()
     run(module_path=Path(args.config))

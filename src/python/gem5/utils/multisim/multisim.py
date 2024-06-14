@@ -61,6 +61,12 @@ from typing import (
 # an executable module.
 module_run = False
 
+# A global variable to store the simulators to run in parallel. If `None`, then
+# `None` is passed to the `multiprocessing.Pool` which instructs
+# multiprocessing to use the maximum number of available threads.
+# threads.
+_num_processes = None
+
 _multi_sim: Set["Simulator"] = set()
 
 
@@ -73,7 +79,7 @@ def _load_module(module_path: Path) -> None:
     spec.loader.exec_module(modulevar)
 
 
-def get_simulator_ids_child_process(list_manager, module_path: Path) -> None:
+def _get_simulator_ids_child_process(id_list, module_path: Path) -> None:
     """Get the ids of the simulations to be run.
 
     This function is passed to the Python multiprocessing module and run with
@@ -90,9 +96,29 @@ def get_simulator_ids_child_process(list_manager, module_path: Path) -> None:
     global _multi_sim
     print(_multi_sim)
     print([sim.get_id() for sim in _multi_sim])
-    if len(list_manager) != 0:
-        list_manager *= 0
-    list_manager.extend([sim.get_id() for sim in _multi_sim])
+    if len(id_list) != 0:
+        id_list *= 0
+    id_list.extend([sim.get_id() for sim in _multi_sim])
+
+
+def _get_simulator_num_processes_child_process(
+    num_processes_dict, module_path: Path
+) -> None:
+    """Get the ids of the simulations to be run.
+
+    This function is passed to the Python multiprocessing module and run with
+    the correct module path in the `_get_simulator_ids` function. This function
+    is run in a child process which loads the module (config script) then reads
+    the IDs.
+
+    Note: We run this as child process as we cannot load the config script as
+    a module in the main process. This function is used in
+    `get_simulator_ids` and should be used separately.
+    """
+
+    _load_module(module_path)
+    global _num_processes
+    num_processes_dict["num_processes"] = _num_processes
 
 
 def get_simulator_ids(config_module_path: Path) -> list[str]:
@@ -108,14 +134,26 @@ def get_simulator_ids(config_module_path: Path) -> list[str]:
     """
 
     manager = multiprocessing.Manager()
-    list_manager = manager.list()
+    id_list = manager.list()
     p = multiprocessing.Process(
-        target=get_simulator_ids_child_process,
-        args=(list_manager, config_module_path),
+        target=_get_simulator_ids_child_process,
+        args=(id_list, config_module_path),
     )
     p.start()
     p.join()
-    return list_manager
+    return id_list
+
+
+def get_num_processes(config_module_path: Path) -> Optional[int]:
+    manager = multiprocessing.Manager()
+    num_processes_dict = manager.dict()
+    p = multiprocessing.Process(
+        target=_get_simulator_num_processes_child_process,
+        args=(num_processes_dict, config_module_path),
+    )
+    p.start()
+    p.join()
+    return num_processes_dict["num_processes"]
 
 
 def _run(module_path: Path, id: str) -> None:
@@ -153,6 +191,7 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     # Get the simulator IDs. This both provides us a list of targets
     # and, by-proxy, the number of jobs.
     ids = get_simulator_ids(module_path)
+    max_num_processes = get_num_processes(module_path)
 
     assert len(_multi_sim) == 0, (
         "Simulators instantiated in main thread instead of child thread "
@@ -163,13 +202,27 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     # specified (i.e. `None`) the default is the number or available threads.
     from ..multiprocessing.context import gem5Context
 
-    pool = gem5Context().Pool(processes=processes, maxtasksperchild=1)
+    pool = gem5Context().Pool(processes=max_num_processes, maxtasksperchild=1)
 
     # Use the starmap function to create N child processes each with same
     # module path (the config script specifying all simulations using MultiSim)
     # but a different ID. The ID is used to select the correct simulator to
     # run.
     pool.starmap(_run, zip([module_path for _ in range(len(ids))], tuple(ids)))
+
+
+def set_num_processes(num_processes: int) -> None:
+    """Set the max number of processes to run in parallel.
+
+    :param num_processes: The number of processes to run in parallel.
+    """
+    if num_processes < 1:
+        raise ValueError("Number of processes must be greater than 0.")
+    if isinstance(num_processes, int):
+        global _num_processes
+        _num_processes = num_processes
+    else:
+        raise ValueError("Number of processes must be an integer.")
 
 
 def num_simulators() -> int:

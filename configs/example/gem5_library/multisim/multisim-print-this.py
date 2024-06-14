@@ -65,6 +65,9 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
+# Set the maximum number of concurrent processes to be 2.
+multisim.set_num_processes(2)
+
 for process_id in range(5):
     cache_hierarchy = NoCache()
     memory = SingleChannelDDR3_1600(size="32MB")
