@@ -168,9 +168,9 @@ jobs:
       # Check that the gem5.opt artifact exists and is executable.
     - name: Chmod gem5.{opt,debug,fast} to be executable
       run: |
-        find . -name "gem5.opt" | xargs  chmod u+x
-        find . -name "gem5.debug" | xargs chmod u+x
-        find . -name "gem5.fast" | xargs chmod u+x
+        find . -name "gem5.opt" | xargs -r chmod u+x
+        find . -name "gem5.debug" | xargs -r chmod u+x
+        find . -name "gem5.fast" | xargs -r chmod u+x
 
       # Run the testlib quick tests in the given directory.
     - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
@@ -216,9 +216,9 @@ jobs:
       # Check that the gem5 binaries exist and are executable.
     - name: Chmod gem5.{opt,debug,fast} to be executable
       run: |
-        find . -name "gem5.opt" | xargs chmod u+x
-        find . -name "gem5.debug" | xargs chmod u+x
-        find . -name "gem5.fast" | xargs chmod u+x
+        find . -name "gem5.opt" | xargs -r chmod u+x
+        find . -name "gem5.debug" | xargs -r chmod u+x
+        find . -name "gem5.fast" | xargs -r chmod u+x
 
       # Run the pyunit tests.
     - name: Run The pyunit tests
