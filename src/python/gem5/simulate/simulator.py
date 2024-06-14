@@ -689,21 +689,14 @@ class Simulator:
                           run. If this ``max_ticks`` value is met, a ``MAX_TICK``
                           exit event is received, if another simulation exit
                           event is met the tick count is reset. This is the
-                          **maximum number of ticks per simulation run**.
-                          **WARNING**: This this parameter is deprecated and
-                          will be removed in future releases of gem5. Please
-                          set the max ticks via the `set_max_ticks` function.
-                          or via the Simulator constructor.
+                          **maximum number of ticks per simulation run.
         """
 
-        if max_ticks:
+        if hasattr(self, "_max_ticks") and self._max_ticks and max_ticks:
             warn(
-                "The `max_ticks` parameter in the `Simulator.run` function is "
-                "deprecated and will be removed in future releases of gem5. "
-                "Please set the max ticks via the `set_max_ticks` function or "
-                "via the Simulator constructor. Using this parameter in the "
-                "`run` function will override the value set in the "
-                "constructor or via the `set_max_ticks` funciton."
+                "Max ticks has already been set prior to setting it through "
+                "the run call. In these cases the max ticks set through the "
+                "`run` function is used"
             )
             self.set_max_ticks(max_ticks)
 
