@@ -73,9 +73,7 @@ def _load_module(module_path: Path) -> None:
     spec.loader.exec_module(modulevar)
 
 
-def get_simulator_ids_child_process(
-    dict_return: multiprocessing.Manager, module_path: Path
-) -> None:
+def get_simulator_ids_child_process(list_manager, module_path: Path) -> None:
     """Get the ids of the simulations to be run.
 
     This function is passed to the Python multiprocessing module and run with
@@ -92,10 +90,12 @@ def get_simulator_ids_child_process(
     global _multi_sim
     print(_multi_sim)
     print([sim.get_id() for sim in _multi_sim])
-    dict_return["ids"] = {sim.get_id() for sim in _multi_sim}
+    if len(list_manager) != 0:
+        list_manager *= 0
+    list_manager.extend([sim.get_id() for sim in _multi_sim])
 
 
-def get_simulator_ids(config_module_path: Path) -> Set[str]:
+def get_simulator_ids(config_module_path: Path) -> list[str]:
     """This is a  hack to determine the IDs of the simulations we are to run.
     The only way we can know is by importing the module, which we can only do
     in the child processes. We therefore create a child process with the
@@ -108,15 +108,14 @@ def get_simulator_ids(config_module_path: Path) -> Set[str]:
     """
 
     manager = multiprocessing.Manager()
-    dict_return = manager.dict()
+    list_manager = manager.list()
     p = multiprocessing.Process(
         target=get_simulator_ids_child_process,
-        args=(dict_return, config_module_path),
+        args=(list_manager, config_module_path),
     )
     p.start()
     p.join()
-    print(dict_return)
-    return dict_return["ids"]
+    return list_manager
 
 
 def _run(module_path: Path, id: str) -> None:
@@ -170,7 +169,7 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     # module path (the config script specifying all simulations using MultiSim)
     # but a different ID. The ID is used to select the correct simulator to
     # run.
-    pool.starmap(_run, zip([module_path for _ in range(len(ids))], list(ids)))
+    pool.starmap(_run, zip([module_path for _ in range(len(ids))], tuple(ids)))
 
 
 def num_simulators() -> int:

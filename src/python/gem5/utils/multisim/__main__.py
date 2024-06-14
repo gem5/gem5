@@ -63,7 +63,7 @@ def main():
     )
 
     args = parser.parse_args()
-    run(module_path=Path(args.config), processes=args.processes)
+    run(module_path=Path(args.config))
 
 
 if __name__ == "__m5_main__":
