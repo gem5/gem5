@@ -1997,6 +1997,7 @@ namespace VegaISA
          * fits in better with the LDS pipeline logic.
          */
          setFlag(Load);
+         setFlag(ALU);
     } // Inst_DS__DS_SWIZZLE_B32
 
     Inst_DS__DS_SWIZZLE_B32::~Inst_DS__DS_SWIZZLE_B32()
