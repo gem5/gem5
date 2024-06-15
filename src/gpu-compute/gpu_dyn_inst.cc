@@ -726,6 +726,12 @@ GPUDynInst::isSystemCoherent() const
 }
 
 bool
+GPUDynInst::isI8() const
+{
+    return _staticInst->isI8();
+}
+
+bool
 GPUDynInst::isF16() const
 {
     return _staticInst->isF16();
@@ -759,6 +765,12 @@ bool
 GPUDynInst::isMAD() const
 {
     return _staticInst->isMAD();
+}
+
+bool
+GPUDynInst::isMFMA() const
+{
+    return _staticInst->isMFMA();
 }
 
 void
