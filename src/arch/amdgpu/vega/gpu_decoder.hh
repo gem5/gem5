@@ -1714,7 +1714,7 @@ namespace VegaISA
 
     struct InFmt_FLAT {
         unsigned int    OFFSET : 13;
-        unsigned int       LDS : 1;
+        unsigned int       SVE : 1;
         unsigned int       SEG : 2;
         unsigned int       GLC : 1;
         unsigned int       SLC : 1;
