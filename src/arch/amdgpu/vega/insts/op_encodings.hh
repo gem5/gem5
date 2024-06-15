@@ -1306,6 +1306,11 @@ namespace VegaISA
                 ConstScalarOperandU32 soffset(gpuDynInst, saddr);
                 soffset.read();
 
+                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+                if (instData.SVE) {
+                    voffset.read();
+                }
+
                 Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
 
                 int elemSize;
@@ -1320,6 +1325,7 @@ namespace VegaISA
                 unsigned swizzleOffset = soffset.rawData() + offset;
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                     if (gpuDynInst->exec_mask[lane]) {
+                        swizzleOffset += instData.SVE ? voffset[lane] : 0;
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
                             + swizzle(swizzleOffset, lane, elemSize);
                     }
@@ -1328,7 +1334,9 @@ namespace VegaISA
                 assert(isFlatScratch());
 
                 ConstVecOperandU32 voffset(gpuDynInst, vaddr);
-                voffset.read();
+                if (instData.SVE) {
+                    voffset.read();
+                }
 
                 Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
 
@@ -1343,8 +1351,11 @@ namespace VegaISA
 
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                     if (gpuDynInst->exec_mask[lane]) {
+                        VecElemU32 vgpr_offset =
+                            instData.SVE ? voffset[lane] : 0;
+
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzle(voffset[lane] + offset, lane, elemSize);
+                            + swizzle(vgpr_offset + offset, lane, elemSize);
                     }
                 }
             }
