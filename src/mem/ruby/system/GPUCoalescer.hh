@@ -291,14 +291,8 @@ class GPUCoalescer : public RubyPort
 
     void readCallback(Addr address,
                       MachineType mach,
-                      DataBlock& data);
-
-    void readCallback(Addr address,
-                      MachineType mach,
                       DataBlock& data,
-                      Cycles initialRequestTime,
-                      Cycles forwardRequestTime,
-                      Cycles firstResponseTime);
+                      bool externalHit = false);
 
     void readCallback(Addr address,
                       MachineType mach,
@@ -306,7 +300,16 @@ class GPUCoalescer : public RubyPort
                       Cycles initialRequestTime,
                       Cycles forwardRequestTime,
                       Cycles firstResponseTime,
-                      bool isRegion);
+                      bool externalHit = false);
+
+    void readCallback(Addr address,
+                      MachineType mach,
+                      DataBlock& data,
+                      Cycles initialRequestTime,
+                      Cycles forwardRequestTime,
+                      Cycles firstResponseTime,
+                      bool isRegion,
+                      bool externalHit = false);
 
     /* atomics need their own callback because the data
        might be const coming from SLICC */
@@ -392,13 +395,17 @@ class GPUCoalescer : public RubyPort
                      Cycles initialRequestTime,
                      Cycles forwardRequestTime,
                      Cycles firstResponseTime,
-                     bool isRegion);
+                     bool isRegion,
+                     bool externalHit = false);
+
     void recordMissLatency(CoalescedRequest* crequest,
                            MachineType mach,
                            Cycles initialRequestTime,
                            Cycles forwardRequestTime,
                            Cycles firstResponseTime,
-                           bool success, bool isRegion);
+                           bool success,
+                           bool isRegion);
+
     void completeHitCallback(std::vector<PacketPtr> & mylist);
 
     virtual RubyRequestType getRequestType(PacketPtr pkt);

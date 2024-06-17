@@ -655,10 +655,12 @@ machine(MachineType:TCC, "TCC Cache")
 
   action(p_profileMiss, "pm", desc="Profile cache miss") {
       L2cache.profileDemandMiss();
+      DPRINTF(RubyHitMiss, "in TCC miss at %#lx\n", address);
   }
 
   action(p_profileHit, "ph", desc="Profile cache hit") {
       L2cache.profileDemandHit();
+      DPRINTF(RubyHitMiss, "in TCC hit at %#lx\n", address);
   }
 
   action(t_allocateTBE, "t", desc="allocate TBE Entry") {
