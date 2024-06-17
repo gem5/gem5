@@ -99,7 +99,7 @@ def _get_simulator_ids_child_process(id_list, module_path: Path) -> None:
     id_list.extend([sim.get_id() for sim in _multi_sim])
 
 
-def _get_simulator_num_processes_child_process(
+def _get_num_processes_child_process(
     num_processes_dict, module_path: Path
 ) -> None:
     """Get the ids of the simulations to be run.
@@ -146,7 +146,7 @@ def get_num_processes(config_module_path: Path) -> Optional[int]:
     manager = multiprocessing.Manager()
     num_processes_dict = manager.dict()
     p = multiprocessing.Process(
-        target=_get_simulator_num_processes_child_process,
+        target=_get_num_processes_child_process,
         args=(num_processes_dict, config_module_path),
     )
     p.start()
