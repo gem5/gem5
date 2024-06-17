@@ -535,7 +535,7 @@ machine(MachineType:Directory, "Directory protocol")
     z_recycleRequestQueue;
   }
 
-  transition({IM, MI, ID, ID_W}, {DMA_READ, DMA_WRITE} ) {
+  transition({IM, MI, ID, ID_W, M_DRDI}, {DMA_READ, DMA_WRITE} ) {
     y_recycleDMARequestQueue;
   }
 
@@ -648,6 +648,11 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(I, PUTX_NotOwner, I) {
+    b_sendWriteBackNack;
+    i_popIncomingRequestQueue;
+  }
+
+  transition({M_DWR, M_DRD, M_DRDI, M_DWRI}, PUTX_NotOwner) {
     b_sendWriteBackNack;
     i_popIncomingRequestQueue;
   }
