@@ -568,9 +568,9 @@ def config_hmc_dev(opt, system, hmc_host):
     # Attach 4 serial link to 4 crossbar/s
     for i in range(opt.num_serial_links):
         if opt.enable_link_monitor:
-            system.hmc_host.seriallink[
-                i
-            ].mem_side_port = system.hmc_dev.lmonitor[i].cpu_side_port
+            system.hmc_host.seriallink[i].mem_side_port = (
+                system.hmc_dev.lmonitor[i].cpu_side_port
+            )
             system.hmc_dev.lmonitor[i].mem_side_port = system.hmc_dev.xbar[
                 i
             ].cpu_side_ports
@@ -613,14 +613,12 @@ def config_hmc_dev(opt, system, hmc_host):
                     ]
 
                     # Connect the bridge between corssbars
-                    system.hmc_dev.xbar[
-                        i
-                    ].mem_side_ports = system.hmc_dev.buffers[
-                        index
-                    ].cpu_side_port
-                    system.hmc_dev.buffers[
-                        index
-                    ].mem_side_port = system.hmc_dev.xbar[j].cpu_side_ports
+                    system.hmc_dev.xbar[i].mem_side_ports = (
+                        system.hmc_dev.buffers[index].cpu_side_port
+                    )
+                    system.hmc_dev.buffers[index].mem_side_port = (
+                        system.hmc_dev.xbar[j].cpu_side_ports
+                    )
                 else:
                     # Don't connect the xbar to itself
                     pass
@@ -629,49 +627,49 @@ def config_hmc_dev(opt, system, hmc_host):
     # can only direct traffic to it local vaults
     if opt.arch == "mixed":
         system.hmc_dev.buffer30 = Bridge(ranges=system.mem_ranges[0:4])
-        system.hmc_dev.xbar[
-            3
-        ].mem_side_ports = system.hmc_dev.buffer30.cpu_side_port
+        system.hmc_dev.xbar[3].mem_side_ports = (
+            system.hmc_dev.buffer30.cpu_side_port
+        )
         system.hmc_dev.buffer30.mem_side_port = system.hmc_dev.xbar[
             0
         ].cpu_side_ports
 
         system.hmc_dev.buffer31 = Bridge(ranges=system.mem_ranges[4:8])
-        system.hmc_dev.xbar[
-            3
-        ].mem_side_ports = system.hmc_dev.buffer31.cpu_side_port
+        system.hmc_dev.xbar[3].mem_side_ports = (
+            system.hmc_dev.buffer31.cpu_side_port
+        )
         system.hmc_dev.buffer31.mem_side_port = system.hmc_dev.xbar[
             1
         ].cpu_side_ports
 
         system.hmc_dev.buffer32 = Bridge(ranges=system.mem_ranges[8:12])
-        system.hmc_dev.xbar[
-            3
-        ].mem_side_ports = system.hmc_dev.buffer32.cpu_side_port
+        system.hmc_dev.xbar[3].mem_side_ports = (
+            system.hmc_dev.buffer32.cpu_side_port
+        )
         system.hmc_dev.buffer32.mem_side_port = system.hmc_dev.xbar[
             2
         ].cpu_side_ports
 
         system.hmc_dev.buffer20 = Bridge(ranges=system.mem_ranges[0:4])
-        system.hmc_dev.xbar[
-            2
-        ].mem_side_ports = system.hmc_dev.buffer20.cpu_side_port
+        system.hmc_dev.xbar[2].mem_side_ports = (
+            system.hmc_dev.buffer20.cpu_side_port
+        )
         system.hmc_dev.buffer20.mem_side_port = system.hmc_dev.xbar[
             0
         ].cpu_side_ports
 
         system.hmc_dev.buffer21 = Bridge(ranges=system.mem_ranges[4:8])
-        system.hmc_dev.xbar[
-            2
-        ].mem_side_ports = system.hmc_dev.buffer21.cpu_side_port
+        system.hmc_dev.xbar[2].mem_side_ports = (
+            system.hmc_dev.buffer21.cpu_side_port
+        )
         system.hmc_dev.buffer21.mem_side_port = system.hmc_dev.xbar[
             1
         ].cpu_side_ports
 
         system.hmc_dev.buffer23 = Bridge(ranges=system.mem_ranges[12:16])
-        system.hmc_dev.xbar[
-            2
-        ].mem_side_ports = system.hmc_dev.buffer23.cpu_side_port
+        system.hmc_dev.xbar[2].mem_side_ports = (
+            system.hmc_dev.buffer23.cpu_side_port
+        )
         system.hmc_dev.buffer23.mem_side_port = system.hmc_dev.xbar[
             3
         ].cpu_side_ports
