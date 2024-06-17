@@ -99,7 +99,9 @@
 
 #include <array>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "base/cprintf.hh"
@@ -216,6 +218,24 @@ class VecRegContainer
         }
         ccprintf(os, "]");
         return os;
+    }
+
+    std::string
+    getString(const uint64_t& size) const
+    {
+        std::stringstream s;
+        size_t count = 0;
+        s << "[";
+        for (auto& b: container) {
+            if (count && (count % 4) == 0)
+                s << "_";
+            s << std::hex << std::setfill('0') << std::setw(2) << (uint16_t)b;
+            count++;
+            if (count == size)
+                break;
+        }
+        s << "]";
+        return s.str();
     }
 
     /** @} */
