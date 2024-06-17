@@ -284,7 +284,7 @@ def add_simulator(simulator: "Simulator") -> None:
                 "If running this script directly as a configuration script "
                 "then a single argument must be specified: the id of the "
                 "simulator to run. This will run the simulation associated "
-                "with that id and no other. If thgfe intent is instead to run "
+                "with that id and no other. If the intent is instead to run "
                 "the script via the MultiSim utility then run this script via "
                 "the multisim module: "
                 "`<gem5> -m gem5.utils.multisim <config_script>`.\n\n"
