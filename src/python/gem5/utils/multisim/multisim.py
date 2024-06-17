@@ -268,7 +268,8 @@ def add_simulator(simulator: "Simulator") -> None:
             type=str,
             nargs="?",
             default=None,
-            help="The id of the simulator to run.",
+            help="The id of the simulator to run. "
+            "WARNING: If the id is invalid nothing is done.",
         )
         parser.add_argument(
             "-l",
