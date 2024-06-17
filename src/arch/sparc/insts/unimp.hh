@@ -59,7 +59,9 @@ class FailUnimplemented : public SparcStaticInst
     /// Constructor
     FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst) :
             SparcStaticInst(_mnemonic, _machInst, No_OpClass)
-    {}
+    {
+        flags[IsInvalid] = true;
+    }
 
     Fault
     execute(ExecContext *xc, trace::InstRecord *traceData) const override
