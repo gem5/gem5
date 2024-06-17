@@ -379,7 +379,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       if (use_seq_not_coal) {
         sequencer.readCallback(address, tmp, false, MachineType:L1Cache);
       } else {
-        coalescer.readCallback(address, MachineType:L1Cache, tmp, false);
+        coalescer.readCallback(address, MachineType:L1Cache, tmp);
       }
       if(is_valid(cache_entry)) {
         unset_cache_entry();
@@ -404,7 +404,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
           if (use_seq_not_coal) {
             sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
           } else {
-            coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk, false);
+            coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
           }
       } else {
         enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
@@ -565,7 +565,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     if (use_seq_not_coal) {
       sequencer.readCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
     } else {
-      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk, true);
+      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
     }
   }
 
@@ -574,7 +574,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     if (use_seq_not_coal) {
       sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
     } else {
-      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk, false);
+      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
     }
   }
 
@@ -587,7 +587,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       if (use_seq_not_coal) {
         sequencer.readCallback(address, tmp, false, MachineType:L1Cache);
       } else {
-        coalescer.readCallback(address, MachineType:L1Cache, tmp, false);
+        coalescer.readCallback(address, MachineType:L1Cache, tmp);
       }
     }
   }
