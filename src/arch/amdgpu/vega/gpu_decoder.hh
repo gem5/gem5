@@ -325,6 +325,7 @@ namespace VegaISA
         GPUStaticInst* decode_OPU_VOP3__V_ADD_U32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_SUB_U32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_SUBREV_U32(MachInst);
+        GPUStaticInst* decode_OPU_VOP3__V_FMAC_F32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_NOP(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_MOV_B32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_CVT_I32_F64(MachInst);
@@ -1713,7 +1714,7 @@ namespace VegaISA
 
     struct InFmt_FLAT {
         unsigned int    OFFSET : 13;
-        unsigned int       LDS : 1;
+        unsigned int       SVE : 1;
         unsigned int       SEG : 2;
         unsigned int       GLC : 1;
         unsigned int       SLC : 1;

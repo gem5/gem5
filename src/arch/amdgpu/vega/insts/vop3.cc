@@ -2404,6 +2404,73 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP3__V_FMAC_F32 class methods ---
+
+    Inst_VOP3__V_FMAC_F32::Inst_VOP3__V_FMAC_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fmac_f32", false)
+    {
+        setFlag(ALU);
+        setFlag(F32);
+        setFlag(FMA);
+    } // Inst_VOP3__V_FMAC_F32
+
+    Inst_VOP3__V_FMAC_F32::~Inst_VOP3__V_FMAC_F32()
+    {
+    } // ~Inst_VOP3__V_FMAC_F32
+
+    // --- description from .arch file ---
+    // D.f = S0.f * S1.f + D.f.
+    void
+    Inst_VOP3__V_FMAC_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+        vdst.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+        panic_if(instData.OPSEL, "OPSEL not implemented for %s", _opcode);
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (instData.ABS & 0x4) {
+            vdst.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        if (extData.NEG & 0x4) {
+            vdst.negModifier();
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                float out = std::fma(src0[lane], src1[lane], vdst[lane]);
+                out = omodModifier(out, extData.OMOD);
+                out = std::clamp(vdst[lane], 0.0f, 1.0f);
+                vdst[lane] = out;
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP3__V_NOP class methods ---
 
     Inst_VOP3__V_NOP::Inst_VOP3__V_NOP(InFmt_VOP3A *iFmt)

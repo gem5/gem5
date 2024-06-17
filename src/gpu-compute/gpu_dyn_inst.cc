@@ -925,20 +925,14 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         ComputeUnit *cu = wavefront()->computeUnit;
 
         if (wavefront()->gfxVersion == GfxVersion::gfx942) {
-            // Architected flat scratch base address in FLAT_SCRATCH registers
-            uint32_t fs_lo = cu->srf[simdId]->read(
-                VegaISA::REG_FLAT_SCRATCH_LO);
-            uint32_t fs_hi = cu->srf[simdId]->read(
-                VegaISA::REG_FLAT_SCRATCH_HI);
-
-            Addr arch_flat_scratch = ((Addr)(fs_hi) << 32) | fs_lo;
-
+            // Architected flat scratch base address is in a dedicated hardware
+            // register.
             for (int lane = 0; lane < cu->wfSize(); ++lane) {
                 if (mask[lane]) {
                     // The scratch base is added for other gfx versions,
                     // otherwise this would simply add the register base.
                     addr[lane] = addr[lane] - cu->shader->getScratchBase()
-                        + arch_flat_scratch;
+                        + wavefront()->archFlatScratchAddr;
                 }
             }
         } else {

@@ -384,14 +384,13 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 // the FLAT_SCRATCH register pair to the scratch backing
                 // memory: https://llvm.org/docs/AMDGPUUsage.html#flat-scratch
                 if (task->gfxVersion() == GfxVersion::gfx942) {
-                    Addr arch_flat_scratch =
+                    archFlatScratchAddr =
                         task->amdQueue.scratch_backing_memory_location;
-                    computeUnit->srf[simdId]->write(
-                        VegaISA::REG_FLAT_SCRATCH_HI,
-                        bits(arch_flat_scratch, 63, 32));
-                    computeUnit->srf[simdId]->write(
-                        VegaISA::REG_FLAT_SCRATCH_LO,
-                        bits(arch_flat_scratch, 31, 0));
+
+                    DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                            "Setting architected flat scratch = %x\n",
+                            computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                            archFlatScratchAddr);
 
                     break;
                 }
