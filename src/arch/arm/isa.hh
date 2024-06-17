@@ -435,6 +435,8 @@ namespace ArmISA
 
         void globalClearExclusive() override;
         void globalClearExclusive(ExecContext *xc) override;
+
+        int64_t getVectorLengthInBytes() const override { return sveVL * 16; }
     };
 
 } // namespace ArmISA

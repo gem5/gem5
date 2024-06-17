@@ -56,7 +56,7 @@ RegClassOps::regName(const RegId &id) const
 }
 
 std::string
-RegClassOps::valString(const void *val, size_t size) const
+RegClassOps::valString(const void *val, const size_t& size) const
 {
     // If this is just a RegVal, or could be interpreted as one, print it
     // that way.

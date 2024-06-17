@@ -464,8 +464,9 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
             memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
         }
     }
-    if (traceData)
+    if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
+    }
     return NoFault;
 }
 
@@ -666,8 +667,9 @@ VlSegDeIntrlvMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) c
             elem++;
         }
     }
-    if (traceData)
+    if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
+    }
     return NoFault;
 }
 
@@ -776,8 +778,9 @@ VsSegIntrlvMicroInst::execute(ExecContext* xc,
         }
     }
 
-    if (traceData)
+    if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
+    }
     return NoFault;
 }
 
