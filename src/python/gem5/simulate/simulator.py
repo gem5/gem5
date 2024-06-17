@@ -692,7 +692,7 @@ class Simulator:
                           **maximum number of ticks per simulation run.
         """
 
-        if hasattr(self, "_max_ticks") and self._max_ticks and max_ticks:
+        if max_ticks and max_ticks != self._max_ticks:
             warn(
                 "Max ticks has already been set prior to setting it through "
                 "the run call. In these cases the max ticks set through the "
