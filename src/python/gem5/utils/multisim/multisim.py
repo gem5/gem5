@@ -94,8 +94,6 @@ def _get_simulator_ids_child_process(id_list, module_path: Path) -> None:
 
     _load_module(module_path)
     global _multi_sim
-    print(_multi_sim)
-    print([sim.get_id() for sim in _multi_sim])
     if len(id_list) != 0:
         id_list *= 0
     id_list.extend([sim.get_id() for sim in _multi_sim])
