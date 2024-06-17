@@ -241,7 +241,7 @@ def add_simulator(simulator: "Simulator") -> None:
 
     :param simulator: The simulator to add to the multisim.
     :param id: The id of the simulator. This is used to reference the
-    simululation. This is particularly important when referencing the correct
+    simulation. This is particularly important when referencing the correct
     m5out subdirectory.
     """
 
