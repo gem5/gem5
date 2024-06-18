@@ -150,22 +150,28 @@ class SpatterKernel:
         kernel_delta: int,
         kernel_count: int,
         kernel_type: SpatterKernelType,
-        kernel_trace: List[int],
+        base_index: int,
+        indices_per_stride: int,
+        stride_size: int,
         index_size: int,
         base_index_addr: Addr,
         value_size: int,
         base_value_addr: Addr,
+        kernel_trace: List[int],
         fix_empty_trace: bool = False,
     ):
         self._id = kernel_id
         self._delta = kernel_delta
         self._count = kernel_count
-        self._trace = kernel_trace
         self._type = kernel_type
+        self._base_index = base_index
+        self._indices_per_stride = indices_per_stride
+        self._stride_size = stride_size
         self._index_size = index_size
         self._base_index_addr = base_index_addr
         self._value_size = value_size
         self._base_value_addr = base_value_addr
+        self._trace = kernel_trace
 
         if fix_empty_trace and len(kernel_trace) == 0:
             inform(
@@ -185,6 +191,9 @@ class SpatterKernel:
             self._delta,
             self._count,
             self._type.getValue(),
+            self._base_index,
+            self._indices_per_stride,
+            self._stride_size,
             self._index_size,
             self._base_index_addr,
             self._value_size,

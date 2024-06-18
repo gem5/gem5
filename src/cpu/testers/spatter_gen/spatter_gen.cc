@@ -205,6 +205,7 @@ void
 SpatterGen::addKernel(
     uint32_t id, uint32_t delta, uint32_t count,
     SpatterKernelType type,
+    uint32_t base_index, uint32_t indices_per_stride, uint32_t stride,
     size_t index_size, Addr base_index_addr,
     size_t value_size, Addr base_value_addr,
     const std::vector<uint32_t>& indices
@@ -218,6 +219,7 @@ SpatterGen::addKernel(
     SpatterKernel new_kernel(
                             requestorId,
                             id, delta, count, type,
+                            base_index, indices_per_stride, stride,
                             index_size, base_index_addr,
                             value_size, base_value_addr
                             );
