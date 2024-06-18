@@ -112,9 +112,9 @@ if args.set_ticks_before:
 simulator = Simulator(board=motherboard)
 
 if args.set_ticks_at_execution:
-    simulator.run(max_ticks=args.set_ticks_at_execution)
-else:
-    simulator.run()
+    simulator.set_max_ticks(args.set_ticks_at_execution)
+
+simulator.run()
 
 # Set the max ticks after the simulator run.
 if args.set_ticks_after:

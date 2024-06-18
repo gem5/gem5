@@ -145,9 +145,9 @@ board.set_workload(list(suite)[0])
 simulator = Simulator(board=board, full_system=args.fs_sim)
 
 if args.tick_exit:
-    simulator.run(max_ticks=args.tick_exit)
-else:
-    simulator.run()
+    simulator.set_max_ticks(args.tick_exit)
+
+simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(

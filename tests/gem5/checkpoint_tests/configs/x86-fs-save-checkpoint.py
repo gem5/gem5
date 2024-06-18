@@ -87,11 +87,11 @@ board.set_kernel_disk_workload(
     disk_image=obtain_resource("x86-ubuntu-18.04-img"),
 )
 
-sim = Simulator(board=board, full_system=True)
+sim = Simulator(board=board, full_system=True, max_ticks=10**6)
 print("Beginning simulation!")
 
-max_ticks = 10**6
-sim.run(max_ticks=max_ticks)
+
+sim.run()
 print(
     "Exiting @ tick {} because {}.".format(
         sim.get_current_tick(), sim.get_last_exit_event_cause()

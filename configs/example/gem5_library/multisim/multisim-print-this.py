@@ -1,5 +1,5 @@
-# Copyright (c) 2023 The Regents of the University of California
-# All rights reserved.
+# Copyright (c) 2024 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,15 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-This gem5 test script creates a simple board to run the first
-10^6 ticks of "sparc-hello" binary simulation and saves a checkpoint.
-This configuration serves as a test to ensure that checkpoints work
-with SPARC ISA.
+"""An example of a single configuration script for defining multiple
+simulations through the gem5 `multisim` module.
+
+This script is very simple and simply prints a simple message once for each
+simulation, outputing the process id.
+
+Usage
+-----
+
+1. To run all the simulations defined in this script::
+
+```shell
+<gem5-binary> -m gem5.utils.multisim \
+    configs/example/gem5_library/multisim/multisim-print-this.py
+```
+
+2. To run a specific simulation defined in this script:
+
+```shell
+<gem5-binary> configs/example/gem5_library/multisim/multisim-print-this.py \
+    process_id_1
+```
+
+3. To list all the IDs of the simulations defined in this script:
+
+```shell
+<gem5-binary> configs/example/gem5_library/multisim/multisim-print-this.py -l
+```
 """
 
-import argparse
 
+import gem5.utils.multisim as multisim
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.memory import SingleChannelDDR3_1600
@@ -41,48 +64,24 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
 
-parser = argparse.ArgumentParser()
+# Set the maximum number of concurrent processes to be 2.
+multisim.set_num_processes(2)
 
-parser.add_argument(
-    "--checkpoint-path",
-    type=str,
-    required=False,
-    default="sparc-hello-test-checkpoint/",
-    help="The directory to store the checkpoint.",
-)
-
-args = parser.parse_args()
-requires(isa_required=ISA.SPARC)
-
-cache_hierarchy = NoCache()
-
-memory = SingleChannelDDR3_1600(size="32MB")
-processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.SPARC, num_cores=2
-)
-
-board = SimpleBoard(
-    clk_freq="3GHz",
-    processor=processor,
-    memory=memory,
-    cache_hierarchy=cache_hierarchy,
-)
-board.set_se_binary_workload(
-    obtain_resource(
-        "sparc-hello",
-        resource_version="1.0.0",
+for process_id in range(5):
+    cache_hierarchy = NoCache()
+    memory = SingleChannelDDR3_1600(size="32MB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=1
     )
-)
-
-sim = Simulator(board=board, full_system=False, max_ticks=10**6)
-sim.run()
-print(
-    "Exiting @ tick {} because {}.".format(
-        sim.get_current_tick(), sim.get_last_exit_event_cause()
+    board = SimpleBoard(
+        clk_freq="1GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
     )
-)
-print("Taking checkpoint at", args.checkpoint_path)
-sim.save_checkpoint(args.checkpoint_path)
-print("Done taking checkpoint")
+    board.set_se_binary_workload(
+        binary=obtain_resource("x86-print-this"),
+        arguments=[f"Hello from process {process_id}", 1],
+    )
+    multisim.add_simulator(Simulator(board=board, id=f"process_{process_id}"))
