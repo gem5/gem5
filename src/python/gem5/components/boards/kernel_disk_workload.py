@@ -249,3 +249,11 @@ class KernelDiskWorkload:
                     "Checkpoints must be passed as a Path or an "
                     "CheckpointResource."
                 )
+
+    def append_kernel_arg(self, arg: str) -> None:
+        """
+        Append a kernel argument to the list of kernel arguments.
+
+        :param arg: The kernel argument to append.
+        """
+        self.workload.command_line += f" {arg}"
