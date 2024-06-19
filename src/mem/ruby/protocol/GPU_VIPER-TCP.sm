@@ -565,7 +565,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     if (use_seq_not_coal) {
       sequencer.readCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
     } else {
-      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk, false);
+      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk, true);
     }
   }
 
