@@ -493,7 +493,7 @@ void
 GPUCoalescer::readCallback(Addr address,
                         MachineType mach,
                         DataBlock& data,
-                        bool externalHit)
+                        bool externalHit = false)
 {
     readCallback(address, mach, data, Cycles(0), Cycles(0), Cycles(0), externalHit);
 }
@@ -505,7 +505,7 @@ GPUCoalescer::readCallback(Addr address,
                         Cycles initialRequestTime,
                         Cycles forwardRequestTime,
                         Cycles firstResponseTime,
-                        bool externalHit)
+                        bool externalHit = false)
 {
 
     readCallback(address, mach, data,
@@ -521,7 +521,7 @@ GPUCoalescer::readCallback(Addr address,
                         Cycles forwardRequestTime,
                         Cycles firstResponseTime,
                         bool isRegion,
-                        bool externalHit)
+                        bool externalHit = false)
 {
     assert(address == makeLineAddress(address));
     assert(coalescedTable.count(address));
@@ -552,7 +552,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                        Cycles forwardRequestTime,
                        Cycles firstResponseTime,
                        bool isRegion,
-                       bool externalHit)
+                       bool externalHit = false)
 {
     PacketPtr pkt = crequest->getFirstPkt();
     Addr request_address = pkt->getAddr();
