@@ -552,7 +552,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                        Cycles forwardRequestTime,
                        Cycles firstResponseTime,
                        bool isRegion,
-                       externalHit = false)
+                       bool externalHit = false)
 {
     PacketPtr pkt = crequest->getFirstPkt();
     Addr request_address = pkt->getAddr();
