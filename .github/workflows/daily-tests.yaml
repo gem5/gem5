@@ -203,7 +203,6 @@ jobs:
           status-${{ steps.run-tests.outcome }}
           path: tests/testing-results
 
-
   daily-tests:
     # The dummy job is used to indicate whether the daily tests have
     # passed or not. This can be used as status check for pull requests.
