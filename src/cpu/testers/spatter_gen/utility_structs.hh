@@ -228,7 +228,7 @@ class SpatterKernel
         _type(type),
         indexSize(index_size), baseIndexAddr(base_index_addr),
         valueSize(value_size), baseValueAddr(base_value_addr),
-        index(0), iteration(0), remRolls(0)
+        iteration(0), remRolls(0)
     {}
 
     uint32_t id() const { return _id; }
