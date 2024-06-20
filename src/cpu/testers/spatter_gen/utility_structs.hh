@@ -164,19 +164,17 @@ class SpatterKernel
     class IndexGen
     {
       private:
-        uint32_t base;
         uint32_t indicesPerStride;
         uint32_t stride;
 
         uint32_t next;
       public:
-        IndexGen(): base(0), indicesPerStride(0), stride(0), next(0)
+        IndexGen(): indicesPerStride(0), stride(0), next(0)
         {}
 
         IndexGen(uint32_t base_index,
                 uint32_t indices_per_stride,
                 uint32_t stride_size):
-            base(base_index),
             indicesPerStride(indices_per_stride),
             stride(stride_size), next(base_index)
         {}
@@ -207,8 +205,6 @@ class SpatterKernel
     size_t valueSize;
     Addr baseValueAddr;
 
-    // needed to iterate over indices multiple times.
-    uint32_t index;
     // current iteration over indices
     uint32_t iteration;
 
