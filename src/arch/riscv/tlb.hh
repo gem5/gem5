@@ -97,6 +97,14 @@ class TLB : public BaseTLB
 
     void takeOverFrom(BaseTLB *old) override {}
 
+    /**
+     * Insert an entry into the TLB.
+     * @param vpn The virtual page number extracted from the address.
+     *            It is shifted based on the page size. We assume the
+     *            smallest defined page size and remove the upper bits of the
+     *            virtual address that are not part of the page number.
+     * @param entry The entry to insert.
+     */
     TlbEntry *insert(Addr vpn, const TlbEntry &entry);
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
@@ -123,7 +131,8 @@ class TLB : public BaseTLB
      */
     Port *getTableWalkerPort() override;
 
-    Addr translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode);
+    Addr translateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
+                          BaseMMU::Mode mode);
 
     Fault translateAtomic(const RequestPtr &req,
                           ThreadContext *tc, BaseMMU::Mode mode) override;
@@ -134,6 +143,17 @@ class TLB : public BaseTLB
                               BaseMMU::Mode mode) override;
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
                            BaseMMU::Mode mode) const override;
+
+    /**
+     * Perform the tlb lookup
+     * @param vpn The virtual page number extracted from the address.
+     *            It is shifted based on the page size. We assume the
+     *            smallest defined page size and remove the upper bits of the
+     *            virtual address that are not part of the page number.
+     * @param asid The address space identifier as specified by satp.
+     * @param mode The mode of the memory operation.
+     * @param hidden If the lookup should be hidden from the statistics.
+     */
     TlbEntry *lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden);
 
   private:

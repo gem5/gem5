@@ -67,6 +67,12 @@ using namespace RiscvISA;
 static Addr
 buildKey(Addr vpn, uint16_t asid)
 {
+    // Note ASID is 16 bits
+    // The VPN in sv39 is up to 39-12=27 bits
+    // The VPN in sv48 is up to 48-12=36 bits
+    // The VPN in sv57 is up to 57-12=45 bits
+    // So, shifting the ASID into the top 16 bits is safe.
+    assert(bits(vpn, 63, 48) == 0);
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
@@ -110,6 +116,12 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
 {
     TlbEntry *entry = trie.lookup(buildKey(vpn, asid));
 
+    DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x, key=%#x): "
+                        "%s ppn=%#x (%#x) %s\n",
+            vpn, asid, buildKey(vpn, asid), entry ? "hit" : "miss",
+            entry ? entry->paddr : 0, entry ? entry->size() : 0,
+            hidden ? "hidden" : "");
+
     if (!hidden) {
         if (entry)
             entry->lruSeq = nextSeq();
@@ -131,9 +143,6 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
             else
                 stats.readHits++;
         }
-
-        DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n",
-                vpn, asid, entry ? "hit" : "miss", entry ? entry->paddr : 0);
     }
 
     return entry;
@@ -142,15 +151,19 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
 TlbEntry *
 TLB::insert(Addr vpn, const TlbEntry &entry)
 {
-    DPRINTF(TLB, "insert(vpn=%#x, asid=%#x): ppn=%#x pte=%#x size=%#x\n",
-        vpn, entry.asid, entry.paddr, entry.pte, entry.size());
+    DPRINTF(TLB, "insert(vpn=%#x, asid=%#x, key=%#x): "
+                 "vaddr=%#x paddr=%#x pte=%#x size=%#x\n",
+        vpn, entry.asid, buildKey(vpn, entry.asid), entry.vaddr, entry.paddr,
+        entry.pte, entry.size());
 
     // If somebody beat us to it, just use that existing entry.
     TlbEntry *newEntry = lookup(vpn, entry.asid, BaseMMU::Read, true);
     if (newEntry) {
         // update PTE flags (maybe we set the dirty/writable flag)
         newEntry->pte = entry.pte;
-        assert(newEntry->vaddr == vpn);
+        assert(newEntry->vaddr == entry.vaddr);
+        assert(newEntry->asid == entry.asid);
+        assert(newEntry->logBytes == entry.logBytes);
         return newEntry;
     }
 
@@ -163,31 +176,46 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
     Addr key = buildKey(vpn, entry.asid);
     *newEntry = entry;
     newEntry->lruSeq = nextSeq();
-    newEntry->vaddr = vpn;
-    newEntry->trieHandle =
-    trie.insert(key, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
+    newEntry->trieHandle = trie.insert(
+        key, TlbEntryTrie::MaxBits - entry.logBytes + PageShift, newEntry
+    );
     return newEntry;
 }
 
 void
-TLB::demapPage(Addr vpn, uint64_t asid)
+TLB::demapPage(Addr vaddr, uint64_t asid)
 {
+    // Note: vaddr is Reg[rs1] and asid is Reg[rs2]
+    // The definition of this instruction is
+    // if vaddr=x0 and asid=x0, then flush all
+    // if vaddr=x0 and asid!=x0 then flush all with matching asid
+    // if vaddr!=x0 and asid=x0 then flush all leaf PTEs that match vaddr
+    // if vaddr!=x0 and asid!=x0 then flush the leaf PTE that matches vaddr
+    //    in the given asid.
+    // No effect if vaddr is not valid
+    // Currently, we assume if the values of the registers are 0 then it was
+    // referencing x0.
+
     asid &= 0xFFFF;
 
-    if (vpn == 0 && asid == 0)
+    DPRINTF(TLB, "flush(vaddr=%#x, asid=%#x)\n", vaddr, asid);
+    if (vaddr == 0 && asid == 0) {
+        DPRINTF(TLB, "Flushing all TLB entries\n");
         flushAll();
-    else {
-        DPRINTF(TLB, "flush(vpn=%#x, asid=%#x)\n", vpn, asid);
-        if (vpn != 0 && asid != 0) {
-            TlbEntry *newEntry = lookup(vpn, asid, BaseMMU::Read, true);
-            if (newEntry)
-                remove(newEntry - tlb.data());
+    } else {
+        if (vaddr != 0 && asid != 0) {
+            // TODO: When supporting other address translation modes, fix this
+            Addr vpn = getVPNFromVAddr(vaddr, AddrXlateMode::SV39);
+            TlbEntry *entry = lookup(vpn, asid, BaseMMU::Read, true);
+            if (entry) {
+                remove(entry - tlb.data());
+            }
         }
         else {
             for (size_t i = 0; i < size; i++) {
                 if (tlb[i].trieHandle) {
                     Addr mask = ~(tlb[i].size() - 1);
-                    if ((vpn == 0 || (vpn & mask) == tlb[i].vaddr) &&
+                    if ((vaddr == 0 || (vaddr & mask) == tlb[i].vaddr) &&
                         (asid == 0 || tlb[i].asid == asid))
                         remove(i);
                 }
@@ -267,9 +295,10 @@ TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode)
 }
 
 Addr
-TLB::translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode)
+TLB::translateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
+                      BaseMMU::Mode mode)
 {
-    TlbEntry *e = lookup(vaddr, asid, mode, false);
+    TlbEntry *e = lookup(getVPNFromVAddr(vaddr, xmode), asid, mode, false);
     assert(e != nullptr);
     return e->paddr << PageShift | (vaddr & mask(e->logBytes));
 }
@@ -284,7 +313,8 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     Addr vaddr = Addr(sext<VADDR_BITS>(req->getVaddr()));
     SATP satp = tc->readMiscReg(MISCREG_SATP);
 
-    TlbEntry *e = lookup(vaddr, satp.asid, mode, false);
+    Addr vpn = getVPNFromVAddr(vaddr, satp.mode);
+    TlbEntry *e = lookup(vpn, satp.asid, mode, false);
     if (!e) {
         Fault fault = walker->start(tc, translation, req, mode);
         if (translation != nullptr || fault != NoFault) {
@@ -292,7 +322,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             delayed = true;
             return fault;
         }
-        e = lookup(vaddr, satp.asid, mode, true);
+        e = lookup(vpn, satp.asid, mode, true);
         assert(e != nullptr);
     }
 
@@ -315,8 +345,8 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     }
 
     Addr paddr = e->paddr << PageShift | (vaddr & mask(e->logBytes));
-    DPRINTF(TLBVerbose, "translate(vpn=%#x, asid=%#x): %#x\n",
-            vaddr, satp.asid, paddr);
+    DPRINTF(TLBVerbose, "translate(vaddr=%#x, vpn=%#x, asid=%#x): %#x\n",
+            vaddr, vpn, satp.asid, paddr);
     req->setPaddr(paddr);
 
     return NoFault;
@@ -505,9 +535,11 @@ TLB::unserialize(CheckpointIn &cp)
         freeList.pop_front();
 
         newEntry->unserializeSection(cp, csprintf("Entry%d", x));
-        Addr key = buildKey(newEntry->vaddr, newEntry->asid);
+        // TODO: When supporting other addressing modes fix this
+        Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
+        Addr key = buildKey(vpn, newEntry->asid);
         newEntry->trieHandle = trie.insert(key,
-            TlbEntryTrie::MaxBits - newEntry->logBytes, newEntry);
+            TlbEntryTrie::MaxBits - newEntry->logBytes + PageShift, newEntry);
     }
 }
 
