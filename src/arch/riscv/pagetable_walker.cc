@@ -203,7 +203,8 @@ Walker::startWalkWrapper()
 
     // check if we get a tlb hit to skip the walk
     Addr vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
-    TlbEntry *e = tlb->lookup(vaddr, currState->satp.asid, currState->mode,
+    Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
+    TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                               true);
     Fault fault = NoFault;
     if (e) {
@@ -242,7 +243,8 @@ Walker::startWalkWrapper()
         if (currStates.size()) {
             currState = currStates.front();
             vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
-            e = tlb->lookup(vaddr, currState->satp.asid, currState->mode,
+            Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
+            e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                             true);
             if (e) {
                fault = tlb->checkPermissions(currState->status,
@@ -461,9 +463,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
 
         if (doTLBInsert) {
-            if (!functional)
-                walker->tlb->insert(entry.vaddr, entry);
-            else {
+            if (!functional) {
+                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+                walker->tlb->insert(vpn, entry);
+            } else {
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
                         entry.vaddr, entry.paddr << PageShift |
                         (entry.vaddr & mask(entry.logBytes)));
@@ -571,7 +574,8 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              */
             Addr vaddr = req->getVaddr();
             vaddr = Addr(sext<VADDR_BITS>(vaddr));
-            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
+            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid,
+                                                       satp.mode, mode);
             req->setPaddr(paddr);
 
             // do pmp check if any checking condition is met.

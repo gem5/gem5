@@ -53,6 +53,7 @@ enum AddrXlateMode
     BARE = 0,
     SV39 = 8,
     SV48 = 9,
+    SV57 = 10,
 };
 
 // Sv39 paging
@@ -75,6 +76,13 @@ BitUnion64(PTESv39)
     Bitfield<1> r;
     Bitfield<0> v;
 EndBitUnion(PTESv39)
+
+/**
+ * Remove the page offset and the upper bits that are
+ * not part of the VPN from the address.
+ * Note that this must assume the smallest page size
+ */
+Addr getVPNFromVAddr(Addr vaddr, Addr mode);
 
 struct TlbEntry;
 typedef Trie<Addr, TlbEntry> TlbEntryTrie;
