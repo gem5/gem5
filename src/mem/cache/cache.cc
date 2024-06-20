@@ -861,7 +861,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
                 }
                 // not a cache fill, just forwarding response
                 // responseLatency is the latency of the return path
-                // from lower level cahces/memory to the core.
+                // from lower level caches/memory to the core.
                 completion_time += clockEdge(responseLatency) +
                     pkt->payloadDelay;
                 if (!is_error) {
