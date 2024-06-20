@@ -161,7 +161,38 @@ class SpatterKernel
     typedef enums::SpatterKernelType SpatterKernelType;
     typedef SpatterAccess::AccessPair AccessPair;
 
+    class IndexGen
+    {
+      private:
+        uint32_t indicesPerStride;
+        uint32_t stride;
+
+        uint32_t next;
+      public:
+        IndexGen(): indicesPerStride(0), stride(0), next(0)
+        {}
+
+        IndexGen(uint32_t base_index,
+                uint32_t indices_per_stride,
+                uint32_t stride_size):
+            indicesPerStride(indices_per_stride),
+            stride(stride_size), next(base_index)
+        {}
+
+        uint32_t nextIndex() {
+            uint32_t ret = next;
+            // update next index
+            next++;
+            if (next % indicesPerStride == 0) {
+                next += (stride - indicesPerStride);
+            }
+            return ret;
+        }
+    };
+
     RequestorID requestorId;
+    IndexGen indexGen;
+
     uint32_t _id;
     uint32_t delta;
     uint32_t count;
@@ -174,8 +205,6 @@ class SpatterKernel
     size_t valueSize;
     Addr baseValueAddr;
 
-    // needed to iterate over indices multiple times.
-    uint32_t index;
     // current iteration over indices
     uint32_t iteration;
 
@@ -189,15 +218,17 @@ class SpatterKernel
         RequestorID requestor_id,
         uint32_t id, uint32_t delta, uint32_t count,
         SpatterKernelType type,
+        uint32_t base_index, uint32_t indices_per_stride, uint32_t stride,
         size_t index_size, Addr base_index_addr,
         size_t value_size, Addr base_value_addr
     ):
         requestorId(requestor_id),
+        indexGen(base_index, indices_per_stride, stride),
         _id(id), delta(delta), count(count),
         _type(type),
         indexSize(index_size), baseIndexAddr(base_index_addr),
         valueSize(value_size), baseValueAddr(base_value_addr),
-        index(0), iteration(0), remRolls(0)
+        iteration(0), remRolls(0)
     {}
 
     uint32_t id() const { return _id; }
@@ -215,10 +246,10 @@ class SpatterKernel
     SpatterAccess* nextSpatterAccess()
     {
         std::queue<AccessPair> access_pairs;
+        // get the next index for the index array
+        uint32_t index = indexGen.nextIndex();
         Addr index_addr = baseIndexAddr + (index * indexSize);
         access_pairs.emplace(index_addr, indexSize);
-        // update index in the index array
-        index++;
 
         uint32_t front = indices.front();
         uint32_t value_index = (delta * iteration) + front;
