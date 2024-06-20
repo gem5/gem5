@@ -201,7 +201,7 @@ print("Beginning simulation!")
 simulator = Simulator(board=motherboard)
 
 if args.tick_exit:
-    simulator.set_max_tick(args.tick_exit)
+    simulator.set_max_ticks(args.tick_exit)
 
 simulator.run()
 
