@@ -39,15 +39,15 @@
 # In the final stage this this is copied into /usr/local/bin/gem5. This ensures
 # there is a pre-built gem5 binary in each devcontainer. This can save time
 # if the container is used for education or demonstration purposes.
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies as builder
-RUN git clone --branch stable https://github.com/gem5/gem5
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:v24-0 as builder
+RUN git clone --branch v24.0 https://github.com/gem5/gem5
 WORKDIR /gem5
 RUN scons build/ALL/gem5.opt -j`nproc`
 
 # Stage 2: The final stage where we create the devcontainer image.
 # This includes all dependencies for building and running gem5, the
 # dependencies for developing gem5, and a pre-built gem5 binary.
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:v24-0
 RUN apt -y update  && \
     apt -y install vim
 COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5
