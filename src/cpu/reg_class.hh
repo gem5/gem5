@@ -248,7 +248,7 @@ class RegClass
         return _ops->valString(val, regBytes());
     }
     std::string
-    valString(const void *val, const uint64_t& num_bytes) const
+    valString(const void *val, const size_t& num_bytes) const
     {
         return _ops->valString(val, std::min(regBytes(), num_bytes));
     }
