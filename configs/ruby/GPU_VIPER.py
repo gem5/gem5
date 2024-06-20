@@ -149,7 +149,8 @@ class TCPCache(RubyCache):
         self.size = MemorySize(options.tcp_size)
         self.assoc = options.tcp_assoc
         self.resourceStalls = options.no_tcc_resource_stalls
-        self.replacement_policy = RP_choose(options.tcp_rp)
+        if hasattr(options, "tcp_rp"):
+            self.replacement_policy = RP_choose(options.tcp_rp)
 
 
 class TCPCntrl(TCP_Controller, CntrlBase):
@@ -241,7 +242,8 @@ class SQCCache(RubyCache):
     def create(self, options):
         self.size = MemorySize(options.sqc_size)
         self.assoc = options.sqc_assoc
-        self.replacement_policy = RP_choose(options.tcp_rp)
+        if hasattr(options, "sqc_rp"):
+            self.replacement_policy = RP_choose(options.sqc_rp)
 
 
 class SQCCntrl(SQC_Controller, CntrlBase):
@@ -303,7 +305,8 @@ class TCC(RubyCache):
         self.start_index_bit = math.log(options.cacheline_size, 2) + math.log(
             options.num_tccs, 2
         )
-        self.replacement_policy = RP_choose(options.tcp_rp)
+        if hasattr(options, "tcc_rp"):
+            self.replacement_policy = RP_choose(options.tcc_rp)
 
 
 class TCCCntrl(TCC_Controller, CntrlBase):
