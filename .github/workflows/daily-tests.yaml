@@ -97,6 +97,33 @@ jobs:
           status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
 
+  gpu-tests:
+    runs-on: [self-hosted, linux, x64]
+    container: ghcr.io/gem5/gcn-gpu:latest
+    timeout-minutes: 300
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: develop
+    - name: Build VEGA_X86/gem5.opt
+      run: scons build/VEGA_X86/gem5.opt -j`nproc`
+
+    - name: Run Testlib GPU Tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --length=long --skip-build -vvv -t $(nproc) --host gcn_gpu
+
+    - name: Upload results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4.0.0
+      with:
+        name: |
+          gpu_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        path: tests/testing-results
+        retention-days: 7
+
+
+
   sst-test:
     # This runs the SST-gem5 integration compilation and tests it with
     # ext/sst/sst/example.py.

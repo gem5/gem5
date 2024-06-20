@@ -281,6 +281,32 @@ jobs:
         path: tests/testing-results
         retention-days: 30
 
+  gpu-tests:
+    runs-on: [self-hosted, linux, x64]
+    container: ghcr.io/gem5/gcn-gpu:latest
+    timeout-minutes: 180
+    needs: [check-for-change-id]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: develop
+    - name: Build VEGA_X86/gem5.opt
+      run: scons build/VEGA_X86/gem5.opt -j`nproc`
+
+    - name: Run Testlib GPU Tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
+
+    - name: Upload results
+      if: success() || failure()
+      uses: actions/upload-artifact@v4.0.0
+      with:
+        with:
+        name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt
+          }}-gpu-status-${{ steps.run-tests.outcome }}-output
+        path: tests/testing-results
+        retention-days: 30
+
   ci-tests:
     # This job is a status check for the pull request. If this job passes the
     # pull request can be merged
@@ -294,6 +320,7 @@ jobs:
     - gpu-tests
 =======
     - check-for-change-id
+    - gpu-tests
 
 >>>>>>> 8d9263e09d (misc,tests,gpu-compute: Move some GPU tests to CI)
     steps:
