@@ -203,3 +203,7 @@ class ChanneledMemory(AbstractMemorySystem):
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()
+
+    @overrides(AbstractMemorySystem)
+    def get_uninterleaved_range(self) -> List[AddrRange]:
+        return [self._mem_range]
