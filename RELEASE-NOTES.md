@@ -99,6 +99,10 @@ This can be used to build and run gem5 in consistent environment and enables Git
 * An integer overflow error known to affect the `AddrRange` class has been fixed.
 * Fix fflags behavior of floating point instruction in RISC-V for Out-of-Order CPUs.
 
+### Arm FEAT_MPAM Support
+
+An initial implementation of FEAT_MPAM has been introduced in gem5 with the capability to statically partition
+classic caches. Guidance on how to use this is available on a Arm community [blog post](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/gem5-cache-partitioning)
 
 
 # Version 23.1
