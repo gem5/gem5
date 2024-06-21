@@ -83,6 +83,14 @@ class AbstractMemorySystem(SubSystem):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_uninterleaved_range(self) -> List[AddrRange]:
+        """Returns the range of the memory system without interleaving.
+        This is useful when other components in the system want to interleave
+        the memory range different to how the memory has interleaved them.
+        """
+        raise NotImplementedError
+
     def _post_instantiate(self) -> None:
         """Called to set up anything needed after ``m5.instantiate``."""
         pass
