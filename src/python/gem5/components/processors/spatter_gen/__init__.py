@@ -30,4 +30,6 @@ from .spatter_kernel import (
     SpatterKernel,
     parse_kernel,
     partition_trace,
+    prepare_kernels,
+    unroll_trace,
 )
