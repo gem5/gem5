@@ -186,5 +186,7 @@ jobs:
         needs:
             - testlib-very-long-tests
             - dramsys-tests
+            - LULESH-test
+            - HACC-test
         steps:
             - run: echo "This weekly tests have passed."
