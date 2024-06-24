@@ -98,7 +98,7 @@ target "gpu-fs" {
 target "sst" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  context = "sst-11.1.0"
+  context = "sst"
   tags = ["${IMAGE_URI}/sst-env:${TAG}"]
 }
 
