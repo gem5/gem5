@@ -48,6 +48,7 @@
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"
+#include "dev/intpin.hh"
 #include "mem/htm.hh"
 #include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"
@@ -258,6 +259,8 @@ class BaseCPU : public ClockedObject
 
   protected:
     std::vector<ThreadContext *> threadContexts;
+
+    std::vector<std::unique_ptr<IntSourcePin<BaseCPU>>> cpuIdlePins;
 
     trace::InstTracer * tracer;
 
