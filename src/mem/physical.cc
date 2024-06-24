@@ -367,7 +367,7 @@ PhysicalMemory::serializeStore(CheckpointOut &cp, unsigned int store_id,
     // memories that are not part of the address map can overlap
     std::string filename =
         name() + ".store" + std::to_string(store_id) + ".pmem";
-    int64_t range_size = range.size();
+    Addr range_size = range.size();
 
     DPRINTF(Checkpoint, "Serializing physical memory %s with size %d\n",
             filename, range_size);
@@ -452,7 +452,7 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
     uint8_t* pmem = backingStore[store_id].pmem;
     AddrRange range = backingStore[store_id].range;
 
-    int64_t range_size;
+    Addr range_size;
     UNSERIALIZE_SCALAR(range_size);
 
     DPRINTF(Checkpoint, "Unserializing physical memory %s with size %d\n",
@@ -463,8 +463,8 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
               range_size, range.size());
 
     uint64_t curr_size = 0;
-    int64_t* temp_page = new int64_t[chunk_size];
-    int64_t* pmem_current;
+    uint8_t* temp_page = new uint8_t[chunk_size];
+    uint8_t* pmem_current;
     uint32_t bytes_read;
     while (curr_size < range.size()) {
         bytes_read = gzread(compressed_mem, temp_page, chunk_size);
@@ -473,11 +473,12 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
 
         assert(bytes_read % sizeof(int64_t) == 0);
 
-        for (uint32_t x = 0; x < bytes_read / sizeof(int64_t); x++) {
+        for (uint32_t x = 0; x < bytes_read / sizeof(uint8_t); x++) {
             // Only copy bytes that are non-zero, so we don't give
             // the VM system hell
             if (*(temp_page + x) != 0) {
-                pmem_current = (int64_t*)(pmem + curr_size + x * sizeof(int64_t));
+                pmem_current = (uint8_t*)(pmem + curr_size + x *
+                sizeof(uint8_t));
                 *pmem_current = *(temp_page + x);
             }
         }
