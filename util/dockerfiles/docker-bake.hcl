@@ -40,15 +40,34 @@ variable "TAG" {
 # `docker buildx bake --push ubuntu-20-04_all-dependencies` or
 # `docker buildx bake --push ubuntu-releases`.
 group "default" {
-  targets=["clang-compilers", "ubuntu-releases", "gcc-compilers", "gcn-gpu", "gpu-fs", "sst", "systemc", "llvm-gnu-cross-compiler-riscv64", "gem5-all-min-dependencies"]
+  targets=[
+    "clang-compilers",
+    "ubuntu-releases",
+    "gcc-compilers",
+    "gcn-gpu",
+    "gpu-fs",
+    "sst",
+    "systemc",
+    "llvm-gnu-cross-compiler-riscv64",
+    "gem5-all-min-dependencies"
+  ]
 }
 
 group "ubuntu-releases" {
-  targets=["ubuntu-24-04_all-dependencies", "ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-24-04_min-dependencies"]
+  targets=[
+    "ubuntu-24-04_all-dependencies",
+    "ubuntu-22-04_all-dependencies",
+    "ubuntu-20-04_all-dependencies",
+    "ubuntu-24-04_min-dependencies"
+  ]
 }
 
 group "clang-compilers" {
-  targets = ["clang-compilers-base-20-04", "clang-compilers-base-22-04", "clang-compilers-16"]
+  targets = [
+    "clang-compilers-base-20-04",
+    "clang-compilers-base-22-04",
+    "clang-compilers-16"
+  ]
 }
 
 group "gcc-compilers" {
