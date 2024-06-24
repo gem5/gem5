@@ -47,9 +47,7 @@ group "default" {
     "gcn-gpu",
     "gpu-fs",
     "sst",
-    "systemc",
-    "llvm-gnu-cross-compiler-riscv64",
-    "gem5-all-min-dependencies"
+    "systemc"
   ]
 }
 
@@ -151,7 +149,7 @@ target "gcc-compilers-base-20-04" {
   context = "ubuntu-20.04_gcc-version"
   dockerfile = "Dockerfile"
   matrix = {
-    ver = ["8", "9", "10"]
+    ver = ["10"]
   }
   args = {
     version = ver
@@ -165,7 +163,7 @@ target "gcc-compilers-base-22-04" {
   context = "ubuntu-22.04_gcc-version"
   dockerfile = "Dockerfile"
   matrix = {
-    ver = ["11", "12"]
+    ver = ["11", "12", "13'"]
   }
   args = {
     version = ver
@@ -206,18 +204,4 @@ target "clang-compilers-16" {
   dockerfile = "Dockerfile"
   context = "ubuntu-22.04_clang_16"
   tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
-}
-
-target "llvm-gnu-cross-compiler-riscv64" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "llvm-gnu-cross-compiler-riscv64"
-  tags = ["${IMAGE_URI}/llvm-gnu-cross-compiler-riscv64:${TAG}"]
-}
-
-target "gem5-all-min-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "gem5-all-min-dependencies"
-  tags = ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
 }
