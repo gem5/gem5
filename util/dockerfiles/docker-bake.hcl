@@ -32,7 +32,7 @@ variable "IMAGE_URI" {
 }
 
 variable "TAG" {
-  default = "latest"
+  default = "bootcamp-2024"
 }
 
 # A group of targets to be built. Note: groups can contain other groups.
