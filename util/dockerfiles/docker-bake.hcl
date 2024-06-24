@@ -105,7 +105,7 @@ target "sst" {
 target "systemc" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  context = "systemc-2.3.3"
+  context = "systemc"
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
