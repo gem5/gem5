@@ -327,6 +327,10 @@ PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/context.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/popen_spawn_gem5.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/__init__.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/config.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/manager.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/server.py')
 
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
