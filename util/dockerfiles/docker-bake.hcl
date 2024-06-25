@@ -40,6 +40,7 @@ target "common" {
   # Here we are enabling multi-platform builds. We are compiling to both ARM
   # amd X86.
   platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
+  pull = true
 }
 
 # A group of targets to be built. Note: groups can contain other groups.
