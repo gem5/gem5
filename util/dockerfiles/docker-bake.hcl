@@ -35,6 +35,13 @@ variable "TAG" {
   default = "bootcamp-2024"
 }
 
+# Common attributes across all targets. Note: these can be overwritten.
+target "common" {
+  # Here we are enabling multi-platform builds. We are compiling to both ARM
+  # amd X86.
+  platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
+}
+
 # A group of targets to be built. Note: groups can contain other groups.
 # Any target or group can be build individually. I.e.:
 # `docker buildx bake --push ubuntu-20-04_all-dependencies` or
@@ -42,13 +49,122 @@ variable "TAG" {
 group "default" {
   targets=[
     "clang-compilers",
-    "ubuntu-releases",
     "gcc-compilers",
+    "ubuntu-releases",
     "gcn-gpu",
     "gpu-fs",
     "sst",
     "systemc"
   ]
+}
+
+group "clang-compilers" {
+  targets = [
+    "clang-version-14",
+    "clang-version-15",
+    "clang-version-16",
+    "clang-version-17",
+    "clang-version-18"
+  ]
+}
+
+target "clang-version-14" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "14"
+  }
+  context = "clang-compiler"
+  tags = ["${IMAGE_URI}/clang-version-14:${TAG}"]
+}
+
+target "clang-version-15" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "15"
+  }
+  context = "clang-compiler"
+  tags = ["${IMAGE_URI}/clang-version-15:${TAG}"]
+}
+
+target "clang-version-16" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "16"
+  }
+  context = "clang-compiler"
+  tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
+}
+
+target "clang-version-17" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "17"
+  }
+  context = "clang-compiler"
+  tags = ["${IMAGE_URI}/clang-version-17:${TAG}"]
+}
+
+target "clang-version-18" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "18"
+  }
+  context = "clang-compiler"
+  tags = ["${IMAGE_URI}/clang-version-18:${TAG}"]
+}
+
+group "gcc-compilers" {
+  targets = [
+    "gcc-version-10",
+    "gcc-version-11",
+    "gcc-version-12",
+    "gcc-version-13"
+  ]
+}
+
+target "gcc-version-10" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "10"
+  }
+  context = "gcc-compiler"
+  tags = ["${IMAGE_URI}/gcc-version-10:${TAG}"]
+}
+
+target "gcc-version-11" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "11"
+  }
+  context = "gcc-compiler"
+  tags = ["${IMAGE_URI}/gcc-version-11:${TAG}"]
+}
+
+target "gcc-version-12" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "12"
+  }
+  context = "gcc-compiler"
+  tags = ["${IMAGE_URI}/gcc-version-12:${TAG}"]
+}
+
+target "gcc-version-13" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  args = {
+    version = "13"
+  }
+  context = "gcc-compiler"
+  tags = ["${IMAGE_URI}/gcc-version-13:${TAG}"]
 }
 
 group "ubuntu-releases" {
@@ -58,25 +174,6 @@ group "ubuntu-releases" {
     "ubuntu-20-04_all-dependencies",
     "ubuntu-24-04_min-dependencies"
   ]
-}
-
-group "clang-compilers" {
-  targets = [
-    "clang-compilers-base-20-04",
-    "clang-compilers-base-22-04",
-    "clang-compilers-16"
-  ]
-}
-
-group "gcc-compilers" {
-  targets = ["gcc-compilers-base-20-04", "gcc-compilers-base-22-04"]
-}
-
-# Common attributes across all targets. Note: these can be overwritten.
-target "common" {
-  # Here we are enabling multi-platform builds. We are compiling to both ARM
-  # amd X86.
-  platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
 }
 
 target "gcn-gpu" {
@@ -141,67 +238,4 @@ target "ubuntu-24-04_min-dependencies" {
   dockerfile = "Dockerfile"
   context = "ubuntu-24.04_min-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
-}
-
-target "gcc-compilers-base-20-04" {
-  name = "gcc-compilers-${replace(ver, ".", "-")}"
-  inherits = ["common"]
-  context = "ubuntu-20.04_gcc-version"
-  dockerfile = "Dockerfile"
-  matrix = {
-    ver = ["10"]
-  }
-  args = {
-    version = ver
-  }
-  tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
-}
-
-target "gcc-compilers-base-22-04" {
-  name = "gcc-compilers-${replace(ver, ".", "-")}"
-  inherits = ["common"]
-  context = "ubuntu-22.04_gcc-version"
-  dockerfile = "Dockerfile"
-  matrix = {
-    ver = ["11", "12", "13'"]
-  }
-  args = {
-    version = ver
-  }
-  tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
-}
-
-target "clang-compilers-base-20-04" {
-  name = "clang-compilers-${replace(ver, ".", "-")}"
-  inherits = ["common"]
-  context = "ubuntu-20.04_clang-version"
-  dockerfile = "Dockerfile"
-  matrix = {
-    ver = ["10", "11", "12"]
-  }
-  args = {
-    version = ver
-  }
-  tags = ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
-}
-
-target "clang-compilers-base-22-04" {
-  name = "clang-compilers-${replace(ver, ".", "-")}"
-  inherits = ["common"]
-  context = "ubuntu-22.04_clang-version"
-  dockerfile = "Dockerfile"
-  matrix = {
-    ver = ["13", "14", "15"]
-  }
-  args = {
-    version = ver
-  }
-  tags =  ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
-}
-
-target "clang-compilers-16" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_clang_16"
-  tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
 }
