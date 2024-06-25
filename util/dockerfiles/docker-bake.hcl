@@ -178,6 +178,34 @@ group "ubuntu-releases" {
   ]
 }
 
+target "ubuntu-24-04_all-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-24.04_all-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
+}
+
+target "ubuntu-22-04_all-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-22.04_all-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
+}
+
+target "ubuntu-20-04_all-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-20.04_all-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
+}
+
+target "ubuntu-24-04_min-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-24.04_min-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
+}
+
 target "gcn-gpu" {
   inherits = ["common"]
   platform = "linux/amd64" # Only build for x86.
@@ -208,38 +236,10 @@ target "systemc" {
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
-target "ubuntu-24-04_all-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-24.04_all-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
-}
-
-target "ubuntu-22-04_all-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_all-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
-}
-
 target "devcontainer" {
   inherits = ["common"]
   dependencies = ["devcontainer"]
   dockerfile = "Dockerfile"
   context = "devcontainer"
   tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
-}
-
-target "ubuntu-20-04_all-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-20.04_all-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
-}
-
-target "ubuntu-24-04_min-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-24.04_min-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
 }
