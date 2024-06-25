@@ -55,7 +55,8 @@ group "default" {
     "gcn-gpu",
     "gpu-fs",
     "sst",
-    "systemc"
+    "systemc",
+    "devcontainer"
   ]
 }
 
