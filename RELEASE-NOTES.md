@@ -92,7 +92,9 @@ This can be used to build and run gem5 in consistent environment and enables Git
 
 ### GPU Model
 
-* Supporty for the MI200 GPU model.
+* Support for MI300X and MI200 GPU models including their features and most instructions.
+* ROCm 6.1 disk image and compile docker files have been added. ROCm 5.4.2 and 4.2 resources are removed.
+* The deprecated GCN3 ISA has been removed. Use VEGA instead.
 
 ## Bug Fixes
 
