@@ -179,6 +179,7 @@ group "ubuntu-releases" {
 
 target "gcn-gpu" {
   inherits = ["common"]
+  platform = "linux/amd64" # Only build for x86.
   dockerfile = "Dockerfile"
   context = "gcn-gpu"
   tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
@@ -186,6 +187,7 @@ target "gcn-gpu" {
 
 target "gpu-fs" {
   inherits = ["common"]
+  platform = "linux/amd64" # Only build for x86.
   dockerfile = "Dockerfile"
   context = "gpu-fs"
   tags = ["${IMAGE_URI}/gpu-fs:${TAG}"]
