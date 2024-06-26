@@ -5,7 +5,6 @@ During this time there have been 298 pull requests merged, comprising of over 60
 
 ## API and user-facing changes
 
-
 * The GCN3 GPU model has been removed in favor of the newer VEGA_X85 GPU model.
 * gem5 now supports building, running, and simulating Ubuntu 24.04.
 
@@ -76,6 +75,12 @@ Example scripts of using MultiSim can be found in "configs/example/gem5_library/
 
 ### RISC-V Vector Extension Support
 
+**@powerjg : Can you add some details here?**
+
+### Scatter
+
+**@powerjg : Can you add some details here?**
+
 ## Improvements
 
 * KVM is now supported in the gem5 Standard Library ARM Board.
@@ -87,8 +92,28 @@ This can be used to build and run gem5 in consistent environment and enables Git
 
 ### gem5 Python Statistics
 
+The gem5 Python statistics API has been improved.
+The gem5 Project's general intent with this improvement is make it easier and more desirable to obtain and interact with gem5 simulation statistics via Python.
 
+For example, the following code snippet demonstrates how to obtain statistics from a gem5 simulation:
 
+```python
+from m5.stats.gem5stats import get_simstat
+
+## Setup and run the configuation ...
+simstat = get_simstat(board)
+
+# Print the number of cycles the CPU at index 0 has executed.
+print(simstat.cpu[0].numCycles)
+
+# Strings can also be used to access statistics.
+print(simstat['cpu'][0]['numCycles'])
+
+# Print the total number of cycles executed by all CPUs.
+print(sum(simstat.cpu[i].numCycles for i in range(len(simstat.cpu))))
+```
+
+We hope the usage of the gem5 Python statistics API will be more intuitive and easier to use while allowing better processing of statistical data.
 
 ### GPU Model
 
