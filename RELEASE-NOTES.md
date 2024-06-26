@@ -67,7 +67,7 @@ If only one simulation specified in the config needs run, you can do so with:
 ```sh
 <gem5 binary>  <config script> --list # Lists the simulations by ID
 
-<gem5 binaruy> <config script> <ID> # Run the simulation with the specified ID.
+<gem5 binary> <config script> <ID> # Run the simulation with the specified ID.
 ```
 
 Example scripts of using MultiSim can be found in "configs/example/gem5_library/multisim".
@@ -75,14 +75,38 @@ Example scripts of using MultiSim can be found in "configs/example/gem5_library/
 
 ### RISC-V Vector Extension Support
 
-**@powerjg : Can you add some details here?**
+There have been significant improvements to the RVV support in gem5 including
 
-### Scatter
+* Fixed viota (#1137)
+* Fixed vrgather (#1134)
+* Added RVV FP16 support (#1123)
+* Fixed widening and narrowing instructions (#1079)
+* Fixed bug in vfmv.f.s (#863)
+* Add unit stride segment loads and stores (#851) (#913)
+* Fix vl in masked load/store (#830)
+* Add unit-stride loads (#794)
+* Fix many RVV instructions (#814) (#805) (#715)
 
-**@powerjg : Can you add some details here?**
+### General RISC-V bugfixes
+
+* Fixed problem in TLB lookup (#1264)
+* Fixed sign-extended branch target (#1173)
+* Fixed compressed jump instructions (#1163)
+* Fixed GDB connection (#1152)
+* Fixed CSR behavior (#1099)
+* Add Integer conditional operations Zicond (#1078)
+* Add RISC-V Semihosting support (#681)
+* Added more detailed instruction types (#589)
+* Fixed 32-bit m5op arguments (#900)
+* Fixed c.fswsp and c.fsw (#998) (#1005)
+* Update PLIC implementation (#886)
+* Fix fflags behavior in O3 (#868)
+* Add support for local interrupts (#813)
+* Removebit 63 of physical address (#756)
 
 ## Improvements
 
+* Added an new generator which can generate requests based on [spatter](https://github.com/hpcgarage/spatter) patterns.
 * KVM is now supported in the gem5 Standard Library ARM Board.
 * Generic Cache template added to the Standard Library: https://github.com/gem5/gem5/pull/745
 * Support added for partitioning caches.
