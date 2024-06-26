@@ -463,8 +463,8 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
               range_size, range.size());
 
     uint64_t curr_size = 0;
-    uint8_t* temp_page = new uint8_t[chunk_size];
-    uint8_t* pmem_current;
+    long* temp_page = new long[chunk_size];
+    long* pmem_current;
     uint32_t bytes_read;
     while (curr_size < range.size()) {
         bytes_read = gzread(compressed_mem, temp_page, chunk_size);
@@ -473,12 +473,11 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
 
         assert(bytes_read % sizeof(int64_t) == 0);
 
-        for (uint32_t x = 0; x < bytes_read / sizeof(uint8_t); x++) {
-            // Only copy bytes that are non-zero, so we don't give
-            // the VM system hell
+        for (uint32_t x = 0; x < bytes_read / sizeof(long); x++) {
+        // Only copy bytes that are non-zero, so we don't give
+        // the VM system hell
             if (*(temp_page + x) != 0) {
-                pmem_current = (uint8_t*)(pmem + curr_size + x *
-                sizeof(uint8_t));
+                pmem_current = (long*)(pmem + curr_size + x * sizeof(long));
                 *pmem_current = *(temp_page + x);
             }
         }
