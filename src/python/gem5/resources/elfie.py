@@ -24,7 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import List
+from typing import (
+    List,
+    Optional,
+)
 
 from m5.objects import PcCountTrackerManager
 from m5.params import PcCountPair
@@ -36,9 +39,31 @@ class ELFieInfo:
     See https://github.com/intel/pinball2elf for more information.
     """
 
-    def __init__(self, start: PcCountPair, end: PcCountPair):
+    def __init__(
+        self,
+        start_pc: Optional[str] = None,
+        end_pc: Optional[str] = None,
+        start_pc_count: Optional[str] = None,
+        end_pc_count: Optional[str] = None,
+        start: Optional["PcCountPair"] = None,
+        end: Optional["PcCountPair"] = None,
+        **kwargs
+    ):
         self._start = start
         self._end = end
+
+        if self._start is None:
+            if start_pc is None or start_pc_count is None:
+                raise ValueError(
+                    "start_pc and start_pc_count must be provided"
+                )
+            self._start = PcCountPair(int(start_pc, 16), int(start_pc_count))
+
+        if self._end is None:
+            if end_pc is None or end_pc_count is None:
+                raise ValueError("end_pc and end_pc_count must be provided")
+            self._end = PcCountPair(int(end_pc, 16), int(end_pc_count))
+
         self._manager = PcCountTrackerManager()
         self._manager.targets = self.get_targets()
 
