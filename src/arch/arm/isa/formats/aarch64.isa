@@ -741,7 +741,7 @@ namespace Aarch64
                         if (o3 == 1)
                             return new SWPLAB(machInst, rt, rnsp, rs);
                         else
-                            return new LDADDLAB(machInst, rt, rnsp, rs);
+                            return new LDADDALB(machInst, rt, rnsp, rs);
                     case 0x4:
                         if (o3 == 1)
                             return new SWPH(machInst, rt, rnsp, rs);
@@ -765,7 +765,7 @@ namespace Aarch64
                         if (o3 == 1)
                             return new SWPLAH(machInst, rt, rnsp, rs);
                         else
-                            return new LDADDLAH(machInst, rt, rnsp, rs);
+                            return new LDADDALH(machInst, rt, rnsp, rs);
                     case 0x8:
                         if (o3 == 1)
                             return new SWP(machInst, rt, rnsp, rs);
@@ -789,7 +789,7 @@ namespace Aarch64
                         if (o3 == 1)
                             return new SWPLA(machInst, rt, rnsp, rs);
                         else
-                            return new LDADDLA(machInst, rt, rnsp, rs);
+                            return new LDADDAL(machInst, rt, rnsp, rs);
                     case 0xc:
                         if (o3 == 1)
                             return new SWP64(machInst, rt, rnsp, rs);
@@ -814,7 +814,7 @@ namespace Aarch64
                         if (o3 == 1)
                             return new SWPLA64(machInst, rt, rnsp, rs);
                         else
-                            return new LDADDLA64(machInst, rt, rnsp, rs);
+                            return new LDADDAL64(machInst, rt, rnsp, rs);
                     default:
                         GEM5_UNREACHABLE;
                 }

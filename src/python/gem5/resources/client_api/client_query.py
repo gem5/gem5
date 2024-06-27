@@ -45,7 +45,10 @@ class ClientQuery:
     ):
         self.resource_id = resource_id
         self.resource_version = resource_version
-        self.gem5_version = gem5_version
+        # We only need the major and minor version numbers.
+        # As on database side, we only store the major and minor
+        # version numbers.
+        self.gem5_version = ".".join(gem5_version.split(".")[:2])
 
     def get_resource_id(self) -> str:
         return self.resource_id
