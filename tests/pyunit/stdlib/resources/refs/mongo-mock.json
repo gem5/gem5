@@ -22,7 +22,8 @@
         "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ],
         "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
     },
@@ -49,7 +50,8 @@
         "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
         "resource_version": "1.1.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ],
         "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
     }
