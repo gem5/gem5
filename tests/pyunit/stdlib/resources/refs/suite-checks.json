@@ -3,7 +3,7 @@
         "id": "suite-example",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1"],
+        "gem5_versions": ["develop","23.1", "24.0"],
         "workloads": [
             {
                 "id": "simple-workload-1",
@@ -37,7 +37,8 @@
         },
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -60,7 +61,8 @@
         },
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -74,7 +76,8 @@
         "source": "src/linux-kernel",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -89,7 +92,8 @@
         "root_partition": "1",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -103,7 +107,8 @@
         "source": "src/simple",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     }
 ]
