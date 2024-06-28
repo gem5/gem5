@@ -57,6 +57,7 @@ from .client import (
 )
 from .client_api.client_query import ClientQuery
 from .downloader import get_resource
+from .elfie import ELFieInfo
 from .looppoint import (
     LooppointCsvLoader,
     LooppointJsonLoader,
@@ -1411,4 +1412,5 @@ _get_resource_json_type_map = {
     "looppoint-json": LooppointJsonResource,
     "suite": SuiteResource,
     "workload": WorkloadResource,
+    "elfie-info": ELFieInfo,
 }
