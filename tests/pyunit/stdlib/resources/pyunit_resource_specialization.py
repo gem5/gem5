@@ -30,7 +30,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from gem5.isas import ISA
-from gem5.resources.client_api.client_wrapper import ClientWrapper
+from gem5.resources.client import (
+    _create_clients,
+    clientwrapper,
+)
 from gem5.resources.looppoint import (
     LooppointCsvLoader,
     LooppointJsonLoader,
@@ -51,7 +54,11 @@ mock_config_json = {
 
 @patch(
     "gem5.resources.client.clientwrapper",
-    ClientWrapper(mock_config_json),
+    new=None,
+)
+@patch(
+    "gem5.resources.client._create_clients",
+    side_effect=lambda x: _create_clients(mock_config_json),
 )
 class ResourceSpecializationSuite(unittest.TestCase):
     """This suite tests that `gem5.resource.resource` casts to the correct
@@ -73,7 +80,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
             "resources",
         )
 
-    def test_binary_resource(self) -> None:
+    def test_binary_resource(self, mock_create_clients) -> None:
         """Tests the loading of of a BinaryResource"""
         resource = obtain_resource(
             resource_id="binary-example",
@@ -89,7 +96,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual("src/simple", resource.get_source())
         self.assertEqual(ISA.ARM, resource.get_architecture())
 
-    def test_kernel_resource(self) -> None:
+    def test_kernel_resource(self, mock_create_clients) -> None:
         """Tests the loading of a KernelResource."""
         resource = obtain_resource(
             resource_id="kernel-example",
@@ -105,7 +112,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual("src/linux-kernel", resource.get_source())
         self.assertEqual(ISA.RISCV, resource.get_architecture())
 
-    def test_bootloader_resource(self) -> None:
+    def test_bootloader_resource(self, mock_create_clients) -> None:
         """Tests the loading of a BootloaderResource."""
         resource = obtain_resource(
             resource_id="bootloader-example",
@@ -121,7 +128,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsNone(resource.get_source())
         self.assertIsNone(resource.get_architecture())
 
-    def test_disk_image_resource(self) -> None:
+    def test_disk_image_resource(self, mock_create_clients) -> None:
         """Tests the loading of a DiskImageResource."""
         resource = obtain_resource(
             resource_id="disk-image-example",
@@ -137,7 +144,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual("src/x86-ubuntu", resource.get_source())
         self.assertEqual("1", resource.get_root_partition())
 
-    def test_checkpoint_resource(self) -> None:
+    def test_checkpoint_resource(self, mock_create_clients) -> None:
         """Tests the loading of a CheckpointResource."""
         resource = obtain_resource(
             resource_id="checkpoint-example",
@@ -152,7 +159,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         )
         self.assertIsNone(resource.get_source())
 
-    def test_git_resource(self) -> None:
+    def test_git_resource(self, mock_create_clients) -> None:
         """Tests the loading of a GitResource."""
         resource = obtain_resource(
             resource_id="git-example",
@@ -165,7 +172,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsNone(resource.get_description())
         self.assertIsNone(resource.get_source())
 
-    def test_simpoint_directory_resource(self) -> None:
+    def test_simpoint_directory_resource(self, mock_create_clients) -> None:
         """Tests the loading of a Simpoint directory resource."""
         resource = obtain_resource(
             resource_id="simpoint-directory-example",
@@ -200,7 +207,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         )
         self.assertEqual("Example Workload", resource.get_workload_name())
 
-    def test_simpoint_resource(self) -> None:
+    def test_simpoint_resource(self, mock_create_clients) -> None:
         """Tests the loading of a Simpoint resource."""
         resource = obtain_resource(
             resource_id="simpoint-example",
@@ -219,7 +226,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual([2, 3, 4, 15], resource.get_simpoint_list())
         self.assertEqual([0.1, 0.2, 0.4, 0.3], resource.get_weight_list())
 
-    def test_file_resource(self) -> None:
+    def test_file_resource(self, mock_create_clients) -> None:
         """Tests the loading of a FileResource."""
         resource = obtain_resource(
             resource_id="file-example",
@@ -233,7 +240,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsNone(resource.get_description())
         self.assertIsNone(resource.get_source())
 
-    def test_directory_resource(self) -> None:
+    def test_directory_resource(self, mock_create_clients) -> None:
         """Tests the loading of a DirectoryResource."""
         resource = obtain_resource(
             resource_id="directory-example",
@@ -247,7 +254,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         )
         self.assertIsNone(resource.get_source())
 
-    def test_looppoint_pinpoints_resource(self) -> None:
+    def test_looppoint_pinpoints_resource(self, mock_create_clients) -> None:
         """Tests the creation of LooppointCreatorCSVResource via a Looppoint
         pinpoints csv file."""
 
@@ -268,7 +275,9 @@ class ResourceSpecializationSuite(unittest.TestCase):
         )
         self.assertIsNone(resource.get_source())
 
-    def test_looppoint_json_restore_resource(self) -> None:
+    def test_looppoint_json_restore_resource(
+        self, mock_create_clients
+    ) -> None:
         """Tests the creation of LooppointJsonResource via a
         Looppoint JSON file."""
 

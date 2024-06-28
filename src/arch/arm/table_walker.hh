@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016, 2019, 2021-2022 Arm Limited
+ * Copyright (c) 2010-2016, 2019, 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -86,6 +86,7 @@ class TableWalker : public ClockedObject
         virtual uint8_t offsetBits() const = 0;
         virtual bool secure(bool have_security, WalkerState *currState) const = 0;
         virtual std::string dbgHeader() const = 0;
+        virtual uint8_t* getRawPtr() = 0;
         virtual uint64_t getRawData() const = 0;
         virtual uint8_t texcb() const
         {
@@ -120,6 +121,12 @@ class TableWalker : public ClockedObject
         L1Descriptor() : data(0), _dirty(false)
         {
             lookupLevel = LookupLevel::L1;
+        }
+
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
         }
 
         uint64_t
@@ -291,6 +298,12 @@ class TableWalker : public ClockedObject
             lookupLevel = LookupLevel::L2;
         }
 
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
+        }
+
         uint64_t
         getRawData() const override
         {
@@ -440,6 +453,12 @@ class TableWalker : public ClockedObject
         GrainSize grainSize;
 
         uint8_t physAddrRange;
+
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
+        }
 
         uint64_t
         getRawData() const override
@@ -647,7 +666,7 @@ class TableWalker : public ClockedObject
                                         !currState->secureLookup)) {
                 return false;  // ARM ARM issue C B3.6.3
             } else if (currState->aarch64) {
-                if (!MMU::hasUnprivRegime(currState->el, currState->hcr.e2h)) {
+                if (!MMU::hasUnprivRegime(currState->regime)) {
                     // By default translations are treated as global
                     // in AArch64 for regimes without an unpriviledged
                     // component
@@ -810,6 +829,9 @@ class TableWalker : public ClockedObject
         /** Current exception level */
         ExceptionLevel el;
 
+        /** Current translation regime */
+        TranslationRegime regime;
+
         /** Current physical address range in bits */
         int physAddrRange;
 
@@ -822,7 +844,6 @@ class TableWalker : public ClockedObject
         /** ASID that we're servicing the request under */
         uint16_t asid;
         vmid_t vmid;
-        bool    isHyp;
 
         /** Translation state for delayed requests */
         BaseMMU::Translation *transState;
@@ -869,20 +890,31 @@ class TableWalker : public ClockedObject
 
         /** If the access comes from the secure state. */
         bool isSecure;
+        /** Whether lookups should be treated as using the secure state.
+         * This is usually the same as isSecure, but can be set to false by the
+         * long descriptor table attributes. */
+        bool secureLookup = false;
 
         /** True if table walks are uncacheable (for table descriptors) */
         bool isUncacheable;
 
         /** Helper variables used to implement hierarchical access permissions
-         * when the long-desc. format is used (LPAE only) */
-        bool secureLookup;
-        bool rwTable;
-        bool userTable;
-        bool xnTable;
-        bool pxnTable;
+         * when the long-desc. format is used. */
+        struct LongDescData
+        {
+            bool rwTable = false;
+            bool userTable = false;
+            bool xnTable = false;
+            bool pxnTable = false;
+        };
+        std::optional<LongDescData> longDescData;
 
         /** Hierarchical access permission disable */
         bool hpd;
+
+        uint8_t sh;
+        uint8_t irgn;
+        uint8_t orgn;
 
         /** Flag indicating if a second stage of lookup is required */
         bool stage2Req;
@@ -941,14 +973,11 @@ class TableWalker : public ClockedObject
     class Port : public QueuedRequestPort
     {
       public:
-        Port(TableWalker& _walker, RequestorID id);
+        Port(TableWalker& _walker);
 
-        void sendFunctionalReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag);
-        void sendAtomicReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag, Tick delay);
-        void sendTimingReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag, Tick delay,
+        void sendFunctionalReq(const RequestPtr &req, uint8_t *data);
+        void sendAtomicReq(const RequestPtr &req, uint8_t *data, Tick delay);
+        void sendTimingReq(const RequestPtr &req, uint8_t *data, Tick delay,
             Event *event);
 
         bool recvTimingResp(PacketPtr pkt) override;
@@ -958,8 +987,7 @@ class TableWalker : public ClockedObject
         void handleResp(TableWalkerState *state, Addr addr,
                         Addr size, Tick delay=0);
 
-        PacketPtr createPacket(Addr desc_addr, int size,
-                               uint8_t *data, Request::Flags flag,
+        PacketPtr createPacket(const RequestPtr &req, uint8_t *data,
                                Tick delay, Event *event);
 
       private:
@@ -970,9 +998,6 @@ class TableWalker : public ClockedObject
 
         /** Packet queue used to store outgoing snoop responses. */
         SnoopRespPacketQueue snoopRespQueue;
-
-        /** Cached requestorId of the table walker */
-        RequestorID requestorId;
     };
 
     /** This translation class is used to trigger the data fetch once a timing
@@ -1105,7 +1130,7 @@ class TableWalker : public ClockedObject
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
-               bool hyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
+               BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, bool secure,
                MMU::ArmTranslationType tran_type, bool stage2,
                const TlbEntry *walk_entry);
@@ -1119,6 +1144,7 @@ class TableWalker : public ClockedObject
                       LongDescriptor &lDescriptor);
     void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                          LongDescriptor &lDescriptor);
+    void memAttrsWalkAArch64(TlbEntry &te);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 
@@ -1146,8 +1172,9 @@ class TableWalker : public ClockedObject
     void doLongDescriptorWrapper(LookupLevel curr_lookup_level);
     Event* LongDescEventByLevel[4];
 
-    bool fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
-        Request::Flags flags, int queueIndex, Event *event,
+    void fetchDescriptor(Addr desc_addr,
+        DescriptorBase &descriptor, int num_bytes,
+        Request::Flags flags, LookupLevel lookup_lvl, Event *event,
         void (TableWalker::*doDescriptor)());
 
     Fault generateLongDescFault(ArmFault::FaultSource src);
@@ -1173,6 +1200,9 @@ class TableWalker : public ClockedObject
     /// system-wide setting or by the TCR_ELx IPS/PS setting
     bool checkAddrSizeFaultAArch64(Addr addr, int pa_range);
 
+    /// Returns true if the table walk should be uncacheable
+    bool uncacheableWalk() const;
+
     Fault processWalkAArch64();
     void processWalkWrapper();
     EventFunctionWrapper doProcessEvent;
@@ -1181,10 +1211,20 @@ class TableWalker : public ClockedObject
 
     void pendingChange();
 
+    /** Timing mode: saves the currState into the stateQueues */
+    void stashCurrState(int queue_idx);
+
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
-    Fault testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
-                   LookupLevel lookup_level, bool stage2);
+    void mpamTagTableWalk(RequestPtr &req) const;
+
+  public: /* Testing */
+    TlbTestInterface *test;
+
+    void setTestInterface(TlbTestInterface *ti);
+
+    Fault testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
+                   LookupLevel lookup_level);
 };
 
 } // namespace ArmISA

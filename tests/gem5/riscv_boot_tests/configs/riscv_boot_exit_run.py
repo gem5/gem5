@@ -104,12 +104,12 @@ args = parser.parse_args()
 requires(isa_required=ISA.RISCV)
 
 if args.mem_system == "classic":
-    from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-        PrivateL1PrivateL2CacheHierarchy,
+    from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+        PrivateL1PrivateL2WalkCacheHierarchy,
     )
 
     # Setup the cache hierarchy.
-    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+    cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
         l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
     )
 elif args.mem_system == "mesi_two_level":
@@ -163,7 +163,9 @@ board = RiscvBoard(
 
 # Set the workload.
 workload = obtain_resource(
-    "riscv-ubuntu-20.04-boot", resource_directory=args.resource_directory
+    "riscv-ubuntu-20.04-boot",
+    resource_directory=args.resource_directory,
+    resource_version="3.0.0",
 )
 board.set_workload(workload)
 
@@ -171,9 +173,9 @@ board.set_workload(workload)
 simulator = Simulator(board=board)
 
 if args.tick_exit:
-    simulator.run(max_ticks=args.tick_exit)
-else:
-    simulator.run()
+    simulator.set_max_ticks(args.tick_exit)
+
+simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(

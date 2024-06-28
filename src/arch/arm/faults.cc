@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016-2019, 2022 Arm Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2019, 2022, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/interrupts.hh"
 #include "arch/arm/isa.hh"
+#include "arch/arm/regs/misc_accessors.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
@@ -372,22 +373,6 @@ ArmFault::getSyndromeReg64() const
         return MISCREG_ESR_EL2;
       case EL3:
         return MISCREG_ESR_EL3;
-      default:
-        panic("Invalid exception level");
-        break;
-    }
-}
-
-MiscRegIndex
-ArmFault::getFaultAddrReg64() const
-{
-    switch (toEL) {
-      case EL1:
-        return MISCREG_FAR_EL1;
-      case EL2:
-        return MISCREG_FAR_EL2;
-      case EL3:
-        return MISCREG_FAR_EL3;
       default:
         panic("Invalid exception level");
         break;
@@ -1113,13 +1098,15 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         if (stage2) {
             // stage 2 fault, set HPFAR_EL2 to the faulting IPA
             // and FAR_EL2 to the Original VA
-            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), OVAddr);
+            misc_regs::writeRegister<misc_regs::FarAccessor>(
+                tc, OVAddr, this->toEL);
             tc->setMiscReg(MISCREG_HPFAR_EL2, bits(faultAddr, 47, 12) << 4);
 
             DPRINTF(Faults, "Abort Fault (Stage 2) VA: 0x%x IPA: 0x%x\n",
                     OVAddr, faultAddr);
         } else {
-            tc->setMiscReg(AbortFault<T>::getFaultAddrReg64(), faultAddr);
+            misc_regs::writeRegister<misc_regs::FarAccessor>(
+                tc, faultAddr, this->toEL);
         }
     }
 }
@@ -1517,7 +1504,7 @@ PCAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     ArmFaultVals<PCAlignmentFault>::invoke(tc, inst);
     assert(from64);
     // Set the FAR
-    tc->setMiscReg(getFaultAddrReg64(), faultPC);
+    misc_regs::writeRegister<misc_regs::FarAccessor>(tc, faultPC, toEL);
 }
 
 bool
@@ -1661,8 +1648,7 @@ Watchpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     ArmFaultVals<Watchpoint>::invoke(tc, inst);
     // Set the FAR
-    tc->setMiscReg(getFaultAddrReg64(), vAddr);
-
+    misc_regs::writeRegister<misc_regs::FarAccessor>(tc, vAddr, toEL);
 }
 
 bool

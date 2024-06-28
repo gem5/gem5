@@ -32,6 +32,7 @@
 #include <string>
 
 #include "arch/riscv/remote_gdb.hh"
+#include "arch/riscv/semihosting.hh"
 #include "params/RiscvBootloaderKernelWorkload.hh"
 #include "params/RiscvLinux.hh"
 #include "sim/kernel_workload.hh"
@@ -51,11 +52,12 @@ class FsLinux : public KernelWorkload
      **/
     PCEvent *kernelPanicPcEvent = nullptr;
     PCEvent *kernelOopsPcEvent = nullptr;
+    RiscvSemihosting *semihosting = nullptr;
     void addExitOnKernelPanicEvent();
     void addExitOnKernelOopsEvent();
   public:
     PARAMS(RiscvLinux);
-    FsLinux(const Params &p) : KernelWorkload(p) {}
+    FsLinux(const Params &p) : KernelWorkload(p), semihosting(p.semihosting) {}
     ~FsLinux()
     {
         if (kernelPanicPcEvent != nullptr) {
@@ -78,6 +80,7 @@ class FsLinux : public KernelWorkload
     }
 
     ByteOrder byteOrder() const override { return ByteOrder::little; }
+    RiscvSemihosting *getSemihosting() const override { return semihosting; }
 };
 
 class BootloaderKernelWorkload: public Workload
@@ -89,6 +92,7 @@ class BootloaderKernelWorkload: public Workload
     loader::SymbolTable kernelSymbolTable;
     loader::SymbolTable bootloaderSymbolTable;
     const std::string bootArgs;
+    RiscvSemihosting *semihosting;
 
     /**
      * Event to halt the simulator if the kernel calls panic() or
@@ -109,7 +113,8 @@ class BootloaderKernelWorkload: public Workload
   public:
     PARAMS(RiscvBootloaderKernelWorkload);
     BootloaderKernelWorkload(const Params &p)
-        : Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line)
+        : Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line),
+          semihosting(p.semihosting)
     {
         loadBootloaderSymbolTable();
         loadKernelSymbolTable();
@@ -141,6 +146,8 @@ class BootloaderKernelWorkload: public Workload
     ByteOrder byteOrder() const override { return ByteOrder::little; }
 
     loader::Arch getArch() const override { return kernel->getArch(); }
+
+    RiscvSemihosting *getSemihosting() const override { return semihosting; }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2019, 2022 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2019, 2022, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -220,9 +220,6 @@ class ArmFault : public FaultBase
     // Returns the actual syndrome register to use based on the target
     // exception level
     MiscRegIndex getSyndromeReg64() const;
-    // Returns the actual fault address register to use based on the target
-    // exception level
-    MiscRegIndex getFaultAddrReg64() const;
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 nullStaticInstPtr) override;

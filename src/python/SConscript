@@ -93,6 +93,9 @@ PySource('gem5.components.cachehierarchies.classic',
     'private_l1_private_l2_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/'
+    'private_l1_private_l2_walk_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.classic',
+    'gem5/components/cachehierarchies/classic/'
     'private_l1_shared_l2_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.classic.caches',
     'gem5/components/cachehierarchies/classic/caches/__init__.py')
@@ -242,9 +245,21 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/linear_generator.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/strided_generator_core.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/strided_generator.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/random_generator_core.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/random_generator.py')
+PySource('gem5.components.processors.spatter_gen',
+         'gem5/components/processors/spatter_gen/__init__.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_generator_core.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_generator.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_kernel.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_core.py')
 PySource('gem5.components.processors',
@@ -290,15 +305,20 @@ PySource('gem5.resources.client_api',
 PySource('gem5.resources.client_api',
          'gem5/resources/client_api/atlasclient.py')
 PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/client_wrapper.py')
-PySource('gem5.resources.client_api',
          'gem5/resources/client_api/abstract_client.py')
+PySource('gem5.resources.client_api',
+            'gem5/resources/client_api/client_query.py')
 PySource('gem5', 'gem5_default_config.py')
 PySource('gem5.utils', 'gem5/utils/__init__.py')
 PySource('gem5.utils', 'gem5/utils/filelock.py')
 PySource('gem5.utils', 'gem5/utils/override.py')
 PySource('gem5.utils', 'gem5/utils/progress_bar.py')
 PySource('gem5.utils', 'gem5/utils/requires.py')
+PySource('gem5.utils',
+         'gem5/utils/socks_ssl_context.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__init__.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/multisim.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__main__.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/__init__.py')
 PySource('gem5.utils.multiprocessing',

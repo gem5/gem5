@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013,2016,2018-2019 ARM Limited
+ * Copyright (c) 2013, 2016, 2018-2019, 2023-2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,6 +50,7 @@
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"
@@ -62,6 +63,7 @@ BaseTags::BaseTags(const Params &p)
     : ClockedObject(p), blkSize(p.block_size), blkMask(blkSize - 1),
       size(p.size), lookupLatency(p.tag_latency),
       system(p.system), indexingPolicy(p.indexing_policy),
+      partitionManager(p.partitioning_manager),
       warmupBound((p.warmup_percentage/100.0) * (p.size / p.block_size)),
       warmedUp(false), numBlocks(p.size / p.block_size),
       dataBlks(new uint8_t[p.size]), // Allocate data storage in one big chunk
@@ -111,9 +113,11 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     assert(requestor_id < system->maxRequestors());
     stats.occupancies[requestor_id]++;
 
-    // Insert block with tag, src requestor id and task id
+    // Insert block with tag, src requestor id, task id and PartitionId
+    const auto partition_id = partitionManager ?
+        partitionManager->readPacketPartitionID(pkt) : 0;
     blk->insert(extractTag(pkt->getAddr()), pkt->isSecure(), requestor_id,
-                pkt->req->taskId());
+                pkt->req->taskId(), partition_id);
 
     // Check if cache warm up is done
     if (!warmedUp && stats.tagsInUse.value() >= warmupBound) {

@@ -63,7 +63,7 @@ class HSAQueueEntry
     HSAQueueEntry(std::string kernel_name, uint32_t queue_id,
                   int dispatch_id, void *disp_pkt, AMDKernelCode *akc,
                   Addr host_pkt_addr, Addr code_addr, GfxVersion gfx_version)
-        : kernName(kernel_name),
+        : _gfxVersion(gfx_version), kernName(kernel_name),
           _wgSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_x,
                   (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_y,
                   (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_z}},
@@ -94,25 +94,22 @@ class HSAQueueEntry
         // LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
         //     #code-object-v3-kernel-descriptor
         //
-        // Currently, the only supported gfx version in gem5 that computes
-        // VGPR count differently is gfx90a.
-        if (gfx_version == GfxVersion::gfx90a) {
+        // Currently, the only supported gfx versions in gem5 that compute
+        // VGPR count differently are gfx90a and gfx942.
+        if (gfx_version == GfxVersion::gfx90a ||
+            gfx_version == GfxVersion::gfx942) {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
         } else {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
         }
 
-        // SGPR allocation granularies:
-        // - GFX8: 8
-        // - GFX9: 16
-        // Source: https://llvm.org/docs/.html
-        if (gfx_version == GfxVersion::gfx801 ||
-                gfx_version == GfxVersion::gfx803) {
-            numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
-        } else if (gfx_version == GfxVersion::gfx900 ||
+        // SGPR allocation granulary is 16 in GFX9
+        // Source: https://llvm.org/docs/AMDGPUUsage.html
+        if (gfx_version == GfxVersion::gfx900 ||
                 gfx_version == GfxVersion::gfx902 ||
                 gfx_version == GfxVersion::gfx908 ||
-                gfx_version == GfxVersion::gfx90a) {
+                gfx_version == GfxVersion::gfx90a ||
+                gfx_version == GfxVersion::gfx942) {
             numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
         } else {
             panic("Saw unknown gfx version setting up GPR counts\n");
@@ -127,6 +124,17 @@ class HSAQueueEntry
         }
 
         parseKernelCode(akc);
+
+        // Offset of a first AccVGPR in the unified register file.
+        // Granularity 4. Value 0-63. 0 - accum-offset = 4,
+        // 1 - accum-offset = 8, ..., 63 - accum-offset = 256.
+        _accumOffset = (akc->accum_offset + 1) * 4;
+    }
+
+    const GfxVersion&
+    gfxVersion() const
+    {
+        return _gfxVersion;
     }
 
     const std::string&
@@ -393,6 +401,12 @@ class HSAQueueEntry
         assert(_outstandingWbs >= 0);
     }
 
+    unsigned
+    accumOffset() const
+    {
+        return _accumOffset;
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -412,12 +426,6 @@ class HSAQueueEntry
             akc->enable_sgpr_flat_scratch_init);
         initialSgprState.set(PrivateSegSize,
             akc->enable_sgpr_private_segment_size);
-        initialSgprState.set(GridWorkgroupCountX,
-            akc->enable_sgpr_grid_workgroup_count_x);
-        initialSgprState.set(GridWorkgroupCountY,
-            akc->enable_sgpr_grid_workgroup_count_y);
-        initialSgprState.set(GridWorkgroupCountZ,
-            akc->enable_sgpr_grid_workgroup_count_z);
         initialSgprState.set(WorkgroupIdX,
             akc->enable_sgpr_workgroup_id_x);
         initialSgprState.set(WorkgroupIdY,
@@ -427,7 +435,7 @@ class HSAQueueEntry
         initialSgprState.set(WorkgroupInfo,
             akc->enable_sgpr_workgroup_info);
         initialSgprState.set(PrivSegWaveByteOffset,
-            akc->enable_sgpr_private_segment_wave_byte_offset);
+            akc->enable_private_segment);
 
         /**
          * set the enable bits for the initial VGPR state. the
@@ -438,6 +446,8 @@ class HSAQueueEntry
         initialVgprState.set(WorkitemIdZ, akc->enable_vgpr_workitem_id > 1);
     }
 
+    // store gfx version for version specific task handling
+    GfxVersion _gfxVersion;
     // name of the kernel associated with the AQL entry
     std::string kernName;
     // workgroup Size (3 dimensions)
@@ -492,6 +502,8 @@ class HSAQueueEntry
 
     std::bitset<NumVectorInitFields> initialVgprState;
     std::bitset<NumScalarInitFields> initialSgprState;
+
+    unsigned _accumOffset;
 };
 
 } // namespace gem5

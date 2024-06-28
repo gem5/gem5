@@ -3,7 +3,7 @@
         "id": "suite-example",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1"],
+        "gem5_versions": ["develop","23.1", "24.0"],
         "workloads": [
             {
                 "id": "simple-workload-1",
@@ -23,15 +23,22 @@
         "description": "Description of workload here",
         "function": "set_kernel_disk_workload",
         "resources": {
-            "kernel": "x86-linux-kernel-5.2.3-example",
-            "disk-image": "x86-ubuntu-18.04-img-example"
+            "kernel": {
+                "id": "x86-linux-kernel-5.2.3-example",
+                "resource_version": "1.0.0"
+            },
+            "disk-image": {
+                "id": "x86-ubuntu-18.04-img-example",
+                "resource_version": "1.0.0"
+            }
         },
         "additional_params": {
             "readfile_contents": "echo 'Boot successful'; m5 exit"
         },
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -40,15 +47,22 @@
         "description": "Description of workload here",
         "function": "set_kernel_disk_workload",
         "resources": {
-            "kernel": "x86-linux-kernel-5.2.3-example",
-            "disk-image": "x86-ubuntu-18.04-img-example"
+            "kernel": {
+                "id": "x86-linux-kernel-5.2.3-example",
+                "resource_version": "1.0.0"
+            },
+            "disk-image": {
+                "id": "x86-ubuntu-18.04-img-example",
+                "resource_version": "1.0.0"
+            }
         },
         "additional_params": {
             "readfile_contents": "echo 'Boot successful'; m5 exit"
         },
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -62,7 +76,8 @@
         "source": "src/linux-kernel",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -77,7 +92,8 @@
         "root_partition": "1",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     },
     {
@@ -91,7 +107,8 @@
         "source": "src/simple",
         "resource_version": "1.0.0",
         "gem5_versions": [
-            "develop"
+            "develop",
+            "24.0"
         ]
     }
 ]

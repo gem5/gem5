@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,8 +84,9 @@ Stride::Stride(const StridePrefetcherParams &p)
     threshConf(p.confidence_threshold/100.0),
     useRequestorId(p.use_requestor_id),
     degree(p.degree),
+    distance(p.distance),
     pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
-        p.table_replacement_policy)
+                p.table_replacement_policy)
 {
 }
 
@@ -104,16 +105,21 @@ Stride::findTable(int context)
 Stride::PCTable*
 Stride::allocateNewContext(int context)
 {
+    std::string table_name = name() + ".PCTable" + std::to_string(context);
     // Create new table
-    auto insertion_result = pcTables.insert(std::make_pair(context,
-        PCTable(pcTableInfo.assoc, pcTableInfo.numEntries,
-        pcTableInfo.indexingPolicy, pcTableInfo.replacementPolicy,
-        StrideEntry(initConfidence))));
+    auto ins_result = pcTables.emplace(std::piecewise_construct,
+                           std::forward_as_tuple(context),
+                           std::forward_as_tuple(table_name.c_str(),
+                                                 pcTableInfo.numEntries,
+                                                 pcTableInfo.assoc,
+                                                 pcTableInfo.replacementPolicy,
+                                                 pcTableInfo.indexingPolicy,
+                                                 StrideEntry(initConfidence)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
     // Get iterator to new pc table, and then return a pointer to the new table
-    return &(insertion_result.first->second);
+    return &(ins_result.first->second);
 }
 
 void
@@ -168,15 +174,16 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
             return;
         }
 
+        // Round strides up to atleast 1 cacheline
+        int prefetch_stride = new_stride;
+        if (abs(new_stride) < blkSize) {
+            prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
+        }
+
+        Addr new_addr = pf_addr + distance * prefetch_stride;
         // Generate up to degree prefetches
         for (int d = 1; d <= degree; d++) {
-            // Round strides up to atleast 1 cacheline
-            int prefetch_stride = new_stride;
-            if (abs(new_stride) < blkSize) {
-                prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
-            }
-
-            Addr new_addr = pf_addr + d * prefetch_stride;
+            new_addr += prefetch_stride;
             addresses.push_back(AddrPriority(new_addr, 0));
         }
     } else {

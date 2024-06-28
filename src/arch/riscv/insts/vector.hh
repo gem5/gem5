@@ -31,6 +31,7 @@
 
 #include <string>
 
+#include "arch/riscv/faults.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
@@ -306,6 +307,10 @@ class VseMacroInst : public VectorMemMacroInst
 
 class VleMicroInst : public VectorMicroInst
 {
+  public:
+    mutable bool trimVl;
+    mutable uint32_t faultIdx;
+
   protected:
     Request::Flags memAccessFlags;
 
@@ -313,6 +318,7 @@ class VleMicroInst : public VectorMicroInst
                   uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
                             _microIdx, _vlen)
+        , trimVl(false), faultIdx(_microVl)
     {
         this->flags[IsLoad] = true;
     }
@@ -563,13 +569,149 @@ class VxsatMicroInst : public VectorArithMicroInst
   public:
     VxsatMicroInst(bool* Vxsat, ExtMachInst extMachInst)
         : VectorArithMicroInst("vxsat_micro", extMachInst,
-          VectorIntegerArithOp, 0, 0)
+          SimdMiscOp, 0, 0)
     {
         vxsat = Vxsat;
     }
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     std::string generateDisassembly(Addr, const loader::SymbolTable *)
         const override;
+};
+
+class VlFFTrimVlMicroOp : public VectorMicroInst
+{
+  private:
+    RegId srcRegIdxArr[8];
+    RegId destRegIdxArr[0];
+    std::vector<StaticInstPtr>& microops;
+
+  public:
+    VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
+        uint32_t _microIdx, uint32_t _vlen,
+        std::vector<StaticInstPtr>& _microops);
+    uint32_t calcVl() const;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    std::unique_ptr<PCStateBase> branchTarget(ThreadContext *) const override;
+    std::string generateDisassembly(Addr, const loader::SymbolTable *)
+        const override;
+};
+
+class VlSegMacroInst : public VectorMemMacroInst
+{
+  protected:
+    VlSegMacroInst(const char* mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _vlen)
+        : VectorMemMacroInst(mnem, _machInst, __opClass, _vlen)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VlSegMicroInst : public VectorMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    uint8_t regIdx;
+
+    VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _numMicroops,
+                   uint32_t _field, uint32_t _numFields,
+                   uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
+                          _microIdx, _vlen)
+    {
+      this->flags[IsLoad] = true;
+    }
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VlSegDeIntrlvMicroInst : public VectorArithMicroInst
+{
+  private:
+    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId destRegIdxArr[1];
+    uint32_t numSrcs;
+    uint32_t numMicroops;
+    uint32_t field;
+    uint32_t sizeOfElement;
+    uint32_t micro_vl;
+
+  public:
+    uint32_t vlen;
+
+    VlSegDeIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
+                            uint32_t _dstReg, uint32_t _numSrcs,
+                            uint32_t _microIdx, uint32_t _numMicroops,
+                            uint32_t _field, uint32_t _vlen,
+                            uint32_t _sizeOfElement);
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+
+    std::string generateDisassembly(Addr,
+        const loader::SymbolTable *)  const override;
+};
+
+class VsSegMacroInst : public VectorMemMacroInst
+{
+  protected:
+    VsSegMacroInst(const char* mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _vlen)
+        : VectorMemMacroInst(mnem, _machInst, __opClass, _vlen)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VsSegMicroInst : public VectorMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    uint8_t regIdx;
+
+    VsSegMicroInst(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _numMicroops,
+                   uint32_t _field, uint32_t _numFields,
+                   uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
+                          _microIdx, _vlen)
+    {
+      this->flags[IsStore] = true;
+    }
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VsSegIntrlvMicroInst : public VectorArithMicroInst
+{
+  private:
+    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId destRegIdxArr[1];
+    uint32_t numSrcs;
+    uint32_t numMicroops;
+    uint32_t field;
+    uint32_t sizeOfElement;
+    uint32_t micro_vl;
+
+  public:
+    uint32_t vlen;
+
+    VsSegIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
+                            uint32_t _dstReg, uint32_t _numSrcs,
+                            uint32_t _microIdx, uint32_t _numMicroops,
+                            uint32_t _field, uint32_t _vlen,
+                            uint32_t _sizeOfElement);
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+
+    std::string generateDisassembly(Addr,
+        const loader::SymbolTable *)  const override;
 };
 
 } // namespace RiscvISA

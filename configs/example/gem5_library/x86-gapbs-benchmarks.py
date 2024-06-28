@@ -77,7 +77,9 @@ parser = argparse.ArgumentParser(
     description="An example configuration script to run the gapbs benchmarks."
 )
 
-gapbs_suite = obtain_resource("gapbs-benchmark-suite")
+gapbs_suite = obtain_resource(
+    "gapbs-benchmark-suite", resource_version="1.0.0"
+)
 
 # The only positional argument accepted is the benchmark name in this script.
 

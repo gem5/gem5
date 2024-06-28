@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2023 Arm Limited
+ * Copyright (c) 2011-2013,2017-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -186,8 +186,9 @@ MiscRegRegImmOp64::generateDisassembly(
 uint32_t
 MiscRegRegImmOp64::iss() const
 {
-    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(dest);
-    return _iss(misc_reg, op1);
+    const auto misc_reg = encodeAArch64SysReg(dest);
+    assert(misc_reg.has_value());
+    return _iss(misc_reg.value(), op1);
 }
 
 std::string
@@ -205,8 +206,9 @@ RegMiscRegImmOp64::generateDisassembly(
 uint32_t
 RegMiscRegImmOp64::iss() const
 {
-    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(op1);
-    return _iss(misc_reg, dest);
+    const auto misc_reg = encodeAArch64SysReg(op1);
+    assert(misc_reg.has_value());
+    return _iss(misc_reg.value(), dest);
 }
 
 Fault
@@ -244,963 +246,1113 @@ RegNone::generateDisassembly(
 }
 
 void
+TlbiOp64::tlbiAll(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable)
+{
+    TLBIALLEL tlbi_op(regime, secure);
+    if (shareable) {
+        tlbi_op.broadcast(tc);
+    } else {
+        tlbi_op(tc);
+    }
+}
+
+void
+TlbiOp64::tlbiVmall(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool stage2)
+{
+    TLBIVMALL tlbi_op(regime, secure, stage2);
+    if (shareable) {
+        tlbi_op.broadcast(tc);
+    } else {
+        tlbi_op(tc);
+    }
+}
+
+void
+TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    if (MMU::hasUnprivRegime(regime)) {
+        // The asid will only be used when e2h == 1
+        bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
+        auto asid = asid_16bits ? bits(value, 63, 48) :
+                                  bits(value, 55, 48);
+
+        TLBIMVA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12,
+                        asid, last_level);
+        if (shareable) {
+            tlbi_op.broadcast(tc);
+        } else {
+            tlbi_op(tc);
+        }
+    } else {
+        TLBIMVAA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12, last_level);
+        if (shareable) {
+            tlbi_op.broadcast(tc);
+        } else {
+            tlbi_op(tc);
+        }
+    }
+}
+
+void
+TlbiOp64::tlbiVaa(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    TLBIMVAA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12, last_level);
+    if (shareable) {
+        tlbi_op.broadcast(tc);
+    } else {
+        tlbi_op(tc);
+    }
+}
+
+void
+TlbiOp64::tlbiAsid(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable)
+{
+    bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
+    auto asid = asid_16bits ? bits(value, 63, 48) :
+                              bits(value, 55, 48);
+
+    TLBIASID tlbi_op(regime, secure, asid);
+    if (shareable) {
+        tlbi_op.broadcast(tc);
+    } else {
+        tlbi_op(tc);
+    }
+}
+
+void
+TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    if (EL2Enabled(tc)) {
+        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        auto release = isa->getRelease();
+
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) &&
+            !scr.ns && !bits(value, 63);
+
+        const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
+            39 : 35;
+        TLBIIPA tlbi_op(TranslationRegime::EL10, secure,
+            static_cast<Addr>(bits(value, top_bit, 0)) << 12,
+            last_level);
+
+        if (shareable) {
+            tlbi_op.broadcast(tc);
+        } else {
+            tlbi_op(tc);
+        }
+    }
+}
+
+void
+TlbiOp64::tlbiRvaa(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    TLBIRMVAA tlbi_op(regime, secure, value, last_level);
+    if (shareable) {
+        tlbi_op.broadcast(tc);
+    } else {
+        tlbi_op(tc);
+    }
+}
+
+void
+TlbiOp64::tlbiRva(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    if (MMU::hasUnprivRegime(regime)) {
+        // The asid will only be used when e2h == 1
+        bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
+        auto asid = asid_16bits ? bits(value, 63, 48) :
+                                  bits(value, 55, 48);
+
+        TLBIRMVA tlbi_op(regime, secure, value, asid, last_level);
+        if (shareable) {
+            tlbi_op.broadcast(tc);
+        } else {
+            tlbi_op(tc);
+        }
+    } else {
+        tlbiRvaa(tc, value, secure, regime, shareable, last_level);
+    }
+}
+
+void
+TlbiOp64::tlbiRipaS2(ThreadContext *tc, RegVal value,
+    bool secure, TranslationRegime regime, bool shareable, bool last_level)
+{
+    if (EL2Enabled(tc)) {
+        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        auto release = isa->getRelease();
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) &&
+            !scr.ns && !bits(value, 63);
+
+        TLBIRIPA tlbi_op(TranslationRegime::EL10, secure, value, last_level);
+
+        if (shareable) {
+            tlbi_op.broadcast(tc);
+        } else {
+            tlbi_op(tc);
+        }
+    }
+}
+
+std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
+    { MISCREG_TLBI_ALLE3, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                false); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE3IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE3OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE2, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                false); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE2IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE2OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ALLE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiAll(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_VMALLE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_VMALLE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_VMALLE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_VMALLS12E1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false, // shareable
+                true); // stage2
+        }
+    },
+
+    { MISCREG_TLBI_VMALLS12E1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // stage2
+        }
+    },
+
+    { MISCREG_TLBI_VMALLS12E1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVmall(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // stage2
+        }
+    },
+
+    { MISCREG_TLBI_VAE3, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                false, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE3IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE3OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE3, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE3IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE3OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                true, // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE2, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                false, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE2IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                TranslationRegime::EL2, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE2OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc,EL2), // secure
+                TranslationRegime::EL2, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE2, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE2IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE2OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VAE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_VALE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_ASIDE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiAsid(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ASIDE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiAsid(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_ASIDE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiAsid(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true); // shareable
+        }
+    },
+
+    { MISCREG_TLBI_VAAE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_VAAE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_VAAE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_VAALE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_VAALE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_VAALE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiVaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2E1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2E1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2E1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                false); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2LE1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2LE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_IPAS2LE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiIpaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // last level
+        }
+    },
+
+    { MISCREG_TLBI_RVAE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAAE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAAE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAAE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAALE1, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+            bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
+                hcr.fb && !hcr.tge;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                shareable, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAALE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAALE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TlbiOp64::tlbiRvaa(tc, value,
+                isSecureAtEL(tc, translationEl(regime)), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2E1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2E1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2E1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2LE1, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2LE1IS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RIPAS2LE1OS, [](ThreadContext *tc, RegVal value)
+        {
+            TlbiOp64::tlbiRipaS2(tc, value,
+                isSecureAtEL(tc, EL1), // secure
+                TranslationRegime::EL10, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE2, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                false, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE2IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE2OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE2, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE2IS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE2OS, [](ThreadContext *tc, RegVal value)
+        {
+            const TranslationRegime regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL2), // secure
+                regime, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE3, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                false, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE3IS, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVAE3OS, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                false); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE3, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                false, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE3IS, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+
+    { MISCREG_TLBI_RVALE3OS, [](ThreadContext *tc, RegVal value)
+        {
+            tlbiRva(tc, value,
+                isSecureAtEL(tc, EL3), // secure
+                TranslationRegime::EL3, // regime
+                true, // shareable
+                true); // last level only
+        }
+    },
+};
+
+void
 TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
 {
     ThreadContext* tc = xc->tcBase();
-    auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    auto release = isa->getRelease();
 
-    bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
-
-    switch (dest_idx) {
-      // AArch64 TLB Invalidate All, EL3
-      case MISCREG_TLBI_ALLE3:
-        {
-            TLBIALLEL tlbiOp(EL3, true);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate All, EL3, Inner Shareable
-      case MISCREG_TLBI_ALLE3IS:
-      // AArch64 TLB Invalidate All, EL3, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_ALLE3OS:
-        {
-            TLBIALLEL tlbiOp(EL3, true);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate All, EL2
-      case MISCREG_TLBI_ALLE2:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL2, secure);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate All, EL2, Inner Shareable
-      case MISCREG_TLBI_ALLE2IS:
-      // AArch64 TLB Invalidate All, EL2, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_ALLE2OS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL2, secure);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate All, EL1
-      case MISCREG_TLBI_ALLE1:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL1, secure);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate All, EL1, Inner Shareable
-      case MISCREG_TLBI_ALLE1IS:
-      // AArch64 TLB Invalidate All, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_ALLE1OS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL1, secure);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_VMALLS12E1:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(EL1, secure, true);
-            tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_VMALLE1:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(target_el, secure, false);
-            tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_VMALLS12E1IS:
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VMALLS12E1OS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(EL1, secure, true);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_VMALLE1IS:
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VMALLE1OS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(target_el, secure, false);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL3
-      case MISCREG_TLBI_VAE3_Xt:
-        {
-
-            TLBIMVAA tlbiOp(EL3, true,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            false);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, EL3
-      case MISCREG_TLBI_VALE3_Xt:
-        {
-
-            TLBIMVAA tlbiOp(EL3, true,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            true);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL3, Inner Shareable
-      case MISCREG_TLBI_VAE3IS_Xt:
-      // AArch64 TLB Invalidate by VA, EL3, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VAE3OS_Xt:
-        {
-            TLBIMVAA tlbiOp(EL3, true,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            false);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, EL3, Inner Shareable
-      case MISCREG_TLBI_VALE3IS_Xt:
-      // AArch64 TLB Invalidate by VA, Last Level, EL3, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VALE3OS_Xt:
-        {
-            TLBIMVAA tlbiOp(EL3, true,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            true);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL2
-      case MISCREG_TLBI_VAE2_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(value, 43, 0)) << 12,
-                               asid, false);
-                tlbiOp(tc);
-            } else {
-                TLBIMVAA tlbiOp(EL2, secure,
-                                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                                false);
-                tlbiOp(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, EL2
-      case MISCREG_TLBI_VALE2_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(value, 43, 0)) << 12,
-                               asid, true);
-                tlbiOp(tc);
-            } else {
-                TLBIMVAA tlbiOp(EL2, secure,
-                                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                                true);
-                tlbiOp(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL2, Inner Shareable
-      case MISCREG_TLBI_VAE2IS_Xt:
-      // AArch64 TLB Invalidate by VA, EL2, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VAE2OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(value, 43, 0)) << 12,
-                               asid, false);
-                tlbiOp.broadcast(tc);
-            } else {
-                TLBIMVAA tlbiOp(EL2, secure,
-                                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                                false);
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, EL2, Inner Shareable
-      case MISCREG_TLBI_VALE2IS_Xt:
-      // AArch64 TLB Invalidate by VA, Last Level, EL2, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VALE2OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIMVA tlbiOp(EL2, secure,
-                               static_cast<Addr>(bits(value, 43, 0)) << 12,
-                               asid, true);
-                tlbiOp.broadcast(tc);
-            } else {
-                TLBIMVAA tlbiOp(EL2, secure,
-                                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                                true);
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL1
-      case MISCREG_TLBI_VAE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                           static_cast<Addr>(bits(value, 43, 0)) << 12,
-                           asid, false);
-
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, EL1
-      case MISCREG_TLBI_VALE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                           static_cast<Addr>(bits(value, 43, 0)) << 12,
-                           asid, true);
-
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, EL1, Inner Shareable
-      case MISCREG_TLBI_VAE1IS_Xt:
-      // AArch64 TLB Invalidate by VA, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VAE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            asid, false);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_VALE1IS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            asid, true);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by ASID, EL1
-      case MISCREG_TLBI_ASIDE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(target_el, secure, asid);
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by ASID, EL1, Inner Shareable
-      case MISCREG_TLBI_ASIDE1IS_Xt:
-      // AArch64 TLB Invalidate by ASID, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_ASIDE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(target_el, secure, asid);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, All ASID, EL1
-      case MISCREG_TLBI_VAAE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                false);
-
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, Last Level, All ASID, EL1
-      case MISCREG_TLBI_VAALE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                true);
-
-            tlbiOp(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, All ASID, EL1, Inner Shareable
-      case MISCREG_TLBI_VAAE1IS_Xt:
-      // AArch64 TLB Invalidate by VA, All ASID, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VAAE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                false);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by VA, All ASID,
-      // Last Level, EL1, Inner Shareable
-      case MISCREG_TLBI_VAALE1IS_Xt:
-      // AArch64 TLB Invalidate by VA, All ASID,
-      // Last Level, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_VAALE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
-                static_cast<Addr>(bits(value, 43, 0)) << 12,
-                true);
-
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, EL1
-      case MISCREG_TLBI_IPAS2E1_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
-                    39 : 35;
-                TLBIIPA tlbiOp(EL1, secure,
-                    static_cast<Addr>(bits(value, top_bit, 0)) << 12,
-                    false);
-
-                tlbiOp(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, Last Level EL1
-      case MISCREG_TLBI_IPAS2LE1_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIIPA tlbiOp(EL1, secure,
-                    static_cast<Addr>(bits(value, 35, 0)) << 12,
-                    true);
-
-                tlbiOp(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, EL1, Inner Shareable
-      case MISCREG_TLBI_IPAS2E1IS_Xt:
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_IPAS2E1OS_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
-                    39 : 35;
-                TLBIIPA tlbiOp(EL1, secure,
-                    static_cast<Addr>(bits(value, top_bit, 0)) << 12,
-                    false);
-
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, Last Level, EL1, Inner Shareable
-      case MISCREG_TLBI_IPAS2LE1IS_Xt:
-      // AArch64 TLB Invalidate by Intermediate Physical Address,
-      // Stage 2, Last Level, EL1, Outer Shareable
-      // We are currently not distinguishing Inner and Outer domains.
-      // We therefore implement TLBIOS instructions as TLBIIS
-      case MISCREG_TLBI_IPAS2LE1OS_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIIPA tlbiOp(EL1, secure,
-                    static_cast<Addr>(bits(value, 35, 0)) << 12,
-                    true);
-
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVAE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, false);
-
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAE1IS_Xt:
-      case MISCREG_TLBI_RVAE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, false);
-
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAAE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, false);
-
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAAE1IS_Xt:
-      case MISCREG_TLBI_RVAAE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, false);
-
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVALE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, true);
-
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVALE1IS_Xt:
-      case MISCREG_TLBI_RVALE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            auto asid = asid_16bits ? bits(value, 63, 48) :
-                                      bits(value, 55, 48);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, true);
-
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAALE1_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, true);
-
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAALE1IS_Xt:
-      case MISCREG_TLBI_RVAALE1OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, true);
-
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_RIPAS2E1_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIRIPA tlbiOp(EL1, secure, value, false);
-
-                tlbiOp(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RIPAS2E1IS_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIRIPA tlbiOp(EL1, secure, value, false);
-
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RIPAS2LE1_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIRIPA tlbiOp(EL1, secure, value, true);
-
-                tlbiOp(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RIPAS2LE1IS_Xt:
-        {
-            if (EL2Enabled(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
-                bool secure = release->has(ArmExtension::SECURITY) &&
-                    !scr.ns && !bits(value, 63);
-
-                TLBIRIPA tlbiOp(EL1, secure, value, true);
-
-                tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVAE2_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, false);
-
-                if (tlbiOp.valid())
-                    tlbiOp(tc);
-            } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, false);
-
-                if (tlbiOp.valid())
-                    tlbiOp(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVAE2IS_Xt:
-      case MISCREG_TLBI_RVAE2OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, false);
-
-                if (tlbiOp.valid())
-                    tlbiOp.broadcast(tc);
-            } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, false);
-
-                if (tlbiOp.valid())
-                    tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVALE2_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, true);
-
-                if (tlbiOp.valid())
-                    tlbiOp(tc);
-            } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, true);
-
-                if (tlbiOp.valid())
-                    tlbiOp(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVALE2IS_Xt:
-      case MISCREG_TLBI_RVALE2OS_Xt:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-
-            if (hcr.e2h) {
-                // The asid will only be used when e2h == 1
-                auto asid = asid_16bits ? bits(value, 63, 48) :
-                                          bits(value, 55, 48);
-
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, true);
-
-                if (tlbiOp.valid())
-                    tlbiOp.broadcast(tc);
-            } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, true);
-
-                if (tlbiOp.valid())
-                    tlbiOp.broadcast(tc);
-            }
-            return;
-        }
-      case MISCREG_TLBI_RVAE3_Xt:
-        {
-            TLBIRMVAA tlbiOp(EL3, true, value, false);
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVAE3IS_Xt:
-      case MISCREG_TLBI_RVAE3OS_Xt:
-        {
-            TLBIRMVAA tlbiOp(EL3, true, value, false);
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVALE3_Xt:
-        {
-            TLBIRMVAA tlbiOp(EL3, true, value, true);
-            if (tlbiOp.valid())
-                tlbiOp(tc);
-            return;
-        }
-      case MISCREG_TLBI_RVALE3IS_Xt:
-      case MISCREG_TLBI_RVALE3OS_Xt:
-        {
-            TLBIRMVAA tlbiOp(EL3, true, value, true);
-            if (tlbiOp.valid())
-                tlbiOp.broadcast(tc);
-            return;
-        }
-      default:
+    if (auto it = tlbiOps.find(dest_idx); it != tlbiOps.end()) {
+        it->second(tc, value);
+    } else {
         panic("Invalid TLBI\n");
     }
 }

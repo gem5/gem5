@@ -253,7 +253,7 @@ RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_FFLAGS).physIndex) & RVxCSRMasks.at(CSR_FFLAGS);
     r.frm = context->readMiscRegNoEffect(
         CSRData.at(CSR_FRM).physIndex) & RVxCSRMasks.at(CSR_FRM);
-    r.fcsr = context->readMiscRegNoEffect(
+    r.fcsr = context->readMiscReg(
         CSRData.at(CSR_FCSR).physIndex) & RVxCSRMasks.at(CSR_FCSR);
 
     // CSR registers
@@ -363,7 +363,7 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
 
     setRegNoEffectWithMask(context, RV32, pms, CSR_FFLAGS, r.fflags);
     setRegNoEffectWithMask(context, RV32, pms, CSR_FRM, r.frm);
-    setRegNoEffectWithMask(context, RV32, pms, CSR_FCSR, r.fcsr);
+    setRegWithMask(context, RV32, pms, CSR_FCSR, r.fcsr);
 
     // TODO: implement CSR counter registers for mcycle(h), minstret(h)
 
@@ -450,7 +450,7 @@ RemoteGDB::Riscv64GdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_FFLAGS).physIndex) & RVxCSRMasks.at(CSR_FFLAGS);
     r.frm = context->readMiscRegNoEffect(
         CSRData.at(CSR_FRM).physIndex) & RVxCSRMasks.at(CSR_FRM);
-    r.fcsr = context->readMiscRegNoEffect(
+    r.fcsr = context->readMiscReg(
         CSRData.at(CSR_FCSR).physIndex) & RVxCSRMasks.at(CSR_FCSR);
 
     // CSR registers
@@ -554,7 +554,7 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
 
     setRegNoEffectWithMask(context, RV64, pms, CSR_FFLAGS, r.fflags);
     setRegNoEffectWithMask(context, RV64, pms, CSR_FRM, r.frm);
-    setRegNoEffectWithMask(context, RV64, pms, CSR_FCSR, r.fcsr);
+    setRegWithMask(context, RV64, pms, CSR_FCSR, r.fcsr);
 
     // TODO: implement CSR counter registers for mcycle, minstret
 

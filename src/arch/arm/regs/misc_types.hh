@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023 Arm Limited
+ * Copyright (c) 2010-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -225,6 +225,11 @@ namespace ArmISA
         Bitfield<7, 4> el1;
         Bitfield<3, 0> el0;
     EndBitUnion(AA64PFR0)
+
+    BitUnion64(AA64PFR1)
+        Bitfield<27, 24> sme;
+        Bitfield<19, 16> mpamFrac;
+    EndBitUnion(AA64PFR1)
 
     BitUnion64(AA64ZFR0)
         Bitfield<59, 56> f64mm;
@@ -1064,10 +1069,73 @@ namespace ArmISA
         Bitfield<0> afsr0EL1;
     EndBitUnion(HFGTR)
 
+    // HDFGRTR and HDFGWTR
+    BitUnion64(HDFGTR)
+        Bitfield<11> osdlrEL1;
+        Bitfield<10> oseccrEL1;
+        Bitfield<9> oslsrEL1;
+        Bitfield<8> oslarEL1;
+        Bitfield<7> dbgprcrEL1;
+        Bitfield<6> dbgauthstatusEL1;
+        Bitfield<5> dbgclaim;
+        Bitfield<4> mdscrEL1;
+        Bitfield<3> dbgwvrnEL1;
+        Bitfield<2> dbgwcrnEL1;
+        Bitfield<1> dbgbvrnEL1;
+        Bitfield<0> dbgbcrnEL1;
+    EndBitUnion(HDFGTR)
+
     BitUnion64(HCRX)
         Bitfield<15> sctlr2En;
         Bitfield<14> tcr2En;
     EndBitUnion(HCRX)
+
+    BitUnion64(MPAMIDR)
+        Bitfield<61> hasSdeflt;
+        Bitfield<60> hasForceNs;
+        Bitfield<58> hasTidr;
+        Bitfield<39,32> pmgMax;
+        Bitfield<20,18> vpmrMax;
+        Bitfield<17> hasHcr;
+        Bitfield<15,0> partidMax;
+    EndBitUnion(MPAMIDR)
+
+    // Generic view of MPAMx_ELy
+    BitUnion64(MPAM)
+        Bitfield<63> mpamEn;
+
+        // MPAM1_EL1 only
+        SubBitUnion(el1, 62, 48)
+            Bitfield<60> forcedNs;
+        EndSubBitUnion(el1)
+
+        // MPAM2_EL2 only
+        SubBitUnion(el2, 62, 48)
+            Bitfield<58> tidr;
+            Bitfield<50> enMpamSm;
+            Bitfield<49> trapMpam0EL1;
+            Bitfield<48> trapMpam1EL1;
+        EndSubBitUnion(el2)
+
+        // MPAM3_EL3 only
+        SubBitUnion(el3, 62, 48)
+            Bitfield<62> trapLower;
+            Bitfield<61> sdeflt;
+            Bitfield<60> forceNs;
+        EndSubBitUnion(el3)
+
+        Bitfield<47,40> pmgD;
+        Bitfield<39,32> pmgI;
+        Bitfield<31,16> partidD;
+        Bitfield<15,0>  partidI;
+    EndBitUnion(MPAM)
+
+    BitUnion64(MPAMHCR)
+        Bitfield<31> trapMpamIdrEL1;
+        Bitfield<8> gstappPlk;
+        Bitfield<1> el1Vpmen;
+        Bitfield<0> el0Vpmen;
+    EndBitUnion(MPAMHCR)
 
 } // namespace ArmISA
 } // namespace gem5

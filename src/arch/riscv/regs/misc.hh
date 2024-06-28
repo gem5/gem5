@@ -17,6 +17,7 @@
  *
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -244,6 +245,21 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER29H,
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
+
+    NUM_PHYS_MISCREGS,
+
+    MISCREG_MSTATUS = MISCREG_STATUS,
+    MISCREG_MIP = MISCREG_IP,
+    MISCREG_MIE = MISCREG_IE,
+    // This CSR shared the same space with MISCREG_FFLAGS
+    MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
+    MISCREG_FCSR,
+    MISCREG_USTATUS,
+    MISCREG_UIP,
+    MISCREG_UIE,
+    MISCREG_SSTATUS,
+    MISCREG_SIP,
+    MISCREG_SIE,
 
     NUM_MISCREGS
 };
@@ -519,10 +535,10 @@ constexpr uint64_t isaExtsFlags() {
 
 const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_USTATUS,
-        {"ustatus", MISCREG_STATUS, rvTypeFlags(RV64, RV32),
+        {"ustatus", MISCREG_USTATUS, rvTypeFlags(RV64, RV32),
          isaExtsFlags('n')}},
     {CSR_UIE,
-        {"uie", MISCREG_IE, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
+        {"uie", MISCREG_UIE, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
     {CSR_UTVEC,
         {"utvec", MISCREG_UTVEC, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
     {CSR_USCRATCH,
@@ -536,15 +552,14 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_UTVAL,
         {"utval", MISCREG_UTVAL, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
     {CSR_UIP,
-        {"uip", MISCREG_IP, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
+        {"uip", MISCREG_UIP, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
     {CSR_FFLAGS,
         {"fflags", MISCREG_FFLAGS, rvTypeFlags(RV64, RV32),
          isaExtsFlags('f')}},
     {CSR_FRM,
         {"frm", MISCREG_FRM, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
-     // Actually FRM << 5 | FFLAGS
     {CSR_FCSR,
-        {"fcsr", MISCREG_FFLAGS, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
+        {"fcsr", MISCREG_FCSR, rvTypeFlags(RV64, RV32), isaExtsFlags('f')}},
     {CSR_CYCLE,
         {"cycle", MISCREG_CYCLE, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_TIME,
@@ -733,7 +748,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
          isaExtsFlags()}},
 
     {CSR_SSTATUS,
-        {"sstatus", MISCREG_STATUS, rvTypeFlags(RV64, RV32),
+        {"sstatus", MISCREG_SSTATUS, rvTypeFlags(RV64, RV32),
          isaExtsFlags('s')}},
     {CSR_SEDELEG,
         {"sedeleg", MISCREG_SEDELEG, rvTypeFlags(RV64, RV32),
@@ -742,7 +757,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
         {"sideleg", MISCREG_SIDELEG, rvTypeFlags(RV64, RV32),
          isaExtsFlags('s')}},
     {CSR_SIE,
-        {"sie", MISCREG_IE, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
+        {"sie", MISCREG_SIE, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_STVEC,
         {"stvec", MISCREG_STVEC, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_SCOUNTEREN,
@@ -759,7 +774,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_STVAL,
         {"stval", MISCREG_STVAL, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_SIP,
-        {"sip", MISCREG_IP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
+        {"sip", MISCREG_SIP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_SATP,
         {"satp", MISCREG_SATP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
 
@@ -773,7 +788,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_MHARTID,
         {"mhartid", MISCREG_HARTID, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MSTATUS,
-        {"mstatus", MISCREG_STATUS, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+        {"mstatus", MISCREG_MSTATUS, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MISA,
         {"misa", MISCREG_ISA, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MEDELEG,
@@ -781,7 +796,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_MIDELEG,
         {"mideleg", MISCREG_MIDELEG, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MIE,
-        {"mie", MISCREG_IE, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+        {"mie", MISCREG_MIE, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MTVEC,
         {"mtvec", MISCREG_MTVEC, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MCOUNTEREN,
@@ -799,7 +814,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_MTVAL,
         {"mtval", MISCREG_MTVAL, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_MIP,
-        {"mip", MISCREG_IP, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+        {"mip", MISCREG_MIP, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     {CSR_PMPCFG0,
         {"pmpcfg0", MISCREG_PMPCFG0, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
     // pmpcfg1 rv32 only
@@ -1233,6 +1248,7 @@ EndBitUnion(MISA)
  * this bit union.
  */
 BitUnion64(INTERRUPT)
+    Bitfield<63,16> local;
     Bitfield<11> mei;
     Bitfield<9> sei;
     Bitfield<8> uei;
@@ -1438,6 +1454,7 @@ USTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     },
 };
 
+const RegVal LOCAL_MASK = mask(63,16);
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal SEI_MASK = 1ULL << 9;
 const RegVal UEI_MASK = 1ULL << 8;
@@ -1448,13 +1465,13 @@ const RegVal MSI_MASK = 1ULL << 3;
 const RegVal SSI_MASK = 1ULL << 1;
 const RegVal USI_MASK = 1ULL << 0;
 const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MU] = MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MNU] = MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
+    [enums::M] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MU] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MNU] = LOCAL_MASK | MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
                    MSI_MASK | USI_MASK,
-    [enums::MSU] = MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
+    [enums::MSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
                    MSI_MASK | SSI_MASK,
-    [enums::MNSU] = MEI_MASK | SEI_MASK | UEI_MASK |
+    [enums::MNSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | UEI_MASK |
                     MTI_MASK | STI_MASK | UTI_MASK |
                     MSI_MASK | SSI_MASK | USI_MASK,
 };

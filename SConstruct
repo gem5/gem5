@@ -117,6 +117,8 @@ AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
 AddOption('--with-lto', action='store_true',
           help='Enable Link-Time Optimization')
+AddOption('--with-libcxx', action='store_true',
+          help='Use libc++ as the C++ standard library (requires Clang)')
 AddOption('--verbose', action='store_true',
           help='Print full tool command lines')
 AddOption('--without-python', action='store_true',
@@ -550,11 +552,6 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-pipe'])
         env.Append(CCFLAGS=['-fno-strict-aliasing'])
 
-        # Enable -Wall and -Wextra and then disable the few warnings that
-        # we consistently violate
-        env.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
-                            '-Wno-sign-compare', '-Wno-unused-parameter'])
-
         # We always compile using C++17
         env.Append(CXXFLAGS=['-std=c++17'])
 
@@ -566,6 +563,16 @@ for variant_path in variant_paths:
 
         with gem5_scons.Configure(env) as conf:
             conf.CheckLinkFlag('-Wl,--as-needed')
+
+        want_libcxx = GetOption('with_libcxx')
+        if want_libcxx:
+            with gem5_scons.Configure(env) as conf:
+                # Try using libc++ if it supports the <filesystem> library.
+                code = '#include <filesystem>\nint main() { return 0; }'
+                if (not conf.CheckCxxFlag('-stdlib=libc++') or
+                    not conf.CheckLinkFlag('-stdlib=libc++', code=code)
+                ):
+                    error('Requested libc++ but it is not usable')
 
         linker = GetOption('linker')
         if linker:
@@ -597,6 +604,13 @@ for variant_path in variant_paths:
                     env.Append(LINKFLAGS=['-Wl,--no-keep-memory'])
                 else:
                     error("Unable to use --no-keep-memory with the linker")
+
+        # Treat warnings as errors but white list some warnings that we
+        # want to allow (e.g., deprecation warnings).
+        env.Append(CCFLAGS=['-Werror',
+                             '-Wno-error=deprecated-declarations',
+                             '-Wno-error=deprecated',
+                            ])
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",
@@ -612,8 +626,8 @@ for variant_path in variant_paths:
               "src/SConscript to support that compiler.")))
 
     if env['GCC']:
-        if compareVersions(env['CXXVERSION'], "7") < 0:
-            error('gcc version 7 or newer required.\n'
+        if compareVersions(env['CXXVERSION'], "10") < 0:
+            error('gcc version 10 or newer required.\n'
                   'Installed version:', env['CXXVERSION'])
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
@@ -637,17 +651,6 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
-        if compareVersions(env['CXXVERSION'], "9") < 0:
-            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
-            # in GCC version 8. As of GCC version 9, this is not required.
-            #
-            # In GCC 7 the `libstdc++fs`` library explicit linkage is also
-            # required but the `std::filesystem` is under the `experimental`
-            # namespace(`std::experimental::filesystem`).
-            #
-            # Note: gem5 does not support GCC versions < 7.
-            env.Append(LIBS=['stdc++fs'])
-
     elif env['CLANG']:
         if compareVersions(env['CXXVERSION'], "6") < 0:
             error('clang version 6 or newer required.\n'
@@ -665,7 +668,7 @@ for variant_path in variant_paths:
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
-        if compareVersions(env['CXXVERSION'], "11") < 0:
+        if not want_libcxx and compareVersions(env['CXXVERSION'], "11") < 0:
             # `libstdc++fs`` must be explicitly linked for `std::filesystem``
             # in clang versions 6 through 10.
             #
@@ -679,7 +682,7 @@ for variant_path in variant_paths:
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
         # opposed to libstdc++, as the later is dated.
-        if sys.platform == "darwin":
+        if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
 
@@ -688,20 +691,26 @@ for variant_path in variant_paths:
     if GetOption('with_ubsan'):
         sanitizers.append('undefined')
     if GetOption('with_asan'):
-        # Available for gcc >= 5 or llvm >= 3.1 both a requirement
-        # by the build system
-        sanitizers.append('address')
-        suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
-        suppressions_opt = 'suppressions=%s' % suppressions_file
-        suppressions_opts = ':'.join([suppressions_opt,
-                                      'print_suppressions=0'])
-        env['ENV']['LSAN_OPTIONS'] = suppressions_opts
-        print()
-        warning('To suppress false positive leaks, set the LSAN_OPTIONS '
-                'environment variable to "%s" when running gem5' %
-                suppressions_opts)
-        warning('LSAN_OPTIONS=%s' % suppressions_opts)
-        print()
+        if env['GCC']:
+            # Address sanitizer is not supported with GCC. Please see Github
+            # Issue https://github.com/gem5/gem5/issues/916 for more details.
+            warning("Address Sanitizer is not supported with GCC. "
+                    "This option will be ignored.")
+        else:
+            # Available for llvm >= 3.1. A requirement by the build system.
+            sanitizers.append('address')
+            suppressions_file = Dir('util').File('lsan-suppressions')\
+                                .get_abspath()
+            suppressions_opt = 'suppressions=%s' % suppressions_file
+            suppressions_opts = ':'.join([suppressions_opt,
+                                        'print_suppressions=0'])
+            env['ENV']['LSAN_OPTIONS'] = suppressions_opts
+            print()
+            warning('To suppress false positive leaks, set the LSAN_OPTIONS '
+                    'environment variable to "%s" when running gem5' %
+                    suppressions_opts)
+            warning('LSAN_OPTIONS=%s' % suppressions_opts)
+            print()
     if sanitizers:
         sanitizers = ','.join(sanitizers)
         if env['GCC'] or env['CLANG']:

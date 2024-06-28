@@ -148,11 +148,18 @@ class GPUCommandProcessor : public DmaVirtDevice
     // Typedefing dmaRead and dmaWrite function pointer
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     void initABI(HSAQueueEntry *task);
+    void sanityCheckAKC(AMDKernelCode *akc);
     HSAPacketProcessor *hsaPP;
     TranslationGenPtr translate(Addr vaddr, Addr size) override;
 
     // Running counter of dispatched tasks
     int dynamic_task_id = 0;
+
+    // Running counter of dispatched user (non-blit) kernels
+    int non_blit_kernel_id = 0;
+
+    // Skip all user (non-blit) kernels until reaching this kernel
+    int target_non_blit_kernel_id = 0;
 
     // Keep track of start times for task dispatches.
     std::unordered_map<Addr, Tick> dispatchStartTime;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021,2023 ARM Limited
+ * Copyright (c) 2020-2021,2023-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -157,6 +157,9 @@ structure (Sequencer, external = "yes") {
   void llscClearLocalMonitor();
 
   void evictionCallback(Addr);
+
+  void invL1Callback();
+
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
 }
@@ -186,6 +189,7 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   Addr tlbiTransactionUid,   desc="Unique identifier of the TLB shootdown operation that produced this request";
   bool isGLCSet,             default="false",desc="If flag is set, bypass GPU L1 cache";
   bool isSLCSet,             default="false",desc="If flag is set, bypass GPU L1 and L2 caches";
+  bool isSecure,             default="false",desc="If flag is set, request is in secure PA space";
 
   RequestPtr getRequestPtr();
 }

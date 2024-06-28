@@ -34,8 +34,8 @@ with X86 ISA in fs mode.
 import argparse
 
 from gem5.components.boards.x86_board import X86Board
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
 )
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.cpu_types import CPUTypes
@@ -63,7 +63,7 @@ requires(isa_required=ISA.X86)
 # Setup the cache hierarchy.
 # For classic, PrivateL1PrivateL2 and NoCache have been tested.
 # For Ruby, MESI_Two_Level and MI_example have been tested.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="32kB", l1i_size="32kB", l2_size="512kB"
 )
 
@@ -87,11 +87,11 @@ board.set_kernel_disk_workload(
     disk_image=obtain_resource("x86-ubuntu-18.04-img"),
 )
 
-sim = Simulator(board=board, full_system=True)
+sim = Simulator(board=board, full_system=True, max_ticks=10**6)
 print("Beginning simulation!")
 
-max_ticks = 10**6
-sim.run(max_ticks=max_ticks)
+
+sim.run()
 print(
     "Exiting @ tick {} because {}.".format(
         sim.get_current_tick(), sim.get_last_exit_event_cause()

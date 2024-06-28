@@ -732,6 +732,7 @@ X86KvmCPU::updateKvmState()
     updateKvmStateSRegs();
     updateKvmStateFPU();
     updateKvmStateMSRs();
+    updateKvmStateXCRs();
 
     DPRINTF(KvmContext, "X86KvmCPU::updateKvmState():\n");
     if (debug::KvmContext)
@@ -997,6 +998,24 @@ X86KvmCPU::updateKvmStateMSRs()
 }
 
 void
+X86KvmCPU::updateKvmStateXCRs()
+{
+    if (haveXCRs) {
+        struct kvm_xcrs xcrs;
+
+        xcrs.nr_xcrs = NumXCRegs;
+        xcrs.flags = 0;
+
+        for (int i = 0; i < xcrs.nr_xcrs; ++i) {
+            xcrs.xcrs[i].xcr = i;
+            xcrs.xcrs[i].value = tc->readMiscReg(misc_reg::xcr(i));
+        }
+
+        setXCRs(xcrs);
+    }
+}
+
+void
 X86KvmCPU::updateThreadContext()
 {
     struct kvm_regs regs;
@@ -1023,6 +1042,7 @@ X86KvmCPU::updateThreadContext()
         updateThreadContextFPU(fpu);
     }
     updateThreadContextMSRs();
+    updateThreadContextXCRs();
 
     // The M5 misc reg caches some values from other
     // registers. Writing to it with side effects causes it to be
@@ -1186,6 +1206,21 @@ X86KvmCPU::updateThreadContextMSRs()
                 entry->index, entry->data);
 
         tc->setMiscReg(X86ISA::msrMap.at(entry->index), entry->data);
+    }
+}
+
+void
+X86KvmCPU::updateThreadContextXCRs()
+{
+    if (haveXCRs) {
+        struct kvm_xcrs xcrs;
+
+        getXCRs(xcrs);
+
+        for (int i = 0; i < xcrs.nr_xcrs; ++i) {
+            tc->setMiscReg(misc_reg::xcr(xcrs.xcrs[i].xcr),
+                           xcrs.xcrs[i].value);
+        }
     }
 }
 

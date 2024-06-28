@@ -86,8 +86,6 @@ class GPUComputeDriver final : public EmulatedDriver
     doorbellSize()
     {
         switch (gfxVersion) {
-          case GfxVersion::gfx801:
-          case GfxVersion::gfx803:
           case GfxVersion::gfx902:
             return 4;
           case GfxVersion::gfx900:

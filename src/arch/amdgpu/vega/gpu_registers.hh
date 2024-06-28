@@ -106,10 +106,10 @@ namespace VegaISA
         REG_RESERVED_25 = 232,
         REG_RESERVED_26 = 233,
         REG_RESERVED_27 = 234,
-        REG_RESERVED_28 = 235,
-        REG_RESERVED_29 = 236,
-        REG_RESERVED_30 = 237,
-        REG_RESERVED_31 = 238,
+        REG_SHARED_BASE = 235,
+        REG_SHARED_LIMIT = 236,
+        REG_PRIVATE_BASE = 237,
+        REG_PRIVATE_LIMIT = 238,
         REG_RESERVED_32 = 239,
         REG_POS_HALF = 240,
         REG_NEG_HALF = 241,
@@ -129,7 +129,7 @@ namespace VegaISA
         REG_LDS_DIRECT = 254,
         REG_SRC_LITERAL = 255,
         REG_VGPR_MIN = 256,
-        REG_VGPR_MAX = 511
+        REG_VGPR_MAX = 767
     };
 
     constexpr size_t MaxOperandDwords(16);

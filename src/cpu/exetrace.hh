@@ -66,6 +66,7 @@ class ExeTracerRecord : public InstRecord
         : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
           tracer(_tracer)
     {
+        vectorLengthInBytes = _thread->getIsaPtr()->getVectorLengthInBytes();
     }
 
     void traceInst(const StaticInstPtr &inst, bool ran);
@@ -74,6 +75,7 @@ class ExeTracerRecord : public InstRecord
 
   protected:
     const ExeTracer &tracer;
+    int64_t vectorLengthInBytes;
 };
 
 class ExeTracer : public InstTracer

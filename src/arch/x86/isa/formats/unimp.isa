@@ -58,6 +58,7 @@ output header {{
             // don't call execute() (which panics) if we're on a
             // speculative path
             flags[IsNonSpeculative] = true;
+            flags[IsInvalid] = true;
         }
 
         Fault execute(ExecContext *, trace::InstRecord *) const override;

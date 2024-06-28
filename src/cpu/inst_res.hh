@@ -176,6 +176,13 @@ class InstResult
             return _regClass->valString(&reg);
         }
     }
+
+    std::string
+    asString(const int64_t& num_bytes) const
+    {
+        assert(blob());
+        return _regClass->valString(getBlob(), num_bytes);
+    }
 };
 
 } // namespace gem5

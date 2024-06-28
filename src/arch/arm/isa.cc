@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023 Arm Limited
+ * Copyright (c) 2010-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #include "arch/arm/mmu.hh"
 #include "arch/arm/pmu.hh"
 #include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/misc_accessors.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
@@ -72,6 +73,8 @@ namespace gem5
 namespace ArmISA
 {
 
+using namespace misc_regs;
+
 namespace
 {
 
@@ -80,7 +83,7 @@ RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
+ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop)
 {
     _regClasses.push_back(&flatIntRegClass);
@@ -106,6 +109,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     // Cache system-level properties
     if (FullSystem && system) {
         highestELIs64 = system->highestELIs64();
+        highestEL = system->highestEL();
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
         sveVL = system->sveVL();
@@ -114,6 +118,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
         release = system->releaseFS();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
+        highestEL = EL1; // ArmSystem::highestEL does the same
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
         sveVL = p.sve_vl_se;
@@ -267,6 +272,8 @@ ISA::redirectRegVHE(int misc_reg)
         return currEL() == EL2 ? MISCREG_CONTEXTIDR_EL2 : misc_reg;
       case MISCREG_CNTKCTL_EL1:
         return currEL() == EL2 ? MISCREG_CNTHCTL_EL2 : misc_reg;
+      case MISCREG_MPAM1_EL1:
+        return currEL() == EL2 ? MISCREG_MPAM2_EL2 : misc_reg;
       case MISCREG_CNTP_TVAL:
       case MISCREG_CNTP_TVAL_EL0:
         if (ELIsInHost(tc, currEL())) {
@@ -356,6 +363,8 @@ ISA::redirectRegVHE(int misc_reg)
         return MISCREG_CONTEXTIDR_EL1;
       case MISCREG_CNTKCTL_EL12:
         return MISCREG_CNTKCTL_EL1;
+      case MISCREG_MPAM1_EL12:
+        return MISCREG_MPAM1_EL1;
       // _EL02 registers
       case MISCREG_CNTP_TVAL_EL02:
         return MISCREG_CNTP_TVAL_EL0;
@@ -600,6 +609,23 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_HIFAR: // alias for secure IFAR
         return readMiscRegNoEffect(MISCREG_IFAR_S);
 
+      case MISCREG_MPAM1_EL1:
+        {
+            MPAM mpam1 = readMiscRegNoEffect(MISCREG_MPAM1_EL1);
+            mpam1.mpamEn = readRegisterNoEffect<MpamAccessor>(
+                tc, highestEL).mpamEn;
+            mpam1.el1.forcedNs = isSecure(tc) ?
+                readRegisterNoEffect<MpamAccessor>(tc, EL3).el3.forceNs : 0;
+            return mpam1;
+        }
+      case MISCREG_MPAM2_EL2:
+        {
+            MPAM mpam2 = readMiscRegNoEffect(MISCREG_MPAM2_EL2);
+            mpam2.mpamEn = readRegisterNoEffect<MpamAccessor>(
+                tc, highestEL).mpamEn;
+            return mpam2;
+        }
+
       case MISCREG_RNDR:
         tc->setReg(cc_reg::Nz, (RegVal)0);
         tc->setReg(cc_reg::C, (RegVal)0);
@@ -731,8 +757,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                 const uint32_t ones = (uint32_t)(-1);
                 CPACR cpacrMask = 0;
-                // Only cp10, cp11, and ase are implemented, nothing else should
-                // be writable
+                // Only cp10, cp11, and ase are implemented
+                // nothing else should be writable
                 cpacrMask.cp10 = ones;
                 cpacrMask.cp11 = ones;
                 cpacrMask.asedis = ones;
@@ -1541,6 +1567,8 @@ ISA::getCurSmeVecLenInBits() const
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
     SERIALIZE_MAPPING(miscRegs, miscRegName, NUM_PHYS_MISCREGS);
 }

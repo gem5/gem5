@@ -88,7 +88,7 @@ parser = argparse.ArgumentParser(
     description="An example configuration script to run the npb benchmarks."
 )
 
-npb_suite = obtain_resource("npb-benchmark-suite")
+npb_suite = obtain_resource("npb-benchmark-suite", resource_version="1.0.0")
 # The only positional argument accepted is the benchmark name in this script.
 
 parser.add_argument(

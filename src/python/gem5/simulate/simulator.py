@@ -26,6 +26,7 @@
 
 import os
 import sys
+from io import StringIO
 from pathlib import Path
 from typing import (
     Callable,
@@ -52,6 +53,8 @@ from .exit_event_generators import (
     exit_generator,
     reset_stats_generator,
     save_checkpoint_generator,
+    skip_generator,
+    spatter_exit_generator,
     switch_generator,
     warn_default_decorator,
 )
@@ -104,6 +107,8 @@ class Simulator:
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
         checkpoint_path: Optional[Path] = None,
+        max_ticks: Optional[int] = m5.MaxTick,
+        id: Optional[int] = None,
     ) -> None:
         """
         :param board: The board to be simulated.
@@ -138,6 +143,22 @@ class Simulator:
                                 the path is ``None``. **This parameter is deprecated.
                                 Please set the checkpoint when setting the board's
                                 workload**.
+        :param max_ticks: The maximum number of ticks to execute  in the
+                          simulation run before exiting with a ``MAX_TICK``
+                          exit event. If not set this value is to `m5.MaxTick`,
+                          the last value allowed in the tick variable. At
+                          present this is an unsigned 64-bit integer, and
+                          herefore is set to 2^4-1. Prior to intialization,
+                          max tickks can also be set via the `set_max_ticks`
+                          function.
+        :param id: An optional parameter specifying the ID of the simulation.
+        This is particularly useful when running muliple simuations in
+        parallel. The ID can be unique and descriptive of the simulation. If
+        not set, the ID will be a hash of the instantiated system and
+        Simulator configuration. Note, the latter means the ID only available
+        after the Simulator has been instantiated. The ID can be obtained via
+        the `get_id` method.
+
 
         ``on_exit_event`` usage notes
         ---------------------------
@@ -270,6 +291,11 @@ class Simulator:
 
         """
 
+        self.set_max_ticks(max_ticks)
+
+        if id:
+            self.set_id(id)
+
         # We specify a dictionary here outlining the default behavior for each
         # exit event. Each exit event is mapped to a generator.
         self._default_on_exit_dict = {
@@ -280,6 +306,12 @@ class Simulator:
                 "creating a checkpoint and continuing",
             )(),
             ExitEvent.FAIL: exit_generator(),
+            ExitEvent.SPATTER_EXIT: warn_default_decorator(
+                spatter_exit_generator,
+                "spatter exit",
+                "dumping and resetting stats after each sync point. "
+                "Note that there will be num_cores*sync_points spatter_exits.",
+            )(spatter_gen=board.get_processor()),
             ExitEvent.SWITCHCPU: warn_default_decorator(
                 switch_generator,
                 "switch CPU",
@@ -299,7 +331,7 @@ class Simulator:
             ExitEvent.MAX_TICK: exit_generator(),
             ExitEvent.SCHEDULED_TICK: exit_generator(),
             ExitEvent.SIMPOINT_BEGIN: warn_default_decorator(
-                reset_stats_generator,
+                skip_generator,
                 "simpoint begin",
                 "resetting the stats and continuing",
             )(),
@@ -358,6 +390,66 @@ class Simulator:
             )
 
         self._checkpoint_path = checkpoint_path
+
+    def set_id(self, id: str) -> None:
+        """Set the ID of the simulator.
+
+        As, in the caae of multisim, this ID will be used to create an
+        output subdirectory, there needs to be rules on what an ID can be.
+        For now, this function encoures that IDs can only be alphanumeric
+        characters with underscores  and dashes. Uunderscores and dashes cannot
+        be at the start or end of the ID and  the ID must start with at least
+        one letter.
+
+        :param id: The ID of the simulator.
+        """
+
+        if not id:
+            raise ValueError("ID cannot be an empty string.")
+
+        if not id[0].isalpha():
+            raise ValueError("ID must start with a letter.")
+
+        if not id[-1].isalnum():
+            raise ValueError(
+                "ID must end with a alphanumeric value (a digit "
+                "or a character)."
+            )
+
+        if not all(char.isalnum() or char in ["_", "-"] for char in id):
+            raise ValueError(
+                "ID can only contain alphanumeric characters, "
+                "underscores, and dashes."
+            )
+        self._id = id
+
+    def get_id(self) -> Optional[str]:
+        """
+        Returns the ID of the simulation. This is particularly useful when
+        running multiple simulations in parallel. The ID can be unique and
+        descriptive of the simulation. It is set via the contructor or the
+        `set_id` function. None if not set by either.
+        """
+
+        if hasattr(self, "_id") and self._id:
+            return self._id
+
+        return None
+
+    def set_max_ticks(self, max_tick: int) -> None:
+        """Set the absolute (not relative) maximum number of ticks to run the
+        simulation for. This is the maximum number of ticks to run the
+        simulation for before exiting with a ``MAX_TICK`` exit event.
+        """
+        if max_tick > m5.MaxTick:
+            raise ValueError(
+                f"Max ticks must be less than {m5.MaxTick}, not {max_tick}"
+            )
+        self._max_ticks = max_tick
+
+    def get_max_ticks(self) -> int:
+        assert hasattr(self, "_max_ticks"), "Max ticks not set"
+        return self._max_ticks
 
     def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """
@@ -470,6 +562,12 @@ class Simulator:
         """
         return self._last_exit_event.getCause()
 
+    def get_last_exit_event_code(self) -> int:
+        """
+        Returns the last exit event status code
+        """
+        return self._last_exit_event.getCode()
+
     def get_current_tick(self) -> int:
         """
         Returns the current tick.
@@ -498,6 +596,38 @@ class Simulator:
 
         return to_return
 
+    def override_outdir(self, new_outdir: Path) -> None:
+        """This function can be used to override the output directory locatiomn
+        Assiming the path passed is valid, the directory will be created
+        and set as the new output directory, thus overriding what was set at
+        the gem5 command line. Is there fore advised this function is used with
+        caution. Its primary use is for swaning multiple gem5 processes from
+        a gem5 process to allow the child processes their own output directory.
+
+        :param new_outdir: The new output directory to be used instead of that
+                           set at the gem5 command line.
+        """
+
+        if self._instantiated:
+            raise Exception(
+                "Cannot override the output directory after the simulation "
+                "has been instantiated."
+            )
+        from m5 import options
+
+        from _m5.core import setOutputDir
+
+        new_outdir.mkdir(parents=True, exist_ok=True)
+
+        if not new_outdir.exists():
+            raise Exception(f"Directory '{new_outdir}' does not exist")
+
+        if not new_outdir.is_dir():
+            raise Exception(f"'{new_outdir}' is not a directory")
+
+        options.outdir = str(new_outdir)
+        setOutputDir(options.outdir)
+
     def _instantiate(self) -> None:
         """
         This method will instantiate the board and carry out necessary
@@ -511,9 +641,11 @@ class Simulator:
             self._board._pre_instantiate()
 
             root = Root(
-                full_system=self._full_system
-                if self._full_system is not None
-                else self._board.is_fullsystem(),
+                full_system=(
+                    self._full_system
+                    if self._full_system is not None
+                    else self._board.is_fullsystem()
+                ),
                 board=self._board,
             )
 
@@ -557,7 +689,7 @@ class Simulator:
             # any final things.
             self._board._post_instantiate()
 
-    def run(self, max_ticks: int = m5.MaxTick) -> None:
+    def run(self, max_ticks: Optional[int] = None) -> None:
         """
         This function will start or continue the simulator run and handle exit
         events accordingly.
@@ -566,8 +698,16 @@ class Simulator:
                           run. If this ``max_ticks`` value is met, a ``MAX_TICK``
                           exit event is received, if another simulation exit
                           event is met the tick count is reset. This is the
-                          **maximum number of ticks per simulation run**.
+                          **maximum number of ticks per simulation run.
         """
+
+        if max_ticks and max_ticks != self._max_ticks:
+            warn(
+                "Max ticks has already been set prior to setting it through "
+                "the run call. In these cases the max ticks set through the "
+                "`run` function is used"
+            )
+            self.set_max_ticks(max_ticks)
 
         # Check to ensure no banned module has been imported.
         for banned_module in self._banned_modules.keys():
@@ -583,7 +723,7 @@ class Simulator:
 
         # This while loop will continue until an a generator yields True.
         while True:
-            self._last_exit_event = m5.simulate(max_ticks)
+            self._last_exit_event = m5.simulate(self.get_max_ticks())
 
             # Translate the exit event cause to the exit event enum.
             exit_enum = ExitEvent.translate_exit_status(

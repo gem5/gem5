@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2020 ARM Limited
+ * Copyright (c) 2013, 2018-2020, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@
 #include "base/types.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/SMMUv3.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/smmu_v3_transl.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
@@ -62,7 +63,7 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     requestPort(name() + ".request", *this),
     tableWalkPort(name() + ".walker", *this),
     controlPort(name() + ".control", *this, params.reg_map),
-    irqInterfaceEnable(params.irq_interface_enable),
+    eventqInterrupt(params.eventq_irq ? params.eventq_irq->get() : nullptr),
     tlb(params.tlb_entries, params.tlb_assoc, params.tlb_policy, this),
     configCache(params.cfg_entries, params.cfg_assoc, params.cfg_policy, this),
     ipaCache(params.ipa_entries, params.ipa_assoc, params.ipa_policy, this),
@@ -618,10 +619,9 @@ SMMUv3::writeControl(PacketPtr pkt)
             break;
         case offsetof(SMMURegs, irq_ctrl):
             assert(pkt->getSize() == sizeof(uint32_t));
-            if (irqInterfaceEnable) {
-                warn("SMMUv3::%s No support for interrupt sources", __func__);
-                regs.irq_ctrl = regs.irq_ctrlack = pkt->getLE<uint32_t>();
-            }
+            warn("SMMUv3::%s No support for GERROR and PRI interrupt sources",
+                 __func__);
+            regs.irq_ctrl = regs.irq_ctrlack = pkt->getLE<uint32_t>();
             break;
 
         case offsetof(SMMURegs, cr1):

@@ -63,6 +63,10 @@ class PM4PacketProcessor : public DmaVirtDevice
     std::unordered_map<uint16_t, PM4Queue *> queues;
     /* A map of PM4 queues based on doorbell offset */
     std::unordered_map<uint32_t, PM4Queue *> queuesMap;
+
+    int _ipId;
+    AddrRange _mmioRange;
+
   public:
     PM4PacketProcessor(const PM4PacketProcessorParams &p);
 
@@ -136,14 +140,14 @@ class PM4PacketProcessor : public DmaVirtDevice
     void decodeHeader(PM4Queue *q, PM4Header header);
 
     /* Methods that implement PM4 packets */
-    void writeData(PM4Queue *q, PM4WriteData *pkt);
+    void writeData(PM4Queue *q, PM4WriteData *pkt, PM4Header header);
     void writeDataDone(PM4Queue *q, PM4WriteData *pkt, Addr addr);
     void mapQueues(PM4Queue *q, PM4MapQueues *pkt);
     void unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt);
     void doneMQDWrite(Addr mqdAddr, Addr addr);
     void mapProcess(uint32_t pasid, uint64_t ptBase, uint32_t shMemBases);
-    void mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt);
-    void mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt);
+    void mapProcessV1(PM4Queue *q, PM4MapProcess *pkt);
+    void mapProcessV2(PM4Queue *q, PM4MapProcessV2 *pkt);
     void processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr, QueueDesc *mqd,
                     uint16_t vmid);
     void processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
@@ -188,6 +192,9 @@ class PM4PacketProcessor : public DmaVirtDevice
     void setRbDoorbellCntrl(uint32_t data);
     void setRbDoorbellRangeLo(uint32_t data);
     void setRbDoorbellRangeHi(uint32_t data);
+
+    int getIpId() const { return _ipId; }
+    AddrRange getMMIORange() const { return _mmioRange; }
 };
 
 } // namespace gem5

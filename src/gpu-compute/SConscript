@@ -38,7 +38,7 @@ SimObject('GPU.py', sim_objects=[
     'PoolManager', 'SimplePoolManager', 'DynPoolManager', 'RegisterFile',
     'ScalarRegisterFile', 'VectorRegisterFile', 'RegisterManager', 'Wavefront',
     'ComputeUnit', 'Shader', 'GPUComputeDriver', 'GPURenderDriver',
-    'GPUDispatcher', 'GPUCommandProcessor'],
+    'GPUDispatcher', 'GPUCommandProcessor', 'RegisterFileCache'],
     enums=['PrefetchType', 'GfxVersion', 'StorageClassType'])
 SimObject('GPUStaticInstFlags.py', enums=['GPUStaticInstFlags'])
 SimObject('LdsState.py', sim_objects=['LdsState'])
@@ -71,6 +71,7 @@ Source('dyn_pool_manager.cc')
 Source('simple_pool_manager.cc')
 Source('static_register_manager_policy.cc')
 Source('vector_register_file.cc')
+Source('register_file_cache.cc')
 Source('wavefront.cc')
 
 DebugFlag('GPUAgentDisp')
@@ -83,6 +84,7 @@ DebugFlag('GPUExec')
 DebugFlag('GPUFetch')
 DebugFlag('GPUInst')
 DebugFlag('GPUKernelInfo')
+DebugFlag('GPULDS')
 DebugFlag('GPUMem')
 DebugFlag('GPUPort')
 DebugFlag('GPUPrefetch')
@@ -96,6 +98,7 @@ DebugFlag('GPUSRF')
 DebugFlag('GPUSync')
 DebugFlag('GPUTLB')
 DebugFlag('GPUVRF')
+DebugFlag('GPURFC')
 DebugFlag('GPUVRFSched')
 DebugFlag('GPUWgLatency')
 DebugFlag('Predictor')
@@ -103,5 +106,5 @@ DebugFlag('WavefrontStack')
 
 CompoundFlag('GPUALL', ['GPUCoalescer', 'GPUDisp', 'GPUExec', 'GPUFetch',
                         'GPUMem', 'GPUPort', 'GPUSched', 'GPUSRF', 'GPUSync',
-                        'GPUTLB', 'GPUVRF', 'GPUWgLatency', 'GPUKernelInfo',
-                        'GPUInitAbi'])
+                        'GPUTLB', 'GPUVRF', 'GPURFC', 'GPUWgLatency',
+                        'GPUKernelInfo', 'GPUInitAbi', 'GPULDS'])

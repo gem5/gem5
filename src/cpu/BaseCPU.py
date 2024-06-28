@@ -302,17 +302,26 @@ class BaseCPU(ClockedObject):
 
         # Practically speaking, these ports will exist on the x86 interrupt
         # controller class.
+        # Note: _uncached_interrupt_response_ports is a *class* variable
+        # not a *instance* variable. Thus, we cannot use `extend` here.
         if "pio" in self.ArchInterrupts._ports:
             self._uncached_interrupt_response_ports = (
-                self._uncached_interrupt_response_ports + ["interrupts[0].pio"]
+                self._uncached_interrupt_response_ports
+                + [f"interrupts[{i}].pio" for i in range(self.numThreads)]
             )
         if "int_responder" in self.ArchInterrupts._ports:
             self._uncached_interrupt_response_ports = (
                 self._uncached_interrupt_response_ports
-                + ["interrupts[0].int_responder"]
+                + [
+                    f"interrupts[{i}].int_responder"
+                    for i in range(self.numThreads)
+                ]
             )
         if "int_requestor" in self.ArchInterrupts._ports:
             self._uncached_interrupt_request_ports = (
                 self._uncached_interrupt_request_ports
-                + ["interrupts[0].int_requestor"]
+                + [
+                    f"interrupts[{i}].int_requestor"
+                    for i in range(self.numThreads)
+                ]
             )

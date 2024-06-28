@@ -95,7 +95,7 @@ void dump_cached_report(const char* ctx)
 
 SC_MODULE( M )
 {
-    sc_in<bool> emit;  // 1: emit, 0: dump cahced report
+    sc_in<bool> emit;  // 1: emit, 0: dump cached report
     sc_in<const char*> id;
     sc_in<bool> ofs; 
     sc_event t1, t2, m1, m2;

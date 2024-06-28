@@ -36,9 +36,12 @@
 #include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
+#include "debug/GPUDisp.hh"
+#include "debug/GPUInitAbi.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 #include "mem/se_translating_port_proxy.hh"
@@ -47,6 +50,7 @@
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
+#include "sim/sim_exit.hh"
 #include "sim/syscall_emul_buf.hh"
 
 namespace gem5
@@ -54,7 +58,8 @@ namespace gem5
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
-      walker(p.walker), hsaPP(p.hsapp)
+      walker(p.walker), hsaPP(p.hsapp),
+      target_non_blit_kernel_id(p.target_non_blit_kernel_id)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -117,7 +122,25 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                                        Addr host_pkt_addr)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
-    assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
+    // The kernel object should be aligned to a 64B boundary, but not
+    // necessarily a cache line boundary.
+    unsigned akc_alignment_granularity = 64;
+    assert(!(disp_pkt->kernel_object & (akc_alignment_granularity - 1)));
+
+    /**
+     * Make sure there is not a race condition with invalidates in the L2
+     * cache. The full system driver may write directly to memory using
+     * large BAR while the L2 cache is allowed to keep data in the valid
+     * state between kernel launches. This is a rare event but is required
+     * for correctness.
+     */
+    if (shader()->getNumOutstandingInvL2s() > 0) {
+        DPRINTF(GPUCommandProc,
+                "Deferring kernel launch due to outstanding L2 invalidates\n");
+        shader()->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
+
+        return;
+    }
 
     /**
      * Need to use a raw pointer for DmaVirtDevice API. This is deleted
@@ -200,7 +223,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
             // Read from GPU memory manager one cache line at a time to prevent
             // rare cases where the AKC spans two memory pages.
             ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                               system()->cacheLineSize());
+                               akc_alignment_granularity);
             for (; !gen.done(); gen.next()) {
                 Addr chunk_addr = gen.addr();
                 int vmid = 1;
@@ -211,10 +234,13 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
                 Request::Flags flags = Request::PHYSICAL;
                 RequestPtr request = std::make_shared<Request>(chunk_addr,
-                    system()->cacheLineSize(), flags,
+                    akc_alignment_granularity, flags,
                     walker->getDevRequestor());
                 Packet *readPkt = new Packet(request, MemCmd::ReadReq);
                 readPkt->dataStatic((uint8_t *)akc + gen.complete());
+                // If the request spans two device memories, the device memory
+                // returned will be null.
+                assert(system()->getDeviceMemory(readPkt) != nullptr);
                 system()->getDeviceMemory(readPkt)->access(readPkt);
                 delete readPkt;
             }
@@ -229,6 +255,8 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
                                         uint32_t queue_id, Addr host_pkt_addr)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
+
+    sanityCheckAKC(akc);
 
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
         "kernel object\n", akc->kernel_code_entry_byte_offset);
@@ -250,10 +278,13 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
      * APUs to implement asynchronous memcopy operations from 2 pointers in
      * host memory.  I have no idea what BLIT stands for.
      * */
-    if (akc->runtime_loader_kernel_symbol) {
+    bool is_blit_kernel;
+    if (!disp_pkt->completion_signal) {
         kernel_name = "Some kernel";
+        is_blit_kernel = false;
     } else {
         kernel_name = "Blit kernel";
+        is_blit_kernel = true;
     }
 
     DPRINTF(GPUKernelInfo, "Kernel name: %s\n", kernel_name.c_str());
@@ -263,6 +294,38 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
     HSAQueueEntry *task = new HSAQueueEntry(kernel_name, queue_id,
         dynamic_task_id, raw_pkt, akc, host_pkt_addr, machine_code_addr,
         gfxVersion);
+
+    // The driver expects the start time to be in ns
+    Tick start_ts = curTick() / sim_clock::as_int::ns;
+    dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+
+    // Potentially skip a non-blit kernel
+    if (!is_blit_kernel && (non_blit_kernel_id < target_non_blit_kernel_id)) {
+        DPRINTF(GPUCommandProc, "Skipping non-blit kernel %i (Task ID: %i)\n",
+                non_blit_kernel_id, dynamic_task_id);
+
+        // Notify the HSA PP that this kernel is complete
+        hsaPacketProc().finishPkt(task->dispPktPtr(), task->queueId());
+        if (task->completionSignal()) {
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete with completion "
+                    "signal! Addr: %d\n", task->completionSignal());
+
+            sendCompletionSignal(task->completionSignal());
+        } else {
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete! No completion "
+                "signal\n");
+        }
+
+        ++dynamic_task_id;
+        ++non_blit_kernel_id;
+
+        delete akc;
+
+        // Notify the run script that a kernel has been skipped
+        exitSimLoop("Skipping GPU Kernel");
+
+        return;
+    }
 
     DPRINTF(GPUCommandProc, "Task ID: %i Got AQL: wg size (%dx%dx%d), "
         "grid size (%dx%dx%d) kernarg addr: %#x, completion "
@@ -279,10 +342,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
     initABI(task);
     ++dynamic_task_id;
-
-    // The driver expects the start time to be in ns
-    Tick start_ts = curTick() / sim_clock::as_int::ns;
-    dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+    if (!is_blit_kernel) ++non_blit_kernel_id;
 
     delete akc;
 }
@@ -614,6 +674,113 @@ GPUCommandProcessor::initABI(HSAQueueEntry *task)
 
     dmaReadVirt(hostReadIdxPtr + sizeof(hostReadIdxPtr),
         sizeof(uint32_t), cb, &cb->dmaBuffer);
+}
+
+void
+GPUCommandProcessor::sanityCheckAKC(AMDKernelCode *akc)
+{
+    DPRINTF(GPUInitAbi, "group_segment_fixed_size: %d\n",
+            akc->group_segment_fixed_size);
+    DPRINTF(GPUInitAbi, "private_segment_fixed_size: %d\n",
+            akc->private_segment_fixed_size);
+    DPRINTF(GPUInitAbi, "kernarg_size: %d\n", akc->kernarg_size);
+    DPRINTF(GPUInitAbi, "kernel_code_entry_byte_offset: %d\n",
+            akc->kernel_code_entry_byte_offset);
+    DPRINTF(GPUInitAbi, "accum_offset: %d\n", akc->accum_offset);
+    DPRINTF(GPUInitAbi, "tg_split: %d\n", akc->tg_split);
+    DPRINTF(GPUInitAbi, "granulated_workitem_vgpr_count: %d\n",
+            akc->granulated_workitem_vgpr_count);
+    DPRINTF(GPUInitAbi, "granulated_wavefront_sgpr_count: %d\n",
+            akc->granulated_wavefront_sgpr_count);
+    DPRINTF(GPUInitAbi, "priority: %d\n", akc->priority);
+    DPRINTF(GPUInitAbi, "float_mode_round_32: %d\n", akc->float_mode_round_32);
+    DPRINTF(GPUInitAbi, "float_mode_round_16_64: %d\n",
+            akc->float_mode_round_16_64);
+    DPRINTF(GPUInitAbi, "float_mode_denorm_32: %d\n",
+            akc->float_mode_denorm_32);
+    DPRINTF(GPUInitAbi, "float_mode_denorm_16_64: %d\n",
+            akc->float_mode_denorm_16_64);
+    DPRINTF(GPUInitAbi, "priv: %d\n", akc->priv);
+    DPRINTF(GPUInitAbi, "enable_dx10_clamp: %d\n", akc->enable_dx10_clamp);
+    DPRINTF(GPUInitAbi, "debug_mode: %d\n", akc->debug_mode);
+    DPRINTF(GPUInitAbi, "enable_ieee_mode: %d\n", akc->enable_ieee_mode);
+    DPRINTF(GPUInitAbi, "bulky: %d\n", akc->bulky);
+    DPRINTF(GPUInitAbi, "cdbg_user: %d\n", akc->cdbg_user);
+    DPRINTF(GPUInitAbi, "fp16_ovfl: %d\n", akc->fp16_ovfl);
+    DPRINTF(GPUInitAbi, "wgp_mode: %d\n", akc->wgp_mode);
+    DPRINTF(GPUInitAbi, "mem_ordered: %d\n", akc->mem_ordered);
+    DPRINTF(GPUInitAbi, "fwd_progress: %d\n", akc->fwd_progress);
+    DPRINTF(GPUInitAbi, "enable_private_segment: %d\n",
+            akc->enable_private_segment);
+    DPRINTF(GPUInitAbi, "user_sgpr_count: %d\n", akc->user_sgpr_count);
+    DPRINTF(GPUInitAbi, "enable_trap_handler: %d\n", akc->enable_trap_handler);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_x: %d\n",
+            akc->enable_sgpr_workgroup_id_x);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_y: %d\n",
+            akc->enable_sgpr_workgroup_id_y);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_z: %d\n",
+            akc->enable_sgpr_workgroup_id_z);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_info: %d\n",
+            akc->enable_sgpr_workgroup_info);
+    DPRINTF(GPUInitAbi, "enable_vgpr_workitem_id: %d\n",
+            akc->enable_vgpr_workitem_id);
+    DPRINTF(GPUInitAbi, "enable_exception_address_watch: %d\n",
+            akc->enable_exception_address_watch);
+    DPRINTF(GPUInitAbi, "enable_exception_memory: %d\n",
+            akc->enable_exception_memory);
+    DPRINTF(GPUInitAbi, "granulated_lds_size: %d\n", akc->granulated_lds_size);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_invalid_operation: %d\n",
+            akc->enable_exception_ieee_754_fp_invalid_operation);
+    DPRINTF(GPUInitAbi, "enable_exception_fp_denormal_source: %d\n",
+            akc->enable_exception_fp_denormal_source);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_division_by_zero: %d\n",
+            akc->enable_exception_ieee_754_fp_division_by_zero);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_overflow: %d\n",
+            akc->enable_exception_ieee_754_fp_overflow);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_underflow: %d\n",
+            akc->enable_exception_ieee_754_fp_underflow);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_inexact: %d\n",
+            akc->enable_exception_ieee_754_fp_inexact);
+    DPRINTF(GPUInitAbi, "enable_exception_int_divide_by_zero: %d\n",
+            akc->enable_exception_int_divide_by_zero);
+    DPRINTF(GPUInitAbi, "enable_sgpr_private_segment_buffer: %d\n",
+            akc->enable_sgpr_private_segment_buffer);
+    DPRINTF(GPUInitAbi, "enable_sgpr_dispatch_ptr: %d\n",
+            akc->enable_sgpr_dispatch_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_queue_ptr: %d\n",
+            akc->enable_sgpr_queue_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_kernarg_segment_ptr: %d\n",
+            akc->enable_sgpr_kernarg_segment_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_dispatch_id: %d\n",
+            akc->enable_sgpr_dispatch_id);
+    DPRINTF(GPUInitAbi, "enable_sgpr_flat_scratch_init: %d\n",
+            akc->enable_sgpr_flat_scratch_init);
+    DPRINTF(GPUInitAbi, "enable_sgpr_private_segment_size: %d\n",
+            akc->enable_sgpr_private_segment_size);
+    DPRINTF(GPUInitAbi, "enable_wavefront_size32: %d\n",
+            akc->enable_wavefront_size32);
+    DPRINTF(GPUInitAbi, "use_dynamic_stack: %d\n", akc->use_dynamic_stack);
+    DPRINTF(GPUInitAbi, "kernarg_preload_spec_length: %d\n",
+            akc->kernarg_preload_spec_length);
+    DPRINTF(GPUInitAbi, "kernarg_preload_spec_offset: %d\n",
+            akc->kernarg_preload_spec_offset);
+
+
+    // Check for features not implemented in gem5
+    fatal_if(akc->wgp_mode, "WGP mode not supported\n");
+    fatal_if(akc->mem_ordered, "Memory ordering control not supported\n");
+    fatal_if(akc->fwd_progress, "Fwd_progress mode not supported\n");
+
+
+    // Warn on features that gem5 will ignore
+    warn_if(akc->fp16_ovfl, "FP16 clamp control bit ignored\n");
+    warn_if(akc->bulky, "Bulky code object bit ignored\n");
+    // TODO: All the IEEE bits
+
+    warn_if(akc->kernarg_preload_spec_length ||
+            akc->kernarg_preload_spec_offset,
+            "Kernarg preload not implemented\n");
+    warn_if(akc->tg_split, "TG split not implemented\n");
 }
 
 System*

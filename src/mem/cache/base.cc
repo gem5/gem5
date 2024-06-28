@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2018-2019, 2023 ARM Limited
+ * Copyright (c) 2012-2013, 2018-2019, 2023-2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,7 @@
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
 #include "mem/cache/tags/compressed_tags.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
@@ -86,6 +87,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
       compressor(p.compressor),
+      partitionManager(p.partitioning_manager),
       prefetcher(p.prefetcher),
       writeAllocator(p.write_allocator),
       writebackClean(p.writeback_clean),
@@ -1030,7 +1032,8 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         CacheBlk *victim = nullptr;
         if (replaceExpansions || is_data_contraction) {
             victim = tags->findVictim(regenerateBlkAddr(blk),
-                blk->isSecure(), compression_size, evict_blks);
+                blk->isSecure(), compression_size, evict_blks,
+                blk->getPartitionId());
 
             // It is valid to return nullptr if there is no victim
             if (!victim) {
@@ -1639,10 +1642,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         blk_size_bits = comp_data->getSizeBits();
     }
 
+    // get partitionId from Packet
+    const auto partition_id = partitionManager ?
+        partitionManager->readPacketPartitionID(pkt) : 0;
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
     CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,
-                                        evict_blks);
+                                        evict_blks, partition_id);
 
     // It is valid to return nullptr if there is no victim
     if (!victim)

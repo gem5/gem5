@@ -37,6 +37,7 @@
 #include "base/trace.hh"
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_device.hh"
 #include "mem/packet_access.hh"
 
 namespace gem5
@@ -51,6 +52,35 @@ AMDGPUVM::AMDGPUVM()
     for (int i = 0; i < AMDGPU_VM_COUNT; ++i) {
         memset(&vmContexts[0], 0, sizeof(AMDGPUVMContext));
     }
+
+    for (int i = 0; i < NUM_MMIO_RANGES; ++i) {
+        mmioRanges[i] = AddrRange();
+    }
+}
+
+void
+AMDGPUVM::setMMIOAperture(mmio_range_t mmio_aperture, AddrRange range)
+{
+    mmioRanges[mmio_aperture] = range;
+}
+
+AddrRange
+AMDGPUVM::getMMIORange(mmio_range_t mmio_aperture)
+{
+    return mmioRanges[mmio_aperture];
+}
+
+const AddrRange&
+AMDGPUVM::getMMIOAperture(Addr offset)
+{
+    for (int i = 0; i < NUM_MMIO_RANGES; ++i) {
+        if (mmioRanges[i].contains(offset)) {
+            return mmioRanges[i];
+        }
+    }
+
+    // Default to NBIO
+    return mmioRanges[NBIO_MMIO_RANGE];
 }
 
 Addr

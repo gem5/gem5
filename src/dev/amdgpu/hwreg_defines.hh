@@ -44,7 +44,7 @@ namespace gem5
 
 /*
  * Further descriptions can be found in the "Hardware Register Values" table
- * in any of the GCN3, Vega, CDNA1, CNDA2, or RDNA ISA manuals.
+ * in any of the Vega, CDNA, or RDNA ISA manuals.
  */
 enum amdgpu_hwreg
 {

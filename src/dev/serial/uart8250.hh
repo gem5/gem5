@@ -215,6 +215,7 @@ class Uart8250 : public Uart
 
     void processIntrEvent(int intrBit);
     void scheduleIntr(Event *event);
+    void clearIntr(int intrBit);
 
     EventFunctionWrapper txIntrEvent;
     EventFunctionWrapper rxIntrEvent;

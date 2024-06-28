@@ -198,8 +198,12 @@ class ChanneledMemory(AbstractMemorySystem):
             raise Exception(
                 "Multi channel memory controller requires a single range "
                 "which matches the memory's size.\n"
-                f"The range size: {range[0].size()}\n"
+                f"The range size: {ranges[0].size()}\n"
                 f"This memory's size: {self._size}"
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()
+
+    @overrides(AbstractMemorySystem)
+    def get_uninterleaved_range(self) -> List[AddrRange]:
+        return [self._mem_range]

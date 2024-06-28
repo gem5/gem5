@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2023 Arm Limited
+ * Copyright (c) 2010, 2012-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -90,6 +90,7 @@ namespace ArmISA
 
         // Cached copies of system-level properties
         bool highestELIs64;
+        ExceptionLevel highestEL;
         bool haveLargeAsid64;
         uint8_t physAddrRange;
 
@@ -434,6 +435,8 @@ namespace ArmISA
 
         void globalClearExclusive() override;
         void globalClearExclusive(ExecContext *xc) override;
+
+        int64_t getVectorLengthInBytes() const override { return sveVL * 16; }
     };
 
 } // namespace ArmISA

@@ -41,12 +41,18 @@ namespace RiscvISA
 {
 
 BareMetal::BareMetal(const Params &p) : Workload(p),
-    _isBareMetal(p.bare_metal), _resetVect(p.reset_vect),
-    bootloader(loader::createObjectFile(p.bootloader))
+    _isBareMetal(p.bare_metal),
+    bootloader(loader::createObjectFile(p.bootloader)),
+    semihosting(p.semihosting)
 {
     fatal_if(!bootloader, "Could not load bootloader file %s.", p.bootloader);
-    _resetVect = bootloader->entryPoint();
     bootloaderSymtab = bootloader->symtab();
+
+    if (p.auto_reset_vect) {
+        _resetVect = bootloader->entryPoint();
+    } else {
+        _resetVect = p.reset_vect;
+    }
 
     loader::debugSymbolTable.insert(bootloaderSymtab);
 }

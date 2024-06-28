@@ -4,6 +4,7 @@
 # Copyright (c) 2014 Sven Karlsson
 # Copyright (c) 2020 Barkhausen Institut
 # Copyright (c) 2021 Huawei International
+# Copyright (c) 2024 University of Rostock
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -48,6 +49,7 @@ if env['CONF']['USE_RISCV_ISA']:
 
 Source('decoder.cc', tags='riscv isa')
 Source('faults.cc', tags='riscv isa')
+Source('interrupts.cc', tags='riscv isa')
 Source('isa.cc', tags='riscv isa')
 Source('process.cc', tags='riscv isa')
 Source('pagetable.cc', tags='riscv isa')
@@ -56,6 +58,7 @@ Source('pma_checker.cc', tags='riscv isa')
 Source('pmp.cc', tags='riscv isa')
 Source('reg_abi.cc', tags='riscv isa')
 Source('remote_gdb.cc', tags='riscv isa')
+Source('semihosting.cc', tags='riscv isa')
 Source('tlb.cc', tags='riscv isa')
 
 Source('linux/se_workload.cc', tags='riscv isa')
@@ -63,7 +66,8 @@ Source('linux/fs_workload.cc', tags='riscv isa')
 
 Source('bare_metal/fs_workload.cc', tags='riscv isa')
 
-SimObject('PMAChecker.py', sim_objects=['PMAChecker'], tags='riscv isa')
+SimObject('PMAChecker.py', sim_objects=['PMAChecker', 'BasePMAChecker'],
+    tags='riscv isa')
 SimObject('PMP.py', sim_objects=['PMP'], tags='riscv isa')
 SimObject('RiscvDecoder.py', sim_objects=['RiscvDecoder'], tags='riscv isa')
 SimObject('RiscvFsWorkload.py',
@@ -75,6 +79,8 @@ SimObject('RiscvInterrupts.py', sim_objects=['RiscvInterrupts'],
 SimObject('RiscvISA.py', sim_objects=['RiscvISA'],
     enums=['RiscvType', 'PrivilegeModeSet'], tags='riscv isa')
 SimObject('RiscvMMU.py', sim_objects=['RiscvMMU'], tags='riscv isa')
+SimObject('RiscvSemihosting.py', sim_objects=['RiscvSemihosting'],
+          tags='riscv isa')
 SimObject('RiscvSeWorkload.py', sim_objects=[
     'RiscvSEWorkload', 'RiscvEmuLinux'], tags='riscv isa')
 SimObject('RiscvTLB.py', sim_objects=['RiscvPagetableWalker', 'RiscvTLB'],

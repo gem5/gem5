@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Arm Limited
+ * Copyright (c) 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -430,6 +430,7 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   } else {
     tbe.txnId := in_msg.txnId;
   }
+  tbe.ns := in_msg.ns;
 
   assert(tbe.is_snp_tbe == false);
   assert(tbe.is_repl_tbe == false);
@@ -449,6 +450,8 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
 
   tbe.atomic_op.clear();
   tbe.atomic_op.orMask(in_msg.atomic_op);
+  tbe.atomic_to_be_done := false;
+  tbe.atomic_to_be_wb := false;
 
   tbe.use_DMT := false;
   tbe.use_DCT := false;
@@ -796,13 +799,15 @@ bool needCacheEntry(CHIRequestType req_type,
       (enable_DMT && is_invalid(dir_entry) &&
        ((req_type == CHIRequestType:ReadShared) ||
         (req_type == CHIRequestType:ReadUnique) ||
+        (req_type == CHIRequestType:MakeReadUnique) ||
         (req_type == CHIRequestType:ReadOnce)))) {
     return false;
   } else {
     return is_prefetch ||
            (alloc_on_readshared && ((req_type == CHIRequestType:ReadShared) ||
                                     (req_type == CHIRequestType:ReadNotSharedDirty))) ||
-           (alloc_on_readunique && (req_type == CHIRequestType:ReadUnique)) ||
+           (alloc_on_readunique && ((req_type == CHIRequestType:ReadUnique) ||
+                                   (req_type == CHIRequestType:MakeReadUnique))) ||
            (alloc_on_readonce && (req_type == CHIRequestType:ReadOnce)) ||
            (alloc_on_writeback && ((req_type == CHIRequestType:WriteBackFull) ||
                                    (req_type == CHIRequestType:WriteCleanFull) ||
@@ -814,7 +819,7 @@ bool needCacheEntry(CHIRequestType req_type,
                                  (req_type == CHIRequestType:AtomicStore))) ||
            (alloc_on_seq_line_write && (req_type == CHIRequestType:StoreLine)) ||
            (alloc_on_atomic && ((req_type == CHIRequestType:AtomicReturn) ||
-                               (req_type == CHIRequestType:AtomicNoReturn)));
+                                 (req_type == CHIRequestType:AtomicNoReturn)));
   }
 }
 
@@ -822,6 +827,7 @@ bool needDeallocCacheEntry(CHIRequestType req_type) {
   return (dealloc_on_shared && ((req_type == CHIRequestType:ReadShared) ||
                                 (req_type == CHIRequestType:ReadNotSharedDirty))) ||
          (dealloc_on_unique && ((req_type == CHIRequestType:ReadUnique) ||
+                                (req_type == CHIRequestType:MakeReadUnique) ||
                                 (req_type == CHIRequestType:CleanUnique)));
 }
 
@@ -1183,6 +1189,7 @@ bool isReadReqType(CHIRequestType type) {
   if (type == CHIRequestType:Load ||
       type == CHIRequestType:ReadShared ||
       type == CHIRequestType:ReadNotSharedDirty ||
+      type == CHIRequestType:MakeReadUnique ||
       type == CHIRequestType:ReadOnce) {
     return true;
   }
@@ -1194,7 +1201,16 @@ bool isWriteReqType(CHIRequestType type) {
       type == CHIRequestType:StoreLine ||
       type == CHIRequestType:WriteUniquePtl ||
       type == CHIRequestType:WriteUniqueFull ||
+      type == CHIRequestType:WriteUniqueZero ||
       type == CHIRequestType:ReadUnique) {
+    return true;
+  }
+  return false;
+}
+
+bool isStashReqType(CHIRequestType type) {
+  if (type == CHIRequestType:StashOnceShared ||
+      type == CHIRequestType:StashOnceUnique) {
     return true;
   }
   return false;
@@ -1232,6 +1248,8 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     return Event:CleanUnique;
   } else if (type == CHIRequestType:ReadOnce) {
     return Event:ReadOnce;
+  } else if (type == CHIRequestType:MakeReadUnique) {
+      return Event:MakeReadUnique;
   } else if (type == CHIRequestType:Evict) {
     return Event:Evict;
   } else if (type == CHIRequestType:WriteBackFull) {
@@ -1254,18 +1272,28 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     } else {
       return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
     }
+  } else if (type == CHIRequestType:WriteUniqueZero) {
+      return Event:WriteUniqueZero;
+  } else if (type == CHIRequestType:StashOnceShared) {
+      return Event:StashOnceShared;
+  } else if (type == CHIRequestType:StashOnceUnique) {
+      return Event:StashOnceUnique;
   } else if (type == CHIRequestType:DvmTlbi_Initiate) {
     return Event:DvmTlbi_Initiate;
   } else if (type == CHIRequestType:DvmSync_Initiate) {
     return Event:DvmSync_Initiate;
   } else if (type == CHIRequestType:AtomicReturn){
-    if (is_HN) {
+    if (is_HN && alloc_on_atomic) {
+      return Event:AtomicReturn_PoC_Alloc;
+    } else if (is_HN){
       return Event:AtomicReturn_PoC;
     } else {
       return Event:AtomicReturn;
     }
   } else if (type == CHIRequestType:AtomicNoReturn){
-    if (is_HN) {
+    if (is_HN && alloc_on_atomic) {
+      return Event:AtomicNoReturn_PoC_Alloc;
+    } else if (is_HN){
       return Event:AtomicNoReturn_PoC;
     } else {
       return Event:AtomicNoReturn;

@@ -92,7 +92,7 @@ TranslatingPortProxy::tryReadBlob(Addr addr, void *p, uint64_t size) const
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
             addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
-            PortProxy::readBlobPhys(range.paddr, flags, p, range.size);
+            PortProxy::readBlobPhys(range.paddr, range.flags, p, range.size);
             p = static_cast<uint8_t *>(p) + range.size;
     });
 }
@@ -105,7 +105,7 @@ TranslatingPortProxy::tryWriteBlob(
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
             addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
-            PortProxy::writeBlobPhys(range.paddr, flags, p, range.size);
+            PortProxy::writeBlobPhys(range.paddr, range.flags, p, range.size);
             p = static_cast<const uint8_t *>(p) + range.size;
     });
 }
@@ -117,7 +117,7 @@ TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, uint64_t size) const
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
             addr, size, _tc, mode, flags),
         [this, v](const auto &range) {
-            PortProxy::memsetBlobPhys(range.paddr, flags, v, range.size);
+            PortProxy::memsetBlobPhys(range.paddr, range.flags, v, range.size);
     });
 }
 

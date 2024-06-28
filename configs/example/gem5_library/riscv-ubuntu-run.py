@@ -57,12 +57,12 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.RISCV)
 
 # With RISCV, we use simple caches.
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
 )
 
 # Here we setup the parameters of the l1 and l2 caches.
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
 )
 
@@ -88,7 +88,9 @@ board = RiscvBoard(
 # Ubuntu 20.04. Once the system successfully boots it encounters an `m5_exit`
 # instruction which stops the simulation. When the simulation has ended you may
 # inspect `m5out/system.pc.com_1.device` to see the stdout.
-board.set_workload(obtain_resource("riscv-ubuntu-20.04-boot"))
+board.set_workload(
+    obtain_resource("riscv-ubuntu-20.04-boot", resource_version="3.0.0")
+)
 
 simulator = Simulator(board=board)
 simulator.run()

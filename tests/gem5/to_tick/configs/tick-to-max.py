@@ -98,7 +98,9 @@ motherboard = SimpleBoard(
 
 # Set the workload
 binary = obtain_resource(
-    "x86-hello64-static", resource_directory=args.resource_directory
+    "x86-hello64-static",
+    resource_directory=args.resource_directory,
+    resource_version="1.0.0",
 )
 motherboard.set_se_binary_workload(binary)
 
@@ -110,9 +112,9 @@ if args.set_ticks_before:
 simulator = Simulator(board=motherboard)
 
 if args.set_ticks_at_execution:
-    simulator.run(max_ticks=args.set_ticks_at_execution)
-else:
-    simulator.run()
+    simulator.set_max_ticks(args.set_ticks_at_execution)
+
+simulator.run()
 
 # Set the max ticks after the simulator run.
 if args.set_ticks_after:

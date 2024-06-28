@@ -240,6 +240,8 @@ namespace RiscvISA
     [MISCREG_HPMCOUNTER29H]  = "HPMCOUNTER29H",
     [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
+
+    [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
 
 namespace
@@ -254,9 +256,8 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p),
-    _rvType(p.riscv_type), checkAlignment(p.check_alignment),
-    enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
+ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
+    _rvType(p.riscv_type), enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
     _privilegeModeSet(p.privilege_mode_set)
 {
     _regClasses.push_back(&intRegClass);
@@ -276,7 +277,7 @@ ISA::ISA(const Params &p) : BaseISA(p),
             p.vlen, p.elen);
 
 
-    miscRegFile.resize(NUM_MISCREGS);
+    miscRegFile.resize(NUM_PHYS_MISCREGS);
     clear();
 }
 
@@ -304,7 +305,7 @@ ISA::copyRegsFrom(ThreadContext *src)
     }
 
     // Copying Misc Regs
-    for (int i = 0; i < NUM_MISCREGS; i++)
+    for (int i = 0; i < NUM_PHYS_MISCREGS; i++)
         tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     // Lastly copy PC/NPC
@@ -409,7 +410,7 @@ RegVal
 ISA::readMiscRegNoEffect(RegIndex idx) const
 {
     // Illegal CSR
-    panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
+    panic_if(idx > NUM_PHYS_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Reading MiscReg %s (%d): %#x.\n",
             MiscRegNames[idx], idx, miscRegFile[idx]);
     return miscRegFile[idx];
@@ -481,11 +482,27 @@ ISA::readMiscReg(RegIndex idx)
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
             return ic->readIP();
         }
+      case MISCREG_UIP:
+        {
+            return readMiscReg(MISCREG_IP) & UI_MASK[getPrivilegeModeSet()];
+        }
+      case MISCREG_SIP:
+        {
+            return readMiscReg(MISCREG_IP) & SI_MASK[getPrivilegeModeSet()];
+        }
       case MISCREG_IE:
         {
             auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
             return ic->readIE();
+        }
+      case MISCREG_UIE:
+        {
+            return readMiscReg(MISCREG_IE) & UI_MASK[getPrivilegeModeSet()];
+        }
+      case MISCREG_SIE:
+        {
+            return readMiscReg(MISCREG_IE) & SI_MASK[getPrivilegeModeSet()];
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
@@ -550,6 +567,16 @@ ISA::readMiscReg(RegIndex idx)
 
             return readMiscRegNoEffect(idx);
         }
+      case MISCREG_USTATUS:
+        {
+           return readMiscReg(MISCREG_STATUS) &
+                  USTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+        }
+      case MISCREG_SSTATUS:
+        {
+           return readMiscReg(MISCREG_STATUS) &
+                  SSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+        }
       case MISCREG_VLENB:
         {
             auto rpc = tc->pcState().as<PCState>();
@@ -567,10 +594,19 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_VCSR:
         {
-            return readMiscRegNoEffect(MISCREG_VXSAT) &
+            return readMiscRegNoEffect(MISCREG_VXSAT) |
                   (readMiscRegNoEffect(MISCREG_VXRM) << 1);
         }
         break;
+      case MISCREG_FFLAGS_EXE:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
+        }
+      case MISCREG_FCSR:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) |
+                  (readMiscRegNoEffect(MISCREG_FRM) << FRM_OFFSET);
+        }
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -603,7 +639,7 @@ void
 ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 {
     // Illegal CSR
-    panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
+    panic_if(idx > NUM_PHYS_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Setting MiscReg %s (%d) to %#x.\n",
             MiscRegNames[idx], idx, val);
     miscRegFile[idx] = val;
@@ -688,16 +724,46 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
           case MISCREG_IP:
             {
+                val = val & MI_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
                 ic->setIP(val);
             }
             break;
+          case MISCREG_UIP:
+            {
+                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
+                setMiscReg(MISCREG_IP, val);
+            }
+            break;
+          case MISCREG_SIP:
+            {
+                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
+                setMiscReg(MISCREG_IP, val);
+            }
+            break;
           case MISCREG_IE:
             {
+                val = val & MI_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
                 ic->setIE(val);
+            }
+            break;
+          case MISCREG_UIE:
+            {
+                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
+                setMiscReg(MISCREG_IE, val);
+            }
+            break;
+          case MISCREG_SIE:
+            {
+                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
+                setMiscReg(MISCREG_IE, val);
             }
             break;
           case MISCREG_SATP:
@@ -741,6 +807,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_STATUS:
             {
+                val = val & MSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
                 if (_rvType != RV32) {
                     // SXL and UXL are hard-wired to 64 bit
                     auto cur = readMiscRegNoEffect(idx);
@@ -752,6 +819,22 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     val &= ~STATUS_VS_MASK;
                 }
                 setMiscRegNoEffect(idx, val);
+            }
+            break;
+          case MISCREG_USTATUS:
+            {
+                RegVal mask = USTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+                val = (val & mask) |
+                      (readMiscRegNoEffect(MISCREG_STATUS) & ~mask);
+                setMiscReg(MISCREG_STATUS, val);
+            }
+            break;
+          case MISCREG_SSTATUS:
+            {
+                RegVal mask = SSTATUS_MASKS[rvType()][getPrivilegeModeSet()];
+                val = (val & mask) |
+                      (readMiscRegNoEffect(MISCREG_STATUS) & ~mask);
+                setMiscReg(MISCREG_STATUS, val);
             }
             break;
           case MISCREG_VXSAT:
@@ -770,6 +853,29 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 setMiscRegNoEffect(MISCREG_VXRM, (val & 0x6) >> 1);
             }
             break;
+          case MISCREG_FFLAGS_EXE:
+            {
+                RegVal new_val = readMiscRegNoEffect(MISCREG_FFLAGS);
+                new_val |= (val & FFLAGS_MASK);
+                setMiscRegNoEffect(MISCREG_FFLAGS, new_val);
+            }
+            break;
+          case MISCREG_FFLAGS:
+            {
+                setMiscRegNoEffect(MISCREG_FFLAGS, val & FFLAGS_MASK);
+            }
+            break;
+          case MISCREG_FRM:
+            {
+                setMiscRegNoEffect(MISCREG_FRM, val & FRM_MASK);
+            }
+            break;
+          case MISCREG_FCSR:
+            {
+                setMiscRegNoEffect(MISCREG_FFLAGS, bits(val, 4, 0));
+                setMiscRegNoEffect(MISCREG_FRM, bits(val, 7, 5));
+            }
+            break;
           default:
             setMiscRegNoEffect(idx, val);
         }
@@ -779,6 +885,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     DPRINTF(Checkpoint, "Serializing Riscv Misc Registers\n");
     SERIALIZE_CONTAINER(miscRegFile);
 }

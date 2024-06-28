@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2019, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -83,19 +83,74 @@ class SMMUTranslationProcess : public SMMUProcess
         uint8_t s2t0sz;
     };
 
-    enum FaultType
+    enum FaultType : uint8_t
     {
         FAULT_NONE,
-        FAULT_TRANSLATION, // F_TRANSLATION
-        FAULT_PERMISSION,  // F_PERMISSION
+        FAULT_UUT = 0x1, // F_UUT = Unsupported Upstream Transaction
+        FAULT_BAD_STREAMID = 0x2, // C_BAD_STREAMID = Transaction streamID out of range
+        FAULT_STE_FETCH = 0x3, // F_STE_FETCH = Fetch of STE caused external abort
+        FAULT_BAD_STE = 0x4, // C_BAD_STE = Invalid STE
+        FAULT_BAD_ATS_TREQ = 0x5, // F_BAD_ATS_TREQ
+        FAULT_STREAM_DISABLED = 0x6, // F_STREAM_DISABLED = Non-substream trans disabled
+        FAULT_TRANSL_FORBIDDEN = 0x7, // F_TRANSL_FORBIDDEN = SMMU bypass not allowed
+        FAULT_BAD_SUBSTREAMID = 0x8, // F_BAD_SUBSTREAMID = Bad substreamID
+        FAULT_CD_FETCH = 0x9, // F_CD_FETCH = Fetch of CD caused external abort
+        FAULT_BAD_CD = 0xa, // C_BAD_CD = Invalid CD
+        FAULT_WALK_EABT = 0xb, // F_WALK_EABT = Table walk/update caused external abort
+        FAULT_TRANSLATION = 0x10, // F_TRANSLATION = Translation Fault
+        FAULT_ADDR_SIZE = 0x11, // F_ADDR_SIZE = Address Size fault
+        FAULT_ACCESS = 0x12, // F_ACCESS = Access flag fault
+        FAULT_PERMISSION = 0x13, // F_PERMISSION = Permission fault
+        FAULT_TLB_CONFLICT = 0x20, // F_TLB_CONFLICT = TLB conflict
+        FAULT_CFG_CONFLICT = 0x21, // F_CFG_CONFLICT = Config cache conflict
+        FAULT_PAGE_REQUEST = 0x24, // E_PAGE_REQUEST
+        FAULT_VMS_FETCH = 0x25, // F_VMS_FETCH
+    };
+
+    /* The class of the operation that caused the fault */
+    enum FaultClass
+    {
+        CD = 0x0, // CD fetch
+        TT = 0x1, // Stage1 translation table fetch
+        IN = 0x2, // Input address caused fault
+        RESERVED = 0x3
+    };
+
+    struct Fault
+    {
+        explicit Fault(FaultType _type,
+                       FaultClass _clss=FaultClass::RESERVED,
+                       bool _stage2=false, Addr _ipa=0)
+          : type(_type), clss(_clss), stage2(_stage2), ipa(_ipa)
+        {}
+
+        Fault(const Fault &rhs) = default;
+        Fault& operator=(const Fault &rhs) = default;
+
+        bool isFaulting() const { return type != FAULT_NONE; }
+
+        FaultType type;
+        FaultClass clss;
+        bool stage2;
+        Addr ipa;
     };
 
     struct TranslResult
     {
-        FaultType  fault;
-        Addr       addr;
-        Addr       addrMask;
-        bool       writable;
+        TranslResult()
+          : fault(FaultType::FAULT_NONE),
+            addr(0), addrMask(0), writable(false)
+        {}
+
+        TranslResult(const TranslResult&) = default;
+        TranslResult& operator=(const TranslResult &rhs) = default;
+
+        bool isFaulting() const { return fault.isFaulting(); }
+
+        Fault fault;
+        Addr  addr;
+        Addr  addrMask;
+        bool  writable;
     };
 
     SMMUv3DeviceInterface &ifc;
@@ -166,14 +221,17 @@ class SMMUTranslationProcess : public SMMUProcess
 
     void issuePrefetch(Addr addr);
 
+    void abortTransaction(Yield &yield, const TranslResult &tr);
     void completeTransaction(Yield &yield, const TranslResult &tr);
     void completePrefetch(Yield &yield);
 
+    SMMUEvent generateEvent(const TranslResult &tr);
     void sendEvent(Yield &yield, const SMMUEvent &ev);
+    void sendEventInterrupt(Yield &yield);
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
-    void doReadCD(Yield &yield, ContextDescriptor &cd,
-                  const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
+    TranslResult doReadCD(Yield &yield, ContextDescriptor &cd,
+                          const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
     void doReadConfig(Yield &yield, Addr addr, void *ptr, size_t size,
                       uint32_t sid, uint32_t ssid);
     void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr,

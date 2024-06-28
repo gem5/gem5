@@ -35,6 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
 import sys
 
 if __name__ == "__main__":
@@ -44,8 +45,20 @@ if __name__ == "__main__":
 if __name__ == "__m5_main__":
     import unittest
 
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "--directory",
+        default="pyunit",
+        help="directory to search for pyunit files",
+    )
+
+    args = parser.parse_args()
+
     loader = unittest.TestLoader()
-    tests = loader.discover("pyunit", pattern="pyunit*.py")
+    tests = loader.discover(args.directory, pattern="pyunit*.py")
 
     runner = unittest.runner.TextTestRunner(verbosity=2)
     result = runner.run(tests)

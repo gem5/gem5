@@ -75,7 +75,8 @@ void
 AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
                                                 uint32_t ring_id,
                                                 uint32_t client_id,
-                                                uint32_t source_id)
+                                                uint32_t source_id,
+                                                unsigned node_id)
 {
     assert(client_id == SOC15_IH_CLIENTID_RLC ||
            client_id == SOC15_IH_CLIENTID_SDMA0 ||
@@ -112,6 +113,7 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
     cookie->clientId = client_id;
     cookie->sourceId = source_id;
     cookie->ringId = ring_id;
+    cookie->nodeId = node_id;
     cookie->source_data_dw1 = cntxt_id;
     interruptQueue.push(cookie);
 }
@@ -128,6 +130,10 @@ AMDGPUInterruptHandler::DmaEvent::process()
     } else {
         fatal("Interrupt Handler DMA event returned bad value: %d\n", data);
     }
+
+    if (dataPtr) {
+        delete [] dataPtr;
+    }
 }
 
 void
@@ -138,7 +144,7 @@ AMDGPUInterruptHandler::submitWritePointer()
     Addr paddr = regs.WptrAddr;
     std::memcpy(dataPtr, &regs.IH_Wptr, sizeof(uint32_t));
 
-    dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 2);
+    dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 2, dataPtr);
     dmaWrite(paddr, sizeof(uint32_t), dmaEvent, dataPtr);
 }
 
@@ -155,7 +161,7 @@ AMDGPUInterruptHandler::submitInterruptCookie()
 
     DPRINTF(AMDGPUDevice, "InterruptHandler rptr: 0x%x wptr: 0x%x\n",
                           regs.IH_Rptr, regs.IH_Wptr);
-    dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 1);
+    dmaEvent = new AMDGPUInterruptHandler::DmaEvent(this, 1, dataPtr);
     dmaWrite(paddr, cookieSize, dmaEvent, dataPtr);
 
     interruptQueue.pop();

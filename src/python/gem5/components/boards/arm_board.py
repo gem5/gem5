@@ -42,6 +42,7 @@ from m5.objects import (
     BadAddr,
     Bridge,
     CowDiskImage,
+    GenericTimer,
     IOXBar,
     PciVirtIO,
     Port,
@@ -51,6 +52,7 @@ from m5.objects import (
     Terminal,
     VExpress_GEM5_Base,
     VExpress_GEM5_Foundation,
+    VExpress_GEM5_V1,
     VirtIOBlock,
     VncServer,
     VoltageDomain,
@@ -80,6 +82,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     **Limitations**
     * stage2 walker ports are ignored.
+    * KVM cores only work with VExpress_GEM5_V1
     """
 
     __metaclass__ = ABCMeta
@@ -210,6 +213,17 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # realview system.
         if hasattr(self.realview.gic, "cpu_addr"):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
+
+        # For KVM cpus, we need to simulate the GIC.
+        if any(core.is_kvm_core() for core in self.processor.get_cores()):
+            # The following is taken from
+            # `tests/fs/linux/arm/configs/arm_generic.py`:
+            # Arm KVM regressions will use a simulated GIC. This means that in
+            # order to work we need to remove the system interface of the
+            # generic timer from the DTB and we need to inform the MuxingKvmGic
+            # class to use the gem5 GIC instead of relying on the host one
+            GenericTimer.generateDeviceTree = SimObject.generateDeviceTree
+            self.realview.gic.simulate_gic = True
 
         # IO devices has to setup before incorporating the caches in the case
         # of ruby caches. Otherwise the DMA controllers are incorrectly

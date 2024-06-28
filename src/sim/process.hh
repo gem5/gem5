@@ -158,7 +158,7 @@ class Process : public SimObject
      * @return True if the map operation was successful.  (At this
      *           point in time, the map operation always succeeds.)
      */
-    bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
+    bool map(Addr vaddr, Addr paddr, int64_t size, bool cacheable = true);
 
     void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
                        ThreadContext *new_tc, bool alloc_page);

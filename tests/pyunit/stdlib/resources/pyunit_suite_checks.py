@@ -33,7 +33,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from gem5.resources.client_api.client_wrapper import ClientWrapper
+from gem5.resources.client import _create_clients
 from gem5.resources.resource import (
     SuiteResource,
     WorkloadResource,
@@ -54,9 +54,13 @@ class CustomSuiteResourceTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def setUpClass(cls):
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def setUpClass(cls, mock_create_clients):
         cls.workload1 = obtain_resource("simple-workload-1")
         cls.workload2 = obtain_resource("simple-workload-2")
         cls.SuiteResource = SuiteResource(
@@ -65,9 +69,13 @@ class CustomSuiteResourceTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_with_input_group(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_with_input_group(self, mock_create_clients) -> None:
         """
         Tests the `with_input_group` function.
         """
@@ -94,16 +102,24 @@ class SuiteResourceTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def setUpClass(cls):
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def setUpClass(cls, mock_create_clients):
         cls.suite = obtain_resource("suite-example", gem5_version="develop")
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_with_input_group(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_with_input_group(self, mock_create_clients) -> None:
         """
         Tests the `with_input_group` function.
         """
@@ -116,9 +132,13 @@ class SuiteResourceTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_with_input_group_multiple(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_with_input_group_multiple(self, mock_create_clients) -> None:
         # test if an input group can return multiple workloads in a suite resource
         filtered_suite = self.suite.with_input_group("testtag1")
         self.assertIsInstance(filtered_suite, SuiteResource)
@@ -128,9 +148,13 @@ class SuiteResourceTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_with_input_group_invalid(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_with_input_group_invalid(self, mock_create_clients) -> None:
         """
         Tests the `with_input_group` function with an invalid input group.
         """
@@ -145,9 +169,13 @@ class SuiteResourceTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_get_input_groups(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_get_input_groups(self, mock_create_clients) -> None:
         """
         Tests the `list_input_groups` function.
         """
@@ -156,9 +184,13 @@ class SuiteResourceTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json),
+        new=None,
     )
-    def test_get_input_groups_not_found(self) -> None:
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_get_input_groups_not_found(self, mock_create_clients) -> None:
         """
         Tests the `list_input_groups` function with an invalid input group.
         """

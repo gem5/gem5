@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021 Arm Limited
+# Copyright (c) 2020-2021,2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.AbstractMemory import AbstractMemory
+from m5.objects.QoSMemSinkCtrl import QoSMemSinkCtrl
 
 
 class QoSMemSinkInterface(AbstractMemory):

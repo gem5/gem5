@@ -179,7 +179,8 @@ class GPUStaticInst : public GPUStaticInstFlags
     {
         return _flags[MemoryRef] && (_flags[GlobalSegment] ||
                _flags[PrivateSegment] || _flags[ReadOnlySegment] ||
-               _flags[SpillSegment] || _flags[FlatGlobal]);
+               _flags[SpillSegment] || _flags[FlatGlobal] ||
+               _flags[FlatScratch]);
     }
 
     bool
@@ -210,6 +211,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isSystemCoherent() const { return _flags[SystemCoherent]; }
 
     // Floating-point instructions
+    bool isI8() const { return _flags[I8]; }
     bool isF16() const { return _flags[F16]; }
     bool isF32() const { return _flags[F32]; }
     bool isF64() const { return _flags[F64]; }
@@ -218,6 +220,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isFMA() const { return _flags[FMA]; }
     bool isMAC() const { return _flags[MAC]; }
     bool isMAD() const { return _flags[MAD]; }
+    bool isMFMA() const { return _flags[MFMA]; }
 
     virtual int instSize() const = 0;
 
@@ -321,6 +324,9 @@ class GPUStaticInst : public GPUStaticInstFlags
     int _ipdInstNum;
 
     std::bitset<Num_Flags> _flags;
+
+    void generateVirtToPhysMap(Wavefront *wf, ComputeUnit *cu, OperandInfo& op,
+                               std::vector<OperandInfo>& opVec, OpType opType);
 };
 
 class KernelLaunchStaticInst : public GPUStaticInst

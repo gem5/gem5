@@ -72,6 +72,7 @@ machine(MachineType:TCC, "TCC Cache")
     L2_Repl,                desc="L2 Replacement";
     // Probes
     PrbInv,                 desc="Invalidating probe";
+    InvCache,               desc="Invalidating probe from TCP";
     // Coming from Memory Controller
     WBAck,                  desc="writethrough ack from memory";
     Bypass,                 desc="Bypass the entire L2 cache";
@@ -117,6 +118,8 @@ machine(MachineType:TCC, "TCC Cache")
     int numPending,                  desc="num pending requests";
     int numPendingDirectoryAtomics,  desc="number of pending atomics to be performed in directory";
     int atomicDoneCnt,               desc="number AtomicDones triggered";
+    bool atomicDataReturn,           desc="Got Atomic op and need return value?", default="false";
+    bool atomicDataNoReturn,         desc="Got Atomic op and don't need return value?", default="false";
     bool isGLCSet,                   desc="Bypass L1 Cache";
     bool isSLCSet,                   desc="Bypass L1 and L2 Cache";
     WriteMask atomicWriteMask,       desc="Atomic write mask";
@@ -411,6 +414,8 @@ machine(MachineType:TCC, "TCC Cache")
           }
         } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
             trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:InvCache) {
+            trigger(Event:InvCache, in_msg.addr, cache_entry, tbe);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -425,6 +430,19 @@ machine(MachineType:TCC, "TCC Cache")
         L2cache.deallocate(address);
     }
     unset_cache_entry();
+  }
+
+  action(ir_invL2Resp, "ir", desc="send L2 invalidate ack") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:InvL2Resp;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        DPRINTF(RubySlicc, "%s\n", out_msg);
+      }
+    }
   }
 
   action(sd_sendData, "sd", desc="send Shared response") {
@@ -588,6 +606,7 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.Sender := machineID;
           out_msg.MessageSize := MessageSizeType:Response_Data;
+          out_msg.instSeqNum := in_msg.instSeqNum;
           out_msg.DataBlk := cache_entry.DataBlk;
           out_msg.isGLCSet := in_msg.isGLCSet;
           out_msg.isSLCSet := in_msg.isSLCSet;
@@ -680,6 +699,8 @@ machine(MachineType:TCC, "TCC Cache")
           tbe.atomicWriteMask.clear();
           tbe.atomicWriteMask.orMask(in_msg.writeMask);
         }
+        tbe.atomicDataReturn := in_msg.Type == CoherenceRequestType:AtomicReturn;
+        tbe.atomicDataNoReturn := in_msg.Type == CoherenceRequestType:AtomicNoReturn;
       }
     }
   }
@@ -878,12 +899,12 @@ machine(MachineType:TCC, "TCC Cache")
 
   action(pa_performAtomic, "pa", desc="Perform atomic") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
-      if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+      if ((is_valid(tbe) && tbe.atomicDataReturn) || in_msg.Type == CoherenceRequestType:AtomicReturn) {
         cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
       } else {
         // Set the isAtomicNoReturn flag to ensure that logs are not
         // generated erroneously
-        assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+        assert((is_valid(tbe) && tbe.atomicDataNoReturn) || in_msg.Type == CoherenceRequestType:AtomicNoReturn);
         cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
       }
     }
@@ -1106,7 +1127,7 @@ machine(MachineType:TCC, "TCC Cache")
     st_stallAndWaitRequest;
   }
 
-  transition(I, WrVicBlk) {TagArrayRead} {
+  transition(I, {WrVicBlk, WrVicBlkEvict}) {TagArrayRead} {
     p_profileMiss;
     wt_writeThrough;
     p_popRequestQueue;
@@ -1182,6 +1203,12 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition({A, IV, WI, WIB}, L2_Repl) {
     i_invL2;
+  }
+
+  transition({I, V}, InvCache, I) {TagArrayRead, TagArrayWrite} {
+    i_invL2;
+    ir_invL2Resp;
+    p_popRequestQueue;
   }
 
   transition({I, V}, PrbInv, I) {TagArrayRead, TagArrayWrite} {
@@ -1273,6 +1300,7 @@ machine(MachineType:TCC, "TCC Cache")
     wardb_writeAtomicResponseDirtyBytes;
     pa_performAtomic;
     baplr_sendBypassedAtomicPerformedLocallyResponse;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pr_popResponseQueue;
   }

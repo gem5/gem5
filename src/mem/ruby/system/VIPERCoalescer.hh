@@ -63,11 +63,13 @@ class VIPERCoalescer : public GPUCoalescer
     ~VIPERCoalescer();
     void writeCompleteCallback(Addr address, uint64_t instSeqNum);
     void invTCPCallback(Addr address);
+    void invTCCCallback(Addr address);
     RequestStatus makeRequest(PacketPtr pkt) override;
     void issueRequest(CoalescedRequest* crequest) override;
 
   private:
     void invTCP();
+    void invTCC(PacketPtr pkt);
 
     // make write-complete response packets from original write request packets
     void makeWriteCompletePkts(CoalescedRequest* crequest);
@@ -78,6 +80,9 @@ class VIPERCoalescer : public GPUCoalescer
 
     // number of remaining cache lines to be invalidated in TCP
     int m_num_pending_invs;
+
+    // outstanding L2 invalidate packets
+    std::unordered_map<Addr, std::vector<PacketPtr>> m_pending_invl2s;
 
     // a map of instruction sequence number and corresponding pending
     // write-complete response packets. Each write-complete response

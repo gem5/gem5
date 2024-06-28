@@ -66,6 +66,7 @@ class LdsChunk;
 class ScalarRegisterFile;
 class Shader;
 class VectorRegisterFile;
+class RegisterFileCache;
 
 struct ComputeUnitParams;
 
@@ -296,6 +297,8 @@ class ComputeUnit : public ClockedObject
     // array of scalar register files, one per SIMD
     std::vector<ScalarRegisterFile*> srf;
 
+    std::vector<RegisterFileCache*> rfc;
+
     // Width per VALU/SIMD unit: number of work items that can be executed
     // on the vector ALU simultaneously in a SIMD unit
     int simdWidth;
@@ -305,6 +308,8 @@ class ComputeUnit : public ClockedObject
     // number of pipe stages for bypassing data to next dependent double
     // precision vector instruction inside the vector ALU pipeline
     int dpBypassPipeLength;
+    // number of pipe stages for register file cache
+    int rfcPipeLength;
     // number of pipe stages for scalar ALU
     int scalarPipeStages;
     // number of pipe stages for operand collection & distribution network
@@ -390,6 +395,7 @@ class ComputeUnit : public ClockedObject
     int simdUnitWidth() const { return simdWidth; }
     int spBypassLength() const { return spBypassPipeLength; }
     int dpBypassLength() const { return dpBypassPipeLength; }
+    int rfcLength() const { return rfcPipeLength; }
     int scalarPipeLength() const { return scalarPipeStages; }
     int storeBusLength() const { return numCyclesPerStoreTransfer; }
     int loadBusLength() const { return numCyclesPerLoadTransfer; }
@@ -406,6 +412,7 @@ class ComputeUnit : public ClockedObject
 
     void doInvalidate(RequestPtr req, int kernId);
     void doFlush(GPUDynInstPtr gpuDynInst);
+    void doSQCInvalidate(RequestPtr req, int kernId);
 
     void dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg);
     bool hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg);
@@ -467,6 +474,8 @@ class ComputeUnit : public ClockedObject
 
     void handleSQCReturn(PacketPtr pkt);
 
+    void sendInvL2(Addr paddr);
+
   protected:
     RequestorID _requestorId;
 
@@ -520,6 +529,7 @@ class ComputeUnit : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
+            ComputeUnit *computeUnit = nullptr;
             GPUDynInstPtr _gpuDynInst;
             PortID port_index;
             Packet::SenderState *saved;
@@ -527,6 +537,12 @@ class ComputeUnit : public ClockedObject
             SenderState(GPUDynInstPtr gpuDynInst, PortID _port_index,
                         Packet::SenderState *sender_state=nullptr)
                 : _gpuDynInst(gpuDynInst),
+                  port_index(_port_index),
+                  saved(sender_state) { }
+
+            SenderState(ComputeUnit *cu, PortID _port_index,
+                        Packet::SenderState *sender_state=nullptr)
+                : computeUnit(cu),
                   port_index(_port_index),
                   saved(sender_state) { }
         };
@@ -672,6 +688,23 @@ class ComputeUnit : public ClockedObject
                     *sender_state=nullptr, int _kernId=-1)
                 : wavefront(_wavefront), saved(sender_state),
                 kernId(_kernId){ }
+        };
+
+        class MemReqEvent : public Event
+        {
+          private:
+            SQCPort &sqcPort;
+            PacketPtr pkt;
+
+          public:
+            MemReqEvent(SQCPort &_sqc_port, PacketPtr _pkt)
+                : Event(), sqcPort(_sqc_port), pkt(_pkt)
+            {
+              setFlags(Event::AutoDelete);
+            }
+
+            void process();
+            const char *description() const;
         };
 
         std::deque<std::pair<PacketPtr, Wavefront*>> retries;
@@ -986,7 +1019,7 @@ class ComputeUnit : public ClockedObject
 
     // hold the time of the arrival of the first cache block related to
     // a particular GPUDynInst. This is used to calculate the difference
-    // between the first and last chace block arrival times.
+    // between the first and last cache block arrival times.
     std::unordered_map<GPUDynInstPtr, Tick> headTailMap;
 
   public:
@@ -1107,6 +1140,12 @@ class ComputeUnit : public ClockedObject
         statistics::Scalar numVecOpsExecutedMAD16;
         statistics::Scalar numVecOpsExecutedMAD32;
         statistics::Scalar numVecOpsExecutedMAD64;
+        // number of individual MFMA 16,32,64 vector operations executed
+        statistics::Scalar numVecOpsExecutedMFMA;
+        statistics::Scalar numVecOpsExecutedMFMAI8;
+        statistics::Scalar numVecOpsExecutedMFMAF16;
+        statistics::Scalar numVecOpsExecutedMFMAF32;
+        statistics::Scalar numVecOpsExecutedMFMAF64;
         // total number of two op FP vector operations executed
         statistics::Scalar numVecOpsExecutedTwoOpFP;
         // Total cycles that something is running on the GPU

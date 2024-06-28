@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019, 2021 Arm Limited
+ * Copyright (c) 2013, 2018-2019, 2021, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@
 #include "debug/SMMUv3.hh"
 #include "debug/SMMUv3Hazard.hh"
 #include "dev/arm/amba.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/smmu_v3.hh"
 #include "sim/system.hh"
 
@@ -184,7 +185,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
         tr = smmuTranslation(yield);
 
-        if (tr.fault == FAULT_NONE)
+        if (!tr.isFaulting())
             ifcTLBUpdate(yield, tr);
 
         hazard4kRelease();
@@ -213,7 +214,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
                 tr = smmuTranslation(yield);
 
-                if (tr.fault == FAULT_NONE) {
+                if (!tr.isFaulting()) {
                     ifcTLBUpdate(yield, tr);
 
                     issuePrefetch(next4k);
@@ -222,20 +223,18 @@ SMMUTranslationProcess::main(Yield &yield)
                 hazard4kRelease();
             }
 
-            if (tr.fault == FAULT_NONE)
+            if (!tr.isFaulting())
                 microTLBUpdate(yield, tr);
         }
 
         hazardIdHold(yield);
         hazardIdRelease();
 
-        if (tr.fault != FAULT_NONE)
-            panic("Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
-                    "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
-                    request.addr, request.size, request.sid, request.ssid,
-                    request.isWrite, request.isPrefetch, request.isAtsRequest);
-
-        completeTransaction(yield, tr);
+        if (tr.isFaulting()) {
+            abortTransaction(yield, tr);
+        } else {
+            completeTransaction(yield, tr);
+        }
     }
 }
 
@@ -243,7 +242,7 @@ SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::bypass(Addr addr) const
 {
     TranslResult tr;
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = addr;
     tr.addrMask = 0;
     tr.writable = 1;
@@ -297,7 +296,7 @@ SMMUTranslationProcess::smmuTranslation(Yield &yield)
         // Free PTW slot
         doSemaphoreUp(smmu.ptwSem);
 
-        if (tr.fault == FAULT_NONE)
+        if (!tr.isFaulting())
             smmuTLBUpdate(yield, tr);
     }
 
@@ -336,8 +335,8 @@ SMMUTranslationProcess::microTLBLookup(Yield &yield, TranslResult &tr)
         "micro TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x paddr=%#x\n",
         request.addr, e->vaMask, request.sid, request.ssid, e->pa);
 
-    tr.fault = FAULT_NONE;
-    tr.addr = e->pa + (request.addr & ~e->vaMask);;
+    tr.fault    = Fault(FAULT_NONE);
+    tr.addr     = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
 
@@ -370,7 +369,7 @@ SMMUTranslationProcess::ifcTLBLookup(Yield &yield, TranslResult &tr,
             "paddr=%#x\n", request.addr, e->vaMask, request.sid,
             request.ssid, e->pa);
 
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
@@ -402,7 +401,7 @@ SMMUTranslationProcess::smmuTLBLookup(Yield &yield, TranslResult &tr)
             "SMMU TLB hit vaddr=%#x amask=%#x asid=%#x vmid=%#x paddr=%#x\n",
             request.addr, e->vaMask, context.asid, context.vmid, e->pa);
 
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
@@ -414,7 +413,7 @@ void
 SMMUTranslationProcess::microTLBUpdate(Yield &yield,
                                        const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!ifc.microTLBEnable)
         return;
@@ -446,7 +445,7 @@ void
 SMMUTranslationProcess::ifcTLBUpdate(Yield &yield,
                                      const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!ifc.mainTLBEnable)
         return;
@@ -483,7 +482,7 @@ void
 SMMUTranslationProcess::smmuTLBUpdate(Yield &yield,
                                       const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!smmu.tlbEnable)
         return;
@@ -632,7 +631,7 @@ SMMUTranslationProcess::findConfig(Yield &yield,
     // Now fetch stage 1 config.
     if (context.stage1Enable) {
         ContextDescriptor cd;
-        doReadCD(yield, cd, ste, request.sid, request.ssid);
+        tr = doReadCD(yield, cd, ste, request.sid, request.ssid);
 
         tc.ttb0 = cd.dw1.ttb0 << CD_TTB_SHIFT;
         tc.ttb1 = cd.dw2.ttb1 << CD_TTB_SHIFT;
@@ -647,7 +646,7 @@ SMMUTranslationProcess::findConfig(Yield &yield,
         tc.t0sz = 0;
     }
 
-    return true;
+    return !tr.isFaulting();
 }
 
 void
@@ -767,7 +766,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
             DPRINTF(SMMUv3, "S1 PTE not valid - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_TRANSLATION;
+            tr.fault = Fault(FAULT_TRANSLATION, FaultClass::IN, false);
             return tr;
         }
 
@@ -777,7 +776,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
             DPRINTF(SMMUv3, "S1 page not writable - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_PERMISSION;
+            tr.fault = Fault(FAULT_PERMISSION, FaultClass::IN, false);
             return tr;
         }
 
@@ -788,7 +787,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
 
         if (context.stage2Enable) {
             TranslResult s2tr = translateStage2(yield, walkPtr, false);
-            if (s2tr.fault != FAULT_NONE)
+            if (s2tr.isFaulting())
                 return s2tr;
 
             walkPtr = s2tr.addr;
@@ -799,15 +798,17 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
     }
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addrMask = pt_ops->pageMask(pte, level);
     tr.addr     = walkPtr + (addr & ~tr.addrMask);
     tr.writable = pt_ops->isWritable(pte, level, false);
 
     if (context.stage2Enable) {
         TranslResult s2tr = translateStage2(yield, tr.addr, true);
-        if (s2tr.fault != FAULT_NONE)
+        if (s2tr.isFaulting()) {
+            s2tr.fault.clss = FaultClass::IN;
             return s2tr;
+        }
 
         tr = combineTranslations(tr, s2tr);
     }
@@ -852,7 +853,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
             DPRINTF(SMMUv3, "  S2 PTE not valid - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_TRANSLATION;
+            tr.fault = Fault(FAULT_TRANSLATION, FaultClass::TT, true, addr);
             return tr;
         }
 
@@ -862,7 +863,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
             DPRINTF(SMMUv3, "  S2 PTE not writable = fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_PERMISSION;
+            tr.fault = Fault(FAULT_PERMISSION, FaultClass::TT, true, addr);
             return tr;
         }
 
@@ -877,7 +878,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
     }
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addrMask = pt_ops->pageMask(pte, level);
     tr.addr     = walkPtr + (addr & ~tr.addrMask);
     tr.writable = pt_ops->isWritable(pte, level, true);
@@ -913,7 +914,7 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
     TranslResult tr;
     if (walk_ep) {
         if (walk_ep->leaf) {
-            tr.fault    = FAULT_NONE;
+            tr.fault    = Fault(FAULT_NONE);
             tr.addr     = walk_ep->pa + (addr & ~walk_ep->vaMask);
             tr.addrMask = walk_ep->vaMask;
             tr.writable = walk_ep->permissions;
@@ -924,8 +925,9 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
         Addr table_addr = context.ttb0;
         if (context.stage2Enable) {
             TranslResult s2tr = translateStage2(yield, table_addr, false);
-            if (s2tr.fault != FAULT_NONE)
+            if (s2tr.isFaulting()) {
                 return s2tr;
+            }
 
             table_addr = s2tr.addr;
         }
@@ -935,7 +937,7 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
                             table_addr);
     }
 
-    if (tr.fault == FAULT_NONE)
+    if (!tr.isFaulting())
         DPRINTF(SMMUv3, "Translated vaddr %#x to paddr %#x\n", addr, tr.addr);
 
     return tr;
@@ -957,7 +959,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
 
     if (ipa_ep) {
         TranslResult tr;
-        tr.fault    = FAULT_NONE;
+        tr.fault    = Fault(FAULT_NONE);
         tr.addr     = ipa_ep->pa + (addr & ~ipa_ep->ipaMask);
         tr.addrMask = ipa_ep->ipaMask;
         tr.writable = ipa_ep->permissions;
@@ -995,7 +997,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
     TranslResult tr;
     if (walk_ep) {
         if (walk_ep->leaf) {
-            tr.fault    = FAULT_NONE;
+            tr.fault    = Fault(FAULT_NONE);
             tr.addr     = walk_ep->pa + (addr & ~walk_ep->vaMask);
             tr.addrMask = walk_ep->vaMask;
             tr.writable = walk_ep->permissions;
@@ -1009,7 +1011,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
                         context.httb);
     }
 
-    if (tr.fault == FAULT_NONE)
+    if (!tr.isFaulting())
         DPRINTF(SMMUv3, "  Translated %saddr %#x to paddr %#x\n",
             context.stage1Enable ? "ip" : "v", addr, tr.addr);
 
@@ -1034,13 +1036,13 @@ SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::combineTranslations(const TranslResult &s1tr,
                                             const TranslResult &s2tr) const
 {
-    if (s2tr.fault != FAULT_NONE)
+    if (s2tr.isFaulting())
         return s2tr;
 
-    assert(s1tr.fault == FAULT_NONE);
+    assert(!s1tr.isFaulting());
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addr     = s2tr.addr;
     tr.addrMask = s1tr.addrMask | s2tr.addrMask;
     tr.writable = s1tr.writable & s2tr.writable;
@@ -1230,10 +1232,50 @@ SMMUTranslationProcess::issuePrefetch(Addr addr)
 }
 
 void
+SMMUTranslationProcess::abortTransaction(Yield &yield,
+                                         const TranslResult &tr)
+{
+    DPRINTF(SMMUv3, "Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
+            "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
+            request.addr, request.size, request.sid, request.ssid,
+            request.isWrite, request.isPrefetch, request.isAtsRequest);
+
+    // If eventq is not enabled, silently discard event
+    // TODO: Handle full queue (we are currently aborting
+    // in send event)
+    if (smmu.regs.cr0 & CR0_EVENTQEN_MASK) {
+        SMMUEvent event = generateEvent(tr);
+
+        sendEvent(yield, event);
+    }
+
+    ifc.xlateSlotsRemaining++;
+    smmu.scheduleDeviceRetries();
+
+    if (smmu.system.isAtomicMode()) {
+        request.pkt->makeAtomicResponse();
+    } else if (smmu.system.isTimingMode()) {
+        request.pkt->makeTimingResponse();
+    } else {
+        panic("Not in atomic or timing mode");
+    }
+
+    request.pkt->setBadAddress();
+
+    SMMUAction a;
+    // Send the bad address response to the client device
+    a.type = ACTION_SEND_RESP;
+    a.pkt = request.pkt;
+    a.ifc = &ifc;
+    a.delay = 0;
+    yield(a);
+}
+
+void
 SMMUTranslationProcess::completeTransaction(Yield &yield,
                                             const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     unsigned numRequestorBeats = request.isWrite ?
         (request.size + (smmu.requestPortWidth-1))
@@ -1304,6 +1346,32 @@ SMMUTranslationProcess::completePrefetch(Yield &yield)
     yield(a);
 }
 
+SMMUEvent
+SMMUTranslationProcess::generateEvent(const TranslResult &tr)
+{
+    SMMUEvent event;
+    switch (tr.fault.type) {
+      case FAULT_PERMISSION:
+      case FAULT_TRANSLATION:
+        event.data.dw0.streamId = request.sid;
+        event.data.dw0.substreamId = request.ssid;
+        event.data.dw1.rnw = !request.isWrite;
+        event.data.dw2.inputAddr = request.addr;
+        event.data.dw1.s2 = tr.fault.stage2;
+        if (tr.fault.stage2) {
+            // Only support non-secure mode in the SMMU
+            event.data.dw1.nsipa = true;
+            event.data.dw3.ipa = tr.fault.ipa;
+        }
+        event.data.dw1.clss = tr.fault.clss;
+        break;
+      default:
+        panic("Unsupported fault: %d\n", tr.fault.type);
+    }
+
+    return event;
+}
+
 void
 SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 {
@@ -1315,23 +1383,45 @@ SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 
     Addr event_addr =
         (smmu.regs.eventq_base & Q_BASE_ADDR_MASK) +
-        (smmu.regs.eventq_prod & sizeMask) * sizeof(ev);
+        (smmu.regs.eventq_prod & sizeMask) * sizeof(ev.data);
 
-    DPRINTF(SMMUv3, "Sending event to addr=%#08x (pos=%d): type=%#x stag=%#x "
-        "flags=%#x sid=%#x ssid=%#x va=%#08x ipa=%#x\n",
-        event_addr, smmu.regs.eventq_prod, ev.type, ev.stag,
-        ev.flags, ev.streamId, ev.substreamId, ev.va, ev.ipa);
+    DPRINTF(SMMUv3, "Sending event to addr=%#08x (pos=%d): %s\n",
+        event_addr, smmu.regs.eventq_prod, ev.print());
+
+    bool empty_queue = (smmu.regs.eventq_prod & sizeMask) ==
+        (smmu.regs.eventq_cons & sizeMask);
 
     // This deliberately resets the overflow field in eventq_prod!
     smmu.regs.eventq_prod = (smmu.regs.eventq_prod + 1) & sizeMask;
 
-    doWrite(yield, event_addr, &ev, sizeof(ev));
+    doWrite(yield, event_addr, &ev.data, sizeof(ev.data));
 
-    if (!(smmu.regs.eventq_irq_cfg0 & E_BASE_ENABLE_MASK))
-        panic("eventq msi not enabled\n");
+    // Send an event queue interrupt when transitioning from empty to
+    // non empty queue
+    if (IRQCtrl irq_ctrl = smmu.regs.irq_ctrl;
+        irq_ctrl.eventqIrqEn && empty_queue) {
 
-    doWrite(yield, smmu.regs.eventq_irq_cfg0 & E_BASE_ADDR_MASK,
-            &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
+        sendEventInterrupt(yield);
+    }
+}
+
+void
+SMMUTranslationProcess::sendEventInterrupt(Yield &yield)
+{
+    Addr msi_addr = smmu.regs.eventq_irq_cfg0 & E_BASE_ADDR_MASK;
+
+    // Check if MSIs are enabled by inspecting the SMMU_IDR.MSI bit
+    // According to the SMMUv3 spec, using an address equal to 0
+    // disables the sending of the MSI
+    if (IDR0 idr0 = smmu.regs.idr0; idr0.msi && msi_addr != 0) {
+        DPRINTF(SMMUv3, "Raise Event queue MSI\n");
+        doWrite(yield, msi_addr,
+                &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
+    }
+    if (smmu.eventqInterrupt) {
+        DPRINTF(SMMUv3, "Raise Event queue wired interrupt\n");
+        smmu.eventqInterrupt->raise();
+    }
 }
 
 void
@@ -1402,12 +1492,13 @@ SMMUTranslationProcess::doReadSTE(Yield &yield,
     smmu.stats.steFetches++;
 }
 
-void
+SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::doReadCD(Yield &yield,
                                  ContextDescriptor &cd,
                                  const StreamTableEntry &ste,
                                  uint32_t sid, uint32_t ssid)
 {
+    TranslResult tr;
     Addr cd_addr = 0;
 
     if (ste.dw0.s1cdmax == 0) {
@@ -1426,8 +1517,15 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
             uint64_t l2_addr = (ste.dw0.s1ctxptr << ST_CD_ADDR_SHIFT) +
                 bits(ssid, 24, split) * sizeof(l2_ptr);
 
-            if (context.stage2Enable)
-                l2_addr = translateStage2(yield, l2_addr, false).addr;
+            if (context.stage2Enable) {
+                tr = translateStage2(yield, l2_addr, false);
+                if (tr.isFaulting()) {
+                    tr.fault.clss = FaultClass::CD;
+                    return tr;
+                }
+
+                l2_addr = tr.addr;
+            }
 
             DPRINTF(SMMUv3, "Read L1CD at %#x\n", l2_addr);
 
@@ -1443,8 +1541,15 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
         }
     }
 
-    if (context.stage2Enable)
-        cd_addr = translateStage2(yield, cd_addr, false).addr;
+    if (context.stage2Enable) {
+        tr = translateStage2(yield, cd_addr, false);
+        if (tr.isFaulting()) {
+            tr.fault.clss = FaultClass::CD;
+            return tr;
+        }
+
+        cd_addr = tr.addr;
+    }
 
     DPRINTF(SMMUv3, "Read CD at %#x\n", cd_addr);
 
@@ -1464,6 +1569,7 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
         panic("CD @ %#x not valid\n", cd_addr);
 
     smmu.stats.cdFetches++;
+    return tr;
 }
 
 void

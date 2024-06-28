@@ -101,7 +101,8 @@ typedef struct
     uint32_t reserved2 : 15;
     uint32_t timestamp_src : 1;
     uint32_t pasid : 16;
-    uint32_t reserved3 : 15;
+    uint32_t nodeId : 8;
+    uint32_t reserved3 : 7;
     uint32_t pasid_src : 1;
     uint32_t source_data_dw1;
     uint32_t source_data_dw2;
@@ -135,10 +136,12 @@ class AMDGPUInterruptHandler : public DmaDevice
       private:
         AMDGPUInterruptHandler *deviceIh;
         uint32_t data;
+        uint8_t *dataPtr;
 
       public:
-        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data)
-            : Event(), deviceIh(deviceIh), data(data)
+        DmaEvent(AMDGPUInterruptHandler *deviceIh, uint32_t data,
+                 uint8_t* _dataPtr)
+            : Event(), deviceIh(deviceIh), data(data), dataPtr(_dataPtr)
         {
             setFlags(Event::AutoDelete);
         }
@@ -171,7 +174,7 @@ class AMDGPUInterruptHandler : public DmaDevice
 
     void setGPUDevice(AMDGPUDevice *gpu_device) { gpuDevice = gpu_device; }
     void prepareInterruptCookie(ContextID cntxtId, uint32_t ring_id,
-        uint32_t client_id, uint32_t source_id);
+        uint32_t client_id, uint32_t source_id, unsigned node_id);
     void submitInterruptCookie();
     void submitWritePointer();
     void intrPost();

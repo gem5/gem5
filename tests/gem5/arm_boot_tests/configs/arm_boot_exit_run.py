@@ -205,23 +205,26 @@ board.set_kernel_disk_workload(
     kernel=obtain_resource(
         "arm64-linux-kernel-5.4.49",
         resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     bootloader=obtain_resource(
         "arm64-bootloader-foundation",
         resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     disk_image=obtain_resource(
         "arm64-ubuntu-20.04-img",
         resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
 )
 
 simulator = Simulator(board=board)
 
 if args.tick_exit:
-    simulator.run(max_ticks=args.tick_exit)
-else:
-    simulator.run()
+    simulator.set_max_ticks(args.tick_exit)
+
+simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(

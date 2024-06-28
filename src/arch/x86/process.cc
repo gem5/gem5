@@ -112,7 +112,7 @@ X86_64Process::X86_64Process(const ProcessParams &params,
 
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7FFFFFFFF000ULL;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
@@ -398,6 +398,7 @@ X86_64Process::initState()
 
             tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
             tc->setMiscReg(misc_reg::Ftw, 0xffff);
+            tc->setMiscReg(misc_reg::Fcw, 0x037f);
 
             tc->setMiscReg(misc_reg::ApicBase, 0xfee00900);
 
@@ -617,6 +618,7 @@ X86_64Process::initState()
 
             tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
             tc->setMiscReg(misc_reg::Ftw, 0xffff);
+            tc->setMiscReg(misc_reg::Fcw, 0x037f);
 
             // Setting CR3 to the process pid so that concatinated
             // page addr with lower 12 bits of CR3 can be used in SE
@@ -752,6 +754,7 @@ I386Process::initState()
 
         tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
         tc->setMiscReg(misc_reg::Ftw, 0xffff);
+        tc->setMiscReg(misc_reg::Fcw, 0x037f);
     }
 }
 

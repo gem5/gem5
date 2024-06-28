@@ -200,8 +200,20 @@ Walker::startWalkWrapper()
 {
     unsigned num_squashed = 0;
     WalkerState *currState = currStates.front();
+
+    // check if we get a tlb hit to skip the walk
+    Addr vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+    Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
+    TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
+                              true);
+    Fault fault = NoFault;
+    if (e) {
+       fault = tlb->checkPermissions(currState->status, currState->pmode,
+                                     vaddr, currState->mode, e->pte);
+    }
+
     while ((num_squashed < numSquashable) && currState &&
-        currState->translation->squashed()) {
+           (currState->translation->squashed() || (e && fault == NoFault))) {
         currStates.pop_front();
         num_squashed++;
 
@@ -209,9 +221,14 @@ Walker::startWalkWrapper()
             currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
-        currState->translation->finish(
-            std::make_shared<UnimpFault>("Squashed Inst"),
-            currState->req, currState->tc, currState->mode);
+        if (currState->translation->squashed()) {
+            currState->translation->finish(
+                std::make_shared<UnimpFault>("Squashed Inst"),
+                currState->req, currState->tc, currState->mode);
+        } else {
+            tlb->translateTiming(currState->req, currState->tc,
+                                 currState->translation, currState->mode);
+        }
 
         // delete the current request if there are no inflight packets.
         // if there is something in flight, delete when the packets are
@@ -223,13 +240,27 @@ Walker::startWalkWrapper()
         }
 
         // check the next translation request, if it exists
-        if (currStates.size())
+        if (currStates.size()) {
             currState = currStates.front();
-        else
+            vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+            Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
+            e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
+                            true);
+            if (e) {
+               fault = tlb->checkPermissions(currState->status,
+                                             currState->pmode, vaddr,
+                                             currState->mode, e->pte);
+            }
+        } else {
             currState = NULL;
+        }
     }
-    if (currState && !currState->wasStarted())
-        currState->startWalk();
+    if (currState && !currState->wasStarted()) {
+        if (!e || fault != NoFault)
+            currState->startWalk();
+        else
+            schedule(startWalkWrapperEvent, clockEdge(Cycles(1)));
+    }
 }
 
 Fault
@@ -302,11 +333,14 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     // step 2:
     // Performing PMA/PMP checks on physical address of PTE
 
-    walker->pma->check(read->req);
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
     fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
                     RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+
+    if (fault == NoFault) {
+        fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
+    }
 
     if (fault == NoFault) {
         // step 3:
@@ -354,14 +388,20 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         // this read will eventually become write
                         // if doWrite is True
 
-                        walker->pma->check(read->req);
-
                         fault = walker->pmp->pmpCheck(read->req,
                                             BaseMMU::Write, pmode, tc, entry.vaddr);
+
+                        if (fault == NoFault) {
+                            fault = walker->pma->check(read->req,
+                                                BaseMMU::Write, entry.vaddr);
+                        }
 
                     }
                     // perform step 8 only if pmp checks pass
                     if (fault == NoFault) {
+                        DPRINTF(PageTableWalker,
+                                "#0 leaf node at level %d, with vpn %#x\n",
+                                 level, entry.vaddr);
 
                         // step 8
                         entry.logBytes = PageShift + (level * LEVEL_BITS);
@@ -374,6 +414,17 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         if (!pte.d && mode != BaseMMU::Write)
                             entry.pte.w = 0;
                         doTLBInsert = true;
+
+                        // Update statistics for completed page walks
+                        if (level == 1) {
+                            walker->pagewalkerstats.num_2mb_walks++;
+                        }
+                        if (level == 0) {
+                            walker->pagewalkerstats.num_4kb_walks++;
+                        }
+                        DPRINTF(PageTableWalker,
+                                "#1 leaf node at level %d, with vpn %#x\n",
+                                level, entry.vaddr);
                     }
                 }
             } else {
@@ -412,9 +463,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
 
         if (doTLBInsert) {
-            if (!functional)
-                walker->tlb->insert(entry.vaddr, entry);
-            else {
+            if (!functional) {
+                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+                walker->tlb->insert(vpn, entry);
+            } else {
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
                         entry.vaddr, entry.paddr << PageShift |
                         (entry.vaddr & mask(entry.logBytes)));
@@ -522,14 +574,18 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              */
             Addr vaddr = req->getVaddr();
             vaddr = Addr(sext<VADDR_BITS>(vaddr));
-            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
+            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid,
+                                                       satp.mode, mode);
             req->setPaddr(paddr);
-            walker->pma->check(req);
 
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
             timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+
+            if (timingFault == NoFault) {
+                timingFault = walker->pma->check(req, mode);
+            }
 
             // Let the CPU continue.
             translation->finish(timingFault, req, tc, mode);
@@ -618,6 +674,15 @@ Walker::WalkerState::pageFault(bool present)
 {
     DPRINTF(PageTableWalker, "Raising page fault.\n");
     return walker->tlb->createPagefault(entry.vaddr, mode);
+}
+
+Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(num_4kb_walks, statistics::units::Count::get(),
+             "Completed page walks with 4KB pages"),
+    ADD_STAT(num_2mb_walks, statistics::units::Count::get(),
+             "Completed page walks with 2MB pages")
+{
 }
 
 } // namespace RiscvISA

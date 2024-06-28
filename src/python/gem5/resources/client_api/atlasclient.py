@@ -43,7 +43,9 @@ from urllib import (
 
 from m5.util import warn
 
+from ...utils.socks_ssl_context import get_proxy_context
 from .abstract_client import AbstractClient
+from .client_query import ClientQuery
 
 
 class AtlasClientHttpJsonRequestError(Exception):
@@ -133,7 +135,7 @@ class AtlasClient(AbstractClient):
 
         for attempt in itertools.count(start=1):
             try:
-                response = request.urlopen(req)
+                response = request.urlopen(req, context=get_proxy_context())
                 break
             except Exception as e:
                 if attempt >= max_failed_attempts:
@@ -155,24 +157,39 @@ class AtlasClient(AbstractClient):
 
     def get_resources(
         self,
-        resource_id: Optional[str] = None,
-        resource_version: Optional[str] = None,
-        gem5_version: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        client_queries: List[ClientQuery],
+    ) -> Dict[str, Any]:
         url = f"{self.url}/action/find"
         data = {
             "dataSource": self.dataSource,
             "collection": self.collection,
             "database": self.database,
         }
-        filter = {}
-        if resource_id:
-            filter["id"] = resource_id
-            if resource_version is not None:
-                filter["resource_version"] = resource_version
 
-        if filter:
-            data["filter"] = filter
+        search_conditions = []
+        for resource in client_queries:
+            condition = {
+                "id": resource.get_resource_id(),
+            }
+
+            if not resource.get_gem5_version().startswith("DEVELOP"):
+                # This is a regex search that matches the beginning of the
+                # string. So if the resource version is '20.1', it will
+                # match '20.1.1'.
+                condition["gem5_versions"] = {
+                    "$regex": f"^{resource.get_gem5_version()}",
+                    "$options": "i",
+                }
+
+            # If the resource has a resource_version, add it to the search
+            # conditions.
+            if resource.get_resource_version():
+                condition["resource_version"] = resource.get_resource_version()
+
+            search_conditions.append(condition)
+
+        filter = {"$or": search_conditions}
+        data["filter"] = filter
 
         headers = {
             "Authorization": f"Bearer {self.get_token()}",
@@ -186,8 +203,15 @@ class AtlasClient(AbstractClient):
             purpose_of_request="Get Resources",
         )["documents"]
 
-        # I do this as a lazy post-processing step because I can't figure out
-        # how to do this via an Atlas query, which may be more efficient.
-        return self.filter_incompatible_resources(
-            resources_to_filter=resources, gem5_version=gem5_version
-        )
+        resources_by_id = {}
+        for resource in resources:
+            if resource["id"] in resources_by_id.keys():
+                resources_by_id[resource["id"]].append(resource)
+            else:
+                resources_by_id[resource["id"]] = [resource]
+
+        # Sort the resources by version and return the latest version.
+        for id, resource_list in resources_by_id.items():
+            resources_by_id[id] = self.sort_resources(resource_list)[0]
+
+        return resources_by_id

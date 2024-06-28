@@ -49,6 +49,16 @@ enum QueueType
     RLC
 };
 
+/*
+ * Hold information about doorbells including queue type and the IP
+ * block ID if the IP can have multiple instances.
+ */
+typedef struct
+{
+    QueueType qtype;
+    int ip_id;
+} DoorbellInfo;
+
 // AMD GPUs support 16 different virtual address spaces
 static constexpr int AMDGPU_VM_COUNT = 16;
 
@@ -61,35 +71,10 @@ constexpr int MMIO_BAR = 5;
 constexpr uint32_t VGA_ROM_DEFAULT = 0xc0000;
 constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
 
-/* SDMA base, size, mmio offset shift. */
-static constexpr uint32_t SDMA0_BASE  = 0x4980;
-static constexpr uint32_t SDMA1_BASE  = 0x5180;
-static constexpr uint32_t SDMA_SIZE  = 0x800;
-static constexpr uint32_t SDMA_OFFSET_SHIFT  = 2;
-
-/* Interrupt handler base, size, mmio offset shift. */
-static constexpr uint32_t IH_BASE = 0x4280;
-static constexpr uint32_t IH_SIZE = 0x700;
+/* Most MMIOs use DWORD addresses and thus need to be shifted. */
 static constexpr uint32_t IH_OFFSET_SHIFT = 2;
-
-/* Graphics register bus manager base, size, mmio offset shift. */
-static constexpr uint32_t GRBM_BASE  = 0x8000;
-static constexpr uint32_t GRBM_SIZE  = 0x5000;
 static constexpr uint32_t GRBM_OFFSET_SHIFT  = 2;
-
-/* GFX base, size, mmio offset shift. */
-static constexpr uint32_t GFX_BASE  = 0x28000;
-static constexpr uint32_t GFX_SIZE  = 0x17000;
-static constexpr uint32_t GFX_OFFSET_SHIFT  = 2;
-
-/* MMHUB base, size, mmio offset shift. */
-static constexpr uint32_t MMHUB_BASE = 0x68000;
-static constexpr uint32_t MMHUB_SIZE = 0x2120;
 static constexpr uint32_t MMHUB_OFFSET_SHIFT = 2;
-
-/* NBIO base and size. */
-static constexpr uint32_t NBIO_BASE = 0x0;
-static constexpr uint32_t NBIO_SIZE = 0x4280;
 
 } // namespace gem5
 

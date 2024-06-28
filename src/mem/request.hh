@@ -158,7 +158,7 @@ class Request : public Extensible<Request>
         MEM_SWAP                    = 0x00400000,
         MEM_SWAP_COND               = 0x00800000,
         /** This request is a read which will be followed by a write. */
-        READ_MODIFY_WRITE           = 0x00020000,
+        READ_MODIFY_WRITE           = 0x0020000000000000,
 
         /** The request is a prefetch. */
         PREFETCH                    = 0x01000000,
@@ -292,8 +292,8 @@ class Request : public Extensible<Request>
 
     /**
      * These bits are used to set the coherence policy for the GPU and are
-     * encoded in the GCN3 instructions. The GCN3 ISA defines two cache levels
-     * See the AMD GCN3 ISA Architecture Manual for more details.
+     * encoded in the Vega instructions. The Vega ISA defines two cache levels
+     * See the AMD Vega ISA Architecture Manual for more details.
      *
      * INV_L1: L1 cache invalidation
      * FLUSH_L2: L2 cache flush
@@ -1096,6 +1096,7 @@ class Request : public Extensible<Request>
      * setting extraFlags should be done via setCacheCoherenceFlags().
      */
     bool isInvL1() const { return _cacheCoherenceFlags.isSet(INV_L1); }
+    bool isInvL2() const { return _cacheCoherenceFlags.isSet(GL2_CACHE_INV); }
 
     bool
     isGL2CacheFlush() const

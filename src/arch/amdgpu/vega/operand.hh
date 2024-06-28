@@ -37,6 +37,7 @@
 #include "arch/amdgpu/vega/gpu_registers.hh"
 #include "arch/generic/vec_reg.hh"
 #include "gpu-compute/scalar_register_file.hh"
+#include "gpu-compute/shader.hh"
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
@@ -489,7 +490,7 @@ namespace VegaISA
         typename std::enable_if<Condition, void>::type
         setBit(int bit, int bit_val)
         {
-            DataType &sgpr = *((DataType*)srfData.data());
+            GEM5_ALIGNED(8) DataType &sgpr = *((DataType*)srfData.data());
             replaceBits(sgpr, bit, bit_val);
         }
 
@@ -513,15 +514,49 @@ namespace VegaISA
         {
             assert(NumDwords == 1 || NumDwords == 2);
 
+            if (_opIdx >= REG_INT_CONST_POS_MIN &&
+                _opIdx <= REG_INT_CONST_NEG_MAX) {
+                assert(sizeof(DataType) <= sizeof(srfData));
+                DataType misc_val(0);
+                assert(isConstVal(_opIdx));
+                misc_val = (DataType)_gpuDynInst
+                    ->readConstVal<DataType>(_opIdx);
+                std::memcpy((void*)srfData.data(), (void*)&misc_val,
+                            sizeof(DataType));
+
+                return;
+            }
+
+            if (_opIdx == REG_M0 || _opIdx == REG_ZERO || _opIdx == REG_SCC) {
+                assert(sizeof(DataType) <= sizeof(srfData));
+                DataType misc_val(0);
+                misc_val = (DataType)_gpuDynInst->readMiscReg(_opIdx);
+                std::memcpy((void*)srfData.data(), (void*)&misc_val,
+                            sizeof(DataType));
+
+                return;
+            }
+
             switch(_opIdx) {
               case REG_EXEC_LO:
                 {
-                    ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
-                        execMask().to_ullong();
-                    std::memcpy((void*)srfData.data(), (void*)&exec_mask,
-                        sizeof(exec_mask));
-                    DPRINTF(GPUSRF, "Read EXEC\n");
-                    DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    if constexpr (NumDwords == 2) {
+                        ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ullong();
+                        std::memcpy((void*)srfData.data(), (void*)&exec_mask,
+                            sizeof(exec_mask));
+                        DPRINTF(GPUSRF, "Read EXEC\n");
+                        DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                    } else {
+                        ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
+                            execMask().to_ullong();
+
+                        ScalarRegU32 exec_mask_lo = bits(exec_mask, 31, 0);
+                        std::memcpy((void*)srfData.data(),
+                            (void*)&exec_mask_lo, sizeof(exec_mask_lo));
+                        DPRINTF(GPUSRF, "Read EXEC_LO\n");
+                        DPRINTF(GPUSRF, "EXEC_LO = %#x\n", exec_mask_lo);
+                    }
                 }
                 break;
               case REG_EXEC_HI:
@@ -544,8 +579,83 @@ namespace VegaISA
               case REG_SRC_SWDA:
               case REG_SRC_DPP:
               case REG_SRC_LITERAL:
-                assert(NumDwords == 1);
+                /**
+                 * From the Vega specification:
+                 * When a literal constant is used with a 64 bit instruction,
+                 * the literal is expanded to 64 bits by: padding the LSBs
+                 * with zeros for floats, padding the MSBs with zeros for
+                 * unsigned ints, and by sign-extending signed ints.
+                 */
                 srfData[0] = _gpuDynInst->srcLiteral();
+                if constexpr (NumDwords == 2) {
+                    if constexpr (std::is_integral_v<DataType>) {
+                        if constexpr (std::is_signed_v<DataType>) {
+                            if (bits(srfData[0], 31, 31) == 1) {
+                                srfData[1] = 0xffffffff;
+                            } else {
+                                srfData[1] = 0;
+                            }
+                        } else {
+                            srfData[1] = 0;
+                        }
+                    } else {
+                        srfData[1] = _gpuDynInst->srcLiteral();
+                        srfData[0] = 0;
+                    }
+                }
+                break;
+              case REG_SHARED_BASE:
+                {
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 shared_base = cu->shader->ldsApe().base;
+                        std::memcpy((void*)srfData.data(), (void*)&shared_base,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read SHARED_BASE = %#x\n",
+                                shared_base);
+                    }
+                }
+                break;
+              case REG_SHARED_LIMIT:
+                {
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 shared_limit = cu->shader->ldsApe().limit;
+                        std::memcpy((void*)srfData.data(),
+                                (void*)&shared_limit, sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read SHARED_LIMIT = %#x\n",
+                                shared_limit);
+                    }
+                }
+                break;
+              case REG_PRIVATE_BASE:
+                {
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 priv_base = cu->shader->scratchApe().base;
+                        std::memcpy((void*)srfData.data(), (void*)&priv_base,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read PRIVATE_BASE = %#x\n",
+                                priv_base);
+                    }
+                }
+                break;
+              case REG_PRIVATE_LIMIT:
+                {
+                    assert(NumDwords == 2);
+                    if constexpr (NumDwords == 2) {
+                        ComputeUnit *cu = _gpuDynInst->computeUnit();
+                        ScalarRegU64 priv_limit =
+                            cu->shader->scratchApe().limit;
+                        std::memcpy((void*)srfData.data(), (void*)&priv_limit,
+                                sizeof(srfData));
+                        DPRINTF(GPUSRF, "Read PRIVATE_LIMIT = %#x\n",
+                                priv_limit);
+                    }
+                }
                 break;
               case REG_POS_HALF:
                 {
@@ -617,18 +727,8 @@ namespace VegaISA
                 }
                 break;
               default:
-                {
-                    assert(sizeof(DataType) <= sizeof(srfData));
-                    DataType misc_val(0);
-                    if (isConstVal(_opIdx)) {
-                        misc_val = (DataType)_gpuDynInst
-                            ->readConstVal<DataType>(_opIdx);
-                    } else {
-                        misc_val = (DataType)_gpuDynInst->readMiscReg(_opIdx);
-                    }
-                    std::memcpy((void*)srfData.data(), (void*)&misc_val,
-                                sizeof(DataType));
-                }
+                panic("Invalid special register index: %d\n", _opIdx);
+                break;
             }
         }
 
@@ -674,7 +774,7 @@ namespace VegaISA
          * of a register is 1 dword. this class will take care to do the
          * proper packing/unpacking of sub-dword operands.
          */
-        std::array<ScalarRegU32, NumDwords> srfData;
+        GEM5_ALIGNED(8) std::array<ScalarRegU32, NumDwords> srfData;
     };
 
     // typedefs for the various sizes/types of scalar operands
@@ -735,6 +835,142 @@ namespace VegaISA
     using ConstVecOperandU128 = VecOperand<VecElemU32, true, 4>;
     using ConstVecOperandU256 = VecOperand<VecElemU32, true, 8>;
     using ConstVecOperandU512 = VecOperand<VecElemU32, true, 16>;
+
+
+// Helper class for using multiple VecElemU32 to represent data types which
+// do not divide a dword evenly.
+template<int BITS, int ELEM_SIZE>
+class PackedReg
+{
+    // Logical view is:
+    // dword N, dword N - 1, ..., dword 1, dword 0.
+    // Within each dword, the element starts at [ELEM_SIZE:0]. For example,
+    // for ELEM_SIZE = 6 for fp6 types, [5:0] is the first value, [11:6] is
+    // the second, and so forth. For 6 bits specifically, the 6th element
+    // spans dword 0 and dword 1.
+    static_assert(BITS % 32 == 0);
+    static_assert(BITS % ELEM_SIZE == 0);
+    static_assert(ELEM_SIZE <= 32);
+
+    static constexpr int NumDwords = BITS / 32;
+    uint32_t dwords[NumDwords] = {};
+
+  public:
+    PackedReg() = default;
+
+    void
+    setDword(int dw, uint32_t value)
+    {
+        assert(dw < NumDwords);
+        dwords[dw] = value;
+    }
+
+    uint32_t
+    getDword(int dw)
+    {
+        assert(dw < NumDwords);
+        return dwords[dw];
+    }
+
+    uint32_t
+    getElem(int elem)
+    {
+        assert(elem < (BITS / ELEM_SIZE));
+
+        // Get the upper/lower *bit* location of the element.
+        int ubit, lbit;
+        ubit = elem * ELEM_SIZE + (ELEM_SIZE - 1);
+        lbit = elem * ELEM_SIZE;
+
+        // Convert the bit locations to upper/lower dwords. It is possible
+        // to span two dwords but this does not have to support spanning
+        // more than two dwords.
+        int udw, ldw;
+        udw = ubit / 32;
+        ldw = lbit / 32;
+        assert(udw == ldw || udw == ldw + 1);
+
+        if (udw == ldw) {
+            // Easy case, just shift the dword value and mask to get value.
+            int dw_lbit = lbit % 32;
+
+            uint32_t elem_mask = (1UL << ELEM_SIZE) - 1;
+            uint32_t rv = (dwords[ldw] >> dw_lbit) & elem_mask;
+
+            return rv;
+        }
+
+        // Harder case. To make it easier put into a quad word and shift
+        // that variable instead of trying to work with two.
+        uint64_t qword =
+            uint64_t(dwords[udw]) << 32 | uint64_t(dwords[ldw]);
+
+        int qw_lbit = lbit % 32;
+
+        uint64_t elem_mask = (1ULL << ELEM_SIZE) - 1;
+        uint32_t rv = uint32_t((qword >> qw_lbit) & elem_mask);
+
+        return rv;
+    }
+
+    void
+    setElem(int elem, uint32_t value)
+    {
+        assert(elem < (BITS / ELEM_SIZE));
+
+        // Get the upper/lower *bit* location of the element.
+        int ubit, lbit;
+        ubit = elem * ELEM_SIZE + (ELEM_SIZE - 1);
+        lbit = elem * ELEM_SIZE;
+
+        // Convert the bit locations to upper/lower dwords. It is possible
+        // to span two dwords but this does not have to support spanning
+        // more than two dwords.
+        int udw, ldw;
+        udw = ubit / 32;
+        ldw = lbit / 32;
+        assert(udw == ldw || udw == ldw + 1);
+
+        if (udw == ldw) {
+            // Easy case, just shift the dword value and mask to get value.
+            int dw_lbit = lbit % 32;
+
+            // Make sure the value is not going to clobber another element.
+            uint32_t elem_mask = (1UL << ELEM_SIZE) - 1;
+            value &= elem_mask;
+
+            // Clear the bits we are setting.
+            elem_mask <<= dw_lbit;
+            dwords[ldw] &= ~elem_mask;
+
+            value <<= dw_lbit;
+            dwords[ldw] |= value;
+
+            return;
+        }
+
+        // Harder case. Put the two dwords in a quad word and manipulate that.
+        // Then place the two new dwords back into the storage.
+        uint64_t qword =
+            uint64_t(dwords[udw]) << 32 | uint64_t(dwords[ldw]);
+
+        int qw_lbit = lbit % 32;
+
+        // Make sure the value is not going to clobber another element.
+        uint64_t elem_mask = (1ULL << ELEM_SIZE) - 1;
+        value &= elem_mask;
+
+        elem_mask <<= qw_lbit;
+        qword &= elem_mask;
+
+        value <<= qw_lbit;
+        qword |= value;
+
+        dwords[udw] = uint32_t(qword >> 32);
+        dwords[ldw] = uint32_t(qword & mask(32));
+    }
+};
+
 }
 
 } // namespace gem5

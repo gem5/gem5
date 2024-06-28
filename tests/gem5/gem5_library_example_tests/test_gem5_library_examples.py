@@ -348,6 +348,86 @@ gem5_verify_config(
     length=constants.long_tag,
 )
 
+gem5_verify_config(
+    name="test-gem5-library-example-multisim-fs-x86-npb",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "multisim",
+        "multisim-fs-x86-npb.py",
+    ),
+    config_args=[],
+    gem5_args=["-m", "gem5.utils.multisim"],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-multisim-print-this",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "multisim",
+        "multisim-print-this.py",
+    ),
+    config_args=[],
+    gem5_args=["-m", "gem5.utils.multisim"],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-multisim-print-this-list",
+    fixtures=(),
+    verifiers=(
+        verifier.MatchStdoutNoPerf(
+            joinpath(getcwd(), "ref/simout_multisim_print_this_list.txt")
+        ),
+    ),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "multisim",
+        "multisim-print-this.py",
+    ),
+    config_args=["--list"],
+    gem5_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-multisim-print-this-single-process",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "multisim",
+        "multisim-print-this.py",
+    ),
+    config_args=["process_1"],
+    gem5_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)
+
 # The LoopPoint-Checkpointing feature is still under development, therefore
 # these tests are temporarily disabled until this feature is complete.#
 

@@ -115,10 +115,15 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         }
 
         if (debug::ExecResult && dataStatus != DataInvalid) {
-            if (dataStatus == DataReg)
-                ccprintf(outs, " D=%s", data.asReg.asString());
-            else
+            if (dataStatus == DataReg) {
+                if (vectorLengthInBytes > 0 && inst->isVector()) {
+                    outs << " D=" << data.asReg.asString(vectorLengthInBytes);
+                } else {
+                    ccprintf(outs, " D=%s", data.asReg.asString());
+                }
+            } else {
                 ccprintf(outs, " D=%#018x", data.asInt);
+            }
         }
 
         if (debug::ExecEffAddr && getMemValid())

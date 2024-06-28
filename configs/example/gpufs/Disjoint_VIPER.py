@@ -58,6 +58,8 @@ class Disjoint_VIPER(RubySystem):
             self.network_cpu = DisjointSimple(self)
             self.network_gpu = DisjointSimple(self)
 
+        self.block_size_bytes = options.cacheline_size
+
         # Construct CPU controllers
         cpu_dir_nodes = construct_dirs(options, system, self, self.network_cpu)
         (cp_sequencers, cp_cntrl_nodes) = construct_corepairs(

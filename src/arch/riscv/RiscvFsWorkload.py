@@ -27,6 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.RiscvSemihosting import RiscvSemihosting
 from m5.objects.System import System
 from m5.objects.Workload import (
     KernelWorkload,
@@ -43,6 +44,15 @@ class RiscvBareMetal(Workload):
     bootloader = Param.String("File, that contains the bootloader code")
     bare_metal = Param.Bool(True, "Using Bare Metal Application?")
     reset_vect = Param.Addr(0x0, "Reset vector")
+    semihosting = Param.RiscvSemihosting(
+        NULL,
+        "Enable support for RISC-V semihosting by settings this parameter",
+    )
+    auto_reset_vect = Param.Bool(
+        True,
+        "Use bootloader entry point as reset vector. "
+        "If `auto_reset_vect` is true, the `reset_vect` parameter is ignored.",
+    )
 
 
 class RiscvLinux(KernelWorkload):
@@ -54,6 +64,10 @@ class RiscvLinux(KernelWorkload):
         "", "File that contains the Device Tree Blob. Don't use DTB if empty."
     )
     dtb_addr = Param.Addr(0x87E00000, "DTB address")
+    semihosting = Param.RiscvSemihosting(
+        NULL,
+        "Enable support for RISC-V semihosting by settings this parameter",
+    )
 
     # gem5 event upon guest's kernel panic
     # Default to false because when the kernel is compiled into the bootloader
@@ -118,4 +132,8 @@ class RiscvBootloaderKernelWorkload(Workload):
         "DumpDmesgAndExit",
         "Define how gem5 should behave after a Linux Kernel Oops. "
         "Handler might not be implemented for all architectures.",
+    )
+    semihosting = Param.RiscvSemihosting(
+        NULL,
+        "Enable support for RISC-V semihosting by settings this parameter",
     )

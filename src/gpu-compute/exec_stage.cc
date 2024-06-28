@@ -216,7 +216,7 @@ ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
     ComputeUnit *compute_unit = static_cast<ComputeUnit*>(parent);
 
     spc.init(0, compute_unit->numExeUnits(), 1);
-    idleDur.init(0, 75, 5);
+    idleDur.init(0, 75-1, 5);
     numCyclesWithInstrTypeIssued.init(compute_unit->numExeUnits());
     numCyclesWithNoInstrTypeIssued.init(compute_unit->numExeUnits());
 

@@ -33,36 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.Serial import SerialDevice
-from m5.objects.Terminal import Terminal
-from m5.params import *
-from m5.SimObject import *
+from m5.objects.BaseSemihosting import BaseSemihosting
 
 
-class ArmSemihosting(SimObject):
+class ArmSemihosting(BaseSemihosting):
     type = "ArmSemihosting"
     cxx_header = "arch/arm/semihosting.hh"
     cxx_class = "gem5::ArmSemihosting"
-
-    cmd_line = Param.String("", "Command line to report to guest")
-    stdin = Param.String("stdin", "Standard input (stdin for gem5's terminal)")
-    stdout = Param.String(
-        "stdout", "Standard output (stdout for gem5's terminal)"
-    )
-    stderr = Param.String(
-        "stderr", "Standard error (stderr for gem5's terminal)"
-    )
-    files_root_dir = Param.String(
-        "", "Host root directory for files handled by Semihosting"
-    )
-
-    mem_reserve = Param.MemorySize(
-        "32MiB",
-        "Amount of memory to reserve at the start of the address map. This "
-        "memory won't be used by the heap reported to an application.",
-    )
-    stack_size = Param.MemorySize("32MiB", "Application stack size")
-
-    time = Param.Time(
-        "01/01/2009", "System time to use ('Now' for actual time)"
-    )
