@@ -57,6 +57,7 @@ from .client import (
 )
 from .client_api.client_query import ClientQuery
 from .downloader import get_resource
+from .elfie import ELFieInfo
 from .looppoint import (
     LooppointCsvLoader,
     LooppointJsonLoader,
@@ -1164,7 +1165,10 @@ def _get_workload(
         )
 
         # Adding the additional parameters to the workload parameters
-        if workload["additional_params"]:
+        if (
+            "additional_params" in workload.keys()
+            and workload["additional_params"]
+        ):
             for key in workload["additional_params"].keys():
                 assert isinstance(key, str)
                 value = workload["additional_params"][key]
@@ -1408,4 +1412,5 @@ _get_resource_json_type_map = {
     "looppoint-json": LooppointJsonResource,
     "suite": SuiteResource,
     "workload": WorkloadResource,
+    "elfie-info": ELFieInfo,
 }

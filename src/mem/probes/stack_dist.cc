@@ -53,7 +53,7 @@ StackDistProbe::StackDistProbe(const StackDistProbeParams &p)
 {
     fatal_if(p.system->cacheLineSize() > p.line_size,
              "The stack distance probe must use a cache line size that is "
-             "larger or equal to the system's cahce line size.");
+             "larger or equal to the system's cache line size.");
 }
 
 StackDistProbe::StackDistProbeStats::StackDistProbeStats(

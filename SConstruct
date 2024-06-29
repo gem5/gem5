@@ -552,11 +552,6 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-pipe'])
         env.Append(CCFLAGS=['-fno-strict-aliasing'])
 
-        # Enable -Wall and -Wextra and then disable the few warnings that
-        # we consistently violate
-        env.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
-                            '-Wno-sign-compare', '-Wno-unused-parameter'])
-
         # We always compile using C++17
         env.Append(CXXFLAGS=['-std=c++17'])
 

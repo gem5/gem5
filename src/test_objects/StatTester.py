@@ -44,3 +44,57 @@ class ScalarStatTester(StatTester):
     cxx_class = "gem5::ScalarStatTester"
 
     value = Param.Float("The scalar stat's value.")
+
+
+class VectorStatTester(StatTester):
+    type = "VectorStatTester"
+    cxx_header = "test_objects/stat_tester.hh"
+    cxx_class = "gem5::VectorStatTester"
+
+    values = VectorParam.Float("The vector stat's values.")
+    subnames = VectorParam.String(
+        [],
+        "The vector stat's subnames. If position is empty, index int is "
+        "used instead.",
+    )
+    subdescs = VectorParam.String(
+        [],
+        "The vector stat's subdescriptions. If empty, the subdescriptions "
+        "are not used.",
+    )
+
+
+class Vector2dStatTester(StatTester):
+    type = "Vector2dStatTester"
+    cxx_header = "test_objects/stat_tester.hh"
+    cxx_class = "gem5::Vector2dStatTester"
+
+    x_size = Param.Int("The number of elements in the x dimension.")
+    y_size = Param.Int("The number of elements in the y dimension.")
+
+    values = VectorParam.Float("The vector stat's values, flattened.")
+    subnames = VectorParam.String(
+        [],
+        "The vector stat's subnames. If position is empty, index int is "
+        "used instead.",
+    )
+    subdescs = VectorParam.String(
+        [],
+        "The vector stat's subdescriptions. If empty, the subdescriptions "
+        "are not used.",
+    )
+    ysubnames = VectorParam.String(
+        [],
+        "The vector stat's y subdescriptions. If empty, the subdescriptions ",
+    )
+
+
+class SparseHistStatTester(StatTester):
+    type = "SparseHistStatTester"
+    cxx_header = "test_objects/stat_tester.hh"
+    cxx_class = "gem5::SparseHistStatTester"
+
+    samples = VectorParam.Float(
+        "The sparse histogram's sampled values, to be inserted into the "
+        "histogram."
+    )

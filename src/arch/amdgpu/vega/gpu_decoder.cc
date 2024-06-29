@@ -886,7 +886,7 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OPU_VOP3__V_FMAC_F32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -6171,6 +6171,12 @@ namespace VegaISA
     {
         return new Inst_VOP3__V_SUBREV_U32(&iFmt->iFmt_VOP3A);
     } // decode_OPU_VOP3__V_SUBREV_U32
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_FMAC_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_FMAC_F32(&iFmt->iFmt_VOP3A);
+    } // decode_OPU_VOP3__V_FMAC_F32
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_NOP(MachInst iFmt)

@@ -1019,7 +1019,7 @@ class ComputeUnit : public ClockedObject
 
     // hold the time of the arrival of the first cache block related to
     // a particular GPUDynInst. This is used to calculate the difference
-    // between the first and last chace block arrival times.
+    // between the first and last cache block arrival times.
     std::unordered_map<GPUDynInstPtr, Tick> headTailMap;
 
   public:
@@ -1140,6 +1140,12 @@ class ComputeUnit : public ClockedObject
         statistics::Scalar numVecOpsExecutedMAD16;
         statistics::Scalar numVecOpsExecutedMAD32;
         statistics::Scalar numVecOpsExecutedMAD64;
+        // number of individual MFMA 16,32,64 vector operations executed
+        statistics::Scalar numVecOpsExecutedMFMA;
+        statistics::Scalar numVecOpsExecutedMFMAI8;
+        statistics::Scalar numVecOpsExecutedMFMAF16;
+        statistics::Scalar numVecOpsExecutedMFMAF32;
+        statistics::Scalar numVecOpsExecutedMFMAF64;
         // total number of two op FP vector operations executed
         statistics::Scalar numVecOpsExecutedTwoOpFP;
         // Total cycles that something is running on the GPU

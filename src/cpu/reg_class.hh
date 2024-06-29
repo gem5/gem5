@@ -45,6 +45,7 @@
 #include <iterator>
 #include <string>
 
+#include "arch/generic/vec_reg.hh"
 #include "base/cprintf.hh"
 #include "base/debug.hh"
 #include "base/intmath.hh"
@@ -170,7 +171,7 @@ class RegClassOps
     /** Print the name of the register specified in id. */
     virtual std::string regName(const RegId &id) const;
     /** Print the value of a register pointed to by val of size size. */
-    virtual std::string valString(const void *val, size_t size) const;
+    virtual std::string valString(const void *val, const size_t& size) const;
     /** Flatten register id id using information in the ISA object isa. */
     virtual RegId
     flatten(const BaseISA &isa, const RegId &id) const
@@ -245,6 +246,11 @@ class RegClass
     valString(const void *val) const
     {
         return _ops->valString(val, regBytes());
+    }
+    std::string
+    valString(const void *val, const size_t& num_bytes) const
+    {
+        return _ops->valString(val, std::min(regBytes(), num_bytes));
     }
     RegId
     flatten(const BaseISA &isa, const RegId &id) const
@@ -354,15 +360,30 @@ RegClass::operator[](RegIndex idx) const
     return RegId(*this, idx);
 }
 
+// Type matching for gem5::VecRegContainer class
+// This is used in TypedRegClassOps.
+template<typename>
+struct is_vec_reg_container : std::false_type {};
+template<std::size_t SIZE>
+struct is_vec_reg_container<gem5::VecRegContainer<SIZE>> : std::true_type {};
+
 template <typename ValueType>
 class TypedRegClassOps : public RegClassOps
 {
   public:
     std::string
-    valString(const void *val, size_t size) const override
+    valString(const void *val, const size_t& size) const override
     {
-        assert(size == sizeof(ValueType));
-        return csprintf("%s", *(const ValueType *)val);
+        if constexpr (is_vec_reg_container<ValueType>::value) {
+            if (size == sizeof(ValueType)) {
+                return csprintf("%s", *(const ValueType *)val);
+            } else {
+                return ((const ValueType *)val)->getString(size);
+            }
+        } else {
+            assert(size == sizeof(ValueType));
+            return csprintf("%s", *(const ValueType *)val);
+        }
     }
 };
 

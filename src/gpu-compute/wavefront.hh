@@ -205,6 +205,9 @@ class Wavefront : public SimObject
     // will live while the WF is executed
     uint32_t startSgprIndex;
 
+    // Architected flat scratch address for MI300+
+    Addr archFlatScratchAddr = 0;
+
     // Old value of destination gpr (for trace)
     std::vector<uint32_t> oldVgpr;
     // Id of destination gpr (for trace)

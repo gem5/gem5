@@ -252,6 +252,14 @@ PySource('gem5.components.processors',
     'gem5/components/processors/random_generator_core.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/random_generator.py')
+PySource('gem5.components.processors.spatter_gen',
+         'gem5/components/processors/spatter_gen/__init__.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_generator_core.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_generator.py')
+PySource('gem5.components.processors.spatter_gen',
+    'gem5/components/processors/spatter_gen/spatter_kernel.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_core.py')
 PySource('gem5.components.processors',
@@ -308,6 +316,9 @@ PySource('gem5.utils', 'gem5/utils/progress_bar.py')
 PySource('gem5.utils', 'gem5/utils/requires.py')
 PySource('gem5.utils',
          'gem5/utils/socks_ssl_context.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__init__.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/multisim.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__main__.py')
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/__init__.py')
 PySource('gem5.utils.multiprocessing',

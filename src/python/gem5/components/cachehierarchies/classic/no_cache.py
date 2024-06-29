@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
+
 from m5.objects import (
     BadAddr,
     BaseXBar,
@@ -64,8 +66,7 @@ class NoCache(AbstractClassicCacheHierarchy):
 
     """
 
-    @staticmethod
-    def _get_default_membus() -> SystemXBar:
+    def _get_default_membus(self) -> SystemXBar:
         """
         A method used to obtain the default memory bus of 64 bit in width for
         the NoCache CacheHierarchy.
@@ -82,18 +83,16 @@ class NoCache(AbstractClassicCacheHierarchy):
         membus.max_routing_table_size = 2048
         return membus
 
-    def __init__(
-        self, membus: BaseXBar = _get_default_membus.__func__()
-    ) -> None:
+    def __init__(self, membus: Optional[BaseXBar] = None) -> None:
         """
         :param membus: The memory bus for this setup. This parameter is
                        optional and will default toa 64 bit width SystemXBar
-                       is not specified.
+                       if not specified.
 
         :type membus: BaseXBar
         """
         super().__init__()
-        self.membus = membus
+        self.membus = membus if membus else self._get_default_membus()
 
     @overrides(AbstractClassicCacheHierarchy)
     def get_mem_side_port(self) -> Port:

@@ -53,6 +53,7 @@ output header {{
         Unknown(ExtMachInst _machInst) :
                 X86ISA::X86StaticInst("unknown", _machInst, No_OpClass)
         {
+            flags[IsInvalid] = true;
         }
 
         Fault execute(ExecContext *, trace::InstRecord *) const override;

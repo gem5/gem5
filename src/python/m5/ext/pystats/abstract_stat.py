@@ -26,10 +26,12 @@
 
 import re
 from typing import (
+    Any,
     Callable,
     List,
     Optional,
     Pattern,
+    Tuple,
     Union,
 )
 
@@ -60,20 +62,11 @@ class AbstractStat(SerializableStat):
                           If it returns ``True``, then the child is yielded.
                           Otherwise, the child is skipped. If not provided then
                           all children are returned.
+
+        Note: This is method must be implemented in AbstractStat subclasses
+        which have children, otherwise it will return an empty list.
         """
-
-        to_return = []
-        for attr in self.__dict__:
-            obj = getattr(self, attr)
-            if isinstance(obj, AbstractStat):
-                if (predicate and predicate(attr)) or not predicate:
-                    to_return.append(obj)
-                if recursive:
-                    to_return = to_return + obj.children(
-                        predicate=predicate, recursive=True
-                    )
-
-        return to_return
+        return []
 
     def find(self, regex: Union[str, Pattern]) -> List["AbstractStat"]:
         """Find all stats that match the name, recursively through all the
@@ -99,3 +92,52 @@ class AbstractStat(SerializableStat):
         return self.children(
             lambda _name: re.match(pattern, _name), recursive=True
         )
+
+    def _get_vector_item(self, item: str) -> Optional[Tuple[str, int, Any]]:
+        """It has been the case in gem5 that SimObject vectors are stored as
+        strings such as "cpu0" or "cpu1". This function splits the string into
+        the SimObject name and index, (e.g.: ["cpu", 0] and ["cpu", 1]) and
+        returns the item for that name and it's index. If the string cannot be
+        split into a SimObject name and index, or if the SimObject does not
+        exit at `Simobject[index]`, the function returns None.
+        """
+        regex = re.compile("[0-9]+$")
+        match = regex.search(item)
+        if not match:
+            return None
+
+        match_str = match.group()
+
+        assert match_str.isdigit(), f"Regex match must be a digit: {match_str}"
+        vector_index = int(match_str)
+        vector_name = item[: (-1 * len(match_str))]
+
+        if hasattr(self, vector_name):
+            vector = getattr(self, vector_name)
+            try:
+                vector_value = vector[vector_index]
+                return vector_name, vector_index, vector_value
+            except KeyError:
+                pass
+        return None
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __getattr__(self, item: str) -> Any:
+        vector_item = self._get_vector_item(item)
+        if not vector_item:
+            return None
+
+        assert (
+            len(vector_item) == 3
+        ), f"Vector item must have 3 elements: {vector_item}"
+        return vector_item[2]
+
+    def __getitem__(self, item: str):
+        return getattr(self, item)
+
+    def __contains__(self, item: Any) -> bool:
+        return (
+            isinstance(item, str) and self._get_vector_item(item)
+        ) or hasattr(self, item)

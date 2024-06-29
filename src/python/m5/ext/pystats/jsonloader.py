@@ -31,13 +31,9 @@ from typing import (
     Union,
 )
 
-from .group import (
-    Group,
-    Vector,
-)
+from .group import Group
 from .simstat import SimStat
 from .statistic import (
-    Accumulator,
     Distribution,
     Scalar,
     Statistic,
@@ -73,10 +69,6 @@ class JsonLoader(json.JSONDecoder):
             elif d["type"] == "Distribution":
                 d.pop("type", None)
                 return Distribution(**d)
-
-            elif d["type"] == "Accumulator":
-                d.pop("type", None)
-                return Accumulator(**d)
 
             elif d["type"] == "Group":
                 return Group(**d)

@@ -215,7 +215,15 @@ class KernelDiskWorkload:
         if readfile:
             self.readfile = readfile
         elif readfile_contents:
-            self.readfile = os.path.join(m5.options.outdir, "readfile")
+            # We hash the contents of the readfile and append it to the
+            # readfile name. This is to ensure that we don't overwrite the
+            # readfile if the contents are different.
+            readfile_contents_hash = hex(
+                hash(tuple(bytes(readfile_contents, "utf-8")))
+            )
+            self.readfile = os.path.join(
+                m5.options.outdir, ("readfile_" + readfile_contents_hash)
+            )
 
         # Add the contents to the readfile, if specified.
         if readfile_contents:
@@ -241,3 +249,11 @@ class KernelDiskWorkload:
                     "Checkpoints must be passed as a Path or an "
                     "CheckpointResource."
                 )
+
+    def append_kernel_arg(self, arg: str) -> None:
+        """
+        Append a kernel argument to the list of kernel arguments.
+
+        :param arg: The kernel argument to append.
+        """
+        self.workload.command_line += f" {arg}"

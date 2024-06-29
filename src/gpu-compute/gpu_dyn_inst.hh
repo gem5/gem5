@@ -286,6 +286,7 @@ class GPUDynInst : public GPUExecContext
     bool isGloballyCoherent() const;
     bool isSystemCoherent() const;
 
+    bool isI8() const;
     bool isF16() const;
     bool isF32() const;
     bool isF64() const;
@@ -293,6 +294,7 @@ class GPUDynInst : public GPUExecContext
     bool isFMA() const;
     bool isMAC() const;
     bool isMAD() const;
+    bool isMFMA() const;
 
     // for FLAT memory ops. check the segment address
     // against the APE registers to see if it falls

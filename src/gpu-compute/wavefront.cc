@@ -384,14 +384,13 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 // the FLAT_SCRATCH register pair to the scratch backing
                 // memory: https://llvm.org/docs/AMDGPUUsage.html#flat-scratch
                 if (task->gfxVersion() == GfxVersion::gfx942) {
-                    Addr arch_flat_scratch =
+                    archFlatScratchAddr =
                         task->amdQueue.scratch_backing_memory_location;
-                    computeUnit->srf[simdId]->write(
-                        VegaISA::REG_FLAT_SCRATCH_HI,
-                        bits(arch_flat_scratch, 63, 32));
-                    computeUnit->srf[simdId]->write(
-                        VegaISA::REG_FLAT_SCRATCH_LO,
-                        bits(arch_flat_scratch, 31, 0));
+
+                    DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                            "Setting architected flat scratch = %x\n",
+                            computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                            archFlatScratchAddr);
 
                     break;
                 }
@@ -1028,6 +1027,14 @@ Wavefront::exec()
         computeUnit->stats.controlFlowDivergenceDist.sample(num_active_lanes);
         computeUnit->stats.numVecOpsExecuted += num_active_lanes;
 
+        if (ii->isMFMA()) {
+            computeUnit->stats.numVecOpsExecutedMFMA += num_active_lanes;
+            if (ii->isI8()) {
+                computeUnit->stats.numVecOpsExecutedMFMAI8
+                    += num_active_lanes;
+            }
+        }
+
         if (ii->isF16() && ii->isALU()) {
             if (ii->isF32() || ii->isF64()) {
                 fatal("Instruction is tagged as both (1) F16, and (2)"
@@ -1047,6 +1054,10 @@ Wavefront::exec()
             else if (ii->isMAD()) {
                 computeUnit->stats.numVecOpsExecutedMAD16 += num_active_lanes;
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
+            }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF16
                     += num_active_lanes;
             }
         }
@@ -1071,6 +1082,10 @@ Wavefront::exec()
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
                     += num_active_lanes;
             }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF32
+                    += num_active_lanes;
+            }
         }
         if (ii->isF64() && ii->isALU()) {
             if (ii->isF16() || ii->isF32()) {
@@ -1091,6 +1106,10 @@ Wavefront::exec()
             else if (ii->isMAD()) {
                 computeUnit->stats.numVecOpsExecutedMAD64 += num_active_lanes;
                 computeUnit->stats.numVecOpsExecutedTwoOpFP
+                    += num_active_lanes;
+            }
+            else if (ii->isMFMA()) {
+                computeUnit->stats.numVecOpsExecutedMFMAF64
                     += num_active_lanes;
             }
         }

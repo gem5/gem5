@@ -114,7 +114,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "23.0"
+            "23.0",
+            "24.0"
         ]
     },
     {

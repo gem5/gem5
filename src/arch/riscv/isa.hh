@@ -166,6 +166,8 @@ class ISA : public BaseISA
     unsigned getVecLenInBytes() { return vlen >> 3; }
     unsigned getVecElemLenInBits() { return elen; }
 
+    int64_t getVectorLengthInBytes() const override { return vlen >> 3; }
+
     PrivilegeModeSet getPrivilegeModeSet() { return _privilegeModeSet; }
 
     virtual Addr getFaultHandlerAddr(

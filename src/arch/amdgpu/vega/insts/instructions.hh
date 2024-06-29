@@ -25950,6 +25950,40 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBREV_U32
 
+    class Inst_VOP3__V_FMAC_F32 : public Inst_VOP3A
+    {
+      public:
+        Inst_VOP3__V_FMAC_F32(InFmt_VOP3A*);
+        ~Inst_VOP3__V_FMAC_F32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP3__V_FMAC_F32
+
     class Inst_VOP3__V_NOP : public Inst_VOP3A
     {
       public:
@@ -44142,6 +44176,12 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        if (_delta == 2) {
+            setFlag(F64);
+        } else if (_delta == 1) {
+            setFlag(F32);
+        }
       }
       ~Inst_VOP3P_MAI__V_MFMA() {}
 
@@ -44369,6 +44409,10 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        if (MXFPT::size() == 16) {
+            setFlag(F16);
+        }
       }
       ~Inst_VOP3P_MAI__V_MFMA_MXFP() {}
 
@@ -44615,6 +44659,8 @@ namespace VegaISA
           : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
       {
         setFlag(ALU);
+        setFlag(MFMA);
+        setFlag(I8);
       }
       ~Inst_VOP3P_MAI__V_MFMA_I8() {}
 
