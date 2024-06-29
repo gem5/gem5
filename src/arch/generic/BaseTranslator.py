@@ -4,7 +4,6 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-
 class Translator(SimObject):
     type = "Translator"
     cxx_class = "gem5::Translator"

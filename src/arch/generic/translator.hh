@@ -7,22 +7,29 @@
 
 namespace gem5
 {
+/**
+ * This is the base object from which the TLB and the Page Table Walkers will
+ * inherit from. This object focuses on having a small interface which will
+ * be used by the MMU to access the TLB and the PTWs.
+ */
 template <typename Entry>
 class Translator : public ClockedObject
 {
   private:
-    AssociativeCache<Entry> _cache;
-    Translator* _nextLevel;
+    AssociativeCache<Entry> _cache; // This could be TLB or Page Walk Cache
+    Translator* _nextLevel; // Access to multi-level TLB and PT Walkers
 
   public:
     PARAMS(Translator);
     Translator(const Params &params)
       : SimObject(p), _nextLevel(p.next_level),
-        _cache((name() + ".Translator").c_str(), p.num_entries,
+        _cache((name() + ".TranslatorCache").c_str(), p.num_entries,
             p.associativity, p.repl_policy, p.indexing_policy);
 
-    Translator* nextLevel() const { return _nextLevel; }
-
+    /**
+     * This function allows for easy access to the TLB and PTW hierarchy
+     */
+    virtual Translator* nextLevel() = 0;
 };
 
 } // namespace gem5
