@@ -16,9 +16,9 @@ class Translator : public ClockedObject
 
   public:
     PARAMS(Translator);
-    Translator(const Params &params) 
-      : SimObject(p), _nextLevel(p.next_level), 
-        _cache((name() + ".Translator").c_str(), p.num_entries, 
+    Translator(const Params &params)
+      : SimObject(p), _nextLevel(p.next_level),
+        _cache((name() + ".Translator").c_str(), p.num_entries,
             p.associativity, p.repl_policy, p.indexing_policy);
 
     Translator* nextLevel() const { return _nextLevel; }
