@@ -9,7 +9,7 @@ In this project we will focus on 2 primary goals:
 
 ## Remodeling Current Implementations
 
-As of today, gem5's implementation of address translation is highly inconsistent across different ISAs. Each architecture has it's own implementation, with differing functionalities and separate source files for generic features that exist regardless of architecture. 
+As of today, gem5's implementation of address translation is highly inconsistent across different ISAs. Each architecture has it's own implementation, with differing functionalities and separate source files for generic features that exist regardless of architecture.
 
 Our goal is to move these features to a generic class and leave ISA specific classes to implement only ISA specific features.
 
