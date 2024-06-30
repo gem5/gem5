@@ -31,11 +31,11 @@
 
 structure (GPUCoalescer, external = "yes") {
   void readCallback(Addr, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles);
+  void readCallback(Addr, MachineType, DataBlock, bool);
   void readCallback(Addr, MachineType, DataBlock,
                     Cycles, Cycles, Cycles, bool);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles, bool, bool);
   void writeCallback(Addr, DataBlock);
   void writeCallback(Addr, MachineType, DataBlock);
   void writeCallback(Addr, MachineType, DataBlock,
@@ -49,11 +49,11 @@ structure (GPUCoalescer, external = "yes") {
 
 structure (VIPERCoalescer, external = "yes") {
   void readCallback(Addr, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles);
+  void readCallback(Addr, MachineType, DataBlock, bool);
   void readCallback(Addr, MachineType, DataBlock,
                     Cycles, Cycles, Cycles, bool);
+  void readCallback(Addr, MachineType, DataBlock,
+                    Cycles, Cycles, Cycles, bool, bool);
   void writeCallback(Addr, DataBlock);
   void writeCallback(Addr, MachineType, DataBlock);
   void writeCallback(Addr, MachineType, DataBlock,
