@@ -54,30 +54,12 @@ jobs:
               run: scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option }}
             - name: Build gem5
               run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v4.0.0
+            - uses: actions/upload-artifact@v4
               with:
                   name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
                   path: '*build/${{ matrix.image }}/gem5.opt'
                   retention-days: 1
             - run: echo "This job's status is ${{ job.status }}."
-    # The actions/upload-artifact@v4 action has a special "merge" sub action
-    # which allows for the merging of multiple artifacts into a single one.
-    # This is otherwise not possible as artifacts are immutable after creation
-    # in v4. We createa a merged artifact here as we want to download all the
-    # gem5 build artifacts when running the long tests.
-    merge-gem5-build-artifacts:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [build-gem5, name-artifacts]
-        steps:
-            - name: Merge gem5 build artifacts
-              uses: actions/upload-artifact/merge@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}
-                  pattern: ${{needs.name-artifacts.outputs.build-name}}*
-                  retention-days: 1
-                  compression-level: 9
-
 
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
@@ -101,7 +83,7 @@ jobs:
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [name-artifacts, merge-gem5-build-artifacts]
+        needs: [name-artifacts, build-gem5]
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         steps:
             - name: Clean runner
@@ -110,9 +92,10 @@ jobs:
             # download all artifacts for each test. Thoguh this is inelegant,
             # it's simpler than figuring otu which long tests requires which
             # binary.
-            - uses: actions/download-artifact@v4.0.0
+            - uses: actions/download-artifact@v4
               with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}
+                  pattern: ${{needs.name-artifacts.outputs.build-name}}*
+                  merge-multiple: true
             # The upload/download GitHub actions do not preserve the executable
             # bit of the files. We need to set the executable bit for the
             # gem5.opt binaries we've just downloaded.
@@ -123,7 +106,7 @@ jobs:
               run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
             - name: upload results
               if: success() || failure()
-              uses: actions/upload-artifact@v4.0.0
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
@@ -148,7 +131,7 @@ jobs:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4.0.0
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
             - run: chmod u+x build/ALL/gem5.opt
@@ -158,7 +141,7 @@ jobs:
                   --skip-build -vv
             - name: upload results
               if: success() || failure()
-              uses: actions/upload-artifact@v4.0.0
+              uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
