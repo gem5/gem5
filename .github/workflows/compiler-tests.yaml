@@ -4,10 +4,7 @@
 name: Compiler Tests
 
 on:
-  # Runs every Friday from 7AM UTC
-    schedule:
-        - cron: 00 7 * * 5
-  # Allows us to manually start workflow for testing
+    # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
 
 jobs:
@@ -25,10 +22,6 @@ jobs:
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
             - uses: actions/checkout@v4
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
@@ -47,10 +40,6 @@ jobs:
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
             - uses: actions/checkout@v4
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
