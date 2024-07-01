@@ -60,24 +60,6 @@ jobs:
                   path: '*build/${{ matrix.image }}/gem5.opt'
                   retention-days: 1
             - run: echo "This job's status is ${{ job.status }}."
-    # The actions/upload-artifact@v4 action has a special "merge" sub action
-    # which allows for the merging of multiple artifacts into a single one.
-    # This is otherwise not possible as artifacts are immutable after creation
-    # in v4. We createa a merged artifact here as we want to download all the
-    # gem5 build artifacts when running the long tests.
-    merge-gem5-build-artifacts:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [build-gem5, name-artifacts]
-        steps:
-            - name: Merge gem5 build artifacts
-              uses: actions/upload-artifact/merge@v4
-              with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}
-                  pattern: ${{needs.name-artifacts.outputs.build-name}}*
-                  retention-days: 1
-                  compression-level: 9
-
 
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
@@ -101,7 +83,7 @@ jobs:
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [name-artifacts, merge-gem5-build-artifacts]
+        needs: [name-artifacts, build-gem5]
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         steps:
             - name: Clean runner
@@ -112,7 +94,8 @@ jobs:
             # binary.
             - uses: actions/download-artifact@v4.0.0
               with:
-                  name: ${{needs.name-artifacts.outputs.build-name}}
+                  pattern: ${{needs.name-artifacts.outputs.build-name}}*
+                  merge-multiple: true
             # The upload/download GitHub actions do not preserve the executable
             # bit of the files. We need to set the executable bit for the
             # gem5.opt binaries we've just downloaded.
