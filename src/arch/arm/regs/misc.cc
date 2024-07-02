@@ -499,6 +499,7 @@ std::unordered_map<MiscRegNum32, MiscRegIndex> miscRegNum32ToIdx{
     // MCRR/MRRC regs
     { MiscRegNum32(15, 0, 2), MISCREG_TTBR0 },
     { MiscRegNum32(15, 0, 7), MISCREG_PAR },
+    { MiscRegNum32(15, 0, 9), MISCREG_PMCCNTR }, // ARMv8 AArch32 register
     { MiscRegNum32(15, 0, 12), MISCREG_ICC_SGI1R },
     { MiscRegNum32(15, 0, 14), MISCREG_CNTPCT },
     { MiscRegNum32(15, 0, 15), MISCREG_CPUMERRSR },
