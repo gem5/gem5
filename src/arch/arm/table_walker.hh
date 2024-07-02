@@ -678,6 +678,14 @@ class TableWalker : public ClockedObject
             return !bits(data, 11);
         }
 
+        /** FNXS for FEAT_XS only */
+        bool
+        fnxs() const
+        {
+            assert((type() == Block || type() == Page));
+            return bits(data, 11);
+        }
+
         /** Returns true if the access flag (AF) is set. */
         bool
         af() const
@@ -1145,6 +1153,7 @@ class TableWalker : public ClockedObject
     void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                          LongDescriptor &lDescriptor);
     void memAttrsWalkAArch64(TlbEntry &te);
+    bool uncacheableFromAttrs(uint8_t attrs);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 

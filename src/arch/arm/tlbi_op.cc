@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 Arm Limited
+ * Copyright (c) 2018-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,12 @@ namespace gem5
 
 namespace ArmISA {
 
+bool
+TLBIOp::match(TlbEntry* te, vmid_t vmid) const
+{
+    return matchEntry(te, vmid) && (attr != Attr::ExcludeXS || !te->xs);
+}
+
 void
 TLBIALL::operator()(ThreadContext* tc)
 {
@@ -61,7 +67,7 @@ TLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
         (te->vmid == vmid || el2Enabled) &&
@@ -76,9 +82,9 @@ ITLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIALL::match(TlbEntry* te, vmid_t vmid) const
+ITLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIALL::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIALL::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -89,9 +95,9 @@ DTLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIALL::match(TlbEntry* te, vmid_t vmid) const
+DTLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIALL::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIALL::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
@@ -107,7 +113,7 @@ TLBIALLEL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLEL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLEL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
         te->checkRegime(targetRegime);
@@ -128,7 +134,7 @@ TLBIVMALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIVMALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIVMALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
         te->checkRegime(targetRegime) &&
@@ -148,7 +154,7 @@ TLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIASID::match(TlbEntry* te, vmid_t vmid) const
+TLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && te->asid == asid &&
         secureLookup == !te->nstid &&
@@ -164,9 +170,9 @@ ITLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIASID::match(TlbEntry* te, vmid_t vmid) const
+ITLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIASID::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIASID::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -177,9 +183,9 @@ DTLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIASID::match(TlbEntry* te, vmid_t vmid) const
+DTLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIASID::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIASID::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
@@ -194,7 +200,7 @@ TLBIALLN::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLN::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLN::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && te->nstid &&
         te->checkRegime(targetRegime);
@@ -226,7 +232,7 @@ TLBIMVAA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -261,7 +267,7 @@ TLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -275,9 +281,9 @@ ITLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+ITLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIMVA::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -287,9 +293,9 @@ DTLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+DTLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIMVA::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
@@ -304,7 +310,7 @@ TLBIIPA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIRMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
@@ -320,7 +326,7 @@ TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
 }
 
 bool
-TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIRMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();

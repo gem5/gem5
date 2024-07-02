@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2018 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2018, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -161,6 +161,14 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
         } else {
             stage1Te.shareable       = true;
             stage1Te.outerShareable = true;
+        }
+
+        if (stage1Te.mtype == TlbEntry::MemoryType::Normal &&
+            stage1Te.innerAttrs == 3 &&
+            stage1Te.outerAttrs == 3) {
+            stage1Te.xs = false;
+        } else {
+            stage1Te.xs = stage1Te.xs && stage2Te->xs;
         }
         stage1Te.updateAttributes();
     }

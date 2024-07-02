@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2021, 2023 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -260,6 +260,8 @@ struct TlbEntry : public Serializable
     bool xn;                // Execute Never
     bool pxn;               // Privileged Execute Never (LPAE only)
 
+    bool xs;                // xs attribute from FEAT_XS
+
     //Construct an entry that maps to physical address addr for SE mode
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,
              bool uncacheable, bool read_only) :
@@ -272,7 +274,8 @@ struct TlbEntry : public Serializable
          ns(true), nstid(true), regime(TranslationRegime::EL10),
          type(TypeTLB::unified), partial(false),
          nonCacheable(uncacheable),
-         shareable(false), outerShareable(false), xn(0), pxn(0)
+         shareable(false), outerShareable(false), xn(0), pxn(0),
+         xs(true)
     {
         // no restrictions by default, hap = 0x3
 
@@ -289,7 +292,8 @@ struct TlbEntry : public Serializable
          longDescFormat(false), global(false), valid(false),
          ns(true), nstid(true), regime(TranslationRegime::EL10),
          type(TypeTLB::unified), partial(false), nonCacheable(false),
-         shareable(false), outerShareable(false), xn(0), pxn(0)
+         shareable(false), outerShareable(false), xn(0), pxn(0),
+         xs(true)
     {
         // no restrictions by default, hap = 0x3
 
@@ -406,9 +410,9 @@ struct TlbEntry : public Serializable
     print() const
     {
         return csprintf("%#x, asn %d vmn %d ppn %#x size: %#x ap:%d "
-                        "ns:%d nstid:%d g:%d regime:%s", vpn << N, asid, vmid,
+                        "ns:%d nstid:%d g:%d xs: %d regime:%s", vpn << N, asid, vmid,
                         pfn << N, size, ap, ns, nstid, global,
-                        regimeToStr(regime));
+                        xs, regimeToStr(regime));
     }
 
     void
