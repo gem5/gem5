@@ -469,7 +469,9 @@ let {{
 
     singleSimpleCode = vfpEnabledCheckCode + '''
         [[maybe_unused]] FPSCR fpscr = (FPSCR) FpscrExc;
-        FpDest = %(op)s;
+        static_assert(std::is_same_v<decltype(%(op)s), uint32_t>,
+                      "operation triggers invalid implicit conversion");
+        FpDest_uw = %(op)s;
     '''
     singleCode = singleSimpleCode + '''
         FpscrExc = fpscr;
@@ -485,14 +487,18 @@ let {{
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
-    singleBinOp = "binaryOp(fpscr, FpOp1, FpOp2," + \
-                "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
-    singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
+    singleBinOp = "floatToBits32(binaryOp(fpscr, FpOp1, FpOp2, " + \
+                  "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode))"
+    singleUnaryOp = "floatToBits32(unaryOp(fpscr, FpOp1, " + \
+                    "%(func)s, fpscr.fz, fpscr.rMode))"
     doubleCode = vfpEnabledCheckCode + '''
         [[maybe_unused]] FPSCR fpscr = (FPSCR) FpscrExc;
-        double dest = %(op)s;
-        FpDestP0_uw = dblLow(dest);
-        FpDestP1_uw = dblHi(dest);
+        uint64_t cOp1 = ((uint64_t)FpOp1P0_uw | ((uint64_t)FpOp1P1_uw << 32));
+        static_assert(std::is_same_v<decltype(%(op)s), uint64_t>,
+                      "operation triggers invalid implicit conversion");
+        uint64_t cDest = %(op)s;
+        FpDestP0_uw = (uint32_t)cDest;
+        FpDestP1_uw = (uint32_t)(cDest >> 32);
         FpscrExc = fpscr;
     '''
     doubleTernOp = vfpEnabledCheckCode + '''
@@ -509,13 +515,13 @@ let {{
         FpscrExc = fpscr;
     '''
     doubleBinOp = '''
-        binaryOp(fpscr, dbl(FpOp1P0_uw, FpOp1P1_uw),
-                        dbl(FpOp2P0_uw, FpOp2P1_uw),
-                        %(func)s, fpscr.fz, fpscr.dn, fpscr.rMode);
+        floatToBits64(binaryOp(fpscr, bitsToFloat64(cOp1),
+                               dbl(FpOp2P0_uw, FpOp2P1_uw),
+                               %(func)s, fpscr.fz, fpscr.dn, fpscr.rMode))
     '''
     doubleUnaryOp = '''
-        unaryOp(fpscr, dbl(FpOp1P0_uw, FpOp1P1_uw), %(func)s,
-                fpscr.fz, fpscr.rMode)
+        floatToBits64(unaryOp(fpscr, bitsToFloat64(cOp1), %(func)s,
+                              fpscr.fz, fpscr.rMode))
     '''
 
     def buildTernaryFpOp(Name, base, opClass, singleOp, doubleOp, paramStr):
@@ -671,8 +677,7 @@ let {{
     buildUnaryFpOp("vsqrt", "Vsqrt", "FpRegRegOp", "SimdFloatSqrtOp", "sqrtf",
                    "sqrt")
 
-    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp,
-                             doubleOp = None):
+    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
@@ -695,28 +700,24 @@ let {{
             exec_output += PredOpExecute.subst(iop)
 
     buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp", "SimdFloatMiscOp",
-                         "-FpOp1", "-dbl(FpOp1P0_uw, FpOp1P1_uw)")
+                         "fplibNeg(FpOp1_uw)", "fplibNeg(cOp1)")
     buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
-                         "fabsf(FpOp1)", "fabs(dbl(FpOp1P0_uw, FpOp1P1_uw))")
+                         "fplibAbs(FpOp1_uw)", "fplibAbs(cOp1)")
     buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdFloatMiscOp",
-        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_POSINF, false, fpscr)",
-        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
-        "FPRounding_POSINF, false, fpscr)"
+        "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_POSINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrintm", "VRIntM", "FpRegRegOp", "SimdFloatMiscOp",
-        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_NEGINF, false, fpscr)",
-        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
-        "FPRounding_NEGINF, false, fpscr)"
+        "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_NEGINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrinta", "VRIntA", "FpRegRegOp", "SimdFloatMiscOp",
-        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_TIEAWAY, false, fpscr)",
-        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
-        "FPRounding_TIEAWAY, false, fpscr)"
+        "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEAWAY, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrintn", "VRIntN", "FpRegRegOp", "SimdFloatMiscOp",
-        "fplibRoundInt<uint32_t>(FpOp1, FPRounding_TIEEVEN, false, fpscr)",
-        "fplibRoundInt<uint64_t>(dbl(FpOp1P0_uw, FpOp1P1_uw), " \
-        "FPRounding_TIEEVEN, false, fpscr)"
+        "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEEVEN, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)"
         )
 }};
 
