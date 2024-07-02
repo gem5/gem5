@@ -1360,13 +1360,12 @@ let {{
     vcmpZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpDest);
-        // This only handles imm == 0 for now.
-        assert(imm == 0);
-        if (FpDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (FpDest == 0.0f) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (FpDest < imm) {
+        } else if (FpDest < 0.0f) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (FpDest > imm) {
+        } else if (FpDest > 0.0f) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint32_t qnan = 0x7fc00000;
@@ -1388,16 +1387,15 @@ let {{
     exec_output += PredOpExecute.subst(vcmpZeroSIop);
 
     vcmpZeroDCode = vfpEnabledCheckCode + '''
-        // This only handles imm == 0 for now.
-        assert(imm == 0);
         double cDest = dbl(FpDestP0_uw, FpDestP1_uw);
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, cDest);
-        if (cDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (cDest == 0.0) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (cDest < imm) {
+        } else if (cDest < 0.0) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (cDest > imm) {
+        } else if (cDest > 0.0) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint64_t qnan = 0x7ff8000000000000ULL;
@@ -1471,11 +1469,12 @@ let {{
     vcmpeZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpDest);
-        if (FpDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (FpDest == 0.0f) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (FpDest < imm) {
+        } else if (FpDest < 0.0f) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (FpDest > imm) {
+        } else if (FpDest > 0.0f) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             fpscr.ioc = 1;
@@ -1496,11 +1495,12 @@ let {{
         double cDest = dbl(FpDestP0_uw, FpDestP1_uw);
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, cDest);
-        if (cDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (cDest == 0.0) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (cDest < imm) {
+        } else if (cDest < 0.0) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (cDest > imm) {
+        } else if (cDest > 0.0) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             fpscr.ioc = 1;
