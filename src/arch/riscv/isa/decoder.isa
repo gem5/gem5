@@ -69,7 +69,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Fp2_bits = Mem;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x2: c_lw({{
                 offset = CIMM2<1:1> << 2 |
@@ -78,7 +78,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Rp2_sd = Mem_sw;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x3: decode RVTYPE {
                 0x0: c_flw({{
@@ -97,7 +97,7 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd = freg(f32(Mem_uw));
                     Fp2_bits = fd.v;
                 }}, {{
-                    EA = (uint32_t)(Rp1_uw + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x1: c_ld({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
@@ -115,7 +115,7 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     Rp2 = Mem_ub;
                 }}, {{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x1: decode CFUNCT1BIT6 {
                     0x0: c_lhu({{
@@ -123,14 +123,14 @@ decode QUADRANT default Unknown::unknown() {
                     }}, {{
                         Rp2 = Mem_uh;
                     }}, {{
-                        EA = rvZext(Rp1 + offset);
+                        EA = rvSext(Rp1 + offset);
                     }});
                     0x1: c_lh({{
                         offset = CIMM2<0:0> << 1;
                     }}, {{
                         Rp2_sd = Mem_sh;
                     }}, {{
-                        EA = rvZext(Rp1 + offset);
+                        EA = rvSext(Rp1 + offset);
                     }});
                 }
             }
@@ -140,14 +140,14 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     Mem_ub = Rp2_ub;
                 }}, ea_code={{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x3: c_sh({{
                     offset = (CIMM2<0:0> << 1);
                 }}, {{
                     Mem_uh = Rp2_uh;
                 }}, ea_code={{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
             }
         }
@@ -162,7 +162,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Mem = Fp2_bits;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x6: c_sw({{
                 offset = CIMM2<1:1> << 2 |
@@ -171,7 +171,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Mem_uw = Rp2_uw;
             }}, ea_code={{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x7: decode RVTYPE {
                 0x0: c_fsw({{
@@ -186,7 +186,7 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_uw = unboxF32(boxF32(Fp2_bits));
                 }}, {{
-                    EA = (uint32_t)(Rp1_uw + offset);
+                    EA = rvSext(Rp1_uw + offset);
                 }});
                 0x1: c_sd({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
@@ -213,8 +213,8 @@ decode QUADRANT default Unknown::unknown() {
         }});
         0x1: decode RVTYPE {
             0x0: CJOp::c_jal({{
-                ra_sw = NPC_uw;
-                NPC_uw = PC_uw + imm;
+                ra = rvSext(NPC);
+                NPC = rvSext(PC + imm);
             }}, IsDirectControl, IsUncondControl, IsCall);
             0x1: CIOp::c_addiw({{
                 imm = sext<6>(CIMM5 | (CIMM1 << 5));
@@ -349,18 +349,18 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         0x5: CJOp::c_j({{
-            NPC = rvZext(PC + imm);
+            NPC = rvSext(PC + imm);
         }}, IsDirectControl, IsUncondControl);
         format CBOp {
             0x6: c_beqz({{
                 if (rvSext(Rp1) == 0)
-                    NPC = rvZext(PC + imm);
+                    NPC = rvSext(PC + imm);
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
             0x7: c_bnez({{
                 if (rvSext(Rp1) != 0)
-                    NPC = rvZext(PC + imm);
+                    NPC = rvSext(PC + imm);
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
@@ -396,7 +396,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Fc1_bits = Mem;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x2: c_lwsp({{
                 offset = CIMM5<4:2> << 2 |
@@ -409,7 +409,7 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 Rc1_sw = Mem_sw;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x3: decode RVTYPE {
                 0x0: c_flwsp({{
@@ -429,7 +429,7 @@ decode QUADRANT default Unknown::unknown() {
                     fd = freg(f32(Mem_uw));
                     Fc1_bits = fd.v;
                 }}, {{
-                    EA = (uint32_t)(sp_uw + offset);
+                    EA = rvSext(sp_uw + offset);
                 }});
                 0x1: c_ldsp({{
                     offset = CIMM5<4:3> << 3 |
@@ -453,7 +453,7 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<IllegalInstFault>(
                                 "source reg x0", machInst);
                     }
-                    NPC = rvZext(Rc1 & (~0x1));
+                    NPC = rvSext(Rc1 & (~0x1));
                 }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
                     // RC1 == 0 is HINT
@@ -470,7 +470,7 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     default: CJump::c_jalr({{
                         ra = rvSext(NPC);
-                        NPC = rvZext(Rc1 & (~0x1));
+                        NPC = rvSext(Rc1 & (~0x1));
                     }}, IsIndirectControl, IsUncondControl, IsCall);
                 }
                 default: CompressedROp::c_add({{
@@ -491,7 +491,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Mem_ud = Fc2_bits;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x6: c_swsp({{
                 offset = CIMM6<5:2> << 2 |
@@ -499,7 +499,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Mem_uw = Rc2_uw;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x7: decode RVTYPE {
                 0x0: c_fswsp({{
@@ -513,7 +513,7 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_uw = unboxF32(boxF32(Fc2_bits));
                 }}, {{
-                    EA = (uint32_t)(sp_uw + offset);
+                    EA = rvSext(sp_uw + offset);
                 }});
                 0x1: c_sdsp({{
                     offset = CIMM6<5:3> << 3 |
@@ -4755,44 +4755,44 @@ decode QUADRANT default Unknown::unknown() {
             format BOp {
                 0x0: beq({{
                     if (rvSext(Rs1) == rvSext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x1: bne({{
                     if (rvSext(Rs1) != rvSext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x4: blt({{
                     if (rvSext(Rs1_sd) < rvSext(Rs2_sd)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x5: bge({{
                     if (rvSext(Rs1_sd) >= rvSext(Rs2_sd)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x6: bltu({{
                     if (rvZext(Rs1) < rvZext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x7: bgeu({{
                     if (rvZext(Rs1) >= rvZext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
             }
@@ -4801,13 +4801,13 @@ decode QUADRANT default Unknown::unknown() {
         0x19: decode FUNCT3 {
             0x0: Jump::jalr({{
                 Rd = rvSext(NPC);
-                NPC = rvZext((imm + Rs1) & (~0x1));
+                NPC = rvSext((imm + Rs1) & (~0x1));
             }}, IsIndirectControl, IsUncondControl);
         }
 
         0x1b: JOp::jal({{
             Rd = rvSext(NPC);
-            NPC = rvZext(PC + imm);
+            NPC = rvSext(PC + imm);
         }}, IsDirectControl, IsUncondControl);
 
         0x1c: decode FUNCT3 {

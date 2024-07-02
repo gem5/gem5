@@ -199,7 +199,7 @@ def template BranchExecute {{
     {
         auto &rpc = branch_pc.as<RiscvISA::PCState>();
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
-        npc->set(rvZext(rpc.pc() + imm));
+        npc->set(rvSext(rpc.pc() + imm));
         return npc;
     }
 
@@ -307,7 +307,7 @@ def template JumpExecute {{
     {
         PCStateBase *pc_ptr = tc->pcState().clone();
         pc_ptr->as<PCState>().set(
-            rvZext((tc->getReg(srcRegIdx(0)) + imm) & ~0x1));
+            rvSext((tc->getReg(srcRegIdx(0)) + imm) & ~0x1));
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 

@@ -301,7 +301,7 @@ def template CacheBlockBasedStoreCompleteAcc {{
     }
 }};
 
-def format Load(memacc_code, ea_code = {{EA = rvZext(Rs1 + offset);}},
+def format Load(memacc_code, ea_code={{EA = rvSext(Rs1 + offset);}},
         offset_code={{offset = sext<12>(IMM12);}},
         mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
@@ -309,7 +309,7 @@ def format Load(memacc_code, ea_code = {{EA = rvZext(Rs1 + offset);}},
         inst_flags, 'Load', exec_template_base='Load')
 }};
 
-def format Store(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
+def format Store(memacc_code, ea_code={{EA = rvSext(Rs1 + offset);}},
         offset_code={{offset = sext<12>(IMM5 | (IMM7 << 5));}},
         mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
@@ -317,7 +317,7 @@ def format Store(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
         inst_flags, 'Store', exec_template_base='Store')
 }};
 
-def format CBMOp(memacc_code, ea_code={{EA = rvZext(Rs1);}},
+def format CBMOp(memacc_code, ea_code={{EA = rvSext(Rs1);}},
         offset_code={{;}}, mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
