@@ -63,8 +63,8 @@ class TLBIOp
         ExcludeXS
     };
 
-    TLBIOp(TranslationRegime _target_regime, bool _secure, Attr _attr)
-      : secureLookup(_secure), targetRegime(_target_regime), attr(_attr)
+    TLBIOp(TranslationRegime _target_regime, SecurityState _ss, Attr _attr)
+      : ss(_ss), targetRegime(_target_regime), attr(_attr)
     {}
 
     virtual ~TLBIOp() {}
@@ -108,7 +108,7 @@ class TLBIOp
         return false;
     }
 
-    bool secureLookup;
+    SecurityState ss;
     TranslationRegime targetRegime;
     Attr attr;
 };
@@ -117,9 +117,9 @@ class TLBIOp
 class TLBIALL : public TLBIOp
 {
   public:
-    TLBIALL(TranslationRegime _target_regime, bool _secure,
+    TLBIALL(TranslationRegime _target_regime, SecurityState _ss,
             Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _secure, _attr), el2Enabled(false),
+      : TLBIOp(_target_regime, _ss, _attr), el2Enabled(false),
         currentEL(EL0)
     {}
 
@@ -135,12 +135,6 @@ class TLBIALL : public TLBIOp
         return currentEL == EL2;
     }
 
-    TLBIALL
-    makeStage2() const
-    {
-        return TLBIALL(targetRegime, secureLookup, attr);
-    }
-
     bool el2Enabled;
     ExceptionLevel currentEL;
 };
@@ -149,8 +143,8 @@ class TLBIALL : public TLBIOp
 class ITLBIALL : public TLBIALL
 {
   public:
-    ITLBIALL(TranslationRegime _target_regime, bool _secure)
-      : TLBIALL(_target_regime, _secure)
+    ITLBIALL(TranslationRegime _target_regime, SecurityState _ss)
+      : TLBIALL(_target_regime, _ss)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -162,8 +156,8 @@ class ITLBIALL : public TLBIALL
 class DTLBIALL : public TLBIALL
 {
   public:
-    DTLBIALL(TranslationRegime _target_regime, bool _secure)
-      : TLBIALL(_target_regime, _secure)
+    DTLBIALL(TranslationRegime _target_regime, SecurityState _ss)
+      : TLBIALL(_target_regime, _ss)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -175,8 +169,8 @@ class DTLBIALL : public TLBIALL
 class TLBIALLEL : public TLBIOp
 {
   public:
-    TLBIALLEL(TranslationRegime _target_regime, bool _secure, Attr _attr)
-      : TLBIOp(_target_regime, _secure, _attr)
+    TLBIALLEL(TranslationRegime _target_regime, SecurityState _ss, Attr _attr)
+      : TLBIOp(_target_regime, _ss, _attr)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -190,22 +184,15 @@ class TLBIALLEL : public TLBIOp
         return targetRegime == TranslationRegime::EL10 ||
                targetRegime == TranslationRegime::EL20;
     }
-
-    TLBIALLEL
-    makeStage2() const
-    {
-        return TLBIALLEL(targetRegime, secureLookup, attr);
-    }
-
 };
 
 /** Implementaton of AArch64 TLBI VMALLE1(IS)/VMALLS112E1(IS) instructions */
 class TLBIVMALL : public TLBIOp
 {
   public:
-    TLBIVMALL(TranslationRegime _target_regime, bool _secure,
-              bool _stage2, Attr _attr)
-      : TLBIOp(_target_regime, _secure, _attr), el2Enabled(false),
+    TLBIVMALL(TranslationRegime _target_regime,
+              SecurityState _ss, bool _stage2, Attr _attr)
+      : TLBIOp(_target_regime, _ss, _attr), el2Enabled(false),
         stage2(_stage2)
     {}
 
@@ -219,12 +206,6 @@ class TLBIVMALL : public TLBIOp
         return stage2;
     }
 
-    TLBIVMALL
-    makeStage2() const
-    {
-        return TLBIVMALL(targetRegime, secureLookup, false, attr);
-    }
-
     bool el2Enabled;
     bool stage2;
 };
@@ -233,9 +214,9 @@ class TLBIVMALL : public TLBIOp
 class TLBIASID : public TLBIOp
 {
   public:
-    TLBIASID(TranslationRegime _target_regime, bool _secure,
+    TLBIASID(TranslationRegime _target_regime, SecurityState _ss,
              uint16_t _asid, Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _secure, _attr), asid(_asid),
+      : TLBIOp(_target_regime, _ss, _attr), asid(_asid),
         el2Enabled(false)
     {}
 
@@ -251,8 +232,9 @@ class TLBIASID : public TLBIOp
 class ITLBIASID : public TLBIASID
 {
   public:
-    ITLBIASID(TranslationRegime _target_regime, bool _secure, uint16_t _asid)
-      : TLBIASID(_target_regime, _secure, _asid)
+    ITLBIASID(TranslationRegime _target_regime,
+              SecurityState _ss, uint16_t _asid)
+      : TLBIASID(_target_regime, _ss, _asid)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -264,8 +246,9 @@ class ITLBIASID : public TLBIASID
 class DTLBIASID : public TLBIASID
 {
   public:
-    DTLBIASID(TranslationRegime _target_regime, bool _secure, uint16_t _asid)
-      : TLBIASID(_target_regime, _secure, _asid)
+    DTLBIASID(TranslationRegime _target_regime,
+              SecurityState _ss, uint16_t _asid)
+      : TLBIASID(_target_regime, _ss, _asid)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -278,7 +261,7 @@ class TLBIALLN : public TLBIOp
 {
   public:
     TLBIALLN(TranslationRegime _target_regime)
-      : TLBIOp(_target_regime, false, Attr::None)
+      : TLBIOp(_target_regime, SecurityState::NonSecure, Attr::None)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -290,12 +273,6 @@ class TLBIALLN : public TLBIOp
     {
         return targetRegime != TranslationRegime::EL2;
     }
-
-    TLBIALLN
-    makeStage2() const
-    {
-        return TLBIALLN(targetRegime);
-    }
 };
 
 /** TLB Invalidate by VA, All ASID */
@@ -304,9 +281,9 @@ class TLBIMVAA : public TLBIOp
   protected:
     TlbEntry::Lookup lookupGen(vmid_t vmid) const;
   public:
-    TLBIMVAA(TranslationRegime _target_regime, bool _secure,
+    TLBIMVAA(TranslationRegime _target_regime, SecurityState _ss,
              Addr _addr, bool last_level, Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _secure, _attr), addr(_addr),
+      : TLBIOp(_target_regime, _ss, _attr), addr(_addr),
         lastLevel(last_level)
     {}
 
@@ -325,10 +302,10 @@ class TLBIMVA : public TLBIOp
     TlbEntry::Lookup lookupGen(vmid_t vmid) const;
 
   public:
-    TLBIMVA(TranslationRegime _target_regime, bool _secure,
+    TLBIMVA(TranslationRegime _target_regime, SecurityState _ss,
             Addr _addr, uint16_t _asid, bool last_level,
             Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _secure, _attr), addr(_addr), asid(_asid),
+      : TLBIOp(_target_regime, _ss, _attr), addr(_addr), asid(_asid),
         lastLevel(last_level)
     {}
 
@@ -345,9 +322,9 @@ class TLBIMVA : public TLBIOp
 class ITLBIMVA : public TLBIMVA
 {
   public:
-    ITLBIMVA(TranslationRegime _target_regime, bool _secure,
+    ITLBIMVA(TranslationRegime _target_regime, SecurityState _ss,
              Addr _addr, uint16_t _asid)
-      : TLBIMVA(_target_regime, _secure, _addr, _asid, false)
+      : TLBIMVA(_target_regime, _ss, _addr, _asid, false)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -359,9 +336,9 @@ class ITLBIMVA : public TLBIMVA
 class DTLBIMVA : public TLBIMVA
 {
   public:
-    DTLBIMVA(TranslationRegime _target_regime, bool _secure,
+    DTLBIMVA(TranslationRegime _target_regime, SecurityState _ss,
              Addr _addr, uint16_t _asid)
-      : TLBIMVA(_target_regime, _secure, _addr, _asid, false)
+      : TLBIMVA(_target_regime, _ss, _addr, _asid, false)
     {}
 
     void operator()(ThreadContext* tc) override;
@@ -427,20 +404,45 @@ class TLBIRange
 /** TLB Invalidate by Intermediate Physical Address */
 class TLBIIPA : public TLBIOp
 {
+  protected:
+    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
   public:
-    TLBIIPA(TranslationRegime _target_regime, bool _secure, Addr _addr,
+    TLBIIPA(TranslationRegime _target_regime, SecurityState _ss, Addr _addr,
             bool last_level, Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _secure, _attr),
-        addr(_addr), lastLevel(last_level)
+      : TLBIOp(_target_regime, _ss, _attr),
+        addr(_addr),
+        lastLevel(last_level),
+        ipaSpace(PASpace::NonSecure)
     {}
+
+    TLBIIPA(ThreadContext *tc, TranslationRegime _target_regime,
+            SecurityState _ss, RegVal val,
+            bool last_level, Attr _attr=Attr::None)
+      : TLBIOp(_target_regime, _ss, _attr),
+        addr(0),
+        lastLevel(last_level),
+        ipaSpace(PASpace::NonSecure)
+    {
+        const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
+            39 : 35;
+        addr = static_cast<Addr>(bits(val, top_bit, 0)) << 12;
+
+        switch (ss) {
+          case SecurityState::NonSecure:
+            ipaSpace = PASpace::NonSecure;
+            break;
+          case SecurityState::Secure:
+            ipaSpace = bits(val, 63) ?
+                PASpace::NonSecure : PASpace::Secure;
+            break;
+          default:
+            panic("Invalid SecurityState\n");
+        }
+    }
 
     void operator()(ThreadContext* tc) override;
 
-    bool
-    matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override
-    {
-        panic("This shouldn't be called\n");
-    }
+    bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
 
     bool
     stage1Flush() const override
@@ -448,26 +450,19 @@ class TLBIIPA : public TLBIOp
         return false;
     }
 
-    /** TLBIIPA is basically a TLBIMVAA for stage2 TLBs */
-    virtual TLBIMVAA
-    makeStage2() const
-    {
-        return TLBIMVAA(targetRegime, secureLookup, addr, lastLevel, attr);
-    }
-
     Addr addr;
     bool lastLevel;
+    PASpace ipaSpace;
 };
 
 /** TLB Range Invalidate by VA */
 class TLBIRMVA : public TLBIRange, public TLBIMVA
 {
   public:
-    TLBIRMVA(TranslationRegime _target_regime, bool _secure,
+    TLBIRMVA(TranslationRegime _target_regime, SecurityState _ss,
              RegVal val, uint16_t _asid, bool last_level, Attr _attr)
       : TLBIRange(val),
-        TLBIMVA(_target_regime, _secure, startAddress(),
-            _asid, last_level, _attr)
+        TLBIMVA(_target_regime, _ss, startAddress(), _asid, last_level, _attr)
     {}
 
     bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -477,10 +472,10 @@ class TLBIRMVA : public TLBIRange, public TLBIMVA
 class TLBIRMVAA : public TLBIRange, public TLBIMVAA
 {
   public:
-    TLBIRMVAA(TranslationRegime _target_regime, bool _secure,
+    TLBIRMVAA(TranslationRegime _target_regime, SecurityState _ss,
               RegVal val, bool last_level, Attr _attr)
       : TLBIRange(val),
-        TLBIMVAA(_target_regime, _secure, startAddress(), last_level, _attr)
+        TLBIMVAA(_target_regime, _ss, startAddress(), last_level, _attr)
     {}
 
     bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -490,18 +485,15 @@ class TLBIRMVAA : public TLBIRange, public TLBIMVAA
 class TLBIRIPA : public TLBIRange, public TLBIIPA
 {
   public:
-    TLBIRIPA(TranslationRegime _target_regime, bool _secure,
+    TLBIRIPA(ThreadContext *tc, TranslationRegime _target_regime, SecurityState _ss,
              RegVal val, bool last_level, Attr _attr)
       : TLBIRange(val),
-        TLBIIPA(_target_regime, _secure, startAddress(), last_level, _attr)
-    {}
-
-    virtual TLBIMVAA
-    makeStage2() const
+        TLBIIPA(tc, _target_regime, _ss, val, last_level, _attr)
     {
-        return TLBIRMVAA(targetRegime, secureLookup, rangeData,
-            lastLevel, attr);
+        addr = startAddress();
     }
+
+    bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
 };
 
 } // namespace ArmISA

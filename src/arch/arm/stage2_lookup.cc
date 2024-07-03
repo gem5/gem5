@@ -57,7 +57,7 @@ Fault
 Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
 {
     fault = mmu->getTE(&stage2Te, req, tc, mode, this, timing,
-        functional, secure, tranType, true);
+        functional, ss, ipaSpace, tranType, true);
 
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
@@ -193,7 +193,7 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     if ((fault == NoFault) && (stage2Te == NULL)) {
         // OLD_LOOK: stage2Tlb
         fault = mmu->getTE(&stage2Te, req, tc, mode, this,
-            timing, functional, secure, tranType, true);
+            timing, functional, ss, ipaSpace, tranType, true);
     }
 
     // Now we have the stage 2 table entry we need to merge it with the stage
