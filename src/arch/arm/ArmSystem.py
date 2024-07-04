@@ -96,6 +96,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
+        "FEAT_TTST",
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_RNG",
@@ -204,6 +205,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
+        "FEAT_TTST",
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_EVT",
@@ -252,6 +254,7 @@ class Armv84(Armv83):
         "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
+        "FEAT_TTST",
     ]
 
 
