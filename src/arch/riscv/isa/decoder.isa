@@ -487,6 +487,20 @@ decode QUADRANT default Unknown::unknown() {
         }
         format CompressedStore {
             0x5: decode ENABLE_ZCD {
+                0x0: decode CFUNCT6LOW3 {
+                    0x3: decode CFUNCT2LOW {
+                        0x1: CmMvsa01::cm_mvsa01();
+                        0x3: CmMva01s::cm_mva01s();
+                    }
+                    0x6: decode CFUNCT2MID {
+                        0x0: CmPush::cm_push();
+                        0x2: CmPop::cm_pop();
+                    }
+                    0x7: decode CFUNCT2MID {
+                        0x0: CmPop::cm_popretz(is_ret=True, has_a0=True);
+                        0x2: CmPop::cm_popret(is_ret=True);
+                    }
+                }
                 0x1: c_fsdsp({{
                     offset = CIMM6<5:3> << 3 |
                              CIMM6<2:0> << 6;
