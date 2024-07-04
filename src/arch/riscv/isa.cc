@@ -260,7 +260,7 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _rvType(p.riscv_type), enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
     _privilegeModeSet(p.privilege_mode_set),
-    _wfiResumeOnPending(p.wfi_resume_on_pending)
+    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);

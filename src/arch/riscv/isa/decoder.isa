@@ -54,23 +54,25 @@ decode QUADRANT default Unknown::unknown() {
             Rp2 = rvSext(sp + imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: c_fld({{
-                offset = CIMM3 << 3 | CIMM2 << 6;
-            }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+            0x1: decode ENABLE_ZCD {
+                0x1: c_fld({{
+                    offset = CIMM3 << 3 | CIMM2 << 6;
+                }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
 
-                // Mutating any floating point register changes the FS bit
-                // of the STATUS CSR.
-                status.fs = FPUStatus::DIRTY;
-                xc->setMiscReg(MISCREG_STATUS, status);
+                    // Mutating any floating point register changes the FS bit
+                    // of the STATUS CSR.
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
 
-                Fp2_bits = Mem;
-            }}, {{
-                EA = rvSext(Rp1 + offset);
-            }});
+                    Fp2_bits = Mem;
+                }}, {{
+                    EA = rvSext(Rp1 + offset);
+                }});
+            }
             0x2: c_lw({{
                 offset = CIMM2<1:1> << 2 |
                          CIMM3 << 3 |
@@ -152,18 +154,20 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: c_fsd({{
-                offset = CIMM3 << 3 | CIMM2 << 6;
-            }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+            0x5: decode ENABLE_ZCD {
+                0x1: c_fsd({{
+                    offset = CIMM3 << 3 | CIMM2 << 6;
+                }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
 
-                Mem = Fp2_bits;
-            }}, {{
-                EA = rvSext(Rp1 + offset);
-            }});
+                    Mem = Fp2_bits;
+                }}, {{
+                    EA = rvSext(Rp1 + offset);
+                }});
+            }
             0x6: c_sw({{
                 offset = CIMM2<1:1> << 2 |
                          CIMM3 << 3 |
@@ -381,23 +385,25 @@ decode QUADRANT default Unknown::unknown() {
             Rc1 = rvSext(Rc1 << imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: c_fldsp({{
-                offset = CIMM5<4:3> << 3 |
-                         CIMM1 << 5 |
-                         CIMM5<2:0> << 6;
-            }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+            0x1: decode ENABLE_ZCD {
+                0x1: c_fldsp({{
+                    offset = CIMM5<4:3> << 3 |
+                             CIMM1 << 5 |
+                             CIMM5<2:0> << 6;
+                }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
 
-                status.fs = FPUStatus::DIRTY;
-                xc->setMiscReg(MISCREG_STATUS, status);
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
 
-                Fc1_bits = Mem;
-            }}, {{
-                EA = rvSext(sp + offset);
-            }});
+                    Fc1_bits = Mem;
+                }}, {{
+                    EA = rvSext(sp + offset);
+                }});
+            }
             0x2: c_lwsp({{
                 offset = CIMM5<4:2> << 2 |
                          CIMM1 << 5 |
@@ -480,19 +486,21 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: c_fsdsp({{
-                offset = CIMM6<5:3> << 3 |
-                         CIMM6<2:0> << 6;
-            }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+            0x5: decode ENABLE_ZCD {
+                0x1: c_fsdsp({{
+                    offset = CIMM6<5:3> << 3 |
+                             CIMM6<2:0> << 6;
+                }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
 
-                Mem_ud = Fc2_bits;
-            }}, {{
-                EA = rvSext(sp + offset);
-            }});
+                    Mem_ud = Fc2_bits;
+                }}, {{
+                    EA = rvSext(sp + offset);
+                }});
+            }
             0x6: c_swsp({{
                 offset = CIMM6<5:2> << 2 |
                          CIMM6<1:0> << 6;
