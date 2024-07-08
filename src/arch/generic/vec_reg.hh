@@ -140,8 +140,11 @@ class VecRegContainer
     VecRegContainer() {}
     VecRegContainer(const VecRegContainer &) = default;
 
+    /** Set the container. */
+    void set(uint8_t val) { memset(container.data(), val, SIZE); }
+
     /** Zero the container. */
-    void zero() { memset(container.data(), 0, SIZE); }
+    void zero() { set(0); }
 
     /** Assignment operators. */
     /** @{ */
