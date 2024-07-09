@@ -553,7 +553,6 @@ def format VectorGatherFormat(code, category, *flags) {{
     else:
         error("not supported category for VectorIntFormat: %s" % category)
     src2_reg_id = "vecRegClass[_machInst.vs2 + vs2_idx]"
-    src2_reg_id = "vecRegClass[_machInst.vs2 + vs2_idx]"
 
     # vtmp0 as dummy src reg to create dependency with pin vd micro
     src3_reg_id = "vecRegClass[VecMemInternalReg0 + vd_idx]"
