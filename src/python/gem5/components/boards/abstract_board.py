@@ -47,6 +47,7 @@ from m5.objects import (
 )
 
 from ...resources.resource import WorkloadResource
+from ..modifier import Modifier
 from .mem_mode import (
     MemMode,
     mem_mode_to_string,
@@ -125,6 +126,9 @@ class AbstractBoard:
         # A private variable to record whether `_connect_things` has been
         # been called.
         self._connect_things_called = False
+
+        # A list to store the modifiers user might add to this board.
+        self._modifiers = []
 
     def get_processor(self) -> "AbstractProcessor":
         """Get the processor connected to the board.
@@ -241,6 +245,14 @@ class AbstractBoard:
                 )
 
         func(**workload.get_parameters())
+
+    def add_modifier(self, modifier: Modifier) -> None:
+        """
+        Add a modifier to the board.
+
+        :param modifier: The modifier to add to the board.
+        """
+        self._modifiers.append(modifier)
 
     @abstractmethod
     def _setup_board(self) -> None:
@@ -390,6 +402,10 @@ class AbstractBoard:
 
         # Connect the memory, processor, and cache hierarchy.
         self._connect_things()
+
+    def _apply_modifiers(self) -> None:
+        for modifier in self._modifiers:
+            modifier.apply(self)
 
     def _connect_things_check(self):
         """

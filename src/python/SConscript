@@ -37,6 +37,7 @@ PySource("gem5.simulate", "gem5/simulate/simulator.py")
 PySource("gem5.simulate", "gem5/simulate/exit_event.py")
 PySource("gem5.simulate", "gem5/simulate/exit_event_generators.py")
 PySource("gem5.components", "gem5/components/__init__.py")
+PySource("gem5.components", "gem5/components/modifier.py")
 PySource("gem5.components.boards", "gem5/components/boards/__init__.py")
 PySource("gem5.components.boards", "gem5/components/boards/abstract_board.py")
 PySource(
@@ -473,6 +474,22 @@ PySource(
 PySource(
     "gem5.components.processors",
     "gem5/components/processors/traffic_generator.py",
+)
+PySource(
+    "gem5.components.processors.modifiers",
+    "gem5/components/processors/modifiers/__init__.py",
+)
+PySource(
+    "gem5.components.processors.modifiers.o3_modifiers",
+    "gem5/components/processors/modifiers/o3_modifiers/__init__.py",
+)
+PySource(
+    "gem5.components.processors.modifiers.o3_modifiers",
+    "gem5/components/processors/modifiers/o3_modifiers/o3_cpu_modifier.py",
+)
+PySource(
+    "gem5.components.processors.modifiers.o3_modifiers",
+    "gem5/components/processors/modifiers/o3_modifiers/branchpred_modifier.py",
 )
 PySource("gem5.prebuilt", "gem5/prebuilt/__init__.py")
 PySource("gem5.prebuilt.demo", "gem5/prebuilt/demo/__init__.py")

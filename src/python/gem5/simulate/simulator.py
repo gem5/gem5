@@ -640,6 +640,8 @@ class Simulator:
             # `_pre_instantiate` function.
             self._board._pre_instantiate()
 
+            self._board._apply_modifiers()
+
             root = Root(
                 full_system=(
                     self._full_system
