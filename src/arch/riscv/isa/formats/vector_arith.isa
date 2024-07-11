@@ -79,7 +79,28 @@ let {{
             uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) * this->microIdx;
             ''' + code
 
-    def wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul):
+    def wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul,
+        src1_is_vec):
+        def checkOverlap(vreg_name, vreg_emul):
+            check_code = '''
+            if ((({vreg_emul} < 0) && ({vreg_name} == VD)) ||
+                (({vreg_emul} >= 0) &&
+                 ({vreg_name} < VD + num_microops - (1 << {vreg_emul})) &&
+                 (VD < {vreg_name} + (1 << {vreg_emul})))) {
+                // A destination vector register group can overlap a source
+                // vector register group if the destination EEW is greater than
+                // the source EEW, the source EMUL is at least 1, and the
+                // overlap is in the highest- numbered part of the destination
+                // register group.
+                std::string error =
+                    csprintf("Unsupported overlap in {vreg_name} and VD for "
+                             "Widening op");
+                return std::make_shared<IllegalInstFault>(error, machInst);
+            }
+            '''
+            check_code = check_code.replace("{vreg_name}", vreg_name)
+            check_code = check_code.replace("{vreg_emul}", vreg_emul)
+            return check_code
         src2_sew_mul_bits = src2_sew_mul.bit_length() - 1
         dest_sew_mul_bits = dest_sew_mul.bit_length() - 1
         constraint_checks = '''
@@ -92,27 +113,33 @@ let {{
             }
             ''' % dest_sew_mul_bits
         if src2_sew_mul_bits != dest_sew_mul_bits:
-            constraint_checks += '''
-            const int64_t vs2_emul = vlmul + %d;
-            if (((vs2_emul < 0) && (VS2 == VD)) ||
-                ((vs2_emul >= 0) &&
-                 (VS2 < VD + num_microops - (1 << vs2_emul)) &&
-                 (VD < VS2 + (1 << vs2_emul)))) {
-                // A destination vector register group can overlap a source
-                // vector register group if the destination EEW is greater than
-                // the source EEW, the source EMUL is at least 1, and the
-                // overlap is in the highest- numbered part of the destination
-                // register group.
-                std::string error =
-                    csprintf("Unsupported overlap in Vs2 and Vd for Widening op");
-                return std::make_shared<IllegalInstFault>(error, machInst);
-            }
-            ''' % src2_sew_mul_bits
+            constraint_checks += (
+                "const int64_t vs2_emul = vlmul + %d;" % src2_sew_mul_bits
+            )
+            constraint_checks += checkOverlap("VS2", "vs2_emul")
+        if src1_is_vec:
+            constraint_checks += checkOverlap("VS1", "vlmul")
         return constraint_checks + code
 
-    def narrowingOpRegisterConstraintChecks(code, src2_sew_mul):
+    def narrowingOpRegisterConstraintChecks(code, src2_sew_mul, src1_is_vec):
+        def checkOverlap(vreg_name):
+            check_code = '''
+            if (({vreg_name} < VD) &&
+                (VD <= ({vreg_name} + num_microops - 1))) {
+                // A destination vector register group can overlap a source
+                // vector register group if the destination EEW is smaller than
+                // the source EEW and the overlap is in the lowest-numbered
+                // part of the source register group
+                std::string error =
+                    csprintf("Unsupported overlap in {vreg_name} and VD for "
+                             "Narrowing op");
+                return std::make_shared<IllegalInstFault>(error, machInst);
+            }
+            '''
+            check_code = check_code.replace("{vreg_name}", vreg_name)
+            return check_code
         src2_sew_mul_bits = src2_sew_mul.bit_length() - 1
-        return '''
+        constraint_checks = '''
             const uint32_t num_microops =
                 1 << std::max<int64_t>(0, vlmul + %d);
             if ((machInst.vs2 %% alignToPowerOfTwo(num_microops)) != 0) {
@@ -120,16 +147,11 @@ let {{
                     csprintf("Unaligned VS2 group in Narrowing op");
                 return std::make_shared<IllegalInstFault>(error, machInst);
             }
-            if ((VS2 < VD) && (VD <= (VS2 + num_microops - 1))) {
-                // A destination vector register group can overlap a source
-                // vector register group if the destination EEW is smaller than
-                // the source EEW and the overlap is in the lowest-numbered
-                // part of the source register group
-                std::string error =
-                    csprintf("Unsupported overlap in Vs2 and Vd for Narrowing op");
-                return std::make_shared<IllegalInstFault>(error, machInst);
-            }
-        ''' % src2_sew_mul_bits + code
+        ''' % src2_sew_mul_bits
+        constraint_checks += checkOverlap("VS2")
+        if src1_is_vec:
+            constraint_checks += checkOverlap("VS1")
+        return constraint_checks + code
 
     def fflags_wrapper(code):
         return '''
@@ -337,8 +359,10 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     dest_sew_mul = 2
     src1_reg_id = ""
+    src1_is_vec = False
     if category in ["OPIVV", "OPMVV"]:
         src1_reg_id = "vecRegClass[_machInst.vs1 + _microIdx / 2]"
+        src1_is_vec = True
     elif category in ["OPIVX", "OPMVX"]:
         src1_reg_id = "intRegClass[_machInst.rs1]"
     else:
@@ -372,7 +396,8 @@ def format VectorIntWideningFormat(code, category, *flags) {{
         code = eiDeclarePrefix(code, widening=True)
     code = loopWrapper(code)
 
-    code = wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul)
+    code = wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul,
+        src1_is_vec)
 
     vm_decl_rd = ""
     if v0_required:
@@ -419,8 +444,10 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
 
     old_vd_idx = 2
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
+    src1_is_vec = False
     if category in ["OPIVV"]:
         src1_reg_id = "vecRegClass[_machInst.vs1 + _microIdx / 2]"
+        src1_is_vec = True
     elif category in ["OPIVX"]:
         src1_reg_id = "intRegClass[_machInst.rs1]"
     elif category == "OPIVI":
@@ -441,7 +468,7 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
     code = maskCondWrapper(code)
     code = eiDeclarePrefix(code, widening=True)
     code = loopWrapper(code)
-    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul)
+    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul, src1_is_vec)
     vm_decl_rd = vmDeclAndReadData()
 
     set_vlenb = setVlenb();
@@ -757,8 +784,10 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     dest_sew_mul = 2
     src1_reg_id = ""
+    src1_is_vec = False
     if category in ["OPFVV"]:
         src1_reg_id = "vecRegClass[_machInst.vs1 + _microIdx / 2]"
+        src1_is_vec = True
     elif category in ["OPFVF"]:
         src1_reg_id = "floatRegClass[_machInst.rs1]"
     else:
@@ -793,7 +822,8 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
     code = loopWrapper(code)
     code = fflags_wrapper(code)
 
-    code = wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul)
+    code = wideningOpRegisterConstraintChecks(code, src2_sew_mul, dest_sew_mul,
+        src1_is_vec)
 
     vm_decl_rd = ""
     if v0_required:
@@ -909,7 +939,7 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     code = eiDeclarePrefix(code, widening=True)
     code = loopWrapper(code)
     code = fflags_wrapper(code)
-    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul)
+    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul, False)
 
     vm_decl_rd = vmDeclAndReadData()
 
