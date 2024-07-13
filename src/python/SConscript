@@ -26,362 +26,574 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+Import("*")
 
-PySource('gem5', 'gem5/__init__.py')
-PySource('gem5', 'gem5/coherence_protocol.py')
-PySource('gem5', 'gem5/isas.py')
-PySource('gem5', 'gem5/runtime.py')
-PySource('gem5.simulate', 'gem5/simulate/__init__.py')
-PySource('gem5.simulate', 'gem5/simulate/simulator.py')
-PySource('gem5.simulate', 'gem5/simulate/exit_event.py')
-PySource('gem5.simulate', 'gem5/simulate/exit_event_generators.py')
-PySource('gem5.components', 'gem5/components/__init__.py')
-PySource('gem5.components.boards', 'gem5/components/boards/__init__.py')
-PySource('gem5.components.boards', 'gem5/components/boards/abstract_board.py')
-PySource('gem5.components.boards',
-    'gem5/components/boards/abstract_system_board.py')
-PySource('gem5.components.boards', 'gem5/components/boards/mem_mode.py')
-PySource('gem5.components.boards', 'gem5/components/boards/riscv_board.py')
-PySource('gem5.components.boards.experimental',
-    'gem5/components/boards/experimental/__init__.py')
-PySource('gem5.components.boards.experimental',
-    'gem5/components/boards/experimental/lupv_board.py')
-PySource('gem5.components.boards', 'gem5/components/boards/simple_board.py')
-PySource('gem5.components.boards', 'gem5/components/boards/test_board.py')
-PySource('gem5.components.boards', 'gem5/components/boards/x86_board.py')
-PySource('gem5.components.boards', 'gem5/components/boards/arm_board.py')
-PySource('gem5.components.boards',
-    "gem5/components/boards/kernel_disk_workload.py")
-PySource('gem5.components.boards',
-    "gem5/components/boards/se_binary_workload.py")
-PySource('gem5.components.cachehierarchies',
-    'gem5/components/cachehierarchies/__init__.py')
-PySource('gem5.components.cachehierarchies',
-    'gem5/components/cachehierarchies/abstract_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies',
-    'gem5/components/cachehierarchies/abstract_two_level_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies',
-    'gem5/components/cachehierarchies/abstract_three_level_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.chi',
-    'gem5/components/cachehierarchies/chi/__init__.py')
-PySource('gem5.components.cachehierarchies.chi',
-    'gem5/components/cachehierarchies/chi/private_l1_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/__init__.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/abstract_node.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/directory.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/dma_requestor.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/private_l1_moesi_cache.py')
-PySource('gem5.components.cachehierarchies.chi.nodes',
-    'gem5/components/cachehierarchies/chi/nodes/memory_controller.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/__init__.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/'
-    'abstract_classic_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/no_cache.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/private_l1_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/'
-    'private_l1_private_l2_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/'
-    'private_l1_private_l2_walk_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.classic',
-    'gem5/components/cachehierarchies/classic/'
-    'private_l1_shared_l2_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.classic.caches',
-    'gem5/components/cachehierarchies/classic/caches/__init__.py')
-PySource('gem5.components.cachehierarchies.classic.caches',
-    'gem5/components/cachehierarchies/classic/caches/l1dcache.py')
-PySource('gem5.components.cachehierarchies.classic.caches',
-    'gem5/components/cachehierarchies/classic/caches/l1icache.py')
-PySource('gem5.components.cachehierarchies.classic.caches',
-    'gem5/components/cachehierarchies/classic/caches/l2cache.py')
-PySource('gem5.components.cachehierarchies.classic.caches',
-    'gem5/components/cachehierarchies/classic/caches/mmu_cache.py')
-PySource('gem5.components.cachehierarchies.ruby',
-    'gem5/components/cachehierarchies/ruby/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby',
-    'gem5/components/cachehierarchies/ruby/abstract_ruby_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.ruby',
-    'gem5/components/cachehierarchies/ruby/mesi_two_level_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.ruby',
-    'gem5/components/cachehierarchies/ruby/'
-    'mesi_three_level_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.ruby',
-    'gem5/components/cachehierarchies/ruby/mi_example_cache_hierarchy.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_l2_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/'
-    'dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/l2_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    '__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    'directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    'dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    'l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    'l2_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
-    'l3_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
-    'octopi.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
-    'core_complex.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
-    'octopi_network.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
-    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
-    'ruby_network_components.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
-    'gem5/components/cachehierarchies/ruby/caches/mi_example/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
-    'gem5/components/cachehierarchies/ruby/caches/mi_example/directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
-    'gem5/components/cachehierarchies/ruby/caches/mi_example/'
-    'dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
-    'gem5/components/cachehierarchies/ruby/caches/mi_example/l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.topologies',
-    'gem5/components/cachehierarchies/ruby/topologies/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.topologies',
-    'gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py')
-PySource('gem5.components.memory', 'gem5/components/memory/__init__.py')
-PySource('gem5.components.memory', 'gem5/components/memory/abstract_memory_system.py')
-PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
+PySource("gem5", "gem5/__init__.py")
+PySource("gem5", "gem5/coherence_protocol.py")
+PySource("gem5", "gem5/isas.py")
+PySource("gem5", "gem5/runtime.py")
+PySource("gem5.simulate", "gem5/simulate/__init__.py")
+PySource("gem5.simulate", "gem5/simulate/simulator.py")
+PySource("gem5.simulate", "gem5/simulate/exit_event.py")
+PySource("gem5.simulate", "gem5/simulate/exit_event_generators.py")
+PySource("gem5.components", "gem5/components/__init__.py")
+PySource("gem5.components.boards", "gem5/components/boards/__init__.py")
+PySource("gem5.components.boards", "gem5/components/boards/abstract_board.py")
+PySource(
+    "gem5.components.boards", "gem5/components/boards/abstract_system_board.py"
+)
+PySource("gem5.components.boards", "gem5/components/boards/mem_mode.py")
+PySource("gem5.components.boards", "gem5/components/boards/riscv_board.py")
+PySource(
+    "gem5.components.boards.experimental",
+    "gem5/components/boards/experimental/__init__.py",
+)
+PySource(
+    "gem5.components.boards.experimental",
+    "gem5/components/boards/experimental/lupv_board.py",
+)
+PySource("gem5.components.boards", "gem5/components/boards/simple_board.py")
+PySource("gem5.components.boards", "gem5/components/boards/test_board.py")
+PySource("gem5.components.boards", "gem5/components/boards/x86_board.py")
+PySource("gem5.components.boards", "gem5/components/boards/arm_board.py")
+PySource(
+    "gem5.components.boards", "gem5/components/boards/kernel_disk_workload.py"
+)
+PySource(
+    "gem5.components.boards", "gem5/components/boards/se_binary_workload.py"
+)
+PySource(
+    "gem5.components.cachehierarchies",
+    "gem5/components/cachehierarchies/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies",
+    "gem5/components/cachehierarchies/abstract_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies",
+    "gem5/components/cachehierarchies/abstract_two_level_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies",
+    "gem5/components/cachehierarchies/abstract_three_level_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi",
+    "gem5/components/cachehierarchies/chi/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi",
+    "gem5/components/cachehierarchies/chi/private_l1_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/abstract_node.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/directory.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/dma_requestor.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/private_l1_moesi_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.chi.nodes",
+    "gem5/components/cachehierarchies/chi/nodes/memory_controller.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/"
+    "abstract_classic_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/no_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/private_l1_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/"
+    "private_l1_private_l2_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/"
+    "private_l1_private_l2_walk_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic",
+    "gem5/components/cachehierarchies/classic/"
+    "private_l1_shared_l2_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic.caches",
+    "gem5/components/cachehierarchies/classic/caches/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic.caches",
+    "gem5/components/cachehierarchies/classic/caches/l1dcache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic.caches",
+    "gem5/components/cachehierarchies/classic/caches/l1icache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic.caches",
+    "gem5/components/cachehierarchies/classic/caches/l2cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.classic.caches",
+    "gem5/components/cachehierarchies/classic/caches/mmu_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby",
+    "gem5/components/cachehierarchies/ruby/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby",
+    "gem5/components/cachehierarchies/ruby/abstract_ruby_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby",
+    "gem5/components/cachehierarchies/ruby/mesi_two_level_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby",
+    "gem5/components/cachehierarchies/ruby/"
+    "mesi_three_level_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby",
+    "gem5/components/cachehierarchies/ruby/mi_example_cache_hierarchy.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches",
+    "gem5/components/cachehierarchies/ruby/caches/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches",
+    "gem5/components/cachehierarchies/ruby/caches/abstract_directory.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches",
+    "gem5/components/cachehierarchies/ruby/caches/abstract_dma_controller.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches",
+    "gem5/components/cachehierarchies/ruby/caches/abstract_l1_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches",
+    "gem5/components/cachehierarchies/ruby/caches/abstract_l2_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_two_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_two_level/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_two_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_two_level/directory.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_two_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_two_level/"
+    "dma_controller.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_two_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_two_level/l1_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_two_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_two_level/l2_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "directory.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "dma_controller.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "l1_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "l2_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/mesi_three_level/"
+    "l3_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/"
+    "octopi.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/"
+    "core_complex.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/"
+    "octopi_network.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mesi_three_level",
+    "gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/"
+    "ruby_network_components.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mi_example",
+    "gem5/components/cachehierarchies/ruby/caches/mi_example/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mi_example",
+    "gem5/components/cachehierarchies/ruby/caches/mi_example/directory.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mi_example",
+    "gem5/components/cachehierarchies/ruby/caches/mi_example/"
+    "dma_controller.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.caches.mi_example",
+    "gem5/components/cachehierarchies/ruby/caches/mi_example/l1_cache.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.topologies",
+    "gem5/components/cachehierarchies/ruby/topologies/__init__.py",
+)
+PySource(
+    "gem5.components.cachehierarchies.ruby.topologies",
+    "gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py",
+)
+PySource("gem5.components.memory", "gem5/components/memory/__init__.py")
+PySource(
+    "gem5.components.memory",
+    "gem5/components/memory/abstract_memory_system.py",
+)
+PySource("gem5.components.memory", "gem5/components/memory/dramsim_3.py")
 
-if env['HAVE_DRAMSYS']:
-    PySource('gem5.components.memory', 'gem5/components/memory/dramsys.py')
+if env["HAVE_DRAMSYS"]:
+    PySource("gem5.components.memory", "gem5/components/memory/dramsys.py")
 
-PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
-PySource('gem5.components.memory', 'gem5/components/memory/memory.py')
-PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')
-PySource('gem5.components.memory', 'gem5/components/memory/multi_channel.py')
-PySource('gem5.components.memory', 'gem5/components/memory/hbm.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/__init__.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/ddr3.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/ddr4.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/ddr5.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/gddr.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/hbm.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/hmc.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/lpddr2.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/lpddr3.py')
-PySource('gem5.components.memory.dram_interfaces',
-'gem5/components/memory/dram_interfaces/lpddr5.py')
-PySource('gem5.components.memory.dram_interfaces',
-    'gem5/components/memory/dram_interfaces/wideio.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/__init__.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/abstract_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/abstract_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/abstract_generator.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/abstract_processor.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/complex_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/complex_generator.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/cpu_types.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/gups_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/gups_generator.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/gups_generator_ep.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/gups_generator_par.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/linear_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/linear_generator.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/strided_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/strided_generator.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/random_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/random_generator.py')
-PySource('gem5.components.processors.spatter_gen',
-         'gem5/components/processors/spatter_gen/__init__.py')
-PySource('gem5.components.processors.spatter_gen',
-    'gem5/components/processors/spatter_gen/spatter_generator_core.py')
-PySource('gem5.components.processors.spatter_gen',
-    'gem5/components/processors/spatter_gen/spatter_generator.py')
-PySource('gem5.components.processors.spatter_gen',
-    'gem5/components/processors/spatter_gen/spatter_kernel.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/simple_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/base_cpu_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/simple_processor.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/base_cpu_processor.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/simple_switchable_processor.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/switchable_processor.py')
-PySource('gem5.utils', 'gem5/utils/simpoint.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/traffic_generator_core.py')
-PySource('gem5.components.processors',
-    'gem5/components/processors/traffic_generator.py')
-PySource('gem5.prebuilt', 'gem5/prebuilt/__init__.py')
-PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/__init__.py')
-PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/x86_demo_board.py')
-PySource('gem5.prebuilt.riscvmatched',
-    'gem5/prebuilt/riscvmatched/__init__.py')
-PySource('gem5.prebuilt.riscvmatched',
-    'gem5/prebuilt/riscvmatched/riscvmatched_board.py')
-PySource('gem5.prebuilt.riscvmatched',
-    'gem5/prebuilt/riscvmatched/riscvmatched_cache.py')
-PySource('gem5.prebuilt.riscvmatched',
-    'gem5/prebuilt/riscvmatched/riscvmatched_processor.py')
-PySource('gem5.prebuilt.riscvmatched',
-    'gem5/prebuilt/riscvmatched/riscvmatched_core.py')
-PySource('gem5.resources', 'gem5/resources/__init__.py')
-PySource('gem5.resources', 'gem5/resources/client.py')
-PySource('gem5.resources', 'gem5/resources/downloader.py')
-PySource('gem5.resources', 'gem5/resources/md5_utils.py')
-PySource('gem5.resources', 'gem5/resources/resource.py')
-PySource('gem5.resources', 'gem5/resources/workload.py')
-PySource('gem5.resources', 'gem5/resources/looppoint.py')
-PySource('gem5.resources', 'gem5/resources/elfie.py')
-PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/__init__.py')
-PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/jsonclient.py')
-PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/atlasclient.py')
-PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/abstract_client.py')
-PySource('gem5.resources.client_api',
-            'gem5/resources/client_api/client_query.py')
-PySource('gem5', 'gem5_default_config.py')
-PySource('gem5.utils', 'gem5/utils/__init__.py')
-PySource('gem5.utils', 'gem5/utils/filelock.py')
-PySource('gem5.utils', 'gem5/utils/override.py')
-PySource('gem5.utils', 'gem5/utils/progress_bar.py')
-PySource('gem5.utils', 'gem5/utils/requires.py')
-PySource('gem5.utils',
-         'gem5/utils/socks_ssl_context.py')
-PySource('gem5.utils.multisim', 'gem5/utils/multisim/__init__.py')
-PySource('gem5.utils.multisim', 'gem5/utils/multisim/multisim.py')
-PySource('gem5.utils.multisim', 'gem5/utils/multisim/__main__.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/__init__.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/_command_line.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/context.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/popen_spawn_gem5.py')
+PySource("gem5.components.memory", "gem5/components/memory/simple.py")
+PySource("gem5.components.memory", "gem5/components/memory/memory.py")
+PySource("gem5.components.memory", "gem5/components/memory/single_channel.py")
+PySource("gem5.components.memory", "gem5/components/memory/multi_channel.py")
+PySource("gem5.components.memory", "gem5/components/memory/hbm.py")
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/__init__.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/ddr3.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/ddr4.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/ddr5.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/gddr.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/hbm.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/hmc.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/lpddr2.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/lpddr3.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/lpddr5.py",
+)
+PySource(
+    "gem5.components.memory.dram_interfaces",
+    "gem5/components/memory/dram_interfaces/wideio.py",
+)
+PySource(
+    "gem5.components.processors", "gem5/components/processors/__init__.py"
+)
+PySource(
+    "gem5.components.processors", "gem5/components/processors/abstract_core.py"
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/abstract_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/abstract_generator.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/abstract_processor.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/complex_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/complex_generator.py",
+)
+PySource(
+    "gem5.components.processors", "gem5/components/processors/cpu_types.py"
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/gups_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/gups_generator.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/gups_generator_ep.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/gups_generator_par.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/linear_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/linear_generator.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/strided_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/strided_generator.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/random_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/random_generator.py",
+)
+PySource(
+    "gem5.components.processors.spatter_gen",
+    "gem5/components/processors/spatter_gen/__init__.py",
+)
+PySource(
+    "gem5.components.processors.spatter_gen",
+    "gem5/components/processors/spatter_gen/spatter_generator_core.py",
+)
+PySource(
+    "gem5.components.processors.spatter_gen",
+    "gem5/components/processors/spatter_gen/spatter_generator.py",
+)
+PySource(
+    "gem5.components.processors.spatter_gen",
+    "gem5/components/processors/spatter_gen/spatter_kernel.py",
+)
+PySource(
+    "gem5.components.processors", "gem5/components/processors/simple_core.py"
+)
+PySource(
+    "gem5.components.processors", "gem5/components/processors/base_cpu_core.py"
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/simple_processor.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/base_cpu_processor.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/simple_switchable_processor.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/switchable_processor.py",
+)
+PySource("gem5.utils", "gem5/utils/simpoint.py")
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/traffic_generator_core.py",
+)
+PySource(
+    "gem5.components.processors",
+    "gem5/components/processors/traffic_generator.py",
+)
+PySource("gem5.prebuilt", "gem5/prebuilt/__init__.py")
+PySource("gem5.prebuilt.demo", "gem5/prebuilt/demo/__init__.py")
+PySource("gem5.prebuilt.demo", "gem5/prebuilt/demo/x86_demo_board.py")
+PySource(
+    "gem5.prebuilt.riscvmatched", "gem5/prebuilt/riscvmatched/__init__.py"
+)
+PySource(
+    "gem5.prebuilt.riscvmatched",
+    "gem5/prebuilt/riscvmatched/riscvmatched_board.py",
+)
+PySource(
+    "gem5.prebuilt.riscvmatched",
+    "gem5/prebuilt/riscvmatched/riscvmatched_cache.py",
+)
+PySource(
+    "gem5.prebuilt.riscvmatched",
+    "gem5/prebuilt/riscvmatched/riscvmatched_processor.py",
+)
+PySource(
+    "gem5.prebuilt.riscvmatched",
+    "gem5/prebuilt/riscvmatched/riscvmatched_core.py",
+)
+PySource("gem5.resources", "gem5/resources/__init__.py")
+PySource("gem5.resources", "gem5/resources/client.py")
+PySource("gem5.resources", "gem5/resources/downloader.py")
+PySource("gem5.resources", "gem5/resources/md5_utils.py")
+PySource("gem5.resources", "gem5/resources/resource.py")
+PySource("gem5.resources", "gem5/resources/workload.py")
+PySource("gem5.resources", "gem5/resources/looppoint.py")
+PySource("gem5.resources", "gem5/resources/elfie.py")
+PySource("gem5.resources.client_api", "gem5/resources/client_api/__init__.py")
+PySource(
+    "gem5.resources.client_api", "gem5/resources/client_api/jsonclient.py"
+)
+PySource(
+    "gem5.resources.client_api", "gem5/resources/client_api/atlasclient.py"
+)
+PySource(
+    "gem5.resources.client_api", "gem5/resources/client_api/abstract_client.py"
+)
+PySource(
+    "gem5.resources.client_api", "gem5/resources/client_api/client_query.py"
+)
+PySource("gem5", "gem5_default_config.py")
+PySource("gem5.utils", "gem5/utils/__init__.py")
+PySource("gem5.utils", "gem5/utils/filelock.py")
+PySource("gem5.utils", "gem5/utils/override.py")
+PySource("gem5.utils", "gem5/utils/progress_bar.py")
+PySource("gem5.utils", "gem5/utils/requires.py")
+PySource("gem5.utils", "gem5/utils/socks_ssl_context.py")
+PySource("gem5.utils.multisim", "gem5/utils/multisim/__init__.py")
+PySource("gem5.utils.multisim", "gem5/utils/multisim/multisim.py")
+PySource("gem5.utils.multisim", "gem5/utils/multisim/__main__.py")
+PySource(
+    "gem5.utils.multiprocessing", "gem5/utils/multiprocessing/__init__.py"
+)
+PySource(
+    "gem5.utils.multiprocessing", "gem5/utils/multiprocessing/_command_line.py"
+)
+PySource("gem5.utils.multiprocessing", "gem5/utils/multiprocessing/context.py")
+PySource(
+    "gem5.utils.multiprocessing",
+    "gem5/utils/multiprocessing/popen_spawn_gem5.py",
+)
 
-PySource('', 'importer.py')
-PySource('m5', 'm5/__init__.py')
-PySource('m5', 'm5/SimObject.py')
-PySource('m5', 'm5/citations.py')
-PySource('m5', 'm5/core.py')
-PySource('m5', 'm5/debug.py')
-PySource('m5', 'm5/event.py')
-PySource('m5', 'm5/main.py')
-PySource('m5', 'm5/options.py')
-PySource('m5', 'm5/params.py')
-PySource('m5', 'm5/proxy.py')
-PySource('m5', 'm5/simulate.py')
-PySource('m5', 'm5/ticks.py')
-PySource('m5', 'm5/trace.py')
-PySource('m5.objects', 'm5/objects/__init__.py')
-PySource('m5.stats', 'm5/stats/__init__.py')
-PySource('m5.util', 'm5/util/__init__.py')
-PySource('m5.util', 'm5/util/attrdict.py')
-PySource('m5.util', 'm5/util/convert.py')
-PySource('m5.util', 'm5/util/dot_writer.py')
-PySource('m5.util', 'm5/util/dot_writer_ruby.py')
-PySource('m5.util', 'm5/util/fdthelper.py')
-PySource('m5.util', 'm5/util/multidict.py')
-PySource('m5.util', 'm5/util/pybind.py')
-PySource('m5.util', 'm5/util/terminal.py')
-PySource('m5.util', 'm5/util/terminal_formatter.py')
+PySource("", "importer.py")
+PySource("m5", "m5/__init__.py")
+PySource("m5", "m5/SimObject.py")
+PySource("m5", "m5/citations.py")
+PySource("m5", "m5/core.py")
+PySource("m5", "m5/debug.py")
+PySource("m5", "m5/event.py")
+PySource("m5", "m5/main.py")
+PySource("m5", "m5/options.py")
+PySource("m5", "m5/params.py")
+PySource("m5", "m5/proxy.py")
+PySource("m5", "m5/simulate.py")
+PySource("m5", "m5/ticks.py")
+PySource("m5", "m5/trace.py")
+PySource("m5.objects", "m5/objects/__init__.py")
+PySource("m5.stats", "m5/stats/__init__.py")
+PySource("m5.util", "m5/util/__init__.py")
+PySource("m5.util", "m5/util/attrdict.py")
+PySource("m5.util", "m5/util/convert.py")
+PySource("m5.util", "m5/util/dot_writer.py")
+PySource("m5.util", "m5/util/dot_writer_ruby.py")
+PySource("m5.util", "m5/util/fdthelper.py")
+PySource("m5.util", "m5/util/multidict.py")
+PySource("m5.util", "m5/util/pybind.py")
+PySource("m5.util", "m5/util/terminal.py")
+PySource("m5.util", "m5/util/terminal_formatter.py")
 
-PySource('m5.internal', 'm5/internal/__init__.py')
-PySource('m5.internal', 'm5/internal/params.py')
-PySource('m5.ext', 'm5/ext/__init__.py')
-PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/pyfdt.py')
-PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
+PySource("m5.internal", "m5/internal/__init__.py")
+PySource("m5.internal", "m5/internal/params.py")
+PySource("m5.ext", "m5/ext/__init__.py")
+PySource("m5.ext.pyfdt", "m5/ext/pyfdt/pyfdt.py")
+PySource("m5.ext.pyfdt", "m5/ext/pyfdt/__init__.py")
 
-PySource('m5.ext.pystats', 'm5/ext/pystats/__init__.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/serializable_stat.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/abstract_stat.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/group.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/simstat.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/statistic.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/storagetype.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/timeconversion.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/jsonloader.py')
-PySource('m5.stats', 'm5/stats/gem5stats.py')
+PySource("m5.ext.pystats", "m5/ext/pystats/__init__.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/serializable_stat.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/abstract_stat.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/group.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/simstat.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/statistic.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/storagetype.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/timeconversion.py")
+PySource("m5.ext.pystats", "m5/ext/pystats/jsonloader.py")
+PySource("m5.stats", "m5/stats/gem5stats.py")
 
-Source('embedded.cc', add_tags=['python', 'm5_module'])
-Source('importer.cc', add_tags=['python', 'm5_module'])
-cc, hh = env.Blob('m5ImporterCode', 'importer.py')
-Source(cc, add_tags=['python', 'm5_module'])
+Source("embedded.cc", add_tags=["python", "m5_module"])
+Source("importer.cc", add_tags=["python", "m5_module"])
+cc, hh = env.Blob("m5ImporterCode", "importer.py")
+Source(cc, add_tags=["python", "m5_module"])
 
-Source('pybind11/core.cc', add_tags='python')
-Source('pybind11/debug.cc', add_tags='python')
-Source('pybind11/event.cc', add_tags='python')
-Source('pybind11/object_file.cc', add_tags='python')
-Source('pybind11/stats.cc', add_tags='python')
+Source("pybind11/core.cc", add_tags="python")
+Source("pybind11/debug.cc", add_tags="python")
+Source("pybind11/event.cc", add_tags="python")
+Source("pybind11/object_file.cc", add_tags="python")
+Source("pybind11/stats.cc", add_tags="python")
 
-SimObject('m5/objects/SimObject.py', sim_objects=['SimObject'],
-        enums=['ByteOrder'])
+SimObject(
+    "m5/objects/SimObject.py", sim_objects=["SimObject"], enums=["ByteOrder"]
+)
