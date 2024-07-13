@@ -86,6 +86,8 @@ class RiscvStaticInst : public StaticInst
         tc->pcState(pc);
     }
 
+    uint64_t getEMI() const override { return machInst; }
+
     std::unique_ptr<PCStateBase>
     buildRetPC(const PCStateBase &cur_pc,
             const PCStateBase &call_pc) const override
