@@ -58,8 +58,41 @@ namespace gem5
 
 using namespace ArmISA;
 
+TlbEntry*
+TLB::Table::accessEntry(const KeyType &key)
+{
+    auto entry = findEntry(key);
+
+    if (entry && !key.functional) {
+        accessEntry(entry);
+    }
+
+    return entry;
+}
+
+TlbEntry*
+TLB::Table::findEntry(const KeyType &key) const
+{
+    auto candidates = indexingPolicy->getPossibleEntries(key);
+
+    for (auto candidate : candidates) {
+        auto entry = static_cast<TlbEntry*>(candidate);
+        // We check for pageSize match outside of the Entry::match
+        // as the latter is also used to match entries in TLBI invalidation
+        // where we don't care about the pageSize
+        if (entry->N == key.pageSize && entry->match(key)) {
+            return entry;
+        }
+    }
+
+    return nullptr;
+}
+
 TLB::TLB(const ArmTLBParams &p)
-    : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
+    : BaseTLB(p),
+      table(name().c_str(), p.size, p.assoc,
+            p.replacement_policy, p.indexing_policy),
+      size(p.size),
       isStage2(p.is_stage2),
       _walkCache(false),
       tableWalker(nullptr),
@@ -88,11 +121,12 @@ TLB::TLB(const ArmTLBParams &p)
             partialLevels[lookup_lvl] = false;
         }
     }
+
+    table.setDebugFlag(::gem5::debug::TLB);
 }
 
 TLB::~TLB()
 {
-    delete[] table;
 }
 
 void
@@ -103,62 +137,19 @@ TLB::setTableWalker(TableWalker *table_walker)
 }
 
 TlbEntry*
-TLB::match(const Lookup &lookup_data)
-{
-    // Vector of TLB entry candidates.
-    // Only one of them will be assigned to retval and will
-    // be returned to the MMU (in case of a hit)
-    // The vector has one entry per lookup level as it stores
-    // both complete and partial matches
-    std::vector<std::pair<int, const TlbEntry*>> hits{
-        LookupLevel::Num_ArmLookupLevel, {0, nullptr}};
-
-    int x = 0;
-    while (x < size) {
-        if (table[x].match(lookup_data)) {
-            const TlbEntry &entry = table[x];
-            hits[entry.lookupLevel] = std::make_pair(x, &entry);
-
-            // This is a complete translation, no need to loop further
-            if (!entry.partial)
-                break;
-        }
-        ++x;
-    }
-
-    // Loop over the list of TLB entries matching our translation
-    // request, starting from the highest lookup level (complete
-    // translation) and iterating backwards (using reverse iterators)
-    for (auto it = hits.rbegin(); it != hits.rend(); it++) {
-        const auto& [idx, entry] = *it;
-        if (!entry) {
-            // No match for the current LookupLevel
-            continue;
-        }
-
-        // Maintaining LRU array
-        // We only move the hit entry ahead when the position is higher
-        // than rangeMRU
-        if (idx > rangeMRU && !lookup_data.functional) {
-            TlbEntry tmp_entry = *entry;
-            for (int i = idx; i > 0; i--)
-                table[i] = table[i - 1];
-            table[0] = tmp_entry;
-            return &table[0];
-        } else {
-            return &table[idx];
-        }
-    }
-
-    return nullptr;
-}
-
-TlbEntry*
-TLB::lookup(const Lookup &lookup_data)
+TLB::lookup(Lookup lookup_data)
 {
     const auto mode = lookup_data.mode;
 
-    TlbEntry *retval = match(lookup_data);
+    TlbEntry *retval = nullptr;
+    // We iterate over all stored sizes, starting from the
+    // smallest until the biggest. In this way we prioritize
+    // complete translations over partial translations
+    for (const auto &page_size : observedPageSizes) {
+        lookup_data.pageSize = page_size;
+        if (retval = table.accessEntry(lookup_data); retval)
+            break;
+    }
 
     DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x ss %s "
             "ppn %#x size: %#x pa: %#x ap:%d ns:%d ss:%s g:%d asid: %d "
@@ -217,7 +208,7 @@ TLB::multiLookup(const Lookup &lookup_data)
                 // Insert entry only if this is not a functional
                 // lookup and if the translation is complete (unless this
                 // TLB caches partial translations)
-                insert(*te);
+                insert(lookup_data, *te);
             }
         }
     }
@@ -240,29 +231,13 @@ TLB::checkPromotion(TlbEntry *entry, BaseMMU::Mode mode)
 
 // insert a new TLB entry
 void
-TLB::insert(TlbEntry &entry)
+TLB::insert(const Lookup &lookup_data, TlbEntry &entry)
 {
-    DPRINTF(TLB, "Inserting entry into TLB with pfn:%#x size:%#x vpn: %#x"
-            " asid:%d vmid:%d N:%d global:%d valid:%d nc:%d xn:%d"
-            " ap:%#x domain:%#x ns:%d ss:%s xs:%d regime: %s\n", entry.pfn,
-            entry.size, entry.vpn, entry.asid, entry.vmid, entry.N,
-            entry.global, entry.valid, entry.nonCacheable, entry.xn,
-            entry.ap, static_cast<uint8_t>(entry.domain), entry.ns,
-            entry.ss, entry.xs, regimeToStr(entry.regime));
+    TlbEntry *victim = table.findVictim(lookup_data);
 
-    if (table[size - 1].valid)
-        DPRINTF(TLB, " - Replacing Valid entry %#x, asn %d vmn %d ppn %#x "
-                "size: %#x ap:%d ns:%d ss:%s g:%d xs:%d regime: %s\n",
-                table[size-1].vpn << table[size-1].N, table[size-1].asid,
-                table[size-1].vmid, table[size-1].pfn << table[size-1].N,
-                table[size-1].size, table[size-1].ap, table[size-1].ns,
-                table[size-1].ss, table[size-1].global,
-                table[size-1].xs, regimeToStr(table[size-1].regime));
+    *victim = entry;
 
-    // inserting to MRU position and evicting the LRU one
-    for (int i = size - 1; i > 0; --i)
-        table[i] = table[i-1];
-    table[0] = entry;
+    table.insertEntry(lookup_data, victim);
 
     observedPageSizes.insert(entry.N);
     stats.inserts++;
@@ -270,30 +245,26 @@ TLB::insert(TlbEntry &entry)
 }
 
 void
-TLB::multiInsert(TlbEntry &entry)
+TLB::multiInsert(const Lookup &lookup, TlbEntry &entry)
 {
     // Insert a partial translation only if the TLB is configured
     // as a walk cache
     if (!entry.partial || partialLevels[entry.lookupLevel]) {
-        insert(entry);
+        insert(lookup, entry);
     }
 
     if (auto next_level = static_cast<TLB*>(nextLevel())) {
-        next_level->multiInsert(entry);
+        next_level->multiInsert(lookup, entry);
     }
 }
 
 void
 TLB::printTlb() const
 {
-    int x = 0;
-    TlbEntry *te;
     DPRINTF(TLB, "Current TLB contents:\n");
-    while (x < size) {
-        te = &table[x];
-        if (te->valid)
-            DPRINTF(TLB, " *  %s\n", te->print());
-        ++x;
+    for (auto& te : table) {
+        if (te.valid)
+            DPRINTF(TLB, " *  %s\n", te.print());
     }
 }
 
@@ -301,17 +272,12 @@ void
 TLB::flushAll()
 {
     DPRINTF(TLB, "Flushing all TLB entries\n");
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-
-        if (te->valid) {
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
+    for (auto& te : table) {
+        if (te.valid) {
+            DPRINTF(TLB, " -  %s\n", te.print());
+            table.invalidate(&te);
             stats.flushedEntries++;
         }
-        ++x;
     }
 
     stats.flushTlb++;
@@ -321,18 +287,14 @@ TLB::flushAll()
 void
 TLB::flush(const TLBIOp& tlbi_op)
 {
-    int x = 0;
     bool valid_entry = false;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        if (tlbi_op.match(te, vmid)) {
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
+    for (auto& te : table) {
+        if (tlbi_op.match(&te, vmid)) {
+            DPRINTF(TLB, " -  %s\n", te.print());
+            table.invalidate(&te);
             stats.flushedEntries++;
         }
-        valid_entry = valid_entry || te->valid;
-        ++x;
+        valid_entry = valid_entry || te.valid;
     }
 
     stats.flushTlb++;

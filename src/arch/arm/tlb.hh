@@ -46,6 +46,7 @@
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/tlb.hh"
+#include "base/cache/associative_cache.hh"
 #include "base/statistics.hh"
 #include "enums/TypeTLB.hh"
 #include "mem/request.hh"
@@ -102,7 +103,14 @@ class TlbTestInterface
 class TLB : public BaseTLB
 {
   protected:
-    TlbEntry* table;
+    class Table : public AssociativeCache<TlbEntry>
+    {
+      public:
+        using AssociativeCache<TlbEntry>::AssociativeCache;
+        using AssociativeCache<TlbEntry>::accessEntry;
+        TlbEntry* accessEntry(const KeyType &key) override;
+        TlbEntry* findEntry(const KeyType &key) const override;
+    } table;
 
     /** TLB Size */
     int size;
@@ -177,7 +185,7 @@ class TLB : public BaseTLB
     /** Lookup an entry in the TLB
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(const Lookup &lookup_data);
+    TlbEntry *lookup(Lookup lookup_data);
 
     /** Lookup an entry in the TLB and in the next levels by
      * following the nextLevel pointer
@@ -202,10 +210,10 @@ class TLB : public BaseTLB
     void setVMID(vmid_t _vmid) { vmid = _vmid; }
 
     /** Insert a PTE in the current TLB */
-    void insert(TlbEntry &pte);
+    void insert(const Lookup &lookup_data, TlbEntry &pte);
 
     /** Insert a PTE in the current TLB and in the higher levels */
-    void multiInsert(TlbEntry &pte);
+    void multiInsert(const Lookup &lookup_data, TlbEntry &pte);
 
     /** Reset the entire TLB. Used for CPU switching to prevent stale
      * translations after multiple switches
@@ -285,10 +293,6 @@ class TLB : public BaseTLB
      * data access or a data TLB entry on an instruction access:
      */
     void checkPromotion(TlbEntry *entry, BaseMMU::Mode mode);
-
-    /** Helper function looking up for a matching TLB entry
-     * Does not update stats; see lookup method instead */
-    TlbEntry *match(const Lookup &lookup_data);
 };
 
 } // namespace ArmISA
