@@ -179,6 +179,8 @@ struct TlbEntry : public ReplaceableEntry, Serializable
     {
         // virtual address
         Addr va = 0;
+        // page size
+        Addr pageSize = Grain4KB;
         // lookup size:
         // * != 0 -> this is a range based lookup.
         //           end_address = va + size
