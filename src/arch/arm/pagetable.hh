@@ -351,6 +351,13 @@ struct TlbEntry : public ReplaceableEntry, Serializable
         std::swap(xs, rhs.xs);
     }
 
+    /** Need for compliance with the AssociativeCache interface */
+    void
+    invalidate()
+    {
+        valid = false;
+    }
+
     void
     updateVaddr(Addr new_vaddr)
     {
