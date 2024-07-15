@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@
 #include "arch/generic/mmu.hh"
 #include "enums/TypeTLB.hh"
 #include "enums/ArmLookupLevel.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -162,7 +163,7 @@ struct V8PageTableOps64k : public PageTableOps
 };
 
 // ITB/DTB table entry
-struct TlbEntry : public Serializable
+struct TlbEntry : public ReplaceableEntry, Serializable
 {
   public:
     typedef enums::ArmLookupLevel LookupLevel;
@@ -296,6 +297,46 @@ struct TlbEntry : public Serializable
         // no restrictions by default, hap = 0x3
 
         // @todo Check the memory type
+    }
+    TlbEntry(const TlbEntry &rhs) = default;
+    TlbEntry& operator=(TlbEntry rhs)
+    {
+        swap(rhs);
+        return *this;
+    }
+
+    void
+    swap(TlbEntry &rhs)
+    {
+        std::swap(pfn, rhs.pfn);
+        std::swap(size, rhs.size);
+        std::swap(vpn, rhs.vpn);
+        std::swap(attributes, rhs.attributes);
+        std::swap(lookupLevel, rhs.lookupLevel);
+        std::swap(asid, rhs.asid);
+        std::swap(vmid, rhs.vmid);
+        std::swap(tg, rhs.tg);
+        std::swap(N, rhs.N);
+        std::swap(innerAttrs, rhs.innerAttrs);
+        std::swap(outerAttrs, rhs.outerAttrs);
+        std::swap(ap, rhs.ap);
+        std::swap(hap, rhs.hap);
+        std::swap(domain, rhs.domain);
+        std::swap(mtype, rhs.mtype);
+        std::swap(longDescFormat, rhs.longDescFormat);
+        std::swap(global, rhs.global);
+        std::swap(valid, rhs.valid);
+        std::swap(ns, rhs.ns);
+        std::swap(ss, rhs.ss);
+        std::swap(regime, rhs.regime);
+        std::swap(type, rhs.type);
+        std::swap(partial, rhs.partial);
+        std::swap(nonCacheable, rhs.nonCacheable);
+        std::swap(shareable, rhs.shareable);
+        std::swap(outerShareable, rhs.outerShareable);
+        std::swap(xn, rhs.xn);
+        std::swap(pxn, rhs.pxn);
+        std::swap(xs, rhs.xs);
     }
 
     void
