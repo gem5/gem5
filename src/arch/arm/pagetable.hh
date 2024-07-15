@@ -358,6 +358,9 @@ struct TlbEntry : public ReplaceableEntry, Serializable
         valid = false;
     }
 
+    /** Need for compliance with the AssociativeCache interface */
+    void insert(const Lookup &lookup) {}
+
     void
     updateVaddr(Addr new_vaddr)
     {
