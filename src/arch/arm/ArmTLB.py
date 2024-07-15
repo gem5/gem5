@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BaseTLB import BaseTLB
+from m5.objects.ReplacementPolicies import LRURP
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
@@ -71,6 +72,16 @@ class ArmTLB(BaseTLB):
     cxx_header = "arch/arm/tlb.hh"
     sys = Param.System(Parent.any, "system object parameter")
     size = Param.Int(64, "TLB size")
+    assoc = Param.Int(
+        Self.size, "Associativity of the TLB. Fully Associative by default"
+    )
+    indexing_policy = Param.TLBIndexingPolicy(
+        TLBSetAssociative(assoc=Parent.assoc, num_entries=Parent.size),
+        "Indexing policy of the TLB",
+    )
+    replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the TLB"
+    )
     is_stage2 = Param.Bool(False, "Is this a stage 2 TLB?")
 
     partial_levels = VectorParam.ArmLookupLevel(
