@@ -468,8 +468,6 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
         bytes_read = gzread(compressed_mem, pmem, chunk_size);
         if (bytes_read == 0)
             break;
-
-        assert(bytes_read % sizeof(int64_t) == 0);
         curr_size += bytes_read;
         pmem += bytes_read;
     }
