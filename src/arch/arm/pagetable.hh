@@ -177,6 +177,16 @@ struct TlbEntry : public ReplaceableEntry, Serializable
 
     struct Lookup
     {
+        Lookup() = default;
+        explicit Lookup(const TlbEntry &entry)
+          : va(entry.vpn << entry.N), pageSize(entry.N), size(0),
+            asn(entry.asid), ignoreAsn(false),
+            vmid(entry.vmid), ss(entry.ss),
+            functional(false),
+            targetRegime(entry.regime),
+            mode(BaseMMU::Read)
+        {}
+
         // virtual address
         Addr va = 0;
         // page size
