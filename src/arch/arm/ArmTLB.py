@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2013, 2015, 2021 Arm Limited
+# Copyright (c) 2009, 2013, 2015, 2021, 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -43,6 +43,26 @@ from m5.SimObject import SimObject
 
 class ArmLookupLevel(Enum):
     vals = ["L0", "L1", "L2", "L3"]
+
+
+class TLBIndexingPolicy(SimObject):
+    type = "TLBIndexingPolicy"
+    abstract = True
+    cxx_class = "gem5::IndexingPolicyTemplate<gem5::ArmISA::TLBTypes>"
+    cxx_header = "arch/arm/pagetable.hh"
+    cxx_template_params = ["class Types"]
+
+    # Get the size from the parent (cache)
+    num_entries = Param.Int(Parent.size, "number of TLB entries")
+
+    # Get the associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+
+class TLBSetAssociative(TLBIndexingPolicy):
+    type = "TLBSetAssociative"
+    cxx_class = "gem5::ArmISA::TLBSetAssociative"
+    cxx_header = "arch/arm/pagetable.hh"
 
 
 class ArmTLB(BaseTLB):

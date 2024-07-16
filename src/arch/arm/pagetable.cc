@@ -489,5 +489,14 @@ getPageTableOps(GrainSize trans_granule)
     }
 }
 
+TLBTypes::KeyType::KeyType(const TlbEntry &entry)
+  : va(entry.vpn << entry.N), pageSize(entry.N), size(0),
+    asn(entry.asid), ignoreAsn(false),
+    vmid(entry.vmid), ss(entry.ss),
+    functional(false),
+    targetRegime(entry.regime),
+    mode(BaseMMU::Read)
+{}
+
 } // namespace ArmISA
 } // namespace gem5
