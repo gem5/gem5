@@ -156,6 +156,16 @@ class TLB : public BaseTLB
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;
 
+    /** Set of observed page sizes in the TLB
+     * We update the set conservatively, therefore allowing
+     * false positives but not false negatives.
+     * This means there could be a stored page size with
+     * no matching TLB entry (e.g. it has been invalidated),
+     * but if the page size is not in the set, we are certain
+     * there is no associated TLB with that size
+     */
+    std::set<Addr> observedPageSizes;
+
   public:
     using Params = ArmTLBParams;
     using Lookup = TlbEntry::Lookup;
