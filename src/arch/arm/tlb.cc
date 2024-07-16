@@ -264,6 +264,7 @@ TLB::insert(TlbEntry &entry)
         table[i] = table[i-1];
     table[0] = entry;
 
+    observedPageSizes.insert(entry.N);
     stats.inserts++;
     ppRefills->notify(1);
 }
@@ -314,12 +315,14 @@ TLB::flushAll()
     }
 
     stats.flushTlb++;
+    observedPageSizes.clear();
 }
 
 void
 TLB::flush(const TLBIOp& tlbi_op)
 {
     int x = 0;
+    bool valid_entry = false;
     TlbEntry *te;
     while (x < size) {
         te = &table[x];
@@ -328,10 +331,13 @@ TLB::flush(const TLBIOp& tlbi_op)
             te->valid = false;
             stats.flushedEntries++;
         }
+        valid_entry = valid_entry || te->valid;
         ++x;
     }
 
     stats.flushTlb++;
+    if (!valid_entry)
+        observedPageSizes.clear();
 }
 
 void
