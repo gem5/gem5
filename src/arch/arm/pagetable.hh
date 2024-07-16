@@ -50,6 +50,9 @@
 #include "enums/TypeTLB.hh"
 #include "enums/ArmLookupLevel.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "params/TLBIndexingPolicy.hh"
+#include "params/TLBSetAssociative.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -162,30 +165,15 @@ struct V8PageTableOps64k : public PageTableOps
     LookupLevel lastLevel() const override;
 };
 
-// ITB/DTB table entry
-struct TlbEntry : public ReplaceableEntry, Serializable
+struct TlbEntry;
+
+class TLBTypes
 {
   public:
-    typedef enums::ArmLookupLevel LookupLevel;
-
-    enum class MemoryType : std::uint8_t
+    struct KeyType
     {
-        StronglyOrdered,
-        Device,
-        Normal
-    };
-
-    struct Lookup
-    {
-        Lookup() = default;
-        explicit Lookup(const TlbEntry &entry)
-          : va(entry.vpn << entry.N), pageSize(entry.N), size(0),
-            asn(entry.asid), ignoreAsn(false),
-            vmid(entry.vmid), ss(entry.ss),
-            functional(false),
-            targetRegime(entry.regime),
-            mode(BaseMMU::Read)
-        {}
+        KeyType() = default;
+        explicit KeyType(const TlbEntry &entry);
 
         // virtual address
         Addr va = 0;
@@ -211,6 +199,48 @@ struct TlbEntry : public ReplaceableEntry, Serializable
         TranslationRegime targetRegime = TranslationRegime::EL10;
         // mode to differentiate between read/writes/fetches.
         BaseMMU::Mode mode = BaseMMU::Read;
+    };
+
+    using Params = TLBIndexingPolicyParams;
+};
+using TLBIndexingPolicy = IndexingPolicyTemplate<TLBTypes>;
+
+class TLBSetAssociative : public TLBIndexingPolicy
+{
+  public:
+    PARAMS(TLBSetAssociative);
+    TLBSetAssociative(const Params &p)
+      : TLBIndexingPolicy(p, p.num_entries, 0)
+    {}
+
+    std::vector<ReplaceableEntry*>
+    getPossibleEntries(const KeyType &key) const override
+    {
+        Addr set_number = (key.va >> key.pageSize) & setMask;
+        return sets[set_number];
+    }
+
+    Addr
+    regenerateAddr(const KeyType &key,
+                   const ReplaceableEntry *entry) const override
+    {
+        panic("Unimplemented\n");
+    }
+};
+
+// ITB/DTB table entry
+struct TlbEntry : public ReplaceableEntry, Serializable
+{
+  public:
+    using LookupLevel = enums::ArmLookupLevel;
+    using Lookup = TLBTypes::KeyType;
+    using IndexingPolicy = TLBIndexingPolicy;
+
+    enum class MemoryType : std::uint8_t
+    {
+        StronglyOrdered,
+        Device,
+        Normal
     };
 
     // Matching variables
@@ -545,6 +575,9 @@ struct TlbEntry : public ReplaceableEntry, Serializable
 const PageTableOps *getPageTableOps(GrainSize trans_granule);
 
 } // namespace ArmISA
+
+template class IndexingPolicyTemplate<ArmISA::TLBTypes>;
+
 } // namespace gem5
 
 #endif // __ARCH_ARM_PAGETABLE_H__

@@ -38,104 +38,127 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+Import("*")
 
-Source('insts/fplib.cc')
+Source("insts/fplib.cc")
 
-if env['CONF']['USE_ARM_ISA']:
-    env.TagImplies('arm isa', 'gem5 lib')
+if env["CONF"]["USE_ARM_ISA"]:
+    env.TagImplies("arm isa", "gem5 lib")
 
 # The GTest function does not have a 'tags' parameter. We therefore apply this
 # guard to ensure this test is only built when ARM is compiled.
 #
 # Note: This will need reconfigured for multi-isa. E.g., if this is
 # incorporated: https://gem5-review.googlesource.com/c/public/gem5/+/52491
-if env['CONF']['USE_ARM_ISA']:
-    GTest('aapcs64.test', 'aapcs64.test.cc',
-          '../../base/debug.cc',
-          '../../cpu/reg_class.cc',
-          '../../sim/bufval.cc', '../../sim/cur_tick.cc',
-          'regs/int.cc')
-    GTest('matrix.test', 'matrix.test.cc')
-Source('decoder.cc', tags='arm isa')
-Source('faults.cc', tags='arm isa')
-Source('htm.cc', tags='arm isa')
-Source('insts/branch.cc', tags='arm isa')
-Source('insts/branch64.cc', tags='arm isa')
-Source('insts/data64.cc', tags='arm isa')
-Source('insts/macromem.cc', tags='arm isa')
-Source('insts/mem.cc', tags='arm isa')
-Source('insts/mem64.cc', tags='arm isa')
-Source('insts/misc.cc', tags='arm isa')
-Source('insts/misc64.cc', tags='arm isa')
-Source('insts/pred_inst.cc', tags='arm isa')
-Source('insts/pseudo.cc', tags='arm isa')
-Source('insts/sme.cc', tags='arm isa')
-Source('insts/static_inst.cc', tags='arm isa')
-Source('insts/sve.cc', tags='arm isa')
-Source('insts/sve_mem.cc', tags='arm isa')
-Source('insts/vfp.cc', tags='arm isa')
-Source('insts/crypto.cc', tags='arm isa')
-Source('insts/tme64.cc', tags='arm isa')
-if env['CONF']['PROTOCOL'] == 'MESI_Three_Level_HTM':
-    Source('insts/tme64ruby.cc', tags='arm isa')
+if env["CONF"]["USE_ARM_ISA"]:
+    GTest(
+        "aapcs64.test",
+        "aapcs64.test.cc",
+        "../../base/debug.cc",
+        "../../cpu/reg_class.cc",
+        "../../sim/bufval.cc",
+        "../../sim/cur_tick.cc",
+        "regs/int.cc",
+    )
+    GTest("matrix.test", "matrix.test.cc")
+Source("decoder.cc", tags="arm isa")
+Source("faults.cc", tags="arm isa")
+Source("htm.cc", tags="arm isa")
+Source("insts/branch.cc", tags="arm isa")
+Source("insts/branch64.cc", tags="arm isa")
+Source("insts/data64.cc", tags="arm isa")
+Source("insts/macromem.cc", tags="arm isa")
+Source("insts/mem.cc", tags="arm isa")
+Source("insts/mem64.cc", tags="arm isa")
+Source("insts/misc.cc", tags="arm isa")
+Source("insts/misc64.cc", tags="arm isa")
+Source("insts/pred_inst.cc", tags="arm isa")
+Source("insts/pseudo.cc", tags="arm isa")
+Source("insts/sme.cc", tags="arm isa")
+Source("insts/static_inst.cc", tags="arm isa")
+Source("insts/sve.cc", tags="arm isa")
+Source("insts/sve_mem.cc", tags="arm isa")
+Source("insts/vfp.cc", tags="arm isa")
+Source("insts/crypto.cc", tags="arm isa")
+Source("insts/tme64.cc", tags="arm isa")
+if env["CONF"]["PROTOCOL"] == "MESI_Three_Level_HTM":
+    Source("insts/tme64ruby.cc", tags="arm isa")
 else:
-    Source('insts/tme64classic.cc', tags='arm isa')
-Source('interrupts.cc', tags='arm isa')
-Source('isa.cc', tags='arm isa')
-Source('isa_device.cc', tags='arm isa')
-Source('linux/process.cc', tags='arm isa')
-Source('linux/se_workload.cc', tags='arm isa')
-Source('linux/fs_workload.cc', tags='arm isa')
-Source('freebsd/fs_workload.cc', tags='arm isa')
-Source('freebsd/se_workload.cc', tags='arm isa')
-Source('fs_workload.cc', tags='arm isa')
-Source('regs/int.cc', tags='arm isa')
-Source('regs/misc.cc', tags='arm isa')
-Source('mmu.cc', tags='arm isa')
-Source('mpam.cc', tags='arm isa')
-Source('nativetrace.cc', tags='arm isa')
-Source('pagetable.cc', tags='arm isa')
-Source('pauth_helpers.cc', tags='arm isa')
-Source('pmu.cc', tags='arm isa')
-Source('process.cc', tags='arm isa')
-Source('qarma.cc', tags='arm isa')
-Source('remote_gdb.cc', tags='arm isa')
-Source('reg_abi.cc', tags='arm isa')
-Source('semihosting.cc', tags='arm isa')
-Source('system.cc', tags='arm isa')
-Source('table_walker.cc', tags='arm isa')
-Source('self_debug.cc', tags='arm isa')
-Source('stage2_lookup.cc', tags='arm isa')
-Source('tlb.cc', tags='arm isa')
-Source('tlbi_op.cc', tags='arm isa')
-Source('utility.cc', tags='arm isa')
+    Source("insts/tme64classic.cc", tags="arm isa")
+Source("interrupts.cc", tags="arm isa")
+Source("isa.cc", tags="arm isa")
+Source("isa_device.cc", tags="arm isa")
+Source("linux/process.cc", tags="arm isa")
+Source("linux/se_workload.cc", tags="arm isa")
+Source("linux/fs_workload.cc", tags="arm isa")
+Source("freebsd/fs_workload.cc", tags="arm isa")
+Source("freebsd/se_workload.cc", tags="arm isa")
+Source("fs_workload.cc", tags="arm isa")
+Source("regs/int.cc", tags="arm isa")
+Source("regs/misc.cc", tags="arm isa")
+Source("mmu.cc", tags="arm isa")
+Source("mpam.cc", tags="arm isa")
+Source("nativetrace.cc", tags="arm isa")
+Source("pagetable.cc", tags="arm isa")
+Source("pauth_helpers.cc", tags="arm isa")
+Source("pmu.cc", tags="arm isa")
+Source("process.cc", tags="arm isa")
+Source("qarma.cc", tags="arm isa")
+Source("remote_gdb.cc", tags="arm isa")
+Source("reg_abi.cc", tags="arm isa")
+Source("semihosting.cc", tags="arm isa")
+Source("system.cc", tags="arm isa")
+Source("table_walker.cc", tags="arm isa")
+Source("self_debug.cc", tags="arm isa")
+Source("stage2_lookup.cc", tags="arm isa")
+Source("tlb.cc", tags="arm isa")
+Source("tlbi_op.cc", tags="arm isa")
+Source("utility.cc", tags="arm isa")
 
-SimObject('ArmDecoder.py', sim_objects=['ArmDecoder'], tags='arm isa')
-SimObject('ArmFsWorkload.py', sim_objects=[
-    'ArmFsWorkload', 'ArmFsLinux', 'ArmFsFreebsd'],
-    enums=['ArmMachineType'], tags='arm isa')
-SimObject('ArmInterrupts.py', sim_objects=['ArmInterrupts'], tags='arm isa')
-SimObject('ArmISA.py', sim_objects=['ArmISA'], enums=['DecoderFlavor'],
-    tags='arm isa')
-SimObject('ArmMMU.py', sim_objects=['ArmTableWalker', 'ArmMMU'],
-    tags='arm isa')
-SimObject('ArmNativeTrace.py', sim_objects=['ArmNativeTrace'], tags='arm isa')
-SimObject('ArmSemihosting.py', sim_objects=['ArmSemihosting'], tags='arm isa')
-SimObject('ArmSeWorkload.py', sim_objects=[
-    'ArmSEWorkload', 'ArmEmuLinux', 'ArmEmuFreebsd'], tags='arm isa')
-SimObject('ArmSystem.py', sim_objects=['ArmSystem', 'ArmRelease'],
-    enums=['ArmExtension'], tags='arm isa')
-SimObject('ArmTLB.py', sim_objects=['ArmTLB'], enums=['ArmLookupLevel'],
-    tags='arm isa')
-SimObject('ArmPMU.py', sim_objects=['ArmPMU'], tags='arm isa')
+SimObject("ArmDecoder.py", sim_objects=["ArmDecoder"], tags="arm isa")
+SimObject(
+    "ArmFsWorkload.py",
+    sim_objects=["ArmFsWorkload", "ArmFsLinux", "ArmFsFreebsd"],
+    enums=["ArmMachineType"],
+    tags="arm isa",
+)
+SimObject("ArmInterrupts.py", sim_objects=["ArmInterrupts"], tags="arm isa")
+SimObject(
+    "ArmISA.py",
+    sim_objects=["ArmISA"],
+    enums=["DecoderFlavor"],
+    tags="arm isa",
+)
+SimObject(
+    "ArmMMU.py", sim_objects=["ArmTableWalker", "ArmMMU"], tags="arm isa"
+)
+SimObject("ArmNativeTrace.py", sim_objects=["ArmNativeTrace"], tags="arm isa")
+SimObject("ArmSemihosting.py", sim_objects=["ArmSemihosting"], tags="arm isa")
+SimObject(
+    "ArmSeWorkload.py",
+    sim_objects=["ArmSEWorkload", "ArmEmuLinux", "ArmEmuFreebsd"],
+    tags="arm isa",
+)
+SimObject(
+    "ArmSystem.py",
+    sim_objects=["ArmSystem", "ArmRelease"],
+    enums=["ArmExtension"],
+    tags="arm isa",
+)
+SimObject(
+    "ArmTLB.py",
+    sim_objects=["ArmTLB", "TLBIndexingPolicy", "TLBSetAssociative"],
+    enums=["ArmLookupLevel"],
+    tags="arm isa",
+)
+SimObject("ArmPMU.py", sim_objects=["ArmPMU"], tags="arm isa")
 
-SimObject('ArmCPU.py', sim_objects=[], tags='arm isa')
+SimObject("ArmCPU.py", sim_objects=[], tags="arm isa")
 
-DebugFlag('Arm', tags='arm isa')
-DebugFlag('ArmTme', 'Transactional Memory Extension', tags='arm isa')
-DebugFlag('MPAM', 'MPAM debug flag', tags='arm isa')
-DebugFlag('PMUVerbose', "Performance Monitor", tags='arm isa')
+DebugFlag("Arm", tags="arm isa")
+DebugFlag("ArmTme", "Transactional Memory Extension", tags="arm isa")
+DebugFlag("MPAM", "MPAM debug flag", tags="arm isa")
+DebugFlag("PMUVerbose", "Performance Monitor", tags="arm isa")
 
 # Add files generated by the ISA description.
-ISADesc('isa/main.isa', decoder_splits=3, exec_splits=6, tags='arm isa')
+ISADesc("isa/main.isa", decoder_splits=3, exec_splits=6, tags="arm isa")
