@@ -74,6 +74,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (bits(src1[lane], 0) || bits(src1[lane], 1)) {
@@ -188,6 +191,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -304,6 +310,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (bits(src1[lane], 0) || bits(src1[lane], 1)) {
@@ -419,6 +428,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1277,6 +1289,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -1310,6 +1325,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1345,6 +1363,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -1379,6 +1400,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] > src1[lane] ? 1 : 0);
@@ -1412,6 +1436,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1448,6 +1475,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] >= src1[lane] ? 1 : 0);
@@ -1481,6 +1511,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1517,6 +1550,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, (std::isnan(src0[lane])
@@ -1552,6 +1588,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] >= src1[lane]) ? 1 : 0);
@@ -1585,6 +1624,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1621,6 +1663,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] > src1[lane]) ? 1 : 0);
@@ -1654,6 +1699,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1689,6 +1737,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -1722,6 +1773,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1818,6 +1872,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -1853,6 +1910,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1890,6 +1950,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -1926,6 +1989,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] > src1[lane] ? 1 : 0);
@@ -1961,6 +2027,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1999,6 +2068,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] >= src1[lane] ? 1 : 0);
@@ -2035,6 +2107,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2074,6 +2149,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, (std::isnan(src0[lane])
@@ -2111,6 +2189,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] >= src1[lane]) ? 1 : 0);
@@ -2146,6 +2227,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2184,6 +2268,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] > src1[lane]) ? 1 : 0);
@@ -2219,6 +2306,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2256,6 +2346,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] == src1[lane]) ? 1 : 0);
@@ -2291,6 +2384,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2387,6 +2483,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -2420,6 +2519,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2455,6 +2557,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -2489,6 +2594,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] > src1[lane] ? 1 : 0);
@@ -2522,6 +2630,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2558,6 +2669,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] >= src1[lane] ? 1 : 0);
@@ -2591,6 +2705,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2627,6 +2744,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, (std::isnan(src0[lane])
@@ -2662,6 +2782,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] >= src1[lane]) ? 1 : 0);
@@ -2695,6 +2818,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2731,6 +2857,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] > src1[lane]) ? 1 : 0);
@@ -2764,6 +2893,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2799,6 +2931,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -2832,6 +2967,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -2928,6 +3066,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -2963,6 +3104,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3000,6 +3144,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -3036,6 +3183,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] > src1[lane] ? 1 : 0);
@@ -3071,6 +3221,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3109,6 +3262,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] >= src1[lane] ? 1 : 0);
@@ -3145,6 +3301,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3184,6 +3343,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, (std::isnan(src0[lane])
@@ -3221,6 +3383,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] >= src1[lane]) ? 1 : 0);
@@ -3256,6 +3421,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3294,6 +3462,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, !(src0[lane] > src1[lane]) ? 1 : 0);
@@ -3329,6 +3500,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3366,6 +3540,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -3401,6 +3578,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3495,6 +3675,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -3527,6 +3710,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3561,6 +3747,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -3593,6 +3782,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3627,6 +3819,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -3659,6 +3854,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3749,6 +3947,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -3823,6 +4024,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -3855,6 +4059,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -3931,6 +4138,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4024,6 +4234,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -4058,6 +4271,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4094,6 +4310,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -4128,6 +4347,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4164,6 +4386,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -4198,6 +4423,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4294,6 +4522,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -4328,6 +4559,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4364,6 +4598,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -4398,6 +4635,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4434,6 +4674,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -4468,6 +4711,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4561,6 +4807,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -4593,6 +4842,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4627,6 +4879,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -4659,6 +4914,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4693,6 +4951,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -4725,6 +4986,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4815,6 +5079,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -4847,6 +5114,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4881,6 +5151,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -4913,6 +5186,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -4947,6 +5223,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -4979,6 +5258,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5072,6 +5354,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -5106,6 +5391,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5142,6 +5430,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -5176,6 +5467,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5212,6 +5506,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -5246,6 +5543,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5342,6 +5642,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -5376,6 +5679,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5412,6 +5718,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -5446,6 +5755,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5482,6 +5794,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -5516,6 +5831,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5609,6 +5927,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -5641,6 +5962,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5675,6 +5999,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -5707,6 +6034,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5741,6 +6071,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -5773,6 +6106,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5863,6 +6199,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -5895,6 +6234,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5929,6 +6271,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -5961,6 +6306,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -5995,6 +6343,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -6027,6 +6378,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6120,6 +6474,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -6154,6 +6511,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6190,6 +6550,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -6224,6 +6587,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6260,6 +6626,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -6294,6 +6663,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6390,6 +6762,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -6424,6 +6799,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6460,6 +6838,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] <= src1[lane] ? 1 : 0);
@@ -6494,6 +6875,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -6530,6 +6914,9 @@ namespace VegaISA
         src0.readSrc();
         src1.read();
 
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vcc.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -6564,6 +6951,9 @@ namespace VegaISA
 
         src0.readSrc();
         src1.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
