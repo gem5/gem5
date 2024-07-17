@@ -82,6 +82,11 @@ class Interrupts : public BaseInterrupts
         return checkNonMaskableInterrupt() || (ip & ie & globalMask()).any();
     }
 
+    bool checkInterruptsWfi() const
+    {
+        return checkNonMaskableInterrupt() || (ip & ie).any();
+    }
+
     Fault getInterrupt() override;
 
     void updateIntrInfo() override {}
