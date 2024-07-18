@@ -1,4 +1,3 @@
-
 # Copyright (c) 2024 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -40,7 +39,7 @@
 # In the final stage this this is copied into /usr/local/bin/gem5. This ensures
 # there is a pre-built gem5 binary in each devcontainer. This can save time
 # if the container is used for education or demonstration purposes.
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest as builder
+FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest as builder
 RUN git clone --branch v24.0 https://github.com/gem5/gem5
 WORKDIR /gem5
 RUN scons build/ALL/gem5.opt -j`nproc`
@@ -52,10 +51,11 @@ RUN scons build/VEGA_X86/gem5.opt -j`nproc`
 # Stage 2: Create the devcontainer image.
 # This includes all dependencies for building and running gem5, the
 # dependencies for developing gem5, and a pre-built gem5 binary.
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5-mesi
-COPY --from=builder /gem5/build/ALL_CHI/gem5.opt /usr/local/bin/gem5
+COPY --from=builder /gem5/build/ALL_CHI/gem5.opt /usr/local/bin/gem5-chi
 COPY --from=builder /gem5/build/VEGA_X86/gem5.opt /usr/local/bin/gem5-vega
+RUN ln -s /usr/local/bin/gem5-chi /usr/local/bin/gem5
 
 # Stage 3: Install additional packages.
 # While the base image includes all dependencies for building and running gem5,
@@ -70,4 +70,10 @@ RUN apt -y update  && \
     g++-aarch64-linux-gnu \
     g++-riscv64-linux-gnu \
     gcc-aarch64-linux-gnu \
-    gcc-riscv64-linux-gnu
+    gcc-riscv64-linux-gnu \
+    locales \
+    gdb \
+    unzip
+
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
