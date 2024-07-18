@@ -232,6 +232,12 @@ class AssociativeCache : public Named
 
         auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
 
+        if (debugFlag && debugFlag->tracing() && victim->isValid()) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), debugFlag->name(),
+                "Replacing entry: %s\n", victim->print());
+        }
+
         invalidate(victim);
 
         return victim;
@@ -257,6 +263,12 @@ class AssociativeCache : public Named
     virtual void
     insertEntry(const KeyType &key, Entry *entry)
     {
+        if (debugFlag && debugFlag->tracing()) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), debugFlag->name(),
+                "Inserting entry: %s\n", entry->print());
+        }
+
         entry->insert(key);
         replPolicy->reset(entry->replacementData);
     }
