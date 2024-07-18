@@ -3052,7 +3052,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrExc;
         float mid = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
                              true, true, VfpRoundNearest);
-        destReg = fabs(mid);
+        destReg = fabsf(mid);
         FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vabd", "VabdDFp", "SimdFloatAddOp", ("float",), 2, vabdfpCode)
