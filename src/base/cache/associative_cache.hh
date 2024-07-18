@@ -81,6 +81,8 @@ class AssociativeCache : public Named
     /** The entries */
     std::vector<Entry> entries;
 
+    const ::gem5::debug::SimpleFlag* debugFlag = nullptr;
+
   private:
 
     void
@@ -120,7 +122,8 @@ class AssociativeCache : public Named
           associativity(associativity_),
           replPolicy(repl_policy),
           indexingPolicy(indexing_policy),
-          entries(num_entries, init_val)
+          entries(num_entries, init_val),
+          debugFlag(nullptr)
     {
         initParams(num_entries, associativity);
     }
@@ -160,6 +163,12 @@ class AssociativeCache : public Named
         entries.resize(num_entries, init_val);
 
         initParams(num_entries, associativity);
+    }
+
+    void
+    setDebugFlag(const ::gem5::debug::SimpleFlag& flag)
+    {
+        debugFlag = &flag;
     }
 
     /**
