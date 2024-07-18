@@ -244,6 +244,9 @@ PMU::setMiscReg(int misc_reg, RegVal val)
       case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
         setCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0, val);
         return;
+      case MISCREG_PMEVTYPER0...MISCREG_PMEVTYPER5:
+        setCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0, val);
+        return;
 
       case MISCREG_PMCCFILTR:
       case MISCREG_PMCCFILTR_EL0:
@@ -262,6 +265,9 @@ PMU::setMiscReg(int misc_reg, RegVal val)
 
       case MISCREG_PMEVCNTR0_EL0...MISCREG_PMEVCNTR5_EL0:
         setCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0, val);
+        return;
+      case MISCREG_PMEVCNTR0...MISCREG_PMEVCNTR5:
+        setCounterValue(misc_reg - MISCREG_PMEVCNTR0, val);
         return;
 
       case MISCREG_PMXEVCNTR_EL0:
@@ -356,6 +362,8 @@ PMU::readMiscRegInt(int misc_reg)
 
       case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
         return getCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0);
+      case MISCREG_PMEVTYPER0...MISCREG_PMEVTYPER5:
+        return getCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0);
 
       case MISCREG_PMCCFILTR:
       case MISCREG_PMCCFILTR_EL0:
@@ -366,11 +374,10 @@ PMU::readMiscRegInt(int misc_reg)
       case MISCREG_PMXEVTYPER:
         return getCounterTypeRegister(reg_pmselr.sel);
 
-      case MISCREG_PMEVCNTR0_EL0...MISCREG_PMEVCNTR5_EL0: {
-            return getCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0) &
-                0xFFFFFFFF;
-
-        }
+      case MISCREG_PMEVCNTR0_EL0...MISCREG_PMEVCNTR5_EL0:
+        return getCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0) & 0xFFFFFFFF;
+      case MISCREG_PMEVCNTR0...MISCREG_PMEVCNTR5:
+        return getCounterValue(misc_reg - MISCREG_PMEVCNTR0) & 0xFFFFFFFF;
 
       case MISCREG_PMXEVCNTR_EL0:
       case MISCREG_PMXEVCNTR:

@@ -401,6 +401,19 @@ std::unordered_map<MiscRegNum32, MiscRegIndex> miscRegNum32ToIdx{
     { MiscRegNum32(15, 0, 14, 2, 1), MISCREG_CNTP_CTL },
     { MiscRegNum32(15, 0, 14, 3, 0), MISCREG_CNTV_TVAL },
     { MiscRegNum32(15, 0, 14, 3, 1), MISCREG_CNTV_CTL },
+    { MiscRegNum32(15, 0, 14, 8, 0), MISCREG_PMEVCNTR0 },
+    { MiscRegNum32(15, 0, 14, 8, 1), MISCREG_PMEVCNTR1 },
+    { MiscRegNum32(15, 0, 14, 8, 2), MISCREG_PMEVCNTR2 },
+    { MiscRegNum32(15, 0, 14, 8, 3), MISCREG_PMEVCNTR3 },
+    { MiscRegNum32(15, 0, 14, 8, 4), MISCREG_PMEVCNTR4 },
+    { MiscRegNum32(15, 0, 14, 8, 5), MISCREG_PMEVCNTR5 },
+    { MiscRegNum32(15, 0, 14, 12, 0), MISCREG_PMEVTYPER0 },
+    { MiscRegNum32(15, 0, 14, 12, 1), MISCREG_PMEVTYPER1 },
+    { MiscRegNum32(15, 0, 14, 12, 2), MISCREG_PMEVTYPER2 },
+    { MiscRegNum32(15, 0, 14, 12, 3), MISCREG_PMEVTYPER3 },
+    { MiscRegNum32(15, 0, 14, 12, 4), MISCREG_PMEVTYPER4 },
+    { MiscRegNum32(15, 0, 14, 12, 5), MISCREG_PMEVTYPER5 },
+    { MiscRegNum32(15, 0, 14, 15, 7), MISCREG_PMCCFILTR },
     { MiscRegNum32(15, 1, 0, 0, 0), MISCREG_CCSIDR },
     { MiscRegNum32(15, 1, 0, 0, 1), MISCREG_CLIDR },
     { MiscRegNum32(15, 1, 0, 0, 7), MISCREG_AIDR },
@@ -3964,6 +3977,30 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges();
     InitReg(MISCREG_PMXEVTYPER)
       .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR0)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR1)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR2)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR3)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR4)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVCNTR5)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER0)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER1)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER2)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER3)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER4)
+      .allPrivileges();
+    InitReg(MISCREG_PMEVTYPER5)
+      .allPrivileges();
     InitReg(MISCREG_PMCCFILTR)
       .allPrivileges();
     InitReg(MISCREG_PMXEVCNTR)
@@ -6142,41 +6179,41 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_CNTVOFF);
     // END Generic Timer (AArch64)
     InitReg(MISCREG_PMEVCNTR0_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR0);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR0);
     InitReg(MISCREG_PMEVCNTR1_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR1);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR1);
     InitReg(MISCREG_PMEVCNTR2_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR2);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR2);
     InitReg(MISCREG_PMEVCNTR3_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR3);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR3);
     InitReg(MISCREG_PMEVCNTR4_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR4);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR4);
     InitReg(MISCREG_PMEVCNTR5_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVCNTR5);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVCNTR5);
     InitReg(MISCREG_PMEVTYPER0_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER0);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER0);
     InitReg(MISCREG_PMEVTYPER1_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER1);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER1);
     InitReg(MISCREG_PMEVTYPER2_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER2);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER2);
     InitReg(MISCREG_PMEVTYPER3_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER3);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER3);
     InitReg(MISCREG_PMEVTYPER4_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER4);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER4);
     InitReg(MISCREG_PMEVTYPER5_EL0)
-      .allPrivileges();
-//    .mapsTo(MISCREG_PMEVTYPER5);
+      .allPrivileges()
+      .mapsTo(MISCREG_PMEVTYPER5);
     InitReg(MISCREG_IL1DATA0_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_IL1DATA1_EL1)
