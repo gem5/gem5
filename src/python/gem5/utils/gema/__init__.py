@@ -56,6 +56,4 @@ class Gema:
 
     def run(self):
         """Run a gEMA instance."""
-        # main = Process(target=self.server.run(), name="gema")
-        # main.run()
         self.server.run()
