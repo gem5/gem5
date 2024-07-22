@@ -92,13 +92,14 @@ STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
             }
             if (generation_ended) {
                 // PST is indexed using the PC (secure bit is unused)
+                bool is_secure = false;
                 auto pst_entry = patternSequenceTable.findEntry(pst_addr,
-                false);
+                is_secure);
                 if (pst_entry == nullptr) {
                     // Tipically an entry will not exist
                     pst_entry = patternSequenceTable.findVictim(pst_addr);
                     assert(pst_entry != nullptr);
-                    patternSequenceTable.insertEntry(pst_addr, false,
+                    patternSequenceTable.insertEntry(pst_addr, is_secure,
                     pst_entry);
                 } else {
                     patternSequenceTable.accessEntry(pst_entry);
@@ -221,9 +222,11 @@ STeMS::reconstructSequence(
 
     // Now query the PST with the PC of each RMOB entry
     idx = 0;
+    bool is_secure = false;
     for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
         it++) {
-        auto pst_entry = patternSequenceTable.findEntry(it->pstAddress, false);
+        auto pst_entry = patternSequenceTable.findEntry(it->pstAddress,
+        is_secure);
         if (pst_entry != nullptr) {
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {
