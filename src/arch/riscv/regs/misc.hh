@@ -1423,13 +1423,17 @@ EndBitUnion(MISA)
  */
 BitUnion64(INTERRUPT)
     Bitfield<63,16> local;
+    Bitfield<12> sgei; // H-extension
     Bitfield<11> mei;
+    Bitfield<10> vsei; // H-extension
     Bitfield<9> sei;
     Bitfield<8> uei;
     Bitfield<7> mti;
+    Bitfield<6> vsti;  // H-extension
     Bitfield<5> sti;
     Bitfield<4> uti;
     Bitfield<3> msi;
+    Bitfield<2> vssi;  // H-extension
     Bitfield<1> ssi;
     Bitfield<0> usi;
 EndBitUnion(INTERRUPT)
