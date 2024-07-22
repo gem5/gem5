@@ -90,7 +90,7 @@ class AssociativeSet : public AssociativeCache<Entry>
     using AssociativeCache<Entry>::accessEntryByAddr;
     using AssociativeCache<Entry>::findEntry;
     using AssociativeCache<Entry>::insertEntry;
-    using AssociativeCache<Entry>::getPossibleEntries;
+    // using AssociativeCache<Entry>::getPossibleEntries;
 
     using AssociativeCache<Entry>::replPolicy;
     using AssociativeCache<Entry>::indexingPolicy;
