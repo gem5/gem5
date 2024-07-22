@@ -148,7 +148,7 @@ class SignaturePath : public Queued
     };
 
     /** Pattern table */
-    AssociativeCache<PatternEntry> patternTable;
+    AssociativeSet<PatternEntry> patternTable;
 
     /**
      * Generates a new signature from an existing one and a new stride
