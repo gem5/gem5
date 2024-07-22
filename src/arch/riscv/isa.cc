@@ -202,6 +202,38 @@ namespace RiscvISA
     [MISCREG_VTYPE]         = "VTYPE",
     [MISCREG_VLENB]         = "VLENB",
 
+    // H-extension (RV64) registers
+
+    [MISCREG_HVIP]          = "HVIP",
+
+    [MISCREG_MTINST]        = "MTINST",
+    [MISCREG_MTVAL2]        = "MTVAL2",
+
+    [MISCREG_HSTATUS]       = "HSTATUS",
+    [MISCREG_HEDELEG]       = "HEDELEG",
+    [MISCREG_HIDELEG]       = "HIDELEG",
+    [MISCREG_HCOUNTEREN]    = "HCOUNTEREN",
+    [MISCREG_HGEIE]         = "HGEIE",
+    [MISCREG_HTVAL]         = "HTVAL",
+    [MISCREG_HTINST]        = "HTINST",
+    [MISCREG_HGEIP]         = "HGEIP",
+
+    [MISCREG_HENVCFG]       = "HENVCFG",
+    [MISCREG_HGATP]         = "HGATP",
+    [MISCREG_HCONTEXT]      = "HCONTEXT",
+    [MISCREG_HTIMEDELTA]    = "HTIMEDELTA",
+
+    [MISCREG_VSSTATUS]      = "VSSTATUS",
+    [MISCREG_VSTVEC]        = "VSTVEC",
+    [MISCREG_VSSCRATCH]     = "VSSCRATCH",
+    [MISCREG_VSEPC]         = "VSEPC",
+    [MISCREG_VSCAUSE]       = "VSCAUSE",
+    [MISCREG_VSTVAL]        = "VSTVAL",
+    [MISCREG_VSATP]         = "VSATP",
+    [MISCREG_VIRT]          = "VIRT",
+
+    // H-extension (RV64) registers end here
+
     [MISCREG_NMIVEC]        = "NMIVEC",
     [MISCREG_NMIE]          = "NMIE",
     [MISCREG_NMIP]          = "NMIP",
@@ -344,6 +376,10 @@ void ISA::clear()
         case enums::MNSU:
           misa.rvs = misa.rvu = misa.rvn = 1;
           break;
+        case enums::MHSU:
+          misa.rvh = misa.rvs = misa.rvu = 1;
+          inform("RVH enabled.");
+          break;
         default:
           panic("Privilege mode set config should not reach here");
     }
@@ -362,6 +398,20 @@ void ISA::clear()
           if (getEnableRvv()) {
               status.vs = VPUStatus::INITIAL;
               misa.rvv = 1;
+          }
+          if (misa.rvh) {
+              HSTATUS hstatus = 0;
+              hstatus.vsxl = 2;
+              miscRegFile[MISCREG_HSTATUS] = hstatus;
+
+              STATUS vsstatus = 0;
+              vsstatus.uxl = 2;
+              vsstatus.fs = FPUStatus::INITIAL;
+
+              if (getEnableRvv())
+                vsstatus.vs = VPUStatus::INITIAL;
+
+              miscRegFile[MISCREG_VSSTATUS] = vsstatus;
           }
           break;
         default:
