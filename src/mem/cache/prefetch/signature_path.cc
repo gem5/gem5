@@ -278,7 +278,7 @@ SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
         //   confidence, these are prefetch candidates
         // - select the entry with the highest counter as the "lookahead"
         PatternEntry *current_pattern_entry =
-            patternTable.findEntry(current_signature, false); //,
+            patternTable.findEntry(current_signature, is_secure);
         PatternStrideEntry const *lookahead = nullptr;
         if (current_pattern_entry != nullptr) {
             unsigned long max_counter = 0;

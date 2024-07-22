@@ -176,15 +176,15 @@ PIF::notifyRetiredInst(const Addr pc)
                 // Insert the spatial entry into the history buffer and update
                 // the 'iterator' table to point to the new entry
                 historyBuffer.push_back(spatialCompactor);
-
+                bool is_secure = false;
                 auto idx_entry = index.findEntry(spatialCompactor.trigger,
-                false);
+                is_secure);
                 if (idx_entry != nullptr) {
                     index.accessEntry(idx_entry);
                 } else {
                     idx_entry = index.findVictim(spatialCompactor.trigger);
                     assert(idx_entry != nullptr);
-                    index.insertEntry(spatialCompactor.trigger, false,
+                    index.insertEntry(spatialCompactor.trigger, is_secure,
                     idx_entry);
                 }
                 idx_entry->historyIt =
@@ -207,6 +207,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
     }
 
     const Addr pc = pfi.getPC();
+    bool is_secure = pfi.isSecure();
 
     // First check if the access has been prefetched, this is done by
     // comparing the access against the active Stream Address Buffers
@@ -221,7 +222,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Check if a valid entry in the 'index' table is found and allocate a new
     // active prediction stream
-    IndexEntry *idx_entry = index.findEntry(pc, false);
+    IndexEntry *idx_entry = index.findEntry(pc, is_secure);
 
     if (idx_entry != nullptr) {
         index.accessEntry(idx_entry);
