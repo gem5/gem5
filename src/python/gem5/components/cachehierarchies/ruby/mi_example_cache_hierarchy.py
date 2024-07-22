@@ -32,9 +32,12 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
+from ....utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
+
 from ....isas import ISA
 from ....utils.override import overrides
-from ....utils.requires import requires
 from ...boards.abstract_board import AbstractBoard
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
@@ -62,8 +65,6 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
-
         self.ruby_system = RubySystem()
 
         # Ruby's global network.

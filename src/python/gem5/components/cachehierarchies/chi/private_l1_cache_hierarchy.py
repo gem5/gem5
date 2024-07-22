@@ -36,6 +36,10 @@ from m5.objects import (
 from m5.objects.SubSystem import SubSystem
 
 from gem5.coherence_protocol import CoherenceProtocol
+from gem5.utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.CHI)
+
 from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
     AbstractCacheHierarchy,
@@ -49,7 +53,6 @@ from gem5.components.cachehierarchies.ruby.topologies.simple_pt2pt import (
 from gem5.components.processors.abstract_core import AbstractCore
 from gem5.isas import ISA
 from gem5.utils.override import overrides
-from gem5.utils.requires import requires
 
 from .nodes.directory import SimpleDirectory
 from .nodes.dma_requestor import DMARequestor
@@ -79,8 +82,6 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        requires(coherence_protocol_required=CoherenceProtocol.CHI)
-
         self.ruby_system = RubySystem()
 
         # Ruby's global network.
