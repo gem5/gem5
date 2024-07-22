@@ -89,12 +89,18 @@ jobs:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-            # download all artifacts for each test. Thoguh this is inelegant,
-            # it's simpler than figuring otu which long tests requires which
-            # binary.
+
+            # Determine the build targets for the test.
+            - working-directory: ${{ github.workspace }}/tests
+              id: artifact-targets
+              run: |
+                  echo "targets=$(/main.py list --build-targets -q --length=long gem5/${{ matrix.test-type }} | rev | cut -d / -f 2 | rev | while read x; do echo "${ needs.name-artifacts.outputs.build-name }}-${x}"; done)" >>$GITHUB_OUTPUT
+
+            # Download the build artifacts for the test.
             - uses: actions/download-artifact@v4
               with:
-                  pattern: ${{needs.name-artifacts.outputs.build-name}}*
+                  pattern: |
+                      ${{ steps.artifact-targets.outputs.targets }}
                   merge-multiple: true
             # The upload/download GitHub actions do not preserve the executable
             # bit of the files. We need to set the executable bit for the
