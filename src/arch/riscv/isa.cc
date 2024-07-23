@@ -385,7 +385,7 @@ void ISA::clear()
     }
 
     // mark FS is initial
-    status.fs = INITIAL;
+    status.fs = FPUStatus::INITIAL;
 
     // _rvType dependent init.
     switch (_rvType) {
@@ -1035,6 +1035,13 @@ ISA::resetThread()
     Reset().invoke(tc);
 }
 
+bool
+ISA::isV() const
+{
+    // Virtualized when V-bit is 1
+    return readMiscRegNoEffect(MISCREG_VIRT) == 1;
+}
+
 Addr
 ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
 {
@@ -1044,6 +1051,87 @@ ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
         addr += 4 * cause;
     return addr;
 }
+
+// V-bit utilities (H-extension)
+bool isV(ExecContext *xc) { return xc->readMiscReg(MISCREG_VIRT); }
+bool isV(ThreadContext *tc) { return tc->readMiscReg(MISCREG_VIRT); }
+
+void setV(ExecContext *xc) {
+    assert(!isV(xc));
+    xc->setMiscReg(MISCREG_VIRT, 1);
+}
+void setV(ThreadContext *tc) {
+    assert(!isV(tc));
+    tc->setMiscReg(MISCREG_VIRT, 1);
+}
+
+void resetV(ExecContext *xc) {
+    assert(isV(xc));
+    xc->setMiscReg(MISCREG_VIRT, 0);
+}
+void resetV(ThreadContext *tc) {
+    assert(isV(tc));
+    tc->setMiscReg(MISCREG_VIRT, 0);
+}
+
+// FPU status update function
+Fault updateFPUStatus(ExecContext *xc, ExtMachInst machInst, bool set_dirty) {
+
+
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    STATUS vsstatus = misa.rvh && isV(xc) ?
+        xc->readMiscReg(MISCREG_VSSTATUS) : 0;
+
+    if (status.fs == FPUStatus::OFF ||
+        (misa.rvh && isV(xc) && vsstatus.fs == FPUStatus::OFF))
+        return std::make_shared<IllegalInstFault>("FPU is off", machInst);
+
+    if (set_dirty) {
+        status.fs = FPUStatus::DIRTY;
+        xc->setMiscReg(MISCREG_STATUS, status);
+
+        if (misa.rvh && isV(xc)) {
+            vsstatus.fs = FPUStatus::DIRTY;
+            xc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
+        }
+    }
+
+    return NoFault;
+}
+
+// VPU status update function
+Fault updateVPUStatus(
+    ExecContext *xc, ExtMachInst machInst, bool set_dirty, bool check_vill) {
+
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    STATUS vsstatus = misa.rvh && isV(xc) ?
+        xc->readMiscReg(MISCREG_VSSTATUS) : 0;
+
+    if (!misa.rvv || status.vs == VPUStatus::OFF ||
+        (misa.rvh && isV(xc) && vsstatus.vs == VPUStatus::OFF))
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+
+
+    if (check_vill && machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+
+    if (set_dirty) {
+        status.vs = VPUStatus::DIRTY;
+        xc->setMiscReg(MISCREG_STATUS, status);
+
+        if (misa.rvh && isV(xc)) {
+            vsstatus.vs = VPUStatus::DIRTY;
+            xc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
+        }
+    }
+
+    return NoFault;
+}
+
 
 } // namespace RiscvISA
 } // namespace gem5
@@ -1058,6 +1146,7 @@ operator<<(std::ostream &os, gem5::RiscvISA::PrivilegeMode pm)
         return os << "PRV_S";
     case gem5::RiscvISA::PRV_M:
         return os << "PRV_M";
+    default:
+        return os << "PRV_<invalid>";
     }
-    return os << "PRV_<invalid>";
 }
