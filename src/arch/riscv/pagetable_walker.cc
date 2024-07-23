@@ -578,6 +578,11 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
                                                        satp.mode, mode);
             req->setPaddr(paddr);
 
+            
+            if(walker->pma->isUncacheable(paddr, req->getSize())){
+                req->setFlags(Request::UNCACHEABLE);
+            }
+
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
