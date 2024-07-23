@@ -94,7 +94,7 @@ jobs:
             - working-directory: ${{ github.workspace }}/tests
               id: artifact-targets
               run: |
-                  echo "targets=$(/main.py list --build-targets -q --length=long gem5/${{ matrix.test-type }} | rev | cut -d / -f 2 | rev | while read x; do echo "${ needs.name-artifacts.outputs.build-name }}-${x}"; done)" >>$GITHUB_OUTPUT
+                  echo "targets=$(./main.py list --build-targets -q --length=long gem5/${{ matrix.test-type }} | rev | cut -d / -f 2 | rev | while read x; do echo ${ needs.name-artifacts.outputs.build-name }}-${x}; done)" >>$GITHUB_OUTPUT
 
             # Download the build artifacts for the test.
             - uses: actions/download-artifact@v4
