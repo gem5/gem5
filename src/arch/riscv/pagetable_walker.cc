@@ -578,7 +578,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
                                                        satp.mode, mode);
             req->setPaddr(paddr);
 
-            
+
             if(walker->pma->isUncacheable(paddr, req->getSize())){
                 req->setFlags(Request::UNCACHEABLE);
             }
