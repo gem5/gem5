@@ -35,6 +35,7 @@
 #ifndef __ARCH_RISCV_ISA_HH__
 #define __ARCH_RISCV_ISA_HH__
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -145,6 +146,12 @@ class ISA : public BaseISA
         return CSRMasks[_rvType][_privilegeModeSet];
     }
 
+    virtual const std::unordered_map<int, RegVal>&
+    getCSRWriteMaskMap() const
+    {
+        return CSRWriteMasks[_rvType][_privilegeModeSet];
+    }
+
     bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;
 
@@ -190,6 +197,15 @@ class ISA : public BaseISA
 
     virtual Addr getFaultHandlerAddr(
         RegIndex idx, uint64_t cause, bool intr) const;
+
+    void swapToVirtCSR(uint64_t& csr, RegIndex& midx, std::string& csrName);
+
+    Fault hpmCounterCheck(int counter, ExtMachInst machInst) const;
+    Fault tvmChecks(uint64_t csr, PrivilegeMode pm, ExtMachInst machInst);
+
+    RegVal backdoorReadCSRAllBits(uint64_t csr);
+    RegVal readCSR(uint64_t csr);
+    void writeCSR(uint64_t csr, RegVal writeData);
 };
 
 // V-bit utilities (H-extension)
