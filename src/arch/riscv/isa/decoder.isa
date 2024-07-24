@@ -443,10 +443,12 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode RC2 {
                 0x0: decode RC1 {
                     0x0: SystemOp::c_ebreak({{
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+                        bool virtualized = misa.rvh ? isV(xc) : false;
                         // NB: Semihosting spec requires uncompressed ebreak,
                         // so this instruction does not check for semihosting.
                         return std::make_shared<BreakpointFault>(
-                            xc->pcState());
+                            xc->pcState(), virtualized);
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     default: CJump::c_jalr({{
                         ra = rvSext(NPC);
@@ -4775,8 +4777,12 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: decode FUNCT7 {
                     0x0: decode RS2 {
                         0x0: ecall({{
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            bool virtualized = misa.rvh ?
+                                isV(xc) : false;
                             return std::make_shared<SyscallFault>(
-                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
+                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV),
+                                                                virtualized);
                         }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                             No_OpClass);
                         0x1: ebreak({{
@@ -4798,41 +4804,93 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
-                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            // This sret implementation conforms to
+                            // RISCV Privileged Spec 20211203
+                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             if (!misa.rvs) {
                                 return std::make_shared<IllegalInstFault>(
                                             "sret can't execute without RVS",
                                             machInst);
                             }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+                            HSTATUS hstatus = misa.rvh ?
+                                xc->readMiscReg(MISCREG_HSTATUS) : 0;
+
+                            MiscRegIndex status_idx = isV(xc) ?
+                                MISCREG_VSSTATUS : MISCREG_STATUS;
+
+                            STATUS status = xc->readMiscReg(status_idx);
+
                             auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-                            if (pm == PRV_U ||
-                                (pm == PRV_S && status.tsr == 1)) {
-                                return std::make_shared<IllegalInstFault>(
-                                            "sret in user mode or TSR enabled",
+                                                        MISCREG_PRV);
+
+                            if (misa.rvh && isV(xc)) {
+                                if (pm == PRV_U || hstatus.vtsr) {
+                                    return std::make_shared<VirtualInstFault>(
+                                            "sret in PRV_U or VTSR enabled",
                                             machInst);
+                                }
                                 NPC = NPC;
                             } else {
-                                xc->setMiscReg(MISCREG_PRV, status.spp);
-                                status.sie = status.spie;
-                                status.spie = 1;
-                                status.spp = PRV_U;
-                                xc->setMiscReg(MISCREG_STATUS, status);
-                                NPC = xc->readMiscReg(MISCREG_SEPC);
+                                if (pm == PRV_U ||
+                                (pm == PRV_S && status.tsr == 1)) {
+                                    return std::make_shared<IllegalInstFault>(
+                                            "sret in PRV_U or TSR enabled",
+                                            machInst);
+                                }
+                                NPC = NPC;
+                            }
+
+                            NPC = isV(xc) ? xc->readMiscReg(MISCREG_VSEPC) :
+                                            xc->readMiscReg(MISCREG_SEPC);
+
+                            xc->setMiscReg(MISCREG_PRV, status.spp);
+                            status.sie = status.spie;
+                            status.spie = 1;
+                            status.spp = PRV_U;
+
+                            xc->setMiscReg(status_idx, status);
+                            xc->tcBase()->getMMUPtr()->flushAll();
+
+                            if (!isV(xc)) {
+                                if (misa.rvh) {
+                                    if (hstatus.spv) {
+                                        setV(xc);
+                                    }
+                                    hstatus.spv = 0;
+                                    xc->setMiscReg(MISCREG_HSTATUS, hstatus);
+                                }
+
+                                status.mprv = 0; // 20211203
                             }
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
                                 MISCREG_PRV);
-                            if (misa.rvs && (pm == PRV_U ||
-                                (pm == PRV_S && status.tw == 1))) {
+
+
+                            if (misa.rvh && isV(xc) && pm == PRV_U) {
+                                return std::make_shared<VirtualInstFault>(
+                                            "wfi in VU mode",
+                                            machInst);
+                            } else if (pm != PRV_M && status.tw == 1) {
                                 return std::make_shared<IllegalInstFault>(
-                                            "wfi in user mode or TW enabled",
+                                        "wfi not in M mode with TW enabled",
+                                        machInst);
+                            } else if (misa.rvh && isV(xc) && pm == PRV_S &&
+                                hstatus.vtw == 1) {
+                                return std::make_shared<VirtualInstFault>(
+                                        "wfi in VS mode with VTW enabled",
+                                        machInst);
+                            } else if (misa.rvs && pm < PRV_S) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "wfi in user mode",
                                             machInst);
                             }
+
                             auto tc = xc->tcBase();
                             auto cpu = tc->getCpuPtr();
                             auto ic = dynamic_cast<RiscvISA::Interrupts*>(
@@ -4867,28 +4925,84 @@ decode QUADRANT default Unknown::unknown() {
                                 "sfence_vma can't execute without RVS",
                                 machInst);
                         }
+
                         STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
-                        if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
+
+                        if (misa.rvh && isV(xc) &&
+                            (pm == PRV_U || hstatus.vtvm == 1)) {
+                            return std::make_shared<VirtualInstFault>(
+                                    "sfence in VU mode or VTVM enabled",
+                                    machInst);
+                        }
+                        else if (pm == PRV_U ||
+                        (pm == PRV_S && status.tvm == 1)) {
                             return std::make_shared<IllegalInstFault>(
                                         "sfence in user mode or TVM enabled",
                                         machInst);
                         }
+
                         xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0xb: sinval_vvma({{
+                        warn("sinval_vvma not implemented");
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0xc: decode RS2{
+                        0x0: sfence_w_inval({{
+                            warn("sfence_w_inval not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                        0x1: sfence_inval_ir({{
+                            warn("sfence_inval_ir not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    }
+
                     0x18: mret({{
+                        // We do not check for H-extension (misa.rvh)
+                        // to have a simpler implementation here.
+                        // By default even when misa.rvh == 0,
+                        // isV == false (MISCREG_VIRT == 0)
+                        // and the register bits we reference exist
+                        // but are not writable by the masks
+
+                        // This mret implementation conforms to
+                        // RISCV Privileged Spec 20211203
+                        // Cross-checked with spike implementation
+
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+
                         if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
-                            return std::make_shared<IllegalInstFault>(
-                                        "mret at lower privilege", machInst);
+                            if (isV(xc)) { // H-extension
+                                return std::make_shared<VirtualInstFault>(
+                                    "mret at lower prv (V=1)", machInst);
+                            }
+                            else {
+                                return std::make_shared<IllegalInstFault>(
+                                    "mret at lower privilege", machInst);
+                            }
                             NPC = NPC;
                         } else {
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            if (status.mpp != PRV_M) {
+                                if (status.mpv == 1) { // H-extension
+                                    setV(xc);
+                                }
+                                status.mprv = 0;
+                            }
+
                             xc->setMiscReg(MISCREG_PRV, status.mpp);
                             xc->setMiscReg(MISCREG_NMIE, 1);
+
                             status.mie = status.mpie;
                             status.mpie = 1;
-                            status.mpp = PRV_U;
+                            status.mpp = misa.rvu ? PRV_U : PRV_M;
+                            status.mpv = 0; // H-extension
+
                             xc->setMiscReg(MISCREG_STATUS, status);
+                            xc->tcBase()->getMMUPtr()->flushAll();
                             NPC = xc->readMiscReg(MISCREG_MEPC);
                         }
                     }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
