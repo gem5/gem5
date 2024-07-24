@@ -93,7 +93,12 @@ struct ControlConversionRegister
                 ControlExtension *control_ex = nullptr;
                 trans.get_extension(control_ex);
                 if (!control_ex) {
-                    return;
+                    control_ex = new Gem5SystemC::ControlExtension();
+                    if (trans.has_mm()) {
+                        trans.set_auto_extension(control_ex);
+                    } else {
+                        trans.set_extension(control_ex);
+                    }
                 }
 
                 control_ex->setPrivileged(pkt->req->isPriv());
