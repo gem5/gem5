@@ -37,8 +37,7 @@ namespace RiscvISA
 {
 
 Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
-                                          ip(0),
-                                          ie(0)
+                                          ip(0), ie(0), hvip(0)
 {
     for (uint8_t i = 0;
         i < p.port_local_interrupt_pins_connection_count;
@@ -71,8 +70,39 @@ Interrupts::globalMask() const
     PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
     switch (prv) {
         case PRV_U:
+            if (misa.rvh && isV(tc)) {
+                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
+
+                mask.local = ~hideleg.local | ~mideleg.local;
+                if (status.uie)
+                    mask.local = mask.local | (hideleg.local & mideleg.local);
+
+                mask.vsei = (!hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
+                mask.vssi = (!hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
+                mask.vsti = (!hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
+
+                // status.sie is always 0 if misa.rvn is disabled
+                mask.mei = (!mideleg.mei | !hideleg.mei)
+                        |  (mideleg.mei & hideleg.mei & vsstatus.sie);
+
+                mask.mti = (!mideleg.mti | !hideleg.mti)
+                        |  (mideleg.mti & hideleg.mti & vsstatus.sie);
+
+                mask.msi = (!mideleg.msi | !hideleg.msi)
+                        |  (mideleg.msi & hideleg.msi & vsstatus.sie);
+
+                mask.sei = (!mideleg.sei | !hideleg.sei)
+                        |  (mideleg.sei & hideleg.sei & vsstatus.sie);
+
+                mask.sti = (!mideleg.sti | !hideleg.sti)
+                        |  (mideleg.sti & hideleg.sti & vsstatus.sie);
+
+                mask.ssi = (!mideleg.ssi | !hideleg.ssi)
+                        |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
+            }
             // status.uie is always 0 if misa.rvn is disabled
-            if (misa.rvs) {
+            else if (misa.rvs) {
                 mask.local = ~sideleg.local;
                 if (status.uie)
                     mask.local = mask.local | sideleg.local;
@@ -99,15 +129,52 @@ Interrupts::globalMask() const
                 mask.uei = mask.uti = mask.usi = 1;
             break;
         case PRV_S:
-            mask.local = ~mideleg.local;
-            mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
-            mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
-            mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
-            if (status.sie) {
-                mask.sei = mask.sti = mask.ssi = 1;
-                mask.local = mask.local | mideleg.local;
+            if (misa.rvh && isV(tc)) {
+                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
+
+                mask.local = ~hideleg.local | ~mideleg.local;
+                if (status.sie)
+                    mask.local = mask.local | (hideleg.local & mideleg.local);
+
+                mask.vsei = (!hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
+                mask.vssi = (!hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
+                mask.vsti = (!hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
+
+                // status.sie is always 0 if misa.rvn is disabled
+                mask.mei = (!mideleg.mei | !hideleg.mei)
+                        |  (mideleg.mei & hideleg.mei & vsstatus.sie);
+
+                mask.mti = (!mideleg.mti | !hideleg.mti)
+                        |  (mideleg.mti & hideleg.mti & vsstatus.sie);
+
+                mask.msi = (!mideleg.msi | !hideleg.msi)
+                        |  (mideleg.msi & hideleg.msi & vsstatus.sie);
+
+
+                mask.sei = (!mideleg.sei | !hideleg.sei)
+                        |  (mideleg.sei & hideleg.sei & vsstatus.sie);
+
+                mask.sti = (!mideleg.sti | !hideleg.sti)
+                        |  (mideleg.sti & hideleg.sti & vsstatus.sie);
+
+                mask.ssi = (!mideleg.ssi | !hideleg.ssi)
+                        |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
+
+                mask.uei = mask.uti = mask.usi = 0;
+            } else {
+                // status.sie is always 0 if misa.rvn is disabled
+                mask.local = ~mideleg.local;
+                mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
+                mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
+                mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
+                if (status.sie) {
+                    mask.sei = mask.sti = mask.ssi = 1;
+                    mask.local = mask.local | mideleg.local;
+                }
+                mask.uei = mask.uti = mask.usi = 0;
             }
-            mask.uei = mask.uti = mask.usi = 0;
+
             break;
         case PRV_M:
 
@@ -147,9 +214,13 @@ Interrupts::getInterrupt()
             INT_LOCAL_11, INT_LOCAL_10, INT_LOCAL_9, INT_LOCAL_8,
             INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
             INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
+            //Table 5.1 from riscv-interrupts-1.0-RC3.pdf
+            //https://github.com/riscv/riscv-aia
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
             INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
+            INT_EXT_SUPER_GUEST, INT_EXT_VIRTUAL_SUPER,
+            INT_SOFTWARE_VIRTUAL_SUPER, INT_TIMER_VIRTUAL_SUPER,
+            INT_EXT_USER, INT_TIMER_USER, INT_SOFTWARE_USER
         };
         for (const int &id : interrupt_order) {
             if (checkInterrupt(id) && mask[id]) {
@@ -215,8 +286,10 @@ void
 Interrupts::serialize(CheckpointOut &cp) const
 {
     unsigned long ip_ulong = ip.to_ulong();
+    unsigned long hvip_ulong = hvip.to_ulong();
     unsigned long ie_ulong = ie.to_ulong();
     SERIALIZE_SCALAR(ip_ulong);
+    SERIALIZE_SCALAR(hvip_ulong);
     SERIALIZE_SCALAR(ie_ulong);
 }
 
@@ -224,11 +297,11 @@ void
 Interrupts::unserialize(CheckpointIn &cp)
 {
     unsigned long ip_ulong;
+    unsigned long hvip_ulong;
     unsigned long ie_ulong;
-    UNSERIALIZE_SCALAR(ip_ulong);
-    ip = ip_ulong;
-    UNSERIALIZE_SCALAR(ie_ulong);
-    ie = ie_ulong;
+    UNSERIALIZE_SCALAR(ip_ulong);   ip = ip_ulong;
+    UNSERIALIZE_SCALAR(hvip_ulong); hvip = hvip_ulong;
+    UNSERIALIZE_SCALAR(ie_ulong);   ie = ie_ulong;
 }
 
 Port &

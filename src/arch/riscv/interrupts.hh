@@ -98,7 +98,7 @@ class Interrupts : public BaseInterrupts
 
     void clearAll() override;
 
-    uint64_t readIP() const { return (uint64_t)ip.to_ulong(); }
+    uint64_t readIP() const { return (uint64_t)ip.to_ulong() | readHVIP(); }
     uint64_t readIE() const { return (uint64_t)ie.to_ulong(); }
     uint64_t readHVIP() const { return (uint64_t)hvip.to_ulong(); }
 
