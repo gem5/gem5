@@ -246,8 +246,8 @@ PIF::PrefetchListenerPC::notify(const Addr& pc)
 void
 PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 {
-    ProbeManager *pm(obj->getProbeManager());
-    listenersPC.push_back(new PrefetchListenerPC(*this, pm, name));
+    ProbeManager *pm = obj->getProbeManager();
+    listenersPC.push_back(pm->connect<PrefetchListenerPC>(*this, name));
 }
 
 } // namespace prefetch

@@ -165,9 +165,8 @@ class PIF : public Queued
         class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
         {
           public:
-            PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
-                             const std::string &name)
-                : ProbeListenerArgBase(pm, name),
+            PrefetchListenerPC(PIF &_parent, std::string name)
+                : ProbeListenerArgBase(std::move(name)),
                   parent(_parent) {}
             void notify(const Addr& pc) override;
           protected:
@@ -175,7 +174,7 @@ class PIF : public Queued
         };
 
         /** Array of probe listeners */
-        std::vector<PrefetchListenerPC *> listenersPC;
+        std::vector<ProbeConnectionPtr> listenersPC;
 
 
     public:

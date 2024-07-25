@@ -358,12 +358,10 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         }
 
       protected:
-        struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
+        struct RegularProbe: public ProbeListenerArgBase<uint64_t>
         {
-            RegularProbe(RegularEvent *parent, SimObject* obj,
-                std::string name)
-                : ProbeListenerArgBase(obj->getProbeManager(), name),
-                  parentEvent(parent) {}
+            RegularProbe(RegularEvent *parent, std::string name)
+                : ProbeListenerArgBase(std::move(name)), parentEvent(parent) {}
 
             RegularProbe() = delete;
 
@@ -379,7 +377,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         /** Set of probe listeners tapping onto each of the input micro-arch
          *  events which compose this pmu event
          */
-        std::vector<std::unique_ptr<RegularProbe>> attachedProbePointList;
+        std::vector<ProbeConnectionPtr> attachedProbePointList;
 
         void enable() override;
 

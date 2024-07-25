@@ -61,23 +61,8 @@ ProbeListenerObject::ProbeListenerObject(
 {
 }
 
-ProbeListenerObject::~ProbeListenerObject()
-{
-    for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-        delete (*l);
-    }
-    listeners.clear();
-}
-
-ProbeListener::ProbeListener(ProbeManager *_manager, const std::string &_name)
-    : manager(_manager), name(_name)
-{
-    manager->addListener(name, *this);
-}
-
 ProbeListener::~ProbeListener()
 {
-    manager->removeListener(name, *this);
 }
 
 bool
@@ -132,6 +117,18 @@ ProbeManager::addPoint(ProbePoint &point)
         }
     }
     points.push_back(&point);
+}
+
+ProbeConnection::ProbeConnection(ProbeManager* _manager,
+                                 std::unique_ptr<ProbeListener> _listener)
+    : listener(std::move(_listener)), manager(_manager)
+{
+    manager->addListener(listener->getName(), *listener);
+}
+
+ProbeConnection::~ProbeConnection()
+{
+    manager->removeListener(listener->getName(), *listener);
 }
 
 } // namespace gem5

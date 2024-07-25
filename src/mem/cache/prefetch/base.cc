@@ -277,22 +277,22 @@ Base::regProbeListeners()
      * cache is configured to prefetch on accesses.
      */
     if (listeners.empty() && probeManager != nullptr) {
-        listeners.push_back(new PrefetchListener(*this, probeManager,
-                                                "Miss", false, true));
-        listeners.push_back(new PrefetchListener(*this, probeManager,
-                                                 "Fill", true, false));
-        listeners.push_back(new PrefetchListener(*this, probeManager,
-                                                 "Hit", false, false));
-        listeners.push_back(new PrefetchEvictListener(*this, probeManager,
-                                                 "Data Update"));
+        listeners.push_back(probeManager->connect<PrefetchListener>(
+            *this, "Miss", false, true));
+        listeners.push_back(probeManager->connect<PrefetchListener>(
+            *this, "Fill", false, true));
+        listeners.push_back(probeManager->connect<PrefetchListener>(
+            *this, "Hit", false, true));
+        listeners.push_back(probeManager->connect<PrefetchEvictListener>(
+            *this, "Data Update"));
     }
 }
 
 void
 Base::addEventProbe(SimObject *obj, const char *name)
 {
-    ProbeManager *pm(obj->getProbeManager());
-    listeners.push_back(new PrefetchListener(*this, pm, name));
+    ProbeManager *pm = obj->getProbeManager();
+    listeners.push_back(pm->connect<PrefetchListener>(*this, name));
 }
 
 void

@@ -498,8 +498,9 @@ void
 PMU::RegularEvent::enable()
 {
     for (auto& subEvents: microArchitectureEventSet) {
-        attachedProbePointList.emplace_back(
-            new RegularProbe(this, subEvents.first, subEvents.second));
+        attachedProbePointList.push_back(
+            subEvents.first->getProbeManager()->connect<RegularProbe>(
+                this, subEvents.second));
     }
 }
 
