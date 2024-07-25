@@ -314,12 +314,16 @@ class ProbePointArg : public ProbePoint
      * @param l the ProbeListener to add to the notify list.
      */
     void
-    addListener(ProbeListener *l) override
+    addListener(ProbeListener *l_base) override
     {
+        auto *l = dynamic_cast<ProbeListenerArgBase<Arg> *>(l_base);
+        panic_if(!l, "Wrong type of listener: expected %s got %s",
+                 typeid(ProbeListenerArgBase<Arg>).name(),
+                 typeid(*l_base).name());
         // check listener not already added
         if (std::find(listeners.begin(), listeners.end(), l) ==
             listeners.end()) {
-            listeners.push_back(static_cast<ProbeListenerArgBase<Arg> *>(l));
+            listeners.push_back(l);
         }
     }
 
@@ -328,8 +332,12 @@ class ProbePointArg : public ProbePoint
      * @param l the ProbeListener to remove from the notify list.
      */
     void
-    removeListener(ProbeListener *l) override
+    removeListener(ProbeListener *l_base) override
     {
+        auto *l = dynamic_cast<ProbeListenerArgBase<Arg> *>(l_base);
+        panic_if(!l, "Wrong type of listener expected %s got %s",
+                 typeid(ProbeListenerArgBase<Arg>).name(),
+                 typeid(*l_base).name());
         listeners.erase(std::remove(listeners.begin(), listeners.end(), l),
                         listeners.end());
     }
@@ -341,8 +349,8 @@ class ProbePointArg : public ProbePoint
     void
     notify(const Arg &arg)
     {
-        for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-            (*l)->notify(arg);
+        for (auto *l : listeners) {
+            l->notify(arg);
         }
     }
 };
