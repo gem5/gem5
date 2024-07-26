@@ -349,10 +349,8 @@ PMU::readMiscRegInt(int misc_reg)
         return reg_pmceid1 & 0xFFFFFFFF;
 
       case MISCREG_PMCCNTR_EL0:
-        return cycleCounter.getValue();
-
       case MISCREG_PMCCNTR:
-        return cycleCounter.getValue() & 0xFFFFFFFF;
+        return cycleCounter.getValue();
 
       case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
         return getCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0);
