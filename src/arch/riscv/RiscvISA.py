@@ -115,10 +115,14 @@ class RiscvISA(BaseISA):
     enable_Zicbom_fs = Param.Bool(True, "Enable Zicbom extension in FS mode")
     enable_Zicboz_fs = Param.Bool(True, "Enable Zicboz extension in FS mode")
 
-    wfi_pending_resume = Param.Bool(
+    wfi_resume_on_pending = Param.Bool(
         True,
-        "Set true to specify that only a pending interrupt is required "
-        "to resume after wfi instruction",
+        "If wfi_resume_on_pending is set to True, the hart will resume "
+        "execution when interrupt becomes pending. The local enabled status "
+        "is not considered.\n"
+        "If wfi_resume_on_pending is set to False, the hart will only "
+        "resume the execution when an locally enabled interrupt becomes "
+        "pending.",
     )
 
     def get_isa_string(self):

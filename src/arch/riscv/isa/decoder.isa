@@ -4880,7 +4880,7 @@ decode QUADRANT default Unknown::unknown() {
                             auto isa = dynamic_cast<RiscvISA::ISA*>(
                                 tc->getIsaPtr());
                             panic_if(!ic, "Invalid Interrupt Controller.");
-                            if (isa->getWfiPendingResume()) {
+                            if (isa->resumeOnPending()) {
                                 // Go to sleep only if there are no pending
                                 // interrupts at all, and no non-maskable
                                 // interrupts.
