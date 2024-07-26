@@ -57,9 +57,11 @@ enum AddrXlateMode
 };
 
 // Sv39 paging
-const Addr VADDR_BITS  = 39;
-const Addr LEVEL_BITS  = 9;
-const Addr LEVEL_MASK  = (1 << LEVEL_BITS) - 1;
+const Addr SV39_XLEN = 64;
+const Addr SV39_VADDR_BITS  = 39;
+const Addr SV39_LEVELS = 3;
+const Addr SV39_LEVEL_BITS  = 9;
+const Addr SV39X4_WIDENED_BITS = 2;
 
 BitUnion64(PTESv39)
     Bitfield<53, 10> ppn;
@@ -101,19 +103,26 @@ struct TlbEntry : public Serializable
 
     PTESv39 pte;
 
+    PTESv39 gpte;
+
     TlbEntryTrie::Handle trieHandle;
 
     // A sequence number to keep track of LRU.
     uint64_t lruSeq;
 
     TlbEntry()
-        : paddr(0), vaddr(0), logBytes(0), pte(), lruSeq(0)
+        : paddr(0), vaddr(0), logBytes(0), pte(), gpte(), lruSeq(0)
     {}
 
     // Return the page size in bytes
     Addr size() const
     {
         return (static_cast<Addr>(1) << logBytes);
+    }
+
+    void reset()
+    {
+        paddr = vaddr = logBytes = pte = gpte = lruSeq = 0;
     }
 
     void serialize(CheckpointOut &cp) const override;

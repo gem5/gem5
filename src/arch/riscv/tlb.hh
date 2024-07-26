@@ -54,6 +54,27 @@ class ThreadContext;
    simply create an ITLB and DTLB that will point to the real TLB */
 namespace RiscvISA {
 
+class MemAccessInfo
+{
+  public:
+    PrivilegeMode priv;
+    bool virt;
+    bool force_virt;
+    bool hlvx;
+    bool lr;
+
+    MemAccessInfo() = default;
+    MemAccessInfo(
+      PrivilegeMode priv, bool virt, bool force_virt, bool hlvx, bool lr) :
+      priv(priv), virt(virt), force_virt(force_virt), hlvx(hlvx), lr(lr) {}
+};
+
+enum XlateStage
+{
+  FIRST_STAGE,
+  GSTAGE
+};
+
 class Walker;
 
 class TLB : public BaseTLB
@@ -109,11 +130,16 @@ class TLB : public BaseTLB
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
 
-    Fault checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-                           BaseMMU::Mode mode, PTESv39 pte);
-    Fault createPagefault(Addr vaddr, BaseMMU::Mode mode);
+    Fault checkPermissions(ThreadContext* tc, MemAccessInfo mem_access,
+                            Addr vaddr, BaseMMU::Mode mode, PTESv39 pte,
+                            Addr gvaddr = 0x0,
+                            XlateStage stage = XlateStage::FIRST_STAGE);
 
-    PrivilegeMode getMemPriv(ThreadContext *tc, BaseMMU::Mode mode);
+    Fault createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr = 0x0,
+                          bool gpf = false, bool virt = false);
+
+    MemAccessInfo getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
+                                  const Request::ArchFlagsType arch_flags);
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;

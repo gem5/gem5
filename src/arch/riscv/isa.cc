@@ -774,7 +774,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                 // Flush TLB if satp changed as Spike does
                 if (new_val != cur_val) {
-                    //std::cout << "[TLB flush]: ATP changed" << std::endl;
                     tc->getMMUPtr()->flushAll();
                 }
                 setMiscRegNoEffect(idx, new_val);
