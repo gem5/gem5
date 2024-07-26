@@ -108,7 +108,7 @@ class RiscvISA(BaseISA):
         ELEN in Ch. 2 of RISC-V vector spec",
     )
     privilege_mode_set = Param.PrivilegeModeSet(
-        "MSU",  # MHSU to enable hypervisor (H-extension)
+        "MHSU",  # MHSU to enable hypervisor (H-extension)
         # also change isa.cc:readMiscReg for MIDELEG
         # if working with old bbl bootloader
         "The combination of privilege modes \

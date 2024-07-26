@@ -106,7 +106,7 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
         inst_flags)
 
     if mem_flags:
-        mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
+        mem_flags = [ '(Request::%s)' % flag for flag in mem_flags ]
         s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
         microiop.constructor += s
 

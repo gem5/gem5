@@ -529,8 +529,8 @@ ISA::readMiscReg(RegIndex idx)
             // In those cases, the bootloader panics.
             // You can replace with the line below, however H-extension
             // is incomplete this way.
-            //return misa.rvh ? mideleg_val : mideleg_val;
-            return misa.rvh ? mideleg_val | HS_INTERRUPTS : mideleg_val;
+            return mideleg_val;
+            //return misa.rvh ? mideleg_val | HS_INTERRUPTS : mideleg_val;
 
         }
       case MISCREG_SEPC:
