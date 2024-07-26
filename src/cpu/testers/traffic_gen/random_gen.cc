@@ -69,7 +69,7 @@ RandomGen::getNextPacket()
     // round down to start address of block
     addr -= addr % blocksize;
 
-    DPRINTF(TrafficGen, "RandomGen::getNextPacket: %c to addr %x, size %d\n",
+    DPRINTF(TrafficGen, "RandomGen::getNextPacket: %c to addr %#x, size %d\n",
             isRead ? 'r' : 'w', addr, blocksize);
 
     // add the amount of data manipulated to the total
