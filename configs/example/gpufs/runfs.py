@@ -189,10 +189,10 @@ def addRunFSOptions(parser):
     )
 
     parser.add_argument(
-        "--no-kvm-perf",
+        "--kvm-perf",
         default=False,
         action="store_true",
-        help="Disable KVM perf counters (use this with LSF / ETX)",
+        help="Enable KVM perf counters",
     )
 
     parser.add_argument(
