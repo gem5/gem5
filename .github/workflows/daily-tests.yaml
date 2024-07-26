@@ -69,7 +69,8 @@ jobs:
             - uses: actions/checkout@v4
             - name: long ${{ matrix.test-type }} gem5_library_example_tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} --length=long -vv
+              run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} --length=long
+                  -vv
             - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
