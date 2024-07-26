@@ -35,6 +35,7 @@
 #include "arch/amdgpu/vega/gpu_decoder.hh"
 #include "arch/amdgpu/vega/gpu_mem_helpers.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
+#include "arch/amdgpu/vega/insts/inst_util.hh"
 #include "arch/amdgpu/vega/operand.hh"
 #include "debug/GPUExec.hh"
 #include "debug/VEGA.hh"
@@ -420,6 +421,159 @@ namespace VegaISA
         // possible second DWORD
         InstFormat extData;
         uint32_t varSize;
+
+        template<typename T>
+        uint32_t
+        sdwabSelect(uint32_t dword, const SDWASelVals sel,
+                    bool sign_ext, bool neg, bool abs)
+        {
+            // Use the gem5 bits() helper to select a sub region from the
+            // dword based on the select. Return a 32-bit unsigned which will
+            // be cast to the appropriate compare type in the lambda passed to
+            // sdwabHelper.
+            int low_bit = 0, high_bit = 0;
+            uint32_t rv = dword;
+
+            if (sel < SDWA_WORD_0) {
+                // Selecting a sub-dword value smaller than a word (i.e., a
+                // byte). These values are 0-3 so multiplying by BITS_PER_BYTE
+                // gives the lower and upper bit easily.
+                low_bit = sel * VegaISA::BITS_PER_BYTE;
+                high_bit = low_bit + VegaISA::BITS_PER_BYTE - 1;
+            } else if (sel < SDWA_DWORD) {
+                // Selecting a sub-dword value of word size. Enum value is 4
+                // or 5, so selecting the LSb and multiplying gives the lower
+                // and upper bit.
+                low_bit = (sel & 1) * VegaISA::BITS_PER_WORD;
+                high_bit = low_bit + VegaISA::MSB_PER_WORD - 1;
+            } else {
+                // We are selecting the whole dword. Assert that is true and
+                // set the bit locations for lower and upper based on dword
+                // size.
+                assert(sel == SDWA_DWORD);
+                low_bit = 0;
+                high_bit = sizeof(uint32_t) * VegaISA::BITS_PER_BYTE - 1;
+            }
+
+            rv = bits(dword, high_bit, low_bit);
+
+            uint32_t sign_bit = 1 << high_bit;
+
+            // Panic on combinations which do not make sense.
+            if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+                panic_if(neg, "SWDAB negation operation on unsigned type!\n");
+                panic_if(sign_ext, "SWDAB sign extend on unsigned type!\n");
+            }
+
+            // Apply ABS, then NEG, then SEXT.
+            if (abs) {
+                if (std::is_integral_v<T>) {
+                    // If sign is set, sign extend first then call std::abs.
+                    if ((rv & sign_bit) && std::is_signed_v<T>) {
+                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
+                        rv = std::abs(static_cast<long long>(rv)) & 0xFFFFFFFF;
+                    }
+                } else {
+                    // Clear sign bit for FP types.
+                    rv = rv & mask(high_bit);
+                }
+            }
+
+            if (neg) {
+                if (std::is_integral_v<T>) {
+                    // If sign is set, sign extend first then call unary-.
+                    if (rv & sign_bit) {
+                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
+                        rv = -rv;
+                    }
+                } else {
+                    // Flip sign bit for FP types.
+                    rv = rv ^ mask(high_bit);
+                }
+            }
+
+            if (sign_ext) {
+                if (std::is_integral_v<T>) {
+                    if (rv & sign_bit) {
+                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
+                    }
+                } else {
+                    // It is not entirely clear what to do here. Literal
+                    // extensions for FP operands append zeros to mantissa
+                    // but specification does not state anything for SDWAB.
+                    panic("SDWAB sign extend set for non-integral type!\n");
+                }
+            }
+
+            return rv;
+        }
+
+        template<typename T>
+        void
+        sdwabHelper(GPUDynInstPtr gpuDynInst, int (*cmpFunc)(T, T))
+        {
+            DPRINTF(VEGA, "Handling %s SRC SDWA. SRC0: register %s[%d], "
+                    "sDst s[%d], sDst type %s, SRC0_SEL: %d, SRC0_SEXT: %d "
+                    "SRC0_NEG: %d, SRC0_ABS: %d, SRC1: register %s[%d], "
+                    "SRC1_SEL: %d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: "
+                    "%d\n", _opcode.c_str(),
+                    (extData.iFmt_VOP_SDWAB.S0 ? "s" : "v"),
+                    extData.iFmt_VOP_SDWAB.SRC0,
+                    extData.iFmt_VOP_SDWAB.SDST,
+                    (extData.iFmt_VOP_SDWAB.SD ? "SGPR" : "VCC"),
+                    extData.iFmt_VOP_SDWAB.SRC0_SEL,
+                    extData.iFmt_VOP_SDWAB.SRC0_SEXT,
+                    extData.iFmt_VOP_SDWAB.SRC0_NEG,
+                    extData.iFmt_VOP_SDWAB.SRC0_ABS,
+                    (extData.iFmt_VOP_SDWAB.S1 ? "s" : "v"),
+                    instData.VSRC1,
+                    extData.iFmt_VOP_SDWAB.SRC1_SEL,
+                    extData.iFmt_VOP_SDWAB.SRC1_SEXT,
+                    extData.iFmt_VOP_SDWAB.SRC1_NEG,
+                    extData.iFmt_VOP_SDWAB.SRC1_ABS);
+
+            // Start with SRC0 and insert 9th bit for VGPR source (S0 == 0).
+            int src0_idx = extData.iFmt_VOP_SDWAB.SRC0;
+            src0_idx += (extData.iFmt_VOP_SDWAB.S0 == 0) ? 0x100 : 0;
+
+            // Start with VSRC1[7:0], insert 9th bit for VGPR source (S1 == 0).
+            int src1_idx = instData.VSRC1;
+            src1_idx += (extData.iFmt_VOP_SDWAB.S1 == 0) ? 0x100 : 0;
+
+            // SD == 0 if VCC is dest, else use SDST index.
+            int sdst_idx = (extData.iFmt_VOP_SDWAB.SD == 1) ?
+                int(extData.iFmt_VOP_SDWAB.SDST) : REG_VCC_LO;
+
+            ConstVecOperandU32 src0(gpuDynInst, src0_idx);
+            ConstVecOperandU32 src1(gpuDynInst, src1_idx);
+            ScalarOperandU64 sdst(gpuDynInst, sdst_idx);
+
+            // Use readSrc in case of scalar const register.
+            src0.readSrc();
+            src1.readSrc();
+
+            // Select bits first, then cast to type, then apply modifiers.
+            const SDWASelVals src0_sel =
+                (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC0_SEL;
+            const SDWASelVals src1_sel =
+                (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC1_SEL;
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->wavefront()->execMask(lane)) {
+                    T a = sdwabSelect<T>(src0[lane], src0_sel,
+                                         extData.iFmt_VOP_SDWAB.SRC0_SEXT,
+                                         extData.iFmt_VOP_SDWAB.SRC0_NEG,
+                                         extData.iFmt_VOP_SDWAB.SRC0_ABS);
+                    T b = sdwabSelect<T>(src1[lane], src1_sel,
+                                         extData.iFmt_VOP_SDWAB.SRC1_SEXT,
+                                         extData.iFmt_VOP_SDWAB.SRC1_NEG,
+                                         extData.iFmt_VOP_SDWAB.SRC1_ABS);
+                    sdst.setBit(lane, cmpFunc(a, b));
+                }
+            }
+
+            sdst.write();
+        }
 
       private:
         bool hasSecondDword(InFmt_VOPC *);
