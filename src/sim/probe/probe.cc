@@ -66,41 +66,34 @@ ProbeListener::~ProbeListener()
 }
 
 bool
-ProbeManager::addListener(std::string point_name, ProbeListener &listener)
+ProbeManager::addListener(std::string_view point_name, ProbeListener &listener)
 {
     DPRINTFR(ProbeVerbose, "Probes: Call to addListener to \"%s\" on %s.\n",
         point_name, object->name());
-    bool added = false;
-    for (auto p = points.begin(); p != points.end(); ++p) {
-        if ((*p)->getName() == point_name) {
-            (*p)->addListener(&listener);
-            added = true;
-        }
-    }
-    if (!added) {
+    if (ProbePoint *p = getProbePoint(point_name)) {
+        p->addListener(&listener);
+        return true;
+    } else {
         DPRINTFR(ProbeVerbose, "Probes: Call to addListener to \"%s\" on "
             "%s failed, no such point.\n", point_name, object->name());
+        return false;
     }
-    return added;
 }
 
 bool
-ProbeManager::removeListener(std::string point_name, ProbeListener &listener)
+ProbeManager::removeListener(std::string_view point_name,
+                             ProbeListener &listener)
 {
     DPRINTFR(ProbeVerbose, "Probes: Call to removeListener from \"%s\" on "
         "%s.\n", point_name, object->name());
-    bool removed = false;
-    for (auto p = points.begin(); p != points.end(); ++p) {
-        if ((*p)->getName() == point_name) {
-            (*p)->removeListener(&listener);
-            removed = true;
-        }
-    }
-    if (!removed) {
+    if (ProbePoint *p = getProbePoint(point_name)) {
+        p->removeListener(&listener);
+        return true;
+    } else {
         DPRINTFR(ProbeVerbose, "Probes: Call to removeListener from \"%s\" "
             "on %s failed, no such point.\n", point_name, object->name());
+        return false;
     }
-    return removed;
 }
 
 void
@@ -109,14 +102,22 @@ ProbeManager::addPoint(ProbePoint &point)
     DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s.\n",
         point.getName(), object->name());
 
-    for (auto p = points.begin(); p != points.end(); ++p) {
-        if ((*p)->getName() == point.getName()) {
-            DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s "
-                "failed, already added.\n", point.getName(), object->name());
-            return;
-        }
+    if (getProbePoint(point.getName())) {
+        DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s "
+            "failed, already added.\n", point.getName(), object->name());
+        return;
     }
     points.push_back(&point);
+}
+
+ProbePoint *
+ProbeManager::getProbePoint(std::string_view point_name) const {
+    for (auto p : points) {
+        if (p->getName() == point_name) {
+            return p;
+        }
+    }
+    return nullptr;
 }
 
 ProbeConnection::ProbeConnection(ProbeManager* _manager,
