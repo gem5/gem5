@@ -30,7 +30,6 @@ jobs:
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [name-artifacts]
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         steps:
             - name: Clean runner
@@ -61,7 +60,6 @@ jobs:
                 test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt,
                     gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [name-artifacts]
         timeout-minutes: 1440 # 24 hours
         steps:
             - name: Clean runner
