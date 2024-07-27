@@ -543,8 +543,9 @@ PMU::CounterState::detach()
         sourceEvent->detachEvent(this);
         sourceEvent = nullptr;
     } else {
-        debugCounter("detaching event not currently attached"
-            " to any event\n");
+        DPRINTFS(PMUVerbose, &pmu,
+                 "detaching event %d not currently attached to any event"
+                 " [counterId = %d]\n", eventId, counterId);
     }
 }
 
