@@ -601,6 +601,7 @@ PMU::updateCounter(CounterState &ctr)
         if (sourceEvent == eventMap.end()) {
             warn("Can't enable PMU counter of type '0x%x': "
                  "No such event type.\n", ctr.eventId);
+            ctr.detach();
         } else {
             ctr.attach(sourceEvent->second);
         }
