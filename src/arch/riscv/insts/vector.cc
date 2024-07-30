@@ -412,10 +412,10 @@ VMvWholeMicroInst::generateDisassembly(Addr pc,
 }
 
 VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
-    uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize)
+    uint8_t _dstReg, uint8_t _numSrcs, uint32_t _elen, uint32_t _vlen,
+    size_t _elemSize)
     : VectorArithMicroInst("vmask_mv_micro", extMachInst,
-                            SimdAddOp, 0, 0),
-      vlen(_vlen),
+                            SimdAddOp, 0, 0, _elen, _vlen),
       elemSize(_elemSize)
 {
     setRegIdxArrays(
@@ -439,9 +439,8 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     trace::InstRecord* traceData) const
 {
     vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
-    PCStateBase *pc_ptr = xc->tcBase()->pcState().clone();
     auto Vd = tmp_d0.as<uint8_t>();
-    uint32_t vlenb = pc_ptr->as<PCState>().vlenb();
+    uint32_t vlenb = vlen >> 3;
     const uint32_t elems_per_vreg = vlenb / elemSize;
     size_t bit_cnt = elems_per_vreg;
 
@@ -503,9 +502,10 @@ VxsatMicroInst::generateDisassembly(Addr pc,
 }
 
 VlFFTrimVlMicroOp::VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
-    uint32_t _microIdx, uint32_t _vlen, std::vector<StaticInstPtr>& _microops)
+    uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+    std::vector<StaticInstPtr>& _microops)
     : VectorMicroInst("vlff_trimvl_v_micro", _machInst, SimdConfigOp,
-                      _microVl, _microIdx, _vlen),
+                      _microVl, _microIdx, _elen, _vlen),
       microops(_microops)
 {
     setRegIdxArrays(
@@ -614,13 +614,13 @@ std::string VlSegMicroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
-                        uint32_t _dstReg, uint32_t _numSrcs,
-                        uint32_t _microIdx, uint32_t _numMicroops,
-                        uint32_t _field, uint32_t _vlen, uint32_t _sizeOfElement)
+VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst,
+                        uint32_t _micro_vl, uint32_t _dstReg,
+                        uint32_t _numSrcs, uint32_t _microIdx,
+                        uint32_t _numMicroops, uint32_t _field, uint32_t _elen,
+                        uint32_t _vlen, uint32_t _sizeOfElement)
     : VectorArithMicroInst("vlseg_deintrlv_micro", extMachInst,
-                            SimdAddOp, 0, 0),
-        vlen(_vlen)
+                            SimdAddOp, 0, 0, _elen, _vlen)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -716,13 +716,13 @@ std::string VsSegMicroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-VsSegIntrlvMicroInst::VsSegIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
-                        uint32_t _dstReg, uint32_t _numSrcs,
-                        uint32_t _microIdx, uint32_t _numMicroops,
-                        uint32_t _field, uint32_t _vlen, uint32_t _sizeOfElement)
+VsSegIntrlvMicroInst::VsSegIntrlvMicroInst(ExtMachInst extMachInst,
+                        uint32_t _micro_vl, uint32_t _dstReg,
+                        uint32_t _numSrcs, uint32_t _microIdx,
+                        uint32_t _numMicroops, uint32_t _field, uint32_t _elen,
+                        uint32_t _vlen, uint32_t _sizeOfElement)
     : VectorArithMicroInst("vsseg_reintrlv_micro", extMachInst,
-                            SimdAddOp, 0, 0),
-        vlen(_vlen)
+                            SimdAddOp, 0, 0, _elen, _vlen)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -802,9 +802,10 @@ VsSegIntrlvMicroInst::generateDisassembly(Addr pc,
 }
 
 VCpyVsMicroInst::VCpyVsMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                                 uint8_t _vsRegIdx)
+                                 uint8_t _vsRegIdx, uint32_t _elen,
+                                 uint32_t _vlen)
     : VectorArithMicroInst("vcpyvs_v_micro", _machInst, SimdMiscOp, 0,
-                           _microIdx)
+                           _microIdx, _elen, _vlen)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -857,9 +858,10 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 }
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                                 uint32_t _numVdPins, bool _hasVdOffset)
+                                 uint32_t _numVdPins, uint32_t _elen,
+                                 uint32_t _vlen, bool _hasVdOffset)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
-                           _microIdx)
+                           _microIdx, _elen, _vlen)
     , hasVdOffset(_hasVdOffset)
 {
     setRegIdxArrays(
