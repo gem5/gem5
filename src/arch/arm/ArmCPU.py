@@ -28,6 +28,7 @@ from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.ArmMMU import ArmMMU
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
+from m5.objects.BaseFastMemSimpleCPU import BaseFastMemSimpleCPU
 from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseO3Checker import BaseO3Checker
@@ -48,6 +49,10 @@ class ArmAtomicSimpleCPU(BaseAtomicSimpleCPU, ArmCPU):
 
 
 class ArmNonCachingSimpleCPU(BaseNonCachingSimpleCPU, ArmCPU):
+    mmu = ArmMMU()
+
+
+class ArmFastMemSimpleCPU(BaseFastMemSimpleCPU, ArmCPU):
     mmu = ArmMMU()
 
 

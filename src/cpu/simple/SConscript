@@ -39,6 +39,9 @@ if env['CONF']['BUILD_ISA']:
             sim_objects=['BaseNonCachingSimpleCPU'])
     Source('noncaching.cc')
 
+    SimObject('BaseFastMemSimpleCPU.py', sim_objects=['BaseFastMemSimpleCPU'])
+    Source('fastmem.cc')
+
     SimObject('BaseTimingSimpleCPU.py', sim_objects=['BaseTimingSimpleCPU'])
     Source('timing.cc')
 
@@ -51,3 +54,4 @@ if env['CONF']['BUILD_ISA']:
     SimObject('AtomicSimpleCPU.py', sim_objects=[])
     SimObject('NonCachingSimpleCPU.py', sim_objects=[])
     SimObject('TimingSimpleCPU.py', sim_objects=[])
+    SimObject('FastMemSimpleCPU.py', sim_objects=[])
