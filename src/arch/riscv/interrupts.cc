@@ -78,27 +78,27 @@ Interrupts::globalMask() const
                 if (status.uie)
                     mask.local = mask.local | (hideleg.local & mideleg.local);
 
-                mask.vsei = (!hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
-                mask.vssi = (!hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
-                mask.vsti = (!hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
+                mask.vsei = (~hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
+                mask.vssi = (~hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
+                mask.vsti = (~hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
 
                 // status.sie is always 0 if misa.rvn is disabled
-                mask.mei = (!mideleg.mei | !hideleg.mei)
+                mask.mei = (~mideleg.mei | ~hideleg.mei)
                         |  (mideleg.mei & hideleg.mei & vsstatus.sie);
 
-                mask.mti = (!mideleg.mti | !hideleg.mti)
+                mask.mti = (~mideleg.mti | ~hideleg.mti)
                         |  (mideleg.mti & hideleg.mti & vsstatus.sie);
 
-                mask.msi = (!mideleg.msi | !hideleg.msi)
+                mask.msi = (~mideleg.msi | ~hideleg.msi)
                         |  (mideleg.msi & hideleg.msi & vsstatus.sie);
 
-                mask.sei = (!mideleg.sei | !hideleg.sei)
+                mask.sei = (~mideleg.sei | ~hideleg.sei)
                         |  (mideleg.sei & hideleg.sei & vsstatus.sie);
 
-                mask.sti = (!mideleg.sti | !hideleg.sti)
+                mask.sti = (~mideleg.sti | ~hideleg.sti)
                         |  (mideleg.sti & hideleg.sti & vsstatus.sie);
 
-                mask.ssi = (!mideleg.ssi | !hideleg.ssi)
+                mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
                         |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
             }
             // status.uie is always 0 if misa.rvn is disabled
@@ -106,12 +106,12 @@ Interrupts::globalMask() const
                 mask.local = ~sideleg.local;
                 if (status.uie)
                     mask.local = mask.local | sideleg.local;
-                mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
-                mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
-                mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
-                mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
-                mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
-                mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
+                mask.mei = (~sideleg.mei) | (sideleg.mei & status.uie);
+                mask.mti = (~sideleg.mti) | (sideleg.mti & status.uie);
+                mask.msi = (~sideleg.msi) | (sideleg.msi & status.uie);
+                mask.sei = (~sideleg.sei) | (sideleg.sei & status.uie);
+                mask.sti = (~sideleg.sti) | (sideleg.sti & status.uie);
+                mask.ssi = (~sideleg.ssi) | (sideleg.ssi & status.uie);
             } else {
                 // According to the RISC-V privilege spec v1.10, if the
                 // S privilege mode is not implemented and user-trap
@@ -120,9 +120,9 @@ Interrupts::globalMask() const
                 mask.local = ~mideleg.local;
                 if (status.uie)
                     mask.local = mask.local | mideleg.local;
-                mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
-                mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
-                mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
+                mask.mei = (~mideleg.mei) | (mideleg.mei & status.uie);
+                mask.mti = (~mideleg.mti) | (mideleg.mti & status.uie);
+                mask.msi = (~mideleg.msi) | (mideleg.msi & status.uie);
                 mask.sei = mask.sti = mask.ssi = 0;
             }
             if (status.uie)
@@ -137,37 +137,37 @@ Interrupts::globalMask() const
                 if (status.sie)
                     mask.local = mask.local | (hideleg.local & mideleg.local);
 
-                mask.vsei = (!hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
-                mask.vssi = (!hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
-                mask.vsti = (!hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
+                mask.vsei = (~hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
+                mask.vssi = (~hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
+                mask.vsti = (~hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
 
                 // status.sie is always 0 if misa.rvn is disabled
-                mask.mei = (!mideleg.mei | !hideleg.mei)
+                mask.mei = (~mideleg.mei | ~hideleg.mei)
                         |  (mideleg.mei & hideleg.mei & vsstatus.sie);
 
-                mask.mti = (!mideleg.mti | !hideleg.mti)
+                mask.mti = (~mideleg.mti | ~hideleg.mti)
                         |  (mideleg.mti & hideleg.mti & vsstatus.sie);
 
-                mask.msi = (!mideleg.msi | !hideleg.msi)
+                mask.msi = (~mideleg.msi | ~hideleg.msi)
                         |  (mideleg.msi & hideleg.msi & vsstatus.sie);
 
 
-                mask.sei = (!mideleg.sei | !hideleg.sei)
+                mask.sei = (~mideleg.sei | ~hideleg.sei)
                         |  (mideleg.sei & hideleg.sei & vsstatus.sie);
 
-                mask.sti = (!mideleg.sti | !hideleg.sti)
+                mask.sti = (~mideleg.sti | ~hideleg.sti)
                         |  (mideleg.sti & hideleg.sti & vsstatus.sie);
 
-                mask.ssi = (!mideleg.ssi | !hideleg.ssi)
+                mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
                         |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
 
                 mask.uei = mask.uti = mask.usi = 0;
             } else {
                 // status.sie is always 0 if misa.rvn is disabled
                 mask.local = ~mideleg.local;
-                mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
-                mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
-                mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
+                mask.mei = (~mideleg.mei) | (mideleg.mei & status.sie);
+                mask.mti = (~mideleg.mti) | (mideleg.mti & status.sie);
+                mask.msi = (~mideleg.msi) | (mideleg.msi & status.sie);
                 if (status.sie) {
                     mask.sei = mask.sti = mask.ssi = 1;
                     mask.local = mask.local | mideleg.local;
