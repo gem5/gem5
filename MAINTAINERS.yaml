@@ -51,12 +51,6 @@ arch-arm:
         - Giacomo Travaglini <giacomo.travaglini@arm.com>
         - Andreas Sandberg <andreas.sandberg@arm.com>
 
-arch-gcn3:
-    status: maintained
-    maintainers:
-        - Matt Sinclair <sinclair@cs.wisc.edu>
-        - Matt Poremba <matthew.poremba@amd.com>
-
 arch-vega:
     status: maintained
     maintainers:
