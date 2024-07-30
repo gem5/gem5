@@ -946,7 +946,11 @@ Sequencer::makeRequest(PacketPtr pkt)
             DPRINTF(RubySequencer, "Issuing LL\n");
             assert(pkt->isRead());
             primary_type = RubyRequestType_Load_Linked;
+#if defined (PROTOCOL_MESI_Two_Level) || defined (PROTOCOL_MESI_Three_Level)
+            secondary_type = RubyRequestType_Load_Linked;
+#else
             secondary_type = RubyRequestType_LD;
+#endif
         }
     } else if (pkt->req->isLockedRMW()) {
         //
