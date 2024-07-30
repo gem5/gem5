@@ -694,8 +694,8 @@ BaseCPU::setReset(bool state)
             tc->getIsaPtr()->resetThread();
             // reset the decoder in case it had partially decoded something,
             tc->getDecoderPtr()->reset();
-            // flush the TLBs,
-            tc->getMMUPtr()->flushAll();
+            // reset MMU,
+            tc->getMMUPtr()->reset();
             // Clear any interrupts,
             interrupts[tc->threadId()]->clearAll();
             // and finally reenable execution.
