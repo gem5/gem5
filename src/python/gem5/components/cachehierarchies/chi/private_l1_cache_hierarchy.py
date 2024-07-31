@@ -207,7 +207,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
     ) -> List[MemoryController]:
         memory_controllers = []
         for rng, port in board.get_mem_ports():
-            mc = MemoryController(self.ruby_system.network, rng, port)
+            mc = MemoryController(self.ruby_system.network, [rng], port)
             mc.ruby_system = self.ruby_system
             memory_controllers.append(mc)
         return memory_controllers

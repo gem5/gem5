@@ -334,6 +334,16 @@ class AbstractBoard:
         """
         raise NotImplementedError
 
+    def get_mem_ranges(self) -> List[AddrRange]:
+        if not hasattr(self, "mem_ranges"):
+            raise Exception(
+                "The board does not have any memory ranges. This is likely "
+                "due to the memory ranges not being set in the `_setup_memory_ranges` "
+                "function."
+            )
+
+        return getattr(self, "mem_ranges")
+
     @abstractmethod
     def _setup_memory_ranges(self) -> None:
         """

@@ -183,7 +183,7 @@ class PrivateL1SharedL2CacheHierarchy(
             mshrs=20,
             size="1kB",
             tgts_per_mshr=12,
-            addr_ranges=board.mem_ranges,
+            addr_ranges=board.get_mem_ranges(),
         )
         self.iocache.mem_side = self.membus.cpu_side_ports
         self.iocache.cpu_side = board.get_mem_side_coherent_io_port()
