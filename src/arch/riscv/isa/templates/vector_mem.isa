@@ -1765,7 +1765,8 @@ Fault
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
 
-    panic_if((pow(2, vlmul) * this->numFields) > 8, "LMUL value is illegal for vlseg inst");
+    panic_if(((1 << vlmul) * this->numFields) > 8,
+        "LMUL value is illegal for vlseg inst");
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -1823,7 +1824,8 @@ Fault
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
 
-    panic_if((pow(2, vlmul) * this->numFields) > 8, "LMUL value is illegal for vlseg inst");
+    panic_if(((1 << vlmul) * this->numFields) > 8,
+        "LMUL value is illegal for vlseg inst");
 
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
@@ -2010,7 +2012,7 @@ Fault
     %(ea_code)s;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    panic_if((pow(2, vlmul) * this->numFields) > 8,
+    panic_if(((1 << vlmul) * this->numFields) > 8,
         "LMUL value is illegal for vsseg inst");
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
@@ -2067,7 +2069,7 @@ Fault
     %(ea_code)s;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-        panic_if((pow(2, vlmul) * this->numFields) > 8,
+        panic_if(((1 << vlmul) * this->numFields) > 8,
             "LMUL value is illegal for vsseg inst");
 
 
