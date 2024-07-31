@@ -86,7 +86,7 @@ class TLB : public BaseTLB
     } stats;
 
   public:
-    BasePMAChecker *pma;
+    PMAChecker *pma;
     PMP *pmp;
 
   public:

@@ -349,6 +349,12 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             vaddr, vpn, satp.asid, paddr);
     req->setPaddr(paddr);
 
+    // look if the physical address is uncacheable
+    // and set the flag accordingly
+    if(pma->isUncacheable(paddr, req->getSize())) {
+        req->setFlags(Request::UNCACHEABLE);
+    }
+    
     return NoFault;
 }
 
@@ -422,6 +428,14 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         if (fault != NoFault)
             return fault;
 
+        // look if the physical address is uncacheable
+        // and set the flag accordingly
+        Addr paddr = req->getPaddr();
+        if(pma->isUncacheable(paddr, req->getSize())){
+            req->setFlags(Request::UNCACHEABLE);
+            DPRINTF(TLB, "Access to address %#x turned to uncacheable.\n", paddr);
+        }
+
         return NoFault;
     }
 }
@@ -493,6 +507,14 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
 
     DPRINTF(TLB, "Translated (functional) %#x -> %#x.\n", vaddr, paddr);
     req->setPaddr(paddr);
+
+    // look if the physical address is uncacheable
+    // and set the flag accordingly
+    if(pma->isUncacheable(paddr, req->getSize())){
+        req->setFlags(Request::UNCACHEABLE);
+        DPRINTF(TLB, "Access to address %#x turned to uncacheable.\n", paddr);
+    }
+    
     return NoFault;
 }
 
