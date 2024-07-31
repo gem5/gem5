@@ -156,7 +156,11 @@ class SEBinaryWorkload:
             if isinstance(checkpoint, Path):
                 self._checkpoint = checkpoint
             elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint = Path(checkpoint.get_local_path())
+                self._checkpoint = (
+                    Path(checkpoint_path)
+                    if (checkpoint_path := checkpoint.get_local_path())
+                    else None
+                )
             else:
                 raise Exception(
                     "The checkpoint must be None, Path, or "
@@ -167,7 +171,7 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         arguments: List[str] = [],
-        simpoint: SimpointResource = None,
+        simpoint: SimpointResource | None = None,
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
@@ -211,8 +215,10 @@ class SEBinaryWorkload:
         Returns the SimpointResorce object set. If no SimpointResource object
         has been set an exception is thrown.
         """
-        if getattr(self, "_simpoint_resource", None):
-            return self._simpoint_resource
+        if (
+            simpoint := getattr(self, "_simpoint_resource", None)
+        ) and simpoint is not None:
+            return simpoint
         raise Exception("This board does not have a simpoint set.")
 
     def set_se_looppoint_workload(

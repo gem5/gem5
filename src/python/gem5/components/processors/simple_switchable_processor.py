@@ -94,7 +94,8 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         super().incorporate_processor(board=board)
 
         if (
-            board.get_cache_hierarchy().is_ruby()
+            (cache_hierarchy := board.get_cache_hierarchy())
+            and cache_hierarchy.is_ruby()
             and self._mem_mode == MemMode.ATOMIC
         ):
             warn(

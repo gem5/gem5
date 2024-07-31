@@ -661,10 +661,10 @@ def main():
             except:
                 traceback.print_exc()
                 print("Uncaught exception. Entering post mortem debugging")
-                t = sys.exc_info()[2]
-                while t.tb_next is not None:
-                    t = t.tb_next
-                    pdb.interaction(t.tb_frame, t)
+                if t := sys.exc_info()[2]:
+                    while t.tb_next is not None:
+                        t = t.tb_next
+                        pdb.interaction(t.tb_frame, t)
         else:
             exec(filecode, scope)
 

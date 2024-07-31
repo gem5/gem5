@@ -560,13 +560,22 @@ class Simulator:
         """
         Returns the last exit event cause.
         """
-        return self._last_exit_event.getCause()
+        return (
+            last_exit_event.getCause()
+            if (last_exit_event := self._last_exit_event)
+            else ""
+        )
 
     def get_last_exit_event_code(self) -> int:
         """
         Returns the last exit event status code
         """
-        return self._last_exit_event.getCode()
+        # TODO: determine sane default
+        return (
+            last_exit_event.getCode()
+            if (last_exit_event := self._last_exit_event)
+            else -1
+        )
 
     def get_current_tick(self) -> int:
         """
@@ -727,7 +736,7 @@ class Simulator:
 
             # Translate the exit event cause to the exit event enum.
             exit_enum = ExitEvent.translate_exit_status(
-                self.get_last_exit_event_cause()
+                self.get_last_exit_event_cause() or ""
             )
 
             # Check to see the run is corresponding to the expected execution

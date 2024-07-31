@@ -966,7 +966,9 @@ class SimObject(metaclass=MetaSimObject):
                 f"{self}.{name} already has parent not resetting parent.\n"
                 f"\tNote: {name} is not a parameter of {type(self).__name__}"
             )
-            warn(f"(Previously declared as {child._parent}.{name}")
+            warn(
+                f"(Previously declared as {child._parent if isinstance(child, SimObject) else child[0]._parent}.{name}"
+            )
             return
         if name in self._children:
             # This code path had an undiscovered bug that would make it fail

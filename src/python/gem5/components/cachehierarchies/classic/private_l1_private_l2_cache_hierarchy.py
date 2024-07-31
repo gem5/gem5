@@ -144,6 +144,10 @@ class PrivateL1PrivateL2CacheHierarchy(
                 f"l1d-cache-{i}", L1DCache(size=self._l1d_size)
             )
 
+            assert l2_node.cache is not None
+            assert l1i_node.cache is not None
+            assert l1d_node.cache is not None
+
             self.l2buses[i].mem_side_ports = l2_node.cache.cpu_side
             self.membus.cpu_side_ports = l2_node.cache.mem_side
 
@@ -153,7 +157,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             cpu.connect_icache(l1i_node.cache.cpu_side)
             cpu.connect_dcache(l1d_node.cache.cpu_side)
 
-            self._connect_table_walker(i, cpu)
+            self._connect_table_walker(i, cpu)  # type: ignore[arg-type]
 
             if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = self.membus.mem_side_ports

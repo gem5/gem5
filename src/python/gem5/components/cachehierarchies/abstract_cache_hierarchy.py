@@ -88,7 +88,11 @@ class CacheNode:
         node = FdtNode(f"{self.name}")
         node.append(FdtPropertyStrings("compatible", ["cache"]))
         node.append(FdtPropertyWords("cache-level", int(level)))
-        node.append(FdtPropertyWords("cache-size", int(self.cache.size)))
+        node.append(
+            FdtPropertyWords(
+                "cache-size", int(cache.size if (cache := self.cache) else 0)
+            )
+        )
         if self.next_level:
             node.append(
                 FdtPropertyWords(

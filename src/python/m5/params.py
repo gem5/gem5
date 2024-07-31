@@ -1577,7 +1577,7 @@ class MetaEnum(MetaParamValue):
                 "Enum-derived class must define attribute 'map' or 'vals'"
             )
 
-        if cls.is_class:
+        if getattr(cls, "is_class", False):
             cls.cxx_type = f"{name}"
         else:
             scope = init_dict.get("wrapper_name", "enums")
@@ -2086,7 +2086,7 @@ class PortRef:
         }
 
     def __getattr__(self, attr):
-        if attr == "peerObj":
+        if attr == "peerObj" and self.peer is not None:
             # shorthand for proxies
             return self.peer.simobj
         raise AttributeError(
@@ -2146,12 +2146,20 @@ class PortRef:
 
         old_peer = self.peer
 
-        if Port.is_compat(old_peer, new_1) and Port.is_compat(self, new_2):
+        if (
+            old_peer is not None
+            and Port.is_compat(old_peer, new_1)
+            and Port.is_compat(self, new_2)
+        ):
             old_peer.peer = new_1
             new_1.peer = old_peer
             self.peer = new_2
             new_2.peer = self
-        elif Port.is_compat(old_peer, new_2) and Port.is_compat(self, new_1):
+        elif (
+            old_peer is not None
+            and Port.is_compat(old_peer, new_2)
+            and Port.is_compat(self, new_1)
+        ):
             old_peer.peer = new_2
             new_2.peer = old_peer
             self.peer = new_1
@@ -2163,7 +2171,7 @@ class PortRef:
                 self,
                 self.role,
                 old_peer,
-                old_peer.role,
+                old_peer.role if old_peer is not None else None,
                 new_1,
                 new_1.role,
                 new_2,
@@ -2185,7 +2193,7 @@ class PortRef:
 
     def unproxy(self, simobj):
         assert simobj is self.simobj
-        if proxy.isproxy(self.peer):
+        if self.peer is not None and proxy.isproxy(self.peer):
             try:
                 realPeer = self.peer.unproxy(self.simobj)
             except:

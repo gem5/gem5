@@ -175,7 +175,7 @@ class RISCVMatchedCacheHierarchy(
             mshrs=20,
             size="1kB",
             tgts_per_mshr=12,
-            addr_ranges=board.mem_ranges,
+            addr_ranges=board.mem_ranges,  # TODO: this attribute doesn't seem to exist, need to figure out what this is supposed to be
         )
         self.iocache.mem_side = self.membus.cpu_side_ports
         self.iocache.cpu_side = board.get_mem_side_coherent_io_port()

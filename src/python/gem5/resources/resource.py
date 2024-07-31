@@ -127,7 +127,7 @@ class AbstractResource:
 
     def get_id(self) -> str:
         """Returns the ID of the resource."""
-        return self._id
+        return self._id or ""
 
     def get_category_name(cls) -> str:
         raise NotImplementedError
@@ -143,7 +143,7 @@ class AbstractResource:
 
     def get_resource_version(self) -> str:
         """Returns the version of the resource."""
-        return self._version
+        return self._version or ""
 
     def get_local_path(self) -> Optional[str]:
         """Returns the local path of the resource.
@@ -502,7 +502,7 @@ class SimpointResource(AbstractResource):
         if self.get_warmup_interval() != 0:
             self._warmup_list = self._set_warmup_list()
         else:
-            self._warmup_list = [0] * len(self.get_simpoint_start_insts)
+            self._warmup_list = [0] * len(self.get_simpoint_start_insts())
 
     def get_simpoint_list(self) -> List[int]:
         """Returns the a list containing all the SimPoints for the workload."""
@@ -953,6 +953,9 @@ def obtain_resource(
                     ``resource_directory`` parameter.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
+
+    if not clients:
+        clients = []
 
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(

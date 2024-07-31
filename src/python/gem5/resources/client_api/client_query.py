@@ -48,7 +48,7 @@ class ClientQuery:
         # We only need the major and minor version numbers.
         # As on database side, we only store the major and minor
         # version numbers.
-        self.gem5_version = ".".join(gem5_version.split(".")[:2])
+        self.gem5_version = ".".join((gem5_version or "0.0.0").split(".")[:2])
 
     def get_resource_id(self) -> str:
         return self.resource_id
