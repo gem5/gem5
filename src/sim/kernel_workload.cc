@@ -104,12 +104,22 @@ KernelWorkload::initState()
     };
     if (params().object_file != "")  {
         if (params().addr_check) {
+            auto memory_size = system->memSize();
+            auto kernel_size = _end - _start;
             // Validate kernel mapping before loading binary
+            fatal_if((kernel_size > memory_size),
+                "Kernel is mapped to invalid location (not memory). start"
+                " (%#lx) - end (%#lx) %#lx:%#lx\n"
+                "The kernel size (%ld bytes, %ld MB) appears to be larger "
+                "than total system memory (%ld bytes, %ld MB). Try increasing"
+                " system memory.", _start, _end, mapper(_start), mapper(_end),
+                kernel_size, kernel_size>>20, memory_size, memory_size>>20);
             fatal_if(!system->isMemAddr(mapper(_start)) ||
-                    !system->isMemAddr(mapper(_end)),
-                    "Kernel is mapped to invalid location (not memory). "
-                    "start (%#x) - end (%#x) %#x:%#x\n",
-                    _start, _end, mapper(_start), mapper(_end));
+                !system->isMemAddr(mapper(_end)),
+                "Kernel is mapped to invalid location (not memory). start"
+                " (%#lx) - end (%#lx) %#lx:%#lx\n", _start, _end,
+                mapper(_start), mapper(_end));
+
         }
         // Load program sections into memory
         image.write(phys_mem);
