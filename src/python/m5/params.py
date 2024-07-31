@@ -60,6 +60,7 @@ import math
 import re
 import sys
 import time
+from typing import List
 
 from . import (
     proxy,
@@ -900,71 +901,70 @@ class PcCountPair(ParamValue):
 class AddrRange(ParamValue):
     cxx_type = "AddrRange"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        # we annotate start/end/size as int | str | Addr, but as long as it's something
+        # that can construct an Addr, we're happy
+        start: int | str | Addr | None | list | tuple = None,
+        end: int | str | Addr | None = None,
+        size: int | str | Addr | None = None,
+        intlvMatch: int | None = None,
+        intlvBits: int | None = None,
+        masks: List[int] | None = None,
+        intlvHighBit: int | None = None,
+        xorHighBit: int | None = None,
+    ):
         # Disable interleaving and hashing by default
         self.intlvBits = 0
         self.intlvMatch = 0
         self.masks = []
 
-        def handle_kwargs(self, kwargs):
-            # An address range needs to have an upper limit, specified
-            # either explicitly with an end, or as an offset using the
-            # size keyword.
-            if "end" in kwargs:
-                self.end = Addr(kwargs.pop("end"))
-            elif "size" in kwargs:
-                self.end = self.start + Addr(kwargs.pop("size"))
-            else:
-                raise TypeError("Either end or size must be specified")
-
-            # Now on to the optional bit
-            if "intlvMatch" in kwargs:
-                self.intlvMatch = int(kwargs.pop("intlvMatch"))
-
-            if "masks" in kwargs:
-                self.masks = [int(x) for x in list(kwargs.pop("masks"))]
-                self.intlvBits = len(self.masks)
-            else:
-                if "intlvBits" in kwargs:
-                    self.intlvBits = int(kwargs.pop("intlvBits"))
-                    self.masks = [0] * self.intlvBits
-                    if "intlvHighBit" not in kwargs:
-                        raise TypeError("No interleave bits specified")
-                    intlv_high_bit = int(kwargs.pop("intlvHighBit"))
-                    xor_high_bit = 0
-                    if "xorHighBit" in kwargs:
-                        xor_high_bit = int(kwargs.pop("xorHighBit"))
-                    for i in range(0, self.intlvBits):
-                        bit1 = intlv_high_bit - i
-                        mask = 1 << bit1
-                        if xor_high_bit != 0:
-                            bit2 = xor_high_bit - i
-                            mask |= 1 << bit2
-                        self.masks[self.intlvBits - i - 1] = mask
-
-        if len(args) == 0:
-            self.start = Addr(kwargs.pop("start"))
-            handle_kwargs(self, kwargs)
-
-        elif len(args) == 1:
-            if kwargs:
-                self.start = Addr(args[0])
-                handle_kwargs(self, kwargs)
-            elif isinstance(args[0], (list, tuple)):
-                self.start = Addr(args[0][0])
-                self.end = Addr(args[0][1])
-            else:
+        # Handle getting the start and end addresses
+        match (start, end, size):
+            # case where start is a list/tuple
+            case ([start, end] | (start, end), None, None):
+                self.start = Addr(start)
+                self.end = Addr(end)
+            # cases where start is an int/str/None
+            case (start, None, size) if size is not None:
+                self.start = Addr(start or 0)
+                self.end = self.start + Addr(size)
+            case (start, end, _) if end is not None:
+                self.start = Addr(start or 0)
+                self.end = Addr(end)
+            # case where only one address is specified (given as start but will be used as end)
+            case (start, None, None) if start is not None:
                 self.start = Addr(0)
-                self.end = Addr(args[0])
+                self.end = Addr(start)
+            # failure case
+            case params:
+                raise TypeError(
+                    f"Either end or size must be specified: {params}"
+                )
 
-        elif len(args) == 2:
-            self.start = Addr(args[0])
-            self.end = Addr(args[1])
-        else:
-            raise TypeError("Too many arguments specified")
+        # now on to the optional bit
+        if intlvMatch is not None:
+            self.intlvMatch = int(intlvMatch)
 
-        if kwargs:
-            raise TypeError(f"Too many keywords: {list(kwargs.keys())}")
+        if masks is not None:
+            self.masks = [int(x) for x in list(masks)]
+            self.intlvBits = len(self.masks)
+        elif intlvBits is not None:
+            self.intlvBits = int(intlvBits)
+            self.masks = [0] * self.intlvBits
+            if intlvHighBit is None:
+                raise TypeError("No interleave bits specified")
+            intlv_high_bit = int(intlvHighBit)
+            xor_high_bit = 0
+            if xorHighBit is not None:
+                xor_high_bit = int(xorHighBit)
+            for i in range(0, self.intlvBits):
+                bit1 = intlv_high_bit - i
+                mask = 1 << bit1
+                if xor_high_bit != 0:
+                    bit2 = xor_high_bit - i
+                    mask |= 1 << bit2
+                self.masks[self.intlvBits - i - 1] = mask
 
     def __str__(self):
         if len(self.masks) == 0:
