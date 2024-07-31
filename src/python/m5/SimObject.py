@@ -11,7 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
-# Copyright (c) 2010-20013 Advanced Micro Devices, Inc.
+# Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
