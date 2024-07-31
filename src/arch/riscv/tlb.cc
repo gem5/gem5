@@ -354,7 +354,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     if(pma->isUncacheable(paddr, req->getSize())) {
         req->setFlags(Request::UNCACHEABLE);
     }
-    
+
     return NoFault;
 }
 
@@ -514,7 +514,7 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
         req->setFlags(Request::UNCACHEABLE);
         DPRINTF(TLB, "Access to address %#x turned to uncacheable.\n", paddr);
     }
-    
+
     return NoFault;
 }
 
