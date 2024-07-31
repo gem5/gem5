@@ -91,12 +91,8 @@ def _url_factory(schemes, enable=True):
     def decorator(func):
         @wraps(func)
         def wrapper(url):
-            try:
-                from urllib.parse import parse_qs
-            except ImportError:
-                # Python 2 fallback
-                from urlparse import parse_qs
             from ast import literal_eval
+            from urllib.parse import parse_qs
 
             qs = parse_qs(url.query, keep_blank_values=True)
 
@@ -111,13 +107,15 @@ def _url_factory(schemes, enable=True):
                     fatal(f"{url.geturl()}: '{key}' has multiple values.")
                 else:
                     try:
-                        return key, literal_eval(values[0])
+                        return literal_eval(values[0])
                     except ValueError:
                         fatal(
                             f"{url.geturl()}: {values[0]} isn't a valid Python literal"
                         )
 
-            kwargs = dict([parse_value(k, v) for k, v in qs.items()])
+            kwargs = {
+                k: value for k, v in qs.items() if (value := parse_value(k, v))
+            }
 
             try:
                 return func(f"{url.netloc}{url.path}", **kwargs)
@@ -215,11 +213,7 @@ def addStatVisitor(url):
 
     """
 
-    try:
-        from urllib.parse import urlsplit
-    except ImportError:
-        # Python 2 fallback
-        from urlparse import urlsplit
+    from urllib.parse import urlsplit
 
     parsed = urlsplit(url)
 
