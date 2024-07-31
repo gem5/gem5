@@ -578,7 +578,7 @@ class NumericParamValue(ParamValue):
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(MetaParamValue):
-    def __init__(cls, name, bases, dict):
+    def __init__(self, name, bases, dict):
         super().__init__(name, bases, dict)
 
         # CheckedInt is an abstract base class, so we actually don't
@@ -587,19 +587,22 @@ class CheckedIntType(MetaParamValue):
         if name == "CheckedInt":
             return
 
-        if not (hasattr(cls, "min") and hasattr(cls, "max")):
-            if not (hasattr(cls, "size") and hasattr(cls, "unsigned")):
+        if not hasattr(self, "min") or not hasattr(self, "max"):
+            if (size := getattr(self, "size", None)) is not None:
+                # TODO: Maybe only override min and max if they are not already set
+                # (rather than overriding both if either are unset)
+                if getattr(self, "unsigned", False):
+                    self.min = 0
+                    self.max = 2**size - 1
+                else:
+                    self.min = -(2 ** (size - 1))
+                    self.max = (2 ** (size - 1)) - 1
+            else:
                 panic(
                     "CheckedInt subclass %s must define either\n"
                     "    'min' and 'max' or 'size' and 'unsigned'\n",
                     name,
                 )
-            if cls.unsigned:
-                cls.min = 0
-                cls.max = 2**cls.size - 1
-            else:
-                cls.min = -(2 ** (cls.size - 1))
-                cls.max = (2 ** (cls.size - 1)) - 1
 
 
 # Abstract superclass for bounds-checked integer parameters.  This
