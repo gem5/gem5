@@ -220,40 +220,37 @@ class MetaSimObject(type):
 
         cls._citations = gem5_citations  # Default to gem5's citations
 
-        # We don't support multiple inheritance of sim objects.  If you want
-        # to, you must fix multidict to deal with it properly. Non sim-objects
-        # are ok, though
-        bTotal = 0
-        for c in bases:
-            if isinstance(c, MetaSimObject):
-                bTotal += 1
-            if bTotal > 1:
+        match len([None for b in bases if isinstance(b, MetaSimObject)]):
+            # If the base class is not set, we assume type `object`. This ensures
+            # `class Foo(object): pass` is considered equivalent to
+            # `class Foo: pass`.
+            #
+            # however, since we would only set _base if base is a MetaSimObject, we
+            # can just set it to None here.
+            case 0:
+                cls._base = None
+            case 1:
+                base = bases[0]
+                if isinstance(base, MetaSimObject):
+                    cls._base = base
+                    cls._params = multidict(base._params)
+                    cls._ports = multidict(base._ports)
+                    cls._deprecated_params = multidict(base._deprecated_params)
+                    cls._values = multidict(base._values)
+                    cls._hr_values = multidict(base._hr_values)
+                    cls._children = multidict(base._children)
+                    cls._port_refs = multidict(base._port_refs)
+                    # mark base as having been subclassed
+                    base._instantiated = True
+            case _:
+                # We don't support multiple inheritance of sim objects.  If you want
+                # to, you must fix multidict to deal with it properly. Non sim-objects
+                # are ok, though
                 raise TypeError(
                     "SimObjects do not support multiple inheritance"
                 )
 
-        # If the base class is not set, we assume type `object`. This ensures
-        # `class Foo(object): pass` is considered equivalent to
-        # `class Foo: pass`.
-        base = bases[0] if len(bases) > 0 else object
-
-        # Set up general inheritance via multidicts.  A subclass will
-        # inherit all its settings from the base class.  The only time
-        # the following is not true is when we define the SimObject
-        # class itself (in which case the multidicts have no parent).
-        if isinstance(base, MetaSimObject):
-            cls._base = base
-            cls._params.parent = base._params
-            cls._ports.parent = base._ports
-            cls._deprecated_params.parent = base._deprecated_params
-            cls._values.parent = base._values
-            cls._hr_values.parent = base._hr_values
-            cls._children.parent = base._children
-            cls._port_refs.parent = base._port_refs
-            # mark base as having been subclassed
-            base._instantiated = True
-        else:
-            cls._base = None
+        # TODO: "cls._values_dict" doesn't seem to exist, need to check if this is a typo
 
         # default keyword values
         if "type" in cls._value_dict:
