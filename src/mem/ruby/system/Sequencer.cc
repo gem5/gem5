@@ -269,6 +269,9 @@ Sequencer::functionalWrite(Packet *func_pkt)
                 ++num_written;
         }
     }
+    // Functional writes to addresses being monitored
+    // will fail (remove) the monitor entry.
+    llscClearMonitor(makeLineAddress(func_pkt->getAddr()));
 
     return num_written;
 }
