@@ -25,18 +25,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta
-
-from m5.objects import (
-    SimObject,
-    System,
+from typing import (
+    TYPE_CHECKING,
+    Optional,
 )
+
+from m5.objects.System import System
+from m5.SimObject import SimObject
 
 from ...utils.override import overrides
 from .abstract_board import AbstractBoard
 
+if TYPE_CHECKING:
+    from ..cachehierarchies.abstract_cache_hierarchy import (
+        AbstractCacheHierarchy,
+    )
+    from ..memory.abstract_memory_system import AbstractMemorySystem
+    from ..processors.abstract_processor import AbstractProcessor
+
 
 class AbstractSystemBoard(System, AbstractBoard):
-
     """
     An abstract board for cases where boards should inherit from System.
     """
@@ -48,7 +56,7 @@ class AbstractSystemBoard(System, AbstractBoard):
         clk_freq: str,
         processor: "AbstractProcessor",
         memory: "AbstractMemorySystem",
-        cache_hierarchy: "AbstractCacheHierarchy",
+        cache_hierarchy: Optional["AbstractCacheHierarchy"] = None,
     ):
         System.__init__(self)
         AbstractBoard.__init__(
@@ -58,6 +66,10 @@ class AbstractSystemBoard(System, AbstractBoard):
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
+
+    @overrides(AbstractBoard)
+    def get_cache_hierarchy(self) -> "AbstractCacheHierarchy":
+        return self.cache_hierarchy
 
     @overrides(SimObject)
     def createCCObject(self):

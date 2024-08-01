@@ -26,7 +26,7 @@
 
 from abc import abstractmethod
 
-from m5.objects import Directory_Controller
+from m5.objects.Directory_Controller import Directory_Controller
 
 
 class AbstractDirectory(Directory_Controller):

@@ -26,9 +26,9 @@
 
 import os
 import sys
-from io import StringIO
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     Dict,
     Generator,
@@ -41,7 +41,7 @@ from typing import (
 import m5
 import m5.ticks
 from m5.ext.pystats.simstat import SimStat
-from m5.objects import Root
+from m5.objects import Root  # type: ignore
 from m5.stats import addStatVisitor
 from m5.util import warn
 
@@ -107,8 +107,8 @@ class Simulator:
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
         checkpoint_path: Optional[Path] = None,
-        max_ticks: Optional[int] = m5.MaxTick,
-        id: Optional[int] = None,
+        max_ticks: Optional[int] = None,
+        id: Optional[str] = None,
     ) -> None:
         """
         :param board: The board to be simulated.
@@ -291,6 +291,9 @@ class Simulator:
 
         """
 
+        if not max_ticks:
+            max_ticks = m5.MaxTick
+
         self.set_max_ticks(max_ticks)
 
         if id:
@@ -353,7 +356,7 @@ class Simulator:
                     # In instances where we have a list of functions, we
                     # convert this to a generator.
                     self._on_exit_event[key] = (func() for func in value)
-                elif isinstance(value, Callable):
+                elif callable(value):
                     # In instances where the user passes a lone function, the
                     # function is called on every exit event of that type. Here
                     # we convert the function into an infinite generator.
@@ -374,9 +377,10 @@ class Simulator:
         self._board = board
         self._full_system = full_system
         self._expected_execution_order = expected_execution_order
-        self._tick_stopwatch = []
+        self._tick_stopwatch: List[Tuple[ExitEvent, int]] = []
 
-        self._last_exit_event = None
+        # The type is actually the GlobalSimLoopExitEvent class, but that's defined in the C++ code and there are no bindings for it so I'm just using Any here.
+        self._last_exit_event: None | Any = None
         self._exit_event_count = 0
 
         if checkpoint_path:
@@ -622,9 +626,9 @@ class Simulator:
                 "Cannot override the output directory after the simulation "
                 "has been instantiated."
             )
-        from m5 import options
+        from m5.options import outdir  # type: ignore
 
-        from _m5.core import setOutputDir
+        from _m5.core import setOutputDir  # type: ignore
 
         new_outdir.mkdir(parents=True, exist_ok=True)
 
@@ -634,8 +638,8 @@ class Simulator:
         if not new_outdir.is_dir():
             raise Exception(f"'{new_outdir}' is not a directory")
 
-        options.outdir = str(new_outdir)
-        setOutputDir(options.outdir)
+        outdir = str(new_outdir)
+        setOutputDir(outdir)
 
     def _instantiate(self) -> None:
         """

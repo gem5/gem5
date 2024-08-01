@@ -26,13 +26,13 @@
 
 from typing import Optional
 
-from m5.objects import (
-    BadAddr,
+from m5.objects.Cache import Cache
+from m5.objects.Device import BadAddr
+from m5.objects.XBar import (
     BaseXBar,
-    Cache,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *

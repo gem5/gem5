@@ -26,7 +26,7 @@
 
 from typing import Optional
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
 """
 This class is a data class that represents a query to the client.

@@ -25,12 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
 )
 
-from m5.objects import PcCountTrackerManager
+from m5.objects.PcCountTracker import PcCountTrackerManager
 from m5.params import PcCountPair
+
+if TYPE_CHECKING:
+    from gem5.components.processors.abstract_processor import AbstractProcessor
 
 
 class ELFieInfo:

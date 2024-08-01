@@ -67,6 +67,7 @@ class BaseProxy:
             )
         super().__setattr__(attr, value)
 
+    @staticmethod
     def _gen_op(operation):
         def op(self, operand):
             if not (isinstance(operand, (int, float)) or isproxy(operand)):
@@ -147,6 +148,7 @@ class BaseProxy:
 
         return self._opcheck(result, base)
 
+    @staticmethod
     def getindex(obj, index):
         if index == None:
             return obj
@@ -158,8 +160,6 @@ class BaseProxy:
             # if index is 0 and item is not subscriptable, just
             # use item itself (so cpu[0] works on uniprocessors)
         return obj
-
-    getindex = staticmethod(getindex)
 
     # This method should be called once the proxy is assigned to a
     # particular parameter or port to set the expected type of the

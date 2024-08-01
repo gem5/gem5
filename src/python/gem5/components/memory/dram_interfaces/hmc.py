@@ -50,6 +50,10 @@ Note that HMC is configured differently than some other DRAM interfaces.
 """
 
 
+from m5.objects import MemCtrl
+from m5.objects.DRAMInterface import DDR3_1600_8x8
+
+
 class HMC_2500_1x32(DDR3_1600_8x8):
     """
     A single HMC-2500 x32 model based on:

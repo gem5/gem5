@@ -26,7 +26,6 @@
 
 import importlib
 import platform
-from typing import Optional
 
 from ...isas import ISA
 from ...utils.requires import requires
@@ -43,6 +42,8 @@ class SimpleCore(BaseCPUCore):
     def __init__(self, cpu_type: CPUTypes, core_id: int, isa: ISA):
         requires(isa_required=isa)
         super().__init__(
+            # WARN: we're initializing this with the wrong type, that, or the constructor expects the wrong type
+            # figure out which is the case and fix it
             core=SimpleCore.cpu_simobject_factory(
                 isa=isa, cpu_type=cpu_type, core_id=core_id
             ),

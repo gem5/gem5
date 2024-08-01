@@ -25,11 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import (
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     DMASequencer,
     RubyPortProxy,
     RubySequencer,
-    RubySystem,
 )
 
 from ....coherence_protocol import CoherenceProtocol
@@ -62,13 +62,13 @@ class MESIThreeLevelCacheHierarchy(
     def __init__(
         self,
         l1i_size: str,
-        l1i_assoc: str,
+        l1i_assoc: int,
         l1d_size: str,
-        l1d_assoc: str,
+        l1d_assoc: int,
         l2_size: str,
-        l2_assoc: str,
+        l2_assoc: int,
         l3_size: str,
-        l3_assoc: str,
+        l3_assoc: int,
         num_l3_banks: int,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)

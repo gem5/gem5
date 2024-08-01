@@ -33,13 +33,14 @@ from typing import (
     Optional,
 )
 
-from m5.objects import (
-    BaseMMU,
-    PcCountTrackerManager,
+from m5.objects.BaseMMU import BaseMMU
+from m5.objects.PcCountTracker import PcCountTrackerManager
+from m5.objects.Process import Process
+from m5.objects.SubSystem import SubSystem
+from m5.params import (
+    PcCountPair,
     Port,
-    SubSystem,
 )
-from m5.params import PcCountPair
 
 from ...isas import ISA
 

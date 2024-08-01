@@ -33,30 +33,35 @@ from typing import (
 )
 
 import m5
-from m5.objects import (
-    AddrRange,
+from m5.objects.ArmFsWorkload import ArmFsLinux
+from m5.objects.ArmSystem import (
     ArmDefaultRelease,
-    ArmFsLinux,
     ArmRelease,
     ArmSystem,
-    BadAddr,
-    Bridge,
+)
+from m5.objects.Bridge import Bridge
+from m5.objects.ClockDomain import SrcClockDomain
+from m5.objects.Device import BadAddr
+from m5.objects.DiskImage import (
     CowDiskImage,
-    GenericTimer,
-    IOXBar,
-    PciVirtIO,
-    Port,
     RawDiskImage,
-    SimObject,
-    SrcClockDomain,
-    Terminal,
+)
+from m5.objects.GenericTimer import GenericTimer
+from m5.objects.RealView import (
     VExpress_GEM5_Base,
     VExpress_GEM5_Foundation,
-    VExpress_GEM5_V1,
-    VirtIOBlock,
-    VncServer,
-    VoltageDomain,
 )
+from m5.objects.Terminal import Terminal
+from m5.objects.VirtIO import PciVirtIO
+from m5.objects.VirtIOBlock import VirtIOBlock
+from m5.objects.Vnc import VncServer
+from m5.objects.VoltageDomain import VoltageDomain
+from m5.objects.XBar import IOXBar
+from m5.params import (
+    AddrRange,
+    Port,
+)
+from m5.SimObject import SimObject
 
 from ...isas import ISA
 from ...resources.resource import AbstractResource
@@ -100,6 +105,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self._platform = platform
         self._clk_freq = clk_freq
 
+        # TODO: this call to super resolves to AbstractBoard, what class are we intending to call here?
         super().__init__()
         AbstractBoard.__init__(
             self,
@@ -123,6 +129,10 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             self.multi_proc = True
 
     @overrides(AbstractBoard)
+    def get_cache_hierarchy(self) -> "AbstractCacheHierarchy":
+        return self.cache_hierarchy
+
+    @overrides(AbstractBoard)
     def _setup_board(self) -> None:
         # This board is expected to run full-system simulation.
         # Loading ArmFsLinux() from `src/arch/arm/ArmFsWorkload.py`
@@ -131,7 +141,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # We are fixing the following variable for the ArmSystem to work. The
         # security extension is checked while generating the dtb file in
         # realview. This board does not have security extension enabled.
-        self._have_psci = False
+        self._have_psci: bool = False
 
         # highest_el_is_64 is set to True. True if the register width of the
         # highest implemented exception level is 64 bits.
@@ -157,7 +167,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.iobus.default = self.iobus.badaddr_responder.pio
 
         # We now need to setup the dma_ports.
-        self._dma_ports = None
+        self._dma_ports: List[Port] | None = None
 
         # RealView sets up most of the on-chip and off-chip devices and GIC
         # for the ARM board. These devices' information is also used to
@@ -193,7 +203,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
         # The PCI Devices. PCI devices can be added via the `_add_pci_device`
         # function.
-        self._pci_devices = []
+        self._pci_devices: List[PciVirtIO] = []
 
     def _setup_io_devices(self) -> None:
         """
@@ -207,7 +217,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # VExpress_GEM5_V1_HDLcd and VExpress_GEM5_Foundation.
         # VExpress_GEM5_V2 and VExpress_GEM5_V2_HDLcd are not supported by the
         # ArmBoard.
-        self.realview = self._platform
+        self.realview: VExpress_GEM5_Base = self._platform
 
         # We need to setup the global interrupt controller (GIC) addr for the
         # realview system.
@@ -274,9 +284,10 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(AbstractBoard)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        all_ports = [
-            (self.realview.bootmem.range, self.realview.bootmem.port),
-        ] + self.get_memory().get_mem_ports()
+        all_ports: List[Tuple[AddrRange, Port]] = [
+            (self.realview.bootmem.range, self.realview.bootmem.port)
+        ]
+        all_ports.extend(self.get_memory().get_mem_ports())
 
         return all_ports
 
@@ -311,7 +322,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         return True
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> List[Port] | None:
         # The DMA ports differ depending upon the cache hierarchy. The method
         # self.set_dma_ports takes care of that. In the case of ruby caches,
         # this method should initially return an empty list.
@@ -356,7 +367,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             file may not exist at this location when this function is called.
         """
 
-        return os.path.join(m5.options.outdir, "device.dtb")
+        return os.path.join(m5.options.outdir, "device.dtb")  # type: ignore
 
     def _add_pci_device(self, pci_device: PciVirtIO) -> None:
         """Attaches the PCI Device to the board. All devices will be added to

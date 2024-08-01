@@ -27,8 +27,6 @@
 from typing import List
 
 from ...utils.override import overrides
-from ..boards.abstract_board import AbstractBoard
-from ..boards.mem_mode import MemMode
 from .abstract_generator import AbstractGenerator
 from .random_generator_core import RandomGeneratorCore
 

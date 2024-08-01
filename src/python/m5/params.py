@@ -55,18 +55,22 @@
 #####################################################################
 
 import copy
-import datetime
 import math
-import re
-import sys
 import time
-from typing import List
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+)
 
 from . import (
     proxy,
     ticks,
 )
 from .util import *
+
+if TYPE_CHECKING:
+    from .SimObject import SimObject
 
 
 def isSimObject(*args, **kwargs):
@@ -463,7 +467,7 @@ class String(ParamValue, str):
     cmd_line_settable = True
 
     @classmethod
-    def cxx_predecls(self, code):
+    def cxx_predecls(cls, code):
         code("#include <string>")
 
     def __call__(self, value):
@@ -471,7 +475,7 @@ class String(ParamValue, str):
         return value
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{dest} = {src};")
         code(f"{ret} true;")
 
@@ -483,6 +487,9 @@ class String(ParamValue, str):
 # operations in a type-safe way.  e.g., a Latency times an int returns
 # a new Latency object.
 class NumericParamValue(ParamValue):
+    def __init__(self, value) -> None:
+        self.value = value
+
     @staticmethod
     def unwrap(v):
         return v.value if isinstance(v, NumericParamValue) else v
@@ -573,7 +580,7 @@ class NumericParamValue(ParamValue):
     # istringstream and let overloading choose the right type according to
     # the dest type.
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} to_number({src}, {dest});")
 
 
@@ -743,7 +750,7 @@ class Cycles(CheckedInt):
     unsigned = True
 
     def getValue(self):
-        from _m5.core import Cycles
+        from _m5.core import Cycles  # type: ignore
 
         return Cycles(self.value)
 
@@ -789,7 +796,7 @@ class Float(ParamValue, float):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -876,7 +883,7 @@ class PcCountPair(ParamValue):
 
     def getValue(self):
         #  convert Python PcCountPair into C++ PcCountPair
-        from _m5.pc import PcCountPair
+        from _m5.pc import PcCountPair  # type: ignore
 
         return PcCountPair(self.pc, self.count)
 
@@ -1027,7 +1034,7 @@ class AddrRange(ParamValue):
 
     def getValue(self):
         # Go from the Python class to the wrapped C++ class
-        from _m5.range import AddrRange
+        from _m5.range import AddrRange  # type: ignore
 
         return AddrRange(
             int(self.start), int(self.end), self.masks, int(self.intlvMatch)
@@ -1107,7 +1114,7 @@ class HostSocket(ParamValue):
             self.value = value
 
     def getValue(self):
-        from _m5.socket import (
+        from _m5.socket import (  # type: ignore
             listenSocketEmptyConfig,
             listenSocketInetConfig,
             listenSocketUnixAbstractConfig,
@@ -1211,11 +1218,11 @@ class EthernetAddr(ParamValue):
 
     def unproxy(self, base):
         if self.value == NextEthernetAddr:
-            return EthernetAddr(self.value())
+            return EthernetAddr(self.value)
         return self
 
     def getValue(self):
-        from _m5.net import EthAddr
+        from _m5.net import EthAddr  # type: ignore
 
         return EthAddr(self.value)
 
@@ -1226,7 +1233,7 @@ class EthernetAddr(ParamValue):
         return self.value
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{dest} = networking::EthAddr({src});")
         code(f"{ret} true;")
 
@@ -1279,7 +1286,7 @@ class IpAddress(ParamValue):
             raise TypeError("invalid ip address %#08x" % self.ip)
 
     def getValue(self):
-        from _m5.net import IpAddress
+        from _m5.net import IpAddress  # type: ignore
 
         return IpAddress(self.ip)
 
@@ -1353,10 +1360,10 @@ class IpNetmask(IpAddress):
     def verify(self):
         self.verifyIp()
         if self.netmask < 0 or self.netmask > 32:
-            raise TypeError("invalid netmask %d" % netmask)
+            raise TypeError(f"invalid netmask {self.netmask}")
 
     def getValue(self):
-        from _m5.net import IpNetmask
+        from _m5.net import IpNetmask  # type: ignore
 
         return IpNetmask(self.ip, self.netmask)
 
@@ -1432,7 +1439,7 @@ class IpWithPort(IpAddress):
             raise TypeError("invalid port %d" % self.port)
 
     def getValue(self):
-        from _m5.net import IpWithPort
+        from _m5.net import IpWithPort  # type: ignore
 
         return IpWithPort(self.ip, self.port)
 
@@ -1503,7 +1510,7 @@ class Time(ParamValue):
     def getValue(self):
         import calendar
 
-        from _m5.core import tm
+        from _m5.core import tm  # type: ignore
 
         return tm.gmtime(calendar.timegm(self.value))
 
@@ -1514,7 +1521,7 @@ class Time(ParamValue):
         return str(self)
 
     def get_config_as_dict(self):
-        assert false
+        assert False
         return str(self)
 
     @classmethod
@@ -1691,7 +1698,7 @@ class TickParamValue(NumericParamValue):
     # Ticks are expressed in seconds in JSON files and in plain
     # Ticks in .ini files.  Switch based on a config flag
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code("${ret} to_number(${src}, ${dest});")
 
 
@@ -1874,7 +1881,7 @@ class Temperature(ParamValue):
         return str(self.value)
 
     def getValue(self):
-        from _m5.core import Temperature
+        from _m5.core import Temperature  # type: ignore
 
         return Temperature.from_kelvin(self.value)
 
@@ -1892,7 +1899,7 @@ class Temperature(ParamValue):
         pass
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code("double _temp;")
         code(f"bool _ret = to_number({src}, _temp);")
         code("if (_ret)")
@@ -1911,11 +1918,11 @@ class NetworkBandwidth(float, ParamValue):
         return super().__new__(cls, val)
 
     def __str__(self):
-        return str(self.val)
+        return str(self.val)  # type: ignore
 
     def __call__(self, value):
         val = convert.toNetworkBandwidth(value)
-        self.__init__(val)
+        self.__init__(val)  # type: ignore
         return value
 
     def getValue(self):
@@ -1936,7 +1943,7 @@ class NetworkBandwidth(float, ParamValue):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -1952,7 +1959,7 @@ class MemoryBandwidth(float, ParamValue):
 
     def __call__(self, value):
         val = convert.toMemoryBandwidth(value)
-        self.__init__(val)
+        self.__init__(val)  # type: ignore
         return value
 
     def getValue(self):
@@ -1975,7 +1982,7 @@ class MemoryBandwidth(float, ParamValue):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -1991,8 +1998,8 @@ class MemoryBandwidth(float, ParamValue):
 class NullSimObject(metaclass=Singleton):
     _name = "Null"
 
-    def __call__(cls):
-        return cls
+    def __call__(self):
+        return self
 
     def _instantiate(self, parent=None, path=""):
         pass
@@ -2055,13 +2062,15 @@ AllMemory = AddrRange(0, MaxAddr)
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
 class PortRef:
-    def __init__(self, simobj, name, role, is_source):
+    def __init__(self, simobj: "SimObject", name, role, is_source):
         assert isSimObject(simobj) or isSimObjectClass(simobj)
         self.simobj = simobj
         self.name = name
         self.role = role
         self.is_source = is_source
-        self.peer = None  # not associated with another port yet
+        self.peer: PortRef | None = (
+            None  # not associated with another port yet
+        )
         self.ccConnected = False  # C++ port connection done?
         self.index = -1  # always -1 for non-vector ports
 
@@ -2208,12 +2217,12 @@ class PortRef:
         if self.ccConnected:  # already done this
             return
 
-        peer = self.peer
         if not self.peer:  # nothing to connect to
             return
+        peer = self.peer
 
-        port = self.simobj.getPort(self.name, self.index)
-        peer_port = peer.simobj.getPort(peer.name, peer.index)
+        port: Any = self.simobj.getPort(self.name, self.index)
+        peer_port: Any = peer.simobj.getPort(peer.name, peer.index)
         port.bind(peer_port)
 
         self.ccConnected = True
@@ -2338,8 +2347,10 @@ class Port:
 
     # Generate a PortRef for this port on the given SimObject with the
     # given name
-    def makeRef(self, simobj):
-        return PortRef(simobj, self.name, self.role, self.is_source)
+    def makeRef(self, simobj: "SimObject"):
+        return PortRef(
+            simobj, getattr(self, "name"), self.role, self.is_source
+        )
 
     # Connect an instance of this port (on the given SimObject with
     # the given name) with the port described by the supplied PortRef
@@ -2352,7 +2363,7 @@ class Port:
         pass
 
     def pybind_predecls(self, code):
-        cls.cxx_predecls(self, code)
+        self.cxx_predecls(code)
 
     # Declare an unsigned int with the same name as the port, that
     # will eventually hold the number of connected ports (and thus the
@@ -2379,8 +2390,10 @@ class ResponsePort(Port):
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
 class VectorPort(Port):
-    def makeRef(self, simobj):
-        return VectorPortRef(simobj, self.name, self.role, self.is_source)
+    def makeRef(self, simobj: "SimObject"):
+        return VectorPortRef(
+            simobj, getattr(self, "name"), self.role, self.is_source
+        )
 
 
 class VectorRequestPort(VectorPort):

@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Export native methods to Python
-from _m5.trace import (
+from _m5.trace import (  # type: ignore
     activate,
     disable,
     enable,

@@ -27,8 +27,8 @@
 from m5.objects import (
     ClockDomain,
     MessageBuffer,
-    RubyCache,
 )
+from m5.objects.RubyCache import RubyCache
 
 from ......isas import ISA
 from ......utils.override import overrides

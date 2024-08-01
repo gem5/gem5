@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     DMASequencer,
     RubyPortProxy,
     RubySequencer,
-    RubySystem,
 )
 
 from ....coherence_protocol import CoherenceProtocol
@@ -53,7 +53,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
     simple point-to-point topology.
     """
 
-    def __init__(self, size: str, assoc: str):
+    def __init__(self, size: str, assoc: int):
         """
         :param size: The size of each cache in the heirarchy.
         :param assoc: The associativity of each cache.

@@ -28,29 +28,31 @@ import os
 from typing import List
 
 import m5
-from m5.objects import (
-    AddrRange,
-    Bridge,
-    Clint,
+from m5.objects.Bridge import Bridge
+from m5.objects.Clint import Clint
+from m5.objects.DiskImage import (
     CowDiskImage,
-    Frequency,
-    IOXBar,
-    LupioBLK,
-    LupioIPI,
-    LupioPIC,
-    LupioRNG,
-    LupioRTC,
-    LupioSYS,
-    LupioTMR,
-    LupioTTY,
-    LupV,
-    Plic,
-    PMAChecker,
-    Port,
     RawDiskImage,
-    RiscvLinux,
-    RiscvRTC,
-    Terminal,
+)
+from m5.objects.LupioBLK import LupioBLK
+from m5.objects.LupioIPI import LupioIPI
+from m5.objects.LupioPIC import LupioPIC
+from m5.objects.LupioRNG import LupioRNG
+from m5.objects.LupioRTC import LupioRTC
+from m5.objects.LupioSYS import LupioSYS
+from m5.objects.LupioTMR import LupioTMR
+from m5.objects.LupioTTY import LupioTTY
+from m5.objects.LupV import LupV
+from m5.objects.Plic import Plic
+from m5.objects.PMAChecker import PMAChecker
+from m5.objects.RiscvFsWorkload import RiscvLinux
+from m5.objects.RTC import RiscvRTC
+from m5.objects.Terminal import Terminal
+from m5.objects.XBar import IOXBar
+from m5.params import (
+    AddrRange,
+    Frequency,
+    Port,
 )
 from m5.util.fdthelper import (
     Fdt,
@@ -273,10 +275,12 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         return self.iobus.mem_side_ports
 
     @overrides(AbstractSystemBoard)
-    def _setup_memory_ranges(self):
+    def _setup_memory_ranges(self) -> None:
         memory = self.get_memory()
         mem_size = memory.get_size()
-        self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]
+        self.mem_ranges: List[AddrRange] = [
+            AddrRange(start=0x80000000, size=mem_size)
+        ]
         memory.set_memory_range(self.mem_ranges)
 
     def _generate_device_tree(self, outdir: str) -> None:
@@ -574,10 +578,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # Default DTB address if bbl is built with --with-dts option
         self.workload.dtb_addr = 0x87E00000
 
+        from m5.options import outdir  # type: ignore
+
         # We need to wait to generate the device tree until after the disk is
         # set up. Now that the disk and workload are set, we can generate the
         # device tree file.
-        self._generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
+        self._generate_device_tree(outdir)
+        self.workload.dtb_filename = os.path.join(outdir, "device.dtb")

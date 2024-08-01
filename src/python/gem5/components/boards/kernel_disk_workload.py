@@ -28,12 +28,11 @@ import os
 from abc import abstractmethod
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
     Union,
 )
-
-import m5
 
 from ...resources.resource import (
     BootloaderResource,
@@ -221,8 +220,10 @@ class KernelDiskWorkload:
             readfile_contents_hash = hex(
                 hash(tuple(bytes(readfile_contents, "utf-8")))
             )
+            from m5.options import outdir  # type: ignore
+
             self.readfile = os.path.join(
-                m5.options.outdir, ("readfile_" + readfile_contents_hash)
+                outdir, ("readfile_" + readfile_contents_hash)
             )
 
         # Add the contents to the readfile, if specified.

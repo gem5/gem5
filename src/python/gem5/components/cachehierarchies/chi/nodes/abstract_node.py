@@ -25,17 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
-from abc import abstractmethod
 
-from m5.objects import (
-    Cache_Controller,
-    MessageBuffer,
-    RubyNetwork,
-)
-
-from gem5.components.processors.abstract_core import AbstractCore
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.isas import ISA
+from m5.objects.Cache_Controller import Cache_Controller  # Type: ignore
+from m5.objects.MessageBuffer import MessageBuffer
+from m5.objects.Network import RubyNetwork
 
 
 class TriggerMessageBuffer(MessageBuffer):
@@ -96,7 +89,7 @@ class AbstractNode(Cache_Controller):
 
     def getBlockSizeBits(self):
         bits = int(math.log(self._cache_line_size, 2))
-        if 2**bits != self._cache_line_size.value:
+        if 2**bits != int(self._cache_line_size):
             raise Exception("Cache line size not a power of 2!")
         return bits
 

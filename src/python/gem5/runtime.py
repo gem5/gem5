@@ -31,7 +31,6 @@ This file contains functions to extract gem5 runtime information.
 from typing import Set
 
 from m5.defines import buildEnv
-from m5.util import warn
 
 from .coherence_protocol import CoherenceProtocol
 from .isas import (

@@ -40,20 +40,31 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from typing import Callable
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    List,
+    Optional,
+)
 
-from m5.objects import SubSystem
-from m5.util.fdthelper import *
+from m5.objects.SubSystem import SubSystem
+from m5.SimObject import SimObject
+from m5.util.fdthelper import (
+    FdtNode,
+    FdtPropertyStrings,
+    FdtPropertyWords,
+)
 
-from ..boards.abstract_board import AbstractBoard
+if TYPE_CHECKING:
+    from ..boards.abstract_board import AbstractBoard
 
 
 class CacheNode:
     def __init__(
         self,
         name: str,
-        cache: SimObject,
-        next_level: "CacheNode",
+        cache: SimObject | None,
+        next_level: Optional["CacheNode"],
         hierarchy: "AbstractCacheHierarchy",
     ):
         self.name = name
@@ -61,7 +72,7 @@ class CacheNode:
         self.next_level = next_level
         self.hierarchy = hierarchy
 
-        self.prev_levels = []
+        self.prev_levels: List[CacheNode] = []
 
         # Need to assign this to a SimObject
         if cache is not None:
@@ -120,7 +131,7 @@ class AbstractCacheHierarchy(SubSystem):
     """
 
     @abstractmethod
-    def incorporate_cache(self, board: AbstractBoard) -> None:
+    def incorporate_cache(self, board: "AbstractBoard") -> None:
         """
         Incorporates the caches into a board.
 

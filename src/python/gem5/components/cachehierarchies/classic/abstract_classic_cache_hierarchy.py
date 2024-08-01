@@ -26,7 +26,7 @@
 
 from abc import abstractmethod
 
-from m5.objects import Port
+from m5.params import Port
 
 from ....utils.override import overrides
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy

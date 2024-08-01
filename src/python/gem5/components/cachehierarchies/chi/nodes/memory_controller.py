@@ -26,12 +26,12 @@
 
 from typing import List
 
-from m5.objects import (
+from m5.objects.Memory_Controller import Memory_Controller  # type: ignore
+from m5.objects.MessageBuffer import MessageBuffer
+from m5.objects.Network import RubyNetwork
+from m5.params import (
     AddrRange,
-    Memory_Controller,
-    MessageBuffer,
     Port,
-    RubyNetwork,
 )
 
 from .abstract_node import TriggerMessageBuffer

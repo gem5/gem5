@@ -27,13 +27,13 @@
 from itertools import chain
 from typing import List
 
-from m5.objects import (
-    NULL,
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     RubyPortProxy,
     RubySequencer,
-    RubySystem,
 )
 from m5.objects.SubSystem import SubSystem
+from m5.params import NULL
 
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.utils.requires import requires

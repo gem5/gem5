@@ -26,7 +26,7 @@
 
 from abc import abstractmethod
 
-from m5.objects import L2Cache_Controller
+from m5.objects.L2Cache_Controller import L2Cache_Controller
 
 
 class AbstractL2Cache(L2Cache_Controller):

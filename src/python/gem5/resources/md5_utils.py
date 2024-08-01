@@ -27,12 +27,13 @@
 
 import hashlib
 from pathlib import Path
-from typing import Type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from hashlib import _Hash
 
 
-def _md5_update_from_file(
-    filename: Path, hash: Type[hashlib.md5]
-) -> Type[hashlib.md5]:
+def _md5_update_from_file(filename: Path, hash: "_Hash") -> "_Hash":
     assert filename.is_file()
 
     if filename.stat().st_size < 1024 * 1024 * 100:
@@ -55,9 +56,7 @@ def _md5_update_from_file(
     return hash
 
 
-def _md5_update_from_dir(
-    directory: Path, hash: Type[hashlib.md5]
-) -> Type[hashlib.md5]:
+def _md5_update_from_dir(directory: Path, hash: "_Hash") -> "_Hash":
     assert directory.is_dir()
     for path in sorted(directory.iterdir(), key=lambda p: str(p).lower()):
         hash.update(path.name.encode())

@@ -28,6 +28,7 @@
 from typing import (
     Dict,
     List,
+    Sequence,
 )
 
 import m5
@@ -36,7 +37,6 @@ from ...utils.override import *
 from ..boards.abstract_board import AbstractBoard
 from .abstract_core import AbstractCore
 from .abstract_processor import AbstractProcessor
-from .cpu_types import CPUTypes
 from .simple_core import SimpleCore
 
 
@@ -80,7 +80,7 @@ class SwitchableProcessor(AbstractProcessor):
         )
 
         if self._prepare_kvm:
-            from m5.objects import KvmVM
+            from m5.objects import KvmVM  # type: ignore
 
             self.kvm_vm = KvmVM()
 
@@ -110,7 +110,7 @@ class SwitchableProcessor(AbstractProcessor):
         return len(self._current_cores)
 
     @overrides(AbstractProcessor)
-    def get_cores(self) -> List[AbstractCore]:
+    def get_cores(self) -> Sequence[AbstractCore]:
         return self._current_cores
 
     def _all_cores(self):

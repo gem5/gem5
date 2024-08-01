@@ -27,12 +27,12 @@
 
 from typing import Optional
 
-from m5.objects import (
+from m5.objects.ClockDomain import SrcClockDomain
+from m5.objects.GUPSGen import GUPSGen
+from m5.objects.VoltageDomain import VoltageDomain
+from m5.params import (
     Addr,
-    GUPSGen,
     Port,
-    SrcClockDomain,
-    VoltageDomain,
 )
 
 from ...utils.override import overrides

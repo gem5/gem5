@@ -26,13 +26,11 @@
 
 from typing import (
     List,
-    Tuple,
+    Sequence,
 )
 
-from m5.objects import (
-    RubySequencer,
-    SubSystem,
-)
+from m5.objects.Sequencer import RubySequencer
+from m5.objects.SubSystem import SubSystem
 
 from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.l1_cache import (
@@ -72,7 +70,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
     def __init__(
         self,
         board: AbstractBoard,
-        cores: List[AbstractCore],
+        cores: Sequence[AbstractCore],
         ruby_system,
         l1i_size: str,
         l1i_assoc: int,
@@ -100,7 +98,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
         self._ruby_system = ruby_system
         self._cache_line_size = 64
 
-        self._directory_controllers = []
+        self._directory_controllers: List = []
 
         self._core_complex_id = self._get_core_complex_id()
         self.main_router = RubyRouter(

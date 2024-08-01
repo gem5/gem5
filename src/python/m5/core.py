@@ -36,5 +36,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from _m5.core import setOutputDir
-from _m5.loader import setInterpDir
+from _m5.core import setOutputDir  # type: ignore
+from _m5.loader import setInterpDir  # type: ignore

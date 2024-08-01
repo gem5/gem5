@@ -32,7 +32,7 @@ from typing import (
     Tuple,
 )
 
-from m5.objects import SpatterKernelType
+from m5.objects.SpatterGen import SpatterKernelType
 from m5.params import Addr
 from m5.util import inform
 
@@ -195,7 +195,9 @@ class SpatterKernel:
         )
 
 
-def parse_kernel(kernel: dict, default_delta=8) -> Tuple[int, int, str, List]:
+def parse_kernel(
+    kernel: dict, default_delta=8
+) -> Tuple[int, int, SpatterKernelType, List]:
     """
     Function to parse a kernel from a dictionary. Each Spatter trace is
     represented as a list of dictionaries in JSON. Each dictionary in the list

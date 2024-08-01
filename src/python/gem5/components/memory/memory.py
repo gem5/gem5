@@ -33,14 +33,13 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     Union,
 )
 
-from m5.objects import (
+from m5.objects.DRAMInterface import DRAMInterface
+from m5.objects.MemCtrl import MemCtrl
+from m5.params import (
     AddrRange,
-    DRAMInterface,
-    MemCtrl,
     Port,
 )
 from m5.util.convert import toMemorySize

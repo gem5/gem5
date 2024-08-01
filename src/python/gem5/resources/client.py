@@ -42,7 +42,7 @@ from m5.util import (
     warn,
 )
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
 from gem5.gem5_default_config import config
 
@@ -255,7 +255,7 @@ def _list_all_resources(
 def _get_resource_json_obj_from_client(
     client_queries: List[ClientQuery],
     clients: Optional[List[str]] = None,
-) -> Dict:
+) -> List[Dict]:
     """
     This function returns the resource object from the client with the
     given id and version.

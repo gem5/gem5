@@ -27,7 +27,7 @@
 
 from typing import Optional
 
-from m5.objects import Addr
+from m5.params import Addr
 from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
@@ -75,7 +75,7 @@ class GUPSGeneratorEP(AbstractGenerator):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
-        clk_freq: str,
+        clk_freq: str | None,
     ):
         """
         Helper function to create cores.

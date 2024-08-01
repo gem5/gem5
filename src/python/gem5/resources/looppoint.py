@@ -29,6 +29,7 @@ import json
 import os
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Dict,
     List,
     Optional,
@@ -36,8 +37,11 @@ from typing import (
 )
 
 import m5
-from m5.objects import PcCountTrackerManager
+from m5.objects.PcCountTracker import PcCountTrackerManager
 from m5.params import PcCountPair
+
+if TYPE_CHECKING:
+    from gem5.components.processors.abstract_processor import AbstractProcessor
 
 
 class LooppointRegionPC:
@@ -91,7 +95,7 @@ class LooppointRegionPC:
             "global": self.get_global(),
         }
         if self._relative:
-            to_return["relative"] = self.get_relative()
+            to_return["relative"] = self._relative
 
         return to_return
 
@@ -377,7 +381,7 @@ class Looppoint:
         self,
         input_indent: int = 4,
         filepath: str = os.path.join(m5.options.outdir, "looppoint.json"),
-    ) -> Dict[int, Dict]:
+    ):
         """
         This function is used to output the ``_json_file`` into a json file.
 

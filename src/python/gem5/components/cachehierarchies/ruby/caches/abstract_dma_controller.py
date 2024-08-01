@@ -26,7 +26,7 @@
 
 from abc import abstractmethod
 
-from m5.objects import DMA_Controller
+from m5.objects.DMA_Controller import DMA_Controller
 
 
 class AbstractDMAController(DMA_Controller):

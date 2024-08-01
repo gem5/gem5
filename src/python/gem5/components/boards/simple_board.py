@@ -26,9 +26,9 @@
 
 from typing import List
 
-from m5.objects import (
+from m5.objects.XBar import IOXBar
+from m5.params import (
     AddrRange,
-    IOXBar,
     Port,
 )
 

@@ -39,13 +39,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import inspect
-import sys
 from functools import wraps
 from types import (
     FunctionType,
     MethodType,
     ModuleType,
 )
+from typing import Tuple
 
 import m5
 from m5.citations import gem5_citations
@@ -59,18 +59,30 @@ from m5.ext.pyfdt import pyfdt
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
 # variable, the 'name' param)...
-from m5.params import *
 from m5.params import (
+    DeprecatedParam,
+    EthernetAddr,
+    Param,
     ParamDesc,
     Port,
     SimObjectVector,
     VectorParamDesc,
     isNullPointer,
 )
-from m5.proxy import *
-from m5.proxy import isproxy
-from m5.util import *
-from m5.util.pybind import *
+from m5.proxy import (
+    Parent,
+    isproxy,
+)
+from m5.util import (
+    attrdict,
+    fatal,
+    multidict,
+    warn,
+)
+from m5.util.pybind import (
+    PyBindMethod,
+    PyBindProperty,
+)
 
 #####################################################################
 #
@@ -193,7 +205,7 @@ class MetaSimObject(type):
         return cls
 
     # subclass initialization
-    def __init__(cls, name, bases, dict):
+    def __init__(cls, name, bases: Tuple["MetaSimObject"], dict) -> None:
         # calls type.__init__()... I think that's a no-op, but leave
         # it here just in case it's not.
         super().__init__(name, bases, dict)
@@ -255,9 +267,9 @@ class MetaSimObject(type):
         # default keyword values
         if "type" in cls._value_dict:
             if "cxx_class" not in cls._value_dict:
-                cls._value_dict["cxx_class"] = cls._value_dict["type"]
+                cls._value_dict["cxx_class"] = cls._value_dict["type"]  # type: ignore
 
-            cls._value_dict["cxx_type"] = f"{cls._value_dict['cxx_class']} *"
+            cls._value_dict["cxx_type"] = f"{cls._value_dict['cxx_class']} *"  # type: ignore
 
             if "cxx_header" not in cls._value_dict:
                 global noCxxHeader
@@ -271,7 +283,7 @@ class MetaSimObject(type):
         # the class is defined, so we handle them here.  The others
         # can be set later too, so just emulate that by calling
         # setattr().
-        for key, val in cls._value_dict.items():
+        for key, val in cls._value_dict.items():  # type: ignore
             # param descriptions
             if isinstance(val, ParamDesc):
                 cls._new_param(key, val)
@@ -282,7 +294,7 @@ class MetaSimObject(type):
 
             # Deprecated variable names
             elif isinstance(val, DeprecatedParam):
-                new_name, new_val = cls._get_param_by_value(val.newParam)
+                new_name, _ = cls._get_param_by_value(val.newParam)  # type: ignore
                 # Note: We don't know the (string) name of this variable until
                 # here, so now we can finish setting up the dep_param.
                 val.oldName = key
@@ -370,7 +382,7 @@ class MetaSimObject(type):
         a runtime error. This will search both the current object and its
         parents.
         """
-        for k, v in cls._value_dict.items():
+        for k, v in cls._value_dict.items():  # type: ignore
             if v == value:
                 return k, v
         raise RuntimeError(f"Cannot find parameter {value} in parameter list")
@@ -461,7 +473,7 @@ class MetaSimObject(type):
 # values defined on the SimObject class itself).  It will get
 # overridden by the permanent definition (which requires that
 # SimObject be defined) lower in this file.
-def isSimObjectOrVector(value):
+def isSimObjectOrVector(value):  # type: ignore
     return False
 
 
@@ -501,7 +513,8 @@ def cxxMethod(*args, **kwargs):
             return func(self, *args, **kwargs)
 
         f = py_call if override else cxx_call
-        f.__pybind = PyBindMethod(
+        # TODO: Figure out where the __pybind attribute is coming from, and adjust type hints accordingly.
+        f.__pybind = PyBindMethod(  # type: ignore
             name,
             cxx_name=cxx_name,
             args=args,
@@ -996,7 +1009,7 @@ class SimObject(metaclass=MetaSimObject):
                 warn("%s adopting orphan SimObject param '%s'", self, key)
                 self.add_child(key, val)
 
-    def path(self):
+    def path(self) -> str:
         if not self._parent:
             return f"<orphan {self.__class__}>"
         elif isinstance(self._parent, MetaSimObject):
@@ -1004,7 +1017,7 @@ class SimObject(metaclass=MetaSimObject):
 
         ppath = self._parent.path()
         if ppath == "root":
-            return self._name
+            return str(self._name)
         return ppath + "." + self._name
 
     def path_list(self):
@@ -1375,16 +1388,16 @@ def isSimObjectOrSequence(value):
 
 
 def isRoot(obj):
-    from m5.objects import Root
+    from m5.objects import Root  # type: ignore
 
     return obj and obj is Root.getInstance()
 
 
-def isSimObjectOrVector(value):
+def isSimObjectOrVector(value):  # type: ignore[no-redef]
     return isSimObject(value) or isSimObjectVector(value)
 
 
-def tryAsSimObjectOrVector(value):
+def tryAsSimObjectOrVector(value) -> SimObject | SimObjectVector | None:
     if isSimObjectOrVector(value):
         return value
     if isSimObjectSequence(value):
@@ -1392,7 +1405,7 @@ def tryAsSimObjectOrVector(value):
     return None
 
 
-def coerceSimObjectOrVector(value):
+def coerceSimObjectOrVector(value) -> SimObject | SimObjectVector:
     value = tryAsSimObjectOrVector(value)
     if value is None:
         raise TypeError("SimObject or SimObjectVector expected")

@@ -30,6 +30,7 @@ from functools import partial
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
     Generator,
     List,
@@ -45,7 +46,7 @@ from m5.util import (
     warn,
 )
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
 from ..isas import (
     ISA,
@@ -129,6 +130,7 @@ class AbstractResource:
         """Returns the ID of the resource."""
         return self._id or ""
 
+    @classmethod
     def get_category_name(cls) -> str:
         raise NotImplementedError
 
@@ -194,6 +196,7 @@ class FileResource(AbstractResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "FileResource"
 
@@ -233,6 +236,7 @@ class DirectoryResource(AbstractResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "DirectoryResource"
 
@@ -279,6 +283,7 @@ class DiskImageResource(FileResource):
         """Returns, if applicable, the Root Partition of the disk image."""
         return self._root_partition
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "DiskImageResource"
 
@@ -313,6 +318,7 @@ class BinaryResource(FileResource):
             elif isinstance(architecture, ISA):
                 self._architecture = architecture
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "BinaryResource"
 
@@ -345,6 +351,7 @@ class BootloaderResource(BinaryResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "BootloaderResource"
 
@@ -371,6 +378,7 @@ class GitResource(DirectoryResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "GitResource"
 
@@ -399,6 +407,7 @@ class KernelResource(BinaryResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "KernelResource"
 
@@ -430,6 +439,7 @@ class CheckpointResource(DirectoryResource):
             downloader=downloader,
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "CheckpointResource"
 
@@ -443,10 +453,14 @@ class SimpointResource(AbstractResource):
 
     def __init__(
         self,
+        simpoint_interval: int,
         resource_version: Optional[str] = None,
-        simpoint_interval: int = None,
-        simpoint_list: List[int] = None,
-        weight_list: List[float] = None,
+        simpoint_list: (
+            List[int] | None
+        ) = None,  # TODO: Determine whether these should be required parameters
+        weight_list: (
+            List[float] | None
+        ) = None,  # TODO: Determine whether these should be required parameters
         warmup_interval: int = 0,
         id: Optional[str] = None,
         workload_name: Optional[str] = None,
@@ -454,7 +468,6 @@ class SimpointResource(AbstractResource):
         source: Optional[str] = None,
         downloader: Optional[partial] = None,
         local_path: Optional[str] = None,
-        **kwargs,
     ):
         """
         :param simpoint_interval: The SimPoint interval.
@@ -485,7 +498,7 @@ class SimpointResource(AbstractResource):
         self._warmup_interval = warmup_interval
         self._workload_name = workload_name
 
-        self._simpoint_start_insts = None
+        self._simpoint_start_insts: List[int] | None = None
 
     def _load_simpoints(self) -> None:
         """As we cache downloading of resources until we require it, we may
@@ -582,6 +595,7 @@ class SimpointResource(AbstractResource):
             self._simpoint_start_insts[index] = start_inst - warmup_inst
         return warmup_list
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "SimpointResource"
 
@@ -613,6 +627,7 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
             self, pinpoints_file=Path(self.get_local_path())
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "LooppointCsvResource"
 
@@ -642,6 +657,7 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
             self, looppoint_file=self.get_local_path(), region_id=region_id
         )
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "LooppointJsonResource"
 
@@ -706,7 +722,7 @@ class SimpointDirectoryResource(SimpointResource):
 
     def _get_weights_and_simpoints_from_file(
         self,
-    ) -> Tuple[List[int], List[int]]:
+    ) -> Tuple[List[int], List[float]]:
         """This is a helper function to extract the weights and SimPoints from
         the files.
         """
@@ -734,6 +750,7 @@ class SimpointDirectoryResource(SimpointResource):
             weight_list.append(weight)
         return simpoint_list, weight_list
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "SimpointDirectoryResource"
 
@@ -799,6 +816,7 @@ class SuiteResource(AbstractResource):
         """
         return len(self._workloads)
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "SuiteResource"
 
@@ -848,19 +866,22 @@ class WorkloadResource(AbstractResource):
 
     def __init__(
         self,
-        function: str = None,
+        function: str,
         id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = {},
+        parameters: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         """
         :param function: The function to call on the board.
         :param parameters: The parameters to pass to the function.
         """
+
+        if parameters is None:
+            parameters = {}
 
         super().__init__(
             local_path=local_path,
@@ -906,6 +927,7 @@ class WorkloadResource(AbstractResource):
         """
         self._params[parameter] = value
 
+    @classmethod
     def get_category_name(cls) -> str:
         return "WorkloadResource"
 
@@ -915,7 +937,7 @@ def obtain_resource(
     resource_directory: Optional[str] = None,
     download_md5_mismatch: bool = True,
     resource_version: Optional[str] = None,
-    clients: Optional[List] = None,
+    clients: Optional[List[str]] = None,
     gem5_version=core.gem5Version,
     to_path: Optional[str] = None,
     quiet: bool = False,
@@ -992,6 +1014,7 @@ def obtain_resource(
                 downloader=downloader,
                 **resource_json,
             )
+        # WARN: CustomResource is deprecated, this should be refactored to use AbstractResource or the functionality should be removed
         return CustomResource(local_path=to_path, downloader=downloader)
 
     assert resources_category in _get_resource_json_type_map
@@ -1031,7 +1054,7 @@ def obtain_resource(
 def _get_suite(
     suite: Dict[str, Any],
     local_path: str,
-    resource_directory: str,
+    resource_directory: str | None,
     download_md5_mismatch: bool,
     clients: List[str],
     gem5_version: str,
@@ -1095,7 +1118,7 @@ def _get_suite(
 def _get_workload(
     workload: Dict[str, Any],
     local_path: str,
-    resource_directory: str,
+    resource_directory: str | None,
     download_md5_mismatch: bool,
     clients: List[str],
     gem5_version: str,
@@ -1187,8 +1210,8 @@ def _get_workload(
 
 def _get_to_path_and_downloader_partial(
     resource_json: Dict[str, str],
-    to_path: str,
-    resource_directory: str,
+    to_path: str | None,
+    resource_directory: str | None,
     download_md5_mismatch: bool,
     clients: List[str],
     gem5_version: str,
@@ -1399,7 +1422,7 @@ def Resource(
     )
 
 
-_get_resource_json_type_map = {
+_get_resource_json_type_map: Dict[str, Callable[..., AbstractResource]] = {
     "disk-image": DiskImageResource,
     "binary": BinaryResource,
     "kernel": KernelResource,
@@ -1415,5 +1438,5 @@ _get_resource_json_type_map = {
     "looppoint-json": LooppointJsonResource,
     "suite": SuiteResource,
     "workload": WorkloadResource,
-    "elfie-info": ELFieInfo,
+    "elfie-info": ELFieInfo,  # type: ignore
 }

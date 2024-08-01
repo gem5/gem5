@@ -24,25 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
+from typing import List
+
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     DMASequencer,
     RubyPortProxy,
-    RubySystem,
 )
 
-from ......coherence_protocol import CoherenceProtocol
-from ......components.boards.abstract_board import AbstractBoard
-from ......components.cachehierarchies.ruby.caches.mesi_three_level.directory import (
+from gem5.coherence_protocol import CoherenceProtocol
+from gem5.components.boards.abstract_board import AbstractBoard
+from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.directory import (
     Directory,
 )
-from ......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
+from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
     DMAController,
 )
-from ......utils.requires import requires
-from ....abstract_three_level_cache_hierarchy import (
+from gem5.utils.requires import requires
+
+from .....abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
 )
-from ...abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from ....abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .core_complex import CoreComplex
 from .octopi_network import OctopiNetwork
 from .ruby_network_components import (
@@ -84,10 +87,10 @@ class OctopiCache(
             l3_assoc=l3_assoc,
         )
 
-        self._directory_controllers = []
-        self._dma_controllers = []
-        self._io_controllers = []
-        self._core_complexes = []
+        self._directory_controllers: List = []
+        self._dma_controllers: List = []
+        self._io_controllers: List = []
+        self._core_complexes: List = []
         self._num_core_complexes = num_core_complexes
         self._is_fullsystem = is_fullsystem
 

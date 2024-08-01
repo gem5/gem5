@@ -77,7 +77,9 @@ class AbstractClient(ABC):
         """
         raise NotImplementedError
 
-    def sort_resources(self, resources: List) -> List:
+    def sort_resources(
+        self, resources: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Sorts the resources by ID.
 
@@ -88,7 +90,7 @@ class AbstractClient(ABC):
         :return: A list of sorted resources.
         """
 
-        def sort_tuple(resource: Dict) -> Tuple:
+        def sort_tuple(resource: Dict[str, Any]) -> Tuple:
             """This is used for sorting resources by ID and version. First
             the ID is sorted, then the version. In cases where the version
             contains periods, it's assumed this is to separate a
@@ -97,7 +99,7 @@ class AbstractClient(ABC):
             those less significant. If the value is a digit it is cast as an
             int, otherwise, it is cast as a string, to lower-case.
             """
-            to_return = (resource["id"].lower(),)
+            to_return: Tuple = (resource["id"].lower(),)
             for val in resource["resource_version"].split("."):
                 if val.isdigit():
                     to_return += (int(val),)

@@ -36,10 +36,10 @@ from typing import (
     Union,
 )
 
-from m5.objects import (
+from m5.objects.DRAMInterface import DRAMInterface
+from m5.objects.HBMCtrl import HBMCtrl
+from m5.params import (
     AddrRange,
-    DRAMInterface,
-    HBMCtrl,
     Port,
 )
 

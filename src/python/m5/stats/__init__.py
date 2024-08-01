@@ -37,6 +37,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+)
+
 import m5
 from m5.objects import Root
 from m5.params import isNullPointer
@@ -45,13 +51,17 @@ from m5.util import (
     fatal,
 )
 
-import _m5.stats
+import _m5.stats  # type: ignore
 
 # Stat exports
-from _m5.stats import periodicStatDump
-from _m5.stats import schedStatEvent as schedEvent
+from _m5.stats import periodicStatDump  # type: ignore
+from _m5.stats import schedStatEvent as schedEvent  # type: ignore
 
 from .gem5stats import JsonOutputVistor
+
+if TYPE_CHECKING:
+    from m5.SimObject import SimObject
+
 
 outputList = []
 
@@ -297,9 +307,9 @@ def _bindStatHierarchy(root):
         _bind_obj(name, obj)
 
 
-names = []
-stats_dict = {}
-stats_list = []
+names: List = []
+stats_dict: Dict = {}
+stats_list: List = []
 
 
 def enable():
@@ -379,7 +389,7 @@ def _dump_to_visitor(visitor, roots=None):
 
 lastDump = 0
 # List[SimObject].
-global_dump_roots = []
+global_dump_roots: List["SimObject"] = []
 
 
 def dump(roots=None):

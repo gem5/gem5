@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional
-
 from m5.util import warn
 
 from ...isas import ISA
@@ -53,7 +51,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         starting_core_type: CPUTypes,
         switch_core_type: CPUTypes,
         num_cores: int,
-        isa: ISA = None,
+        isa: ISA,
     ) -> None:
         """
         :param starting_core_type: The CPU type for each type in the processor

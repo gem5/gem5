@@ -24,13 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Union
+from typing import (
+    List,
+    Union,
+)
 
-from m5.objects import (
-    Port,
+from m5.objects.SpatterGen import (
     SpatterGen,
     SpatterProcessingMode,
 )
+from m5.params import Port
 
 from ....utils.override import overrides
 from ..abstract_core import AbstractCore
@@ -59,7 +62,8 @@ class SpatterGeneratorCore(AbstractGeneratorCore):
             request_buffer_entries=request_buffer_entries,
             send_rate=send_rate,
         )
-        self._kernels = []
+        # TODO: Type this properly
+        self._kernels: List = []
 
     @overrides(AbstractCore)
     def connect_dcache(self, port: Port) -> None:

@@ -29,9 +29,9 @@ from typing import (
     Optional,
 )
 
-from m5.objects import (
+from m5.objects.XBar import IOXBar
+from m5.params import (
     AddrRange,
-    IOXBar,
     Port,
 )
 
@@ -44,7 +44,6 @@ from .abstract_system_board import AbstractSystemBoard
 
 
 class TestBoard(AbstractSystemBoard):
-
     """This is a Testing Board used to run traffic generators on a simple
     architecture.
 
@@ -87,7 +86,7 @@ class TestBoard(AbstractSystemBoard):
         )
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def has_dma_ports(self) -> bool:
         return False
 
     @overrides(AbstractSystemBoard)
@@ -116,10 +115,6 @@ class TestBoard(AbstractSystemBoard):
         # memory.
         self.mem_ranges = [AddrRange(memory.get_size())]
         memory.set_memory_range(self.mem_ranges)
-
-    @overrides(AbstractSystemBoard)
-    def has_dma_ports(self) -> bool:
-        return False
 
     @overrides(AbstractBoard)
     def _connect_things(self) -> None:

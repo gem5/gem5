@@ -24,22 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional
 
-from m5.objects import (
-    BaseCPU,
-    BaseMMU,
-    Port,
-    Process,
+from m5.objects.BaseMinorCPU import (
+    MinorDefaultFloatSimdFU,
+    MinorDefaultIntDivFU,
+    MinorDefaultIntFU,
+    MinorDefaultIntMulFU,
+    MinorDefaultMemFU,
+    MinorDefaultMiscFU,
+    MinorDefaultPredFU,
+    MinorFUPool,
+    minorMakeOpClassSet,
 )
-from m5.objects.BaseMinorCPU import *
+from m5.objects.BranchPredictor import (
+    ReturnAddrStack,
+    SimpleBTB,
+    SimpleIndirectPredictor,
+    TournamentBP,
+)
 from m5.objects.RiscvCPU import RiscvMinorCPU
 
 from gem5.components.processors.base_cpu_core import BaseCPUCore
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.utils.override import overrides
-from gem5.utils.requires import requires
 
 
 class U74IntFU(MinorDefaultIntFU):

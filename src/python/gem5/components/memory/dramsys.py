@@ -32,13 +32,14 @@ from typing import (
     Tuple,
 )
 
-from m5.objects import (
+# TODO: Troubleshoot why stubs for this aren't generating
+from m5.objects import DRAMSys  # type: ignore
+from m5.objects.MemCtrl import MemCtrl
+from m5.objects.SystemC import SystemC_Kernel
+from m5.objects.TlmBridge import Gem5ToTlmBridge32
+from m5.params import (
     AddrRange,
-    DRAMSys,
-    Gem5ToTlmBridge32,
-    MemCtrl,
     Port,
-    SystemC_Kernel,
 )
 from m5.util.convert import toMemorySize
 

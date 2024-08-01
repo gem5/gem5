@@ -31,21 +31,17 @@ from typing import (
     Union,
 )
 
-from m5.objects import (
-    Process,
-    SEWorkload,
-)
+from m5.objects.Process import Process
+from m5.objects.Workload import SEWorkload
 from m5.util import warn
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
 from ...resources.resource import (
-    AbstractResource,
     BinaryResource,
     CheckpointResource,
     FileResource,
-    SimpointDirectoryResource,
     SimpointResource,
 )
 from ..processors.switchable_processor import SwitchableProcessor
@@ -154,7 +150,7 @@ class SEBinaryWorkload:
         # Simulator module to setup checkpoints.
         if checkpoint:
             if isinstance(checkpoint, Path):
-                self._checkpoint = checkpoint
+                self._checkpoint: Path | None = checkpoint
             elif isinstance(checkpoint, AbstractResource):
                 self._checkpoint = (
                     Path(checkpoint_path)
@@ -170,8 +166,8 @@ class SEBinaryWorkload:
     def set_se_simpoint_workload(
         self,
         binary: BinaryResource,
+        simpoint: SimpointResource,
         arguments: List[str] = [],
-        simpoint: SimpointResource | None = None,
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
@@ -223,10 +219,10 @@ class SEBinaryWorkload:
 
     def set_se_looppoint_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         looppoint: Looppoint,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
         region_id: Optional[Union[int, str]] = None,
     ) -> None:
         """Set up the system to run a LoopPoint workload.
@@ -259,10 +255,10 @@ class SEBinaryWorkload:
 
     def set_se_elfie_workload(
         self,
-        elfie: AbstractResource,
+        elfie: BinaryResource,
         elfie_info: ELFieInfo,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a ELFie workload.
 

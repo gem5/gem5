@@ -343,9 +343,11 @@ def interact(scope):
     prompt_out = "gem5 \\#: "
 
     try:
-        import IPython
-        from IPython.config.loader import Config
-        from IPython.terminal.embed import InteractiveShellEmbed
+        import IPython  # type: ignore
+        from IPython.config.loader import Config  # type: ignore
+        from IPython.terminal.embed import (
+            InteractiveShellEmbed,  # type: ignore
+        )
 
         cfg = Config()
         cfg.PromptManager.in_template = prompt_in1
@@ -367,7 +369,7 @@ def interact(scope):
 
 
 def _check_tracing():
-    import _m5.core
+    import _m5.core  # type: ignore
 
     from .util import fatal
 
@@ -381,14 +383,14 @@ def main():
     import m5
     from m5.util.terminal_formatter import TerminalFormatter
 
-    import _m5.core
+    import _m5.core  # type: ignore
 
+    from . import info  # type: ignore
     from . import (
         core,
         debug,
         defines,
         event,
-        info,
         stats,
         trace,
     )
@@ -440,13 +442,13 @@ def main():
         done = True
         print("Build information:")
         print()
-        print(f"gem5 version {defines.gem5Version}")
-        print(f"compiled {defines.compileDate}")
+        print(f"gem5 version {defines.gem5Version}")  # type: ignore
+        print(f"compiled {defines.compileDate}")  # type: ignore
         print("build options:")
-        keys = list(defines.buildEnv.keys())
+        keys = list(defines.buildEnv.keys())  # type: ignore
         keys.sort()
         for key in keys:
-            val = defines.buildEnv[key]
+            val = defines.buildEnv[key]  # type: ignore
             print(f"    {key} = {val}")
         print()
 
@@ -528,9 +530,11 @@ def main():
             'shlex.quote' doesn't work"""
 
             if os.name == "nt" and os.sep == "\\":
+                import re
+
                 # If a Windows machine, we manually quote the string.
                 arg = arg.replace('"', '\\"')
-                if re.search(r"\s", args):
+                if re.search(r"\s", arg):
                     # We quote args which have whitespace.
                     arg = '"' + arg + '"'
                 return arg

@@ -25,15 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import List
+from typing import Sequence
 
-from m5.objects import (
-    BaseAtomicSimpleCPU,
-    BaseMinorCPU,
-    BaseNonCachingSimpleCPU,
-    BaseO3CPU,
-    BaseTimingSimpleCPU,
-)
+from m5.objects import BaseAtomicSimpleCPU  # type: ignore
+from m5.objects import BaseMinorCPU  # type: ignore
+from m5.objects import BaseNonCachingSimpleCPU  # type: ignore
+from m5.objects import BaseO3CPU  # type: ignore
+from m5.objects import BaseTimingSimpleCPU  # type: ignore
 from m5.util import warn
 
 from ...utils.override import overrides
@@ -59,11 +57,11 @@ class BaseCPUProcessor(AbstractProcessor):
     and is not officially supported.
     """
 
-    def __init__(self, cores: List[BaseCPUCore]):
+    def __init__(self, cores: Sequence[BaseCPUCore]):
         super().__init__(cores=cores)
 
         if any(core.is_kvm_core() for core in self.get_cores()):
-            from m5.objects import KvmVM
+            from m5.objects import KvmVM  # type: ignore
 
             self.kvm_vm = KvmVM()
 

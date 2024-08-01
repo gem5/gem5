@@ -29,8 +29,8 @@ import math
 from m5.objects import (
     L2Cache_Controller,
     MessageBuffer,
-    RubyCache,
 )
+from m5.objects.RubyCache import RubyCache
 
 
 # L2Cache_Controller is ruby backend's terminology corresponding to

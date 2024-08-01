@@ -30,7 +30,7 @@
 
 try:
     # Try to import a native module
-    import _m5.core
+    import _m5.core  # type: ignore
 
     # Try to grab something from it in case demandimport is being used
     _m5.core.curTick
@@ -49,9 +49,10 @@ if in_gem5:
         stats,
     )
 
-    if defines.buildEnv["USE_SYSTEMC"]:
-        from . import systemc
-        from . import tlm
+    if defines.buildEnv["USE_SYSTEMC"]:  # type: ignore
+        # mypy can't find these because they are bundled at compile time
+        from . import systemc  # type: ignore
+        from . import tlm  # type: ignore
     from . import util
     from .event import *
     from .main import main

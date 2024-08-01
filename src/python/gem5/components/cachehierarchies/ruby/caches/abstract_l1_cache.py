@@ -27,11 +27,7 @@
 import math
 from abc import abstractmethod
 
-from m5.objects import L1Cache_Controller
-
-from .....isas import ISA
-from ....processors.abstract_core import AbstractCore
-from ....processors.cpu_types import CPUTypes
+from m5.objects.L1Cache_Controller import L1Cache_Controller
 
 
 class AbstractL1Cache(L1Cache_Controller):

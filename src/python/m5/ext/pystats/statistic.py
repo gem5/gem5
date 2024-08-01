@@ -29,9 +29,9 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     List,
     Optional,
+    Sequence,
     Union,
 )
 
@@ -234,10 +234,10 @@ class Vector2d(Statistic):
 
     def __getitem__(self, index: Union[str, int, float]) -> Vector:
         assert self.value is not None
-        # In the case of string, we cast strings to integers of floats if they
+        # In the case of string, we cast strings to integers or floats if they
         # are numeric. This avoids users having to cast strings to integers.
         if isinstance(index, str):
-            if index.isindex():
+            if index.isdigit():
                 index = int(index)
             elif index.isnumeric():
                 index = float(index)
@@ -247,7 +247,7 @@ class Vector2d(Statistic):
         self,
         predicate: Optional[Callable[[str], bool]] = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> Sequence["AbstractStat"]:
         to_return = []
         for attr in self.value.keys():
             obj = self.value[attr]

@@ -47,12 +47,12 @@ class SimPoint:
 
     def __init__(
         self,
-        simpoint_resource: SimpointResource = None,
-        simpoint_interval: int = None,
-        simpoint_file_path: Path = None,
-        weight_file_path: Path = None,
-        simpoint_list: List[int] = None,
-        weight_list: List[int] = None,
+        simpoint_interval: int,
+        simpoint_resource: SimpointResource | None = None,
+        simpoint_file_path: Path | None = None,
+        weight_file_path: Path | None = None,
+        simpoint_list: List[int] | None = None,
+        weight_list: List[float] | None = None,
         warmup_interval: int = 0,
     ) -> None:
         """
@@ -87,6 +87,7 @@ class SimPoint:
 
         # initalize input if you're passing in a CustomResource
         if simpoint_resource is not None:
+            # TODO: Refactor this block
             simpoint_directory = str(simpoint_resource.get_local_path())
 
             simpoint_file_path = simpoint_directory.get_simpoint_file()
@@ -130,7 +131,7 @@ class SimPoint:
         self,
         simpoint_path: Path,
         weight_path: Path,
-    ) -> Tuple[List[int], List[int]]:
+    ) -> Tuple[List[int], List[float]]:
         """
         This function takes in file paths and outputs a list of SimPoints
         instruction starts and a list of weights.

@@ -25,10 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import (
-    Port,
-    TrafficGen,
-)
+from m5.objects.TrafficGen import TrafficGen
+from m5.params import Port
 
 from ...utils.override import overrides
 from .abstract_core import AbstractCore

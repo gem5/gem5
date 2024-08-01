@@ -33,11 +33,11 @@ from typing import (
     Tuple,
 )
 
-from m5.objects import (
+from m5.objects.MemCtrl import MemCtrl
+from m5.objects.SimpleMemory import SimpleMemory
+from m5.params import (
     AddrRange,
-    MemCtrl,
     Port,
-    SimpleMemory,
 )
 from m5.util.convert import toMemorySize
 
