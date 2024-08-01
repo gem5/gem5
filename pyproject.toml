@@ -10,3 +10,5 @@ known_m5 = "m5"
 known_underscore_m5 = "_m5,slicc"
 known_gem5 = "gem5"
 sections="FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,M5,UNDERSCORE_M5,GEM5,LOCALFOLDER"
+[tool.mypy]
+ignore_missing_imports = true
