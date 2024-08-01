@@ -36,7 +36,10 @@
 # Author: Glenn Bergmans
 
 import os
-import re
+from typing import (
+    Any,
+    Dict,
+)
 
 from m5.ext.pyfdt import pyfdt
 from m5.SimObject import SimObject
@@ -93,7 +96,7 @@ class FdtState:
     maintains a dictionary of allocated phandles."""
 
     phandle_counter = 0
-    phandles = dict()
+    phandles: Dict[str, Any] = dict()
 
     def __init__(self, **kwargs):
         """Instantiate values of this state. The state can only be initialized
@@ -188,7 +191,7 @@ class FdtNode(pyfdt.FdtNode):
         """Create a new node and immediately set the phandle property, if obj
         is supplied"""
         super().__init__(name)
-        if obj != None:
+        if obj is not None:
             self.appendPhandle(obj)
 
     def append(self, subnodes):

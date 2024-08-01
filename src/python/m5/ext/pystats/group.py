@@ -75,8 +75,8 @@ class Group(AbstractStat):
                 if (predicate and predicate(attr)) or not predicate:
                     to_return.append(obj)
                 if recursive:
-                    to_return = to_return + obj.children(
-                        predicate=predicate, recursive=True
+                    to_return.extend(
+                        obj.children(predicate=predicate, recursive=True)
                     )
         return to_return
 
@@ -85,7 +85,7 @@ class SimObjectGroup(Group):
     """A group of statistics encapulated within a SimObject."""
 
     def __init__(self, **kwargs: Dict[str, Union[Group, Statistic]]):
-        super().__init__(type="SimObject", **kwargs)
+        super().__init__(type="SimObject", **kwargs)  # type: ignore
 
 
 class SimObjectVectorGroup(Group):
@@ -95,7 +95,7 @@ class SimObjectVectorGroup(Group):
 
     def __init__(self, value: List[AbstractStat], **kwargs: Dict[str, Any]):
         assert isinstance(value, list), "Value must be a list"
-        super().__init__(type="SimObjectVector", value=value, **kwargs)
+        super().__init__(type="SimObjectVector", value=value, **kwargs)  # type: ignore
 
     def __getitem__(self, index: Union[int, str, float]) -> AbstractStat:
         if not isinstance(index, int):

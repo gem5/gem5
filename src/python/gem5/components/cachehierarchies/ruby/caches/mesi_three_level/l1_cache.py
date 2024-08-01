@@ -27,7 +27,7 @@
 import math
 
 # TODO: Investivate why stubs are not being generated for L0Cache_Controller
-from m5.objects import L0Cache_Controller  # type: ignore[import]
+from m5.objects import L0Cache_Controller  # type: ignore[attr-defined]
 from m5.objects.ClockDomain import ClockDomain
 from m5.objects.MessageBuffer import MessageBuffer
 from m5.objects.ReplacementPolicies import LRURP

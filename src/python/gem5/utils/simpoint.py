@@ -87,15 +87,15 @@ class SimPoint:
 
         # initalize input if you're passing in a CustomResource
         if simpoint_resource is not None:
-            # TODO: Refactor this block
+            # This class is depricated, it's okay for these to possibly fail,
             simpoint_directory = str(simpoint_resource.get_local_path())
 
-            simpoint_file_path = simpoint_directory.get_simpoint_file()
-            weight_file_path = simpoint_resource.get_weight_file()
-            simpoint_interval = simpoint_resource.get_metadata().get(
+            simpoint_file_path = simpoint_directory.get_simpoint_file()  # type: ignore
+            weight_file_path = simpoint_resource.get_weight_file()  # type: ignore
+            simpoint_interval = simpoint_resource.get_metadata().get(  # type: ignore
                 "simpoint_interval"
             )
-            warmup_interval = simpoint_resource.get_metadata().get(
+            warmup_interval = simpoint_resource.get_metadata().get(  # type: ignore
                 "warmup_interval"
             )
 

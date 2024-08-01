@@ -194,14 +194,13 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
         # Sometimes elements within a vector are defined by their name. Other
         # times they have no name. When a name is not available, we name the
         # stat the index value.
+        index_subname: str | int | float = index
         if len(statistic.subnames) > index and statistic.subnames[index]:
             index_subname = str(statistic.subnames[index])
             if index_subname.isdigit():
                 index_subname = int(index_subname)
             elif index_subname.isnumeric():
                 index_subname = float(index_subname)
-        else:
-            index_subname: str | int | float = index
 
         index_subdesc = None
         if len(statistic.subdescs) > index and statistic.subdescs[index]:

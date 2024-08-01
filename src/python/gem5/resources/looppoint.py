@@ -380,7 +380,7 @@ class Looppoint:
     def output_json_file(
         self,
         input_indent: int = 4,
-        filepath: str = os.path.join(m5.options.outdir, "looppoint.json"),
+        filepath: str | None = None,
     ):
         """
         This function is used to output the ``_json_file`` into a json file.
@@ -388,6 +388,12 @@ class Looppoint:
         :param input_indent: The indent value of the json file.
         :param filepath: The path of the output json file.
         """
+        if not filepath:
+            filepath = os.path.join(
+                m5.options.outdir,  # type: ignore[attr-defined]
+                "looppoint.json",
+            )
+
         with open(filepath, "w") as file:
             json.dump(self.to_json(), file, indent=input_indent)
 
@@ -409,7 +415,7 @@ class LooppointCsvLoader(Looppoint):
                            restoring to a particular region.
         """
 
-        regions = {}
+        regions: Dict[str | int, LooppointRegion] = {}
         warmups = {}
 
         _path = (
@@ -541,15 +547,17 @@ class LooppointJsonLoader(Looppoint):
                 multiplier = float(json_contents[rid]["multiplier"])
                 warmup = None
                 if "warmup" in json_contents[rid]:
-                    start = PcCountPair(
+                    warmup_start = PcCountPair(
                         json_contents[rid]["warmup"]["start"]["pc"],
                         json_contents[rid]["warmup"]["start"]["count"],
                     )
-                    end = PcCountPair(
+                    warmup_end = PcCountPair(
                         json_contents[rid]["warmup"]["end"]["pc"],
                         json_contents[rid]["warmup"]["end"]["count"],
                     )
-                    warmup = LooppointRegionWarmup(start=start, end=end)
+                    warmup = LooppointRegionWarmup(
+                        start=warmup_start, end=warmup_end
+                    )
 
                 regions[rid] = LooppointRegion(
                     simulation=simulation, multiplier=multiplier, warmup=warmup

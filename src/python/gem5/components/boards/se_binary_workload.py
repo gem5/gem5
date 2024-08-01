@@ -190,6 +190,10 @@ class SEBinaryWorkload:
                            simulation to that checkpoint.
         """
 
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
+
         self._simpoint_resource = simpoint
 
         if self.get_processor().get_num_cores() > 1:
@@ -239,6 +243,9 @@ class SEBinaryWorkload:
         :param region_id: If set, will only load the Looppoint region
                           corresponding to that ID.
         """
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
 
         assert isinstance(looppoint, Looppoint)
         self._looppoint_object = looppoint
@@ -271,6 +278,9 @@ class SEBinaryWorkload:
                            information for the ELFie.
         :param arguments: The input arguments for the binary.
         """
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
 
         assert isinstance(elfie_info, ELFieInfo)
         self._elfie_info_object = elfie_info

@@ -31,6 +31,7 @@ from typing import (
     List,
     Optional,
     Pattern,
+    Sequence,
     Tuple,
     Union,
 )
@@ -49,7 +50,7 @@ class AbstractStat(SerializableStat):
         self,
         predicate: Optional[Callable[[str], bool]] = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> Sequence["AbstractStat"]:
         """Iterate through all of the children, optionally with a predicate
 
         .. code-block::
@@ -68,7 +69,7 @@ class AbstractStat(SerializableStat):
         """
         return []
 
-    def find(self, regex: Union[str, Pattern]) -> List["AbstractStat"]:
+    def find(self, regex: Union[str, Pattern]) -> Sequence["AbstractStat"]:
         """Find all stats that match the name, recursively through all the
         SimStats.
 
@@ -90,7 +91,7 @@ class AbstractStat(SerializableStat):
         else:
             pattern = regex
         return self.children(
-            lambda _name: re.match(pattern, _name), recursive=True
+            lambda _name: re.match(pattern, _name) is not None, recursive=True
         )
 
     def _get_vector_item(self, item: str) -> Optional[Tuple[str, int, Any]]:
@@ -139,5 +140,5 @@ class AbstractStat(SerializableStat):
 
     def __contains__(self, item: Any) -> bool:
         return (
-            isinstance(item, str) and self._get_vector_item(item)
+            isinstance(item, str) and self._get_vector_item(item) is not None
         ) or hasattr(self, item)

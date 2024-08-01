@@ -152,10 +152,10 @@ class BaseCPUCore(AbstractCore):
         self.core.createInterruptController()
 
         if self.get_isa().value == ISA.X86.value:
-            if interrupt_requestor != None:
+            if interrupt_requestor is not None:
                 self.core.interrupts[0].pio = interrupt_requestor
                 self.core.interrupts[0].int_responder = interrupt_requestor
-            if interrupt_responce != None:
+            if interrupt_responce is not None:
                 self.core.interrupts[0].int_requestor = interrupt_responce
 
     @overrides(AbstractCore)

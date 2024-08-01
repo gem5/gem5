@@ -1047,7 +1047,7 @@ class SimObject(metaclass=MetaSimObject):
                 visited = getattr(child, "_visited")
 
             if isinstance(child, ptype) and not visited:
-                if found_obj != None and child != found_obj:
+                if found_obj is not None and child != found_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s %s"
                         % (found_obj.path, child.path)
@@ -1057,13 +1057,13 @@ class SimObject(metaclass=MetaSimObject):
         for pname, pdesc in self._params.items():
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
-                if found_obj != None and found_obj != match_obj:
+                if found_obj is not None and found_obj != match_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s and %s"
                         % (found_obj.path, match_obj.path)
                     )
                 found_obj = match_obj
-        return found_obj, found_obj != None
+        return found_obj, found_obj is not None
 
     def find_all(self, ptype):
         all = {}
@@ -1102,7 +1102,7 @@ class SimObject(metaclass=MetaSimObject):
     def unproxyParams(self):
         for param in self._params.keys():
             value = self._values.get(param)
-            if value != None and isproxy(value):
+            if value is not None and isproxy(value):
                 try:
                     value = value.unproxy(self)
                 except:
@@ -1118,7 +1118,7 @@ class SimObject(metaclass=MetaSimObject):
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name)
-            if port != None:
+            if port is not None:
                 port.unproxy(self)
 
     def print_ini(self, ini_file):
@@ -1141,7 +1141,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
-            if value != None:
+            if value is not None:
                 print(
                     f"{param}={self._values[param].ini_str()}",
                     file=ini_file,
@@ -1149,7 +1149,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 print(f"{port_name}={port.ini_str()}", file=ini_file)
 
         print(file=ini_file)  # blank line between objects
@@ -1170,7 +1170,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
-            if value != None:
+            if value is not None:
                 d[param] = value.config_value()
 
         for n in sorted(self._children.keys()):
@@ -1182,7 +1182,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 # Represent each port with a dictionary containing the
                 # prominent attributes
                 d[port_name] = port.get_config_as_dict()
@@ -1246,7 +1246,7 @@ class SimObject(metaclass=MetaSimObject):
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 port_count = len(port)
             else:
                 port_count = 0

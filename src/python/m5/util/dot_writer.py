@@ -101,7 +101,7 @@ def dot_create_nodes(simNode, callgraph):
     # create nodes per port
     for port_name in simNode._ports.keys():
         port = simNode._port_refs.get(port_name, None)
-        if port != None:
+        if port is not None:
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
             cluster.add_node(port_node)
@@ -117,7 +117,7 @@ def dot_create_nodes(simNode, callgraph):
 def dot_create_edges(simNode, callgraph):
     for port_name in simNode._ports.keys():
         port = simNode._port_refs.get(port_name, None)
-        if port != None:
+        if port is not None:
             full_path = re.sub(r"\.", "_", simNode.path())
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
@@ -158,7 +158,7 @@ def dot_create_cluster(simNode, full_path, label):
     ini_strings = []
     for param in sorted(simNode._params.keys()):
         value = simNode._values.get(param)
-        if value != None:
+        if value is not None:
             # parameter name = value in HTML friendly format
             ini_strings.append(
                 str(param) + "&#61;" + simNode._values[param].ini_str()
@@ -330,7 +330,7 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
     # create nodes per port
     for port_name in simNode._ports.keys():
         port = simNode._port_refs.get(port_name, None)
-        if port != None:
+        if port is not None:
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
             cluster.add_node(port_node)

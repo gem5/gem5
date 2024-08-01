@@ -1019,7 +1019,7 @@ def obtain_resource(
                 **resource_json,
             )
         # WARN: CustomResource is deprecated, this should be refactored to use AbstractResource or the functionality should be removed
-        return CustomResource(local_path=to_path, downloader=downloader)
+        return CustomResource(local_path=to_path, downloader=downloader)  # type: ignore
 
     assert resources_category in _get_resource_json_type_map
     resource_class = _get_resource_json_type_map[resources_category]
@@ -1287,6 +1287,7 @@ def _get_to_path_and_downloader_partial(
             quiet=quiet,
         )
 
+    # WARN: This assertion seems to not be valid (causing some tesets to fail), investigate the cause
     assert to_path
     return to_path, downloader
 

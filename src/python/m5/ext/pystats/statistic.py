@@ -105,7 +105,7 @@ class Vector(Statistic):
         )
 
     def __getitem__(self, item: Union[int, str, float]) -> Scalar:
-        assert self.value != None
+        assert self.value is not None
         # In the case of string, we cast strings to integers of floats if they
         # are numeric. This avoids users having to cast strings to integers.
         if isinstance(item, str):
@@ -116,7 +116,7 @@ class Vector(Statistic):
         return self.value[item]
 
     def __contains__(self, item) -> bool:
-        assert self.value != None
+        assert self.value is not None
         if isinstance(item, str):
             if item.isdigit():
                 item = int(item)
@@ -128,7 +128,7 @@ class Vector(Statistic):
         return iter(self.value)
 
     def __len__(self) -> int:
-        assert self.value != None
+        assert self.value is not None
         return len(self.value.values())
 
     def size(self) -> int:
@@ -137,7 +137,7 @@ class Vector(Statistic):
 
         :returns: The size of the vector.
         """
-        assert self.value != None
+        assert self.value is not None
         return len(self.value)
 
     def mean(self) -> float:
@@ -146,7 +146,7 @@ class Vector(Statistic):
 
         :returns: The mean value across all values in the vector.
         """
-        assert self.value != None
+        assert self.value is not None
 
         return self.count() / self.size()
 
@@ -156,14 +156,14 @@ class Vector(Statistic):
 
         :returns: The sum of all vector values.
         """
-        assert self.value != None
+        assert self.value is not None
         return sum(float(self.value[key]) for key in self.values)
 
     def children(
         self,
         predicate: Optional[Callable[[str], bool]] = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> Sequence["AbstractStat"]:
         to_return = []
         for attr in self.value.keys():
             obj = self.value[attr]
@@ -174,8 +174,8 @@ class Vector(Statistic):
                     or not predicate
                 ):
                     to_return.append(obj)
-                to_return = to_return + obj.children(
-                    predicate=predicate, recursive=True
+                to_return.extend(
+                    obj.children(predicate=predicate, recursive=True)
                 )
         return to_return
 
@@ -248,7 +248,7 @@ class Vector2d(Statistic):
         predicate: Optional[Callable[[str], bool]] = None,
         recursive: bool = False,
     ) -> Sequence["AbstractStat"]:
-        to_return = []
+        to_return: List["AbstractStat"] = []
         for attr in self.value.keys():
             obj = self.value[attr]
             if (
@@ -257,9 +257,7 @@ class Vector2d(Statistic):
                 or not predicate
             ):
                 to_return.append(obj)
-            to_return = to_return + obj.children(
-                predicate=predicate, recursive=True
-            )
+            to_return.extend(obj.children(predicate=predicate, recursive=True))
         return to_return
 
     def __contains__(self, item) -> bool:
@@ -307,7 +305,7 @@ class Distribution(Vector):
         description: Optional[str] = None,
     ):
         super().__init__(
-            value=value,
+            value=value,  # type: ignore[arg-type]
             type="Distribution",
             description=description,
         )
@@ -338,7 +336,7 @@ class SparseHist(Vector):
         description: Optional[str] = None,
     ):
         super().__init__(
-            value=value,
+            value=value,  # type: ignore[arg-type]
             type="SparseHist",
             description=description,
         )
@@ -351,5 +349,5 @@ class SparseHist(Vector):
         """
         Returns the total number of samples.
         """
-        assert self.value != None
+        assert self.value is not None
         return sum(self.value.values())

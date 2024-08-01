@@ -160,7 +160,7 @@ class ParamDesc:
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
-        if ptype != None:
+        if ptype is not None:
             self.ptype = ptype
 
         if args:
@@ -2080,7 +2080,7 @@ class PortRef:
     def __len__(self):
         # Return the number of connected ports, i.e. 0 is we have no
         # peer and 1 if we do.
-        return int(self.peer != None)
+        return int(self.peer is not None)
 
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
