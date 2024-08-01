@@ -528,10 +528,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # Default DTB address if bbl is built with --with-dts option
         self.workload.dtb_addr = 0x87E00000
 
-        from m5.options import outdir  # type: ignore
-
-        self.generate_device_tree(outdir)
-        self.workload.dtb_filename = os.path.join(outdir, "device.dtb")
+        self.generate_device_tree(m5.options.outdir)  # type: ignore
+        self.workload.dtb_filename = os.path.join(m5.options.outdir, "device.dtb")  # type: ignore
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:

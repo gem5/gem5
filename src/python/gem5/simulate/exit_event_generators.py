@@ -113,9 +113,7 @@ def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
     generator.
     """
     if not checkpoint_dir:
-        from m5.options import outdir  # type: ignore
-
-        checkpoint_dir = Path(outdir)
+        checkpoint_dir = Path(m5.options.outdir)  # type: ignore
     while True:
         m5.checkpoint((checkpoint_dir / f"cpt.{str(m5.curTick())}").as_posix())
         yield False

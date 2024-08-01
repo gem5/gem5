@@ -626,7 +626,6 @@ class Simulator:
                 "Cannot override the output directory after the simulation "
                 "has been instantiated."
             )
-        from m5.options import outdir  # type: ignore
 
         from _m5.core import setOutputDir  # type: ignore
 
@@ -638,8 +637,8 @@ class Simulator:
         if not new_outdir.is_dir():
             raise Exception(f"'{new_outdir}' is not a directory")
 
-        outdir = str(new_outdir)
-        setOutputDir(outdir)
+        m5.options.outdir = str(new_outdir)  # type: ignore
+        setOutputDir(m5.options.outdir)  # type: ignore
 
     def _instantiate(self) -> None:
         """

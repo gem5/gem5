@@ -34,6 +34,8 @@ from typing import (
     Union,
 )
 
+import m5
+
 from ...resources.resource import (
     BootloaderResource,
     CheckpointResource,
@@ -226,10 +228,9 @@ class KernelDiskWorkload:
             readfile_contents_hash = hex(
                 hash(tuple(bytes(readfile_contents, "utf-8")))
             )
-            from m5.options import outdir  # type: ignore
 
             self.readfile = os.path.join(
-                outdir, ("readfile_" + readfile_contents_hash)
+                m5.options.outdir, ("readfile_" + readfile_contents_hash)  # type: ignore
             )
 
         # Add the contents to the readfile, if specified.

@@ -73,9 +73,8 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
     config.set("system", "channels", str(num_chnls))
     config.write(new_config)
     new_config.close()
-    from m5.options import outdir  # type: ignore
 
-    return output_file, outdir
+    return output_file, m5.options.outdir  # type: ignore
 
 
 class DRAMSim3MemCtrl(DRAMsim3):

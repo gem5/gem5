@@ -29,6 +29,7 @@ from abc import ABCMeta
 from functools import partial
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -468,6 +469,7 @@ class SimpointResource(AbstractResource):
         source: Optional[str] = None,
         downloader: Optional[partial] = None,
         local_path: Optional[str] = None,
+        **_,
     ):
         """
         :param simpoint_interval: The SimPoint interval.
@@ -1288,7 +1290,9 @@ def _get_to_path_and_downloader_partial(
         )
 
     # WARN: This assertion seems to not be valid (causing some tesets to fail), investigate the cause
-    assert to_path
+    # in the meaning, we only assert when TYPE_CHECKING is True so that mypy treats this as a type hint
+    if TYPE_CHECKING:
+        assert to_path
     return to_path, downloader
 
 

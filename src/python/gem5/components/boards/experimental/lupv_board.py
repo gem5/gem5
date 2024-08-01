@@ -578,10 +578,8 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # Default DTB address if bbl is built with --with-dts option
         self.workload.dtb_addr = 0x87E00000
 
-        from m5.options import outdir  # type: ignore
-
         # We need to wait to generate the device tree until after the disk is
         # set up. Now that the disk and workload are set, we can generate the
         # device tree file.
-        self._generate_device_tree(outdir)
-        self.workload.dtb_filename = os.path.join(outdir, "device.dtb")
+        self._generate_device_tree(m5.options.outdir)  # type: ignore
+        self.workload.dtb_filename = os.path.join(m5.options.outdir, "device.dtb")  # type: ignore

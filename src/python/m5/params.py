@@ -1217,8 +1217,8 @@ class EthernetAddr(ParamValue):
         return value
 
     def unproxy(self, base):
-        if self.value == NextEthernetAddr:
-            return EthernetAddr(self.value)
+        if callable(self.value) and self.value == NextEthernetAddr:
+            return EthernetAddr(self.value())
         return self
 
     def getValue(self):
@@ -1227,7 +1227,7 @@ class EthernetAddr(ParamValue):
         return EthAddr(self.value)
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def ini_str(self):
         return self.value
