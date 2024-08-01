@@ -139,8 +139,31 @@ class FUPool : public SimObject
     FUPool(const Params &p);
     ~FUPool();
 
+    /**
+     * Named constants to differentiate cases where an
+     * instruction asked the FUPool for a free FU
+     * but did not get one
+     */
+
+    /**
+     * Instruction asked for a FU but does not actually
+     * need any (e.g., NOP)
+     */
+    static constexpr auto NoNeedFU = -3;
+
+    /**
+     * Instruction asked for a FU but this FUPool does
+     * not have a FU for this instruction op type
+     */
     static constexpr auto NoCapableFU = -2;
+
+    /**
+     * Instruction asked for a FU but all FU for
+     * this op type have already been allocated to
+     * other instructions this cycle
+     */
     static constexpr auto NoFreeFU = -1;
+
     /**
      * Gets a FU providing the requested capability. Will mark the
      * unit as busy, but leaves the freeing of the unit up to the IEW
