@@ -592,6 +592,7 @@ class SimpointResource(AbstractResource):
             warmup_list.append(warmup_inst)
             # change the starting instruction of a SimPoint to include the
             # warmup instruction length
+            assert self._simpoint_start_insts is not None
             self._simpoint_start_insts[index] = start_inst - warmup_inst
         return warmup_list
 
@@ -623,9 +624,8 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
             resource_version=resource_version,
             downloader=downloader,
         )
-        LooppointCsvLoader.__init__(
-            self, pinpoints_file=Path(self.get_local_path())
-        )
+        assert (self_local_path := self.get_local_path()) is not None
+        LooppointCsvLoader.__init__(self, pinpoints_file=Path(self_local_path))
 
     @classmethod
     def get_category_name(cls) -> str:
@@ -653,8 +653,9 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
             resource_version=resource_version,
             downloader=downloader,
         )
+        assert (self_local_path := self.get_local_path()) is not None
         LooppointJsonLoader.__init__(
-            self, looppoint_file=self.get_local_path(), region_id=region_id
+            self, looppoint_file=self_local_path, region_id=region_id
         )
 
     @classmethod
@@ -714,11 +715,13 @@ class SimpointDirectoryResource(SimpointResource):
 
     def get_simpoint_file(self) -> Path:
         """Return the SimPoint File path."""
-        return Path(Path(self.get_local_path()) / self._simpoint_file)
+        assert (local_path := self.get_local_path()) is not None
+        return Path(Path(local_path) / self._simpoint_file)
 
     def get_weight_file(self) -> Path:
         """Returns the Weight File path."""
-        return Path(Path(self.get_local_path()) / self._weight_file)
+        assert (local_path := self.get_local_path()) is not None
+        return Path(Path(local_path) / self._weight_file)
 
     def _get_weights_and_simpoints_from_file(
         self,
@@ -897,6 +900,7 @@ class WorkloadResource(AbstractResource):
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
+        assert self._id
         return self._id
 
     def get_function_str(self) -> str:
@@ -1233,7 +1237,7 @@ def _get_to_path_and_downloader_partial(
             # function, we heck the "GEM5_RESOURCE_DIR" environment variable.
             # If this too is not set we call `_get_default_resource_dir()` to
             # determine where the resource directory is, or should be, located.
-            if resource_directory == None:
+            if resource_directory is None:
                 resource_directory = os.getenv(
                     "GEM5_RESOURCE_DIR", _get_default_resource_dir()
                 )
@@ -1282,6 +1286,8 @@ def _get_to_path_and_downloader_partial(
             gem5_version=gem5_version,
             quiet=quiet,
         )
+
+    assert to_path
     return to_path, downloader
 
 

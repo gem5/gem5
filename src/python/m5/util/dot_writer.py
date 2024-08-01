@@ -349,7 +349,7 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
             v_dom = c_dom.__getattr__("voltage_domain")
             pass
 
-        if c_dom == domain or c_dom == None:
+        if c_dom == domain or c_dom is None:
             dot_create_dvfs_nodes(child, cluster, domain)
         else:
             if c_dom not in dvfs_domains:

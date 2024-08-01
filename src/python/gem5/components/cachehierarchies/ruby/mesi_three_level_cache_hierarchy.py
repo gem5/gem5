@@ -194,6 +194,12 @@ class MESIThreeLevelCacheHierarchy(
         self._dma_controllers = []
         if board.has_dma_ports():
             dma_ports = board.get_dma_ports()
+            if not dma_ports:
+                raise ValueError(
+                    "DMA ports are enabled but no DMA ports are provided",
+                    "This is likely a configuration error",
+                )
+
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(
                     DMASequencer(version=i, in_ports=port), self.ruby_system

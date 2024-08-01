@@ -173,12 +173,18 @@ class AbstractBoard:
         """
         return self._cache_hierarchy
 
-    def get_cache_line_size(self) -> int | None:
+    def get_cache_line_size(self) -> int:
         """Get the size of the cache line.
 
         :returns: The size of the cache line size.
         """
-        return getattr(self, "cache_line_size", None)
+        if (line_size := getattr(self, "cache_line_size", None)) is not None:
+            return line_size
+        else:
+            # TODO: is it better to just return 0 (or some other default value) if the attribute is not set?
+            raise Exception(
+                "The cache line size has not been set for this board."
+            )
 
     def connect_system_port(self, port: Port) -> None:
         self.system_port = port
@@ -218,7 +224,7 @@ class AbstractBoard:
         This function is used by the Simulator module to setup the simulation
         correctly.
         """
-        if self._is_fs == None:
+        if self._is_fs is None:
             raise Exception(
                 "The workload for this board not yet to be set. "
                 "Whether the board is to be executed in FS or SE "

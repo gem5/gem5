@@ -150,7 +150,7 @@ class BaseProxy:
 
     @staticmethod
     def getindex(obj, index):
-        if index == None:
+        if index is None:
             return obj
         try:
             obj = obj[index]

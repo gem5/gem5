@@ -216,7 +216,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         self, board: AbstractBoard
     ) -> List[DMARequestor]:
         dma_controllers = []
-        for i, port in enumerate(board.get_dma_ports()):
+        for i, port in enumerate(board.get_dma_ports() or []):
             ctrl = DMARequestor(
                 self.ruby_system.network,
                 board.get_cache_line_size(),

@@ -89,6 +89,7 @@ class ELFieInfo:
         """Returns the complete list of targets PcCountPairs. That is, the
         PcCountPairs each region starts with as well as the relevant warmup
         intervals."""
+        assert self._start and self._end
         return [self._start, self._end]
 
     def get_manager(self) -> PcCountTrackerManager:

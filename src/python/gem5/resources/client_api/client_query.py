@@ -41,14 +41,17 @@ class ClientQuery:
         self,
         resource_id: str,
         resource_version: Optional[str] = None,
-        gem5_version: Optional[str] = core.gem5Version,
+        gem5_version: Optional[str] = None,
     ):
+        if gem5_version is None:
+            gem5_version = str(core.gem5Version)
+
         self.resource_id = resource_id
         self.resource_version = resource_version
         # We only need the major and minor version numbers.
         # As on database side, we only store the major and minor
         # version numbers.
-        self.gem5_version = ".".join((gem5_version or "0.0.0").split(".")[:2])
+        self.gem5_version = ".".join((gem5_version).split(".")[:2])
 
     def get_resource_id(self) -> str:
         return self.resource_id
@@ -56,5 +59,5 @@ class ClientQuery:
     def get_resource_version(self) -> Optional[str]:
         return self.resource_version
 
-    def get_gem5_version(self) -> Optional[str]:
+    def get_gem5_version(self) -> str:
         return self.gem5_version

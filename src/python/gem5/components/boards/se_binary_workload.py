@@ -151,16 +151,16 @@ class SEBinaryWorkload:
         if checkpoint:
             if isinstance(checkpoint, Path):
                 self._checkpoint: Path | None = checkpoint
-            elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint = (
-                    Path(checkpoint_path)
-                    if (checkpoint_path := checkpoint.get_local_path())
-                    else None
-                )
+            elif (
+                isinstance(checkpoint, CheckpointResource)
+                and (checkpoint_path := checkpoint.get_local_path())
+                is not None
+            ):
+                self._checkpoint = Path(checkpoint_path)
             else:
                 raise Exception(
                     "The checkpoint must be None, Path, or "
-                    "AbstractResource."
+                    "CheckpointResource."
                 )
 
     def set_se_simpoint_workload(

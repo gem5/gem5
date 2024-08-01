@@ -242,8 +242,8 @@ class LooppointRegion:
     def get_pc_count_pairs(self) -> List[PcCountPair]:
         """Returns the PC count pairs for this LoopPoint region."""
         pc_count_pairs = self.get_simulation().get_pc_count_pairs()
-        if self.get_warmup():
-            pc_count_pairs.extend(self.get_warmup().get_pc_count_pairs())
+        if warmup := self.get_warmup():
+            pc_count_pairs.extend(warmup.get_pc_count_pairs())
         return pc_count_pairs
 
     def update_relatives_counts(self, manager: PcCountTrackerManager) -> None:
@@ -255,8 +255,8 @@ class LooppointRegion:
     def get_start(self) -> PcCountPair:
         """Returns the correct starting PcCountPair for this LoopPoint
         region."""
-        if self.get_warmup():
-            return self.get_warmup().get_start()
+        if warmup := self.get_warmup():
+            return warmup.get_start()
         return self.get_simulation().get_start().get_pc_count_pair()
 
     def to_json(self) -> Dict:
@@ -266,8 +266,8 @@ class LooppointRegion:
             "simulation": self.get_simulation().to_json(),
             "multiplier": self.get_multiplier(),
         }
-        if self.get_warmup():
-            to_return["warmup"] = self.get_warmup().to_json()
+        if warmup := self.get_warmup():
+            to_return["warmup"] = warmup.to_json()
         return to_return
 
 

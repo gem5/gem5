@@ -180,6 +180,12 @@ class KernelDiskWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
+        assert hasattr(self, "workload")
+
+        if TYPE_CHECKING:
+            # make sure mypy knows that self has a workload attribute
+            self.workload = getattr(self, "workload")
+
         # Set the disk device
         self._disk_device = disk_device
 
@@ -241,9 +247,13 @@ class KernelDiskWorkload:
         # Simulator module to setup checkpoints.
         if checkpoint:
             if isinstance(checkpoint, Path):
-                self._checkpoint = checkpoint
-            elif isinstance(checkpoint, CheckpointResource):
-                self._checkpoint = Path(checkpoint.get_local_path())
+                self._checkpoint: Path | None = checkpoint
+            elif (
+                isinstance(checkpoint, CheckpointResource)
+                and (checkpoint_path := checkpoint.get_local_path())
+                is not None
+            ):
+                self._checkpoint = Path(checkpoint_path)
             else:
                 # The checkpoint_dir must be None, Path, Or AbstractResource.
                 raise Exception(
