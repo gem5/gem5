@@ -176,7 +176,7 @@ PIF::notifyRetiredInst(const Addr pc)
                 // Insert the spatial entry into the history buffer and update
                 // the 'iterator' table to point to the new entry
                 historyBuffer.push_back(spatialCompactor);
-                bool is_secure = false;
+                constexpr bool is_secure = false;
                 auto idx_entry = index.findEntry(spatialCompactor.trigger,
                 is_secure);
                 if (idx_entry != nullptr) {

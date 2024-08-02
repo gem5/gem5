@@ -192,7 +192,7 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
 SignaturePath::PatternEntry &
 SignaturePath::getPatternEntry(Addr signature)
 {
-    bool is_secure = false;
+    constexpr bool is_secure = false;
     PatternEntry* pattern_entry = patternTable.findEntry(signature, is_secure);
     if (pattern_entry != nullptr) {
         // Signature found
