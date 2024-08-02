@@ -29,14 +29,14 @@ __all__ = ["multidict"]
 
 from typing import (
     Dict,
-    Self,
+    Optional,
 )
 
 
 class multidict:
-    def __init__(self, parent: Self | None = None, **kwargs):
+    def __init__(self, parent: Optional["multidict"] = None, **kwargs):
         self.local = dict(**kwargs)
-        self.parent: Self | None = parent
+        self.parent: Optional["multidict"] = parent
         self.deleted: Dict = {}
 
     def __str__(self):
