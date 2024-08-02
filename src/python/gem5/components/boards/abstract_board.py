@@ -112,11 +112,9 @@ class AbstractBoard:
         # Set the processor, memory, and cache hierarchy.
         self.processor = processor
         self.memory = memory
-        self._cache_hierarchy: Optional[
-            "AbstractCacheHierarchy"
-        ] = cache_hierarchy
+        self._cache_hierarchy = cache_hierarchy
         if cache_hierarchy is not None:
-            self.cache_hierarchy: "AbstractCacheHierarchy" = cache_hierarchy
+            self.cache_hierarchy = cache_hierarchy
 
         # This variable determines whether the board is to be executed in
         # full-system or syscall-emulation mode. This is set when the workload
