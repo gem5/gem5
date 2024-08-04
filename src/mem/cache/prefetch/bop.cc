@@ -55,6 +55,14 @@ BOP::BOP(const BOPPrefetcherParams &p)
     if (!isPowerOf2(blkSize)) {
         fatal("%s: cache line size is not power of 2\n", name());
     }
+    if (p.negative_offsets_enable && (p.offset_list_size % 2 != 0)) {
+        fatal("%s: negative offsets enabled with odd offset list size\n",
+              name());
+    }
+    if (p.degree <= 0) {
+        fatal("%s: prefetch degree must be strictly greater than zero\n",
+              name());
+    }
 
     rrLeft.resize(rrEntries);
     rrRight.resize(rrEntries);
@@ -113,10 +121,10 @@ BOP::delayQueueEventWrapper()
 unsigned int
 BOP::index(Addr addr, unsigned int way) const
 {
-    Addr lrrEntries = floorLog2(rrEntries);
+    Addr log_rr_entries = floorLog2(rrEntries);
     Addr lineaddr = addr >> lBlkSize;
-    Addr hash = lineaddr ^ (lineaddr >> (lrrEntries << way));
-    hash &= ((1ULL << lrrEntries) - 1);
+    Addr hash = lineaddr ^ (lineaddr >> (log_rr_entries << way));
+    hash &= ((1ULL << log_rr_entries) - 1);
     return hash % rrEntries;
 }
 
@@ -184,16 +192,16 @@ BOP::testRR(Addr addr) const
 }
 
 void
-BOP::bestOffsetLearning(Addr addr)
+BOP::bestOffsetLearning(Addr addr_tag)
 {
     Addr offset_tag = (*offsetsListIterator).first;
 
-    // Compute the lookup tag for the RR table. addr is a tag value, not an
-    // address. Therefore, subtracting the offset from addr may result in
+    // Compute the lookup tag for the RR table. Since addr_tag is a tag value,
+    // and not an address, subtracting the offset from addr_tag may result in
     // integer underflow. Therefore, we first convert the tag back to address
     // by right shifting it, and then subtract the offset. This gives us a
     // new lookup address which we use to compute the lookup tag
-    Addr lookup_tag = tag((addr << lBlkSize) - (offset_tag << lBlkSize));
+    Addr lookup_tag = tag((addr_tag << lBlkSize) - (offset_tag << lBlkSize));
 
     // There was a hit in the RR table, increment the score for this offset
     if (testRR(lookup_tag)) {
@@ -218,23 +226,26 @@ BOP::bestOffsetLearning(Addr addr)
     }
 
     // Check if its time to re-calculate the best offset
-    if ((bestScore >= scoreMax) || (round >= roundMax))
-    {
+    if ((bestScore >= scoreMax) || (round >= roundMax)) {
+        round = 0;
+
+        // If the current best score (bestScore) has exceed the threshold to
+        // enable prefetching (badScore), reset the learning structures and
+        // enable prefetch generation
+        if (bestScore > badScore)  {
+            bestOffset = phaseBestOffset;
             round = 0;
-            if (bestScore > badScore)
-            {
-                bestOffset = phaseBestOffset;
-                round = 0;
-                bestScore = 0;
-                phaseBestOffset = 0;
-                resetScores();
-                issuePrefetchRequests = true;
-            }
-            else
-                issuePrefetchRequests = false;
-            resetScores();
             bestScore = 0;
             phaseBestOffset = 0;
+            resetScores();
+            issuePrefetchRequests = true;
+        }
+        else {
+            issuePrefetchRequests = false;
+        }
+        resetScores();
+        bestScore = 0;
+        phaseBestOffset = 0;
     }
 }
 
@@ -257,8 +268,8 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
     bestOffsetLearning(addr);
 
     if (issuePrefetchRequests) {
-        for (int d = 1; d <= degree; d++) {
-            Addr prefetch_addr = addr + ((d * bestOffset) << lBlkSize);
+        for (int i = 1; i <= degree; i++) {
+            Addr prefetch_addr = addr + ((i * bestOffset) << lBlkSize);
             addresses.push_back(AddrPriority(prefetch_addr, 0));
             DPRINTF(HWPrefetch, "Generated prefetch %#lx\n", prefetch_addr);
         }
@@ -270,7 +281,7 @@ BOP::notifyFill(const CacheAccessProbeArg &arg)
 {
     const PacketPtr& pkt = arg.pkt;
 
-    // Only insert into the RR right way if it's the pkt is a HWP
+    // Only insert into the RR right way if it's the pkt is a hardware prefetch
     if (!pkt->cmd.isHWPrefetch()) return;
 
     Addr addr = pkt->getAddr();

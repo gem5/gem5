@@ -153,7 +153,8 @@ class BOP : public Queued
         void notifyFill(const CacheAccessProbeArg &arg) override;
 
     public:
-    	unsigned int degree;
+        /** The prefetch degree, i.e. the number of prefetches to generate */
+        unsigned int degree;
 
         BOP(const BOPPrefetcherParams &p);
         ~BOP() = default;
