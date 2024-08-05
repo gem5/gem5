@@ -63,7 +63,7 @@ class RandomGenerator(AbstractGenerator):
         generator cores that could replace the processing cores in a board.
 
         :param num_cores: The number of linear generator cores to create.
-        :param duration: The number of ticks for the generator to generate
+        :param duration: The duration of time for which the generator generates
                          traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each

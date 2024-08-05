@@ -60,7 +60,7 @@ class LinearGeneratorCore(AbstractGeneratorCore):
         a linear (stream) traffic specific to the parameters below. This core
         uses PyTrafficGen to create and inject the synthetic traffic.
 
-        :param duration: The number of ticks for the generator core to generate
+        :param duration: The duration of time for which the generator core generates
                          traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
