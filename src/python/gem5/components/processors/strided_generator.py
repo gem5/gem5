@@ -65,6 +65,33 @@ class StridedGenerator(AbstractGenerator):
                 data_limit=data_limit,
             )
         )
+        """The strided generator
+
+        This class defines an external interface to create a list of strided
+        generator cores that could replace the processing cores in a board.
+
+        :param duration: The duration of time for which the generator generates
+                         traffic.
+        :param rate: The rate at which the data accesses are demanded.
+        :param block_size: The number of bytes to be read/written with each
+                           request.
+        :param superblock_size: The number of bytes to read/write contiguously
+                                per stride. Must be a multiple of block_size.
+        :param stride_size: The number of bytes from the beginning of one superblock
+                            to the beginning of the next superblock.
+                            Must be a multiple of superblock_size.
+        :param min_addr: The lower bound of the address range the generator
+                         will read/write from/to.
+        :param max_addr: The upper bound of the address range the generator
+                         will read/write from/to.
+        :param offset: The starting offset in bytes from min_addr at which
+                       the generator reads/writes. Must be a multiple of superblock_size.
+        :param rd_perc: The percentage of read requests among all the generated
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
+        :param data_limit: The amount of data in bytes to read/write by the
+                           generator before stopping generation.
+        """
 
     def _create_cores(
         self,
