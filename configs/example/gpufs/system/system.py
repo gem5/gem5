@@ -332,9 +332,9 @@ def makeGpuFSSystem(args):
     token_port_idx = 0
     for i in range(len(system.ruby._cpu_ports)):
         if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
-            system.cpu[shader_idx].CUs[
-                token_port_idx
-            ].gmTokenPort = system.ruby._cpu_ports[i].gmTokenPort
+            system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = (
+                system.ruby._cpu_ports[i].gmTokenPort
+            )
             token_port_idx += 1
 
     wavefront_size = args.wf_size
@@ -342,9 +342,9 @@ def makeGpuFSSystem(args):
         # The pipeline issues wavefront_size number of uncoalesced requests
         # in one GPU issue cycle. Hence wavefront_size mem ports.
         for j in range(wavefront_size):
-            system.cpu[shader_idx].CUs[i].memory_port[
-                j
-            ] = system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
+            system.cpu[shader_idx].CUs[i].memory_port[j] = (
+                system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
+            )
         gpu_port_idx += 1
 
     for i in range(args.num_compute_units):
