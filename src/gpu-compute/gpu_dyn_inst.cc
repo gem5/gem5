@@ -314,7 +314,7 @@ void
 GPUDynInst::completeAcc(GPUDynInstPtr gpuDynInst)
 {
     DPRINTF(GPUMem, "CU%d: WF[%d][%d]: mempacket status bitvector="
-            "%#x\n complete",
+            "%#x complete\n",
             cu->cu_id, simdId, wfSlotId, exec_mask);
 
     _staticInst->completeAcc(gpuDynInst);
