@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +56,15 @@ void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
 void m5_reset_stats(uint64_t ns_delay, uint64_t ns_period);
 void m5_dump_stats(uint64_t ns_delay, uint64_t ns_period);
 void m5_dump_reset_stats(uint64_t ns_delay, uint64_t ns_period);
+/**
+ * @brief Can be used to turn on / off debug tracing from workload.
+ * To turn off debug tracing at the beginning, use `--debug-start=-1` as
+ * CLI option.
+ *
+ * @param enable 0 for disabling debug tracing, otherwise it is enabled
+ * @return Nothing
+ */
+void m5_configure_tracing(uint64_t enable);
 uint64_t m5_read_file(void *buffer, uint64_t len, uint64_t offset);
 uint64_t m5_write_file(void *buffer, uint64_t len, uint64_t offset,
                        const char *filename);

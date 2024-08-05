@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +61,7 @@
 #define M5OP_DUMP_STATS         0x41
 #define M5OP_DUMP_RESET_STATS   0x42
 #define M5OP_CHECKPOINT         0x43
+#define M5OP_CONFIGURE_TRACING  0x4E
 #define M5OP_WRITE_FILE         0x4F
 #define M5OP_READ_FILE          0x50
 #define M5OP_DEBUG_BREAK        0x51
@@ -98,6 +100,7 @@
     M5OP(m5_dump_stats, M5OP_DUMP_STATS)                        \
     M5OP(m5_dump_reset_stats, M5OP_DUMP_RESET_STATS)            \
     M5OP(m5_checkpoint, M5OP_CHECKPOINT)                        \
+    M5OP(m5_configure_tracing, M5OP_CONFIGURE_TRACING)          \
     M5OP(m5_write_file, M5OP_WRITE_FILE)                        \
     M5OP(m5_read_file, M5OP_READ_FILE)                          \
     M5OP(m5_debug_break, M5OP_DEBUG_BREAK)                      \

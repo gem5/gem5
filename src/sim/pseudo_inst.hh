@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,6 +90,7 @@ void quiesceSkip(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);
+void configureTracing(ThreadContext *tc, uint64_t enable);
 uint64_t readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
     uint64_t offset);
 uint64_t writefile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
@@ -200,6 +202,10 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
 
       case M5OP_CHECKPOINT:
         invokeSimcall<ABI>(tc, m5checkpoint);
+        return true;
+
+      case M5OP_CONFIGURE_TRACING:
+        invokeSimcall<ABI>(tc, configureTracing);
         return true;
 
       case M5OP_WRITE_FILE:

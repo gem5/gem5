@@ -11,6 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2024 University of Rostock
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -286,7 +287,8 @@ def parse_options():
         "--debug-start",
         metavar="TICK",
         type="int",
-        help="Start debug output at TICK",
+        help="If >= 0, start debug output at TICK. If -1, debug tracing is "
+        "disabled at the beginning",
     )
     option(
         "--debug-end",
@@ -600,8 +602,11 @@ def main():
 
     if options.debug_start:
         _check_tracing()
-        e = event.create(trace.enable, event.Event.Debug_Enable_Pri)
-        event.mainq.schedule(e, options.debug_start)
+        if options.debug_start == -1:
+            trace.disable()
+        else:
+            e = event.create(trace.enable, event.Event.Debug_Enable_Pri)
+            event.mainq.schedule(e, options.debug_start)
     else:
         trace.enable()
 

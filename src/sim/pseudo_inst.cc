@@ -14,6 +14,7 @@
  *
  * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -364,6 +365,17 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
         Tick when = curTick() + delay * sim_clock::as_int::ns;
         Tick repeat = period * sim_clock::as_int::ns;
         exitSimLoop("checkpoint", 0, when, repeat);
+    }
+}
+
+void
+configureTracing(ThreadContext *tc, uint64_t enable)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::configureTracing(%#x)\n", enable);
+    if (enable) {
+        gem5::trace::enable();
+    } else {
+        gem5::trace::disable();
     }
 }
 
