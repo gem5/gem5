@@ -108,7 +108,8 @@ class RiscvISA(BaseISA):
         ELEN in Ch. 2 of RISC-V vector spec",
     )
     privilege_mode_set = Param.PrivilegeModeSet(
-        "MHSU",  # MHSU to enable hypervisor (H-extension)
+        "MSU",  # set MHSU to enable hypervisor (H-extension)
+        # O3 CPU is not supported in MHSU currently
         # also change isa.cc:readMiscReg for MIDELEG
         # if working with old bbl bootloader
         "The combination of privilege modes \
