@@ -101,7 +101,7 @@ StridedGen::getNextPacket()
 
     // If we have reached the end of the address space, reset the
     // address to the start of the range
-    if (nextAddr > endAddr) {
+    if (nextAddr >= endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
                 "the range\n");
         nextAddr = startAddr + offset;
