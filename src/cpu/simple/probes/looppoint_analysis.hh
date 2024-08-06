@@ -55,9 +55,26 @@ class LooppointAnalysis : public ProbeListenerObject
 
     virtual void regProbeListeners();
 
+    /**
+     * This function is called when a the probe point notifies the
+     * LoopPointAnalysis probe listener.
+     *
+     * @param inst_pair A pair that contains the SimpleThread pointer and the
+     * StaticInstPtr of the commited instruction from the atomic CPU.
+     */
     void checkPc(const std::pair<SimpleThread*, StaticInstPtr>& inst_pair);
 
+    /**
+     * When this function is called, it sets the class variable ifListening to
+     * true, then calls the regProbeListeners() function to register the probe
+     * listeners to the probe points,
+     */
     void startListening();
+
+    /**
+     * When this function is called, it sets the class variable ifListening to
+     * false, then removes the probe listeners from the probe points.
+     */
     void stopListening();
 
     typedef ProbeListenerArg<LooppointAnalysis,
@@ -65,16 +82,53 @@ class LooppointAnalysis : public ProbeListenerObject
 
   private:
 
+    /**
+     * This is the pointer to the LooppointAnalysisManager SimObject that is
+     * managing all the LooppointAnalysis ProbeListenerObjects.
+     */
     LooppointAnalysisManager *lpaManager;
+
+    /**
+     * This is the valid address range for the basic block that the
+     * LooppointAnalysis considers analyzing. Any basic block that is not in
+     * this range will not be analyzed, i.e. counting.
+     */
     AddrRange bbValidAddrRange;
+
+    /**
+     * We only consider the loops within this address range as candidates for
+     * marking the execution points.
+     */
     AddrRange markerValidAddrRange;
+
+    /**
+     * Any basic block that is in this range will not be analyzed.
+     */
     std::vector<AddrRange> bbExcludedAddrRanges;
+
+    /**
+     * Only when this is set to true, the LooppointAnalysis will listen to the
+     * probe points.
+     */
     bool ifListening;
 
+    /**
+     * The counter for the number of instructions within the current basic
+     * block.
+     */
     uint64_t bbInstCounter;
 
+    /**
+     * The basic block vector for the current core that the LooppointAnalysis
+     * is attached to.
+     */
     std::unordered_map<Addr, uint64_t> localBBV;
 
+    /**
+     * This function updates the localBBV for the input PC's basic block.
+     * Specifically, it increments the count of the input PC's basic block in
+     * the localBBV.
+     */
     void updateLocalBBV(const Addr pc);
 
   public:
@@ -94,22 +148,86 @@ class LooppointAnalysisManager: public SimObject
   public:
     LooppointAnalysisManager(const LooppointAnalysisManagerParams &params);
 
-    void countPc(const Addr pc);
-    void updateBBV(const Addr pc);
+    /**
+     * This function is called by the LooppointAnalysis probe listener when it
+     * finds a valid backward branch that can be used as a marker.
+     * Specifically, it increments the backwardBranchCounter for the input PC.
+     */
+    void countBackwardBranch(const Addr pc);
+
+    /**
+     * This function is called by the LooppointAnalysis probe listener when it
+     * reaches the branch instruction for a valid basic block.
+     * Specifically, it increments the globalBBV for the input PC.
+     */
+    void updateGlobalBBV(const Addr pc);
 
   private:
-    std::unordered_map<Addr, uint64_t> loopCounter;
+    /**
+     * This counter is for the valid backward branches that we consider as
+     * candidates for marking the execution points.
+     * The key is the Program Counter address of the backward branch, and the
+     * value is the number of times the backward branch is executed.
+     */
+    std::unordered_map<Addr, uint64_t> backwardBranchCounter;
+
+    /**
+     * This is the global basic block vector that contains the count of each
+     * basic block that is executed.
+     * The key is the Program Counter address of the basic block's branch
+     * instruction, and the value is the number of times the basic block is
+     * executed.
+     */
     std::unordered_map<Addr, uint64_t> globalBBV;
+
+    /**
+     * This map stores the number of instructions in each basic block.
+     * The key is the Program Counter address of the basic block's branch
+     * instruction, and the value is the number of instructions in the basic
+     * block.
+     */
     std::unordered_map<Addr, uint64_t> bbInstMap;
 
+    /**
+     * This variable stores the number of instructions that we used to define
+     * a region. For example, if the regionLength is 100, then every time when
+     * there are 100 valid instructions executed globally through all the
+     * cores, we will consider that as a region.
+     */
     uint64_t regionLength;
+
+    /**
+     * This is a counter for the globally executed instructions. We use this to
+     * compare with the regionLength to determine if we reach the end of a
+     * region.
+     */
     uint64_t globalInstCounter;
 
-    Addr mostRecentLoopPC;
+    /**
+     * This variable stores the Program Counter address of the most recent
+     * valid backward branch that we consider as a marker.
+     */
+    Addr mostRecentBackwardBranchPC;
 
+    /**
+     * This set stores the Program Counter addresses of the valid backward
+     * branches.
+     */
     std::unordered_set<Addr> backwardBranchPC;
+    /**
+     * This set stores the Program Counter addresses of the valid not control
+     * instructions.
+     */
     std::unordered_set<Addr> validNotControlPC;
+    /**
+     * This set stores the Program Counter addresses of the valid control
+     * instructions.
+     */
     std::unordered_set<Addr> validControlPC;
+    /**
+     * This set stores the Program Counter addresses of the encountered
+     * instructions.
+     */
     std::unordered_set<Addr> encounteredPC;
 
   public:
@@ -186,19 +304,19 @@ class LooppointAnalysisManager: public SimObject
         globalInstCounter++;
     };
 
-    Addr getMostRecentLoopPC() const
+    Addr getMostRecentBackwardBranchPC() const
     {
-        return mostRecentLoopPC;
+        return mostRecentBackwardBranchPC;
     };
 
-    std::unordered_map<Addr, uint64_t> getLoopCounter() const
+    std::unordered_map<Addr, uint64_t> getBackwardBranchCounter() const
     {
-        return loopCounter;
+        return backwardBranchCounter;
     };
 
-    uint64_t getMostRecentLoopCount() const
+    uint64_t getMostRecentBackwardBranchCount() const
     {
-        return loopCounter.find(mostRecentLoopPC)->second;
+        return backwardBranchCounter.find(mostRecentBackwardBranchPC)->second;
     };
 };
 
