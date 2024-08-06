@@ -32,7 +32,7 @@ Then run the simulations in parallel with the `gem5` binary using  `-m gem5.util
 Here is an example of how to use MultiSim:
 
 ```python
-import gem5.util.multisim as multisim
+import gem5.utils.multisim as multisim
 
 # Set the maximum number of processes to run in parallel
 multisim.set_num_processes(4)
