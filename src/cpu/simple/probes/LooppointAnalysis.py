@@ -40,7 +40,7 @@ class LooppointAnalysis(ProbeListenerObject):
     """
 
     type = "LooppointAnalysis"
-    cxx_header = "cpu/simple/probes/LooppointAnalysis.hh"
+    cxx_header = "cpu/simple/probes/looppoint_analysis.hh"
     cxx_class = "gem5::LooppointAnalysis"
 
     cxx_exports = [
@@ -74,7 +74,7 @@ class LooppointAnalysisManager(SimObject):
     """
 
     type = "LooppointAnalysisManager"
-    cxx_header = "cpu/simple/probes/LooppointAnalysis.hh"
+    cxx_header = "cpu/simple/probes/looppoint_analysis.hh"
     cxx_class = "gem5::LooppointAnalysisManager"
 
     cxx_exports = [
