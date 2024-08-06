@@ -31,3 +31,10 @@ Import('*')
 if env['CONF']['BUILD_ISA']:
     SimObject('SimPoint.py', sim_objects=['SimPoint'])
     Source('simpoint.cc')
+
+    SimObject(
+        'LooppointAnalysis.py',
+        sim_objects=['LooppointAnalysis','LooppointAnalysisManager']
+    )
+    Source('looppoint_analysis.cc')
+    DebugFlag("LooppointAnalysis")
