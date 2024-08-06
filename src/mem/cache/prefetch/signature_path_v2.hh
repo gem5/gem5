@@ -66,7 +66,7 @@ class SignaturePathV2 : public SignaturePath
                                delta(0) {}
     };
     /** Global History Register */
-    AssociativeCache<GlobalHistoryEntry> globalHistoryRegister;
+    AssociativeSet<GlobalHistoryEntry> globalHistoryRegister;
 
     double calculateLookaheadConfidence(PatternEntry const &sig,
             PatternStrideEntry const &lookahead) const override;

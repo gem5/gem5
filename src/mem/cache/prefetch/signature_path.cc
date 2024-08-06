@@ -192,7 +192,8 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
 SignaturePath::PatternEntry &
 SignaturePath::getPatternEntry(Addr signature)
 {
-    PatternEntry* pattern_entry = patternTable.findEntry(signature);
+    constexpr bool is_secure = false;
+    PatternEntry* pattern_entry = patternTable.findEntry(signature, is_secure);
     if (pattern_entry != nullptr) {
         // Signature found
         patternTable.accessEntry(pattern_entry);
@@ -201,7 +202,7 @@ SignaturePath::getPatternEntry(Addr signature)
         pattern_entry = patternTable.findVictim(signature);
         assert(pattern_entry != nullptr);
 
-        patternTable.insertEntry(signature, pattern_entry);
+        patternTable.insertEntry(signature, is_secure, pattern_entry);
     }
     return *pattern_entry;
 }
@@ -277,7 +278,7 @@ SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
         //   confidence, these are prefetch candidates
         // - select the entry with the highest counter as the "lookahead"
         PatternEntry *current_pattern_entry =
-            patternTable.findEntry(current_signature);
+            patternTable.findEntry(current_signature, is_secure);
         PatternStrideEntry const *lookahead = nullptr;
         if (current_pattern_entry != nullptr) {
             unsigned long max_counter = 0;

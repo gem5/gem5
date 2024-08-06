@@ -85,7 +85,7 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
         }
     } else {
         // if misses are not being tracked, attempt to detect stream accesses
-        PrefetchTableEntry *pt_entry = prefetchTable.findEntry(pc);
+        PrefetchTableEntry *pt_entry = prefetchTable.findEntry(pc, is_secure);
         if (pt_entry != nullptr) {
             prefetchTable.accessEntry(pt_entry);
 
@@ -159,7 +159,7 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
         } else {
             pt_entry = prefetchTable.findVictim(pc);
             assert(pt_entry != nullptr);
-            prefetchTable.insertEntry(pc, pt_entry);
+            prefetchTable.insertEntry(pc, pt_entry-> secure, pt_entry);
             pt_entry->address = addr;
             pt_entry->secure = is_secure;
         }
