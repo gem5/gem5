@@ -160,7 +160,7 @@ target "clang-compilers-base-20-04" {
   context = "ubuntu-20.04_clang-version"
   dockerfile = "Dockerfile"
   matrix = {
-    ver = ["7", "8", "9", "10", "11", "12"]
+    ver = ["10", "11", "12"]
   }
   args = {
     version = ver
