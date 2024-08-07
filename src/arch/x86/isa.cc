@@ -201,7 +201,7 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 	mcgCap.count = 8;
 	dest->setMiscReg(misc_reg::McgCap, mcgCap);
 
-	
+
     dest->getMMUPtr()->flushAll();
 }
 
