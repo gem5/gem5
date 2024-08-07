@@ -87,13 +87,17 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
 
     if (lpaManager->ifEncountered(pc))
     {
+        // if we have already encountered this pc, we should already
+        // categorized it
         if (lpaManager->ifValidNotControl(pc))
         {
-            lpaManager->incrementGlobalInstCounter();
+            // if it is categorized as a valid not control instruction
             bbInstCounter++;
+            lpaManager->incrementGlobalInstCounter();
         }
         else if (lpaManager->ifValidControl(pc))
         {
+            // if it is categorized as a valid control instruction
             bbInstCounter ++;
             lpaManager->incrementGlobalInstCounter();
             lpaManager->updateBBInstMap(pc, bbInstCounter);
@@ -102,27 +106,33 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
             bbInstCounter = 0;
             if (lpaManager->ifBackwardBranch(pc))
             {
+                // if it is categorized as a backward branch
                 lpaManager->countBackwardBranch(pc);
             }
         }
         return;
     }
 
-    lpaManager->updateEncountered(pc);
-
-        if (inst->isMicroop() && !inst->isLastMicroop())
+    if (inst->isMicroop() && !inst->isLastMicroop())
     {
+        // ignore this if it is a microop
         return;
     }
 
+    lpaManager->updateEncountered(pc);
+    // if we have not encountered this pc before, we should now update it to
+    // the corresponding category
+
     if (!thread->getIsaPtr()->inUserMode())
     {
+        // ignore this if it is not in user mode
         return;
     }
 
     if (bbValidAddrRange.end() > 0 &&
         (pc < bbValidAddrRange.start() || pc > bbValidAddrRange.end()))
     {
+        // ignore this if it is not in the valid address range
         return;
     }
 
@@ -133,6 +143,7 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
             if (pc >= bbExcludedAddrRanges[i].start() &&
                 pc <= bbExcludedAddrRanges[i].end())
             {
+                // ignore this if it is in the excluded address range
                 return;
             }
         }
@@ -143,6 +154,8 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
 
     if (inst->isControl())
     {
+        // if it is a control instruction, we see it as the end of a basic
+        // block
         lpaManager->updateValidControl(pc);
         lpaManager->updateBBInstMap(pc, bbInstCounter);
         updateLocalBBV(pc);
@@ -153,6 +166,8 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
          (pc < markerValidAddrRange.start() || pc > markerValidAddrRange.end())
         )
         {
+            // if it is not in the marker valid address range, we do not
+            // consider it as a possible marker used loop branch instruction
             return;
         }
 
@@ -231,6 +246,10 @@ LooppointAnalysisManager::countBackwardBranch(const Addr pc)
 
     if (globalInstCounter >= regionLength)
     {
+        // note that we do not reset any counter here but only raise an
+        // exit event.
+        // we can reset the counters through the simulation script using
+        // the helper functions in the LooppointAnalysisManager class
         exitSimLoopNow("simpoint starting point found");
     }
 }
