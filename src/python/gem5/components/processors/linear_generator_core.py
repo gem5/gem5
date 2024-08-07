@@ -61,7 +61,8 @@ class LinearGeneratorCore(AbstractGeneratorCore):
         uses PyTrafficGen to create and inject the synthetic traffic.
 
         :param duration: The duration of time for which the generator core generates
-                         traffic.
+                         traffic. Must be a string containing a positive number
+                         and some unit. For example, "1ms".
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
                            request.
@@ -73,7 +74,8 @@ class LinearGeneratorCore(AbstractGeneratorCore):
                         requests. The write percentage would be equal to
                         ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-                           generator before stopping generation.
+                           generator before stopping generation. If set to 0,
+                           there will be no data limit.
         """
         self.generator = PyTrafficGen()
         self._duration = duration
