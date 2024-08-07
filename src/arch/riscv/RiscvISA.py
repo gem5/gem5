@@ -116,7 +116,7 @@ class RiscvISA(BaseISA):
     enable_Zicboz_fs = Param.Bool(True, "Enable Zicboz extension in FS mode")
 
     wfi_resume_on_pending = Param.Bool(
-        True,
+        False,
         "If wfi_resume_on_pending is set to True, the hart will resume "
         "execution when interrupt becomes pending. The local enabled status "
         "is not considered.\n"
