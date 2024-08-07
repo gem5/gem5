@@ -49,7 +49,7 @@ LooppointAnalysis::LooppointAnalysis(const LooppointAnalysisParams &params)
                 params.bb_excluded_addr_ranges[i].start(),
                 params.bb_excluded_addr_ranges[i].end()
             )
-        )
+        );
         DPRINTF(LooppointAnalysis, "Excluding address range: (%li, %li)\n",
                 params.bb_excluded_addr_ranges[i].start(),
                 params.bb_excluded_addr_ranges[i].end()
@@ -180,7 +180,7 @@ LooppointAnalysis::regProbeListeners()
 {
     if (ifListening)
     {
-        listeners.push_back(new LooppointAnalysisListener(this,
+        listeners.push_back(new looppointAnalysisListener(this,
                             "Commit", &LooppointAnalysis::checkPc));
         DPRINTF(LooppointAnalysis, "Start listening to the RetiredInstsPC\n");
     }
