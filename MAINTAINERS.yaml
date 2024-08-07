@@ -113,11 +113,13 @@ dev-hsa:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
+        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 dev-amdgpu:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
+        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 dev-virtio:
     status: maintained
@@ -154,6 +156,7 @@ gpu-compute:
     status: maintained
     maintainers:
         - Matt Poremba <matthew.poremba@amd.com>
+        - Matt Sinclair <sinclair@cs.wisc.edu>
 
 learning-gem5:
     desc: >-

@@ -81,7 +81,7 @@ StridedGen::getNextPacket()
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
 
-    DPRINTF(TrafficGen, "StridedGen::getNextPacket: %c to addr %x, size %d\n",
+    DPRINTF(TrafficGen, "StridedGen::getNextPacket: %c to addr %#x, size %d\n",
             isRead ? 'r' : 'w', nextAddr, blocksize);
 
     // Add the amount of data manipulated to the total

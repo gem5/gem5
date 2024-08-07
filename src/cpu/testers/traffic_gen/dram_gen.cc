@@ -124,7 +124,7 @@ DramGen::getNextPacket()
         }
     }
 
-    DPRINTF(TrafficGen, "DramGen::getNextPacket: %c to addr %x, "
+    DPRINTF(TrafficGen, "DramGen::getNextPacket: %c to addr %#x, "
             "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
             isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 

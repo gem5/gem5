@@ -155,7 +155,7 @@ class STeMS : public Queued
     /** Active Generation Table (AGT) */
     AssociativeSet<ActiveGenerationTableEntry> activeGenerationTable;
     /** Pattern Sequence Table (PST) */
-    AssociativeCache<ActiveGenerationTableEntry> patternSequenceTable;
+    AssociativeSet<ActiveGenerationTableEntry> patternSequenceTable;
 
     /** Data type of the Region Miss Order Buffer entry */
     struct RegionMissOrderBufferEntry

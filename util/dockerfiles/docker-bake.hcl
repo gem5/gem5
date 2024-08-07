@@ -32,7 +32,7 @@ variable "IMAGE_URI" {
 }
 
 variable "TAG" {
-  default = "latest"
+  default = "bootcamp-2024"
 }
 
 # A group of targets to be built. Note: groups can contain other groups.
@@ -160,7 +160,7 @@ target "clang-compilers-base-20-04" {
   context = "ubuntu-20.04_clang-version"
   dockerfile = "Dockerfile"
   matrix = {
-    ver = ["7", "8", "9", "10", "11", "12"]
+    ver = ["10", "11", "12"]
   }
   args = {
     version = ver
