@@ -227,9 +227,11 @@ class SDMAEngine : public DmaVirtDevice
     void write(SDMAQueue *q, sdmaWrite *pkt);
     void writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer);
     void writeDone(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer);
+    void writeCleanup(uint32_t *dmaBuffer);
     void copy(SDMAQueue *q, sdmaCopy *pkt);
     void copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer);
     void copyDone(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer);
+    void copyCleanup(uint8_t *dmaBuffer);
     void indirectBuffer(SDMAQueue *q, sdmaIndirectBuffer *pkt);
     void fence(SDMAQueue *q, sdmaFence *pkt);
     void fenceDone(SDMAQueue *q, sdmaFence *pkt);
@@ -243,6 +245,7 @@ class SDMAEngine : public DmaVirtDevice
     bool pollRegMemFunc(uint32_t value, uint32_t reference, uint32_t func);
     void ptePde(SDMAQueue *q, sdmaPtePde *pkt);
     void ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer);
+    void ptePdeCleanup(uint64_t *dmaBuffer);
     void atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt);
     void atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
                     uint64_t *dmaBuffer);
