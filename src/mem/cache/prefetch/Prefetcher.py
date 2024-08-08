@@ -228,6 +228,38 @@ class TaggedPrefetcher(QueuedPrefetcher):
     degree = Param.Int(2, "Number of prefetches to generate")
 
 
+class IpcpPrefetcher(QueuedPrefetcher):
+    # Paper: https://doi.org/10.1109/ISCA45697.2020.00021
+    # CS and CPLX prefetcher
+    type = "IpcpPrefetcher"
+    cxx_class = "gem5::prefetch::Ipcp"
+    cxx_header = "mem/cache/prefetch/ipcp.hh"
+    ip_entries = Param.Unsigned(64, "Number of IPs to track")
+    cspt_entries = Param.Unsigned(64, "Number of complex signature to track")
+    ip_tag_bits = Param.Unsigned(9, "Number of IP bits to use as Tag")
+    last_vpage_bits = Param.Unsigned(
+        2, "Number of bits require to track (adjacent) page change"
+    )
+    signature_bits = Param.Unsigned(7, "Number of bits to record strides")
+    degree = Param.Int(3, "Initial degree for CS and CPLX class")
+    cs_on = Param.Bool(True, "Enable Constant stride IP prefetcher")
+    cplx_on = Param.Bool(True, "Enable Complex stride IP prefetcher")
+
+    # GS prefetcher
+    page_on = Param.Bool(True, "Enable Page prefetcher")
+    page_degree = Param.Int(6, "Number of prefetches to generate")
+    rm_size = Param.Unsigned(8, "Number of spatial region to monitor")
+    region_size = Param.Unsigned(2048, "Spatial region size")
+
+    # NL
+    nl_on = Param.Bool(True, "Enable next line prefetcher")
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_access = True
+
+
 class IndirectMemoryPrefetcher(QueuedPrefetcher):
     type = "IndirectMemoryPrefetcher"
     cxx_class = "gem5::prefetch::IndirectMemory"
