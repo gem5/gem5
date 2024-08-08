@@ -135,8 +135,7 @@ FpRegRegRegCondOp::generateDisassembly(
     const
 {
     std::stringstream ss;
-    printMnemonic(ss);
-    printCondition(ss, cond);
+    printMnemonic(ss, "", /*withPred=*/false, /*withCond64=*/true, cond);
     printFloatReg(ss, dest);
     ss << ", ";
     printFloatReg(ss, op1);
