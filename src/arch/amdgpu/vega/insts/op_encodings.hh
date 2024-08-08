@@ -1309,8 +1309,12 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
-                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+                // Store with more than one dword need to be swizzled and
+                // should use the template<int N> version of this method.
+                static_assert(sizeof(T) <= 4);
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -1328,9 +1332,10 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
-                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+                initScratchReqHelper<N>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -1351,8 +1356,12 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
-                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+                // Store with more than one dword need to be swizzled and
+                // should use the template<int N> version of this method.
+                static_assert(sizeof(T) <= 4);
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -1370,9 +1379,11 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
-                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+                swizzleData<N>(gpuDynInst);
+                initScratchReqHelper<N>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -1481,7 +1492,7 @@ namespace VegaISA
                     if (gpuDynInst->exec_mask[lane]) {
                         swizzleOffset += instData.SVE ? voffset[lane] : 0;
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzle(swizzleOffset, lane, elemSize);
+                            + swizzleAddr(swizzleOffset, lane, elemSize);
                     }
                 }
             } else {
@@ -1509,7 +1520,7 @@ namespace VegaISA
                             instData.SVE ? voffset[lane] : 0;
 
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzle(vgpr_offset + offset, lane, elemSize);
+                            + swizzleAddr(vgpr_offset+offset, lane, elemSize);
                     }
                 }
             }
@@ -1616,6 +1627,34 @@ namespace VegaISA
             }
         }
 
+        // Swizzle memory such that dwords from each lane are interleaved.
+        // For example, a global_store_dwordx2 where every lane has two dwords
+        // A and B would write A B A B, A B ... A B in contiguous memory while
+        // scratch should write A A ... A B B ... B for 64 x2 total dwords.
+        // Only applies to >1 dword.
+        template<int N>
+        void
+        swizzleData(GPUDynInstPtr gpuDynInst)
+        {
+            static_assert(N > 1);
+
+            uint32_t data[N * NumVecElemPerVecReg];
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                for (int dword = 0; dword < N; ++dword) {
+                    data[dword * NumVecElemPerVecReg + lane] =
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->d_data))[lane * N + dword];
+                }
+            }
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                for (int dword = 0; dword < N; ++dword) {
+                    (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * N + dword] =
+                            data[lane * N + dword];
+                }
+            }
+        }
+
         bool
         vgprIsOffset()
         {
@@ -1662,7 +1701,7 @@ namespace VegaISA
         }
 
         VecElemU32
-        swizzle(VecElemU32 offset, int lane, int elem_size)
+        swizzleAddr(VecElemU32 offset, int lane, int elem_size)
         {
             // This is not described in the spec. We use the swizzle from
             // buffer memory instructions and fix the stride to 4. Multiply
