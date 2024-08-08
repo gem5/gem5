@@ -194,6 +194,7 @@ namespace ArmISA
 
         Bitfield<15>     ltopcode15;
         Bitfield<11, 8>  ltopcode11_8;
+        Bitfield<11>     ltopcode11;
         Bitfield<7,  6>  ltopcode7_6;
         Bitfield<7,  4>  ltopcode7_4;
         Bitfield<4>      ltopcode4;

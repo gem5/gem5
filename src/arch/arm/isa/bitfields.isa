@@ -161,6 +161,7 @@ def bitfield HTS            hts;
 
 def bitfield LTOPCODE_15    ltopcode15;
 def bitfield LTOPCODE_11_8  ltopcode11_8;
+def bitfield LTOPCODE_11    ltopcode11;
 def bitfield LTOPCODE_7_6   ltopcode7_6;
 def bitfield LTOPCODE_7_4   ltopcode7_4;
 def bitfield LTOPCODE_4     ltopcode4;

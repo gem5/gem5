@@ -442,6 +442,7 @@ let {{
     {
         assert(!AARCH64);
         assert(bits(machInst, 31, 26) == 0b111111);
+        assert(bits(machInst, 11) == 0b1);
         // The following constraints also apply to this encoding: op0<2:1>!=11
         assert(bits(machInst, 25, 24) != 0b11);
         uint8_t op0 = bits(machInst, 25, 23);
@@ -2676,6 +2677,15 @@ let {{
     StaticInstPtr
     decodeVfpData(ExtMachInst machInst)
     {
+        // To avoid future incorrectly decoded instructions assert that we
+        // are indeed looking at the right encoding region.
+        // See "Floating-point data-processing" sections for A32 and T32.
+        if (machInst.bigThumb) {
+            assert(bits(machInst, 31, 24) == 0b11101110);
+        } else {
+            assert(bits(machInst, 27, 24) == 0b1110);
+            assert(bits(machInst, 31, 28) != 0b1111);
+        }
         const uint32_t opc1 = bits(machInst, 23, 20);
         const uint32_t opc2 = bits(machInst, 19, 16);
         const uint32_t opc3 = bits(machInst, 7, 6);
