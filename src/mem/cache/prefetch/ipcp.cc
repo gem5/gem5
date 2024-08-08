@@ -324,9 +324,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
         for (int i = 1; i <= degree; i++) {
             Addr prefAddr = blockAddress(blkAddr
              + ((i * ipcpTable[ipIndex].stride) * blkSize));
-            if (1 || (samePage(blkAddr, prefAddr))) //allow page cross
-                addresses.push_back(AddrPriority(prefAddr,0));
-            if (!samePage(blkAddr, prefAddr)) ipcpStats.pageCross += 1;
+            addresses.push_back(AddrPriority(prefAddr,0));
         }
     } else if ((cspt[updatedSignature].conf > 0)
      && (cspt[updatedSignature].stride != 0)
@@ -336,8 +334,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
         for (int i = 1; i <= degree; i++) {
             Addr prefAddr = blockAddress(blkAddr
              + (cspt[updatedSignature].stride * blkSize));
-            if ((1 || samePage(blkAddr, prefAddr))
-             && (cspt[updatedSignature].conf > 0)
+            if ((cspt[updatedSignature].conf > 0)
              && (cspt[updatedSignature].stride != 0))
                 addresses.push_back(AddrPriority(prefAddr,0));
             updatedSignature = getSignature(updatedSignature,
@@ -349,8 +346,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
       //Tentative NL
       ipcpStats.nlChosen += 1;
       Addr prefAddr = blockAddress(blkAddr + blkSize);
-      if (samePage(blkAddr, prefAddr))
-          addresses.push_back(AddrPriority(prefAddr,0));
+      addresses.push_back(AddrPriority(prefAddr,0));
     } else ipcpStats.noPrefs += 1;
 
 
