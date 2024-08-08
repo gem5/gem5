@@ -63,7 +63,6 @@
 namespace gem5
 {
 
-class BaseIndexingPolicy;
 namespace replacement_policy
 {
     class Base;

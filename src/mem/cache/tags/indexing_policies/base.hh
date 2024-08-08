@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -49,23 +49,32 @@
 
 #include <vector>
 
+#include "base/intmath.hh"
+#include "base/logging.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "params/BaseIndexingPolicy.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-class ReplaceableEntry;
-
 /**
  * A common base class for indexing table locations. Classes that inherit
  * from it determine hash functions that should be applied based on the set
  * and way. These functions are then applied to re-map the original values.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
+ * @tparam Types the Types template parameter shall contain the following type
+ *         traits:
+ *           - KeyType = The key/lookup data type
+ *           - Params = The indexing policy Param type
  */
-class BaseIndexingPolicy : public SimObject
+template <class Types>
+class IndexingPolicyTemplate : public SimObject
 {
   protected:
+    using KeyType = typename Types::KeyType;
+    using Params = typename Types::Params;
+
     /**
      * The associativity.
      */
@@ -98,19 +107,28 @@ class BaseIndexingPolicy : public SimObject
 
   public:
     /**
-     * Convenience typedef.
-     */
-    typedef BaseIndexingPolicyParams Params;
-
-    /**
      * Construct and initialize this policy.
      */
-    BaseIndexingPolicy(const Params &p);
+    IndexingPolicyTemplate(const Params &p)
+      : SimObject(p), assoc(p.assoc),
+        numSets(p.size / (p.entry_size * assoc)),
+        setShift(floorLog2(p.entry_size)), setMask(numSets - 1), sets(numSets),
+        tagShift(setShift + floorLog2(numSets))
+    {
+        fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power " \
+                 "of 2");
+        fatal_if(assoc <= 0, "associativity must be greater than zero");
+
+        // Make space for the entries
+        for (uint32_t i = 0; i < numSets; ++i) {
+            sets[i].resize(assoc);
+        }
+    }
 
     /**
      * Destructor.
      */
-    ~BaseIndexingPolicy() {};
+    ~IndexingPolicyTemplate() {};
 
     /**
      * Associate a pointer to an entry to its physical counterpart.
@@ -118,7 +136,23 @@ class BaseIndexingPolicy : public SimObject
      * @param entry The entry pointer.
      * @param index An unique index for the entry.
      */
-    void setEntry(ReplaceableEntry* entry, const uint64_t index);
+    void
+    setEntry(ReplaceableEntry* entry, const uint64_t index)
+    {
+        // Calculate set and way from entry index
+        const std::lldiv_t div_result = std::div((long long)index, assoc);
+        const uint32_t set = div_result.quot;
+        const uint32_t way = div_result.rem;
+
+        // Sanity check
+        assert(set < numSets);
+
+        // Assign a free pointer
+        sets[set][way] = entry;
+
+        // Inform the entry its position
+        entry->setPosition(set, way);
+    }
 
     /**
      * Get an entry based on its set and way. All entries must have been set
@@ -128,7 +162,11 @@ class BaseIndexingPolicy : public SimObject
      * @param way The way of the desired entry.
      * @return entry The entry pointer.
      */
-    ReplaceableEntry* getEntry(const uint32_t set, const uint32_t way) const;
+    ReplaceableEntry*
+    getEntry(const uint32_t set, const uint32_t way) const
+    {
+        return sets[set][way];
+    }
 
     /**
      * Generate the tag from the given address.
@@ -136,7 +174,12 @@ class BaseIndexingPolicy : public SimObject
      * @param addr The address to get the tag from.
      * @return The tag of the address.
      */
-    virtual Addr extractTag(const Addr addr) const;
+    virtual Addr
+    extractTag(const Addr addr) const
+    {
+        return (addr >> tagShift);
+    }
+
 
     /**
      * Find all possible entries for insertion and replacement of an address.
@@ -146,7 +189,7 @@ class BaseIndexingPolicy : public SimObject
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    virtual std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr)
+    virtual std::vector<ReplaceableEntry*> getPossibleEntries(const KeyType &key)
                                                                     const = 0;
 
     /**
@@ -156,9 +199,19 @@ class BaseIndexingPolicy : public SimObject
      * @param entry The entry.
      * @return the entry's original address.
      */
-    virtual Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry)
-                                                                    const = 0;
+    virtual Addr regenerateAddr(const KeyType &key,
+                                const ReplaceableEntry* entry) const = 0;
 };
+
+class AddrTypes
+{
+  public:
+    using KeyType = Addr;
+    using Params = BaseIndexingPolicyParams;
+};
+
+using BaseIndexingPolicy = IndexingPolicyTemplate<AddrTypes>;
+template class IndexingPolicyTemplate<AddrTypes>;
 
 } // namespace gem5
 
