@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -64,30 +76,14 @@ class AssociativeSet : public AssociativeCache<Entry>
     AssociativeSet(const char *name, const size_t num_entries,
                    const size_t associativity_,
                    replacement_policy::Base *repl_policy,
-                   BaseIndexingPolicy *indexing_policy,
+                   typename Entry::IndexingPolicy *indexing_policy,
                    Entry const &init_val = Entry());
-
-    /**
-     * Find an entry within the set
-     * @param addr key element
-     * @param is_secure tag element
-     * @return returns a pointer to the wanted entry or nullptr if it does not
-     *  exist.
-     */
-    Entry* findEntry(Addr addr, bool is_secure) const;
-
-    /**
-     * Indicate that an entry has just been inserted
-     * @param addr key of the container
-     * @param is_secure tag component of the container
-     * @param entry pointer to the container entry to be inserted
-     */
-    void insertEntry(Addr addr, bool is_secure, Entry* entry);
 
   private:
     // The following APIs are excluded since they lack the secure bit
     using AssociativeCache<Entry>::findEntry;
     using AssociativeCache<Entry>::insertEntry;
+    using AssociativeCache<Entry>::getPossibleEntries;
     using AssociativeCache<Entry>::replPolicy;
     using AssociativeCache<Entry>::indexingPolicy;
 };

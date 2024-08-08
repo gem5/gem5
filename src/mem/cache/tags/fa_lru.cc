@@ -145,7 +145,7 @@ FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
 {
     CachesMask mask = 0;
     FALRUBlk* blk =
-        static_cast<FALRUBlk*>(findBlock(pkt->getAddr(), pkt->isSecure()));
+        static_cast<FALRUBlk*>(findBlock({pkt->getAddr(), pkt->isSecure()}));
 
     // If a cache hit
     if (blk && blk->isValid()) {
@@ -167,19 +167,20 @@ FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
 }
 
 CacheBlk*
-FALRU::findBlock(Addr addr, bool is_secure) const
+FALRU::findBlock(const CacheBlk::KeyType &lookup) const
 {
     FALRUBlk* blk = nullptr;
 
-    Addr tag = extractTag(addr);
-    auto iter = tagHash.find(std::make_pair(tag, is_secure));
+    Addr tag = extractTag(lookup.address);
+    auto key = std::make_pair(tag, lookup.secure);
+    auto iter = tagHash.find(key);
     if (iter != tagHash.end()) {
         blk = (*iter).second;
     }
 
     if (blk && blk->isValid()) {
         assert(blk->getTag() == tag);
-        assert(blk->isSecure() == is_secure);
+        assert(blk->isSecure() == lookup.secure);
     }
 
     return blk;
@@ -193,7 +194,7 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 }
 
 CacheBlk*
-FALRU::findVictim(Addr addr, const bool is_secure, const std::size_t size,
+FALRU::findVictim(const CacheBlk::KeyType& key, const std::size_t size,
                   std::vector<CacheBlk*>& evict_blks,
                   const uint64_t partition_id)
 {

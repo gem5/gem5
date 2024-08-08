@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -40,36 +52,11 @@ AssociativeSet<Entry>::AssociativeSet(const char *name,
                                       const size_t num_entries,
                                       const size_t associativity_,
                                       replacement_policy::Base *repl_policy,
-                                      BaseIndexingPolicy *indexing_policy,
+                                      typename Entry::IndexingPolicy *indexing_policy,
                                       Entry const &init_val)
   : AssociativeCache<Entry>(name, num_entries, associativity_,
                             repl_policy, indexing_policy, init_val)
 {
-}
-
-template <class Entry>
-Entry*
-AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
-{
-    Addr tag = indexingPolicy->extractTag(addr);
-    auto candidates = indexingPolicy->getPossibleEntries(addr);
-
-    for (auto candidate : candidates) {
-        Entry* entry = static_cast<Entry*>(candidate);
-        if (entry->matchTag(tag, is_secure)) {
-            return entry;
-        }
-    }
-
-    return nullptr;
-}
-
-template<class Entry>
-void
-AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry* entry)
-{
-   entry->insert(indexingPolicy->extractTag(addr), is_secure);
-   replPolicy->reset(entry->replacementData);
 }
 
 } // namespace gem5

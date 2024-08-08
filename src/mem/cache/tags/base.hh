@@ -86,7 +86,7 @@ class BaseTags : public ClockedObject
     System *system;
 
     /** Indexing policy */
-    BaseIndexingPolicy *indexingPolicy;
+    TaggedIndexingPolicy *indexingPolicy;
 
     /** Partitioning manager */
     partitioning_policy::PartitionManager *partitionManager;
@@ -199,7 +199,7 @@ class BaseTags : public ClockedObject
      * @param is_secure True if the target memory space is secure.
      * @return Pointer to the cache block.
      */
-    virtual CacheBlk *findBlock(Addr addr, bool is_secure) const;
+    virtual CacheBlk *findBlock(const CacheBlk::KeyType &key) const;
 
     /**
      * Find a block given set and way.
@@ -282,7 +282,7 @@ class BaseTags : public ClockedObject
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
+    virtual CacheBlk* findVictim(const CacheBlk::KeyType &key,
                                  const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks,
                                  const uint64_t partition_id=0) = 0;

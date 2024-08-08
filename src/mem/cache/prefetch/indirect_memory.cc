@@ -87,7 +87,8 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
         }
     } else {
         // if misses are not being tracked, attempt to detect stream accesses
-        PrefetchTableEntry *pt_entry = prefetchTable.findEntry(pc, is_secure);
+        const PrefetchTableEntry::KeyType key{pc, is_secure};
+        PrefetchTableEntry *pt_entry = prefetchTable.findEntry(key);
         if (pt_entry != nullptr) {
             prefetchTable.accessEntry(pt_entry);
 
@@ -159,9 +160,9 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                 }
             }
         } else {
-            pt_entry = prefetchTable.findVictim(pc);
+            pt_entry = prefetchTable.findVictim(key);
             assert(pt_entry != nullptr);
-            prefetchTable.insertEntry(pc, pt_entry-> secure, pt_entry);
+            prefetchTable.insertEntry(key, pt_entry);
             pt_entry->address = addr;
             pt_entry->secure = is_secure;
         }
@@ -174,7 +175,8 @@ IndirectMemory::allocateOrUpdateIPDEntry(
 {
     // The address of the pt_entry is used to index the IPD
     Addr ipd_entry_addr = (Addr) pt_entry;
-    IndirectPatternDetectorEntry *ipd_entry = ipd.findEntry(ipd_entry_addr);
+    const IndirectPatternDetectorEntry::KeyType key{ipd_entry_addr, false};
+    IndirectPatternDetectorEntry *ipd_entry = ipd.findEntry(key);
     if (ipd_entry != nullptr) {
         ipd.accessEntry(ipd_entry);
         if (!ipd_entry->secondIndexSet) {
@@ -189,9 +191,9 @@ IndirectMemory::allocateOrUpdateIPDEntry(
             ipdEntryTrackingMisses = nullptr;
         }
     } else {
-        ipd_entry = ipd.findVictim(ipd_entry_addr);
+        ipd_entry = ipd.findVictim(key);
         assert(ipd_entry != nullptr);
-        ipd.insertEntry(ipd_entry_addr, ipd_entry);
+        ipd.insertEntry(key, ipd_entry);
         ipd_entry->idx1 = index;
         ipdEntryTrackingMisses = ipd_entry;
     }

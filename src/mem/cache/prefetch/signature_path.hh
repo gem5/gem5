@@ -79,7 +79,7 @@ class SignaturePath : public Queued
         signature_t signature;
         /** Last accessed block within a page */
         stride_t lastBlock;
-        SignatureEntry(BaseIndexingPolicy *ip)
+        SignatureEntry(TaggedIndexingPolicy *ip)
           : TaggedEntry(ip), signature(0), lastBlock(0)
         {}
     };
@@ -104,7 +104,7 @@ class SignaturePath : public Queued
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
         PatternEntry(size_t num_strides, unsigned counter_bits,
-                     BaseIndexingPolicy *ip)
+                     TaggedIndexingPolicy *ip)
           : TaggedEntry(ip), strideEntries(num_strides, counter_bits),
             counter(counter_bits)
         {

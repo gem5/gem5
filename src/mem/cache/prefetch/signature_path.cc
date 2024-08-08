@@ -171,20 +171,21 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
         stride_t block, bool &miss, stride_t &stride,
         double &initial_confidence)
 {
-    SignatureEntry* signature_entry = signatureTable.findEntry(ppn, is_secure);
+    const SignatureEntry::KeyType key{ppn, is_secure};
+    SignatureEntry* signature_entry = signatureTable.findEntry(key);
     if (signature_entry != nullptr) {
         signatureTable.accessEntry(signature_entry);
         miss = false;
         stride = block - signature_entry->lastBlock;
     } else {
-        signature_entry = signatureTable.findVictim(ppn);
+        signature_entry = signatureTable.findVictim(key);
         assert(signature_entry != nullptr);
 
         // Sets signature_entry->signature, initial_confidence, and stride
         handleSignatureTableMiss(block, signature_entry->signature,
             initial_confidence, stride);
 
-        signatureTable.insertEntry(ppn, is_secure, signature_entry);
+        signatureTable.insertEntry(key, signature_entry);
         miss = true;
     }
     signature_entry->lastBlock = block;
@@ -194,17 +195,17 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
 SignaturePath::PatternEntry &
 SignaturePath::getPatternEntry(Addr signature)
 {
-    constexpr bool is_secure = false;
-    PatternEntry* pattern_entry = patternTable.findEntry(signature, is_secure);
+    const PatternEntry::KeyType key{signature, false};
+    PatternEntry* pattern_entry = patternTable.findEntry(key);
     if (pattern_entry != nullptr) {
         // Signature found
         patternTable.accessEntry(pattern_entry);
     } else {
         // Signature not found
-        pattern_entry = patternTable.findVictim(signature);
+        pattern_entry = patternTable.findVictim(key);
         assert(pattern_entry != nullptr);
 
-        patternTable.insertEntry(signature, is_secure, pattern_entry);
+        patternTable.insertEntry(key, pattern_entry);
     }
     return *pattern_entry;
 }
@@ -280,7 +281,7 @@ SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
         //   confidence, these are prefetch candidates
         // - select the entry with the highest counter as the "lookahead"
         PatternEntry *current_pattern_entry =
-            patternTable.findEntry(current_signature, is_secure);
+            patternTable.findEntry({current_signature, is_secure});
         PatternStrideEntry const *lookahead = nullptr;
         if (current_pattern_entry != nullptr) {
             unsigned long max_counter = 0;

@@ -64,7 +64,7 @@ namespace prefetch
 {
 
 Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence,
-                                 BaseIndexingPolicy *ip)
+                                 TaggedIndexingPolicy *ip)
   : TaggedEntry(ip), confidence(init_confidence)
 {
     invalidate();
@@ -144,7 +144,8 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     PCTable& pc_table = findTable(requestor_id);
 
     // Search for entry in the pc table
-    StrideEntry *entry = pc_table.findEntry(pc, is_secure);
+    const StrideEntry::KeyType key{pc, is_secure};
+    StrideEntry *entry = pc_table.findEntry(key);
 
     if (entry != nullptr) {
         pc_table.accessEntry(entry);
@@ -198,17 +199,18 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
                 is_secure ? "s" : "ns");
 
-        StrideEntry* entry = pc_table.findVictim(pc);
+        StrideEntry* entry = pc_table.findVictim(key);
 
         // Insert new entry's data
         entry->lastAddr = pf_addr;
-        pc_table.insertEntry(pc, is_secure, entry);
+        pc_table.insertEntry(key, entry);
     }
 }
 
 uint32_t
-StridePrefetcherHashedSetAssociative::extractSet(const Addr pc) const
+StridePrefetcherHashedSetAssociative::extractSet(const KeyType &key) const
 {
+    const Addr pc = key.address;
     const Addr hash1 = pc >> 1;
     const Addr hash2 = hash1 >> tagShift;
     return (hash1 ^ hash2) & setMask;

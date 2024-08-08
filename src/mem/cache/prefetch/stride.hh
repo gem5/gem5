@@ -76,16 +76,16 @@ namespace prefetch
  * Override the default set associative to apply a specific hash function
  * when extracting a set.
  */
-class StridePrefetcherHashedSetAssociative : public SetAssociative
+class StridePrefetcherHashedSetAssociative : public TaggedSetAssociative
 {
   protected:
-    uint32_t extractSet(const Addr addr) const override;
+    uint32_t extractSet(const KeyType &key) const override;
     Addr extractTag(const Addr addr) const override;
 
   public:
     StridePrefetcherHashedSetAssociative(
         const StridePrefetcherHashedSetAssociativeParams &p)
-      : SetAssociative(p)
+      : TaggedSetAssociative(p)
     {
     }
     ~StridePrefetcherHashedSetAssociative() = default;
@@ -120,11 +120,11 @@ class Stride : public Queued
         const int assoc;
         const int numEntries;
 
-        BaseIndexingPolicy* const indexingPolicy;
+        TaggedIndexingPolicy* const indexingPolicy;
         replacement_policy::Base* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
-                    BaseIndexingPolicy* indexing_policy,
+                    TaggedIndexingPolicy* indexing_policy,
                     replacement_policy::Base* repl_policy)
           : assoc(assoc), numEntries(num_entries),
             indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
@@ -136,7 +136,7 @@ class Stride : public Queued
     struct StrideEntry : public TaggedEntry
     {
         StrideEntry(const SatCounter8& init_confidence,
-                    BaseIndexingPolicy *ip);
+                    TaggedIndexingPolicy *ip);
 
         void invalidate() override;
 

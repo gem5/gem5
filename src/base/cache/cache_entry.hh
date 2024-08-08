@@ -122,12 +122,6 @@ class CacheEntry : public ReplaceableEntry
                         isValid(), ReplaceableEntry::print());
     }
 
-    void
-    setIndexingPolicy(BaseIndexingPolicy *ip)
-    {
-        indexingPolicy = ip;
-    }
-
   protected:
     /**
      * Set tag associated to this block.

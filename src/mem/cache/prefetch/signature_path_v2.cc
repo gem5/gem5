@@ -132,11 +132,11 @@ SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
 {
     // Always use the replacement policy to assign new entries, as all
     // of them are unique, there are never "hits" in the GHR
-    GlobalHistoryEntry *gh_entry = globalHistoryRegister.findVictim(0);
+    const GlobalHistoryEntry::KeyType key{0, false};
+    GlobalHistoryEntry *gh_entry = globalHistoryRegister.findVictim(key);
     assert(gh_entry != nullptr);
     // Any address value works, as it is never used
-    constexpr bool is_secure = false;
-    globalHistoryRegister.insertEntry(0, is_secure, gh_entry);
+    globalHistoryRegister.insertEntry(key, gh_entry);
 
     gh_entry->signature = signature;
     gh_entry->lastBlock = last_offset;

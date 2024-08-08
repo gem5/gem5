@@ -153,7 +153,7 @@ class CacheBlk : public TaggedEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk()
+    CacheBlk() : TaggedEntry(nullptr)
     {
         invalidate();
     }
@@ -177,7 +177,7 @@ class CacheBlk : public TaggedEntry
         assert(!isValid());
         assert(other.isValid());
 
-        insert(other.getTag(), other.isSecure());
+        insert({other.getTag(), other.isSecure()});
 
         if (other.wasPrefetched()) {
             setPrefetched();
@@ -323,7 +323,7 @@ class CacheBlk : public TaggedEntry
      * @param task_ID The new task ID.
      * @param partition_id The source partition ID.
      */
-    void insert(const Addr tag, const bool is_secure,
+    void insert(const KeyType &tag,
         const int src_requestor_ID, const uint32_t task_ID,
         const uint64_t partition_id);
     using TaggedEntry::insert;
@@ -526,7 +526,7 @@ class TempCacheBlk final : public CacheBlk
      * Creates a temporary cache block, with its own storage.
      * @param size The size (in bytes) of this cache block.
      */
-    TempCacheBlk(unsigned size, BaseIndexingPolicy *ip) : CacheBlk()
+    TempCacheBlk(unsigned size, TaggedIndexingPolicy *ip) : CacheBlk()
     {
         data = new uint8_t[size];
 
@@ -547,10 +547,10 @@ class TempCacheBlk final : public CacheBlk
     }
 
     void
-    insert(const Addr addr, const bool is_secure) override
+    insert(const KeyType &tag) override
     {
-        CacheBlk::insert(addr, is_secure);
-        _addr = addr;
+        CacheBlk::insert(tag);
+        _addr = tag.address;
     }
 
     /**

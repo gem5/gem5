@@ -62,7 +62,7 @@ class SignaturePathV2 : public SignaturePath
         double confidence;
         stride_t lastBlock;
         stride_t delta;
-        GlobalHistoryEntry(BaseIndexingPolicy *ip)
+        GlobalHistoryEntry(TaggedIndexingPolicy *ip)
           : TaggedEntry(ip), signature(0), confidence(0.0), lastBlock(0),
             delta(0)
         {}

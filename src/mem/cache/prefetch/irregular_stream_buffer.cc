@@ -85,7 +85,8 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
     // Training, if the entry exists, then we found a correlation between
     // the entry lastAddress (named as correlated_addr_A) and the address of
     // the current access (named as correlated_addr_B)
-    TrainingUnitEntry *entry = trainingUnit.findEntry(pc, is_secure);
+    const TrainingUnitEntry::KeyType key{pc, is_secure};
+    TrainingUnitEntry *entry = trainingUnit.findEntry(key);
     bool correlated_addr_found = false;
     Addr correlated_addr_A = 0;
     Addr correlated_addr_B = 0;
@@ -95,10 +96,10 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
         correlated_addr_A = entry->lastAddress;
         correlated_addr_B = addr;
     } else {
-        entry = trainingUnit.findVictim(pc);
+        entry = trainingUnit.findVictim(key);
         assert(entry != nullptr);
 
-        trainingUnit.insertEntry(pc, is_secure, entry);
+        trainingUnit.insertEntry(key, entry);
     }
     // Update the entry
     entry->lastAddress = addr;
@@ -149,15 +150,15 @@ IrregularStreamBuffer::calculatePrefetch(const PrefetchInfo &pfi,
     //   (given the structured address S, prefetch S+1, S+2, .. up to S+degree)
     Addr amc_address = addr / prefetchCandidatesPerEntry;
     Addr map_index   = addr % prefetchCandidatesPerEntry;
-    AddressMappingEntry *ps_am = psAddressMappingCache.findEntry(amc_address,
-                                                                 is_secure);
+    AddressMappingEntry *ps_am = psAddressMappingCache.findEntry(
+        {amc_address, is_secure});
     if (ps_am != nullptr) {
         AddressMapping &mapping = ps_am->mappings[map_index];
         if (mapping.counter > 0) {
             Addr sp_address = mapping.address / prefetchCandidatesPerEntry;
             Addr sp_index   = mapping.address % prefetchCandidatesPerEntry;
             AddressMappingEntry *sp_am =
-                spAddressMappingCache.findEntry(sp_address, is_secure);
+                spAddressMappingCache.findEntry({sp_address, is_secure});
             if (sp_am == nullptr) {
                 // The entry has been evicted, can not generate prefetches
                 return;
@@ -183,15 +184,15 @@ IrregularStreamBuffer::getPSMapping(Addr paddr, bool is_secure)
     Addr amc_address = paddr / prefetchCandidatesPerEntry;
     Addr map_index   = paddr % prefetchCandidatesPerEntry;
     AddressMappingEntry *ps_entry =
-        psAddressMappingCache.findEntry(amc_address, is_secure);
+        psAddressMappingCache.findEntry({amc_address, is_secure});
     if (ps_entry != nullptr) {
         // A PS-AMC line already exists
         psAddressMappingCache.accessEntry(ps_entry);
     } else {
-        ps_entry = psAddressMappingCache.findVictim(amc_address);
+        ps_entry = psAddressMappingCache.findVictim({amc_address, is_secure});
         assert(ps_entry != nullptr);
 
-        psAddressMappingCache.insertEntry(amc_address, is_secure, ps_entry);
+        psAddressMappingCache.insertEntry({amc_address, is_secure}, ps_entry);
     }
     return ps_entry->mappings[map_index];
 }
@@ -203,14 +204,14 @@ IrregularStreamBuffer::addStructuralToPhysicalEntry(
     Addr amc_address = structural_address / prefetchCandidatesPerEntry;
     Addr map_index   = structural_address % prefetchCandidatesPerEntry;
     AddressMappingEntry *sp_entry =
-        spAddressMappingCache.findEntry(amc_address, is_secure);
+        spAddressMappingCache.findEntry({amc_address, is_secure});
     if (sp_entry != nullptr) {
         spAddressMappingCache.accessEntry(sp_entry);
     } else {
-        sp_entry = spAddressMappingCache.findVictim(amc_address);
+        sp_entry = spAddressMappingCache.findVictim({amc_address, is_secure});
         assert(sp_entry != nullptr);
 
-        spAddressMappingCache.insertEntry(amc_address, is_secure, sp_entry);
+        spAddressMappingCache.insertEntry({amc_address, is_secure}, sp_entry);
     }
     AddressMapping &mapping = sp_entry->mappings[map_index];
     mapping.address = physical_address;

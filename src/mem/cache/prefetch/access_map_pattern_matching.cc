@@ -110,14 +110,15 @@ AccessMapPatternMatching::AccessMapEntry *
 AccessMapPatternMatching::getAccessMapEntry(Addr am_addr,
                 bool is_secure)
 {
-    AccessMapEntry *am_entry = accessMapTable.findEntry(am_addr, is_secure);
+    const TaggedEntry::KeyType key{am_addr, is_secure};
+    AccessMapEntry *am_entry = accessMapTable.findEntry(key);
     if (am_entry != nullptr) {
         accessMapTable.accessEntry(am_entry);
     } else {
-        am_entry = accessMapTable.findVictim(am_addr);
+        am_entry = accessMapTable.findVictim(key);
         assert(am_entry != nullptr);
 
-        accessMapTable.insertEntry(am_addr, is_secure, am_entry);
+        accessMapTable.insertEntry(key, am_entry);
     }
     return am_entry;
 }
