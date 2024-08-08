@@ -44,8 +44,8 @@ def tlb_options(parser):
     #   L1 TLB Options (D-TLB, I-TLB, Dispatcher-TLB)
     # ===================================================================
 
-    parser.add_argument("--L1TLBentries", type=int, default="32")
-    parser.add_argument("--L1TLBassoc", type=int, default="32")
+    parser.add_argument("--L1TLBentries", type=int, default="64")
+    parser.add_argument("--L1TLBassoc", type=int, default="64")
     parser.add_argument(
         "--L1AccessLatency",
         type=int,
@@ -68,7 +68,7 @@ def tlb_options(parser):
     # ===================================================================
 
     parser.add_argument("--L2TLBentries", type=int, default="4096")
-    parser.add_argument("--L2TLBassoc", type=int, default="32")
+    parser.add_argument("--L2TLBassoc", type=int, default="64")
     parser.add_argument(
         "--L2AccessLatency",
         type=int,
@@ -90,7 +90,7 @@ def tlb_options(parser):
     # ===================================================================
 
     parser.add_argument("--L3TLBentries", type=int, default="8192")
-    parser.add_argument("--L3TLBassoc", type=int, default="32")
+    parser.add_argument("--L3TLBassoc", type=int, default="64")
     parser.add_argument(
         "--L3AccessLatency",
         type=int,
