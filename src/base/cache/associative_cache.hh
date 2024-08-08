@@ -60,12 +60,13 @@ namespace gem5
 template <typename Entry>
 class AssociativeCache : public Named
 {
+  protected:
+
     static_assert(std::is_base_of_v<CacheEntry, Entry>,
                   "Entry should be derived from CacheEntry");
 
     typedef replacement_policy::Base BaseReplacementPolicy;
-
-  protected:
+    typedef typename Entry::IndexingPolicy IndexingPolicy;
 
     /** Associativity of the cache. */
     size_t associativity;
@@ -74,7 +75,7 @@ class AssociativeCache : public Named
     BaseReplacementPolicy *replPolicy;
 
     /** Indexing policy of the cache */
-    BaseIndexingPolicy *indexingPolicy;
+    IndexingPolicy *indexingPolicy;
 
     /** The entries */
     std::vector<Entry> entries;
@@ -112,7 +113,7 @@ class AssociativeCache : public Named
     AssociativeCache(const char *name, const size_t num_entries,
                      const size_t associativity_,
                      BaseReplacementPolicy *repl_policy,
-                     BaseIndexingPolicy *indexing_policy,
+                     IndexingPolicy *indexing_policy,
                      Entry const &init_val = Entry())
         : Named(std::string(name)),
           associativity(associativity_),
@@ -149,7 +150,7 @@ class AssociativeCache : public Named
     init(const size_t num_entries,
          const size_t associativity_,
          BaseReplacementPolicy *_repl_policy,
-         BaseIndexingPolicy *_indexing_policy,
+         IndexingPolicy *_indexing_policy,
          Entry const &init_val = Entry())
     {
         associativity = associativity_;

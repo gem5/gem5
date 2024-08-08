@@ -59,6 +59,8 @@ namespace gem5
 class CacheEntry : public ReplaceableEntry
 {
   public:
+    using IndexingPolicy = BaseIndexingPolicy;
+
     CacheEntry(BaseIndexingPolicy *ip) : indexingPolicy(ip) {}
     ~CacheEntry() = default;
     CacheEntry(const CacheEntry &rhs)
