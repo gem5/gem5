@@ -1,3 +1,11 @@
+# Version 24.0.0.1
+
+**[HOTFIX]** Fixes a bug affecting the use of the `IndirectMemoryPrefetcher`, `SignaturePathPrefetcher`, `SignaturePathPrefetcherV2`, `STeMSPrefetcher`, and `PIFPrefetcher` SimObjects.
+Use of these resulted in gem5 crashing a gem5 crash with the error message "Need is_secure arg".
+
+The fix to this introduced to the gem5 develop branch in the <https://github.com/gem5/gem5/pull/1374> Pull Request.
+The commits in this PR were cherry-picked on the gem5 stable branch to create the v24.0.0.1 hotfix release.
+
 # Version 24.0
 
 gem5 Version 24.0 is the first major release of 2024.
