@@ -38,6 +38,50 @@
 namespace gem5
 {
 
+class LocalInstTracker : public ProbeListenerObject
+{
+  public:
+    LocalInstTracker(const LocalInstTrackerParams &params);
+
+    /** setup the probelistener */
+    virtual void regProbeListeners();
+
+    /**
+     * this function is called when the ProbePoint "RetiredInsts" is notified
+     *
+     * @param inst the number of retired instructions. It is usually 1.
+     */
+    void retiredInstsHandler(const uint64_t& inst);
+
+  private:
+    typedef ProbeListenerArg<LocalInstTracker, uint64_t>
+                                                    LocalInstTrackerListener;
+
+    /** a boolean variable that determines if the LocalInstTracker is
+     * listening to the ProbePoints or not
+     */
+    bool ifListening;
+
+    /**
+     * the pointer to the GlobalInstTracker object. It is used to update the
+      * instruction count and check if the instruction count has reached the
+      * threshold across all the cores.
+     */
+    GlobalInstTracker *globalInstTracker;
+
+  public:
+    /** stop listening to the ProbePoints */
+    void stopListening();
+
+    /** start listening to the ProbePoints */
+    void startListening()
+    {
+      ifListening = true;
+      regProbeListeners();
+    }
+
+};
+
 class GlobalInstTracker : public SimObject
 {
   public:
@@ -81,50 +125,6 @@ class GlobalInstTracker : public SimObject
     {
       return instThreshold;
     };
-};
-
-class LocalInstTracker : public ProbeListenerObject
-{
-  public:
-    LocalInstTracker(const LocalInstTrackerParams &params);
-
-    /** setup the probelistener */
-    virtual void regProbeListeners();
-
-    /**
-     * this function is called when the ProbePoint "RetiredInsts" is notified
-     *
-     * @param inst the number of retired instructions. It is usually 1.
-     */
-    void retiredInstsHandler(const uint64_t& inst);
-
-  private:
-    typedef ProbeListenerArg<LocalInstTracker, uint64_t>
-                                                    LocalInstTrackerListener;
-
-    /** a boolean variable that determines if the LocalInstTracker is
-     * listening to the ProbePoints or not
-     */
-    bool ifListening;
-
-    /**
-     * the pointer to the GlobalInstTracker object. It is used to update the
-      * instruction count and check if the instruction count has reached the
-      * threshold across all the cores.
-     */
-    GlobalInstTracker *globalInstTracker;
-
-  public:
-    /** stop listening to the ProbePoints */
-    void stopListening();
-
-    /** start listening to the ProbePoints */
-    void startListening()
-    {
-      ifListening = true;
-      regProbeListeners();
-    }
-
 };
 
 }

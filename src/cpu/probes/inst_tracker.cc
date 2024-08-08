@@ -31,10 +31,10 @@
 namespace gem5
 {
 
-LocalInstTracker::LocalInstTracker(const LocalInstTrackerParams &p)
-    : ProbeListenerObject(p),
-      globalInstTracker(p.global_inst_tracker),
-      ifListening(p.start_listening)
+LocalInstTracker::LocalInstTracker(const LocalInstTrackerParams &params)
+    : ProbeListenerObject(params),
+      ifListening(params.start_listening),
+      globalInstTracker(params.global_inst_tracker)
 {
     DPRINTF(InstTracker, "ifListening = %s\n", ifListening ? "true" : "false");
 }
@@ -48,9 +48,15 @@ LocalInstTracker::regProbeListeners()
             listeners.push_back(new LocalInstTrackerListener(this,
                                     "RetiredInsts",
                                     &LocalInstTracker::retiredInstsHandler));
-            DPRINTF(InstTracker, "Listening to RetiredInsts\n");
+            DPRINTF(InstTracker, "Start listening to RetiredInsts\n");
         }
     }
+}
+
+void
+LocalInstTracker::retiredInstsHandler(const uint64_t& inst)
+{
+    globalInstTracker->updateAndCheckInstCount(inst);
 }
 
 void
@@ -64,17 +70,14 @@ LocalInstTracker::stopListening()
     DPRINTF(InstTracker, "Stopped listening\n");
 }
 
-void
-LocalInstTracker::retiredInstsHandler(const uint64_t& inst)
-{
-    globalInstTracker->updateAndCheckInstCount(inst);
-}
 
-GlobalInstTracker::GlobalInstTracker(const GlobalInstTrackerParams &p)
-    : SimObject(p),
+GlobalInstTracker::GlobalInstTracker(const GlobalInstTrackerParams &params)
+    : SimObject(params),
       instCount(0),
-      instThreshold(p.inst_threshold)
-{}
+      instThreshold(params.inst_threshold)
+{
+    DPRINTF(InstTracker, "instThreshold = %lu\n", instThreshold);
+}
 
 void
 GlobalInstTracker::updateAndCheckInstCount(const uint64_t& inst)
@@ -86,6 +89,10 @@ GlobalInstTracker::updateAndCheckInstCount(const uint64_t& inst)
                                 "instThreshold = %lu\n",
                                 instCount, instThreshold);
 
+        // note that when the threshold is reached, the simulation will raise
+        // and exit event but it will not reset the instruction counter.
+        // user can reset the counter by calling the resetCounter() function
+        // in the simulation script.
         exitSimLoopNow("a thread reached the max instruction count");
     }
 }
