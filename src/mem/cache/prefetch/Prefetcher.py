@@ -281,6 +281,56 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
     )
 
 
+class IMPv2Prefetcher(QueuedPrefetcher):
+    type = "IMPv2Prefetcher"
+    cxx_class = "gem5::prefetch::IMP"
+    cxx_header = "mem/cache/prefetch/indirect_memory_v2.hh"
+
+    streaming_degree = Param.Unsigned(
+        16,
+        "The prefetch degree of the streaming component (in terms of cache "
+        "lines) of IMP",
+    )
+    indirect_degree = Param.Unsigned(
+        16,
+        "The prefetch degree of the indirect prefetches (in terms of words)",
+    )
+    max_indirect_prefetch_distance = Param.Unsigned(
+        16, "The maximum prefetch distance for indirect prefetches"
+    )
+    prefetch_table_size = Param.Unsigned(
+        16,
+        "The number of entries in the Prefetch Table",
+    )
+    streaming_threshold = Param.Unsigned(
+        5,
+        "Confidence threshold for the streaming component",
+    )
+    indirect_threshold = Param.Unsigned(
+        2,
+        "Confidence threshold for the indirect component",
+    )
+    indirect_pattern_detector_size = Param.Unsigned(
+        4,
+        "Number of entries in the IPD",
+    )
+    num_miss_after_index = Param.Unsigned(
+        10,
+        "Number of misses to track after an index access in the Indirect "
+        "Pattern Detector",
+    )
+    shift_values = VectorParam.Int(
+        [2, 3, 4, -3],
+        "Shift values to use in the Indirect Pattern Detector",
+    )
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_access = True
+    on_inst = False
+
+
 class SignaturePathPrefetcher(QueuedPrefetcher):
     type = "SignaturePathPrefetcher"
     cxx_class = "gem5::prefetch::SignaturePath"
