@@ -79,8 +79,16 @@ void
 LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
                                                      StaticInstPtr>& inst_pair)
 {
-    SimpleThread* thread = inst_pair.first;
     const StaticInstPtr &inst = inst_pair.second;
+
+    if (inst->isMicroop() && !inst->isLastMicroop())
+    {
+        // ignore this if it is a microop
+        return;
+    }
+
+    SimpleThread* thread = inst_pair.first;
+
     auto &pcstate =
                 thread->getTC()->pcState().as<GenericISA::PCStateWithNext>();
     Addr pc = pcstate.pc();
@@ -110,12 +118,6 @@ LooppointAnalysis::checkPc(const std::pair<SimpleThread*,
                 lpaManager->countBackwardBranch(pc);
             }
         }
-        return;
-    }
-
-    if (inst->isMicroop() && !inst->isLastMicroop())
-    {
-        // ignore this if it is a microop
         return;
     }
 
@@ -195,9 +197,12 @@ LooppointAnalysis::regProbeListeners()
 {
     if (ifListening)
     {
-        listeners.push_back(new looppointAnalysisListener(this,
-                            "Commit", &LooppointAnalysis::checkPc));
-        DPRINTF(LooppointAnalysis, "Start listening to the RetiredInstsPC\n");
+        if (listeners.size() == 0) {
+            listeners.push_back(new looppointAnalysisListener(this,
+                                "Commit", &LooppointAnalysis::checkPc));
+            DPRINTF(LooppointAnalysis,
+                                    "Start listening to the RetiredInstsPC\n");
+        }
     }
 
 }
@@ -250,6 +255,11 @@ LooppointAnalysisManager::countBackwardBranch(const Addr pc)
         // exit event.
         // we can reset the counters through the simulation script using
         // the helper functions in the LooppointAnalysisManager class
+        DPRINTF(LooppointAnalysis, "simpoint starting point found\n");
+        DPRINTF(LooppointAnalysis, "globalInstCounter = %lu\n",
+                globalInstCounter);
+        DPRINTF(LooppointAnalysis, "regionLength = %lu\n",
+                regionLength);
         exitSimLoopNow("simpoint starting point found");
     }
 }

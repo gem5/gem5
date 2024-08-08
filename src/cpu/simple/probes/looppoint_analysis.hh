@@ -287,6 +287,7 @@ class LooppointAnalysisManager: public SimObject
     void clearGlobalBBV()
     {
         globalBBV.clear();
+        DPRINTF(LooppointAnalysis,"globalBBV is cleared\n");
     };
 
     uint64_t getGlobalInstCounter() const
@@ -297,6 +298,8 @@ class LooppointAnalysisManager: public SimObject
     void clearGlobalInstCounter()
     {
         globalInstCounter = 0;
+        DPRINTF(LooppointAnalysis,"globalInstCounter is cleared\n current "
+            "globalInstCounter = %lu\n", globalInstCounter);
     };
 
     void incrementGlobalInstCounter()
