@@ -4873,16 +4873,29 @@ decode QUADRANT default Unknown::unknown() {
                                             "wfi in user mode or TW enabled",
                                             machInst);
                             }
-                            // Go to sleep only if there's no pending interrupt
-                            // at all, including masked interrupts.
                             auto tc = xc->tcBase();
                             auto cpu = tc->getCpuPtr();
                             auto ic = dynamic_cast<RiscvISA::Interrupts*>(
                                 cpu->getInterruptController(tc->threadId()));
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
                             panic_if(!ic, "Invalid Interrupt Controller.");
-                            if (ic->readIP() == 0
+                            if (isa->resumeOnPending()) {
+                                // Go to sleep only if there are no pending
+                                // interrupts at all, and no non-maskable
+                                // interrupts.
+                                if (ic->readIP() == 0
                                 && xc->readMiscReg(MISCREG_NMIP) == 0) {
-                                tc->quiesce();
+                                    tc->quiesce();
+                                }
+                            } else {
+                                // Go to sleep only if there are no enabled
+                                // pending interrupts at all, and no
+                                // non-maskable interrupts
+                                if (!(ic->readIP() & ic->readIE())
+                                 && xc->readMiscReg(MISCREG_NMIP) == 0) {
+                                    tc->quiesce();
+                                 }
                             }
                         }}, IsNonSpeculative, IsQuiesce,
                             IsSerializeAfter, No_OpClass, IsSquashAfter);
