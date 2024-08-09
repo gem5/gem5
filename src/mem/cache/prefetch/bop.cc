@@ -67,8 +67,10 @@ BOP::BOP(const BOPPrefetcherParams &p)
     rrLeft.resize(rrEntries);
     rrRight.resize(rrEntries);
 
-    // Following the paper implementation, a list with the specified number
-    // of offsets which are of the form 2^i * 3^j * 5^k with i,j,k >= 0
+    /*
+     * Following the paper implementation, a list with the specified number
+     * of offsets which are of the form 2^i * 3^j * 5^k with i,j,k >= 0
+     */
     const int factors[] = { 2, 3, 5 };
     unsigned int i = 0;
     int64_t offset_i = 1;
@@ -86,8 +88,10 @@ BOP::BOP(const BOPPrefetcherParams &p)
         if (offset == 1) {
             offsetsList.push_back(OffsetListEntry(offset_i, 0));
             i++;
-            // If we want to use negative offsets, add also the negative value
-            // of the offset just calculated
+            /*
+             * If we want to use negative offsets, add also the negative value
+             * of the offset just calculated
+             */
             if (p.negative_offsets_enable)  {
                 offsetsList.push_back(OffsetListEntry(-offset_i, 0));
                 i++;
@@ -121,9 +125,34 @@ BOP::delayQueueEventWrapper()
 unsigned int
 BOP::index(Addr addr, unsigned int way) const
 {
+    /*
+     * The second parameter, way, is set to 0 for indexing the left side of the
+     * RR Table and, it is set to 1 for indexing the right side of the RR
+     * Table. This is because we always pass the enum RRWay as the way argument
+     * while calling index. This enum is defined in the bop.hh file.
+     *
+     * The indexing function in the author's ChampSim code, which can be found
+     * here: https://comparch-conf.gatech.edu/dpc2/final_program.html, computes
+     * the hash as follows:
+     *
+     *  1. For indexing the left side of the RR Table (way = 0), the cache line
+     *     address is XORed with itself after right shifting it by the log base
+     *     2 of the number of entries in the RR Table.
+     *  2. For indexing the right side of the RR Table (way = 1), the cache
+     *     line address is XORed with itself after right shifting it by the log
+     *     base 2 of the number of entries in the RR Table, multiplied by two.
+     *
+     * Therefore, we if just left shift the log base 2 of the number of RR
+     * entries (log_rr_entries) with the parameter way, then if we are indexing
+     * the left side, we'll leave log_rr_entries as it is, but if we are
+     * indexing the right side, we'll multiply it with 2. Now once we have the
+     * result of this operation, we can right shift the cache line address
+     * (line_addr) by this value to get the first operand of the final XOR
+     * operation. The second operand of the XOR operation is line_addr itself
+     */
     Addr log_rr_entries = floorLog2(rrEntries);
-    Addr lineaddr = addr >> lBlkSize;
-    Addr hash = lineaddr ^ (lineaddr >> (log_rr_entries << way));
+    Addr line_addr = addr >> lBlkSize;
+    Addr hash = line_addr ^ (line_addr >> (log_rr_entries << way));
     hash &= ((1ULL << log_rr_entries) - 1);
     return hash % rrEntries;
 }
@@ -148,8 +177,10 @@ BOP::insertIntoDelayQueue(Addr x)
         return;
     }
 
-    // Add the address to the delay queue and schedule an event to process
-    // it after the specified delay cycles
+    /*
+     * Add the address to the delay queue and schedule an event to process
+     * it after the specified delay cycles
+     */
     Tick process_tick = curTick() + delayTicks;
 
     delayQueue.push_back(DelayQueueEntry(x, process_tick));
@@ -196,11 +227,13 @@ BOP::bestOffsetLearning(Addr addr_tag)
 {
     Addr offset_tag = (*offsetsListIterator).first;
 
-    // Compute the lookup tag for the RR table. Since addr_tag is a tag value,
-    // and not an address, subtracting the offset from addr_tag may result in
-    // integer underflow. Therefore, we first convert the tag back to address
-    // by right shifting it, and then subtract the offset. This gives us a
-    // new lookup address which we use to compute the lookup tag
+    /*
+     * Compute the lookup tag for the RR table. Since addr_tag is a tag value,
+     * and not an address, subtracting the offset from addr_tag may result in
+     * integer underflow. Therefore, we first convert the tag back to address
+     * by right shifting it, and then subtract the offset. This gives us a
+     * new lookup address which we use to compute the lookup tag
+     */
     Addr lookup_tag = tag((addr_tag << lBlkSize) - (offset_tag << lBlkSize));
 
     // There was a hit in the RR table, increment the score for this offset
@@ -218,8 +251,10 @@ BOP::bestOffsetLearning(Addr addr_tag)
     // Move the offset iterator forward to prepare for the next time
     offsetsListIterator++;
 
-    // All the offsets in the list were visited meaning that a learning
-    // phase finished. Check if
+    /*
+     * All the offsets in the list were visited meaning that a learning
+     * phase finished. Check if
+     */
     if (offsetsListIterator == offsetsList.end()) {
         offsetsListIterator = offsetsList.begin();
         round++;
@@ -229,18 +264,16 @@ BOP::bestOffsetLearning(Addr addr_tag)
     if ((bestScore >= scoreMax) || (round >= roundMax)) {
         round = 0;
 
-        // If the current best score (bestScore) has exceed the threshold to
-        // enable prefetching (badScore), reset the learning structures and
-        // enable prefetch generation
-        if (bestScore > badScore)  {
+        /*
+         * If the current best score (bestScore) has exceed the threshold to
+         * enable prefetching (badScore), reset the learning structures and
+         * enable prefetch generation
+         */
+        if (bestScore > badScore) {
             bestOffset = phaseBestOffset;
             round = 0;
-            bestScore = 0;
-            phaseBestOffset = 0;
-            resetScores();
             issuePrefetchRequests = true;
-        }
-        else {
+        } else {
             issuePrefetchRequests = false;
         }
         resetScores();
@@ -263,8 +296,10 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
         insertIntoRR(addr, tag_x, RRWay::Left);
     }
 
-    // Go through the nth offset and update the score, the best score and the
-    // current best offset if a better one is found
+    /*
+     * Go through the nth offset and update the score, the best score and the
+     * current best offset if a better one is found
+     */
     bestOffsetLearning(addr);
 
     if (issuePrefetchRequests) {
