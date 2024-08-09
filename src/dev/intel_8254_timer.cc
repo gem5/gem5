@@ -211,7 +211,7 @@ void
 Intel8254Timer::Counter::setMode(int mode_val)
 {
     if (mode_val != InitTc && mode_val != RateGen &&
-       mode_val != SquareWave)
+       mode_val != SquareWave && mode_val != SoftwareStrobe)
         panic("PIT mode %#x is not implemented: \n", mode_val);
 
     mode = mode_val;
@@ -292,6 +292,9 @@ Intel8254Timer::Counter::CounterEvent::process()
         break;
       case RateGen:
       case SquareWave:
+        setTo(counter->period);
+        break;
+      case SoftwareStrobe:
         setTo(counter->period);
         break;
       default:
