@@ -133,7 +133,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     }
 
     // Get required packet info
-    Addr pf_addr = pfi.getAddr();
+    Addr pf_addr = blockAddress(pfi.getAddr());
     Addr pc = pfi.getPC();
     bool is_secure = pfi.isSecure();
     RequestorID requestor_id = useRequestorId ? pfi.getRequestorId() : 0;
@@ -168,6 +168,10 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
                 (int)entry->confidence);
 
         entry->lastAddr = pf_addr;
+
+        // Return if we don't see a stride match
+        if (!stride_match)
+            return;
 
         // Abort prefetch generation if below confidence threshold
         if (entry->confidence.calcSaturation() < threshConf) {
