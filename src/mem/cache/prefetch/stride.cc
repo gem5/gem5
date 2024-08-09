@@ -149,6 +149,11 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
 
         // Hit in table
         int new_stride = pf_addr - entry->lastAddr;
+
+        // Do nothing on repeated memory access
+        if (new_stride == 0)
+            return;
+
         bool stride_match = (new_stride == entry->stride);
 
         // Adjust confidence for stride entry
@@ -176,12 +181,6 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         // Abort prefetch generation if below confidence threshold
         if (entry->confidence.calcSaturation() < threshConf) {
             return;
-        }
-
-        // Round strides up to atleast 1 cacheline
-        int prefetch_stride = new_stride;
-        if (abs(new_stride) < blkSize) {
-            prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
         }
 
         Addr new_addr = pf_addr + distance * prefetch_stride;
