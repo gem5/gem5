@@ -86,15 +86,31 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             // For types with no NaN return max value.
             if (std::numeric_limits<dFMT>::has_quiet_NaN) {
                 out = std::numeric_limits<dFMT>::quiet_NaN();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             } else {
                 out = std::numeric_limits<dFMT>::max();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             }
         } else if (std::isinf(in)) {
             // For types with no Inf return max value.
             if (std::numeric_limits<dFMT>::has_infinity) {
                 out = std::numeric_limits<dFMT>::infinity();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             } else {
                 out = std::numeric_limits<dFMT>::max();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             }
         } else if (in.mant == 0 && in.exp == 0) {
             // All MX formats FP32, and FP64 encode 0 as all zeros. Keep sign.
@@ -243,15 +259,31 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             // For types with no NaN return max value.
             if (std::numeric_limits<dFMT>::has_quiet_NaN) {
                 out = std::numeric_limits<dFMT>::quiet_NaN();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             } else {
                 out = std::numeric_limits<dFMT>::max();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             }
         } else if (std::isinf(in)) {
             // For types with no Inf return max value.
             if (std::numeric_limits<dFMT>::has_infinity) {
                 out = std::numeric_limits<dFMT>::infinity();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             } else {
                 out = std::numeric_limits<dFMT>::max();
+                // Preserve sign bit
+                if (in.storage & 0x80000000) {
+                    out.storage |= 0x80000000;
+                }
             }
         } else if (in.mant == 0 && in.exp == 0) {
             // All MX formats FP32, and FP64 encode 0 as all zeros. Keep sign.
