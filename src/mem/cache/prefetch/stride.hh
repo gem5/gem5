@@ -148,6 +148,13 @@ class Stride : public Queued
     std::unordered_map<int, PCTable> pcTables;
 
     /**
+     * If this parameter is set to true, then the prefetcher will operate at
+     * the granularity of cache line. Otherwise it would operate on the
+     * granularity of word addresses
+     */
+    const bool useCachelineAddr;
+
+    /**
      * Try to find a table of entries for the given context. If none is
      * found, a new table is created.
      *
