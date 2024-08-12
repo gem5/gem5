@@ -129,6 +129,55 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
     }
 }
 
+template<int N>
+inline void
+initScratchReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
+{
+    int req_size = N * sizeof(VegaISA::VecElemU32);
+    int block_size = gpuDynInst->computeUnit()->cacheLineSize();
+
+    gpuDynInst->resetEntireStatusVector();
+    for (int lane = 0; lane < VegaISA::NumVecElemPerVecReg; ++lane) {
+        if (gpuDynInst->exec_mask[lane]) {
+            Addr vaddr[N];
+
+            for (int dword = 0; dword < N; ++dword) {
+                int stride = VegaISA::NumVecElemPerVecReg
+                           * sizeof(VegaISA::VecElemU32);
+                vaddr[dword] = gpuDynInst->addr[lane] + dword * stride;
+
+                // Do not allow misaligned for simplicity for now.
+                Addr split_addr = roundDown(vaddr[dword] + req_size - 1,
+                                            block_size);
+                panic_if(split_addr > vaddr[dword], "Misaligned swizzled "
+                        "scratch access not yet implemented\n");
+            }
+
+            gpuDynInst->setStatusVector(lane, N);
+
+            RequestPtr req[N];
+            PacketPtr pkt[N];
+            for (int dword = 0; dword < N; ++dword) {
+                req[dword] = std::make_shared<Request>(vaddr[dword], req_size,
+                        0, gpuDynInst->computeUnit()->requestorId(), 0,
+                        gpuDynInst->wfDynId);
+                gpuDynInst->setRequestFlags(req[dword]);
+                pkt[dword] = new Packet(req[dword], mem_req_type);
+
+                int data_elem = lane + dword * VegaISA::NumVecElemPerVecReg;
+                pkt[dword]->dataStatic(
+                    &(reinterpret_cast<VegaISA::VecElemU32*>(
+                        gpuDynInst->d_data))[data_elem]);
+
+                gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
+                                                       pkt[dword]);
+            }
+        } else { // if lane is not active, then no pending requests
+            gpuDynInst->setStatusVector(lane, 0);
+        }
+    }
+}
+
 /**
  * Helper function for scalar instructions declared in op_encodings.  This
  * function takes in all of the arguments for a given memory request we are
