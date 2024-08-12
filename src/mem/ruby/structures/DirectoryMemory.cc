@@ -69,7 +69,7 @@ DirectoryMemory::DirectoryMemory(const Params &p)
 void
 DirectoryMemory::init()
 {
-    m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
+    m_num_entries = m_size_bytes / m_block_size;
     m_entries = new AbstractCacheEntry*[m_num_entries];
     for (int i = 0; i < m_num_entries; i++)
         m_entries[i] = NULL;

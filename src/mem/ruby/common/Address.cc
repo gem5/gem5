@@ -73,7 +73,7 @@ Addr
 makeNextStrideAddress(Addr addr, int stride)
 {
     return makeLineAddress(addr) +
-        static_cast<int>(RubySystem::getBlockSizeBytes()) * stride;
+        static_cast<int>(64 /* TODO */) * stride;
 }
 
 std::string

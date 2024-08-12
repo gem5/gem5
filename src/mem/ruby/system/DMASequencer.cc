@@ -73,7 +73,7 @@ void
 DMASequencer::init()
 {
     RubyPort::init();
-    m_data_block_mask = mask(RubySystem::getBlockSizeBits());
+    m_data_block_mask = mask(m_ruby_system->getBlockSizeBits());
 }
 
 RequestStatus
@@ -110,8 +110,10 @@ DMASequencer::makeRequest(PacketPtr pkt)
 
     DPRINTF(RubyDma, "DMA req created: addr %p, len %d\n", line_addr, len);
 
+    int blk_size = m_ruby_system->getBlockSizeBytes();
+
     std::shared_ptr<SequencerMsg> msg =
-        std::make_shared<SequencerMsg>(clockEdge());
+        std::make_shared<SequencerMsg>(clockEdge(), blk_size);
     msg->getPhysicalAddress() = paddr;
     msg->getLineAddress() = line_addr;
 
@@ -145,8 +147,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
 
     int offset = paddr & m_data_block_mask;
 
-    msg->getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
-        len : RubySystem::getBlockSizeBytes() - offset;
+    msg->getLen() = (offset + len) <= m_ruby_system->getBlockSizeBytes() ?
+        len : m_ruby_system->getBlockSizeBytes() - offset;
 
     if (write && (data != NULL)) {
         if (active_request.data != NULL) {
@@ -183,8 +185,10 @@ DMASequencer::issueNext(const Addr& address)
         return;
     }
 
+    int blk_size = m_ruby_system->getBlockSizeBytes();
+
     std::shared_ptr<SequencerMsg> msg =
-        std::make_shared<SequencerMsg>(clockEdge());
+        std::make_shared<SequencerMsg>(clockEdge(), blk_size);
     msg->getPhysicalAddress() = active_request.start_paddr +
                                 active_request.bytes_completed;
 
@@ -196,9 +200,9 @@ DMASequencer::issueNext(const Addr& address)
 
     msg->getLen() =
         (active_request.len -
-         active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
+         active_request.bytes_completed < m_ruby_system->getBlockSizeBytes() ?
          active_request.len - active_request.bytes_completed :
-         RubySystem::getBlockSizeBytes());
+         m_ruby_system->getBlockSizeBytes());
 
     if (active_request.write) {
         msg->getDataBlk().

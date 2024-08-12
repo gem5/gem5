@@ -57,10 +57,10 @@ namespace ruby
 *       - The same line has been accessed in the past accessLatency ticks
 */
 
-ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Tick access_latency)
+ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Cycles access_clocks)
 {
     this->numALUs = num_ALUs;
-    this->accessLatency = access_latency;
+    this->accessClocks = access_clocks;
 }
 
 bool ALUFreeListArray::tryAccess(Addr addr)

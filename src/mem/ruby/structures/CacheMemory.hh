@@ -154,6 +154,8 @@ class CacheMemory : public SimObject
     void htmAbortTransaction();
     void htmCommitTransaction();
 
+    void setRubySystem(RubySystem* rs);
+
   public:
     int getCacheSize() const { return m_cache_size; }
     int getCacheAssoc() const { return m_cache_assoc; }

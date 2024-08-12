@@ -45,7 +45,8 @@ class ALUFreeListArray
 {
   private:
     unsigned int numALUs;
-    Tick accessLatency;
+    Cycles accessClocks;
+    Tick accessLatency = 0;
 
     class AccessRecord
     {
@@ -63,13 +64,24 @@ class ALUFreeListArray
     std::deque<AccessRecord> accessQueue;
 
   public:
-    ALUFreeListArray(unsigned int num_ALUs, Tick access_latency);
+    ALUFreeListArray(unsigned int num_ALUs, Cycles access_clocks);
 
     bool tryAccess(Addr addr);
 
     void reserve(Addr addr);
 
-    Tick getLatency() const { return accessLatency; }
+    Tick
+    getLatency() const
+    {
+        assert(accessLatency > 0);
+        return accessLatency;
+    }
+
+    void
+    setClockPeriod(Tick clockPeriod)
+    {
+        accessLatency = accessClocks * clockPeriod;
+    }
 };
 
 } // namespace ruby

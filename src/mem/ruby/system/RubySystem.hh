@@ -69,7 +69,7 @@ class RubySystem : public ClockedObject
 
     // config accessors
     static int getRandomization() { return m_randomization; }
-    static uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
+    uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
     static uint32_t getBlockSizeBits() { return m_block_size_bits; }
     static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
     static bool getWarmupEnabled() { return m_warmup_enabled; }
@@ -135,7 +135,7 @@ class RubySystem : public ClockedObject
   private:
     // configuration parameters
     static bool m_randomization;
-    static uint32_t m_block_size_bytes;
+    uint32_t m_block_size_bytes;
     static uint32_t m_block_size_bits;
     static uint32_t m_memory_size_bits;
 

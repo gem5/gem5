@@ -135,9 +135,9 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     // Creating WriteMask that records written bytes
     // and atomic operations. This enables partial writes
     // and partial reads of those writes
-    DataBlock dataBlock;
+    uint32_t blockSize = m_ruby_system->getBlockSizeBytes();
+    DataBlock dataBlock(blockSize);
     dataBlock.clear();
-    uint32_t blockSize = RubySystem::getBlockSizeBytes();
     std::vector<bool> accessMask(blockSize,false);
     std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
     uint32_t tableSize = crequest->getPackets().size();
@@ -159,15 +159,17 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     }
     std::shared_ptr<RubyRequest> msg;
     if (pkt->isAtomicOp()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
+        msg = std::make_shared<RubyRequest>(clockEdge(), blockSize,
+                              pkt->getAddr(), pkt->getSize(), pc,
+                              crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
                               blockSize, accessMask,
                               dataBlock, atomicOps, crequest->getSeqNum());
     } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
+        msg = std::make_shared<RubyRequest>(clockEdge(), blockSize,
+                              pkt->getAddr(), pkt->getSize(), pc,
+                              crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
                               blockSize, accessMask,
@@ -296,7 +298,7 @@ VIPERCoalescer::invTCP()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, 0, 0,
+            clockEdge(), m_ruby_system->getBlockSizeBytes(), addr, 0, 0,
             request_type, RubyAccessMode_Supervisor,
             nullptr);
         DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);
@@ -343,7 +345,7 @@ VIPERCoalescer::invTCC(PacketPtr pkt)
     RubyRequestType request_type = RubyRequestType_InvL2;
 
     std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-        clockEdge(), addr, 0, 0,
+        clockEdge(), m_ruby_system->getBlockSizeBytes(), addr, 0, 0,
         request_type, RubyAccessMode_Supervisor,
         nullptr);
 

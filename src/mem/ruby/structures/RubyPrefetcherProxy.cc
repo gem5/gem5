@@ -66,7 +66,7 @@ RubyPrefetcherProxy::RubyPrefetcherProxy(AbstractController* _parent,
         prefetcher->setParentInfo(
             cacheCntrl->params().system,
             cacheCntrl->getProbeManager(),
-            RubySystem::getBlockSizeBytes());
+            cacheCntrl->m_ruby_system->getBlockSizeBytes());
     }
 }
 
@@ -112,7 +112,7 @@ RubyPrefetcherProxy::issuePrefetch()
 
         if (pkt) {
             DPRINTF(HWPrefetch, "Next prefetch ready %s\n", pkt->print());
-            unsigned blk_size = RubySystem::getBlockSizeBytes();
+            unsigned blk_size = cacheCntrl->m_ruby_system->getBlockSizeBytes();
             Addr line_addr = pkt->getBlockAddr(blk_size);
 
             if (issuedPfPkts.count(line_addr) == 0) {
@@ -126,6 +126,7 @@ RubyPrefetcherProxy::issuePrefetch()
 
                 std::shared_ptr<RubyRequest> msg =
                     std::make_shared<RubyRequest>(cacheCntrl->clockEdge(),
+                                                  blk_size,
                                                   pkt->getAddr(),
                                                   blk_size,
                                                   0, // pc

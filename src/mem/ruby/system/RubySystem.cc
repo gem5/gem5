@@ -67,7 +67,6 @@ namespace ruby
 {
 
 bool RubySystem::m_randomization;
-uint32_t RubySystem::m_block_size_bytes;
 uint32_t RubySystem::m_block_size_bits;
 uint32_t RubySystem::m_memory_size_bits;
 bool RubySystem::m_warmup_enabled = false;
@@ -212,8 +211,8 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
 
     // Create the CacheRecorder and record the cache trace
     m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
-                                         ruby_port_map,
-                                         block_size_bytes);
+                                         ruby_port_map, block_size_bytes,
+                                         m_block_size_bytes);
 }
 
 void
@@ -331,7 +330,7 @@ RubySystem::serialize(CheckpointOut &cp) const
     // Store the cache-block size, so we are able to restore on systems
     // with a different cache-block size. CacheRecorder depends on the
     // correct cache-block size upon unserializing.
-    uint64_t block_size_bytes = getBlockSizeBytes();
+    uint64_t block_size_bytes = m_block_size_bytes;
     SERIALIZE_SCALAR(block_size_bytes);
 
     // Check that there's a valid trace to use.  If not, then memory won't

@@ -646,6 +646,7 @@ $c_ident::$c_ident(const Params &p)
     m_machineID.num = m_version;
     m_num_controllers++;
     p.ruby_system->registerAbstractController(this);
+    m_ruby_system = p.ruby_system;
 
     m_in_ports = $num_in_ports;
 """
@@ -775,6 +776,17 @@ $c_ident::init()
                     elif "default" in vtype:
                         comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
+
+                    # For objects that require knowing the cache line size,
+                    # set the value here.
+                    if vtype.c_ident in ("TBETable"):
+                        block_size_func = "m_ruby_system->getBlockSizeBytes()"
+                        code(f"(*{vid}).setBlockSize({block_size_func});")
+
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory":
+                assert param.pointer
+                code(f"m_{param.ident}_ptr->setRubySystem(m_ruby_system);")
 
         # Set the prefetchers
         code()

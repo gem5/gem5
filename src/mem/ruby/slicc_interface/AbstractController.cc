@@ -268,7 +268,7 @@ AbstractController::serviceMemoryQueue()
     }
 
     const MemoryMsg *mem_msg = (const MemoryMsg*)mem_queue->peek();
-    unsigned int req_size = RubySystem::getBlockSizeBytes();
+    unsigned int req_size = m_ruby_system->getBlockSizeBytes();
     if (mem_msg->m_Len > 0) {
         req_size = mem_msg->m_Len;
     }
@@ -382,7 +382,10 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         return false;
     }
 
-    std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
+    int blk_size = m_ruby_system->getBlockSizeBytes();
+
+    std::shared_ptr<MemoryMsg> msg =
+        std::make_shared<MemoryMsg>(clockEdge(), blk_size);
     (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
 
@@ -396,7 +399,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
 
         // Copy data from the packet
         (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
-                                 RubySystem::getBlockSizeBytes());
+                                 m_ruby_system->getBlockSizeBytes());
     } else if (pkt->isWrite()) {
         (*msg).m_Type = MemoryRequestType_MEMORY_WB;
         (*msg).m_MessageSize = MessageSizeType_Writeback_Control;

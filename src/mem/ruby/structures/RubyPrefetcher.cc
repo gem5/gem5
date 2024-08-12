@@ -313,7 +313,7 @@ RubyPrefetcher::accessNonunitFilter(Addr line_addr,
                         // dataBlockBytes (bc makeNextStrideAddress is
                         // calculated based on this multiplicative constant!)
                         const int stride = entry.stride /
-                            RubySystem::getBlockSizeBytes();
+                            64 /* TODO */;
 
                         // clear this filter entry
                         entry.clear();

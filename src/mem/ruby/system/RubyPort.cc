@@ -344,7 +344,7 @@ RubyPort::MemResponsePort::recvAtomic(PacketPtr pkt)
         }
 
         assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
-               RubySystem::getBlockSizeBytes());
+               owner.m_ruby_system->getBlockSizeBytes());
     }
 
     // Find the machine type of memory controller interface
@@ -404,7 +404,7 @@ RubyPort::MemResponsePort::recvFunctional(PacketPtr pkt)
     }
 
     assert(pkt->getAddr() + pkt->getSize() <=
-           makeLineAddress(pkt->getAddr()) + RubySystem::getBlockSizeBytes());
+           makeLineAddress(pkt->getAddr()) + rs->getBlockSizeBytes());
 
     if (access_backing_store) {
         // The attached physmem contains the official version of data.
@@ -501,7 +501,7 @@ RubyPort::ruby_stale_translation_callback(Addr txnId)
     // assumed they will not be modified or deleted by receivers.
     // TODO: should this really be using funcRequestorId?
     auto request = std::make_shared<Request>(
-        0, RubySystem::getBlockSizeBytes(), Request::TLBI_EXT_SYNC,
+        0, m_ruby_system->getBlockSizeBytes(), Request::TLBI_EXT_SYNC,
         Request::funcRequestorId);
     // Store the txnId in extraData instead of the address
     request->setExtraData(txnId);
@@ -701,7 +701,7 @@ RubyPort::ruby_eviction_callback(Addr address)
     // assumed they will not be modified or deleted by receivers.
     // TODO: should this really be using funcRequestorId?
     auto request = std::make_shared<Request>(
-        address, RubySystem::getBlockSizeBytes(), 0,
+        address, m_ruby_system->getBlockSizeBytes(), 0,
         Request::funcRequestorId);
 
     // Use a single packet to signal all snooping ports of the invalidation.

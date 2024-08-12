@@ -70,6 +70,8 @@ class TBETable
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
+    void setBlockSize(const int block_size) { m_block_size = block_size; }
+
     ENTRY *getNullEntry();
     ENTRY *lookup(Addr address);
 
@@ -85,7 +87,8 @@ class TBETable
     std::unordered_map<Addr, ENTRY> m_map;
 
   private:
-    int m_number_of_TBEs;
+    int m_number_of_TBEs = 0;
+    int m_block_size = 0;
 };
 
 template<class ENTRY>
@@ -112,7 +115,8 @@ TBETable<ENTRY>::allocate(Addr address)
 {
     assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
-    m_map[address] = ENTRY();
+    assert(m_block_size > 0);
+    m_map.emplace(address, ENTRY(m_block_size));
 }
 
 template<class ENTRY>

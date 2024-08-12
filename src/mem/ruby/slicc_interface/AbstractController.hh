@@ -72,6 +72,7 @@ namespace ruby
 class Network;
 class GPUCoalescer;
 class DMASequencer;
+class RubySystem;
 
 // used to communicate that an in_port peeked the wrong message type
 class RejectException: public std::exception
@@ -451,6 +452,8 @@ class AbstractController : public ClockedObject, public Consumer
         SenderState(MachineID _id) : id(_id)
         {}
     };
+
+    RubySystem *m_ruby_system = nullptr;
 
   private:
     /** The address range to which the controller responds on the CPU side. */

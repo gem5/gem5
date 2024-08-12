@@ -910,7 +910,7 @@ Sequencer::invL1()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, 0, 0,
+            clockEdge(), m_ruby_system->getBlockSizeBytes(), addr, 0, 0,
             request_type, RubyAccessMode_Supervisor,
             nullptr);
         DPRINTF(RubySequencer, "Evicting addr 0x%x\n", addr);
@@ -1080,11 +1080,13 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
         pc = pkt->req->getPC();
     }
 
+    int blk_size = m_ruby_system->getBlockSizeBytes();
+
     // check if the packet has data as for example prefetch and flush
     // requests do not
     std::shared_ptr<RubyRequest> msg;
     if (pkt->req->isMemMgmt()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(),
+        msg = std::make_shared<RubyRequest>(clockEdge(), blk_size,
                                             pc, secondary_type,
                                             RubyAccessMode_Supervisor, pkt,
                                             proc_id, core_id);
@@ -1111,8 +1113,9 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
                     msg->m_tlbiTransactionUid);
         }
     } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                                            pkt->getSize(), pc, secondary_type,
+        msg = std::make_shared<RubyRequest>(clockEdge(), blk_size,
+                                            pkt->getAddr(), pkt->getSize(),
+                                            pc, secondary_type,
                                             RubyAccessMode_Supervisor, pkt,
                                             PrefetchBit_No, proc_id, core_id);
 

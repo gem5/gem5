@@ -36,7 +36,6 @@
 
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
-#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
