@@ -552,6 +552,24 @@ class SlimAMPMPrefetcher(QueuedPrefetcher):
     )
 
 
+class BoPrefetcher(QueuedPrefetcher):
+    # Paper: https://doi.org/10.1109/HPCA.2016.7446087
+    type = "BoPrefetcher"
+    cxx_class = "gem5::prefetch::Bo"
+    cxx_header = "mem/cache/prefetch/bo.hh"
+    round_max = Param.Int(100, "Number of rounds for training")
+    max_score = Param.Int(31, "Maximum score to finish training")
+    bad_score = Param.Int(1, "Below this score switch off prefetcher")
+    rr_size = Param.Int(256, "Size of recent request table")
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_pf_hit = True
+    on_miss = True
+    on_inst = False
+
+
 class BOPPrefetcher(QueuedPrefetcher):
     type = "BOPPrefetcher"
     cxx_class = "gem5::prefetch::BOP"
