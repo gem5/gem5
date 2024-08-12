@@ -184,7 +184,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         // Round strides up to at least 1 cacheline
         int prefetch_stride = entry->stride;
         if (abs(prefetch_stride) < blkSize) {
-            prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
+            prefetch_stride = (prefetch_stride < 0) ? -blkSize : blkSize;
         }
 
         Addr new_addr = pf_addr + distance * prefetch_stride;
