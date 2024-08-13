@@ -173,7 +173,6 @@ group "ubuntu-releases" {
   targets=[
     "ubuntu-24-04_all-dependencies",
     "ubuntu-22-04_all-dependencies",
-    "ubuntu-20-04_all-dependencies",
     "ubuntu-24-04_min-dependencies"
   ]
 }
@@ -190,13 +189,6 @@ target "ubuntu-22-04_all-dependencies" {
   dockerfile = "Dockerfile"
   context = "ubuntu-22.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
-}
-
-target "ubuntu-20-04_all-dependencies" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-20.04_all-dependencies"
-  tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-24-04_min-dependencies" {
