@@ -37,8 +37,8 @@ variable "TAG" {
 
 # Common attributes across all targets. Note: these can be overwritten.
 target "common" {
-  # Here we are enabling multi-platform builds. We are compiling to both ARM
-  # amd X86.
+  # Here we are enabling multi-platform builds. We are compiling to ARM, X86,
+  # and RISC-V.
   platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
   pull = true
 }
