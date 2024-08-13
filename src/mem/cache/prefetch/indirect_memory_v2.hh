@@ -174,8 +174,8 @@ namespace gem5
                         uint64_t confidence;
 
                         /*
-                         * The predicted indirect access is then used to update
-                         * the confidence of this entry
+                         * The predicted indirect access is used to update the
+                         * confidence of this entry
                          */
                         std::optional<Addr> predicted_indirect_access;
 
@@ -189,7 +189,10 @@ namespace gem5
                         /*
                          * This counter tracks the number of hits obtained on
                          * this indirect pattern. This counter is upper bounded
-                         * by max_hit_count
+                         * by max_hit_count. This counter is then used by IMP
+                         * to decide the prefetch distance for the stride
+                         * component of IMP which is responsible for issuing
+                         * prefetches for the index array, B
                          */
                         uint64_t hit_count;
 
@@ -219,8 +222,8 @@ namespace gem5
                     /*
                      * The indirect table is indexed using the IP of the load
                      * instruction responsible for reading the indexing array,
-                     * i.e. B. Note that this is the same index which is used
-                     * for indexing the stream table
+                     * i.e. B. Note that the stream table is also indexed using
+                     * the IP
                      */
                     std::map<Addr, IndirectTableEntry> indirect_table;
                     const uint64_t indirect_table_size;
@@ -237,7 +240,7 @@ namespace gem5
                     /* This function is called whenever a new index value is
                      * observed, i.e. a read from array B. This function
                      * performs two jobs:
-                     * 1. It updated the predicted indirect access value for
+                     * 1. It updates the predicted indirect access value for
                      *    the entry associated with IP
                      * 2. If the found_match flag for the entry is set to
                      *    false when this function is called, the entry's
