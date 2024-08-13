@@ -47,9 +47,9 @@ Types of Functions That Need to Be Added:
 // This is the NewTLB Entry
 
 // [0] necessary imports
-// using the struct TLB Entry to build this 
+// using the struct TLB Entry to build this
 class TLBEntry : public CacheEntry, public Serializable
-{ 
+{
 
   public:
   // Variables found across the pagetable.hh files across ISA's
@@ -71,8 +71,8 @@ class TLBEntry : public CacheEntry, public Serializable
 
   // [2] Constructors
     // change this current implementation to include AC initialization
-    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, 
-            bool uncacheable, bool read_only); 
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
+            bool uncacheable, bool read_only);
     TlbEntry();
 
   // [3] Internal Functions
@@ -103,4 +103,3 @@ class TLBEntry : public CacheEntry, public Serializable
 } // namespace gem5
 
 #endif
-

@@ -9,7 +9,7 @@
 
 // to be honest, most things needed to be public or protected
 
-// using the struct TLB Entry to build this 
+// using the struct TLB Entry to build this
 
 // public vs. private vs. protected
 /*
@@ -22,10 +22,10 @@ then move down to all the ones that the ISA's need
 private is the actual last resort
 
 */
- 
+
 // honestly need to make everything in here public
 class TLBEntry : public CacheEntry, public Serializable
-{ 
+{
 
   public:
   // these are pretty common variables
@@ -49,9 +49,9 @@ class TLBEntry : public CacheEntry, public Serializable
   // [2] these are the constructors
     // have to get this constructor to match the variables above
     // at some point i will have to initailize the Cache Entry, no idea
-    // have to get Cache Entry instea 
-    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, 
-            bool uncacheable, bool read_only); 
+    // have to get Cache Entry instea
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
+            bool uncacheable, bool read_only);
     TlbEntry();
 
 
@@ -80,7 +80,7 @@ class TLBEntry : public CacheEntry, public Serializable
 
 
 // [4] these are the extension from serializable
-    // this is the part that calls on serializable 
+    // this is the part that calls on serializable
     // come back to this! - not entirely sure how to navigate from this
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
