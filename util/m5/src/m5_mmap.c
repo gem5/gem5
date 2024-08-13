@@ -57,7 +57,7 @@ void *m5_mem = NULL;
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 
-const char *m5_mmap_dev = "/dev/mem";
+const char *m5_mmap_dev = "/dev/gem5_bridge";
 
 void
 map_m5_mem()
@@ -79,8 +79,7 @@ map_m5_mem()
         exit(1);
     }
 
-    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                  m5op_addr);
+    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     close(fd);
 
     if (!m5_mem) {
