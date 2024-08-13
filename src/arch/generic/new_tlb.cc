@@ -22,16 +22,14 @@ namespace gem5
  * calculates stats
  * returns an entry
  * 
- * @TBD: determine what the key value will be
+ * @TBD: call the build key function determine how to access BaseMMU, determine how to access status
  * @AC: findEntry(const Addr addr)
  * @params: key | mode (for stats) | hidden (to know whether to update LRU)
- *  - key can either be vpn & asid or va
  * @result: returns entry that was found in the AC
  * 
  */
-TLBEntry * lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
-
-    // create new entry
+virtual TLBEntry * lookup(Addr key, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
+    
     TLBEntry *entry = this->_cache.findEntry(key)
 
     // following code taken from arch/riscv/tlb.cc
@@ -63,8 +61,32 @@ TLBEntry * lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
         return entry;
 }
 
-TLBEntry * insert(----)
-    // AssociativeCache::insertEntry(const Addr addr, Entry *entry)
+/** Insert
+ * insert entry, sets the parameters of the accordingly
+ * calculates stats
+ * returns an entry
+ * 
+ * @TBD: 
+ * @AC: insertEntry(const Addr addr, Entry *entry), 
+ * @params: key | mode (for stats) | hidden (to know whether to update LRU)
+ * @result: returns the new entry
+ * 
+ */
+TLBEntry * insert(Addr vpn, const TlbEntry &entry, uint64_t pcid) {
+/** Differences
+ * key for insert
+ * asid, vs. psid
+ * logBytes
+ * full system vs. not full system
+ */
+
+// calling buildKey
+// this is function for x86
+// this is null for riscv
+
+
+
+}
 
 TLBEntry * remove(----)
     // AssociativeCache::findEntry(const Addr addr)
@@ -117,6 +139,14 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
     ADD_STAT(accesses, statistics::units::Count::get(),
              "Total TLB (read and write) accesses",
              readAccesses + writeAccesses)
+
+// Helper Function
+
+// riscv
+static Addr buildKey(Addr vpn, uint16_t asid)
+
+//x86
+inline Addr concAddrPcid(Addr vpn, uint64_t pcid)
 
 
 };
