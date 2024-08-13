@@ -1,7 +1,6 @@
-
-
 #include "base/cache/associative_cache.hh"
-#include "generic/new_tlb.hh
+#include "generic/new_tlb.hh 
+// this generic/new_tlb.hh includes both TLB definition and the TLB Entry definition
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
@@ -13,10 +12,56 @@ Questions:
 namespace gem5
 {
 
+// Constructor
+
 
 // Cache Management
-TLBEntry * lookup(----)
-    // AssociativeCache::findEntry(const Addr addr)
+
+/** Lookup
+ * looks up an entry based off of certain params
+ * calculates stats
+ * returns an entry
+ * 
+ * @TBD: determine what the key value will be
+ * @AC: findEntry(const Addr addr)
+ * @params: key | mode (for stats) | hidden (to know whether to update LRU)
+ *  - key can either be vpn & asid or va
+ * @result: returns entry that was found in the AC
+ * 
+ */
+TLBEntry * lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
+
+    // create new entry
+    TLBEntry *entry = this->_cache.findEntry(key)
+
+    // following code taken from arch/riscv/tlb.cc
+    if (!hidden) {
+        if (entry) 
+            entry->lruSeq = nextSeq(); 
+        
+        // noting the misses/hits
+        if (mode == BaseMMU::Write)
+            stats.writeAccesses++;
+        else
+            stats.readAccesses++;
+        
+        // noting the misses/hits
+        if (!entry) {
+            if (mode == BaseMMU::Write)
+                stats.writeMisses++;
+            else
+                stats.readMisses++;
+        }
+        else {
+            if (mode == BaseMMU::Write)
+                stats.writeHits++;
+            else
+                stats.readHits++;
+        }
+
+        // return entry
+        return entry;
+}
 
 TLBEntry * insert(----)
     // AssociativeCache::insertEntry(const Addr addr, Entry *entry)
@@ -25,8 +70,16 @@ TLBEntry * remove(----)
     // AssociativeCache::findEntry(const Addr addr)
     // AssociativeCache::invalidate(Entry *entry)
    
-void flushAll(---)
+/**
+ * clears all entry in associative cache
+ * @params: none
+ * @result: none
+ */
+void flushAll() {
+    this->_cache.clear()
     // AssociateCache::clear()
+
+}
    
 void evictLRU(---)
     // AssociativeCachefindVictim(const Addr addr)
