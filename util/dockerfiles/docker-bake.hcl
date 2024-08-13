@@ -32,7 +32,7 @@ variable "IMAGE_URI" {
 }
 
 variable "TAG" {
-  default = "bootcamp-2024"
+  default = "latest"
 }
 
 # Common attributes across all targets. Note: these can be overwritten.
