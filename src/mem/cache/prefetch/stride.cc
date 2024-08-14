@@ -86,7 +86,8 @@ Stride::Stride(const StridePrefetcherParams &p)
     degree(p.degree),
     distance(p.distance),
     pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
-                p.table_replacement_policy)
+                p.table_replacement_policy),
+    useCachelineAddr(p.use_cache_line_address)
 {
 }
 
@@ -133,7 +134,8 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
     }
 
     // Get required packet info
-    Addr pf_addr = pfi.getAddr();
+    Addr pf_addr = useCachelineAddr ? blockAddress(pfi.getAddr())
+                                    : pfi.getAddr();
     Addr pc = pfi.getPC();
     bool is_secure = pfi.isSecure();
     RequestorID requestor_id = useRequestorId ? pfi.getRequestorId() : 0;
@@ -149,10 +151,15 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
 
         // Hit in table
         int new_stride = pf_addr - entry->lastAddr;
+
+        // Do nothing on repeated memory access
+        if (useCachelineAddr && new_stride == 0)
+            return;
+
         bool stride_match = (new_stride == entry->stride);
 
         // Adjust confidence for stride entry
-        if (stride_match && new_stride != 0) {
+        if (stride_match) {
             entry->confidence++;
         } else {
             entry->confidence--;
@@ -174,10 +181,10 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
             return;
         }
 
-        // Round strides up to atleast 1 cacheline
-        int prefetch_stride = new_stride;
-        if (abs(new_stride) < blkSize) {
-            prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
+        // Round strides up to at least 1 cacheline
+        int prefetch_stride = entry->stride;
+        if (abs(prefetch_stride) < blkSize) {
+            prefetch_stride = (prefetch_stride < 0) ? -blkSize : blkSize;
         }
 
         Addr new_addr = pf_addr + distance * prefetch_stride;

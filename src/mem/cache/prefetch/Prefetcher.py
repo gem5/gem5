@@ -190,6 +190,13 @@ class StridePrefetcher(QueuedPrefetcher):
 
     use_requestor_id = Param.Bool(True, "Use requestor id based history")
 
+    use_cache_line_address = Param.Bool(
+        True,
+        "If this parameter is set to True, then the prefetcher will "
+        "operate on cache line addresses, else it would operate on word "
+        "addresses",
+    )
+
     degree = Param.Int(4, "Number of prefetches to generate")
     distance = Param.Unsigned(
         0,
