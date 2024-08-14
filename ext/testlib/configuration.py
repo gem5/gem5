@@ -296,6 +296,7 @@ def define_constants(constants):
         constants.host_isa_tag_type: (
             constants.host_x86_64_tag,
             constants.host_arm_tag,
+            constants.host_gcn_gpu_tag,
         ),
     }
 

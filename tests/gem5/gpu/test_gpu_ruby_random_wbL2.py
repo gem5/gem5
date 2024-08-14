@@ -52,7 +52,7 @@ gem5_verify_config(
     ),
     config_args=["--WB_L2", "--test-length", "50000", "--num-dmas", "0"],
     valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=constants.supported_hosts,
+    valid_hosts=(constants.host_gcn_gpu_tag,),
     length=constants.long_tag,
 )
 
@@ -79,6 +79,6 @@ gem5_verify_config(
     ),
     config_args=["--WB_L2", "--test-length", "5000000", "--num-dmas", "0"],
     valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=constants.supported_hosts,
+    valid_hosts=(constants.host_gcn_gpu_tag,),
     length=constants.long_tag,
 )
