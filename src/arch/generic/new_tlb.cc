@@ -1,13 +1,8 @@
 #include "base/cache/associative_cache.hh"
 #include "generic/new_tlb.hh 
-// this generic/new_tlb.hh includes both TLB definition and the TLB Entry definition
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
-/*
-Questions:
-- How do I specify the return type?
-*/
 
 namespace gem5
 {
@@ -28,10 +23,14 @@ namespace gem5
  * @result: returns entry that was found in the AC
  * 
  */
-virtual TLBEntry * lookup(Addr key, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
+  /** ISA specification
+   *  x86 key = concAddrPcid(vpn, pcid)
+   *  RISCV key = buildKey(vpn, asid)
+   */
+   
+virtual TLBEntry * lookup(Addr key, BaseMMU::Mode mode, bool hidden) {
     
     TLBEntry *entry = this->_cache.findEntry(key)
-
     // following code taken from arch/riscv/tlb.cc
     if (!hidden) {
         if (entry) 
@@ -72,7 +71,13 @@ virtual TLBEntry * lookup(Addr key, uint16_t asid, BaseMMU::Mode mode, bool hidd
  * @result: returns the new entry
  * 
  */
-TLBEntry * insert(Addr vpn, const TlbEntry &entry, uint64_t pcid) {
+// insert_key for RISCV = build key(vpn, entry.asid)
+// insert_key for x86 = vpn
+
+// lookup_key for RISCV = vpn
+// lookup_key for x86 = 
+
+TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, uint64_t pcid, Addr insert_key) {
 /** Differences
  * key for insert
  * asid, vs. psid
@@ -80,27 +85,50 @@ TLBEntry * insert(Addr vpn, const TlbEntry &entry, uint64_t pcid) {
  * full system vs. not full system
  */
 
-// calling buildKey
-// this is function for x86
-// this is null for riscv
+// internal lookup is called, so the key is already set
+TlbEntry *newEntry = lookup(lookup_key, entry.asid, BaseMMU::read, true);
+
+// find an entry
+
+// free list handling
+
+
+// set the new entry and stuff
+RISCV:
+- newEntry->pte = 
+- creates an Addr of buildKey(vpn, entry.asid)
+- sets a newEntry to entry // this is explicity 
+- update lruEq
+
+A
+
+
+
+// figure out where to actually insert
+
 
 
 
 }
 
-TLBEntry * remove(----)
-    // AssociativeCache::findEntry(const Addr addr)
-    // AssociativeCache::invalidate(Entry *entry)
+/** Remove
+ * removes an index
+ * @AC: findEntry(const Addr addr), invalidate(Entry *entry)
+ * @params: address to delete
+ * @result: none
+ */
+void remove(Addr addr) {
+    this->_cache.invalidate(findEntry(addr));
+}
    
-/**
+/** FlushAll
  * clears all entry in associative cache
+ * @AC: clear()
  * @params: none
  * @result: none
  */
 void flushAll() {
     this->_cache.clear()
-    // AssociateCache::clear()
-
 }
    
 void evictLRU(---)
