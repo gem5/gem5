@@ -28,7 +28,7 @@ The Dockerfiles are built using the Docker buildx feature. The buildx feature is
 For more information on the Docker buildx feature, refer to the [Docker documentation](https://docs.docker.com/buildx/working-with-buildx/).
 
 In this setup we store the buildx configurations in the "docker-bake.hcl" file.
-It is worth contsulting this files and noting the "targerts" and "groups" these can be passed to the buildx command to build that target image or group of images.
+It is worth consulting these files and noting the "targets" and "groups", these can be passed to the buildx command to build that target image or group of images.
 
 For example, the following will build the "ubuntu-24.04_all-dependencies" image:
 
