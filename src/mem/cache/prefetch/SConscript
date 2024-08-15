@@ -31,8 +31,8 @@ Import('*')
 SimObject('Prefetcher.py', sim_objects=[
     'BasePrefetcher', 'MultiPrefetcher', 'QueuedPrefetcher',
     'StridePrefetcherHashedSetAssociative', 'StridePrefetcher',
-    'SmsPrefetcher', 'TaggedPrefetcher', 'IndirectMemoryPrefetcher', 
-    'SignaturePathPrefetcher', 'SignaturePathPrefetcherV2', 
+    'SmsPrefetcher', 'TaggedPrefetcher', 'IndirectMemoryPrefetcher',
+    'SignaturePathPrefetcher', 'SignaturePathPrefetcherV2',
     'AccessMapPatternMatching', 'AMPMPrefetcher',
     'DeltaCorrelatingPredictionTables', 'DCPTPrefetcher',
     'IrregularStreamBufferPrefetcher', 'SlimAMPMPrefetcher',
