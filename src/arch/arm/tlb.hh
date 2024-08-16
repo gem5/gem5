@@ -168,7 +168,7 @@ class TLB : public BaseTLB
 
   public:
     using Params = ArmTLBParams;
-    using Lookup = TlbEntry::Lookup;
+    using Lookup = TlbEntry::KeyType;
     using LookupLevel = enums::ArmLookupLevel;
 
     TLB(const Params &p);

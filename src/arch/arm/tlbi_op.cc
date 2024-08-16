@@ -206,10 +206,10 @@ TLBIALLN::matchEntry(TlbEntry* te, vmid_t vmid) const
         te->checkRegime(targetRegime);
 }
 
-TlbEntry::Lookup
+TlbEntry::KeyType
 TLBIMVAA::lookupGen(vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data;
+    TlbEntry::KeyType lookup_data;
     lookup_data.va = sext<56>(addr);
     lookup_data.ignoreAsn = true;
     lookup_data.vmid = vmid;
@@ -234,15 +234,15 @@ TLBIMVAA::operator()(ThreadContext* tc)
 bool
 TLBIMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
 
     return te->match(lookup_data) && (!lastLevel || !te->partial);
 }
 
-TlbEntry::Lookup
+TlbEntry::KeyType
 TLBIMVA::lookupGen(vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data;
+    TlbEntry::KeyType lookup_data;
     lookup_data.va = sext<56>(addr);
     lookup_data.asn = asid;
     lookup_data.ignoreAsn = false;
@@ -269,7 +269,7 @@ TLBIMVA::operator()(ThreadContext* tc)
 bool
 TLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
 
     return te->match(lookup_data) && (!lastLevel || !te->partial);
 }
@@ -309,10 +309,10 @@ TLBIIPA::operator()(ThreadContext* tc)
     }
 }
 
-TlbEntry::Lookup
+TlbEntry::KeyType
 TLBIIPA::lookupGen(vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data;
+    TlbEntry::KeyType lookup_data;
     lookup_data.va = szext<56>(addr);
     lookup_data.ignoreAsn = true;
     lookup_data.vmid = vmid;
@@ -326,7 +326,7 @@ TLBIIPA::lookupGen(vmid_t vmid) const
 bool
 TLBIIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
 
     return te->match(lookup_data) && (!lastLevel || !te->partial) &&
         ipaSpace == te->ipaSpace;
@@ -335,7 +335,7 @@ TLBIIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
 bool
 TLBIRMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
 
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
@@ -351,7 +351,7 @@ TLBIRMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 bool
 TLBIRMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
 
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
@@ -367,7 +367,7 @@ TLBIRMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 bool
 TLBIRIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    TlbEntry::KeyType lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
 
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
