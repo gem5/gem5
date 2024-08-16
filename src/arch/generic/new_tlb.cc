@@ -17,7 +17,7 @@ namespace gem5
  * calculates stats
  * returns an entry
  * 
- * @TBD: call the build key function determine how to access BaseMMU, determine how to access status
+ * @TBD: call the build key function determine how to access BaseMMU, determine how to access status?
  * @AC: findEntry(const Addr addr)
  * @params: key | mode (for stats) | hidden (to know whether to update LRU)
  * @result: returns entry that was found in the AC
@@ -27,8 +27,16 @@ namespace gem5
    *  x86 key = concAddrPcid(vpn, pcid)
    *  RISCV key = buildKey(vpn, asid)
    */
+
+/**
+ * So basically would happen
+ * ISA::TLB lookup ( - , - , - ){
+ *   CREATE KEY
+ *   TLB(key)
+ * }
+ */
    
-virtual TLBEntry * lookup(Addr key, BaseMMU::Mode mode, bool hidden) {
+virtual TLBEntry * lookup(Addr vpn,  BaseMMU::Mode mode, bool hidden) {
     
     TLBEntry *entry = this->_cache.findEntry(key)
     // following code taken from arch/riscv/tlb.cc
@@ -71,27 +79,57 @@ virtual TLBEntry * lookup(Addr key, BaseMMU::Mode mode, bool hidden) {
  * @result: returns the new entry
  * 
  */
-// insert_key for RISCV = build key(vpn, entry.asid)
-// insert_key for x86 = vpn
-
-// lookup_key for RISCV = vpn
-// lookup_key for x86 = 
-
-TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, uint64_t pcid, Addr insert_key) {
-/** Differences
- * key for insert
- * asid, vs. psid
- * logBytes
- * full system vs. not full system
+/** ISA Specification - create these in insert NOT lookup
+ * x86 lookup_key = insert_key = conc(vpn, pcid)
+ * RISCV lookup_key = buildKey(vpn, asid)
+ * RISCV insert_key = buildKey(vpn, entry.asid)
  */
+/**
+ * ISA::TLB(param1, param2, + MORE)
+ * BUILD KEY
+ * TLB.insert(Key)
+ * 
+ */
+TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, Addr insert_key) {
 
-// internal lookup is called, so the key is already set
+
+// this si calling TLB lookup NOT ISA entry
 TlbEntry *newEntry = lookup(lookup_key, entry.asid, BaseMMU::read, true);
 
-// find an entry
+
+// in riscv: 
+check if newEntry->vaddr == entry.vadder
+newEntry->pte = entry.pte
+
+// in x86:
+check if newEntry->vaddr = insert_key
 
 // free list handling
 
+// this is a huge processing thing that i have to come figure out
+*newEntry = entry;
+newEntry->lruSeq = nextSeq();
+
+
+    newEntry->vaddr = vpn;
+
+    if (FullSystem) {
+        newEntry->trieHandle =
+        trie.insert(vpn, TlbEntryTrie::MaxBits-entry.logBytes, newEntry);
+    }
+    else {
+        newEntry->trieHandle =
+        trie.insert(vpn, TlbEntryTrie::MaxBits, newEntry);
+    }
+    return newEntry;
+
+// 
+    Addr key = buildKey(vpn, entry.asid);
+    newEntry->trieHandle = trie.insert(
+        key, TlbEntryTrie::MaxBits - entry.logBytes + PageShift, newEntry
+    );
+    return newEntry;
+}
 
 // set the new entry and stuff
 RISCV:
@@ -106,9 +144,7 @@ A
 
 // figure out where to actually insert
 
-
-
-
+return newEntry;
 }
 
 /** Remove

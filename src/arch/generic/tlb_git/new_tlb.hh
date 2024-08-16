@@ -17,7 +17,11 @@
 Virtual Function:
 - a pure virtual function means that its not implemented in the base class
 
+<<<<<<< HEAD:src/arch/generic/tlb_git/new_tlb.hh
 */
+=======
+// using the struct TLB Entry to build this
+>>>>>>> 7b793aca05f2fcd37bd1c33a07aac84a5d62d65f:src/arch/generic/new_tlb_entry.hh
 
 namespace gem5
 {
@@ -36,6 +40,7 @@ Types of Functions That Need to Be Added:
 
 */
 
+<<<<<<< HEAD:src/arch/generic/tlb_git/new_tlb.hh
 {
   public:
   protected:
@@ -48,8 +53,11 @@ Types of Functions That Need to Be Added:
 
 // [0] necessary imports
 // using the struct TLB Entry to build this 
+=======
+// honestly need to make everything in here public
+>>>>>>> 7b793aca05f2fcd37bd1c33a07aac84a5d62d65f:src/arch/generic/new_tlb_entry.hh
 class TLBEntry : public CacheEntry, public Serializable
-{ 
+{
 
   public:
   // Variables found across the pagetable.hh files across ISA's
@@ -69,10 +77,20 @@ class TLBEntry : public CacheEntry, public Serializable
     // bool noExec;         // Whether or not memory on this page can be executed.
 
 
+<<<<<<< HEAD:src/arch/generic/tlb_git/new_tlb.hh
   // [2] Constructors
     // change this current implementation to include AC initialization
     TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, 
             bool uncacheable, bool read_only); 
+=======
+
+  // [2] these are the constructors
+    // have to get this constructor to match the variables above
+    // at some point i will have to initailize the Cache Entry, no idea
+    // have to get Cache Entry instea
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
+            bool uncacheable, bool read_only);
+>>>>>>> 7b793aca05f2fcd37bd1c33a07aac84a5d62d65f:src/arch/generic/new_tlb_entry.hh
     TlbEntry();
 
   // [3] Internal Functions
@@ -90,7 +108,16 @@ class TLBEntry : public CacheEntry, public Serializable
     }
 
 
+<<<<<<< HEAD:src/arch/generic/tlb_git/new_tlb.hh
 // [4] Extended from Serializable
+=======
+
+
+
+// [4] these are the extension from serializable
+    // this is the part that calls on serializable
+    // come back to this! - not entirely sure how to navigate from this
+>>>>>>> 7b793aca05f2fcd37bd1c33a07aac84a5d62d65f:src/arch/generic/new_tlb_entry.hh
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
