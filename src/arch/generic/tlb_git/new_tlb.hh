@@ -52,7 +52,7 @@ Types of Functions That Need to Be Added:
 // This is the NewTLB Entry
 
 // [0] necessary imports
-// using the struct TLB Entry to build this 
+// using the struct TLB Entry to build this
 =======
 // honestly need to make everything in here public
 >>>>>>> 7b793aca05f2fcd37bd1c33a07aac84a5d62d65f:src/arch/generic/new_tlb_entry.hh
@@ -80,8 +80,8 @@ class TLBEntry : public CacheEntry, public Serializable
 <<<<<<< HEAD:src/arch/generic/tlb_git/new_tlb.hh
   // [2] Constructors
     // change this current implementation to include AC initialization
-    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr, 
-            bool uncacheable, bool read_only); 
+    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
+            bool uncacheable, bool read_only);
 =======
 
   // [2] these are the constructors

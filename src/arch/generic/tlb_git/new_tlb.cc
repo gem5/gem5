@@ -24,10 +24,10 @@ TLBEntry * insert(----)
 TLBEntry * remove(----)
     // AssociativeCache::findEntry(const Addr addr)
     // AssociativeCache::invalidate(Entry *entry)
-   
+
 void flushAll(---)
     // AssociateCache::clear()
-   
+
 void evictLRU(---)
     // AssociativeCachefindVictim(const Addr addr)
     // plus a few more functions
@@ -67,4 +67,3 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
 
 
 };
-
