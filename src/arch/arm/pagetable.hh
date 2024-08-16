@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -233,7 +233,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
 {
   public:
     using LookupLevel = enums::ArmLookupLevel;
-    using Lookup = TLBTypes::KeyType;
+    using KeyType = TLBTypes::KeyType;
     using IndexingPolicy = TLBIndexingPolicy;
 
     enum class MemoryType : std::uint8_t
@@ -389,7 +389,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
     }
 
     /** Need for compliance with the AssociativeCache interface */
-    void insert(const Lookup &lookup) {}
+    void insert(const KeyType &key) {}
 
     /** Need for compliance with the AssociativeCache interface */
     bool isValid() const { return valid; }
@@ -407,32 +407,32 @@ struct TlbEntry : public ReplaceableEntry, Serializable
     }
 
     bool
-    matchAddress(const Lookup &lookup) const
+    matchAddress(const KeyType &key) const
     {
         Addr page_addr = vpn << N;
-        if (lookup.size) {
+        if (key.size) {
             // This is a range based loookup
-            return lookup.va <= page_addr + size &&
-                   lookup.va + lookup.size > page_addr;
+            return key.va <= page_addr + size &&
+                   key.va + key.size > page_addr;
         } else {
             // This is a normal lookup
-            return lookup.va >= page_addr && lookup.va <= page_addr + size;
+            return key.va >= page_addr && key.va <= page_addr + size;
         }
     }
 
     bool
-    match(const Lookup &lookup) const
+    match(const KeyType &key) const
     {
         bool match = false;
-        if (valid && matchAddress(lookup) && lookup.ss == ss)
+        if (valid && matchAddress(key) && key.ss == ss)
         {
-            match = checkRegime(lookup.targetRegime);
+            match = checkRegime(key.targetRegime);
 
-            if (match && !lookup.ignoreAsn) {
-                match = global || (lookup.asn == asid);
+            if (match && !key.ignoreAsn) {
+                match = global || (key.asn == asid);
             }
-            if (match && useVMID(lookup.targetRegime)) {
-                match = lookup.vmid == vmid;
+            if (match && useVMID(key.targetRegime)) {
+                match = key.vmid == vmid;
             }
         }
         return match;

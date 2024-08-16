@@ -185,7 +185,7 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 
     auto tlb = getTlb(BaseMMU::Read, state.directToStage2);
 
-    TlbEntry::Lookup lookup_data;
+    TlbEntry::KeyType lookup_data;
 
     lookup_data.va = va;
     lookup_data.asn = state.asid;
@@ -1475,7 +1475,7 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, SecurityState ss,
 {
     TLB *tlb = getTlb(mode, stage2);
 
-    TlbEntry::Lookup lookup_data;
+    TlbEntry::KeyType lookup_data;
 
     lookup_data.va = va;
     lookup_data.asn = asid;
