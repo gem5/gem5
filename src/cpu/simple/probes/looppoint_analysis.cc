@@ -200,7 +200,7 @@ LooppointAnalysis::stopListening()
         if (_listener != nullptr) {
             delete(_listener);
             DPRINTF(LooppointAnalysis,
-                "Stop listening to the RetiredInstsPC\n");
+                "Deleted Listener pointer\n");
         }
     }
     listeners.clear();
