@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
 from m5.objects import SimObject
 from m5.objects.Probe import ProbeListenerObject
 from m5.params import *
@@ -54,16 +55,19 @@ class LooppointAnalysis(ProbeListenerObject):
         "the LooppointAnalysis manager"
     )
     bb_valid_addr_range = Param.AddrRange(
-        AddrRange(start=0, end=0), "the valid address range for basic blocks"
+        "the valid address range for basic blocks. If the address start and"
+        "end are both 0 (AddrRange(start=0, end=0)), it means every address is"
+        "valid."
     )
     marker_valid_addr_range = Param.AddrRange(
-        AddrRange(start=0, end=0), "the valid address range for markers"
+        "the valid address range for markers. If the address start and end are"
+        "both 0 (AddrRange(start=0, end=0)), it means every address is valid."
     )
     bb_excluded_addr_ranges = VectorParam.AddrRange(
         [], "the excluded address ranges for basic blocks"
     )
     if_listening = Param.Bool(
-        True, "if the LooppointAnalysis is listening to " "the probe point"
+        True, "if the LooppointAnalysis is listening to the probe point"
     )
 
 
@@ -87,4 +91,43 @@ class LooppointAnalysisManager(SimObject):
         PyBindMethod("getMostRecentBackwardBranchCount"),
     ]
 
-    region_length = Param.Int(100000000, "the length of the region")
+    region_length = Param.Int(100_000_000, "the length of the region")
+
+
+add_citation(
+    LooppointAnalysis,
+    """
+    @INPROCEEDINGS{9773236,
+        author={Sabu, Alen and Patil, Harish and Heirman, Wim and Carlson, Trevor E.},
+        booktitle={2022 IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
+        title={LoopPoint: Checkpoint-driven Sampled Simulation for Multi-threaded Applications},
+        year={2022},
+        volume={},
+        number={},
+        pages={604-618},
+        keywords={Data centers;Codes;Multicore processing;Computational modeling;
+            Computer architecture;Parallel processing;
+            Benchmark testing;checkpointing;multi-threaded;
+            record-and-replay;sampling;simulation},
+        doi={10.1109/HPCA53966.2022.00051}}
+    """,
+)
+
+add_citation(
+    LooppointAnalysisManager,
+    """
+    @INPROCEEDINGS{9773236,
+        author={Sabu, Alen and Patil, Harish and Heirman, Wim and Carlson, Trevor E.},
+        booktitle={2022 IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
+        title={LoopPoint: Checkpoint-driven Sampled Simulation for Multi-threaded Applications},
+        year={2022},
+        volume={},
+        number={},
+        pages={604-618},
+        keywords={Data centers;Codes;Multicore processing;Computational modeling;
+            Computer architecture;Parallel processing;
+            Benchmark testing;checkpointing;multi-threaded;
+            record-and-replay;sampling;simulation},
+        doi={10.1109/HPCA53966.2022.00051}}
+    """,
+)

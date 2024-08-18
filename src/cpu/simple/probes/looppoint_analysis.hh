@@ -132,12 +132,14 @@ class LooppointAnalysis : public ProbeListenerObject
     void updateLocalBBV(const Addr pc);
 
   public:
-    std::unordered_map<Addr, uint64_t> getLocalBBV() const
+    std::unordered_map<Addr, uint64_t>
+    getLocalBBV() const
     {
         return localBBV;
     };
 
-    void clearLocalBBV()
+    void
+    clearLocalBBV()
     {
         localBBV.clear();
     };
@@ -210,11 +212,6 @@ class LooppointAnalysisManager: public SimObject
     Addr mostRecentBackwardBranchPC;
 
     /**
-     * This set stores the Program Counter addresses of the valid backward
-     * branches.
-     */
-    std::unordered_set<Addr> backwardBranchPC;
-    /**
      * This set stores the Program Counter addresses of the valid not control
      * instructions.
      */
@@ -231,47 +228,50 @@ class LooppointAnalysisManager: public SimObject
     std::unordered_set<Addr> encounteredPC;
 
   public:
-    bool ifBackwardBranch(const Addr pc) const
+    bool
+    ifBackwardBranch(const Addr pc) const
     {
-        return backwardBranchPC.find(pc) != backwardBranchPC.end();
+        return backwardBranchCounter.find(pc) != backwardBranchCounter.end();
     };
 
-    bool ifValidNotControl(const Addr pc) const
+    bool
+    ifValidNotControl(const Addr pc) const
     {
         return validNotControlPC.find(pc) != validNotControlPC.end();
     };
 
-    bool ifValidControl(const Addr pc) const
+    bool
+    ifValidControl(const Addr pc) const
     {
         return validControlPC.find(pc) != validControlPC.end();
     };
 
-    bool ifEncountered(const Addr pc) const
+    bool
+    ifEncountered(const Addr pc) const
     {
         return encounteredPC.find(pc) != encounteredPC.end();
     };
 
-    void updateBackwardBranch(const Addr pc)
-    {
-        backwardBranchPC.insert(pc);
-    };
-
-    void updateValidNotControl(const Addr pc)
+    void
+    updateValidNotControl(const Addr pc)
     {
         validNotControlPC.insert(pc);
     };
 
-    void updateValidControl(const Addr pc)
+    void
+    updateValidControl(const Addr pc)
     {
         validControlPC.insert(pc);
     };
 
-    void updateEncountered(const Addr pc)
+    void
+    updateEncountered(const Addr pc)
     {
         encounteredPC.insert(pc);
     };
 
-    void updateBBInstMap(Addr pc, uint64_t inst_ount)
+    void
+    updateBBInstMap(Addr pc, uint64_t inst_ount)
     {
         if (bbInstMap.find(pc) == bbInstMap.end())
         {
@@ -279,45 +279,53 @@ class LooppointAnalysisManager: public SimObject
         }
     };
 
-    std::unordered_map<Addr, uint64_t> getGlobalBBV() const
+    std::unordered_map<Addr, uint64_t>
+    getGlobalBBV() const
     {
         return globalBBV;
     };
 
-    void clearGlobalBBV()
+    void
+    clearGlobalBBV()
     {
         globalBBV.clear();
         DPRINTF(LooppointAnalysis,"globalBBV is cleared\n");
     };
 
-    uint64_t getGlobalInstCounter() const
+    uint64_t
+    getGlobalInstCounter() const
     {
         return globalInstCounter;
     };
 
-    void clearGlobalInstCounter()
+    void
+    clearGlobalInstCounter()
     {
         globalInstCounter = 0;
         DPRINTF(LooppointAnalysis,"globalInstCounter is cleared\n current "
             "globalInstCounter = %lu\n", globalInstCounter);
     };
 
-    void incrementGlobalInstCounter()
+    void
+    incrementGlobalInstCounter()
     {
         globalInstCounter++;
     };
 
-    Addr getMostRecentBackwardBranchPC() const
+    Addr
+    getMostRecentBackwardBranchPC() const
     {
         return mostRecentBackwardBranchPC;
     };
 
-    std::unordered_map<Addr, uint64_t> getBackwardBranchCounter() const
+    std::unordered_map<Addr, uint64_t>
+    getBackwardBranchCounter() const
     {
         return backwardBranchCounter;
     };
 
-    uint64_t getMostRecentBackwardBranchCount() const
+    uint64_t
+    getMostRecentBackwardBranchCount() const
     {
         return backwardBranchCounter.find(mostRecentBackwardBranchPC)->second;
     };
