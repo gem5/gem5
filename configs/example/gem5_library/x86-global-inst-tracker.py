@@ -24,6 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""
+
+This script demonstrates how to use global and local instruction trackers to
+monitor and control the simulation based on the number of instructions
+committed.
+
+This script will create a global instruction tracker to manage each local
+instruction tracker and connects each local instruction tracker to a core.
+The global instruction tracker will raise an event when the number of
+instructions committed across all cores reaches a certain threshold.
+
+In this script, we expect to start monitorning the instruction committed from
+the start of the simulation and raise a SIMPOINT_BEGIN exit event when all
+cores in combination have committed 100,000,000 instructions. Then, we will
+change the threshold to 20,000 instructions and raise another SIMPOINT_BEGIN
+event when the new threshold is reached. Finally, we will stop listening to
+instructions.
+
+Usage:
+------
+
+scons build/X86/gem5.opt
+./build/X86/gem5.opt [--debug-flags=InstTracker] \
+    configs/example/gem5_library/x86-global-inst-tracker.py
+
+"""
+
 import m5
 from m5.objects import (
     GlobalInstTracker,
@@ -41,14 +68,6 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
-
-"""
-
-Usage:
-
-gem5.opt configs/example/gem5_library/x86-global-inst-tracker.py
-
-"""
 
 cache_hierarchy = PrivateL1CacheHierarchy(
     l1d_size="64kB",
@@ -118,13 +137,10 @@ def max_inst_handler():
     # we can stop listening to instructions
     for tracker in all_trackers:
         tracker.stopListening()
-    """
-    similarly, we can start listening to instructions again by calling:
-
-    for tracker in all_trackers:
-        tracker.startListening()
-
-    """
+    # similarly, we can start listening to instructions again by calling:
+    #
+    # for tracker in all_trackers:
+    #     tracker.startListening()
     m5.stats.dump()
     m5.stats.reset()
     yield False

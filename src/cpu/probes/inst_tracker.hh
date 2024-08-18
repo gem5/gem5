@@ -55,7 +55,7 @@ class LocalInstTracker : public ProbeListenerObject
 
   private:
     typedef ProbeListenerArg<LocalInstTracker, uint64_t>
-                                                    LocalInstTrackerListener;
+        LocalInstTrackerListener;
 
     /** a boolean variable that determines if the LocalInstTracker is
      * listening to the ProbePoints or not
@@ -74,10 +74,11 @@ class LocalInstTracker : public ProbeListenerObject
     void stopListening();
 
     /** start listening to the ProbePoints */
-    void startListening()
+    void
+    startListening()
     {
-      ifListening = true;
-      regProbeListeners();
+        ifListening = true;
+        regProbeListeners();
     }
 
 };
@@ -99,7 +100,6 @@ class GlobalInstTracker : public SimObject
     */
     uint64_t instCount;
 
-
     /**
       * the threshold for the number of instructions that should be executed
       * before the simulation exits
@@ -107,23 +107,26 @@ class GlobalInstTracker : public SimObject
     uint64_t instThreshold;
 
   public:
-    void changeThreshold(uint64_t new_threshold)
+    void
+    changeThreshold(uint64_t new_threshold)
     {
-      instThreshold = new_threshold;
-      DPRINTF(InstTracker, "Changing the instruction threshold\n"
-                          "instThreshold = %lu\n", instThreshold);
+        instThreshold = new_threshold;
+        DPRINTF(InstTracker, "Changing the instruction threshold\n"
+                                  "instThreshold = %lu\n", instThreshold);
     };
 
-    void resetCounter()
+    void
+    resetCounter()
     {
-      instCount = 0;
-      DPRINTF(InstTracker, "Resetting the instruction counter\n"
+        instCount = 0;
+        DPRINTF(InstTracker, "Resetting the instruction counter\n"
                                               "instCount = %lu\n", instCount);
     };
 
-    uint64_t getThreshold() const
+    uint64_t
+    getThreshold() const
     {
-      return instThreshold;
+        return instThreshold;
     };
 };
 

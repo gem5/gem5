@@ -43,8 +43,7 @@ void
 LocalInstTracker::regProbeListeners()
 {
     if (ifListening) {
-        if (listeners.empty())
-        {
+        if (listeners.empty()) {
             listeners.push_back(new LocalInstTrackerListener(this,
                                     "RetiredInsts",
                                     &LocalInstTracker::retiredInstsHandler));
@@ -63,11 +62,14 @@ void
 LocalInstTracker::stopListening()
 {
     ifListening = false;
-    for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-        delete (*l);
+    bool _ifRemoved;
+    for (auto &listener : listeners) {
+        _ifRemoved = getProbeManager()->removeListener(
+            "RetiredInsts",
+            *listener
+        );
+        DPRINTF(InstTracker, "If removed: %s\n", _ifRemoved ? "Yes" : "No");
     }
-    listeners.clear();
-    DPRINTF(InstTracker, "Stopped listening\n");
 }
 
 
