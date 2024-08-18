@@ -74,6 +74,7 @@ LocalInstTracker::stopListening()
             DPRINTF(InstTracker, "Deleted Listener pointer\n");
         }
     }
+    listeners.clear();
     DPRINTF(InstTracker, "Stop listening to RetiredInsts\n");
 }
 
