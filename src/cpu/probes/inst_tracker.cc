@@ -63,13 +63,18 @@ LocalInstTracker::stopListening()
 {
     ifListening = false;
     bool _ifRemoved;
-    for (auto &listener : listeners) {
+    for (auto &_listener : listeners) {
         _ifRemoved = getProbeManager()->removeListener(
             "RetiredInsts",
-            *listener
+            *_listener
         );
-        DPRINTF(InstTracker, "If removed: %s\n", _ifRemoved ? "Yes" : "No");
+        panic_if(!_ifRemoved, "Failed to remove listener");
+        if (_listener != nullptr) {
+            delete(_listener);
+            DPRINTF(InstTracker, "Deleted Listener pointer\n");
+        }
     }
+    DPRINTF(InstTracker, "Stop listening to RetiredInsts\n");
 }
 
 
