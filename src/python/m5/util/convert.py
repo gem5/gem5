@@ -37,6 +37,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Attempting to import `warn` results in an error about a circular import:
+# ImportError: cannot import name 'warn' from partially initialized module 'm5.util' (most likely due to a circular import) (/home/bees/gem5-3rd-worktree/src/python/m5/util/__init__.py):
+
+# from m5.util import warn
+# from . import warn
+
 # metric prefixes
 atto = 1.0e-18
 femto = 1.0e-15
@@ -258,6 +264,16 @@ def toMemoryBandwidth(value):
 
 
 def toMemorySize(value):
+    if (
+        type(value) is str
+        and len(value) > 1
+        and value[-2] in binary_prefixes.keys()
+        and not "i" in value
+    ):
+        print(
+            f"warn: Base 10 memory/cache size {value} will be cast to base 2"
+            + f" size {value[0:-2]}{value[-2].upper()}i{value[-1]}"
+        )
     return toBinaryInteger(value, "memory size", "B")
 
 
