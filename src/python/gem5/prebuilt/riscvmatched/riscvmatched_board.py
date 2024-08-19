@@ -77,7 +77,7 @@ def U74Memory():
     """
     Memory for the U74 board.
 
-    DDR4 Subsystem with 16GB of memory.
+    DDR4 Subsystem with 16GiB of memory.
 
     Starts at 0x80000000.
 
@@ -85,7 +85,7 @@ def U74Memory():
 
     :return: ChanneledMemory
     """
-    memory = SingleChannelDDR4_2400("16GB")
+    memory = SingleChannelDDR4_2400("16GiB")
     memory.set_memory_range(
         [AddrRange(start=0x80000000, size=memory.get_size())]
     )
@@ -121,7 +121,7 @@ class RISCVMatchedBoard(
         :param clk_freq: The clock frequency of the system,
         default: 1.2GHz
         :param l2_size: The size of the L2 cache,
-        default: 2MB
+        default: 2MiB
         :param is_fs: Whether the system is a full system or not,
         default: False (SE Mode)
 
@@ -230,9 +230,9 @@ class RISCVMatchedBoard(
                 ]
 
                 # PCI
-                self.bridge.ranges.append(AddrRange(0x2F000000, size="16MB"))
-                self.bridge.ranges.append(AddrRange(0x30000000, size="256MB"))
-                self.bridge.ranges.append(AddrRange(0x40000000, size="512MB"))
+                self.bridge.ranges.append(AddrRange(0x2F000000, size="16MiB"))
+                self.bridge.ranges.append(AddrRange(0x30000000, size="256MiB"))
+                self.bridge.ranges.append(AddrRange(0x40000000, size="512MiB"))
 
     def _setup_pma(self) -> None:
         """Set the PMA devices on each core"""
@@ -243,9 +243,9 @@ class RISCVMatchedBoard(
         ]
 
         # PCI
-        uncacheable_range.append(AddrRange(0x2F000000, size="16MB"))
-        uncacheable_range.append(AddrRange(0x30000000, size="256MB"))
-        uncacheable_range.append(AddrRange(0x40000000, size="512MB"))
+        uncacheable_range.append(AddrRange(0x2F000000, size="16MiB"))
+        uncacheable_range.append(AddrRange(0x30000000, size="256MiB"))
+        uncacheable_range.append(AddrRange(0x40000000, size="512MiB"))
 
         # TODO: Not sure if this should be done per-core like in the example
         for cpu in self.get_processor().get_cores():

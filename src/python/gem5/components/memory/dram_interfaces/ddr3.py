@@ -67,7 +67,7 @@ class DDR3_1600_8x8(DRAMInterface):
     # DDR3 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
+    # Each device has a page (row buffer) size of 1 Kibibyte (1Ki columns x8)
     device_rowbuffer_size = "1KiB"
 
     # 8x8 configuration, so 8 devices

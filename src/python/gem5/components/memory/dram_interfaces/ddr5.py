@@ -50,7 +50,7 @@ class DDR5_4400_4x8(DRAMInterface):
     burst_length = 16
 
     # Each device has a page (row buffer) size of 256B
-    # Four devices lead to a page size of 1KB
+    # Four devices lead to a page size of 1KiB
     device_rowbuffer_size = "256B"
 
     # 4Gbx8 configuration
