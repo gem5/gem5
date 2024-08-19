@@ -31,6 +31,9 @@
 
 set -e
 
+# Making the downloaded repository safe as the owner might differ for .devcontainer env.
+git config --global --add safe.directory /workspaces/gem5
+
 # Refresh the git index.
 git update-index
 
