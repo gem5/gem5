@@ -89,9 +89,9 @@ class TLBEntry : public CacheEntry, public Serializable
     {
         return (1 << logBytes);
     }
-    uint64_t nextSeq() 
-    { 
-      return ++lruSeq; 
+    uint64_t nextSeq()
+    {
+      return ++lruSeq;
     }
 
 
@@ -109,4 +109,3 @@ class TLBEntry : public CacheEntry, public Serializable
 } // namespace gem5
 
 #endif
-

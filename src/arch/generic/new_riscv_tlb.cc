@@ -1,5 +1,5 @@
-// example of a RISCV TLB that inherits from TLB 
-// helps in visualizing what the end product should look like 
+// example of a RISCV TLB that inherits from TLB
+// helps in visualizing what the end product should look like
 
 
 Addr buildKey(Addr vpn, uint16_t pcid)
@@ -16,5 +16,5 @@ Addr buildKey(Addr vpn, uint16_t pcid)
 TLBEntry * lookup(Addr key, uint16_t asid, BaseMMU::Mode mode, bool hidden) {
 
 
-    
+
 }
