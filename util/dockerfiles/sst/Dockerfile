@@ -66,3 +66,7 @@ RUN wget https://github.com/sstsimulator/sst-elements/releases/download/v13.0.0_
     make all -j $(nproc) && \
     make install && \
     cd /sst && rm -rf sstelements-13.0.0.tar.gz sst-elements-library-13.0.0
+
+#Setting the environmental variables
+ENV PATH=$PATH:$SST_CORE_HOME/bin
+ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/
