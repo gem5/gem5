@@ -40,6 +40,7 @@ from m5.objects import *
 from m5.util import addToPath
 
 from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
 from gem5.runtime import get_supported_isas
 
 addToPath("../")
@@ -402,12 +403,39 @@ parser.add_argument(
     help="cache replacement policy" "policy for sqc",
 )
 
+parser.add_argument(
+    "--download-resource",
+    type=str,
+    default=None,
+    required=False,
+    help="Download this resources prior to simulation",
+)
+
+parser.add_argument(
+    "--download-dir",
+    type=str,
+    default=None,
+    required=False,
+    help="Download resources to this directory",
+)
+
 Ruby.define_options(parser)
 
 # add TLB options to the parser
 GPUTLBOptions.tlb_options(parser)
 
 args = parser.parse_args()
+
+# Get the resource if specified.
+if args.download_resource:
+    resources = obtain_resource(
+        resource_id=args.download_resource,
+        resource_directory=args.download_dir,
+    )
+
+    # This line seems pointless but is actually what triggers the download.
+    resources.get_local_path()
+
 
 # The GPU cache coherence protocols only work with the backing store
 args.access_backing_store = True
