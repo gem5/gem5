@@ -234,6 +234,20 @@ RemoteGDB::acc(Addr va, size_t len)
 }
 
 void
+RemoteGDB::insertHardBreak(Addr addr, size_t kind)
+{
+    Addr realAddr = getRvType(context()) == RV64 ? addr : sext(addr, 32);
+    BaseRemoteGDB::insertHardBreak(realAddr, kind);
+}
+
+void
+RemoteGDB::removeHardBreak(Addr addr, size_t kind)
+{
+    Addr realAddr = getRvType(context()) == RV64 ? addr : sext(addr, 32);
+    BaseRemoteGDB::removeHardBreak(realAddr, kind);
+}
+
+void
 RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());

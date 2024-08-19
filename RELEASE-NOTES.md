@@ -1,3 +1,12 @@
+# Verion 24.1
+
+## User facing changes
+
+* The [behavior of the`StridePrefetcher` has been altered](https://github.com/gem5/gem5/pull/1449) as follows:
+  * The addresses used to compute the stride has been changed from word aligned addresses to cache line aligned addresses.
+  * It returns if the stride does not match, as opposed to issuing prefetching using the new stride --- the previous, incorrect behavior.
+  * Returns if the new stride is 0, indicating multiple reads from the same cache line.
+
 # Version 24.0
 
 gem5 Version 24.0 is the first major release of 2024.
