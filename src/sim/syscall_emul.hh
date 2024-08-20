@@ -149,7 +149,7 @@ SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
 /// Target set_tid_address() handler.
 SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
-                                uint64_t tidPtr);
+                                VPtr<> tidPtr);
 
 /// Target getpagesize() handler.
 SyscallReturn getpagesizeFunc(SyscallDesc *desc, ThreadContext *tc);
@@ -1920,7 +1920,7 @@ fstatfsFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 readvFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, uint64_t tiov_base,
+          int tgt_fd, VPtr<> tiov_base,
           typename OS::size_t count)
 {
     auto p = tc->getProcessPtr();
@@ -1958,7 +1958,7 @@ readvFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 writevFunc(SyscallDesc *desc, ThreadContext *tc,
-           int tgt_fd, uint64_t tiov_base,
+           int tgt_fd, VPtr<> tiov_base,
            typename OS::size_t count)
 {
     auto p = tc->getProcessPtr();

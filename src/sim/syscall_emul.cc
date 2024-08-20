@@ -289,7 +289,7 @@ brkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> new_brk)
 }
 
 SyscallReturn
-setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc, uint64_t tidPtr)
+setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> tidPtr)
 {
     auto process = tc->getProcessPtr();
 
