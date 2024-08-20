@@ -213,6 +213,20 @@ class AddrTypes
 using BaseIndexingPolicy = IndexingPolicyTemplate<AddrTypes>;
 template class IndexingPolicyTemplate<AddrTypes>;
 
+/**
+ * This helper generates an a tag extractor function object
+ * which will be typically used by Replaceable entries indexed
+ * with the BaseIndexingPolicy.
+ * It allows to "decouple" indexing from tagging. Those entries
+ * would call the functor without directly holding a pointer
+ * to the indexing policy which should reside in the cache.
+ */
+static constexpr auto
+genTagExtractor(BaseIndexingPolicy *ip)
+{
+    return [ip] (Addr addr) { return ip->extractTag(addr); };
+}
+
 } // namespace gem5
 
 #endif //__MEM_CACHE_INDEXING_POLICIES_BASE_HH__

@@ -129,8 +129,8 @@ class FrequentValues : public Base
          */
         SatCounter32 counter;
 
-        VFTEntry(std::size_t num_bits, BaseIndexingPolicy *ip)
-          : CacheEntry(ip), value(0), counter(num_bits)
+        VFTEntry(std::size_t num_bits, TagExtractor ext)
+          : CacheEntry(ext), value(0), counter(num_bits)
         {
         }
 

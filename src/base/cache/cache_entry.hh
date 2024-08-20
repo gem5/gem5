@@ -61,12 +61,12 @@ class CacheEntry : public ReplaceableEntry
   public:
     using IndexingPolicy = BaseIndexingPolicy;
     using KeyType = Addr;
+    using TagExtractor = std::function<Addr(Addr)>;
 
-    CacheEntry(BaseIndexingPolicy *ip) : indexingPolicy(ip) {}
-    ~CacheEntry() = default;
-    CacheEntry(const CacheEntry &rhs)
-      : indexingPolicy(rhs.indexingPolicy)
+    CacheEntry(TagExtractor ext)
+      : extractTag(ext), valid(false), tag(MaxAddr)
     {}
+    ~CacheEntry() = default;
 
     /**
      * Checks if the entry is valid.
@@ -138,24 +138,19 @@ class CacheEntry : public ReplaceableEntry
         valid = true;
     }
 
-    virtual Addr
-    extractTag(Addr addr) const
-    {
-        return indexingPolicy->extractTag(addr);
-    }
-
   private:
+    /** Callback used to extract the tag from the entry */
+    TagExtractor extractTag;
+
     /**
      * Valid bit. The contents of this entry are only valid if this bit is set.
      * @sa invalidate()
      * @sa insert()
      */
-    bool valid{false};
-
-    BaseIndexingPolicy *indexingPolicy{nullptr};
+    bool valid;
 
     /** The entry's tag. */
-    Addr tag{MaxAddr};
+    Addr tag;
 };
 
 } // namespace gem5

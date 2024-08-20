@@ -76,8 +76,8 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * Constructor
          * @param num_deltas number of deltas stored in the entry
          */
-        DCPTEntry(unsigned int num_deltas, BaseIndexingPolicy *ip)
-          : CacheEntry(ip), lastAddress(0), deltas(num_deltas)
+        DCPTEntry(unsigned int num_deltas, TagExtractor ext)
+          : CacheEntry(ext), lastAddress(0), deltas(num_deltas)
         {
         }
 

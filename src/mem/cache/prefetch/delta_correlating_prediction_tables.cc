@@ -44,7 +44,8 @@ DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
    table((name() + "DCPT").c_str(), p.table_entries,
          p.table_assoc, p.table_replacement_policy,
          p.table_indexing_policy,
-         DCPTEntry(p.deltas_per_entry, p.table_indexing_policy))
+         DCPTEntry(p.deltas_per_entry,
+                   genTagExtractor(p.table_indexing_policy)))
 {
 }
 
