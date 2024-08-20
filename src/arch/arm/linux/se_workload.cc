@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013, 2015, 2020 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2020, 2024 ARM Limited
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -185,7 +185,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 42, "pipe", pipePseudoFunc },
         { base + 43, "times", timesFunc<ArmLinux32> },
         { base + 45, "brk", brkFunc },
-        { base + 46, "setgid" },
+        { base + 46, "setgid", ignoreFunc },
         { base + 47, "getgid", getgidFunc },
         { base + 49, "geteuid", geteuidFunc },
         { base + 50, "getegid", getegidFunc },
@@ -293,7 +293,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 163, "mremap", mremapFunc<ArmLinux32> }, // ARM-specific
         { base + 164, "setresuid" },
         { base + 165, "getresuid" },
-        { base + 168, "poll" },
+        { base + 168, "poll", pollFunc<ArmLinux32> },
         { base + 169, "nfsservctl" },
         { base + 170, "setresgid" },
         { base + 171, "getresgid" },
@@ -316,7 +316,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 190, "vfork" },
         { base + 191, "getrlimit", getrlimitFunc<ArmLinux32> },
         { base + 192, "mmap2", mmapFunc<ArmLinux32> },
-        { base + 193, "truncate64" },
+        { base + 193, "truncate64", truncate64Func },
         { base + 194, "ftruncate64", ftruncate64Func },
         { base + 195, "stat64", stat64Func<ArmLinux32> },
         { base + 196, "lstat64", lstat64Func<ArmLinux32> },
@@ -336,8 +336,8 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 210, "setresgid" },
         { base + 211, "getresgid" },
         { base + 212, "chown" },
-        { base + 213, "setuid" },
-        { base + 214, "setgid" },
+        { base + 213, "setuid", ignoreFunc },
+        { base + 214, "setgid", ignoreFunc },
         { base + 215, "setfsuid" },
         { base + 216, "setfsgid" },
 #if defined(SYS_getdents64)
@@ -488,7 +488,9 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 363, "sys_rt_tgsigqueueinfo" },
         { base + 364, "sys_perf_event_open" },
         { base + 365, "sys_recvmmsg" },
-        { base + 384, "getrandom", getrandomFunc<ArmLinux32> }
+        { base + 384, "getrandom", getrandomFunc<ArmLinux32> },
+        { base + 397, "sys_statx", ignoreFunc },
+        { base + 398, "sys_rseq", ignoreFunc }
     })
     {}
 };
@@ -544,7 +546,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {   base + 42, "nfsservctl" },
         {   base + 43, "statfs64" },
         {   base + 44, "fstatfs64" },
-        {   base + 45, "truncate64" },
+        {   base + 45, "truncate64", truncate64Func },
         {   base + 46, "ftruncate64", ftruncate64Func },
         {   base + 47, "fallocate", fallocateFunc<ArmLinux64> },
         {   base + 48, "faccessat", faccessatFunc<ArmLinux64> },
@@ -830,7 +832,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
 #endif
         { base + 1066, "futimesat", futimesatFunc<ArmLinux64> },
         { base + 1067, "select" },
-        { base + 1068, "poll" },
+        { base + 1068, "poll", pollFunc<ArmLinux64> },
         { base + 1069, "epoll_wait" },
         { base + 1070, "ustat" },
         { base + 1071, "vfork" },
