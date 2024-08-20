@@ -40,7 +40,8 @@
 # there is a pre-built gem5 binary in each devcontainer. This can save time
 # if the container is used for education or demonstration purposes.
 FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest as builder
-RUN git clone --branch v24.0 https://github.com/gem5/gem5
+RUN wget https://github.com/gem5/gem5/archive/refs/tags/v24.0.tar.gz && \
+    tar xzf v24.0.tar.gz && mv gem5-24.0 gem5 && rm v24.0.tar.gz
 WORKDIR /gem5
 RUN scons build/ALL/gem5.opt -j`nproc`
 RUN scons defconfig build/ALL_CHI build_opts/ALL && \
