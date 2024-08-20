@@ -254,6 +254,7 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
         ctc->setReg(SparcISA::SyscallPseudoReturnReg, 1);
     }
 
+    typedef uint64_t size_t;
     typedef int64_t off_t;
 };
 
@@ -301,6 +302,7 @@ class Sparc32Linux : public SparcLinux
         uint32_t mem_unit;  /* Memory unit size in bytes */
     };
 
+    typedef uint32_t size_t;
     typedef int32_t off_t;
 
     /// Resource constants for getrlimit() (overide some generics).

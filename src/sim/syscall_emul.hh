@@ -173,10 +173,6 @@ SyscallReturn shutdownFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
                               VPtr<> buf_ptr, int name_len);
 
-/// Target getcwd() handler.
-SyscallReturn getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
-                         VPtr<> buf_ptr, unsigned long size);
-
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> pathname);
@@ -972,6 +968,38 @@ openFunc(SyscallDesc *desc, ThreadContext *tc,
             desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_flags, mode);
 }
 
+/// Target getcwd() handler
+template <class OS>
+SyscallReturn
+getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
+           VPtr<> buf_ptr, typename OS::size_t size)
+{
+    int result = 0;
+    auto p = tc->getProcessPtr();
+    BufferArg buf(buf_ptr, size);
+
+    // Is current working directory defined?
+    std::string cwd = p->tgtCwd;
+    if (!cwd.empty()) {
+        if (cwd.length() >= size) {
+            // Buffer too small
+            return -ERANGE;
+        }
+        strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
+        result = cwd.length();
+    } else {
+        if (getcwd((char *)buf.bufferPtr(), size)) {
+            result = strlen((char *)buf.bufferPtr());
+        } else {
+            result = -1;
+        }
+    }
+
+    buf.copyOut(SETranslatingPortProxy(tc));
+
+    return (result == -1) ? -errno : result;
+}
+
 /// Target lseek() handler
 template <class OS>
 SyscallReturn
@@ -1341,7 +1369,8 @@ fchmodFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, uint32_t mode)
 template <class OS>
 SyscallReturn
 mremapFunc(SyscallDesc *desc, ThreadContext *tc,
-        VPtr<> start, uint64_t old_length, uint64_t new_length, uint64_t flags,
+        VPtr<> start, typename OS::size_t old_length,
+        typename OS::size_t new_length, int flags,
         guest_abi::VarArgs<uint64_t> varargs)
 {
     auto p = tc->getProcessPtr();
@@ -2106,7 +2135,7 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 pread64Func(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, VPtr<> bufPtr, int nbytes,
+            int tgt_fd, VPtr<> bufPtr, typename OS::size_t nbytes,
             typename OS::off_t offset)
 {
     auto p = tc->getProcessPtr();
@@ -2128,7 +2157,7 @@ pread64Func(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 pwrite64Func(SyscallDesc *desc, ThreadContext *tc,
-             int tgt_fd, VPtr<> bufPtr, int nbytes,
+             int tgt_fd, VPtr<> bufPtr, typename OS::size_t nbytes,
              typename OS::off_t offset)
 {
     auto p = tc->getProcessPtr();
@@ -2762,7 +2791,7 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
 template <class OS>
 SyscallReturn
 readFunc(SyscallDesc *desc, ThreadContext *tc,
-        int tgt_fd, VPtr<> buf_ptr, int nbytes)
+        int tgt_fd, VPtr<> buf_ptr, typename OS::size_t nbytes)
 {
     auto p = tc->getProcessPtr();
 
@@ -2790,7 +2819,7 @@ readFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 writeFunc(SyscallDesc *desc, ThreadContext *tc,
-        int tgt_fd, VPtr<> buf_ptr, int nbytes)
+        int tgt_fd, VPtr<> buf_ptr, typename OS::size_t nbytes)
 {
     auto p = tc->getProcessPtr();
 

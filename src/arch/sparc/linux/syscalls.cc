@@ -215,7 +215,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     { 116, "gettimeofday", gettimeofdayFunc<Sparc32Linux> }, // 32 bit
     { 117, "getrusage" }, // 32 bit
     { 118, "getsockopt" },
-    { 119, "getcwd", getcwdFunc },
+    { 119, "getcwd", getcwdFunc<Sparc32Linux> },
     { 120, "readv" },
     { 121, "writev" },
     { 122, "settimeofday" }, // 32 bit

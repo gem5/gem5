@@ -203,6 +203,7 @@ class MipsLinux : public Linux, public OpenFlagTable<MipsLinux>
        uint32_t mem_unit;  /* Memory unit size in bytes */
     };
 
+    typedef uint32_t size_t;
     typedef int32_t off_t;
 };
 

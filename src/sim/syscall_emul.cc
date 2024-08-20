@@ -345,36 +345,6 @@ gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<> buf_ptr, unsigned long size)
-{
-    int result = 0;
-    auto p = tc->getProcessPtr();
-    BufferArg buf(buf_ptr, size);
-
-    // Is current working directory defined?
-    std::string cwd = p->tgtCwd;
-    if (!cwd.empty()) {
-        if (cwd.length() >= size) {
-            // Buffer too small
-            return -ERANGE;
-        }
-        strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
-        result = cwd.length();
-    } else {
-        if (getcwd((char *)buf.bufferPtr(), size)) {
-            result = strlen((char *)buf.bufferPtr());
-        } else {
-            result = -1;
-        }
-    }
-
-    buf.copyOut(SETranslatingPortProxy(tc));
-
-    return (result == -1) ? -errno : result;
-}
-
-SyscallReturn
 unlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname)
 {
     std::string path;

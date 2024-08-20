@@ -237,7 +237,7 @@ SyscallDescTable<EmuLinux::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 180, "pread64", pread64Func<X86Linux64> },
     { 181, "pwrite64", pwrite64Func<X86Linux64> },
     { 182, "chown" },
-    { 183, "getcwd", getcwdFunc },
+    { 183, "getcwd", getcwdFunc<X86Linux32> },
     { 184, "capget" },
     { 185, "capset" },
     { 186, "sigaltstack" },

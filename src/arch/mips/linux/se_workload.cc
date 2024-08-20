@@ -372,7 +372,7 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4200, "pread64" },
     { 4201, "pwrite64" },
     { 4202, "chown" },
-    { 4203, "getcwd", getcwdFunc },
+    { 4203, "getcwd", getcwdFunc<MipsLinux> },
     { 4204, "capget" },
     { 4205, "capset" },
     { 4206, "sigalstack" },

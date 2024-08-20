@@ -133,7 +133,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
 #else
     {  78, "getdents" },
 #endif
-    {  79, "getcwd", getcwdFunc },
+    {  79, "getcwd", getcwdFunc<X86Linux64> },
     {  80, "chdir", chdirFunc },
     {  81, "fchdir" },
     {  82, "rename", renameFunc },
