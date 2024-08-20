@@ -943,13 +943,13 @@ AMDGPUDevice::deallocatePasid(uint16_t pasid)
 }
 
 void
-AMDGPUDevice::deallocateAllQueues()
+AMDGPUDevice::deallocateAllQueues(bool unmap_static)
 {
     idMap.erase(idMap.begin(), idMap.end());
     usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
 
     for (auto& it : sdmaEngs) {
-        it.second->deallocateRLCQueues();
+        it.second->deallocateRLCQueues(unmap_static);
     }
 
     // "All" queues implicitly refers to all user queues. User queues begin at

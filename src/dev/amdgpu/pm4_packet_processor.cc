@@ -518,8 +518,11 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     assert(pkt->engineSel == 2 || pkt->engineSel == 3);
     SDMAEngine *sdma_eng = gpuDevice->getSDMAById(pkt->engineSel - 2);
 
+    // Queue type 1 and 2 are "static" queues
+    bool is_static = (pkt->queueType == 2) || (pkt->queueType == 3);
+
     // Register RLC queue with SDMA
-    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2, addr, mqd);
+    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2, addr, mqd, is_static);
 
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
@@ -587,6 +590,47 @@ PM4PacketProcessor::updateReadIndex(Addr offset, uint64_t rd_idx)
 }
 
 void
+PM4PacketProcessor::unmapAllQueues(bool unmap_static)
+{
+    auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();
+    for (auto iter : gpuDevice->getUsedVMIDs()) {
+        for (auto id : iter.second) {
+            assert(queues.count(id));
+
+            // Do not unmap KMD queues.
+            if (queues[id]->privileged()) {
+                continue;
+            }
+
+            // Do not unmap static queues if requested.
+            if (!unmap_static && queues[id]->isStatic()) {
+                continue;
+            }
+
+            QueueDesc *mqd = queues[id]->getMQD();
+            DPRINTF(PM4PacketProcessor, "Unmapping queue %d with read "
+                    "index %ld\n", id, mqd->mqdReadIndex);
+
+            // Partially writing the mqd with an offset of 96 dwords as gem5
+            // does not use the full MQD and begins 96 dwords from the start
+            // of the full MQD structure. See src/dev/amdgpu/pm4_queues.hh.
+            Addr addr = getGARTAddr(queues[id]->mqdBase() +
+                                    96 * sizeof(uint32_t));
+            Addr mqd_base = queues[id]->mqdBase();
+            auto cb = new DmaVirtCallback<uint32_t>(
+                [ = ] (const uint32_t &) {
+                    doneMQDWrite(mqd_base, addr);
+                });
+            mqd->base >>= 8;
+            dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
+            queues.erase(id);
+            hsa_pp.unsetDeviceQueueDesc(id, 8);
+            delete mqd;
+        }
+    }
+}
+
+void
 PM4PacketProcessor::unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt)
 {
     q->incRptr(sizeof(PM4UnmapQueues));
@@ -634,38 +678,13 @@ PM4PacketProcessor::unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt)
         gpuDevice->deallocatePasid(pkt->pasid);
         break;
       case 2:
-        panic("Unmapping queue selection 2 unimplemented\n");
+        unmapAllQueues(true);
+        gpuDevice->deallocateAllQueues(true);
         break;
-      case 3: {
-        auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();
-        for (auto iter : gpuDevice->getUsedVMIDs()) {
-            for (auto id : iter.second) {
-                assert(queues.count(id));
-
-                // Do not unmap KMD queues
-                if (queues[id]->privileged()) {
-                    continue;
-                }
-                QueueDesc *mqd = queues[id]->getMQD();
-                DPRINTF(PM4PacketProcessor, "Unmapping queue %d with read "
-                        "index %ld\n", id, mqd->mqdReadIndex);
-                // Partially writing the mqd with an offset of 96 dwords
-                Addr addr = getGARTAddr(queues[id]->mqdBase() +
-                                        96 * sizeof(uint32_t));
-                Addr mqd_base = queues[id]->mqdBase();
-                auto cb = new DmaVirtCallback<uint32_t>(
-                    [ = ] (const uint32_t &) {
-                        doneMQDWrite(mqd_base, addr);
-                    });
-                mqd->base >>= 8;
-                dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
-                queues.erase(id);
-                hsa_pp.unsetDeviceQueueDesc(id, 8);
-                delete mqd;
-            }
-        }
-        gpuDevice->deallocateAllQueues();
-      } break;
+      case 3:
+        unmapAllQueues(false);
+        gpuDevice->deallocateAllQueues(false);
+      break;
       default:
         panic("Unrecognized options\n");
         break;
@@ -1127,6 +1146,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     uint32_t pipe[num_queues];
     uint32_t queue[num_queues];
     bool privileged[num_queues];
+    uint32_t queue_type[num_queues];
     uint32_t hqd_active[num_queues];
     uint32_t hqd_vmid[num_queues];
     Addr aql_rptr[num_queues];
@@ -1157,6 +1177,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
         pipe[i] = q->pipe();
         queue[i] = q->queue();
         privileged[i] = q->privileged();
+        queue_type[i] = q->queueType();
         hqd_active[i] = q->getMQD()->hqd_active;
         hqd_vmid[i] = q->getMQD()->hqd_vmid;
         aql_rptr[i] = q->getMQD()->aqlRptr;
@@ -1183,6 +1204,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(pipe, num_queues);
     SERIALIZE_ARRAY(queue, num_queues);
     SERIALIZE_ARRAY(privileged, num_queues);
+    SERIALIZE_ARRAY(queue_type, num_queues);
     SERIALIZE_ARRAY(hqd_active, num_queues);
     SERIALIZE_ARRAY(hqd_vmid, num_queues);
     SERIALIZE_ARRAY(aql_rptr, num_queues);
@@ -1216,6 +1238,7 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     uint32_t pipe[num_queues];
     uint32_t queue[num_queues];
     bool privileged[num_queues];
+    uint32_t queue_type[num_queues];
     uint32_t hqd_active[num_queues];
     uint32_t hqd_vmid[num_queues];
     Addr aql_rptr[num_queues];
@@ -1239,6 +1262,7 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(pipe, num_queues);
     UNSERIALIZE_ARRAY(queue, num_queues);
     UNSERIALIZE_ARRAY(privileged, num_queues);
+    UNSERIALIZE_ARRAY(queue_type, num_queues);
     UNSERIALIZE_ARRAY(hqd_active, num_queues);
     UNSERIALIZE_ARRAY(hqd_vmid, num_queues);
     UNSERIALIZE_ARRAY(aql_rptr, num_queues);
@@ -1269,7 +1293,8 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
         queues[id[i]]->ib(ib[i]);
         queues[id[i]]->offset(offset[i]);
         queues[id[i]]->processing(processing[i]);
-        queues[id[i]]->setPkt(me[i], pipe[i], queue[i], privileged[i]);
+        queues[id[i]]->setPkt(me[i], pipe[i], queue[i], privileged[i],
+                              queue_type[i]);
         queues[id[i]]->getMQD()->hqd_active = hqd_active[i];
         queues[id[i]]->getMQD()->hqd_vmid = hqd_vmid[i];
         queues[id[i]]->getMQD()->aqlRptr = aql_rptr[i];
