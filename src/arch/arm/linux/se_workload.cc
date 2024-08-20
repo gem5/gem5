@@ -163,7 +163,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 14, "mknod", mknodFunc },
         { base + 15, "chmod", chmodFunc<ArmLinux32> },
         { base + 16, "lchown", chownFunc },
-        { base + 19, "lseek", lseekFunc },
+        { base + 19, "lseek", lseekFunc<ArmLinux32> },
         { base + 20, "getpid", getpidFunc },
         { base + 21, "mount" },
         { base + 22, "umount" },
@@ -567,7 +567,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
 #else
         {   base + 61, "getdents64" },
 #endif
-        {   base + 62, "llseek", lseekFunc },
+        {   base + 62, "lseek", lseekFunc<ArmLinux64> },
         {   base + 63, "read", readFunc<ArmLinux64> },
         {   base + 64, "write", writeFunc<ArmLinux64> },
         {   base + 65, "readv" },
@@ -817,7 +817,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         { base + 1054, "newfstatat" },
         { base + 1055, "fstatfs" },
         { base + 1056, "statfs" },
-        { base + 1057, "lseek", lseekFunc },
+        { base + 1057, "lseek", lseekFunc<ArmLinux64> },
         { base + 1058, "mmap", mmapFunc<ArmLinux64> },
         { base + 1059, "alarm" },
         { base + 1060, "getpgrp" },

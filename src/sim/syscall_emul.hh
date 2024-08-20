@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2019-2021, 2023 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2019-2021, 2023-2024 Arm Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -160,13 +160,9 @@ SyscallReturn brkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> new_brk);
 /// Target close() handler.
 SyscallReturn closeFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd);
 
-/// Target lseek() handler.
-SyscallReturn lseekFunc(SyscallDesc *desc, ThreadContext *tc,
-                        int tgt_fd, uint64_t offs, int whence);
-
 /// Target _llseek() handler.
 SyscallReturn _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
-                          int tgt_fd, uint64_t offset_high,
+                          int tgt_fd, uint32_t offset_high,
                           uint32_t offset_low, VPtr<> result_ptr, int whence);
 
 /// Target shutdown() handler.
@@ -974,6 +970,24 @@ openFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     return openatFunc<OS>(
             desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_flags, mode);
+}
+
+/// Target lseek() handler
+template <class OS>
+SyscallReturn
+lseekFunc(SyscallDesc *desc, ThreadContext *tc,
+          int tgt_fd, typename OS::off_t offs, int whence)
+{
+    auto p = tc->getProcessPtr();
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    off_t result = lseek(sim_fd, offs, whence);
+
+    return (result == (off_t)-1) ? -errno : result;
 }
 
 /// Target unlinkat() handler.
@@ -2092,7 +2106,8 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 pread64Func(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, VPtr<> bufPtr, int nbytes, int offset)
+            int tgt_fd, VPtr<> bufPtr, int nbytes,
+            typename OS::off_t offset)
 {
     auto p = tc->getProcessPtr();
 
@@ -2113,7 +2128,8 @@ pread64Func(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 pwrite64Func(SyscallDesc *desc, ThreadContext *tc,
-             int tgt_fd, VPtr<> bufPtr, int nbytes, int offset)
+             int tgt_fd, VPtr<> bufPtr, int nbytes,
+             typename OS::off_t offset)
 {
     auto p = tc->getProcessPtr();
 

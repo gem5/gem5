@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +58,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     {   5, "fstat", fstat64Func<X86Linux64> },
     {   6, "lstat", lstat64Func<X86Linux64> },
     {   7, "poll", pollFunc<X86Linux64> },
-    {   8, "lseek", lseekFunc },
+    {   8, "lseek", lseekFunc<X86Linux64> },
     {   9, "mmap", mmapFunc<X86Linux64> },
     {  10, "mprotect", ignoreFunc },
     {  11, "munmap", munmapFunc<X86Linux64> },
