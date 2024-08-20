@@ -153,7 +153,7 @@ class CacheBlk : public TaggedEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk() : TaggedEntry(nullptr)
+    CacheBlk() : TaggedEntry()
     {
         invalidate();
     }
@@ -526,11 +526,10 @@ class TempCacheBlk final : public CacheBlk
      * Creates a temporary cache block, with its own storage.
      * @param size The size (in bytes) of this cache block.
      */
-    TempCacheBlk(unsigned size, TaggedIndexingPolicy *ip) : CacheBlk()
+    TempCacheBlk(unsigned size, TagExtractor ext) : CacheBlk()
     {
         data = new uint8_t[size];
-
-        setIndexingPolicy(ip);
+        registerTagExtractor(ext);
     }
     TempCacheBlk(const TempCacheBlk&) = delete;
     using CacheBlk::operator=;

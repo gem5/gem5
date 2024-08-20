@@ -67,9 +67,11 @@ class IrregularStreamBuffer : public Queued
      */
     struct TrainingUnitEntry : public TaggedEntry
     {
-        TrainingUnitEntry(TaggedIndexingPolicy *ip)
-          : TaggedEntry(ip), lastAddress(0), lastAddressSecure(false)
-        {}
+        TrainingUnitEntry(TagExtractor ext)
+          : TaggedEntry(), lastAddress(0), lastAddressSecure(false)
+        {
+            registerTagExtractor(ext);
+        }
         Addr lastAddress;
         bool lastAddressSecure;
     };
@@ -93,9 +95,10 @@ class IrregularStreamBuffer : public Queued
     {
         std::vector<AddressMapping> mappings;
         AddressMappingEntry(size_t num_mappings, unsigned counter_bits,
-                            TaggedIndexingPolicy *ip)
-          : TaggedEntry(ip), mappings(num_mappings, counter_bits)
+                            TagExtractor ext)
+          : TaggedEntry(), mappings(num_mappings, counter_bits)
         {
+            registerTagExtractor(ext);
         }
 
         void

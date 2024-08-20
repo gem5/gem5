@@ -56,7 +56,7 @@ AccessMapPatternMatching::AccessMapPatternMatching(
                      p.access_map_table_replacement_policy,
                      p.access_map_table_indexing_policy,
                      AccessMapEntry(hotZoneSize / blkSize,
-                                    p.access_map_table_indexing_policy)),
+                        genTagExtractor(p.access_map_table_indexing_policy))),
       numGoodPrefetches(0), numTotalPrefetches(0), numRawCacheMisses(0),
       numRawCacheHits(0), degree(startDegree), usefulDegree(startDegree),
       epochEvent([this]{ processEpochEvent(); }, name())

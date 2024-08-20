@@ -99,13 +99,14 @@ class IndirectMemory : public Queued
          */
         bool increasedIndirectCounter;
 
-        PrefetchTableEntry(unsigned indirect_counter_bits,
-                           TaggedIndexingPolicy *ip)
-            : TaggedEntry(ip), address(0), secure(false), streamCounter(0),
+        PrefetchTableEntry(unsigned indirect_counter_bits, TagExtractor ext)
+            : TaggedEntry(), address(0), secure(false), streamCounter(0),
               enabled(false), index(0), baseAddr(0), shift(0),
               indirectCounter(indirect_counter_bits),
               increasedIndirectCounter(false)
-        {}
+        {
+            registerTagExtractor(ext);
+        }
 
         void
         invalidate() override
@@ -145,11 +146,12 @@ class IndirectMemory : public Queued
 
         IndirectPatternDetectorEntry(unsigned int num_addresses,
                                      unsigned int num_shifts,
-                                     TaggedIndexingPolicy *ip)
-          : TaggedEntry(ip), idx1(0), idx2(0), secondIndexSet(false),
+                                     TagExtractor ext)
+          : TaggedEntry(), idx1(0), idx2(0), secondIndexSet(false),
             numMisses(0),
             baseAddr(num_addresses, std::vector<Addr>(num_shifts))
         {
+            registerTagExtractor(ext);
         }
 
         void

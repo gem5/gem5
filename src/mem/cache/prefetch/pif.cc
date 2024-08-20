@@ -48,7 +48,7 @@ PIF::PIF(const PIFPrefetcherParams &p)
       index((name() + ".PIFIndex").c_str(), p.index_entries, p.index_assoc,
             p.index_replacement_policy,
             p.index_indexing_policy,
-            IndexEntry(p.index_indexing_policy)),
+            IndexEntry(genTagExtractor(p.index_indexing_policy))),
       streamAddressBuffer(p.stream_address_buffer_entries),
       listenersPC()
 {

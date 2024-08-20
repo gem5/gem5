@@ -137,7 +137,12 @@ class PIF : public Queued
 
         struct IndexEntry : public TaggedEntry
         {
-            using TaggedEntry::TaggedEntry;
+            IndexEntry(TagExtractor ext)
+              : TaggedEntry()
+            {
+                registerTagExtractor(ext);
+            }
+
             HistoryBuffer::iterator historyIt;
         };
 

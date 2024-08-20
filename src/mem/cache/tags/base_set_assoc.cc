@@ -84,7 +84,7 @@ BaseSetAssoc::tagsInit()
         blk->replacementData = replacementPolicy->instantiateEntry();
 
         // This is not used as of now but we set it for security
-        blk->setIndexingPolicy(indexingPolicy);
+        blk->registerTagExtractor(genTagExtractor(indexingPolicy));
     }
 }
 

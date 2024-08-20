@@ -112,7 +112,7 @@ SectorSubBlk::print() const
 }
 
 SectorBlk::SectorBlk()
-    : TaggedEntry(nullptr), _validCounter(0)
+    : TaggedEntry(), _validCounter(0)
 {
 }
 

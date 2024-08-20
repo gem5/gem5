@@ -136,8 +136,7 @@ class Stride : public Queued
     /** Tagged by hashed PCs. */
     struct StrideEntry : public TaggedEntry
     {
-        StrideEntry(const SatCounter8& init_confidence,
-                    TaggedIndexingPolicy *ip);
+        StrideEntry(const SatCounter8& init_confidence, TagExtractor ext);
 
         void invalidate() override;
 

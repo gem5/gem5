@@ -80,9 +80,11 @@ class SignaturePath : public Queued
         signature_t signature;
         /** Last accessed block within a page */
         stride_t lastBlock;
-        SignatureEntry(TaggedIndexingPolicy *ip)
-          : TaggedEntry(ip), signature(0), lastBlock(0)
-        {}
+        SignatureEntry(TagExtractor ext)
+          : TaggedEntry(), signature(0), lastBlock(0)
+        {
+            registerTagExtractor(ext);
+        }
     };
     /** Signature table */
     AssociativeCache<SignatureEntry> signatureTable;
@@ -105,10 +107,11 @@ class SignaturePath : public Queued
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
         PatternEntry(size_t num_strides, unsigned counter_bits,
-                     TaggedIndexingPolicy *ip)
-          : TaggedEntry(ip), strideEntries(num_strides, counter_bits),
+                     TagExtractor ext)
+          : TaggedEntry(), strideEntries(num_strides, counter_bits),
             counter(counter_bits)
         {
+            registerTagExtractor(ext);
         }
 
         /** Reset the entries to their initial values */

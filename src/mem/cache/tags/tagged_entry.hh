@@ -112,11 +112,18 @@ class TaggedEntry : public ReplaceableEntry
   public:
     using KeyType = TaggedTypes::KeyType;
     using IndexingPolicy = TaggedIndexingPolicy;
+    using TagExtractor = std::function<Addr(Addr)>;
 
-    TaggedEntry(IndexingPolicy *ip)
-      : _valid(false), _secure(false), _tag(MaxAddr), indexingPolicy(ip)
+    TaggedEntry()
+      : _valid(false), _secure(false), _tag(MaxAddr)
     {}
     ~TaggedEntry() = default;
+
+    void
+    registerTagExtractor(TagExtractor ext)
+    {
+        extractTag = ext;
+    }
 
     /**
      * Checks if the entry is valid.
@@ -177,12 +184,6 @@ class TaggedEntry : public ReplaceableEntry
         clearSecure();
     }
 
-    void
-    setIndexingPolicy(IndexingPolicy *ip)
-    {
-        indexingPolicy = ip;
-    }
-
     std::string
     print() const override
     {
@@ -201,11 +202,8 @@ class TaggedEntry : public ReplaceableEntry
     /** Set secure bit. */
     virtual void setSecure() { _secure = true; }
 
-    Addr
-    extractTag(Addr addr) const
-    {
-        return indexingPolicy->extractTag(addr);
-    }
+    /** Clear secure bit. Should be only used by the invalidation function. */
+    void clearSecure() { _secure = false; }
 
     /** Set valid bit. The block must be invalid beforehand. */
     virtual void
@@ -214,6 +212,9 @@ class TaggedEntry : public ReplaceableEntry
         assert(!isValid());
         _valid = true;
     }
+
+    /** Callback used to extract the tag from the entry */
+    TagExtractor extractTag;
 
   private:
     /**
@@ -231,13 +232,21 @@ class TaggedEntry : public ReplaceableEntry
 
     /** The entry's tag. */
     Addr _tag;
-
-    /** Reference to the indexing policy */
-    IndexingPolicy *indexingPolicy;
-
-    /** Clear secure bit. Should be only used by the invalidation function. */
-    void clearSecure() { _secure = false; }
 };
+
+/**
+ * This helper generates an a tag extractor function object
+ * which will be typically used by Replaceable entries indexed
+ * with the TaggedIndexingPolicy.
+ * It allows to "decouple" indexing from tagging. Those entries
+ * would call the functor without directly holding a pointer
+ * to the indexing policy which should reside in the cache.
+ */
+static constexpr auto
+genTagExtractor(TaggedIndexingPolicy *ip)
+{
+    return [ip] (Addr addr) { return ip->extractTag(addr); };
+}
 
 } // namespace gem5
 

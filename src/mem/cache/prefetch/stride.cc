@@ -63,9 +63,10 @@ namespace prefetch
 {
 
 Stride::StrideEntry::StrideEntry(const SatCounter8& init_confidence,
-                                 TaggedIndexingPolicy *ip)
-  : TaggedEntry(ip), confidence(init_confidence)
+                                 TagExtractor ext)
+  : TaggedEntry(), confidence(init_confidence)
 {
+    registerTagExtractor(ext);
     invalidate();
 }
 
@@ -114,7 +115,8 @@ Stride::allocateNewContext(int context)
         pcTableInfo.assoc,
         pcTableInfo.replacementPolicy,
         pcTableInfo.indexingPolicy,
-        StrideEntry(initConfidence, pcTableInfo.indexingPolicy)));
+        StrideEntry(initConfidence,
+            genTagExtractor(pcTableInfo.indexingPolicy))));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
