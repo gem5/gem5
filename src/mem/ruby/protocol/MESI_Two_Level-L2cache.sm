@@ -238,6 +238,10 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
+  int functionalReadPriority() {
+    return 20;
+  }
+
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 
