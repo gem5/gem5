@@ -99,20 +99,32 @@ board = ArmBoard(
     platform=platform,
 )
 
-# Here we set a full system workload. The "arm64-ubuntu-20.04-boot" boots
-# Ubuntu 20.04.
+# Here we set a full system workload. The "arm-ubuntu-24.04-boot-with-systemd" boots
+# Ubuntu 24.04.
+workload = obtain_resource("arm-ubuntu-24.04-boot-with-systemd")
+board.set_workload(workload)
 
-board.set_workload(
-    obtain_resource("arm64-ubuntu-20.04-boot", resource_version="2.0.0")
+
+def exit_event_handler():
+    print("First exit: kernel booted")
+    yield False  # gem5 is now executing systemd startup
+    print("Second exit: Started `after_boot.sh` script")
+    # The after_boot.sh script is executed after the kernel and systemd have
+    # booted.
+    yield False  # gem5 is now executing the `after_boot.sh` script
+    print("Third exit: Finished `after_boot.sh` script")
+    # The after_boot.sh script will run a script if it is passed via
+    # m5 readfile. This is the last exit event before the simulation exits.
+    yield True
+
+
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        # Here we want override the default behavior for the first m5 exit
+        # exit event.
+        ExitEvent.EXIT: exit_event_handler()
+    },
 )
-
-# We define the system with the aforementioned system defined.
-
-simulator = Simulator(board=board)
-
-# Once the system successfully boots, it encounters an
-# `m5_exit instruction encountered`. We stop the simulation then. When the
-# simulation has ended you may inspect `m5out/board.terminal` to see
-# the stdout.
 
 simulator.run()
