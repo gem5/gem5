@@ -587,6 +587,16 @@ class BOPPrefetcher(QueuedPrefetcher):
                 queue",
     )
 
+    # BOP is a degree one prefetcher
+    degree = Param.Int(1, "Number of prefetches to generate")
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_pf_hit = True
+    on_miss = True
+    on_inst = False
+
 
 class SBOOEPrefetcher(QueuedPrefetcher):
     type = "SBOOEPrefetcher"
