@@ -134,6 +134,14 @@ class AbstractController : public ClockedObject, public Consumer
     virtual bool functionalReadBuffers(PacketPtr&) = 0;
     virtual void functionalRead(const Addr &addr, PacketPtr)
     { panic("functionalRead(Addr,PacketPtr) not implemented"); }
+    /**
+     * Returns the priority used by functional reads when deciding from which
+     * controller to read a Maybe_Stale data block.
+     * Lower positive values have higher priority, negative values are ignored.
+     *
+     * @return the controller's priority
+     */
+    virtual int functionalReadPriority() { return -1; }
 
     //! Functional read that reads only blocks not present in the mask.
     //! Return number of bytes read.
