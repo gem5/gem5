@@ -46,19 +46,12 @@ from m5.objects import (
 )
 from m5.util import warn
 
-# from ...components.memory.single_channel import SingleChannelDDR3_1600
-from gem5.components.memory import DualChannelDDR4_2400
-
-from ...coherence_protocol import CoherenceProtocol
 from ...components.boards.riscv_board import RiscvBoard
 from ...components.boards.se_binary_workload import SEBinaryWorkload
-
-# from ...components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
-#     MESITwoLevelCacheHierarchy,
-# )
 from ...components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
     PrivateL1PrivateL2WalkCacheHierarchy,
 )
+from ...components.memory import DualChannelDDR4_2400
 from ...components.processors.cpu_types import CPUTypes
 from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
@@ -86,7 +79,6 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
     def __init__(self, is_fs):
         requires(
             isa_required=ISA.RISCV,
-            # coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
         )
 
         warn(
@@ -96,24 +88,14 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
         )
         self._fs = is_fs
 
-        # memory = SingleChannelDDR3_1600(size="2GiB")
         memory = DualChannelDDR4_2400(size="3GiB")
 
         processor = SimpleProcessor(
-            # cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=4
             cpu_type=CPUTypes.TIMING,
             isa=ISA.RISCV,
             num_cores=2,
         )
-        # cache_hierarchy = MESITwoLevelCacheHierarchy(
-        #     l1d_size="32KiB",
-        #     l1d_assoc=8,
-        #     l1i_size="32KiB",
-        #     l1i_assoc=8,
-        #     l2_size="1MiB",
-        #     l2_assoc=16,
-        #     num_l2_banks=1,
-        # )
+
         # Here we setup the parameters of the l1 and l2 caches.
         cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
             l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
@@ -143,28 +125,6 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
                 self.workload.entry_point = 0x80000000
 
         self._connect_things()
-
-    # @overrides(RiscvBoard)
-    # def _add_disk_to_board(self, disk_image: AbstractResource):
-    #     image = CowDiskImage(
-    #         child=RawDiskImage(read_only=True), read_only=False
-    #     )
-    #     image.child.image_file = disk_image.get_local_path()
-    #     self.disk.vio.image = image
-
-    #     # Note: The below is a bit of a hack. We need to wait to generate the
-    #     # device tree until after the disk is set up. Now that the disk and
-    #     # workload are set, we can generate the device tree file.
-    #     self._setup_io_devices()
-    #     self._setup_pma()
-
-    #     # Default DTB address if bbl is built with --with-dts option
-    #     self.workload.dtb_addr = 0x87E00000
-
-    #     self.generate_device_tree(m5.options.outdir)
-    #     self.workload.dtb_filename = os.path.join(
-    #         m5.options.outdir, "device.dtb"
-    #     )
 
     @overrides(RiscvBoard)
     def _setup_board(self) -> None:
@@ -242,47 +202,3 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
                 "RiscvDemoBoard does not have any I/O ports. Use has_coherent_io to "
                 "check this."
             )
-
-    # def _setup_io_devices(self) -> None:
-    #     """Connect the I/O devices to the I/O bus in FS mode."""
-    #     if self._fs:
-    #         # Add PCI
-    #         self.platform.pci_host.pio = self.iobus.mem_side_ports
-
-    #         # Add Ethernet card
-    #         self.ethernet = IGbE_e1000(
-    #             pci_bus=0,
-    #             pci_dev=0,
-    #             pci_func=0,
-    #             InterruptLine=1,
-    #             InterruptPin=1,
-    #         )
-
-    #         self.ethernet.host = self.platform.pci_host
-    #         self.ethernet.pio = self.iobus.mem_side_ports
-    #         self.ethernet.dma = self.iobus.cpu_side_ports
-
-    #         if self.get_cache_hierarchy().is_ruby():
-    #             for device in self._off_chip_devices + self._on_chip_devices:
-    #                 device.pio = self.iobus.mem_side_ports
-
-    #         else:
-    #             for device in self._off_chip_devices:
-    #                 device.pio = self.iobus.mem_side_ports
-    #             for device in self._on_chip_devices:
-    #                 device.pio = self.get_cache_hierarchy().get_mem_side_port()
-
-    #             self.bridge = Bridge(delay="10ns")
-    #             self.bridge.mem_side_port = self.iobus.cpu_side_ports
-    #             self.bridge.cpu_side_port = (
-    #                 self.get_cache_hierarchy().get_mem_side_port()
-    #             )
-    #             self.bridge.ranges = [
-    #                 AddrRange(dev.pio_addr, size=dev.pio_size)
-    #                 for dev in self._off_chip_devices
-    #             ]
-
-    #             # PCI
-    #             self.bridge.ranges.append(AddrRange(0x2F000000, size="16MB"))
-    #             self.bridge.ranges.append(AddrRange(0x30000000, size="256MB"))
-    #             self.bridge.ranges.append(AddrRange(0x40000000, size="512MB"))
