@@ -80,7 +80,7 @@ jobs:
               if: success() || failure()
               uses: actions/upload-artifact@v4.0.0
               with:
-                  name: gpu_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+                  name: gpu_tests_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
                   path: tests/testing-results
                   retention-days: 7
 
