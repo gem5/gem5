@@ -357,6 +357,20 @@ class Simulator:
                     # In instances where the user passes a lone function, the
                     # function is called on every exit event of that type. Here
                     # we convert the function into an infinite generator.
+
+                    # We check if the function is a generator. If it is we
+                    # throw a warning as this is likely a mistake.
+                    import inspect
+
+                    if inspect.isgeneratorfunction(value):
+                        warn(
+                            f"Function passed for '{key.value}' exit event "
+                            "is not a generator but a function that returns "
+                            "a generator. Did you mean to do this? (e.g., "
+                            "did you mean `ExitEvent.EVENT : gen()` instead "
+                            "of `ExitEvent.EVENT : gen`)"
+                        )
+
                     def function_generator(func: Callable):
                         while True:
                             yield func()
