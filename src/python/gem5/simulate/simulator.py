@@ -664,21 +664,11 @@ class Simulator:
 
         if not self._instantiated:
             # Before anything else we run the AbstractBoard's
-            # `_pre_instantiate` function.
-            self._board._pre_instantiate()
-
-            root = Root(
-                full_system=(
-                    self._full_system
-                    if self._full_system is not None
-                    else self._board.is_fullsystem()
-                ),
-                board=self._board,
+            # `_pre_instantiate` function. This returns the root object which
+            # is required for instantiation.
+            self._root = self._board._pre_instantiate(
+                full_system=self._full_system
             )
-
-            # We take a copy of the Root in case it's required elsewhere
-            # (for example, in `get_stats()`).
-            self._root = root
 
             # The following is a bit of a hack. If a simulation is to use a KVM
             # core then the `sim_quantum` value must be set. However, in the
