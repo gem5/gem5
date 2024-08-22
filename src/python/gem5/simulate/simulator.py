@@ -117,6 +117,10 @@ class Simulator:
                             behavior. If not set, whether or not to run in FS
                             mode will be determined via the board's
                             ``is_fullsystem()`` function.
+                            **Warning: This parameter is deprecated. The board
+                            determines if the simulation is full system or not.
+                            This parameter will be removed in a future gem5
+                            release.**
         :param on_exit_event: An optional map to specify what to execute on
                               each exit event. There are three possibilities here:
                               a generator, a list of functions, or a single function.
@@ -290,6 +294,15 @@ class Simulator:
         These generators can be found in the ``exit_event_generator.py`` module.
 
         """
+
+        if full_system is not None:
+            warn(
+                "Setting the full_system parameter via the Simulator "
+                "constructor is deprecated and will be removed in future "
+                "releases of gem5. "
+                "The board determines if the simulation is full system or not "
+                "via it's `is_fullsystem` method."
+            )
 
         self.set_max_ticks(max_ticks)
 
