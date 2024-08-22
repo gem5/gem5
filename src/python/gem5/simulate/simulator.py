@@ -670,29 +670,6 @@ class Simulator:
                 full_system=self._full_system
             )
 
-            # The following is a bit of a hack. If a simulation is to use a KVM
-            # core then the `sim_quantum` value must be set. However, in the
-            # case of using a SwitchableProcessor the KVM cores may be
-            # switched out and therefore not accessible via `get_cores()`.
-            # This is the reason for the `isinstance` check.
-            #
-            # We cannot set the `sim_quantum` value in every simulation as
-            # setting it causes the scheduling of exits to be off by the
-            # `sim_quantum` value (something necessary if we are using KVM
-            # cores). Ergo we only set the value of KVM cores are present.
-            #
-            # There is still a bug here in that if the user is switching to and
-            # from KVM and non-KVM cores via the SwitchableProcessor then the
-            # scheduling of exits for the non-KVM cores will be incorrect. This
-            # will be fixed at a later date.
-            processor = self._board.processor
-            if any(core.is_kvm_core() for core in processor.get_cores()) or (
-                isinstance(processor, SwitchableProcessor)
-                and any(core.is_kvm_core() for core in processor._all_cores())
-            ):
-                m5.ticks.fixGlobalFrequency()
-                root.sim_quantum = m5.ticks.fromSeconds(0.001)
-
             # m5.instantiate() takes a parameter specifying the path to the
             # checkpoint directory. If the parameter is None, no checkpoint
             # will be restored.

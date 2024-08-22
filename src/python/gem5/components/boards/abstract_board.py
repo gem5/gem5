@@ -406,11 +406,11 @@ class AbstractBoard:
                             occurs whether a simulation is to be run in FS or
                             SE mode will be determined by the board set."""
 
-        # Connect the memory, processor, and cache hierarchy.
+        # 1. Connect the memory, processor, and cache hierarchy.
         self._connect_things()
 
-        # Return the Root object.
-        return Root(
+        # 2. Create the root object
+        root = Root(
             full_system=(
                 full_system
                 if full_system is not None
@@ -418,6 +418,13 @@ class AbstractBoard:
             ),
             board=self,
         )
+
+        # 3. Call any of the components' `_pre_instantiate` functions.
+        # Right now, only the processor requires this.
+        self.get_processor()._pre_instantiate(root)
+
+        # 4. Return the root object.
+        return root
 
     def _connect_things_check(self):
         """
