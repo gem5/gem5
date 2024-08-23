@@ -70,10 +70,10 @@ Ipcp::Ipcp(const IpcpPrefetcherParams &p)
 }
 
 Addr
-Ipcp::getSignature(Addr curSignature, int stride)
+Ipcp::getSignature(Addr curSignature, int64_t stride)
 {
     //Handle -ve stride
-    int corStride = (stride < 0) ?
+    int64_t corStride = (stride < 0) ?
      (stride * (-1)
      + (1 << floorLog2(blkSize))) : stride;
     return (((curSignature << 1) ^ corStride)
@@ -124,7 +124,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
     if (RST.find(regionBase) != RST.end()) {
         RST[regionBase].cacheLineTouched.insert(blkAddr);
         RST[regionBase].lastTouch = curTick();
-        int stride = blkAddr - RST[regionBase].lastAddr;
+        int64_t stride = blkAddr - RST[regionBase].lastAddr;
         if (stride != 0) {
             if (stride > 0)
                RST[regionBase].dir += 1;
@@ -204,7 +204,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
 
    //CS, CPLX
 
-    int curStride = 0;
+    int64_t curStride = 0;
 
     //Lookup IPCP
     if (ipcpTable.find(ipIndex) != ipcpTable.end()) {
@@ -316,6 +316,8 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
         for (int i = 1; i <= pageDegree; i++) {
             Addr prefAddr = blockAddress(blkAddr + (i * newStride));
             addresses.push_back(AddrPriority(prefAddr,0));
+            if (!samePage(blkAddr, prefAddr))
+                ipcpStats.pageCross += 1;
         }
     } else if ((ipcpTable[ipIndex].conf > 1) &&
      (ipcpTable[ipIndex].stride != 0) && csOn) {
@@ -325,18 +327,26 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
             Addr prefAddr = blockAddress(blkAddr
              + ((i * ipcpTable[ipIndex].stride) * blkSize));
             addresses.push_back(AddrPriority(prefAddr,0));
+            if (!samePage(blkAddr, prefAddr))
+                ipcpStats.pageCross += 1;
         }
     } else if ((cspt[updatedSignature].conf > 0)
      && (cspt[updatedSignature].stride != 0)
      && cplxOn) {
         //It is Complex stride IP
         ipcpStats.cplxChosen += 1;
+        int64_t prefOffset = 0;
+        //ToDo: Add CPLX distance
         for (int i = 1; i <= degree; i++) {
+            prefOffset += cspt[updatedSignature].stride;
             Addr prefAddr = blockAddress(blkAddr
-             + (cspt[updatedSignature].stride * blkSize));
+             + (prefOffset * blkSize));
             if ((cspt[updatedSignature].conf > 0)
-             && (cspt[updatedSignature].stride != 0))
+             && (prefOffset != 0)) {
                 addresses.push_back(AddrPriority(prefAddr,0));
+                if (!samePage(blkAddr, prefAddr))
+                   ipcpStats.pageCross += 1;
+            }
             updatedSignature = getSignature(updatedSignature,
              cspt[updatedSignature].stride);
             if ((cspt[updatedSignature].stride == 0) ||

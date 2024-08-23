@@ -53,7 +53,8 @@ class Ipcp : public Queued
    {
        public:
            Addr ipTag, lastVpage, lastLineOffset, signature, regionAddr;
-           int stride, conf, valid, dir;
+           int64_t stride;
+	   int conf, valid, dir;
            bool streamValid;
 
            IpEntry() {
@@ -74,7 +75,7 @@ class Ipcp : public Queued
    class CsptEntry
    {
        public:
-           int stride;
+           int64_t stride;
            int conf;
            CsptEntry() {
                stride = 0;
@@ -93,7 +94,7 @@ class Ipcp : public Queued
     bitsIpTag, bitsLastVpage, bitsSignature;
    const int degree;
    bool csOn, cplxOn;
-   Addr getSignature(Addr curSignature, int stride);
+   Addr getSignature(Addr curSignature, int64_t stride);
 
    //GS IP
    //Structure sizes
