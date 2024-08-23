@@ -32,7 +32,6 @@
 #include <climits>
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/SignaturePathPrefetcher.hh"
 
 namespace gem5
@@ -49,16 +48,18 @@ SignaturePath::SignaturePath(const SignaturePathPrefetcherParams &p)
       prefetchConfidenceThreshold(p.prefetch_confidence_threshold),
       lookaheadConfidenceThreshold(p.lookahead_confidence_threshold),
       signatureTable((name() + ".SignatureTable").c_str(),
-                     p.signature_table_entries,
-                     p.signature_table_assoc,
-                     p.signature_table_replacement_policy,
-                     p.signature_table_indexing_policy),
+          p.signature_table_entries,
+          p.signature_table_assoc,
+          p.signature_table_replacement_policy,
+          p.signature_table_indexing_policy,
+          SignatureEntry(genTagExtractor(p.signature_table_indexing_policy))),
       patternTable((name() + ".PatternTable").c_str(),
-                   p.pattern_table_entries,
-                   p.pattern_table_assoc,
-                   p.pattern_table_replacement_policy,
-                   p.pattern_table_indexing_policy,
-                   PatternEntry(stridesPerPatternEntry, p.num_counter_bits))
+          p.pattern_table_entries,
+          p.pattern_table_assoc,
+          p.pattern_table_replacement_policy,
+          p.pattern_table_indexing_policy,
+          PatternEntry(stridesPerPatternEntry, p.num_counter_bits,
+                       genTagExtractor(p.pattern_table_indexing_policy)))
 {
     fatal_if(prefetchConfidenceThreshold < 0,
         "The prefetch confidence threshold must be greater than 0\n");
@@ -169,20 +170,21 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
         stride_t block, bool &miss, stride_t &stride,
         double &initial_confidence)
 {
-    SignatureEntry* signature_entry = signatureTable.findEntry(ppn, is_secure);
+    const SignatureEntry::KeyType key{ppn, is_secure};
+    SignatureEntry* signature_entry = signatureTable.findEntry(key);
     if (signature_entry != nullptr) {
         signatureTable.accessEntry(signature_entry);
         miss = false;
         stride = block - signature_entry->lastBlock;
     } else {
-        signature_entry = signatureTable.findVictim(ppn);
+        signature_entry = signatureTable.findVictim(key);
         assert(signature_entry != nullptr);
 
         // Sets signature_entry->signature, initial_confidence, and stride
         handleSignatureTableMiss(block, signature_entry->signature,
             initial_confidence, stride);
 
-        signatureTable.insertEntry(ppn, is_secure, signature_entry);
+        signatureTable.insertEntry(key, signature_entry);
         miss = true;
     }
     signature_entry->lastBlock = block;
@@ -192,16 +194,17 @@ SignaturePath::getSignatureEntry(Addr ppn, bool is_secure,
 SignaturePath::PatternEntry &
 SignaturePath::getPatternEntry(Addr signature)
 {
-    PatternEntry* pattern_entry = patternTable.findEntry(signature);
+    const PatternEntry::KeyType key{signature, false};
+    PatternEntry* pattern_entry = patternTable.findEntry(key);
     if (pattern_entry != nullptr) {
         // Signature found
         patternTable.accessEntry(pattern_entry);
     } else {
         // Signature not found
-        pattern_entry = patternTable.findVictim(signature);
+        pattern_entry = patternTable.findVictim(key);
         assert(pattern_entry != nullptr);
 
-        patternTable.insertEntry(signature, pattern_entry);
+        patternTable.insertEntry(key, pattern_entry);
     }
     return *pattern_entry;
 }
@@ -277,7 +280,7 @@ SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
         //   confidence, these are prefetch candidates
         // - select the entry with the highest counter as the "lookahead"
         PatternEntry *current_pattern_entry =
-            patternTable.findEntry(current_signature);
+            patternTable.findEntry({current_signature, is_secure});
         PatternStrideEntry const *lookahead = nullptr;
         if (current_pattern_entry != nullptr) {
             unsigned long max_counter = 0;

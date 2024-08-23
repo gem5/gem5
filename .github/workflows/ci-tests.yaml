@@ -96,7 +96,7 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-16:latest
+        container: ghcr.io/gem5/clang-version-18:latest
         needs: [pre-commit, check-for-change-id]
         timeout-minutes: 90
         steps:
@@ -221,6 +221,32 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
+    gpu-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 180
+        needs: [pre-commit, check-for-change-id]
+        steps:
+            - uses: actions/checkout@v4
+
+            # Build the VEGA_X86/gem5.opt binary.
+            - name: Build VEGA_X86/gem5.opt
+              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+
+            # Run the GPU tests.
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
+
+            # Upload the tests/testing-results directory as an artifact.
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
+                  path: tests/testing-results
+                  retention-days: 30
+
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
@@ -232,5 +258,6 @@ jobs:
             - unittests-all-opt
             - pre-commit
             - check-for-change-id
+            - gpu-tests
         steps:
             - run: echo "This job's status is ${{ job.status }}."

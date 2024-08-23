@@ -42,6 +42,7 @@
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/page_size.hh"
 #include "arch/riscv/pma_checker.hh"
+#include "arch/riscv/pmp.hh"
 #include "arch/riscv/tlb.hh"
 
 #include "params/RiscvMMU.hh"
@@ -59,6 +60,13 @@ class MMU : public BaseMMU
     MMU(const RiscvMMUParams &p)
       : BaseMMU(p), pma(p.pma_checker)
     {}
+
+    void
+    reset() override
+    {
+        // Reset PMP Cfg
+        getPMP()->pmpReset();
+    }
 
     TranslationGenPtr
     translateFunctional(Addr start, Addr size, ThreadContext *tc,

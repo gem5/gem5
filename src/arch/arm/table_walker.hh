@@ -436,7 +436,7 @@ class TableWalker : public ClockedObject
 
         LongDescriptor()
           : data(0), _dirty(false), aarch64(false), grainSize(Grain4KB),
-            physAddrRange(0)
+            physAddrRange(0), isStage2(false)
         {}
 
         /** The raw bits of the entry */
@@ -453,6 +453,8 @@ class TableWalker : public ClockedObject
         GrainSize grainSize;
 
         uint8_t physAddrRange;
+
+        bool isStage2;
 
         uint8_t*
         getRawPtr() override
@@ -491,8 +493,13 @@ class TableWalker : public ClockedObject
         secure(bool have_security, WalkerState *currState) const override
         {
             if (type() == Block || type() == Page) {
-                return have_security &&
-                    (currState->secureLookup && !bits(data, 5));
+                if (isStage2) {
+                    return have_security && currState->secureLookup &&
+                        !currState->vtcr.nsa;
+                } else {
+                    return have_security &&
+                        (currState->secureLookup && !bits(data, 5));
+                }
             } else {
                 return have_security && currState->secureLookup;
             }
@@ -662,8 +669,9 @@ class TableWalker : public ClockedObject
         global(WalkerState *currState) const override
         {
             assert(currState && (type() == Block || type() == Page));
-            if (!currState->aarch64 && (currState->isSecure &&
-                                        !currState->secureLookup)) {
+            const bool secure_state = currState->ss == SecurityState::Secure;
+            if (!currState->aarch64 && secure_state &&
+                !currState->secureLookup) {
                 return false;  // ARM ARM issue C B3.6.3
             } else if (currState->aarch64) {
                 if (!MMU::hasUnprivRegime(currState->regime)) {
@@ -671,11 +679,19 @@ class TableWalker : public ClockedObject
                     // in AArch64 for regimes without an unpriviledged
                     // component
                     return true;
-                } else if (currState->isSecure && !currState->secureLookup) {
+                } else if (secure_state && !currState->secureLookup) {
                     return false;
                 }
             }
             return !bits(data, 11);
+        }
+
+        /** FNXS for FEAT_XS only */
+        bool
+        fnxs() const
+        {
+            assert((type() == Block || type() == Page));
+            return bits(data, 11);
         }
 
         /** Returns true if the access flag (AF) is set. */
@@ -888,12 +904,17 @@ class TableWalker : public ClockedObject
         /** If the access is a fetch (for execution, and no-exec) must be checked?*/
         bool isFetch;
 
-        /** If the access comes from the secure state. */
-        bool isSecure;
+        /** Security State of the access */
+        SecurityState ss;
         /** Whether lookups should be treated as using the secure state.
          * This is usually the same as isSecure, but can be set to false by the
          * long descriptor table attributes. */
         bool secureLookup = false;
+
+        /** IPA space (Secure vs NonSecure); stage2 only.
+         * This depends on whether the stage1 translation targeted
+         * a secure or non-secure IPA space */
+        PASpace ipaSpace;
 
         /** True if table walks are uncacheable (for table descriptors) */
         bool isUncacheable;
@@ -1131,7 +1152,8 @@ class TableWalker : public ClockedObject
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
                BaseMMU::Mode mode, BaseMMU::Translation *_trans,
-               bool timing, bool functional, bool secure,
+               bool timing, bool functional, SecurityState ss,
+               PASpace ipaspace,
                MMU::ArmTranslationType tran_type, bool stage2,
                const TlbEntry *walk_entry);
 
@@ -1145,6 +1167,7 @@ class TableWalker : public ClockedObject
     void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                          LongDescriptor &lDescriptor);
     void memAttrsWalkAArch64(TlbEntry &te);
+    bool uncacheableFromAttrs(uint8_t attrs);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 
@@ -1193,8 +1216,11 @@ class TableWalker : public ClockedObject
     Fault processWalk();
     Fault processWalkLPAE();
 
-    bool checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
-        GrainSize granule, int tsz, bool low_range);
+    Addr maxTxSz(GrainSize tg) const;
+    Addr s1MinTxSz(GrainSize tg) const;
+    bool s1TxSzFault(GrainSize tg, int tsz) const;
+    bool checkVAOutOfRange(Addr addr, int top_bit,
+        int tsz, bool low_range);
 
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting

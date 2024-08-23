@@ -274,6 +274,8 @@ ISA::redirectRegVHE(int misc_reg)
         return currEL() == EL2 ? MISCREG_CNTHCTL_EL2 : misc_reg;
       case MISCREG_MPAM1_EL1:
         return currEL() == EL2 ? MISCREG_MPAM2_EL2 : misc_reg;
+      case MISCREG_ZCR_EL1:
+        return currEL() == EL2 ? MISCREG_ZCR_EL2 : misc_reg;
       case MISCREG_CNTP_TVAL:
       case MISCREG_CNTP_TVAL_EL0:
         if (ELIsInHost(tc, currEL())) {

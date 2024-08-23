@@ -234,6 +234,20 @@ RemoteGDB::acc(Addr va, size_t len)
 }
 
 void
+RemoteGDB::insertHardBreak(Addr addr, size_t kind)
+{
+    Addr realAddr = getRvType(context()) == RV64 ? addr : sext(addr, 32);
+    BaseRemoteGDB::insertHardBreak(realAddr, kind);
+}
+
+void
+RemoteGDB::removeHardBreak(Addr addr, size_t kind)
+{
+    Addr realAddr = getRvType(context()) == RV64 ? addr : sext(addr, 32);
+    BaseRemoteGDB::removeHardBreak(realAddr, kind);
+}
+
+void
 RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
@@ -368,7 +382,7 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
     // TODO: implement CSR counter registers for mcycle(h), minstret(h)
 
     // U mode CSR
-    setRegNoEffectWithMask(context, RV32, pms, CSR_USTATUS, r.ustatus);
+    setRegWithMask(context, RV32, pms, CSR_USTATUS, r.ustatus);
     setRegWithMask(context, RV32, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV32, pms, CSR_UIP, r.uip);
     context->setMiscRegNoEffect(
@@ -383,7 +397,7 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_UTVAL).physIndex, r.utval);
 
     // S mode CSR
-    setRegNoEffectWithMask(context, RV32, pms, CSR_SSTATUS, r.sstatus);
+    setRegWithMask(context, RV32, pms, CSR_SSTATUS, r.sstatus);
     setRegWithMask(context, RV32, pms, CSR_SIE, r.sie);
     setRegWithMask(context, RV32, pms, CSR_SIP, r.sip);
     context->setMiscRegNoEffect(
@@ -406,7 +420,7 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_SATP).physIndex, r.satp);
 
     // M mode CSR
-    setRegNoEffectWithMask(context, RV32, pms, CSR_MSTATUS, r.mstatus);
+    setRegWithMask(context, RV32, pms, CSR_MSTATUS, r.mstatus);
     setRegNoEffectWithMask(context, RV32, pms, CSR_MISA, r.misa);
     setRegWithMask(context, RV32, pms, CSR_MIE, r.mie);
     setRegWithMask(context, RV32, pms, CSR_MIP, r.mip);
@@ -559,7 +573,7 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
     // TODO: implement CSR counter registers for mcycle, minstret
 
     // U mode CSR
-    setRegNoEffectWithMask(context, RV64, pms, CSR_USTATUS, r.ustatus);
+    setRegWithMask(context, RV64, pms, CSR_USTATUS, r.ustatus);
     setRegWithMask(context, RV64, pms, CSR_UIE, r.uie);
     setRegWithMask(context, RV64, pms, CSR_UIP, r.uip);
     context->setMiscRegNoEffect(
@@ -574,8 +588,7 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_UTVAL).physIndex, r.utval);
 
     // S mode CSR
-    setRegNoEffectWithMask(
-        context, RV64, pms, CSR_SSTATUS, r.sstatus);
+    setRegWithMask(context, RV64, pms, CSR_SSTATUS, r.sstatus);
     setRegWithMask(context, RV64, pms, CSR_SIE, r.sie);
     setRegWithMask(context, RV64, pms, CSR_SIP, r.sip);
     context->setMiscRegNoEffect(
@@ -598,8 +611,7 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_SATP).physIndex, r.satp);
 
     // M mode CSR
-    setRegNoEffectWithMask(
-        context, RV64, pms, CSR_MSTATUS, r.mstatus);
+    setRegWithMask(context, RV64, pms, CSR_MSTATUS, r.mstatus);
     setRegNoEffectWithMask(context, RV64, pms, CSR_MISA, r.misa);
     setRegWithMask(context, RV64, pms, CSR_MIE, r.mie);
     setRegWithMask(context, RV64, pms, CSR_MIP, r.mip);

@@ -331,7 +331,7 @@ SCMasterPort::recvTimingResp(gem5::PacketPtr pkt)
      *
      * See recvTimingReq in sc_slave_port.cc for a detailed description.
      */
-    auto delay = sc_core::sc_time::from_value(pkt->payloadDelay);
+    auto delay = sc_core::sc_time::from_value(pkt->headerDelay);
     // reset the delays
     pkt->payloadDelay = 0;
     pkt->headerDelay = 0;

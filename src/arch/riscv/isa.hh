@@ -5,6 +5,7 @@
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
  * Copyright (c) 2020 Barkhausen Institut
+ * Coypright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,6 +99,15 @@ class ISA : public BaseISA
      */
     PrivilegeModeSet _privilegeModeSet;
 
+    /**
+     * The WFI instruction can halt the execution of a hart.
+     * If this variable is set true, the execution resumes if
+     * an interrupt becomes pending. If this variable is set
+     * to false, the execution only resumes if an locally enabled
+     * interrupt becomes pending.
+    */
+    const bool _wfiResumeOnPending;
+
   public:
     using Params = RiscvISAParams;
 
@@ -107,6 +117,9 @@ class ISA : public BaseISA
     newPCState(Addr new_inst_addr=0) const override
     {
         unsigned vlenb = vlen >> 3;
+        if (_rvType == RV32) {
+            new_inst_addr = sext<32>(new_inst_addr);
+        }
         return new PCState(new_inst_addr, _rvType, vlenb);
     }
 
@@ -169,6 +182,8 @@ class ISA : public BaseISA
     int64_t getVectorLengthInBytes() const override { return vlen >> 3; }
 
     PrivilegeModeSet getPrivilegeModeSet() { return _privilegeModeSet; }
+
+    bool resumeOnPending() { return _wfiResumeOnPending; }
 
     virtual Addr getFaultHandlerAddr(
         RegIndex idx, uint64_t cause, bool intr) const;

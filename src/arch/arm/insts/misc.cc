@@ -411,12 +411,13 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            TLBIALL tlbiOp(TranslationRegime::EL10, secure);
+            TLBIALL tlbiOp(TranslationRegime::EL10, ss);
             if (shareable) {
                 tlbiOp.broadcast(tc);
             } else {
@@ -429,8 +430,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALL tlbiOp(TranslationRegime::EL10, secure);
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIALL tlbiOp(TranslationRegime::EL10, ss);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -440,12 +442,13 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            ITLBIALL tlbiOp(TranslationRegime::EL10, secure);
+            ITLBIALL tlbiOp(TranslationRegime::EL10, ss);
             if (shareable) {
                 tlbiOp.broadcast(tc);
             } else {
@@ -459,12 +462,13 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            DTLBIALL tlbiOp(TranslationRegime::EL10, secure);
+            DTLBIALL tlbiOp(TranslationRegime::EL10, ss);
             if (shareable) {
                 tlbiOp.broadcast(tc);
             } else {
@@ -478,13 +482,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TLBIMVA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
                            false);
@@ -502,13 +507,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TLBIMVA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
                            true);
@@ -525,9 +531,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIMVA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
                            false);
@@ -540,9 +547,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIMVA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            mbits(value, 31, 12),
                            bits(value, 7, 0),
                            true);
@@ -556,13 +564,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             TLBIASID tlbiOp(TranslationRegime::EL10,
-                            secure,
+                            ss,
                             bits(value, 7, 0));
 
             if (shareable) {
@@ -577,9 +586,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIASID tlbiOp(TranslationRegime::EL10,
-                            secure,
+                            ss,
                             bits(value, 7, 0));
 
             tlbiOp.broadcast(tc);
@@ -591,11 +601,12 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
-            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, ss,
                             mbits(value, 31, 12), false);
 
             if (shareable) {
@@ -611,12 +622,13 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
-            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, ss,
                             mbits(value, 31, 12), true);
 
             if (shareable) {
@@ -631,8 +643,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, ss,
                             mbits(value, 31, 12), false);
 
             tlbiOp.broadcast(tc);
@@ -643,8 +656,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL10, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL10, ss,
                             mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
@@ -655,8 +669,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, ss,
                             mbits(value, 31, 12), false);
 
             tlbiOp(tc);
@@ -667,8 +682,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, ss,
                             mbits(value, 31, 12), true);
 
             tlbiOp(tc);
@@ -679,8 +695,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, ss,
                             mbits(value, 31, 12), false);
 
             tlbiOp.broadcast(tc);
@@ -691,8 +708,9 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
+            TLBIMVAA tlbiOp(TranslationRegime::EL2, ss,
                             mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
@@ -703,9 +721,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIIPA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            false);
 
@@ -718,9 +737,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIIPA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            true);
 
@@ -733,9 +753,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIIPA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            false);
 
@@ -748,9 +769,10 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             TLBIIPA tlbiOp(TranslationRegime::EL10,
-                           secure,
+                           ss,
                            static_cast<Addr>(bits(value, 35, 0)) << 12,
                            true);
 
@@ -763,12 +785,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
+
             ITLBIMVA tlbiOp(TranslationRegime::EL10,
-                            secure,
+                            ss,
                             mbits(value, 31, 12),
                             bits(value, 7, 0));
 
@@ -785,13 +809,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             DTLBIMVA tlbiOp(TranslationRegime::EL10,
-                            secure,
+                            ss,
                             mbits(value, 31, 12),
                             bits(value, 7, 0));
 
@@ -808,13 +833,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             ITLBIASID tlbiOp(TranslationRegime::EL10,
-                             secure,
+                             ss,
                              bits(value, 7, 0));
 
             if (shareable) {
@@ -830,13 +856,14 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            auto ss = release->has(ArmExtension::SECURITY) && !scr.ns ?
+                SecurityState::Secure : SecurityState::NonSecure;
             // Check for Force Broadcast. Ignored if HCR_EL2.TGE == 1
             bool shareable = currEL(tc) == EL1 && EL2Enabled(tc) &&
                 hcr.fb && !hcr.tge;
 
             DTLBIASID tlbiOp(TranslationRegime::EL10,
-                             secure,
+                             ss,
                              bits(value, 7, 0));
 
             if (shareable) {

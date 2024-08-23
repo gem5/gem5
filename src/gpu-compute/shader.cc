@@ -214,19 +214,23 @@ Shader::prepareInvalidate(HSAQueueEntry *task) {
     for (int i_cu = 0; i_cu < n_cu; ++i_cu) {
         // create a request to hold INV info; the request's fields will
         // be updated in cu before use
-        auto req = std::make_shared<Request>(0, 0, 0,
-                                             cuList[i_cu]->requestorId(),
-                                             0, -1);
+        auto tcc_req = std::make_shared<Request>(0, 0, 0,
+                                                 cuList[i_cu]->requestorId(),
+                                                 0, -1);
 
         _dispatcher.updateInvCounter(kernId, +1);
         // all necessary INV flags are all set now, call cu to execute
-        cuList[i_cu]->doInvalidate(req, task->dispatchId());
+        cuList[i_cu]->doInvalidate(tcc_req, task->dispatchId());
 
 
         // A set of CUs share a single SQC cache. Send a single invalidate
         // request to each SQC
+        auto sqc_req = std::make_shared<Request>(0, 0, 0,
+                                                 cuList[i_cu]->requestorId(),
+                                                 0, -1);
+
         if ((i_cu % n_cu_per_sqc) == 0) {
-            cuList[i_cu]->doSQCInvalidate(req, task->dispatchId());
+            cuList[i_cu]->doSQCInvalidate(sqc_req, task->dispatchId());
         }
 
         // I don't like this. This is intrusive coding.

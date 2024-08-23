@@ -33,8 +33,11 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
-from ....isas import ISA
 from ....utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
+
+from ....isas import ISA
 from ...boards.abstract_board import AbstractBoard
 from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
@@ -80,8 +83,6 @@ class MESITwoLevelCacheHierarchy(
         self._num_l2_banks = num_l2_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
-
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()

@@ -115,14 +115,14 @@ CompressedTags::tagsInit()
 }
 
 CacheBlk*
-CompressedTags::findVictim(Addr addr, const bool is_secure,
+CompressedTags::findVictim(const CacheBlk::KeyType& key,
                            const std::size_t compressed_size,
                            std::vector<CacheBlk*>& evict_blks,
                            const uint64_t partition_id=0)
 {
     // Get all possible locations of this superblock
     std::vector<ReplaceableEntry*> superblock_entries =
-        indexingPolicy->getPossibleEntries(addr);
+        indexingPolicy->getPossibleEntries(key);
 
     // Filter entries based on PartitionID
     if (partitionManager){
@@ -132,13 +132,12 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
 
     // Check if the superblock this address belongs to has been allocated. If
     // so, try co-allocating
-    Addr tag = extractTag(addr);
     SuperBlk* victim_superblock = nullptr;
     bool is_co_allocation = false;
-    const uint64_t offset = extractSectorOffset(addr);
+    const uint64_t offset = extractSectorOffset(key.address);
     for (const auto& entry : superblock_entries){
         SuperBlk* superblock = static_cast<SuperBlk*>(entry);
-        if (superblock->matchTag(tag, is_secure) &&
+        if (superblock->match(key) &&
             !superblock->blks[offset]->isValid() &&
             superblock->isCompressed() &&
             superblock->canCoAllocate(compressed_size))

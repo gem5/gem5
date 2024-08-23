@@ -250,6 +250,7 @@ BaseSemihosting::callWrite0(ThreadContext *tc, InPlaceArg arg)
     PortProxy &proxy = portProxy(tc);
     std::string str;
     proxy.readString(str, arg.addr);
+    DDUMP(Semihosting, str.data(), str.size());
     std::cout.write(str.c_str(), str.size());
     std::cout.flush();
 
@@ -263,8 +264,10 @@ BaseSemihosting::callWrite(
     if (handle > files.size() || !files[handle])
         return RetErrno(size, EBADF);
 
+    DPRINTF(Semihosting, "Semihosting SYS_WRITE(%x, %d)\n", addr, size);
     std::vector<uint8_t> buffer(size);
     portProxy(tc).readBlob(addr, buffer.data(), buffer.size());
+    DDUMP(Semihosting, buffer.data(), buffer.size());
 
     int64_t ret = files[handle]->write(buffer.data(), buffer.size());
     if (ret < 0) {

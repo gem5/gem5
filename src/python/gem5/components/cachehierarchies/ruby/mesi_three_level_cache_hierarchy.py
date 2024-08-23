@@ -33,8 +33,11 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
-from ....isas import ISA
 from ....utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL)
+
+from ....isas import ISA
 from ...boards.abstract_board import AbstractBoard
 from ..abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
@@ -84,10 +87,6 @@ class MESIThreeLevelCacheHierarchy(
         self._num_l3_banks = num_l3_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-        requires(
-            coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
-        )
-
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()

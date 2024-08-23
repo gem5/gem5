@@ -172,15 +172,6 @@ class AtlasClient(AbstractClient):
                 "id": resource.get_resource_id(),
             }
 
-            if not resource.get_gem5_version().startswith("DEVELOP"):
-                # This is a regex search that matches the beginning of the
-                # string. So if the resource version is '20.1', it will
-                # match '20.1.1'.
-                condition["gem5_versions"] = {
-                    "$regex": f"^{resource.get_gem5_version()}",
-                    "$options": "i",
-                }
-
             # If the resource has a resource_version, add it to the search
             # conditions.
             if resource.get_resource_version():
@@ -214,4 +205,18 @@ class AtlasClient(AbstractClient):
         for id, resource_list in resources_by_id.items():
             resources_by_id[id] = self.sort_resources(resource_list)[0]
 
+        # Check if the resource is compatible with the gem5version
+        for resource in client_queries:
+            if resource.get_resource_id() not in resources_by_id:
+                continue
+            if not resource.get_gem5_version().startswith("DEVELOP"):
+                if (
+                    resource.get_gem5_version()
+                    not in resources_by_id[resource.get_resource_id()][
+                        "gem5_versions"
+                    ]
+                ):
+                    warn(
+                        f"Resource {resource.get_resource_id()} is not compatible with gem5 version {resource.get_gem5_version()}."
+                    )
         return resources_by_id

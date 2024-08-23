@@ -91,6 +91,7 @@ requires(isa_required=ISA.RISCV)
 # --bare-metal (boolean):       Use baremetal Riscv (default False). Use this
 #                               if bbl is built with "--with-dts" option.
 #                               (do not forget to include bootargs in dts file)
+# --riscv-32bits (boolean):     Use 32 bits core of Riscv CPU
 #
 # Not Used:
 # --command-line-file, --script, --frame-capture, --os-type, --timesync,
@@ -155,6 +156,11 @@ parser.add_argument(
     default="/some/invalid/root/directory",
     type=str,
     help="The root directory for files exposed to semihosting",
+)
+parser.add_argument(
+    "--riscv-32bits",
+    action="store_true",
+    help="Use 32 bits core of Riscv CPU",
 )
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
@@ -261,6 +267,10 @@ system.init_param = args.init_param
 system.cpu = [
     CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i) for i in range(np)
 ]
+
+if args.riscv_32bits:
+    for core in system.cpu:
+        core.ArchISA.riscv_type = "RV32"
 
 if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock

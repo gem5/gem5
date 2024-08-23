@@ -2725,7 +2725,7 @@ let {{
             }
             break;
           case 0x9:
-            if ((opc3 & 0x1) == 0) {
+            if (bits(machInst, 6) == 1) {
                 if (single) {
                     return decodeVfpRegRegRegOp<VfnmaS>(
                             machInst, vd, vn, vm, false);

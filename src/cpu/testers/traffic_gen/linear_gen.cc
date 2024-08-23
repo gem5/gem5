@@ -64,7 +64,7 @@ LinearGen::getNextPacket()
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
 
-    DPRINTF(TrafficGen, "LinearGen::getNextPacket: %c to addr %x, size %d\n",
+    DPRINTF(TrafficGen, "LinearGen::getNextPacket: %c to addr %#x, size %d\n",
             isRead ? 'r' : 'w', nextAddr, blocksize);
 
     // Add the amount of data manipulated to the total
@@ -78,7 +78,7 @@ LinearGen::getNextPacket()
 
     // If we have reached the end of the address space, reset the
     // address to the start of the range
-    if (nextAddr > endAddr) {
+    if (nextAddr >= endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
                 "the range\n");
         nextAddr = startAddr;
