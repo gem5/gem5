@@ -133,6 +133,7 @@ namespace ArmISA
     EndBitUnion(AA64ISAR0)
 
     BitUnion64(AA64ISAR1)
+        Bitfield<59, 56> xs;
         Bitfield<55, 52> i8mm;
         Bitfield<43, 40> specres;
         Bitfield<39, 36> sb;
@@ -654,6 +655,10 @@ namespace ArmISA
         Bitfield<19> vs;     // Only defined for VTCR_EL2
         Bitfield<21> ha;     // Only defined for VTCR_EL2
         Bitfield<22> hd;     // Only defined for VTCR_EL2
+        Bitfield<29> nsw;    // Only defined for VTCR_EL2
+        Bitfield<29> sw;     // Only defined for VSTCR_EL2
+        Bitfield<30> nsa;    // Only defined for VTCR_EL2
+        Bitfield<30> sa;     // Only defined for VSTCR_EL2
     EndBitUnion(VTCR_t)
 
     BitUnion32(PRRR)
@@ -1088,6 +1093,8 @@ namespace ArmISA
     BitUnion64(HCRX)
         Bitfield<15> sctlr2En;
         Bitfield<14> tcr2En;
+        Bitfield<4> fgtnxs;
+        Bitfield<3> fnxs;
     EndBitUnion(HCRX)
 
     BitUnion64(MPAMIDR)

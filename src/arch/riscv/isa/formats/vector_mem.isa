@@ -32,7 +32,7 @@ let {{
 def setVlen():
         return "uint32_t vlen = VlenbBits * 8;\n"
 def setVlenb():
-        return "uint32_t vlenb = VlenbBits;\n"
+        return "[[maybe_unused]] uint32_t vlenb = VlenbBits;\n"
 
 def declareVMemTemplate(class_name):
     return f'''
@@ -52,6 +52,17 @@ def getFaultCode():
             fault = NoFault;
             trimVl = true;
         }
+    }
+    '''
+
+def getTailMaskPolicyCode():
+    return '''
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
+        RiscvISA::vreg_t old_vd;
+        xc->getRegOperand(this, 1, &old_vd);
+        tmp_d0 = old_vd;
+    } else {
+        tmp_d0.set(0xff);
     }
     '''
 
@@ -94,7 +105,8 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
          'set_vlenb': setVlenb(),
          'set_vlen': setVlen(),
          'declare_vmem_template': declareVMemTemplate(Name + 'Micro'),
-         'fault_code': getFaultCode() if fault_only_first else ''},
+         'fault_code': getFaultCode() if fault_only_first else '',
+         'tail_mask_policy_code': getTailMaskPolicyCode()},
         inst_flags)
 
     if mem_flags:

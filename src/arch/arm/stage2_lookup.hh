@@ -72,16 +72,19 @@ class Stage2LookUp : public BaseMMU::Translation
     Fault                   fault;
     bool                    complete;
     bool                    selfDelete;
-    bool                    secure;
+    SecurityState           ss;
+    PASpace                 ipaSpace;
 
   public:
     Stage2LookUp(MMU *_mmu, TlbEntry s1_te, const RequestPtr &_req,
         MMU::Translation *_transState, BaseMMU::Mode _mode, bool _timing,
-        bool _functional, bool _secure, MMU::ArmTranslationType _tranType) :
-        mmu(_mmu), stage1Te(s1_te), s1Req(_req),
+        bool _functional, SecurityState _ss,
+        MMU::ArmTranslationType _tranType)
+      : mmu(_mmu), stage1Te(s1_te), s1Req(_req),
         transState(_transState), mode(_mode), timing(_timing),
         functional(_functional), tranType(_tranType), stage2Te(nullptr),
-        fault(NoFault), complete(false), selfDelete(false), secure(_secure)
+        fault(NoFault), complete(false), selfDelete(false), ss(_ss),
+        ipaSpace(s1_te.ns ? PASpace::NonSecure : PASpace::Secure)
     {
         req = std::make_shared<Request>();
         req->setVirt(s1_te.pAddr(s1Req->getVaddr()), s1Req->getSize(),

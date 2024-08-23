@@ -69,7 +69,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Fp2_bits = Mem;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x2: c_lw({{
                 offset = CIMM2<1:1> << 2 |
@@ -78,7 +78,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Rp2_sd = Mem_sw;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x3: decode RVTYPE {
                 0x0: c_flw({{
@@ -97,7 +97,7 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd = freg(f32(Mem_uw));
                     Fp2_bits = fd.v;
                 }}, {{
-                    EA = (uint32_t)(Rp1_uw + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x1: c_ld({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
@@ -115,7 +115,7 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     Rp2 = Mem_ub;
                 }}, {{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x1: decode CFUNCT1BIT6 {
                     0x0: c_lhu({{
@@ -123,14 +123,14 @@ decode QUADRANT default Unknown::unknown() {
                     }}, {{
                         Rp2 = Mem_uh;
                     }}, {{
-                        EA = rvZext(Rp1 + offset);
+                        EA = rvSext(Rp1 + offset);
                     }});
                     0x1: c_lh({{
                         offset = CIMM2<0:0> << 1;
                     }}, {{
                         Rp2_sd = Mem_sh;
                     }}, {{
-                        EA = rvZext(Rp1 + offset);
+                        EA = rvSext(Rp1 + offset);
                     }});
                 }
             }
@@ -140,14 +140,14 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     Mem_ub = Rp2_ub;
                 }}, ea_code={{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
                 0x3: c_sh({{
                     offset = (CIMM2<0:0> << 1);
                 }}, {{
                     Mem_uh = Rp2_uh;
                 }}, ea_code={{
-                    EA = rvZext(Rp1 + offset);
+                    EA = rvSext(Rp1 + offset);
                 }});
             }
         }
@@ -162,7 +162,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Mem = Fp2_bits;
             }}, {{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x6: c_sw({{
                 offset = CIMM2<1:1> << 2 |
@@ -171,7 +171,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Mem_uw = Rp2_uw;
             }}, ea_code={{
-                EA = rvZext(Rp1 + offset);
+                EA = rvSext(Rp1 + offset);
             }});
             0x7: decode RVTYPE {
                 0x0: c_fsw({{
@@ -186,7 +186,7 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_uw = unboxF32(boxF32(Fp2_bits));
                 }}, {{
-                    EA = (uint32_t)(Rp1_uw + offset);
+                    EA = rvSext(Rp1_uw + offset);
                 }});
                 0x1: c_sd({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
@@ -213,8 +213,8 @@ decode QUADRANT default Unknown::unknown() {
         }});
         0x1: decode RVTYPE {
             0x0: CJOp::c_jal({{
-                ra_sw = NPC_uw;
-                NPC_uw = PC_uw + imm;
+                ra = rvSext(NPC);
+                NPC = rvSext(PC + imm);
             }}, IsDirectControl, IsUncondControl, IsCall);
             0x1: CIOp::c_addiw({{
                 imm = sext<6>(CIMM5 | (CIMM1 << 5));
@@ -349,18 +349,18 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         0x5: CJOp::c_j({{
-            NPC = rvZext(PC + imm);
+            NPC = rvSext(PC + imm);
         }}, IsDirectControl, IsUncondControl);
         format CBOp {
             0x6: c_beqz({{
                 if (rvSext(Rp1) == 0)
-                    NPC = rvZext(PC + imm);
+                    NPC = rvSext(PC + imm);
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
             0x7: c_bnez({{
                 if (rvSext(Rp1) != 0)
-                    NPC = rvZext(PC + imm);
+                    NPC = rvSext(PC + imm);
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
@@ -396,7 +396,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Fc1_bits = Mem;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x2: c_lwsp({{
                 offset = CIMM5<4:2> << 2 |
@@ -409,7 +409,7 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 Rc1_sw = Mem_sw;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x3: decode RVTYPE {
                 0x0: c_flwsp({{
@@ -429,7 +429,7 @@ decode QUADRANT default Unknown::unknown() {
                     fd = freg(f32(Mem_uw));
                     Fc1_bits = fd.v;
                 }}, {{
-                    EA = (uint32_t)(sp_uw + offset);
+                    EA = rvSext(sp_uw + offset);
                 }});
                 0x1: c_ldsp({{
                     offset = CIMM5<4:3> << 3 |
@@ -453,7 +453,7 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<IllegalInstFault>(
                                 "source reg x0", machInst);
                     }
-                    NPC = rvZext(Rc1 & (~0x1));
+                    NPC = rvSext(Rc1 & (~0x1));
                 }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
                     // RC1 == 0 is HINT
@@ -470,7 +470,7 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     default: CJump::c_jalr({{
                         ra = rvSext(NPC);
-                        NPC = rvZext(Rc1 & (~0x1));
+                        NPC = rvSext(Rc1 & (~0x1));
                     }}, IsIndirectControl, IsUncondControl, IsCall);
                 }
                 default: CompressedROp::c_add({{
@@ -491,7 +491,7 @@ decode QUADRANT default Unknown::unknown() {
 
                 Mem_ud = Fc2_bits;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x6: c_swsp({{
                 offset = CIMM6<5:2> << 2 |
@@ -499,7 +499,7 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 Mem_uw = Rc2_uw;
             }}, {{
-                EA = rvZext(sp + offset);
+                EA = rvSext(sp + offset);
             }});
             0x7: decode RVTYPE {
                 0x0: c_fswsp({{
@@ -513,7 +513,7 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_uw = unboxF32(boxF32(Fc2_bits));
                 }}, {{
-                    EA = (uint32_t)(sp_uw + offset);
+                    EA = rvSext(sp_uw + offset);
                 }});
                 0x1: c_sdsp({{
                     offset = CIMM6<5:3> << 3 |
@@ -607,8 +607,6 @@ decode QUADRANT default Unknown::unknown() {
                             if ((machInst.vm || elem_mask(v0, ei)) &&
                                 i < this->microVl) {
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                            } else {
-                                Vd_ub[i] = Vs2_ub[i];
                             }
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
@@ -616,56 +614,42 @@ decode QUADRANT default Unknown::unknown() {
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e8_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                                } else {
-                                    Vd_ub[i] = Vs2_ub[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
@@ -693,8 +677,6 @@ decode QUADRANT default Unknown::unknown() {
                         if ((machInst.vm || elem_mask(v0, ei)) &&
                             i < this->microVl && i < this->faultIdx) {
                             Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
-                        } else {
-                            Vd_ub[i] = Vs2_ub[i];
                         }
                     }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
@@ -719,8 +701,6 @@ decode QUADRANT default Unknown::unknown() {
                             if ((machInst.vm || elem_mask(v0, ei)) &&
                                 i < this->microVl) {
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                            } else {
-                                Vd_uh[i] = Vs2_uh[i];
                             }
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
@@ -728,56 +708,42 @@ decode QUADRANT default Unknown::unknown() {
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e16_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                                } else {
-                                    Vd_uh[i] = Vs2_uh[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
@@ -802,8 +768,6 @@ decode QUADRANT default Unknown::unknown() {
                         if ((machInst.vm || elem_mask(v0, ei)) &&
                             i < this->microVl && i < this->faultIdx) {
                             Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
-                        } else {
-                            Vd_uh[i] = Vs2_uh[i];
                         }
                     }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
@@ -828,8 +792,6 @@ decode QUADRANT default Unknown::unknown() {
                             if ((machInst.vm || elem_mask(v0, ei)) &&
                                 i < this->microVl) {
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                            } else {
-                                Vd_uw[i] = Vs2_uw[i];
                             }
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
@@ -837,56 +799,42 @@ decode QUADRANT default Unknown::unknown() {
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e32_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                                } else {
-                                    Vd_uw[i] = Vs2_uw[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
@@ -911,8 +859,6 @@ decode QUADRANT default Unknown::unknown() {
                         if ((machInst.vm || elem_mask(v0, ei)) &&
                             i < this->microVl && i < this->faultIdx) {
                             Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
-                        } else {
-                            Vd_uw[i] = Vs2_uw[i];
                         }
                     }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
@@ -937,8 +883,6 @@ decode QUADRANT default Unknown::unknown() {
                             if ((machInst.vm || elem_mask(v0, ei)) &&
                                 i < this->microVl) {
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                            } else {
-                                Vd_ud[i] = Vs2_ud[i];
                             }
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
@@ -946,56 +890,42 @@ decode QUADRANT default Unknown::unknown() {
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e64_v({{
                                 if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                                } else {
-                                    Vd_ud[i] = Vs2_ud[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                         }
@@ -1020,8 +950,6 @@ decode QUADRANT default Unknown::unknown() {
                         if ((machInst.vm || elem_mask(v0, ei)) &&
                             i < this->microVl && i < this->faultIdx) {
                             Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
-                        } else {
-                            Vd_ud[i] = Vs2_ud[i];
                         }
                     }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
                 }
@@ -2817,10 +2745,10 @@ decode QUADRANT default Unknown::unknown() {
                         if (this->vm || elem_mask(v0, ei)) {
                             const uint64_t idx = Vs1_vu[i]
                                 - vs2_elems * vs2_idx;
-                            auto res = (Vs1_vu[i] >= vlmax) ? 0
-                                : (idx < vs2_elems) ? Vs2_vu[idx]
-                                : Vs3_vu[i];
-                            Vd_vu[i] = res;
+                            if (Vs1_vu[i] >= vlmax)
+                                Vd_vu[i] = 0;
+                            else if (idx < vs2_elems)
+                                Vd_vu[i] = Vs2_vu[idx];
                         }
                     }
                 }}, OPIVV, SimdMiscOp);
@@ -2830,10 +2758,10 @@ decode QUADRANT default Unknown::unknown() {
                         if (this->vm || elem_mask(v0, ei)) {
                             const uint32_t idx = Vs1_uh[i + vs1_bias]
                                 - vs2_elems * vs2_idx;
-                            auto res = (Vs1_uh[i + vs1_bias] >= vlmax) ? 0
-                                : (idx < vs2_elems) ? Vs2_vu[idx]
-                                : Vs3_vu[i + vd_bias];
-                            Vd_vu[i + vd_bias] = res;
+                            if (Vs1_uh[i + vs1_bias] >= vlmax)
+                                Vd_vu[i + vd_bias] = 0;
+                            else if (idx < vs2_elems)
+                                Vd_vu[i + vd_bias] = Vs2_vu[idx];
                         }
                     }
                 }}, OPIVV, SimdMiscOp);
@@ -3736,9 +3664,10 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t zextImm = rvZext(SIMM5);
                         if (this->vm || elem_mask(v0, ei)) {
                             const uint64_t idx = zextImm - vs2_elems * vs2_idx;
-                            Vd_vu[i] = (zextImm >= vlmax) ? 0
-                                : (idx < vs2_elems) ? Vs2_vu[idx]
-                                : Vs3_vu[i];
+                            if (zextImm >= vlmax)
+                                Vd_vu[i] = 0;
+                            else if (idx < vs2_elems)
+                                Vd_vu[i] = Vs2_vu[idx];
                         }
                     }
                 }}, OPIVI, SimdMiscOp);
@@ -4071,9 +4000,10 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t zextRs1 = rvZext(Rs1);
                         if (this->vm || elem_mask(v0, ei)) {
                             const uint64_t idx = zextRs1 - vs2_elems * vs2_idx;
-                            Vd_vu[i] = (zextRs1 >= vlmax) ? 0
-                                : (idx < vs2_elems) ? Vs2_vu[idx]
-                                : Vs3_vu[i];
+                            if (zextRs1 >= vlmax)
+                                Vd_vu[i] = 0;
+                            else if (idx < vs2_elems)
+                                Vd_vu[i] = Vs2_vu[idx];
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
@@ -4825,44 +4755,44 @@ decode QUADRANT default Unknown::unknown() {
             format BOp {
                 0x0: beq({{
                     if (rvSext(Rs1) == rvSext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x1: bne({{
                     if (rvSext(Rs1) != rvSext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x4: blt({{
                     if (rvSext(Rs1_sd) < rvSext(Rs2_sd)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x5: bge({{
                     if (rvSext(Rs1_sd) >= rvSext(Rs2_sd)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x6: bltu({{
                     if (rvZext(Rs1) < rvZext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
                 0x7: bgeu({{
                     if (rvZext(Rs1) >= rvZext(Rs2)) {
-                        NPC = rvZext(PC + imm);
+                        NPC = rvSext(PC + imm);
                     } else {
-                        NPC = rvZext(NPC);
+                        NPC = rvSext(NPC);
                     }
                 }}, IsDirectControl, IsCondControl);
             }
@@ -4871,13 +4801,13 @@ decode QUADRANT default Unknown::unknown() {
         0x19: decode FUNCT3 {
             0x0: Jump::jalr({{
                 Rd = rvSext(NPC);
-                NPC = rvZext((imm + Rs1) & (~0x1));
+                NPC = rvSext((imm + Rs1) & (~0x1));
             }}, IsIndirectControl, IsUncondControl);
         }
 
         0x1b: JOp::jal({{
             Rd = rvSext(NPC);
-            NPC = rvZext(PC + imm);
+            NPC = rvSext(PC + imm);
         }}, IsDirectControl, IsUncondControl);
 
         0x1c: decode FUNCT3 {
@@ -4943,16 +4873,29 @@ decode QUADRANT default Unknown::unknown() {
                                             "wfi in user mode or TW enabled",
                                             machInst);
                             }
-                            // Go to sleep only if there's no pending interrupt
-                            // at all, including masked interrupts.
                             auto tc = xc->tcBase();
                             auto cpu = tc->getCpuPtr();
                             auto ic = dynamic_cast<RiscvISA::Interrupts*>(
                                 cpu->getInterruptController(tc->threadId()));
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
                             panic_if(!ic, "Invalid Interrupt Controller.");
-                            if (ic->readIP() == 0
+                            if (isa->resumeOnPending()) {
+                                // Go to sleep only if there are no pending
+                                // interrupts at all, and no non-maskable
+                                // interrupts.
+                                if (ic->readIP() == 0
                                 && xc->readMiscReg(MISCREG_NMIP) == 0) {
-                                tc->quiesce();
+                                    tc->quiesce();
+                                }
+                            } else {
+                                // Go to sleep only if there are no enabled
+                                // pending interrupts at all, and no
+                                // non-maskable interrupts
+                                if (!(ic->readIP() & ic->readIE())
+                                 && xc->readMiscReg(MISCREG_NMIP) == 0) {
+                                    tc->quiesce();
+                                 }
                             }
                         }}, IsNonSpeculative, IsQuiesce,
                             IsSerializeAfter, No_OpClass, IsSquashAfter);

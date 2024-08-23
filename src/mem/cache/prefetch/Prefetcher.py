@@ -39,6 +39,7 @@
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
+from m5.objects.Tags import *
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import *
@@ -164,7 +165,7 @@ class QueuedPrefetcher(BasePrefetcher):
     )
 
 
-class StridePrefetcherHashedSetAssociative(SetAssociative):
+class StridePrefetcherHashedSetAssociative(TaggedSetAssociative):
     type = "StridePrefetcherHashedSetAssociative"
     cxx_class = "gem5::prefetch::StridePrefetcherHashedSetAssociative"
     cxx_header = "mem/cache/prefetch/stride.hh"
@@ -190,6 +191,13 @@ class StridePrefetcher(QueuedPrefetcher):
 
     use_requestor_id = Param.Bool(True, "Use requestor id based history")
 
+    use_cache_line_address = Param.Bool(
+        True,
+        "If this parameter is set to True, then the prefetcher will "
+        "operate on cache line addresses, else it would operate on word "
+        "addresses",
+    )
+
     degree = Param.Int(4, "Number of prefetches to generate")
     distance = Param.Unsigned(
         0,
@@ -201,7 +209,7 @@ class StridePrefetcher(QueuedPrefetcher):
 
     table_assoc = Param.Int(4, "Associativity of the PC table")
     table_entries = Param.MemorySize("64", "Number of entries of the PC table")
-    table_indexing_policy = Param.BaseIndexingPolicy(
+    table_indexing_policy = Param.TaggedIndexingPolicy(
         StridePrefetcherHashedSetAssociative(
             entry_size=1, assoc=Parent.table_assoc, size=Parent.table_entries
         ),
@@ -228,8 +236,8 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
         "16", "Number of entries of the Prefetch Table"
     )
     pt_table_assoc = Param.Unsigned(16, "Associativity of the Prefetch Table")
-    pt_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    pt_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.pt_table_assoc,
             size=Parent.pt_table_entries,
@@ -249,8 +257,8 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
     ipd_table_assoc = Param.Unsigned(
         4, "Associativity of the Indirect Pattern Detector"
     )
-    ipd_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    ipd_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.ipd_table_assoc,
             size=Parent.ipd_table_entries,
@@ -288,8 +296,8 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
     signature_table_assoc = Param.Unsigned(
         2, "Associativity of the signature table"
     )
-    signature_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    signature_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.signature_table_assoc,
             size=Parent.signature_table_entries,
@@ -312,8 +320,8 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
     strides_per_pattern_entry = Param.Unsigned(
         4, "Number of strides stored in each pattern entry"
     )
-    pattern_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    pattern_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.pattern_table_assoc,
             size=Parent.pattern_table_entries,
@@ -348,8 +356,8 @@ class SignaturePathPrefetcherV2(SignaturePathPrefetcher):
     global_history_register_entries = Param.MemorySize(
         "8", "Number of entries of global history register"
     )
-    global_history_register_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    global_history_register_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.global_history_register_entries,
             size=Parent.global_history_register_entries,
@@ -384,8 +392,8 @@ class AccessMapPatternMatching(ClockedObject):
     access_map_table_assoc = Param.Unsigned(
         8, "Associativity of the access map table"
     )
-    access_map_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    access_map_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.access_map_table_assoc,
             size=Parent.access_map_table_entries,
@@ -480,8 +488,8 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
     training_unit_entries = Param.MemorySize(
         "128", "Number of entries of the training unit"
     )
-    training_unit_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    training_unit_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.training_unit_assoc,
             size=Parent.training_unit_entries,
@@ -501,8 +509,8 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
     address_map_cache_entries = Param.MemorySize(
         "128", "Number of entries of the PS/SP AMCs"
     )
-    ps_address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    ps_address_map_cache_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.address_map_cache_assoc,
             size=Parent.address_map_cache_entries,
@@ -513,8 +521,8 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
         LRURP(),
         "Replacement policy of the Physical-to-Structural Address Map Cache",
     )
-    sp_address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    sp_address_map_cache_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.address_map_cache_assoc,
             size=Parent.address_map_cache_entries,
@@ -580,6 +588,16 @@ class BOPPrefetcher(QueuedPrefetcher):
                 queue",
     )
 
+    # BOP is a degree one prefetcher
+    degree = Param.Int(1, "Number of prefetches to generate")
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_pf_hit = True
+    on_miss = True
+    on_inst = False
+
 
 class SBOOEPrefetcher(QueuedPrefetcher):
     type = "SBOOEPrefetcher"
@@ -609,8 +627,8 @@ class STeMSPrefetcher(QueuedPrefetcher):
     active_generation_table_assoc = Param.Unsigned(
         64, "Associativity of the active generation table"
     )
-    active_generation_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    active_generation_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.active_generation_table_assoc,
             size=Parent.active_generation_table_entries,
@@ -627,8 +645,8 @@ class STeMSPrefetcher(QueuedPrefetcher):
     pattern_sequence_table_assoc = Param.Unsigned(
         16384, "Associativity of the pattern sequence table"
     )
-    pattern_sequence_table_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    pattern_sequence_table_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1,
             assoc=Parent.pattern_sequence_table_assoc,
             size=Parent.pattern_sequence_table_entries,
@@ -677,8 +695,8 @@ class PIFPrefetcher(QueuedPrefetcher):
 
     index_entries = Param.MemorySize("64", "Number of entries in the index")
     index_assoc = Param.Unsigned(64, "Associativity of the index")
-    index_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(
+    index_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
             entry_size=1, assoc=Parent.index_assoc, size=Parent.index_entries
         ),
         "Indexing policy of the index",

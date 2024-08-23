@@ -312,11 +312,15 @@ def makeGpuFSSystem(args):
                 obj.eventq_index = 0
             cpu.eventq_index = i + 1
 
-    # Disable KVM Perf counters if specified. This is useful for machines
-    # with more restrictive KVM paranoid levels.
-    if args.no_kvm_perf and ObjectList.is_kvm_cpu(TestCPUClass):
-        for i, cpu in enumerate(system.cpu[:-1]):
-            cpu.usePerf = False
+    # Only enable KVM perf counters if explicitly set, as this is more
+    # restrictive.
+    if ObjectList.is_kvm_cpu(TestCPUClass):
+        if args.kvm_perf:
+            for i, cpu in enumerate(system.cpu[:-1]):
+                cpu.usePerf = True
+        else:
+            for i, cpu in enumerate(system.cpu[:-1]):
+                cpu.usePerf = False
 
     gpu_port_idx = (
         len(system.ruby._cpu_ports)

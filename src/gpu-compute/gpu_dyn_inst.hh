@@ -384,9 +384,10 @@ class GPUDynInst : public GPUExecContext
     void
     setStatusVector(int lane, int newVal)
     {
-        // currently we can have up to 2 memory requests per lane (if the
-        // lane's request goes across multiple cache lines)
-        assert((newVal >= 0) && (newVal <= 2));
+        // Currently we can have up to 4 memory requests per lane. This can
+        // occur on a memory request loading 4x dwords where the memory is
+        // swizzled.
+        assert((newVal >= 0) && (newVal <= 4));
         statusVector[lane] = newVal;
     }
 

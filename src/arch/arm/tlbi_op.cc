@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 Arm Limited
+ * Copyright (c) 2018-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,12 @@ namespace gem5
 
 namespace ArmISA {
 
+bool
+TLBIOp::match(TlbEntry* te, vmid_t vmid) const
+{
+    return matchEntry(te, vmid) && (attr != Attr::ExcludeXS || !te->xs);
+}
+
 void
 TLBIALL::operator()(ThreadContext* tc)
 {
@@ -61,9 +67,9 @@ TLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         (te->vmid == vmid || el2Enabled) &&
         te->checkRegime(targetRegime);
 }
@@ -76,9 +82,9 @@ ITLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIALL::match(TlbEntry* te, vmid_t vmid) const
+ITLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIALL::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIALL::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -89,9 +95,9 @@ DTLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIALL::match(TlbEntry* te, vmid_t vmid) const
+DTLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIALL::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIALL::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
@@ -107,9 +113,9 @@ TLBIALLEL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLEL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLEL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         te->checkRegime(targetRegime);
 }
 
@@ -128,9 +134,9 @@ TLBIVMALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIVMALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIVMALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         te->checkRegime(targetRegime) &&
         (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
 }
@@ -148,10 +154,10 @@ TLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIASID::match(TlbEntry* te, vmid_t vmid) const
+TLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && te->asid == asid &&
-        secureLookup == !te->nstid &&
+        ss == te->ss &&
         te->checkRegime(targetRegime) &&
         (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
 }
@@ -164,9 +170,9 @@ ITLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIASID::match(TlbEntry* te, vmid_t vmid) const
+ITLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIASID::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIASID::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -177,9 +183,9 @@ DTLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIASID::match(TlbEntry* te, vmid_t vmid) const
+DTLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIASID::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIASID::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
@@ -194,9 +200,9 @@ TLBIALLN::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLN::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLN::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && te->nstid &&
+    return te->valid && te->ss == SecurityState::NonSecure &&
         te->checkRegime(targetRegime);
 }
 
@@ -207,7 +213,7 @@ TLBIMVAA::lookupGen(vmid_t vmid) const
     lookup_data.va = sext<56>(addr);
     lookup_data.ignoreAsn = true;
     lookup_data.vmid = vmid;
-    lookup_data.secure = secureLookup;
+    lookup_data.ss = ss;
     lookup_data.functional = true;
     lookup_data.targetRegime = targetRegime;
     lookup_data.mode = BaseMMU::Read;
@@ -226,7 +232,7 @@ TLBIMVAA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -241,7 +247,7 @@ TLBIMVA::lookupGen(vmid_t vmid) const
     lookup_data.asn = asid;
     lookup_data.ignoreAsn = false;
     lookup_data.vmid = vmid;
-    lookup_data.secure = secureLookup;
+    lookup_data.ss = ss;
     lookup_data.functional = true;
     lookup_data.targetRegime = targetRegime;
     lookup_data.mode = BaseMMU::Read;
@@ -261,7 +267,7 @@ TLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -275,9 +281,9 @@ ITLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-ITLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+ITLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::instruction);
+    return TLBIMVA::matchEntry(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
@@ -287,24 +293,47 @@ DTLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-DTLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+DTLBIMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::data);
+    return TLBIMVA::matchEntry(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
 TLBIIPA::operator()(ThreadContext* tc)
 {
-    getMMUPtr(tc)->flushStage2(makeStage2());
+    getMMUPtr(tc)->flushStage2(*this);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getMMUPtr(checker)->flushStage2(makeStage2());
+        getMMUPtr(checker)->flushStage2(*this);
     }
 }
 
+TlbEntry::Lookup
+TLBIIPA::lookupGen(vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data;
+    lookup_data.va = szext<56>(addr);
+    lookup_data.ignoreAsn = true;
+    lookup_data.vmid = vmid;
+    lookup_data.ss = ss;
+    lookup_data.functional = true;
+    lookup_data.targetRegime = targetRegime;
+    lookup_data.mode = BaseMMU::Read;
+    return lookup_data;
+}
+
 bool
-TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+
+    return te->match(lookup_data) && (!lastLevel || !te->partial) &&
+        ipaSpace == te->ipaSpace;
+}
+
+bool
+TLBIRMVA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
@@ -320,7 +349,7 @@ TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
 }
 
 bool
-TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIRMVAA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
@@ -330,6 +359,23 @@ TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
         return tgMap[rangeData.tg] == te->tg &&
         (resTLBIttl(rangeData.tg, rangeData.ttl) ||
             rangeData.ttl == te->lookupLevel);
+    } else {
+        return false;
+    }
+}
+
+bool
+TLBIRIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    lookup_data.size = rangeSize();
+
+    auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
+    if (addr_match) {
+        return ipaSpace == te->ipaSpace &&
+            tgMap[rangeData.tg] == te->tg &&
+            (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+                rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }

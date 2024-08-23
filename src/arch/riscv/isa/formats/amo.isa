@@ -429,7 +429,7 @@ def template AtomicMemOpRMWCompleteAcc {{
 // LR/SC/AMO decode formats
 
 def format LoadReserved(memacc_code, postacc_code={{ }},
-        ea_code={{EA = rvZext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
     macro_ea_code = ''
     macro_inst_flags = []
     macro_iop = InstObjParams(name, Name, 'LoadReserved', macro_ea_code,
@@ -460,7 +460,7 @@ def format LoadReserved(memacc_code, postacc_code={{ }},
 }};
 
 def format StoreCond(memacc_code, postacc_code={{ }},
-        ea_code={{EA = rvZext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
     macro_ea_code = ''
     macro_inst_flags = []
     macro_iop = InstObjParams(name, Name, 'StoreCond', macro_ea_code,
@@ -491,7 +491,7 @@ def format StoreCond(memacc_code, postacc_code={{ }},
 }};
 
 def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
-        ea_code={{EA = rvZext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
     macro_ea_code = ''
     macro_inst_flags = []
     macro_iop = InstObjParams(name, Name, 'AtomicMemOp', macro_ea_code,

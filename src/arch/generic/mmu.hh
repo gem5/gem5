@@ -109,6 +109,8 @@ class BaseMMU : public SimObject
 
     virtual void flushAll();
 
+    virtual void reset();
+
     void demapPage(Addr vaddr, uint64_t asn);
 
     virtual Fault

@@ -43,10 +43,11 @@
 
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
 #include "base/circular_queue.hh"
 #include "base/sat_counter.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5
 {
@@ -93,10 +94,11 @@ class STeMS : public Queued
         /** Sequence of accesses */
         std::vector<SequenceEntry> sequence;
 
-        ActiveGenerationTableEntry(int num_positions)
+        ActiveGenerationTableEntry(int num_positions, TagExtractor ext)
           : TaggedEntry(), paddress(0), pc(0),
             seqCounter(0), sequence(num_positions)
         {
+            registerTagExtractor(ext);
         }
 
         void
@@ -153,7 +155,7 @@ class STeMS : public Queued
     };
 
     /** Active Generation Table (AGT) */
-    AssociativeSet<ActiveGenerationTableEntry> activeGenerationTable;
+    AssociativeCache<ActiveGenerationTableEntry> activeGenerationTable;
     /** Pattern Sequence Table (PST) */
     AssociativeCache<ActiveGenerationTableEntry> patternSequenceTable;
 

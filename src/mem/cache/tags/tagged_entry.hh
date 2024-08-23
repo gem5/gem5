@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2024 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2020 Inria
  * All rights reserved.
  *
@@ -31,25 +43,94 @@
 
 #include <cassert>
 
-#include "base/cache/cache_entry.hh"
 #include "base/cprintf.hh"
-#include "base/logging.hh"
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "params/TaggedIndexingPolicy.hh"
+#include "params/TaggedSetAssociative.hh"
 
 namespace gem5
 {
+
+class TaggedTypes
+{
+  public:
+    struct KeyType
+    {
+        Addr address;
+        bool secure;
+    };
+    using Params = TaggedIndexingPolicyParams;
+};
+
+using TaggedIndexingPolicy = IndexingPolicyTemplate<TaggedTypes>;
+template class IndexingPolicyTemplate<TaggedTypes>;
+
+/**
+ * This version of set associative indexing deals with
+ * a Lookup structure made of address and secure bit.
+ * It extracts the address but discards the secure bit which
+ * is used for tagging only
+ */
+class TaggedSetAssociative : public TaggedIndexingPolicy
+{
+  protected:
+    virtual uint32_t
+    extractSet(const KeyType &key) const
+    {
+        return (key.address >> setShift) & setMask;
+    }
+
+  public:
+    PARAMS(TaggedSetAssociative);
+    TaggedSetAssociative(const Params &p)
+      : TaggedIndexingPolicy(p)
+    {}
+
+    std::vector<ReplaceableEntry*>
+    getPossibleEntries(const KeyType &key) const override
+    {
+        return sets[extractSet(key)];
+    }
+
+    Addr
+    regenerateAddr(const KeyType &key,
+                   const ReplaceableEntry *entry) const override
+    {
+        return (key.address << tagShift) | (entry->getSet() << setShift);
+    }
+};
 
 /**
  * A tagged entry is an entry containing a tag. Each tag is accompanied by a
  * secure bit, which informs whether it belongs to a secure address space.
  * A tagged entry's contents are only relevant if it is marked as valid.
  */
-class TaggedEntry : public CacheEntry
+class TaggedEntry : public ReplaceableEntry
 {
   public:
-    TaggedEntry() : CacheEntry(), _secure(false) {}
+    using KeyType = TaggedTypes::KeyType;
+    using IndexingPolicy = TaggedIndexingPolicy;
+    using TagExtractor = std::function<Addr(Addr)>;
+
+    TaggedEntry()
+      : _valid(false), _secure(false), _tag(MaxAddr)
+    {}
     ~TaggedEntry() = default;
+
+    void
+    registerTagExtractor(TagExtractor ext)
+    {
+        extractTag = ext;
+    }
+
+    /**
+     * Checks if the entry is valid.
+     *
+     * @return True if the entry is valid.
+     */
+    virtual bool isValid() const { return _valid; }
 
     /**
      * Check if this block holds data from the secure memory space.
@@ -59,16 +140,24 @@ class TaggedEntry : public CacheEntry
     bool isSecure() const { return _secure; }
 
     /**
+     * Get tag associated to this block.
+     *
+     * @return The tag value.
+     */
+    virtual Addr getTag() const { return _tag; }
+
+    /**
      * Checks if the given tag information corresponds to this entry's.
      *
      * @param tag The tag value to compare to.
      * @param is_secure Whether secure bit is set.
      * @return True if the tag information match this entry's.
      */
-    virtual bool
-    matchTag(Addr tag, bool is_secure) const
+    bool
+    match(const KeyType &key) const
     {
-        return isValid() && (getTag() == tag) && (isSecure() == is_secure);
+        return isValid() && (getTag() == extractTag(key.address)) &&
+            (isSecure() == key.secure);
     }
 
     /**
@@ -78,20 +167,20 @@ class TaggedEntry : public CacheEntry
      * @param tag The tag value.
      */
     virtual void
-    insert(const Addr tag, const bool is_secure)
+    insert(const KeyType &key)
     {
         setValid();
-        setTag(tag);
-        if (is_secure) {
+        setTag(extractTag(key.address));
+        if (key.secure) {
             setSecure();
         }
     }
 
     /** Invalidate the block. Its contents are no longer valid. */
-    void
-    invalidate() override
+    virtual void invalidate()
     {
-        CacheEntry::invalidate();
+        _valid = false;
+        setTag(MaxAddr);
         clearSecure();
     }
 
@@ -102,37 +191,62 @@ class TaggedEntry : public CacheEntry
             isSecure(), isValid(), ReplaceableEntry::print());
     }
 
-    bool
-    matchTag(const Addr tag) const override
-    {
-        panic("Need is_secure arg");
-        return false;
-    }
-
-    void
-    insert(const Addr tag) override
-    {
-        panic("Need is_secure arg");
-        return;
-    }
   protected:
+    /**
+     * Set tag associated to this block.
+     *
+     * @param tag The tag value.
+     */
+    virtual void setTag(Addr tag) { _tag = tag; }
+
     /** Set secure bit. */
     virtual void setSecure() { _secure = true; }
 
+    /** Clear secure bit. Should be only used by the invalidation function. */
+    void clearSecure() { _secure = false; }
+
+    /** Set valid bit. The block must be invalid beforehand. */
+    virtual void
+    setValid()
+    {
+        assert(!isValid());
+        _valid = true;
+    }
+
+    /** Callback used to extract the tag from the entry */
+    TagExtractor extractTag;
+
   private:
+    /**
+     * Valid bit. The contents of this entry are only valid if this bit is set.
+     * @sa invalidate()
+     * @sa insert()
+     */
+    bool _valid;
+
     /**
      * Secure bit. Marks whether this entry refers to an address in the secure
      * memory space. Must always be modified along with the tag.
      */
     bool _secure;
 
-    /** Clear secure bit. Should be only used by the invalidation function. */
-    void clearSecure() { _secure = false; }
-
-    /** Do not use API without is_secure flag. */
-    using CacheEntry::matchTag;
-    using CacheEntry::insert;
+    /** The entry's tag. */
+    Addr _tag;
 };
+
+/**
+ * This helper generates an a tag extractor function object
+ * which will be typically used by Replaceable entries indexed
+ * with the TaggedIndexingPolicy.
+ * It allows to "decouple" indexing from tagging. Those entries
+ * would call the functor without directly holding a pointer
+ * to the indexing policy which should reside in the cache.
+ */
+static constexpr auto
+genTagExtractor(TaggedIndexingPolicy *ip)
+{
+    return [ip] (Addr addr) { return ip->extractTag(addr); };
+}
 
 } // namespace gem5
 

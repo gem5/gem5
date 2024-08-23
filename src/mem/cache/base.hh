@@ -1283,17 +1283,17 @@ class BaseCache : public ClockedObject
     }
 
     bool inCache(Addr addr, bool is_secure) const {
-        return tags->findBlock(addr, is_secure);
+        return tags->findBlock({addr, is_secure});
     }
 
     bool hasBeenPrefetched(Addr addr, bool is_secure) const {
-        CacheBlk *block = tags->findBlock(addr, is_secure);
+        CacheBlk *block = tags->findBlock({addr, is_secure});
         return block && block->wasPrefetched();
     }
 
     bool hasBeenPrefetched(Addr addr, bool is_secure,
                            RequestorID requestor) const {
-        CacheBlk *block = tags->findBlock(addr, is_secure);
+        CacheBlk *block = tags->findBlock({addr, is_secure});
         return block && block->wasPrefetched() &&
                (block->getSrcRequestorId() == requestor);
     }

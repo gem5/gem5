@@ -444,14 +444,14 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     uint32_t vlenb = pc_ptr->as<PCState>().vlenb();
     const uint32_t elems_per_vreg = vlenb / elemSize;
     size_t bit_cnt = elems_per_vreg;
+
+    // mask tails are always treated as agnostic: writting 1s
+    tmp_d0.set(0xff);
+
     vreg_t tmp_s;
-    xc->getRegOperand(this, 0, &tmp_s);
-    auto s = tmp_s.as<uint8_t>();
-    // cp the first result and tail
-    memcpy(Vd, s, vlenb);
-    for (uint8_t i = 1; i < this->_numSrcRegs; i++) {
+    for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
         xc->getRegOperand(this, i, &tmp_s);
-        s = tmp_s.as<uint8_t>();
+        auto s = tmp_s.as<uint8_t>();
         if (elems_per_vreg < 8) {
             const uint32_t m = (1 << elems_per_vreg) - 1;
             const uint32_t mask = m << (i * elems_per_vreg % 8);
@@ -658,7 +658,13 @@ VlSegDeIntrlvMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) c
     for (uint32_t i = 0; i < numSrcs; i++) {
         xc->getRegOperand(this, i, &tmp_s);
         s = tmp_s.as<uint8_t>();
-        while(index < (i + 1) * elems_per_vreg)
+
+        // copy tail/inactive elements from vtmp src
+        if (i == field) {
+            tmp_d0 = tmp_s;
+        }
+
+        while (index < (i + 1) * elems_per_vreg)
         {
             memcpy(Vd + (elem * sizeOfElement),
                     s + ((index  %  elems_per_vreg) * sizeOfElement),
@@ -705,8 +711,6 @@ std::string VsSegMicroInst::generateDisassembly(Addr pc,
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
         '(' << registerName(srcRegIdx(0)) << ')' <<
         ", "<< registerName(srcRegIdx(1));
-    if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
     if (!machInst.vm)
         ss << ", v0.t";
     return ss.str();
@@ -794,6 +798,135 @@ VsSegIntrlvMicroInst::generateDisassembly(Addr pc,
         ss << ", " << registerName(srcRegIdx(i));
     }
     ss << ", field: " << field;
+    return ss.str();
+}
+
+VCpyVsMicroInst::VCpyVsMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
+                                 uint8_t _vsRegIdx)
+    : VectorArithMicroInst("vcpyvs_v_micro", _machInst, SimdMiscOp, 0,
+                           _microIdx)
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[VecMemInternalReg0 + _microIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_vsRegIdx + _microIdx]);
+}
+
+Fault
+VCpyVsMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
+{
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
+    // copy vector source reg to vtmp
+    vreg_t& vtmp = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    vreg_t vs;
+    xc->getRegOperand(this, 0, &vs);
+    vtmp = vs;
+
+    if (traceData) {
+        traceData->setData(vecRegClass, &vtmp);
+    }
+
+    return NoFault;
+}
+
+std::string
+VCpyVsMicroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
+    return ss.str();
+}
+
+VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
+                                 uint32_t _numVdPins, bool _hasVdOffset)
+    : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
+                           _microIdx)
+    , hasVdOffset(_hasVdOffset)
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)
+                              || hasVdOffset) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    }
+    RegId Vd = destRegIdx(0);
+    Vd.setNumPinnedWrites(_numVdPins);
+    setDestRegIdx(0, Vd);
+}
+
+Fault
+VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
+{
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
+    // tail/mask policy: both undisturbed if one is, 1s if none
+    vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
+                             || hasVdOffset) {
+        vreg_t old_vd;
+        xc->getRegOperand(this, 0, &old_vd);
+        vd = old_vd;
+    } else {
+        vd.set(0xff);
+    }
+
+    if (traceData) {
+        traceData->setData(vecRegClass, &vd);
+    }
+
+    return NoFault;
+}
+
+std::string
+VPinVdMicroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
+                             || hasVdOffset) {
+        ss << registerName(srcRegIdx(0));
+    } else {
+        ss << "~0";
+    }
+
     return ss.str();
 }
 

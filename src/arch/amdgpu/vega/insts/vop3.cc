@@ -2464,7 +2464,9 @@ namespace VegaISA
             if (wf->execMask(lane)) {
                 float out = std::fma(src0[lane], src1[lane], vdst[lane]);
                 out = omodModifier(out, extData.OMOD);
-                out = std::clamp(vdst[lane], 0.0f, 1.0f);
+                if (instData.CLAMP) {
+                    out = std::clamp(vdst[lane], 0.0f, 1.0f);
+                }
                 vdst[lane] = out;
             }
         }
@@ -2879,7 +2881,9 @@ namespace VegaISA
                 if (neg & 1) tmp = -tmp;
 
                 tmp = omodModifier(tmp, extData.OMOD);
-                tmp = std::clamp(tmp, 0.0f, 1.0f);
+                if (instData.CLAMP) {
+                    tmp = std::clamp(tmp, 0.0f, 1.0f);
+                }
 
                 AMDGPU::mxfloat16 out(tmp);
 
@@ -2934,7 +2938,9 @@ namespace VegaISA
                 if (neg & 1) tmp = -tmp;
 
                 float out = omodModifier(float(tmp), extData.OMOD);
-                out = std::clamp(out, 0.0f, 1.0f);
+                if (instData.CLAMP) {
+                    out = std::clamp(out, 0.0f, 1.0f);
+                }
 
                 vdst[lane] = out;
             }

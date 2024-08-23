@@ -231,7 +231,7 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
      *       payload delay and comparing it to the time between BEGIN_REQ and
      *       END_REQ. Then, a warning should be printed.
      */
-    auto delay = sc_core::sc_time::from_value(packet->payloadDelay);
+    auto delay = sc_core::sc_time::from_value(packet->headerDelay);
     // reset the delays
     packet->payloadDelay = 0;
     packet->headerDelay = 0;

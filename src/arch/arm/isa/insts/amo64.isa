@@ -427,7 +427,7 @@ let {{
                    flavor="release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldaddab",   "LDADDAB",   1, unsign=True,
                    flavor="acquire").emit(OP_DICT['ADD'])
-    AtomicArithmeticSingleOp("ldaddlab",  "LDADDLAB",  1, unsign=True,
+    AtomicArithmeticSingleOp("ldaddalb",  "LDADDALB",  1, unsign=True,
                    flavor="acquire_release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldaddh",    "LDADDH",    2, unsign=True,
                    flavor="normal").emit(OP_DICT['ADD'])
@@ -435,7 +435,7 @@ let {{
                    flavor="release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldaddah",   "LDADDAH",   2, unsign=True,
                    flavor="acquire").emit(OP_DICT['ADD'])
-    AtomicArithmeticSingleOp("ldaddlah",  "LDADDLAH",  2, unsign=True,
+    AtomicArithmeticSingleOp("ldaddalh",  "LDADDALH",  2, unsign=True,
                    flavor="acquire_release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldadd",     "LDADD",     4, unsign=True,
                    flavor="normal").emit(OP_DICT['ADD'])
@@ -443,7 +443,7 @@ let {{
                    flavor="release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldadda",    "LDADDA",    4, unsign=True,
                    flavor="acquire").emit(OP_DICT['ADD'])
-    AtomicArithmeticSingleOp("ldaddla",   "LDADDLA",   4, unsign=True,
+    AtomicArithmeticSingleOp("ldaddal",   "LDADDAL",   4, unsign=True,
                    flavor="acquire_release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldadd64",   "LDADD64",   8, unsign=True,
                    flavor="normal").emit(OP_DICT['ADD'])
@@ -451,7 +451,7 @@ let {{
                    flavor="release").emit(OP_DICT['ADD'])
     AtomicArithmeticSingleOp("ldadda64",  "LDADDA64",  8, unsign=True,
                    flavor="acquire").emit(OP_DICT['ADD'])
-    AtomicArithmeticSingleOp("ldaddla64", "LDADDLA64", 8, unsign=True,
+    AtomicArithmeticSingleOp("ldaddal64", "LDADDAL64", 8, unsign=True,
                    flavor="acquire_release").emit(OP_DICT['ADD'])
 
     AtomicArithmeticSingleOp("ldclrb",    "LDCLRB",    1, unsign=True,

@@ -368,7 +368,7 @@ namespace VegaISA
         src0.read();
         src1.read();
 
-        scc = (src0.rawData() <= src1.rawData()) ? 1 : 0;
+        scc = (src0.rawData() < src1.rawData()) ? 1 : 0;
 
         scc.write();
     } // execute
@@ -556,8 +556,8 @@ namespace VegaISA
     void
     Inst_SOPC__S_CMP_EQ_U64::execute(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandI64 src0(gpuDynInst, instData.SSRC0);
-        ConstScalarOperandI64 src1(gpuDynInst, instData.SSRC1);
+        ConstScalarOperandU64 src0(gpuDynInst, instData.SSRC0);
+        ConstScalarOperandU64 src1(gpuDynInst, instData.SSRC1);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
         src0.read();
@@ -584,8 +584,8 @@ namespace VegaISA
     void
     Inst_SOPC__S_CMP_LG_U64::execute(GPUDynInstPtr gpuDynInst)
     {
-        ConstScalarOperandI64 src0(gpuDynInst, instData.SSRC0);
-        ConstScalarOperandI64 src1(gpuDynInst, instData.SSRC1);
+        ConstScalarOperandU64 src0(gpuDynInst, instData.SSRC0);
+        ConstScalarOperandU64 src1(gpuDynInst, instData.SSRC1);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
         src0.read();

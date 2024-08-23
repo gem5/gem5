@@ -173,7 +173,7 @@ def template CJumpExecute {{
     %(class_name)s::branchTarget(ThreadContext *tc) const
     {
         PCStateBase *pc_ptr = tc->pcState().clone();
-        pc_ptr->as<PCState>().set(rvZext(tc->getReg(srcRegIdx(0)) & ~0x1));
+        pc_ptr->as<PCState>().set(rvSext(tc->getReg(srcRegIdx(0)) & ~0x1));
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 
