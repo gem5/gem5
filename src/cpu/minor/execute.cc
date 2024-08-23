@@ -1080,8 +1080,7 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
         !branch.isStreamChange() && /* No real branch */
         fault == NoFault && /* No faults */
         completed_inst && /* Still finding instructions to execute */
-        num_insts_committed <= commitLimit + 1 /* Not reached commit limit */
-        // num_insts_committed != commitLimit /* Not reached commit limit */
+        num_insts_committed != commitLimit + 1 /* Not reached commit limit */
         /* Plus one to issue next load */
         )
     {
@@ -1100,9 +1099,6 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
          *  remains true to the end of the loop body.
          *  Start by considering the the head of the in flight insts queue */
         MinorDynInstPtr inst = head_inflight_inst->inst;
-
-        if (!(inst->staticInst->isMemRef() && inst->staticInst->isLoad()) && num_insts_committed == commitLimit) break;
-
 
         bool committed_inst = false;
         bool discard_inst = false;
@@ -1125,6 +1121,13 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
 
         DPRINTF(MinorExecute, "Trying to commit canCommitInsts: %d\n",
             can_commit_insts);
+
+        if (num_insts_committed == commitLimit && 
+            !(inst->staticInst->isMemRef() && inst->staticInst->isLoad()) 
+            // avoid first and second if conditions
+            && ((isInbetweenInsts(thread_id) && tryPCEvents(thread_id)) 
+                || (mem_response && num_mem_refs_committed < memoryCommitLimit))
+            ) break;
 
         /* Test for PC events after every instruction */
         if (isInbetweenInsts(thread_id) && tryPCEvents(thread_id)) {
