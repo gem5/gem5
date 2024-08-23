@@ -1,16 +1,20 @@
 #include "base/cache/associative_cache.hh"
-#include "generic/new_tlb.hh
+#include "generic/new_tlb.hh"
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
 
-namespace gem5
-{
+namespace gem5 {
 
 // Constructor
 
-
-// Cache Management
+// getTag - override
+/* This function overrides the getTag function and all concatentation
+happens within the actual function. This just confirms that 
+*/
+Addr getTag(Addr tag) override{
+    return tag;
+}
 
 /** Lookup
  * looks up an entry based off of certain params
@@ -21,26 +25,19 @@ namespace gem5
  * @AC: findEntry(const Addr addr)
  * @params: key | mode (for stats) | hidden (to know whether to update LRU)
  * @result: returns entry that was found in the AC
- *
- */
-  /** ISA specification
-   *  x86 key = concAddrPcid(vpn, pcid)
-   *  RISCV key = buildKey(vpn, asid)
-   */
-
-/**
- * So basically would happen
- * ISA::TLB lookup ( - , - , - ){
- *   CREATE KEY
- *   TLB(key)
- * }
  */
 
-virtual TLBEntry * lookup(Addr vpn,  BaseMMU::Mode mode, bool hidden) {
+// in riscv, you would pass id as asid << 48
+virtual TLBEntry * lookup(Addr vpn, uint64_t id, BaseMMU::Mode mode, bool updateLRU) {
 
-    TLBEntry *entry = this->_cache.findEntry(key)
+    Addr tag = vpn | id;
+
+    TLBEntry *entry = this->_cache.findEntry(tag);
+
     // following code taken from arch/riscv/tlb.cc
-    if (!hidden) {
+    if (updateLRU) {
+
+	// this can be switched out with the associative cache function - accessEntrybyAddr
         if (entry)
             entry->lruSeq = nextSeq();
 
@@ -68,85 +65,6 @@ virtual TLBEntry * lookup(Addr vpn,  BaseMMU::Mode mode, bool hidden) {
         return entry;
 }
 
-/** Insert
- * insert entry, sets the parameters of the accordingly
- * calculates stats
- * returns an entry
- *
- * @TBD:
- * @AC: insertEntry(const Addr addr, Entry *entry),
- * @params: key | mode (for stats) | hidden (to know whether to update LRU)
- * @result: returns the new entry
- *
- */
-/** ISA Specification - create these in insert NOT lookup
- * x86 lookup_key = insert_key = conc(vpn, pcid)
- * RISCV lookup_key = buildKey(vpn, asid)
- * RISCV insert_key = buildKey(vpn, entry.asid)
- */
-/**
- * ISA::TLB(param1, param2, + MORE)
- * BUILD KEY
- * TLB.insert(Key)
- *
- */
-TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, Addr insert_key) {
-
-
-// this si calling TLB lookup NOT ISA entry
-TlbEntry *newEntry = lookup(lookup_key, entry.asid, BaseMMU::read, true);
-
-
-// in riscv:
-check if newEntry->vaddr == entry.vadder
-newEntry->pte = entry.pte
-
-// in x86:
-check if newEntry->vaddr = insert_key
-
-// free list handling
-
-// this is a huge processing thing that i have to come figure out
-*newEntry = entry;
-newEntry->lruSeq = nextSeq();
-
-
-    newEntry->vaddr = vpn;
-
-    if (FullSystem) {
-        newEntry->trieHandle =
-        trie.insert(vpn, TlbEntryTrie::MaxBits-entry.logBytes, newEntry);
-    }
-    else {
-        newEntry->trieHandle =
-        trie.insert(vpn, TlbEntryTrie::MaxBits, newEntry);
-    }
-    return newEntry;
-
-//
-    Addr key = buildKey(vpn, entry.asid);
-    newEntry->trieHandle = trie.insert(
-        key, TlbEntryTrie::MaxBits - entry.logBytes + PageShift, newEntry
-    );
-    return newEntry;
-}
-
-// set the new entry and stuff
-RISCV:
-- newEntry->pte =
-- creates an Addr of buildKey(vpn, entry.asid)
-- sets a newEntry to entry // this is explicity
-- update lruEq
-
-A
-
-
-
-// figure out where to actually insert
-
-return newEntry;
-}
-
 /** Remove
  * removes an index
  * @AC: findEntry(const Addr addr), invalidate(Entry *entry)
@@ -167,13 +85,35 @@ void flushAll() {
     this->_cache.clear()
 }
 
+-----
+
+/** Insert
+ * insert entry, sets the parameters of the accordingly
+ * calculates stats
+ * returns an entry
+ *
+ * @TBD:
+ * @AC: insertEntry(const Addr addr, Entry *entry),
+ * @params: key | mode (for stats) | hidden (to know whether to update LRU)
+ * @result: returns the new entry
+ *
+ */
+
+virtual TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, Addr insert_key) {
+    // LOOKUP
+    // CHECK IF EXISTS
+    // CHECK IF FULL - evict LRU
+    // SET NEW ENTRY
+    // FULL SYSTEM
+    return newEntry;
+}
+
+
 void evictLRU(---)
     // AssociativeCachefindVictim(const Addr addr)
     // plus a few more functions
 
 void demapPage(---)
-
-// Translation
 
 // virtual Fault translate()
 // check permissions
@@ -204,13 +144,4 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
              "Total TLB (read and write) accesses",
              readAccesses + writeAccesses)
 
-// Helper Function
-
-// riscv
-static Addr buildKey(Addr vpn, uint16_t asid)
-
-//x86
-inline Addr concAddrPcid(Addr vpn, uint64_t pcid)
-
-
-};
+}; // end of gem5 namspace

@@ -60,7 +60,6 @@ class TLBEntry : public CacheEntry, public Serializable
     bool uncacheable;  // Whether the page is cacheable or not.
     bool writable;         // Read permission is always available, assuming it isn't blocked by other mechanisms.
     unsigned logBytes;  // The size of the page this represents, in address bits.
-    uint64_t lruSeq;         // A sequence number to keep track of LRU.
 
     /* example of some x86 specific variabeles*/
     // bool user;         // Whether this page is accesible without being in supervisor mode, lets the caches handle the writeback policy.
@@ -89,11 +88,6 @@ class TLBEntry : public CacheEntry, public Serializable
     {
         return (1 << logBytes);
     }
-    uint64_t nextSeq()
-    {
-      return ++lruSeq;
-    }
-
 
 
 // [4] Extended from Serializable
