@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/spatio_temporal_memory_streaming.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/STeMSPrefetcher.hh"
 
 namespace gem5
@@ -43,19 +42,21 @@ STeMS::STeMS(const STeMSPrefetcherParams &p)
     spatialRegionSizeBits(floorLog2(p.spatial_region_size)),
     reconstructionEntries(p.reconstruction_entries),
     activeGenerationTable((name() + ".ActiveGenerationTable").c_str(),
-                          p.active_generation_table_entries,
-			  p.active_generation_table_assoc,
-                          p.active_generation_table_replacement_policy,
-                          p.active_generation_table_indexing_policy,
-                          ActiveGenerationTableEntry(
-                              spatialRegionSize / blkSize)),
+        p.active_generation_table_entries,
+        p.active_generation_table_assoc,
+        p.active_generation_table_replacement_policy,
+        p.active_generation_table_indexing_policy,
+        ActiveGenerationTableEntry(
+            spatialRegionSize / blkSize,
+            genTagExtractor(p.active_generation_table_indexing_policy))),
     patternSequenceTable((name() + ".PatternSequenceTable").c_str(),
-                         p.pattern_sequence_table_entries,
-			 p.pattern_sequence_table_assoc,
-                         p.pattern_sequence_table_replacement_policy,
-                         p.pattern_sequence_table_indexing_policy,
-                         ActiveGenerationTableEntry(
-                             spatialRegionSize / blkSize)),
+        p.pattern_sequence_table_entries,
+        p.pattern_sequence_table_assoc,
+        p.pattern_sequence_table_replacement_policy,
+        p.pattern_sequence_table_indexing_policy,
+        ActiveGenerationTableEntry(
+            spatialRegionSize / blkSize,
+            genTagExtractor(p.pattern_sequence_table_indexing_policy))),
     rmob(p.region_miss_order_buffer_entries),
     addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
     lastTriggerCounter(0)
@@ -91,16 +92,14 @@ STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
                 }
             }
             if (generation_ended) {
+                const ActiveGenerationTableEntry::KeyType key{pst_addr, false};
                 // PST is indexed using the PC (secure bit is unused)
-                constexpr bool is_secure = false;
-                auto pst_entry = patternSequenceTable.findEntry(pst_addr,
-                is_secure);
+                auto pst_entry = patternSequenceTable.findEntry(key);
                 if (pst_entry == nullptr) {
                     // Tipically an entry will not exist
-                    pst_entry = patternSequenceTable.findVictim(pst_addr);
+                    pst_entry = patternSequenceTable.findVictim(key);
                     assert(pst_entry != nullptr);
-                    patternSequenceTable.insertEntry(pst_addr, is_secure,
-                    pst_entry);
+                    patternSequenceTable.insertEntry(key, pst_entry);
                 } else {
                     patternSequenceTable.accessEntry(pst_entry);
                 }
@@ -157,8 +156,9 @@ STeMS::calculatePrefetch(const PrefetchInfo &pfi,
     // Check if any active generation has ended
     checkForActiveGenerationsEnd(cache);
 
+    const ActiveGenerationTableEntry::KeyType key{sr_addr, is_secure};
     ActiveGenerationTableEntry *agt_entry =
-        activeGenerationTable.findEntry(sr_addr, is_secure);
+        activeGenerationTable.findEntry(key);
     if (agt_entry != nullptr) {
         // found an entry in the AGT, entry is currently being recorded,
         // add the offset
@@ -175,9 +175,9 @@ STeMS::calculatePrefetch(const PrefetchInfo &pfi,
         lastTriggerCounter = 0;
 
         // allocate a new AGT entry
-        agt_entry = activeGenerationTable.findVictim(sr_addr);
+        agt_entry = activeGenerationTable.findVictim(key);
         assert(agt_entry != nullptr);
-        activeGenerationTable.insertEntry(sr_addr, is_secure, agt_entry);
+        activeGenerationTable.insertEntry(key, agt_entry);
         agt_entry->pc = pc;
         agt_entry->paddress = paddr;
         agt_entry->addOffset(sr_offset);
@@ -222,11 +222,10 @@ STeMS::reconstructSequence(
 
     // Now query the PST with the PC of each RMOB entry
     idx = 0;
-    constexpr bool is_secure = false;
     for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
         it++) {
-        auto pst_entry = patternSequenceTable.findEntry(it->pstAddress,
-        is_secure);
+        auto pst_entry = patternSequenceTable.findEntry(
+            {it->pstAddress, false});
         if (pst_entry != nullptr) {
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {

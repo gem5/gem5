@@ -127,7 +127,7 @@ class BaseSetAssoc : public BaseTags
      */
     CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override
     {
-        CacheBlk *blk = findBlock(pkt->getAddr(), pkt->isSecure());
+        CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
 
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
@@ -167,14 +167,14 @@ class BaseSetAssoc : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
+    CacheBlk* findVictim(const CacheBlk::KeyType& key,
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks,
                          const uint64_t partition_id=0) override
     {
         // Get possible entries to be victimized
         std::vector<ReplaceableEntry*> entries =
-            indexingPolicy->getPossibleEntries(addr);
+            indexingPolicy->getPossibleEntries(key);
 
         // Filter entries based on PartitionID
         if (partitionManager) {
@@ -243,7 +243,7 @@ class BaseSetAssoc : public BaseTags
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return indexingPolicy->regenerateAddr(blk->getTag(), blk);
+        return indexingPolicy->regenerateAddr({blk->getTag(), false}, blk);
     }
 
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {

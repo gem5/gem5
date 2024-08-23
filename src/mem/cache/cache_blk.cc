@@ -47,14 +47,14 @@ namespace gem5
 {
 
 void
-CacheBlk::insert(const Addr tag, const bool is_secure,
+CacheBlk::insert(const KeyType &tag,
                  const int src_requestor_ID, const uint32_t task_ID,
                  const uint64_t partition_id)
 {
     // Make sure that the block has been properly invalidated
     assert(!isValid());
 
-    insert(tag, is_secure);
+    insert(tag);
 
     // Set source requestor ID
     setSrcRequestorId(src_requestor_ID);

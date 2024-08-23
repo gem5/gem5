@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015, 2022 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2022, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,19 +51,19 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
+#include "mem/cache/tags/tagged_entry.hh"
 #include "mem/packet.hh"
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 
 namespace gem5
 {
 
-class BaseIndexingPolicy;
 namespace replacement_policy
 {
     class Base;
@@ -77,16 +77,16 @@ namespace prefetch
  * Override the default set associative to apply a specific hash function
  * when extracting a set.
  */
-class StridePrefetcherHashedSetAssociative : public SetAssociative
+class StridePrefetcherHashedSetAssociative : public TaggedSetAssociative
 {
   protected:
-    uint32_t extractSet(const Addr addr) const override;
+    uint32_t extractSet(const KeyType &key) const override;
     Addr extractTag(const Addr addr) const override;
 
   public:
     StridePrefetcherHashedSetAssociative(
         const StridePrefetcherHashedSetAssociativeParams &p)
-      : SetAssociative(p)
+      : TaggedSetAssociative(p)
     {
     }
     ~StridePrefetcherHashedSetAssociative() = default;
@@ -121,11 +121,11 @@ class Stride : public Queued
         const int assoc;
         const int numEntries;
 
-        BaseIndexingPolicy* const indexingPolicy;
+        TaggedIndexingPolicy* const indexingPolicy;
         replacement_policy::Base* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
-                    BaseIndexingPolicy* indexing_policy,
+                    TaggedIndexingPolicy* indexing_policy,
                     replacement_policy::Base* repl_policy)
           : assoc(assoc), numEntries(num_entries),
             indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
@@ -136,7 +136,7 @@ class Stride : public Queued
     /** Tagged by hashed PCs. */
     struct StrideEntry : public TaggedEntry
     {
-        StrideEntry(const SatCounter8& init_confidence);
+        StrideEntry(const SatCounter8& init_confidence, TagExtractor ext);
 
         void invalidate() override;
 
@@ -144,8 +144,8 @@ class Stride : public Queued
         int stride;
         SatCounter8 confidence;
     };
-    typedef AssociativeSet<StrideEntry> PCTable;
-    std::unordered_map<int, PCTable> pcTables;
+    using PCTable = AssociativeCache<StrideEntry>;
+    std::unordered_map<int, std::unique_ptr<PCTable>> pcTables;
 
     /**
      * If this parameter is set to true, then the prefetcher will operate at
@@ -161,7 +161,7 @@ class Stride : public Queued
      * @param context The context to be searched for.
      * @return The table corresponding to the given context.
      */
-    PCTable* findTable(int context);
+    PCTable& findTable(int context);
 
     /**
      * Create a PC table for the given context.
@@ -169,7 +169,7 @@ class Stride : public Queued
      * @param context The context of the new PC table.
      * @return The new PC table
      */
-    PCTable* allocateNewContext(int context);
+    PCTable& allocateNewContext(int context);
 
   public:
     Stride(const StridePrefetcherParams &p);

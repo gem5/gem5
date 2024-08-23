@@ -29,7 +29,6 @@
 #include "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/prefetch/associative_set_impl.hh"
 #include "params/DCPTPrefetcher.hh"
 #include "params/DeltaCorrelatingPredictionTables.hh"
 
@@ -44,7 +43,9 @@ DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
    deltaBits(p.delta_bits), deltaMaskBits(p.delta_mask_bits),
    table((name() + "DCPT").c_str(), p.table_entries,
          p.table_assoc, p.table_replacement_policy,
-         p.table_indexing_policy, DCPTEntry(p.deltas_per_entry))
+         p.table_indexing_policy,
+         DCPTEntry(p.deltas_per_entry,
+                   genTagExtractor(p.table_indexing_policy)))
 {
 }
 
