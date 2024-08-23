@@ -10,7 +10,7 @@ namespace gem5 {
 
 // getTag - override
 /* This function overrides the getTag function and all concatentation
-happens within the actual function. This just confirms that 
+happens within the actual function. This just confirms that
 */
 Addr getTag(Addr tag) override{
     return tag;
