@@ -1122,10 +1122,10 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
         DPRINTF(MinorExecute, "Trying to commit canCommitInsts: %d\n",
             can_commit_insts);
 
-        if (num_insts_committed == commitLimit && 
-            !(inst->staticInst->isMemRef() && inst->staticInst->isLoad()) 
+        if (num_insts_committed == commitLimit &&
+            !(inst->staticInst->isMemRef() && inst->staticInst->isLoad())
             // avoid first and second if conditions
-            && ((isInbetweenInsts(thread_id) && tryPCEvents(thread_id)) 
+            && ((isInbetweenInsts(thread_id) && tryPCEvents(thread_id))
                 || (mem_response && num_mem_refs_committed < memoryCommitLimit))
             ) break;
 
