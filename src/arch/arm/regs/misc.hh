@@ -1165,6 +1165,7 @@ namespace ArmISA
         MISCREG_HFGWTR_EL2,
         MISCREG_HDFGRTR_EL2,
         MISCREG_HDFGWTR_EL2,
+        MISCREG_HAFGRTR_EL2,
 
         // FEAT_MPAM
         MISCREG_MPAMIDR_EL1,
@@ -2912,6 +2913,7 @@ namespace ArmISA
         "hfgwtr_el2",
         "hdfgrtr_el2",
         "hdfgwtr_el2",
+        "hafgrtr_el2",
 
         // FEAT_MPAM
         "mpamidr_el1",
