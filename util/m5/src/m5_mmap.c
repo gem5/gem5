@@ -57,7 +57,7 @@ void *m5_mem = NULL;
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 
-const char *m5_mmap_dev = "/dev/gem5_bridge";
+const char *m5_mmap_dev = "/dev/gem5/bridge";
 
 void
 map_m5_mem()
