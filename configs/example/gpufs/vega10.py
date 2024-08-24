@@ -141,7 +141,7 @@ def runVegaGPUFS(cpu_type):
     args.ruby = True
     args.cpu_type = cpu_type
     args.num_cpus = 1
-    args.mem_size = "3GB"
+    args.mem_size = "3GiB"
     args.dgpu = True
     args.dgpu_mem_size = "16GB"
     args.dgpu_start = "0GB"

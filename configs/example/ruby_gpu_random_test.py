@@ -175,7 +175,7 @@ if not (args.num_dmas is None):
 #   level 1: large
 # Each location corresponds to a 4-byte piece of data
 #
-args.mem_size = "1024MB"
+args.mem_size = "1024MiB"
 if args.address_range == "small":
     num_atomic_locs = 10
     num_regular_locs_per_atomic_loc = 10000

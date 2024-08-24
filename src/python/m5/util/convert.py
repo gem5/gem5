@@ -270,9 +270,11 @@ def toMemorySize(value):
         and value[-2] in binary_prefixes.keys()
         and not "i" in value
     ):
-        print(
-            f"warn: Base 10 memory/cache size {value} will be cast to base 2"
-            + f" size {value[0:-2]}{value[-2].upper()}i{value[-1]}"
+        from m5.util import warn
+
+        warn(
+            f"Base 10 memory/cache size {value} will be cast to base 2"
+            + f" size {value[0:-2]}{value[-2].upper()}i{value[-1]}."
         )
     return toBinaryInteger(value, "memory size", "B")
 

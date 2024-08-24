@@ -64,7 +64,7 @@ args = parser.parse_args()
 # instantiate the riscv matched board with default parameters
 board = RISCVMatchedBoard(
     clk_freq="1.2GHz",
-    l2_size="2MB",
+    l2_size="2MiB",
     is_fs=True,
 )
 

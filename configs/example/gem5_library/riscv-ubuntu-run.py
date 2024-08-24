@@ -63,12 +63,12 @@ from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_h
 
 # Here we setup the parameters of the l1 and l2 caches.
 cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
-    l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
+    l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
 
-memory = DualChannelDDR4_2400(size="3GB")
+memory = DualChannelDDR4_2400(size="3GiB")
 
 # Here we setup the processor. We use a simple processor.
 processor = SimpleProcessor(

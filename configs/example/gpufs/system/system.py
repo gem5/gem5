@@ -57,8 +57,8 @@ def makeGpuFSSystem(args):
     ]
     cmdline = " ".join(boot_options)
 
-    if MemorySize(args.mem_size) < MemorySize("2GB"):
-        panic("Need at least 2GB of system memory to load amdgpu module")
+    if MemorySize(args.mem_size) < MemorySize("2GiB"):
+        panic("Need at least 2GiB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
     (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
@@ -89,7 +89,7 @@ def makeGpuFSSystem(args):
     )
 
     # Setup VGA ROM region
-    system.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128kB"))]
+    system.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128KiB"))]
 
     # Create specified number of CPUs. GPUFS really only needs one.
     system.cpu = [

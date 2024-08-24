@@ -86,10 +86,10 @@ class DDR5_4400_4x8(DRAMInterface):
     # RRD_S (different bank group) : 8nCK
     tRRD = "3.632ns"
 
-    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KB page
+    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KiB page
     tRRD_L = "5ns"
 
-    # tFAW for 1KB page is MAX(32nCK, 14.545ns)
+    # tFAW for 1KiB page is MAX(32nCK, 14.545ns)
     tXAW = "14.545ns"
     activation_limit = 4
 
@@ -194,10 +194,10 @@ class DDR5_6400_4x8(DDR5_4400_4x8):
     # RRD_S (different bank group) : 8nCK
     tRRD = "2.496ns"
 
-    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KB page
+    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KiB page
     tRRD_L = "5ns"
 
-    # tFAW for 1KB page is MAX(32 CK, 10.00ns)
+    # tFAW for 1KiB page is MAX(32 CK, 10.00ns)
     tXAW = "10ns"
 
     # Rd/Wr turnaround timings
@@ -254,7 +254,7 @@ class DDR5_8400_4x8(DDR5_4400_4x8):
     # RRD_S (different bank group) : 8nCK
     tRRD = "1.904ns"
 
-    # tFAW for 1KB page is MAX(32 CK, 10.00ns)
+    # tFAW for 1KiB page is MAX(32 CK, 10.00ns)
     tXAW = "10ns"
 
     # Rd/Wr turnaround timings

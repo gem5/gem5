@@ -40,7 +40,7 @@ class StridedGenerator(AbstractGenerator):
         self,
         num_cores: int = 1,
         duration: str = "1ms",
-        rate: str = "100GB/s",
+        rate: str = "100GiB/s",
         block_size: int = 64,
         superblock_size: int = 64,
         stride_size: Optional[int] = None,

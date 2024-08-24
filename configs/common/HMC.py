@@ -300,10 +300,10 @@ def add_options(parser):
     # address range for each of the serial links
     parser.add_argument(
         "--serial-link-addr-range",
-        default="1GB",
+        default="1GiB",
         type=str,
         help="memory range for each of the serial links.\
-                        Default: 1GB",
+                        Default: 1GiB",
     )
 
     # *****************************PERFORMANCE MONITORING*********************
@@ -390,10 +390,10 @@ def add_options(parser):
     # HMC device - vault capacity or size
     parser.add_argument(
         "--hmc-dev-vault-size",
-        default="256MB",
+        default="256MiB",
         type=str,
         help="vault storage capacity in bytes. Default:\
-                        256MB",
+                        256MiB",
     )
     parser.add_argument(
         "--mem-type",

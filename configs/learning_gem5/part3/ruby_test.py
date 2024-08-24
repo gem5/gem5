@@ -51,7 +51,7 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = "timing"  # Use timing accesses
-system.mem_ranges = [AddrRange("512MB")]  # Create an address range
+system.mem_ranges = [AddrRange("512MiB")]  # Create an address range
 
 # Create the tester
 system.tester = RubyTester(
@@ -59,7 +59,7 @@ system.tester = RubyTester(
 )
 
 # Create a simple memory controller and connect it to the membus
-system.mem_ctrl = SimpleMemory(latency="50ns", bandwidth="0GB/s")
+system.mem_ctrl = SimpleMemory(latency="50ns", bandwidth="0GiB/s")
 system.mem_ctrl.range = system.mem_ranges[0]
 
 # Create the Ruby System

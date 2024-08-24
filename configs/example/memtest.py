@@ -218,7 +218,7 @@ else:
 
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = Cache(
-    size="32kB",
+    size="32KiB",
     assoc=4,
     tag_latency=1,
     data_latency=1,
@@ -356,7 +356,7 @@ last_subsys = getattr(system, f"l{len(cachespec)}subsys0")
 last_subsys.xbar.point_of_coherency = True
 if args.noncoherent_cache:
     system.llc = NoncoherentCache(
-        size="16MB",
+        size="16MiB",
         assoc=16,
         tag_latency=10,
         data_latency=10,

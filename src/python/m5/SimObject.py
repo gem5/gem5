@@ -92,7 +92,7 @@ from m5.util.pybind import *
 # object, either using keyword assignment in the constructor or in
 # separate assignment statements.  For example:
 #
-# cache = BaseCache(size='64KB')
+# cache = BaseCache(size='64KiB')
 # cache.hit_latency = 3
 # cache.assoc = 8
 #
