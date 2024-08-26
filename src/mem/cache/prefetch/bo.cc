@@ -108,7 +108,7 @@ Bo::calculatePrefetch(const PrefetchInfo &pfi,
         maxScoreAttained = false;
     }
 
-    //Degree 1 prefetching if bestOffset
+    // Degree 1 prefetching if bestOffset
     if (bestOffset != 0) {
         Addr newAddr = blkAddr + (bestOffset * blkSize);
         if (samePage(blkAddr, newAddr)) {
