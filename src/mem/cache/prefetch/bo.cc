@@ -87,7 +87,7 @@ Bo::calculatePrefetch(const PrefetchInfo &pfi,
 
    // Update BestOffset based on the learning phase
     if ((round > roundMax) || maxScoreAttained) {
-        //get max score
+        // get max score
         int max = 0;
         bestOffset = 0;
         for (auto score: scoreTable) {
