@@ -64,7 +64,7 @@ Bo::calculatePrefetch(const PrefetchInfo &pfi,
 
     assert (scoreTable.size() == offsetList.size());
 
-    //lookup into RR
+    // lookup into RR
     Addr lookupAddr = blkAddr - (blkSize * offsetList.at(offsetIndex));
     for (auto rrEntry: rrTable) {
         if (rrEntry == lookupAddr) {
