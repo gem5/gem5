@@ -89,7 +89,7 @@ gem5_verify_config(
         "-c",
         joinpath(resource_path, "allSyncPrims-1kernel"),
         "--options",
-        "lfTreeBarrUniq 10 16 4 10 16 4",
+        "lfTreeBarrUniq 10 16 4",
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
