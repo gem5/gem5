@@ -29,6 +29,7 @@
 /**
  * @file
  * Describes a HPCA variant of Best-Offset prefetcher.
+ * DOI: 10.1109/HPCA.2016.7446087
  */
 
 #ifndef __MEM_CACHE_PREFETCH_BO_HH__
