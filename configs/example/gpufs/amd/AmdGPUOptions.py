@@ -253,3 +253,10 @@ def addAmdGPUOptions(parser):
         default=0,
         help="number of registers in cache",
     )
+    parser.add_argument(
+        "--memtime-latency",
+        type=int,
+        # Set to a default of 41 from micro-benchmarks
+        default=41,
+        help="Latency for memtimes in scalar memory pipeline.",
+    )
