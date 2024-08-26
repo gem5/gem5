@@ -46,7 +46,7 @@ Bo::Bo(const BoPrefetcherParams &p)
     badScore(p.bad_score), rrSize(p.rr_size)
 {
     bestOffset = 0;
-    for (auto offsets : offsetList) {
+    for (const auto& offsets : offsetList) {
         scoreTable[offsets] = 0;
     }
     rrTable.clear();
