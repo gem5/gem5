@@ -46,29 +46,29 @@ Sms::Sms(const SmsPrefetcherParams &p)
     : Queued(p), Max_Contexts(p.ft_size), MAX_PHTSize(p.pht_size),
       Region_Size(p.region_size)
 {
-        AGT.clear();
-        AGTPC.clear();
-        FT.clear();
-        PHT.clear();
-        fifoFT.clear();
-        lruAGT.clear();
-        lruPHT.clear();
+    AGT.clear();
+    AGTPC.clear();
+    FT.clear();
+    PHT.clear();
+    fifoFT.clear();
+    lruAGT.clear();
+    lruPHT.clear();
 
 }
 void
 Sms::notifyEvict(const EvictionInfo &info)
 {
     //Check if any active generation has ended
-    Addr regionBase = roundDown(info.addr, Region_Size);
-    std::pair <Addr,Addr> pc_offset = AGTPC[regionBase];
-    if (AGT.find(regionBase) != AGT.end()) {
+    Addr region_base = roundDown(info.addr, Region_Size);
+    std::pair <Addr,Addr> pc_offset = AGTPC[region_base];
+    if (AGT.find(region_base) != AGT.end()) {
         //remove old recording
         if (PHT.find(pc_offset) != PHT.end()) {
             PHT[pc_offset].clear();
         }
         //Move from AGT to PHT
-        for (std::set<Addr>::iterator it = AGT[regionBase].begin();
-         it != AGT[regionBase].end(); it ++) {
+        for (std::set<Addr>::iterator it = AGT[region_base].begin();
+         it != AGT[region_base].end(); it ++) {
             PHT[pc_offset].insert(*it);
         }
         lruPHT.push_front(pc_offset);
@@ -79,10 +79,8 @@ Sms::notifyEvict(const EvictionInfo &info)
         lruPHT.pop_back();
     }
 
-    AGTPC.erase(regionBase);
-    AGT.erase(regionBase);
-
-
+    AGTPC.erase(region_base);
+    AGT.erase(region_base);
 }
 void
 Sms::calculatePrefetch(const PrefetchInfo &pfi,
@@ -97,44 +95,42 @@ Sms::calculatePrefetch(const PrefetchInfo &pfi,
 
     Addr blk_addr = blockAddress(pfi.getAddr());
     Addr pc = pfi.getPC();
-    Addr regionBase = roundDown(blk_addr, Region_Size);
-    Addr offset = blk_addr - regionBase;
+    Addr region_base = roundDown(blk_addr, Region_Size);
+    Addr offset = blk_addr - region_base;
 
     //Training
-    if (AGT.find(regionBase) != AGT.end()) {
-        assert (FT.find(regionBase) == FT.end());
+    if (AGT.find(region_base) != AGT.end()) {
+        assert (FT.find(region_base) == FT.end());
         // Record Pattern
-        AGT[regionBase].insert(offset);
+        AGT[region_base].insert(offset);
         //update LRU
         for (std::deque <Addr>::iterator lit = lruAGT.begin();
          lit != lruAGT.end(); lit ++) {
-            if ((*lit) == regionBase) {
+            if ((*lit) == region_base) {
                 lruAGT.erase(lit);
-                lruAGT.push_front(regionBase);
+                lruAGT.push_front(region_base);
                 break;
             }
         }
-    }
-    else if (FT.find(regionBase) != FT.end()) {
+    } else if (FT.find(region_base) != FT.end()) {
         //move entry from FT to AGT
-        AGT[regionBase].insert(FT[regionBase].second);
-        AGTPC[regionBase] = FT[regionBase];
-        lruAGT.push_front(regionBase);
+        AGT[region_base].insert(FT[region_base].second);
+        AGTPC[region_base] = FT[region_base];
+        lruAGT.push_front(region_base);
         //Record latest offset
-        AGT[regionBase].insert(offset);
+        AGT[region_base].insert(offset);
         //Recycle FT entry
-        FT.erase(regionBase);
+        FT.erase(region_base);
         //Make space for next entry
         while (AGT.size() > Max_Contexts) {
             AGT.erase(lruAGT.back());
             AGTPC.erase(lruAGT.back());
             lruAGT.pop_back();
         }
-    }
-    else {
+    } else {
         // Trigger Access
-        FT[regionBase] = std::make_pair (pc,offset);
-        fifoFT.push_front(regionBase);
+        FT[region_base] = std::make_pair (pc,offset);
+        fifoFT.push_front(region_base);
         while (FT.size() > Max_Contexts) {
             FT.erase(fifoFT.back());
             fifoFT.pop_back();
@@ -146,8 +142,8 @@ Sms::calculatePrefetch(const PrefetchInfo &pfi,
     if (PHT.find(pc_offset) != PHT.end()) {
         for (std::set<Addr>::iterator it = PHT[pc_offset].begin();
          it != PHT[pc_offset].end(); it ++) {
-            Addr prefAddr = blockAddress(regionBase + (*it));
-            addresses.push_back(AddrPriority(prefAddr,0));
+            Addr pref_addr = blockAddress(region_base + (*it));
+            addresses.push_back(AddrPriority(pref_addr,0));
         }
         for (std::deque < std::pair <Addr,Addr> >::iterator lit
          = lruPHT.begin(); lit != lruPHT.end(); lit ++) {
