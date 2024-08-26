@@ -76,7 +76,7 @@ Bo::calculatePrefetch(const PrefetchInfo &pfi,
         }
     }
 
-    //prepare for next learning phase
+    // prepare for the next learning phase
     if (offsetIndex >= (offsetList.size() - 1)) {
         //Next round
         round += 1;
