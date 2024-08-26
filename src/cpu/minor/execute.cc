@@ -607,10 +607,18 @@ Execute::issue(ThreadID thread_id)
                 // Update ALU access stats.
                 if (inst->staticInst->isVector()) {
                     cpu.executeStats[inst->id.threadId]->numVecAluAccesses++;
-                } else if (inst->staticInst->isFloating()) {
+                }
+
+                if (inst->staticInst->isFloating()) {
                     cpu.executeStats[inst->id.threadId]->numFpAluAccesses++;
-                } else if (inst->staticInst->isInteger()) {
+                }
+
+                if (inst->staticInst->isInteger()) {
                     cpu.executeStats[inst->id.threadId]->numIntAluAccesses++;
+                }
+
+                if (inst->staticInst->isMemRef()) {
+                    cpu.executeStats[inst->id.threadId]->numMemRefs++;
                 }
 
 
