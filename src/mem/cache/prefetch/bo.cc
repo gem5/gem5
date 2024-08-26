@@ -85,7 +85,7 @@ Bo::calculatePrefetch(const PrefetchInfo &pfi,
     else
         offsetIndex += 1;
 
-   //Update BestOffset based on learning phase
+   // Update BestOffset based on the learning phase
     if ((round > roundMax) || maxScoreAttained) {
         //get max score
         int max = 0;
