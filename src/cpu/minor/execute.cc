@@ -893,6 +893,10 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
             cpu.commitStats[inst->id.threadId]->numFpInsts++;
         }
 
+        if (inst->staticInst->isVector()) {
+            cpu.commitStats[inst->id.threadId]->numVecInsts++;
+        }
+
         if (inst->staticInst->isMemRef()) {
             cpu.commitStats[inst->id.threadId]->numMemRefs++;
         }
