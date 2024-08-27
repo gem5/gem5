@@ -69,6 +69,24 @@ namespace gem5
 
 namespace RiscvISA {
 
+std::pair<bool, Fault>
+Walker::tryCoalesce(ThreadContext *_tc, BaseMMU::Translation *translation,
+                    const RequestPtr &_req, BaseMMU::Mode _mode)
+{
+    assert(currStates.size());
+    for (auto it: currStates) {
+        auto &ws = *it;
+        auto [coalesced, fault] =
+            ws.tryCoalesce(_tc, translation, _req, _mode);
+        if (coalesced) {
+            return std::make_pair(true, fault);
+        }
+    }
+    DPRINTF(PageTableWalker, "Coalescing failed on Addr %#lx (pc=%#lx)\n",
+            _req->getVaddr(), _req->getPC());
+    return std::make_pair(false, NoFault);
+}
+
 Fault
 Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
               const RequestPtr &_req, BaseMMU::Mode _mode)
@@ -79,6 +97,16 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
     WalkerState * newState = new WalkerState(this, _translation, _req);
     newState->initState(_tc, _mode, sys->isTimingMode());
     if (currStates.size()) {
+        auto [coalesced, fault] =
+            tryCoalesce(_tc, _translation, _req, _mode);
+        if (coalesced) {
+            DPRINTF(PageTableWalker,
+                    "Walks in progress: %d. Coalesce req pc: %#lx, addr: %#lx "
+                    "into currStates\n",
+                    currStates.size(), _req->getPC(), _req->getVaddr());
+            delete newState;
+            return fault;
+        }
         assert(newState->isTiming());
         DPRINTF(PageTableWalker, "Walks in progress: %d\n", currStates.size());
         currStates.push_back(newState);
@@ -193,6 +221,41 @@ Walker::WalkerState::initState(ThreadContext * _tc,
     pmode = walker->tlb->getMemPriv(tc, mode);
     satp = tc->readMiscReg(MISCREG_SATP);
     assert(satp.mode == AddrXlateMode::SV39);
+}
+
+std::pair<bool, Fault>
+Walker::WalkerState::tryCoalesce(ThreadContext *_tc,
+    BaseMMU::Translation *translation,
+    const RequestPtr &_req, BaseMMU::Mode _mode)
+{
+    SATP _satp = _tc->readMiscReg(MISCREG_SATP);
+    bool priv_match = (
+        (mode == _mode) && (satp == _satp) &&
+        (pmode == walker->tlb->getMemPriv(_tc, _mode)) &&
+        (status == _tc->readMiscReg(MISCREG_STATUS)));
+
+    bool addr_match = false;
+    Addr addr_match_num = req->getVaddr();
+    Addr pre_match_num = _req->getVaddr();
+
+    addr_match = ((pre_match_num >> PageShift) << PageShift) ==
+                 ((addr_match_num >> PageShift) << PageShift);
+
+    if (priv_match && addr_match) {
+        // coalesce
+        DPRINTF(PageTableWalker,
+        "Coalescing walk for %#lx(pc=%#lx) into %#lx(pc=%#lx)\n",
+        req->getVaddr(), _req->getPC(), req->getVaddr(), req->getPC());
+        // add to list of requestors
+        Fault new_fault = NoFault;
+        if (timingFault != NoFault) {
+            // recreate fault for this txn, we don't have pmp yet
+            // TODO: also consider pmp's addr fault
+            DPRINTF(PageTableWalker, "FAULT in tryCoalesce\n");
+        }
+        return std::make_pair(true, new_fault);
+    }
+    return std::make_pair(false, NoFault);
 }
 
 void
