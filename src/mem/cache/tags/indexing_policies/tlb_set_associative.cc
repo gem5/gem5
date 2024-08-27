@@ -9,13 +9,13 @@ TLBSetAssociative::TLBSetAssociative(const Params &p)
     : BaseIndexingPolicy(p)
 {
 }
-// added function - this gets the 
-Addr TLBSetAssociative::getVPNfromVA(const Addr addr) const 
+// added function - this gets the
+Addr TLBSetAssociative::getVPNfromVA(const Addr addr) const
 {
     return (addr >> pageOffset) & vpnMask;
 }
 
-Addr extractTag(const Addr addr) override const 
+Addr extractTag(const Addr addr) override const
 {
     return addr;
 }
@@ -28,9 +28,9 @@ SetAssociative::extractSet(const Addr addr) const
 
 std::vector<ReplaceableEntry*>
 SetAssociative::getPossibleEntries(const Addr addr) const
-{   
+{
     return sets[extractSet(addr)];
 }
 
 } // namespace gem5
-~      
+~

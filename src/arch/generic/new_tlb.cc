@@ -22,7 +22,7 @@ virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU)
 
     // concatenate vpn and id
     Addr key = vpn | id;
-    
+
     TLBEntry *entry = this->_cache.findEntry(key);
 
     if (updateLRU) {
