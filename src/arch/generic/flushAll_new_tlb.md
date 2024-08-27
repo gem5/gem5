@@ -8,5 +8,4 @@
 - none
 
 **Structure of Function**
-- AC cache function called `clear` 
-
+- AC cache function called `clear`
