@@ -3,44 +3,30 @@
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
+// set_associative implementation
+#include "mem/cache/tags/indexing_policies/tlb_set_assocative.hh"
+
+// lru_rp
+#include "mem/cache/replacement_policies/lru_rp.hh"
+
 
 namespace gem5 {
 
-// Constructor
-
-// getTag - override
-/* This function overrides the getTag function and all concatentation
-happens within the actual function. This just confirms that
-*/
-Addr getTag(Addr tag) override{
-    return tag;
-}
-
 /** Lookup
- * looks up an entry based off of certain params
- * calculates stats
- * returns an entry
- *
- * @TBD: call the build key function determine how to access BaseMMU, determine how to access status?
  * @AC: findEntry(const Addr addr)
- * @params: key | mode (for stats) | hidden (to know whether to update LRU)
+ * @params: key | mode (for stats) | updateLRU (to know whether to update LRU)
  * @result: returns entry that was found in the AC
  */
 
-// in riscv, you would pass id as asid << 48
-virtual TLBEntry * lookup(Addr vpn, uint64_t id, BaseMMU::Mode mode, bool updateLRU) {
+virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU) {
 
-    Addr tag = vpn | id;
+    // concatenate vpn and id
+    Addr key = vpn | id;
+    
+    TLBEntry *entry = this->_cache.findEntry(key);
 
-    TLBEntry *entry = this->_cache.findEntry(tag);
-
-    // following code taken from arch/riscv/tlb.cc
     if (updateLRU) {
-
-	// this can be switched out with the associative cache function - accessEntrybyAddr
-        if (entry)
-            entry->lruSeq = nextSeq();
-
+        accessEntry(entry); // this is standard
         // noting the misses/hits
         if (mode == BaseMMU::Write)
             stats.writeAccesses++;
@@ -61,17 +47,17 @@ virtual TLBEntry * lookup(Addr vpn, uint64_t id, BaseMMU::Mode mode, bool update
                 stats.readHits++;
         }
 
-        // return entry
-        return entry;
+    return entry;
 }
 
 /** Remove
  * removes an index
  * @AC: findEntry(const Addr addr), invalidate(Entry *entry)
- * @params: address to delete
+ * @params: vpn and id -> in order to find Entry
  * @result: none
  */
-void remove(Addr addr) {
+void remove(Addr vpn, auto id) {
+
     this->_cache.invalidate(findEntry(addr));
 }
 
