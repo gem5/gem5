@@ -81,6 +81,8 @@ class AssociativeCache : public Named
     /** The entries */
     std::vector<Entry> entries;
 
+    const ::gem5::debug::SimpleFlag* debugFlag = nullptr;
+
   private:
 
     void
@@ -120,7 +122,8 @@ class AssociativeCache : public Named
           associativity(associativity_),
           replPolicy(repl_policy),
           indexingPolicy(indexing_policy),
-          entries(num_entries, init_val)
+          entries(num_entries, init_val),
+          debugFlag(nullptr)
     {
         initParams(num_entries, associativity);
     }
@@ -160,6 +163,12 @@ class AssociativeCache : public Named
         entries.resize(num_entries, init_val);
 
         initParams(num_entries, associativity);
+    }
+
+    void
+    setDebugFlag(const ::gem5::debug::SimpleFlag& flag)
+    {
+        debugFlag = &flag;
     }
 
     /**
@@ -223,6 +232,12 @@ class AssociativeCache : public Named
 
         auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
 
+        if (debugFlag && debugFlag->tracing() && victim->isValid()) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), debugFlag->name(),
+                "Replacing entry: %s\n", victim->print());
+        }
+
         invalidate(victim);
 
         return victim;
@@ -248,6 +263,12 @@ class AssociativeCache : public Named
     virtual void
     insertEntry(const KeyType &key, Entry *entry)
     {
+        if (debugFlag && debugFlag->tracing()) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), debugFlag->name(),
+                "Inserting entry: %s\n", entry->print());
+        }
+
         entry->insert(key);
         replPolicy->reset(entry->replacementData);
     }
