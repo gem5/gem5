@@ -562,6 +562,33 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     }
 }
 
+bool
+Sequencer::processReadCallback(SequencerRequest &seq_req,
+                               DataBlock& data,
+                               const bool ruby_request,
+                               bool externalHit,
+                               const MachineType mach,
+                               Cycles initialRequestTime,
+                               Cycles forwardRequestTime,
+                               Cycles firstResponseTime)
+{
+    if (ruby_request) {
+        assert((seq_req.m_type == RubyRequestType_LD) ||
+               (seq_req.m_type == RubyRequestType_Load_Linked) ||
+               (seq_req.m_type == RubyRequestType_IFETCH));
+    }
+    if ((seq_req.m_type != RubyRequestType_LD) &&
+        (seq_req.m_type != RubyRequestType_Load_Linked) &&
+        (seq_req.m_type != RubyRequestType_IFETCH) &&
+        (seq_req.m_type != RubyRequestType_REPLACEMENT)) {
+        // Write request: reissue request to the cache hierarchy
+        issueRequest(seq_req.pkt, seq_req.m_second_type);
+        return true;
+    }
+    return false;
+
+}
+
 void
 Sequencer::readCallback(Addr address, DataBlock& data,
                         bool externalHit, const MachineType mach,
@@ -583,17 +610,9 @@ Sequencer::readCallback(Addr address, DataBlock& data,
     bool ruby_request = true;
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
-        if (ruby_request) {
-            assert((seq_req.m_type == RubyRequestType_LD) ||
-                   (seq_req.m_type == RubyRequestType_Load_Linked) ||
-                   (seq_req.m_type == RubyRequestType_IFETCH));
-        }
-        if ((seq_req.m_type != RubyRequestType_LD) &&
-            (seq_req.m_type != RubyRequestType_Load_Linked) &&
-            (seq_req.m_type != RubyRequestType_IFETCH) &&
-            (seq_req.m_type != RubyRequestType_REPLACEMENT)) {
-            // Write request: reissue request to the cache hierarchy
-            issueRequest(seq_req.pkt, seq_req.m_second_type);
+        if (processReadCallback(seq_req, data, ruby_request, externalHit, mach,
+                                initialRequestTime, forwardRequestTime,
+                                firstResponseTime)) {
             break;
         }
         if (ruby_request) {
@@ -983,6 +1002,8 @@ Sequencer::makeRequest(PacketPtr pkt)
 
         }
 #endif
+    } else if (pkt->req->hasNoAddr()) {
+        primary_type = secondary_type = RubyRequestType_hasNoAddr;
     } else {
         //
         // To support SwapReq, we need to check isWrite() first: a SwapReq

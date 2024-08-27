@@ -295,6 +295,14 @@ parser.add_argument(
     help="Latency for scalar responses from ruby to the cu.",
 )
 
+parser.add_argument(
+    "--memtime-latency",
+    type=int,
+    # Set to a default of 41 from micro-benchmarks
+    default=41,
+    help="Latency for memtimes in scalar memory pipeline.",
+)
+
 parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth for TLBs")
 parser.add_argument(
     "--pf-type",
@@ -539,6 +547,7 @@ for i in range(n_cu):
             mem_resp_latency=args.mem_resp_latency,
             scalar_mem_req_latency=args.scalar_mem_req_latency,
             scalar_mem_resp_latency=args.scalar_mem_resp_latency,
+            memtime_latency=args.memtime_latency,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,

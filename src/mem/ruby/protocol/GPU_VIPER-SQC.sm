@@ -243,12 +243,17 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         Entry cache_entry := getCacheEntry(in_msg.LineAddress);
-        TBE tbe := TBEs.lookup(in_msg.LineAddress);
-        DPRINTF(RubySlicc, "%s\n", in_msg);
-        if (in_msg.Type == RubyRequestType:REPLACEMENT) {
-          trigger(Event:Evict, in_msg.LineAddress, cache_entry, tbe);
+        if (in_msg.Type == RubyRequestType:hasNoAddr) {
+          sequencer.readCallback(in_msg.LineAddress, cache_entry.DataBlk, true, MachineType:L1Cache);
+          mandatoryQueue_in.dequeue(clockEdge());
         } else {
-          trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
+          TBE tbe := TBEs.lookup(in_msg.LineAddress);
+          DPRINTF(RubySlicc, "%s\n", in_msg);
+          if (in_msg.Type == RubyRequestType:REPLACEMENT) {
+            trigger(Event:Evict, in_msg.LineAddress, cache_entry, tbe);
+          } else {
+            trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
+          }
         }
       }
     }

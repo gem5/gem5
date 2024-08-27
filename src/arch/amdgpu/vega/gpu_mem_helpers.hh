@@ -204,11 +204,17 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
      * than the address of the first byte then we have a misaligned
      * access.
      */
-    bool misaligned_acc = split_addr > vaddr;
+    bool misaligned_acc = split_addr > vaddr &&
+      !gpuDynInst->staticInstruction()->hasNoAddr();
 
-    RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
-                                 gpuDynInst->computeUnit()->requestorId(), 0,
-                                 gpuDynInst->wfDynId);
+    Request::Flags flags;
+    if (gpuDynInst->staticInstruction()->hasNoAddr()) {
+        flags.set(Request::HAS_NO_ADDR);
+    }
+    RequestPtr req = std::make_shared<Request>(
+        vaddr, req_size, std::move(flags),
+        gpuDynInst->computeUnit()->requestorId(), 0,
+        gpuDynInst->wfDynId);
 
     if (misaligned_acc) {
         RequestPtr req1, req2;

@@ -254,7 +254,7 @@ class SQCCntrl(SQC_Controller, CntrlBase):
         self.L1cache.create(options)
         self.L1cache.resourceStalls = options.no_resource_stalls
 
-        self.sequencer = RubySequencer()
+        self.sequencer = VIPERSequencer()
 
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache

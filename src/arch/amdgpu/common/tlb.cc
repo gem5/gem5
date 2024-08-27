@@ -379,7 +379,11 @@ namespace X86ISA
 
         assert(seg != segment_idx::Ms);
         Addr vaddr = req->getVaddr();
-        DPRINTF(GPUTLB, "TLB Lookup for vaddr %#x.\n", vaddr);
+        if (req->hasNoAddr()) {
+            return true;
+        } else {
+            DPRINTF(GPUTLB, "TLB Lookup for vaddr %#x.\n", vaddr);
+        }
         HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
         if (m5Reg.prot) {
@@ -693,13 +697,19 @@ namespace X86ISA
         if (success) {
             lookup_outcome = TLB_HIT;
             // Put the entry in SenderState
-            TlbEntry *entry = lookup(tmp_req->getVaddr(), false);
-            assert(entry);
-
             auto p = sender_state->tc->getProcessPtr();
-            sender_state->tlbEntry =
-                new TlbEntry(p->pid(), entry->vaddr, entry->paddr,
-                             false, false);
+            if (pkt->req->hasNoAddr()) {
+                sender_state->tlbEntry =
+                    new TlbEntry(p->pid(), 0, 0,
+                                 false, false);
+            } else {
+                TlbEntry *entry = lookup(tmp_req->getVaddr(), false);
+                assert(entry);
+
+                sender_state->tlbEntry =
+                    new TlbEntry(p->pid(), entry->vaddr, entry->paddr,
+                                 false, false);
+            }
 
             if (update_stats) {
                 // the reqCnt has an entry per level, so its size tells us
