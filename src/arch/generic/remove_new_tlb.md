@@ -1,4 +1,4 @@
-**INSERT FUNCTION**
+**REMOVE FUNCTION**
 -
 
 **Inputs**:
