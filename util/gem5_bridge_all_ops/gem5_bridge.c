@@ -97,7 +97,7 @@ static char *gem5_bridge_parse_ints(int numargs, char *buff, uint64_t *outargs)
         do {
             if (!bufp[0]) /* End of buffer */
                 break;
-            tok = strsep(&bufp, " ");
+            tok = strsep(&bufp, " \t\n");
         } while (!tok[0]); /* Skip long chains of whitespace */
         if (kstrtou64(tok, 10, &outargs[i]) < 0) {
             pr_err("%s: failed parsing int from \"%s\"\n", __func__, tok);
@@ -109,14 +109,27 @@ static char *gem5_bridge_parse_ints(int numargs, char *buff, uint64_t *outargs)
     return bufp;
 }
 
-/* Kernel may have been built for 32-bit addresses, in which case we
- * do not have access to `ioread64`. However, we know that this MMIO
- * access will reach KVM and it will expect a 64-bit request so we
- * just force it explicitly here. */
+/* We want to directly do a 64-bit read to our calculated memory address.
+ * There is an ioread64() function, but this would both taint the register
+ * state and may be disabled since KVM configuration tends to have 32-bit
+ * addresses, which prevents ioread64() from being available in the kernel
+ * headers. */
 #define POKE \
     *(volatile u64 __force *)(gem5_bridge_mmio + (gem5_bridge_nextop << 8))
 
-static void gem5_bridge_poke_int(int a) {
+/* Necessary macro to ensure argument loading is not elided by the compiler
+ * while also doing best effort to not taint the argument registers. */
+#define UNUSED(_type, _var)                                          \
+do {                                                                 \
+    volatile _type dummy = _var; /* Ensure argument is not elided */ \
+    (void)dummy;                 /* Silence unused var warnings */   \
+} while (0)
+
+/* `noinline` and `UNUSED` macros required to ensure that calling convention
+ * is invoked predictably. This enables gem5 to consistently extract arguments
+ * from the thread context. */
+static void noinline gem5_bridge_poke_int(u64 a) {
+    UNUSED(u64, a);
     POKE;
 }
 
