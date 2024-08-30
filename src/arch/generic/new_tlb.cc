@@ -3,14 +3,17 @@
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
-// set_associative implementation
+// indexing policy - in process of development  
 #include "mem/cache/tags/indexing_policies/tlb_set_assocative.hh"
 
-// lru_rp
+// replacement policy - preexisting
 #include "mem/cache/replacement_policies/lru_rp.hh"
 
 
 namespace gem5 {
+
+// Constructor 
+// this will probably use some TLB initialization stuff
 
 /** Lookup
  * @AC: findEntry(const Addr addr)
@@ -58,7 +61,9 @@ virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU)
  */
 void remove(Addr vpn, auto id) {
 
-    this->_cache.invalidate(findEntry(addr));
+    Addr key = vpn | id;
+    this->_cache.invalidate(findEntry(key));
+
 }
 
 /** FlushAll
@@ -71,41 +76,42 @@ void flushAll() {
     this->_cache.clear()
 }
 
------
-
-/** Insert
- * insert entry, sets the parameters of the accordingly
- * calculates stats
- * returns an entry
- *
- * @TBD:
- * @AC: insertEntry(const Addr addr, Entry *entry),
- * @params: key | mode (for stats) | hidden (to know whether to update LRU)
- * @result: returns the new entry
- *
+/** evictLRU
+ * clears the least recently used within a set
+ * @AC: findVictim(), invalidate()
+ * @params: addr - this is the set index IF the TLB is not fully associative
+ * @result: none
  */
+void evictLRU(Addr addr) {
 
-virtual TlbEntry * insert(Addr lookup_key, const TlbEntry &entry, Addr insert_key) {
+    TLBEntry * entry = this->_cache.findVictim(addr);
+    this->_cache.invalidate(entry);
+
+}
+
+// pseudo
+virtual TlbEntry * insert(Addr vpn, auto id, const TlbEntry &entry) {
     // LOOKUP
     // CHECK IF EXISTS
     // CHECK IF FULL - evict LRU
     // SET NEW ENTRY
-    // FULL SYSTEM
+    // FULL SYSTEM or
     return newEntry;
 }
 
 
-void evictLRU(---)
-    // AssociativeCachefindVictim(const Addr addr)
-    // plus a few more functions
-
-void demapPage(---)
-
 // virtual Fault translate()
 // check permissions
 virtual Fault TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
-virtual Fault TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+// has isCacheClean checks
+
+
+
+
+// this can be made regular - it still has the isCacheClean stuff in x86,
+// however, its not impossible to recreate it!
 virtual Fault TLB::translateTiming(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+
 
 
 // Serialization
@@ -113,8 +119,14 @@ void serialize(---)
 void unserialize(---)
 
 
+// keep this virtual
+// keep translate virtual
+void demapPage(---)
+virtual Fault TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+
+
 // Statistics
-TLB::TlbStats::TlbStats(statistics::Group *parent)
+TLB::TlbStats::TlbStats(statistics::Group *parent
   : statistics::Group(parent),
     ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
     ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),

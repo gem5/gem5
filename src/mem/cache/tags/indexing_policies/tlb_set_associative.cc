@@ -9,27 +9,44 @@ TLBSetAssociative::TLBSetAssociative(const Params &p)
     : BaseIndexingPolicy(p)
 {
 }
-// added function - this gets the
+// added function - this gets the vpn from the virtual address
 Addr TLBSetAssociative::getVPNfromVA(const Addr addr) const
 {
     return (addr >> pageOffset) & vpnMask;
 }
 
+// override from BaseIndexingPolicy because tag uses
+// two variables and this is the easiest solution
 Addr extractTag(const Addr addr) override const
 {
     return addr;
 }
 
-uint32_t
-SetAssociative::extractSet(const Addr addr) const
+// function is not used often because we want to have the option for 
+// TLB to not be fully associative, even though most times it will
+// be fully associative 
+auto 
+TLBSetAssociative::extractSet(const Addr addr) const
 {
     return (addr >> setShift) & setMask;
 }
 
 std::vector<ReplaceableEntry*>
-SetAssociative::getPossibleEntries(const Addr addr) const
-{
-    return sets[extractSet(addr)];
+TLBSetAssociative::getPossibleEntries(const Addr addr) const
+{ 
+    if (num_entries == associativity) {
+	    
+       std::vector<ReplaceableEntry*> entries;
+       for (int i = 0; i < num_entries; i++) {
+		entries.append(sets[i][0]);
+       }
+       return entries;
+
+    } else {
+
+       return sets[extractSet(addr)];
+
+    }
 }
 
 } // namespace gem5
