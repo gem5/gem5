@@ -50,6 +50,7 @@ from common import (
     FileSystemConfig,
     GPUTLBConfig,
     GPUTLBOptions,
+    ObjectList,
     Options,
     Simulation,
 )
@@ -393,6 +394,7 @@ parser.add_argument(
     "--tcp-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for tcp",
 )
 
@@ -400,6 +402,7 @@ parser.add_argument(
     "--tcc-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for tcc",
 )
 
@@ -408,6 +411,7 @@ parser.add_argument(
     "--sqc-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for sqc",
 )
 
