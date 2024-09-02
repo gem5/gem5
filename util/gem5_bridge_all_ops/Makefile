@@ -1,8 +1,10 @@
-DRIVER := gem5_bridge
-GROUP  := gem5
+DRIVER  := gem5_bridge
+SOURCES := gem5_bridge gem5_ops
+GROUP   := gem5
 
 ifneq ($(KERNELRELEASE),)
-obj-m += $(DRIVER).o
+obj-m := $(DRIVER).o
+$(DRIVER)-objs := $(addprefix ./src/,$(addsuffix .o,$(SOURCES)))
 
 # Build Parameters:
 # - GEM5OPS_BASE : base physical address of gem5ops MMIO range

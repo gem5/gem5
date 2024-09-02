@@ -6,37 +6,13 @@
 #include <linux/io.h>
 #include <linux/kdev_t.h>
 #include <linux/kernel.h>
-#include <linux/kstrtox.h>
 #include <linux/mm.h>
 #include <linux/module.h>
-#include <linux/string.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
 
-/* ========================================================================= *
- * gem5_bridge Device Configuration
- * ========================================================================= */
-
-struct gem5_bridge_dev_config
-{
-    /* @TODO: Still needs required fields for functionality */
-    const char *name;
-    u8 opcode;
-    int num_args;
-};
-static struct gem5_bridge_dev_config config_list[] = {
-    { .name = "bridge" /* bridge has no config, can only mmap */ },
-    { .name = "exit", .opcode=0x21, .num_args = 1 },
-};
-enum gem5_bridge_op
-{
-    /* Op enum values must match connected device indices in `config_list` */
-    GEM5_EXIT = 1,
-};
-
-/* Just helpful for printing */
-#define PATH "/dev/gem5/"
-
+#include "gem5_bridge.h"
+#include "gem5_ops.h"
 
 /* ========================================================================= *
  * Constants
@@ -45,93 +21,28 @@ enum gem5_bridge_op
 /* Device information */
 #define DEV_NAME "gem5_bridge"
 #define DEV_MODE ((umode_t)0666) /* All users have RW access to this device */
-#define DEV_COUNT ARRAY_SIZE(config_list)
+#define DEV_COUNT op_count /* Comes from size of op_list */
 
-/* Physical address for base of gem5ops MMIO range */
-#ifndef GEM5OPS_BASE
-#define GEM5OPS_BASE 0xffff0000 /* default, also used for x86 */
-#endif
-
-/* Size of gem5ops MMIO range */
-#ifndef GEM5OPS_SIZE
-#define GEM5OPS_SIZE 0x10000
-#endif
+/* Just helpful for printing */
+#define PATH "/dev/gem5/"
 
 
 /* ========================================================================= *
- * Global Variables
+ * Exported Variables
  * ========================================================================= */
 
 /* gem5 bridge */
-static void __iomem *gem5_bridge_mmio;
-static u16 gem5_bridge_nextop;
+void __iomem *gem5_bridge_mmio;
+
+
+/* ========================================================================= *
+ * Local Variables
+ * ========================================================================= */
 
 /* Device information */
 static dev_t dev_number;
 static struct class *dev_class;
-static struct cdev cdev_list[DEV_COUNT];
-
-
-/* ========================================================================= *
- * Utility
- * ========================================================================= */
-
-static int gem5_bridge_search(const char *dev_name) {
-    int i;
-    for (i = 0; i < DEV_COUNT; ++i) {
-        if (!strcmp(dev_name, config_list[i].name)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-/* Returns a pointer to the first buffer position after the parsed ints,
- * or NULL on error */
-static char *gem5_bridge_parse_ints(int numargs, char *buff, uint64_t *outargs)
-{
-    int i;
-    char *bufp = buff; /* Need a local pointer that can be modified */
-    char *tok;
-    for (i = 0; i < numargs; ++i) {
-        do {
-            if (!bufp[0]) /* End of buffer */
-                break;
-            tok = strsep(&bufp, " \t\n");
-        } while (!tok[0]); /* Skip long chains of whitespace */
-        if (kstrtou64(tok, 10, &outargs[i]) < 0) {
-            pr_err("%s: failed parsing int from \"%s\"\n", __func__, tok);
-            return NULL;
-        }
-    }
-    if (i < numargs)
-        return NULL;
-    return bufp;
-}
-
-/* We want to directly do a 64-bit read to our calculated memory address.
- * There is an ioread64() function, but this would both taint the register
- * state and may be disabled since KVM configuration tends to have 32-bit
- * addresses, which prevents ioread64() from being available in the kernel
- * headers. */
-#define POKE \
-    *(volatile u64 __force *)(gem5_bridge_mmio + (gem5_bridge_nextop << 8))
-
-/* Necessary macro to ensure argument loading is not elided by the compiler
- * while also doing best effort to not taint the argument registers. */
-#define UNUSED(_type, _var)                                          \
-do {                                                                 \
-    volatile _type dummy = _var; /* Ensure argument is not elided */ \
-    (void)dummy;                 /* Silence unused var warnings */   \
-} while (0)
-
-/* `noinline` and `UNUSED` macros required to ensure that calling convention
- * is invoked predictably. This enables gem5 to consistently extract arguments
- * from the thread context. */
-static void noinline gem5_bridge_poke_int(u64 a) {
-    UNUSED(u64, a);
-    POKE;
-}
+static struct cdev *cdev_list;
 
 
 /* ========================================================================= *
@@ -155,21 +66,21 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
     unsigned long vm_size = vma->vm_end - vma->vm_start + vma->vm_pgoff;
     unsigned long gem5_bridge_pfn = GEM5OPS_BASE >> PAGE_SHIFT;
     const char *file_name = filp->f_path.dentry->d_iname;
-    int dev_i = gem5_bridge_search(file_name);
+    struct gem5_op *op = gem5_op_search(file_name);
 
-    if (dev_i < 0) {
+    if (vm_size > GEM5OPS_SIZE) {
+        pr_err("%s: requested memory range is too large\n", __func__);
+        return -EINVAL;
+    }
+
+    if (!op) {
         pr_err("%s: unsupported device node "PATH"%s\n", __func__, file_name);
         return -EINVAL;
     }
 
-    if (dev_i != 0) {
-        pr_err("%s: mmap unsupported for "PATH"%s, only works with /dev/%s\n",
-                __func__, config_list[dev_i].name, config_list[0].name);
-        return -EINVAL;
-    }
-
-    if (vm_size > GEM5OPS_SIZE) {
-        pr_err("%s: requested memory range is too large\n", __func__);
+    /* Hard-coded check for bridge device, no other device can mmap */
+    if (op != &op_list[0]) {
+        pr_err("%s: mmap unsupported for "PATH"%s\n", __func__, op->name);
         return -EINVAL;
     }
 
@@ -185,23 +96,14 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
     return 0;
 }
 
-/* This function is disabled, but still included to show how one can directly
- * cause this driver to trigger MMIO traps. Included so far is the ability to
- * detect when "exit" has been written to the device node and, once detected,
- * a memory request is made to the address that gem5 will detect as an m5exit
- * operation. Currently, there is no implementation of the m5op arguments which
- * prevents this from being functional in this state as the delay argument will
- * be undefined and could cause the simulation to crash. */
-#define WRITE_BUFF_SIZE 1024
+#define WRITE_BUFF_SIZE 4096
 static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
                                     size_t count, loff_t *offp)
 {
     static char kbuff[WRITE_BUFF_SIZE];
-    static u64 intargs[2];
-    char *kbufp = kbuff;
 
     const char *file_name = filp->f_path.dentry->d_iname;
-    int dev_i = gem5_bridge_search(file_name);
+    struct gem5_op *op = gem5_op_search(file_name);
 
     if (count >= WRITE_BUFF_SIZE) {
         pr_err("%s: write content reaches or exceeds buffer size of %d\n",
@@ -214,21 +116,18 @@ static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
         return -EINVAL; /* @TODO: find better error code */
     }
 
-    if (dev_i < 0) {
+    if (!op) {
         pr_err("%s: unsupported device node "PATH"%s\n", __func__, file_name);
         return -EINVAL;
     }
 
-    switch ((enum gem5_bridge_op)dev_i) {
-    case GEM5_EXIT:
-        kbufp = gem5_bridge_parse_ints(1, kbufp, intargs);
-        pr_info("%s: op=exit, args=%llu\n", __func__, intargs[0]);
-        gem5_bridge_nextop = config_list[dev_i].opcode;
-        gem5_bridge_poke_int(intargs[0]);
-        break;
-    default:
-        pr_err("%s: write unsupported for "PATH"%s",
-                __func__, config_list[dev_i].name);
+    if (!op->write) {
+        pr_err("%s: write unsupported for "PATH"%s\n", __func__, op->name);
+        return -EINVAL;
+    }
+
+    if (op->write(op, kbuff) < 0) {
+        pr_err("%s: write failed for "PATH"%s\n", __func__, op->name);
         return -EINVAL;
     }
 
@@ -291,6 +190,7 @@ static int __init gem5_bridge_init(void)
     dev_class->dev_uevent = gem5_bridge_uevent;
 
     /* Create all character devices */
+    cdev_list = kvcalloc(DEV_COUNT, sizeof(struct cdev), GFP_KERNEL);
     for (cdev_i = 0; cdev_i < DEV_COUNT; ++cdev_i) {
         /* Create cdev struct for this device */
         cdev_number = MKDEV(MAJOR(dev_number), cdev_i);
@@ -298,16 +198,16 @@ static int __init gem5_bridge_init(void)
         error = cdev_add(&cdev_list[cdev_i], cdev_number, 1);
         if (error < 0) {
             pr_err("%s: failed to init/add character device: %s\n",
-                    __func__, config_list[cdev_i].name);
+                    __func__, op_list[cdev_i].name);
             goto error_cdev_add;
         }
 
         /* Create device */
         devp = device_create(dev_class, NULL, cdev_number, NULL,
-                             "gem5/%s", config_list[cdev_i].name);
+                             "gem5/%s", op_list[cdev_i].name);
         if (IS_ERR(devp)) {
             pr_err("%s: failed to create device: %s\n",
-                    __func__, config_list[cdev_i].name);
+                    __func__, op_list[cdev_i].name);
             goto error_device_create;
         }
     }
@@ -325,6 +225,7 @@ error_cdev_add:
         device_destroy(dev_class, cdev_number);
         cdev_del(&cdev_list[cdev_i]);
     }
+    kvfree(cdev_list);
     class_destroy(dev_class);
 error_class_create:
     unregister_chrdev_region(dev_number, DEV_COUNT);
@@ -345,6 +246,7 @@ static void __exit gem5_bridge_exit(void)
         device_destroy(dev_class, cdev_number);
         cdev_del(&cdev_list[cdev_i]);
     }
+    kvfree(cdev_list);
     class_destroy(dev_class);
     unregister_chrdev_region(dev_number, DEV_COUNT);
     iounmap(gem5_bridge_mmio);
@@ -356,4 +258,4 @@ module_exit(gem5_bridge_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Noah Krim");
-MODULE_DESCRIPTION("Diver that provides user-space mapping to MMIO range");
+MODULE_DESCRIPTION("Driver that facilitates gem5 op calls via MMIO accesses");
