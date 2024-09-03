@@ -73,15 +73,10 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
         return -EINVAL;
     }
 
-    if (!op) {
-        pr_err("%s: unsupported device node "PATH"%s\n", __func__, file_name);
-        return -EINVAL;
-    }
-
     /* Hard-coded check for bridge device, no other device can mmap */
-    if (op != &op_list[0]) {
+    if (!op || op != &op_list[0]) {
         pr_err("%s: mmap unsupported for "PATH"%s\n", __func__, op->name);
-        return -EINVAL;
+        return -ENOTTY;
     }
 
     /* Map the virtual memory area to our gem5 ops MMIO range */
@@ -96,43 +91,88 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
     return 0;
 }
 
-#define WRITE_BUFF_SIZE 4096
-static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
-                                    size_t count, loff_t *offp)
+static ssize_t gem5_bridge_read(struct file *filp, char *ubuff,
+                                    size_t len, loff_t *offp)
 {
-    static char kbuff[WRITE_BUFF_SIZE];
-
+    ssize_t result;
+    char *kbuff;
     const char *file_name = filp->f_path.dentry->d_iname;
     struct gem5_op *op = gem5_op_search(file_name);
 
-    if (count >= WRITE_BUFF_SIZE) {
-        pr_err("%s: write content reaches or exceeds buffer size of %d\n",
-                __func__, WRITE_BUFF_SIZE);
+    /* Allocate kernel buffer */
+    kbuff = kvmalloc(len, GFP_KERNEL);
+    if (!kbuff) {
+        pr_err("%s: unable to allocate kernel buffer\n", __func__);
+        return -ENOMEM;
+    }
+
+    /* Check that the device is valid and its op has read functionality */
+    if (!op || !op->read) {
+        pr_err("%s: read unsupported for "PATH"%s\n", __func__, op->name);
+        kvfree(kbuff);
+        return -ENOTTY;
+    }
+
+    /* Run this op's read function */
+    result = op->read(op, kbuff, len, offp);
+    if (result < 0) {
+        pr_err("%s: read failed for "PATH"%s\n", __func__, op->name);
+        kvfree(kbuff);
         return -EINVAL;
     }
 
-    if (copy_from_user(kbuff, ubuff, count) > 0) {
-        pr_err("%s: unknown error when copying user buffer\n", __func__);
-        return -EINVAL; /* @TODO: find better error code */
+    /* Copy kernel buffer to user buffer */
+    if (copy_to_user(ubuff, kbuff, result) != 0) {
+        pr_err("%s: unable to copy kernel buffer to user buffer\n", __func__);
+        kvfree(kbuff);
+        return -EFAULT;
     }
 
-    if (!op) {
-        pr_err("%s: unsupported device node "PATH"%s\n", __func__, file_name);
-        return -EINVAL;
+    pr_info("%s: SUCCESS! (result=%lu)\n", __func__, result);
+    kvfree(kbuff);
+    return result;
+}
+
+static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
+                                    size_t len, loff_t *offp)
+{
+    ssize_t result;
+    char *kbuff;
+    const char *file_name = filp->f_path.dentry->d_iname;
+    struct gem5_op *op = gem5_op_search(file_name);
+
+    /* Allocate kernel buffer */
+    kbuff = kvmalloc(len, GFP_KERNEL);
+    if (!kbuff) {
+        pr_err("%s: unable to allocate kernel buffer\n", __func__);
+        return -ENOMEM;
     }
 
-    if (!op->write) {
+    /* Copy user buffer to kernel buffer */
+    if (copy_from_user(kbuff, ubuff, len) != 0) {
+        pr_err("%s: unable to copy user buffer to kernel buffer\n", __func__);
+        kvfree(kbuff);
+        return -EFAULT;
+    }
+
+    /* Check that the device is valid and its op has write functionality */
+    if (!op || !op->write) {
         pr_err("%s: write unsupported for "PATH"%s\n", __func__, op->name);
-        return -EINVAL;
+        kvfree(kbuff);
+        return -ENOTTY;
     }
 
-    if (op->write(op, kbuff) < 0) {
+    /* Run this op's write function */
+    result = op->write(op, kbuff, len, offp);
+    if (result < 0) {
         pr_err("%s: write failed for "PATH"%s\n", __func__, op->name);
+        kvfree(kbuff);
         return -EINVAL;
     }
 
-    pr_info("%s: SUCCESS!\n", __func__);
-    return count;
+    pr_info("%s: SUCCESS! (result=%lu)\n", __func__, result);
+    kvfree(kbuff);
+    return result;
 }
 
 static struct file_operations gem5_bridge_fops = {
@@ -140,6 +180,7 @@ static struct file_operations gem5_bridge_fops = {
     .open       = gem5_bridge_open,
     .release    = gem5_bridge_release,
     .mmap       = gem5_bridge_mmap,
+    .read       = gem5_bridge_read,
     .write      = gem5_bridge_write,
 };
 
@@ -191,6 +232,10 @@ static int __init gem5_bridge_init(void)
 
     /* Create all character devices */
     cdev_list = kvcalloc(DEV_COUNT, sizeof(struct cdev), GFP_KERNEL);
+    if (!cdev_list) {
+        pr_err("%s: failed to allocate cdev list\n", __func__);
+        goto error_cdev_list_kvcalloc;
+    }
     for (cdev_i = 0; cdev_i < DEV_COUNT; ++cdev_i) {
         /* Create cdev struct for this device */
         cdev_number = MKDEV(MAJOR(dev_number), cdev_i);
@@ -226,6 +271,7 @@ error_cdev_add:
         cdev_del(&cdev_list[cdev_i]);
     }
     kvfree(cdev_list);
+error_cdev_list_kvcalloc:
     class_destroy(dev_class);
 error_class_create:
     unregister_chrdev_region(dev_number, DEV_COUNT);

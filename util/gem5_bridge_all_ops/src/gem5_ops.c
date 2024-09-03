@@ -10,9 +10,10 @@
  * Op Function Forward Declarations
  * ========================================================================= */
 
-// static int read_file(struct gem5_op *op, char *buff);
-// static int write_file(struct gem5_op *op, char *buff);
-static int op_args_int(struct gem5_op *op, char *buff);
+static ssize_t read_file(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off);
+static ssize_t op_int(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off);
 
 
 /* ========================================================================= *
@@ -22,12 +23,11 @@ static int op_args_int(struct gem5_op *op, char *buff);
 struct gem5_op op_list[] =
 {
     /* Always keep "bridge" as first op */
-    { .name = "bridge",    /* no opcode */ /* hard-coded mmap */ },
+    { .name = "bridge", /* no opcode */ /* hard-coded mmap */ },
 
-    { .name = "exit",      .opcode = 0x21, .write = op_args_int },
+    { .name = "exit",           .opcode = 0x21, .write = op_int },
 
-//    { .name = "writefile", .opcode = 0x4F, .read  = read_file },
-//    { .name = "readfile",  .opcode = 0x50, .read  = read_file },
+    { .name = "readfile",       .opcode = 0x50, .read = read_file },
 };
 const int op_count = ARRAY_SIZE(op_list);
 
@@ -86,10 +86,10 @@ static int parse_arg_int(char **bufp, u64 *outint)
     return 0;
 }
 
-/* We want to directly do a 64-bit read to our calculated memory address.
- * There is an ioread64() function, but this would both taint the register
+/* We want to directly do a 64-bit write to our calculated memory address.
+ * There is an iowrite64() function, but this would both taint the register
  * state and may be disabled since KVM configuration tends to have 32-bit
- * addresses, which prevents ioread64() from being available in the kernel
+ * addresses, which prevents iowrite64() from being available in the kernel
  * headers. */
 static u16 poke_opcode; /* Global variable for setting poke target */
 #define POKE \
@@ -97,40 +97,119 @@ static u16 poke_opcode; /* Global variable for setting poke target */
 
 /* Necessary macro to ensure argument loading is not elided by the compiler
  * while also doing best effort to not taint the argument registers. */
-#define UNUSED(_type, _var)                                          \
+#define USED_INT(_var)                                             \
+do {                                                               \
+    volatile u64 dummy = _var; /* Ensure argument is not elided */ \
+    (void)dummy;               /* Silence unused var warnings */   \
+} while (0)
+#define USED_STR(_var)                                               \
 do {                                                                 \
-    volatile _type dummy = _var; /* Ensure argument is not elided */ \
+    char *volatile dummy = _var; /* Ensure argument is not elided */ \
     (void)dummy;                 /* Silence unused var warnings */   \
+} while (0)
+
+/* Assembly fragment to explicitly return the value placed in the result
+ * register by gem5 while executing the op. */
+u64 __retval; /* Dummy var for storing op result from assembly */
+#if defined(__x86_64__)
+    #define ASM_RETVAL asm("movq %%rax, %0" : "=r" (__retval) :: "%rax")
+#elif defined(__aarch64__)
+    #define ASM_RETVAL asm("mov %0, x0" : "=r" (__retval) :: "x0")
+#else
+    #define ASM_RETVAL pr_err("%s: unsupported architecture\n", __func__)
+#endif
+#define RET          \
+do {                 \
+    ASM_RETVAL;      \
+    return __retval; \
 } while (0)
 
 
 /* ========================================================================= *
- * Op Function Definitions
+ * MMIO Poking Functions
  * ========================================================================= */
 
-static noinline void poke_int(u64 a)
+/*
+static noinline u64 poke_nil(void)
 {
-    UNUSED(u64, a);
-    POKE;
+    POKE; RET;
 }
-static int op_args_int(struct gem5_op *op, char *buff)
-{
-    u64 arg0;
-    int err = 0;
-    err |= parse_arg_int(&buff, &arg0);
+*/
 
-    if (err) {
-        pr_err("%s: failed parsing args, expected the form \"%s\"\n",
-                __func__, "<int>");
-        return -EINVAL;
-    }
+static noinline u64 poke_int(u64 a)
+{
+    USED_INT(a);
+    POKE; RET;
+}
+
+/*
+static noinline u64 poke_int_int(u64 a, u64 b)
+{
+    USED_INT(a); USED_INT(b);
+    POKE; RET;
+}
+*/
+
+static noinline u64 poke_str_int_int(char *a, u64 b, u64 c)
+{
+    USED_STR(a); USED_INT(b); USED_INT(c);
+    POKE; RET;
+}
+
+
+/* ========================================================================= *
+ * Op Function Definitions - Specialized
+ * ========================================================================= */
+
+static ssize_t read_file(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off)
+{
+    ssize_t bytes_read = 0;
 
     poke_opcode = op->opcode;
-    poke_int(arg0);
+    bytes_read = poke_str_int_int(buff, len, *off);
 
-    pr_info("%s: SUCCESS!\n", __func__);
-    return 0;
+    if (bytes_read > 0)
+        *off += bytes_read;
+    return bytes_read;
 }
+
+
+/* ========================================================================= *
+ * Op Function Definitions - General
+ * ========================================================================= */
+
+#define OP_ARG_ERR(_err, _argfmt)                                     \
+    if (_err) {                                                       \
+        pr_err("%s: failed parsing args, expected the form \"%s\"\n", \
+                __func__, _argfmt);                                   \
+        return -EINVAL;                                               \
+    }
+
+static ssize_t op_int(struct gem5_op *op, char *buff, size_t len, loff_t *off)
+{
+    u64 arg0;
+    int err = parse_arg_int(&buff, &arg0);
+    OP_ARG_ERR(err, "<int>");
+
+    poke_opcode = op->opcode;
+    (void)poke_int(arg0);
+    return len; /* unconditionally consume entire input */
+}
+/*
+static ssize_t op_int_int(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off)
+{
+    u64 arg0, arg1;
+    int err = parse_arg_int(&buff, &arg0)
+            | parse_arg_int(&buff, &arg1);
+    OP_ARG_ERR(err, "<int> <int>");
+
+    poke_opcode = op->opcode;
+    (void)poke_int_int(arg0, arg1);
+    return len;
+}
+*/
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Noah Krim");

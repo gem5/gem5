@@ -5,8 +5,10 @@
 
 /* Types for op function pointers */
 struct gem5_op; /* Forward decl */
-typedef int (*read_f)(struct gem5_op *op, char *kbuff);
-typedef int (*write_f)(struct gem5_op *op, char *kbuff);
+typedef ssize_t (*read_f)(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off);
+typedef ssize_t (*write_f)(struct gem5_op *op, char *buff, size_t len,
+                            loff_t *off);
 
 /* Op configuration struct */
 struct gem5_op
