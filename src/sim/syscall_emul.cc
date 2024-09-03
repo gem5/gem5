@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ *
+ * The license below extends only to copyright in the software and
+ * shall not be construed as granting a license to any other
+ * intellectual property including but not limited to intellectual
+ * property relating to a hardware implementation of the
+ * functionality of the software licensed hereunder.  You may use the
+ * software subject to the license terms below provided that you
+ * ensure that this notice is replicated unmodified and in its
+ * entirety in all distributions of the software, modified or
+ * unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -277,7 +289,7 @@ brkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> new_brk)
 }
 
 SyscallReturn
-setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc, uint64_t tidPtr)
+setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> tidPtr)
 {
     auto process = tc->getProcessPtr();
 
@@ -292,26 +304,10 @@ closeFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd)
     return p->fds->closeFDEntry(tgt_fd);
 }
 
-SyscallReturn
-lseekFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, uint64_t offs, int whence)
-{
-    auto p = tc->getProcessPtr();
-
-    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
-    if (!ffdp)
-        return -EBADF;
-    int sim_fd = ffdp->getSimFD();
-
-    off_t result = lseek(sim_fd, offs, whence);
-
-    return (result == (off_t)-1) ? -errno : result;
-}
-
 
 SyscallReturn
 _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, uint64_t offset_high, uint32_t offset_low,
+            int tgt_fd, uint32_t offset_high, uint32_t offset_low,
             VPtr<> result_ptr, int whence)
 {
     auto p = tc->getProcessPtr();
@@ -321,7 +317,7 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
         return -EBADF;
     int sim_fd = ffdp->getSimFD();
 
-    uint64_t offset = (offset_high << 32) | offset_low;
+    uint64_t offset = ((uint64_t) offset_high << 32) | offset_low;
 
     uint64_t result = lseek(sim_fd, offset, whence);
     result = htog(result, tc->getSystemPtr()->getGuestByteOrder());
@@ -346,36 +342,6 @@ gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
     strncpy((char *)name.bufferPtr(), hostname, name_len);
     name.copyOut(SETranslatingPortProxy(tc));
     return 0;
-}
-
-SyscallReturn
-getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<> buf_ptr, unsigned long size)
-{
-    int result = 0;
-    auto p = tc->getProcessPtr();
-    BufferArg buf(buf_ptr, size);
-
-    // Is current working directory defined?
-    std::string cwd = p->tgtCwd;
-    if (!cwd.empty()) {
-        if (cwd.length() >= size) {
-            // Buffer too small
-            return -ERANGE;
-        }
-        strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
-        result = cwd.length();
-    } else {
-        if (getcwd((char *)buf.bufferPtr(), size)) {
-            result = strlen((char *)buf.bufferPtr());
-        } else {
-            result = -1;
-        }
-    }
-
-    buf.copyOut(SETranslatingPortProxy(tc));
-
-    return (result == -1) ? -errno : result;
 }
 
 SyscallReturn

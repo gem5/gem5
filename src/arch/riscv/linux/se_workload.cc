@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2005 The Regents of The University of Michigan
  * Copyright 2007 MIPS Technologies, Inc.
  * Copyright 2016 The University of Virginia
@@ -141,7 +152,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 14,   "removexattr" },
     { 15,   "lremovexattr" },
     { 16,   "fremovexattr" },
-    { 17,   "getcwd", getcwdFunc },
+    { 17,   "getcwd", getcwdFunc<RiscvLinux64> },
     { 18,   "lookup_dcookie" },
     { 19,   "eventfd2" },
     { 20,   "epoll_create1" },
@@ -190,7 +201,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
 #else
     { 61,   "getdents64" },
 #endif
-    { 62,   "lseek", lseekFunc },
+    { 62,   "lseek", lseekFunc<RiscvLinux64> },
     { 63,   "read", readFunc<RiscvLinux64> },
     { 64,   "write", writeFunc<RiscvLinux64> },
     { 66,   "writev", writevFunc<RiscvLinux64> },
@@ -432,7 +443,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 1054, "newfstatat", newfstatatFunc<RiscvLinux64> },
     { 1055, "fstatfs", fstatfsFunc<RiscvLinux64> },
     { 1056, "statfs", statfsFunc<RiscvLinux64> },
-    { 1057, "lseek", lseekFunc },
+    { 1057, "lseek", lseekFunc<RiscvLinux64> },
     { 1058, "mmap", mmapFunc<RiscvLinux64> },
     { 1059, "alarm" },
     { 1060, "getpgrp", getpgrpFunc },
@@ -480,7 +491,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 14,   "removexattr" },
     { 15,   "lremovexattr" },
     { 16,   "fremovexattr" },
-    { 17,   "getcwd", getcwdFunc },
+    { 17,   "getcwd", getcwdFunc<RiscvLinux32> },
     { 18,   "lookup_dcookie" },
     { 19,   "eventfd2" },
     { 20,   "epoll_create1" },
@@ -529,7 +540,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
 #else
     { 61,   "getdents64" },
 #endif
-    { 62,   "lseek", lseekFunc },
+    { 62,   "lseek", lseekFunc<RiscvLinux32> },
     { 63,   "read", readFunc<RiscvLinux32> },
     { 64,   "write", writeFunc<RiscvLinux32> },
     { 66,   "writev", writevFunc<RiscvLinux32> },
@@ -771,7 +782,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 1054, "newfstatat", newfstatatFunc<RiscvLinux32> },
     { 1055, "fstatfs", fstatfsFunc<RiscvLinux32> },
     { 1056, "statfs", statfsFunc<RiscvLinux32> },
-    { 1057, "lseek", lseekFunc },
+    { 1057, "lseek", lseekFunc<RiscvLinux32> },
     { 1058, "mmap", mmapFunc<RiscvLinux32> },
     { 1059, "alarm" },
     { 1060, "getpgrp", getpgrpFunc },
