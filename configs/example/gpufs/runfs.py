@@ -199,6 +199,7 @@ def addRunFSOptions(parser):
         "--tcp-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for tcp",
     )
 
@@ -206,6 +207,7 @@ def addRunFSOptions(parser):
         "--tcc-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for tcc",
     )
 
@@ -214,6 +216,7 @@ def addRunFSOptions(parser):
         "--sqc-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for sqc",
     )
 
