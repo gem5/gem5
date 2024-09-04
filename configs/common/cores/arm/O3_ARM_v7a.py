@@ -111,6 +111,15 @@ class O3_ARM_v7a_FUP(FUPool):
 class O3_ARM_v7a_BTB(SimpleBTB):
     numEntries = 2048
     tagBits = 18
+    associativity = 1
+    instShiftAmt = 2
+    btbReplPolicy = LRURP()
+    btbIndexingPolicy = BTBSetAssociative(
+        num_entries=Parent.numEntries,
+        set_shift=Parent.instShiftAmt,
+        assoc=Parent.associativity,
+        tag_bits=Parent.tagBits,
+    )
 
 
 # Bi-Mode Branch Predictor
