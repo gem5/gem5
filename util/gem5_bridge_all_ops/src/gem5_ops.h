@@ -24,6 +24,6 @@ extern struct gem5_op op_list[];
 extern const int op_count;
 
 /* Utility funcitons */
-struct gem5_op *gem5_op_search(const char *dev_name);
+struct gem5_op *gem5_ops_search(const char *dev_name);
 
 #endif /* GEM5_OPS_H */

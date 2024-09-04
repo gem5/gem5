@@ -20,6 +20,7 @@
 
 /* Device information */
 #define DEV_NAME "gem5_bridge"
+#define DEV_GROUP "gem5"
 #define DEV_MODE ((umode_t)0666) /* All users have RW access to this device */
 #define DEV_COUNT op_count /* Comes from size of op_list */
 
@@ -66,7 +67,7 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
     unsigned long vm_size = vma->vm_end - vma->vm_start + vma->vm_pgoff;
     unsigned long gem5_bridge_pfn = GEM5OPS_BASE >> PAGE_SHIFT;
     const char *file_name = filp->f_path.dentry->d_iname;
-    struct gem5_op *op = gem5_op_search(file_name);
+    struct gem5_op *op = gem5_ops_search(file_name);
 
     if (vm_size > GEM5OPS_SIZE) {
         pr_err("%s: requested memory range is too large\n", __func__);
@@ -84,7 +85,7 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
                             vm_size, vma->vm_page_prot))
     {
         pr_err("%s: failed to remap vm area to phys addr\n", __func__);
-        return -EAGAIN;
+        return -EINVAL;
     }
 
     pr_info("%s: SUCCESS!\n", __func__);
@@ -97,7 +98,7 @@ static ssize_t gem5_bridge_read(struct file *filp, char *ubuff,
     ssize_t result;
     char *kbuff;
     const char *file_name = filp->f_path.dentry->d_iname;
-    struct gem5_op *op = gem5_op_search(file_name);
+    struct gem5_op *op = gem5_ops_search(file_name);
 
     /* Allocate kernel buffer */
     kbuff = kvmalloc(len, GFP_KERNEL);
@@ -118,7 +119,7 @@ static ssize_t gem5_bridge_read(struct file *filp, char *ubuff,
     if (result < 0) {
         pr_err("%s: read failed for "PATH"%s\n", __func__, op->name);
         kvfree(kbuff);
-        return -EINVAL;
+        return result; /* propogate the error */
     }
 
     /* Copy kernel buffer to user buffer */
@@ -139,7 +140,7 @@ static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
     ssize_t result;
     char *kbuff;
     const char *file_name = filp->f_path.dentry->d_iname;
-    struct gem5_op *op = gem5_op_search(file_name);
+    struct gem5_op *op = gem5_ops_search(file_name);
 
     /* Allocate kernel buffer */
     kbuff = kvmalloc(len, GFP_KERNEL);
@@ -167,7 +168,7 @@ static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
     if (result < 0) {
         pr_err("%s: write failed for "PATH"%s\n", __func__, op->name);
         kvfree(kbuff);
-        return -EINVAL;
+        return result; /* propogate the error */
     }
 
     pr_info("%s: SUCCESS! (result=%lu)\n", __func__, result);
@@ -249,7 +250,7 @@ static int __init gem5_bridge_init(void)
 
         /* Create device */
         devp = device_create(dev_class, NULL, cdev_number, NULL,
-                             "gem5/%s", op_list[cdev_i].name);
+                             DEV_GROUP"/%s", op_list[cdev_i].name);
         if (IS_ERR(devp)) {
             pr_err("%s: failed to create device: %s\n",
                     __func__, op_list[cdev_i].name);
@@ -302,6 +303,13 @@ static void __exit gem5_bridge_exit(void)
 module_init(gem5_bridge_init);
 module_exit(gem5_bridge_exit);
 
+
+/* ========================================================================= *
+ * FOOTER
+ * ========================================================================= */
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Noah Krim");
-MODULE_DESCRIPTION("Driver that facilitates gem5 op calls via MMIO accesses");
+MODULE_DESCRIPTION(
+    "Driver that facilitates gem5 op calls via MMIO accesses"
+);
