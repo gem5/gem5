@@ -35,6 +35,7 @@
 
 #include "gem5_bridge.h"
 #include "gem5_ops.h"
+#include "gem5_poke.h"
 
 /* ========================================================================= *
  * Op Function Forward Declarations
@@ -170,110 +171,6 @@ static int parse_arg_int(char **bufp, u64 *outint)
 
 
 /* ========================================================================= *
- * MMIO Poking Functions
- * ========================================================================= */
-
-/* @NOTE: At this point, I am uncertain if the below approach is better than
- *        linking against or including raw assembly, as was done before. One
- *        benefit is that the architecure-specific aspects are drastically
- *        reduced. On the other hand, there is a lot of compiler massaging
- *        which is inherently not guaranteed. */
-
-/* We want to directly do a 64-bit write to our calculated memory address.
- * There is an iowrite64() function, but this would both taint the register
- * state and may be disabled since KVM configuration tends to have 32-bit
- * addresses, which prevents iowrite64() from being available in the kernel
- * headers. */
-static u16 poke_opcode; /* Global variable for setting poke target */
-#define POKE \
-    *(volatile u64 __force *)(gem5_bridge_mmio + (poke_opcode << 8))
-
-/* Necessary macro to ensure argument loading is not elided by the compiler
- * while also doing best effort to not taint the argument registers. */
-#define USED_INT(_var)                                             \
-do {                                                               \
-    volatile u64 dummy = _var; /* Ensure argument is not elided */ \
-    (void)dummy;               /* Silence unused var warnings */   \
-} while (0)
-#define USED_STR(_var)                                               \
-do {                                                                 \
-    char *volatile dummy = _var; /* Ensure argument is not elided */ \
-    (void)dummy;                 /* Silence unused var warnings */   \
-} while (0)
-
-/* Location to store op result from asm, accessible via /dev/gem5/retval */
-static u64 gem5_ops_retval;
-/* Assembly fragment to explicitly return the value placed in the result
- * register by gem5 while executing the op. */
-#if defined(__x86_64__)
-    /* 64-bit x86 */
-    #define ASM_RETVAL asm("movq %%rax, %0" : "=r" (gem5_ops_retval) :: "%rax")
-#elif defined(__i386__)
-    /* 32-bit x86 */
-    #define ASM_RETVAL asm("movq %%eax, %0" : "=r" (gem5_ops_retval) :: "%eax")
-#elif defined(__aarch64__)
-    /* 64-bit ARM */
-    #define ASM_RETVAL asm("mov %0, x0" : "=r" (gem5_ops_retval) :: "x0")
-#elif defined(__arm__) || defined(__thumb__) || defined(_M_ARM)
-    /* 32-bit ARM */
-    #define ASM_RETVAL asm("mov %0, r0" : "=r" (gem5_ops_retval) :: "r0")
-#else
-    #define ASM_RETVAL pr_err("%s: unsupported architecture\n", __func__)
-#endif
-#define RET                 \
-do {                        \
-    ASM_RETVAL;             \
-    return gem5_ops_retval; \
-} while (0)
-
-/* In these poke functions, the `noinline` attribute and `USED_*` macros are
- * required to ensure that calling convention is invoked predictably. This
- * enables gem5 to consistently extract arguments from the thread context. */
-
-static noinline u64 poke_nil(void)
-{
-    POKE; RET;
-}
-
-static noinline u64 poke_int1(u64 a)
-{
-    USED_INT(a);
-    POKE; RET;
-}
-
-static noinline u64 poke_int2(u64 a, u64 b)
-{
-    USED_INT(a); USED_INT(b);
-    POKE; RET;
-}
-
-static noinline u64 poke_int6(u64 a, u64 b, u64 c, u64 d, u64 e, u64 f)
-{
-    USED_INT(a); USED_INT(b); USED_INT(c);
-    USED_INT(d); USED_INT(e); USED_INT(f);
-    POKE; RET;
-}
-
-static noinline u64 poke_int1_str1(u64 a, char *b)
-{
-    USED_INT(a); USED_STR(b);
-    POKE; RET;
-}
-
-static noinline u64 poke_str1_int2(char *a, u64 b, u64 c)
-{
-    USED_STR(a); USED_INT(b); USED_INT(c);
-    POKE; RET;
-}
-
-static noinline u64 poke_str1_int2_str1(char *a, u64 b, u64 c, char *d)
-{
-    USED_STR(a); USED_INT(b); USED_INT(c); USED_STR(d);
-    POKE; RET;
-}
-
-
-/* ========================================================================= *
  * Op Function Definitions - Specialized
  * ========================================================================= */
 
@@ -286,7 +183,7 @@ static ssize_t read_retval(struct gem5_op *op, char *buff, size_t len,
     if (*offp > 0)
         return 0;
 
-    bytes_read = snprintf(buff, len, "%llu\n", gem5_ops_retval);
+    bytes_read = snprintf(buff, len, "%llu\n", gem5_poke_retval);
     if ((size_t)bytes_read >= len) {
         pr_err("%s: buffer size cannot fit retval\n", __func__);
         return -EINVAL;
@@ -301,8 +198,8 @@ static ssize_t read_file(struct gem5_op *op, char *buff, size_t len,
 {
     ssize_t bytes_read = 0;
 
-    poke_opcode = op->opcode;
-    bytes_read = poke_str1_int2(buff, len, *offp);
+    gem5_poke_opcode = op->opcode;
+    bytes_read = POKE3((u64)buff, len, *offp);
 
     if (bytes_read > 0) /* only push offset on success */
         *offp += bytes_read;
@@ -344,8 +241,8 @@ static ssize_t write_file(struct gem5_op *op, char *buff, size_t len,
         return -EINVAL;
     }
 
-    poke_opcode = op->opcode;
-    bytes_written = poke_str1_int2_str1(buff, len, *off, write_file_dest);
+    gem5_poke_opcode = op->opcode;
+    bytes_written = POKE4((u64)buff, len, *off, (u64)write_file_dest);
 
     if (bytes_written > 0) /* only push offset on success */
         *off += bytes_written;
@@ -367,8 +264,8 @@ do {                                                              \
 static ssize_t op_nil(struct gem5_op *op, char *buff, size_t len,
                             loff_t *offp)
 {
-    poke_opcode = op->opcode;
-    (void)poke_nil();
+    gem5_poke_opcode = op->opcode;
+    (void)POKE0();
     return len; /* unconditionally consume entire input */
 }
 
@@ -379,8 +276,8 @@ static ssize_t op_int1(struct gem5_op *op, char *buff, size_t len,
     int err = parse_arg_int(&buff, &arg0);
     if (err) OP_ARG_ERR("<int>");
 
-    poke_opcode = op->opcode;
-    (void)poke_int1(arg0);
+    gem5_poke_opcode = op->opcode;
+    (void)POKE1(arg0);
     return len; /* unconditionally consume entire input */
 }
 
@@ -392,8 +289,8 @@ static ssize_t op_int2(struct gem5_op *op, char *buff, size_t len,
             | parse_arg_int(&buff, &arg1);
     if (err) OP_ARG_ERR("<int> <int>");
 
-    poke_opcode = op->opcode;
-    (void)poke_int2(arg0, arg1);
+    gem5_poke_opcode = op->opcode;
+    (void)POKE2(arg0, arg1);
     return len; /* unconditionally consume entire input */
 }
 
@@ -409,8 +306,8 @@ static ssize_t op_int6(struct gem5_op *op, char *buff, size_t len,
             | parse_arg_int(&buff, &arg5);
     if (err) OP_ARG_ERR("<int> <int> <int> <int> <int> <int>");
 
-    poke_opcode = op->opcode;
-    (void)poke_int6(arg0, arg1, arg2, arg3, arg4, arg5);
+    gem5_poke_opcode = op->opcode;
+    (void)POKE6(arg0, arg1, arg2, arg3, arg4, arg5);
     return len; /* unconditionally consume entire input */
 }
 
@@ -423,8 +320,8 @@ static ssize_t op_int1_str1(struct gem5_op *op, char *buff, size_t len,
             | parse_arg_str(&buff, &arg1);
     if (err) OP_ARG_ERR("<int> <string>");
 
-    poke_opcode = op->opcode;
-    (void)poke_int1_str1(arg0, arg1);
+    gem5_poke_opcode = op->opcode;
+    (void)POKE2(arg0, (u64)arg1);
     return len; /* unconditionally consume entire input */
 }
 

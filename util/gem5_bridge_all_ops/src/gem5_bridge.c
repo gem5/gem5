@@ -145,7 +145,7 @@ static ssize_t gem5_bridge_read(struct file *filp, char *ubuff,
 
     /* Run this op's read function */
     result = op->read(op, kbuff, len, offp);
-    if (result < 0) {
+    if (result < 0 || result > len) {
         pr_err("%s: read failed for "PATH"%s\n", __func__, op->name);
         kvfree(kbuff);
         return result; /* propogate the error */
@@ -194,7 +194,7 @@ static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
 
     /* Run this op's write function */
     result = op->write(op, kbuff, len, offp);
-    if (result < 0) {
+    if (result < 0 || result > len) {
         pr_err("%s: write failed for "PATH"%s\n", __func__, op->name);
         kvfree(kbuff);
         return result; /* propogate the error */

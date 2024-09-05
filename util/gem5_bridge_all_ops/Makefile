@@ -1,5 +1,5 @@
 DRIVER  := gem5_bridge
-SOURCES := gem5_bridge gem5_ops
+SOURCES := gem5_bridge gem5_ops gem5_poke
 GROUP   := gem5
 
 ifneq ($(KERNELRELEASE),)
