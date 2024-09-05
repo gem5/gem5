@@ -283,7 +283,11 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
 
-    NUM_MISCREGS
+    NUM_MISCREGS,
+
+    HELPER_FFLAGS_EXE = NUM_MISCREGS,
+
+    NUM_MISC_AND_HELPER_REGS
 };
 
 inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
