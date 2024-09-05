@@ -12,7 +12,7 @@ TLBIndexing::TLBIndexing(const Params &p)
 
 std::vector<ReplaceableEntry*>
 TLBIndexing::getPossibleEntries(const Addr addr) const
-{ 
+{
     return sets[extractSet(addr)];
 
 }
@@ -20,10 +20,10 @@ TLBIndexing::getPossibleEntries(const Addr addr) const
 // useless function
 Addr
 TLBIndexing::regenerateAddr(const Addr tag, const ReplaceableEntry* entry) const override{
-    return tag;	 
+    return tag;
 }
 
-// used everywhere, but just returns what was there before 
+// used everywhere, but just returns what was there before
 Addr
 TLBIndexing::extractTag(const Addr addr) override const
 {
@@ -46,11 +46,11 @@ TLBIndexing::getVPNfromVA(const Addr addr) const
     return vpn & vpnMask;
 }
 
-// [virtual page number][0's] -> [virtual page number][id] OR [virtual page number][id][0's 
-Addr 
+// [virtual page number][0's] -> [virtual page number][id] OR [virtual page number][id][0's
+Addr
 TLBIndexing::buildKey(Addr vpn, Addr id) const
 {
-    return (vpn << idShift) | id; 
+    return (vpn << idShift) | id;
 }
 
 

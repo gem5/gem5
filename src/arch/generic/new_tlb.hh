@@ -11,7 +11,7 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 
-// indexing policy - in process of development  
+// indexing policy - in process of development
 #include "mem/cache/tags/indexing_policies/tlb_indexing.hh"
 
 // replacement policy - preexisting
@@ -21,7 +21,7 @@
 namespace gem5 {
 
 /** Constructor for Associative Cache **/
-TLB(const char* name, size_t num_entries, size_t associativity, 
+TLB(const char* name, size_t num_entries, size_t associativity,
         BaseReplacementPolicy* repl_policy, BaseIndexingPolicy* indexing_policy)
 {
     // Initialize the AssociativeCache through the _cache member in Translator
@@ -39,7 +39,7 @@ virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU)
 
     Addr key = buildKey(vpn, id);
 
-    // findEntry 
+    // findEntry
     TLBEntry *entry = this->_cache.findEntry(key);
 
     if (updateLRU) {
@@ -138,8 +138,3 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
 }
 
 }; // end of namespace
-
-
-
-
-
