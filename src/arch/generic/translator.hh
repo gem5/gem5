@@ -15,8 +15,9 @@ namespace gem5
 template <typename Entry>
 class Translator : public ClockedObject
 {
-  private:
+  private: // Change private to protected
     AssociativeCache<Entry> _cache; // This could be TLB or Page Walk Cache
+    // The associativeCache will be changed to a TLBCache
     Translator* _nextLevel; // Access to multi-level TLB and PT Walkers
 
   public:

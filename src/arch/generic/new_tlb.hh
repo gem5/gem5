@@ -1,105 +1,145 @@
-
-
-#ifndef __ARCH_GENERIC_NEW_TLB_HH__
-#define __ARCH_GENERIC_NEW_TLB_HH__
-
 #include "base/cache/associative_cache.hh"
+#include "generic/new_tlb.hh"
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 #include "base/cache/cache_entry.hh"
-#include "arch/generic/new_tlb_entry.hh"
+#include "base/intmath.hh"
+#include "base/logging.hh"
+#include "base/named.hh"
+#include "base/types.hh"
+#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 
-/* General Notes:
-  Public vs. Private vs. protected
-- Private = only this class can access
-- Protected = this class and derived class can access (ex: ISA's that derive from this)
-- Public = any class can access
+// indexing policy - in process of development  
+#include "mem/cache/tags/indexing_policies/tlb_indexing.hh"
 
-Virtual Function:
-- a pure virtual function means that its not implemented in the base class
+// replacement policy - preexisting
+#include "mem/cache/replacement_policies/lru_rp.hh"
 
-*/
 
-namespace gem5
+namespace gem5 {
+
+/** Constructor for Associative Cache **/
+TLB(const char* name, size_t num_entries, size_t associativity, 
+        BaseReplacementPolicy* repl_policy, BaseIndexingPolicy* indexing_policy)
+{
+    // Initialize the AssociativeCache through the _cache member in Translator
+    _cache.init(num_entries, associativity, repl_policy, indexing_policy);
+}
+
+
+/** Lookup
+ * @AC: findEntry(const Addr addr)
+ * @params: vpn, id, mode, updateLRU
+ * @result: returns entry that was found
+ */
+
+virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU) {
+
+    Addr key = buildKey(vpn, id);
+
+    // findEntry 
+    TLBEntry *entry = this->_cache.findEntry(key);
+
+    if (updateLRU) {
+        accessEntry(entry); // this is standard
+        // noting the misses/hits
+        if (mode == BaseMMU::Write)
+            stats.writeAccesses++;
+        else
+            stats.readAccesses++;
+
+        // noting the misses/hits
+        if (!entry) {
+            if (mode == BaseMMU::Write)
+                stats.writeMisses++;
+            else
+                stats.readMisses++;
+        }
+        else {
+            if (mode == BaseMMU::Write)
+                stats.writeHits++;
+            else
+                stats.readHits++;
+        }
+
+    return entry;
+}
+
+/** Remove
+ * removes an index
+ * @AC: findEntry(const Addr addr), invalidate(Entry *entry)
+ * @params: vpn, id
+ * @result: none
+ */
+void remove(Addr vpn, auto id) {
+
+    Addr key = buildKey(vpn, id);
+    this->_cache.invalidate(findEntry(key));
+
+}
+
+/** FlushAll
+ * clears all entry in associative cache
+ * @AC: clear()
+ * @params: none
+ * @result: none
+ */
+void flushAll() {
+    this->_cache.clear()
+}
+
+/** evictLRU
+ * clears the least recently used within a set
+ * @AC: findVictim(), invalidate()
+ * @params: vpn -> in order to find which set we need to remove
+ * @result: none
+ */
+void evictLRU(Addr vpn) {
+
+    TLBEntry * entry = this->_cache.findVictim(addr);
+    this->_cache.invalidate(entry);
+
+}
+
+
+virtual TlbEntry * insert(Addr vpn, auto id, const TlbEntry &entry);
+virtual demapPage(Addr addr, uint64_t address_space)
+virtual Fault TLB::translate(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+virtual Fault TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+virtual Fault TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+virtual Fault TLB::translateTiming(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
+
+
+
+virtual serialize(CheckpointIn &cp)
+virtual unserialize(CheckpointIn &cp)
+
+
+// Statistics
+TLB::TlbStats::TlbStats(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
+    ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),
+    ADD_STAT(readAccesses, statistics::units::Count::get(), "read accesses"),
+    ADD_STAT(writeHits, statistics::units::Count::get(), "write hits"),
+    ADD_STAT(writeMisses, statistics::units::Count::get(), "write misses"),
+    ADD_STAT(writeAccesses, statistics::units::Count::get(), "write accesses"),
+    ADD_STAT(hits, statistics::units::Count::get(),
+             "Total TLB (read and write) hits", readHits + writeHits),
+    ADD_STAT(misses, statistics::units::Count::get(),
+             "Total TLB (read and write) misses", readMisses + writeMisses),
+    ADD_STAT(accesses, statistics::units::Count::get(),
+             "Total TLB (read and write) accesses",
+             readAccesses + writeAccesses)
 {
 
-class NewTLB : public Translator
-/*
-Types of Functions That Need to Be Added:
-- Constructor (including the Translator Paramenters)
-- Cache Management (called AC functions this->_cache)
-- Translation
-  - Transaltion
-  - Translation Helping Functions (Permissions, Miss Servicing, Etc.)
-  - Different Types of Translation
-- Serialization
-- Statistics
+}
 
-*/
-
-{
-  public:
-  protected:
-  private:
-  public:
+}; // end of namespace
 
 
-};
-// This is the NewTLB Entry
-
-// [0] necessary imports
-// using the struct TLB Entry to build this
-class TLBEntry : public CacheEntry, public Serializable
-{
-
-  public:
-  // Variables found across the pagetable.hh files across ISA's
-  // [1] Variables
-    Addr vaddr;  // The virtual address corresponding to this entry
-    Addr paddr; // The physical address corresponding to this entry
-    bool uncacheable;  // Whether the page is cacheable or not.
-    bool writable;         // Read permission is always available, assuming it isn't blocked by other mechanisms.
-    unsigned logBytes;  // The size of the page this represents, in address bits.
-
-    /* example of some x86 specific variabeles*/
-    // bool user;         // Whether this page is accesible without being in supervisor mode, lets the caches handle the writeback policy.
-    // bool pwt;
-    // bool global;        // Whether or not to kick this page out on a write to CR3.
-    // bool patBit;         // A bit used to form an index into the PAT table.
-    // bool noExec;         // Whether or not memory on this page can be executed.
 
 
-  // [2] Constructors
-    // change this current implementation to include AC initialization
-    TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
-            bool uncacheable, bool read_only);
-    TlbEntry();
 
-  // [3] Internal Functions
-    void updateVaddr(Addr new_vaddr)
-    {
-        vaddr = new_vaddr;
-    }
-    Addr pageStart()
-    {
-        return paddr;
-    }
-    int size()     // Return the page size in bytes
-    {
-        return (1 << logBytes);
-    }
-
-
-// [4] Extended from Serializable
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
-
-// [5] Extra Functions Extended from Cache Entry
-
-};
-
-
-} // namespace gem5
-
-#endif
