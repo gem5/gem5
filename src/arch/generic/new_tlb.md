@@ -33,7 +33,7 @@
 
 **Status**
 - `insert` left virtual
-- most other functions were implemented, using the parameter `id` 
+- most other functions were implemented, using the parameter `id`
 
 
 **EvictLRU FUNCTION**
@@ -139,11 +139,11 @@
 - override from `BaseIndexingPolicy`
 - doesn't do anything, just returns the input
 - this is because `extractTag` is called in a lot of Associative Cache
-- 
+-
 
 **`extractSet`**
 - left as normal
-- set index is defined?? 
+- set index is defined??
 
 **`getPossibleEntries`**
 - pure virtual function, implemented in this class

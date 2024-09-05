@@ -3,7 +3,7 @@
 #include "params/NewTLB.hh"
 #include "sim/sim_object.hh"
 
-// indexing policy - in process of development  
+// indexing policy - in process of development
 #include "mem/cache/tags/indexing_policies/tlb_set_assocative.hh"
 
 // replacement policy - preexisting
@@ -12,7 +12,7 @@
 
 namespace gem5 {
 
-// Constructor 
+// Constructor
 // this will probably use some TLB initialization stuff
 
 /** Lookup

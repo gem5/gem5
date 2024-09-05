@@ -22,10 +22,10 @@ Addr extractTag(const Addr addr) override const
     return addr;
 }
 
-// function is not used often because we want to have the option for 
+// function is not used often because we want to have the option for
 // TLB to not be fully associative, even though most times it will
-// be fully associative 
-auto 
+// be fully associative
+auto
 TLBSetAssociative::extractSet(const Addr addr) const
 {
     return (addr >> setShift) & setMask;
@@ -33,9 +33,9 @@ TLBSetAssociative::extractSet(const Addr addr) const
 
 std::vector<ReplaceableEntry*>
 TLBSetAssociative::getPossibleEntries(const Addr addr) const
-{ 
+{
     if (num_entries == associativity) {
-	    
+
        std::vector<ReplaceableEntry*> entries;
        for (int i = 0; i < num_entries; i++) {
 		entries.append(sets[i][0]);
