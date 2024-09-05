@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016-2018, 2021-2022 Arm Limited
+// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -470,6 +470,7 @@ def operands {{
 
     #Abstracted control reg operands
     'MiscDest': CntrlReg('dest'),
+    'MiscDest2': CntrlReg('dest2'),
     'MiscOp1': CntrlReg('op1'),
     'MiscNsBankedDest': CntrlNsBankedReg('dest'),
     'MiscNsBankedOp1': CntrlNsBankedReg('op1'),
