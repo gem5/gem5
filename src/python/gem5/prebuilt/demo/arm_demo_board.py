@@ -32,8 +32,8 @@ from m5.objects import (
 from m5.util import warn
 
 from gem5.components.boards.arm_board import ArmBoard
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
+from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
+    PrivateL1SharedL2CacheHierarchy,
 )
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
@@ -69,24 +69,34 @@ class ArmDemoBoard(ArmBoard):
             "This board is not known to be be representative of any "
             "real-world system. Use with caution."
         )
-        cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-            l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
+        cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+            l1d_size="16KiB", l1i_size="16KiB", l2_size="8MiB"
         )
 
-        memory = DualChannelDDR4_2400(size="2GB")
+        memory = DualChannelDDR4_2400(size="8GB")
 
         if use_kvm:
             processor = SimpleProcessor(
-                cpu_type=CPUTypes.TIMING, num_cores=2, isa=ISA.ARM
+                cpu_type=CPUTypes.KVM, num_cores=4, isa=ISA.ARM
             )
+            # The ArmBoard requires a `release` to be specified. This adds all the
+            # extensions or features to the system. We are setting this to for_kvm()
+            # to enable KVM simulation.
             release = ArmDefaultRelease.for_kvm()
+
+            # The platform sets up the memory ranges of all the on-chip and off-chip
+            # devices present on the ARM system. ARM KVM only works with VExpress_GEM5_V1
+            # on the ArmBoard at the moment.
             platform = VExpress_GEM5_V1()
 
         else:
             processor = SimpleProcessor(
-                cpu_type=CPUTypes.TIMING, num_cores=2, isa=ISA.ARM
+                cpu_type=CPUTypes.TIMING, num_cores=4, isa=ISA.ARM
             )
             release = ArmDefaultRelease()
+
+            # The platform sets up the memory ranges of all the on-chip and off-chip
+            # devices present on the ARM system.
             platform = VExpress_GEM5_Foundation()
 
         super().__init__(
