@@ -9,10 +9,10 @@ class TLBEntry : public CacheEntry {
     Addr vaddr;
     Addr paddr;
     unsigned int logBytes;
-    Addr id; 
+    Addr id;
     Addr tag;
     bool uncacheable;
-    
+
     virtual bool isValid() const {
         return valid;
     }
