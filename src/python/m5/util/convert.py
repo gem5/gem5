@@ -102,6 +102,15 @@ binary_prefixes = {
     "k": kibi,
 }
 
+base_10_to_2 = {
+    "k": "Ki",
+    "M": "Mi",
+    "G": "Gi",
+    "T": "Ti",
+    "P": "Pi",
+    "E": "Ei",
+}
+
 
 def assertStr(value):
     if not isinstance(value, str):
@@ -122,6 +131,32 @@ def _split_suffix(value, suffixes):
     assert len(matches) <= 1
 
     return (value[: -len(matches[0])], matches[0]) if matches else (value, "")
+
+
+def _split_suffix_by_prefix(value):
+    """Split a string based on a suffix from a list of suffixes.
+    This is intended to be used with the keys of binary_prefixes.
+
+    :param value: String value to test for a matching magnitude
+    (e.g. k, M, Gi, etc).
+    :param suffixes: Container of suffixes to test.
+
+    :returns: A tuple of (value, suffix). Suffix is the empty string
+              if there is no match.
+
+    """
+    matches = [sfx for sfx in binary_prefixes.keys() if sfx in value]
+
+    if len(matches) == 2:  # e.g. matches both M and Mi
+        matches.sort(key=len, reverse=True)
+        matches.pop()
+        assert len(matches) <= 1
+
+    return (
+        (value[: value.find(matches[0])], matches[0])
+        if matches
+        else (value, "")
+    )
 
 
 def toNum(value, target_type, units, prefixes, converter):
@@ -260,22 +295,24 @@ def toNetworkBandwidth(value):
 
 
 def toMemoryBandwidth(value):
+    checkBaseConversion(value, "B/s")
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
-def toMemorySize(value):
-    if (
-        type(value) is str
-        and len(value) > 1
-        and value[-2] in binary_prefixes.keys()
-        and not "i" in value
-    ):
-        from m5.util import warn
+def checkBaseConversion(value, unit):
+    if type(value) is str:
+        size, prefix = _split_suffix_by_prefix(value)
+        if prefix in base_10_to_2.keys():
+            from m5.util import warn
 
-        warn(
-            f"Base 10 memory/cache size {value} will be cast to base 2"
-            + f" size {value[0:-2]}{value[-2].upper()}i{value[-1]}."
-        )
+            warn(
+                f"Base 10 memory/cache size {value} will be cast to base 2"
+                + f" size {size}{base_10_to_2[prefix]}{unit}."
+            )
+
+
+def toMemorySize(value):
+    checkBaseConversion(value, "B")
     return toBinaryInteger(value, "memory size", "B")
 
 
