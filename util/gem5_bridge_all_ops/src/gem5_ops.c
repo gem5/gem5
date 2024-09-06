@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/kstrtox.h>
 #include <linux/module.h>
@@ -169,6 +170,11 @@ static int parse_arg_int(char **bufp, u64 *outint)
     return 0;
 }
 
+#define ARG_PARSE_ERR(argfmt)                                     \
+    pr_err("%s: failed parsing args, expected the form \"%s\"\n", \
+            __func__, argfmt);
+
+
 
 /* ========================================================================= *
  * Op Function Definitions - Specialized
@@ -212,9 +218,9 @@ static ssize_t set_write_file_dest(struct gem5_op *op, char *buff, size_t len,
                                     loff_t *off)
 {
     char *arg;
-    if (parse_arg_str(&buff, &arg) < 0) {
-        pr_err("%s: failed parsing arg, expected a host destination path\n",
-                __func__);
+    int err = parse_arg_str(&buff, &arg);
+    if (err) {
+        ARG_PARSE_ERR("<host_dest_filepath>");
         return -EINVAL;
     }
 
@@ -254,13 +260,6 @@ static ssize_t write_file(struct gem5_op *op, char *buff, size_t len,
  * Op Function Definitions - General
  * ========================================================================= */
 
-#define OP_ARG_ERR(argfmt)                                        \
-do {                                                              \
-    pr_err("%s: failed parsing args, expected the form \"%s\"\n", \
-            __func__, argfmt);                                    \
-    return -EINVAL;                                               \
-} while (0)
-
 static ssize_t op_nil(struct gem5_op *op, char *buff, size_t len,
                             loff_t *offp)
 {
@@ -274,7 +273,10 @@ static ssize_t op_int1(struct gem5_op *op, char *buff, size_t len,
 {
     u64 arg0;
     int err = parse_arg_int(&buff, &arg0);
-    if (err) OP_ARG_ERR("<int>");
+    if (err) {
+        ARG_PARSE_ERR("<int>");
+        return -EINVAL;
+    }
 
     gem5_poke_opcode = op->opcode;
     (void)POKE1(arg0);
@@ -287,7 +289,10 @@ static ssize_t op_int2(struct gem5_op *op, char *buff, size_t len,
     u64 arg0, arg1;
     int err = parse_arg_int(&buff, &arg0)
             | parse_arg_int(&buff, &arg1);
-    if (err) OP_ARG_ERR("<int> <int>");
+    if (err) {
+        ARG_PARSE_ERR("<int> <int>");
+        return -EINVAL;
+    }
 
     gem5_poke_opcode = op->opcode;
     (void)POKE2(arg0, arg1);
@@ -304,7 +309,10 @@ static ssize_t op_int6(struct gem5_op *op, char *buff, size_t len,
             | parse_arg_int(&buff, &arg3)
             | parse_arg_int(&buff, &arg4)
             | parse_arg_int(&buff, &arg5);
-    if (err) OP_ARG_ERR("<int> <int> <int> <int> <int> <int>");
+    if (err) {
+        ARG_PARSE_ERR("<int> <int> <int> <int> <int> <int>");
+        return -EINVAL;
+    }
 
     gem5_poke_opcode = op->opcode;
     (void)POKE6(arg0, arg1, arg2, arg3, arg4, arg5);
@@ -318,7 +326,10 @@ static ssize_t op_int1_str1(struct gem5_op *op, char *buff, size_t len,
     char *arg1;
     int err = parse_arg_int(&buff, &arg0)
             | parse_arg_str(&buff, &arg1);
-    if (err) OP_ARG_ERR("<int> <string>");
+    if (err) {
+        ARG_PARSE_ERR("<int> <string>");
+        return -EINVAL;
+    }
 
     gem5_poke_opcode = op->opcode;
     (void)POKE2(arg0, (u64)arg1);

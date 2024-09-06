@@ -30,15 +30,9 @@
 #ifndef __GEM5_BRIDGE_H__
 #define __GEM5_BRIDGE_H__
 
-/* Physical address for base of gem5ops MMIO range */
-#ifndef GEM5OPS_BASE
-#define GEM5OPS_BASE 0xffff0000 /* default, also used for x86 */
-#endif
-
-/* Size of gem5ops MMIO range */
-#ifndef GEM5OPS_SIZE
-#define GEM5OPS_SIZE 0x10000
-#endif
+/* Driver parameters */
+extern unsigned long gem5_bridge_baseaddr; /* Physical base addr for MMIO */
+extern unsigned long gem5_bridge_rangesize; /* Size of MMIO range */
 
 /* MMIO virtual address for poking out of KVM */
 extern void __iomem *gem5_bridge_mmio;

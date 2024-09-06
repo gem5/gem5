@@ -37,6 +37,7 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
 
@@ -61,7 +62,16 @@
  * Exported Variables
  * ========================================================================= */
 
-/* gem5 bridge */
+unsigned long gem5_bridge_baseaddr;
+module_param(gem5_bridge_baseaddr, long, 0644);
+MODULE_PARM_DESC(gem5_bridge_baseaddr,
+    "Physical base addr for gem5ops MMIO range");
+
+unsigned long gem5_bridge_rangesize;
+module_param(gem5_bridge_rangesize, long, 0644);
+MODULE_PARM_DESC(gem5_bridge_rangesize,
+    "Size of gem5ops MMIO range");
+
 void __iomem *gem5_bridge_mmio;
 
 
@@ -94,11 +104,11 @@ static int gem5_bridge_release(struct inode *inode, struct file *file)
 static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
 {
     unsigned long vm_size = vma->vm_end - vma->vm_start + vma->vm_pgoff;
-    unsigned long gem5_bridge_pfn = GEM5OPS_BASE >> PAGE_SHIFT;
+    unsigned long gem5_bridge_pfn = gem5_bridge_baseaddr >> PAGE_SHIFT;
     const char *file_name = filp->f_path.dentry->d_iname;
     struct gem5_op *op = gem5_ops_search(file_name);
 
-    if (vm_size > GEM5OPS_SIZE) {
+    if (vm_size > gem5_bridge_rangesize) {
         pr_err("%s: requested memory range is too large\n", __func__);
         return -EINVAL;
     }
@@ -232,8 +242,18 @@ static int __init gem5_bridge_init(void)
     dev_t cdev_number;
     struct device *devp;
 
+    /* Ensure params were defined */
+    if (!gem5_bridge_baseaddr || !gem5_bridge_rangesize) {
+        pr_err("%s: some parameters undefined or invalid, must give non-zero "
+               "values for gem5_bridge_baseaddr and gem5_bridge_rangesize\n",
+               __func__);
+        return -1;
+    }
+
     /* Make virtual mapping to physical MMIO address */
-    gem5_bridge_mmio = ioremap(GEM5OPS_BASE, GEM5OPS_SIZE);
+    pr_info("%s: mapping io range at 0x%lx:0x%lx\n",
+            __func__, gem5_bridge_baseaddr, gem5_bridge_rangesize);
+    gem5_bridge_mmio = ioremap(gem5_bridge_baseaddr, gem5_bridge_rangesize);
     if (gem5_bridge_mmio < 0) {
         pr_err("%s: failed to map gem5ops MMIO range\n", __func__);
         goto error_ioremap;
