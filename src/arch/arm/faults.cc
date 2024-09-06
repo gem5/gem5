@@ -1031,29 +1031,6 @@ template<class T>
 void
 AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (tranMethod == ArmFault::UnknownTran) {
-        tranMethod = longDescFormatInUse(tc) ? ArmFault::LpaeTran
-                                             : ArmFault::VmsaTran;
-
-        if ((tranMethod == ArmFault::VmsaTran) && this->routeToMonitor(tc)) {
-            // See ARM ARM B3-1416
-            bool override_LPAE = false;
-            TTBCR ttbcr_s = tc->readMiscReg(MISCREG_TTBCR_S);
-            [[maybe_unused]] TTBCR ttbcr_ns =
-                tc->readMiscReg(MISCREG_TTBCR_NS);
-            if (ttbcr_s.eae) {
-                override_LPAE = true;
-            } else {
-                // Unimplemented code option, not seen in testing.  May need
-                // extension according to the manual exceprt above.
-                DPRINTF(Faults, "Warning: Incomplete translation method "
-                        "override detected.\n");
-            }
-            if (override_LPAE)
-                tranMethod = ArmFault::LpaeTran;
-        }
-    }
-
     if (source == ArmFault::AsynchronousExternalAbort) {
         tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     }
@@ -1109,6 +1086,34 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                 tc, faultAddr, this->toEL);
         }
     }
+}
+
+template<class T>
+void
+AbortFault<T>::update(ThreadContext *tc)
+{
+    if (tranMethod == ArmFault::UnknownTran) {
+        tranMethod = longDescFormatInUse(tc) ? ArmFault::LpaeTran
+                                             : ArmFault::VmsaTran;
+
+        if ((tranMethod == ArmFault::VmsaTran) && this->routeToMonitor(tc)) {
+            // See ARM ARM B3-1416
+            bool override_LPAE = false;
+            TTBCR ttbcr_s = tc->readMiscReg(MISCREG_TTBCR_S);
+            if (ttbcr_s.eae) {
+                override_LPAE = true;
+            } else {
+                // Unimplemented code option, not seen in testing.  May need
+                // extension according to the manual exceprt above.
+                DPRINTF(Faults, "Warning: Incomplete translation method "
+                        "override detected.\n");
+            }
+            if (override_LPAE)
+                tranMethod = ArmFault::LpaeTran;
+        }
+    }
+
+    ArmFault::update(tc);
 }
 
 template<class T>

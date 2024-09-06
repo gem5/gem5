@@ -227,7 +227,7 @@ class ArmFault : public FaultBase
                   nullStaticInstPtr);
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   nullStaticInstPtr);
-    void update(ThreadContext *tc);
+    virtual void update(ThreadContext *tc);
     bool isResetSPSR(){ return bStep; }
 
     bool vectorCatch(ThreadContext *tc, const StaticInstPtr &inst);
@@ -502,6 +502,7 @@ class AbortFault : public ArmFaultVals<T>
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 nullStaticInstPtr) override;
+    void update(ThreadContext *tc) override;
 
     FSR getFsr(ThreadContext *tc) const override;
     uint8_t getFaultStatusCode(ThreadContext *tc) const;
