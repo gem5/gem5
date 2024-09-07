@@ -254,6 +254,7 @@ class ArmFault : public FaultBase
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
     virtual bool getFaultVAddr(Addr &va) const { return false; }
     OperatingMode getToMode() const { return toMode; }
+    virtual bool isExternalAbort() const { return false; }
 };
 
 template<typename T>
@@ -511,6 +512,7 @@ class AbortFault : public ArmFaultVals<T>
     void annotate(ArmFault::AnnotationIDs id, uint64_t val) override;
     void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg) override;
     bool isMMUFault() const;
+    bool isExternalAbort() const override;
 };
 
 class PrefetchAbort : public AbortFault<PrefetchAbort>

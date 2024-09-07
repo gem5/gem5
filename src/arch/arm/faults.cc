@@ -1227,6 +1227,17 @@ AbortFault<T>::isMMUFault() const
 
 template<class T>
 bool
+AbortFault<T>::isExternalAbort() const
+{
+    return
+        (source == ArmFault::SynchronousExternalAbort)  ||
+        (source == ArmFault::AsynchronousExternalAbort) ||
+        ((source >= ArmFault::SynchExtAbtOnTranslTableWalkLL) &&
+         (source < ArmFault::SynchExtAbtOnTranslTableWalkLL + 4));
+}
+
+template<class T>
+bool
 AbortFault<T>::getFaultVAddr(Addr &va) const
 {
     va = (stage2 ?  OVAddr : faultAddr);
@@ -1368,6 +1379,7 @@ DataAbort::iss() const
     iss.wnr = write;
     iss.s1ptw = s1ptw;
     iss.cm = cm;
+    iss.ea = isExternalAbort();
 
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2
