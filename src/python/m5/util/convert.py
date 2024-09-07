@@ -44,6 +44,8 @@
 # from . import warn
 
 # metric prefixes
+from typing import Optional
+
 atto = 1.0e-18
 femto = 1.0e-15
 pico = 1.0e-12
@@ -299,15 +301,29 @@ def toMemoryBandwidth(value):
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
+def _base_10_to_2(value: str) -> Optional[str]:
+    """Convert a base 10 memory/cache size SI prefix strings to base 2. Used
+    in `checkBaseConversion` to provide a warning message to the user. Will
+    return None if no conversion is required.
+
+
+    This function is intentionally separate from `checkBaseConversion` to aid
+    in testing."""
+    size, prefix = _split_suffix_by_prefix(value)
+    if prefix in base_10_to_2.keys():
+        return f"{size}{base_10_to_2[prefix]}"
+    return None
+
+
 def checkBaseConversion(value, unit):
     if type(value) is str:
-        size, prefix = _split_suffix_by_prefix(value)
-        if prefix in base_10_to_2.keys():
+        new_value = _base_10_to_2(value)
+        if new_value:
             from m5.util import warn
 
             warn(
                 f"Base 10 memory/cache size {value} will be cast to base 2"
-                + f" size {size}{base_10_to_2[prefix]}{unit}."
+                + f" size {new_value}{unit}."
             )
 
 

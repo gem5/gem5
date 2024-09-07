@@ -277,3 +277,11 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertRaises(ValueError, conv, "-1K")
 
         self.assertEqual(conv("32F"), 273.15)
+
+    def test_base_10_to_2(self):
+        conv = convert._base_10_to_2
+
+        self.assertEqual(conv("1k"), "1Ki")
+        self.assertIsNone(conv("1Ki"))
+
+        # Leaving the rest of this test for Erin to finish.
