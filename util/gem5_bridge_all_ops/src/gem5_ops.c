@@ -52,15 +52,7 @@ static ssize_t set_write_file_dest(struct gem5_op *op, char *buff,
 static ssize_t write_file(struct gem5_op *op, char *buff, size_t len,
                             loff_t *offp);
 
-static ssize_t op_nil(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp);
-static ssize_t op_int1(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp);
-static ssize_t op_int2(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp);
-static ssize_t op_int6(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp);
-static ssize_t op_int1_str1(struct gem5_op *op, char *buff, size_t len,
+static ssize_t op_args(struct gem5_op *op, char *buff, size_t len,
                             loff_t *offp);
 
 
@@ -71,46 +63,106 @@ static ssize_t op_int1_str1(struct gem5_op *op, char *buff, size_t len,
 struct gem5_op op_list[] =
 {
     /* Always keep "bridge" as first op, used as backcompat with m5 binary */
-    { .name = "bridge",         /* no opcode */ /* hard-coded mmap */ },
+    { .name = "bridge",
+        /* no opcode */ /* hard-coded mmap */ },
 
     /* Used to read the return value from gem5 for normal write-arg ops */
-    { .name = "retval",         /* no opcode */ .read  = read_retval },
+    { .name = "retval",
+        /* no opcode */ .read  = read_retval },
 
     /* Special device for setting destination path of writefile op */
-    { .name = "writefiledest",  /* no opcode */ .write = set_write_file_dest },
+    { .name = "writefiledest",
+        /* no opcode */ .write = set_write_file_dest },
 
-    { .name = "arm",            .opcode = 0x00, .write = op_int1 },
-    { .name = "quiesce",        .opcode = 0x01, .write = op_nil },
-    { .name = "quiescens",      .opcode = 0x02, .write = op_int1 },
-    { .name = "quiescecycle",   .opcode = 0x03, .write = op_int1 },
-    { .name = "quiescetime",    .opcode = 0x04, .write = op_nil },
-    { .name = "rpns",           .opcode = 0x07, .write = op_nil },
-    { .name = "wakecpu",        .opcode = 0x09, .write = op_int1 },
+    /* Opcode [0x00, 0x0f] */
+    { .name = "arm",
+        .opcode = 0x00, .write = op_args,
+        .argc = 1, .argt = {INT_A} },
+    { .name = "quiesce",
+        .opcode = 0x01, .write = op_args,
+        .argc = 0 },
+    { .name = "quiescens",
+        .opcode = 0x02, .write = op_args,
+        .argc = 1, .argt = {INT_A} },
+    { .name = "quiescecycle",
+        .opcode = 0x03, .write = op_args,
+        .argc = 1, .argt = {INT_A} },
+    { .name = "quiescetime",
+        .opcode = 0x04, .write = op_args,
+        .argc = 0 },
+    { .name = "rpns",
+        .opcode = 0x07, .write = op_args,
+        .argc = 0 },
+    { .name = "wakecpu",
+        .opcode = 0x09, .write = op_args,
+        .argc = 1, .argt = {INT_A} },
 
-    { .name = "exit",           .opcode = 0x21, .write = op_int1 },
-    { .name = "fail",           .opcode = 0x22, .write = op_int2 },
-    { .name = "sum",            .opcode = 0x23, .write = op_int6 },
+    /* Opcode [0x20, 0x2f] */
+    { .name = "exit",
+        .opcode = 0x21, .write = op_args,
+        .argc = 1, .argt = {INT_A} },
+    { .name = "fail",
+        .opcode = 0x22, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "sum",
+        .opcode = 0x23, .write = op_args,
+        .argc = 6, .argt = {INT_A, INT_A, INT_A, INT_A, INT_A, INT_A} },
 
-    { .name = "initparam",      .opcode = 0x30, .write = op_int2 },
-    { .name = "loadsymbol",     .opcode = 0x31, .write = op_nil },
+    /* Opcode [0x30, 0x3f] */
+    { .name = "initparam",
+        .opcode = 0x30, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "loadsymbol",
+        .opcode = 0x31, .write = op_args,
+        .argc = 0 },
 
-    { .name = "resetstats",     .opcode = 0x40, .write = op_int2 },
-    { .name = "dumpstats",      .opcode = 0x41, .write = op_int2 },
-    { .name = "dumpresetstats", .opcode = 0x42, .write = op_int2 },
-    { .name = "checkpoint",     .opcode = 0x43, .write = op_int2 },
-    { .name = "writefile",      .opcode = 0x4F, .write = write_file },
+    /* Opcode [0x40, 0x4f] */
+    { .name = "resetstats",
+        .opcode = 0x40, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "dumpstats",
+        .opcode = 0x41, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "dumpresetstats",
+        .opcode = 0x42, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "checkpoint",
+        .opcode = 0x43, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "writefile",
+        .opcode = 0x4F, .write = write_file },
 
-    { .name = "readfile",       .opcode = 0x50, .read  = read_file },
-    { .name = "debugbreak",     .opcode = 0x51, .write = op_nil },
-    { .name = "switchcpu",      .opcode = 0x52, .write = op_nil },
-    { .name = "addsymbol",      .opcode = 0x53, .write = op_int1_str1 },
-    { .name = "panic",          .opcode = 0x54, .write = op_nil },
-    { .name = "workbegin",      .opcode = 0x5a, .write = op_int2 },
-    { .name = "workend",        .opcode = 0x5b, .write = op_int2 },
+    /* Opcode [0x50, 0x5f] */
+    { .name = "readfile",
+        .opcode = 0x50, .read  = read_file },
+    { .name = "debugbreak",
+        .opcode = 0x51, .write = op_args,
+        .argc = 0 },
+    { .name = "switchcpu",
+        .opcode = 0x52, .write = op_args,
+        .argc = 0 },
+    { .name = "addsymbol",
+        .opcode = 0x53, .write = op_args,
+        .argc = 2, .argt = {INT_A, STR_A} },
+    { .name = "panic",
+        .opcode = 0x54, .write = op_args,
+        .argc = 0 },
+    { .name = "workbegin",
+        .opcode = 0x5a, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
+    { .name = "workend",
+        .opcode = 0x5b, .write = op_args,
+        .argc = 2, .argt = {INT_A, INT_A} },
 
-    { .name = "disttogglesync", .opcode = 0x62, .write = op_nil },
+    /* Opcode [0x60, 0x6f] */
+    { .name = "disttogglesync",
+        .opcode = 0x62, .write = op_args,
+        .argc = 0 },
 
-    { .name = "workload",       .opcode = 0x70, .write = op_nil },
+    /* Opcode [0x60, 0x6f] */
+    { .name = "workload",
+        .opcode = 0x70, .write = op_args,
+        .argc = 0 },
 };
 const int op_count = ARRAY_SIZE(op_list);
 
@@ -260,79 +312,64 @@ static ssize_t write_file(struct gem5_op *op, char *buff, size_t len,
  * Op Function Definitions - General
  * ========================================================================= */
 
-static ssize_t op_nil(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp)
+static void op_args_error(struct gem5_op *op)
 {
-    gem5_poke_opcode = op->opcode;
-    (void)POKE0();
-    return len; /* unconditionally consume entire input */
+    char err_usage_buff[128], *errstr = err_usage_buff;
+    int arg_i;
+
+    if (op->argc == 0) {
+        errstr += snprintf(errstr, 8, " <none>");
+    } else {
+        for (arg_i = 0; arg_i < op->argc; ++arg_i) {
+            switch (op->argt[arg_i]) {
+                case STR_A:
+                    errstr += snprintf(errstr, 8, " <str>");
+                    break;
+                case INT_A:
+                    errstr += snprintf(errstr, 8, " <int>");
+                    break;
+                default:
+                    errstr += snprintf(errstr, 8, " <???>");
+            }
+        }
+    }
+
+    pr_err("%s: argument error on arg %d\n", __func__, arg_i);
+    pr_err("    expected args of the form:%s\n", err_usage_buff);
 }
 
-static ssize_t op_int1(struct gem5_op *op, char *buff, size_t len,
+static ssize_t op_args(struct gem5_op *op, char *buff, size_t len,
                             loff_t *offp)
 {
-    u64 arg0;
-    int err = parse_arg_int(&buff, &arg0);
-    if (err) {
-        ARG_PARSE_ERR("<int>");
-        return -EINVAL;
+    u64 args[GEM5_OPS_MAXARGS] = { 0 };
+    char *argstr;
+    int arg_i;
+    int err;
+
+    for (arg_i = 0; arg_i < op->argc; ++arg_i) {
+        /* Parse args tokens as described by op */
+        switch (op->argt[arg_i]) {
+            case STR_A:
+                err = parse_arg_str(&buff, &argstr);
+                args[arg_i] = (u64)argstr; /* store pointer as u64 */
+                break;
+            case INT_A:
+                err = parse_arg_int(&buff, &args[arg_i]);
+                break;
+            default:
+                pr_err("%s: unrecognized arg type\n", __func__);
+                return -EINVAL;
+        }
+
+        /* Report arg usage errors */
+        if (err) {
+            op_args_error(op);
+            return -EINVAL;
+        }
     }
 
     gem5_poke_opcode = op->opcode;
-    (void)POKE1(arg0);
-    return len; /* unconditionally consume entire input */
-}
-
-static ssize_t op_int2(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp)
-{
-    u64 arg0, arg1;
-    int err = parse_arg_int(&buff, &arg0)
-            | parse_arg_int(&buff, &arg1);
-    if (err) {
-        ARG_PARSE_ERR("<int> <int>");
-        return -EINVAL;
-    }
-
-    gem5_poke_opcode = op->opcode;
-    (void)POKE2(arg0, arg1);
-    return len; /* unconditionally consume entire input */
-}
-
-static ssize_t op_int6(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp)
-{
-    u64 arg0, arg1, arg2, arg3, arg4, arg5;
-    int err = parse_arg_int(&buff, &arg0)
-            | parse_arg_int(&buff, &arg1)
-            | parse_arg_int(&buff, &arg2)
-            | parse_arg_int(&buff, &arg3)
-            | parse_arg_int(&buff, &arg4)
-            | parse_arg_int(&buff, &arg5);
-    if (err) {
-        ARG_PARSE_ERR("<int> <int> <int> <int> <int> <int>");
-        return -EINVAL;
-    }
-
-    gem5_poke_opcode = op->opcode;
-    (void)POKE6(arg0, arg1, arg2, arg3, arg4, arg5);
-    return len; /* unconditionally consume entire input */
-}
-
-static ssize_t op_int1_str1(struct gem5_op *op, char *buff, size_t len,
-                            loff_t *offp)
-{
-    u64 arg0;
-    char *arg1;
-    int err = parse_arg_int(&buff, &arg0)
-            | parse_arg_str(&buff, &arg1);
-    if (err) {
-        ARG_PARSE_ERR("<int> <string>");
-        return -EINVAL;
-    }
-
-    gem5_poke_opcode = op->opcode;
-    (void)POKE2(arg0, (u64)arg1);
+    (void)POKE6(args[0], args[1], args[2], args[3], args[4], args[5]);
     return len; /* unconditionally consume entire input */
 }
 

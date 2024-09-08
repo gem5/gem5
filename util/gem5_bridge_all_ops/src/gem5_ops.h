@@ -39,13 +39,25 @@ typedef ssize_t (*read_f)(struct gem5_op *op, char *buff, size_t len,
 typedef ssize_t (*write_f)(struct gem5_op *op, char *buff, size_t len,
                             loff_t *off);
 
+/* Op arg enum */
+enum gem5_op_arg
+{
+    NIL_A=0,
+    STR_A,
+    INT_A,
+};
+
 /* Op configuration struct */
+#define GEM5_OPS_MAXARGS 6
 struct gem5_op
 {
     const char *name;
     u8 opcode;
     read_f read;
     write_f write;
+    /* Only for generic ops using op_args() */
+    int argc;
+    enum gem5_op_arg argt[GEM5_OPS_MAXARGS];
 };
 
 /* Exported op configuration list */
