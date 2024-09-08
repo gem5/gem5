@@ -57,6 +57,9 @@
 /* Just helpful for printing */
 #define PATH "/dev/gem5/"
 
+/* Size of buffers used for read and write calls */
+#define BUFFSIZE 0x1000
+
 
 /* ========================================================================= *
  * Exported Variables
@@ -134,71 +137,55 @@ static int gem5_bridge_mmap(struct file *filp, struct vm_area_struct *vma)
 static ssize_t gem5_bridge_read(struct file *filp, char *ubuff,
                                     size_t len, loff_t *offp)
 {
+    static char kbuff[BUFFSIZE];
+
     ssize_t result;
-    char *kbuff;
     const char *file_name = filp->f_path.dentry->d_iname;
     struct gem5_op *op = gem5_ops_search(file_name);
-
-    /* Allocate kernel buffer */
-    kbuff = kvmalloc(len, GFP_KERNEL);
-    if (!kbuff) {
-        pr_err("%s: unable to allocate kernel buffer\n", __func__);
-        return -ENOMEM;
-    }
 
     /* Check that the device is valid and its op has read functionality */
     if (!op || !op->read) {
         pr_err("%s: read unsupported for "PATH"%s\n", __func__, op->name);
-        kvfree(kbuff);
         return -ENOTTY;
     }
 
     /* Run this op's read function */
+    len = min(len, (size_t)BUFFSIZE);
     result = op->read(op, kbuff, len, offp);
     if (result < 0 || result > len) {
         pr_err("%s: read failed for "PATH"%s\n", __func__, op->name);
-        kvfree(kbuff);
         return result; /* propogate the error */
     }
 
     /* Copy kernel buffer to user buffer */
     if (copy_to_user(ubuff, kbuff, result) != 0) {
         pr_err("%s: unable to copy kernel buffer to user buffer\n", __func__);
-        kvfree(kbuff);
         return -EFAULT;
     }
 
     pr_info("%s: SUCCESS! (result=%lu)\n", __func__, result);
-    kvfree(kbuff);
     return result;
 }
 
 static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
                                     size_t len, loff_t *offp)
 {
+    static char kbuff[BUFFSIZE];
+
     ssize_t result;
-    char *kbuff;
     const char *file_name = filp->f_path.dentry->d_iname;
     struct gem5_op *op = gem5_ops_search(file_name);
 
-    /* Allocate kernel buffer */
-    kbuff = kvmalloc(len, GFP_KERNEL);
-    if (!kbuff) {
-        pr_err("%s: unable to allocate kernel buffer\n", __func__);
-        return -ENOMEM;
-    }
-
     /* Copy user buffer to kernel buffer */
+    len = min(len, (size_t)BUFFSIZE);
     if (copy_from_user(kbuff, ubuff, len) != 0) {
         pr_err("%s: unable to copy user buffer to kernel buffer\n", __func__);
-        kvfree(kbuff);
         return -EFAULT;
     }
 
     /* Check that the device is valid and its op has write functionality */
     if (!op || !op->write) {
         pr_err("%s: write unsupported for "PATH"%s\n", __func__, op->name);
-        kvfree(kbuff);
         return -ENOTTY;
     }
 
@@ -206,12 +193,10 @@ static ssize_t gem5_bridge_write(struct file *filp, const char *ubuff,
     result = op->write(op, kbuff, len, offp);
     if (result < 0 || result > len) {
         pr_err("%s: write failed for "PATH"%s\n", __func__, op->name);
-        kvfree(kbuff);
         return result; /* propogate the error */
     }
 
     pr_info("%s: SUCCESS! (result=%lu)\n", __func__, result);
-    kvfree(kbuff);
     return result;
 }
 
