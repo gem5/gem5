@@ -23,13 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+FROM --platform=${BUILDPLATFORM} ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.description="A Dockerfile to build an Ubuntu 22.04 docker image with all dependencies required for building and using gem5."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
-
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
