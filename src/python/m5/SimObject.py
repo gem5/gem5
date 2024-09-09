@@ -489,6 +489,12 @@ def cxxMethod(*args, **kwargs):
                 # We don't cound 'self' as an argument in this case.
                 continue
             param = sig.parameters[param_name]
+            if param.kind in [
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            ]:
+                # *args and **kwargs shouldn't be in generated parameters
+                continue
             if param.default is param.empty:
                 args.append(param_name)
             else:
