@@ -58,6 +58,7 @@ void *m5_mem = NULL;
 uint64_t m5op_addr = M5OP_ADDR;
 
 const char *m5_mmap_dev = "/dev/gem5/bridge";
+const char *m5_mmap_dev_fallback = "/dev/mem";
 
 void
 map_m5_mem()
@@ -76,7 +77,19 @@ map_m5_mem()
     fd = open(m5_mmap_dev, O_RDWR | O_SYNC);
     if (fd == -1) {
         fprintf(stderr, "Can't open %s: %s\n", m5_mmap_dev, strerror(errno));
-        exit(1);
+        fprintf(stderr, "--> Make sure the gem5_bridge device driver has "
+                        "been properly inserted into the kernel. Otherwise, "
+                        "sudo access required to perform address-mode ops.\n");
+
+        /* Fallback device */
+        fd = open(m5_mmap_dev_fallback, O_RDWR | O_SYNC);
+        if (fd == -1) {
+            fprintf(stderr, "Can't open %s: %s\n",
+                    m5_mmap_dev_fallback, strerror(errno));
+            fprintf(stderr, "--> Make sure this utility has sudo access to "
+                            "use fallback device.\n");
+            exit(1);
+        }
     }
 
     m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
