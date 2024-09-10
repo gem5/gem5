@@ -203,6 +203,7 @@ def template VSetiVliBranchTarget {{
 
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
         npc->set(rvSext(npc->pc() + 4));
+        npc->new_vconf(true);
         npc->vtype(new_vtype);
         npc->vl(new_vl);
         return npc;
@@ -226,6 +227,7 @@ def template VSetVliBranchTarget {{
         uint32_t new_vl = getNewVL(
             pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
 
+        pc_ptr->as<PCState>().new_vconf(true);
         pc_ptr->as<PCState>().vtype(new_vtype);
         pc_ptr->as<PCState>().vl(new_vl);
         return std::unique_ptr<PCStateBase>{pc_ptr};
@@ -249,6 +251,7 @@ def template VSetVlBranchTarget {{
         uint32_t new_vl = getNewVL(
             pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
 
+        pc_ptr->as<PCState>().new_vconf(true);
         pc_ptr->as<PCState>().vtype(new_vtype);
         pc_ptr->as<PCState>().vl(new_vl);
         return std::unique_ptr<PCStateBase>{pc_ptr};

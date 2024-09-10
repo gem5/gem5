@@ -65,12 +65,14 @@ class PCState : public GenericISA::UPCState<4>
 
     bool _compressed = false;
     RiscvType _rvType = RV64;
+    bool _new_vconf = false;
     VTYPE _vtype = (1ULL << 63); // vtype.vill = 1 at initial;
     uint32_t _vl = 0;
 
   public:
     PCState(const PCState &other) : Base(other),
-        _rvType(other._rvType), _vtype(other._vtype), _vl(other._vl)
+        _rvType(other._rvType),  _new_vconf(other._new_vconf),
+        _vtype(other._vtype), _vl(other._vl)
     {}
     PCState &operator=(const PCState &other) = default;
     PCState() = default;
@@ -90,6 +92,7 @@ class PCState : public GenericISA::UPCState<4>
         auto &pcstate = other.as<PCState>();
         _compressed = pcstate._compressed;
         _rvType = pcstate._rvType;
+        _new_vconf = pcstate._new_vconf;
         _vtype = pcstate._vtype;
         _vl = pcstate._vl;
     }
@@ -99,6 +102,9 @@ class PCState : public GenericISA::UPCState<4>
 
     void rvType(RiscvType rvType) { _rvType = rvType; }
     RiscvType rvType() const { return _rvType; }
+
+    void new_vconf(bool v) { _new_vconf = v; }
+    bool new_vconf() const { return _new_vconf; }
 
     void vtype(VTYPE v) { _vtype = v; }
     VTYPE vtype() const { return _vtype; }
@@ -119,8 +125,8 @@ class PCState : public GenericISA::UPCState<4>
     {
         auto &opc = other.as<PCState>();
         return Base::equals(other) &&
-            _vtype == opc._vtype &&
-            _vl == opc._vl;
+            (_new_vconf == opc._new_vconf) &&
+            (!_new_vconf || (_vtype == opc._vtype && _vl == opc._vl));
     }
 
     void
@@ -128,6 +134,7 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_rvType);
+        SERIALIZE_SCALAR(_new_vconf);
         SERIALIZE_SCALAR(_vtype);
         SERIALIZE_SCALAR(_vl);
         SERIALIZE_SCALAR(_compressed);
@@ -138,6 +145,7 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_rvType);
+        UNSERIALIZE_SCALAR(_new_vconf);
         UNSERIALIZE_SCALAR(_vtype);
         UNSERIALIZE_SCALAR(_vl);
         UNSERIALIZE_SCALAR(_compressed);
