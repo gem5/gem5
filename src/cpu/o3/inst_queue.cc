@@ -812,7 +812,7 @@ InstructionQueue::scheduleReadyInsts()
             continue;
         }
 
-        int idx = FUPool::NoCapableFU;
+        int idx = FUPool::NoNeedFU;
         Cycles op_latency = Cycles(1);
         ThreadID tid = issuing_inst->threadNumber;
 
@@ -832,7 +832,8 @@ InstructionQueue::scheduleReadyInsts()
 
         // If we have an instruction that doesn't require a FU, or a
         // valid FU, then schedule for execution.
-        if (idx != FUPool::NoFreeFU) {
+        if (idx > FUPool::NoFreeFU || idx == FUPool::NoNeedFU ||
+            idx == FUPool::NoCapableFU) {
             if (op_latency == Cycles(1)) {
                 i2e_info->size++;
                 instsToExecute.push_back(issuing_inst);
@@ -841,7 +842,17 @@ InstructionQueue::scheduleReadyInsts()
                 // cycle if we used one.
                 if (idx >= 0)
                     fuPool->freeUnitNextCycle(idx);
+
+                // CPU has no capable FU for the instruction
+                // but this may be OK if the instruction gets
+                // squashed. Remember this and give IEW
+                // the opportunity to trigger a fault
+                // if the instruction is unsupported.
+                // Otherwise, commit will panic.
+                if (idx == FUPool::NoCapableFU)
+                  issuing_inst->setNoCapableFU();
             } else {
+                assert(idx != FUPool::NoCapableFU);
                 bool pipelined = fuPool->isPipelined(op_class);
                 // Generate completion event for the FU
                 ++wbOutstanding;
@@ -898,6 +909,7 @@ InstructionQueue::scheduleReadyInsts()
             listOrder.erase(order_it++);
             iqStats.statIssuedInstType[tid][op_class]++;
         } else {
+            assert(idx == FUPool::NoFreeFU);
             iqStats.statFuBusy[op_class]++;
             iqStats.fuBusy[tid]++;
             ++order_it;
