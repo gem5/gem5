@@ -76,7 +76,7 @@ class SignalSinkPort : public Port
     void onChange(OnChangeFunc func) { _onChange = std::move(func); }
 
     void
-    bind(Port &peer) override
+    virtual bind(Port &peer) override
     {
         _source = dynamic_cast<SignalSourcePort<State> *>(&peer);
         fatal_if(!_source, "Attempt to bind signal pin %s to "
@@ -86,7 +86,7 @@ class SignalSinkPort : public Port
         Port::bind(peer);
     }
     void
-    unbind() override
+    virtual unbind() override
     {
         _source = nullptr;
         Port::unbind();
@@ -127,7 +127,7 @@ class SignalSourcePort : public Port
     const State &state() const { return _state; }
 
     void
-    bind(Port &peer) override
+    virtual bind(Port &peer) override
     {
         sink = dynamic_cast<SignalSinkPort<State> *>(&peer);
         fatal_if(!sink, "Attempt to bind signal pin %s to "
@@ -135,7 +135,7 @@ class SignalSourcePort : public Port
         Port::bind(peer);
     }
     void
-    unbind() override
+    virtual unbind() override
     {
         sink = nullptr;
         Port::unbind();

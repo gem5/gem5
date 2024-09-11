@@ -156,12 +156,12 @@ class RequestPort: public Port, public AtomicRequestProtocol,
      * Bind this request port to a response port. This also does the
      * mirror action and binds the response port to the request port.
      */
-    void bind(Port &peer) override;
+    virtual void bind(Port &peer) override;
 
     /**
      * Unbind this request port and the associated response port.
      */
-    void unbind() override;
+    virtual void unbind() override;
 
     /**
      * Determine if this request port is snooping or not. The default
@@ -391,8 +391,8 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     /**
      * We let the request port do the work, so these don't do anything.
      */
-    void unbind() override {}
-    void bind(Port &peer) override {}
+    void virtual unbind() override {}
+    void virtual bind(Port &peer) override {}
 
   public:
     /* The atomic protocol. */
