@@ -63,7 +63,7 @@ class RemoteGDB : public BaseRemoteGDB
     class Riscv32GdbRegCache : public BaseGdbRegCache
     {
       using BaseGdbRegCache::BaseGdbRegCache;
-      private:
+      protected:
         /**
          * RISC-V Register Cache
          * Order and sizes of registers found in ext/gdb-xml/riscv.xml
@@ -149,7 +149,7 @@ class RemoteGDB : public BaseRemoteGDB
     class Riscv64GdbRegCache : public BaseGdbRegCache
     {
       using BaseGdbRegCache::BaseGdbRegCache;
-      private:
+      protected:
         /**
          * RISC-V Register Cache
          * Order and sizes of registers found in ext/gdb-xml/riscv.xml
