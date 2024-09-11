@@ -135,32 +135,6 @@ def _split_suffix(value, suffixes):
     return (value[: -len(matches[0])], matches[0]) if matches else (value, "")
 
 
-def _split_suffix_by_prefix(value):
-    """Split a string based on a suffix from a list of suffixes.
-    This is intended to be used with the keys of binary_prefixes.
-
-    :param value: String value to test for a matching magnitude
-    (e.g. k, M, Gi, etc).
-    :param suffixes: Container of suffixes to test.
-
-    :returns: A tuple of (value, suffix). Suffix is the empty string
-              if there is no match.
-
-    """
-    matches = [sfx for sfx in binary_prefixes.keys() if sfx in value]
-
-    if len(matches) == 2:  # e.g. matches both M and Mi
-        matches.sort(key=len, reverse=True)
-        matches.pop()
-        assert len(matches) <= 1
-
-    return (
-        (value[: value.find(matches[0])], matches[0])
-        if matches
-        else (value, "")
-    )
-
-
 def toNum(value, target_type, units, prefixes, converter):
     """Convert a string using units and prefixes to (typically) a float or
     integer.
@@ -301,15 +275,15 @@ def toMemoryBandwidth(value):
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
-def _base_10_to_2(value: str) -> Optional[str]:
+def _base_10_to_2(value: str, unit: str) -> Optional[str]:
     """Convert a base 10 memory/cache size SI prefix strings to base 2. Used
     in `checkBaseConversion` to provide a warning message to the user. Will
     return None if no conversion is required.
 
-
     This function is intentionally separate from `checkBaseConversion` to aid
     in testing."""
-    size, prefix = _split_suffix_by_prefix(value)
+    size_and_prefix, _ = _split_suffix(value, [unit])
+    size, prefix = _split_suffix(size_and_prefix, binary_prefixes)
     if prefix in base_10_to_2.keys():
         return f"{size}{base_10_to_2[prefix]}"
     return None
@@ -317,7 +291,7 @@ def _base_10_to_2(value: str) -> Optional[str]:
 
 def checkBaseConversion(value, unit):
     if type(value) is str:
-        new_value = _base_10_to_2(value)
+        new_value = _base_10_to_2(value, unit)
         if new_value:
             from m5.util import warn
 
