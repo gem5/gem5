@@ -45,19 +45,19 @@ from gem5.utils.requires import requires
 class ArmDemoBoard(ArmBoard):
     """
     This prebuilt ARM board is used for demonstration purposes. It simulates an
-    ARM 3GHz dual-core system with a 2GB DDR4_2400 memory system. A
-    PrivateL1PrivateL2 cache hierarchy is set with an l1 data and instruction
-    cache, each 16kB, and a single bank l2 cache of 256kB.
+    ARM 1.4GHz dual-core system with a 4GiB DDR4_2400 memory system. It uses
+    a PrivateL1SharedL2CacheHierarchy with l1d and l1i caches set to 64KiB and
+    l2 shared cache set to 1MiB
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
     reliable statistical results.
     """
 
-    def __init__(self, use_kvm=False):
+    def __init__(self, use_kvm: bool = False) -> None:
         """
         :param use_kvm: If True, the board will use a SimpleProcessor
-            with cpy type of CPUTypes.KVM. If False, the board will use a SimpleProcessor with
+            with cpu type of CPUTypes.KVM. If False, the board will use a SimpleProcessor with
             a cpu type of CPUTypes.TIMING.
         """
         requires(
@@ -70,14 +70,17 @@ class ArmDemoBoard(ArmBoard):
             "real-world system. Use with caution."
         )
         cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
-            l1d_size="16KiB", l1i_size="16KiB", l2_size="8MiB"
+            l1d_size="64KiB", l1i_size="64KiB", l2_size="1MiB"
         )
 
-        memory = DualChannelDDR4_2400(size="8GB")
+        # Note: Normally a system with these specification would have 1
+        # GiB for memory but because some benchmarks would not run with
+        # 1 GiB of memory so we have set it to 4 GiB.
+        memory = DualChannelDDR4_2400(size="4GiB")
 
         if use_kvm:
             processor = SimpleProcessor(
-                cpu_type=CPUTypes.KVM, num_cores=4, isa=ISA.ARM
+                cpu_type=CPUTypes.KVM, num_cores=2, isa=ISA.ARM
             )
             # The ArmBoard requires a `release` to be specified. This adds all the
             # extensions or features to the system. We are setting this to for_kvm()
@@ -100,7 +103,7 @@ class ArmDemoBoard(ArmBoard):
             platform = VExpress_GEM5_Foundation()
 
         super().__init__(
-            clk_freq="3GHz",
+            clk_freq="1.4GHz",
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,

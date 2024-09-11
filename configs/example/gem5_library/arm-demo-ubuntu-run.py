@@ -31,10 +31,10 @@ disk image. This simulation boots the disk image using the ArmDemoBoard.
 Usage
 -----
 
-```
-scons build/ARM/gem5.opt -j<NUM_CPUS>
+```bash
+scons build/ARM/gem5.opt -j $(nproc)
 ./build/ARM/gem5.opt configs/example/gem5_library/arm-demo-ubuntu-run.py
-
+```
 """
 import argparse
 
@@ -49,7 +49,7 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.ARM)
 
 parser = argparse.ArgumentParser(
-    description="An example configuration script to run the arm demo mode."
+    description="An example configuration script to run the ArmDemoBoard."
 )
 
 parser.add_argument(
