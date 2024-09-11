@@ -37,12 +37,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Attempting to import `warn` results in an error about a circular import:
-# ImportError: cannot import name 'warn' from partially initialized module 'm5.util' (most likely due to a circular import) (/home/bees/gem5-3rd-worktree/src/python/m5/util/__init__.py):
-
-# from m5.util import warn
-# from . import warn
-
 # metric prefixes
 from typing import Optional
 
