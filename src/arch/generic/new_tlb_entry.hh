@@ -5,13 +5,14 @@ class TLBEntry : public CacheEntry {
     TLBEntry() = default;
     ~TLBEntry() = default;
 
-    // list of members, these are the most common ones that i see
     Addr vaddr;
     Addr paddr;
-    unsigned int logBytes;
+    unsigned int logBytes; // supposed to be the page size
     Addr id;
     Addr tag;
     bool uncacheable;
+
+    /* Functions that are used from CachEntry
 
     virtual bool isValid() const {
         return valid;
@@ -20,7 +21,6 @@ class TLBEntry : public CacheEntry {
     virtual Addr getTag() const {
         return tag;
     }
-
 
     virtual bool matchTag(const Addr tag) const
     {
@@ -32,11 +32,11 @@ class TLBEntry : public CacheEntry {
         setValid();
         setTag(tag);
     }
-
-    // this marks something as true or not
     virtual void invalidate() {
         valid = false;
         setTag(MaxAddr);
     }
+
+    */
 
 }

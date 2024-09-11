@@ -249,6 +249,7 @@ class AssociativeCache : public Named
     {
         entry->insert(indexingPolicy->extractTag(addr));
         replPolicy->reset(entry->replacementData);
+
     }
 
     /**

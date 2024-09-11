@@ -1,3 +1,4 @@
+
 #include "base/cache/associative_cache.hh"
 #include "generic/new_tlb.hh"
 #include "params/NewTLB.hh"
@@ -17,17 +18,13 @@
 // replacement policy - least recently ysed
 #include "mem/cache/replacement_policies/lru_rp.hh"
 
-
 namespace gem5 {
-
-/** Constructor for Associative Cache **/
 TLB(const char* name, size_t num_entries, size_t associativity,
         BaseReplacementPolicy* repl_policy, BaseIndexingPolicy* indexing_policy)
 {
     // Initialize the AssociativeCache through the _cache member in Translator
     _cache.init(num_entries, associativity, repl_policy, indexing_policy);
 }
-
 
 /** Lookup
  * @AC: findEntry(const Addr addr)
@@ -73,7 +70,7 @@ virtual TLBEntry * lookup(Addr vpn, auto id, BaseMMU::Mode mode, bool updateLRU)
  * @params: vpn, id
  * @result: none
  */
-void remove(Addr vpn, auto id) {
+virtual void remove(Addr vpn, auto id) {
 
     Addr key = buildKey(vpn, id);
     this->_cache.invalidate(findEntry(key));
@@ -86,7 +83,7 @@ void remove(Addr vpn, auto id) {
  * @params: none
  * @result: none
  */
-void flushAll() {
+virtual void flushAll() {
     this->_cache.clear()
 }
 
@@ -96,41 +93,9 @@ void flushAll() {
  * @params: vpn -> in order to find which set we need to remove
  * @result: none
  */
-void evictLRU(Addr vpn) {
-
+virtual void evictLRU(Addr vpn) {
     TLBEntry * entry = this->_cache.findVictim(addr);
     this->_cache.invalidate(entry);
-
 }
 
-
-virtual TlbEntry * insert(Addr vpn, auto id, const TlbEntry &entry);
-virtual demapPage(Addr addr, uint64_t address_space);
-virtual Fault TLB::translate(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode);
-virtual Fault TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode);
-virtual Fault TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode);
-virtual Fault TLB::translateTiming(const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode);
-virtual serialize(CheckpointIn &cp);
-virtual unserialize(CheckpointIn &cp);
-
-
-// Statistics
-TLB::TlbStats::TlbStats(statistics::Group *parent)
-  : statistics::Group(parent),
-    ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
-    ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),
-    ADD_STAT(readAccesses, statistics::units::Count::get(), "read accesses"),
-    ADD_STAT(writeHits, statistics::units::Count::get(), "write hits"),
-    ADD_STAT(writeMisses, statistics::units::Count::get(), "write misses"),
-    ADD_STAT(writeAccesses, statistics::units::Count::get(), "write accesses"),
-    ADD_STAT(hits, statistics::units::Count::get(),
-             "Total TLB (read and write) hits", readHits + writeHits),
-    ADD_STAT(misses, statistics::units::Count::get(),
-             "Total TLB (read and write) misses", readMisses + writeMisses),
-    ADD_STAT(accesses, statistics::units::Count::get(),
-             "Total TLB (read and write) accesses",
-             readAccesses + writeAccesses)
-{
 }
-
-}; // end of namespace
