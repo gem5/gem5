@@ -57,8 +57,11 @@ args = parser.parse_args()
 # or SE simulation.
 board = RiscvDemoBoard(is_fs=False)
 
-# Here we set a workload.
-board.set_workload(obtain_resource(args.workload, args.version))
+# Here we set a workload. If nothing is passed for resource_version, the
+# latest resource version compatible with the gem5 version will be obtained.
+board.set_workload(
+    obtain_resource(resource_id=args.workload, resource_version=args.version)
+)
 
 simulator = Simulator(board=board)
 
