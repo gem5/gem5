@@ -164,7 +164,7 @@ FUPool::getUnit(OpClass capability)
     //  If this pool doesn't have the specified capability,
     //  return this information to the caller
     if (!capabilityList[capability])
-        return -2;
+        return NoCapableFU;
 
     int fu_idx = fuPerCapList[capability].getFU();
     int start_idx = fu_idx;
@@ -175,7 +175,7 @@ FUPool::getUnit(OpClass capability)
         fu_idx = fuPerCapList[capability].getFU();
         if (fu_idx == start_idx) {
             // No FU available
-            return -1;
+            return NoFreeFU;
         }
     }
 
