@@ -37,26 +37,34 @@ class TLBIndexing : public BaseIndexingPolicy
    const int pageShift;
    const unsigned vpnMask;
 
-   /* Overrides from BaseIndexingPolicy */
+   /* Pure Virtual from BaseIndexingPolicy */
 
-   /* Function Explanation */
+   /* @params: an address that contains the vpn and the pcid (tag) */
+   /* @return: a list of entries in a set */
    std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr) const override;
 
-   /* Function Explanation */
+   /* useless function - never used */
    Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry) const override;
 
-   /* Function Explanation */
+   /* Override from BaseIndexingPolicy */
+
+   /* @params: tag 
+    * @return: tag */
    Addr extractTag(const Addr addr) override const;
 
    /* New Functions for TLB Indexing */
 
-   /* Function Explanation */
+   /* @params: [vpn][id] 
+    * @return: [vpn] */
    auto TLBSetAssociative::extractSet(const Addr addr) const;
 
-   /* Function Explanation */
+   /* @params: [vpn][page offset] */
+   /* @return: [vpn] */
    Addr getVPNfromVA(const Addr addr) const;
 
-   /* Function Explanation */
+   /* @params: vpn, id */
+   /* @return: [vpn][id][0's] */ 
+   /* key and tag are synonomous */
    Addr buildKey(Addr vpn, auto id) const;
 
 
