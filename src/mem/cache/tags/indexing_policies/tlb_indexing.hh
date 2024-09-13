@@ -48,13 +48,13 @@ class TLBIndexing : public BaseIndexingPolicy
 
    /* Override from BaseIndexingPolicy */
 
-   /* @params: tag 
+   /* @params: tag
     * @return: tag */
    Addr extractTag(const Addr addr) override const;
 
    /* New Functions for TLB Indexing */
 
-   /* @params: [vpn][id] 
+   /* @params: [vpn][id]
     * @return: [vpn] */
    auto TLBSetAssociative::extractSet(const Addr addr) const;
 
@@ -63,7 +63,7 @@ class TLBIndexing : public BaseIndexingPolicy
    Addr getVPNfromVA(const Addr addr) const;
 
    /* @params: vpn, id */
-   /* @return: [vpn][id][0's] */ 
+   /* @return: [vpn][id][0's] */
    /* key and tag are synonomous */
    Addr buildKey(Addr vpn, auto id) const;
 

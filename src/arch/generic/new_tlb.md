@@ -4,7 +4,7 @@
 What Makes Up the TLB:
 - `TLB` class inherits from `Translator`: `src/arch/generic/new_tlb.hh` and `src/arch/generic/new_tlb.cc`
     - `Translator` has a protected `AssociativeCache` member
-- `TLBEntry` inherits from `CacheEntry` which inherits from `ReplaceableEntry`: ` 
+- `TLBEntry` inherits from `CacheEntry` which inherits from `ReplaceableEntry`: `
 - `TLB_Indexing` is the indexing policy that determines how the tag, sets, and entries are managed within the `AssociativeCache`: `src/mem/cache/tags/indexing_policy/tlb_indexing.hh` and `src/mem/cache/tags/indexing_policy/tlb_indexing.cc`
 
 **[1] TLB Class**
@@ -15,10 +15,10 @@ What Makes Up the TLB:
 | TLB Functions | Translation Functions | Serialization | Stats |
 | --------------|-----------------------|---------------|-------|
 | `lookup`      | `translate`           | `serialize`
-|`evictLRU`     | `translateAtomic`     | `unserialize` 
+|`evictLRU`     | `translateAtomic`     | `unserialize`
 | `remove`      | `translateFunctional` |
 |`flushAll`     |  `translateTiming`    |
-|`demapPage`    |  
+|`demapPage`    |
 |`insert`       |
 
 **Function Types in new_tlb.cc**
@@ -32,16 +32,16 @@ What Makes Up the TLB:
 | `Constructor` | `demapPage`           |
 |               | `insert`             |
 |               | `serialize`          |
-|               | `unserialize`        |                
+|               | `unserialize`        |
 
 
 **Outline**
 - Most TLB functions will be using the `AssociativeCache` functions
-    - `AssociativeCache` functions are a combinations 
+    - `AssociativeCache` functions are a combinations
 - Indexing Policy: newly developed `tlb_indexing`
     - Manages the Associative Cache dat structure
 - Replacement Policy: prexisting `lru_rp`
-    - Manages the replacement (and eviction) policy for the Associative Cache data structure 
+    - Manages the replacement (and eviction) policy for the Associative Cache data structure
 
 ** [1a] Implemented Functions**
 --
@@ -106,7 +106,7 @@ Inputs:
 
 Return: none
 
-Structure of Function: 
+Structure of Function:
 - `buildKey` called on `vpn` and `id`
 - key is the paramater for calling `AssociativeCache` function `findEntry(Addr addr)`
 - `invalidate` is called on the entry returned by `findEntry`
@@ -117,7 +117,7 @@ Notes:
 - these functions are pure virtual, which means that there is no implementation in the parent class TLB
 - each architecture that inherits from this implementation will have to have its implementations
 
-`insert` 
+`insert`
 - differences in what to do in a Full System situation
 
 `translate`
@@ -166,7 +166,7 @@ Notes:
 **Members**
 - virtual address
 - physical address
-- tag 
+- tag
 - logBytes (pageBytes)
 - uncacheable
 
