@@ -48,8 +48,8 @@ from m5.util import warn
 
 from ...components.boards.riscv_board import RiscvBoard
 from ...components.boards.se_binary_workload import SEBinaryWorkload
-from ...components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
-    PrivateL1PrivateL2WalkCacheHierarchy,
+from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
+    PrivateL1SharedL2CacheHierarchy,
 )
 from ...components.memory import DualChannelDDR4_2400
 from ...components.processors.cpu_types import CPUTypes
@@ -65,10 +65,10 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
     This board is based on the X86DemoBoard.
 
     This prebuilt RISCV board is used for demonstration purposes. It simulates
-    an RISCV 3GHz quad-core system with a 2GB DDR3_1600 memory system. A
-    MESI_Two_Level cache hierarchy is set with an l1 data and instruction
-    cache, each 32kB with an associativity of 8, and a single bank l2 cache of
-    1MB with an associativity of 16.
+    an RISCV 1.4GHz dual-core system with a 4GiB DDR4_2400 memory system. A
+    private L1, shared L2 cache hierarchy is set with a l1 data and instruction
+    cache, each 64KiB with an associativity of 8, and a single bank l2 cache of
+    1MiB with an associativity of 16.
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
@@ -88,7 +88,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
         )
         self._fs = is_fs
 
-        memory = DualChannelDDR4_2400(size="3GiB")
+        memory = DualChannelDDR4_2400(size="4GiB")
 
         processor = SimpleProcessor(
             cpu_type=CPUTypes.TIMING,
@@ -97,18 +97,18 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
         )
 
         # Here we setup the parameters of the l1 and l2 caches.
-        cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
-            l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
+        cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+            l1d_size="64KiB", l1i_size="64KiB", l2_size="1MiB"
         )
 
         super().__init__(
-            clk_freq="3GHz",
+            clk_freq="1.4GHz",
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
 
-    # Taken from riscv matched board. Below are functions that are needed to get
+    # Taken from Riscv Matched board. Below are functions that are needed to get
     # SE mode to work.
     @overrides(RiscvBoard)
     def _pre_instantiate(self):
