@@ -142,18 +142,19 @@ if len(commit_header) > max_header_size:
         + ")"
     )
 
-# Then there must be at least one empty line between the commit header and
-# the commit description
-if commit_message_lines[1] != "":
-    _printErrorQuit(
-        "Please add an empty line between the commit title and "
-        "its description"
-    )
+if len(commit_message_lines) > 1:
+    # Then there must be at least one empty line between the commit header and
+    # the commit description
+    if commit_message_lines[1] != "":
+        _printErrorQuit(
+            "Please add an empty line between the commit title and "
+            "its description"
+        )
 
-# Encourage providing descriptions
-if re.search(
-    "^(Signed-off-by|Change-Id|Reviewed-by):", commit_message_lines[2]
-):
-    print("Warning: Commit does not have a description")
+    # Encourage providing descriptions
+    if re.search(
+        "^(Signed-off-by|Change-Id|Reviewed-by):", commit_message_lines[2]
+    ):
+        print("Warning: Commit does not have a description")
 
 sys.exit(0)

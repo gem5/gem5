@@ -21,37 +21,11 @@ jobs:
             - uses: actions/setup-python@v5
             - uses: pre-commit/action@v3.0.1
 
-  # ensures we have a change-id in every commit, needed for gerrit
-    check-for-change-id:
-        # runs on github hosted runner
-        runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-            - name: Check for Change-Id
-              run: |
-                  # loop through all the commits in the pull request
-                  for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
-                      git checkout $commit
-                      if (git log -1 --pretty=format:"%B" | grep -q "Change-Id: ")
-                      then
-                        # passes as long as at least one change-id exists in the pull request
-                        exit 0
-                      fi
-                  done
-                  # if we reach this part, none of the commits had a change-id
-                  echo "None of the commits in this pull request contains a Change-ID, which we require for any changes made to gem5. "\
-                    "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
-                    "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
-                  exit 1
-
     unittests-all-opt:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
+        needs: [pre-commit] # only runs if pre-commit passes.
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
@@ -66,7 +40,7 @@ jobs:
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id]
+        needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
 
@@ -97,7 +71,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-18:latest
-        needs: [pre-commit, check-for-change-id]
+        needs: [pre-commit]
         timeout-minutes: 90
         steps:
             - uses: actions/checkout@v4
@@ -109,7 +83,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-matrix]
+        needs: [pre-commit, testlib-quick-matrix]
         strategy:
             matrix:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
@@ -139,7 +113,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-matrix, testlib-quick-gem5-builds]
+        needs: [pre-commit, testlib-quick-matrix, testlib-quick-gem5-builds]
         timeout-minutes: 360 # 6 hours
         strategy:
             fail-fast: false
@@ -188,7 +162,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-gem5-builds]
+        needs: [pre-commit, testlib-quick-gem5-builds]
         timeout-minutes: 30
         steps:
 
@@ -225,7 +199,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 180
-        needs: [pre-commit, check-for-change-id]
+        needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
 
@@ -257,7 +231,6 @@ jobs:
             - clang-fast-compilation
             - unittests-all-opt
             - pre-commit
-            - check-for-change-id
             - gpu-tests
         steps:
             - run: echo "This job's status is ${{ job.status }}."
