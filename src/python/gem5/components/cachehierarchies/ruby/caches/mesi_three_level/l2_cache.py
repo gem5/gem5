@@ -30,9 +30,9 @@ from m5.objects import (
     ClockDomain,
     L1Cache_Controller,
     MessageBuffer,
-    RubyCache,
     RubyPrefetcher,
 )
+from m5.objects.RubyCache import RubyCache
 
 from ......isas import ISA
 from ......utils.override import *

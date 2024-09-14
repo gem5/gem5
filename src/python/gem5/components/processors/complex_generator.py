@@ -27,7 +27,7 @@
 from typing import (
     Any,
     Iterator,
-    List,
+    Sequence,
 )
 
 from ...utils.override import overrides
@@ -49,7 +49,7 @@ class ComplexGenerator(AbstractGenerator):
         :param num_cores: The number of complex generator cores to create.
         """
 
-    def _create_cores(self, num_cores: int) -> List[ComplexGeneratorCore]:
+    def _create_cores(self, num_cores: int) -> Sequence[ComplexGeneratorCore]:
         """
         Create a list of ComplexGeneratorCore.
         """

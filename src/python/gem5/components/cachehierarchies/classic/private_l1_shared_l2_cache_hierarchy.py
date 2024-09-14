@@ -26,14 +26,14 @@
 
 from typing import Optional
 
-from m5.objects import (
-    BadAddr,
+from m5.objects.Cache import Cache
+from m5.objects.Device import BadAddr
+from m5.objects.XBar import (
     BaseXBar,
-    Cache,
     L2XBar,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *
@@ -183,7 +183,7 @@ class PrivateL1SharedL2CacheHierarchy(
             mshrs=20,
             size="1kB",
             tgts_per_mshr=12,
-            addr_ranges=board.mem_ranges,
+            addr_ranges=board.get_mem_ranges(),
         )
         self.iocache.mem_side = self.membus.cpu_side_ports
         self.iocache.cpu_side = board.get_mem_side_coherent_io_port()

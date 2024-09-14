@@ -55,17 +55,22 @@
 #####################################################################
 
 import copy
-import datetime
 import math
-import re
-import sys
 import time
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+)
 
 from . import (
     proxy,
     ticks,
 )
 from .util import *
+
+if TYPE_CHECKING:
+    from .SimObject import SimObject
 
 
 def isSimObject(*args, **kwargs):
@@ -155,7 +160,7 @@ class ParamDesc:
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
-        if ptype != None:
+        if ptype is not None:
             self.ptype = ptype
 
         if args:
@@ -462,7 +467,7 @@ class String(ParamValue, str):
     cmd_line_settable = True
 
     @classmethod
-    def cxx_predecls(self, code):
+    def cxx_predecls(cls, code):
         code("#include <string>")
 
     def __call__(self, value):
@@ -470,7 +475,7 @@ class String(ParamValue, str):
         return value
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{dest} = {src};")
         code(f"{ret} true;")
 
@@ -482,6 +487,9 @@ class String(ParamValue, str):
 # operations in a type-safe way.  e.g., a Latency times an int returns
 # a new Latency object.
 class NumericParamValue(ParamValue):
+    def __init__(self, value) -> None:
+        self.value = value
+
     @staticmethod
     def unwrap(v):
         return v.value if isinstance(v, NumericParamValue) else v
@@ -572,13 +580,13 @@ class NumericParamValue(ParamValue):
     # istringstream and let overloading choose the right type according to
     # the dest type.
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} to_number({src}, {dest});")
 
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(MetaParamValue):
-    def __init__(cls, name, bases, dict):
+    def __init__(self, name, bases, dict):
         super().__init__(name, bases, dict)
 
         # CheckedInt is an abstract base class, so we actually don't
@@ -587,19 +595,22 @@ class CheckedIntType(MetaParamValue):
         if name == "CheckedInt":
             return
 
-        if not (hasattr(cls, "min") and hasattr(cls, "max")):
-            if not (hasattr(cls, "size") and hasattr(cls, "unsigned")):
+        if not hasattr(self, "min") or not hasattr(self, "max"):
+            if (size := getattr(self, "size", None)) is not None:
+                # TODO: Maybe only override min and max if they are not already set
+                # (rather than overriding both if either are unset)
+                if getattr(self, "unsigned", False):
+                    self.min = 0
+                    self.max = 2**size - 1
+                else:
+                    self.min = -(2 ** (size - 1))
+                    self.max = (2 ** (size - 1)) - 1
+            else:
                 panic(
                     "CheckedInt subclass %s must define either\n"
                     "    'min' and 'max' or 'size' and 'unsigned'\n",
                     name,
                 )
-            if cls.unsigned:
-                cls.min = 0
-                cls.max = 2**cls.size - 1
-            else:
-                cls.min = -(2 ** (cls.size - 1))
-                cls.max = (2 ** (cls.size - 1)) - 1
 
 
 # Abstract superclass for bounds-checked integer parameters.  This
@@ -739,7 +750,7 @@ class Cycles(CheckedInt):
     unsigned = True
 
     def getValue(self):
-        from _m5.core import Cycles
+        from _m5.core import Cycles  # type: ignore
 
         return Cycles(self.value)
 
@@ -785,7 +796,7 @@ class Float(ParamValue, float):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -872,7 +883,7 @@ class PcCountPair(ParamValue):
 
     def getValue(self):
         #  convert Python PcCountPair into C++ PcCountPair
-        from _m5.pc import PcCountPair
+        from _m5.pc import PcCountPair  # type: ignore
 
         return PcCountPair(self.pc, self.count)
 
@@ -897,71 +908,70 @@ class PcCountPair(ParamValue):
 class AddrRange(ParamValue):
     cxx_type = "AddrRange"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        # we annotate start/end/size as int | str | Addr, but as long as it's something
+        # that can construct an Addr, we're happy
+        start: int | str | Addr | None | list | tuple = None,
+        end: int | str | Addr | None = None,
+        size: int | str | Addr | None = None,
+        intlvMatch: int | None = None,
+        intlvBits: int | None = None,
+        masks: List[int] | None = None,
+        intlvHighBit: int | None = None,
+        xorHighBit: int | None = None,
+    ):
         # Disable interleaving and hashing by default
         self.intlvBits = 0
         self.intlvMatch = 0
         self.masks = []
 
-        def handle_kwargs(self, kwargs):
-            # An address range needs to have an upper limit, specified
-            # either explicitly with an end, or as an offset using the
-            # size keyword.
-            if "end" in kwargs:
-                self.end = Addr(kwargs.pop("end"))
-            elif "size" in kwargs:
-                self.end = self.start + Addr(kwargs.pop("size"))
-            else:
-                raise TypeError("Either end or size must be specified")
-
-            # Now on to the optional bit
-            if "intlvMatch" in kwargs:
-                self.intlvMatch = int(kwargs.pop("intlvMatch"))
-
-            if "masks" in kwargs:
-                self.masks = [int(x) for x in list(kwargs.pop("masks"))]
-                self.intlvBits = len(self.masks)
-            else:
-                if "intlvBits" in kwargs:
-                    self.intlvBits = int(kwargs.pop("intlvBits"))
-                    self.masks = [0] * self.intlvBits
-                    if "intlvHighBit" not in kwargs:
-                        raise TypeError("No interleave bits specified")
-                    intlv_high_bit = int(kwargs.pop("intlvHighBit"))
-                    xor_high_bit = 0
-                    if "xorHighBit" in kwargs:
-                        xor_high_bit = int(kwargs.pop("xorHighBit"))
-                    for i in range(0, self.intlvBits):
-                        bit1 = intlv_high_bit - i
-                        mask = 1 << bit1
-                        if xor_high_bit != 0:
-                            bit2 = xor_high_bit - i
-                            mask |= 1 << bit2
-                        self.masks[self.intlvBits - i - 1] = mask
-
-        if len(args) == 0:
-            self.start = Addr(kwargs.pop("start"))
-            handle_kwargs(self, kwargs)
-
-        elif len(args) == 1:
-            if kwargs:
-                self.start = Addr(args[0])
-                handle_kwargs(self, kwargs)
-            elif isinstance(args[0], (list, tuple)):
-                self.start = Addr(args[0][0])
-                self.end = Addr(args[0][1])
-            else:
+        # Handle getting the start and end addresses
+        match (start, end, size):
+            # case where start is a list/tuple
+            case ([start, end] | (start, end), None, None):
+                self.start = Addr(start)
+                self.end = Addr(end)
+            # cases where start is an int/str/None
+            case (start, None, size) if size is not None:
+                self.start = Addr(start or 0)
+                self.end = self.start + Addr(size)
+            case (start, end, _) if end is not None:
+                self.start = Addr(start or 0)
+                self.end = Addr(end)
+            # case where only one address is specified (given as start but will be used as end)
+            case (start, None, None) if start is not None:
                 self.start = Addr(0)
-                self.end = Addr(args[0])
+                self.end = Addr(start)
+            # failure case
+            case params:
+                raise TypeError(
+                    f"Either end or size must be specified: {params}"
+                )
 
-        elif len(args) == 2:
-            self.start = Addr(args[0])
-            self.end = Addr(args[1])
-        else:
-            raise TypeError("Too many arguments specified")
+        # now on to the optional bit
+        if intlvMatch is not None:
+            self.intlvMatch = int(intlvMatch)
 
-        if kwargs:
-            raise TypeError(f"Too many keywords: {list(kwargs.keys())}")
+        if masks is not None:
+            self.masks = [int(x) for x in list(masks)]
+            self.intlvBits = len(self.masks)
+        elif intlvBits is not None:
+            self.intlvBits = int(intlvBits)
+            self.masks = [0] * self.intlvBits
+            if intlvHighBit is None:
+                raise TypeError("No interleave bits specified")
+            intlv_high_bit = int(intlvHighBit)
+            xor_high_bit = 0
+            if xorHighBit is not None:
+                xor_high_bit = int(xorHighBit)
+            for i in range(0, self.intlvBits):
+                bit1 = intlv_high_bit - i
+                mask = 1 << bit1
+                if xor_high_bit != 0:
+                    bit2 = xor_high_bit - i
+                    mask |= 1 << bit2
+                self.masks[self.intlvBits - i - 1] = mask
 
     def __str__(self):
         if len(self.masks) == 0:
@@ -1024,7 +1034,7 @@ class AddrRange(ParamValue):
 
     def getValue(self):
         # Go from the Python class to the wrapped C++ class
-        from _m5.range import AddrRange
+        from _m5.range import AddrRange  # type: ignore
 
         return AddrRange(
             int(self.start), int(self.end), self.masks, int(self.intlvMatch)
@@ -1104,7 +1114,7 @@ class HostSocket(ParamValue):
             self.value = value
 
     def getValue(self):
-        from _m5.socket import (
+        from _m5.socket import (  # type: ignore
             listenSocketEmptyConfig,
             listenSocketInetConfig,
             listenSocketUnixAbstractConfig,
@@ -1207,23 +1217,23 @@ class EthernetAddr(ParamValue):
         return value
 
     def unproxy(self, base):
-        if self.value == NextEthernetAddr:
+        if callable(self.value) and self.value == NextEthernetAddr:
             return EthernetAddr(self.value())
         return self
 
     def getValue(self):
-        from _m5.net import EthAddr
+        from _m5.net import EthAddr  # type: ignore
 
         return EthAddr(self.value)
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def ini_str(self):
         return self.value
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{dest} = networking::EthAddr({src});")
         code(f"{ret} true;")
 
@@ -1276,7 +1286,7 @@ class IpAddress(ParamValue):
             raise TypeError("invalid ip address %#08x" % self.ip)
 
     def getValue(self):
-        from _m5.net import IpAddress
+        from _m5.net import IpAddress  # type: ignore
 
         return IpAddress(self.ip)
 
@@ -1350,10 +1360,10 @@ class IpNetmask(IpAddress):
     def verify(self):
         self.verifyIp()
         if self.netmask < 0 or self.netmask > 32:
-            raise TypeError("invalid netmask %d" % netmask)
+            raise TypeError(f"invalid netmask {self.netmask}")
 
     def getValue(self):
-        from _m5.net import IpNetmask
+        from _m5.net import IpNetmask  # type: ignore
 
         return IpNetmask(self.ip, self.netmask)
 
@@ -1429,7 +1439,7 @@ class IpWithPort(IpAddress):
             raise TypeError("invalid port %d" % self.port)
 
     def getValue(self):
-        from _m5.net import IpWithPort
+        from _m5.net import IpWithPort  # type: ignore
 
         return IpWithPort(self.ip, self.port)
 
@@ -1500,7 +1510,7 @@ class Time(ParamValue):
     def getValue(self):
         import calendar
 
-        from _m5.core import tm
+        from _m5.core import tm  # type: ignore
 
         return tm.gmtime(calendar.timegm(self.value))
 
@@ -1511,7 +1521,7 @@ class Time(ParamValue):
         return str(self)
 
     def get_config_as_dict(self):
-        assert false
+        assert False
         return str(self)
 
     @classmethod
@@ -1574,7 +1584,7 @@ class MetaEnum(MetaParamValue):
                 "Enum-derived class must define attribute 'map' or 'vals'"
             )
 
-        if cls.is_class:
+        if getattr(cls, "is_class", False):
             cls.cxx_type = f"{name}"
         else:
             scope = init_dict.get("wrapper_name", "enums")
@@ -1688,7 +1698,7 @@ class TickParamValue(NumericParamValue):
     # Ticks are expressed in seconds in JSON files and in plain
     # Ticks in .ini files.  Switch based on a config flag
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code("${ret} to_number(${src}, ${dest});")
 
 
@@ -1871,7 +1881,7 @@ class Temperature(ParamValue):
         return str(self.value)
 
     def getValue(self):
-        from _m5.core import Temperature
+        from _m5.core import Temperature  # type: ignore
 
         return Temperature.from_kelvin(self.value)
 
@@ -1889,7 +1899,7 @@ class Temperature(ParamValue):
         pass
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code("double _temp;")
         code(f"bool _ret = to_number({src}, _temp);")
         code("if (_ret)")
@@ -1908,11 +1918,11 @@ class NetworkBandwidth(float, ParamValue):
         return super().__new__(cls, val)
 
     def __str__(self):
-        return str(self.val)
+        return str(self.val)  # type: ignore
 
     def __call__(self, value):
         val = convert.toNetworkBandwidth(value)
-        self.__init__(val)
+        self.__init__(val)  # type: ignore
         return value
 
     def getValue(self):
@@ -1933,7 +1943,7 @@ class NetworkBandwidth(float, ParamValue):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -1949,7 +1959,7 @@ class MemoryBandwidth(float, ParamValue):
 
     def __call__(self, value):
         val = convert.toMemoryBandwidth(value)
-        self.__init__(val)
+        self.__init__(val)  # type: ignore
         return value
 
     def getValue(self):
@@ -1972,7 +1982,7 @@ class MemoryBandwidth(float, ParamValue):
         code("#include <sstream>")
 
     @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
+    def cxx_ini_parse(cls, code, src, dest, ret):
         code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
@@ -1988,8 +1998,8 @@ class MemoryBandwidth(float, ParamValue):
 class NullSimObject(metaclass=Singleton):
     _name = "Null"
 
-    def __call__(cls):
-        return cls
+    def __call__(self):
+        return self
 
     def _instantiate(self, parent=None, path=""):
         pass
@@ -2052,13 +2062,15 @@ AllMemory = AddrRange(0, MaxAddr)
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
 class PortRef:
-    def __init__(self, simobj, name, role, is_source):
+    def __init__(self, simobj: "SimObject", name, role, is_source):
         assert isSimObject(simobj) or isSimObjectClass(simobj)
         self.simobj = simobj
         self.name = name
         self.role = role
         self.is_source = is_source
-        self.peer = None  # not associated with another port yet
+        self.peer: PortRef | None = (
+            None  # not associated with another port yet
+        )
         self.ccConnected = False  # C++ port connection done?
         self.index = -1  # always -1 for non-vector ports
 
@@ -2068,7 +2080,7 @@ class PortRef:
     def __len__(self):
         # Return the number of connected ports, i.e. 0 is we have no
         # peer and 1 if we do.
-        return int(self.peer != None)
+        return int(self.peer is not None)
 
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
@@ -2083,7 +2095,7 @@ class PortRef:
         }
 
     def __getattr__(self, attr):
-        if attr == "peerObj":
+        if attr == "peerObj" and self.peer is not None:
             # shorthand for proxies
             return self.peer.simobj
         raise AttributeError(
@@ -2143,12 +2155,20 @@ class PortRef:
 
         old_peer = self.peer
 
-        if Port.is_compat(old_peer, new_1) and Port.is_compat(self, new_2):
+        if (
+            old_peer is not None
+            and Port.is_compat(old_peer, new_1)
+            and Port.is_compat(self, new_2)
+        ):
             old_peer.peer = new_1
             new_1.peer = old_peer
             self.peer = new_2
             new_2.peer = self
-        elif Port.is_compat(old_peer, new_2) and Port.is_compat(self, new_1):
+        elif (
+            old_peer is not None
+            and Port.is_compat(old_peer, new_2)
+            and Port.is_compat(self, new_1)
+        ):
             old_peer.peer = new_2
             new_2.peer = old_peer
             self.peer = new_1
@@ -2160,7 +2180,7 @@ class PortRef:
                 self,
                 self.role,
                 old_peer,
-                old_peer.role,
+                old_peer.role if old_peer is not None else None,
                 new_1,
                 new_1.role,
                 new_2,
@@ -2182,7 +2202,7 @@ class PortRef:
 
     def unproxy(self, simobj):
         assert simobj is self.simobj
-        if proxy.isproxy(self.peer):
+        if self.peer is not None and proxy.isproxy(self.peer):
             try:
                 realPeer = self.peer.unproxy(self.simobj)
             except:
@@ -2197,12 +2217,12 @@ class PortRef:
         if self.ccConnected:  # already done this
             return
 
-        peer = self.peer
         if not self.peer:  # nothing to connect to
             return
+        peer = self.peer
 
-        port = self.simobj.getPort(self.name, self.index)
-        peer_port = peer.simobj.getPort(peer.name, peer.index)
+        port: Any = self.simobj.getPort(self.name, self.index)
+        peer_port: Any = peer.simobj.getPort(peer.name, peer.index)
         port.bind(peer_port)
 
         self.ccConnected = True
@@ -2327,8 +2347,10 @@ class Port:
 
     # Generate a PortRef for this port on the given SimObject with the
     # given name
-    def makeRef(self, simobj):
-        return PortRef(simobj, self.name, self.role, self.is_source)
+    def makeRef(self, simobj: "SimObject"):
+        return PortRef(
+            simobj, getattr(self, "name"), self.role, self.is_source
+        )
 
     # Connect an instance of this port (on the given SimObject with
     # the given name) with the port described by the supplied PortRef
@@ -2341,7 +2363,7 @@ class Port:
         pass
 
     def pybind_predecls(self, code):
-        cls.cxx_predecls(self, code)
+        self.cxx_predecls(code)
 
     # Declare an unsigned int with the same name as the port, that
     # will eventually hold the number of connected ports (and thus the
@@ -2368,8 +2390,10 @@ class ResponsePort(Port):
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
 class VectorPort(Port):
-    def makeRef(self, simobj):
-        return VectorPortRef(simobj, self.name, self.role, self.is_source)
+    def makeRef(self, simobj: "SimObject"):
+        return VectorPortRef(
+            simobj, getattr(self, "name"), self.role, self.is_source
+        )
 
 
 class VectorRequestPort(VectorPort):

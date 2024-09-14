@@ -29,21 +29,25 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
     Sequence,
     Tuple,
 )
 
-from m5.objects import (
-    AddrRange,
+from m5.objects.ClockDomain import (
     ClockDomain,
-    IOXBar,
-    Port,
     SrcClockDomain,
-    System,
-    VoltageDomain,
+)
+from m5.objects.System import System
+from m5.objects.VoltageDomain import VoltageDomain
+from m5.objects.XBar import IOXBar
+from m5.params import (
+    AddrRange,
+    Port,
 )
 
 from ...resources.resource import WorkloadResource
@@ -51,6 +55,13 @@ from .mem_mode import (
     MemMode,
     mem_mode_to_string,
 )
+
+if TYPE_CHECKING:
+    from ..cachehierarchies.abstract_cache_hierarchy import (
+        AbstractCacheHierarchy,
+    )
+    from ..memory.abstract_memory_system import AbstractMemorySystem
+    from ..processors.abstract_processor import AbstractProcessor
 
 
 class AbstractBoard:
@@ -109,12 +120,12 @@ class AbstractBoard:
         # full-system or syscall-emulation mode. This is set when the workload
         # is defined. Whether or not the board is to be run in FS mode is
         # determined by which kind of workload is set.
-        self._is_fs = None
+        self._is_fs: bool | None = None
 
         # This variable is used to record the checkpoint directory which is
         # set when declaring the board's workload and then used by the
         # Simulator module.
-        self._checkpoint = None
+        self._checkpoint: Path | None = None
 
         # Setup the board and memory system's memory ranges.
         self._setup_memory_ranges()
@@ -133,7 +144,10 @@ class AbstractBoard:
         """
         return self.processor
 
-    def get_memory(self) -> "AbstractMemory":
+    # NOTE: Am I sure that this should be a AbstractMemorySystem instead of a m5.objects.AbstractMemory?
+    # the type being assigned to this previously would imply that, but I'd have to ensure that that's how it's used as well
+    # if it's used as a m5.objects.AbstractMemory then I need either refactor the constructor or convert the values to the correct type
+    def get_memory(self) -> "AbstractMemorySystem":
         """Get the memory (RAM) connected to the board.
 
         :returns: The memory system.
@@ -162,7 +176,13 @@ class AbstractBoard:
 
         :returns: The size of the cache line size.
         """
-        return self.cache_line_size
+        if (line_size := getattr(self, "cache_line_size", None)) is not None:
+            return line_size
+        else:
+            # TODO: is it better to just return 0 (or some other default value) if the attribute is not set?
+            raise Exception(
+                "The cache line size has not been set for this board."
+            )
 
     def connect_system_port(self, port: Port) -> None:
         self.system_port = port
@@ -202,7 +222,7 @@ class AbstractBoard:
         This function is used by the Simulator module to setup the simulation
         correctly.
         """
-        if self._is_fs == None:
+        if self._is_fs is None:
             raise Exception(
                 "The workload for this board not yet to be set. "
                 "Whether the board is to be executed in FS or SE "
@@ -265,7 +285,7 @@ class AbstractBoard:
         raise NotImplementedError
 
     @abstractmethod
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> List[Port] | None:
         """Get the board's Direct Memory Access ports.
         This abstract method must be implemented within the subclasses if they
         support DMA and/or full system simulation.
@@ -318,6 +338,16 @@ class AbstractBoard:
         """
         raise NotImplementedError
 
+    def get_mem_ranges(self) -> List[AddrRange]:
+        if not hasattr(self, "mem_ranges"):
+            raise Exception(
+                "The board does not have any memory ranges. This is likely "
+                "due to the memory ranges not being set in the `_setup_memory_ranges` "
+                "function."
+            )
+
+        return getattr(self, "mem_ranges")
+
     @abstractmethod
     def _setup_memory_ranges(self) -> None:
         """
@@ -369,8 +399,8 @@ class AbstractBoard:
         self.get_memory().incorporate_memory(self)
 
         # Incorporate the cache hierarchy for the motherboard.
-        if self.get_cache_hierarchy():
-            self.get_cache_hierarchy().incorporate_cache(self)
+        if cache_hierarchy := self.get_cache_hierarchy():
+            cache_hierarchy.incorporate_cache(self)
 
         # Incorporate the processor into the motherboard.
         self.get_processor().incorporate_processor(self)
@@ -380,8 +410,8 @@ class AbstractBoard:
     def _post_instantiate(self):
         """Called to set up anything needed after ``m5.instantiate``."""
         self.get_processor()._post_instantiate()
-        if self.get_cache_hierarchy():
-            self.get_cache_hierarchy()._post_instantiate()
+        if cache_hierarchy := self.get_cache_hierarchy():
+            cache_hierarchy._post_instantiate()
         self.get_memory()._post_instantiate()
 
     def _pre_instantiate(self):

@@ -26,14 +26,13 @@
 
 import math
 
-from m5.objects import (
-    LRURP,
-    ClockDomain,
-    L0Cache_Controller,
-    MessageBuffer,
-    RubyCache,
-    RubyPrefetcher,
-)
+# TODO: Investivate why stubs are not being generated for L0Cache_Controller
+from m5.objects import L0Cache_Controller  # type: ignore[attr-defined]
+from m5.objects.ClockDomain import ClockDomain
+from m5.objects.MessageBuffer import MessageBuffer
+from m5.objects.ReplacementPolicies import LRURP
+from m5.objects.RubyCache import RubyCache
+from m5.objects.RubyPrefetcher import RubyPrefetcher
 
 from ......isas import ISA
 from ......utils.override import *

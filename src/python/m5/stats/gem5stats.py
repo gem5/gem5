@@ -29,21 +29,36 @@ This serves as the bridge between the gem5 statistics exposed via PyBind11 and
 the Python Stats model.
 """
 
+import re
 from datetime import datetime
 from typing import (
     IO,
+    Dict,
     List,
+    Optional,
     Union,
 )
 
-from m5.ext.pystats.group import *
-from m5.ext.pystats.simstat import *
-from m5.ext.pystats.statistic import *
-from m5.ext.pystats.storagetype import *
-from m5.objects import *
+from m5.ext.pystats.group import (
+    Group,
+    SimObjectGroup,
+    SimObjectVectorGroup,
+)
+from m5.ext.pystats.simstat import SimStat
+from m5.ext.pystats.statistic import (
+    Distribution,
+    Scalar,
+    SparseHist,
+    Statistic,
+    Vector,
+    Vector2d,
+)
+from m5.ext.pystats.storagetype import StorageType
+from m5.objects.Root import Root
 from m5.params import SimObjectVector
+from m5.SimObject import SimObject
 
-import _m5.stats
+import _m5.stats  # type: ignore
 
 
 class JsonOutputVistor:
@@ -179,14 +194,13 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
         # Sometimes elements within a vector are defined by their name. Other
         # times they have no name. When a name is not available, we name the
         # stat the index value.
+        index_subname: str | int | float = index
         if len(statistic.subnames) > index and statistic.subnames[index]:
             index_subname = str(statistic.subnames[index])
             if index_subname.isdigit():
                 index_subname = int(index_subname)
             elif index_subname.isnumeric():
                 index_subname = float(index_subname)
-        else:
-            index_subname = index
 
         index_subdesc = None
         if len(statistic.subdescs) > index and statistic.subdescs[index]:

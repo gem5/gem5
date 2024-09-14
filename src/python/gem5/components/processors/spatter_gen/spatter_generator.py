@@ -30,11 +30,9 @@ from typing import (
     Union,
 )
 
-from m5.objects import (
-    SpatterProcessingMode,
-    SrcClockDomain,
-    VoltageDomain,
-)
+from m5.objects.ClockDomain import SrcClockDomain
+from m5.objects.SpatterGen import SpatterProcessingMode
+from m5.objects.VoltageDomain import VoltageDomain
 from m5.stats import dump as dump_stats
 from m5.stats import reset as reset_stats
 from m5.util import fatal

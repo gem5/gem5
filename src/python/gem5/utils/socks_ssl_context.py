@@ -28,7 +28,7 @@ import os
 import ssl
 from typing import Optional
 
-_gem5_ssl_context = None
+_gem5_ssl_context: ssl.SSLContext | None = None
 
 
 def get_proxy_context() -> Optional[ssl.SSLContext]:

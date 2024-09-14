@@ -32,14 +32,8 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
-    Type,
-    Union,
 )
-from urllib import (
-    parse,
-    request,
-)
+from urllib import request
 
 from m5.util import warn
 
@@ -160,7 +154,7 @@ class AtlasClient(AbstractClient):
         client_queries: List[ClientQuery],
     ) -> Dict[str, Any]:
         url = f"{self.url}/action/find"
-        data = {
+        data: Dict[str, Any] = {
             "dataSource": self.dataSource,
             "collection": self.collection,
             "database": self.database,
@@ -168,7 +162,7 @@ class AtlasClient(AbstractClient):
 
         search_conditions = []
         for resource in client_queries:
-            condition = {
+            condition: Dict[str, Any] = {
                 "id": resource.get_resource_id(),
             }
 

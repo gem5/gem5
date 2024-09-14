@@ -30,10 +30,6 @@ from typing import (
     Any,
     Dict,
     List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
 )
 from urllib import request
 from urllib.error import URLError

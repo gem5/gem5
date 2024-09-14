@@ -27,13 +27,13 @@
 from enum import Enum
 from typing import (
     Any,
+    Callable,
+    Generator,
     Iterator,
 )
 
-from m5.objects import (
-    Port,
-    PyTrafficGen,
-)
+from m5.objects import PyTrafficGen  # type: ignore
+from m5.params import Port
 from m5.ticks import fromSeconds
 from m5.util.convert import (
     toLatency,
@@ -254,7 +254,7 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         self._traffic_set = True
 
     def set_traffic_from_python_generator(
-        self, python_generator: Iterator[Any]
+        self, python_generator: Callable[[PyTrafficGen], Generator]
     ) -> None:
         """
         Function to set the traffic from a user defined python generator.
@@ -274,14 +274,14 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
 
     def _create_linear_traffic(
         self,
-        duration: str,
-        rate: str,
+        duration: int,
+        rate: float,
         block_size: int,
         min_addr: int,
         max_addr: int,
         rd_perc: int,
         data_limit: int,
-    ) -> None:
+    ) -> Generator[Any, Any, None]:
         """
         This function yields (creates) a linear traffic based on the input
         params. Then it will yield (create) an exit traffic (exit traffic is
@@ -321,14 +321,14 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
 
     def _create_random_traffic(
         self,
-        duration: str,
-        rate: str,
+        duration: int,
+        rate: float,
         block_size: int,
         min_addr: int,
         max_addr: int,
         rd_perc: int,
         data_limit: int,
-    ) -> None:
+    ) -> Generator[Any, Any, None]:
         """
         This function yields (creates) a random traffic based on the input
         params. Then it will yield (create) an exit traffic (exit traffic is

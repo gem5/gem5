@@ -26,9 +26,9 @@
 
 from typing import Type
 
-from m5.objects import (
+from m5.objects.Cache import Cache
+from m5.objects.Prefetcher import (
     BasePrefetcher,
-    Cache,
     StridePrefetcher,
 )
 

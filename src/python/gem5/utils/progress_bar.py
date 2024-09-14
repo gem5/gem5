@@ -48,7 +48,7 @@ class FakeTQDM:
 
 
 try:
-    from tqdm.auto import tqdm
+    from tqdm.auto import tqdm  # type: ignore
 
     _have_tqdm = True
 except ImportError:
@@ -74,4 +74,4 @@ def progress_hook(t):
     return update_to
 
 
-__all__ = [tqdm, progress_hook, FakeTQDM]
+__all__ = ["tqdm", "progress_hook", "FakeTQDM"]

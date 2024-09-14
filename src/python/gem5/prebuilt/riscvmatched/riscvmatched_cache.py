@@ -24,33 +24,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Type
-
-from m5.objects import (
-    BadAddr,
-    BaseXBar,
-    Cache,
+from m5.objects.Cache import Cache
+from m5.objects.Device import BadAddr
+from m5.objects.XBar import (
     L2XBar,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
-from gem5.components.boards.abstract_board import AbstractBoard
-from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
+from ...components.boards.abstract_board import AbstractBoard
+from ...components.cachehierarchies.abstract_cache_hierarchy import (
     AbstractCacheHierarchy,
 )
-from gem5.components.cachehierarchies.abstract_two_level_cache_hierarchy import (
+from ...components.cachehierarchies.abstract_two_level_cache_hierarchy import (
     AbstractTwoLevelCacheHierarchy,
 )
-from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
+from ...components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
     AbstractClassicCacheHierarchy,
 )
-from gem5.components.cachehierarchies.classic.caches.l1dcache import L1DCache
-from gem5.components.cachehierarchies.classic.caches.l1icache import L1ICache
-from gem5.components.cachehierarchies.classic.caches.l2cache import L2Cache
-from gem5.components.cachehierarchies.classic.caches.mmu_cache import MMUCache
-from gem5.isas import ISA
-from gem5.utils.override import *
+from ...components.cachehierarchies.classic.caches.l1dcache import L1DCache
+from ...components.cachehierarchies.classic.caches.l1icache import L1ICache
+from ...components.cachehierarchies.classic.caches.l2cache import L2Cache
+from ...components.cachehierarchies.classic.caches.mmu_cache import MMUCache
+from ...isas import ISA
+from ...utils.override import overrides
 
 
 class RISCVMatchedCacheHierarchy(
@@ -175,7 +172,7 @@ class RISCVMatchedCacheHierarchy(
             mshrs=20,
             size="1kB",
             tgts_per_mshr=12,
-            addr_ranges=board.mem_ranges,
+            addr_ranges=board.get_mem_ranges(),
         )
         self.iocache.mem_side = self.membus.cpu_side_ports
         self.iocache.cpu_side = board.get_mem_side_coherent_io_port()

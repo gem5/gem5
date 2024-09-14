@@ -26,7 +26,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import re
 from typing import (
     List,
     Optional,
@@ -34,23 +33,29 @@ from typing import (
 
 import m5
 from m5.objects import (
-    AddrRange,
-    BadAddr,
     Bridge,
-    CowDiskImage,
-    Frequency,
     HiFive,
-    IGbE_e1000,
-    IOXBar,
     PMAChecker,
-    Port,
-    RawDiskImage,
-    RiscvBootloaderKernelWorkload,
-    RiscvMmioVirtIO,
-    RiscvRTC,
     VirtIOBlock,
     VirtIORng,
 )
+from m5.objects.Device import BadAddr
+from m5.objects.DiskImage import (
+    CowDiskImage,
+    RawDiskImage,
+)
+from m5.objects.Ethernet import IGbE_e1000
+from m5.objects.RiscvFsWorkload import RiscvBootloaderKernelWorkload
+from m5.objects.RiscvVirtIOMMIO import RiscvMmioVirtIO
+from m5.objects.RTC import RiscvRTC
+from m5.objects.Workload import Workload
+from m5.objects.XBar import IOXBar
+from m5.params import (
+    AddrRange,
+    Frequency,
+    Port,
+)
+from m5.util import fatal
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -65,7 +70,12 @@ from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
 from gem5.components.memory import SingleChannelDDR4_2400
 from gem5.isas import ISA
-from gem5.resources.resource import AbstractResource
+from gem5.resources.resource import (
+    AbstractResource,
+    BootloaderResource,
+    DiskImageResource,
+    KernelResource,
+)
 from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
@@ -144,7 +154,7 @@ class RISCVMatchedBoard(
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         if self._fs:
-            self.workload = RiscvBootloaderKernelWorkload()
+            self.workload: Workload = RiscvBootloaderKernelWorkload()
 
             # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
             self.platform = HiFive()
@@ -594,10 +604,8 @@ class RISCVMatchedBoard(
         # Default DTB address if bbl is built with --with-dts option
         self.workload.dtb_addr = 0x87E00000
 
-        self.generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
+        self.generate_device_tree(m5.options.outdir)  # type: ignore
+        self.workload.dtb_filename = os.path.join(m5.options.outdir, "device.dtb")  # type: ignore
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
@@ -611,9 +619,9 @@ class RISCVMatchedBoard(
     @overrides(KernelDiskWorkload)
     def set_kernel_disk_workload(
         self,
-        kernel: AbstractResource,
-        disk_image: AbstractResource,
-        bootloader: Optional[AbstractResource] = None,
+        kernel: KernelResource,
+        disk_image: DiskImageResource,
+        bootloader: Optional[BootloaderResource] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,

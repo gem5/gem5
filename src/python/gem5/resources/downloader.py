@@ -41,7 +41,7 @@ from typing import (
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
 from ..utils.filelock import FileLock
 from ..utils.progress_bar import (
@@ -149,6 +149,7 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
             else:
                 raise e
         except ValueError as e:
+            use_proxy = os.getenv("GEM5_USE_PROXY")
             raise Exception(
                 f"ValueError: {e}\n"
                 "Environment variable GEM5_USE_PROXY is set to "
@@ -348,9 +349,9 @@ def get_resource(
                     f"('{download_dest}')..."
                 )
             unzip_to = download_dest[: -len(zip_extension)]
-            with gzip.open(download_dest, "rb") as f:
+            with gzip.open(download_dest, "rb") as gz_file:
                 with open(unzip_to, "wb") as o:
-                    shutil.copyfileobj(f, o)
+                    shutil.copyfileobj(gz_file, o)
             os.remove(download_dest)
             download_dest = unzip_to
             if not quiet:
@@ -363,7 +364,7 @@ def get_resource(
                     f"('{download_dest}')"
                 )
             unpack_to = download_dest[: -len(tar_extension)]
-            with tarfile.open(download_dest) as f:
+            with tarfile.open(download_dest) as tar_file:
 
                 def is_within_directory(directory, target):
                     abs_directory = os.path.abspath(directory)
@@ -385,7 +386,7 @@ def get_resource(
 
                     tar.extractall(path, members, numeric_owner=numeric_owner)
 
-                safe_extract(f, unpack_to)
+                safe_extract(tar_file, unpack_to)
             os.remove(download_dest)
 
 

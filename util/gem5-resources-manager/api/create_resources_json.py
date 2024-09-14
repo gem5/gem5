@@ -242,7 +242,7 @@ class ResourceJsonCreator:
                 tags = tags.split(":")[0]
                 tags = tags.split("\n")[:-1]
                 tags = [tag.strip().replace("- ", "") for tag in tags]
-                if tags == [""] or tags == None:
+                if tags == [""] or tags is None:
                     tags = []
                 metadata["tags"] = tags
             if "author:" in content:

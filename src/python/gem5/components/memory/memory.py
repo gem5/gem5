@@ -33,14 +33,13 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     Union,
 )
 
-from m5.objects import (
+from m5.objects.DRAMInterface import DRAMInterface
+from m5.objects.MemCtrl import MemCtrl
+from m5.params import (
     AddrRange,
-    DRAMInterface,
-    MemCtrl,
     Port,
 )
 from m5.util.convert import toMemorySize
@@ -74,7 +73,7 @@ class ChanneledMemory(AbstractMemorySystem):
 
     def __init__(
         self,
-        dram_interface_class: Type[DRAMInterface],
+        dram_interface_class: DRAMInterface,
         num_channels: Union[int, str],
         interleaving_size: Union[int, str],
         size: Optional[str] = None,
@@ -96,6 +95,7 @@ class ChanneledMemory(AbstractMemorySystem):
                                   equivalent to the atom size, i.e., 64.
         """
         num_channels = _try_convert(num_channels, int)
+        assert isinstance(num_channels, int)
         interleaving_size = _try_convert(interleaving_size, int)
 
         if size:
@@ -169,7 +169,7 @@ class ChanneledMemory(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def incorporate_memory(self, board: AbstractBoard) -> None:
-        if self._intlv_size < int(board.get_cache_line_size()):
+        if int(self._intlv_size) < int(board.get_cache_line_size()):
             raise ValueError(
                 "Memory interleaving size can not be smaller than"
                 " board's cache line size.\nBoard's cache line size: "

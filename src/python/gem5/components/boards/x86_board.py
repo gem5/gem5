@@ -30,25 +30,31 @@ from typing import (
     Sequence,
 )
 
-from m5.objects import (
-    Addr,
-    AddrRange,
-    BaseXBar,
-    Bridge,
+from m5.objects.Bridge import Bridge
+from m5.objects.DiskImage import (
     CowDiskImage,
-    IdeDisk,
-    IOXBar,
-    Pc,
-    Port,
     RawDiskImage,
-    X86E820Entry,
-    X86FsLinux,
+)
+from m5.objects.E820 import X86E820Entry
+from m5.objects.Ide import IdeDisk
+from m5.objects.IntelMP import (
     X86IntelMPBus,
     X86IntelMPBusHierarchy,
     X86IntelMPIOAPIC,
     X86IntelMPIOIntAssignment,
     X86IntelMPProcessor,
-    X86SMBiosBiosInformation,
+)
+from m5.objects.Pc import Pc
+from m5.objects.SMBios import X86SMBiosBiosInformation
+from m5.objects.X86FsWorkload import X86FsLinux
+from m5.objects.XBar import (
+    BaseXBar,
+    IOXBar,
+)
+from m5.params import (
+    Addr,
+    AddrRange,
+    Port,
 )
 from m5.util.convert import toMemorySize
 

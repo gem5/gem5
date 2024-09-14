@@ -35,10 +35,12 @@ from typing import (
 )
 
 from m5.objects import (
-    AddrRange,
     MemCtrl,
-    Port,
     SubSystem,
+)
+from m5.params import (
+    AddrRange,
+    Port,
 )
 
 from ..boards.abstract_board import AbstractBoard

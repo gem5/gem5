@@ -25,11 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import (
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     DMASequencer,
     RubyPortProxy,
     RubySequencer,
-    RubySystem,
 )
 
 from ....coherence_protocol import CoherenceProtocol
@@ -62,11 +62,11 @@ class MESITwoLevelCacheHierarchy(
     def __init__(
         self,
         l1i_size: str,
-        l1i_assoc: str,
+        l1i_assoc: int,
         l1d_size: str,
-        l1d_assoc: str,
+        l1d_assoc: int,
         l2_size: str,
-        l2_assoc: str,
+        l2_assoc: int,
         num_l2_banks: int,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)
@@ -161,6 +161,12 @@ class MESITwoLevelCacheHierarchy(
         self._dma_controllers = []
         if board.has_dma_ports():
             dma_ports = board.get_dma_ports()
+            if not dma_ports:
+                raise ValueError(
+                    "DMA ports are enabled but no DMA ports are provided",
+                    "This is likely a configuration error",
+                )
+
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(self.ruby_system.network, cache_line_size)
                 ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)

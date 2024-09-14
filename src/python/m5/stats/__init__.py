@@ -37,6 +37,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+)
+
 import m5
 from m5.objects import Root
 from m5.params import isNullPointer
@@ -45,13 +51,17 @@ from m5.util import (
     fatal,
 )
 
-import _m5.stats
+import _m5.stats  # type: ignore
 
 # Stat exports
-from _m5.stats import periodicStatDump
-from _m5.stats import schedStatEvent as schedEvent
+from _m5.stats import periodicStatDump  # type: ignore
+from _m5.stats import schedStatEvent as schedEvent  # type: ignore
 
 from .gem5stats import JsonOutputVistor
+
+if TYPE_CHECKING:
+    from m5.SimObject import SimObject
+
 
 outputList = []
 
@@ -91,12 +101,8 @@ def _url_factory(schemes, enable=True):
     def decorator(func):
         @wraps(func)
         def wrapper(url):
-            try:
-                from urllib.parse import parse_qs
-            except ImportError:
-                # Python 2 fallback
-                from urlparse import parse_qs
             from ast import literal_eval
+            from urllib.parse import parse_qs
 
             qs = parse_qs(url.query, keep_blank_values=True)
 
@@ -111,13 +117,15 @@ def _url_factory(schemes, enable=True):
                     fatal(f"{url.geturl()}: '{key}' has multiple values.")
                 else:
                     try:
-                        return key, literal_eval(values[0])
+                        return literal_eval(values[0])
                     except ValueError:
                         fatal(
                             f"{url.geturl()}: {values[0]} isn't a valid Python literal"
                         )
 
-            kwargs = dict([parse_value(k, v) for k, v in qs.items()])
+            kwargs = {
+                k: value for k, v in qs.items() if (value := parse_value(k, v))
+            }
 
             try:
                 return func(f"{url.netloc}{url.path}", **kwargs)
@@ -215,11 +223,7 @@ def addStatVisitor(url):
 
     """
 
-    try:
-        from urllib.parse import urlsplit
-    except ImportError:
-        # Python 2 fallback
-        from urlparse import urlsplit
+    from urllib.parse import urlsplit
 
     parsed = urlsplit(url)
 
@@ -303,9 +307,9 @@ def _bindStatHierarchy(root):
         _bind_obj(name, obj)
 
 
-names = []
-stats_dict = {}
-stats_list = []
+names: List = []
+stats_dict: Dict = {}
+stats_list: List = []
 
 
 def enable():
@@ -385,7 +389,7 @@ def _dump_to_visitor(visitor, roots=None):
 
 lastDump = 0
 # List[SimObject].
-global_dump_roots = []
+global_dump_roots: List["SimObject"] = []
 
 
 def dump(roots=None):

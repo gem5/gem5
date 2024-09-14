@@ -25,7 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import abstractmethod
-from typing import List
+from typing import (
+    List,
+    Sequence,
+)
 
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
@@ -55,7 +58,7 @@ class AbstractGenerator(AbstractProcessor):
     It defines the external interface of every generator component.
     """
 
-    def __init__(self, cores: List[AbstractGeneratorCore]) -> None:
+    def __init__(self, cores: Sequence[AbstractGeneratorCore]) -> None:
         """
         Create a list of AbstractGeneratorCore (which is an AbstractCore),
         to pass to the constructor of the AbstractProcessor. Due to the

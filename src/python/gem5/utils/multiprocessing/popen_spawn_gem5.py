@@ -38,10 +38,10 @@ from multiprocessing import (
     spawn,
     util,
 )
-from multiprocessing.context import (
-    reduction,
-    set_spawning_popen,
-)
+
+# this exists, idk why mypy can't find it
+from multiprocessing.context import reduction  # type: ignore
+from multiprocessing.context import set_spawning_popen
 
 from ._command_line import get_command_line
 

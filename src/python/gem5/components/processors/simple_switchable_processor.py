@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional
-
 from m5.util import warn
 
 from ...isas import ISA
@@ -53,7 +51,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         starting_core_type: CPUTypes,
         switch_core_type: CPUTypes,
         num_cores: int,
-        isa: ISA = None,
+        isa: ISA,
     ) -> None:
         """
         :param starting_core_type: The CPU type for each type in the processor
@@ -94,7 +92,8 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         super().incorporate_processor(board=board)
 
         if (
-            board.get_cache_hierarchy().is_ruby()
+            (cache_hierarchy := board.get_cache_hierarchy())
+            and cache_hierarchy.is_ruby()
             and self._mem_mode == MemMode.ATOMIC
         ):
             warn(

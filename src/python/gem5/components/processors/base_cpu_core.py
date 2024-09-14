@@ -29,15 +29,17 @@ from typing import (
     Optional,
 )
 
-from m5.objects import (
-    BaseCPU,
-    BaseMMU,
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.BaseMMU import BaseMMU
+from m5.objects.PcCountTracker import (
     PcCountTracker,
     PcCountTrackerManager,
-    Port,
-    Process,
 )
-from m5.params import PcCountPair
+from m5.objects.Process import Process
+from m5.params import (
+    PcCountPair,
+    Port,
+)
 
 from ...isas import ISA
 from ...utils.override import overrides
@@ -85,7 +87,7 @@ class BaseCPUCore(AbstractCore):
         # type for the current ISA target (a bit ugly but it works).
 
         try:
-            from m5.objects import BaseO3CPU
+            from m5.objects import BaseO3CPU  # type: ignore
 
             return isinstance(self.get_simobject(), BaseO3CPU)
         except ImportError:
@@ -97,7 +99,7 @@ class BaseCPUCore(AbstractCore):
     @overrides(AbstractCore)
     def is_kvm_core(self) -> bool:
         try:
-            from m5.objects import BaseKvmCPU
+            from m5.objects import BaseKvmCPU  # type: ignore
 
             return isinstance(self.core, BaseKvmCPU)
         except ImportError:
@@ -150,10 +152,10 @@ class BaseCPUCore(AbstractCore):
         self.core.createInterruptController()
 
         if self.get_isa().value == ISA.X86.value:
-            if interrupt_requestor != None:
+            if interrupt_requestor is not None:
                 self.core.interrupts[0].pio = interrupt_requestor
                 self.core.interrupts[0].int_responder = interrupt_requestor
-            if interrupt_responce != None:
+            if interrupt_responce is not None:
                 self.core.interrupts[0].int_requestor = interrupt_responce
 
     @overrides(AbstractCore)

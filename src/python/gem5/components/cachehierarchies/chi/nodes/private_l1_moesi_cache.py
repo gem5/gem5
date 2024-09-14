@@ -24,12 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    NULL,
-    ClockDomain,
-    RubyCache,
-    RubyNetwork,
-)
+
+from m5.objects.ClockDomain import ClockDomain
+from m5.objects.Network import RubyNetwork
+from m5.objects.RubyCache import RubyCache
+from m5.params import NULL
 
 from gem5.components.processors.abstract_core import AbstractCore
 from gem5.isas import ISA

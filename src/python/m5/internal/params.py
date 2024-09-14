@@ -40,7 +40,7 @@ import inspect
 
 try:
     # Avoid ImportErrors at build time when _m5 is not available
-    import _m5
+    import _m5  # type: ignore
 
     in_gem5 = True
 except ImportError:

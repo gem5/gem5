@@ -28,10 +28,11 @@
 from abc import abstractmethod
 from typing import Optional
 
-from m5.objects import (
-    Port,
-    PortTerminator,
-)
+from m5.objects.PortTerminator import PortTerminator
+
+# TODO: Validate that this is the correct import
+from m5.objects.Process import Process
+from m5.params import Port
 
 from ...isas import ISA
 from ...utils.override import overrides

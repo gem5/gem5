@@ -37,6 +37,7 @@ from .statistic import (
     Distribution,
     Scalar,
     Statistic,
+    Vector,
 )
 
 

@@ -11,7 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
-# Copyright (c) 2010-20013 Advanced Micro Devices, Inc.
+# Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -39,13 +39,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import inspect
-import sys
 from functools import wraps
 from types import (
     FunctionType,
     MethodType,
     ModuleType,
 )
+from typing import Tuple
 
 import m5
 from m5.citations import gem5_citations
@@ -59,18 +59,30 @@ from m5.ext.pyfdt import pyfdt
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
 # variable, the 'name' param)...
-from m5.params import *
 from m5.params import (
+    DeprecatedParam,
+    EthernetAddr,
+    Param,
     ParamDesc,
     Port,
     SimObjectVector,
     VectorParamDesc,
     isNullPointer,
 )
-from m5.proxy import *
-from m5.proxy import isproxy
-from m5.util import *
-from m5.util.pybind import *
+from m5.proxy import (
+    Parent,
+    isproxy,
+)
+from m5.util import (
+    attrdict,
+    fatal,
+    multidict,
+    warn,
+)
+from m5.util.pybind import (
+    PyBindMethod,
+    PyBindProperty,
+)
 
 #####################################################################
 #
@@ -193,7 +205,7 @@ class MetaSimObject(type):
         return cls
 
     # subclass initialization
-    def __init__(cls, name, bases, dict):
+    def __init__(cls, name, bases: Tuple["MetaSimObject"], dict) -> None:
         # calls type.__init__()... I think that's a no-op, but leave
         # it here just in case it's not.
         super().__init__(name, bases, dict)
@@ -220,47 +232,44 @@ class MetaSimObject(type):
 
         cls._citations = gem5_citations  # Default to gem5's citations
 
-        # We don't support multiple inheritance of sim objects.  If you want
-        # to, you must fix multidict to deal with it properly. Non sim-objects
-        # are ok, though
-        bTotal = 0
-        for c in bases:
-            if isinstance(c, MetaSimObject):
-                bTotal += 1
-            if bTotal > 1:
+        match len([None for b in bases if isinstance(b, MetaSimObject)]):
+            # If the base class is not set, we assume type `object`. This ensures
+            # `class Foo(object): pass` is considered equivalent to
+            # `class Foo: pass`.
+            #
+            # however, since we would only set _base if base is a MetaSimObject, we
+            # can just set it to None here.
+            case 0:
+                cls._base = None
+            case 1:
+                base = bases[0]
+                if isinstance(base, MetaSimObject):
+                    cls._base = base
+                    cls._params = multidict(base._params)
+                    cls._ports = multidict(base._ports)
+                    cls._deprecated_params = multidict(base._deprecated_params)
+                    cls._values = multidict(base._values)
+                    cls._hr_values = multidict(base._hr_values)
+                    cls._children = multidict(base._children)
+                    cls._port_refs = multidict(base._port_refs)
+                    # mark base as having been subclassed
+                    base._instantiated = True
+            case _:
+                # We don't support multiple inheritance of sim objects.  If you want
+                # to, you must fix multidict to deal with it properly. Non sim-objects
+                # are ok, though
                 raise TypeError(
                     "SimObjects do not support multiple inheritance"
                 )
 
-        # If the base class is not set, we assume type `object`. This ensures
-        # `class Foo(object): pass` is considered equivalent to
-        # `class Foo: pass`.
-        base = bases[0] if len(bases) > 0 else object
-
-        # Set up general inheritance via multidicts.  A subclass will
-        # inherit all its settings from the base class.  The only time
-        # the following is not true is when we define the SimObject
-        # class itself (in which case the multidicts have no parent).
-        if isinstance(base, MetaSimObject):
-            cls._base = base
-            cls._params.parent = base._params
-            cls._ports.parent = base._ports
-            cls._deprecated_params.parent = base._deprecated_params
-            cls._values.parent = base._values
-            cls._hr_values.parent = base._hr_values
-            cls._children.parent = base._children
-            cls._port_refs.parent = base._port_refs
-            # mark base as having been subclassed
-            base._instantiated = True
-        else:
-            cls._base = None
+        # TODO: "cls._values_dict" doesn't seem to exist, need to check if this is a typo
 
         # default keyword values
         if "type" in cls._value_dict:
             if "cxx_class" not in cls._value_dict:
-                cls._value_dict["cxx_class"] = cls._value_dict["type"]
+                cls._value_dict["cxx_class"] = cls._value_dict["type"]  # type: ignore
 
-            cls._value_dict["cxx_type"] = f"{cls._value_dict['cxx_class']} *"
+            cls._value_dict["cxx_type"] = f"{cls._value_dict['cxx_class']} *"  # type: ignore
 
             if "cxx_header" not in cls._value_dict:
                 global noCxxHeader
@@ -274,7 +283,7 @@ class MetaSimObject(type):
         # the class is defined, so we handle them here.  The others
         # can be set later too, so just emulate that by calling
         # setattr().
-        for key, val in cls._value_dict.items():
+        for key, val in cls._value_dict.items():  # type: ignore
             # param descriptions
             if isinstance(val, ParamDesc):
                 cls._new_param(key, val)
@@ -285,7 +294,7 @@ class MetaSimObject(type):
 
             # Deprecated variable names
             elif isinstance(val, DeprecatedParam):
-                new_name, new_val = cls._get_param_by_value(val.newParam)
+                new_name, _ = cls._get_param_by_value(val.newParam)  # type: ignore
                 # Note: We don't know the (string) name of this variable until
                 # here, so now we can finish setting up the dep_param.
                 val.oldName = key
@@ -373,7 +382,7 @@ class MetaSimObject(type):
         a runtime error. This will search both the current object and its
         parents.
         """
-        for k, v in cls._value_dict.items():
+        for k, v in cls._value_dict.items():  # type: ignore
             if v == value:
                 return k, v
         raise RuntimeError(f"Cannot find parameter {value} in parameter list")
@@ -464,7 +473,7 @@ class MetaSimObject(type):
 # values defined on the SimObject class itself).  It will get
 # overridden by the permanent definition (which requires that
 # SimObject be defined) lower in this file.
-def isSimObjectOrVector(value):
+def isSimObjectOrVector(value):  # type: ignore
     return False
 
 
@@ -510,7 +519,8 @@ def cxxMethod(*args, **kwargs):
             return func(self, *args, **kwargs)
 
         f = py_call if override else cxx_call
-        f.__pybind = PyBindMethod(
+        # TODO: Figure out where the __pybind attribute is coming from, and adjust type hints accordingly.
+        f.__pybind = PyBindMethod(  # type: ignore
             name,
             cxx_name=cxx_name,
             args=args,
@@ -817,7 +827,7 @@ class SimObject(metaclass=MetaSimObject):
         # via __setattr__.  There is only ever one reference
         # object per port, but we create them lazily here.
         ref = self._port_refs.get(attr)
-        if ref == None:
+        if ref is None:
             ref = self._ports[attr].makeRef(self)
             self._port_refs[attr] = ref
         return ref
@@ -975,7 +985,9 @@ class SimObject(metaclass=MetaSimObject):
                 f"{self}.{name} already has parent not resetting parent.\n"
                 f"\tNote: {name} is not a parameter of {type(self).__name__}"
             )
-            warn(f"(Previously declared as {child._parent}.{name}")
+            warn(
+                f"(Previously declared as {child._parent if isinstance(child, SimObject) else child[0]._parent}.{name}"
+            )
             return
         if name in self._children:
             # This code path had an undiscovered bug that would make it fail
@@ -1003,7 +1015,7 @@ class SimObject(metaclass=MetaSimObject):
                 warn("%s adopting orphan SimObject param '%s'", self, key)
                 self.add_child(key, val)
 
-    def path(self):
+    def path(self) -> str:
         if not self._parent:
             return f"<orphan {self.__class__}>"
         elif isinstance(self._parent, MetaSimObject):
@@ -1011,7 +1023,7 @@ class SimObject(metaclass=MetaSimObject):
 
         ppath = self._parent.path()
         if ppath == "root":
-            return self._name
+            return str(self._name)
         return ppath + "." + self._name
 
     def path_list(self):
@@ -1041,7 +1053,7 @@ class SimObject(metaclass=MetaSimObject):
                 visited = getattr(child, "_visited")
 
             if isinstance(child, ptype) and not visited:
-                if found_obj != None and child != found_obj:
+                if found_obj is not None and child != found_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s %s"
                         % (found_obj.path, child.path)
@@ -1051,13 +1063,13 @@ class SimObject(metaclass=MetaSimObject):
         for pname, pdesc in self._params.items():
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
-                if found_obj != None and found_obj != match_obj:
+                if found_obj is not None and found_obj != match_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s and %s"
                         % (found_obj.path, match_obj.path)
                     )
                 found_obj = match_obj
-        return found_obj, found_obj != None
+        return found_obj, found_obj is not None
 
     def find_all(self, ptype):
         all = {}
@@ -1096,7 +1108,7 @@ class SimObject(metaclass=MetaSimObject):
     def unproxyParams(self):
         for param in self._params.keys():
             value = self._values.get(param)
-            if value != None and isproxy(value):
+            if value is not None and isproxy(value):
                 try:
                     value = value.unproxy(self)
                 except:
@@ -1112,7 +1124,7 @@ class SimObject(metaclass=MetaSimObject):
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name)
-            if port != None:
+            if port is not None:
                 port.unproxy(self)
 
     def print_ini(self, ini_file):
@@ -1135,7 +1147,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
-            if value != None:
+            if value is not None:
                 print(
                     f"{param}={self._values[param].ini_str()}",
                     file=ini_file,
@@ -1143,7 +1155,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 print(f"{port_name}={port.ini_str()}", file=ini_file)
 
         print(file=ini_file)  # blank line between objects
@@ -1164,7 +1176,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
-            if value != None:
+            if value is not None:
                 d[param] = value.config_value()
 
         for n in sorted(self._children.keys()):
@@ -1176,7 +1188,7 @@ class SimObject(metaclass=MetaSimObject):
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 # Represent each port with a dictionary containing the
                 # prominent attributes
                 d[port_name] = port.get_config_as_dict()
@@ -1240,7 +1252,7 @@ class SimObject(metaclass=MetaSimObject):
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
-            if port != None:
+            if port is not None:
                 port_count = len(port)
             else:
                 port_count = 0
@@ -1382,16 +1394,16 @@ def isSimObjectOrSequence(value):
 
 
 def isRoot(obj):
-    from m5.objects import Root
+    from m5.objects import Root  # type: ignore
 
     return obj and obj is Root.getInstance()
 
 
-def isSimObjectOrVector(value):
+def isSimObjectOrVector(value):  # type: ignore[no-redef]
     return isSimObject(value) or isSimObjectVector(value)
 
 
-def tryAsSimObjectOrVector(value):
+def tryAsSimObjectOrVector(value) -> SimObject | SimObjectVector | None:
     if isSimObjectOrVector(value):
         return value
     if isSimObjectSequence(value):
@@ -1399,7 +1411,7 @@ def tryAsSimObjectOrVector(value):
     return None
 
 
-def coerceSimObjectOrVector(value):
+def coerceSimObjectOrVector(value) -> SimObject | SimObjectVector:
     value = tryAsSimObjectOrVector(value)
     if value is None:
         raise TypeError("SimObject or SimObjectVector expected")

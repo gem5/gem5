@@ -31,21 +31,17 @@ from typing import (
     Union,
 )
 
-from m5.objects import (
-    Process,
-    SEWorkload,
-)
+from m5.objects.Process import Process
+from m5.objects.Workload import SEWorkload
 from m5.util import warn
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
 from ...resources.resource import (
-    AbstractResource,
     BinaryResource,
     CheckpointResource,
     FileResource,
-    SimpointDirectoryResource,
     SimpointResource,
 )
 from ..processors.switchable_processor import SwitchableProcessor
@@ -154,20 +150,24 @@ class SEBinaryWorkload:
         # Simulator module to setup checkpoints.
         if checkpoint:
             if isinstance(checkpoint, Path):
-                self._checkpoint = checkpoint
-            elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint = Path(checkpoint.get_local_path())
+                self._checkpoint: Path | None = checkpoint
+            elif (
+                isinstance(checkpoint, CheckpointResource)
+                and (checkpoint_path := checkpoint.get_local_path())
+                is not None
+            ):
+                self._checkpoint = Path(checkpoint_path)
             else:
                 raise Exception(
                     "The checkpoint must be None, Path, or "
-                    "AbstractResource."
+                    "CheckpointResource."
                 )
 
     def set_se_simpoint_workload(
         self,
         binary: BinaryResource,
+        simpoint: SimpointResource,
         arguments: List[str] = [],
-        simpoint: SimpointResource = None,
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
@@ -190,6 +190,10 @@ class SEBinaryWorkload:
                            simulation to that checkpoint.
         """
 
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
+
         self._simpoint_resource = simpoint
 
         if self.get_processor().get_num_cores() > 1:
@@ -211,16 +215,18 @@ class SEBinaryWorkload:
         Returns the SimpointResorce object set. If no SimpointResource object
         has been set an exception is thrown.
         """
-        if getattr(self, "_simpoint_resource", None):
-            return self._simpoint_resource
+        if (
+            simpoint := getattr(self, "_simpoint_resource", None)
+        ) and simpoint is not None:
+            return simpoint
         raise Exception("This board does not have a simpoint set.")
 
     def set_se_looppoint_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         looppoint: Looppoint,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
         region_id: Optional[Union[int, str]] = None,
     ) -> None:
         """Set up the system to run a LoopPoint workload.
@@ -237,6 +243,9 @@ class SEBinaryWorkload:
         :param region_id: If set, will only load the Looppoint region
                           corresponding to that ID.
         """
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
 
         assert isinstance(looppoint, Looppoint)
         self._looppoint_object = looppoint
@@ -253,10 +262,10 @@ class SEBinaryWorkload:
 
     def set_se_elfie_workload(
         self,
-        elfie: AbstractResource,
+        elfie: BinaryResource,
         elfie_info: ELFieInfo,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a ELFie workload.
 
@@ -269,6 +278,9 @@ class SEBinaryWorkload:
                            information for the ELFie.
         :param arguments: The input arguments for the binary.
         """
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
 
         assert isinstance(elfie_info, ELFieInfo)
         self._elfie_info_object = elfie_info

@@ -27,13 +27,13 @@
 from itertools import chain
 from typing import List
 
-from m5.objects import (
-    NULL,
+from m5.objects.RubySystem import RubySystem
+from m5.objects.Sequencer import (
     RubyPortProxy,
     RubySequencer,
-    RubySystem,
 )
 from m5.objects.SubSystem import SubSystem
+from m5.params import NULL
 
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.utils.requires import requires
@@ -207,7 +207,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
     ) -> List[MemoryController]:
         memory_controllers = []
         for rng, port in board.get_mem_ports():
-            mc = MemoryController(self.ruby_system.network, rng, port)
+            mc = MemoryController(self.ruby_system.network, [rng], port)
             mc.ruby_system = self.ruby_system
             memory_controllers.append(mc)
         return memory_controllers
@@ -216,7 +216,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         self, board: AbstractBoard
     ) -> List[DMARequestor]:
         dma_controllers = []
-        for i, port in enumerate(board.get_dma_ports()):
+        for i, port in enumerate(board.get_dma_ports() or []):
             ctrl = DMARequestor(
                 self.ruby_system.network,
                 board.get_cache_line_size(),

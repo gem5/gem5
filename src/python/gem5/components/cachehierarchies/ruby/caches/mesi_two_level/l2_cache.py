@@ -26,10 +26,8 @@
 
 import math
 
-from m5.objects import (
-    MessageBuffer,
-    RubyCache,
-)
+from m5.objects import MessageBuffer
+from m5.objects.RubyCache import RubyCache
 
 from ......utils.override import *
 from ..abstract_l2_cache import AbstractL2Cache

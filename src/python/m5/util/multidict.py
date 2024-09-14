@@ -27,11 +27,17 @@
 __all__ = ["multidict"]
 
 
+from typing import (
+    Dict,
+    Optional,
+)
+
+
 class multidict:
-    def __init__(self, parent={}, **kwargs):
+    def __init__(self, parent: Optional["multidict"] = None, **kwargs):
         self.local = dict(**kwargs)
-        self.parent = parent
-        self.deleted = {}
+        self.parent: Optional["multidict"] = parent
+        self.deleted: Dict = {}
 
     def __str__(self):
         return str(dict(self.items()))
@@ -40,13 +46,15 @@ class multidict:
         return repr(dict(list(self.items())))
 
     def __contains__(self, key):
-        return key in self.local or key in self.parent
+        return key in self.local or (
+            self.parent is not None and key in self.parent
+        )
 
     def __delitem__(self, key):
         try:
             del self.local[key]
         except KeyError as e:
-            if key in self.parent:
+            if self.parent is not None and key in self.parent:
                 self.deleted[key] = True
             else:
                 raise KeyError(e)
@@ -59,13 +67,20 @@ class multidict:
         try:
             return self.local[key]
         except KeyError as e:
-            if not self.deleted.get(key, False) and key in self.parent:
+            if (
+                not self.deleted.get(key, False)
+                and self.parent is not None
+                and key in self.parent
+            ):
                 return self.parent[key]
             else:
                 raise KeyError(e)
 
     def __len__(self):
-        return len(self.local) + len(self.parent)
+        if self.parent is not None:
+            return len(self.local) + len(self.parent)
+        else:
+            return len(self.local)
 
     def next(self):
         for key, value in self.local.items():
@@ -83,11 +98,11 @@ class multidict:
         yield from self.next()
 
     def keys(self):
-        for key, value in self.next():
+        for key, _ in self.next():
             yield key
 
     def values(self):
-        for key, value in self.next():
+        for _, value in self.next():
             yield value
 
     def get(self, key, default=None):

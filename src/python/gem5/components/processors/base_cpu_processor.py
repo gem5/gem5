@@ -25,15 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import List
+from typing import Sequence
 
-from m5.objects import (
-    BaseAtomicSimpleCPU,
-    BaseMinorCPU,
-    BaseNonCachingSimpleCPU,
-    BaseO3CPU,
-    BaseTimingSimpleCPU,
-)
+from m5.objects import BaseAtomicSimpleCPU  # type: ignore
+from m5.objects import BaseMinorCPU  # type: ignore
+from m5.objects import BaseNonCachingSimpleCPU  # type: ignore
+from m5.objects import BaseO3CPU  # type: ignore
+from m5.objects import BaseTimingSimpleCPU  # type: ignore
 from m5.util import warn
 
 from ...utils.override import overrides
@@ -59,18 +57,20 @@ class BaseCPUProcessor(AbstractProcessor):
     and is not officially supported.
     """
 
-    def __init__(self, cores: List[BaseCPUCore]):
+    def __init__(self, cores: Sequence[BaseCPUCore]):
         super().__init__(cores=cores)
 
         if any(core.is_kvm_core() for core in self.get_cores()):
-            from m5.objects import KvmVM
+            from m5.objects import KvmVM  # type: ignore
 
             self.kvm_vm = KvmVM()
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
         if any(core.is_kvm_core() for core in self.get_cores()):
-            board.kvm_vm = self.kvm_vm
+            assert hasattr(board, "kvm_vm")
+            board.kvm_vm = self.kvm_vm  # type:ignore[attr-defined]
+
             # To get the KVM CPUs to run on different host CPUs
             # Specify a different event queue for each CPU
             for i, core in enumerate(self.cores):
@@ -88,7 +88,9 @@ class BaseCPUProcessor(AbstractProcessor):
         ):
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif isinstance(self.cores[0].get_simobject(), BaseAtomicSimpleCPU):
-            if board.get_cache_hierarchy().is_ruby():
+            if (
+                cache_hierarchy := board.get_cache_hierarchy()
+            ) and cache_hierarchy.is_ruby():
                 warn(
                     "Using an atomic core with Ruby will result in "
                     "'atomic_noncaching' memory mode. This will skip caching "

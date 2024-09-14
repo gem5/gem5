@@ -29,14 +29,13 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    List,
     Optional,
+    Sequence,
 )
 
 from m5.objects import SubSystem
 
 from ...isas import ISA
-from ...utils.requires import requires
 from ..boards.abstract_board import AbstractBoard
 from .abstract_core import AbstractCore
 
@@ -46,7 +45,7 @@ class AbstractProcessor(SubSystem):
 
     def __init__(
         self,
-        cores: Optional[List[AbstractCore]] = None,
+        cores: Optional[Sequence[AbstractCore]] = None,
         isa: ISA = ISA.NULL,
     ) -> None:
         """Set the cores on the processor
@@ -69,7 +68,7 @@ class AbstractProcessor(SubSystem):
         assert getattr(self, "cores")
         return len(self.cores)
 
-    def get_cores(self) -> List[AbstractCore]:
+    def get_cores(self) -> Sequence[AbstractCore]:
         assert getattr(self, "cores")
         return self.cores
 

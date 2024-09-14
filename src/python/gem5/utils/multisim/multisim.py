@@ -51,11 +51,16 @@ This script is then passed to the child processes to load.
 
 import importlib
 import multiprocessing
+from importlib.machinery import ModuleSpec
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Optional,
     Set,
 )
+
+if TYPE_CHECKING:
+    from gem5.simulate.simulator import Simulator
 
 # A global variable which __main__.py flips to `True` when multisim is run as
 # an executable module.
@@ -72,10 +77,16 @@ _multi_sim: Set["Simulator"] = set()
 
 def _load_module(module_path: Path) -> None:
     """Load the module at the given path."""
-    spec = importlib.util.spec_from_file_location(
+    spec: ModuleSpec | None = importlib.util.spec_from_file_location(  # util is a hidden module in importlib, but it does exist # type: ignore
         "gem5target", str(module_path)
     )
-    modulevar = importlib.util.module_from_spec(spec)
+    if not spec:
+        raise ImportError("No spec found for module.")
+    modulevar = importlib.util.module_from_spec(  # util is a hidden module in importlib, but it does exist # type: ignore
+        spec
+    )
+    if not spec.loader:
+        raise ImportError("No loader found in spec object.")
     spec.loader.exec_module(modulevar)
 
 
@@ -132,7 +143,7 @@ def get_simulator_ids(config_module_path: Path) -> list[str]:
     """
 
     manager = multiprocessing.Manager()
-    id_list = manager.list()
+    id_list = [str(id) for id in manager.list()]
     p = multiprocessing.Process(
         target=_get_simulator_ids_child_process,
         args=(id_list, config_module_path),
@@ -166,7 +177,11 @@ def _run(module_path: Path, id: str) -> None:
     assert len(sim_list) == 1, f"Multiple simulators with id '{id}' found."
     import m5
 
-    subdir = Path(Path(m5.options.outdir) / Path(sim_list[0].get_id()))
+    # WARN: there appears to not be an outdir defined in the options module, is it linked in from cpp?
+    subdir = Path(
+        Path(m5.options.outdir)  # type: ignore[attr-defined]
+        / Path(sim_list[0].get_id() or "")
+    )
     sim_list[0].override_outdir(subdir)
 
     sim_list[0].run()
@@ -295,6 +310,10 @@ def add_simulator(simulator: "Simulator") -> None:
         elif args.id == simulator.get_id():
             import m5
 
-            subdir = Path(Path(m5.options.outdir) / Path(simulator.get_id()))
+            # WARN: there appears to not be an outdir defined in the options module, is it linked in from cpp?
+            subdir = Path(
+                Path(m5.options.outdir)  # type: ignore[attr-defined]
+                / Path(simulator.get_id() or "")
+            )
             simulator.override_outdir(subdir)
             simulator.run()

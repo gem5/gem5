@@ -25,12 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
 )
 
-from m5.objects import PcCountTrackerManager
+from m5.objects.PcCountTracker import PcCountTrackerManager
 from m5.params import PcCountPair
+
+if TYPE_CHECKING:
+    from gem5.components.processors.abstract_processor import AbstractProcessor
 
 
 class ELFieInfo:
@@ -85,6 +89,7 @@ class ELFieInfo:
         """Returns the complete list of targets PcCountPairs. That is, the
         PcCountPairs each region starts with as well as the relevant warmup
         intervals."""
+        assert self._start and self._end
         return [self._start, self._end]
 
     def get_manager(self) -> PcCountTrackerManager:

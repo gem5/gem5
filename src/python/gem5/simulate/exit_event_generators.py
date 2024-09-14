@@ -26,7 +26,11 @@
 
 from pathlib import Path
 from typing import (
+    Any,
+    Callable,
     Generator,
+    Literal,
+    NoReturn,
     Optional,
 )
 
@@ -45,7 +49,9 @@ In this package we store generators for simulation exit events.
 """
 
 
-def warn_default_decorator(gen: Generator, type: str, effect: str):
+def warn_default_decorator(
+    gen: Callable[..., Generator], type: str, effect: str
+) -> Callable[..., Generator]:
     """A decortator for generators which will print a warning that it is a
     default generator.
     """
@@ -60,7 +66,7 @@ def warn_default_decorator(gen: Generator, type: str, effect: str):
     return wrapped_generator
 
 
-def exit_generator():
+def exit_generator() -> Generator[Literal[True], Any, NoReturn]:
     """
     A default generator for an exit event. It will return ``True``, indicating that
     the Simulator run loop should exit.
@@ -78,6 +84,7 @@ def switch_generator(processor: AbstractProcessor):
     is_switchable = isinstance(processor, SwitchableProcessor)
     while True:
         if is_switchable:
+            # WARN: There is no `switch` method in the `SwitchableProcessor` class.
             yield processor.switch()
         else:
             yield False
@@ -106,9 +113,7 @@ def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
     generator.
     """
     if not checkpoint_dir:
-        from m5 import options
-
-        checkpoint_dir = Path(options.outdir)
+        checkpoint_dir = Path(m5.options.outdir)  # type: ignore
     while True:
         m5.checkpoint((checkpoint_dir / f"cpt.{str(m5.curTick())}").as_posix())
         yield False

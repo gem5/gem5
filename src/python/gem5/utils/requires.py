@@ -97,7 +97,7 @@ def requires(
     # why the enum did not compare correctly yielded no results. The following
     # code works, even though it is verbose and appears functionally equivalent
     # to the original code.
-    if isa_required != None and isa_required.value not in (
+    if isa_required is not None and isa_required.value not in (
         isa.value for isa in supported_isas
     ):
         msg = f"The required ISA is '{isa_required.name}'. Supported ISAs: "
@@ -106,7 +106,7 @@ def requires(
         raise Exception(_get_exception_str(msg=msg))
 
     if (
-        coherence_protocol_required != None
+        coherence_protocol_required is not None
         and coherence_protocol_required.value
         != runtime_coherence_protocol.value
     ):

@@ -24,6 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-for module in __spec__.loader_state:
+for module in __spec__.loader_state:  # type: ignore[name-defined]
     if module.startswith("m5.objects."):
         exec(f"from {module} import *")

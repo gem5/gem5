@@ -36,10 +36,10 @@ from typing import (
     Union,
 )
 
-from m5.objects import (
+from m5.objects.DRAMInterface import DRAMInterface
+from m5.objects.HBMCtrl import HBMCtrl
+from m5.params import (
     AddrRange,
-    DRAMInterface,
-    HBMCtrl,
     Port,
 )
 
@@ -153,11 +153,11 @@ class HighBandwidthMemory(ChanneledMemory):
 
     @overrides(ChanneledMemory)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        intlv_bits = log(self._num_channels, 2)
+        intlv_bits = log(int(self._num_channels), 2)
         mask_list = []
 
         for ib in range(int(intlv_bits)):
-            mask_list.append(1 << int(ib + log(self._intlv_size, 2)))
+            mask_list.append(1 << int(ib + log(int(self._intlv_size), 2)))
         addr_ranges = []
         for i in range(len(self.mem_ctrl)):
             addr_ranges.append(

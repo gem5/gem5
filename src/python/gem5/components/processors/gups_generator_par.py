@@ -27,11 +27,9 @@
 
 from typing import Optional
 
-from m5.objects import Addr
+from m5.params import Addr
 
 from ...utils.override import overrides
-from ..boards.abstract_board import AbstractBoard
-from ..boards.mem_mode import MemMode
 from .abstract_generator import AbstractGenerator
 from .gups_generator_core import GUPSGeneratorCore
 
@@ -76,13 +74,13 @@ class GUPSGeneratorPAR(AbstractGenerator):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
-        clk_freq: str,
+        clk_freq: str | None,
     ):
         return [
             GUPSGeneratorCore(
                 start_addr=start_addr,
                 mem_size=mem_size,
-                update_limit=update_limit / num_cores,
+                update_limit=update_limit // num_cores,
                 clk_freq=clk_freq,
             )
             for _ in range(num_cores)

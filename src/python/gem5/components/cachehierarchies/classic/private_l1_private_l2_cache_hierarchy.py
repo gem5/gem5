@@ -38,15 +38,15 @@
 
 from typing import Optional
 
-from m5.objects import (
-    BadAddr,
-    BaseCPU,
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.Cache import Cache
+from m5.objects.Device import BadAddr
+from m5.objects.XBar import (
     BaseXBar,
-    Cache,
     L2XBar,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *
@@ -144,6 +144,10 @@ class PrivateL1PrivateL2CacheHierarchy(
                 f"l1d-cache-{i}", L1DCache(size=self._l1d_size)
             )
 
+            assert l2_node.cache is not None
+            assert l1i_node.cache is not None
+            assert l1d_node.cache is not None
+
             self.l2buses[i].mem_side_ports = l2_node.cache.cpu_side
             self.membus.cpu_side_ports = l2_node.cache.mem_side
 
@@ -153,7 +157,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             cpu.connect_icache(l1i_node.cache.cpu_side)
             cpu.connect_dcache(l1d_node.cache.cpu_side)
 
-            self._connect_table_walker(i, cpu)
+            self._connect_table_walker(i, cpu)  # type: ignore[arg-type]
 
             if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = self.membus.mem_side_ports
@@ -180,7 +184,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             mshrs=20,
             size="1kB",
             tgts_per_mshr=12,
-            addr_ranges=board.mem_ranges,
+            addr_ranges=board.get_mem_ranges(),
         )
         self.iocache.mem_side = self.membus.cpu_side_ports
         self.iocache.cpu_side = board.get_mem_side_coherent_io_port()

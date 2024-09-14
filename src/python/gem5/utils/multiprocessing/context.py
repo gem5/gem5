@@ -30,18 +30,18 @@ Some code inspired by the Python standard library implementation of the
 multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
 
-from multiprocessing import (
-    context,
-    process,
+from multiprocessing.context import (
+    BaseContext,
+    DefaultContext,
 )
-from multiprocessing.context import DefaultContext
+from multiprocessing.process import BaseProcess
 
 
 # The `_start_method` must be `None` for the `Spawn_gem5Process` class.
 # Otherwise, in `_bootstrap` in the `BaseProcess` it will try to force the
 # `_start_method` to be gem5-specific, which the `multiprocessing` module
 # doesn't understand.
-class Spawn_gem5Process(process.BaseProcess):
+class Spawn_gem5Process(BaseProcess):
     _start_method = None
 
     @staticmethod
@@ -51,7 +51,7 @@ class Spawn_gem5Process(process.BaseProcess):
         return Popen(process_obj)
 
 
-class Process(process.BaseProcess):
+class Process(BaseProcess):
     _start_method = None
 
     @staticmethod
@@ -59,7 +59,7 @@ class Process(process.BaseProcess):
         return _default_context.get_context().Process._Popen(process_obj)
 
 
-class gem5Context(context.BaseContext):
+class gem5Context(BaseContext):
     _name = "spawn_gem5"
     Process = Spawn_gem5Process
 

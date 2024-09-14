@@ -26,13 +26,13 @@
 
 from typing import Optional
 
-from m5.objects import (
-    BadAddr,
+from m5.objects.Bridge import Bridge
+from m5.objects.Device import BadAddr
+from m5.objects.XBar import (
     BaseXBar,
-    Bridge,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *
@@ -129,6 +129,6 @@ class NoCache(AbstractClassicCacheHierarchy):
 
     def _setup_coherent_io_bridge(self, board: AbstractBoard) -> None:
         """Create a bridge from I/O back to membus"""
-        self.iobridge = Bridge(delay="10ns", ranges=board.mem_ranges)
+        self.iobridge = Bridge(delay="10ns", ranges=board.get_mem_ranges())
         self.iobridge.mem_side_port = self.membus.cpu_side_ports
         self.iobridge.cpu_side_port = board.get_mem_side_coherent_io_port()

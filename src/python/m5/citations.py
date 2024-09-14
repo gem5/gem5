@@ -25,9 +25,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pathlib import Path
-from typing import Type
+from typing import (
+    TYPE_CHECKING,
+    Type,
+)
 
 import m5.options
+
+if TYPE_CHECKING:
+    from m5.SimObject import SimObject
 
 
 def add_citation(sim_obj_cls: Type["SimObject"], citation: str):
@@ -60,7 +66,9 @@ def gather_citations(root: "SimObject"):
             # If a key repeats, then just overwrite it
             citations[key] = cite
 
-    with open(Path(m5.options.outdir) / "citations.bib", "w") as output:
+    with open(
+        Path(m5.options.outdir) / "citations.bib", "w"  # type: ignore
+    ) as output:
         output.writelines(citations.values())
 
 

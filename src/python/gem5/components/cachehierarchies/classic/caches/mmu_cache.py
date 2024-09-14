@@ -24,13 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    BasePrefetcher,
-    Cache,
-    StridePrefetcher,
-)
-
-from .....utils.override import *
+from m5.objects.Cache import Cache
 
 
 class MMUCache(Cache):

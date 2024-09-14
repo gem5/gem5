@@ -42,7 +42,7 @@ from m5.util import (
     warn,
 )
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
 from gem5.gem5_default_config import config
 
@@ -227,6 +227,7 @@ def _list_all_resources(
     gem5_version: Optional[str] = core.gem5Version,
 ) -> Dict[str, List[str]]:
     global clientwrapper
+    assert clientwrapper
     clients_to_search = (
         list(clientwrapper.keys()) if clients is None else clients
     )
@@ -255,7 +256,7 @@ def _list_all_resources(
 def _get_resource_json_obj_from_client(
     client_queries: List[ClientQuery],
     clients: Optional[List[str]] = None,
-) -> Dict:
+) -> List[Dict]:
     """
     This function returns the resource object from the client with the
     given id and version.
@@ -305,6 +306,7 @@ def _get_all_resources_by_id(
     :return: A list of resources as Python dictionaries.
     """
     global clientwrapper
+    assert clientwrapper
 
     # creating a dictionary with the resource id as the key and an empty
     # list as the value, the list will be populated with different versions

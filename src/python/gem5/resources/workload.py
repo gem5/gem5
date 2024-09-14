@@ -33,9 +33,8 @@ from typing import (
 
 from m5.util import warn
 
-from _m5 import core
+from _m5 import core  # type: ignore
 
-from .client import get_resource_json_obj
 from .resource import (
     WorkloadResource,
     obtain_resource,

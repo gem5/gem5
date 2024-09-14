@@ -7,11 +7,11 @@ from typing import (
     Tuple,
 )
 
-import m5
-from m5.objects import (
+# TODO: mypy thinks this doesn't exist, need to generate stubs
+from m5.objects import DRAMsim3  # type: ignore
+from m5.objects.MemCtrl import MemCtrl
+from m5.params import (
     AddrRange,
-    DRAMsim3,
-    MemCtrl,
     Port,
 )
 from m5.util.convert import toMemorySize
@@ -73,7 +73,8 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
     config.set("system", "channels", str(num_chnls))
     config.write(new_config)
     new_config.close()
-    return output_file, m5.options.outdir
+
+    return output_file, m5.options.outdir  # type: ignore
 
 
 class DRAMSim3MemCtrl(DRAMsim3):
@@ -118,7 +119,7 @@ class SingleChannel(AbstractMemorySystem):
         pass
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Tuple[Sequence[AddrRange], Port]:
+    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
         return [(self.mem_ctrl.range, self.mem_ctrl.port)]
 
     @overrides(AbstractMemorySystem)
@@ -131,7 +132,7 @@ class SingleChannel(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def set_memory_range(self, ranges: List[AddrRange]) -> None:
-        if len(ranges != 1) or ranges[0].size != self._size:
+        if not (len(ranges) == 1 and ranges[0].size == self._size):
             raise Exception(
                 "Single channel DRAMSim memory controller requires a single "
                 "range which matches the memory's size."

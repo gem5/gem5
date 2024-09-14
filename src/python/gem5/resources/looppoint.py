@@ -29,6 +29,7 @@ import json
 import os
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Dict,
     List,
     Optional,
@@ -36,8 +37,11 @@ from typing import (
 )
 
 import m5
-from m5.objects import PcCountTrackerManager
+from m5.objects.PcCountTracker import PcCountTrackerManager
 from m5.params import PcCountPair
+
+if TYPE_CHECKING:
+    from gem5.components.processors.abstract_processor import AbstractProcessor
 
 
 class LooppointRegionPC:
@@ -91,7 +95,7 @@ class LooppointRegionPC:
             "global": self.get_global(),
         }
         if self._relative:
-            to_return["relative"] = self.get_relative()
+            to_return["relative"] = self._relative
 
         return to_return
 
@@ -238,8 +242,8 @@ class LooppointRegion:
     def get_pc_count_pairs(self) -> List[PcCountPair]:
         """Returns the PC count pairs for this LoopPoint region."""
         pc_count_pairs = self.get_simulation().get_pc_count_pairs()
-        if self.get_warmup():
-            pc_count_pairs.extend(self.get_warmup().get_pc_count_pairs())
+        if warmup := self.get_warmup():
+            pc_count_pairs.extend(warmup.get_pc_count_pairs())
         return pc_count_pairs
 
     def update_relatives_counts(self, manager: PcCountTrackerManager) -> None:
@@ -251,8 +255,8 @@ class LooppointRegion:
     def get_start(self) -> PcCountPair:
         """Returns the correct starting PcCountPair for this LoopPoint
         region."""
-        if self.get_warmup():
-            return self.get_warmup().get_start()
+        if warmup := self.get_warmup():
+            return warmup.get_start()
         return self.get_simulation().get_start().get_pc_count_pair()
 
     def to_json(self) -> Dict:
@@ -262,8 +266,8 @@ class LooppointRegion:
             "simulation": self.get_simulation().to_json(),
             "multiplier": self.get_multiplier(),
         }
-        if self.get_warmup():
-            to_return["warmup"] = self.get_warmup().to_json()
+        if warmup := self.get_warmup():
+            to_return["warmup"] = warmup.to_json()
         return to_return
 
 
@@ -376,14 +380,20 @@ class Looppoint:
     def output_json_file(
         self,
         input_indent: int = 4,
-        filepath: str = os.path.join(m5.options.outdir, "looppoint.json"),
-    ) -> Dict[int, Dict]:
+        filepath: str | None = None,
+    ):
         """
         This function is used to output the ``_json_file`` into a json file.
 
         :param input_indent: The indent value of the json file.
         :param filepath: The path of the output json file.
         """
+        if not filepath:
+            filepath = os.path.join(
+                m5.options.outdir,  # type: ignore[attr-defined]
+                "looppoint.json",
+            )
+
         with open(filepath, "w") as file:
             json.dump(self.to_json(), file, indent=input_indent)
 
@@ -405,7 +415,7 @@ class LooppointCsvLoader(Looppoint):
                            restoring to a particular region.
         """
 
-        regions = {}
+        regions: Dict[str | int, LooppointRegion] = {}
         warmups = {}
 
         _path = (
@@ -537,15 +547,17 @@ class LooppointJsonLoader(Looppoint):
                 multiplier = float(json_contents[rid]["multiplier"])
                 warmup = None
                 if "warmup" in json_contents[rid]:
-                    start = PcCountPair(
+                    warmup_start = PcCountPair(
                         json_contents[rid]["warmup"]["start"]["pc"],
                         json_contents[rid]["warmup"]["start"]["count"],
                     )
-                    end = PcCountPair(
+                    warmup_end = PcCountPair(
                         json_contents[rid]["warmup"]["end"]["pc"],
                         json_contents[rid]["warmup"]["end"]["count"],
                     )
-                    warmup = LooppointRegionWarmup(start=start, end=end)
+                    warmup = LooppointRegionWarmup(
+                        start=warmup_start, end=warmup_end
+                    )
 
                 regions[rid] = LooppointRegion(
                     simulation=simulation, multiplier=multiplier, warmup=warmup

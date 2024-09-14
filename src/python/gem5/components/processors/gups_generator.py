@@ -27,7 +27,7 @@
 
 from typing import Optional
 
-from m5.objects import Addr
+from m5.params import Addr
 
 from ...utils.override import overrides
 from .abstract_generator import AbstractGenerator

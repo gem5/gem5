@@ -29,25 +29,27 @@ import os
 from typing import List
 
 import m5
-from m5.objects import (
-    AddrRange,
-    BadAddr,
-    Bridge,
+from m5.objects.Bridge import Bridge
+from m5.objects.Device import BadAddr
+from m5.objects.DiskImage import (
     CowDiskImage,
-    Frequency,
-    GenericRiscvPciHost,
-    HiFive,
-    IGbE_e1000,
-    IOXBar,
-    PMAChecker,
-    Port,
     RawDiskImage,
-    RiscvBootloaderKernelWorkload,
-    RiscvMmioVirtIO,
-    RiscvRTC,
-    VirtIOBlock,
-    VirtIORng,
 )
+from m5.objects.Ethernet import IGbE_e1000
+from m5.objects.HiFive import HiFive
+from m5.objects.PMAChecker import PMAChecker
+from m5.objects.RiscvFsWorkload import RiscvBootloaderKernelWorkload
+from m5.objects.RiscvVirtIOMMIO import RiscvMmioVirtIO
+from m5.objects.RTC import RiscvRTC
+from m5.objects.VirtIOBlock import VirtIOBlock
+from m5.objects.VirtIORng import VirtIORng
+from m5.objects.XBar import IOXBar
+from m5.params import (
+    AddrRange,
+    Frequency,
+    Port,
+)
+from m5.util import fatal
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -526,10 +528,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # Default DTB address if bbl is built with --with-dts option
         self.workload.dtb_addr = 0x87E00000
 
-        self.generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
+        self.generate_device_tree(m5.options.outdir)  # type: ignore
+        self.workload.dtb_filename = os.path.join(m5.options.outdir, "device.dtb")  # type: ignore
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:

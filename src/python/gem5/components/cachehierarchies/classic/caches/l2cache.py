@@ -26,10 +26,12 @@
 
 from typing import Type
 
-from m5.objects import (
-    BasePrefetcher,
+from m5.objects.Cache import (
     Cache,
     Clusivity,
+)
+from m5.objects.Prefetcher import (
+    BasePrefetcher,
     StridePrefetcher,
 )
 
@@ -51,7 +53,7 @@ class L2Cache(Cache):
         mshrs: int = 20,
         tgts_per_mshr: int = 12,
         writeback_clean: bool = False,
-        clusivity: Clusivity = "mostly_incl",
+        clusivity: Clusivity = "mostly_incl",  # type: ignore
         PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
     ):
         super().__init__()
