@@ -117,7 +117,12 @@ commit_message = open(sys.argv[1]).read()
 
 # The first line of a commit must contain at least one valid gem5 tag, and
 # a commit title
-commit_message_lines = commit_message.splitlines()
+commit_message_lines = []
+for line in commit_message.splitlines():
+    if line.lstrip().startswith("#"):
+        # We don't care about any comment lines (lines starting with #).
+        continue
+    commit_message_lines.append(line)
 commit_header = commit_message_lines[0]
 commit_header_match = re.search(
     r"^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)", commit_header
@@ -152,9 +157,10 @@ if len(commit_message_lines) > 1:
         )
 
     # Encourage providing descriptions
-    if re.search(
-        "^(Signed-off-by|Change-Id|Reviewed-by):", commit_message_lines[2]
-    ):
-        print("Warning: Commit does not have a description")
+    if len(commit_message_lines) > 2:
+        if re.search(
+            "^(Signed-off-by|Change-Id|Reviewed-by):", commit_message_lines[2]
+        ):
+            print("Warning: Commit does not have a description")
 
 sys.exit(0)
