@@ -45,6 +45,7 @@ from m5.objects import Root
 from m5.stats import addStatVisitor
 from m5.util import warn
 
+from _m5.event import ExitEvent as CPPExitEvent
 from _m5.event import GlobalSimLoopExitEvent
 
 from ..components.boards.abstract_board import AbstractBoard
@@ -691,7 +692,7 @@ class Simulator:
             # any final things.
             self._board._post_instantiate()
 
-    def run(self, max_ticks: Optional[int] = None) -> GlobalSimLoopExitEvent:
+    def run(self, max_ticks: Optional[int] = None) -> CPPExitEvent:
         """
         This function will start or continue the simulator run and handle exit
         events accordingly. If the the exit event is handled by returning to

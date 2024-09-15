@@ -140,6 +140,13 @@ pybind_init_event(py::module_ &m_native)
         .def("getCode", &GlobalSimLoopExitEvent::getCode)
         ;
 
+    py::class_<ExitEvent,
+                std::unique_ptr<ExitEvent, py::nodelete>>(
+                m, "ExitEvent")
+          .def("description", &ExitEvent::description)
+          .def("reenter_simloop", &ExitEvent::reenter_simloop)
+          ;
+
     // Event base class. These should never be returned directly to
     // Python since they don't have a well-defined life cycle. Python
     // events should be derived from PyEvent instead.
