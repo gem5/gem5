@@ -1162,7 +1162,6 @@ machine(MachineType:TCC, "TCC Cache")
   transition(I, WrVicBlkBack, W) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     p_profileMiss;
     a_allocateBlock;
-    ut_updateTag;
     swb_sendWBAck;
     wdb_writeDirtyBytes;
     p_popRequestQueue;
@@ -1257,7 +1256,6 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition(IV, Data, V) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     a_allocateBlock;
-    ut_updateTag;
     wcb_writeCacheBlock;
     sdr_sendDataResponse;
     wada_wakeUpAllDependentsAddr;
