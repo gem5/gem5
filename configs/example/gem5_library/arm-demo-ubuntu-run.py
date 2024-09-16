@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--use-kvm",
     action="store_true",
-    help="Use KVM for full system simulation.",
+    help="Use KVM cores instead of Timing.",
 )
 args = parser.parse_args()
 

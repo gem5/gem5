@@ -94,7 +94,7 @@ class ArmDemoBoard(ArmBoard):
 
         else:
             processor = SimpleProcessor(
-                cpu_type=CPUTypes.TIMING, num_cores=4, isa=ISA.ARM
+                cpu_type=CPUTypes.TIMING, num_cores=2, isa=ISA.ARM
             )
             release = ArmDefaultRelease()
 
