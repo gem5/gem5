@@ -1599,3 +1599,512 @@ TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
     EXPECT_TRUE(r.interleaved());
     EXPECT_DEATH(r.exclude(exclude_ranges), "");
 }
+
+TEST(AddrRangeTest, isSubsetModuloInterleavedCompleteOverlap)
+{
+    AddrRange r1(0x00, 0x100, 2, 6, 0);
+    AddrRange r2(0x00, 0x40);
+
+    EXPECT_TRUE(r2.isSubset(r1));
+}
+
+TEST(AddrRangeTest, isSubsetModuloInterleavedNoOverlap)
+{
+    AddrRange r1(0x00, 0x100, 2, 6, 1);
+    AddrRange r2(0x00, 0x40);
+
+    EXPECT_FALSE(r2.isSubset(r1));
+}
+
+TEST(AddrRangeTest, isSubsetModuloInterleavedPartialOverlap)
+{
+    AddrRange r1(0x00, 0x100, 2, 6, 0);
+    AddrRange r2(0x10, 0x50);
+
+    EXPECT_FALSE(r2.isSubset(r1));
+}
+
+/*
+ * The following tests check the behavior of AddrRange when initialized with
+ * a start and end address, as well as masks to distinguish interleaving bits.
+ */
+TEST(AddrRangeTest, LsbModuloInterleavingMask)
+{
+    Addr start = 0x00;
+    Addr end   = 0xFF;
+    // std::vector<Addr> masks;
+    /*
+     * The address is in range if the LSB is set, i.e. is the value is odd.
+     */
+    // masks.push_back(1);
+    uint8_t intlv_match = 1;
+    uint8_t num_channels = 2;
+
+    // AddrRange r(start, end, masks, intlv_match);
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    EXPECT_TRUE(r.valid());
+    EXPECT_EQ(start, r.start());
+    EXPECT_EQ(end, r.end());
+    /*
+     * With interleaving, it's assumed the size is equal to
+     * start - end >> [number of masks].
+     */
+    EXPECT_EQ(0x7F, r.size());
+    /*
+     * The Granularity, the size of regions created by the interleaving bits,
+     * which, in this case, is one.
+     */
+    EXPECT_EQ(64, r.granularity());  // lowest modulo bit is set to 6, thus
+                                     // granularity is 2^6 = 64
+    EXPECT_TRUE(r.interleaved());
+    EXPECT_EQ(2ULL, r.stripes());
+    EXPECT_EQ("[0:0xff] modulo_by 2", r.to_string());
+}
+
+// TEST(AddrRangeTest, TwoModuloInterleavingMasks)
+// {
+//     Addr start = 0x0000;
+//     Addr end   = 0xFFFF;
+//     // std::vector<Addr> masks;
+//     /*
+//      * There are two marks, the two LSBs.
+//      */
+//     // masks.push_back(1);
+//     // masks.push_back((1 << 1));
+//     uint8_t intlv_match = (1 << 1) | 1;
+
+//     AddrRange r(start, end, masks, intlv_match);
+//     EXPECT_TRUE(r.valid());
+//     EXPECT_EQ(start, r.start());
+//     EXPECT_EQ(end, r.end());
+
+//     EXPECT_EQ(0x3FFF, r.size());
+//     EXPECT_TRUE(r.interleaved());
+//     EXPECT_EQ(4ULL, r.stripes());
+//     EXPECT_EQ("[0:0xffff] a[0]^\b=1 a[1]^\b=1", r.to_string());
+// }
+
+TEST(AddrRangeTest, ComplexModuloInterleavingMasks)
+{
+    Addr start = 0x0000;
+    Addr end   = 0xFFFF;
+    // std::vector<Addr> masks;
+    // masks.push_back((1 << 1) | 1);
+    // masks.push_back((1ULL << 63) | (1ULL << 62));
+    uint8_t intlv_match = 0;
+    uint8_t num_channels = 4;
+
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+    EXPECT_TRUE(r.valid());
+    EXPECT_EQ(start, r.start());
+    EXPECT_EQ(end, r.end());
+
+    EXPECT_EQ(0x3FFF, r.size());
+    EXPECT_TRUE(r.interleaved());
+    EXPECT_EQ(4ULL, r.stripes());
+    // EXPECT_EQ("[0:0xffff] a[0]^a[1]^\b=0 a[62]^a[63]^\b=0", r.to_string());
+    EXPECT_EQ("[0:0xffff] modulo_by 4", r.to_string());
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressesMergesWith)
+{
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+    // std::vector<Addr> masks;
+    // masks.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
+    // masks.push_back((1 << 2));
+    uint8_t num_channels = 2;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+    uint8_t intlv_match2 = 1;  // intlv_match may differ.
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_TRUE(r1.mergesWith(r2));
+    EXPECT_TRUE(r2.mergesWith(r1));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressesDoNotMergeWith)
+{
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+    // std::vector<Addr> masks1;
+    // masks1.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
+    // masks1.push_back((1 << 2));
+    uint8_t num_channels = 2;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 7, intlv_match1);
+
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+    //
+    uint8_t intlv_match2 = 1;  // intlv_match may differ.
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_FALSE(r1.mergesWith(r2));
+    EXPECT_FALSE(r2.mergesWith(r1));
+}
+
+TEST(AddrRangeTest, MooduloInterleavingAddressesDoNotIntersect)
+{
+    /*
+     * Range 1: all the odd addresses between 0x0000 and 0xFFFF.
+     */
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+    uint8_t intlv_match1 = 1;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    /*
+     * Range 2: all the even addresses between 0x0000 and 0xFFFF. These
+     * addresses should thereby not intersect.
+     */
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+    uint8_t intlv_match2 = 0;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_FALSE(r1.intersects(r2));
+    EXPECT_FALSE(r2.intersects(r1));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressesIntersectsViaMerging)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+    uint8_t intlv_match2 = 0;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_TRUE(r1.intersects(r2));
+    EXPECT_TRUE(r2.intersects(r1));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressesDoesNotIntersectViaMerging)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+
+    /*
+     * These addresses can merge, but their intlv_match values differ. They
+     * therefore do not intersect.
+     */
+    uint8_t intlv_match2 = 1;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_FALSE(r1.intersects(r2));
+    EXPECT_FALSE(r2.intersects(r1));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressAddRemoveInterlvBits)
+{
+    uint8_t num_channels = 3;
+
+    Addr start = 0x00000;
+    Addr end   = 0x10000;
+    // std::vector<Addr> masks;
+    // masks.push_back(1);
+    uint8_t intlv_match = 0;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    Addr input = 0xFFFF;
+    Addr output = r.removeIntlvBits(input);
+
+    /*
+     * Because we dont have any specified "intlv bits" with the modulo
+     * we have to be creative with how we effectively add/remove intlv bits
+     * we notice that everything to the left of the lowest modulo bit
+     * is essentially an intlv bit, however we cant get rid of all of these
+     * instead I change the representation of these bits based on the
+     * number of memory channels simply by dividing
+     *
+     * So, to remove the intlv bits, we copy the lower bits given by
+     * lowest_modulo_bit. we then shift right that many bits, then
+     * divide by our num_channels(stored as "modulo by"), shift back left
+     * then add the lower bits back
+     *
+     * A key thing to note, in the previous interleaving constructor, if
+     * we had 4 memory channels, we would need 2 bits for interleaving.
+     * Meaning that after we remove these bits we are left with
+     * 64 - 2 = 62 bits available to use for rorabachco
+     * in this new implementation, if we have 4 channels we will divide by 4
+     * which effectively shifts right by 2 bits, giving us 2 leading 0's
+     * thus it will also have 64 - 2 = 62 bits for rorabachco
+     *
+     * doing this with the input 0xFFFF
+     * 0xFFFF >> 6 =  0x3FF
+     * we have 3 channels, so we divide by 3 0x3FF/3 = 0x155
+     * 0x155 << 6 = 0x5540
+     * then we add back the lower 6 bits removed before 0x3F
+     * leaving us with 0x5540 + 0x3F = 0x557F
+     */
+    Addr expected_out = 0x557F;
+    EXPECT_EQ(expected_out, output);
+
+    /*
+     * The addIntlvBits function will re-insert bits at the removed locations
+     */
+    EXPECT_EQ(input, r.addIntlvBits(output));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressAddRemoveInterlvBitsTwoMasks)
+{
+    uint8_t num_channels = 3;
+
+    Addr start = 0x00000;
+    Addr end   = 0x10000;
+    uint8_t intlv_match = 0;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    Addr input = (1 << 9) | (1 << 8) | 1;
+    /*
+     * (1 << 8) and 1 are interleaving bits to be removed.
+     * 0b1100000001 we take out lower 6 bits leaving us with 0b1100
+     * 0b1100/3 = 0b0100
+     * shift left 6 bits and add the 1 back in to get 0100000001
+     */
+    Addr output = r.removeIntlvBits(input);
+
+    /*
+     *
+     */
+    EXPECT_EQ(((1 << 8) | 1), output);
+
+    /*
+     * Re-adding the interleaving.
+     */
+    EXPECT_EQ(input, r.addIntlvBits(output));
+}
+
+TEST(AddrRangeTest, AddRemoveModuloInterleavBitsAcrossRange)
+{
+    /*
+     * This purpose of this test is to ensure that removing then adding
+     * interleaving bits has no net effect.
+     * E.g.:
+     * addr_range.addIntlvBits(add_range.removeIntlvBits(an_address)) should
+     * always return an_address.
+     */
+
+    uint8_t num_channels = 17;
+
+    Addr start = 0x00000;
+    Addr end   = 0x10000;
+
+    uint8_t intlv_match = 0x0;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    for (Addr i=0x0; i < 0xFFF; i+=num_channels << 6) {
+        Addr removedBits = r.removeIntlvBits(i);
+
+        /*
+         * As intlv_match = 0xF, all the interleaved bits should be set.
+         */
+        EXPECT_EQ(i, r.addIntlvBits(removedBits));  // needs checking
+        // issue is, we cut off some bits during the divide that we need when
+        // readding bits is it possible that we need to store the bits we cut
+        // off? is it possible that the amount modulo'd away will always be
+        // intlvmatch?
+    }
+}
+
+TEST(AddrRangeTest, AddRemoveModuloInterleavBitsAcrossContiguousRange)
+{
+    /*
+     * This purpose of this test is to ensure that removing then adding
+     * interleaving bits has no net effect.
+     * E.g.:
+     * addr_range.addIntlvBits(add_range.removeIntlvBits(an_address)) should
+     * always return an_address.
+     */
+
+    uint8_t num_channels = 9;
+
+    Addr start = 0x00000;
+    Addr end   = 0x10000;
+    uint8_t intlv_match = 0x7;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    for (Addr i=0x1C0; i < 0xFFF; i+=(num_channels << 6)) {
+        Addr removedBits = r.removeIntlvBits(i);
+        /*
+         * As intlv_match = 0x7, all the interleaved bits should be set.
+         */
+        EXPECT_EQ(i, r.addIntlvBits(removedBits));
+    }
+}
+
+TEST(AddrRangeTest, ModuloInterleavingAddressesGetOffset)
+{
+    uint8_t num_channels = 3;
+
+    Addr start = 0x0002;
+    Addr end   = 0xFFFF;
+    // std::vector<Addr> masks;
+    // masks.push_back((1 << 4) | (1 << 2));
+    uint8_t intlv_match = 1;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    Addr value = ((1 << 10) | (1 << 9) | (1 << 8) | (1 << 2) | (1 << 1) | 1);
+    Addr value_interleaving_bits_removed =
+        ((1 << 9) | (1 << 6) | (1 << 2) | (1 << 1) | 1);
+    // ((1 << 9) | (1 << 8) | (1 << 7) | (1 << 1) | 1);
+
+    Addr expected_output = value_interleaving_bits_removed - start;
+
+    EXPECT_EQ(expected_output, r.getOffset(value));
+}
+
+TEST(AddrRangeTest, ModuloInterleavingLessThanStartEquals)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000FFFF;
+    Addr end1   = 0xFFFF0000;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000FFFF;
+    Addr end2   = 0x000F0000;
+
+    uint8_t intlv_match2 = 2;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    /*
+     * When The start addresses are equal, the intlv_match values are
+     * compared.
+     */
+    EXPECT_TRUE(r1 < r2);
+    EXPECT_FALSE(r2 < r1);
+}
+
+TEST(AddrRangeTest, ModuloInterleavingLessThanStartNotEquals)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000FFFF;
+    Addr end1   = 0xFFFF0000;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000FFFE;
+    Addr end2   = 0x000F0000;
+
+    uint8_t intlv_match2 = 2;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_TRUE(r2 < r1);
+    EXPECT_FALSE(r1 < r2);
+}
+
+TEST(AddrRangeTest, ModuloInterleavingEqualTo)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000FFFF;
+    Addr end1   = 0xFFFF0000;
+
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000FFFF;
+    Addr end2   = 0xFFFF0000;
+
+    uint8_t intlv_match2 = 0;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    EXPECT_TRUE(r1 == r2);
+}
+
+TEST(AddrRangeTest, ModuloInterleavingNotEqualTo)
+{
+    uint8_t num_channels = 3;
+
+    Addr start1 = 0x0000FFFF;
+    Addr end1   = 0xFFFF0000;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000FFFF;
+    Addr end2   = 0xFFFF0000;
+    uint8_t intlv_match2 = 2;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    /*
+     * These ranges are not equal due to having different masks.
+     */
+    EXPECT_FALSE(r1 == r2);
+}
+
+// /*
+//  * The AddrRange(AddrRangeList) constructor "merges" the interleaving
+//  * address ranges. It should be noted that this constructor simply checks
+//  that
+//  * these interleaving addresses can be merged then creates a new address
+//  from
+//  * the start and end addresses of the first address range in the list.
+//  */
+TEST(AddrRangeTest, MergingModuloInterleavingAddressRanges)
+{
+    uint8_t num_channels = 2;
+
+    Addr start1 = 0x0000;
+    Addr end1   = 0xFFFF;
+    uint8_t intlv_match1 = 0;
+    AddrRange r1(start1, end1, num_channels, 6, intlv_match1);
+
+    Addr start2 = 0x0000;
+    Addr end2   = 0xFFFF;
+    uint8_t intlv_match2 = 1;
+    AddrRange r2(start2, end2, num_channels, 6, intlv_match2);
+
+    AddrRangeList to_merge;
+    to_merge.push_back(r1);
+    to_merge.push_back(r2);
+
+    AddrRange output(to_merge);
+
+    EXPECT_EQ(0x0000, output.start());
+    EXPECT_EQ(0xFFFF, output.end());
+    EXPECT_FALSE(output.interleaved());
+}
+
+TEST(AddrRangeTest, MergingModuloInterleavingAddressRangesOneRange)
+{
+    /*
+     * In the case where there is just one range in the list, the merged
+     * address range is equal to that range.
+     */
+    uint8_t num_channels = 2;  // get an error when its 3, is that expected?
+
+    Addr start = 0x0000;
+    Addr end   = 0xFFFF;
+    uint8_t intlv_match = 0;
+    AddrRange r(start, end, num_channels, 6, intlv_match);
+
+    AddrRangeList to_merge;
+    to_merge.push_back(r);
+
+    AddrRange output(to_merge);
+
+    EXPECT_EQ(r, output);
+}

@@ -902,6 +902,8 @@ class AddrRange(ParamValue):
         self.intlvBits = 0
         self.intlvMatch = 0
         self.masks = []
+        self.modulo_by = 0
+        self.lowest_modulo_bit = 0
 
         def handle_kwargs(self, kwargs):
             # An address range needs to have an upper limit, specified
@@ -913,6 +915,11 @@ class AddrRange(ParamValue):
                 self.end = self.start + Addr(kwargs.pop("size"))
             else:
                 raise TypeError("Either end or size must be specified")
+
+            if "modulo_by" in kwargs:
+                self.modulo_by = int(kwargs.pop("modulo_by"))
+            if "lowest_modulo_bit" in kwargs:
+                self.lowest_modulo_bit = int(kwargs.pop("lowest_modulo_bit"))
 
             # Now on to the optional bit
             if "intlvMatch" in kwargs:
@@ -965,6 +972,14 @@ class AddrRange(ParamValue):
 
     def __str__(self):
         if len(self.masks) == 0:
+            if self.modulo_by:
+                return "{}:{}:{}:{}:{}".format(
+                    self.start,
+                    self.end,
+                    self.modulo_by,
+                    self.lowest_modulo_bit,
+                    self.intlvMatch,
+                )
             return f"{self.start}:{self.end}"
         else:
             return "{}:{}:{}:{}".format(
@@ -976,7 +991,10 @@ class AddrRange(ParamValue):
 
     def size(self):
         # Divide the size by the size of the interleaving slice
-        return (int(self.end) - int(self.start)) >> self.intlvBits
+        if self.modulo_by == 0:
+            return int(self.end) - int(self.start) >> self.intlvBits
+
+        return (int(self.end) - int(self.start)) / self.modulo_by
 
     @classmethod
     def cxx_predecls(cls, code):
@@ -1026,8 +1044,20 @@ class AddrRange(ParamValue):
         # Go from the Python class to the wrapped C++ class
         from _m5.range import AddrRange
 
+        if not self.modulo_by:
+            return AddrRange(
+                int(self.start),
+                int(self.end),
+                self.masks,
+                int(self.intlvMatch),
+            )
+
         return AddrRange(
-            int(self.start), int(self.end), self.masks, int(self.intlvMatch)
+            int(self.start),
+            int(self.end),
+            int(self.modulo_by),
+            int(self.lowest_modulo_bit),
+            int(self.intlvMatch),
         )
 
     def exclude(self, ranges):
