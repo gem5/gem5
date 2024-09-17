@@ -141,9 +141,20 @@ class SEBinaryWorkload:
             #
             # A better API for this which avoids `isinstance` checks would be
             # welcome.
+            if any(
+                core.is_workload_set()
+                for core in self.get_processor()._all_cores()
+            ):
+                warn("Workload has been set more than once!")
+
             for core in self.get_processor()._all_cores():
                 core.set_workload(process)
         else:
+            if any(
+                core.is_workload_set()
+                for core in self.get_processor().get_cores()
+            ):
+                warn("Workload has been set more than once!")
             for core in self.get_processor().get_cores():
                 core.set_workload(process)
 

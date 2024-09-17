@@ -33,7 +33,7 @@ from typing import (
     Union,
 )
 
-import m5
+from m5.util import warn
 
 from ...resources.resource import (
     BootloaderResource,
@@ -186,6 +186,9 @@ class KernelDiskWorkload:
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.
         self._set_fullsystem(True)
+
+        if self.workload.object_file:
+            warn("Workload has been set more than once!")
 
         # Set the kernel to use.
         self.workload.object_file = kernel.get_local_path()
