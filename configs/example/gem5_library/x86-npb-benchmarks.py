@@ -88,7 +88,9 @@ parser = argparse.ArgumentParser(
     description="An example configuration script to run the npb benchmarks."
 )
 
-npb_suite = obtain_resource("npb-benchmark-suite", resource_version="1.0.0")
+npb_suite = obtain_resource(
+    "x86-ubuntu-24.04-npb-suite", resource_version="1.0.0"
+)
 # The only positional argument accepted is the benchmark name in this script.
 
 parser.add_argument(
@@ -109,22 +111,15 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-# The simulation may fail in the case of `mg` with class C as it uses 3.3 GB
-# of memory (more information is available at https://arxiv.org/abs/2010.13216).
+# The simulation may fail in the case of using size "c" and size "d" of the
+# benchmarks. This is because the X86Board is currently limited to 3 GB of
+# memory.
 # We warn the user here.
 
-if args.benchmark == "npb-mg-c":
+if args.benchmark.endswith("c") or args.benchmark.endswith("d"):
     warn(
-        "mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
-    of main memory in the system."
-    )
-
-# The simulation will fail in the case of `ft` with class C. We warn the user
-# here.
-elif args.benchmark == "npb-ft-c":
-    warn(
-        "There is not enough memory for ft.C. Currently we are\
-    simulating 3 GB of main memory in the system."
+        f"The X86Board is currently limited to 3 GB of memory. The benchmark "
+        f"{args.benchmark} may fail to run."
     )
 
 # Checking for the maximum number of instructions, if provided by the user.
@@ -221,11 +216,25 @@ def handle_workend():
     yield True
 
 
+def exit_event_handler():
+    print("First exit: kernel booted")
+    yield False  # gem5 is now executing systemd startup
+    print("Second exit: Started `after_boot.sh` script")
+    # The after_boot.sh script is executed after the kernel and systemd have
+    # booted.
+    yield False  # gem5 is now executing the `after_boot.sh` script
+    print("Third exit: Finished `after_boot.sh` script")
+    # The after_boot.sh script will run a script if it is passed via
+    # m5 readfile. This is the last exit event before the simulation exits.
+    yield True
+
+
 simulator = Simulator(
     board=board,
     on_exit_event={
         ExitEvent.WORKBEGIN: handle_workbegin(),
         ExitEvent.WORKEND: handle_workend(),
+        ExitEvent.EXIT: exit_event_handler(),
     },
 )
 
