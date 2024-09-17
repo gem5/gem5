@@ -183,7 +183,7 @@ class HiFive(HiFiveBase):
     # PCI
     pci_host = GenericRiscvPciHost(
         conf_base=0x30000000,
-        conf_size="256MB",
+        conf_size="256MiB",
         conf_device_bits=12,
         pci_pio_base=0x2F000000,
         pci_mem_base=0x40000000,

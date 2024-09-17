@@ -77,7 +77,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="128MB")
+memory = SingleChannelDDR3_1600(size="128MiB")
 # Setup a single core Processor.
 if args.cpu_type == "atomic":
     processor = SimpleProcessor(

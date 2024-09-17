@@ -89,11 +89,11 @@ class PrivateL1PrivateL2CacheHierarchy(
         membus: Optional[BaseXBar] = None,
     ) -> None:
         """
-        :param l1d_size: The size of the L1 Data Cache (e.g., "32kB").
+        :param l1d_size: The size of the L1 Data Cache (e.g., "32KiB").
 
-        :param  l1i_size: The size of the L1 Instruction Cache (e.g., "32kB").
+        :param  l1i_size: The size of the L1 Instruction Cache (e.g., "32KiB").
 
-        :param l2_size: The size of the L2 Cache (e.g., "256kB").
+        :param l2_size: The size of the L2 Cache (e.g., "256KiB").
 
         :param membus: The memory bus. This parameter is optional parameter and
                        will default to a 64 bit width SystemXBar is not
@@ -178,7 +178,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             data_latency=50,
             response_latency=50,
             mshrs=20,
-            size="1kB",
+            size="1KiB",
             tgts_per_mshr=12,
             addr_ranges=board.mem_ranges,
         )

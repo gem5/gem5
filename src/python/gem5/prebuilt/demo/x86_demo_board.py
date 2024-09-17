@@ -41,10 +41,10 @@ from ...utils.requires import requires
 class X86DemoBoard(X86Board):
     """
     This prebuilt X86 board is used for demonstration purposes. It simulates
-    an X86 3GHz quad-core system with a 2GB DDR3_1600 memory system. A
+    an X86 3GHz quad-core system with a 2GiB DDR3_1600 memory system. A
     MESI_Two_Level cache hierarchy is set with an l1 data and instruction
-    cache, each 32kB with an associativity of 8, and a single bank l2 cache of
-    1MB with an associativity of 16.
+    cache, each 32KiB with an associativity of 8, and a single bank l2 cache of
+    1MiB with an associativity of 16.
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
@@ -77,16 +77,16 @@ class X86DemoBoard(X86Board):
             "real-world system. Use with caution."
         )
 
-        memory = SingleChannelDDR3_1600(size="2GB")
+        memory = SingleChannelDDR3_1600(size="2GiB")
         processor = SimpleProcessor(
             cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4
         )
         cache_hierarchy = MESITwoLevelCacheHierarchy(
-            l1d_size="32kB",
+            l1d_size="32KiB",
             l1d_assoc=8,
-            l1i_size="32kB",
+            l1i_size="32KiB",
             l1i_assoc=8,
-            l2_size="1MB",
+            l2_size="1MiB",
             l2_assoc=16,
             num_l2_banks=1,
         )

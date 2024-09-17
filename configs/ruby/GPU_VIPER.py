@@ -138,7 +138,7 @@ class CPCntrl(CorePair_Controller, CntrlBase):
 
 
 class TCPCache(RubyCache):
-    size = "16kB"
+    size = "16KiB"
     assoc = 16
     dataArrayBanks = 16  # number of data banks
     tagArrayBanks = 16  # number of tag banks
@@ -276,7 +276,7 @@ class SQCCntrl(SQC_Controller, CntrlBase):
 
 
 class TCC(RubyCache):
-    size = MemorySize("256kB")
+    size = MemorySize("256KiB")
     assoc = 16
     dataAccessLatency = 8
     tagAccessLatency = 2
@@ -289,7 +289,7 @@ class TCC(RubyCache):
         if hasattr(options, "bw_scalor") and options.bw_scalor > 0:
             s = options.num_compute_units
             tcc_size = s * 128
-            tcc_size = str(tcc_size) + "kB"
+            tcc_size = str(tcc_size) + "KiB"
             self.size = MemorySize(tcc_size)
             self.dataArrayBanks = 64
             self.tagArrayBanks = 64
@@ -443,7 +443,7 @@ def define_options(parser):
         help="number of TCC banks in the GPU",
     )
     parser.add_argument(
-        "--sqc-size", type=str, default="32kB", help="SQC cache size"
+        "--sqc-size", type=str, default="32KiB", help="SQC cache size"
     )
     parser.add_argument(
         "--sqc-assoc", type=int, default=8, help="SQC cache assoc"
@@ -478,11 +478,11 @@ def define_options(parser):
         "--TCC_latency", type=int, default=16, help="TCC latency"
     )
     parser.add_argument(
-        "--tcc-size", type=str, default="256kB", help="agregate tcc size"
+        "--tcc-size", type=str, default="256KiB", help="agregate tcc size"
     )
     parser.add_argument("--tcc-assoc", type=int, default=16, help="tcc assoc")
     parser.add_argument(
-        "--tcp-size", type=str, default="16kB", help="tcp size"
+        "--tcp-size", type=str, default="16KiB", help="tcp size"
     )
     parser.add_argument("--tcp-assoc", type=int, default=16, help="tcp assoc")
     parser.add_argument(

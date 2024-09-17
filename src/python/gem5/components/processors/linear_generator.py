@@ -39,7 +39,7 @@ class LinearGenerator(AbstractGenerator):
         self,
         num_cores: int = 1,
         duration: str = "1ms",
-        rate: str = "100GB/s",
+        rate: str = "100GiB/s",
         block_size: int = 64,
         min_addr: int = 0,
         max_addr: int = 32768,

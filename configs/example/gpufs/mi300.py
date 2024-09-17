@@ -152,7 +152,7 @@ def runMI300GPUFS(
 
     # Defaults for CPU
     args.cpu_type = "X86KvmCPU"
-    args.mem_size = "8GB"
+    args.mem_size = "8GiB"
 
     # Defaults for MI300X
     args.gpu_device = "MI300X"

@@ -46,7 +46,7 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = "timing"  # Use timing accesses
-system.mem_ranges = [AddrRange("512MB")]  # Create an address range
+system.mem_ranges = [AddrRange("512MiB")]  # Create an address range
 
 # Create a simple CPU
 system.cpu = X86TimingSimpleCPU()
@@ -55,7 +55,7 @@ system.cpu = X86TimingSimpleCPU()
 system.membus = SystemXBar()
 
 # Create a simple cache
-system.cache = SimpleCache(size="1kB")
+system.cache = SimpleCache(size="1KiB")
 
 # Connect the I and D cache ports of the CPU to the memobj.
 # Since cpu_side is a vector port, each time one of these is connected, it will

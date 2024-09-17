@@ -94,7 +94,7 @@ cache_hierarchy = NoCache()
 # performance in atomic mode. The memory structure can be changed when
 # restoring from a checkpoint, but the size of the memory must be equal or
 # greater to that taken when creating the checkpoint.
-memory = SingleChannelDDR3_1600(size="2GB")
+memory = SingleChannelDDR3_1600(size="2GiB")
 
 processor = SimpleProcessor(
     cpu_type=CPUTypes.ATOMIC,

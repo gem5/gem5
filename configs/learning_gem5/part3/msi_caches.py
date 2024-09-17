@@ -127,7 +127,9 @@ class L1Cache(L1Cache_Controller):
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
         self.cacheMemory = RubyCache(
-            size="16kB", assoc=8, start_index_bit=self.getBlockSizeBits(system)
+            size="16KiB",
+            assoc=8,
+            start_index_bit=self.getBlockSizeBits(system),
         )
         self.clk_domain = cpu.clk_domain
         self.send_evictions = self.sendEvicts(cpu)

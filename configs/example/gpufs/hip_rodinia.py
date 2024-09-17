@@ -134,7 +134,7 @@ if __name__ == "__m5_main__":
     args.ruby = True
     args.cpu_type = "X86KvmCPU"
     args.num_cpus = 1
-    args.mem_size = "3GB"
+    args.mem_size = "3GiB"
     args.dgpu = True
     args.dgpu_mem_size = "16GB"
     args.dgpu_start = "0GB"

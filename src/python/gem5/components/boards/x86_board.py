@@ -67,7 +67,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     A board capable of full system simulation for X86.
 
     **Limitations**
-    * Currently, this board's memory is hardcoded to 3GB.
+    * Currently, this board's memory is hardcoded to 3GiB.
     * Much of the I/O subsystem is hard coded.
     """
 
@@ -238,8 +238,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
         entries = [
             # Mark the first megabyte of memory as reserved
-            X86E820Entry(addr=0, size="639kB", range_type=1),
-            X86E820Entry(addr=0x9FC00, size="385kB", range_type=2),
+            X86E820Entry(addr=0, size="639KiB", range_type=1),
+            X86E820Entry(addr=0x9FC00, size="385KiB", range_type=2),
             # Mark the rest of physical memory as available
             X86E820Entry(
                 addr=0x100000,
@@ -248,9 +248,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             ),
         ]
 
-        # Reserve the last 16kB of the 32-bit address space for m5ops
+        # Reserve the last 16KiB of the 32-bit address space for m5ops
         entries.append(
-            X86E820Entry(addr=0xFFFF0000, size="64kB", range_type=2)
+            X86E820Entry(addr=0xFFFF0000, size="64KiB", range_type=2)
         )
 
         self.workload.e820_table.entries = entries
@@ -283,10 +283,10 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     def _setup_memory_ranges(self):
         memory = self.get_memory()
 
-        if memory.get_size() > toMemorySize("3GB"):
+        if memory.get_size() > toMemorySize("3GiB"):
             raise Exception(
                 "X86Board currently only supports memory sizes up "
-                "to 3GB because of the I/O hole."
+                "to 3GiB because of the I/O hole."
             )
         data_range = AddrRange(memory.get_size())
         memory.set_memory_range([data_range])

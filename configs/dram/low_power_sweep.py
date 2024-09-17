@@ -116,8 +116,8 @@ system.clk_domain = SrcClockDomain(
     clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
 )
 
-# We are fine with 256 MB memory for now.
-mem_range = AddrRange("256MB")
+# We are fine with 256 MiB memory for now.
+mem_range = AddrRange("256MiB")
 # Start address is 0
 system.mem_ranges = [mem_range]
 
