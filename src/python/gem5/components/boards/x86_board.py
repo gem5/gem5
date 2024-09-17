@@ -41,6 +41,10 @@ from m5.objects import (
     Pc,
     Port,
     RawDiskImage,
+    X86ACPIMadt,
+    X86ACPIMadtIntSourceOverride,
+    X86ACPIMadtIOAPIC,
+    X86ACPIMadtLAPIC,
     X86E820Entry,
     X86FsLinux,
     X86IntelMPBus,
@@ -165,6 +169,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         # Set up the Intel MP table
         base_entries = []
         ext_entries = []
+        # Updated the X86 board with MADT entries.
+        madt_entries = []
         for i in range(self.get_processor().get_num_cores()):
             bp = X86IntelMPProcessor(
                 local_apic_id=i,
@@ -173,6 +179,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
                 bootstrap=(i == 0),
             )
             base_entries.append(bp)
+            lapic = X86ACPIMadtLAPIC(acpi_processor_id=i, apic_id=i, flags=1)
+            madt_entries.append(lapic)
 
         io_apic = X86IntelMPIOAPIC(
             id=self.get_processor().get_num_cores(),
@@ -183,6 +191,12 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
         self.pc.south_bridge.io_apic.apic_id = io_apic.id
         base_entries.append(io_apic)
+        madt_entries.append(
+            X86ACPIMadtIOAPIC(
+                id=io_apic.id, address=io_apic.address, int_base=0
+            )
+        )
+
         pci_bus = X86IntelMPBus(bus_id=0, bus_type="PCI   ")
         base_entries.append(pci_bus)
         isa_bus = X86IntelMPBus(bus_id=1, bus_type="ISA   ")
@@ -203,6 +217,13 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         )
 
         base_entries.append(pci_dev4_inta)
+        pci_dev4_inta_madt = X86ACPIMadtIntSourceOverride(
+            bus_source=pci_dev4_inta.source_bus_id,
+            irq_source=pci_dev4_inta.source_bus_irq,
+            sys_int=pci_dev4_inta.dest_io_apic_intin,
+            flags=0,
+        )
+        madt_entries.append(pci_dev4_inta_madt)
 
         def assignISAInt(irq, apicPin):
             assign_8259_to_apic = X86IntelMPIOIntAssignment(
@@ -226,6 +247,11 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
                 dest_io_apic_intin=apicPin,
             )
             base_entries.append(assign_to_apic)
+            # acpi
+            assign_to_apic_acpi = X86ACPIMadtIntSourceOverride(
+                bus_source=1, irq_source=irq, sys_int=apicPin, flags=0
+            )
+            madt_entries.append(assign_to_apic_acpi)
 
         assignISAInt(0, 2)
         assignISAInt(1, 1)
@@ -236,6 +262,14 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         self.workload.intel_mp_table.base_entries = base_entries
         self.workload.intel_mp_table.ext_entries = ext_entries
 
+        madt = X86ACPIMadt(
+            local_apic_address=0, records=madt_entries, oem_id="madt"
+        )
+        self.workload.acpi_description_table_pointer.rsdt.entries.append(madt)
+        self.workload.acpi_description_table_pointer.xsdt.entries.append(madt)
+        self.workload.acpi_description_table_pointer.oem_id = "gem5"
+        self.workload.acpi_description_table_pointer.rsdt.oem_id = "gem5"
+        self.workload.acpi_description_table_pointer.xsdt.oem_id = "gem5"
         entries = [
             # Mark the first megabyte of memory as reserved
             X86E820Entry(addr=0, size="639KiB", range_type=1),
