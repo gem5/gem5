@@ -42,8 +42,6 @@
 
 #include <sstream>
 
-#include "base/logging.hh"
-
 namespace gem5
 {
 
