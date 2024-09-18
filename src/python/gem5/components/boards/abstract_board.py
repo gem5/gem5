@@ -119,9 +119,6 @@ class AbstractBoard:
         # Setup the board and memory system's memory ranges.
         self._setup_memory_ranges()
 
-        # Setup board properties unique to the board being constructed.
-        self._setup_board()
-
         # A private variable to record whether `_connect_things` has been
         # been called.
         self._connect_things_called = False
@@ -192,6 +189,8 @@ class AbstractBoard:
         :param is_fs: Set whether the board is to be run in FS mode or SE mode.
         """
         self._is_fs = is_fs
+        # Setup board properties unique to the board being constructed.
+        self._setup_board()
 
     def is_fullsystem(self) -> bool:
         """
