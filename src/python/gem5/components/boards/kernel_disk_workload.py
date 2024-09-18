@@ -33,6 +33,7 @@ from typing import (
     Union,
 )
 
+import m5
 from m5.util import warn
 
 from ...resources.resource import (
