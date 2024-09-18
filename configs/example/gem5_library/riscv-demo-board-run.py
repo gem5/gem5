@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,13 @@ A detailed terminal output can be found in `m5out/board.platform.terminal`.
 
 **Warning:** The RiscvDemoBoard uses the Timing CPU. The boot may take
 considerable time to complete execution.
-`configs/example/gem5_library/x86-ubuntu-run-with-kvm.py` can be referenced as
-an example of booting Ubuntu with a KVM CPU.
 
 Usage
 -----
 
 ```
 scons build/ALL/gem5.opt
-./build/ALL/gem5.opt configs/example/gem5_library/riscv-demo-board-ubuntu-run-24.04.py
+./build/ALL/gem5.opt configs/example/gem5_library/riscv-demo-board-run.py --workload=riscv-ubuntu-24.04-boot-no-systemd
 ```
 """
 
@@ -53,12 +51,29 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
-board = RiscvDemoBoard(is_fs=True)
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--workload",
+    help="Enter the name of the workload you would like to run. You can browse"
+    " through the available workloads and resources at "
+    "https://resources.gem5.org",
+)
+
+parser.add_argument(
+    "--version",
+    help="Enter the workload version you would like to use. The latest version"
+    " will be used if this is left blank.",
+)
+
+args = parser.parse_args()
+
+
+board = RiscvDemoBoard()
 
 
 def handle_workend():
     print("Dump stats at the end of the ROI!")
-
     m5.stats.dump()
     print("Reset stats at the end of the ROI!")
     m5.stats.reset()
@@ -70,9 +85,7 @@ def handle_workbegin():
     print("Dumping stats at beginning of ROI!")
     m5.stats.dump()
     print("Resetting stats at the start of ROI!")
-
     m5.stats.reset()
-
     yield False
 
 
@@ -83,10 +96,11 @@ def exit_event_handler():
     yield False
     print("third exit event: After run script")
     print("Dump stats at end of workload!")
-    yield True
 
 
-board.set_workload(obtain_resource("riscv-ubuntu-24.04-boot"))
+board.set_workload(
+    obtain_resource(resource_id=args.workload, resource_version=args.version)
+)
 
 
 simulator = Simulator(

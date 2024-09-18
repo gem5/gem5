@@ -76,7 +76,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     """
 
-    def __init__(self, is_fs):
+    def __init__(self):
         requires(
             isa_required=ISA.RISCV,
         )
@@ -86,7 +86,6 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
             "This board is not known to be be representative of any "
             "real-world system. Use with caution."
         )
-        self._fs = is_fs
 
         memory = DualChannelDDR4_2400(size="4GiB")
 
@@ -112,7 +111,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
     # SE mode to work.
     @overrides(RiscvBoard)
     def _pre_instantiate(self):
-        if self._fs:
+        if self._is_fs:
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x0
                 self.workload.bootloader_filename = self._bootloader[0]
@@ -128,7 +127,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     @overrides(RiscvBoard)
     def _setup_board(self) -> None:
-        if self._fs:
+        if self._is_fs:
             self.workload = RiscvBootloaderKernelWorkload()
 
             # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
@@ -177,11 +176,11 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     @overrides(RiscvBoard)
     def has_io_bus(self) -> bool:
-        return self._fs
+        return self._is_fs
 
     @overrides(RiscvBoard)
     def get_io_bus(self) -> IOXBar:
-        if self._fs:
+        if self._is_fs:
             return self.iobus
         else:
             raise NotImplementedError(
@@ -191,11 +190,11 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     @overrides(RiscvBoard)
     def has_coherent_io(self) -> bool:
-        return self._fs
+        return self._is_fs
 
     @overrides(RiscvBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
-        if self._fs:
+        if self._is_fs:
             return self.iobus.mem_side_ports
         else:
             raise NotImplementedError(
