@@ -50,25 +50,25 @@ RUN mkdir /sst
 
 # Download and build SST-Core without MPI support
 WORKDIR /sst/
-RUN wget https://github.com/sstsimulator/sst-core/releases/download/v13.0.0_Final/sstcore-13.0.0.tar.gz && \
-    tar xf sstcore-13.0.0.tar.gz && \
-    cd sstcore-13.0.0/ && \
+RUN wget https://github.com/sstsimulator/sst-core/releases/download/v14.0.0_Final/sstcore-14.0.0.tar.gz && \
+    tar xf sstcore-14.0.0.tar.gz && \
+    cd sstcore-14.0.0/ && \
     ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
                                         --disable-mpi && \
     make all -j $(nproc) && \
     make install && \
-    cd /sst && rm -rf sstcore-13.0.0.tar.gz sstcore-13.0.0
+    cd /sst && rm -rf sstcore-14.0.0.tar.gz sstcore-14.0.0
 
 # Download and build SST-Elements
 WORKDIR /sst
-RUN wget https://github.com/sstsimulator/sst-elements/releases/download/v13.0.0_Final/sstelements-13.0.0.tar.gz && \
-    tar xf sstelements-13.0.0.tar.gz && \
-    cd sst-elements-library-13.0.0 && \
+RUN wget https://github.com/sstsimulator/sst-elements/releases/download/v14.0.0_Final/sstelements-14.0.0.tar.gz && \
+    tar xf sstelements-14.0.0.tar.gz && \
+    cd sst-elements-library-14.0.0 && \
      ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
                                         --with-sst-core=$SST_CORE_HOME && \
     make all -j $(nproc) && \
     make install && \
-    cd /sst && rm -rf sstelements-13.0.0.tar.gz sst-elements-library-13.0.0
+    cd /sst && rm -rf sstelements-14.0.0.tar.gz sst-elements-library-14.0.0
 
 #Setting the environmental variables
 ENV PATH=$PATH:$SST_CORE_HOME/bin
