@@ -525,11 +525,9 @@ let {{
            EA = XBase;
            faultAddr = EA;
            HCR hcr = Hcr64;
-           SCR scr = Scr64;
            CPSR cpsr = Cpsr;
            ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-           if (el == EL1 && ArmSystem::haveEL(xc->tcBase(), EL2) &&
-               hcr.vm && (scr.ns || !ArmSystem::haveEL(xc->tcBase(), EL3))) {
+           if (el == EL1 && EL2Enabled(xc->tcBase()) && hcr.vm) {
                memAccessFlags = memAccessFlags | Request::CLEAN;
            }
            System *sys = xc->tcBase()->getSystemPtr();
