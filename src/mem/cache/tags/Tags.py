@@ -46,12 +46,6 @@ class TaggedIndexingPolicy(SimObject):
     cxx_header = "mem/cache/tags/tagged_entry.hh"
     cxx_template_params = ["class Types"]
 
-    # Get the size from the parent (cache)
-    size = Param.MemorySize(Parent.size, "capacity in bytes")
-
-    # Get the entry size from the parent (tags)
-    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
-
     # Get the associativity
     assoc = Param.Int(Parent.assoc, "associativity")
 
@@ -60,6 +54,12 @@ class TaggedSetAssociative(TaggedIndexingPolicy):
     type = "TaggedSetAssociative"
     cxx_class = "gem5::TaggedSetAssociative"
     cxx_header = "mem/cache/tags/tagged_entry.hh"
+
+    # Get the size from the parent (cache)
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    # Get the entry size from the parent (tags)
+    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
 
 
 class BaseTags(ClockedObject):
