@@ -51,14 +51,11 @@
 
 #include "base/compiler.hh"
 #include "base/types.hh"
-#include "sim/serialize.hh"
 
 namespace gem5
 {
 
-class Checkpoint;
-
-class Random : public Serializable
+class Random
 {
 
   public:
@@ -115,9 +112,6 @@ class Random : public Serializable
         std::uniform_int_distribution<T> dist(min, max);
         return dist(gen);
     }
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
 };
 
 /**
