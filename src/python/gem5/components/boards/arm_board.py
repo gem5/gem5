@@ -123,11 +123,16 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             self.multi_proc = True
 
     @overrides(AbstractBoard)
-    def _setup_board(self) -> None:
-        # This board is expected to run full-system simulation.
-        # Loading ArmFsLinux() from `src/arch/arm/ArmFsWorkload.py`
-        self.workload = ArmFsLinux()
+    def _set_fullsystem(self, is_fs: bool) -> None:
+        self._is_fs = is_fs
 
+        if self._is_fs:
+            # This board is expected to run full-system simulation.
+            # Loading ArmFsLinux() from `src/arch/arm/ArmFsWorkload.py`
+            self.workload = ArmFsLinux()
+
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
         # We are fixing the following variable for the ArmSystem to work. The
         # security extension is checked while generating the dtb file in
         # realview. This board does not have security extension enabled.

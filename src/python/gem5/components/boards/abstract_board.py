@@ -116,9 +116,6 @@ class AbstractBoard:
         # Simulator module.
         self._checkpoint = None
 
-        # Setup the board and memory system's memory ranges.
-        self._setup_memory_ranges()
-
         # A private variable to record whether `_connect_things` has been
         # been called.
         self._connect_things_called = False
@@ -189,8 +186,6 @@ class AbstractBoard:
         :param is_fs: Set whether the board is to be run in FS mode or SE mode.
         """
         self._is_fs = is_fs
-        # Setup board properties unique to the board being constructed.
-        self._setup_board()
 
     def is_fullsystem(self) -> bool:
         """
@@ -386,6 +381,12 @@ class AbstractBoard:
     def _pre_instantiate(self):
         """To be called immediately before ``m5.instantiate``. This is where
         ``_connect_things`` is executed by default."""
+
+        # Setup the board and memory system's memory ranges.
+        self._setup_memory_ranges()
+
+        # Setup board properties unique to the board being constructed.
+        self._setup_board()
 
         # Connect the memory, processor, and cache hierarchy.
         self._connect_things()

@@ -96,9 +96,14 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             )
 
     @overrides(AbstractSystemBoard)
-    def _setup_board(self) -> None:
-        self.workload = RiscvBootloaderKernelWorkload()
+    def _set_fullsystem(self, is_fs: bool) -> None:
+        self._is_fs = is_fs
 
+        if self._is_fs:
+            self.workload = RiscvBootloaderKernelWorkload()
+
+    @overrides(AbstractSystemBoard)
+    def _setup_board(self) -> None:
         # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
         self.platform = HiFive()
         # Note: This only works with single threaded cores.

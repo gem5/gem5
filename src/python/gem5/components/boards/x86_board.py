@@ -92,11 +92,16 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             )
 
     @overrides(AbstractSystemBoard)
+    def _set_fullsystem(self, is_fs: bool) -> None:
+        self._is_fs = is_fs
+
+        if self._is_fs:
+            self.pc = Pc()
+
+            self.workload = X86FsLinux()
+
+    @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-        self.pc = Pc()
-
-        self.workload = X86FsLinux()
-
         # North Bridge
         self.iobus = IOXBar()
 
