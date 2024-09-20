@@ -71,7 +71,11 @@ jobs:
                   ref: develop
             - name: Build VEGA_X86/gem5.opt
               run: scons build/VEGA_X86/gem5.opt -j`nproc`
-
+            - name: Get Pannotia inputs
+              working-directory: ${{ github.workspace }}/tests/gem5/gpu-pannotia-resources/pannotia-datasets
+              run: gsutil -m cp -r \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/README.txt" \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/bc"
+                  \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/color" \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/floydwarshall" \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/mis"
+                  \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/pagerank" \ "gs://dist.gem5.org/dist/develop/datasets/pannotia/sssp" \ .
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=very-long --skip-build -vvv -t $(nproc) --host gcn_gpu  gem5/gpu
