@@ -25,7 +25,7 @@ jobs:
               id: generate
               uses: docker/bake-action/subaction/list-targets@v4
               with:
-                  target: docker-buildx-bake
+                  target: clang-compilers
                   workdir: util/dockerfiles
 
     docker-buildx-bake:
