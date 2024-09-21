@@ -31,7 +31,7 @@ jobs:
     docker-buildx-bake:
         runs-on: [self-hosted, linux, x64]
         needs:
-            - prepare
+            - obtain-targets
 
         strategy:
             fail-fast: false
