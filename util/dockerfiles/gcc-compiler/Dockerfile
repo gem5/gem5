@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+FROM  ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.description="A Dockerfile to build an Ubuntu 24.04 docker image with all dependencies for gem5, with GCC 13."
