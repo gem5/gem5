@@ -14,9 +14,18 @@ on:
 jobs:
     bake:
         runs-on: [self-hosted, linux, x64]
+
+        strategy:
+            fail-fast: false
+            matrix:
+                target:
+                    - ubuntu-24-04_all-dependencies
+                    - gcc-version-11
+
         permissions:
             packages: write
             contents: read
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -34,5 +43,6 @@ jobs:
             - name: Build and push
               uses: docker/bake-action@v5
               with:
+                  targets: ${{ matrix.target }}
                   workdir: util/dockerfiles
                   push: true
