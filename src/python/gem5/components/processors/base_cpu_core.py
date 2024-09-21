@@ -135,11 +135,6 @@ class BaseCPUCore(AbstractCore):
     def set_workload(self, process: Process) -> None:
         self.core.workload = process
 
-    def is_workload_set(self) -> bool:
-        if self.core.workload:
-            return True
-        return False
-
     @overrides(AbstractCore)
     def set_switched_out(self, value: bool) -> None:
         self.core.switched_out = value
