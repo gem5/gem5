@@ -75,15 +75,11 @@ board = RiscvDemoBoard()
 def handle_workend():
     print("Dump stats at the end of the ROI!")
     m5.stats.dump()
-    print("Reset stats at the end of the ROI!")
-    m5.stats.reset()
     yield False
 
 
 def handle_workbegin():
     print("Done booting Linux")
-    print("Dumping stats at beginning of ROI!")
-    m5.stats.dump()
     print("Resetting stats at the start of ROI!")
     m5.stats.reset()
     yield False
@@ -95,7 +91,7 @@ def exit_event_handler():
     print("second exit event: In after boot")
     yield False
     print("third exit event: After run script")
-    print("Dump stats at end of workload!")
+    yield True
 
 
 board.set_workload(
