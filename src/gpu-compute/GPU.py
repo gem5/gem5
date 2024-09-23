@@ -310,7 +310,7 @@ class Shader(ClockedObject):
         """Insert rel packet into
                                          ruby at kernel end""",
     )
-    globalmem = Param.MemorySize("64kB", "Memory size")
+    globalmem = Param.MemorySize("64KiB", "Memory size")
     timing = Param.Bool(False, "timing memory accesses")
 
     cpu_pointer = Param.BaseCPU(NULL, "pointer to base CPU")
