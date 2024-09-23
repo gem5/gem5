@@ -8,54 +8,30 @@ on:
     workflow_dispatch:
 
 jobs:
-    build-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        outputs:
-            build-name: ${{ steps.artifact-name.outputs.name }}
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/ALL
-              uses: actions/cache@v4
-              with:
-                  path: build/ALL
-                  key: weekly-build-all
-
-            - id: artifact-name
-              run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
-            - name: Build gem5
-              run: |
-                  scons build/ALL/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ steps.artifact-name.outputs.name }}
-                  path: build/ALL/gem5.opt
-                  retention-days: 5
-            - run: echo "This job's status is ${{ job.status }}."
 
     # start running the very-long tests
     testlib-very-long-tests:
         strategy:
             fail-fast: false
             matrix:
-                test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
+                test-type: [gem5_library_example_tests, gem5_resources, stdlib, parsec_benchmarks, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [build-gem5]
         timeout-minutes: 4320 # 3 days
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
               with:
-                  name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
-            - run: chmod u+x build/ALL/gem5.opt
+                  key: testlib-build-all
+
             - name: very-long ${{ matrix.test-type }}
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv
+              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long -j$(nproc) -vv
             - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
@@ -76,12 +52,16 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   ref: develop
-            - name: Build VEGA_X86/gem5.opt
-              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long --skip-build -vvv -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=very-long -vvv -j $(nproc) -t $(nproc) --host gcn_gpu  gem5/gpu
 
             - name: Upload results
               if: success() || failure()
@@ -100,6 +80,13 @@ jobs:
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
+
+            - name: Cache build/ALL
+               # Just restore as we don't want to cache the DRAMSys library most of the time.
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
