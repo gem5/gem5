@@ -47,6 +47,12 @@ jobs:
                   path: build/NULL
                   key: testlib-build-null
 
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all
+
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run gem5/${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc)
