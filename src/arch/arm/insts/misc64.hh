@@ -174,9 +174,8 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
 
     bool miscRead() const { return _miscRead; }
 
+    using ArmISA::ArmStaticInst::generateTrap;
     Fault generateTrap(ArmISA::ExceptionLevel el) const;
-    Fault generateTrap(ArmISA::ExceptionLevel el,
-            ArmISA::ExceptionClass ec, uint32_t iss) const;
 };
 
 class MiscRegImmOp64 : public MiscRegOp64
