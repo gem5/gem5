@@ -393,6 +393,11 @@ RubyPort::MemResponsePort::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(RubyPort, "Functional access for address: %#x\n", pkt->getAddr());
 
+    // In a CPU+dGPU system, GPU functional packets are injected into
+    // the CPU network. This happens because the requestorId is automatically
+    // set to that of the CPU network for these packets. Here, we set it
+    // to that of the GPU RubyPort so that it uses the right network to
+    // access GPU caches
     RubySystem *rs = owner.m_ruby_system;
 
     // Check for pio requests and directly send them to the dedicated
@@ -406,6 +411,10 @@ RubyPort::MemResponsePort::recvFunctional(PacketPtr pkt)
 
     assert(pkt->getAddr() + pkt->getSize() <=
            owner.makeLineAddress(pkt->getAddr()) + rs->getBlockSizeBytes());
+
+    if (pkt->req->getGPUFuncAccess()) {
+        pkt->req->requestorId(owner.m_controller->getRequestorId());
+    }
 
     if (access_backing_store) {
         // The attached physmem contains the official version of data.

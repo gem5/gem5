@@ -364,14 +364,27 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
      * because this method is called by the PCIDevice::read method which
      * is a non-timing read.
      */
-    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
-                                               vramRequestorId());
-    PacketPtr readPkt = Packet::createRead(req);
+    RequestPtr req = std::make_shared<Request>(
+            offset, pkt->getSize(), 0, vramRequestorId());
+
+    PacketPtr readPkt = new Packet(req, MemCmd::ReadReq);
     uint8_t *dataPtr = new uint8_t[pkt->getSize()];
     readPkt->dataDynamic(dataPtr);
+    readPkt->req->setGPUFuncAccess(true);
+    readPkt->setSuppressFuncError();
+    cp->shader()->cuList[0]->memPort[0].sendFunctional(readPkt);
+    if (readPkt->cmd == MemCmd::FunctionalReadError) {
+        delete readPkt;
+        delete[] dataPtr;
+        RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                               vramRequestorId());
+        PacketPtr readPkt = Packet::createRead(req);
+        uint8_t *dataPtr = new uint8_t[pkt->getSize()];
+        readPkt->dataDynamic(dataPtr);
 
-    auto system = cp->shader()->gpuCmdProc.system();
-    system->getDeviceMemory(readPkt)->access(readPkt);
+        auto system = cp->shader()->gpuCmdProc.system();
+        system->getDeviceMemory(readPkt)->access(readPkt);
+    }
 
     pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
     delete readPkt;

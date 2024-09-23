@@ -560,7 +560,8 @@ RubySystem::functionalRead(PacketPtr pkt)
     // it only if it's not in the cache hierarchy at all.
     int num_controllers = netCntrls[request_net_id].size();
     if (num_invalid == (num_controllers - 1) && num_backing_store == 1) {
-        DPRINTF(RubySystem, "only copy in Backing_Store memory, read from it\n");
+        DPRINTF(RubySystem,
+                "only copy in Backing_Store memory, read from it\n");
         ctrl_backing_store->functionalRead(line_address, pkt);
         return true;
     } else if (num_ro > 0 || num_rw >= 1) {
