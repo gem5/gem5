@@ -180,8 +180,11 @@ machine(MachineType:TCC, "TCC Cache")
 
   void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs.lookup(addr);
+    Entry cache_entry := getCacheEntry(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
+    } else if (is_valid(cache_entry)) {
+      testAndRead(addr, cache_entry.DataBlk, pkt);
     } else {
       functionalMemoryRead(pkt);
     }
