@@ -37,10 +37,10 @@ variable "TAG" {
 
 # Common attributes across all targets. Note: these can be overwritten.
 target "common" {
-  # Here we are enabling multi-platform builds. We are compiling to ARM, X86,
-  # and RISC-V.
-  platforms = ["linux/amd64", "linux/arm64", "linux/riscv64"]
+  # Here we are enabling multi-platform builds. We are compiling to ARM, X86]
+  platforms = ["linux/amd64", "linux/arm64"]
   pull = true
+  dockerfile = "Dockerfile"
 }
 
 # A group of targets to be built. Note: groups can contain other groups.
@@ -72,7 +72,7 @@ group "clang-compilers" {
 
 target "clang-version-14" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v14 compiler."]
   args = {
     version = "14"
   }
@@ -82,7 +82,7 @@ target "clang-version-14" {
 
 target "clang-version-15" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v15 compiler."]
   args = {
     version = "15"
   }
@@ -92,7 +92,7 @@ target "clang-version-15" {
 
 target "clang-version-16" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v16 compiler."]
   args = {
     version = "16"
   }
@@ -102,7 +102,7 @@ target "clang-version-16" {
 
 target "clang-version-17" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v17 compiler."]
   args = {
     version = "17"
   }
@@ -112,7 +112,7 @@ target "clang-version-17" {
 
 target "clang-version-18" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v18 compiler."]
   args = {
     version = "18"
   }
@@ -131,7 +131,7 @@ group "gcc-compilers" {
 
 target "gcc-version-10" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v10 compiler"]
   args = {
     version = "10"
   }
@@ -141,7 +141,7 @@ target "gcc-version-10" {
 
 target "gcc-version-11" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v11 compiler."]
   args = {
     version = "11"
   }
@@ -151,7 +151,7 @@ target "gcc-version-11" {
 
 target "gcc-version-12" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v12 compiler."]
   args = {
     version = "12"
   }
@@ -161,7 +161,7 @@ target "gcc-version-12" {
 
 target "gcc-version-13" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v13 compiler."]
   args = {
     version = "13"
   }
@@ -179,59 +179,59 @@ group "ubuntu-releases" {
 
 target "ubuntu-24-04_all-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 24.04 image with all dependencies required for building and running gem5."]
   context = "ubuntu-24.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-22-04_all-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 22.04 image with all dependencies required for building and running gem5."]
   context = "ubuntu-22.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-24-04_min-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 24.04 image with the minimum dependencies required for building and running gem5."]
   context = "ubuntu-24.04_min-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
 }
 
 target "gcn-gpu" {
   inherits = ["common"]
-  platform = "linux/amd64" # Only build for x86.
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image used to build and run gem5 when simulating GPU in SE mode. Also used for creation of GPU SE workloads."]
+  platforms = ["linux/amd64"] # Only build for x86.
   context = "gcn-gpu"
   tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
 }
 
 target "gpu-fs" {
   inherits = ["common"]
-  platform = "linux/amd64" # Only build for x86.
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image used to build applications to be run with GPU full system. Applications targeting AMD's ROCm GPU framework can be built using this image (e.g., HIP, HSA, OpenCL, etc.)."]
+  platforms = ["linux/amd64"] # Only build for x86.
   context = "gpu-fs"
   tags = ["${IMAGE_URI}/gpu-fs:${TAG}"]
 }
 
 target "sst" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image containing all the requirements for building and running gem5 in addition to SST. Used to test gem5-SST integration."]
   context = "sst"
   tags = ["${IMAGE_URI}/sst-env:${TAG}"]
 }
 
 target "systemc" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
+  annotations = ["index,manifest:org.opencontainers.image.description=An image containing all the requirements for building and running gem5 in addition to SystemC. Used to test gem5-SystemC integration."]
   context = "systemc"
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
 target "devcontainer" {
   inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's ./devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
   dependencies = ["devcontainer"]
-  dockerfile = "Dockerfile"
   context = "devcontainer"
   tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
 }

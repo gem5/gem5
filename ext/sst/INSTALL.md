@@ -2,7 +2,7 @@
 
 The links to download SST source code are available at
 <http://sst-simulator.org/SSTPages/SSTMainDownloads/>.
-This guide is using the most recent SST version (13.0.0) as of September 2023.
+This guide is using the most recent SST version (14.0.0) as of September 2024.
 The following guide assumes `$SST_CORE_HOME` as the location where SST will be
 installed.
 
@@ -11,14 +11,14 @@ installed.
 ### Downloading the SST-Core Source Code
 
 ```sh
-wget https://github.com/sstsimulator/sst-core/releases/download/v13.0.0_Final/sstcore-13.0.0.tar.gz
-tar xzf sstcore-13.0.0.tar.gz
+wget https://github.com/sstsimulator/sst-core/releases/download/v14.0.0_Final/sstcore-14.0.0.tar.gz
+tar xzf sstcore-14.0.0.tar.gz
 ```
 
 ### Installing SST-Core
 
 ```sh
-cd sstcore-13.0.0
+cd sstcore-14.0.0
 ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
             --disable-mpi # optional, used when MPI is not available.
 make all -j$(nproc)
@@ -36,14 +36,14 @@ export PATH=$SST_CORE_HOME/bin:$PATH
 ### Downloading the SST-Elements Source Code
 
 ```sh
-wget https://github.com/sstsimulator/sst-elements/releases/download/v13.0.0_Final/sstelements-13.0.0.tar.gz
-tar xzf sstelements-13.0.0.tar.gz
+wget https://github.com/sstsimulator/sst-elements/releases/download/v14.0.0_Final/sstelements-14.0.0.tar.gz
+tar xzf sstelements-14.0.0.tar.gz
 ```
 
 ### Installing SST-Elements
 
 ```sh
-cd sst-elements-library-13.0.0
+cd sst-elements-library-14.0.0
 ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
             --with-sst-core=$SST_CORE_HOME
 make all -j$(nproc)
