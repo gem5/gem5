@@ -27,7 +27,6 @@
 FROM ubuntu:20.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="This dockerfile contains all the dependences necessary to run GPU applications in gem5 using the gcn5 (Vega) APU model."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive

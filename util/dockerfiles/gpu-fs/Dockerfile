@@ -30,7 +30,6 @@
 FROM ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="The Dockerfile in this directory is used to build applications to be run with GPU full system. Applications targeting AMD's ROCm GPU framework can be built using this docker (e.g., HIP, HSA, OpenCL, etc.)."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive

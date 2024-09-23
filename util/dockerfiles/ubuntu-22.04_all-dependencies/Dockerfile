@@ -26,7 +26,6 @@
 FROM ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="A Dockerfile to build an Ubuntu 22.04 docker image with all dependencies required for building and using gem5."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive

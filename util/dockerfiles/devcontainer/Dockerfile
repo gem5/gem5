@@ -42,7 +42,6 @@
 FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest as builder
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="This Dockerfile creates a devcontainer for gem5 development referenced in ./devcontainer/devcontainer.json. The devcontainer is a multi-platform container that can be built for x86, arm, and riscv and includes all dependencies required for gem5 development."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 RUN wget https://github.com/gem5/gem5/archive/refs/tags/v24.0.tar.gz && \
