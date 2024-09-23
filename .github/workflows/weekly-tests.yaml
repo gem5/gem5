@@ -15,6 +15,13 @@ jobs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
             - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: weekly-build-all
+
             - id: artifact-name
               run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
             - name: Build gem5
