@@ -19,10 +19,12 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Cache build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all
+                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-all
             - name: ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
@@ -45,13 +47,17 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/NULL
-                  key: testlib-build-null
+                  key: testlib-build-null-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-null
 
             - name: Cache build/ALL
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all
+                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-all
 
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
@@ -87,7 +93,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all
+                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-all
 
             - name: long ${{ matrix.test-type }} gem5_library_example_tests
               working-directory: ${{ github.workspace }}/tests
@@ -118,7 +126,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
-                  key: testlib-build-vega
+                  key: testlib-build-vega-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-vega
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests

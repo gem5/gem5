@@ -27,7 +27,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all
+                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-all
 
             - name: very-long ${{ matrix.test-type }}
               working-directory: ${{ github.workspace }}/tests
@@ -57,7 +59,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
-                  key: testlib-build-vega
+                  key: testlib-build-vega-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-vega
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
@@ -86,7 +90,9 @@ jobs:
               uses: actions/cache/restore@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all
+                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  restore-keys: |
+                      testlib-build-all
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
