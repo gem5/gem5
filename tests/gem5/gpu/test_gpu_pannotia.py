@@ -24,10 +24,66 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import gzip
+import os.path
+import shutil
+from urllib.request import urlretrieve
 
 from testlib import *
 
 resource_path = joinpath(absdirpath(__file__), "..", "gpu-pannotia-resources")
+binary_path = joinpath(resource_path, "pannotia-bins")
+dataset_path = joinpath(resource_path, "pannotia-datasets")
+
+binary_links = {
+    "bc.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/bc.gem5",
+    "color_max.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_max.gem5",
+    "color_maxmin.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_maxmin.gem5",
+    "fw_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/fw_hip.gem5",
+    "mis_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/mis_hip.gem5",
+    "pagerank.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/pagerank.gem5",
+    "pagerank_spmv.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/pagerank_spmv.gem5",
+    "sssp.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/sssp.gem5",
+    "sssp_ell.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/sssp_ell.gem5",
+}
+
+dataset_links = {
+    "1k_128k.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr",
+    "2k_1M.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/bc/2k_1M.gr",
+    "G3_circuit.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/color/G3_circuit.graph",
+    "ecology1.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/color/ecology1.graph",
+    "256_16384.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/floydwarshall/256_16384.gr",
+    "512_65536.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/floydwarshall/512_65536.gr",
+    "G3_circuit.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/mis/G3_circuit.graph",
+    "ecology1.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/mis/ecology1.graph",
+    "coAuthorsDBLP.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph",
+    "USA-road-d.NY.gr.gz": "http://www.diag.uniroma1.it/challenge9/data/USA-road-d/USA-road-d.NY.gr.gz",
+}
+
+
+if not os.path.isdir(resource_path):
+    os.makedirs(binary_path)
+    os.makedirs(dataset_path)
+
+    for name in binary_links.keys():
+        urlretrieve(binary_links[name], f"{binary_path}/{name}")
+    for name in dataset_links.keys():
+        urlretrieve(dataset_links[name], f"{dataset_path}/{name}")
+
+    with gzip.open(f"{dataset_path}/USA-road-d.NY.gr.gz", "rb") as f_in:
+        with open(f"{dataset_path}/USA-road-d.NY.gr", "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    os.remove(f"{dataset_path}/USA-road-d.NY.gr.gz")
+
+if len(os.listdir(binary_path)) < 9:
+    testlib.log.test_log.warn(
+        "One or more binaries for the Pannotia tests are missing! Try deleting gpu-pannotia-resources and rerunning."
+    )
+if len(os.listdir(dataset_path)) < 8:
+    testlib.log.test_log.warn(
+        "One or more dataset files for the Pannotia tests are missing! Try deleting gpu-pannotia-resources and rerunning."
+    )
+
 
 gem5_verify_config(
     name="gpu-apu-se-pannotia-bc-1k-128k",
@@ -38,9 +94,9 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/bc.gem5"),
+        joinpath(binary_path, "bc.gem5"),
         "--options",
-        joinpath(resource_path, "pannotia-datasets/bc/1k_128k.gr"),
+        joinpath(dataset_path, "1k_128k.gr"),
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -56,9 +112,9 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/bc.gem5"),
+        joinpath(binary_path, "bc.gem5"),
         "--options",
-        joinpath(resource_path, "pannotia-datasets/bc/2k_1M.gr"),
+        joinpath(dataset_path, "2k_1M.gr"),
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -74,9 +130,9 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/color_maxmin.gem5"),
+        joinpath(binary_path, "color_maxmin.gem5"),
         "--options",
-        f'{joinpath(resource_path, "pannotia-datasets/color/ecology1.graph")} 0',
+        f'{joinpath(dataset_path, "ecology1.graph")} 0',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -92,15 +148,50 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/color_maxmin.gem5"),
+        joinpath(binary_path, "color_maxmin.gem5"),
         "--options",
-        f'{joinpath(resource_path, "pannotia-datasets/color/G3_circuit.graph")} 0',
+        f'{joinpath(dataset_path, "G3_circuit.graph")} 0',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
     length=constants.very_long_tag,
 )
 
+gem5_verify_config(
+    name="gpu-apu-se-pannotia-color-max-ecology",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+    config_args=[
+        "-n3",
+        "--mem-size=8GB",
+        "-c",
+        joinpath(binary_path, "color_max.gem5"),
+        "--options",
+        f'{joinpath(dataset_path, "ecology1.graph")} 0',
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
+    length=constants.very_long_tag,
+)
+
+gem5_verify_config(
+    name="gpu-apu-se-pannotia-color-max-g3-circuit",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+    config_args=[
+        "-n3",
+        "--mem-size=8GB",
+        "-c",
+        joinpath(binary_path, "color_max.gem5"),
+        "--options",
+        f'{joinpath(dataset_path, "G3_circuit.graph")} 0',
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
+    length=constants.very_long_tag,
+)
 
 gem5_verify_config(
     name="gpu-apu-se-pannotia-fw-hip-256",
@@ -111,9 +202,9 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/fw_hip.gem5"),
+        joinpath(binary_path, "fw_hip.gem5"),
         "--options",
-        f'-f {joinpath(resource_path, "pannotia-datasets/floydwarshall/256_16384.gr")} -m default',
+        f'-f {joinpath(dataset_path, "256_16384.gr")} -m default',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -129,9 +220,9 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/fw_hip.gem5"),
+        joinpath(binary_path, "fw_hip.gem5"),
         "--options",
-        f'-f {joinpath(resource_path, "pannotia-datasets/floydwarshall/512_65536.gr")} -m default',
+        f'-f {joinpath(dataset_path, "512_65536.gr")} -m default',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -150,9 +241,9 @@ gem5_verify_config(
 #         "-n3",
 #         "--mem-size=64GiB",
 #         "-c",
-#         joinpath(resource_path, "pannotia-bins/mis_hip.gem5"),
+#         joinpath(binary_path, "mis_hip.gem5"),
 #         "--options",
-#         f'{joinpath(resource_path, "pannotia-datasets/mis/ecology1.graph")} 0'
+#         f'{joinpath(dataset_path, "ecology1.graph")} 0'
 #     ],
 #     valid_isas=(constants.vega_x86_tag,),
 #     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -170,9 +261,9 @@ gem5_verify_config(
 #         "-n3",
 #         "--mem-size=32GiB",
 #         "-c",
-#         joinpath(resource_path, "pannotia-bins/mis_hip.gem5"),
+#         joinpath(binary_path, "mis_hip.gem5"),
 #         "--options",
-#         f'{joinpath(resource_path, "pannotia-datasets/mis/G3_circuit.graph")} 0'
+#         f'{joinpath(dataset_path, "G3_circuit.graph")} 0'
 #     ],
 #     valid_isas=(constants.vega_x86_tag,),
 #     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -188,9 +279,27 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/pagerank_spmv.gem5"),
+        joinpath(binary_path, "pagerank_spmv.gem5"),
         "--options",
-        f'{joinpath(resource_path, "pannotia-datasets/pagerank/coAuthorsDBLP.graph")} 0',
+        f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
+    length=constants.very_long_tag,
+)
+
+gem5_verify_config(
+    name="gpu-apu-se-pannotia-pagerank",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+    config_args=[
+        "-n3",
+        "--mem-size=8GB",
+        "-c",
+        joinpath(binary_path, "pagerank.gem5"),
+        "--options",
+        f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
@@ -206,9 +315,28 @@ gem5_verify_config(
         "-n3",
         "--mem-size=8GB",
         "-c",
-        joinpath(resource_path, "pannotia-bins/sssp_ell.gem5"),
+        joinpath(binary_path, "sssp_ell.gem5"),
         "--options",
-        f'{joinpath(resource_path, "pannotia-datasets/sssp/USA-road-d.NY.gr")} 0',
+        f'{joinpath(dataset_path, "USA-road-d.NY.gr")} 0',
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
+    length=constants.very_long_tag,
+)
+
+
+gem5_verify_config(
+    name="gpu-apu-se-pannotia-sssp",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+    config_args=[
+        "-n3",
+        "--mem-size=8GB",
+        "-c",
+        joinpath(binary_path, "sssp.gem5"),
+        "--options",
+        f'{joinpath(dataset_path, "USA-road-d.NY.gr")} 0',
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
