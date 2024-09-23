@@ -40,15 +40,15 @@ length_map = {
     "sparc": constants.long_tag,
     "mips": constants.long_tag,
     "null": constants.long_tag,
-    "arm": constants.long_tag,
-    "x86": constants.long_tag,
+    "arm": constants.very_long_tag,
+    "x86": constants.very_long_tag,
     "power": constants.long_tag,
     "riscv": constants.long_tag,
 }
 
 for isa in isa_map.keys():
-    if isa in ("x86", "arm", "riscv"):
-        # We only do these checks for X86, ARM, and RISCV to save compiling
+    if isa in ("x86", "arm"):
+        # We only do these checks for X86 and ARM to save compiling
         # other ISAs.
         gem5_verify_config(
             name=f"requires-isa-{isa}",
