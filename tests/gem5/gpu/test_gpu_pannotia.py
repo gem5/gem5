@@ -75,13 +75,13 @@ if not os.path.isdir(resource_path):
             shutil.copyfileobj(f_in, f_out)
     os.remove(f"{dataset_path}/USA-road-d.NY.gr.gz")
 
-if len(os.listdir(binary_path)) < 9:
+if len(os.listdir(binary_path)) < len(binary_links):
     testlib.log.test_log.warn(
-        "One or more binaries for the Pannotia tests are missing! Try deleting gpu-pannotia-resources and rerunning."
+        "One or more binaries for the Pannotia GPU tests are missing! Try deleting gpu-pannotia-resources and rerunning."
     )
-if len(os.listdir(dataset_path)) < 8:
+if len(os.listdir(dataset_path)) < len(dataset_links):
     testlib.log.test_log.warn(
-        "One or more dataset files for the Pannotia tests are missing! Try deleting gpu-pannotia-resources and rerunning."
+        "One or more dataset files for the Pannotia GPU tests are missing! Try deleting gpu-pannotia-resources and rerunning."
     )
 
 
