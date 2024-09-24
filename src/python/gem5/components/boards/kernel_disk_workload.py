@@ -75,8 +75,6 @@ class KernelDiskWorkload:
         * This assumes the Linux kernel is used.
     """
 
-    _is_workload_set = False
-
     @abstractmethod
     def get_default_kernel_args(self) -> List[str]:
         """
@@ -183,9 +181,9 @@ class KernelDiskWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
-        if self._is_workload_set:
+        if self.is_workload_set():
             warn("Workload has been set more than once!")
-        self._is_workload_set = True
+        self.set_is_workload_set(True)
 
         # Set the disk device
         self._disk_device = disk_device

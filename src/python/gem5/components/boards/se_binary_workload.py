@@ -68,8 +68,6 @@ class SEBinaryWorkload:
         for multi-core setups, multi-program workloads are not presently supported.
     """
 
-    _is_workload_set = False
-
     def set_se_binary_workload(
         self,
         binary: BinaryResource,
@@ -103,9 +101,9 @@ class SEBinaryWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
-        if self._is_workload_set:
+        if self.is_workload_set():
             warn("Workload has been set more than once!")
-        self._is_workload_set = True
+        self.set_is_workload_set(True)
 
         # If we are setting a workload of this type, we need to run as a
         # SE-mode simulation.
