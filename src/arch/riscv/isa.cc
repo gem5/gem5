@@ -581,8 +581,7 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_VLENB:
         {
-            auto rpc = tc->pcState().as<PCState>();
-            return rpc.vlenb();
+            return getVecLenInBytes();
         }
       case MISCREG_VTYPE:
         {

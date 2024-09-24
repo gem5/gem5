@@ -34,7 +34,7 @@ private:
     %(reg_idx_arr_decl)s;
 public:
     %(class_name)s(ExtMachInst _machInst);
-    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -49,7 +49,7 @@ private:
     %(reg_idx_arr_decl)s;
 public:
     %(class_name)s(ExtMachInst _machInst);
-    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -57,8 +57,9 @@ public:
 
 def template VleConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -75,7 +76,7 @@ def template VleConstructor {{
         this->microops.push_back(microop);
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-        microop = new %(class_name)sMicro(_machInst, micro_vl, i, vlen);
+        microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
@@ -84,7 +85,7 @@ def template VleConstructor {{
 
     if (_opClass == SimdUnitStrideFaultOnlyFirstLoadOp) {
         microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
-                                        vlen, microops);
+                                        elen, vlen, microops);
         this->microops.push_back(microop);
     }
 
@@ -103,7 +104,7 @@ private:
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-        uint32_t _microIdx, uint32_t _vlen);
+        uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -118,9 +119,10 @@ public:
 def template VleMicroConstructor {{
 
 %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-    uint32_t _microIdx, uint32_t _vlen)
-  : %(base_class)s(
-        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+                               uint32_t _microIdx, uint32_t _elen,
+                               uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+                   _microIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -147,7 +149,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     RiscvISA::vreg_t tmp_v0;
@@ -241,7 +242,6 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
-    %(set_vlen)s;
 
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     status.vs = VPUStatus::DIRTY;
@@ -277,8 +277,9 @@ Fault
 
 def template VseConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -295,7 +296,7 @@ def template VseConstructor {{
         this->microops.push_back(microop);
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-        microop = new %(class_name)sMicro(_machInst, micro_vl, i, vlen);
+        microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
@@ -317,7 +318,7 @@ private:
     RegId destRegIdxArr[0];
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen);
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -330,10 +331,11 @@ public:
 
 def template VseMicroConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen)
-  : %(base_class)s(
-        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                               uint32_t _microIdx, uint32_t _elen,
+                               uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+                    _microIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -374,7 +376,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
@@ -425,7 +426,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
@@ -463,8 +463,9 @@ Fault
 
 def template VlmConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -475,7 +476,7 @@ def template VlmConstructor {{
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
     } else {
-        microop = new Vle8_vMicro(_machInst, micro_vl, 0, vlen);
+        microop = new Vle8_vMicro(_machInst, micro_vl, 0, elen, vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsLoad);
     }
@@ -489,8 +490,9 @@ def template VlmConstructor {{
 
 def template VsmConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -501,7 +503,7 @@ def template VsmConstructor {{
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
     } else {
-        microop = new Vse8_vMicro(_machInst, micro_vl, 0, vlen);
+        microop = new Vse8_vMicro(_machInst, micro_vl, 0, elen, vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsStore);
     }
@@ -515,8 +517,9 @@ def template VsmConstructor {{
 
 def template VsWholeConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -526,7 +529,8 @@ def template VsWholeConstructor {{
 
     StaticInstPtr microop;
     for (int i = 0; i < NFIELDS; ++i) {
-        microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, vlen);
+        microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
+                                          vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
@@ -546,8 +550,8 @@ private:
     RegId destRegIdxArr[0];
     RegId srcRegIdxArr[2];
 public:
-    %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -560,10 +564,11 @@ public:
 
 def template VsWholeMicroConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen)
-  : %(base_class)s(
-        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                               uint32_t _microIdx, uint32_t _elen,
+                               uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+                   _microIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -648,8 +653,9 @@ Fault
 
 def template VlWholeConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -660,7 +666,8 @@ def template VlWholeConstructor {{
 
     StaticInstPtr microop;
     for (int i = 0; i < NFIELDS; ++i) {
-        microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, vlen);
+        microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
+                                          vlen);
         microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
@@ -680,8 +687,8 @@ private:
     RegId destRegIdxArr[1];
     RegId srcRegIdxArr[1];
 public:
-    %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -694,10 +701,11 @@ public:
 
 def template VlWholeMicroConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                               uint32_t _microIdx, uint32_t _elen,
+                               uint32_t _vlen)
   : %(base_class)s("%(mnemonic)s_micro", _machInst, %(op_class)s, _microVl,
-      _microIdx, _vlen)
+                   _microIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -730,7 +738,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     Fault fault = readMemAtomicLE(xc, traceData, EA,
@@ -783,7 +790,6 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
-    %(set_vlen)s;
 
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     status.vs = VPUStatus::DIRTY;
@@ -804,8 +810,9 @@ Fault
 
 def template VlStrideConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -826,14 +833,15 @@ def template VlStrideConstructor {{
     for (uint32_t i = 0; i < num_pinvd_microops; i++) {
         uint32_t vdNumElems = (vl >= num_elems_per_vreg*(i+1))
                               ? num_elems_per_vreg : vl-num_elems_per_vreg*i;
-        microop = new VPinVdMicroInst(machInst, i, vdNumElems);
+        microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
     for (int i = 0; micro_vl > 0; ++i) {
         for (int j = 0; j < micro_vl; ++j) {
-            microop = new %(class_name)sMicro(machInst, i, j, micro_vl);
+            microop = new %(class_name)sMicro(machInst, i, j, micro_vl, elen,
+                                              vlen);
             microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsLoad);
             this->microops.push_back(microop);
@@ -859,7 +867,7 @@ private:
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-        uint32_t _microVl);
+                   uint32_t _microVl, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -872,11 +880,11 @@ public:
 
 def template VlStrideMicroConstructor {{
 
-%(class_name)s::%(class_name)s(
-    ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-    uint32_t _microVl)
-  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-        _regIdx, _microIdx, _microVl)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _regIdx,
+                               uint32_t _microIdx, uint32_t _microVl,
+                               uint32_t _elen, uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _regIdx, _microIdx,
+                   _microVl, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -1020,8 +1028,9 @@ Fault
 
 def template VsStrideConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1038,7 +1047,8 @@ def template VsStrideConstructor {{
     }
     for (int i = 0; micro_vl > 0; ++i) {
         for (int j = 0; j < micro_vl; ++j) {
-            microop = new %(class_name)sMicro(machInst, i, j, micro_vl);
+            microop = new %(class_name)sMicro(machInst, i, j, micro_vl, elen,
+                                              vlen);
             microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsStore);
             this->microops.push_back(microop);
@@ -1064,8 +1074,7 @@ private:
     RegId destRegIdxArr[0];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-            uint32_t _microVl);
-
+                   uint32_t _microVl, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
@@ -1077,11 +1086,11 @@ public:
 
 def template VsStrideMicroConstructor {{
 
-%(class_name)s::%(class_name)s(
-    ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-    uint32_t _microVl)
-  : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s,
-      _regIdx, _microIdx, _microVl)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _regIdx,
+                               uint32_t _microIdx, uint32_t _microVl,
+                               uint32_t _elen, uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s, _regIdx,
+                   _microIdx, _microVl, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -1197,8 +1206,9 @@ Fault
 def template VlIndexConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                                         uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1223,11 +1233,11 @@ template<typename ElemType>
     for (uint32_t i = 0; i < num_pinvdcpyvs_microops; i++) {
         uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
 
-        microop = new VCpyVsMicroInst(machInst, i, machInst.vs2);
+        microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen, vlen);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
 
-        microop = new VPinVdMicroInst(machInst, i, vdNumElems);
+        microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
@@ -1238,8 +1248,10 @@ template<typename ElemType>
             uint32_t vs2RegIdx = i / vs2_split_num;
             uint32_t vdElemIdx = j + micro_vlmax * (i % vd_split_num);
             uint32_t vs2ElemIdx = j + micro_vlmax * (i % vs2_split_num);
-            microop = new %(class_name)sMicro<ElemType>(machInst,
-                vdRegIdx, vdElemIdx, vs2RegIdx, vs2ElemIdx);
+            microop = new %(class_name)sMicro<ElemType>(machInst, vdRegIdx,
+                                                        vdElemIdx, vs2RegIdx,
+                                                        vs2ElemIdx, elen,
+                                                        vlen);
             microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsLoad);
             this->microops.push_back(microop);
@@ -1269,7 +1281,8 @@ private:
 public:
     %(class_name)s(ExtMachInst _machInst,
         uint32_t _vdRegIdx, uint32_t _vdElemIdx,
-        uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx);
+        uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx,
+        uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -1285,9 +1298,9 @@ def template VlIndexMicroConstructor {{
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(
     ExtMachInst _machInst,uint32_t _vdRegIdx, uint32_t _vdElemIdx,
-    uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx)
-  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-      _vdRegIdx, _vdElemIdx, _vs2RegIdx, _vs2ElemIdx)
+    uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx, uint32_t _elen, uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vdRegIdx,
+                   _vdElemIdx, _vs2RegIdx, _vs2ElemIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -1442,8 +1455,9 @@ Fault
 def template VsIndexConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                                         uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1468,8 +1482,10 @@ template<typename ElemType>
             uint32_t vs2RegIdx = i / vs2_split_num;
             uint32_t vs3ElemIdx = j + micro_vlmax * (i % vs3_split_num);
             uint32_t vs2ElemIdx = j + micro_vlmax * (i % vs2_split_num);
-            microop = new %(class_name)sMicro<ElemType>(machInst,
-                vs3RegIdx, vs3ElemIdx, vs2RegIdx, vs2ElemIdx);
+            microop = new %(class_name)sMicro<ElemType>(machInst, vs3RegIdx,
+                                                        vs3ElemIdx, vs2RegIdx,
+                                                        vs2ElemIdx, elen,
+                                                        vlen);
             microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsStore);
             this->microops.push_back(microop);
@@ -1497,9 +1513,9 @@ private:
     RegId srcRegIdxArr[4];
     RegId destRegIdxArr[0];
 public:
-    %(class_name)s(ExtMachInst _machInst,
-        uint32_t _vs3RegIdx, uint32_t _vs3ElemIdx,
-        uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vs3RegIdx,
+                   uint32_t _vs3ElemIdx, uint32_t _vs2RegIdx,
+                   uint32_t _vs2ElemIdx, uint32_t _elen, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -1514,10 +1530,13 @@ def template VsIndexMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _vs3RegIdx, uint32_t _vs3ElemIdx,
-    uint32_t _vs2RegIdx, uint32_t _vs2ElemIdx)
-  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-      _vs3RegIdx, _vs3ElemIdx, _vs2RegIdx, _vs2ElemIdx)
+                                         uint32_t _vs3RegIdx,
+                                         uint32_t _vs3ElemIdx,
+                                         uint32_t _vs2RegIdx,
+                                         uint32_t _vs2ElemIdx,
+                                         uint32_t _elen, uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vs3RegIdx,
+                   _vs3ElemIdx, _vs2RegIdx, _vs2ElemIdx, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
@@ -1640,8 +1659,9 @@ Fault
 
 def template VlSegConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1662,7 +1682,9 @@ def template VlSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-                microop = new %(class_name)sMicro(_machInst, micro_vl, i, num_microops, f, NFIELDS, vlen);
+                microop = new %(class_name)sMicro(_machInst, micro_vl, i,
+                                                  num_microops, f, NFIELDS,
+                                                  elen, vlen);
                 microop->setDelayedCommit();
                 microop->setFlag(IsLoad);
                 this->microops.push_back(microop);
@@ -1673,8 +1695,9 @@ def template VlSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-                microop = new VlSegDeIntrlvMicroInst(_machInst, micro_vl, _machInst.vd + i + (f * num_microops),
-                    NFIELDS, i, num_microops, f, vlen, size_per_elem);
+                microop = new VlSegDeIntrlvMicroInst(_machInst, micro_vl,
+                    _machInst.vd + i + (f * num_microops), NFIELDS, i,
+                    num_microops, f, elen, vlen, size_per_elem);
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
             }
@@ -1699,8 +1722,9 @@ private:
     uint32_t numFields;
     uint32_t numMicroops;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl, uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field, uint32_t _numFields, uint32_t _vlen);
-
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field,
+                   uint32_t _numFields, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
@@ -1712,8 +1736,13 @@ public:
 
 def template VlSegMicroConstructor {{
 
-    %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl, uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field, uint32_t _numFields, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx , _numMicroops, _field, _numFields, _vlen)
+    %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                                   uint32_t _microIdx, uint32_t _numMicroops,
+                                   uint32_t _field, uint32_t _numFields,
+                                   uint32_t _elen, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+                     _microIdx , _numMicroops, _field, _numFields, _elen,
+                     _vlen)
 {
     %(set_reg_idx_arr)s;
 
@@ -1747,7 +1776,6 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     RiscvISA::vreg_t tmp_v0;
@@ -1843,7 +1871,6 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
-    %(set_vlen)s;
 
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     status.vs = VPUStatus::DIRTY;
@@ -1878,8 +1905,9 @@ Fault
 
 def template VsSegConstructor {{
 
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1901,7 +1929,7 @@ def template VsSegConstructor {{
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
                 microop = new VsSegIntrlvMicroInst(_machInst, micro_vl,
-                    _machInst.vs3, NFIELDS, i, num_microops, f, vlen,
+                    _machInst.vs3, NFIELDS, i, num_microops, f, elen, vlen,
                     size_per_elem);
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -1912,7 +1940,8 @@ def template VsSegConstructor {{
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
-                    num_microops, f, NFIELDS, vlen);
+                                                  num_microops, f, NFIELDS,
+                                                  elen, vlen);
                 microop->setDelayedCommit();
                 microop->setFlag(IsStore);
                 this->microops.push_back(microop);
@@ -1940,9 +1969,8 @@ private:
     uint32_t numMicroops;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-    uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field,
-    uint32_t _numFields, uint32_t _vlen);
-
+                   uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field,
+                   uint32_t _numFields, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
@@ -1955,10 +1983,11 @@ public:
 def template VsSegMicroConstructor {{
 
     %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-    uint32_t _microIdx, uint32_t _numMicroops, uint32_t _field,
-    uint32_t _numFields, uint32_t _vlen)
+                                   uint32_t _microIdx, uint32_t _numMicroops,
+                                   uint32_t _field, uint32_t _numFields,
+                                   uint32_t _elen, uint32_t _vlen)
     : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
-    _microIdx, _numMicroops, _field, _numFields, _vlen)
+                     _microIdx, _numMicroops, _field, _numFields, _elen, _vlen)
 {
     %(set_reg_idx_arr)s;
 
@@ -2008,7 +2037,6 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
-    %(set_vlen)s;
     %(ea_code)s;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
@@ -2107,23 +2135,23 @@ Fault
 }};
 
 def template VMemBaseDecodeBlock {{
-    return new %(class_name)s(machInst, vlen);
+    return new %(class_name)s(machInst, elen, vlen);
 }};
 
 def template VMemTemplateDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
     case 0b000: {
-        return new %(class_name)s<uint8_t>(machInst);
+        return new %(class_name)s<uint8_t>(machInst, elen, vlen);
     }
     case 0b001: {
-        return new %(class_name)s<uint16_t>(machInst);
+        return new %(class_name)s<uint16_t>(machInst, elen, vlen);
     }
     case 0b010: {
-        return new %(class_name)s<uint32_t>(machInst);
+        return new %(class_name)s<uint32_t>(machInst, elen, vlen);
     }
     case 0b011: {
-        return new %(class_name)s<uint64_t>(machInst);
+        return new %(class_name)s<uint64_t>(machInst, elen, vlen);
     }
     default: GEM5_UNREACHABLE;
 }
@@ -2134,16 +2162,16 @@ def template VMemSplitTemplateDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
     case 0b000: {
-        return new %(class_name)s<uint8_t>(machInst, vlen);
+        return new %(class_name)s<uint8_t>(machInst, elen, vlen);
     }
     case 0b001: {
-        return new %(class_name)s<uint16_t>(machInst, vlen);
+        return new %(class_name)s<uint16_t>(machInst, elen, vlen);
     }
     case 0b010: {
-        return new %(class_name)s<uint32_t>(machInst, vlen);
+        return new %(class_name)s<uint32_t>(machInst, elen, vlen);
     }
     case 0b011: {
-        return new %(class_name)s<uint64_t>(machInst, vlen);
+        return new %(class_name)s<uint64_t>(machInst, elen, vlen);
     }
     default: GEM5_UNREACHABLE;
 }

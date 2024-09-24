@@ -28,11 +28,8 @@
 
 
 let {{
-
-def setVlen():
-        return "uint32_t vlen = VlenbBits * 8;\n"
 def setVlenb():
-        return "[[maybe_unused]] uint32_t vlenb = VlenbBits;\n"
+        return "[[maybe_unused]] uint32_t vlenb = vlen >> 3;\n"
 
 def declareVMemTemplate(class_name):
     return f'''
@@ -103,7 +100,6 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
          'memacc_code': memacc_code,
          'postacc_code': postacc_code,
          'set_vlenb': setVlenb(),
-         'set_vlen': setVlen(),
          'declare_vmem_template': declareVMemTemplate(Name + 'Micro'),
          'fault_code': getFaultCode() if fault_only_first else '',
          'tail_mask_policy_code': getTailMaskPolicyCode()},
