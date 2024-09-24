@@ -122,12 +122,12 @@ args = parser.parse_args()
 if args.cache_size == "small":
     args.tcp_size = "256B"
     args.tcp_assoc = 2
-    args.tcc_size = "1kB"
+    args.tcc_size = "1KiB"
     args.tcc_assoc = 2
 elif args.cache_size == "large":
-    args.tcp_size = "256kB"
+    args.tcp_size = "256KiB"
     args.tcp_assoc = 16
-    args.tcc_size = "1024kB"
+    args.tcc_size = "1024KiB"
     args.tcc_assoc = 16
 
 #

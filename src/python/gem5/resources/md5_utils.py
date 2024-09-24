@@ -38,7 +38,7 @@ def _md5_update_from_file(
     if filename.stat().st_size < 1024 * 1024 * 100:
         from ..utils.progress_bar import FakeTQDM
 
-        # if the file is less than 100MB, no need to show a progress bar.
+        # if the file is less than 100MiB, no need to show a progress bar.
         tqdm = FakeTQDM()
     else:
         from ..utils.progress_bar import tqdm
