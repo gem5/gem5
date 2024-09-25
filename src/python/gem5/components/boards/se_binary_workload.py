@@ -145,7 +145,6 @@ class SEBinaryWorkload:
             #
             # A better API for this which avoids `isinstance` checks would be
             # welcome.
-
             for core in self.get_processor()._all_cores():
                 core.set_workload(process)
         else:
