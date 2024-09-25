@@ -2046,7 +2046,6 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 SSI_MASK // added for S
             },
             {CSR_SIE,
-                MSI_MASK | MTI_MASK | MEI_MASK |
                 SSI_MASK | STI_MASK | SEI_MASK // added for S
             },
         },
