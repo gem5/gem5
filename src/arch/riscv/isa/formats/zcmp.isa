@@ -52,6 +52,7 @@ def template CmPushConstructor {{
         if (rlist < 4) {
             cur_inst = new Unknown(machInst);
             cur_inst->setFlag(IsMicroop);
+            cur_inst->setDelayedCommit();
             microops.emplace_back(cur_inst);
         } else {
             int start_reg = 0;
@@ -70,10 +71,12 @@ def template CmPushConstructor {{
                     cur_inst = new %(class_name)s64MicroInst(
                         machInst, PushPopRegList[i], offset);
                 }
+                cur_inst->setDelayedCommit();
                 microops.emplace_back(cur_inst);
             }
 
             cur_inst = new %(class_name)sSpAdjMicroInst(machInst, -stackAdj());
+            cur_inst->setDelayedCommit();
             microops.emplace_back(cur_inst);
         }
 
@@ -275,6 +278,7 @@ def template CmPopConstructor {{
         if (rlist < 4) {
             cur_inst = new Unknown(machInst);
             cur_inst->setFlag(IsMicroop);
+            cur_inst->setDelayedCommit();
             microops.emplace_back(cur_inst);
         } else {
             int start_reg = 0;
@@ -293,10 +297,12 @@ def template CmPopConstructor {{
                     cur_inst = new %(class_name)s64MicroInst(
                         machInst, PushPopRegList[i], offset);
                 }
+                cur_inst->setDelayedCommit();
                 microops.emplace_back(cur_inst);
             }
 
             cur_inst = new %(class_name)sSpAdjMicroInst(machInst, stackAdj());
+            cur_inst->setDelayedCommit();
             microops.emplace_back(cur_inst);
 
             %(move_a0_desc)s;
@@ -506,12 +512,13 @@ def template CmMvsa01Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
-        microops.emplace_back(
-            new %(class_name)sMvMicroInst(
-                machInst, int_reg::A0, StackRegs[machInst.r1s]));
-        microops.emplace_back(
-            new %(class_name)sMvMicroInst(
-                machInst, int_reg::A1, StackRegs[machInst.r2s]));
+        StaticInstPtr cur_inst;
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, int_reg::A0, StackRegs[machInst.r1s]);
+        microops.emplace_back(cur_inst);
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, int_reg::A1, StackRegs[machInst.r2s]);
+        microops.emplace_back(cur_inst);
 
         microops.front()->setFirstMicroop();
         microops.back()->setLastMicroop();
@@ -522,12 +529,15 @@ def template CmMva01sConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
-        microops.emplace_back(
-            new %(class_name)sMvMicroInst(
-                machInst, StackRegs[machInst.r1s], int_reg::A0));
-        microops.emplace_back(
-            new %(class_name)sMvMicroInst(
-                machInst, StackRegs[machInst.r2s], int_reg::A1));
+        StaticInstPtr cur_inst;
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, StackRegs[machInst.r1s], int_reg::A0);
+        cur_inst->setDelayedCommit();
+        microops.emplace_back(cur_inst);
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, StackRegs[machInst.r2s], int_reg::A1);
+        cur_inst->setDelayedCommit();
+        microops.emplace_back(cur_inst);
 
         microops.front()->setFirstMicroop();
         microops.back()->setLastMicroop();
