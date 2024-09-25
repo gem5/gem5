@@ -446,8 +446,8 @@ def main():
         done = True
         print("Build information:")
         print()
-        print(f"gem5 version {defines.gem5Version}")
-        print(f"compiled {defines.compileDate}")
+        print(f"gem5 version {_m5.core.gem5Version}")
+        print(f"compiled {_m5.core.compileDate}")
         print("build options:")
         keys = list(defines.buildEnv.keys())
         keys.sort()
