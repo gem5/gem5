@@ -279,6 +279,11 @@ class LooppointAnalysisManager: public SimObject
         }
     };
 
+    std::unordered_map<Addr, uint64_t> getBBInstMap() const
+    {
+        return bbInstMap;
+    };
+
     std::unordered_map<Addr, uint64_t>
     getGlobalBBV() const
     {
