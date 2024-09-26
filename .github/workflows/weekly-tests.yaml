@@ -85,15 +85,6 @@ jobs:
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
 
-            - name: Cache build/ALL
-               # Just restore as we don't want to cache the DRAMSys library most of the time.
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
-                  restore-keys: |
-                      testlib-build-all
-
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
               working-directory: ${{ github.workspace }}
