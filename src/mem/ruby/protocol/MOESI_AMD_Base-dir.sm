@@ -107,7 +107,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
     // probe responses
     CPUPrbResp,            desc="Probe Response Msg";
-    CPUPrbRespHit,	       desc="Probe Response Msg and Data";
+    CPUPrbRespWB,	       desc="Probe Response Msg and Data";
 
     ProbeAcksComplete,  desc="Probe Acks Complete";
 
@@ -367,8 +367,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         TBE tbe := TBEs.lookup(in_msg.addr);
         CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(in_msg.addr));
         if (in_msg.Type == CoherenceResponseType:CPUPrbResp) {
-          if (in_msg.Hit == true) {
-            trigger(Event:CPUPrbRespHit, in_msg.addr, entry, tbe);
+          if (in_msg.Hit == true && L2isWB) {
+            trigger(Event:CPUPrbRespWB, in_msg.addr, entry, tbe);
           } else {
             trigger(Event:CPUPrbResp, in_msg.addr, entry, tbe);
           }
@@ -622,35 +622,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
-      }
-    }
-  }
-
-  action(qdrt_queueDmaRdReqTrig, "qdrt", desc="Read data from memory for DMA") {
-    peek(triggerQueue_in, TriggerMsg) {
-      if (L3CacheMemory.isTagPresent(address)) {
-        enqueue(L3TriggerQueue_out, TriggerMsg, l3_hit_latency) {
-          out_msg.addr := address;
-          out_msg.Type := TriggerType:L3Hit;
-        }
-        CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(address));
-
-        // tbe.DataBlk may have partial data (e.g., for DMA writes). Make sure
-        // not to clobber the data before merging it with the L3 cache data.
-        DataBlock tmpBlk := entry.DataBlk;
-        tmpBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
-        tbe.DataBlk := tmpBlk;
-
-        tbe.L3Hit := true;
-        tbe.MemData := true;
-        L3CacheMemory.deallocate(address);
-      } else {
-        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
-          out_msg.addr := address;
-          out_msg.Type := MemoryRequestType:MEMORY_READ;
-          out_msg.Sender := machineID;
-          out_msg.MessageSize := MessageSizeType:Request_Control;
-        }
       }
     }
   }
@@ -1147,6 +1118,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(mt_writeMemDataToTBE, "mt", desc="write Mem data to TBE") {
     peek(memQueue_in, MemoryMsg) {
+      DPRINTF(RubySlicc, "%s\n", in_msg);
       if (tbe.wtData == true) {
         // Keep the write-through data based on mask, but use the memory block
         // for the masked-off data. If we received a probe with data, the mask
@@ -1163,14 +1135,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
 
-  action(y_writeProbeDataToTBEWB, "yw", desc="write Probe Data to TBE") {
+  action(yw_writeProbeDataToTBEWB, "yw", desc="write Probe Data to TBE") {
     peek(responseNetwork_in, ResponseMsg) {
-      tbe.DataBlk := in_msg.DataBlk;
-      tbe.Dirty := in_msg.Dirty;
-      tbe.LastSender := in_msg.Sender;
-      tbe.Cached := true;
+      DPRINTF(RubySlicc, "%s\n", in_msg);
+      if (tbe.Dirty == false) {
+        tbe.DataBlk := in_msg.DataBlk;
+        tbe.Dirty := in_msg.Dirty;
+        tbe.LastSender := in_msg.Sender;
+        tbe.Cached := true;
+        tbe.MemData := true;
+      }
+    }
   }
-}
 
   action(y_writeProbeDataToTBE, "y", desc="write Probe Data to TBE") {
     peek(responseNetwork_in, ResponseMsg) {
@@ -1389,9 +1365,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   // transitions from U
   transition(U, DmaReadWB, BL2) {
-   atd_allocateTBEforDMA; // Allocate a TBE
-   pr_profileL3HitMiss;
-   scd_probeShrCoreDataForDma; // Send probes to the Ruby Network
+    atd_allocateTBEforDMA; // Allocate a TBE
+    qdr_queueDmaRdReq;
+    pr_profileL3HitMiss;
+    scd_probeShrCoreDataForDma; // Send probes to the Ruby Network
   }
 
   transition(U, DmaRead, BDR_PM) {L3TagArrayRead} {
@@ -1637,9 +1614,20 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pr_popResponseQueue;
   }
 
-  transition(BL2, CPUPrbRespHit, BL2_Pm) {
+  transition({BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, BP}, CPUPrbRespWB) {
+    y_writeProbeDataToTBE;
+    x_decrementAcks;
+    o_checkForCompletion;
+    pr_popResponseQueue;
+  }
+
+  transition(BL2, L3Hit, BL2_Pm) {
+    ptl_popTriggerQueue;
+  }
+
+  transition({BL2, BL2_Pm}, CPUPrbRespWB, BL2_Pm) {
     // Blocked on L2 and waiting for probes
-    y_writeProbeDataToTBEWB;
+    yw_writeProbeDataToTBEWB;
     x_decrementAcks;
     o_checkForCompletion;
     pr_popResponseQueue;
@@ -1656,8 +1644,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     // We probed all the TCC dirs but didn't find the memory
     // Send out memory request
     // Transition to waiting on memory
-    qdrt_queueDmaRdReqTrig;
-    pr_profileL3HitMiss; //Must come after qdrt_queueDmaRdReqTrig
     pt_popTriggerQueue;
   }
 
@@ -1665,11 +1651,19 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     // We were waiting for all probes to come back now that they have we can unblock
     // Send WBAck back to TCC
     dd_sendResponseDmaData;
-    w_sendResponseWBAck;
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pd_popDmaRequestQueue;
     pt_popTriggerQueue;
+  }
+
+  transition(BL2, MemData, BL2_Pm) {
+    mt_writeMemDataToTBE;
+    pm_popMemQueue;
+  }
+
+  transition({BL2_Pm, U}, MemData) {
+    pm_popMemQueue;
   }
 
   transition(BL2_M, MemData, U) {
