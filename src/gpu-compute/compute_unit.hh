@@ -685,11 +685,17 @@ class ComputeUnit : public ClockedObject
             Packet::SenderState *saved;
             // kernel id to be used in handling I-Cache invalidate response
             int kernId;
-
+            bool isKernDispatch;
             SenderState(Wavefront *_wavefront, Packet::SenderState
                     *sender_state=nullptr, int _kernId=-1)
                 : wavefront(_wavefront), saved(sender_state),
-                kernId(_kernId){ }
+                kernId(_kernId), isKernDispatch(false){ }
+
+            SenderState(Wavefront *_wavefront, bool _isKernDispatch,
+                    Packet::SenderState *sender_state=nullptr, int _kernId=-1)
+                : wavefront(_wavefront), saved(sender_state),
+                kernId(_kernId), isKernDispatch(_isKernDispatch){ }
+
         };
 
         class MemReqEvent : public Event

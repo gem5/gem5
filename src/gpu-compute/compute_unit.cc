@@ -1062,7 +1062,18 @@ ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
      * and doesn't have a wavefront or instruction associated with it.
      */
     if (sender_state->wavefront != nullptr) {
-        computeUnit->handleSQCReturn(pkt);
+        RequestPtr req = pkt->req;
+        // If the sender state's isKernDispath is set, then the request came
+        // from the gpu command processor. The request fetches information
+        // that will be used in the kernel dispatch process. It should be
+        // handled in the gpu command processor. If the flag isn't set,
+        // then the request is an instruction fetch and can be handled in
+        // the compute unit
+        if (sender_state->isKernDispatch) {
+          computeUnit->shader->gpuCmdProc.completeTimingRead();
+        } else {
+          computeUnit->handleSQCReturn(pkt);
+        }
     } else {
         delete pkt->senderState;
         delete pkt;
