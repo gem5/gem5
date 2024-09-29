@@ -832,17 +832,14 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-      if (getState(tbe, cache_entry, address) == State:V || getState(tbe, cache_entry, address) == State:I) {
-        out_msg.Dirty := false;
-      } else {
-        out_msg.Dirty := true;
-      }
       if (getState(tbe, cache_entry, address) == State:V || getState(tbe, cache_entry, address) == State:M || getState(tbe, cache_entry, address) == State:W) {
         out_msg.Hit := true;
+        out_msg.Dirty := true;
         out_msg.DataBlk := cache_entry.DataBlk;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       } else {
 	    out_msg.Hit := false;
+        out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
       out_msg.Ntsl := true;
