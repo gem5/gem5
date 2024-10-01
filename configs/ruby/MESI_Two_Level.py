@@ -94,7 +94,7 @@ def create_system(
             is_icache=False,
         )
 
-        prefetcher = RubyPrefetcher()
+        prefetcher = RubyPrefetcher(block_size=options.cacheline_size)
 
         clk_domain = cpus[i].clk_domain
 

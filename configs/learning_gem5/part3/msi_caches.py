@@ -84,6 +84,7 @@ class MyCacheSystem(RubySystem):
                 # I/D cache is combined and grab from ctrl
                 dcache=self.controllers[i].cacheMemory,
                 clk_domain=self.controllers[i].clk_domain,
+                ruby_system=self,
             )
             for i in range(len(cpus))
         ]
@@ -191,7 +192,9 @@ class DirController(Directory_Controller):
         self.version = self.versionCount()
         self.addr_ranges = ranges
         self.ruby_system = ruby_system
-        self.directory = RubyDirectoryMemory()
+        self.directory = RubyDirectoryMemory(
+            block_size=ruby_system.block_size_bytes
+        )
         # Connect this directory to the memory side.
         self.memory = mem_ctrls[0].port
         self.connectQueues(ruby_system)

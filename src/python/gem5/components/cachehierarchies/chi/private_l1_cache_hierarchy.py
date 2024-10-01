@@ -137,7 +137,9 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy()
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _create_core_cluster(
@@ -167,12 +169,16 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         )
 
         cluster.icache.sequencer = RubySequencer(
-            version=core_num, dcache=NULL, clk_domain=cluster.icache.clk_domain
+            version=core_num,
+            dcache=NULL,
+            clk_domain=cluster.icache.clk_domain,
+            ruby_system=self.ruby_system,
         )
         cluster.dcache.sequencer = RubySequencer(
             version=core_num,
             dcache=cluster.dcache.cache,
             clk_domain=cluster.dcache.clk_domain,
+            ruby_system=self.ruby_system,
         )
 
         if board.has_io_bus():
@@ -223,7 +229,11 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
                 board.get_clock_domain(),
             )
             version = len(board.get_processor().get_cores()) + i
-            ctrl.sequencer = RubySequencer(version=version, in_ports=port)
+            ctrl.sequencer = RubySequencer(
+                version=version,
+                in_ports=port,
+                ruby_system=self.ruby_system,
+            )
             ctrl.sequencer.dcache = NULL
 
             ctrl.ruby_system = self.ruby_system

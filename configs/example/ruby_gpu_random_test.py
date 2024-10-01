@@ -371,6 +371,7 @@ for dma_idx in range(n_DMAs):
             num_lanes=1,
             clk_domain=thread_clock,
             deadlock_threshold=tester_deadlock_threshold,
+            cache_line_size=system.cache_line_size,
         )
     )
     g_thread_idx += 1
@@ -393,6 +394,7 @@ for cu_idx in range(n_CUs):
                 num_lanes=args.wf_size,
                 clk_domain=thread_clock,
                 deadlock_threshold=tester_deadlock_threshold,
+                cache_line_size=system.cache_line_size,
             )
         )
         g_thread_idx += 1

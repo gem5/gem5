@@ -79,6 +79,7 @@ class TestCacheSystem(RubySystem):
                 # I/D cache is combined and grab from ctrl
                 dcache=self.controllers[i].cacheMemory,
                 clk_domain=self.clk_domain,
+                ruby_system=self,
             )
             for i in range(num_testers)
         ]

@@ -109,7 +109,10 @@ class MESITwoLevelCacheHierarchy(
             )
 
             cache.sequencer = RubySequencer(
-                version=i, dcache=cache.L1Dcache, clk_domain=cache.clk_domain
+                version=i,
+                dcache=cache.L1Dcache,
+                clk_domain=cache.clk_domain,
+                ruby_system=self.ruby_system,
             )
 
             if board.has_io_bus():
@@ -163,7 +166,11 @@ class MESITwoLevelCacheHierarchy(
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(self.ruby_system.network, cache_line_size)
-                ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
+                ctrl.dma_sequencer = DMASequencer(
+                    version=i,
+                    in_ports=port,
+                    ruby_system=self.ruby_system,
+                )
                 self._dma_controllers.append(ctrl)
                 ctrl.ruby_system = self.ruby_system
 
@@ -188,5 +195,7 @@ class MESITwoLevelCacheHierarchy(
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy()
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)

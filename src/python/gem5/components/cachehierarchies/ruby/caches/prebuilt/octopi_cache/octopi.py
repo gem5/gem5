@@ -151,7 +151,9 @@ class OctopiCache(
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy()
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _create_directory_controllers(self, board):
@@ -228,7 +230,11 @@ class OctopiCache(
         if board.has_dma_ports():
             self.ruby_system.dma_controllers = [
                 DMAController(
-                    dma_sequencer=DMASequencer(version=i + 1, in_ports=port),
+                    dma_sequencer=DMASequencer(
+                        version=i + 1,
+                        in_ports=port,
+                        ruby_system=self.ruby_system,
+                    ),
                     ruby_system=self.ruby_system,
                 )
                 for i, port in enumerate(board.get_dma_ports())
