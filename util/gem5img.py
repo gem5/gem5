@@ -65,7 +65,7 @@ MaxLBASectors = 63
 MaxLBABlocks = MaxLBACylinders * MaxLBAHeads * MaxLBASectors
 
 BlockSize = 512
-MB = 1024 * 1024
+MiB = 1024 * 1024
 
 # Setup PATH to look in the sbins.
 env["PATH"] += ":/sbin:/usr/sbin"
@@ -77,8 +77,8 @@ debug = False
 # Figure out cylinders, heads and sectors from a size in blocks.
 def chsFromSize(sizeInBlocks):
     if sizeInBlocks >= MaxLBABlocks:
-        sizeInMBs = (sizeInBlocks * BlockSize) / MB
-        print("%d MB is too big for LBA, truncating file." % sizeInMBs)
+        sizeInMiBs = (sizeInBlocks * BlockSize) / MiB
+        print("%d MiB is too big for LBA, truncating file." % sizeInMiBs)
         return (MaxLBACylinders, MaxLBAHeads, MaxLBASectors)
 
     sectors = sizeInBlocks
@@ -285,7 +285,7 @@ class Command:
 initCom = Command(
     "init",
     "Create an image with an empty file system.",
-    [("file", "Name of the image file."), ("mb", "Size of the file in MB.")],
+    [("file", "Name of the image file."), ("mb", "Size of the file in MiB.")],
 )
 initCom.addArgument(
     "-t",
@@ -356,12 +356,12 @@ umountCom.func = umountComFunc
 newCom = Command(
     "new",
     'File creation part of "init".',
-    [("file", "Name of the image file."), ("mb", "Size of the file in MB.")],
+    [("file", "Name of the image file."), ("mb", "Size of the file in MiB.")],
 )
 
 
 def newImage(file, mb):
-    (cylinders, heads, sectors) = chsFromSize((mb * MB) / BlockSize)
+    (cylinders, heads, sectors) = chsFromSize((mb * MiB) / BlockSize)
     size = cylinders * heads * sectors * BlockSize
 
     # We lseek to the end of the file and only write one byte there. This
@@ -463,7 +463,7 @@ def initComFunc(options, args):
     if dev.setup(path) != 0:
         exit(1)
     size = os.path.getsize(path)
-    if partition(dev, *chsFromSize((mb * MB) / BlockSize)) != 0:
+    if partition(dev, *chsFromSize((mb * MiB) / BlockSize)) != 0:
         dev.destroy()
         exit(1)
     dev.destroy()
