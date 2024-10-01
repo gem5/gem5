@@ -44,13 +44,13 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Restore build/NULL cache
-              uses: actions/cache/restore@v4
+              uses: actions/cache@v4
               with:
                   path: build/NULL
                   key: testlib-build-null-${{ hashFiles('src/**') }}
 
             - name: Restore build/ALL cache
-              uses: actions/cache/restore@v4
+              uses: actions/cache@v4
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ hashFiles('src/**') }}
@@ -67,20 +67,6 @@ jobs:
                   name: ${{ env.MY_STEP_VAR }}
                   path: tests/testing-results
                   retention-days: 7
-
-            - name: Save build/NULL cache
-              uses: actions/cache/save@v4
-              if: ${{ hashFiles('build/NULL/') != '' }}
-              with:
-                  path: build/NULL
-                  key: testlib-build-null-${{ hashFiles('src/**') }}
-
-            - name: Save build/ALL cache
-              uses: actions/cache/save@v4
-              if: ${{ hashFiles('build/ALL/') != '' }}
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
 
             - run: echo "This job's status is ${{ job.status }}."
 
