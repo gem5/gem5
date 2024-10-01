@@ -107,7 +107,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt ? m_pkt->req->isSecure() : false)
     {
-        m_LineAddress = makeLineAddress(m_PhysicalAddress);
+        int block_size_bits = floorLog2(block_size);
+        m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
         if (_pkt) {
             m_isGLCSet = m_pkt->req->isGLCSet();
             m_isSLCSet = m_pkt->req->isSLCSet();
@@ -174,7 +175,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure())
     {
-        m_LineAddress = makeLineAddress(m_PhysicalAddress);
+        int block_size_bits = floorLog2(block_size);
+        m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
         if (_pkt) {
             m_isGLCSet = m_pkt->req->isGLCSet();
             m_isSLCSet = m_pkt->req->isSLCSet();
@@ -211,7 +213,8 @@ class RubyRequest : public Message
           m_tlbiTransactionUid(0),
           m_isSecure(m_pkt->req->isSecure())
     {
-        m_LineAddress = makeLineAddress(m_PhysicalAddress);
+        int block_size_bits = floorLog2(block_size);
+        m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
         if (_pkt) {
             m_isGLCSet = m_pkt->req->isGLCSet();
             m_isSLCSet = m_pkt->req->isSLCSet();

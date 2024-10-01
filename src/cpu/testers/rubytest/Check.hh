@@ -47,6 +47,7 @@ class SubBlock;
 
 const int CHECK_SIZE_BITS = 2;
 const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
+const int CACHE_LINE_BITS = 6;
 
 class Check
 {

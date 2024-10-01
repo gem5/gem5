@@ -243,7 +243,7 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
         std::remove_if(
             m_writeCompletePktMap[key].begin(),
             m_writeCompletePktMap[key].end(),
-            [addr](PacketPtr writeCompletePkt) -> bool {
+            [this,addr](PacketPtr writeCompletePkt) -> bool {
                 if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
                     RubyPort::SenderState *ss =
                         safe_cast<RubyPort::SenderState *>

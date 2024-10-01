@@ -90,7 +90,8 @@ structure(MemoryMsg, desc="...", interface="Message") {
         (MessageSize == MessageSizeType:Writeback_Data))  {
       WriteMask read_mask;
       read_mask.setBlockSize(mask.getBlockSize());
-      read_mask.setMask(addressOffset(addr, makeLineAddress(addr)), Len, true);
+      read_mask.setMask(addressOffset(addr,
+        makeLineAddress(addr, mask.getBlockSize())), Len, true);
       if (MessageSize != MessageSizeType:Writeback_Data) {
         read_mask.setInvertedMask(mask);
       }

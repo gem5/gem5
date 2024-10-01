@@ -64,6 +64,7 @@ DirectoryMemory::DirectoryMemory(const Params &p)
     }
     m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
+    m_block_size = p.block_size;
 }
 
 void
@@ -108,7 +109,7 @@ DirectoryMemory::mapAddressToLocalIdx(Addr address)
         }
         ret += r.size();
     }
-    return ret >> RubySystem::getBlockSizeBits();
+    return ret >> (floorLog2(m_block_size));
 }
 
 AbstractCacheEntry*

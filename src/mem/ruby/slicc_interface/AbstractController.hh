@@ -230,6 +230,11 @@ class AbstractController : public ClockedObject, public Consumer
     /** List of upstream destinations (towards the CPU) */
     const NetDest& allUpstreamDest() const { return upstreamDestinations; }
 
+    // Helper methods for commonly used functions called in common/address.hh
+    Addr getOffset(Addr addr) const;
+    Addr makeLineAddress(Addr addr) const;
+    std::string printAddress(Addr addr) const;
+
   protected:
     //! Profiles original cache requests including PUTs
     void profileRequest(const std::string &request);

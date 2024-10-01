@@ -63,10 +63,10 @@ class Message
 {
   public:
     Message(Tick curTime, int block_size)
-        : m_time(curTime),
+        : m_block_size(block_size),
+          m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedTicks(0), m_msg_counter(0),
-          m_block_size(block_size)
+          m_DelayedTicks(0), m_msg_counter(0)
     { }
 
     Message(const Message &other) = default;
@@ -122,12 +122,14 @@ class Message
     int getVnet() const { return vnet; }
     void setVnet(int net) { vnet = net; }
 
+  protected:
+    int m_block_size = 0;
+
   private:
     Tick m_time;
     Tick m_LastEnqueueTime; // my last enqueue time
     Tick m_DelayedTicks; // my delayed cycles
     uint64_t m_msg_counter; // FIXME, should this be a 64-bit value?
-    int m_block_size = 0;
 
     // Variables for required network traversal
     int incoming_link;

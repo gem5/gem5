@@ -91,6 +91,7 @@ CacheMemory::setRubySystem(RubySystem* rs)
     dataArray.setClockPeriod(rs->clockPeriod());
     tagArray.setClockPeriod(rs->clockPeriod());
     atomicALUArray.setClockPeriod(rs->clockPeriod());
+    atomicALUArray.setBlockSize(rs->getBlockSizeBytes());
 
     if (m_block_size == 0) {
         m_block_size = rs->getBlockSizeBytes();

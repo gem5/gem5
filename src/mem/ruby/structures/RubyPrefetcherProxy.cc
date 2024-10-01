@@ -231,5 +231,19 @@ RubyPrefetcherProxy::regProbePoints()
             cacheCntrl->getProbeManager(), "Data Update");
 }
 
+Addr
+RubyPrefetcherProxy::makeLineAddress(Addr addr) const
+{
+    return ruby::makeLineAddress(addr,
+                           cacheCntrl->m_ruby_system->getBlockSizeBits());
+}
+
+Addr
+RubyPrefetcherProxy::getOffset(Addr addr) const
+{
+    return ruby::getOffset(addr,
+                           cacheCntrl->m_ruby_system->getBlockSizeBits());
+}
+
 } // namespace ruby
 } // namespace gem5

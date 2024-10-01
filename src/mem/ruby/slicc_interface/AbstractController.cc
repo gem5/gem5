@@ -474,6 +474,24 @@ AbstractController::sendRetryRespToMem() {
     }
 }
 
+Addr
+AbstractController::getOffset(Addr addr) const
+{
+    return ruby::getOffset(addr, m_ruby_system->getBlockSizeBits());
+}
+
+Addr
+AbstractController::makeLineAddress(Addr addr) const
+{
+    return ruby::makeLineAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
+std::string
+AbstractController::printAddress(Addr addr) const
+{
+    return ruby::printAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
 bool
 AbstractController::MemoryPort::recvTimingResp(PacketPtr pkt)
 {

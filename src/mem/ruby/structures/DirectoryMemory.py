@@ -49,3 +49,6 @@ class RubyDirectoryMemory(SimObject):
     addr_ranges = VectorParam.AddrRange(
         Parent.addr_ranges, "Address range this directory responds to"
     )
+    block_size = Param.UInt32(
+        "Size of a block in bytes. Usually same as cache line size."
+    )

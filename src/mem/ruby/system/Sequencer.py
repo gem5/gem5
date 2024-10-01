@@ -116,6 +116,11 @@ class RubySequencer(RubyPort):
     # 99 is the dummy default value
     coreid = Param.Int(99, "CorePair core id")
 
+    # Used to access the block size, warmup, etc. fields in RubySystem.
+    # This should NOT be set to Parent.any if there are multiple RubySystem
+    # objects in the simulation.
+    ruby_system = Param.RubySystem("Parent RubySystem object")
+
     def connectCpuPorts(self, cpu):
         """
         Helper for connecting all cpu memory request output ports to this

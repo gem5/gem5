@@ -73,6 +73,8 @@ Sequencer::Sequencer(const Params &p)
 {
     m_outstanding_count = 0;
 
+    m_ruby_system = p.ruby_system;
+
     m_dataCache_ptr = p.dcache;
     m_max_outstanding_requests = p.max_outstanding_requests;
     m_deadlock_threshold = p.deadlock_threshold;
@@ -726,7 +728,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                          printAddress(request_address));
 
     // update the data unless it is a non-data-carrying flush
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         data.setData(pkt);
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
@@ -782,11 +784,11 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     }
 
     RubySystem *rs = m_ruby_system;
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         assert(pkt->req);
         delete pkt;
         rs->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (RubySystem::getCooldownEnabled()) {
+    } else if (m_ruby_system->getCooldownEnabled()) {
         delete pkt;
         rs->m_cache_recorder->enqueueNextFlushRequest();
     } else {
@@ -852,8 +854,8 @@ Sequencer::completeHitCallback(std::vector<PacketPtr> & mylist)
         // When Ruby is in warmup or cooldown phase, the requests come
         // from the cache recorder. They do not track which port to use
         // and do not need to send the response back
-        if (!RubySystem::getWarmupEnabled()
-                && !RubySystem::getCooldownEnabled()) {
+        if (!m_ruby_system->getWarmupEnabled()
+                && !m_ruby_system->getCooldownEnabled()) {
             RubyPort::SenderState *ss =
                 safe_cast<RubyPort::SenderState *>(pkt->senderState);
             MemResponsePort *port = ss->port;
@@ -873,9 +875,9 @@ Sequencer::completeHitCallback(std::vector<PacketPtr> & mylist)
     }
 
     RubySystem *rs = m_ruby_system;
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         rs->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (RubySystem::getCooldownEnabled()) {
+    } else if (m_ruby_system->getCooldownEnabled()) {
         rs->m_cache_recorder->enqueueNextFlushRequest();
     } else {
         testDrainComplete();
@@ -1197,7 +1199,7 @@ Sequencer::incrementUnaddressedTransactionCnt()
     // Limit m_unaddressedTransactionCnt to 32 bits,
     // top 32 bits should always be zeroed out
     uint64_t aligned_txid = \
-        m_unaddressedTransactionCnt << RubySystem::getBlockSizeBits();
+        m_unaddressedTransactionCnt << m_ruby_system->getBlockSizeBits();
 
     if (aligned_txid > 0xFFFFFFFFull) {
         m_unaddressedTransactionCnt = 0;
@@ -1209,7 +1211,7 @@ Sequencer::getCurrentUnaddressedTransactionID() const
 {
     return (
         uint64_t(m_version & 0xFFFFFFFF) << 32) |
-        (m_unaddressedTransactionCnt << RubySystem::getBlockSizeBits()
+        (m_unaddressedTransactionCnt << m_ruby_system->getBlockSizeBits()
     );
 }
 

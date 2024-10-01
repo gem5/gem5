@@ -215,6 +215,12 @@ class CacheMemory : public SimObject
      */
     bool m_use_occupancy;
 
+    Addr
+    makeLineAddress(Addr addr) const
+    {
+        return ruby::makeLineAddress(addr, floorLog2(m_block_size));
+    }
+
     private:
       struct CacheMemoryStats : public statistics::Group
       {

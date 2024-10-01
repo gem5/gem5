@@ -104,6 +104,7 @@ class DirectoryMemory : public SimObject
     uint64_t m_size_bytes;
     uint64_t m_size_bits;
     uint64_t m_num_entries;
+    uint32_t m_block_size;
 
     /**
      * The address range for which the directory responds. Normally

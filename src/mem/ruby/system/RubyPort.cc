@@ -326,6 +326,8 @@ RubyPort::MemResponsePort::recvAtomic(PacketPtr pkt)
         panic("Ruby supports atomic accesses only in noncaching mode\n");
     }
 
+    RubySystem *rs = owner.m_ruby_system;
+
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemSyncReq) {
@@ -343,12 +345,11 @@ RubyPort::MemResponsePort::recvAtomic(PacketPtr pkt)
             return owner.ticksToCycles(req_ticks);
         }
 
-        assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
-               owner.m_ruby_system->getBlockSizeBytes());
+        assert(owner.getOffset(pkt->getAddr()) + pkt->getSize() <=
+               rs->getBlockSizeBytes());
     }
 
     // Find the machine type of memory controller interface
-    RubySystem *rs = owner.m_ruby_system;
     static int mem_interface_type = -1;
     if (mem_interface_type == -1) {
         if (rs->m_abstract_controls[MachineType_Directory].size() != 0) {
@@ -404,7 +405,7 @@ RubyPort::MemResponsePort::recvFunctional(PacketPtr pkt)
     }
 
     assert(pkt->getAddr() + pkt->getSize() <=
-           makeLineAddress(pkt->getAddr()) + rs->getBlockSizeBytes());
+           owner.makeLineAddress(pkt->getAddr()) + rs->getBlockSizeBytes());
 
     if (access_backing_store) {
         // The attached physmem contains the official version of data.
@@ -737,6 +738,24 @@ RubyPort::functionalWrite(Packet *func_pkt)
         }
     }
     return num_written;
+}
+
+Addr
+RubyPort::getOffset(Addr addr) const
+{
+    return ruby::getOffset(addr, m_ruby_system->getBlockSizeBits());
+}
+
+Addr
+RubyPort::makeLineAddress(Addr addr) const
+{
+    return ruby::makeLineAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
+std::string
+RubyPort::printAddress(Addr addr) const
+{
+    return ruby::printAddress(addr, m_ruby_system->getBlockSizeBits());
 }
 
 } // namespace ruby

@@ -85,7 +85,7 @@ bool ALUFreeListArray::tryAccess(Addr addr)
         }
 
         // Block access if the line is already being used
-        if (record.lineAddr == makeLineAddress(addr)) {
+        if (record.lineAddr == makeLineAddress(addr, m_block_size_bits)) {
             return false;
         }
     }
@@ -99,7 +99,9 @@ void ALUFreeListArray::reserve(Addr addr)
     // the access is valid
 
     // Add record to queue
-    accessQueue.push_front(AccessRecord(makeLineAddress(addr), curTick()));
+    accessQueue.push_front(
+        AccessRecord(makeLineAddress(addr, m_block_size_bits), curTick())
+    );
 }
 
 } // namespace ruby

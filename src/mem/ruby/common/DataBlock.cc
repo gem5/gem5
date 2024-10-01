@@ -216,7 +216,7 @@ DataBlock::setData(PacketPtr pkt)
 {
     assert(m_alloc);
     assert(m_block_size > 0);
-    int offset = getOffset(pkt->getAddr());
+    int offset = getOffset(pkt->getAddr(), floorLog2(m_block_size));
     assert(offset + pkt->getSize() <= m_block_size);
     pkt->writeData(&m_data[offset]);
 }

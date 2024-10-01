@@ -405,8 +405,18 @@ clone() const
             # with the method generated below.
             code("\nvoid initBlockSize(int block_size)")
             code("{")
+            code("\tblock_size_bits = floorLog2(block_size);")
+
+            needs_block_size = (
+                "DataBlock",
+                "WriteMask",
+                "PersistentTable",
+                "TimerTable",
+                "PerfectCacheMemory",
+            )
+
             for dm in self.data_members.values():
-                if dm.real_c_type in ("DataBlock", "WriteMask"):
+                if dm.real_c_type in needs_block_size:
                     code(f"\tm_{dm.ident}.setBlockSize(block_size);")
             code("}\n")
 
@@ -460,6 +470,9 @@ set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
         code.dedent()
         code("  //private:")
         code.indent()
+
+        # block_size_bits for print methods
+        code("int block_size_bits = 0;")
 
         # Data members for each field
         for dm in self.data_members.values():
@@ -541,7 +554,7 @@ ${{self.c_ident}}::print(std::ostream& out) const
             if dm.type.c_ident == "Addr":
                 code(
                     """
-out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
+out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}, block_size_bits) << " ";"""
                 )
             else:
                 code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";' "")

@@ -177,7 +177,7 @@ UncoalescedTable::printRequestTable(std::stringstream& ss)
     ss << "Listing pending packets from " << instMap.size() << " instructions";
 
     for (auto& inst : instMap) {
-        ss << "\tAddr: " << printAddress(inst.first) << " with "
+        ss << "\tAddr: " << coalescer->printAddress(inst.first) << " with "
            << inst.second.size() << " pending packets" << std::endl;
     }
 }

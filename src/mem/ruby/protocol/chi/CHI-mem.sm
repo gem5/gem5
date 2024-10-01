@@ -157,7 +157,7 @@ machine(MachineType:Memory, "Memory controller interface") :
   ////////////////////////////////////////////////////////////////////////////
 
   // Cache block size
-  int blockSize, default="RubySystem::getBlockSizeBytes()";
+  int blockSize, default="m_ruby_system->getBlockSizeBytes()";
 
   // TBE fields
   structure(TBE, desc="...") {

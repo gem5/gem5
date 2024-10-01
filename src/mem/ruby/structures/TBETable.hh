@@ -104,7 +104,7 @@ template<class ENTRY>
 inline bool
 TBETable<ENTRY>::isPresent(Addr address) const
 {
-    assert(address == makeLineAddress(address));
+    assert(address == makeLineAddress(address, floorLog2(m_block_size)));
     assert(m_map.size() <= m_number_of_TBEs);
     return !!m_map.count(address);
 }

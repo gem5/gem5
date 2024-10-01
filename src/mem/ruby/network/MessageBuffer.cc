@@ -447,7 +447,6 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
 {
     DPRINTF(RubyQueue, "Stalling due to %#x\n", addr);
     assert(isReady(current_time));
-    assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();
 
     // Since the message will just be moved to stall map, indicate that the

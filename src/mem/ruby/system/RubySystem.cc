@@ -67,7 +67,6 @@ namespace ruby
 {
 
 bool RubySystem::m_randomization;
-uint32_t RubySystem::m_block_size_bits;
 uint32_t RubySystem::m_memory_size_bits;
 bool RubySystem::m_warmup_enabled = false;
 // To look forward to allowing multiple RubySystem instances, track the number
@@ -508,7 +507,7 @@ bool
 RubySystem::functionalRead(PacketPtr pkt)
 {
     Addr address(pkt->getAddr());
-    Addr line_address = makeLineAddress(address);
+    Addr line_address = makeLineAddress(address, m_block_size_bits);
 
     AccessPermission access_perm = AccessPermission_NotPresent;
 
@@ -624,7 +623,7 @@ bool
 RubySystem::functionalRead(PacketPtr pkt)
 {
     Addr address(pkt->getAddr());
-    Addr line_address = makeLineAddress(address);
+    Addr line_address = makeLineAddress(address, m_block_size_bits);
 
     DPRINTF(RubySystem, "Functional Read request for %#x\n", address);
 
@@ -725,7 +724,7 @@ bool
 RubySystem::functionalWrite(PacketPtr pkt)
 {
     Addr addr(pkt->getAddr());
-    Addr line_addr = makeLineAddress(addr);
+    Addr line_addr = makeLineAddress(addr, m_block_size_bits);
     AccessPermission access_perm = AccessPermission_NotPresent;
 
     DPRINTF(RubySystem, "Functional Write request for %#x\n", addr);

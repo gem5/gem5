@@ -132,6 +132,7 @@ class TesterThread : public ClockedObject
         {}
     };
 
+    int cacheLineSize;
     // the unique global id of this thread
     int threadId;
     // width of this thread (1 for cpu thread & wf size for gpu wavefront)
@@ -204,6 +205,7 @@ class TesterThread : public ClockedObject
 
     void printOutstandingReqs(const OutstandingReqTable& table,
                               std::stringstream& ss) const;
+    std::string printAddress(Addr addr) const;
 };
 
 } // namespace gem5

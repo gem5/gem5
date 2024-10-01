@@ -261,6 +261,8 @@ class Sequencer : public RubyPort
 
     PacketPtr m_cache_inv_pkt;
 
+    RubySystem *m_ruby_system;
+
     CacheMemory* m_dataCache_ptr;
 
     // The cache access latency for top-level caches (L0/L1). These are
