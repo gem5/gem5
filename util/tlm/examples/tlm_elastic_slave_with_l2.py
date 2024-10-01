@@ -42,8 +42,8 @@ from Caches import *
 # This configuration shows a simple setup of a Elastic Trace Player (eTraceCPU)
 # and an external TLM port for SystemC co-simulation.
 #
-# We assume a DRAM size of 512MB and L1 cache sizes of 32KB and an L2 cache
-# size of 1MB.
+# We assume a DRAM size of 512MiB and L1 cache sizes of 32KiB and an L2 cache
+# size of 1MiB.
 #
 # Base System Architecture:
 #
@@ -76,7 +76,7 @@ from Caches import *
 system = System(
     cpu=TraceCPU(),
     mem_mode="timing",
-    mem_ranges=[AddrRange("1024MB")],
+    mem_ranges=[AddrRange("1024MiB")],
     cache_line_size=64,
 )
 
@@ -99,8 +99,8 @@ system.cpu_clk_domain = SrcClockDomain(
 )
 
 # Setup CPU's L1 caches:
-system.cpu.icache = L1_ICache(size="32kB")
-system.cpu.dcache = L1_DCache(size="32kB")
+system.cpu.icache = L1_ICache(size="32KiB")
+system.cpu.dcache = L1_DCache(size="32KiB")
 system.cpu.icache.cpu_side = system.cpu.icache_port
 system.cpu.dcache.cpu_side = system.cpu.dcache_port
 
@@ -110,14 +110,14 @@ system.cpu.dataTraceFile = "system.cpu.traceListener.data.gz"
 
 # Setting up L1 BUS:
 system.tol2bus = L2XBar()
-system.l2cache = L2Cache(size="1MB")
+system.l2cache = L2Cache(size="1MiB")
 system.physmem = (
     SimpleMemory()
 )  # This must be instantiated, even if not needed
 
 # Create a external TLM port:
 system.tlm = ExternalSlave()
-system.tlm.addr_ranges = [AddrRange("4096MB")]
+system.tlm.addr_ranges = [AddrRange("4096MiB")]
 system.tlm.port_type = "tlm_slave"
 system.tlm.port_data = "transactor1"
 

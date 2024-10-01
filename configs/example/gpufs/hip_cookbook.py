@@ -128,8 +128,8 @@ if __name__ == "__m5_main__":
     args.num_cpus = 1
     args.mem_size = "3GiB"
     args.dgpu = True
-    args.dgpu_mem_size = "16GB"
-    args.dgpu_start = "0GB"
+    args.dgpu_mem_size = "16GiB"
+    args.dgpu_start = "0GiB"
     args.checkpoint_restore = 0
     args.disjoint = True
     args.timing_gpu = True

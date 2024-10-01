@@ -112,7 +112,7 @@ def addRunFSOptions(parser):
         "--dgpu-mem-size",
         action="store",
         type=str,
-        default="16GB",
+        default="16GiB",
         help="Specify the dGPU physical memory size",
     )
     parser.add_argument(

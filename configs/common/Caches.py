@@ -84,7 +84,7 @@ class IOCache(Cache):
     data_latency = 50
     response_latency = 50
     mshrs = 20
-    size = "1kB"
+    size = "1KiB"
     tgts_per_mshr = 12
 
 
@@ -94,6 +94,6 @@ class PageTableWalkerCache(Cache):
     data_latency = 2
     response_latency = 2
     mshrs = 10
-    size = "1kB"
+    size = "1KiB"
     tgts_per_mshr = 12
     is_read_only = False

@@ -108,7 +108,7 @@ gem5_verify_config(
         resource_path,
         "--reg-alloc-policy=dynamic",
         "-n3",
-        "--mem-size=8GB",
+        "--mem-size=8GiB",
         "--dgpu",
         "--gfx-version",
         "gfx900",

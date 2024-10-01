@@ -35,8 +35,10 @@
 
 #include <string>
 
+#include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/remote_gdb.hh"
 
 namespace gem5
@@ -250,6 +252,10 @@ class RemoteGDB : public BaseRemoteGDB
      */
     bool getXferFeaturesRead(const std::string &annex,
                              std::string &output) override;
+
+    virtual RiscvType getRvType(ThreadContext* tc);
+
+    virtual PrivilegeModeSet getPrivilegeModeSet(ThreadContext* tc);
 };
 
 } // namespace RiscvISA

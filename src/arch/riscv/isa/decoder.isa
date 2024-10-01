@@ -4705,7 +4705,6 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t rs1_bits = RS1;
                         uint64_t requested_vl = Rs1_ud;
                         uint64_t requested_vtype = zimm11;
-                        uint32_t vlen = VlenbBits * 8;
                         uint32_t vlmax = getVlmax(Vtype, vlen);
                         uint32_t current_vl = VL;
                     }}, {{
@@ -4721,7 +4720,6 @@ decode QUADRANT default Unknown::unknown() {
                             uint64_t rs1_bits = RS1;
                             uint64_t requested_vl = Rs1_ud;
                             uint64_t requested_vtype = Rs2_ud;
-                            uint32_t vlen = VlenbBits * 8;
                             uint32_t vlmax = getVlmax(Vtype, vlen);
                             uint32_t current_vl = VL;
                         }}, {{
@@ -4736,7 +4734,6 @@ decode QUADRANT default Unknown::unknown() {
                             uint64_t rs1_bits = -1;
                             uint64_t requested_vl = uimm;
                             uint64_t requested_vtype = zimm10;
-                            uint32_t vlen = VlenbBits * 8;
                             uint32_t vlmax = getVlmax(Vtype, vlen);
                             uint32_t current_vl = VL;
                         }}, {{

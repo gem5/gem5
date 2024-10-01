@@ -116,11 +116,10 @@ class ISA : public BaseISA
     PCStateBase*
     newPCState(Addr new_inst_addr=0) const override
     {
-        unsigned vlenb = vlen >> 3;
         if (_rvType == RV32) {
             new_inst_addr = sext<32>(new_inst_addr);
         }
-        return new PCState(new_inst_addr, _rvType, vlenb);
+        return new PCState(new_inst_addr, _rvType);
     }
 
   public:

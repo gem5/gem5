@@ -142,8 +142,8 @@ def runMI200GPUFS(cpu_type):
     args.cpu_type = "X86KvmCPU"
     args.mem_size = "8GiB"  # CPU host memory
     args.dgpu = True
-    args.dgpu_mem_size = "16GB"  # GPU device memory
-    args.dgpu_start = "0GB"
+    args.dgpu_mem_size = "16GiB"  # GPU device memory
+    args.dgpu_start = "0GiB"
     args.checkpoint_restore = 0
     args.disjoint = True
     args.timing_gpu = True
