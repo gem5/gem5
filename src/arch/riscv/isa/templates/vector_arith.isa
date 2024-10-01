@@ -957,6 +957,8 @@ Fault
 %(class_name)s<ElemType>::execute(ExecContext* xc,
                                   trace::InstRecord* traceData) const
 {
+    if (isFirstMicroop())
+        *cnt = 0;
     using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
     using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
 
