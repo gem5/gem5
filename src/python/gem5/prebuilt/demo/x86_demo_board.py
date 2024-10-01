@@ -114,8 +114,6 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
             self._setup_io_devices()
 
             self.m5ops_base = 0xFFFF0000
-        else:
-            pass
 
     @overrides(X86Board)
     def has_io_bus(self) -> bool:
@@ -123,7 +121,7 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
 
     @overrides(X86Board)
     def get_io_bus(self) -> IOXBar:
-        if self.is_fullsystem():
+        if self.has_io_bus():
             return self.iobus
         else:
             raise NotImplementedError(
@@ -137,7 +135,7 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
 
     @overrides(X86Board)
     def get_mem_side_coherent_io_port(self) -> Port:
-        if self.is_fullsystem():
+        if self.has_coherent_io():
             return self.iobus.mem_side_ports
         else:
             raise NotImplementedError(
