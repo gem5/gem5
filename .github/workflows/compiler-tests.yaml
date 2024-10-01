@@ -16,8 +16,7 @@ jobs:
                 image: [gcc-version-13, gcc-version-12, gcc-version-11, gcc-version-10, clang-version-18, clang-version-17, clang-version-16, clang-version-15,
                     clang-version-14, ubuntu-22.04_all-dependencies, ubuntu-24.04_all-dependencies, ubuntu-24.04_min-dependencies]
                 opts: [.opt, .fast]
-        runs-on: ubuntu-latest
-        #runs-on: [self-hosted, linux, x64]
+        runs-on: [self-hosted, linux, x64]
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
@@ -35,8 +34,7 @@ jobs:
                     NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86]
                 image: [gcc-version-13, clang-version-18]
                 opts: [.opt]
-        runs-on: ubuntu-latest
-        #runs-on: [self-hosted, linux, x64]
+        runs-on: [self-hosted, linux, x64]
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
