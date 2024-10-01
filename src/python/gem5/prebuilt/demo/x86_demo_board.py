@@ -101,9 +101,6 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
             cache_hierarchy=cache_hierarchy,
         )
 
-    # Copied over and adapted from RISCVMatchedBoard and X86Board. We need to
-    # override these functions to get SE mode to work.
-
     @overrides(X86Board)
     def _setup_board(self) -> None:
         if self._is_fs:
