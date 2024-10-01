@@ -95,7 +95,7 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
         )
 
         super().__init__(
-            clk_freq="1.4GHz",
+            clk_freq="3GHz",
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
