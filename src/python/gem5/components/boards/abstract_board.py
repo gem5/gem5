@@ -110,6 +110,7 @@ class AbstractBoard:
         # is defined. Whether or not the board is to be run in FS mode is
         # determined by which kind of workload is set.
         self._is_fs = None
+        self._is_workload_set = False
 
         # This variable is used to record the checkpoint directory which is
         # set when declaring the board's workload and then used by the
@@ -210,6 +211,12 @@ class AbstractBoard:
                 "function is run."
             )
         return self._is_fs
+
+    def set_is_workload_set(self, is_set: bool) -> None:
+        self._is_workload_set = is_set
+
+    def is_workload_set(self) -> bool:
+        return self._is_workload_set
 
     def set_workload(self, workload: WorkloadResource) -> None:
         """
