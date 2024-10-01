@@ -294,7 +294,7 @@ AbstractController::serviceMemoryQueue()
     SenderState *s = new SenderState(mem_msg->m_Sender);
     pkt->pushSenderState(s);
 
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         // Use functional rather than timing accesses during warmup
         mem_queue->dequeue(clockEdge());
         memoryPort.sendFunctional(pkt);
@@ -407,7 +407,8 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         panic("Incorrect packet type received from memory controller!");
     }
 
-    memRspQueue->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    memRspQueue->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)),
+        m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
     delete pkt;
     return true;
 }

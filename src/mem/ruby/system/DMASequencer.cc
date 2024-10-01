@@ -159,7 +159,8 @@ DMASequencer::makeRequest(PacketPtr pkt)
     m_outstanding_count++;
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)),
+        m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
     active_request.bytes_issued += msg->getLen();
 
     return RequestStatus_Issued;
@@ -211,7 +212,8 @@ DMASequencer::issueNext(const Addr& address)
     }
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)),
+        m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
     active_request.bytes_issued += msg->getLen();
     DPRINTF(RubyDma,
             "DMA request bytes issued %d, bytes completed %d, total len %d\n",

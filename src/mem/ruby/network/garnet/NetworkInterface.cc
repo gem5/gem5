@@ -244,7 +244,9 @@ NetworkInterface::wakeup()
                     outNode_ptr[vnet]->areNSlotsAvailable(1, curTime)) {
                     // Space is available. Enqueue to protocol buffer.
                     outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
-                                               cyclesToTicks(Cycles(1)));
+                                               cyclesToTicks(Cycles(1)),
+                                               m_net_ptr->getRandomization(),
+                                               m_net_ptr->getWarmupEnabled());
 
                     // Simply send a credit back since we are not buffering
                     // this flit in the NI
@@ -332,7 +334,9 @@ NetworkInterface::checkStallQueue()
                 if (outNode_ptr[vnet]->areNSlotsAvailable(1,
                     curTime)) {
                     outNode_ptr[vnet]->enqueue(stallFlit->get_msg_ptr(),
-                        curTime, cyclesToTicks(Cycles(1)));
+                        curTime, cyclesToTicks(Cycles(1)),
+                        m_net_ptr->getRandomization(),
+                        m_net_ptr->getWarmupEnabled());
 
                     // Send back a credit with free signal now that the
                     // VC is no longer stalled.

@@ -89,17 +89,21 @@ class EnqueueStatementAST(StatementAST):
                 bypass_strict_fifo_code = self.bypass_strict_fifo.inline(False)
                 code(
                     "(${{self.queue_name.var.code}}).enqueue("
-                    "out_msg, clockEdge(), cyclesToTicks(Cycles($rcode)), $bypass_strict_fifo_code);"
+                    "out_msg, clockEdge(), cyclesToTicks(Cycles($rcode)), "
+                    "m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled(), "
+                    "$bypass_strict_fifo_code);"
                 )
             else:
                 code(
                     "(${{self.queue_name.var.code}}).enqueue("
-                    "out_msg, clockEdge(), cyclesToTicks(Cycles($rcode)));"
+                    "out_msg, clockEdge(), cyclesToTicks(Cycles($rcode)), "
+                    "m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());"
                 )
         else:
             code(
                 "(${{self.queue_name.var.code}}).enqueue(out_msg, "
-                "clockEdge(), cyclesToTicks(Cycles(1)));"
+                "clockEdge(), cyclesToTicks(Cycles(1)),"
+                "m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());"
             )
 
         # End scope

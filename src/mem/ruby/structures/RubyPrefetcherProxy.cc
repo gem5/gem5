@@ -137,7 +137,10 @@ RubyPrefetcherProxy::issuePrefetch()
 
                 // enqueue request into prefetch queue to the cache
                 pfQueue->enqueue(msg, cacheCntrl->clockEdge(),
-                                    cacheCntrl->cyclesToTicks(Cycles(1)));
+                                 cacheCntrl->cyclesToTicks(Cycles(1)),
+                                 cacheCntrl->m_ruby_system->getRandomization(),
+                                 cacheCntrl->m_ruby_system->getWarmupEnabled()
+                                );
 
                 // track all pending PF requests
                 issuedPfPkts[line_addr] = pkt;

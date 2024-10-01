@@ -254,14 +254,14 @@ class Sequencer : public RubyPort
                                         RubyRequestType primary_type,
                                         RubyRequestType secondary_type);
 
+    RubySystem *m_ruby_system;
+
   private:
     int m_max_outstanding_requests;
 
     int m_num_pending_invs;
 
     PacketPtr m_cache_inv_pkt;
-
-    RubySystem *m_ruby_system;
 
     CacheMemory* m_dataCache_ptr;
 

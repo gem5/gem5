@@ -65,7 +65,8 @@ Network::Network(const Params &p)
              "%s: data message size > cache line size", name());
     m_data_msg_size = p.data_msg_size + m_control_msg_size;
 
-    params().ruby_system->registerNetwork(this);
+    m_ruby_system = p.ruby_system;
+    m_ruby_system->registerNetwork(this);
 
     // Populate localNodeVersions with the version of each MachineType in
     // this network. This will be used to compute a global to local ID.
@@ -254,6 +255,18 @@ Network::getLocalNodeID(NodeID global_id) const
 {
     assert(globalToLocalMap.count(global_id));
     return globalToLocalMap.at(global_id);
+}
+
+bool
+Network::getRandomization() const
+{
+    return m_ruby_system->getRandomization();
+}
+
+bool
+Network::getWarmupEnabled() const
+{
+    return m_ruby_system->getWarmupEnabled();
 }
 
 } // namespace ruby

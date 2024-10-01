@@ -919,7 +919,9 @@ Sequencer::invL1()
         assert(m_mandatory_q_ptr != NULL);
         Tick latency = cyclesToTicks(
             m_controller->mandatoryQueueLatency(request_type));
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency,
+                                   m_ruby_system->getRandomization(),
+                                   m_ruby_system->getWarmupEnabled());
         m_num_pending_invs++;
     }
     DPRINTF(RubySequencer,
@@ -1152,7 +1154,9 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     assert(latency > 0);
 
     assert(m_mandatory_q_ptr != NULL);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency,
+                               m_ruby_system->getRandomization(),
+                               m_ruby_system->getWarmupEnabled());
 }
 
 template <class KEY, class VALUE>

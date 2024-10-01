@@ -66,13 +66,8 @@ namespace gem5
 namespace ruby
 {
 
-bool RubySystem::m_randomization;
-uint32_t RubySystem::m_memory_size_bits;
-bool RubySystem::m_warmup_enabled = false;
 // To look forward to allowing multiple RubySystem instances, track the number
 // of RubySystems that need to be warmed up on checkpoint restore.
-unsigned RubySystem::m_systems_to_warmup = 0;
-bool RubySystem::m_cooldown_enabled = false;
 
 RubySystem::RubySystem(const Params &p)
     : ClockedObject(p), m_access_backing_store(p.access_backing_store),
@@ -414,7 +409,6 @@ RubySystem::unserialize(CheckpointIn &cp)
     readCompressedTrace(cache_trace_file, uncompressed_trace,
                         cache_trace_size);
     m_warmup_enabled = true;
-    m_systems_to_warmup++;
 
     // Create the cache recorder that will hang around until startup.
     makeCacheRecorder(uncompressed_trace, cache_trace_size, block_size_bytes);
@@ -465,10 +459,7 @@ RubySystem::startup()
 
         delete m_cache_recorder;
         m_cache_recorder = NULL;
-        m_systems_to_warmup--;
-        if (m_systems_to_warmup == 0) {
-            m_warmup_enabled = false;
-        }
+        m_warmup_enabled = false;
 
         // Restore eventq head
         eventq->replaceHead(eventq_head);

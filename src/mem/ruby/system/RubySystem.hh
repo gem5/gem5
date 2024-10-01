@@ -68,12 +68,12 @@ class RubySystem : public ClockedObject
     ~RubySystem();
 
     // config accessors
-    static int getRandomization() { return m_randomization; }
+    int getRandomization() { return m_randomization; }
     uint32_t getBlockSizeBytes() { return m_block_size_bytes; }
     uint32_t getBlockSizeBits() { return m_block_size_bits; }
-    static uint32_t getMemorySizeBits() { return m_memory_size_bits; }
-    static bool getWarmupEnabled() { return m_warmup_enabled; }
-    static bool getCooldownEnabled() { return m_cooldown_enabled; }
+    uint32_t getMemorySizeBits() { return m_memory_size_bits; }
+    bool getWarmupEnabled() { return m_warmup_enabled; }
+    bool getCooldownEnabled() { return m_cooldown_enabled; }
 
     memory::SimpleMemory *getPhysMem() { return m_phys_mem; }
     Cycles getStartCycle() { return m_start_cycle; }
@@ -134,14 +134,13 @@ class RubySystem : public ClockedObject
     void processRubyEvent();
   private:
     // configuration parameters
-    static bool m_randomization;
+    bool m_randomization;
     uint32_t m_block_size_bytes;
     uint32_t m_block_size_bits;
-    static uint32_t m_memory_size_bits;
+    uint32_t m_memory_size_bits;
 
-    static bool m_warmup_enabled;
-    static unsigned m_systems_to_warmup;
-    static bool m_cooldown_enabled;
+    bool m_warmup_enabled = false;
+    bool m_cooldown_enabled = false;
     memory::SimpleMemory *m_phys_mem;
     const bool m_access_backing_store;
 

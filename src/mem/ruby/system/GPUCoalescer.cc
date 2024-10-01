@@ -142,8 +142,8 @@ UncoalescedTable::updateResources()
             // are accessed directly using the makeRequest() command
             // instead of accessing through the port. This makes
             // sending tokens through the port unnecessary
-            if (!RubySystem::getWarmupEnabled()
-                    && !RubySystem::getCooldownEnabled()) {
+            if (!coalescer->getRubySystem()->getWarmupEnabled() &&
+                !coalescer->getRubySystem()->getCooldownEnabled()) {
                 if (reqTypeMap[seq_num] != RubyRequestType_FLUSH) {
                     DPRINTF(GPUCoalescer,
                             "Returning token seqNum %d\n", seq_num);
@@ -590,7 +590,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
         // When the Ruby system is cooldown phase, the requests come from
         // the cache recorder. These requests do not get coalesced and
         // do not return valid data.
-        if (RubySystem::getCooldownEnabled())
+        if (m_ruby_system->getCooldownEnabled())
             continue;
 
         if (pkt->getPtr<uint8_t>()) {
@@ -700,8 +700,8 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
         // When Ruby is in warmup or cooldown phase, the requests come from
         // the cache recorder. There is no dynamic instruction associated
         // with these requests either
-        if (!RubySystem::getWarmupEnabled()
-                && !RubySystem::getCooldownEnabled()) {
+        if (!m_ruby_system->getWarmupEnabled()
+                && !m_ruby_system->getCooldownEnabled()) {
             if (!m_usingRubyTester) {
                 num_packets = 0;
                 for (int i = 0; i < TheGpuISA::NumVecElemPerVecReg; i++) {
@@ -985,8 +985,8 @@ GPUCoalescer::completeHitCallback(std::vector<PacketPtr> & mylist)
         // When Ruby is in warmup or cooldown phase, the requests come
         // from the cache recorder. They do not track which port to use
         // and do not need to send the response back
-        if (!RubySystem::getWarmupEnabled()
-                && !RubySystem::getCooldownEnabled()) {
+        if (!m_ruby_system->getWarmupEnabled()
+                && !m_ruby_system->getCooldownEnabled()) {
             RubyPort::SenderState *ss =
                 safe_cast<RubyPort::SenderState *>(pkt->senderState);
             MemResponsePort *port = ss->port;
@@ -1015,9 +1015,9 @@ GPUCoalescer::completeHitCallback(std::vector<PacketPtr> & mylist)
     }
 
     RubySystem *rs = m_ruby_system;
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         rs->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (RubySystem::getCooldownEnabled()) {
+    } else if (m_ruby_system->getCooldownEnabled()) {
         rs->m_cache_recorder->enqueueNextFlushRequest();
     } else {
         testDrainComplete();
