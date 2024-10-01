@@ -48,10 +48,9 @@ from ...utils.requires import requires
 class X86DemoBoard(X86Board, SEBinaryWorkload):
     """
     This prebuilt X86 board is used for demonstration purposes. It simulates
-    an X86 3GHz quad-core system with a 2GiB DDR3_1600 memory system. A
-    MESI_Two_Level cache hierarchy is set with an l1 data and instruction
-    cache, each 32KiB with an associativity of 8, and a single bank l2 cache of
-    1MiB with an associativity of 16.
+    an X86 3GHz dual-core system with a 3GiB DDR4_2400 memory system. The
+    cache hierarchy consists of per-core private L1 instruction and data
+    caches (64KiB each) connected to a shared 1MiB L2 cache.
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
