@@ -39,7 +39,6 @@
 
 #include <algorithm>
 
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 #include "enums/AddrMap.hh"
@@ -87,7 +86,7 @@ NvmGen::getNextPacket()
 
         // choose if we generate a read or a write here
         isRead = readPercent != 0 &&
-            (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+            (readPercent == 100 || rng->random(0, 100) < readPercent);
 
         assert((readPercent == 0 && !isRead) ||
                (readPercent == 100 && isRead) ||
@@ -95,11 +94,11 @@ NvmGen::getNextPacket()
 
         // pick a random bank
         unsigned int new_bank =
-            random_mt.random<unsigned int>(0, nbrOfBanksUtil - 1);
+            rng->random<unsigned int>(0, nbrOfBanksUtil - 1);
 
         // pick a random rank
         unsigned int new_rank =
-            random_mt.random<unsigned int>(0, nbrOfRanks - 1);
+            rng->random<unsigned int>(0, nbrOfRanks - 1);
 
         // Generate the start address of the command series
         // routine will update addr variable with bank, rank, and col
@@ -147,7 +146,7 @@ void
 NvmGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
 {
     // start by picking a random address in the range
-    addr = random_mt.random<Addr>(startAddr, endAddr - 1);
+    addr = rng->random<Addr>(startAddr, endAddr - 1);
 
     // round down to start address of a block, i.e. a NVM burst
     addr -= addr % blocksize;
@@ -162,7 +161,7 @@ NvmGen::genStartAddr(unsigned int new_bank, unsigned int new_rank)
     // pick a random burst address, but ensure that there is room for
     // numSeqPkts sequential bursts in the same buffer
     unsigned int new_col =
-        random_mt.random<unsigned int>(0, burst_per_buffer - numSeqPkts);
+        rng->random<unsigned int>(0, burst_per_buffer - numSeqPkts);
 
     if (addrMapping == enums::RoRaBaCoCh ||
         addrMapping == enums::RoRaBaChCo) {

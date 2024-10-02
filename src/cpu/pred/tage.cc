@@ -83,7 +83,7 @@ TAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
         return;
     }
 
-    int nrand = random_mt.random<int>() & 3;
+    int nrand = rng->random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
         DPRINTF(Tage, "Updating tables for branch:%lx; taken?:%d\n",
                 pc, taken);

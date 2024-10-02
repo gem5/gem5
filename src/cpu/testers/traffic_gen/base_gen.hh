@@ -46,6 +46,7 @@
 #include <cstdint>
 #include <string>
 
+#include "base/random.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -71,6 +72,8 @@ class BaseGen
 
     /** The RequestorID used for generating requests */
     const RequestorID requestorId;
+
+    mutable Random::RandomPtr rng = Random::genRandom();
 
     /**
      * Generate a new request and associated packet

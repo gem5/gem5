@@ -406,7 +406,7 @@ Tick
 CfiMemory::getLatency() const
 {
     return latency +
-        (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
+        (latency_var ? rng->random<Tick>(0, latency_var) : 0);
 }
 
 void

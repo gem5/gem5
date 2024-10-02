@@ -29,7 +29,6 @@
 
 #include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
 
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
@@ -67,7 +66,7 @@ SeriesRequestGenerator::initiate()
                                                requestorId);
 
     Packet::Command cmd;
-    bool do_write = (random_mt.random(0, 100) < m_percent_writes);
+    bool do_write = (rng->random(0, 100) < m_percent_writes);
     if (do_write) {
         cmd = MemCmd::WriteReq;
     } else {

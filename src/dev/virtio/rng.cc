@@ -38,7 +38,6 @@
 
 #include "dev/virtio/rng.hh"
 
-#include "base/random.hh"
 #include "debug/VIORng.hh"
 #include "params/VirtIORng.hh"
 #include "sim/system.hh"
@@ -80,7 +79,7 @@ VirtIORng::RngQueue::trySend()
         DPRINTF(VIORng, "Got descriptor (len: %i)\n", d->size());
         size_t len = 0;
         while (len < d->size()) {
-            uint8_t byte = gem5::random_mt.random<uint8_t>();
+            uint8_t byte = rng->random<uint8_t>();
             d->chainWrite(len, &byte, sizeof(uint8_t));
             ++len;
         }

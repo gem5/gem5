@@ -36,7 +36,6 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "base/trace.hh"
 
 namespace gem5
@@ -59,14 +58,15 @@ AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
         randAddressMap[i] = (Addr)((i + 128) << floorLog2(sizeof(Value)));
     }
 
-    // randomly shuffle randAddressMap. The seed is determined by the random_mt
-    // gem5 rng. This allows for deterministic randomization.
+    // randomly shuffle randAddressMap. The seed is determined by the rng
+    // internal to the object to avoid interactions with other components
     std::shuffle(
         randAddressMap.begin(),
         randAddressMap.end(),
+
         // TODO: This is a bug unrelated to this draft PR but the GPU tester is
         // useful for testing this PR.
-        std::default_random_engine(random_mt.random<unsigned>(0,UINT_MAX-1))
+        std::default_random_engine(rng->random<unsigned>(0,UINT_MAX))
     );
 
     // initialize atomic locations
@@ -103,7 +103,7 @@ AddressManager::Location
 AddressManager::getAtomicLoc()
 {
     Location ret_atomic_loc = \
-        random_mt.random<unsigned long>() % numAtomicLocs;
+        rng->random<unsigned long>() % numAtomicLocs;
     atomicStructs[ret_atomic_loc]->startLocSelection();
     return ret_atomic_loc;
 }
@@ -209,7 +209,7 @@ AddressManager::AtomicStruct::getLoadLoc()
         // locArray [firstMark : arraySize-1]
         int range_size = arraySize - firstMark;
         Location ret_loc = locArray[
-                firstMark + random_mt.random<unsigned int>() % range_size
+                firstMark + rng->random<unsigned int>() % range_size
         ];
 
         // update loadStoreMap
@@ -243,7 +243,7 @@ AddressManager::AtomicStruct::getStoreLoc()
         // we can pick any location btw [firstMark : secondMark-1]
         int range_size = secondMark - firstMark;
         Location ret_loc = locArray[
-            firstMark + random_mt.random<unsigned int>() % range_size
+            firstMark + rng->random<unsigned int>() % range_size
         ];
 
         // update loadStoreMap

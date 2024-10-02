@@ -632,7 +632,7 @@ ISA::readMiscReg(RegIndex idx)
         tc->setReg(cc_reg::Nz, (RegVal)0);
         tc->setReg(cc_reg::C, (RegVal)0);
         tc->setReg(cc_reg::V, (RegVal)0);
-        return random_mt.random<RegVal>();
+        return rng->random<RegVal>();
       case MISCREG_RNDRRS:
         tc->setReg(cc_reg::Nz, (RegVal)0);
         tc->setReg(cc_reg::C, (RegVal)0);
@@ -641,7 +641,7 @@ ISA::readMiscReg(RegIndex idx)
         // The random number generator already has an hardcoded
         // seed for the sake of determinism. There is no point
         // in simulating non-determinism here
-        return random_mt.random<RegVal>();
+        return rng->random<RegVal>();
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
