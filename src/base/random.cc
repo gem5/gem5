@@ -45,12 +45,6 @@
 namespace gem5
 {
 
-Random::Random()
-{
-    // default random seed
-    init(5489);
-}
-
 Random::Random(uint32_t s)
 {
     init(s);
@@ -58,6 +52,26 @@ Random::Random(uint32_t s)
 
 Random::~Random()
 {
+    assert(instances);
+
+    int removed = 0;
+
+    instances->erase(std::remove_if(instances->begin(), instances->end(),
+    [&](const auto& s_ptr)
+    {
+        removed += s_ptr.expired();
+        return s_ptr.expired();
+    }));
+
+    // Can only remove one pointer
+    // since we are destroying one
+    // object
+    assert(removed == 1);
+
+    if (instances->empty()) {
+        delete instances;
+        instances = nullptr;
+    }
 }
 
 void
@@ -66,6 +80,7 @@ Random::init(uint32_t s)
     gen.seed(s);
 }
 
-Random random_mt;
+uint64_t Random::globalSeed = 5489;
+Random::Instances* Random::instances = nullptr;
 
 } // namespace gem5

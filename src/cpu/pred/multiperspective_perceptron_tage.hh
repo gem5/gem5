@@ -51,6 +51,7 @@
 #ifndef __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_HH__
 #define __CPU_PRED_MULTIPERSPECTIVE_PERCEPTRON_TAGE_HH__
 
+#include "base/random.hh"
 #include "cpu/pred/loop_predictor.hh"
 #include "cpu/pred/multiperspective_perceptron.hh"
 #include "cpu/pred/statistical_corrector.hh"
@@ -69,6 +70,9 @@ namespace branch_prediction
 class MPP_TAGE : public TAGEBase
 {
     std::vector<unsigned int> tunedHistoryLengths;
+
+    Random::RandomPtr rng = Random::genRandom();
+
   public:
     struct BranchInfo : public TAGEBase::BranchInfo
     {

@@ -82,6 +82,7 @@
 #include <utility>
 
 #include "base/logging.hh"
+#include "base/random.hh"
 #include "dev/net/dist_packet.hh"
 #include "dev/net/etherpkt.hh"
 #include "sim/drain.hh"
@@ -474,6 +475,8 @@ class DistIface : public Drainable, public Serializable
      * Use pseudoOp to start synchronization.
      */
     bool syncStartOnPseudoOp;
+
+    Random::RandomPtr rng = Random::genRandom();
 
   protected:
     /**
