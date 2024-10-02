@@ -215,6 +215,8 @@ class CacheMemory : public SimObject
      */
     bool m_use_occupancy;
 
+    RubySystem *m_ruby_system = nullptr;
+
     Addr
     makeLineAddress(Addr addr) const
     {

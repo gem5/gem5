@@ -912,8 +912,8 @@ Sequencer::invL1()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), m_ruby_system->getBlockSizeBytes(), addr, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
+            clockEdge(), m_ruby_system->getBlockSizeBytes(), m_ruby_system,
+            addr, 0, 0, request_type, RubyAccessMode_Supervisor,
             nullptr);
         DPRINTF(RubySequencer, "Evicting addr 0x%x\n", addr);
         assert(m_mandatory_q_ptr != NULL);
@@ -1091,6 +1091,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     std::shared_ptr<RubyRequest> msg;
     if (pkt->req->isMemMgmt()) {
         msg = std::make_shared<RubyRequest>(clockEdge(), blk_size,
+                                            m_ruby_system,
                                             pc, secondary_type,
                                             RubyAccessMode_Supervisor, pkt,
                                             proc_id, core_id);
@@ -1118,6 +1119,7 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
         }
     } else {
         msg = std::make_shared<RubyRequest>(clockEdge(), blk_size,
+                                            m_ruby_system,
                                             pkt->getAddr(), pkt->getSize(),
                                             pc, secondary_type,
                                             RubyAccessMode_Supervisor, pkt,

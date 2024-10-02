@@ -460,6 +460,11 @@ class AbstractController : public ClockedObject, public Consumer
 
     RubySystem *m_ruby_system = nullptr;
 
+    // Formerly in RubySlicc_ComponentMapping.hh. Moved here to access
+    // RubySystem pointer.
+    NetDest broadcast(MachineType type);
+    int machineCount(MachineType machType);
+
   private:
     /** The address range to which the controller responds on the CPU side. */
     const AddrRangeList addrRanges;

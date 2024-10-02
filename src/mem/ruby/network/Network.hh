@@ -150,6 +150,7 @@ class Network : public ClockedObject
 
     bool getRandomization() const;
     bool getWarmupEnabled() const;
+    RubySystem *getRubySystem() const { return m_ruby_system; }
 
   protected:
     // Private copy constructor and assignment operator
@@ -184,6 +185,8 @@ class Network : public ClockedObject
     // For accessing if randomization/warnup are turned on. We cannot store
     // those values in the constructor in case we are constructed first.
     RubySystem *m_ruby_system = nullptr;
+
+    int MachineType_base_number(const MachineType& obj);
 };
 
 inline std::ostream&

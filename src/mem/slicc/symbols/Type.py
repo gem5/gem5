@@ -254,6 +254,8 @@ namespace gem5
 namespace ruby
 {
 
+class RubySystem;
+
 $klass ${{self.c_ident}}$parent
 {
   public:
@@ -263,7 +265,7 @@ $klass ${{self.c_ident}}$parent
 
         if self.isMessage:
             code(
-                "${{self.c_ident}}(Tick curTime, int blockSize) : %s(curTime, blockSize)"
+                "${{self.c_ident}}(Tick curTime, int blockSize, RubySystem* rs) : %s(curTime, blockSize, rs)"
                 % self["interface"]
             )
 
@@ -318,6 +320,12 @@ $klass ${{self.c_ident}}$parent
                     code(" // default value of $tid")
                 else:
                     code("// m_$ident has no default")
+
+                # These parts of Messages need RubySystem pointers. For things
+                # like Entry which only store NetDest, RubySystem is not needed.
+                if self.isMessage and dm.real_c_type == "NetDest":
+                    code("// m_$ident requires RubySystem")
+                    code("m_$ident.setRubySystem(rs);")
             code.dedent()
         code("}")
 
@@ -338,14 +346,19 @@ $klass ${{self.c_ident}}$parent
             params = ", ".join(params)
 
             if self.isMessage:
-                params = "const Tick curTime, const int blockSize, " + params
+                params = (
+                    "const Tick curTime, const int blockSize, const RubySystem *rs, "
+                    + params
+                )
 
             code("${{self.c_ident}}($params)")
 
             # Call superclass constructor
             if "interface" in self:
                 if self.isMessage:
-                    code('    : ${{self["interface"]}}(curTime, blockSize)')
+                    code(
+                        '    : ${{self["interface"]}}(curTime, blockSize, rs)'
+                    )
 
                     for dm in self.data_members.values():
                         if dm.real_c_type in ("DataBlock", "WriteMask"):
@@ -418,6 +431,14 @@ clone() const
             for dm in self.data_members.values():
                 if dm.real_c_type in needs_block_size:
                     code(f"\tm_{dm.ident}.setBlockSize(block_size);")
+            code("}\n")
+
+            code("\nvoid setRubySystem(RubySystem *ruby_system)")
+            code("{")
+            for dm in self.data_members.values():
+                if dm.real_c_type in ("NetDest"):
+                    code(f"// m_{dm.ident} requires RubySystem")
+                    code(f"\tm_{dm.ident}.setRubySystem(ruby_system);")
             code("}\n")
 
             # const Get methods for each field
@@ -927,7 +948,7 @@ ${{self.c_ident}}_from_base_level(int type)
  * \\return the base number of components for each machine
  */
 int
-${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
+RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 {
     int base = 0;
     switch(obj) {
@@ -941,7 +962,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code(
-                        "    base += ${{enum.ident}}_Controller::getNumControllers();"
+                        "\tbase += m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
                     )
                 else:
                     code("    base += 0;")
@@ -963,7 +984,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
  * \\return the total number of components for each machine
  */
 int
-${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
+RubySystem::${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 """
@@ -974,7 +995,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
                 if enum.primary:
                     code(
-                        "return ${{enum.ident}}_Controller::getNumControllers();"
+                        "return m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
                     )
                 else:
                     code("return 0;")

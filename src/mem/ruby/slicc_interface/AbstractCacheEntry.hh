@@ -59,6 +59,8 @@ namespace gem5
 namespace ruby
 {
 
+class RubySystem;
+
 class AbstractCacheEntry : public ReplaceableEntry
 {
   private:
@@ -85,6 +87,7 @@ class AbstractCacheEntry : public ReplaceableEntry
     }
 
     virtual void initBlockSize(int block_size) { };
+    virtual void setRubySystem(RubySystem *rs) { };
 
     int validBlocks;
     virtual int& getNumValidBlocks()

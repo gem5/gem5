@@ -113,7 +113,7 @@ DMASequencer::makeRequest(PacketPtr pkt)
     int blk_size = m_ruby_system->getBlockSizeBytes();
 
     std::shared_ptr<SequencerMsg> msg =
-        std::make_shared<SequencerMsg>(clockEdge(), blk_size);
+        std::make_shared<SequencerMsg>(clockEdge(), blk_size, m_ruby_system);
     msg->getPhysicalAddress() = paddr;
     msg->getLineAddress() = line_addr;
 
@@ -189,7 +189,7 @@ DMASequencer::issueNext(const Addr& address)
     int blk_size = m_ruby_system->getBlockSizeBytes();
 
     std::shared_ptr<SequencerMsg> msg =
-        std::make_shared<SequencerMsg>(clockEdge(), blk_size);
+        std::make_shared<SequencerMsg>(clockEdge(), blk_size, m_ruby_system);
     msg->getPhysicalAddress() = active_request.start_paddr +
                                 active_request.bytes_completed;
 

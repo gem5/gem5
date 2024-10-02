@@ -68,7 +68,8 @@ class DeferEnqueueingStatementAST(StatementAST):
         # Declare message
         code(
             "std::shared_ptr<${{msg_type.c_ident}}> out_msg = "
-            "std::make_shared<${{msg_type.c_ident}}>(clockEdge(), m_ruby_system->getBlockSizeBytes());"
+            "std::make_shared<${{msg_type.c_ident}}>(clockEdge(),"
+            "    m_ruby_system->getBlockSizeBytes(), m_ruby_system);"
         )
 
         # The other statements

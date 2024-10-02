@@ -65,6 +65,7 @@ DirectoryMemory::DirectoryMemory(const Params &p)
     m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
     m_block_size = p.block_size;
+    m_ruby_system = p.ruby_system;
 }
 
 void
@@ -134,6 +135,8 @@ DirectoryMemory::allocate(Addr address, AbstractCacheEntry *entry)
     assert(idx < m_num_entries);
     assert(m_entries[idx] == NULL);
     entry->changePermission(AccessPermission_Read_Only);
+    entry->initBlockSize(m_block_size);
+    entry->setRubySystem(m_ruby_system);
     m_entries[idx] = entry;
 
     return entry;

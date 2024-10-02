@@ -96,6 +96,8 @@ CacheMemory::setRubySystem(RubySystem* rs)
     if (m_block_size == 0) {
         m_block_size = rs->getBlockSizeBytes();
     }
+
+    m_ruby_system = rs;
 }
 
 void
@@ -295,6 +297,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
     DPRINTF(RubyCache, "allocating address: %#x\n", address);
 
     entry->initBlockSize(m_block_size);
+    entry->setRubySystem(m_ruby_system);
 
     // Find the first open slot
     int64_t cacheSet = addressToCacheSet(address);

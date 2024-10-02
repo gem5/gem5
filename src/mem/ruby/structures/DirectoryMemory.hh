@@ -106,6 +106,8 @@ class DirectoryMemory : public SimObject
     uint64_t m_num_entries;
     uint32_t m_block_size;
 
+    RubySystem *m_ruby_system = nullptr;
+
     /**
      * The address range for which the directory responds. Normally
      * this is all possible memory addresses.

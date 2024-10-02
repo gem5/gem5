@@ -89,6 +89,9 @@ AbstractController::init()
         getMemReqQueue()->setConsumer(this);
     }
 
+    downstreamDestinations.setRubySystem(m_ruby_system);
+    upstreamDestinations.setRubySystem(m_ruby_system);
+
     // Initialize the addr->downstream machine mappings. Multiple machines
     // in downstream_destinations can have the same address range if they have
     // different types. If this is the case, mapAddressToDownstreamMachine
@@ -385,7 +388,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     int blk_size = m_ruby_system->getBlockSizeBytes();
 
     std::shared_ptr<MemoryMsg> msg =
-        std::make_shared<MemoryMsg>(clockEdge(), blk_size);
+        std::make_shared<MemoryMsg>(clockEdge(), blk_size, m_ruby_system);
     (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
 
@@ -491,6 +494,27 @@ std::string
 AbstractController::printAddress(Addr addr) const
 {
     return ruby::printAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
+NetDest
+AbstractController::broadcast(MachineType type)
+{
+    assert(m_ruby_system != nullptr);
+    NodeID type_count = m_ruby_system->MachineType_base_count(type);
+
+    NetDest dest;
+    for (NodeID i = 0; i < type_count; i++) {
+        MachineID mach = {type, i};
+        dest.add(mach);
+    }
+    return dest;
+}
+
+int
+AbstractController::machineCount(MachineType machType)
+{
+    assert(m_ruby_system != nullptr);
+    return m_ruby_system->MachineType_base_count(machType);
 }
 
 bool

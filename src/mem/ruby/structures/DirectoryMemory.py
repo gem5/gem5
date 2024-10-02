@@ -52,3 +52,4 @@ class RubyDirectoryMemory(SimObject):
     block_size = Param.UInt32(
         "Size of a block in bytes. Usually same as cache line size."
     )
+    ruby_system = Param.RubySystem(Parent.any, "")

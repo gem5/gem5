@@ -103,7 +103,8 @@ Network::Network(const Params &p)
 
     m_topology_ptr = new Topology(m_nodes, p.routers.size(),
                                   m_virtual_networks,
-                                  p.ext_links, p.int_links);
+                                  p.ext_links, p.int_links,
+                                  m_ruby_system);
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -247,7 +248,7 @@ Network::addressToNodeID(Addr addr, MachineType mtype)
             }
         }
     }
-    return MachineType_base_count(mtype);
+    return m_ruby_system->MachineType_base_count(mtype);
 }
 
 NodeID
@@ -267,6 +268,12 @@ bool
 Network::getWarmupEnabled() const
 {
     return m_ruby_system->getWarmupEnabled();
+}
+
+int
+Network::MachineType_base_number(const MachineType& obj)
+{
+    return m_ruby_system->MachineType_base_number(obj);
 }
 
 } // namespace ruby

@@ -41,6 +41,7 @@
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -701,6 +702,12 @@ NetworkInterface::functionalWrite(Packet *pkt)
         num_functional_writes += oPort->outFlitQueue()->functionalWrite(pkt);
     }
     return num_functional_writes;
+}
+
+int
+NetworkInterface::MachineType_base_number(const MachineType& obj)
+{
+    return m_net_ptr->getRubySystem()->MachineType_base_number(obj);
 }
 
 } // namespace garnet
