@@ -199,7 +199,7 @@ def makeGpuFSSystem(args):
     system.pc.south_bridge.gpu.pm4_pkt_procs = pm4_procs
 
     # GPU data path
-    gpu_mem_mgr = AMDGPUMemoryManager()
+    gpu_mem_mgr = AMDGPUMemoryManager(cache_line_size=args.cacheline_size)
     system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
 
     # CPU data path (SystemHub)

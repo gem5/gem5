@@ -128,6 +128,8 @@ class AMDGPUMemoryManager(ClockedObject):
     cxx_header = "dev/amdgpu/memory_manager.hh"
     cxx_class = "gem5::AMDGPUMemoryManager"
 
+    cache_line_size = Param.UInt64("Cache line size in bytes")
+
     port = RequestPort("Memory Port to access VRAM (device memory)")
     system = Param.System(Parent.any, "System the dGPU belongs to")
 
