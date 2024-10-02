@@ -410,6 +410,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 285,  "copy_file_range" },
     { 286,  "preadv2" },
     { 287,  "pwritev2" },
+    { 435,  "clone3", clone3Func<RiscvLinux64> },
     { 1024, "open", openFunc<RiscvLinux64> },
     { 1025, "link", linkFunc },
     { 1026, "unlink", unlinkFunc },
