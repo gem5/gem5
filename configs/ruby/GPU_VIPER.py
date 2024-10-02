@@ -688,7 +688,7 @@ def construct_gpudirs(options, system, ruby_system, network):
         dir_cntrl.addr_ranges = dram_intf.range
 
         # Append
-        exec("system.ruby.gpu_dir_cntrl%d = dir_cntrl" % i)
+        exec("ruby_system.gpu_dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
         mem_ctrls.append(mem_ctrl)
 
