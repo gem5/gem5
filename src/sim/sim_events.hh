@@ -76,6 +76,20 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     virtual const char *description() const;
 };
 
+
+class SimpointStartEventEvent : GlobalSimLoopExitEvent
+{
+  public:
+    SimpointStartEventEvent();
+    void process() override;
+    void clean() override {};
+    ~SimpointStartEventEvent (){
+        DPRINTF(Event,"SimpointStartEventEvent destructed\n");
+    };
+    const char *description() const;
+};
+
+
 class LocalSimLoopExitEvent : public Event
 {
   protected:
