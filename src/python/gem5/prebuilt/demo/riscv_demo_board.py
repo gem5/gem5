@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -180,7 +180,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     @overrides(RiscvBoard)
     def get_io_bus(self) -> IOXBar:
-        if self._is_fs:
+        if self.has_io_bus():
             return self.iobus
         else:
             raise NotImplementedError(
@@ -194,7 +194,7 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
 
     @overrides(RiscvBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
-        if self._is_fs:
+        if self.has_coherent_io():
             return self.iobus.mem_side_ports
         else:
             raise NotImplementedError(
