@@ -428,8 +428,7 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     DPRINTF(AMDGPUDevice, "Wrote framebuffer address %#lx\n", offset);
 
     for (auto& cu: CP()->shader()->cuList) {
-        auto system = CP()->shader()->gpuCmdProc.system();
-        Addr aligned_addr = offset & ~(system->cacheLineSize() - 1);
+        Addr aligned_addr = offset & ~(gpuMemMgr->getCacheLineSize() - 1);
         cu->sendInvL2(aligned_addr);
     }
 
