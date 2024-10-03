@@ -54,8 +54,16 @@ Clint::Clint(const Params &params) :
     system(params.system),
     nThread(params.num_threads),
     signal(params.name + ".signal", 0, this),
-    registers(params.name + ".registers", params.pio_addr, this)
+    reset(params.name + ".reset"),
+    resetMtimecmp(params.reset_mtimecmp),
+    registers(params.name + ".registers", params.pio_addr, this,
+              params.mtimecmp_reset_value)
 {
+      reset.onChange([this](const bool& new_val){
+          if (new_val) {
+              doReset();
+          }
+      });
 }
 
 void
@@ -113,7 +121,8 @@ Clint::ClintRegisters::init()
     // Initialize registers
     for (int i = 0; i < clint->nThread; i++) {
         msip.emplace_back(std::string("msip") + std::to_string(i), 0);
-        mtimecmp.emplace_back(std::string("mtimecmp") + std::to_string(i), 0);
+        mtimecmp.emplace_back(
+            std::string("mtimecmp") + std::to_string(i), mtimecmpResetValue);
     }
 
     // Add registers to bank
@@ -209,6 +218,8 @@ Clint::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "int_pin")
         return signal;
+    else if (if_name == "reset")
+        return reset;
     else
         return BasicPioDevice::getPort(if_name, idx);
 }
@@ -235,6 +246,22 @@ Clint::unserialize(CheckpointIn &cp)
         paramIn(cp, reg.name(), reg);
     }
     paramIn(cp, "mtime", registers.mtime);
+}
+
+void
+Clint::doReset() {
+    registers.mtime.reset();
+    for (int i = 0; i < nThread; i++) {
+        // According to the spec, the mtimecmp is in unknown state
+        // Assume we will change the mtimecmp registers to specify value
+        // if the mtimecmp registers accept the reset signal.
+        if (resetMtimecmp) {
+            registers.mtimecmp[i].reset();
+        }
+        registers.msip[i].reset();
+    }
+    // We need to update the mtip interrupt bits when reset
+    raiseInterruptPin(0);
 }
 
 } // namespace gem5

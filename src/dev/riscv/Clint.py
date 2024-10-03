@@ -35,6 +35,7 @@
 
 from m5.objects.Device import BasicPioDevice
 from m5.objects.IntPin import IntSinkPin
+from m5.objects.ResetPort import ResetResponsePort
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
@@ -55,6 +56,13 @@ class Clint(BasicPioDevice):
     int_pin = IntSinkPin("Pin to receive RTC signal")
     pio_size = Param.Addr(0xC000, "PIO Size")
     num_threads = Param.Int("Number of threads in the system.")
+    reset = ResetResponsePort("Reset")
+    reset_mtimecmp = Param.Bool(
+        False, "Change mtimecmp to `mtimecmp_reset_value` when reset"
+    )
+    mtimecmp_reset_value = Param.UInt64(
+        0xFFFFFFFFFFFFFFFF, "mtimecmp reset value"
+    )
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
