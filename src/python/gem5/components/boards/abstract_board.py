@@ -420,8 +420,10 @@ class AbstractBoard:
         )
 
         # 3. Call any of the components' `_pre_instantiate` functions.
-        # Right now, only the processor requires this.
         self.get_processor()._pre_instantiate(root)
+        self.get_memory()._pre_instantiate(root)
+        if self.get_cache_hierarchy():
+            self.get_cache_hierarchy()._pre_instantiate(root)
 
         # 4. Return the root object.
         return root
