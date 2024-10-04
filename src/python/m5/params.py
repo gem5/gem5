@@ -909,6 +909,8 @@ class AddrRange(ParamValue):
             # An address range needs to have an upper limit, specified
             # either explicitly with an end, or as an offset using the
             # size keyword.
+            self.holes = []
+
             if "end" in kwargs:
                 self.end = Addr(kwargs.pop("end"))
             elif "size" in kwargs:
@@ -920,6 +922,11 @@ class AddrRange(ParamValue):
                 self.modulo_by = int(kwargs.pop("modulo_by"))
             if "lowest_modulo_bit" in kwargs:
                 self.lowest_modulo_bit = int(kwargs.pop("lowest_modulo_bit"))
+
+            if "holes" in kwargs:
+                for item in kwargs.pop("holes"):
+                    temp_range = AddrRange(item.start, item.end)
+                    self.holes.append(temp_range.getValue())
 
             # Now on to the optional bit
             if "intlvMatch" in kwargs:
@@ -955,7 +962,9 @@ class AddrRange(ParamValue):
                 self.start = Addr(args[0])
                 handle_kwargs(self, kwargs)
             elif isinstance(args[0], (list, tuple)):
-                self.start = Addr(args[0][0])
+                self.start = Addr(
+                    args[0][0]
+                )  # is this if addr range is the input parameter?
                 self.end = Addr(args[0][1])
             else:
                 self.start = Addr(0)
@@ -1050,6 +1059,16 @@ class AddrRange(ParamValue):
                 int(self.end),
                 self.masks,
                 int(self.intlvMatch),
+            )
+
+        if len(self.holes) > 0:
+            return AddrRange(
+                int(self.start),
+                int(self.end),
+                int(self.modulo_by),
+                int(self.lowest_modulo_bit),
+                int(self.intlvMatch),
+                self.holes,
             )
 
         return AddrRange(

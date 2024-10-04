@@ -143,6 +143,8 @@ init_range(py::module_ &m_native)
         .def(py::init<const std::vector<AddrRange> &>())
         .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t, uint8_t>())
         .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t>())
+        .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t,
+             const std::vector<AddrRange> &>())
 
         .def("__str__", &AddrRange::to_string)
 

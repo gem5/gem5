@@ -95,6 +95,7 @@ class AddrRange
      * the MSB of sel.
      */
     std::vector<Addr> masks;
+    std::vector<AddrRange> holes = {};
 
     /** The value to compare sel with. */
     uint8_t intlvMatch;
@@ -119,6 +120,7 @@ class AddrRange
             intlvMatch = begin_it->intlvMatch;
             modulo_by = begin_it->modulo_by;
             lowest_modulo_bit = begin_it->lowest_modulo_bit;
+            holes = begin_it->holes;
         }
 
         auto count = std::distance(begin_it, end_it);
@@ -155,7 +157,7 @@ class AddrRange
                 for (auto it = begin_it; it != end_it; it++) {
                     fatal_if(!mergesWith(*it),
                              "Can only merge ranges with the same start, end "
-                             "and modulo bits, %s - %s.",
+                             "modulo bits, and holes, %s - %s.",
                              to_string(), it->to_string());
 
                     fatal_if(it->intlvMatch != match,
@@ -194,9 +196,11 @@ class AddrRange
      * @ingroup api_addr_range
      */
     AddrRange(Addr _start, Addr _end, uint8_t _modulo_by,
-              uint8_t _lowest_modulo_bit, uint8_t _intlv_match)
+              uint8_t _lowest_modulo_bit, uint8_t _intlv_match,
+              std::vector<AddrRange> holes = {})
         : _start(_start),
           _end(_end),
+          holes(holes),
           intlvMatch(_intlv_match),
           lowest_modulo_bit(_lowest_modulo_bit),
           modulo_by(_modulo_by)
@@ -345,7 +349,7 @@ class AddrRange
     bool
     interleaved() const
     {
-        return ((masks.size() > 0) || (modulo_by != 0));
+        return ((masks.size() > 0) || (modulo_by > 1));
     }
     // maybe assume user is using modulo correctly?
 
@@ -404,7 +408,12 @@ class AddrRange
     size() const
     {
         if (modulo_by) {  // modulo exclusive
-            return (_end - _start) / modulo_by;
+            uint64_t hole_size = 0;
+            for (auto hole : holes){
+                hole_size += hole.size();
+            }
+
+            return ((_end - _start) - hole_size) / modulo_by;
         }
 
         return (_end - _start) >> masks.size();
@@ -458,8 +467,8 @@ class AddrRange
                 return csprintf("[%#llx:%#llx]%s", _start, _end, str);
             }
 
-            return csprintf("[%#llx:%#llx] modulo_by %d", _start, _end,
-                            modulo_by);
+            return csprintf("[%#llx:%#llx] modulo_by %d, num holes: %d",
+                            _start, _end, modulo_by, holes.size());
         }
         return csprintf("[%#llx:%#llx]", _start, _end);
     }
@@ -478,11 +487,29 @@ class AddrRange
     mergesWith(const AddrRange& r) const
     {
         // Potentially needs simplification
-        return ((r._start == _start && r._end == _end) &&
-                (((r.masks == masks) && !(modulo_by || r.modulo_by)) ||
-                 ((modulo_by && r.modulo_by) &&
-                  (r.modulo_by == modulo_by &&
-                   lowest_modulo_bit == r.lowest_modulo_bit))));
+        // holes makes this much more difficult,
+        // check if one addrRange is the hole of the other
+        if (!modulo_by) {
+            return (r._start == _start && r._end == _end) &&
+                (r.masks == masks);
+        } else {
+            for (auto hole : holes){
+                if (r == hole) {
+                    return true;
+                }
+            }
+
+            for (auto hole : r.holes) {
+                if (*this == hole) {
+                    return true;
+                }
+            }
+
+            return ((r._start == _start && r._end == _end) &&
+                (r.modulo_by == modulo_by &&
+                 r.lowest_modulo_bit == lowest_modulo_bit) &&
+                 (holes == r.holes));
+        }
     }
 
     /**
@@ -504,6 +531,26 @@ class AddrRange
             return false;
         } else if (!interleaved() && !r.interleaved()) {
             // if neither range is interleaved, we are done
+            if (holes.size() > 0 || r.holes.size() > 0) {
+                // if either have holes, check if the other range is in a hole
+                // potentially need to expand, what if the other address range
+                // is in multiple holes?
+                if (_start < r._start) {
+                    for (auto hole : holes){
+
+                        if (hole.contains(r._start) && hole.end() <= r._end){
+                            return false;
+                        }
+                    }
+                } else {
+                    for (auto hole : r.holes) {
+                        if (hole.contains(_start) && hole.end() <= _end) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 
@@ -515,8 +562,30 @@ class AddrRange
         } else if (mergesWith(r)) {
             // restrict the check to ranges that belong to the
             // same chunk
+            // might need to fix this for holes
             return intlvMatch == r.intlvMatch;
         } else {
+            if (holes.size() > 0 || r.holes.size() > 0)
+            {
+                // if either have holes, check if the other range is in a hole
+                // potentially need to expand, what if the other address range
+                // is in multiple holes?
+                if (_start < r._start) {
+                    for (auto hole : holes) {
+
+                        if (hole.contains(r._start) && hole.end() <= r._end) {
+                            return false;
+                        }
+                    }
+                } else {
+                    for (auto hole : r.holes){
+                        if (hole.contains(_start) && hole.end() <= _end) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
             panic("Cannot test intersection of %s and %s\n",
                   to_string(), r.to_string());
         }
@@ -542,6 +611,16 @@ class AddrRange
         // suffices to check the upper bound, the lower bound and
         // whether it would fit in a continuous segment of the input
         // addr range.
+        for (auto hole : r.holes) {
+                    if ((hole.start() >= _start && hole.start() < _end)
+                        || (hole.end() > _start && hole.end() < _end)
+                        || (hole.start() < _start && hole.end() > _end)){
+
+                            return false;
+                    }
+        }
+
+
         if (r.interleaved()) {
             return r.contains(_start) && r.contains(_end - 1) &&
                 size() <= r.granularity();
@@ -552,6 +631,7 @@ class AddrRange
                 // _end is 2^64 so it wraps to 0.
                 // In this case we will be a subset only if r._end
                 // also wraps around.
+
                 return _start >= r._start && r._end == 0;
             } else if (r._end <= r._start){
                 // Special case: if r wraps around that is
@@ -559,6 +639,7 @@ class AddrRange
                 // In this case we will be a subset only if our _start
                 // is within r._start/ _end does not matter
                 // because r wraps around.
+
                 return _start >= r._start;
             } else {
                 // Normal case: Check if our range is completely within 'r'.
@@ -583,6 +664,7 @@ class AddrRange
         // no interleaving, or with interleaving also if the selected
         // bits from the address match the interleaving value
         bool in_range = a >= _start && a < _end;
+
         if (in_range) {
             auto sel = 0;
             if (!modulo_by) {  // modulo exclusive
@@ -595,8 +677,18 @@ class AddrRange
                     sel |= (popCount(masked) % 2) << i;
                 }
             } else {
+                // check if in hole
+                if (holes.size() > 0) { // is this if necessary?
+                    for (auto hole : holes) {
+                        // if (hole.contains(a)) {
+                        if (a >= hole.start() && a < hole.end()){
+                            return false;
+                        }
+                    }
+                }
                 sel = (a >> lowest_modulo_bit) % modulo_by;
             }
+
             return sel == intlvMatch;
         }
         return false;
@@ -745,6 +837,7 @@ class AddrRange
     Addr
     getOffset(const Addr& a) const
     {
+        // potentially subtract by hole sizes / modulo_by
         bool in_range = a >= _start && a < _end;
         if (!in_range) {
             return MaxAddr;
