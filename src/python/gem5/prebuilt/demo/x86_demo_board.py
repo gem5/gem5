@@ -50,7 +50,7 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
     This prebuilt X86 board is used for demonstration purposes. It simulates
     an X86 3GHz dual-core system with a 3GiB DDR4_2400 memory system. The
     cache hierarchy consists of per-core private L1 instruction and data
-    caches (64KiB each) connected to a shared 1MiB L2 cache.
+    caches (64KiB each) connected to a shared 8MiB L2 cache.
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
@@ -90,7 +90,7 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
         )
 
         cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
-            l1d_size="64KiB", l1i_size="64KiB", l2_size="1MiB"
+            l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
         )
 
         super().__init__(
