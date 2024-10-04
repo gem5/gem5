@@ -27,6 +27,7 @@
 FROM ubuntu:20.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
+LABEL org.opencontainers.image.description="An image used to build and run gem5 when simulating GPU in SE mode. Also used for creation of GPU SE workloads."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive

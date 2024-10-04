@@ -199,16 +199,16 @@ target "ubuntu-24-04_min-dependencies" {
 }
 
 target "gcn-gpu" {
-  inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=An image used to build and run gem5 when simulating GPU in SE mode. Also used for creation of GPU SE workloads."]
+  dockerfile = "Dockerfile"
+  pull=true
   platforms = ["linux/amd64"] # Only build for x86.
   context = "gcn-gpu"
   tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
 }
 
 target "gpu-fs" {
-  inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=An image used to build applications to be run with GPU full system. Applications targeting AMD's ROCm GPU framework can be built using this image (e.g., HIP, HSA, OpenCL, etc.)."]
+  dockerfile = "Dockerfile"
+  pull=true
   platforms = ["linux/amd64"] # Only build for x86.
   context = "gpu-fs"
   tags = ["${IMAGE_URI}/gpu-fs:${TAG}"]
