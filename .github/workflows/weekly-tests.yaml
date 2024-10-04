@@ -48,7 +48,7 @@ jobs:
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 300
+        timeout-minutes: 4320 # 3 days
 
         steps:
             - uses: actions/checkout@v4
@@ -63,9 +63,13 @@ jobs:
                   restore-keys: |
                       testlib-build-vega
 
+            - name: Build VEGA_X86/gem5.opt
+              working-directory: ${{ github.workspace }}
+              run: scons build/VEGA_X86/gem5.opt -j $(nproc)
+
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long -vvv -j $(nproc) -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=very-long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
 
             - name: Upload results
               if: success() || failure()
