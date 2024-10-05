@@ -962,9 +962,7 @@ class AddrRange(ParamValue):
                 self.start = Addr(args[0])
                 handle_kwargs(self, kwargs)
             elif isinstance(args[0], (list, tuple)):
-                self.start = Addr(
-                    args[0][0]
-                )
+                self.start = Addr(args[0][0])
                 self.end = Addr(args[0][1])
             else:
                 self.start = Addr(0)
