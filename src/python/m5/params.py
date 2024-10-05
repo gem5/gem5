@@ -964,7 +964,7 @@ class AddrRange(ParamValue):
             elif isinstance(args[0], (list, tuple)):
                 self.start = Addr(
                     args[0][0]
-                )  # is this if addr range is the input parameter?
+                )
                 self.end = Addr(args[0][1])
             else:
                 self.start = Addr(0)
