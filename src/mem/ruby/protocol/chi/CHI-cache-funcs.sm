@@ -228,6 +228,7 @@ void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_UD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SD_Fwded_SC) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
     }
@@ -1419,6 +1420,8 @@ Event dataToEvent (CHIDataType type) {
     return Event:SnpRespData_SC_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
     return Event:SnpRespData_SC_Fwded_SD_PD;
+  } else if (type == CHIDataType:SnpRespData_SD_Fwded_SC) {
+    return Event:SnpRespData_SD_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) {
     return Event:SnpRespData_SC_PD_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_I_Fwded_SD_PD) {

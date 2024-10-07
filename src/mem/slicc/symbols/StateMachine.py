@@ -353,6 +353,7 @@ class $c_ident : public AbstractController
     typedef ${c_ident}Params Params;
     $c_ident(const Params &p);
     static int getNumControllers();
+    static void incNumControllers();
     void init();
 
     MessageBuffer *getMandatoryQueue() const;
@@ -644,7 +645,7 @@ $c_ident::$c_ident(const Params &p)
 {
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
-    m_num_controllers++;
+    incNumControllers();
     p.ruby_system->registerAbstractController(this);
 
     m_in_ports = $num_in_ports;
@@ -1129,6 +1130,12 @@ int
 $c_ident::getNumControllers()
 {
     return m_num_controllers;
+}
+
+void
+$c_ident::incNumControllers()
+{
+    ++m_num_controllers;
 }
 
 MessageBuffer*
