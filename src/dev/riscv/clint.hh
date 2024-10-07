@@ -91,6 +91,13 @@ class Clint : public BasicPioDevice
     void raiseInterruptPin(int id);
     void lowerInterruptPin(int id) {}
 
+  // Interrupt ID
+  enum InterruptId
+  {
+      INT_RTC = 0, // received from RTC(signal port)
+      INT_RESET, // received from reset port
+  };
+
   // Register bank
   public:
 

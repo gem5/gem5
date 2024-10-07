@@ -53,7 +53,7 @@ Clint::Clint(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
     nThread(params.num_threads),
-    signal(params.name + ".signal", 0, this),
+    signal(params.name + ".signal", 0, this, INT_RTC),
     reset(params.name + ".reset"),
     resetMtimecmp(params.reset_mtimecmp),
     registers(params.name + ".registers", params.pio_addr, this,
@@ -69,9 +69,11 @@ Clint::Clint(const Params &params) :
 void
 Clint::raiseInterruptPin(int id)
 {
-    // Increment mtime
+    // Increment mtime when received RTC signal
     uint64_t& mtime = registers.mtime.get();
-    mtime++;
+    if (id == INT_RTC) {
+      mtime++;
+    }
 
     for (int context_id = 0; context_id < nThread; context_id++) {
 
@@ -261,7 +263,7 @@ Clint::doReset() {
         registers.msip[i].reset();
     }
     // We need to update the mtip interrupt bits when reset
-    raiseInterruptPin(0);
+    raiseInterruptPin(INT_RESET);
 }
 
 } // namespace gem5
