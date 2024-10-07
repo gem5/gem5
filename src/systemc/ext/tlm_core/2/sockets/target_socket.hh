@@ -98,6 +98,7 @@ class tlm_base_target_socket :
  * in the derived class and the base class. In GCC v13+ this
  * 'overloaded-virtual' warning is strict enough to trigger here (though the
  * code is correct).
+ * Please check section 9.3 of SystemC 2.3.1 release note for more details.
  */
 #if defined(__GNUC__) && (__GNUC__ >= 13)
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
