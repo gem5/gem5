@@ -45,7 +45,7 @@ from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
-# This runs a check to ensure the gem5 binary is compiled for ARM.
+# This runs a check to ensure the gem5 binary interpreting this file is compiled to include the ARM ISA.
 requires(isa_required=ISA.ARM)
 
 parser = argparse.ArgumentParser(

@@ -31,15 +31,15 @@ from m5.objects import (
 )
 from m5.util import warn
 
-from gem5.components.boards.arm_board import ArmBoard
-from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
+from ...components.boards.arm_board import ArmBoard
+from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
     PrivateL1SharedL2CacheHierarchy,
 )
-from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.isas import ISA
-from gem5.utils.requires import requires
+from ...components.memory import DualChannelDDR4_2400
+from ...components.processors.cpu_types import CPUTypes
+from ...components.processors.simple_processor import SimpleProcessor
+from ...isas import ISA
+from ...utils.requires import requires
 
 
 class ArmDemoBoard(ArmBoard):
@@ -70,7 +70,7 @@ class ArmDemoBoard(ArmBoard):
             "real-world system. Use with caution."
         )
         cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
-            l1d_size="64KiB", l1i_size="64KiB", l2_size="1MiB"
+            l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
         )
 
         # Note: Normally a system with these specification would have 1
