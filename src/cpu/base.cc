@@ -240,7 +240,11 @@ BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
     // Only wake up syscall emulation if it is not waiting on a futex.
     // This is to model the fact that instructions such as ARM SEV
     // should wake up a WFE sleep, but not a futex syscall WAIT.
-    if (FullSystem || !system->futexMap.is_waiting(threadContexts[tid]))
+    //
+    // For RISC-V, the WFI sleep wake up is implementation defined.
+    // The SiFive WFI wake up the hart only if mip & mie != 0
+    if ((FullSystem && interrupts[tid]->isWakeUp()) ||
+        !system->futexMap.is_waiting(threadContexts[tid]))
         wakeup(tid);
 }
 
