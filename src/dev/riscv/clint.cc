@@ -72,7 +72,7 @@ Clint::raiseInterruptPin(int id)
     // Increment mtime when received RTC signal
     uint64_t& mtime = registers.mtime.get();
     if (id == INT_RTC) {
-      mtime++;
+        mtime++;
     }
 
     for (int context_id = 0; context_id < nThread; context_id++) {
