@@ -36,19 +36,17 @@ def template FloatExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
         trace::InstRecord *traceData) const
     {
-        STATUS status = xc->readMiscReg(MISCREG_STATUS);
-        if (status.fs == FPUStatus::OFF)
-            return std::make_shared<IllegalInstFault>("FPU is off", machInst);
-
-        status.fs = FPUStatus::DIRTY;
-        xc->setMiscReg(MISCREG_STATUS, status);
+        bool set_dirty = true;
+        Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+        if (fault != NoFault) { return fault; }
 
         %(op_decl)s;
         %(op_rd)s;
 
         std::feclearexcept(FE_ALL_EXCEPT);
         %(code)s;
-        xc->setMiscReg(MISCREG_FFLAGS_EXE, softfloat_exceptionFlags);
+
+        xc->setMiscReg(HELPER_FFLAGS_EXE, softfloat_exceptionFlags);
         softfloat_exceptionFlags = 0;
 
         %(op_wb)s;

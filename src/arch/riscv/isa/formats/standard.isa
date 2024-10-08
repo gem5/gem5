@@ -339,7 +339,7 @@ def template CSRExecute {{
         }
 
         RegIndex midx = csr_data_it->second.physIndex;
-        const std::string& csrName = csr_data_it->second.name;
+        std::string csrName = csr_data_it->second.name;
         if ((csr_data_it->second.rvTypes & (1 << machInst.rv_type)) == 0) {
             return std::make_shared<IllegalInstFault>(
                     csprintf("%s is not support in mode %d\n",
@@ -362,27 +362,66 @@ def template CSRExecute {{
         RegVal data = 0;
         auto lowestAllowedMode = (PrivilegeMode)bits(csr, 9, 8);
         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+
+        // H-extension quirk
+        // Hypervisor CSRs have a lowestAllowedMode of 2
+        // However, MISCREG_PRV contains PRV_S = 1 and the V-bit is off
+        // when we are in HS-mode.
+
+        // To allow HS-mode to access its CSRs we upgrade the
+        // effective privilege to PRV_HS = 2.
+        // Note that PRV_HS should NEVER be written back to
+        // MISCREG_PRV as that might end up in mpp
+        // which would violate the specification.
+
+        if (misa.rvh && pm == PRV_S && !isV(xc)) {
+            pm = PRV_HS;
+        }
         if (pm < lowestAllowedMode) {
-            return std::make_shared<IllegalInstFault>(
+            if (isV(xc)) {
+                return std::make_shared<VirtualInstFault>(
+                    csprintf("[V] %s is not accessible in %s\n", csrName, pm),
+                    machInst);
+            }
+            else {
+                return std::make_shared<IllegalInstFault>(
                     csprintf("%s is not accessible in %s\n", csrName, pm),
                     machInst);
-        }
-        switch (csr) {
-          case CSR_SATP: {
-            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-            if (pm == PRV_S && status.tvm == 1) {
-                return std::make_shared<IllegalInstFault>(
-                        "SATP access with TVM enabled\n",
-                        machInst);
             }
-            break;
-          }
-          default:
-            break;
         }
 
+        // trick to get rid of const
+        // so we can do swap if needed
+        // this will shadow class member
+        uint64_t csr = this->csr;
+
+        // In virtualized supervisor mode, unmodified supervisor
+        // software thinks it is accessing S-mode CSRs!
+        // However, we remap these accesses to the virtual CSRs
+        // hosted in different MISCREGs to implement the virtualization.
+        if (misa.rvh && isV(xc) && pm == PRV_S) {
+            // Check if the supervisor CSR being accessed
+            // is virtualized and remap it.
+            // Args are passed by reference and modified if needed.
+            isa->swapToVirtCSR(csr, midx, csrName);
+        }
+
+        // Checks tvm fields for ATP regs
+        Fault tvm_fault = isa->tvmChecks(csr, pm, machInst);
+        if (tvm_fault != NoFault) { return tvm_fault; }
+
         if (%(read_cond)s) {
-            data = rvZext(xc->readMiscReg(midx));
+            switch (csr) {
+                case CSR_CYCLE:   case CSR_CYCLEH:
+                case CSR_TIME:    case CSR_TIMEH:
+                case CSR_INSTRET: case CSR_INSTRETH:
+                case CSR_HPMCOUNTER03 ... CSR_HPMCOUNTER31:
+                case CSR_HPMCOUNTER03H ... CSR_HPMCOUNTER31H:
+                Fault hpm_fault = isa->hpmCounterCheck(midx, machInst);
+                if (hpm_fault != NoFault)
+                    return hpm_fault;
+            }
+            data = rvZext(isa->readCSR(csr));
         }
 
         %(code)s;
@@ -394,7 +433,7 @@ def template CSRExecute {{
             }
             DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n",
                     data, csrName);
-            xc->setMiscReg(midx, data);
+            isa->writeCSR(csr, data);
         }
         %(op_wb)s;
         return NoFault;

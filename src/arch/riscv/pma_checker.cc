@@ -38,6 +38,7 @@
 #include "arch/riscv/pma_checker.hh"
 
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/memflags.hh"
 #include "arch/riscv/mmu.hh"
 #include "base/addr_range.hh"
 #include "base/types.hh"
@@ -90,7 +91,8 @@ PMAChecker::checkVAddrAlignment(
     if (addressAlign(req->getVaddr(), alignSize)) {
         return NoFault;
     }
-    return createMisalignFault(req->getVaddr(), mode);
+    return createMisalignFault(
+        req->getVaddr(), mode, req->getArchFlags() & XlateFlags::FORCE_VIRT);
 }
 
 bool
@@ -149,7 +151,8 @@ PMAChecker::checkPAddrAlignment(
 }
 
 Fault
-PMAChecker::createMisalignFault(Addr vaddr, BaseMMU::Mode mode)
+PMAChecker::createMisalignFault(
+    Addr vaddr, BaseMMU::Mode mode, bool virtualized)
 {
     RiscvISA::ExceptionCode code;
     switch (mode) {
@@ -162,7 +165,7 @@ PMAChecker::createMisalignFault(Addr vaddr, BaseMMU::Mode mode)
       default:
         panic("Execute mode request should not reach here.");
     }
-    return std::make_shared<AddressFault>(vaddr, code);
+    return std::make_shared<AddressFault>(vaddr, code, virtualized);
 }
 
 bool

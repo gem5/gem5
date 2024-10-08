@@ -118,7 +118,8 @@ class PMAChecker : public BasePMAChecker
      * Create address-misaligned exception based on the MMU mode and
      * virtual address
      */
-    Fault createMisalignFault(Addr vaddr, BaseMMU::Mode mode);
+    Fault createMisalignFault(
+        Addr vaddr, BaseMMU::Mode mode, bool virtualized = false);
 
     inline bool addressAlign(const Addr addr, const Addr size);
 

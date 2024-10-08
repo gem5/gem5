@@ -81,10 +81,11 @@ class RiscvType(Enum):
 class PrivilegeModeSet(Enum):
     vals = [
         "M",  # Machine privilege mode only
-        "MU",  # Machine and user privlege modes implemented
+        "MU",  # Machine and user privlege modes
         "MNU",  # MU privilege modes with user-mode trap
-        "MSU",  # Machine, supervisor and user modes implemented
+        "MSU",  # Machine, supervisor and user modes
         "MNSU",  # MSU privilege modes with user-mode trap
+        "MHSU",  # Machine, hypervisor, supervisor and user modes
     ]
 
 
@@ -107,7 +108,10 @@ class RiscvISA(BaseISA):
         ELEN in Ch. 2 of RISC-V vector spec",
     )
     privilege_mode_set = Param.PrivilegeModeSet(
-        "MSU",
+        "MSU",  # set MHSU to enable hypervisor (H-extension)
+        # O3 CPU is not supported in MHSU currently
+        # also change isa.cc:readMiscReg for MIDELEG
+        # if working with old bbl bootloader
         "The combination of privilege modes \
         in Privilege Levels section of RISC-V privileged spec",
     )
@@ -137,6 +141,12 @@ class RiscvISA(BaseISA):
         # check for the vector extension
         if self.enable_rvv.value == True:
             isa_extensions.append("v")
+
+        # H-extension is enabled whenever we choose
+        # MHSU privilege mode set
+        if self.privilege_mode_set.value == "MHSU":
+            isa_extensions.append("h")
+
         isa_string = "".join(isa_extensions)
 
         if self.enable_Zicbom_fs.value:

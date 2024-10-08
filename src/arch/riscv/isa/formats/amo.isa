@@ -445,7 +445,7 @@ def format LoadReserved(memacc_code, postacc_code={{ }},
     iop = InstObjParams(name, Name, 'LoadReservedMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
-    mem_flags = ['Request::%s' % flag for flag in mem_flags]
+    mem_flags = ['(Request::%s)' % flag for flag in mem_flags]
     align_flag = getAlignFlag(iop)
     if align_flag:
         mem_flags.append(align_flag)
@@ -476,7 +476,7 @@ def format StoreCond(memacc_code, postacc_code={{ }},
     iop = InstObjParams(name, Name, 'StoreCondMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
-    mem_flags = ['Request::%s' % flag for flag in mem_flags]
+    mem_flags = ['(Request::%s)' % flag for flag in mem_flags]
     align_flag = getAlignFlag(iop)
     if align_flag:
         mem_flags.append(align_flag)
@@ -511,7 +511,7 @@ def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
                              'amoop_code': amoop_code},
                             rmw_inst_flags)
 
-    rmw_mem_flags = ['Request::%s' % flag for flag in rmw_mem_flags]
+    rmw_mem_flags = ['(Request::%s)' % flag for flag in rmw_mem_flags]
     align_flag = getAlignFlag(rmw_iop)
     if align_flag:
         rmw_mem_flags.append(align_flag)

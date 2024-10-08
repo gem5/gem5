@@ -57,15 +57,9 @@ decode QUADRANT default Unknown::unknown() {
             0x1: c_fld({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
-
-                // Mutating any floating point register changes the FS bit
-                // of the STATUS CSR.
-                status.fs = FPUStatus::DIRTY;
-                xc->setMiscReg(MISCREG_STATUS, status);
+                bool set_dirty = true;
+                Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                if (fault != NoFault) { return fault; }
 
                 Fp2_bits = Mem;
             }}, {{
@@ -86,13 +80,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM3 << 3 |
                              CIMM2<0:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd = freg(f32(Mem_uw));
                     Fp2_bits = fd.v;
@@ -155,10 +145,9 @@ decode QUADRANT default Unknown::unknown() {
             0x5: c_fsd({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+                bool set_dirty = false;
+                Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                if (fault != NoFault) { return fault; }
 
                 Mem = Fp2_bits;
             }}, {{
@@ -179,10 +168,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM3 << 3 |
                              CIMM2<0:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fp2_bits));
                 }}, {{
@@ -386,13 +374,9 @@ decode QUADRANT default Unknown::unknown() {
                          CIMM1 << 5 |
                          CIMM5<2:0> << 6;
             }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
-
-                status.fs = FPUStatus::DIRTY;
-                xc->setMiscReg(MISCREG_STATUS, status);
+                bool set_dirty = true;
+                Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                if (fault != NoFault) { return fault; }
 
                 Fc1_bits = Mem;
             }}, {{
@@ -417,13 +401,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM1 << 5 |
                              CIMM5<1:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
@@ -463,10 +443,12 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode RC2 {
                 0x0: decode RC1 {
                     0x0: SystemOp::c_ebreak({{
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+                        bool virtualized = misa.rvh ? isV(xc) : false;
                         // NB: Semihosting spec requires uncompressed ebreak,
                         // so this instruction does not check for semihosting.
                         return std::make_shared<BreakpointFault>(
-                            xc->pcState());
+                            xc->pcState(), virtualized);
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     default: CJump::c_jalr({{
                         ra = rvSext(NPC);
@@ -484,10 +466,9 @@ decode QUADRANT default Unknown::unknown() {
                 offset = CIMM6<5:3> << 3 |
                          CIMM6<2:0> << 6;
             }}, {{
-                STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                if (status.fs == FPUStatus::OFF)
-                    return std::make_shared<IllegalInstFault>("FPU is off",
-                                                               machInst);
+                bool set_dirty = false;
+                Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                if (fault != NoFault) { return fault; }
 
                 Mem_ud = Fc2_bits;
             }}, {{
@@ -506,10 +487,9 @@ decode QUADRANT default Unknown::unknown() {
                     offset = CIMM6<5:2> << 2 |
                              CIMM6<1:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fc2_bits));
                 }}, {{
@@ -560,39 +540,27 @@ decode QUADRANT default Unknown::unknown() {
         0x01: decode FUNCT3 {
             format Load {
                 0x1: flh({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f16(Mem_uh));
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
                 0x2: flw({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
                 0x3: fld({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f64(Mem));
@@ -1267,26 +1235,23 @@ decode QUADRANT default Unknown::unknown() {
         0x09: decode FUNCT3 {
             format Store {
                 0x1: fsh({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uh = unboxF16(boxF16(Fs2_bits));
                 }}, inst_flags=FloatMemWriteOp);
                 0x2: fsw({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fs2_bits));
                 }}, inst_flags=FloatMemWriteOp);
                 0x3: fsd({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
@@ -1497,7 +1462,7 @@ decode QUADRANT default Unknown::unknown() {
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
-                }}, mem_flags=LLSC);
+                }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
                 0x3: StoreCond::sc_w({{
                     Mem_uw = Rs2_uw;
                 }}, {{
@@ -1571,7 +1536,7 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: decode AMOFUNCT {
                     0x2: LoadReserved::lr_d({{
                         Rd_sd = Mem_sd;
-                    }}, mem_flags=LLSC);
+                    }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
                     0x3: StoreCond::sc_d({{
                         Mem = Rs2;
                     }}, {{
@@ -4812,8 +4777,12 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: decode FUNCT7 {
                     0x0: decode RS2 {
                         0x0: ecall({{
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            bool virtualized = misa.rvh ?
+                                isV(xc) : false;
                             return std::make_shared<SyscallFault>(
-                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
+                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV),
+                                                                virtualized);
                         }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                             No_OpClass);
                         0x1: ebreak({{
@@ -4835,41 +4804,93 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
-                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            // This sret implementation conforms to
+                            // RISCV Privileged Spec 20211203
+                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             if (!misa.rvs) {
                                 return std::make_shared<IllegalInstFault>(
                                             "sret can't execute without RVS",
                                             machInst);
                             }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+                            HSTATUS hstatus = misa.rvh ?
+                                xc->readMiscReg(MISCREG_HSTATUS) : 0;
+
+                            MiscRegIndex status_idx = isV(xc) ?
+                                MISCREG_VSSTATUS : MISCREG_STATUS;
+
+                            STATUS status = xc->readMiscReg(status_idx);
+
                             auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-                            if (pm == PRV_U ||
-                                (pm == PRV_S && status.tsr == 1)) {
-                                return std::make_shared<IllegalInstFault>(
-                                            "sret in user mode or TSR enabled",
+                                                        MISCREG_PRV);
+
+                            if (misa.rvh && isV(xc)) {
+                                if (pm == PRV_U || hstatus.vtsr) {
+                                    return std::make_shared<VirtualInstFault>(
+                                            "sret in PRV_U or VTSR enabled",
                                             machInst);
+                                }
                                 NPC = NPC;
                             } else {
-                                xc->setMiscReg(MISCREG_PRV, status.spp);
-                                status.sie = status.spie;
-                                status.spie = 1;
-                                status.spp = PRV_U;
-                                xc->setMiscReg(MISCREG_STATUS, status);
-                                NPC = xc->readMiscReg(MISCREG_SEPC);
+                                if (pm == PRV_U ||
+                                (pm == PRV_S && status.tsr == 1)) {
+                                    return std::make_shared<IllegalInstFault>(
+                                            "sret in PRV_U or TSR enabled",
+                                            machInst);
+                                }
+                                NPC = NPC;
+                            }
+
+                            NPC = isV(xc) ? xc->readMiscReg(MISCREG_VSEPC) :
+                                            xc->readMiscReg(MISCREG_SEPC);
+
+                            xc->setMiscReg(MISCREG_PRV, status.spp);
+                            status.sie = status.spie;
+                            status.spie = 1;
+                            status.spp = PRV_U;
+
+                            xc->setMiscReg(status_idx, status);
+                            xc->tcBase()->getMMUPtr()->flushAll();
+
+                            if (!isV(xc)) {
+                                if (misa.rvh) {
+                                    if (hstatus.spv) {
+                                        setV(xc);
+                                    }
+                                    hstatus.spv = 0;
+                                    xc->setMiscReg(MISCREG_HSTATUS, hstatus);
+                                }
+
+                                status.mprv = 0; // 20211203
                             }
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
                                 MISCREG_PRV);
-                            if (misa.rvs && (pm == PRV_U ||
-                                (pm == PRV_S && status.tw == 1))) {
+
+
+                            if (misa.rvh && isV(xc) && pm == PRV_U) {
+                                return std::make_shared<VirtualInstFault>(
+                                            "wfi in VU mode",
+                                            machInst);
+                            } else if (pm != PRV_M && status.tw == 1) {
                                 return std::make_shared<IllegalInstFault>(
-                                            "wfi in user mode or TW enabled",
+                                        "wfi not in M mode with TW enabled",
+                                        machInst);
+                            } else if (misa.rvh && isV(xc) && pm == PRV_S &&
+                                hstatus.vtw == 1) {
+                                return std::make_shared<VirtualInstFault>(
+                                        "wfi in VS mode with VTW enabled",
+                                        machInst);
+                            } else if (misa.rvs && pm < PRV_S) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "wfi in user mode",
                                             machInst);
                             }
+
                             auto tc = xc->tcBase();
                             auto cpu = tc->getCpuPtr();
                             auto ic = dynamic_cast<RiscvISA::Interrupts*>(
@@ -4904,31 +4925,152 @@ decode QUADRANT default Unknown::unknown() {
                                 "sfence_vma can't execute without RVS",
                                 machInst);
                         }
+
                         STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
-                        if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
+
+                        if (misa.rvh && isV(xc) &&
+                            (pm == PRV_U || hstatus.vtvm == 1)) {
+                            return std::make_shared<VirtualInstFault>(
+                                    "sfence in VU mode or VTVM enabled",
+                                    machInst);
+                        }
+                        else if (pm == PRV_U ||
+                        (pm == PRV_S && status.tvm == 1)) {
                             return std::make_shared<IllegalInstFault>(
                                         "sfence in user mode or TVM enabled",
                                         machInst);
                         }
+
                         xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
-                    0x18: mret({{
-                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+
+                    0xb: sinval_vvma({{
+                        warn("sinval_vvma not implemented");
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0xc: decode RS2{
+                        0x0: sfence_w_inval({{
+                            warn("sfence_w_inval not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                        0x1: sfence_inval_ir({{
+                            warn("sfence_inval_ir not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    }
+
+                     0x11: hfence_vvma({{
+                        auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+
+                        if (!misa.rvh) {
                             return std::make_shared<IllegalInstFault>(
-                                        "mret at lower privilege", machInst);
+                                            "hfence needs RVH",
+                                            machInst);
+                        }
+                        if (isV(xc)) {
+                            return std::make_shared<VirtualInstFault>(
+                                            "hfence with V=1",
+                                            machInst);
+                        }
+                        if (pm < PRV_S) {
+                            return std::make_shared<IllegalInstFault>(
+                                        "hfence needs at least S priv",
+                                        machInst);
+                        }
+                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        return NoFault;
+
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0x13: hinval_vvma({{
+                        warn("hinval_vvma not implemented");
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+
+                    0x18: mret({{
+                        // We do not check for H-extension (misa.rvh)
+                        // to have a simpler implementation here.
+                        // By default even when misa.rvh == 0,
+                        // isV == false (MISCREG_VIRT == 0)
+                        // and the register bits we reference exist
+                        // but are not writable by the masks
+
+                        // This mret implementation conforms to
+                        // RISCV Privileged Spec 20211203
+                        // Cross-checked with spike implementation
+
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+
+                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                            if (isV(xc)) { // H-extension
+                                return std::make_shared<VirtualInstFault>(
+                                    "mret at lower prv (V=1)", machInst);
+                            }
+                            else {
+                                return std::make_shared<IllegalInstFault>(
+                                    "mret at lower privilege", machInst);
+                            }
                             NPC = NPC;
                         } else {
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            if (status.mpp != PRV_M) {
+                                if (status.mpv == 1) { // H-extension
+                                    setV(xc);
+                                }
+                                status.mprv = 0;
+                            }
+
                             xc->setMiscReg(MISCREG_PRV, status.mpp);
                             xc->setMiscReg(MISCREG_NMIE, 1);
+
                             status.mie = status.mpie;
                             status.mpie = 1;
-                            status.mpp = PRV_U;
+                            status.mpp = misa.rvu ? PRV_U : PRV_M;
+                            status.mpv = 0; // H-extension
+
                             xc->setMiscReg(MISCREG_STATUS, status);
+                            xc->tcBase()->getMMUPtr()->flushAll();
                             NPC = xc->readMiscReg(MISCREG_MEPC);
                         }
                     }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
+
+                                        0x31: decode FUNCT3 {
+                        0x0: hfence_gvma({{
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                                        MISCREG_PRV);
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+
+                            if (!misa.rvh) {
+                                return std::make_shared<IllegalInstFault>(
+                                                "hfence needs RVH",
+                                                machInst);
+                            }
+                            if (isV(xc)) {
+                                return std::make_shared<VirtualInstFault>(
+                                                "hfence with V=1",
+                                                machInst);
+                            }
+
+                            if (pm < PRV_S ||
+                                (pm == PRV_S && status.tvm == 1)) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "hfence in U or TVM on",
+                                            machInst);
+                            }
+                            xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                            return NoFault;
+
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    }
+
+                    0x33: decode FUNCT3 {
+                        0x0: hinval_gvma({{
+                            warn("hinval_gvma unimplemented");
+                        }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                    }
                 }
             }
             format CSROp {
@@ -4962,6 +5104,82 @@ decode QUADRANT default Unknown::unknown() {
                     data = rvZext(data & ~uimm);
                 }}, 'true', 'uimm != 0'
                   , IsSerializeAfter, IsNonSpeculative, No_OpClass);
+            }
+            0x4: decode FUNCT7{
+                0x30: decode RS2 {
+                    0x0: HyperLoad::hlv_b({{
+                        Rd_sd = Mem_sb;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_bu({{
+                        Rd = Mem_ub;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                }
+                0x31: HyperStore::hsv_b({{
+                    Mem_ub = Rs2_ub;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x32: decode RS2 {
+                    0x0: HyperLoad::hlv_h({{
+                        Rd_sd = Mem_sh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_hu({{
+                        Rd = Mem_uh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x3: HyperLoad::hlvx_hu({{
+                        Rd = Mem_uh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
+                        'ARCH_BITS & XlateFlags::HLVX'
+                    ]);
+                }
+                0x33: HyperStore::hsv_h({{
+                        Mem_uh = Rs2_uh
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                0x34: decode RS2 {
+                    0x0: HyperLoad::hlv_w({{
+                        Rd_sd = Mem_sw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_wu({{
+                        Rd = Mem_uw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x3: HyperLoad::hlvx_wu({{
+                        Rd = Mem_uw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
+                        'ARCH_BITS & XlateFlags::HLVX'
+                    ]);
+                }
+                0x35: HyperStore::hsv_w({{
+                    Mem_uw = Rs2_uw;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x36: HyperLoad::hlv_d({{
+                    Rd_sd = Mem_sd;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x37: HyperStore::hsv_d({{
+                    Mem_ud = Rs2_ud;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+
             }
         }
 

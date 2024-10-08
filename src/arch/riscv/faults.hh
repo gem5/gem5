@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <string>
 
+#include "arch/riscv/fault_codes.hh"
 #include "arch/riscv/isa.hh"
 #include "cpu/null_static_inst.hh"
 #include "sim/faults.hh"
@@ -46,108 +47,6 @@ class ThreadContext;
 
 namespace RiscvISA
 {
-
-enum FloatException : uint64_t
-{
-    FloatInexact = 0x1,
-    FloatUnderflow = 0x2,
-    FloatOverflow = 0x4,
-    FloatDivZero = 0x8,
-    FloatInvalid = 0x10
-};
-
-/*
- * In RISC-V, exception and interrupt codes share some values. They can be
- * differentiated by an 'Interrupt' flag that is enabled for interrupt faults
- * but not exceptions. The full fault cause can be computed by placing the
- * exception (or interrupt) code in the least significant bits of the CAUSE
- * CSR and then setting the highest bit of CAUSE with the 'Interrupt' flag.
- * For more details on exception causes, see Chapter 3.1.20 of the RISC-V
- * privileged specification v 1.10. Codes are enumerated in Table 3.6.
- */
-enum ExceptionCode : uint64_t
-{
-    INST_ADDR_MISALIGNED = 0,
-    INST_ACCESS = 1,
-    INST_ILLEGAL = 2,
-    BREAKPOINT = 3,
-    LOAD_ADDR_MISALIGNED = 4,
-    LOAD_ACCESS = 5,
-    STORE_ADDR_MISALIGNED = 6,
-    AMO_ADDR_MISALIGNED = 6,
-    STORE_ACCESS = 7,
-    AMO_ACCESS = 7,
-    ECALL_USER = 8,
-    ECALL_SUPER = 9,
-    ECALL_MACHINE = 11,
-    INST_PAGE = 12,
-    LOAD_PAGE = 13,
-    STORE_PAGE = 15,
-    AMO_PAGE = 15,
-
-    INT_SOFTWARE_USER = 0,
-    INT_SOFTWARE_SUPER = 1,
-    INT_SOFTWARE_MACHINE = 3,
-    INT_TIMER_USER = 4,
-    INT_TIMER_SUPER = 5,
-    INT_TIMER_MACHINE = 7,
-    INT_EXT_USER = 8,
-    INT_EXT_SUPER = 9,
-    INT_EXT_MACHINE = 11,
-    INT_LOCAL_0 = 16,
-    INT_LOCAL_1 = 17,
-    INT_LOCAL_2 = 18,
-    INT_LOCAL_3 = 19,
-    INT_LOCAL_4 = 20,
-    INT_LOCAL_5 = 21,
-    INT_LOCAL_6 = 22,
-    INT_LOCAL_7 = 23,
-    INT_LOCAL_8 = 24,
-    INT_LOCAL_9 = 25,
-    INT_LOCAL_10 = 26,
-    INT_LOCAL_11 = 27,
-    INT_LOCAL_12 = 28,
-    INT_LOCAL_13 = 29,
-    INT_LOCAL_14 = 30,
-    INT_LOCAL_15 = 31,
-    INT_LOCAL_16 = 32,
-    INT_LOCAL_17 = 33,
-    INT_LOCAL_18 = 34,
-    INT_LOCAL_19 = 35,
-    INT_LOCAL_20 = 36,
-    INT_LOCAL_21 = 37,
-    INT_LOCAL_22 = 38,
-    INT_LOCAL_23 = 39,
-    INT_LOCAL_24 = 40,
-    INT_LOCAL_25 = 41,
-    INT_LOCAL_26 = 42,
-    INT_LOCAL_27 = 43,
-    INT_LOCAL_28 = 44,
-    INT_LOCAL_29 = 45,
-    INT_LOCAL_30 = 46,
-    INT_LOCAL_31 = 47,
-    INT_LOCAL_32 = 48,
-    INT_LOCAL_33 = 49,
-    INT_LOCAL_34 = 50,
-    INT_LOCAL_35 = 51,
-    INT_LOCAL_36 = 52,
-    INT_LOCAL_37 = 53,
-    INT_LOCAL_38 = 54,
-    INT_LOCAL_39 = 55,
-    INT_LOCAL_40 = 56,
-    INT_LOCAL_41 = 57,
-    INT_LOCAL_42 = 58,
-    INT_LOCAL_43 = 59,
-    INT_LOCAL_44 = 60,
-    INT_LOCAL_45 = 61,
-    INT_LOCAL_46 = 62,
-    INT_LOCAL_47 = 63,
-    NumInterruptTypes,
-    // INT_NMI does not exist in the spec, it's a modeling artifact for NMI. We
-    // intentionally set it to be NumInterruptTypes so it can never conflict
-    // with any real INT_NUM in used.
-    INT_NMI = NumInterruptTypes,
-};
 
 enum class FaultType
 {
@@ -169,12 +68,21 @@ class RiscvFault : public FaultBase
 
     FaultName name() const override { return _name; }
     bool isInterrupt() const { return _fault_type == FaultType::INTERRUPT; }
-    bool isNonMaskableInterrupt() const
-    {
+    bool isNonMaskableInterrupt() const {
         return _fault_type == FaultType::NON_MASKABLE_INTERRUPT;
     }
+    bool isPlainException() const {
+        return _fault_type == FaultType::OTHERS;
+    }
+    bool isGuestPageFault() const {
+      return _code == INST_GUEST_PAGE  || _code == LOAD_GUEST_PAGE ||
+             _code == STORE_GUEST_PAGE || _code == AMO_GUEST_PAGE;
+    }
+
     ExceptionCode exception() const { return _code; }
     virtual RegVal trap_value() const { return 0; }
+    virtual RegVal trap_value2() const { return 0; }
+    virtual bool mustSetGva() const { return false; }
 
     virtual void invokeSE(ThreadContext *tc, const StaticInstPtr &inst);
     void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
@@ -220,6 +128,21 @@ class InstFault : public RiscvFault
   public:
     InstFault(FaultName n, const ExtMachInst inst)
         : RiscvFault(n, FaultType::OTHERS, INST_ILLEGAL), _inst(inst)
+    {}
+
+    RegVal trap_value() const override { return _inst.instBits; }
+};
+
+class VirtualInstFault : public RiscvFault
+{
+  protected:
+    const ExtMachInst _inst;
+    std::string _reason;
+
+  public:
+    VirtualInstFault(std::string reason, const ExtMachInst inst)
+        : RiscvFault("VirtualInst", FaultType::OTHERS, VIRTUAL_INST),
+        _inst(inst), _reason(reason)
     {}
 
     RegVal trap_value() const override { return _inst.instBits; }
@@ -280,27 +203,49 @@ class IllegalFrmFault: public InstFault
 class AddressFault : public RiscvFault
 {
   private:
-    const Addr _addr;
+    const Addr _vaddr;
+    const Addr _gpaddr;
+    const bool _two_stage;
 
   public:
-    AddressFault(const Addr addr, ExceptionCode code)
-        : RiscvFault("Address", FaultType::OTHERS, code), _addr(addr)
+    AddressFault(
+        const Addr vaddr, ExceptionCode code,
+        const Addr gpaddr = 0x0, const bool two_stage = false)
+        : RiscvFault("Address", FaultType::OTHERS, code),
+        _vaddr(vaddr), _gpaddr(gpaddr), _two_stage(two_stage)
     {}
 
-    RegVal trap_value() const override { return _addr; }
+    bool mustSetGva() const override {
+        switch(_code) {
+            case INST_ADDR_MISALIGNED:
+            case LOAD_ADDR_MISALIGNED:
+            case STORE_ADDR_MISALIGNED:
+
+            case INST_ACCESS: case LOAD_ACCESS: case STORE_ACCESS:
+            case INST_PAGE: case LOAD_PAGE: case STORE_PAGE:
+            case INST_GUEST_PAGE: case LOAD_GUEST_PAGE: case STORE_GUEST_PAGE:
+                return _two_stage;
+            default:
+                return false;
+        }
+    }
+    RegVal trap_value() const override { return _vaddr; }
+    RegVal trap_value2() const override { return _gpaddr >> 2; }
 };
 
 class BreakpointFault : public RiscvFault
 {
   private:
     const PCState pcState;
+    const bool _virtualized;
 
   public:
-    BreakpointFault(const PCStateBase &pc)
+    BreakpointFault(const PCStateBase &pc, const bool virtualized = false)
         : RiscvFault("Breakpoint", FaultType::OTHERS, BREAKPOINT),
-        pcState(pc.as<PCState>())
+        pcState(pc.as<PCState>()), _virtualized(virtualized)
     {}
 
+    bool mustSetGva() const override { return _virtualized; }
     RegVal trap_value() const override { return pcState.pc(); }
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
@@ -308,7 +253,7 @@ class BreakpointFault : public RiscvFault
 class SyscallFault : public RiscvFault
 {
   public:
-    SyscallFault(PrivilegeMode prv)
+    SyscallFault(PrivilegeMode prv, const bool virtualized = false)
         : RiscvFault("System call", FaultType::OTHERS, ECALL_USER)
     {
         switch (prv) {
@@ -316,7 +261,7 @@ class SyscallFault : public RiscvFault
             _code = ECALL_USER;
             break;
           case PRV_S:
-            _code = ECALL_SUPER;
+            _code = virtualized ? ECALL_VIRTUAL_SUPER : ECALL_SUPER;
             break;
           case PRV_M:
             _code = ECALL_MACHINE;

@@ -70,6 +70,16 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
 
+        // previous virtualization (H-extension)
+        bool pv = misa.rvh ? isV(tc) : false;
+
+        // MISCREG_PRV (mirroring mpp) cannot have PRV_HS == 2
+        // it can only be 0 (U), 1 (S), 3 (M).
+        // Consult Table 8.8, 8.9 RISCV Privileged Spec V20211203
+        if (misa.rvh && pp == PRV_HS) {
+            panic("Privilege in MISCREG_PRV is PRV_HS == 2!");
+        }
+
         // According to riscv-privileged-v1.11, if a NMI occurs at the middle
         // of a M-mode trap handler, the state (epc/cause) will be overwritten
         // and is not necessary recoverable. There's nothing we can do here so
@@ -84,6 +94,15 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             if (pp != PRV_M &&
                 bits(tc->readMiscReg(MISCREG_MIDELEG), _code) != 0) {
                 prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
+
+                // when rvh is true we know rvs is true so prv is S
+                if (misa.rvh) {
+                    if (isV(tc) &&
+                        bits(tc->readMiscReg(MISCREG_HIDELEG), _code) == 0) {
+                        resetV(tc); // No delegation, go to HS (S with V = 0)
+                    }
+                    // otherwise handled in VS (S with V = 1)
+                }
             }
             if (pp == PRV_U && misa.rvs && misa.rvn &&
                 bits(tc->readMiscReg(MISCREG_SIDELEG), _code) != 0) {
@@ -93,6 +112,15 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             if (pp != PRV_M &&
                 bits(tc->readMiscReg(MISCREG_MEDELEG), _code) != 0) {
                 prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
+
+                // when rvh is true we know rvs is true so prv is S
+                if (misa.rvh) {
+                    if (isV(tc) &&
+                        bits(tc->readMiscReg(MISCREG_HEDELEG), _code) == 0) {
+                        resetV(tc); // No delegation, go to HS (S with V = 0)
+                    }
+                    // otherwise handled in VS (S with V = 1)
+                }
             }
             if (pp == PRV_U && misa.rvs && misa.rvn &&
                 bits(tc->readMiscReg(MISCREG_SEDELEG), _code) != 0) {
@@ -136,6 +164,69 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             panic("Unknown privilege mode %d.", prv);
             break;
         }
+
+        // H-extension extra handling for invoke
+        if (misa.rvh) {
+            if (prv == PRV_M) {
+                status.mpv = pv;
+                status.gva = mustSetGva();
+                // Paragraph 8.5.2 RISCV Privileged Spec 20211203
+                if (isGuestPageFault()) {
+                    tc->setMiscReg(MISCREG_MTVAL2, trap_value() >> 2);
+                }
+                // Going to M-mode for handling, disable V if it's on
+                if (isV(tc)) { resetV(tc); }
+            }
+            else if (prv == PRV_S && !isV(tc)) { // essentially HS-mode
+                HSTATUS hstatus = tc->readMiscReg(MISCREG_HSTATUS);
+                hstatus.spv = pv;
+                if (pv) { // if V-bit was on
+                    hstatus.spvp = status.spp;
+                    hstatus.gva = mustSetGva();
+                    // Paragraph 8.5.2 RISCV Privileged Spec 20211203
+                    if (isGuestPageFault()) {
+                        tc->setMiscReg(MISCREG_HTVAL, trap_value2());
+                    }
+                }
+                // Write changes to hstatus
+                tc->setMiscReg(MISCREG_HSTATUS, hstatus);
+            }
+            else if (prv == PRV_S && isV(tc)) { // essentially VS-mode
+                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                cause = MISCREG_VSCAUSE;
+                epc = MISCREG_VSEPC;
+                tvec = MISCREG_VSTVEC;
+                tval = MISCREG_VSTVAL;
+                vsstatus.spp = pp;
+                vsstatus.spie = vsstatus.sie;
+                vsstatus.sie = 0;
+                tc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
+
+                // Paragraph 8.2.2 RISCV Privileged Spec 20211203
+                switch (_code) {
+                    case INT_SOFTWARE_VIRTUAL_SUPER:
+                        _code = INT_SOFTWARE_SUPER;
+                        break;
+                    case INT_TIMER_VIRTUAL_SUPER:
+                        _code = INT_TIMER_SUPER;
+                        break;
+                    case INT_EXT_VIRTUAL_SUPER:
+                        _code = INT_EXT_SUPER;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                panic("Unknown case in hypervisor fault handler."
+                      "prv = %d, V = %d", prv, isV(tc));
+            }
+        }
+
+        // Also flush TLB on fault handling as Spike does.
+        // This happens even when privilege does not change
+        tc->getMMUPtr()->flushAll();
+
 
         // Set fault cause, privilege, and return PC
         uint64_t _cause = _code;

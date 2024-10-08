@@ -153,19 +153,11 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
 
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
@@ -212,14 +204,10 @@ Fault
     %(set_vlenb)s;
     %(ea_code)s;
 
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     uint32_t mem_size = width_EEW(this->machInst.width) / 8 * this->microVl;
 
@@ -243,9 +231,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     %(tail_mask_policy_code)s
@@ -360,14 +349,11 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -410,14 +396,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -587,12 +571,12 @@ Fault
 %(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -617,12 +601,12 @@ Fault
         trace::InstRecord* traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -725,15 +709,11 @@ Fault
 %(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
 
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     %(op_decl)s;
     %(op_rd)s;
@@ -764,12 +744,12 @@ Fault
                             trace::InstRecord* traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_src_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -791,9 +771,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
@@ -910,18 +891,11 @@ Fault
 {
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
 
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
 
     %(op_decl)s;
     %(op_rd)s;
@@ -962,14 +936,12 @@ Fault
 {
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_src_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1003,9 +975,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
@@ -1113,14 +1086,12 @@ Fault
 {
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1156,14 +1127,12 @@ Fault
 {
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
     if(!machInst.vm) {
@@ -1329,18 +1298,11 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
 
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1381,14 +1343,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_src_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1420,9 +1380,10 @@ Fault
 %(class_name)s<ElemType>::completeAcc(PacketPtr pkt, ExecContext *xc,
                             trace::InstRecord *traceData) const
 {
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     using vu = std::make_unsigned_t<ElemType>;
     %(op_decl)s;
@@ -1565,14 +1526,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1609,14 +1568,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1780,24 +1737,18 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
 
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+    bool set_dirty = true;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
 
     panic_if(((1 << vlmul) * this->numFields) > 8,
         "LMUL value is illegal for vlseg inst");
 
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
 
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
@@ -1841,14 +1792,10 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
 
@@ -1872,9 +1819,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     %(tail_mask_policy_code)s
@@ -2022,14 +1970,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -2079,14 +2025,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();

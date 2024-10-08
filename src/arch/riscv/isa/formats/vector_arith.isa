@@ -155,7 +155,7 @@ let {{
         return '''
         std::feclearexcept(FE_ALL_EXCEPT);
         ''' + code + '''
-        xc->setMiscReg(MISCREG_FFLAGS_EXE, softfloat_exceptionFlags);
+        xc->setMiscReg(HELPER_FFLAGS_EXE, softfloat_exceptionFlags);
         softfloat_exceptionFlags = 0;
         '''
 
