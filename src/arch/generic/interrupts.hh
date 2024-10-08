@@ -89,6 +89,12 @@ class BaseInterrupts : public SimObject
     {
         panic("Interrupts::clearAll unimplemented!\n");
     }
+
+    virtual bool
+    isWakeUp() const
+    {
+        return true;
+    }
 };
 
 } // namespace gem5
