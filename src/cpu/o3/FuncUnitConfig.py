@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017, 2020 ARM Limited
+# Copyright (c) 2010, 2017, 2020, 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -109,6 +109,14 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdExt"),
         OpDesc(opClass="SimdFloatExt"),
         OpDesc(opClass="SimdConfig"),
+        OpDesc(opClass="SimdAes"),
+        OpDesc(opClass="SimdAesMix"),
+        OpDesc(opClass="SimdSha1Hash"),
+        OpDesc(opClass="SimdSha1Hash2"),
+        OpDesc(opClass="SimdSha256Hash"),
+        OpDesc(opClass="SimdSha256Hash2"),
+        OpDesc(opClass="SimdShaSigma2"),
+        OpDesc(opClass="SimdShaSigma3"),
     ]
     count = 4
 
