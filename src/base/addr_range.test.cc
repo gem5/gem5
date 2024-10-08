@@ -1659,7 +1659,7 @@ TEST(AddrRangeTest, LsbModuloInterleavingMask)
                                      // granularity is 2^6 = 64
     EXPECT_TRUE(r.interleaved());
     EXPECT_EQ(2ULL, r.stripes());
-    EXPECT_EQ("[0:0xff] modulo_by 2", r.to_string());
+    EXPECT_EQ("[0:0xff] modulo_by 2, num holes: 0", r.to_string());
 }
 
 // TEST(AddrRangeTest, TwoModuloInterleavingMasks)
@@ -1704,7 +1704,7 @@ TEST(AddrRangeTest, ComplexModuloInterleavingMasks)
     EXPECT_TRUE(r.interleaved());
     EXPECT_EQ(4ULL, r.stripes());
     // EXPECT_EQ("[0:0xffff] a[0]^a[1]^\b=0 a[62]^a[63]^\b=0", r.to_string());
-    EXPECT_EQ("[0:0xffff] modulo_by 4", r.to_string());
+    EXPECT_EQ("[0:0xffff] modulo_by 4, num holes: 0", r.to_string());
 }
 
 TEST(AddrRangeTest, ModuloInterleavingAddressesMergesWith)
