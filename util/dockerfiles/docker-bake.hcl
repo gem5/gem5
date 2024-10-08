@@ -125,7 +125,8 @@ group "gcc-compilers" {
     "gcc-version-10",
     "gcc-version-11",
     "gcc-version-12",
-    "gcc-version-13"
+    "gcc-version-13",
+    "gcc-version-14"
   ]
 }
 
@@ -167,6 +168,16 @@ target "gcc-version-13" {
   }
   context = "gcc-compiler"
   tags = ["${IMAGE_URI}/gcc-version-13:${TAG}"]
+}
+
+target "gcc-version-14" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v14 compiler."]
+  args = {
+    version = "14"
+  }
+  context = "gcc-compiler"
+  tags = ["${IMAGE_URI}/gcc-version-14:${TAG}"]
 }
 
 group "ubuntu-releases" {
