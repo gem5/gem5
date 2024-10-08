@@ -121,6 +121,15 @@ class SIMD_Unit(FUDesc):
     count = 4
 
 
+class Matrix_Unit(FUDesc):
+    opList = [
+        OpDesc(opClass="Matrix"),
+        OpDesc(opClass="MatrixMov"),
+        OpDesc(opClass="MatrixOP"),
+    ]
+    count = 1
+
+
 class PredALU(FUDesc):
     opList = [OpDesc(opClass="SimdPredAlu")]
     count = 1
