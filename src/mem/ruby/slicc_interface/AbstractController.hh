@@ -72,6 +72,7 @@ namespace ruby
 class Network;
 class GPUCoalescer;
 class DMASequencer;
+class RubySystem;
 
 // used to communicate that an in_port peeked the wrong message type
 class RejectException: public std::exception
@@ -228,6 +229,11 @@ class AbstractController : public ClockedObject, public Consumer
 
     /** List of upstream destinations (towards the CPU) */
     const NetDest& allUpstreamDest() const { return upstreamDestinations; }
+
+    // Helper methods for commonly used functions called in common/address.hh
+    Addr getOffset(Addr addr) const;
+    Addr makeLineAddress(Addr addr) const;
+    std::string printAddress(Addr addr) const;
 
   protected:
     //! Profiles original cache requests including PUTs
@@ -451,6 +457,13 @@ class AbstractController : public ClockedObject, public Consumer
         SenderState(MachineID _id) : id(_id)
         {}
     };
+
+    RubySystem *m_ruby_system = nullptr;
+
+    // Formerly in RubySlicc_ComponentMapping.hh. Moved here to access
+    // RubySystem pointer.
+    NetDest broadcast(MachineType type);
+    int machineCount(MachineType machType);
 
   private:
     /** The address range to which the controller responds on the CPU side. */

@@ -80,7 +80,7 @@ class L1Cache(L0Cache_Controller):
             replacement_policy=LRURP(),
         )
         self.clk_domain = clk_domain
-        self.prefetcher = RubyPrefetcher()
+        self.prefetcher = RubyPrefetcher(block_size=cache_line_size)
         self.send_evictions = core.requires_send_evicts()
         self.transitions_per_cycle = 32
         self.enable_prefetch = False

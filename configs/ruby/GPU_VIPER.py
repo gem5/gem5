@@ -114,14 +114,14 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.L2cache = L2Cache()
         self.L2cache.create(options.l2_size, options.l2_assoc, options)
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1D0cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.coreid = 0
         self.sequencer.is_cpu_sequencer = True
 
-        self.sequencer1 = RubySequencer()
+        self.sequencer1 = RubySequencer(ruby_system=ruby_system)
         self.sequencer1.version = self.seqCount()
         self.sequencer1.dcache = self.L1D1cache
         self.sequencer1.ruby_system = ruby_system
@@ -169,7 +169,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         # TCP_Controller inherits this from RubyController
         self.mandatory_queue_latency = options.mandatory_queue_latency
 
-        self.coalescer = VIPERCoalescer()
+        self.coalescer = VIPERCoalescer(ruby_system=ruby_system)
         self.coalescer.version = self.seqCount()
         self.coalescer.icache = self.L1cache
         self.coalescer.dcache = self.L1cache
@@ -182,7 +182,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
             options.max_coalesces_per_cycle
         )
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
@@ -211,7 +211,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.L1cache.create(options)
         self.issue_latency = 1
 
-        self.coalescer = VIPERCoalescer()
+        self.coalescer = VIPERCoalescer(ruby_system=ruby_system)
         self.coalescer.version = self.seqCount()
         self.coalescer.icache = self.L1cache
         self.coalescer.dcache = self.L1cache
@@ -219,7 +219,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.coalescer.support_inst_reqs = False
         self.coalescer.is_cpu_sequencer = False
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
@@ -387,7 +387,9 @@ class DirCntrl(Directory_Controller, CntrlBase):
         self.response_latency = 30
 
         self.addr_ranges = dir_ranges
-        self.directory = RubyDirectoryMemory()
+        self.directory = RubyDirectoryMemory(
+            block_size=ruby_system.block_size_bytes
+        )
 
         self.L3CacheMemory = L3Cache()
         self.L3CacheMemory.create(options, ruby_system, system)
@@ -686,7 +688,7 @@ def construct_gpudirs(options, system, ruby_system, network):
         dir_cntrl.addr_ranges = dram_intf.range
 
         # Append
-        exec("system.ruby.gpu_dir_cntrl%d = dir_cntrl" % i)
+        exec("ruby_system.gpu_dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
         mem_ctrls.append(mem_ctrl)
 

@@ -47,7 +47,6 @@
 #include "base/random.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
-#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -216,6 +215,7 @@ random_time()
 
 void
 MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
+                       bool ruby_is_random, bool ruby_warmup,
                        bool bypassStrictFIFO)
 {
     // record current time incase we have a pop that also adjusts my size
@@ -237,7 +237,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
     // is turned on and this buffer allows it
     if ((m_randomization == MessageRandomization::disabled) ||
         ((m_randomization == MessageRandomization::ruby_system) &&
-          !RubySystem::getRandomization())) {
+          !ruby_is_random)) {
         // No randomization
         arrival_time = current_time + delta;
     } else {
@@ -265,7 +265,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
     }
 
     // If running a cache trace, don't worry about the last arrival checks
-    if (!RubySystem::getWarmupEnabled()) {
+    if (!ruby_warmup) {
         m_last_arrival_time = arrival_time;
     }
 
@@ -447,7 +447,6 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
 {
     DPRINTF(RubyQueue, "Stalling due to %#x\n", addr);
     assert(isReady(current_time));
-    assert(getOffset(addr) == 0);
     MsgPtr message = m_prio_heap.front();
 
     // Since the message will just be moved to stall map, indicate that the
@@ -479,7 +478,8 @@ MessageBuffer::deferEnqueueingMessage(Addr addr, MsgPtr message)
 }
 
 void
-MessageBuffer::enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay)
+MessageBuffer::enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay,
+                                       bool ruby_is_random, bool ruby_warmup)
 {
     assert(!isDeferredMsgMapEmpty(addr));
     std::vector<MsgPtr>& msg_vec = m_deferred_msg_map[addr];
@@ -487,7 +487,7 @@ MessageBuffer::enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay)
 
     // enqueue all deferred messages associated with this address
     for (MsgPtr m : msg_vec) {
-        enqueue(m, curTime, delay);
+        enqueue(m, curTime, delay, ruby_is_random, ruby_warmup);
     }
 
     msg_vec.clear();

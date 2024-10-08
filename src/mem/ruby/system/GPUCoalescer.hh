@@ -341,6 +341,8 @@ class GPUCoalescer : public RubyPort
 
     void insertKernel(int wavefront_id, PacketPtr pkt);
 
+    RubySystem *getRubySystem() { return m_ruby_system; }
+
     GMTokenPort& getGMTokenPort() { return gmTokenPort; }
 
     statistics::Histogram& getOutstandReqHist() { return m_outstandReqHist; }

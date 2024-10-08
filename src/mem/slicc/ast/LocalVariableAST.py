@@ -73,6 +73,8 @@ class LocalVariableAST(StatementAST):
             )
         ):
             code += f"{type.c_ident}* {ident}"
+        elif "implicit_ctor" in type:
+            code += f"{type.c_ident} {ident}({type['implicit_ctor']})"
         else:
             code += f"{type.c_ident} {ident}"
         return type

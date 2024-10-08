@@ -124,7 +124,8 @@ Check::initiatePrefetch()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState = new SenderState(m_address, req->getSize());
+    pkt->senderState = new SenderState(m_address, req->getSize(),
+                                       CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "successfully initiated prefetch.\n");
@@ -161,7 +162,8 @@ Check::initiateFlush()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState = new SenderState(m_address, req->getSize());
+    pkt->senderState = new SenderState(m_address, req->getSize(),
+                                       CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating Flush - successful\n");
@@ -207,7 +209,8 @@ Check::initiateAction()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState = new SenderState(writeAddr, req->getSize());
+    pkt->senderState = new SenderState(m_address, req->getSize(),
+                                       CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating action - successful\n");
@@ -261,7 +264,8 @@ Check::initiateCheck()
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
-    pkt->senderState = new SenderState(m_address, req->getSize());
+    pkt->senderState = new SenderState(m_address, req->getSize(),
+                                       CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
         DPRINTF(RubyTest, "initiating check - successful\n");
@@ -291,7 +295,9 @@ Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
     // This isn't exactly right since we now have multi-byte checks
     //  assert(getAddress() == address);
 
-    assert(ruby::makeLineAddress(m_address) == ruby::makeLineAddress(address));
+    int block_size_bits = CACHE_LINE_BITS;
+    assert(ruby::makeLineAddress(m_address, block_size_bits) ==
+           ruby::makeLineAddress(address, block_size_bits));
     assert(data != NULL);
 
     DPRINTF(RubyTest, "RubyTester Callback\n");
@@ -342,7 +348,7 @@ Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,
-            ruby::makeLineAddress(m_address));
+            ruby::makeLineAddress(m_address, block_size_bits));
     DPRINTF(RubyTest, "Callback done\n");
     debugPrint();
 }

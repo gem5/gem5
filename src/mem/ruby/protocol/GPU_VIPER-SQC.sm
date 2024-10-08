@@ -95,7 +95,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   }
 
   TBETable TBEs, template="<SQC_TBE>", constructor="m_number_of_TBEs";
-  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int TCC_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();

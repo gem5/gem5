@@ -254,6 +254,8 @@ class Sequencer : public RubyPort
                                         RubyRequestType primary_type,
                                         RubyRequestType secondary_type);
 
+    RubySystem *m_ruby_system;
+
   private:
     int m_max_outstanding_requests;
 

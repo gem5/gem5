@@ -306,6 +306,8 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     InputPort *getInportForVnet(int vnet);
     OutputPort *getOutportForVnet(int vnet);
+
+    int MachineType_base_number(const MachineType& obj);
 };
 
 } // namespace garnet

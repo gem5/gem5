@@ -121,7 +121,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   }
 
   TBETable TBEs, template="<TCP_TBE>", constructor="m_number_of_TBEs";
-  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int TCC_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
   int WTcnt, default="0";
   int Fcnt, default="0";
   bool inFlush, default="false";

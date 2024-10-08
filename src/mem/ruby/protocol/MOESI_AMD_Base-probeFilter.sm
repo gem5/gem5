@@ -192,7 +192,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
-  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int TCC_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   Tick clockEdge();
   Tick cyclesToTicks(Cycles c);

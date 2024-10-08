@@ -120,6 +120,10 @@ class Type(Symbol):
         return "message" in self
 
     @property
+    def isTBE(self):
+        return "tbe" in self
+
+    @property
     def isBuffer(self):
         return "buffer" in self
 
@@ -250,18 +254,54 @@ namespace gem5
 namespace ruby
 {
 
+class RubySystem;
+
 $klass ${{self.c_ident}}$parent
 {
   public:
-    ${{self.c_ident}}
 """,
             klass="class",
         )
 
         if self.isMessage:
-            code("(Tick curTime) : %s(curTime) {" % self["interface"])
+            code(
+                "${{self.c_ident}}(Tick curTime, int blockSize, RubySystem* rs) : %s(curTime, blockSize, rs)"
+                % self["interface"]
+            )
+
+            for dm in self.data_members.values():
+                if dm.real_c_type in ("DataBlock", "WriteMask"):
+                    code(f"\t\t, m_{dm.ident}(blockSize)")
+
+            code("{")
+        elif self.isTBE:
+            code("${{self.c_ident}}(int block_size)")
+
+            ctor_count = 0
+            for dm in self.data_members.values():
+                if dm.real_c_type in ("DataBlock", "WriteMask"):
+                    if ctor_count == 0:
+                        code("\t:")
+                    else:
+                        code("\t, ")
+                    code(f"\t\tm_{dm.ident}(block_size)")
+                    ctor_count += 1
+
+            code("{")
         else:
-            code("()\n\t\t{")
+            code("${{self.c_ident}}()")
+
+            ctor_count = 0
+            for dm in self.data_members.values():
+                if dm.real_c_type in ("DataBlock", "WriteMask"):
+                    if ctor_count == 0:
+                        code("\t:")
+                    else:
+                        code("\t, ")
+                    code(f"\t\tm_{dm.ident}(0)")
+                    ctor_count += 1
+
+            code("{")
 
         code.indent()
         if not self.isGlobal:
@@ -280,6 +320,12 @@ $klass ${{self.c_ident}}$parent
                     code(" // default value of $tid")
                 else:
                     code("// m_$ident has no default")
+
+                # These parts of Messages need RubySystem pointers. For things
+                # like Entry which only store NetDest, RubySystem is not needed.
+                if self.isMessage and dm.real_c_type == "NetDest":
+                    code("// m_$ident requires RubySystem")
+                    code("m_$ident.setRubySystem(rs);")
             code.dedent()
         code("}")
 
@@ -300,21 +346,45 @@ $klass ${{self.c_ident}}$parent
             params = ", ".join(params)
 
             if self.isMessage:
-                params = "const Tick curTime, " + params
+                params = (
+                    "const Tick curTime, const int blockSize, const RubySystem *rs, "
+                    + params
+                )
 
             code("${{self.c_ident}}($params)")
 
             # Call superclass constructor
             if "interface" in self:
                 if self.isMessage:
-                    code('    : ${{self["interface"]}}(curTime)')
+                    code(
+                        '    : ${{self["interface"]}}(curTime, blockSize, rs)'
+                    )
+
+                    for dm in self.data_members.values():
+                        if dm.real_c_type in ("DataBlock", "WriteMask"):
+                            code(f"\t\t, m_{dm.ident}(blockSize)")
                 else:
                     code('    : ${{self["interface"]}}()')
+
+                    for dm in self.data_members.values():
+                        if dm.real_c_type in ("DataBlock", "WriteMask"):
+                            code(f"\t\t, m_{dm.ident}(local_{dm.ident})")
+            else:
+                ctor_count = 0
+                for dm in self.data_members.values():
+                    if dm.real_c_type in ("DataBlock", "WriteMask"):
+                        if ctor_count == 0:
+                            code("\t:")
+                        else:
+                            code("\t, ")
+                        code(f"\t\tm_{dm.ident}(local_{dm.ident})")
+                        ctor_count += 1
 
             code("{")
             code.indent()
             for dm in self.data_members.values():
-                code("m_${{dm.ident}} = local_${{dm.ident}};")
+                if not dm.real_c_type in ("DataBlock", "WriteMask"):
+                    code("m_${{dm.ident}} = local_${{dm.ident}};")
 
             code.dedent()
             code("}")
@@ -342,6 +412,35 @@ clone() const
             )
 
         if not self.isGlobal:
+            # Block size setter for fields that require block size
+            # Intentionally do not begin function name with "set" in case
+            # the user has a field named BlockSize which would conflict
+            # with the method generated below.
+            code("\nvoid initBlockSize(int block_size)")
+            code("{")
+            code("\tblock_size_bits = floorLog2(block_size);")
+
+            needs_block_size = (
+                "DataBlock",
+                "WriteMask",
+                "PersistentTable",
+                "TimerTable",
+                "PerfectCacheMemory",
+            )
+
+            for dm in self.data_members.values():
+                if dm.real_c_type in needs_block_size:
+                    code(f"\tm_{dm.ident}.setBlockSize(block_size);")
+            code("}\n")
+
+            code("\nvoid setRubySystem(RubySystem *ruby_system)")
+            code("{")
+            for dm in self.data_members.values():
+                if dm.real_c_type in ("NetDest"):
+                    code(f"// m_{dm.ident} requires RubySystem")
+                    code(f"\tm_{dm.ident}.setRubySystem(ruby_system);")
+            code("}\n")
+
             # const Get methods for each field
             code("// Const accessors methods for each field")
             for dm in self.data_members.values():
@@ -392,6 +491,9 @@ set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
         code.dedent()
         code("  //private:")
         code.indent()
+
+        # block_size_bits for print methods
+        code("int block_size_bits = 0;")
 
         # Data members for each field
         for dm in self.data_members.values():
@@ -473,7 +575,7 @@ ${{self.c_ident}}::print(std::ostream& out) const
             if dm.type.c_ident == "Addr":
                 code(
                     """
-out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
+out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}, block_size_bits) << " ";"""
                 )
             else:
                 code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";' "")
@@ -846,7 +948,7 @@ ${{self.c_ident}}_from_base_level(int type)
  * \\return the base number of components for each machine
  */
 int
-${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
+RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 {
     int base = 0;
     switch(obj) {
@@ -860,7 +962,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code(
-                        "    base += ${{enum.ident}}_Controller::getNumControllers();"
+                        "\tbase += m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
                     )
                 else:
                     code("    base += 0;")
@@ -882,7 +984,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
  * \\return the total number of components for each machine
  */
 int
-${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
+RubySystem::${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 """
@@ -893,7 +995,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
                 if enum.primary:
                     code(
-                        "return ${{enum.ident}}_Controller::getNumControllers();"
+                        "return m_num_controllers[${{self.c_ident}}_${{enum.ident}}];"
                     )
                 else:
                     code("return 0;")
