@@ -274,11 +274,15 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(AbstractBoard)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        all_ports = [
-            (self.realview.bootmem.range, self.realview.bootmem.port),
-        ] + self.get_memory().get_mem_ports()
+        # Note: Ruby needs to create a directory for the realview bootmem
+        if self.get_cache_hierarchy().is_ruby():
+            all_ports = [
+                (self.realview.bootmem.range, self.realview.bootmem.port),
+            ] + self.get_memory().get_mem_ports()
 
-        return all_ports
+            return all_ports
+
+        return super().get_mem_ports()
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
