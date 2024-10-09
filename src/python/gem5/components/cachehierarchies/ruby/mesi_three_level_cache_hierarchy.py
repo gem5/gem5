@@ -33,8 +33,8 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
-from ....utils.requires import requires
 from ....utils.override import overrides
+from ....utils.requires import requires
 
 requires(coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL)
 

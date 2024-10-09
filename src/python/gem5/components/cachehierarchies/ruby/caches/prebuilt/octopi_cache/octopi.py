@@ -38,8 +38,8 @@ from ......components.cachehierarchies.ruby.caches.mesi_three_level.directory im
 from ......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
     DMAController,
 )
-from ......utils.requires import requires
 from ......utils.override import overrides
+from ......utils.requires import requires
 from ....abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
 )
@@ -275,6 +275,7 @@ class OctopiCache(
         from ....caches.mesi_three_level.l1_cache import L1Cache
         from ....caches.mesi_three_level.l2_cache import L2Cache
         from ....caches.mesi_three_level.l3_cache import L3Cache
+
         Directory._version = 0
         L1Cache._version = 0
         L2Cache._version = 0
