@@ -51,10 +51,6 @@ template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF, int N,
           sc_core::sc_port_policy POL>
 class tlm_base_target_socket;
 
-// The overloaded virtual is intended in SystemC, so we'll disable the warning.
-// Please check section 9.3 of SystemC 2.3.1 release note for more details.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 template <unsigned int BUSWIDTH=32, typename FW_IF=tlm_fw_transport_if<>,
           typename BW_IF=tlm_bw_transport_if<>, int N=1,
           sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
@@ -100,6 +96,18 @@ class tlm_base_initiator_socket :
     // - Binds the port of the target socket to the export of the initiator
     //   socket
     //
+
+#pragma GCC diagnostic push
+/**
+ * The following warning is disabled because the bind methods are overloaded
+ * in the derived class and the base class. In GCC v13+ this
+ * 'overloaded-virtual' warning is strict enough to trigger here (though the
+ * code is correct).
+ * Please check section 9.3 of SystemC 2.3.1 release note for more details.
+ */
+#if defined(__GNUC__) && (__GNUC__ >= 13)
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
     virtual void
     bind(base_target_socket_type &s)
     {
@@ -132,6 +140,7 @@ class tlm_base_initiator_socket :
     //
     virtual void bind(bw_interface_type &ifs) { (get_base_export())(ifs); }
     void operator() (bw_interface_type &s) { bind(s); }
+#pragma GCC diagnostic pop
 
     // Implementation of tlm_base_socket_if functions
     virtual sc_core::sc_port_base &get_port_base() { return *this; }
@@ -174,7 +183,6 @@ class tlm_base_initiator_socket :
   protected:
     export_type m_export;
 };
-#pragma GCC diagnostic pop
 
 //
 // Convenience socket classes
