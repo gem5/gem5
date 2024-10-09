@@ -51,7 +51,6 @@ class BankedArray
     Tick clockPeriod = 0;
     unsigned int bankBits;
     unsigned int startIndexBit;
-    RubySystem *m_ruby_system;
 
     class AccessRecord
     {
