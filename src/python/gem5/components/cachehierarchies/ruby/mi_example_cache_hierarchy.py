@@ -33,6 +33,7 @@ from m5.objects import (
 
 from ....coherence_protocol import CoherenceProtocol
 from ....utils.requires import requires
+from ....utils.override import overrides
 
 requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
 
@@ -65,6 +66,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
+        super().incorporate_cache(board)
         self.ruby_system = RubySystem()
 
         # Ruby's global network.
@@ -176,3 +178,9 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
             ruby_system=self.ruby_system
         )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        Directory._version = 0
+        L1Cache._version = 0
+        DMAController._version = 0
