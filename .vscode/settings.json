@@ -1,5 +1,7 @@
 {
     "python.analysis.extraPaths": [
-        "src/python"
+        "src/python",
+        "ext",
+        "tests"
     ]
 }
