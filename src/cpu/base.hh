@@ -156,6 +156,30 @@ class BaseCPU : public ClockedObject
 
         statistics::Formula hostInstRate;
         statistics::Formula hostOpRate;
+
+        Counter previousInsts = 0;
+        Counter previousOps = 0;
+
+        static Counter
+        numSimulatedInsts()
+        {
+            return totalNumSimulatedInsts() - (globalStats->previousInsts);
+        }
+
+        static Counter
+        numSimulatedOps()
+        {
+            return totalNumSimulatedOps() - (globalStats->previousOps);
+        }
+
+        void
+        resetStats() override
+        {
+            previousInsts = totalNumSimulatedInsts();
+            previousOps = totalNumSimulatedOps();
+
+            statistics::Group::resetStats();
+        }
     };
 
     /**
@@ -609,7 +633,7 @@ class BaseCPU : public ClockedObject
 
     static int numSimulatedCPUs() { return cpuList.size(); }
     static Counter
-    numSimulatedInsts()
+    totalNumSimulatedInsts()
     {
         Counter total = 0;
 
@@ -621,7 +645,7 @@ class BaseCPU : public ClockedObject
     }
 
     static Counter
-    numSimulatedOps()
+    totalNumSimulatedOps()
     {
         Counter total = 0;
 

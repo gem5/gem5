@@ -859,13 +859,13 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
              "Simulator op (including micro ops) rate (op/s)")
 {
     simInsts
-        .functor(BaseCPU::numSimulatedInsts)
+        .functor(BaseCPU::GlobalStats::numSimulatedInsts)
         .precision(0)
         .prereq(simInsts)
         ;
 
     simOps
-        .functor(BaseCPU::numSimulatedOps)
+        .functor(BaseCPU::GlobalStats::numSimulatedOps)
         .precision(0)
         .prereq(simOps)
         ;
