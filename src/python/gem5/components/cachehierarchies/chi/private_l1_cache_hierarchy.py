@@ -82,6 +82,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
+        super().incorporate_cache(board)
         self.ruby_system = RubySystem()
 
         # Ruby's global network.
@@ -244,3 +245,10 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
             dma_controllers.append(ctrl)
 
         return dma_controllers
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        from .nodes.abstract_node import AbstractNode
+
+        AbstractNode._version = 0
+        MemoryController._version = 0

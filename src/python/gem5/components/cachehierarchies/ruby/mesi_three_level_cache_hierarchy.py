@@ -33,6 +33,7 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
+from ....utils.override import overrides
 from ....utils.requires import requires
 
 requires(coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL)
@@ -87,6 +88,7 @@ class MESIThreeLevelCacheHierarchy(
         self._num_l3_banks = num_l3_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
+        super().incorporate_cache(board)
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()
@@ -233,3 +235,11 @@ class MESIThreeLevelCacheHierarchy(
             ruby_system=self.ruby_system
         )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        Directory._version = 0
+        L1Cache._version = 0
+        L2Cache._version = 0
+        L3Cache._version = 0
+        DMAController._version = 0

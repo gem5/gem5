@@ -38,6 +38,7 @@ from ......components.cachehierarchies.ruby.caches.mesi_three_level.directory im
 from ......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
     DMAController,
 )
+from ......utils.override import overrides
 from ......utils.requires import requires
 from ....abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
@@ -95,6 +96,7 @@ class OctopiCache(
         requires(
             coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
         )
+        super().incorporate_cache(board)
 
         cache_line_size = board.get_cache_line_size()
 
@@ -267,3 +269,15 @@ class OctopiCache(
             ]
             for link in self.dma_int_links:
                 self.ruby_system.network._add_int_link(link)
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        from ....caches.mesi_three_level.l1_cache import L1Cache
+        from ....caches.mesi_three_level.l2_cache import L2Cache
+        from ....caches.mesi_three_level.l3_cache import L3Cache
+
+        Directory._version = 0
+        L1Cache._version = 0
+        L2Cache._version = 0
+        L3Cache._version = 0
+        DMAController._version = 0
