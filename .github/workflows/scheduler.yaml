@@ -1,4 +1,3 @@
----
 name: Workflow Scheduler
 
 # GitHub scheduled workflows run on the default branch ('stable' in the case of
@@ -15,77 +14,77 @@ name: Workflow Scheduler
 # other workflows.
 
 on:
-    schedule:
+  schedule:
     # Runs every hour, 30 minutes past the hour.
-        - cron: 30 * * * *
+  - cron: 30 * * * *
 
 env:
   # This is the token used to authenticate with GitHub.
   # It is required to run the `gh` CLI.
-    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-    schedule-workflows:
-        runs-on: ubuntu-latest
-        steps:
-            # This step is necessary to allow the `gh` CLI to be used in the
-            # following steps. The `gh` CLI is used to trigger the workflows.
-            # and needs to be used inside a the same repository where the
-            # workflows are defined.
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+  schedule-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      # This step is necessary to allow the `gh` CLI to be used in the
+      # following steps. The `gh` CLI is used to trigger the workflows.
+      # and needs to be used inside a the same repository where the
+      # workflows are defined.
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-            - name: Record day and time
-              id: timedate-recorder
-              run: |
-                  # `date +H` returns the current hour as a number from
-                  # `00` to `23`.
-                  echo "HOUR=$(date +%H)" >> $GITHUB_OUTPUT
+    - name: Record day and time
+      id: timedate-recorder
+      run: |
+        # `date +H` returns the current hour as a number from
+        # `00` to `23`.
+        echo "HOUR=$(date +%H)" >> $GITHUB_OUTPUT
 
-                  # `date +%u` returns the day of the week as a number from
-                  # `1` to `7`.
-                  # `1` is Monday and `7` is Sunday.
-                  echo "DAY=$(date +%u)" >> $GITHUB_OUTPUT
+        # `date +%u` returns the day of the week as a number from
+        # `1` to `7`.
+        # `1` is Monday and `7` is Sunday.
+        echo "DAY=$(date +%u)" >> $GITHUB_OUTPUT
 
-            - name: Daily Tests
-              env:
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
-              run: |
-                  # If current time is 7pm then run the workflow.
-                  if [[ $HOUR  == '19' ]]
-                  then
-                    gh workflow run daily-tests.yaml --ref develop >/dev/null
-                    echo "Daily test scheduled to run on develop branch."
-                  else
-                    echo "Daily tests not scheduled."
-                  fi
+    - name: Daily Tests
+      env:
+        HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+      run: |
+        # If current time is 7pm then run the workflow.
+        if [[ $HOUR  == '19' ]]
+        then
+          gh workflow run daily-tests.yaml --ref develop >/dev/null
+          echo "Daily test scheduled to run on develop branch."
+        else
+          echo "Daily tests not scheduled."
+        fi
 
-            - name: Weekly Tests
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
-              run: |
-                  # If the current day is Friday and the time is 7pm then run
-                  # the workflow.
-                  if [[ $DAY == '5' ]] && [[ $HOUR  == '19' ]]
-                  then
-                    gh workflow run weekly-tests.yaml --ref develop >/dev/null
-                    echo "Weekly test scheduled to run on develop branch."
-                  else
-                    echo "Weekly tests not scheduled."
-                  fi
+    - name: Weekly Tests
+      env:
+        DAY: ${{ steps.timedate-recorder.outputs.DAY }}
+        HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+      run: |
+        # If the current day is Friday and the time is 7pm then run
+        # the workflow.
+        if [[ $DAY == '5' ]] && [[ $HOUR  == '19' ]]
+        then
+          gh workflow run weekly-tests.yaml --ref develop >/dev/null
+          echo "Weekly test scheduled to run on develop branch."
+        else
+          echo "Weekly tests not scheduled."
+        fi
 
-            - name: Compiler Tests
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
-              run: |
-                  # If the current day is Tuesday and the time is 9pm then run
-                  # the workflow.
-                  if [[ $DAY == '2' ]] && [[ $HOUR  == '21' ]]
-                  then
-                    gh workflow run compiler-tests.yaml --ref develop >/dev/null
-                    echo "Compiler tests scheduled to run on the develop branch."
-                  else
-                    echo "Compiler tests not scheduled."
-                  fi
+    - name: Compiler Tests
+      env:
+        DAY: ${{ steps.timedate-recorder.outputs.DAY }}
+        HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+      run: |
+        # If the current day is Tuesday and the time is 9pm then run
+        # the workflow.
+        if [[ $DAY == '2' ]] && [[ $HOUR  == '21' ]]
+        then
+          gh workflow run compiler-tests.yaml --ref develop >/dev/null
+          echo "Compiler tests scheduled to run on the develop branch."
+        else
+          echo "Compiler tests not scheduled."
+        fi
