@@ -45,9 +45,9 @@ from ...utils.requires import requires
 class ArmDemoBoard(ArmBoard):
     """
     This prebuilt ARM board is used for demonstration purposes. It simulates an
-    ARM 1.4GHz dual-core system with a 4GiB DDR4_2400 memory system. It uses
+    ARM 3GHz dual-core system with a 4GiB DDR4_2400 memory system. It uses
     a PrivateL1SharedL2CacheHierarchy with l1d and l1i caches set to 64KiB and
-    l2 shared cache set to 1MiB
+    l2 shared cache set to 8MiB
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
@@ -103,7 +103,7 @@ class ArmDemoBoard(ArmBoard):
             platform = VExpress_GEM5_Foundation()
 
         super().__init__(
-            clk_freq="1.4GHz",
+            clk_freq="3GHz",
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
