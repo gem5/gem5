@@ -292,6 +292,7 @@ machine(MachineType:Memory, "Memory controller interface") :
       //TODO additional handling of partial data ??
       if (is_valid(tbe)) {
         WriteMask read_mask;
+        read_mask.setBlockSize(mask.getBlockSize());
         read_mask.setMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize);
         read_mask.andMask(tbe.dataBlkValid);
         if (read_mask.isEmpty() == false) {
