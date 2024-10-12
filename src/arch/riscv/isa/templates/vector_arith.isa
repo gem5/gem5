@@ -40,6 +40,26 @@ output header {{
         tmp_d0.set(0xff);                                                 \
     }                                                                     \
 
+#define SET_OLDDST_SRC() \
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) { \
+        oldDstIdx = _numSrcRegs; \
+        setSrcRegIdx(_numSrcRegs++, destRegIdxArr[0]); \
+    }
+
+#define SET_VM_SRC() \
+    if (!_machInst.vm) { \
+        vmsrcIdx = _numSrcRegs; \
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]); \
+    }
+
+#define VM_REQUIRED() \
+    [[maybe_unused]] RiscvISA::vreg_t tmp_v0; \
+    [[maybe_unused]] uint8_t *v0; \
+    if(!machInst.vm) { \
+        xc->getRegOperand(this, vmsrcIdx, &tmp_v0); \
+        v0 = tmp_v0.as<uint8_t>(); \
+    }
+
 #define VRM_REQUIRED                                                         \
         uint_fast8_t frm = xc->readMiscReg(MISCREG_FRM);                     \
         if (frm > 4)                                                         \
@@ -367,8 +387,6 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const int64_t vlmul = vtype_vlmul(_machInst.vtype8);
-    // Todo: move to Decode template
-    panic_if(vlmul == 3, "LMUL=8 is illegal for widening inst");
     // when LMUL setted as m1, need to split to 2 micro insts
     const uint32_t num_microops = 1 << std::max<int64_t>(0, vlmul + 1);
 
@@ -462,6 +480,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -747,6 +767,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -1047,6 +1069,7 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
@@ -1884,6 +1907,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -2308,20 +2333,72 @@ template<typename ElemType>
         this->microops.push_back(microop);
     }
 
-    for (uint32_t i = 0; i < ceil((float) this->vl/micro_vlmax); i++) {
-        microop = new VPinVdMicroInst(machInst, i, i+1, elen, vlen, true);
+    for (int i = 0; i < ceil((float) this->vl/micro_vlmax); i++) {
+        microop = new VPinVdMicroInst(machInst, i, std::max(i, 1), elen, vlen, true, true);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
-    // Todo static filter out useless uop
     int micro_idx = 0;
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-        for (int j = 0; j <= i; ++j) {
+        for (int j = 0; j <= std::max(i - 1, 0); ++j) {
             microop = new %(class_name)sMicro<ElemType>(
-                _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen);
+                _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen,
+                j == (std::max(i - 1, 0) - 1));
             microop->setDelayedCommit();
             this->microops.push_back(microop);
+        }
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+    }
+    this->microops.front()->setFirstMicroop();
+    this->microops.back()->setLastMicroop();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorSlideUpImmediateMacroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                                         uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    %(constructor)s;
+    const uint32_t num_microops = vtype_regs_per_group(vtype);
+    int32_t tmp_vl = this->vl;
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
+    int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
+    StaticInstPtr microop;
+
+    if (micro_vl == 0) {
+        microop = new VectorNopMicroInst(_machInst);
+        this->microops.push_back(microop);
+    }
+
+    %(offset_code)s;
+
+    int micro_idx = 0;
+    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        for (int j = 0; j <= std::max(i - 1, 0); ++j) {
+            int vdWindowLeft = microVlmax * i;
+            int vdWindowRight = microVlmax * (i + 1);
+            int vs2WindowLeft = microVlmax * j + offset;
+            int vs3WindowLeft = microVlmax * (j + 1) + offset;
+            bool copyAll = vs3WindowLeft >= vdWindowLeft && vs3WindowLeft < vdWindowRight;
+            bool copyBack = vs2WindowLeft >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
+            // Static filter out useless uop
+            if (copyAll || copyBack || j == std::max(i - 1, 0)) {
+                microop = new %(class_name)sMicro<ElemType>(
+                    _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen,
+                    j == (std::max(i - 1, 0) - 1));
+                microop->setDelayedCommit();
+                this->microops.push_back(microop);
+                break;
+            }
         }
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -2342,7 +2419,7 @@ template<typename ElemType>
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
-    const uint32_t num_microops = vtype_regs_per_group(vtype);
+    const int num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
     const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
@@ -2353,9 +2430,9 @@ template<typename ElemType>
         this->microops.push_back(microop);
     }
 
-    for (uint32_t i = 0; i < ceil((float) this->vl / micro_vlmax); i++) {
-        microop = new VPinVdMicroInst(machInst, i, num_microops-i, elen, vlen,
-                                      false);
+    for (int i = 0; i < ceil((float) this->vl / micro_vlmax); i++) {
+        microop = new VPinVdMicroInst(machInst, i, std::max(num_microops-i-1, 1), elen, vlen,
+                                      true, true);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
@@ -2363,11 +2440,67 @@ template<typename ElemType>
     // Todo static filter out useless uop
     int micro_idx = 0;
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
-        for (int j = i; j < num_microops; ++j) {
+        for (int j = i; j < std::max(num_microops-1, 1) || i == j; ++j) {
             microop = new %(class_name)sMicro<ElemType>(
-                _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen);
+                _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen,
+                j >= (num_microops - 2));
             microop->setDelayedCommit();
             this->microops.push_back(microop);
+        }
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+    }
+    this->microops.front()->setFirstMicroop();
+    this->microops.back()->setLastMicroop();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorSlideDownImmediateMacroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                                         uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    %(constructor)s;
+    const int num_microops = vtype_regs_per_group(vtype);
+    int32_t tmp_vl = this->vl;
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
+    int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
+    StaticInstPtr microop;
+
+    if (micro_vl == 0) {
+        microop = new VectorNopMicroInst(_machInst);
+        this->microops.push_back(microop);
+    }
+
+    %(offset_code)s;
+
+    int micro_idx = 0;
+    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        for (int j = i; j < std::max(num_microops-1, 1) || i == j; ++j) {
+            int vdWindowLeft = microVlmax * i;
+            int vdWindowRight = microVlmax * (i + 1);
+            int vs3WindowLeftSlide = microVlmax * (j + 1) - offset;
+            int vs3WindowRightSlide = microVlmax * (j + 2) - offset;
+            bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft && vs3WindowLeftSlide <= vdWindowRight;
+            bool lastUopForVd = j >= (num_microops - 2);
+            bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
+            bool needZeroTail = lastUopForVd && vs3WindowRightSlide <= vdWindowLeft;
+            // Static filter out useless uop
+            if (copyFrontFromVs2 || copyFrontFromVs3 || needZeroTail) {
+                microop = new %(class_name)sMicro<ElemType>(
+                    _machInst, micro_vl, micro_idx++, i, j, _elen, _vlen,
+                    lastUopForVd,
+                    i == (num_microops - 1) || micro_vl < microVlmax);
+                microop->setDelayedCommit();
+                this->microops.push_back(microop);
+                break;
+            }
         }
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -2387,13 +2520,15 @@ class %(class_name)s : public %(base_class)s
 private:
     // vs2, vs1, vm for *.vv, *.vx
     // vs2, vm for *.vi
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
+    bool lastUopForVd;
+    bool lastUop;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
         uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx, uint32_t _elen,
-        uint32_t _vlen);
+        uint32_t _vlen, bool _lastUopForVd=false, bool _lastUop=false);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2405,9 +2540,12 @@ def template VectorSlideMicroConstructor {{
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
         uint32_t _microVl, uint32_t _microIdx, uint32_t _vdIdx,
-        uint32_t _vs2Idx, uint32_t _elen, uint32_t _vlen)
+        uint32_t _vs2Idx, uint32_t _elen, uint32_t _vlen,
+        bool _lastUopForVd, bool _lastUop)
     : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
-        _microIdx, _vdIdx, _vs2Idx, _elen, _vlen)
+        _microIdx, _vdIdx, _vs2Idx, _elen, _vlen),
+      lastUopForVd(_lastUopForVd),
+      lastUop(_lastUop)
 {
     this->vm = _machInst.vm;
     %(set_reg_idx_arr)s;
@@ -2415,6 +2553,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    SET_VM_SRC();
 }
 
 %(declare_varith_template)s;
@@ -2449,7 +2588,7 @@ Fault
 
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
 
-    %(vm_decl_rd)s;
+    VM_REQUIRED();
     %(code)s;
     %(op_wb)s;
 
@@ -2488,7 +2627,7 @@ Fault
 
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
 
-    %(vm_decl_rd)s;
+    VM_REQUIRED();
     %(code)s;
     %(op_wb)s;
 

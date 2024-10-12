@@ -145,6 +145,10 @@ class ReadPort(FUDesc):
         OpDesc(opClass="SimdIndexedLoad"),
         OpDesc(opClass="SimdUnitStrideFaultOnlyFirstLoad"),
         OpDesc(opClass="SimdWholeRegisterLoad"),
+        OpDesc(opClass="SimdUnitStrideSegmentedLoad"),
+        OpDesc(opClass="SimdUnitStrideSegmentedFaultOnlyFirstLoad"),
+        OpDesc(opClass="SimdStrideSegmentedLoad"),
+        OpDesc(opClass="SimdIndexedSegmentedLoad"),
     ]
     count = 0
 
@@ -158,6 +162,9 @@ class WritePort(FUDesc):
         OpDesc(opClass="SimdStridedStore"),
         OpDesc(opClass="SimdIndexedStore"),
         OpDesc(opClass="SimdWholeRegisterStore"),
+        OpDesc(opClass="SimdUnitStrideSegmentedStore"),
+        OpDesc(opClass="SimdStrideSegmentedStore"),
+        OpDesc(opClass="SimdIndexedSegmentedStore"),
     ]
     count = 0
 
@@ -179,6 +186,13 @@ class RdWrPort(FUDesc):
         OpDesc(opClass="SimdUnitStrideFaultOnlyFirstLoad"),
         OpDesc(opClass="SimdWholeRegisterLoad"),
         OpDesc(opClass="SimdWholeRegisterStore"),
+        OpDesc(opClass="SimdUnitStrideSegmentedLoad"),
+        OpDesc(opClass="SimdUnitStrideSegmentedFaultOnlyFirstLoad"),
+        OpDesc(opClass="SimdUnitStrideSegmentedStore"),
+        OpDesc(opClass="SimdStrideSegmentedLoad"),
+        OpDesc(opClass="SimdStrideSegmentedStore"),
+        OpDesc(opClass="SimdIndexedSegmentedLoad"),
+        OpDesc(opClass="SimdIndexedSegmentedStore"),
     ]
     count = 4
 
