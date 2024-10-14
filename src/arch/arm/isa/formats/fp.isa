@@ -98,7 +98,10 @@ let {{
     decodeNeonData(ExtMachInst machInst);
 
     StaticInstPtr
-    decodeAdvancedSIMD(ExtMachInst machInst);
+    decodeUncondAdvancedSIMD(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeFloatingPointDataProcessing(ExtMachInst machInst);
     '''
 
     decoder_output = '''
@@ -338,11 +341,8 @@ let {{
     '''
     decoder_output += '''
     StaticInstPtr
-    decodeAdvancedSIMD(ExtMachInst machInst)
+    decodeUncondAdvancedSIMD3Reg(ExtMachInst machInst)
     {
-        uint8_t op_code = (bits(machInst, 25) << 1)
-                          | bits(machInst, 21);
-
         RegIndex vd = (RegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
         RegIndex vn = (RegIndex)(2 * (bits(machInst, 19, 16) |
@@ -350,67 +350,142 @@ let {{
         RegIndex vm = (RegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         bool q = bits (machInst, 6);
-        switch (op_code) {
-          case 0x0:
-          {
+        uint8_t op1 = bits(machInst, 24, 23);
+        uint8_t op2 = bits(machInst, 21, 20);
+        uint8_t op3 = bits(machInst, 10);
+        uint8_t op4 = bits(machInst, 8);
+
+        if (bits(op1, 0) == 1 && bits(op2, 1) == 0 && op3 == 0 && op4 == 0) {
             // VCADD
             bool s = bits (machInst, 20);
             if (s) {
-               if (q)
-                   return new VcaddQ<uint32_t>(machInst, vd, vn, vm);
-               else
-                   return new VcaddD<uint32_t>(machInst, vd, vn, vm);
+                if (q)
+                    return new VcaddQ<uint32_t>(machInst, vd, vn, vm);
+                else
+                    return new VcaddD<uint32_t>(machInst, vd, vn, vm);
             } else {
                if (q)
                    return new VcaddQ<uint16_t>(machInst, vd, vn, vm);
                else
                    return new VcaddD<uint16_t>(machInst, vd, vn, vm);
             }
-          }
-          case 0x1:
-          {
+        } else if (bits(op2, 1) == 1 && op3 == 0 && op4 == 0 &&
+                   bits(machInst, 4) == 0) {
             // VCMLA
             bool s = bits (machInst, 20);
             if (s) {
-               if (q)
-                   return new VcmlaQ<uint32_t>(machInst, vd, vn, vm);
-               else
-                   return new VcmlaD<uint32_t>(machInst, vd, vn, vm);
+                if (q)
+                    return new VcmlaQ<uint32_t>(machInst, vd, vn, vm);
+                else
+                    return new VcmlaD<uint32_t>(machInst, vd, vn, vm);
             } else {
-               if (q)
-                   return new VcmlaQ<uint16_t>(machInst, vd, vn, vm);
-               else
-                   return new VcmlaD<uint16_t>(machInst, vd, vn, vm);
+                if (q)
+                    return new VcmlaQ<uint16_t>(machInst, vd, vn, vm);
+                else
+                    return new VcmlaD<uint16_t>(machInst, vd, vn, vm);
             }
-          }
-          case 0x2:
-          case 0x3:
-          {
+        }
+        // Remaining instructions in this table not yet implemented.
+        return new Unknown(machInst);
+    }
+
+    StaticInstPtr
+    decodeUncondAdvancedSIMDMulAcc(ExtMachInst machInst)
+    {
+        uint8_t op1 = bits(machInst, 23);
+        uint8_t op2 = bits(machInst, 21, 20);
+        bool q = bits (machInst, 6);
+        bool u = bits (machInst, 4);
+        RegIndex vd = (RegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        RegIndex vn = (RegIndex)(2 * (bits(machInst, 19, 16) |
+                               (bits(machInst, 7) << 4)));
+        RegIndex vm = (RegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        if (u == 0) {
             // VCMLA by element
             bool s = bits (machInst, 23);
             if (s) {
-               uint8_t index_fp = 0;
-               if (q)
-                   return new VcmlaElemQ<uint32_t>(machInst, vd, vn, vm,
-                                                   index_fp);
-               else
-                   return new VcmlaElemD<uint32_t>(machInst, vd, vn, vm,
-                                                   index_fp);
+                uint8_t index_fp = 0;
+                if (q)
+                    return new VcmlaElemQ<uint32_t>(machInst, vd, vn, vm,
+                                                    index_fp);
+                else
+                    return new VcmlaElemD<uint32_t>(machInst, vd, vn, vm,
+                                                    index_fp);
             } else {
-               vm = (RegIndex)(uint8_t)(2* bits(machInst, 3, 0));
-               uint8_t index_fp = bits(machInst, 5);
-               if (q)
-                   return new VcmlaElemQ<uint16_t>(machInst, vd, vn, vm,
-                                                   index_fp);
-               else
-                   return new VcmlaElemD<uint16_t>(machInst, vd, vn, vm,
-                                                   index_fp);
+                vm = (RegIndex)(uint8_t)(2* bits(machInst, 3, 0));
+                uint8_t index_fp = bits(machInst, 5);
+                if (q)
+                    return new VcmlaElemQ<uint16_t>(machInst, vd, vn, vm,
+                                                    index_fp);
+                else
+                    return new VcmlaElemD<uint16_t>(machInst, vd, vn, vm,
+                                                    index_fp);
             }
-          }
-          default:
-            return new Unknown64(machInst);
+        } else {
+            if (op1 == 0 && op2 == 0b00) {
+                return new FailUnimplemented("VFMAL (by scalar)", machInst);
+            } else if (op1 == 0 && op2 == 0b01) {
+                return new FailUnimplemented("VFMSL (by scalar)", machInst);
+            } else if (op1 == 0 && op2 == 0b11) {
+                return new FailUnimplemented(
+                    "VFMAB, VFMAT (BFloat16, by scalar)", machInst);
+            }
         }
+        // All other encodings currently unallocated.
+        return new Unknown(machInst);
+    }
 
+    StaticInstPtr
+    decodeUncondAdvancedSIMD(ExtMachInst machInst)
+    {
+        assert(!AARCH64);
+        assert(bits(machInst, 31, 26) == 0b111111);
+        assert(bits(machInst, 11) == 0b1);
+        // The following constraints also apply to this encoding: op0<2:1>!=11
+        assert(bits(machInst, 25, 24) != 0b11);
+        uint8_t op0 = bits(machInst, 25, 23);
+        uint8_t op1 = bits(machInst, 21, 16);
+        uint8_t op2 = bits(machInst, 10);
+        uint8_t op3 = bits(machInst, 9, 8);
+        uint8_t op4 = bits(machInst, 6);
+
+        uint8_t op5 = bits(machInst, 4);
+        // Floating-point conditional select, minNum/maxNum, extraction
+        // and insertion, directed convert to integer are handled by
+        // decodeFloatingPointDataProcessing(). We could merge these cases, but
+        // the compiler will do this for us anyway and keeping them separate
+        // ensures that this matching logic matches ARM documentation tables.
+        if (bits(op0, 2) == 0 && bits(op3, 1) == 0) {
+            // Advanced SIMD three registers of the same length extension
+            return decodeUncondAdvancedSIMD3Reg(machInst);
+        } else if (op0 == 0b100) {
+            if (op2 == 0 && op3 != 0 && op4 == 0 && op5 == 0) {
+                // Floating-point conditional select
+                return decodeFloatingPointDataProcessing(machInst);
+            }
+        } else if (op0 == 0b101 && op2 == 0 && op3 != 0 && op5 == 0) {
+            if (bits(op1, 5, 4) == 0 && op4 == 0) {
+                // Floating-point minNum/maxNum",
+                return decodeFloatingPointDataProcessing(machInst);
+            } else if (op1 == 0b110000 && op4 == 1) {
+                // Floating-point extraction and insertion
+                return decodeFloatingPointDataProcessing(machInst);
+            } else if (bits(op1, 5, 3) == 0b111 && op4 == 1) {
+                // Floating-point directed convert to integer
+                return decodeFloatingPointDataProcessing(machInst);
+            }
+        } else if (bits(op0, 2, 1) == 0b10) {
+            if (op2 == 0 && op3 == 0) {
+                // Advanced SIMD and floating-point multiply with accumulate
+                return decodeUncondAdvancedSIMDMulAcc(machInst);
+            } else if (op2 == 1 && bits(op3, 1) == 0) {
+                // Advanced SIMD and floating-point dot product
+                return new FailUnimplemented("SIMD dot product", machInst);
+            }
+        }
+        return new Unknown(machInst);
     }
     '''
 
@@ -2150,7 +2225,7 @@ def format ThumbNeonData() {{
 
 def format Thumb32NeonSIMD() {{
     decode_block = '''
-    return decodeAdvancedSIMD(machInst);
+    return decodeUncondAdvancedSIMD(machInst);
     '''
 }};
 
@@ -2380,10 +2455,14 @@ let {{
                 case 0x3: cond = COND_GT; break;
                 default: panic("unreachable");
                 }
-                if (size == 3) {
+                if (size == 1) {
+                    return new FailUnimplemented("vselect.f16", machInst);
+                } else if (size == 2) {
+                    return new VselS(machInst, vd, vn, vm, cond);
+                } else if (size == 3) {
                     return new VselD(machInst, vd, vn, vm, cond);
                 } else {
-                    return new VselS(machInst, vd, vn, vm, cond);
+                    return new Unknown(machInst);
                 }
             } else if (bits(op0, 3) == 1 && bits(op0, 1, 0) == 0 && op2 != 0) {
                 const bool op = bits(machInst, 6);
@@ -2742,6 +2821,15 @@ let {{
     StaticInstPtr
     decodeVfpData(ExtMachInst machInst)
     {
+        // To avoid future incorrectly decoded instructions assert that we
+        // are indeed looking at the right encoding region.
+        // See "Floating-point data-processing" sections for A32 and T32.
+        if (machInst.bigThumb) {
+            assert(bits(machInst, 31, 24) == 0b11101110);
+        } else {
+            assert(bits(machInst, 27, 24) == 0b1110);
+            assert(bits(machInst, 31, 28) != 0b1111);
+        }
         const uint32_t opc1 = bits(machInst, 23, 20);
         const uint32_t opc2 = bits(machInst, 19, 16);
         const uint32_t opc3 = bits(machInst, 7, 6);
