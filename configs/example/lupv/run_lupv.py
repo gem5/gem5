@@ -110,8 +110,7 @@ board.set_kernel_disk_workload(
 # Begin running of the simulation.
 print("Running with ISA: " + processor.get_isa().name)
 print()
-root = Root(full_system=True, system=board)
-board._pre_instantiate()
+root = board._pre_instantiate()
 m5.instantiate()
 print("Beginning simulation!")
 

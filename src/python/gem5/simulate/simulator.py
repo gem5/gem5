@@ -117,6 +117,10 @@ class Simulator:
                             behavior. If not set, whether or not to run in FS
                             mode will be determined via the board's
                             ``is_fullsystem()`` function.
+                            **Warning: This parameter is deprecated. The board
+                            determines if the simulation is full system or not.
+                            This parameter will be removed in a future gem5
+                            release.**
         :param on_exit_event: An optional map to specify what to execute on
                               each exit event. There are three possibilities here:
                               a generator, a list of functions, or a single function.
@@ -290,6 +294,15 @@ class Simulator:
         These generators can be found in the ``exit_event_generator.py`` module.
 
         """
+
+        if full_system is not None:
+            warn(
+                "Setting the full_system parameter via the Simulator "
+                "constructor is deprecated and will be removed in future "
+                "releases of gem5. "
+                "The board determines if the simulation is full system or not "
+                "via it's `is_fullsystem` method."
+            )
 
         self.set_max_ticks(max_ticks)
 
@@ -651,44 +664,11 @@ class Simulator:
 
         if not self._instantiated:
             # Before anything else we run the AbstractBoard's
-            # `_pre_instantiate` function.
-            self._board._pre_instantiate()
-
-            root = Root(
-                full_system=(
-                    self._full_system
-                    if self._full_system is not None
-                    else self._board.is_fullsystem()
-                ),
-                board=self._board,
+            # `_pre_instantiate` function. This returns the root object which
+            # is required for instantiation.
+            self._root = self._board._pre_instantiate(
+                full_system=self._full_system
             )
-
-            # We take a copy of the Root in case it's required elsewhere
-            # (for example, in `get_stats()`).
-            self._root = root
-
-            # The following is a bit of a hack. If a simulation is to use a KVM
-            # core then the `sim_quantum` value must be set. However, in the
-            # case of using a SwitchableProcessor the KVM cores may be
-            # switched out and therefore not accessible via `get_cores()`.
-            # This is the reason for the `isinstance` check.
-            #
-            # We cannot set the `sim_quantum` value in every simulation as
-            # setting it causes the scheduling of exits to be off by the
-            # `sim_quantum` value (something necessary if we are using KVM
-            # cores). Ergo we only set the value of KVM cores are present.
-            #
-            # There is still a bug here in that if the user is switching to and
-            # from KVM and non-KVM cores via the SwitchableProcessor then the
-            # scheduling of exits for the non-KVM cores will be incorrect. This
-            # will be fixed at a later date.
-            processor = self._board.processor
-            if any(core.is_kvm_core() for core in processor.get_cores()) or (
-                isinstance(processor, SwitchableProcessor)
-                and any(core.is_kvm_core() for core in processor._all_cores())
-            ):
-                m5.ticks.fixGlobalFrequency()
-                root.sim_quantum = m5.ticks.fromSeconds(0.001)
 
             # m5.instantiate() takes a parameter specifying the path to the
             # checkpoint directory. If the parameter is None, no checkpoint
