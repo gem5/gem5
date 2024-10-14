@@ -250,9 +250,11 @@ class ConfigManager:
                         obj,
                         param_name,
                         [
-                            self.objects_by_name[name]
-                            if name != "Null"
-                            else m5.params.NULL
+                            (
+                                self.objects_by_name[name]
+                                if name != "Null"
+                                else m5.params.NULL
+                            )
                             for name in param_values
                         ],
                     )
