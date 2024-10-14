@@ -44,6 +44,8 @@
 #include <sys/syscall.h>
 
 #include "arch/riscv/process.hh"
+#include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -132,6 +134,388 @@ unameFunc32(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
     strcpy(name->machine, "riscv32");
 
     return 0;
+}
+
+static inline void
+cpumask_set_cpu(unsigned int cpu, RiscvLinux::cpumask_t *dstp)
+{
+    assert(cpu < dstp->size * 8);
+    auto &bits = dstp->bits[cpu / sizeof(uint64_t)];
+    bits = insertBits(bits, cpu % sizeof(uint64_t), 1);
+}
+
+static inline void
+cpumask_clear_cpu(unsigned int cpu, RiscvLinux::cpumask_t *dstp)
+{
+    assert(cpu < dstp->size * 8);
+    auto &bits = dstp->bits[cpu / sizeof(uint64_t)];
+    bits = insertBits(bits, cpu % sizeof(uint64_t), 0);
+}
+
+static inline bool
+cpumask_test_cpu(unsigned int cpu, const RiscvLinux::cpumask_t *cpumask)
+{
+    assert(cpu < cpumask->size * 8);
+    return bits(cpumask->bits[cpu / sizeof(uint64_t)], cpu % sizeof(uint64_t)) != 0;
+}
+
+static inline void
+cpumask_and(RiscvLinux::cpumask_t *dstp, const RiscvLinux::cpumask_t *src1p,
+            const RiscvLinux::cpumask_t *src2p)
+{
+    assert(dstp->size == src1p->size);
+    assert(dstp->size == src2p->size);
+    for (size_t i = 0; i < dstp->size / sizeof(dstp->bits[0]); i++) {
+        dstp->bits[i] = src1p->bits[i] & src2p->bits[i];
+    }
+}
+
+static inline bool
+cpumask_empty(const RiscvLinux::cpumask_t *dstp)
+{
+    for (size_t i = 0; i < dstp->size / sizeof(dstp->bits[0]); i++) {
+        if (dstp->bits[i] != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static inline void
+cpumask_copy(RiscvLinux::cpumask_t *dstp, const RiscvLinux::cpumask_t *srcp)
+{
+    assert(dstp->size == srcp->size);
+    memcpy(dstp->bits, srcp->bits, srcp->size);
+}
+
+static inline void
+cpumask_clear(RiscvLinux::cpumask_t *dstp)
+{
+    memset(dstp->bits, 0, dstp->size);
+}
+
+static inline RiscvLinux::cpumask_t *
+cpumask_malloc(ThreadContext *tc)
+{
+    RiscvLinux::cpumask_t *cpumask;
+
+    /* 8-bytes up-boundary alignment */
+    size_t size = (tc->getSystemPtr()->threads.size() + sizeof(cpumask->bits[0]) - 1) /
+                    sizeof(cpumask->bits[0]) * sizeof(cpumask->bits[0]);
+    cpumask = (RiscvLinux::cpumask_t *)malloc(sizeof(cpumask->size) + size);
+    if (cpumask != nullptr) {
+        cpumask->size = size;
+        cpumask_clear(cpumask);
+    }
+
+    return cpumask;
+}
+
+static inline void
+cpumask_free(RiscvLinux::cpumask_t *cpu_online_mask)
+{
+    free(cpu_online_mask);
+}
+
+static inline bool
+riscv_hwprobe_key_is_valid(int64_t key)
+{
+    return key >= 0 && key <= RISCV_HWPROBE_MAX_KEY;
+}
+
+static inline bool
+hwprobe_key_is_bitmask(int64_t key)
+{
+    switch (key) {
+    case RiscvLinux::BaseBehavior:
+    case RiscvLinux::IMAExt0:
+    case RiscvLinux::Cpuperf0:
+        return true;
+    }
+
+    return false;
+}
+
+static inline bool
+riscv_hwprobe_pair_cmp(RiscvLinux::riscv_hwprobe *pair,
+                       RiscvLinux::riscv_hwprobe *other_pair)
+{
+    if (pair->key != other_pair->key) {
+        return false;
+    }
+
+    if (hwprobe_key_is_bitmask(pair->key)) {
+        return (pair->value & other_pair->value) == other_pair->value;
+    }
+
+    return pair->value == other_pair->value;
+}
+
+static inline RiscvLinux::cpumask_t *
+get_cpu_online_mask(ThreadContext *tc)
+{
+    RiscvLinux::cpumask_t *cpu_online_mask = cpumask_malloc(tc);
+    if (cpu_online_mask != nullptr) {
+        for (int i = 0; i < tc->getSystemPtr()->threads.size(); i++) {
+            CPU_SET(i, (cpu_set_t *)&cpu_online_mask->bits);
+        }
+    }
+
+    return cpu_online_mask;
+}
+
+static void
+hwprobe_one_pair(ThreadContext *tc, RiscvLinux::riscv_hwprobe *pair,
+                 RiscvLinux::cpumask_t *cpus)
+{
+    switch (pair->key) {
+    case RiscvLinux::Mvendorid:
+        pair->value = tc->readMiscRegNoEffect(CSRData.at(CSR_MVENDORID).physIndex);
+        break;
+    case RiscvLinux::Marchid:
+        pair->value = tc->readMiscRegNoEffect(CSRData.at(CSR_MARCHID).physIndex);
+        break;
+    case RiscvLinux::Mimpid:
+        pair->value = tc->readMiscRegNoEffect(CSRData.at(CSR_MIMPID).physIndex);
+        break;
+    case RiscvLinux::BaseBehavior:
+        {
+            MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+            RiscvLinux::key_base_behavior_t *base_behavior =
+                (RiscvLinux::key_base_behavior_t *)&pair->value;
+            if (misa.rvi && misa.rvm && misa.rva) {
+                base_behavior->ima = 1;
+            }
+        }
+        break;
+    case RiscvLinux::IMAExt0:
+        {
+            MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+            RiscvLinux::key_ima_ext_0_t *ext = (RiscvLinux::key_ima_ext_0_t *)&pair->value;
+            if (misa.rvf && misa.rvd) ext->FD = 1;
+            if (misa.rvc) ext->C = 1;
+            if (misa.rvv) ext->V = 1;
+            ext->ZBA = 1;
+            ext->ZBB = 1;
+            ext->ZBS = 1;
+            ext->ZICBOZ = 1;
+            ext->ZBC = 1;
+            ext->ZBKB = 1;
+            ext->ZBKC = 1;
+            ext->ZBKX = 1;
+            ext->ZKND = 1;
+            ext->ZKNE = 1;
+            ext->ZKNH = 1;
+            ext->ZKSED = 1;
+            ext->ZKSH = 1;
+            ext->ZKT = 1;
+            ext->ZFH = 1;
+            ext->ZFHMIN = 1;
+            ext->ZVFH = 1;
+            ext->ZVFHMIN = 1;
+            ext->ZICOND = 1;
+            ext->ZVE64D = 1;
+            ext->ZCB = 1;
+            ext->ZCD = 1;
+            ext->ZCF = 1;
+        }
+        break;
+    case RiscvLinux::Cpuperf0:
+    case RiscvLinux::MisalignedScalarPerf:
+        pair->value = RiscvLinux::Slow;
+        break;
+    case RiscvLinux::ZicbozBlockSize:
+        pair->value = tc->getSystemPtr()->cacheLineSize();
+        break;
+    case RiscvLinux::HighestVirtAddress:
+        pair->value = tc->getProcessPtr()->memState->getMmapEnd();
+        break;
+
+    /*
+     * For forward compatibility, unknown keys don't fail the whole
+     * call, but get their element key set to -1 and value set to 0
+     * indicating they're unrecognized.
+     */
+    default:
+        pair->key = -1;
+        pair->value = 0;
+        break;
+    }
+}
+
+template <class OS>
+static int
+hwprobe_get_values(ThreadContext *tc, VPtr<> pairs, typename OS::size_t pair_count,
+                   typename OS::size_t cpusetsize, VPtr<> cpus_user, unsigned int flags)
+{
+    /* Check the reserved flags. */
+    if (flags != 0) {
+        return -EINVAL;
+    }
+
+    RiscvLinux::cpumask_t *cpu_online_mask = get_cpu_online_mask(tc);
+    if (cpu_online_mask == nullptr) {
+        return -ENOMEM;
+    }
+
+    RiscvLinux::cpumask_t *cpus = cpumask_malloc(tc);
+    if (cpus == nullptr) {
+        cpumask_free(cpu_online_mask);
+        return -ENOMEM;
+    }
+
+    if (cpusetsize > cpu_online_mask->size) {
+        cpusetsize = cpu_online_mask->size;
+    }
+
+    RiscvLinux::riscv_hwprobe *pair;
+    BufferArg pairs_buf(pairs, sizeof(RiscvLinux::riscv_hwprobe) * pair_count);
+
+    /*
+    * The interface supports taking in a CPU mask, and returns values that
+    * are consistent across that mask. Allow userspace to specify NULL and
+    * 0 as a shortcut to all online CPUs.
+    */
+    if (cpusetsize == 0 && !cpus_user) {
+        cpumask_copy(cpus, cpu_online_mask);
+        cpusetsize = cpu_online_mask->size;
+    } else {
+        BufferArg cpus_user_buf(cpus_user, cpusetsize);
+        cpus_user_buf.copyIn(SETranslatingPortProxy(tc));
+
+        cpu_online_mask->size = cpusetsize;
+        cpus->size = cpusetsize;
+        memcpy(cpus->bits, cpus_user_buf.bufferPtr(), cpusetsize);
+
+        /*
+        * Userspace must provide at least one online CPU, without that
+        * there's no way to define what is supported.
+        */
+        cpumask_and(cpus, cpus, cpu_online_mask);
+        if (cpumask_empty(cpus)) {
+            cpumask_free(cpu_online_mask);
+            cpumask_free(cpus);
+            return -EINVAL;
+        }
+    }
+
+    pairs_buf.copyIn(SETranslatingPortProxy(tc));
+    pair = (RiscvLinux::riscv_hwprobe *)pairs_buf.bufferPtr();
+
+    for (size_t i = 0; i < pair_count; i++, pair++) {
+        pair->value = 0;
+        hwprobe_one_pair(tc, pair, cpus);
+    }
+
+    pairs_buf.copyOut(SETranslatingPortProxy(tc));
+
+    cpumask_free(cpu_online_mask);
+    cpumask_free(cpus);
+
+    return 0;
+}
+
+template <class OS>
+static int
+hwprobe_get_cpus(ThreadContext *tc, VPtr<> pairs, typename OS::size_t pair_count,
+                 typename OS::size_t cpusetsize, VPtr<> cpus_user, unsigned int flags)
+{
+    if (flags != RISCV_HWPROBE_WHICH_CPUS) {
+        return -EINVAL;
+    }
+
+    if (cpusetsize == 0 || !cpus_user) {
+        return -EINVAL;
+    }
+
+    RiscvLinux::cpumask_t *cpu_online_mask = get_cpu_online_mask(tc);
+    if (cpu_online_mask == nullptr) {
+        return -ENOMEM;
+    }
+
+    RiscvLinux::cpumask_t *cpus = cpumask_malloc(tc);
+    if (cpus == nullptr) {
+        cpumask_free(cpu_online_mask);
+        return -ENOMEM;
+    }
+
+    RiscvLinux::cpumask_t *one_cpu = cpumask_malloc(tc);
+    if (one_cpu == nullptr) {
+        cpumask_free(cpu_online_mask);
+        cpumask_free(cpus);
+        return -ENOMEM;
+    }
+
+    if (cpusetsize > cpu_online_mask->size) {
+        cpusetsize = cpu_online_mask->size;
+    }
+
+    RiscvLinux::riscv_hwprobe *pair;
+    BufferArg cpus_user_buf(cpus_user, cpusetsize);
+    cpus_user_buf.copyIn(SETranslatingPortProxy(tc));
+    memcpy(cpus->bits, cpus_user_buf.bufferPtr(), cpusetsize);
+
+    if (cpumask_empty(cpus)) {
+        cpumask_copy(cpus, cpu_online_mask);
+        cpusetsize = cpu_online_mask->size;
+    }
+
+    cpumask_and(cpus, cpus, cpu_online_mask);
+
+    BufferArg pairs_buf(pairs, sizeof(RiscvLinux::riscv_hwprobe) * pair_count);
+    pairs_buf.copyIn(SETranslatingPortProxy(tc));
+    pair = (RiscvLinux::riscv_hwprobe *)pairs_buf.bufferPtr();
+
+    for (size_t i = 0; i < pair_count; i++, pair++) {
+        if (!riscv_hwprobe_key_is_valid(pair->key)) {
+            *pair = (RiscvLinux::riscv_hwprobe){ .key = -1, .value = 0 };
+            memset(cpus_user_buf.bufferPtr(), 0, cpusetsize);
+            break;
+        }
+
+        RiscvLinux::riscv_hwprobe tmp =
+            (RiscvLinux::riscv_hwprobe){ .key = pair->key, .value = 0 };
+
+        for (int cpu = 0; cpu < cpusetsize * 8; cpu++) {
+            if (!cpumask_test_cpu(cpu, cpus)) {
+                continue;
+            }
+
+            cpumask_set_cpu(cpu, one_cpu);
+
+            hwprobe_one_pair(tc, &tmp, one_cpu);
+
+            if (!riscv_hwprobe_pair_cmp(&tmp, pair)) {
+                cpumask_clear_cpu(cpu, cpus);
+            }
+
+            cpumask_clear_cpu(cpu, one_cpu);
+        }
+    }
+
+    pairs_buf.copyOut(SETranslatingPortProxy(tc));
+    cpus_user_buf.copyOut(SETranslatingPortProxy(tc));
+
+    cpumask_free(cpu_online_mask);
+    cpumask_free(cpus);
+    cpumask_free(one_cpu);
+
+    return 0;
+}
+
+template <class OS>
+static SyscallReturn
+riscvHWProbeFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pairs,
+                 typename OS::size_t pair_count, typename OS::size_t cpusetsize,
+                 VPtr<> cpus_user, unsigned int flags)
+{
+    if (flags & RISCV_HWPROBE_WHICH_CPUS) {
+        return hwprobe_get_cpus<OS>(tc, pairs, pair_count, cpusetsize,
+                                    cpus_user, flags);
+    }
+
+    return hwprobe_get_values<OS>(tc, pairs, pair_count, cpusetsize,
+                                  cpus_user, flags);
 }
 
 SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
@@ -382,6 +766,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 241,  "perf_event_open" },
     { 242,  "accept4" },
     { 243,  "recvmmsg" },
+    { 258,  "riscv_hwprobe", riscvHWProbeFunc<RiscvLinux64> },
     { 260,  "wait4", wait4Func<RiscvLinux64> },
     { 261,  "prlimit64", prlimitFunc<RiscvLinux64> },
     { 262,  "fanotify_init" },
@@ -748,6 +1133,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 241,  "perf_event_open" },
     { 242,  "accept4" },
     { 243,  "recvmmsg" },
+    { 258,  "riscv_hwprobe", riscvHWProbeFunc<RiscvLinux32> },
     { 260,  "wait4", wait4Func<RiscvLinux32> },
     { 261,  "prlimit64", prlimitFunc<RiscvLinux32> },
     { 262,  "fanotify_init" },

@@ -34,6 +34,7 @@
 #include "arch/riscv/utility.hh"
 #include "kern/linux/flag_tables.hh"
 #include "kern/linux/linux.hh"
+#include "base/bitfield.hh"
 
 namespace gem5
 {
@@ -42,6 +43,101 @@ class RiscvLinux : public Linux
 {
   public:
     static const ByteOrder byteOrder = ByteOrder::little;
+
+    enum RiscvHwprobeKey
+    {
+        Mvendorid,
+        Marchid,
+        Mimpid,
+        BaseBehavior,
+        IMAExt0,
+        Cpuperf0,
+        ZicbozBlockSize,
+        HighestVirtAddress,
+        TimeCsrFreq,
+        MisalignedScalarPerf
+    };
+
+    /* Increase RISCV_HWPROBE_MAX_KEY when adding items. */
+    #define RISCV_HWPROBE_MAX_KEY 9
+
+    BitUnion64(key_base_behavior_t)
+    Bitfield<0> ima;
+    EndBitUnion(key_base_behavior_t)
+
+    BitUnion64(key_ima_ext_0_t)
+        Bitfield<49> ZAWRS;
+        Bitfield<48> ZCMOP;
+        Bitfield<47> ZCF;
+        Bitfield<46> ZCD;
+        Bitfield<45> ZCB;
+        Bitfield<44> ZCA;
+        Bitfield<43> ZIMOP;
+        Bitfield<42> ZVE64D;
+        Bitfield<41> ZVE64F;
+        Bitfield<40> ZVE64X;
+        Bitfield<39> ZVE32F;
+        Bitfield<38> ZVE32X;
+        Bitfield<37> ZIHINTPAUSE;
+        Bitfield<36> ZICOND;
+        Bitfield<35> ZACAS;
+        Bitfield<34> ZTSO;
+        Bitfield<33> ZFA;
+        Bitfield<32> ZVFHMIN;
+        Bitfield<31> ZVFH;
+        Bitfield<30> ZIHINTNTL;
+        Bitfield<29> ZFHMIN;
+        Bitfield<28> ZFH;
+        Bitfield<27> ZVKT;
+        Bitfield<26> ZVKSH;
+        Bitfield<25> ZVKSED;
+        Bitfield<24> ZVKNHB;
+        Bitfield<22> ZVKNHA;
+        Bitfield<21> ZVKNED;
+        Bitfield<20> ZVKG;
+        Bitfield<19> ZVKB;
+        Bitfield<18> ZVBC;
+        Bitfield<17> ZVBB;
+        Bitfield<16> ZKT;
+        Bitfield<15> ZKSH;
+        Bitfield<14> ZKSED;
+        Bitfield<13> ZKNH;
+        Bitfield<12> ZKNE;
+        Bitfield<11> ZKND;
+        Bitfield<10> ZBKX;
+        Bitfield<9>  ZBKC;
+        Bitfield<8>  ZBKB;
+        Bitfield<7>  ZBC;
+        Bitfield<6>  ZICBOZ;
+        Bitfield<5>  ZBS;
+        Bitfield<4>  ZBB;
+        Bitfield<3>  ZBA;
+        Bitfield<2>  V;
+        Bitfield<1>  C;
+        Bitfield<0>  FD;
+    EndBitUnion(key_ima_ext_0_t)
+
+    enum MisalignedScalarPerf
+    {
+        Unknown,
+        Emulated,
+        Slow,
+        Fast,
+        Unsupported
+    };
+
+    /* Flags */
+    #define RISCV_HWPROBE_WHICH_CPUS	(1 << 0)
+
+    struct riscv_hwprobe {
+        int64_t  key;
+        uint64_t value;
+    };
+
+    typedef struct cpumask {
+        size_t size;
+        uint64_t bits[];
+    } cpumask_t;
 };
 
 class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
