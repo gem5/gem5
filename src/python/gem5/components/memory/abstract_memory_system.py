@@ -38,7 +38,6 @@ from m5.objects import (
     AddrRange,
     MemCtrl,
     Port,
-    Root,
     SubSystem,
 )
 
@@ -50,18 +49,6 @@ class AbstractMemorySystem(SubSystem):
 
     def __init__(self) -> None:
         super().__init__()
-
-    def _pre_instantiate(self, root: Root) -> None:
-        """Called in the `AbstractBoard`'s `_pre_instantiate` method. This is
-        called after `connect_things`, after the creation of the root object
-        (which is passed in as an argument), but before `m5.instantiate`).
-
-        Subclasses should override this method to set up any connections.
-
-        At present there is no general task that must be specified here and is
-        default or applicable to all memory systems.
-        """
-        pass
 
     @abstractmethod
     def incorporate_memory(self, board: AbstractBoard) -> None:

@@ -313,7 +313,7 @@ class RISCVMatchedBoard(
             memory.set_memory_range(self.mem_ranges)
 
     @overrides(AbstractSystemBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
+    def _pre_instantiate(self):
         if self._fs:
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x0
@@ -326,7 +326,7 @@ class RISCVMatchedBoard(
                 self.workload.kernel_addr = 0x0
                 self.workload.entry_point = 0x80000000
 
-        super()._pre_instantiate(full_system=full_system)
+        self._connect_things()
 
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the ``dtb`` and ``dts`` files.

@@ -26,10 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import (
-    List,
-    Optional,
-)
+from typing import List
 
 import m5
 from m5.objects import (
@@ -501,7 +498,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         return "/dev/vda"
 
     @overrides(AbstractSystemBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None):
+    def _pre_instantiate(self):
         if len(self._bootloader) > 0:
             self.workload.bootloader_addr = 0x0
             self.workload.bootloader_filename = self._bootloader[0]
@@ -510,7 +507,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         else:
             self.workload.kernel_addr = 0x0
             self.workload.entry_point = 0x80000000
-        super()._pre_instantiate(full_system=full_system)
+        self._connect_things()
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):

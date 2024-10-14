@@ -207,15 +207,15 @@ print("Running with ISA: " + processor.get_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 
-# Disable the gdb ports. Required for forking.
-m5.disableAllListeners()
-root = motherboard._pre_instantiate()
+root = Root(full_system=True, system=motherboard)
 
 # TODO: This of annoying. Is there a way to fix this to happen
 # automatically when running KVM?
 root.sim_quantum = int(1e9)
 
-
+# Disable the gdb ports. Required for forking.
+m5.disableAllListeners()
+motherboard._pre_instantiate()
 m5.instantiate()
 
 # Simulate the inital boot with the starting KVM cpu

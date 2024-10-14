@@ -27,14 +27,12 @@
 
 from typing import List
 
-import m5
 from m5.objects import (
     BaseAtomicSimpleCPU,
     BaseMinorCPU,
     BaseNonCachingSimpleCPU,
     BaseO3CPU,
     BaseTimingSimpleCPU,
-    Root,
 )
 from m5.util import warn
 
@@ -101,9 +99,3 @@ class BaseCPUProcessor(AbstractProcessor):
                 board.set_mem_mode(MemMode.ATOMIC)
         else:
             raise NotImplementedError
-
-    def _pre_instantiate(self, root: Root) -> None:
-        super()._pre_instantiate(root)
-        if any(core.is_kvm_core() for core in self.get_cores()):
-            m5.ticks.fixGlobalFrequency()
-            root.sim_quantum = m5.ticks.fromSeconds(0.001)

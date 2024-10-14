@@ -28,7 +28,6 @@ import os
 from abc import ABCMeta
 from typing import (
     List,
-    Optional,
     Sequence,
     Tuple,
 )
@@ -332,8 +331,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.system_port = port
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
-        super()._pre_instantiate(full_system=full_system)
+    def _pre_instantiate(self):
+        super()._pre_instantiate()
 
         # Add the PCI devices.
         self.pci_devices = self._pci_devices

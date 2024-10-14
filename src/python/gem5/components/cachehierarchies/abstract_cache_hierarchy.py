@@ -42,10 +42,7 @@ from abc import (
 )
 from typing import Callable
 
-from m5.objects import (
-    Root,
-    SubSystem,
-)
+from m5.objects import SubSystem
 from m5.util.fdthelper import *
 
 from ..boards.abstract_board import AbstractBoard
@@ -141,18 +138,6 @@ class AbstractCacheHierarchy(SubSystem):
         :returns: ``True`` if the cache hierarchy is ruby. Otherwise ``False``.
         """
         raise NotImplementedError
-
-    def _pre_instantiate(self, root: Root) -> None:
-        """Called in the `AbstractBoard`'s `_pre_instantiate` method. This is
-        called after `connect_things`, after the creation of the root object
-        (which is passed in as an argument), but before `m5.instantiate`).
-
-        Subclasses should override this method to set up any connections.
-
-        At present there is no general task that must be specified here and is
-        default or applicable to all cache hierarchies.
-        """
-        pass
 
     def _post_instantiate(self):
         """Called to set up anything needed after ``m5.instantiate``."""

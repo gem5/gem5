@@ -33,10 +33,7 @@ from typing import (
     Optional,
 )
 
-from m5.objects import (
-    Root,
-    SubSystem,
-)
+from m5.objects import SubSystem
 
 from ...isas import ISA
 from ...utils.requires import requires
@@ -85,13 +82,4 @@ class AbstractProcessor(SubSystem):
 
     def _post_instantiate(self) -> None:
         """Called to set up anything needed after ``m5.instantiate``."""
-        pass
-
-    def _pre_instantiate(self, root: Root) -> None:
-        """Called in the `AbstractBoard`'s `_pre_instantiate` method. This is
-        called after `connect_things`, after the creation of the root object
-        (which is passed in as an argument), but before `m5.instantiate`).
-
-        Subclasses should override this method to set up any connections.
-        """
         pass

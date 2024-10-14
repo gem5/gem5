@@ -202,7 +202,9 @@ motherboard = TestBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-root = motherboard._pre_instantiate()
+root = Root(full_system=False, system=motherboard)
+
+motherboard._pre_instantiate()
 m5.instantiate()
 
 generator.start_traffic()
