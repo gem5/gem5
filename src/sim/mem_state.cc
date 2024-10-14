@@ -78,14 +78,45 @@ MemState::resetOwner(Process *owner)
     _ownerProcess = owner;
 }
 
+std::pair<MemState::OrderedVMAList::iterator,
+        MemState::OrderedVMAList::iterator>
+MemState::getListOfOvalappingVMA(Addr start_addr, Addr length){
+    Addr end_addr = start_addr + length;
+    const AddrRange range(start_addr, end_addr);
+
+    // We want to find a range of all VMA objects that have a chance of
+    // intersecting with the queried range
+    VMA dummy_vma{range, _pageBytes};
+    auto lb = _vmaList.lower_bound(dummy_vma);
+    auto ub = _vmaList.upper_bound(dummy_vma);
+
+    // The lower/upper-bounds are not sufficient when we use
+    // VMA::StrictWeakOrder to compare them. We have to grow the range.
+    while (lb!=_vmaList.begin() && lb->end() > range.start()) {
+        lb--;
+    }
+
+    while (ub!=_vmaList.end() && ub->start() < range.end()) {
+        ub++;
+    }
+
+    return {lb, ub};
+}
+
 bool
 MemState::isUnmapped(Addr start_addr, Addr length)
 {
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
-    for (const auto &vma : _vmaList) {
-        if (vma.intersects(range))
-            return false;
+
+    // We want to find a range of all VMA objects that have a chance of
+    // intersecting with the queried range
+    auto p = getListOfOvalappingVMA(start_addr, length);
+    auto lb = p.first;
+    auto ub = p.second;
+
+    for (auto vma_it = lb; vma_it != ub; vma_it++) {
+        if (vma_it->intersects(range)) return false;
     }
 
     /**
@@ -184,7 +215,7 @@ MemState::mapRegion(Addr start_addr, Addr length,
     /**
      * Record the region in our list structure.
      */
-    _vmaList.emplace_back(AddrRange(start_addr, start_addr + length),
+    _vmaList.emplace(AddrRange(start_addr, start_addr + length),
                           _pageBytes, region_name, sim_fd, offset);
 }
 
@@ -194,8 +225,11 @@ MemState::unmapRegion(Addr start_addr, Addr length)
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
 
-    auto vma = std::begin(_vmaList);
-    while (vma != std::end(_vmaList)) {
+    auto p = getListOfOvalappingVMA(start_addr, length);
+    auto lb = p.first;
+    auto ub = p.second;
+
+    for (auto vma = lb; vma!= ub; ) {
         if (vma->isStrictSuperset(range)) {
             DPRINTF(Vma, "memstate: split vma [0x%x - 0x%x] into "
                     "[0x%x - 0x%x] and [0x%x - 0x%x]\n",
@@ -204,15 +238,21 @@ MemState::unmapRegion(Addr start_addr, Addr length)
                     end_addr, vma->end());
             /**
              * Need to split into two smaller regions.
-             * Create a clone of the old VMA and slice it to the right.
+             * Create a clone of the old VMA and slice it to the left/right.
              */
-            _vmaList.push_back(*vma);
-            _vmaList.back().sliceRegionRight(start_addr);
+            VMA first_vma{*vma};
+            VMA second_vma{*vma};
 
-            /**
-             * Slice old VMA to encapsulate the left region.
-             */
-            vma->sliceRegionLeft(end_addr);
+            first_vma.sliceRegionRight(start_addr);
+            second_vma.sliceRegionLeft(end_addr);
+
+            // These two new VMAs have no overlap with the AddrRange, therefore they
+            // fall out of the range delineated by lb and ub
+            _vmaList.insert(first_vma);
+            _vmaList.insert(second_vma);
+
+            // std::multiset::erase does not invalidate ub/lb
+            vma = _vmaList.erase(vma);
 
             /**
              * Region cannot be in any more VMA, because it is completely
@@ -241,7 +281,11 @@ MemState::unmapRegion(Addr start_addr, Addr length)
                 /**
                  * Overlaps from the right.
                  */
-                vma->sliceRegionRight(start_addr);
+                VMA new_elem = *vma;
+                new_elem.sliceRegionRight(start_addr);
+                _vmaList.insert(new_elem);
+                vma = _vmaList.erase(vma);
+                continue;
             } else {
                 DPRINTF(Vma, "memstate: resizing vma [0x%x - 0x%x] "
                         "into [0x%x - 0x%x]\n",
@@ -250,10 +294,13 @@ MemState::unmapRegion(Addr start_addr, Addr length)
                 /**
                  * Overlaps from the left.
                  */
-                vma->sliceRegionLeft(end_addr);
+                VMA new_elem = *vma;
+                new_elem.sliceRegionLeft(end_addr);
+                _vmaList.insert(new_elem);
+                vma = _vmaList.erase(vma);
+                continue;
             }
         }
-
         vma++;
     }
 
@@ -291,29 +338,35 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
 
-    auto vma = std::begin(_vmaList);
-    while (vma != std::end(_vmaList)) {
+    auto p = getListOfOvalappingVMA(start_addr, length);
+    auto lb = p.first;
+    auto ub = p.second;
+
+    // We don't know if any remapped VMA will fall between lb and ub, so just
+    // store them in this container until we finished iterating vmaList and
+    // then insert them together
+    std::list<VMA> new_created;
+
+    for (auto vma = lb; vma != ub; ) {
         if (vma->isStrictSuperset(range)) {
             /**
              * Create clone of the old VMA and slice right.
              */
-            _vmaList.push_back(*vma);
-            _vmaList.back().sliceRegionRight(start_addr);
+            VMA first_vma = *vma;
+            VMA second_vma = *vma;
+            VMA third_vma = *vma;
 
-            /**
-             * Create clone of the old VMA and slice it left.
-             */
-            _vmaList.push_back(*vma);
-            _vmaList.back().sliceRegionLeft(end_addr);
+            first_vma.sliceRegionRight(start_addr);
+            second_vma.sliceRegionLeft(end_addr);
+            third_vma.sliceRegionLeft(start_addr);
+            third_vma.sliceRegionRight(end_addr);
+            third_vma.remap(new_start_addr);
 
-            /**
-             * Slice the old VMA left and right to adjust the file backing,
-             * then overwrite the virtual addresses!
-             */
-            vma->sliceRegionLeft(start_addr);
-            vma->sliceRegionRight(end_addr);
-            vma->remap(new_start_addr);
+            new_created.push_back(first_vma);
+            new_created.push_back(second_vma);
+            new_created.push_back(third_vma);
 
+            _vmaList.erase(vma);
             /**
              * The region cannot be in any more VMAs, because it is
              * completely contained in this one!
@@ -323,40 +376,57 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
             /**
              * Just go ahead and remap it!
              */
-            vma->remap(vma->start() - start_addr + new_start_addr);
+            VMA new_vma = *vma;
+            new_vma.remap(vma->start() - start_addr + new_start_addr);
+            new_created.push_back(new_vma);
+            vma = _vmaList.erase(vma);
+            continue;
         } else if (vma->intersects(range)) {
             /**
              * Create a clone of the old VMA.
              */
-            _vmaList.push_back(*vma);
+            VMA first_vma= *vma;
+            VMA second_vma= *vma;
 
             if (vma->start() < start_addr) {
                 /**
                  * Overlaps from the right.
                  */
-                _vmaList.back().sliceRegionRight(start_addr);
+                first_vma.sliceRegionRight(start_addr);
 
                 /**
                  * Remap the old region.
                  */
-                vma->sliceRegionLeft(start_addr);
-                vma->remap(new_start_addr);
+                second_vma.sliceRegionLeft(start_addr);
+                second_vma.remap(new_start_addr);
+
+                vma = _vmaList.erase(vma);
+                new_created.push_back(first_vma);
+                new_created.push_back(second_vma);
+                continue;
             } else {
                 /**
                  * Overlaps from the left.
                  */
-                _vmaList.back().sliceRegionLeft(end_addr);
+                first_vma.sliceRegionLeft(end_addr);
 
                 /**
                  * Remap the old region.
                  */
-                vma->sliceRegionRight(end_addr);
-                vma->remap(new_start_addr + vma->start() - start_addr);
+                second_vma.sliceRegionRight(end_addr);
+                second_vma.remap(new_start_addr + vma->start() - start_addr);
+
+                vma = _vmaList.erase(vma);
+                new_created.push_back(first_vma);
+                new_created.push_back(second_vma);
+                continue;
             }
         }
 
         vma++;
     }
+
+    _vmaList.insert(new_created.begin(), new_created.end());
 
     /**
      * TLBs need to be flushed to remove any stale mappings from regions
@@ -395,9 +465,15 @@ MemState::fixupFault(Addr vaddr)
      * Check if we are accessing a mapped virtual address. If so then we
      * just haven't allocated it a physical page yet and can do so here.
      */
-    for (const auto &vma : _vmaList) {
+    Addr vpage_start = roundDown(vaddr, _pageBytes);
+    auto p = getListOfOvalappingVMA(vpage_start, _pageBytes);
+    auto lb = p.first;
+    auto ub = p.second;
+
+    for (auto vma_it = lb; vma_it != ub; vma_it++) {
+        const VMA &vma = *vma_it;
         if (vma.contains(vaddr)) {
-            Addr vpage_start = roundDown(vaddr, _pageBytes);
+            //Addr vpage_start = roundDown(vaddr, _pageBytes);
             _ownerProcess->allocateMem(vpage_start, _pageBytes);
 
             /**

@@ -113,9 +113,10 @@ class VMA
     /**
      * Defer AddrRange related calls to the AddrRange.
      */
-    Addr size() { return _addrRange.size(); }
-    Addr start() { return _addrRange.start(); }
-    Addr end() { return _addrRange.end(); }
+    Addr size() const { return _addrRange.size(); }
+    Addr start() const { return _addrRange.start(); }
+    Addr end() const { return _addrRange.end(); }
+    bool interleaved() const {return _addrRange.interleaved();}
 
     bool
     mergesWith(const AddrRange& r) const
@@ -201,6 +202,36 @@ class VMA
         void *_buffer;       // Host buffer ptr
         size_t _length;       // Length of host ptr
         off_t _offset;       // Offset in file at which mapping starts
+    };
+
+    public:
+    /**
+     * @brief This functor class defines a strict weak order between VMA
+     * objects. Using this functor class as a comparator, mapped virtual memory
+     * pages can be stored in an ordered std::multiset.
+     *
+     * Comparison is made by simply examining the two [start, end)
+     * left-closed-right-open intervals defined by the _addrRange of VMA. VMA
+     * objects with an interleaved AddrRange are not supported.
+     */
+    struct StrictWeakOrder{
+        bool operator()(const VMA &lhs, const VMA &rhs) const {
+            panic_if(lhs.interleaved() || rhs.interleaved(),
+                    "VMA objects with an interleaved AddrRange cannot be "
+                    "compared with this comparator");
+
+            // first, compare start
+            if (lhs._addrRange.start() != rhs._addrRange.start()) {
+                return lhs._addrRange.start() < rhs._addrRange.start();
+            }
+            // then, compare end
+            else if (lhs._addrRange.end() != rhs._addrRange.end()) {
+                return lhs._addrRange.end() < rhs._addrRange.end();
+            }
+
+            // if the [start,end) intervals are identical
+            return false;
+        }
     };
 };
 
