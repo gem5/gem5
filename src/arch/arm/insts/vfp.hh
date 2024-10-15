@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2019 ARM Limited
+ * Copyright (c) 2010-2013, 2019, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -432,6 +432,119 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
         setFPExceptions(exceptions);
         return result;
     }
+};
+
+
+template <typename T>
+T
+vfpFpRint(T val, bool exact, bool defaultNan, bool useRmode = true,
+          VfpRoundingMode roundMode = VfpRoundZero)
+{
+    int  rmode;
+    bool roundAwayFix = false;
+
+    if (!useRmode) {
+        rmode = fegetround();
+    } else {
+        switch (roundMode)
+        {
+          case VfpRoundNearest:
+            rmode = FeRoundNearest;
+            break;
+          case VfpRoundUpward:
+            rmode = FeRoundUpward;
+            break;
+          case VfpRoundDown:
+            rmode = FeRoundDown;
+            break;
+          case VfpRoundZero:
+            rmode = FeRoundZero;
+            break;
+          case VfpRoundAway:
+            // There is no equivalent rounding mode, use round down and we'll
+            // fix it later
+            rmode        = FeRoundDown;
+            roundAwayFix = true;
+            break;
+          default:
+            panic("Unsupported roundMode %d\n", roundMode);
+        }
+    }
+    __asm__ __volatile__("" : "=m" (rmode) : "m" (rmode));
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    fesetround(rmode);
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    T origVal = val;
+    val = rint(val);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+
+    int exceptions = fetestexcept(FeAllExceptions);
+    if (!exact) {
+        exceptions &= ~FeInexact;
+    }
+
+    int fpType = std::fpclassify(val);
+    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
+        if (fpType == FP_NAN) {
+            if (isSnan(val)) {
+                exceptions |= FeInvalid;
+            }
+            if (defaultNan || !isSnan(val)) {
+                bool single = (sizeof(T) == sizeof(float));
+                uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+                val = bitsToFp(qnan, (T)0.0);
+            }
+        } else {
+            val = 0.0;
+        }
+    } else if (origVal != val) {
+        switch (rmode) {
+          case FeRoundNearest:
+            if (origVal - val > 0.5)
+                val += 1.0;
+            else if (val - origVal > 0.5)
+                val -= 1.0;
+            break;
+          case FeRoundDown:
+            if (roundAwayFix) {
+                // The ordering on the subtraction looks a bit odd in that we
+                // don't do the obvious origVal - val, instead we do
+                // -(val - origVal). This is required to get the corruct bit
+                // exact behaviour when very close to the 0.5 threshold.
+                volatile T error = val;
+                error -= origVal;
+                error = -error;
+                if ( (error >  0.5) ||
+                    ((error == 0.5) && (val >= 0)) )
+                    val += 1.0;
+            } else {
+                if (origVal < val)
+                    val -= 1.0;
+            }
+            break;
+          case FeRoundUpward:
+            if (origVal > val)
+                val += 1.0;
+            break;
+        }
+        if (exact) {
+            exceptions |= FeInexact;
+        }
+    }
+    // Fix signal of zero.
+    fpType = std::fpclassify(val);
+    if (fpType == FP_ZERO) {
+        bool single = (sizeof(T) == sizeof(float));
+        uint64_t mask = single ? 0x80000000 : 0x8000000000000000ULL;
+        val = bitsToFp((fpToBits(val) & (~mask)) | (fpToBits(origVal) & mask),
+                       (T)0.0);
+    }
+
+    // __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    setFPExceptions(exceptions);
+
+    return val;
 };
 
 
