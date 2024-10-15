@@ -79,7 +79,7 @@ TAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
     if (squashed) {
         // This restores the global history, then update it
         // and recomputes the folded histories.
-        tage->squash(tid, taken, tage_bi, target);
+        tage->squash(tid, taken, target, inst, tage_bi);
         return;
     }
 
@@ -93,7 +93,7 @@ TAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
     }
 
     // optional non speculative update of the histories
-    tage->updateHistories(tid, pc, taken, tage_bi, false, inst, target);
+    tage->updateHistories(tid, pc, false, taken, target, inst, tage_bi);
     delete bi;
     bp_history = nullptr;
 }
@@ -102,6 +102,7 @@ void
 TAGE::squash(ThreadID tid, void * &bp_history)
 {
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
+    tage->restoreHistState(tid, bi->tageBranchInfo);
     DPRINTF(Tage, "Deleting branch info: %lx\n", bi->tageBranchInfo->branchPC);
     delete bi;
     bp_history = nullptr;
@@ -110,7 +111,7 @@ TAGE::squash(ThreadID tid, void * &bp_history)
 bool
 TAGE::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
-    TageBranchInfo *bi = new TageBranchInfo(*tage);//nHistoryTables+1);
+    TageBranchInfo *bi = new TageBranchInfo(*tage, pc, cond_branch);
     b = (void*)(bi);
     return tage->tagePredict(tid, pc, cond_branch, bi->tageBranchInfo);
 }
@@ -126,18 +127,28 @@ TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history)
 }
 
 void
-TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken, Addr target, void * &bp_history)
+TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                   Addr target, const StaticInstPtr &inst, void * &bp_history)
 {
-    assert(uncond || bp_history);
-    if (uncond) {
-        DPRINTF(Tage, "UnConditionalBranch: %lx\n", pc);
+    if (bp_history == nullptr) {
+
+        // We should only see unconditional branches
+        assert(uncond);
+
         predict(tid, pc, false, bp_history);
     }
 
     // Update the global history for all branches
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
-    tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, true);
+    tage->updateHistories(tid, pc, true, taken, target, inst,
+                          bi->tageBranchInfo);
+}
+
+void
+TAGE::branchPlaceholder(ThreadID tid, Addr pc, bool uncond, void * &bpHistory)
+{
+    TageBranchInfo *bi = new TageBranchInfo(*tage, pc, !uncond);
+    bpHistory = (void*)(bi);
 }
 
 } // namespace branch_prediction
