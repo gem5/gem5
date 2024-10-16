@@ -477,7 +477,7 @@ class VirtQueue : public Serializable
             Index index;
         };
 
-        VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size) :
+        VirtRing(PortProxy &proxy, ByteOrder bo, uint16_t size) :
             header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)
         {}
 
@@ -550,7 +550,7 @@ class VirtQueue : public Serializable
 
       private:
         // Remove default constructor
-        VirtRing<T>();
+        VirtRing();
 
         /** Guest physical memory proxy */
         PortProxy &_proxy;
