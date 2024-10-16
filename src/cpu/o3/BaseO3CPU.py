@@ -42,8 +42,11 @@ from m5.objects.BaseCPU import BaseCPU
 # from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
 from m5.objects.FUPool import *
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
+from m5.SimObject import *
 
 
 class SMTFetchPolicy(ScopedEnum):
@@ -56,6 +59,31 @@ class SMTQueuePolicy(ScopedEnum):
 
 class CommitPolicy(ScopedEnum):
     vals = ["RoundRobin", "OldestReady"]
+
+
+class SSITIndexingPolicy(SimObject):
+    type = "SSITIndexingPolicy"
+    abstract = True
+    cxx_class = "gem5::IndexingPolicyTemplate<gem5::SSITTagTypes>"
+    cxx_header = "cpu/o3/store_set.hh"
+    cxx_template_params = ["class Types"]
+
+    # Get the associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+
+class SSITSetAssociative(SSITIndexingPolicy):
+    type = "SSITSetAssociative"
+    cxx_class = "gem5::SSITSetAssociative"
+    cxx_header = "cpu/o3/store_set.hh"
+
+    # Get the number of entries in the SSIT from the parent
+    num_entries = Param.Unsigned(
+        Parent.SSITSize, "Number of entries in the SSIT"
+    )
+
+    # Set shift for the index. Ignore lower 2 bits for a 4 byte instruction.
+    set_shift = Param.Unsigned(2, "Number of bits to shift PC to get index")
 
 
 class BaseO3CPU(BaseCPU):
@@ -154,6 +182,18 @@ class BaseO3CPU(BaseCPU):
     )
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
+    SSITAssoc = Param.Unsigned(1, "SSIT table associativity")
+    SSITReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "SSIT replacement policy"
+    )
+    SSITIndexingPolicy = Param.SSITIndexingPolicy(
+        SSITSetAssociative(
+            num_entries=Parent.SSITSize,
+            assoc=Parent.SSITAssoc,
+            set_shift=2,
+        ),
+        "SSIT indexing policy",
+    )
 
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers")
 
