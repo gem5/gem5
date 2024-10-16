@@ -87,14 +87,15 @@ class TAGE_SC_L_TAGE : public TAGEBase
         bool highConf;
         bool altConf;
         bool medConf;
-        BranchInfo(TAGEBase &tage) : TAGEBase::BranchInfo(tage),
+        BranchInfo(TAGEBase &tage, Addr pc, bool cond)
+          : TAGEBase::BranchInfo(tage, pc, cond),
             lowConf(false), highConf(false), altConf(false), medConf(false)
         {}
         virtual ~BranchInfo()
         {}
     };
 
-    virtual TAGEBase::BranchInfo *makeBranchInfo() override;
+    virtual TAGEBase::BranchInfo *makeBranchInfo(Addr pc, bool cond) override;
 
     TAGE_SC_L_TAGE(const TAGE_SC_L_TAGEParams &p)
       : TAGEBase(p),
@@ -116,11 +117,6 @@ class TAGE_SC_L_TAGE : public TAGEBase
 
     unsigned getUseAltIdx(TAGEBase::BranchInfo* bi, Addr branch_pc) override;
 
-    void updateHistories(
-        ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
-        bool speculative, const StaticInstPtr &inst,
-        Addr target) override;
-
     int bindex(Addr pc_in) const override;
     int gindex(ThreadID tid, Addr pc, int bank) const override;
     virtual int gindex_ext(int index, int bank) const = 0;
@@ -128,12 +124,10 @@ class TAGE_SC_L_TAGE : public TAGEBase
 
     virtual uint16_t gtag(ThreadID tid, Addr pc, int bank) const override = 0;
 
-    void squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
-                Addr target) override;
-
-    void updatePathAndGlobalHistory(
-        ThreadHistory & tHist, int brtype, bool taken,
-        Addr branch_pc, Addr target);
+    int branchTypeExtra(const StaticInstPtr & inst) override;
+    void updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
+                                    Addr branch_pc, Addr target,
+                                    TAGEBase::BranchInfo* bi) override;
 
     void adjustAlloc(bool & alloc, bool taken, bool pred_taken) override;
 
@@ -171,11 +165,15 @@ class TAGE_SC_L: public LTAGE
   public:
     TAGE_SC_L(const TAGE_SC_LParams &params);
 
-    bool predict(ThreadID tid, Addr pc, bool cond_branch, void* &b) override;
+    bool predict(
+        ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+    void update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
+                bool squashed, const StaticInstPtr & inst,
+                Addr target) override;
 
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bp_history) override
+    { panic("Not implemented for this BP!\n"); }
 
   protected:
 
@@ -184,8 +182,9 @@ class TAGE_SC_L: public LTAGE
         StatisticalCorrector::BranchInfo *scBranchInfo;
 
         TageSCLBranchInfo(TAGEBase &tage, StatisticalCorrector &sc,
-                          LoopPredictor &lp)
-          : LTageBranchInfo(tage, lp), scBranchInfo(sc.makeBranchInfo())
+                          LoopPredictor &lp, Addr pc, bool cond_branch)
+          : LTageBranchInfo(tage, lp, pc, cond_branch),
+            scBranchInfo(sc.makeBranchInfo())
         {}
 
         virtual ~TageSCLBranchInfo()
