@@ -134,6 +134,7 @@ class AbstractController : public ClockedObject, public Consumer
     virtual bool functionalReadBuffers(PacketPtr&) = 0;
     virtual void functionalRead(const Addr &addr, PacketPtr)
     { panic("functionalRead(Addr,PacketPtr) not implemented"); }
+    virtual int functionalReadPriority() { return -1; }
 
     //! Functional read that reads only blocks not present in the mask.
     //! Return number of bytes read.
