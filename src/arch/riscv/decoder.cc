@@ -44,6 +44,7 @@ Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
     ISA *isa = dynamic_cast<ISA*>(p.isa);
     vlen = isa->getVecLenInBits();
     elen = isa->getVecElemLenInBits();
+    _enableZcd = isa->enableZcd();
     reset();
 }
 
@@ -127,6 +128,7 @@ Decoder::decode(PCStateBase &_next_pc)
     emi.vtype8  = next_pc.vtype() & 0xff;
     emi.vill    = next_pc.vtype().vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
+    emi.enable_zcd = _enableZcd;
 
     return decode(emi, next_pc.instAddr());
 }

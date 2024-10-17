@@ -34,6 +34,7 @@
 // Bitfield definitions.
 //
 def bitfield RVTYPE rv_type;
+def bitfield ENABLE_ZCD enable_zcd;
 
 def bitfield QUADRANT <1:0>;
 def bitfield OPCODE5 <6:2>;
@@ -103,10 +104,13 @@ def bitfield CFUNCT1 <12>;
 def bitfield CFUNCT1BIT6 <6>;
 def bitfield CFUNCT2HIGH <11:10>;
 def bitfield CFUNCT2LOW <6:5>;
+def bitfield CFUNCT2MID <9:8>;
 def bitfield RC1 <11:7>;
 def bitfield RC2 <6:2>;
 def bitfield RP1 <9:7>;
 def bitfield RP2 <4:2>;
+def bitfield R1S <9:7>;
+def bitfield R2S <4:2>;
 def bitfield FC1 <11:7>;
 def bitfield FC2 <6:2>;
 def bitfield FP2 <4:2>;

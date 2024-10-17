@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2012 Google
- * Copyright (c) 2017 The University of Virginia
+ * Copyright (c) 2024 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,65 +26,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_DECODER_HH__
-#define __ARCH_RISCV_DECODER_HH__
+#ifndef __ARCH_RISCV_INSTS_ZCMP_HH__
+#define __ARCH_RISCV_INSTS_ZCMP_HH__
 
-#include "arch/generic/decode_cache.hh"
-#include "arch/generic/decoder.hh"
-#include "arch/riscv/insts/vector.hh"
-#include "arch/riscv/types.hh"
-#include "base/logging.hh"
-#include "base/types.hh"
+#include <string>
+
+#include "arch/riscv/insts/static_inst.hh"
 #include "cpu/static_inst.hh"
-#include "debug/Decode.hh"
-#include "params/RiscvDecoder.hh"
 
 namespace gem5
 {
 
-class BaseISA;
-
 namespace RiscvISA
 {
 
-class Decoder : public InstDecoder
+class CmMacroInst : public RiscvMacroInst
 {
-  private:
-    decode_cache::InstMap<ExtMachInst> instMap;
-    bool aligned;
-    bool mid;
+  public:
+    CmMacroInst(const char* mnem, ExtMachInst machInst, OpClass opClass);
 
   protected:
-    //The extended machine instruction being generated
-    ExtMachInst emi;
-    uint32_t machInst;
+    using RiscvMacroInst::RiscvMacroInst;
 
-    uint32_t vlen;
-    uint32_t elen;
-    bool _enableZcd;
+    uint64_t stackAdj() const;
+    std::string getRlistStr() const;
 
-    virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
-
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
-
-  public:
-    Decoder(const RiscvDecoderParams &p);
-
-    void reset() override;
-
-    inline bool compressed(ExtMachInst inst) { return inst.quadRant < 0x3; }
-
-    //Use this to give data to the decoder. This should be used
-    //when there is control flow.
-    void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
-
-    StaticInstPtr decode(PCStateBase &nextPC) override;
+    uint64_t rlist;
 };
 
 } // namespace RiscvISA
 } // namespace gem5
 
-#endif // __ARCH_RISCV_DECODER_HH__
+#endif // __ARCH_RISCV_INSTS_ZCMP_HH__

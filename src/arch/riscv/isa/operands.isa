@@ -70,9 +70,13 @@ def operands {{
     'Rp2': IntReg('ud', 'RP2 + 8', 'IsInteger', 3),
     'ra': IntReg('ud', 'ReturnAddrReg', 'IsInteger', 1),
     'sp': IntReg('ud', 'StackPointerReg', 'IsInteger', 2),
+    'spd': IntReg('ud', 'StackPointerReg', 'IsInteger', 1),
 
     'a0': IntReg('ud', '10', 'IsInteger', 1),
     'a1': IntReg('ud', '11', 'IsInteger', 2),
+
+    'CmPushReg': IntReg('ud', 'push_reg', 'IsInteger', 3),
+    'CmPopReg': IntReg('ud', 'pop_reg', 'IsInteger', 1),
 
     'Fd': FloatRegOp('df', 'FD', 'IsFloating', 1),
     'Fd_bits': FloatRegOp('ud', 'FD', 'IsFloating', 1),

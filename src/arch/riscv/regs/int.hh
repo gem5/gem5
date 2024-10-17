@@ -149,6 +149,18 @@ inline constexpr RegId ArgumentRegs[] = {
     int_reg::A4, int_reg::A5, int_reg::A6, int_reg::A7
 };
 
+const std::vector<RegId> PushPopRegList = {
+    int_reg::S11, int_reg::S10, int_reg::S9, int_reg::S8,
+    int_reg::S7, int_reg::S6, int_reg::S5, int_reg::S4,
+    int_reg::S3, int_reg::S2, int_reg::S1, int_reg::S0,
+    int_reg::Ra
+};
+
+inline constexpr RegId StackRegs[] = {
+  int_reg::S0, int_reg::S1, int_reg::S2, int_reg::S3,
+  int_reg::S4, int_reg::S5, int_reg::S6, int_reg::S7,
+};
+
 } // namespace RiscvISA
 } // namespace gem5
 

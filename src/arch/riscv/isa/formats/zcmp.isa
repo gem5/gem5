@@ -1,0 +1,782 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016 The University of Virginia
+// Copyright (c) 2024 Google LLC
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Cmpush template.
+def template CmPushDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst);
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+        std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+    };
+}};
+
+
+def template CmPushConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
+      %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        StaticInstPtr cur_inst = nullptr;
+        if (rlist < 4) {
+            cur_inst = new Unknown(machInst);
+            cur_inst->setFlag(IsMicroop);
+            cur_inst->setDelayedCommit();
+            microops.emplace_back(cur_inst);
+        } else {
+            int start_reg = 0;
+            if (rlist != 15) {
+                start_reg = (16-rlist);
+            }
+
+            int offset = 0;
+            for (int i = start_reg; i < PushPopRegList.size(); i++) {
+                offset -= rvSelect(4, 8);
+
+                if (machInst.rv_type == RV32) {
+                    cur_inst = new %(class_name)s32MicroInst(
+                        machInst, PushPopRegList[i], offset);
+                } else {
+                    cur_inst = new %(class_name)s64MicroInst(
+                        machInst, PushPopRegList[i], offset);
+                }
+                cur_inst->setDelayedCommit();
+                microops.emplace_back(cur_inst);
+            }
+
+            cur_inst = new %(class_name)sSpAdjMicroInst(machInst, -stackAdj());
+            cur_inst->setDelayedCommit();
+            microops.emplace_back(cur_inst);
+        }
+
+        microops.front()->setFirstMicroop();
+        microops.back()->setLastMicroop();
+    }
+}};
+
+def template CmPushExecute {{
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << getRlistStr() << ", " << (int64_t)-stackAdj();
+        return ss.str();
+    }
+}};
+
+def template CmStoreMicroDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegId push_reg, int64_t offset);
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(
+            Packet *, ExecContext *, trace::InstRecord *) const override;
+        std::string generateDisassembly(
+            Addr, const loader::SymbolTable *) const override;
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+      private:
+        %(reg_idx_arr_decl)s;
+
+        int64_t offset;
+        Request::Flags memAccessFlags;
+    };
+}};
+
+def template CmStoreMicroConstructor {{
+    %(class_name)s::%(class_name)s(
+        ExtMachInst machInst, RegId push_reg, int64_t offset)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
+        offset(offset)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template CmStoreMicroExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        %(memacc_code)s;
+
+        {
+            Fault fault =
+                writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
+                        nullptr);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(op_wb)s;
+
+        return NoFault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
+            offset << '(' << registerName(srcRegIdx(0)) << ')';
+        return ss.str();
+    }
+}};
+
+def template CmStoreMicroInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        %(memacc_code)s;
+
+        {
+            Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
+                memAccessFlags, nullptr);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
+def template CmStoreMicroCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def template SpAdjMicroDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, int64_t adj);
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        std::string generateDisassembly(
+            Addr, const loader::SymbolTable *) const override;
+
+      private:
+        %(reg_idx_arr_decl)s;
+
+        int64_t adj;
+    };
+}};
+
+def template SpAdjMicroConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, int64_t adj)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s), adj(adj)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template SpAdjMicroExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ' '
+            << registerName(srcRegIdx(0)) << ' ' << adj;
+        return ss.str();
+    }
+}};
+
+// Cmpop decode template.
+def template CmPopDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst);
+
+        std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+    };
+}};
+
+
+def template CmPopConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst) :
+      %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        StaticInstPtr cur_inst = nullptr;
+        if (rlist < 4) {
+            cur_inst = new Unknown(machInst);
+            cur_inst->setFlag(IsMicroop);
+            cur_inst->setDelayedCommit();
+            microops.emplace_back(cur_inst);
+        } else {
+            int start_reg = 0;
+            if (rlist != 15) {
+                start_reg = (16-rlist);
+            }
+
+            int offset = stackAdj();
+            for (int i = start_reg; i < PushPopRegList.size(); i++) {
+                offset -= rvSelect(4, 8);
+
+                if (machInst.rv_type == RV32) {
+                    cur_inst = new %(class_name)s32MicroInst(
+                        machInst, PushPopRegList[i], offset);
+                } else {
+                    cur_inst = new %(class_name)s64MicroInst(
+                        machInst, PushPopRegList[i], offset);
+                }
+                cur_inst->setDelayedCommit();
+                microops.emplace_back(cur_inst);
+            }
+
+            cur_inst = new %(class_name)sSpAdjMicroInst(machInst, stackAdj());
+            cur_inst->setDelayedCommit();
+            microops.emplace_back(cur_inst);
+
+            %(move_a0_desc)s;
+            %(return_desc)s;
+        }
+
+        microops.front()->setFirstMicroop();
+        microops.back()->setLastMicroop();
+    }
+}};
+
+def template CmPopExecute {{
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << getRlistStr() << ", " << stackAdj();
+        return ss.str();
+    }
+}};
+
+def template CmLoadMicroDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegId pop_reg, int64_t offset);
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(
+            Packet *, ExecContext *, trace::InstRecord *) const override;
+        std::string generateDisassembly(
+            Addr, const loader::SymbolTable *) const override;
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+      private:
+        %(reg_idx_arr_decl)s;
+
+        int64_t offset;
+        Request::Flags memAccessFlags;
+    };
+}};
+
+def template CmLoadMicroConstructor {{
+    %(class_name)s::%(class_name)s(
+        ExtMachInst machInst, RegId pop_reg, int64_t offset)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
+        offset(offset)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template CmLoadMicroExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        {
+            Fault fault =
+                readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(memacc_code)s;
+
+        %(op_wb)s;
+
+        return NoFault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+            offset << '(' << registerName(srcRegIdx(0)) << ')';
+        return ss.str();
+    }
+}};
+
+def template CmLoadMicroInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+    }
+}};
+
+def template CmLoadMicroCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMemLE(pkt, Mem, traceData);
+
+        %(memacc_code)s;
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
+def template CmRetMicroDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+
+        std::string
+        generateDisassembly(
+                Addr pc, const loader::SymbolTable *symtab) const override;
+
+        std::unique_ptr<PCStateBase> branchTarget(
+                ThreadContext *tc) const override;
+
+        using StaticInst::branchTarget;
+
+      private:
+        %(reg_idx_arr_decl)s;
+    };
+}};
+
+def template CmRetMicroConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template CmRetMicroExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
+
+    std::unique_ptr<PCStateBase>
+    %(class_name)s::branchTarget(ThreadContext *tc) const
+    {
+        PCStateBase *pc_ptr = tc->pcState().clone();
+        pc_ptr->as<PCState>().set(rvSext(tc->getReg(srcRegIdx(0)) & ~0x1));
+        return std::unique_ptr<PCStateBase>{pc_ptr};
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(srcRegIdx(0));
+        return ss.str();
+    }
+}};
+
+// Cmmvsa01 decode template
+def template CmMvDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst);
+
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+        std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+    };
+}};
+
+def template CmMvsa01Constructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        StaticInstPtr cur_inst;
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, int_reg::A0, StackRegs[machInst.r1s]);
+        microops.emplace_back(cur_inst);
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, int_reg::A1, StackRegs[machInst.r2s]);
+        microops.emplace_back(cur_inst);
+
+        microops.front()->setFirstMicroop();
+        microops.back()->setLastMicroop();
+    }
+}};
+
+def template CmMva01sConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        StaticInstPtr cur_inst;
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, StackRegs[machInst.r1s], int_reg::A0);
+        cur_inst->setDelayedCommit();
+        microops.emplace_back(cur_inst);
+        cur_inst = new %(class_name)sMvMicroInst(
+            machInst, StackRegs[machInst.r2s], int_reg::A1);
+        cur_inst->setDelayedCommit();
+        microops.emplace_back(cur_inst);
+
+        microops.front()->setFirstMicroop();
+        microops.back()->setLastMicroop();
+    }
+}};
+
+def template CmMvExecute {{
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(StackRegs[machInst.r1s])
+            << ", " << registerName(StackRegs[machInst.r2s]);
+        return ss.str();
+    }
+}};
+
+def template CmMvMicroDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegId push_reg, RegId pop_reg);
+      protected:
+        using %(base_class)s::%(base_class)s;
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        std::string generateDisassembly(
+            Addr, const loader::SymbolTable *) const override;
+
+      private:
+        %(reg_idx_arr_decl)s;
+    };
+}};
+
+def template CmMvMicroConstructor {{
+    %(class_name)s::%(class_name)s(
+        ExtMachInst machInst, RegId push_reg, RegId pop_reg)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template CmMvMicroExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ' '
+            << registerName(srcRegIdx(0));
+        return ss.str();
+    }
+}};
+
+def format CmPush(*flags) {{
+    code = ''
+    macro_iop = InstObjParams(name, Name, 'CmMacroInst', code, flags)
+    header_output = CmPushDeclare.subst(macro_iop)
+    decoder_output = CmPushConstructor.subst(macro_iop)
+    exec_output = CmPushExecute.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    memacc_code = 'Mem_sw = CmPushReg_sw;'
+    ea_code = 'EA = rvSext(sp + offset);'
+    micro32_iop = InstObjParams('lw', f'{Name}32MicroInst', 'RiscvMicroInst',
+        {'ea_code': ea_code, 'memacc_code': memacc_code},
+        flags)
+
+    mem_flags = [getAlignFlag(micro32_iop)]
+    s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+    micro32_iop.constructor += s
+
+    header_output += CmStoreMicroDeclare.subst(micro32_iop)
+    decoder_output += CmStoreMicroConstructor.subst(micro32_iop)
+    exec_output += CmStoreMicroExecute.subst(micro32_iop) \
+        + CmStoreMicroInitiateAcc.subst(micro32_iop) \
+        + CmStoreMicroCompleteAcc.subst(micro32_iop)
+
+    memacc_code = 'Mem = CmPushReg;'
+    ea_code = 'EA = rvSext(sp + offset);'
+    micro64_iop = InstObjParams('ld', f'{Name}64MicroInst', 'RiscvMicroInst',
+        {'ea_code': ea_code, 'memacc_code': memacc_code},
+        flags)
+
+    mem_flags = [getAlignFlag(micro64_iop)]
+    s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+    micro64_iop.constructor += s
+
+    header_output += CmStoreMicroDeclare.subst(micro64_iop)
+    decoder_output += CmStoreMicroConstructor.subst(micro64_iop)
+    exec_output += CmStoreMicroExecute.subst(micro64_iop) \
+        + CmStoreMicroInitiateAcc.subst(micro64_iop) \
+        + CmStoreMicroCompleteAcc.subst(micro64_iop)
+
+    code = 'spd = rvSext(sp + adj);'
+    sp_adj_iop = InstObjParams('addi', f'{Name}SpAdjMicroInst',
+        'RiscvMicroInst', code, flags)
+
+    header_output += SpAdjMicroDeclare.subst(sp_adj_iop)
+    decoder_output += SpAdjMicroConstructor.subst(sp_adj_iop)
+    exec_output += SpAdjMicroExecute.subst(sp_adj_iop)
+}};
+
+def format CmPop(is_ret=False, has_a0=False, *flags) {{
+    code = ''
+    flags = []
+    has_a0 = eval(has_a0)
+    is_ret = eval(is_ret)
+    move_a0_desc = ''
+    return_desc = ''
+
+    if has_a0:
+        move_a0_desc = rf'''
+          cur_inst = new {Name}MvMicroInst(
+              machInst, ReturnValueReg, int_reg::Zero);
+          microops.emplace_back(cur_inst);
+       '''
+
+    if is_ret:
+        return_desc = rf'''
+          cur_inst = new {Name}RetMicroInst(machInst);
+          microops.emplace_back(cur_inst);
+       '''
+
+    macro_iop = InstObjParams(name, Name, 'CmMacroInst',
+        {'code': code, 'move_a0_desc': move_a0_desc,
+         'return_desc': return_desc},
+        flags)
+    header_output = CmPopDeclare.subst(macro_iop)
+    decoder_output = CmPopConstructor.subst(macro_iop)
+    exec_output = CmPopExecute.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    memacc_code = 'CmPopReg_sw = Mem_sw;'
+    ea_code = 'EA = rvSext(sp + offset);'
+    micro32_iop = InstObjParams('lw', f'{Name}32MicroInst', 'RiscvMicroInst',
+        {'ea_code': ea_code, 'memacc_code': memacc_code},
+        flags)
+
+    mem_flags = [getAlignFlag(micro32_iop)]
+    s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+    micro32_iop.constructor += s
+
+    header_output += CmLoadMicroDeclare.subst(micro32_iop)
+    decoder_output += CmLoadMicroConstructor.subst(micro32_iop)
+    exec_output += CmLoadMicroExecute.subst(micro32_iop) \
+        + CmLoadMicroInitiateAcc.subst(micro32_iop) \
+        + CmLoadMicroCompleteAcc.subst(micro32_iop)
+
+    memacc_code = 'CmPopReg = Mem;'
+    ea_code = 'EA = rvSext(sp + offset);'
+    micro64_iop = InstObjParams('ld', f'{Name}64MicroInst', 'RiscvMicroInst',
+        {'ea_code': ea_code, 'memacc_code': memacc_code},
+        flags)
+
+    mem_flags = [getAlignFlag(micro64_iop)]
+    s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+    micro64_iop.constructor += s
+
+    header_output += CmLoadMicroDeclare.subst(micro64_iop)
+    decoder_output += CmLoadMicroConstructor.subst(micro64_iop)
+    exec_output += CmLoadMicroExecute.subst(micro64_iop) \
+        + CmLoadMicroInitiateAcc.subst(micro64_iop) \
+        + CmLoadMicroCompleteAcc.subst(micro64_iop)
+
+    code = 'spd = rvSext(sp + adj);'
+    sp_adj_iop = InstObjParams('addi', f'{Name}SpAdjMicroInst',
+        'RiscvMicroInst', code, flags)
+
+    header_output += SpAdjMicroDeclare.subst(sp_adj_iop)
+    decoder_output += SpAdjMicroConstructor.subst(sp_adj_iop)
+    exec_output += SpAdjMicroExecute.subst(sp_adj_iop)
+
+    if has_a0:
+        code = 'CmPopReg = CmPushReg;'
+        has_a0_iop = InstObjParams('mv', f'{Name}MvMicroInst',
+            'RiscvMicroInst', code, flags)
+
+        header_output += CmMvMicroDeclare.subst(has_a0_iop)
+        decoder_output += CmMvMicroConstructor.subst(has_a0_iop)
+        exec_output += CmMvMicroExecute.subst(has_a0_iop)
+
+    if is_ret:
+        code = 'NPC = rvSext(ra & (~0x1));'
+        ret_flags = ['IsIndirectControl', 'IsUncondControl', 'IsReturn']
+        is_ret_iop = InstObjParams('jr', f'{Name}RetMicroInst',
+            'RiscvMicroInst', code, ret_flags)
+
+        header_output += CmRetMicroDeclare.subst(is_ret_iop)
+        decoder_output += CmRetMicroConstructor.subst(is_ret_iop)
+        exec_output += CmRetMicroExecute.subst(is_ret_iop)
+}};
+
+def format CmMvsa01() {{
+    code = ''
+    flags = []
+    iop = InstObjParams(name, Name, 'RiscvMacroInst', code, flags)
+    header_output = CmMvDeclare.subst(iop)
+    decoder_output = CmMvsa01Constructor.subst(iop)
+    exec_output = CmMvExecute.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+
+    code = 'CmPopReg = CmPushReg;'
+    micro_iop = InstObjParams('mv', f'{Name}MvMicroInst', 'RiscvMicroInst',
+        code, flags)
+
+    header_output += CmMvMicroDeclare.subst(micro_iop)
+    decoder_output += CmMvMicroConstructor.subst(micro_iop)
+    exec_output += CmMvMicroExecute.subst(micro_iop)
+}};
+
+def format CmMva01s() {{
+    code = ''
+    flags = []
+    iop = InstObjParams(name, Name, 'RiscvMacroInst', code, flags)
+    header_output = CmMvDeclare.subst(iop)
+    decoder_output = CmMva01sConstructor.subst(iop)
+    exec_output = CmMvExecute.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+
+    code = 'CmPopReg = CmPushReg;'
+    micro_iop = InstObjParams('mv', f'{Name}MvMicroInst', 'RiscvMicroInst',
+        code, flags)
+
+    header_output += CmMvMicroDeclare.subst(micro_iop)
+    decoder_output += CmMvMicroConstructor.subst(micro_iop)
+    exec_output += CmMvMicroExecute.subst(micro_iop)
+}};
