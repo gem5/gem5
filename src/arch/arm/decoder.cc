@@ -53,8 +53,6 @@ namespace gem5
 namespace ArmISA
 {
 
-GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
-
 Decoder::Decoder(const ArmDecoderParams &params)
     : InstDecoder(params, &data),
       dvmEnabled(params.dvm_enabled),
