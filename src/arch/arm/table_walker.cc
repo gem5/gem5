@@ -2312,7 +2312,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
             descriptor.getRawData());
 
     // Insert the entry into the TLBs
-    tlb->multiInsert(te);
+    tlb->multiInsert(TlbEntry::KeyType(te), te);
 }
 
 void
@@ -2386,7 +2386,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
             descriptor.getRawData());
 
     // Insert the entry into the TLBs
-    tlb->multiInsert(te);
+    tlb->multiInsert(TlbEntry::KeyType(te), te);
     if (!currState->timing) {
         currState->tc  = NULL;
         currState->req = NULL;
