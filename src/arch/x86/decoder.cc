@@ -41,8 +41,6 @@ namespace gem5
 namespace X86ISA
 {
 
-X86ISAInst::MicrocodeRom Decoder::microcodeRom;
-
 Decoder::State
 Decoder::doResetState()
 {
@@ -670,9 +668,6 @@ Decoder::doImmediateState()
     }
     return nextState;
 }
-
-Decoder::InstBytes Decoder::dummy;
-Decoder::InstCacheMap Decoder::instCacheMap;
 
 StaticInstPtr
 Decoder::decode(ExtMachInst mach_inst, Addr addr)
