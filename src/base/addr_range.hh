@@ -95,9 +95,13 @@ class AddrRange
      * the MSB of sel.
      */
     std::vector<Addr> masks;
+    std::vector<AddrRange> holes = {};
 
     /** The value to compare sel with. */
     uint8_t intlvMatch;
+
+    uint8_t lowest_modulo_bit = 0;
+    uint8_t modulo_by = 0;
 
   protected:
     struct Dummy {};
@@ -114,30 +118,59 @@ class AddrRange
             _end = begin_it->_end;
             masks = begin_it->masks;
             intlvMatch = begin_it->intlvMatch;
+            modulo_by = begin_it->modulo_by;
+            lowest_modulo_bit = begin_it->lowest_modulo_bit;
+            holes = begin_it->holes;
         }
 
         auto count = std::distance(begin_it, end_it);
         // either merge if got all ranges or keep this equal to the single
         // interleaved range
         if (count > 1) {
-            fatal_if(count != (1ULL << masks.size()),
-                    "Got %d ranges spanning %d interleaving bits.",
-                    count, masks.size());
+            if (!begin_it->modulo_by) {
+                fatal_if(count != (1ULL << masks.size()),
+                         "Got %d ranges spanning %d interleaving bits.", count,
+                         masks.size());
 
-            uint8_t match = 0;
-            for (auto it = begin_it; it != end_it; it++) {
-                fatal_if(!mergesWith(*it),
-                        "Can only merge ranges with the same start, end "
-                        "and interleaving bits, %s %s.", to_string(),
-                        it->to_string());
+                uint8_t match = 0;
+                for (auto it = begin_it; it != end_it; it++) {
+                    fatal_if(!mergesWith(*it),
+                             "Can only merge ranges with the same start, end "
+                             "and interleaving bits, %s %s.",
+                             to_string(), it->to_string());
 
-                fatal_if(it->intlvMatch != match,
-                        "Expected interleave match %d but got %d when "
-                        "merging.", match, it->intlvMatch);
-                ++match;
+                    fatal_if(it->intlvMatch != match,
+                             "Expected interleave match %d but got %d when "
+                             "merging.",
+                             match, it->intlvMatch);
+                    ++match;
+                }
+                masks.clear();
+                intlvMatch = 0;
+            } else {
+                fatal_if(
+                    count != begin_it->modulo_by,
+                    "Got %d ranges spanning %d modulo bits.", count,
+                    begin_it->modulo_by);
+
+                uint8_t match = 0;
+                for (auto it = begin_it; it != end_it; it++) {
+                    fatal_if(!mergesWith(*it),
+                             "Can only merge ranges with the same start, end "
+                             "modulo bits, and holes, %s - %s.",
+                             to_string(), it->to_string());
+
+                    fatal_if(it->intlvMatch != match,
+                             "Expected modulo match %d but got %d when "
+                             "merging.",
+                             match, it->intlvMatch);
+                    ++match;
+                }
+                modulo_by = 0;
+                lowest_modulo_bit = 0;
+                masks.clear();
+                intlvMatch = 0;
             }
-            masks.clear();
-            intlvMatch = 0;
         }
     }
 
@@ -149,6 +182,37 @@ class AddrRange
     AddrRange()
         : _start(1), _end(0), intlvMatch(0)
     {}
+
+
+    /**
+     * Construct an address range
+     *
+     * @param _start The start address of this range
+     * @param _end The end address of this range (not included in  the range)
+     * @param _modulo_by Number of channels to interleave across
+     * @param _lowest_modulo_bit Determines granularity of the interleaving
+     * @param intlv_match The matching value of the xor operations
+     *
+     * @ingroup api_addr_range
+     */
+    AddrRange(Addr _start, Addr _end, uint8_t _modulo_by,
+              uint8_t _lowest_modulo_bit, uint8_t _intlv_match,
+              std::vector<AddrRange> holes = {})
+        : _start(_start),
+          _end(_end),
+          holes(holes),
+          intlvMatch(_intlv_match),
+          lowest_modulo_bit(_lowest_modulo_bit),
+          modulo_by(_modulo_by)
+        {
+        fatal_if(!modulo_by, "modulo_by must be > 0 with this contructor\n",
+                 lowest_modulo_bit);
+        // sanity checks
+        fatal_if(
+            modulo_by && (lowest_modulo_bit >= 64 || lowest_modulo_bit < 6 ||
+                          ((2 ^ lowest_modulo_bit) > (_end - _start))),
+            "Modulo bit %d is out of range\n", lowest_modulo_bit);
+    }
 
     /**
      * Construct an address range
@@ -182,9 +246,8 @@ class AddrRange
      */
     AddrRange(Addr _start, Addr _end, const std::vector<Addr> &_masks,
               uint8_t _intlv_match)
-        : _start(_start), _end(_end), masks(_masks),
-          intlvMatch(_intlv_match)
-    {
+        : _start(_start), _end(_end), masks(_masks), intlvMatch(_intlv_match)
+        {
         // sanity checks
         fatal_if(!masks.empty() && _intlv_match >= 1ULL << masks.size(),
                  "Match value %d does not fit in %d interleaving bits\n",
@@ -218,11 +281,12 @@ class AddrRange
      * @ingroup api_addr_range
      */
     AddrRange(Addr _start, Addr _end, uint8_t _intlv_high_bit,
-              uint8_t _xor_high_bit, uint8_t _intlv_bits,
-              uint8_t _intlv_match)
-        : _start(_start), _end(_end), masks(_intlv_bits),
+              uint8_t _xor_high_bit, uint8_t _intlv_bits, uint8_t _intlv_match)
+        : _start(_start),
+          _end(_end),
+          masks(_intlv_bits),
           intlvMatch(_intlv_match)
-    {
+          {
         // sanity checks
         fatal_if(_intlv_bits && _intlv_match >= 1ULL << _intlv_bits,
                  "Match value %d does not fit in %d interleaving bits\n",
@@ -232,14 +296,18 @@ class AddrRange
         if (_intlv_bits && _xor_high_bit) {
             if (_xor_high_bit == _intlv_high_bit) {
                 fatal("XOR and interleave high bit must be different\n");
-            }  else if (_xor_high_bit > _intlv_high_bit) {
+            } else if (_xor_high_bit > _intlv_high_bit) {
                 if ((_xor_high_bit - _intlv_high_bit) < _intlv_bits)
-                    fatal("XOR and interleave high bit must be at least "
-                          "%d bits apart\n", _intlv_bits);
+                    fatal(
+                        "XOR and interleave high bit must be at least "
+                        "%d bits apart\n",
+                        _intlv_bits);
             } else {
                 if ((_intlv_high_bit - _xor_high_bit) < _intlv_bits) {
-                    fatal("Interleave and XOR high bit must be at least "
-                          "%d bits apart\n", _intlv_bits);
+                    fatal(
+                        "Interleave and XOR high bit must be at least "
+                        "%d bits apart\n",
+                        _intlv_bits);
                 }
             }
         }
@@ -256,8 +324,7 @@ class AddrRange
     }
 
     AddrRange(Addr _start, Addr _end)
-        : _start(_start), _end(_end), intlvMatch(0)
-    {}
+        : _start(_start), _end(_end), intlvMatch(0) {}
 
     /**
      * Create an address range by merging a collection of interleaved
@@ -268,11 +335,9 @@ class AddrRange
      * @ingroup api_addr_range
      */
     AddrRange(std::vector<AddrRange> ranges)
-        : AddrRange(Dummy{}, ranges.begin(), ranges.end())
-    {}
+        : AddrRange(Dummy{}, ranges.begin(), ranges.end()) {}
     AddrRange(std::list<AddrRange> ranges)
-        : AddrRange(Dummy{}, ranges.begin(), ranges.end())
-    {}
+        : AddrRange(Dummy{}, ranges.begin(), ranges.end()) {}
 
     /**
      * Determine if the range is interleaved or not.
@@ -281,7 +346,12 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    bool interleaved() const { return masks.size() > 0; }
+    bool
+    interleaved() const
+    {
+        return ((masks.size() > 0) || (modulo_by > 1));
+    }
+    // maybe assume user is using modulo correctly?
 
     /**
      * Determing the interleaving granularity of the range.
@@ -294,12 +364,17 @@ class AddrRange
     granularity() const
     {
         if (interleaved()) {
-            auto combined_mask = 0;
-            for (auto mask: masks) {
-                combined_mask |= mask;
+            if (!modulo_by) {  // modulo exclusive
+                auto combined_mask = 0;
+                for (auto mask : masks) {
+                    combined_mask |= mask;
+                }
+                const uint8_t lowest_bit = ctz64(combined_mask);
+                return 1ULL << lowest_bit;
             }
-            const uint8_t lowest_bit = ctz64(combined_mask);
-            return 1ULL << lowest_bit;
+
+            return 1ULL << lowest_modulo_bit;
+
         } else {
             return size();
         }
@@ -313,7 +388,14 @@ class AddrRange
      *
      * @ingroup api_addr_range
      */
-    uint32_t stripes() const { return 1ULL << masks.size(); }
+    uint32_t
+    stripes() const
+    {
+        if (!modulo_by) {  // modulo exclusive
+            return 1ULL << masks.size();
+        }
+        return 1ULL * modulo_by;
+    }
 
     /**
      * Get the size of the address range. For a case where
@@ -325,6 +407,15 @@ class AddrRange
     Addr
     size() const
     {
+        if (modulo_by) {  // modulo exclusive
+            uint64_t hole_size = 0;
+            for (auto hole : holes){
+                hole_size += hole.size();
+            }
+
+            return ((_end - _start) - hole_size) / modulo_by;
+        }
+
         return (_end - _start) >> masks.size();
     }
 
@@ -360,21 +451,26 @@ class AddrRange
     to_string() const
     {
         if (interleaved()) {
-            std::string str;
-            for (unsigned int i = 0; i < masks.size(); i++) {
-                str += " ";
-                Addr mask = masks[i];
-                while (mask) {
-                    auto bit = ctz64(mask);
-                    mask &= ~(1ULL << bit);
-                    str += csprintf("a[%d]^", bit);
+            if (!modulo_by) {  // modulo exclusive
+
+                std::string str;
+                for (unsigned int i = 0; i < masks.size(); i++) {
+                    str += " ";
+                    Addr mask = masks[i];
+                    while (mask) {
+                        auto bit = ctz64(mask);
+                        mask &= ~(1ULL << bit);
+                        str += csprintf("a[%d]^", bit);
+                    }
+                    str += csprintf("\b=%d", bits(intlvMatch, i));
                 }
-                str += csprintf("\b=%d", bits(intlvMatch, i));
+                return csprintf("[%#llx:%#llx]%s", _start, _end, str);
             }
-            return csprintf("[%#llx:%#llx]%s", _start, _end, str);
-        } else {
-            return csprintf("[%#llx:%#llx]", _start, _end);
+
+            return csprintf("[%#llx:%#llx] modulo_by %d, num holes: %d",
+                            _start, _end, modulo_by, holes.size());
         }
+        return csprintf("[%#llx:%#llx]", _start, _end);
     }
 
     /**
@@ -390,8 +486,30 @@ class AddrRange
     bool
     mergesWith(const AddrRange& r) const
     {
-        return r._start == _start && r._end == _end &&
-            r.masks == masks;
+        // Potentially needs simplification
+        // holes makes this much more difficult,
+        // check if one addrRange is the hole of the other
+        if (!modulo_by) {
+            return (r._start == _start && r._end == _end) &&
+                (r.masks == masks);
+        } else {
+            for (auto hole : holes){
+                if (r == hole) {
+                    return true;
+                }
+            }
+
+            for (auto hole : r.holes) {
+                if (*this == hole) {
+                    return true;
+                }
+            }
+
+            return ((r._start == _start && r._end == _end) &&
+                (r.modulo_by == modulo_by &&
+                 r.lowest_modulo_bit == lowest_modulo_bit) &&
+                 (holes == r.holes));
+        }
     }
 
     /**
@@ -413,6 +531,26 @@ class AddrRange
             return false;
         } else if (!interleaved() && !r.interleaved()) {
             // if neither range is interleaved, we are done
+            if (holes.size() > 0 || r.holes.size() > 0) {
+                // if either have holes, check if the other range is in a hole
+                // potentially need to expand, what if the other address range
+                // is in multiple holes?
+                if (_start < r._start) {
+                    for (auto hole : holes){
+
+                        if (hole.contains(r._start) && hole.end() <= r._end){
+                            return false;
+                        }
+                    }
+                } else {
+                    for (auto hole : r.holes) {
+                        if (hole.contains(_start) && hole.end() <= _end) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 
@@ -424,8 +562,30 @@ class AddrRange
         } else if (mergesWith(r)) {
             // restrict the check to ranges that belong to the
             // same chunk
+            // might need to fix this for holes
             return intlvMatch == r.intlvMatch;
         } else {
+            if (holes.size() > 0 || r.holes.size() > 0)
+            {
+                // if either have holes, check if the other range is in a hole
+                // potentially need to expand, what if the other address range
+                // is in multiple holes?
+                if (_start < r._start) {
+                    for (auto hole : holes) {
+
+                        if (hole.contains(r._start) && hole.end() <= r._end) {
+                            return false;
+                        }
+                    }
+                } else {
+                    for (auto hole : r.holes){
+                        if (hole.contains(_start) && hole.end() <= _end) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
             panic("Cannot test intersection of %s and %s\n",
                   to_string(), r.to_string());
         }
@@ -451,6 +611,16 @@ class AddrRange
         // suffices to check the upper bound, the lower bound and
         // whether it would fit in a continuous segment of the input
         // addr range.
+        for (auto hole : r.holes) {
+                    if ((hole.start() >= _start && hole.start() < _end)
+                        || (hole.end() > _start && hole.end() < _end)
+                        || (hole.start() < _start && hole.end() > _end)){
+
+                            return false;
+                    }
+        }
+
+
         if (r.interleaved()) {
             return r.contains(_start) && r.contains(_end - 1) &&
                 size() <= r.granularity();
@@ -461,6 +631,7 @@ class AddrRange
                 // _end is 2^64 so it wraps to 0.
                 // In this case we will be a subset only if r._end
                 // also wraps around.
+
                 return _start >= r._start && r._end == 0;
             } else if (r._end <= r._start){
                 // Special case: if r wraps around that is
@@ -468,6 +639,7 @@ class AddrRange
                 // In this case we will be a subset only if our _start
                 // is within r._start/ _end does not matter
                 // because r wraps around.
+
                 return _start >= r._start;
             } else {
                 // Normal case: Check if our range is completely within 'r'.
@@ -492,16 +664,31 @@ class AddrRange
         // no interleaving, or with interleaving also if the selected
         // bits from the address match the interleaving value
         bool in_range = a >= _start && a < _end;
+
         if (in_range) {
             auto sel = 0;
-            for (unsigned int i = 0; i < masks.size(); i++) {
-                Addr masked = a & masks[i];
-                // The result of an xor operation is 1 if the number
-                // of bits set is odd or 0 othersize, thefore it
-                // suffices to count the number of bits set to
-                // determine the i-th bit of sel.
-                sel |= (popCount(masked) % 2) << i;
+            if (!modulo_by) {  // modulo exclusive
+                for (unsigned int i = 0; i < masks.size(); i++) {
+                    Addr masked = a & masks[i];
+                    // The result of an xor operation is 1 if the number
+                    // of bits set is odd or 0 othersize, thefore it
+                    // suffices to count the number of bits set to
+                    // determine the i-th bit of sel.
+                    sel |= (popCount(masked) % 2) << i;
+                }
+            } else {
+                // check if in hole
+                if (holes.size() > 0) { // is this if necessary?
+                    for (auto hole : holes) {
+                        // if (hole.contains(a)) {
+                        if (a >= hole.start() && a < hole.end()){
+                            return false;
+                        }
+                    }
+                }
+                sel = (a >> lowest_modulo_bit) % modulo_by;
             }
+
             return sel == intlvMatch;
         }
         return false;
@@ -540,26 +727,36 @@ class AddrRange
             return a;
         }
 
-        // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
-        for (unsigned int i = 0; i < masks.size(); i++) {
-            masks_lsb[i] = ctz64(masks[i]);
-        }
-
-        // we need to sort the list of bits we will discard as we
-        // discard them one by one starting.
-        std::sort(masks_lsb, masks_lsb + masks.size());
-
-        for (unsigned int i = 0; i < masks.size(); i++) {
-            const int intlv_bit = masks_lsb[i];
-            if (intlv_bit > 0) {
-                // on every iteration we remove one bit from the input
-                // address, and therefore the lowest invtl_bit has
-                // also shifted to the right by i positions.
-                a = insertBits(a >> 1, intlv_bit - i - 1, 0, a);
-            } else {
-                a >>= 1;
+        if (!modulo_by) {
+            // Get the LSB set from each mask
+            int masks_lsb[masks.size()];
+            for (unsigned int i = 0; i < masks.size(); i++) {
+                masks_lsb[i] = ctz64(masks[i]);
             }
+
+            // we need to sort the list of bits we will discard as we
+            // discard them one by one starting.
+            std::sort(masks_lsb, masks_lsb + masks.size());
+
+            for (unsigned int i = 0; i < masks.size(); i++) {
+                const int intlv_bit = masks_lsb[i];
+                if (intlv_bit > 0) {
+                    // on every iteration we remove one bit from the input
+                    // address, and therefore the lowest invtl_bit has
+                    // also shifted to the right by i positions.
+                    a = insertBits(a >> 1, intlv_bit - i - 1, 0, a);
+                } else {
+                    a >>= 1;
+                }
+            }
+        } else {
+            uint64_t my_mask = 1;
+            for (uint64_t i = 1; i < lowest_modulo_bit; i++) {
+                my_mask = (my_mask << 1) | 1;
+            }
+            uint64_t lowest_bits = a & my_mask;
+            a = (a >> lowest_modulo_bit) / modulo_by;
+            a = (a << lowest_modulo_bit) + lowest_bits;
         }
         return a;
     }
@@ -579,34 +776,46 @@ class AddrRange
             return a;
         }
 
-        // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
-        for (unsigned int i = 0; i < masks.size(); i++) {
-            masks_lsb[i] = ctz64(masks[i]);
-        }
-
-        // Add bits one-by-one from the LSB side.
-        std::sort(masks_lsb, masks_lsb + masks.size());
-        for (unsigned int i = 0; i < masks.size(); i++) {
-            const int intlv_bit = masks_lsb[i];
-            if (intlv_bit > 0) {
-                // on every iteration we add one bit from the input
-                // address, but the lowest invtl_bit in the iteration is
-                // always in the right position because they are sorted
-                // increasingly from the LSB
-                a = insertBits(a << 1, intlv_bit - 1, 0, a);
-            } else {
-                a <<= 1;
+        if (!modulo_by) {
+            // Get the LSB set from each mask
+            int masks_lsb[masks.size()];
+            for (unsigned int i = 0; i < masks.size(); i++) {
+                masks_lsb[i] = ctz64(masks[i]);
             }
-        }
 
-        for (unsigned int i = 0; i < masks.size(); i++) {
-            const int lsb = ctz64(masks[i]);
-            const Addr intlv_bit = bits(intlvMatch, i);
-            // Calculate the mask ignoring the LSB
-            const Addr masked = a & masks[i] & ~(1 << lsb);
-            // Set the LSB of the mask to whatever satisfies the selector bit
-            a = insertBits(a, lsb, intlv_bit ^ popCount(masked));
+            // Add bits one-by-one from the LSB side.
+            std::sort(masks_lsb, masks_lsb + masks.size());
+            for (unsigned int i = 0; i < masks.size(); i++) {
+                const int intlv_bit = masks_lsb[i];
+                if (intlv_bit > 0) {
+                    // on every iteration we add one bit from the input
+                    // address, but the lowest invtl_bit in the iteration is
+                    // always in the right position because they are sorted
+                    // increasingly from the LSB
+                    a = insertBits(a << 1, intlv_bit - 1, 0, a);
+                } else {
+                    a <<= 1;
+                }
+            }
+
+            for (unsigned int i = 0; i < masks.size(); i++) {
+                const int lsb = ctz64(masks[i]);
+                const Addr intlv_bit = bits(intlvMatch, i);
+                // Calculate the mask ignoring the LSB
+                const Addr masked = a & masks[i] & ~(1 << lsb);
+                // Set the LSB of the mask to whatever satisfies the selector
+                // bit
+                a = insertBits(a, lsb, intlv_bit ^ popCount(masked));
+            }
+
+        } else {
+            uint64_t my_mask = 1;
+            for (uint64_t i = 1; i < lowest_modulo_bit; i++) {
+                my_mask = (my_mask << 1) | 1;
+            }
+            uint64_t lowest_bits = a & my_mask;
+            a = ((a >> lowest_modulo_bit) * modulo_by) + intlvMatch;
+            a = (a << lowest_modulo_bit) + lowest_bits;
         }
 
         return a;
@@ -628,6 +837,7 @@ class AddrRange
     Addr
     getOffset(const Addr& a) const
     {
+        // potentially subtract by hole sizes / modulo_by
         bool in_range = a >= _start && a < _end;
         if (!in_range) {
             return MaxAddr;
