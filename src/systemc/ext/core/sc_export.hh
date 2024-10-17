@@ -78,7 +78,7 @@ class sc_export : public sc_export_base
  * code is correct).
  * Please check section 9.3 of SystemC 2.3.1 release note for more details.
  */
-#if defined(__GNUC__) && (__GNUC__ >= 13)
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 13))
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
     void operator () (IF &i) { bind(i); }
