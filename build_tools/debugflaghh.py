@@ -100,13 +100,16 @@ if components:
 inline union ${{args.name}}
 {
     ~${{args.name}}() {}
-    CompoundFlag ${{args.name}} = {
-        "${{args.name}}", "${{args.desc}}", {
+
+    CompoundFlag flag${{args.name}};
+
+    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}",
+        {
             ${{",\\n            ".join(
                 f"(Flag *)&::gem5::debug::{flag}" for flag in components)}}
-        }
-    };
-} ${{args.name}};
+        }) {}
+
+} instance${{args.name}};
 """
     )
 else:
@@ -115,10 +118,11 @@ else:
 inline union ${{args.name}}
 {
     ~${{args.name}}() {}
-    SimpleFlag ${{args.name}} = {
-        "${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}
-    };
-} ${{args.name}};
+    SimpleFlag flag${{args.name}};
+
+    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}) {}
+
+} instance${{args.name}};
 """
     )
 
@@ -127,7 +131,7 @@ code(
 } // namespace unions
 
 inline constexpr const auto& ${{args.name}} =
-    ::gem5::debug::unions::${{args.name}}.${{args.name}};
+    ::gem5::debug::unions::instance${{args.name}}.flag${{args.name}};
 
 } // namespace debug
 } // namespace gem5
