@@ -4742,7 +4742,7 @@ decode QUADRANT default Unknown::unknown() {
                             Vtype = new_vtype;
                         }}, VSetiVliDeclare, VSetiVliBranchTarget
                           , SimdConfigOp, IsUncondControl
-                          , IsDirectControl);
+                          , IsIndirectControl);
                     }
                 }
             }
