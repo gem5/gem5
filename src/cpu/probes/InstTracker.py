@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,23 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import("*")
+from m5.objects import SimObject
+from m5.objects.Probe import ProbeListenerObject
+from m5.params import *
+from m5.util.pybind import *
 
-if env['CONF']['BUILD_ISA']:
 
-    SimObject(
-        "PcCountTracker.py",
-        sim_objects=["PcCountTracker", "PcCountTrackerManager"],
+class GlobalInstTracker(SimObject):
+    """
+    Global instruction tracker that can be used to trigger an exit event when a
+    certain number of instructions have been executed across all cores.
+    """
+
+    type = "GlobalInstTracker"
+    cxx_header = "cpu/probes/inst_tracker.hh"
+    cxx_class = "gem5::GlobalInstTracker"
+
+    cxx_exports = [
+        PyBindMethod("changeThreshold"),
+        PyBindMethod("resetCounter"),
+        PyBindMethod("getThreshold"),
+    ]
+
+    inst_threshold = Param.Counter(
+        "The instruction threshold to trigger an" " exit event"
     )
-    Source("pc_count_tracker.cc")
-    Source("pc_count_tracker_manager.cc")
 
-    DebugFlag("PcCountTracker")
 
-    SimObject(
-        "InstTracker.py",
-        sim_objects=["GlobalInstTracker", "LocalInstTracker"],
-    )
-    Source("inst_tracker.cc")
+class LocalInstTracker(ProbeListenerObject):
+    """
+    Local instruction tracker that can be used to listen to one core and
+    update the global instruction tracker.
+    """
 
-    DebugFlag("InstTracker")
+    type = "LocalInstTracker"
+    cxx_header = "cpu/probes/inst_tracker.hh"
+    cxx_class = "gem5::LocalInstTracker"
+
+    cxx_exports = [
+        PyBindMethod("stopListening"),
+        PyBindMethod("startListening"),
+    ]
+
+    global_inst_tracker = Param.GlobalInstTracker("Global instruction tracker")
+    start_listening = Param.Bool(True, "Start listening for instructions")
