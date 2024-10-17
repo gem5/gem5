@@ -264,7 +264,7 @@ class ArmFaultVals : public ArmFault
     static FaultVals vals;
 
   public:
-    ArmFaultVals<T>(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
+    ArmFaultVals(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
         ArmFault(mach_inst, _iss) {}
     FaultName name() const override { return vals.name; }
     FaultOffset offset(ThreadContext *tc) override;

@@ -461,7 +461,7 @@ class CacheBlk : public TaggedEntry
 
   protected:
     /** The current coherence status of this block. @sa CoherenceBits */
-    unsigned coherence;
+    unsigned coherence = 0;
 
     // The following setters have been marked as protected because their
     // respective variables should only be modified at 2 moments:
