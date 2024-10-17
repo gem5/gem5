@@ -498,8 +498,20 @@ void
 PMU::RegularEvent::enable()
 {
     for (auto& subEvents: microArchitectureEventSet) {
-        attachedProbePointList.emplace_back(
-            new RegularProbe(this, subEvents.first, subEvents.second));
+        ProbeManager *pm = subEvents.first->getProbeManager();
+        ProbePoint *probe = pm->getProbePoint(subEvents.second);
+        // The PMU currently handles explicit PMU probes as well as
+        // cache events. For any further types of events we will need
+        // to handle them in this function.
+        if (dynamic_cast<probing::PMU *>(probe)) {
+            attachedProbePointList.push_back(pm->connect<RegularProbe>(
+                this, subEvents.second));
+        } else if (dynamic_cast<ProbePointArg<CacheAccessProbeArg> *>(probe)) {
+            attachedProbePointList.push_back(pm->connect<CacheProbe>(
+                this, subEvents.second));
+        } else {
+            panic("Unsupported probe kind for event %s", probe->getName());
+        }
     }
 }
 

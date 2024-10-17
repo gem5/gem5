@@ -72,14 +72,13 @@ class FrequentValues : public Base
         FrequentValues &parent;
 
       public:
-        FrequentValuesListener(FrequentValues &_parent, ProbeManager *pm,
-            const std::string &name)
-          : ProbeListenerArgBase(pm, name), parent(_parent)
+        FrequentValuesListener(FrequentValues &_parent, std::string name)
+          : ProbeListenerArgBase(std::move(name)), parent(_parent)
         {
         }
         void notify(const DataUpdate &data_update) override;
     };
-    std::vector<FrequentValuesListener*> listeners;
+    std::vector<ProbeConnectionPtr> listeners;
 
     /** Whether Huffman encoding is applied to the VFT indices. */
     const bool useHuffmanEncoding;

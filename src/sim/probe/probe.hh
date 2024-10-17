@@ -74,7 +74,8 @@
 namespace gem5
 {
 
-/** Forward declare the ProbeManager. */
+/** Forward declarations. */
+class ProbeConnection;
 class ProbeManager;
 class ProbeListener;
 struct ProbeListenerObjectParams;
@@ -95,26 +96,19 @@ namespace probing
  */
 }
 
-/**
- * This class is a minimal wrapper around SimObject. It is used to declare
- * a python derived object that can be added as a ProbeListener to any other
- * SimObject.
- *
- * It instantiates manager from a call to Parent.any.
- * The vector of listeners is used simply to hold onto listeners until the
- * ProbeListenerObject is destroyed.
- */
-class ProbeListenerObject : public SimObject
+class ProbeConnection
 {
-  protected:
-    ProbeManager *manager;
-    std::vector<ProbeListener *> listeners;
-
   public:
-    ProbeListenerObject(const ProbeListenerObjectParams &params);
-    virtual ~ProbeListenerObject();
-    ProbeManager* getProbeManager() { return manager; }
+    ProbeConnection(ProbeManager* _manager,
+               std::unique_ptr<ProbeListener> _listener);
+    ~ProbeConnection();
+    ProbeConnection(const ProbeConnection& other) = delete;
+
+ protected:
+    std::unique_ptr<ProbeListener> listener;
+    ProbeManager* manager;
 };
+using ProbeConnectionPtr = std::unique_ptr<ProbeConnection>;
 
 /**
  * ProbeListener base class; here to simplify things like containers
@@ -126,15 +120,15 @@ class ProbeListenerObject : public SimObject
 class ProbeListener
 {
   public:
-    ProbeListener(ProbeManager *manager, const std::string &name);
+    ProbeListener(std::string _name) : name(std::move(_name)) {}
     virtual ~ProbeListener();
     ProbeListener(const ProbeListener& other) = delete;
     ProbeListener& operator=(const ProbeListener& other) = delete;
     ProbeListener(ProbeListener&& other) noexcept = delete;
     ProbeListener& operator=(ProbeListener&& other) noexcept = delete;
+    const std::string& getName() const { return name; }
 
   protected:
-    ProbeManager *const manager;
     const std::string name;
 };
 
@@ -153,7 +147,7 @@ class ProbePoint
 
     virtual void addListener(ProbeListener *listener) = 0;
     virtual void removeListener(ProbeListener *listener) = 0;
-    std::string getName() const { return name; }
+    const std::string& getName() const { return name; }
 };
 
 /**
@@ -181,7 +175,7 @@ class ProbeManager
      * @param listener the ProbeListener to add.
      * @return true if added, false otherwise.
      */
-    bool addListener(std::string point_name, ProbeListener &listener);
+    bool addListener(std::string_view point_name, ProbeListener &listener);
 
     /**
      * @brief Remove a ProbeListener from the ProbePoint named by pointName.
@@ -191,13 +185,49 @@ class ProbeManager
      * @param listener the ProbeListener to remove.
      * @return true if removed, false otherwise.
      */
-    bool removeListener(std::string point_name, ProbeListener &listener);
+    bool removeListener(std::string_view point_name, ProbeListener &listener);
 
     /**
      * @brief Add a ProbePoint to this SimObject ProbeManager.
      * @param point the ProbePoint to add.
      */
     void addPoint(ProbePoint &point);
+    ProbePoint *getProbePoint(std::string_view point_name) const;
+
+    template<typename Listener, typename... Args>
+    ProbeConnectionPtr connect(Args&&... args)
+    {
+        return std::make_unique<ProbeConnection>(
+            this, std::make_unique<Listener>(std::forward<Args>(args)...));
+    }
+};
+
+/**
+ * This class is a minimal wrapper around SimObject. It is used to declare
+ * a python derived object that can be added as a ProbeListener to any other
+ * SimObject.
+ *
+ * It instantiates manager from a call to Parent.any.
+ * The vector of listeners is used simply to hold onto listeners until the
+ * ProbeListenerObject is destroyed.
+ */
+class ProbeListenerObject : public SimObject
+{
+  protected:
+    ProbeManager *manager;
+    std::vector<std::unique_ptr<ProbeConnection>> listeners;
+
+  public:
+    explicit ProbeListenerObject(const ProbeListenerObjectParams &params);
+    ~ProbeListenerObject() override = default;
+    ProbeManager* getProbeManager() { return manager; }
+
+    template<typename T, typename... Args>
+    void connectListener(Args&&... args) {
+        listeners.push_back(getProbeManager()->connect<T>(
+            std::forward<Args>(args)...));
+
+    }
 };
 
 /**
@@ -211,8 +241,8 @@ template <class Arg>
 class ProbeListenerArgBase : public ProbeListener
 {
   public:
-    ProbeListenerArgBase(ProbeManager *pm, const std::string &name)
-        : ProbeListener(pm, name)
+    ProbeListenerArgBase(std::string name)
+        : ProbeListener(std::move(name))
     {}
     virtual void notify(const Arg &val) = 0;
 };
@@ -237,9 +267,9 @@ class ProbeListenerArg : public ProbeListenerArgBase<Arg>
      * @param name the name of the ProbePoint to add this listener to.
      * @param func a pointer to the function on obj (called on notify).
      */
-    ProbeListenerArg(T *obj, const std::string &name,
+    ProbeListenerArg(T *obj, std::string name,
         void (T::* func)(const Arg &))
-        : ProbeListenerArgBase<Arg>(obj->getProbeManager(), name),
+        : ProbeListenerArgBase<Arg>(std::move(name)),
           object(obj),
           function(func)
     {}
@@ -285,12 +315,16 @@ class ProbePointArg : public ProbePoint
      * @param l the ProbeListener to add to the notify list.
      */
     void
-    addListener(ProbeListener *l) override
+    addListener(ProbeListener *l_base) override
     {
+        auto *l = dynamic_cast<ProbeListenerArgBase<Arg> *>(l_base);
+        panic_if(!l, "Wrong type of listener: expected %s got %s",
+                 typeid(ProbeListenerArgBase<Arg>).name(),
+                 typeid(*l_base).name());
         // check listener not already added
         if (std::find(listeners.begin(), listeners.end(), l) ==
             listeners.end()) {
-            listeners.push_back(static_cast<ProbeListenerArgBase<Arg> *>(l));
+            listeners.push_back(l);
         }
     }
 
@@ -299,8 +333,12 @@ class ProbePointArg : public ProbePoint
      * @param l the ProbeListener to remove from the notify list.
      */
     void
-    removeListener(ProbeListener *l) override
+    removeListener(ProbeListener *l_base) override
     {
+        auto *l = dynamic_cast<ProbeListenerArgBase<Arg> *>(l_base);
+        panic_if(!l, "Wrong type of listener expected %s got %s",
+                 typeid(ProbeListenerArgBase<Arg>).name(),
+                 typeid(*l_base).name());
         listeners.erase(std::remove(listeners.begin(), listeners.end(), l),
                         listeners.end());
     }
@@ -312,8 +350,8 @@ class ProbePointArg : public ProbePoint
     void
     notify(const Arg &arg)
     {
-        for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-            (*l)->notify(arg);
+        for (auto *l : listeners) {
+            l->notify(arg);
         }
     }
 };
@@ -344,9 +382,8 @@ class ProbeListenerArgFunc : public ProbeListenerArgBase<Arg>
      * @param name the name of the ProbePoint to add this listener to.
      * @param func a pointer to the function on obj (called on notify).
      */
-    ProbeListenerArgFunc(ProbeManager *pm, const std::string &name,
-                       const NotifyFunction &func)
-      : ProbeListenerArgBase<Arg>(pm, name),
+    ProbeListenerArgFunc(const std::string &name, const NotifyFunction &func)
+      : ProbeListenerArgBase<Arg>(name),
         function(func)
     {}
 
