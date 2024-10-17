@@ -56,7 +56,7 @@ class SignalSinkPort : public Port
   protected:
     // if bypass_on_change is specified true, it will not call the _onChange
     // function. Only _state will be updated if needed.
-    void
+    virtual void
     set(const State &new_state, const bool bypass_on_change = false)
     {
         if (new_state == _state)
