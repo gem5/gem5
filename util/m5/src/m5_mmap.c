@@ -57,7 +57,8 @@ void *m5_mem = NULL;
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 
-const char *m5_mmap_dev = "/dev/mem";
+const char *m5_mmap_dev = "/dev/gem5_bridge";
+const char *m5_mmap_dev_fallback = "/dev/mem";
 
 void
 map_m5_mem()
@@ -73,20 +74,53 @@ map_m5_mem()
         fprintf(stdout, "Warn: m5op_addr is set to 0x0\n");
     }
 
+    /* Try to open and map /dev/gem5_bridge */
     fd = open(m5_mmap_dev, O_RDWR | O_SYNC);
     if (fd == -1) {
         fprintf(stderr, "Can't open %s: %s\n", m5_mmap_dev, strerror(errno));
-        exit(1);
+        fprintf(stderr, "--> Make sure the gem5_bridge device driver has "
+                        "been properly inserted into the kernel. Otherwise, "
+                        "sudo access required to perform address-mode ops "
+                        "when linking against m5 library.\n");
+
+    } else {
+        m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                      0); /* Base address configured in device driver */
+        close(fd);
+
+        if (!m5_mem)
+            fprintf(stderr, "Can't map %s: %s\n",
+                    m5_mmap_dev, strerror(errno));
+        else
+            return; /* Success */
     }
 
-    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                  m5op_addr);
-    close(fd);
+    /* First device failed, try fallback device /dev/mem
+     * @NOTE: The m5 executable has setuid permission flag to allow it to run
+     *       with root permissions without sudo, but workloads linked against
+     *       libm5 and wishing to mmap will need explicit sudo access to open
+     *       /dev/mem which is why /dev/gem5_bridge exists. */
+    fd = open(m5_mmap_dev_fallback, O_RDWR | O_SYNC);
+    if (fd == -1) {
+        fprintf(stderr, "Can't open %s: %s\n",
+                m5_mmap_dev_fallback, strerror(errno));
+        fprintf(stderr, "--> Make sure this program has sudo access to "
+                        "use fallback device.\n");
 
-    if (!m5_mem) {
-        fprintf(stderr, "Can't map %s: %s\n", m5_mmap_dev, strerror(errno));
-        exit(1);
+    } else {
+        m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                      m5op_addr); /* Must explicitly use m5op_addr here */
+        close(fd);
+
+        if (!m5_mem)
+            fprintf(stderr, "Can't map %s: %s\n",
+                    m5_mmap_dev_fallback, strerror(errno));
+        else
+            return; /* Success */
     }
+
+    /* Still not mapped, fatal abort */
+    exit(1);
 }
 
 void
