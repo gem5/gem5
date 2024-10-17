@@ -45,7 +45,6 @@
 
 #include "cpu/pred/loop_predictor.hh"
 
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/LTage.hh"
 #include "params/LoopPredictor.hh"
@@ -256,9 +255,9 @@ LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo* bi, bool tage_pred)
         }
 
     } else if (useDirectionBit ? (bi->predTaken != taken) : taken) {
-        if ((random_mt.random<int>() & 3) == 0 || !restrictAllocation) {
+        if ((rng->random<int>() & 3) == 0 || !restrictAllocation) {
             //try to allocate an entry on taken branch
-            int nrand = random_mt.random<int>();
+            int nrand = rng->random<int>();
             for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
                 int loop_hit = (nrand + i) & ((1 << logLoopTableAssoc) - 1);
                 idx = finallindex(bi->loopIndex, bi->loopIndexB, loop_hit);
