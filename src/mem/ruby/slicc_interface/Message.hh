@@ -137,7 +137,7 @@ class Message
     int vnet;
 
     // Needed to call MacheinType_base_count/level
-    const RubySystem *p_ruby_system = nullptr;
+    [[maybe_unused]] const RubySystem *p_ruby_system = nullptr;
 };
 
 inline bool
