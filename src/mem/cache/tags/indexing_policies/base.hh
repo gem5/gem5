@@ -83,7 +83,7 @@ class IndexingPolicyTemplate : public SimObject
     /**
      * The number of sets in the cache.
      */
-    const uint32_t numSets;
+    const uin t32_t numSets;
 
     /**
      * The amount to shift the address to get the set.
