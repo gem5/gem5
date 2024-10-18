@@ -11,6 +11,8 @@ jobs:
 
     get-date:
         runs-on: ubuntu-latest
+        outputs:
+            date: ${{ steps.date.outputs.date }}
         steps:
             - name: Get the current date
               id: date
@@ -31,7 +33,7 @@ jobs:
               uses: actions/cache/restore@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ env.date }}
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-all
             - name: ALL/unittests.${{ matrix.type }} UnitTests
@@ -57,13 +59,13 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/NULL
-                  key: testlib-build-null-${{ env.date }}
+                  key: testlib-build-null-${{ needs.get-date.outputs.date }}
 
             - name: Restore build/ALL cache
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ env.date }}
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
 
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
@@ -101,7 +103,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ env.date }}
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-all
 
@@ -135,7 +137,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
-                  key: testlib-build-vega-${{ env.date }}
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-vega
 
