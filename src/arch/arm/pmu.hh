@@ -47,6 +47,7 @@
 #include "base/cprintf.hh"
 #include "cpu/base.hh"
 #include "debug/PMUVerbose.hh"
+#include "mem/cache/cache_probe_arg.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
@@ -358,20 +359,32 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         }
 
       protected:
-        struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
+        struct RegularProbe: public ProbeListenerArgBase<uint64_t>
         {
-            RegularProbe(RegularEvent *parent, SimObject* obj,
-                std::string name)
-                : ProbeListenerArgBase(obj->getProbeManager(), name),
-                  parentEvent(parent) {}
+            RegularProbe(RegularEvent *parent, std::string name)
+                : ProbeListenerArgBase(std::move(name)), parentEvent(parent) {}
 
             RegularProbe() = delete;
 
-            void notify(const uint64_t &val);
+            void notify(const uint64_t &val) override;
 
           protected:
             RegularEvent *parentEvent;
         };
+        struct CacheProbe: public ProbeListenerArgBase<CacheAccessProbeArg>
+        {
+            CacheProbe(RegularEvent *parent, std::string name)
+                : ProbeListenerArgBase(std::move(name)), parentEvent(parent) {}
+            CacheProbe() = delete;
+
+            void notify(const CacheAccessProbeArg &val) override {
+                parentEvent->increment(1);
+            };
+
+          protected:
+            RegularEvent *parentEvent;
+        };
+
 
         /** The set of events driving the event value **/
         std::set<EventTypeEntry> microArchitectureEventSet;
@@ -379,7 +392,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         /** Set of probe listeners tapping onto each of the input micro-arch
          *  events which compose this pmu event
          */
-        std::vector<std::unique_ptr<RegularProbe>> attachedProbePointList;
+        std::vector<ProbeConnectionPtr> attachedProbePointList;
 
         void enable() override;
 
