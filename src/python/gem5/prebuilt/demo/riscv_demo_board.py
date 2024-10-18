@@ -107,23 +107,8 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
             cache_hierarchy=cache_hierarchy,
         )
 
-    # Taken from Riscv Matched board. Below are functions that are needed to get
-    # SE mode to work.
-    @overrides(RiscvBoard)
-    def _pre_instantiate(self):
-        if self._is_fs:
-            if len(self._bootloader) > 0:
-                self.workload.bootloader_addr = 0x0
-                self.workload.bootloader_filename = self._bootloader[0]
-                self.workload.kernel_addr = 0x80200000
-                self.workload.entry_point = (
-                    0x80000000  # Bootloader starting point
-                )
-            else:
-                self.workload.kernel_addr = 0x0
-                self.workload.entry_point = 0x80000000
-
-        self._connect_things()
+    # Taken from Riscv Matched board. Below are functions that are needed to
+    # get SE mode to work.
 
     @overrides(RiscvBoard)
     def _setup_board(self) -> None:
