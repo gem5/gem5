@@ -41,8 +41,12 @@ let {{
             {setSrcRegCode}
         '''
     def setSrcVm():
-        return "if (!this->vm)\n" + \
-               "    setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);"
+        return '''
+        if (!this->vm) {
+            vmsrcIdx = _numSrcRegs;
+            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+        }
+        '''
     def vmDeclAndReadData():
         return '''
             [[maybe_unused]] RiscvISA::vreg_t tmp_v0;
@@ -1075,6 +1079,7 @@ def format Vector1Vs1VdMaskFormat(code, category, *flags){{
     src2_reg_id = "vecRegClass[_machInst.vs2]"
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     vm_decl_rd = vmDeclAndReadData()
     set_vm_idx = setSrcVm()
@@ -1088,6 +1093,7 @@ def format Vector1Vs1VdMaskFormat(code, category, *flags){{
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'set_vm_idx': set_vm_idx,
+         'copy_old_vd': copyOldVd(1),
          'declare_varith_template': declareVArithTemplate(Name, 'uint', 8, 8),
          },
         flags)
@@ -1454,7 +1460,7 @@ def format VectorReduceIntWideningFormat(code, category, *flags) {{
 let {{
 
 def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
-        decode_template, micro_execute_template):
+        decode_template, micro_execute_template, offset_code=''):
     macroop_class_name = 'VectorSlideMacroInst'
     microop_class_name = 'VectorSlideMicroInst'
     # Make sure flags are in lists (convert to lists if not).
@@ -1470,18 +1476,32 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
         Name,
         macroop_class_name,
        {'code': code,
-        'declare_varith_template': varith_macro_declare},
+        'declare_varith_template': varith_macro_declare,
+        'offset_code': offset_code},
         flags
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
+
+    set_src_reg_idx = ""
+
+    is_slideup = "up" in name
+    is_vi = category == "OPIVI"
+    is_slide1 = "slide1" in name
+    set_src_reg_idx += """
+        const uint32_t vs2IdxMax =
+            (1 << std::max<int64_t>(0, vtype_vlmul(_machInst.vtype8))) - 1;
+    """
     src2_reg_id = "vecRegClass[_machInst.vs2 + vs2Idx]"
+    src3_reg_id = "vecRegClass[_machInst.vs2 + vs2Idx + ((vs2Idx == vs2IdxMax) ? 0 : 1)]"
     src1_ireg_id = "intRegClass[_machInst.rs1]"
     src1_freg_id = "floatRegClass[_machInst.rs1]"
 
+    # vtmp0 as dummy src reg to create dependency with pin vd micro
+    pin_reg_id = "vecRegClass[VecMemInternalReg0 + vdIdx]"
+
     num_src_regs = 0
 
-    set_src_reg_idx = ""
     if category in ["OPIVX", "OPMVX"]:
         set_src_reg_idx += setSrcWrapper(src1_ireg_id)
         num_src_regs += 1
@@ -1490,9 +1510,18 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
         num_src_regs += 1
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
     num_src_regs += 1
+    set_src_reg_idx += setSrcWrapper(src3_reg_id)
+    num_src_regs += 1
+    if is_vi:
+        set_src_reg_idx += """
+            oldDstIdx = _numSrcRegs;
+            setSrcRegIdx(_numSrcRegs++, destRegIdxArr[0]);
+        """
+    elif not is_slide1:
+        set_src_reg_idx += setSrcWrapper(pin_reg_id)
+    num_src_regs += 1
+
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    vm_decl_rd = vmDeclAndReadData()
-    set_src_reg_idx += setSrcVm()
     set_vlenb = setVlenb()
 
     if decode_template is VectorIntDecodeBlock:
@@ -1508,7 +1537,6 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
          'declare_varith_template': varith_micro_declare},
         flags)
 
@@ -1533,6 +1561,26 @@ def format VectorSlideUpFormat(code, category, *flags) {{
             micro_execute_template = VectorSlideMicroExecute)
 }};
 
+def format VectorSlide1UpFormat(code, category, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideUpImmediateMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute,
+            offset_code = 'int offset = 1')
+}};
+
+def format VectorSlideUpVIFormat(code, category, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideUpImmediateMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute,
+            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
+}};
+
 def format VectorSlideDownFormat(code, category, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         VectorSlideBase(name, Name, category, code,
@@ -1542,20 +1590,42 @@ def format VectorSlideDownFormat(code, category, *flags) {{
             micro_execute_template = VectorSlideMicroExecute)
 }};
 
+def format VectorSlide1DownFormat(code, category, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideDownImmediateMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute,
+            offset_code = 'int offset = 1')
+}};
+
+def format VectorSlideDownVIFormat(code, category, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideDownImmediateMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute,
+            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
+}};
+
 def format VectorFloatSlideUpFormat(code, category, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         VectorSlideBase(name, Name, category, code,
             flags,
-            macro_construtor = VectorSlideUpMacroConstructor,
+            macro_construtor = VectorSlideUpImmediateMacroConstructor,
             decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute)
+            micro_execute_template = VectorFloatSlideMicroExecute,
+            offset_code = 'int offset = 1')
 }};
 
 def format VectorFloatSlideDownFormat(code, category, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         VectorSlideBase(name, Name, category, code,
             flags,
-            macro_construtor = VectorSlideDownMacroConstructor,
+            macro_construtor = VectorSlideDownImmediateMacroConstructor,
             decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute)
+            micro_execute_template = VectorFloatSlideMicroExecute,
+            offset_code = 'int offset = 1')
 }};
