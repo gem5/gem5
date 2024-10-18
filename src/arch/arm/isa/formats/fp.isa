@@ -1804,6 +1804,108 @@ let {{
                 } else {
                     return new SHA1SU1(machInst, vd, vm);
                 }
+              case 0x8:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintnhpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintnhpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintnspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintnspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+              case 0x9:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintxhpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintxhpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintxspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintxspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+              case 0xa:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintahpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintahpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintaspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintaspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+              case 0xb:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintzhpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintzhpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintzspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintzspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+              case 0xd:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintmhpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintmhpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintmspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintmspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+              case 0xf:
+                switch (size) {
+                  case 0b01:
+                    if (q) {
+                        return new NVrintphpQ<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintphpD<uint16_t>(machInst, vd, vm);
+                    }
+                  case 0b10:
+                    if (q) {
+                        return new NVrintpspQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrintpspD<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
               case 0xc:
               case 0xe:
                 if (b == 0x18) {
