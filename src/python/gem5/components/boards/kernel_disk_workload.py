@@ -32,6 +32,7 @@ from typing import (
     Optional,
     Union,
 )
+from warnings import warn
 
 import m5
 from m5.util import warn
@@ -100,7 +101,7 @@ class KernelDiskWorkload:
     @abstractmethod
     def _add_disk_to_board(self, disk_image: DiskImageResource) -> None:
         """
-        Sets the configuration needed to add the disk image to the board.
+        Sets the configuration needed to add the root disk image to the board.
 
         .. note::
 
@@ -109,6 +110,31 @@ class KernelDiskWorkload:
 
         :param disk_image: The disk image to add to the system.
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _supports_multiple_images(cls) -> bool:
+        """Returns True if the board supports adding multiple additional
+        disk images beyond just the root disk image.
+        """
+        return False
+
+    @abstractmethod
+    def _add_additional_disk_images_to_board(
+        self,
+        additional_disk_images: List[DiskImageResource],
+    ) -> None:
+        """
+        .. note::
+            This will be executed at the end of the
+            ``set_kernel_disk_workload`` function.
+        :param additional_disk_images: An optional parameter for setting a
+                                       list with the additional disk images
+                                       to mount.
+        """
+        assert (
+            self._supports_multiple_images()
+        ), "`_add_additional_disks_to_board` called when `_supports_multiple_images` returned0 False."
         raise NotImplementedError
 
     def get_disk_root_partition(
@@ -145,6 +171,7 @@ class KernelDiskWorkload:
         disk_image: DiskImageResource,
         bootloader: Optional[BootloaderResource] = None,
         disk_device: Optional[str] = None,
+        additional_disk_images: List[DiskImageResource] = [],
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -156,10 +183,12 @@ class KernelDiskWorkload:
         and a disk image.
 
         :param kernel: The kernel to boot.
-        :param disk_image: The disk image to mount.
+        :param disk_image: The root disk image to mount.
         :param bootloader: The current implementation of the ARM board requires
                            three resources to operate -- kernel, disk image,
                            and, a bootloader.
+        :param additional_disk_images: An optional parameter for setting a list with
+                                 the additional disk images to mount.
         :param readfile: An optional parameter stating the file to be read by
                          by ``m5 readfile``.
         :param readfile_contents: An optional parameter stating the contents of
@@ -231,7 +260,16 @@ class KernelDiskWorkload:
             file.write(readfile_contents)
             file.close()
 
+        # Add the root disk and the additional disks, if specified
         self._add_disk_to_board(disk_image=disk_image)
+        if self._supports_multiple_images():
+            self._add_additional_disk_images_to_board(
+                additional_disk_images=additional_disk_images
+            )
+        elif len(additional_disk_images) > 0:
+            warn(
+                "This board does not support multiple disk images. Additional images will not be added to the board."
+            )
 
         # Set whether to exit on work items.
         self.exit_on_work_items = exit_on_work_items
