@@ -27,11 +27,14 @@
 import gzip
 import os.path
 import shutil
+from pathlib import Path
 from urllib.request import urlretrieve
 
 from testlib import *
 
-resource_path = joinpath(absdirpath(__file__), "..", "gpu-pannotia-resources")
+resource_path = joinpath(
+    absdirpath(__file__), "..", "resources", "gpu-pannotia"
+)
 binary_path = joinpath(resource_path, "pannotia-bins")
 dataset_path = joinpath(resource_path, "pannotia-datasets")
 
@@ -52,14 +55,13 @@ if not os.path.isdir(resource_path):
     os.makedirs(dataset_path)
 
     for name in binary_links.keys():
+        if Path(f"{binary_path}/{name}").exists():
+            continue
         urlretrieve(binary_links[name], f"{binary_path}/{name}")
     for name in dataset_links.keys():
+        if Path(f"{dataset_path}/{name}").exists():
+            continue
         urlretrieve(dataset_links[name], f"{dataset_path}/{name}")
-
-    with gzip.open(f"{dataset_path}/USA-road-d.NY.gr.gz", "rb") as f_in:
-        with open(f"{dataset_path}/USA-road-d.NY.gr", "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    os.remove(f"{dataset_path}/USA-road-d.NY.gr.gz")
 
 if len(os.listdir(binary_path)) < len(binary_links):
     testlib.log.test_log.warn(

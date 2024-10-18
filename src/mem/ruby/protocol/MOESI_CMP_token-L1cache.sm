@@ -198,7 +198,7 @@ machine(MachineType:L1Cache, "Token protocol")
   TBETable L1_TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
   bool starving, default="false";
-  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int l2_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   PersistentTable persistentTable;
   TimerTable useTimerTable;

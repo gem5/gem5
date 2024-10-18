@@ -599,6 +599,22 @@ class BOPPrefetcher(QueuedPrefetcher):
     on_inst = False
 
 
+class SmsPrefetcher(QueuedPrefetcher):
+    # Paper: https://web.eecs.umich.edu/~twenisch/papers/isca06.pdf
+    type = "SmsPrefetcher"
+    cxx_class = "gem5::prefetch::Sms"
+    cxx_header = "mem/cache/prefetch/sms.hh"
+    ft_size = Param.Unsigned(64, "Size of Filter and Active generation table")
+    pht_size = Param.Unsigned(16384, "Size of pattern history table")
+    region_size = Param.Unsigned(4096, "Spatial region size")
+
+    queue_squash = True
+    queue_filter = True
+    cache_snoop = True
+    prefetch_on_access = True
+    on_inst = False
+
+
 class SBOOEPrefetcher(QueuedPrefetcher):
     type = "SBOOEPrefetcher"
     cxx_class = "gem5::prefetch::SBOOE"

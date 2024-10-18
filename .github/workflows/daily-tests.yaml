@@ -8,6 +8,14 @@ on:
     workflow_dispatch:
 
 jobs:
+
+    get-date:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
         strategy:
@@ -16,13 +24,14 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
+        needs: get-date
         steps:
             - uses: actions/checkout@v4
             - name: Cache build/ALL
               uses: actions/cache/restore@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  key: testlib-build-all-${{ env.date }}
                   restore-keys: |
                       testlib-build-all
             - name: ALL/unittests.${{ matrix.type }} UnitTests
@@ -38,6 +47,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours for entire matrix to run
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
@@ -47,13 +57,13 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/NULL
-                  key: testlib-build-null-${{ hashFiles('src/**') }}
+                  key: testlib-build-null-${{ env.date }}
 
             - name: Restore build/ALL cache
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  key: testlib-build-all-${{ env.date }}
 
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
@@ -81,6 +91,7 @@ jobs:
                     gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
@@ -90,7 +101,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  key: testlib-build-all-${{ env.date }}
                   restore-keys: |
                       testlib-build-all
 
@@ -113,6 +124,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 720 # 12 hours
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v4
@@ -123,7 +135,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
-                  key: testlib-build-vega-${{ hashFiles('src/**') }}
+                  key: testlib-build-vega-${{ env.date }}
                   restore-keys: |
                       testlib-build-vega
 

@@ -78,6 +78,7 @@ namespace ruby
 
 class NetDest;
 class MessageBuffer;
+class RubySystem;
 
 class Network : public ClockedObject
 {
@@ -147,6 +148,10 @@ class Network : public ClockedObject
 
     NodeID getLocalNodeID(NodeID global_id) const;
 
+    bool getRandomization() const;
+    bool getWarmupEnabled() const;
+    RubySystem *getRubySystem() const { return m_ruby_system; }
+
   protected:
     // Private copy constructor and assignment operator
     Network(const Network& obj);
@@ -176,6 +181,12 @@ class Network : public ClockedObject
     // Global NodeID to local node map. If there are not multiple networks in
     // the same RubySystem, this is a one-to-one mapping of global to local.
     std::unordered_map<NodeID, NodeID> globalToLocalMap;
+
+    // For accessing if randomization/warnup are turned on. We cannot store
+    // those values in the constructor in case we are constructed first.
+    RubySystem *m_ruby_system = nullptr;
+
+    int MachineType_base_number(const MachineType& obj);
 };
 
 inline std::ostream&

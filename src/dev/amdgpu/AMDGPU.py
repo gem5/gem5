@@ -81,8 +81,6 @@ class AMDGPUDevice(PciDevice):
     InterruptPin = 2
     ExpansionROM = 0
 
-    rom_binary = Param.String("ROM binary dumped from hardware")
-    trace_file = Param.String("MMIO trace collected on hardware")
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )

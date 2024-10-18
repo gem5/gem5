@@ -280,6 +280,7 @@ PySource('gem5.components.processors',
 PySource('gem5.prebuilt', 'gem5/prebuilt/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/x86_demo_board.py')
+PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/arm_demo_board.py')
 PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/__init__.py')
 PySource('gem5.prebuilt.riscvmatched',

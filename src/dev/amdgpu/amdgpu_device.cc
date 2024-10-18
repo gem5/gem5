@@ -58,12 +58,6 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
       init_interrupt_count(0), _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false)
 {
-    // Loading the rom binary dumped from hardware.
-    std::ifstream romBin;
-    romBin.open(p.rom_binary, std::ios::binary);
-    romBin.read((char *)rom.data(), ROM_SIZE);
-    romBin.close();
-
     // System pointer needs to be explicitly set for device memory since
     // DRAMCtrl uses it to get (1) cache line size and (2) the mem mode.
     // Note this means the cache line size is system wide.
@@ -90,10 +84,6 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         gfx_version = GfxVersion::gfx942;
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
-    }
-
-    if (p.trace_file != "") {
-        mmioReader.readMMIOTrace(p.trace_file);
     }
 
     int sdma_id = 0;

@@ -37,6 +37,7 @@
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -56,10 +57,12 @@ const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
                    uint32_t num_vnets,
                    const std::vector<BasicExtLink *> &ext_links,
-                   const std::vector<BasicIntLink *> &int_links)
-    : m_nodes(MachineType_base_number(MachineType_NUM)),
+                   const std::vector<BasicIntLink *> &int_links,
+                   RubySystem *ruby_system)
+    : m_nodes(ruby_system->MachineType_base_number(MachineType_NUM)),
       m_number_of_switches(num_routers), m_vnets(num_vnets),
-      m_ext_link_vector(ext_links), m_int_link_vector(int_links)
+      m_ext_link_vector(ext_links), m_int_link_vector(int_links),
+      m_ruby_system(ruby_system)
 {
     // Total nodes/controllers in network
     assert(m_nodes > 1);
@@ -78,7 +81,8 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         AbstractController *abs_cntrl = ext_link->params().ext_node;
         BasicRouter *router = ext_link->params().int_node;
 
-        int machine_base_idx = MachineType_base_number(abs_cntrl->getType());
+        int machine_base_idx =
+            ruby_system->MachineType_base_number(abs_cntrl->getType());
         int ext_idx1 = machine_base_idx + abs_cntrl->getVersion();
         int ext_idx2 = ext_idx1 + m_nodes;
         int int_idx = router->params().router_id + 2*m_nodes;
@@ -189,7 +193,7 @@ Topology::createLinks(Network *net)
     for (int i = 0; i < topology_weights[0].size(); i++) {
         for (int j = 0; j < topology_weights[0][i].size(); j++) {
             std::vector<NetDest> routingMap;
-            routingMap.resize(m_vnets);
+            routingMap.resize(m_vnets, m_ruby_system);
 
             // Not all sources and destinations are connected
             // by direct links. We only construct the links
@@ -264,7 +268,7 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
-            linkRoute.resize(m_vnets);
+            linkRoute.resize(m_vnets, m_ruby_system);
             BasicLink *link = link_entry.link;
             if (link->mVnets.size() == 0) {
                 net->makeExtInLink(src, dest - (2 * m_nodes), link,
@@ -287,7 +291,7 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
-            linkRoute.resize(m_vnets);
+            linkRoute.resize(m_vnets, m_ruby_system);
             BasicLink *link = link_entry.link;
             if (link->mVnets.size() == 0) {
                 net->makeExtOutLink(src - (2 * m_nodes), node, link,
@@ -309,7 +313,7 @@ Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
         for (int l = 0; l < links.size(); l++) {
             link_entry = links[l];
             std::vector<NetDest> linkRoute;
-            linkRoute.resize(m_vnets);
+            linkRoute.resize(m_vnets, m_ruby_system);
             BasicLink *link = link_entry.link;
             if (link->mVnets.size() == 0) {
                 net->makeInternalLink(src - (2 * m_nodes),
@@ -413,16 +417,17 @@ Topology::shortest_path_to_node(SwitchID src, SwitchID next,
                                 const Matrix &weights, const Matrix &dist,
                                 int vnet)
 {
-    NetDest result;
+    NetDest result(m_ruby_system);
     int d = 0;
     int machines;
     int max_machines;
 
     machines = MachineType_NUM;
-    max_machines = MachineType_base_number(MachineType_NUM);
+    max_machines = m_ruby_system->MachineType_base_number(MachineType_NUM);
 
     for (int m = 0; m < machines; m++) {
-        for (NodeID i = 0; i < MachineType_base_count((MachineType)m); i++) {
+        for (NodeID i = 0;
+            i < m_ruby_system->MachineType_base_count((MachineType)m); i++) {
             // we use "d+max_machines" below since the "destination"
             // switches for the machines are numbered
             // [MachineType_base_number(MachineType_NUM)...

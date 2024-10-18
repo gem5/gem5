@@ -135,9 +135,9 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     // Creating WriteMask that records written bytes
     // and atomic operations. This enables partial writes
     // and partial reads of those writes
-    DataBlock dataBlock;
+    uint32_t blockSize = m_ruby_system->getBlockSizeBytes();
+    DataBlock dataBlock(blockSize);
     dataBlock.clear();
-    uint32_t blockSize = RubySystem::getBlockSizeBytes();
     std::vector<bool> accessMask(blockSize,false);
     std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
     uint32_t tableSize = crequest->getPackets().size();
@@ -159,15 +159,17 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     }
     std::shared_ptr<RubyRequest> msg;
     if (pkt->isAtomicOp()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
+        msg = std::make_shared<RubyRequest>(clockEdge(), blockSize,
+                              m_ruby_system, pkt->getAddr(), pkt->getSize(),
+                              pc, crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
                               blockSize, accessMask,
                               dataBlock, atomicOps, crequest->getSeqNum());
     } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
+        msg = std::make_shared<RubyRequest>(clockEdge(), blockSize,
+                              m_ruby_system, pkt->getAddr(), pkt->getSize(),
+                              pc, crequest->getRubyType(),
                               RubyAccessMode_Supervisor, pkt,
                               PrefetchBit_No, proc_id, 100,
                               blockSize, accessMask,
@@ -195,7 +197,9 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     assert(m_mandatory_q_ptr);
     Tick latency = cyclesToTicks(
         m_controller->mandatoryQueueLatency(crequest->getRubyType()));
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency,
+                               m_ruby_system->getRandomization(),
+                               m_ruby_system->getWarmupEnabled());
 }
 
 void
@@ -241,7 +245,7 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
         std::remove_if(
             m_writeCompletePktMap[key].begin(),
             m_writeCompletePktMap[key].end(),
-            [addr](PacketPtr writeCompletePkt) -> bool {
+            [this,addr](PacketPtr writeCompletePkt) -> bool {
                 if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
                     RubyPort::SenderState *ss =
                         safe_cast<RubyPort::SenderState *>
@@ -296,14 +300,15 @@ VIPERCoalescer::invTCP()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
-            nullptr);
+            clockEdge(), m_ruby_system->getBlockSizeBytes(), m_ruby_system,
+            addr, 0, 0, request_type, RubyAccessMode_Supervisor, nullptr);
         DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);
         assert(m_mandatory_q_ptr != NULL);
         Tick latency = cyclesToTicks(
             m_controller->mandatoryQueueLatency(request_type));
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency,
+                                   m_ruby_system->getRandomization(),
+                                   m_ruby_system->getWarmupEnabled());
         m_num_pending_invs++;
     }
     DPRINTF(GPUCoalescer,
@@ -343,16 +348,17 @@ VIPERCoalescer::invTCC(PacketPtr pkt)
     RubyRequestType request_type = RubyRequestType_InvL2;
 
     std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-        clockEdge(), addr, 0, 0,
-        request_type, RubyAccessMode_Supervisor,
-        nullptr);
+        clockEdge(), m_ruby_system->getBlockSizeBytes(), m_ruby_system,
+        addr, 0, 0, request_type, RubyAccessMode_Supervisor, nullptr);
 
     DPRINTF(GPUCoalescer, "Sending L2 invalidate to 0x%x\n", addr);
 
     assert(m_mandatory_q_ptr);
     Tick latency = cyclesToTicks(
         m_controller->mandatoryQueueLatency(request_type));
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency,
+                               m_ruby_system->getRandomization(),
+                               m_ruby_system->getWarmupEnabled());
 
     m_pending_invl2s[addr].push_back(pkt);
 }

@@ -9,6 +9,13 @@ on:
 
 jobs:
 
+    get-date:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
     # start running the very-long tests
     testlib-very-long-tests:
         strategy:
@@ -18,6 +25,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
@@ -27,7 +35,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ hashFiles('src/**') }}
+                  key: testlib-build-all-${{ env.date }}
                   restore-keys: |
                       testlib-build-all
 
@@ -49,6 +57,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 4320 # 3 days
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v4
@@ -59,7 +68,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
-                  key: testlib-build-vega-${{ hashFiles('src/**') }}
+                  key: testlib-build-vega-${{ env.date }}
                   restore-keys: |
                       testlib-build-vega
 

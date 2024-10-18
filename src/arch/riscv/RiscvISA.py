@@ -114,6 +114,13 @@ class RiscvISA(BaseISA):
 
     enable_Zicbom_fs = Param.Bool(True, "Enable Zicbom extension in FS mode")
     enable_Zicboz_fs = Param.Bool(True, "Enable Zicboz extension in FS mode")
+    enable_Zcd = Param.Bool(
+        True,
+        "Enable Zcd extensions. "
+        "Set the option to false implies the Zcmp and Zcmt is enable as "
+        "c.fsdsp is overlap with them."
+        "Refs: https://github.com/riscv/riscv-isa-manual/blob/main/src/zc.adoc",
+    )
 
     wfi_resume_on_pending = Param.Bool(
         False,

@@ -83,7 +83,7 @@ class RubyPort(ClockedObject):
 
     using_ruby_tester = Param.Bool(False, "")
     no_retry_on_stall = Param.Bool(False, "")
-    ruby_system = Param.RubySystem(Parent.any, "")
+    ruby_system = Param.RubySystem("Parent RubySystem object")
     system = Param.System(Parent.any, "system object")
     support_data_reqs = Param.Bool(True, "data cache requests supported")
     support_inst_reqs = Param.Bool(True, "inst cache requests supported")

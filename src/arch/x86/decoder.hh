@@ -60,19 +60,19 @@ class Decoder : public InstDecoder
     // These are defined and documented in decoder_tables.cc
     static const uint8_t SizeTypeToSize[3][10];
     typedef const uint8_t ByteTable[256];
-    static ByteTable Prefixes[2];
+    static const ByteTable Prefixes[2];
 
-    static ByteTable UsesModRMOneByte;
-    static ByteTable UsesModRMTwoByte;
-    static ByteTable UsesModRMThreeByte0F38;
-    static ByteTable UsesModRMThreeByte0F3A;
+    static const ByteTable UsesModRMOneByte;
+    static const ByteTable UsesModRMTwoByte;
+    static const ByteTable UsesModRMThreeByte0F38;
+    static const ByteTable UsesModRMThreeByte0F3A;
 
-    static ByteTable ImmediateTypeOneByte;
-    static ByteTable ImmediateTypeTwoByte;
-    static ByteTable ImmediateTypeThreeByte0F38;
-    static ByteTable ImmediateTypeThreeByte0F3A;
+    static const ByteTable ImmediateTypeOneByte;
+    static const ByteTable ImmediateTypeTwoByte;
+    static const ByteTable ImmediateTypeThreeByte0F38;
+    static const ByteTable ImmediateTypeThreeByte0F3A;
 
-    static X86ISAInst::MicrocodeRom microcodeRom;
+    X86ISAInst::MicrocodeRom microcodeRom;
 
   protected:
     using MachInst = uint64_t;
@@ -88,7 +88,7 @@ class Decoder : public InstDecoder
         {}
     };
 
-    static InstBytes dummy;
+    InstBytes dummy;
 
     // The bytes to be predecoded.
     MachInst fetchChunk;
@@ -244,7 +244,7 @@ class Decoder : public InstDecoder
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
             CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
-    static InstCacheMap instCacheMap;
+    InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 

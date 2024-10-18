@@ -5,7 +5,7 @@ name: CI Tests
 
 on:
     pull_request:
-        types: [opened, edited, synchronize, ready_for_review]
+        types: [opened, synchronize, ready_for_review]
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -21,17 +21,48 @@ jobs:
             - uses: actions/setup-python@v5
             - uses: pre-commit/action@v3.0.1
 
+    get-date:
+    # We use the date to label caches. A cache is a a "hit" if the date is the
+    # request binary and date are the same as what is stored in the cache.
+    # This essentially means the first job to run on a given day for a given
+    # binary will always be a "miss" and will have to build the binary then
+    # upload it as that day's binary to upload. While this isn't the most
+    # efficient way to do this, the alternative was to run take a hash of the
+    # `src` directory contents and use it as a hash. We found there to be bugs
+    # with the hash function where this task would timeout. This approach is
+    # simple, works, and still provides some level of caching.
+        runs-on: ubuntu-latest
+        outputs:
+            date: ${{ steps.date.outputs.date }}
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
     unittests-all-opt:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit] # only runs if pre-commit passes.
+        needs: [pre-commit, get-date] # only runs if pre-commit passes.
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+
+
+            # Restore the cache if available. As this just builds the unittests
+            # we only obtain the cache and do not provide if if is not
+            # available.
+            - name: Cache build/ALL
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ env.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: CI Unittests
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/unittests.opt -j $(nproc)
+              run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -83,14 +114,24 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, testlib-quick-matrix]
+        needs: [pre-commit, testlib-quick-matrix, get-date]
         strategy:
             matrix:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ env.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: Build gem5
-              run: scons ${{ matrix.build-target }} -j $(nproc)
+              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
 
         # Upload the gem5 binary as an artifact.
         # Note: the "achor.txt" file is a hack to make sure the paths are
@@ -199,13 +240,23 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 180
-        needs: [pre-commit]
+        needs: [pre-commit, get-date]
         steps:
             - uses: actions/checkout@v4
 
+            # Obtain the cache if available. If not available this will upload
+            # this job's instance of the cache.
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ env.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
             # Build the VEGA_X86/gem5.opt binary.
             - name: Build VEGA_X86/gem5.opt
-              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+              run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j`nproc`
 
             # Run the GPU tests.
             - name: Run Testlib GPU Tests
