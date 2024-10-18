@@ -1,0 +1,29 @@
+{
+    "board": {
+      "type": "SimpleBoard",
+      "clk": 3.0
+    },
+    "processor": {
+      "isa": "x86",
+      "type": "SimpleProcessor",
+      "cpu": "o3",
+      "ncores": 1
+    },
+    "memory": {
+      "type": "SingleChannelDDR4_2400",
+      "size": 2048
+    },
+    "cache": {
+      "type": "PrivateL1PrivateL2CacheHierarchy",
+      "l1d_size": 64,
+      "l1i_size": 64,
+      "l2_size": 256,
+      "l1d_assoc": 0,
+      "l1i_assoc": 0,
+      "l2_assoc": 0
+    },
+    "resource": [
+      "default",
+      "x86-hello64-static"
+    ]
+  }
