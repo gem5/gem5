@@ -40,24 +40,10 @@ binary_links = {
     "color_max.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_max.gem5",
     "color_maxmin.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_maxmin.gem5",
     "fw_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/fw_hip.gem5",
-    "mis_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/mis_hip.gem5",
-    "pagerank.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/pagerank.gem5",
-    "pagerank_spmv.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/pagerank_spmv.gem5",
-    "sssp.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/sssp.gem5",
-    "sssp_ell.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/sssp_ell.gem5",
 }
 
 dataset_links = {
     "1k_128k.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr",
-    "2k_1M.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/bc/2k_1M.gr",
-    "G3_circuit.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/color/G3_circuit.graph",
-    "ecology1.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/color/ecology1.graph",
-    "256_16384.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/floydwarshall/256_16384.gr",
-    "512_65536.gr": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/floydwarshall/512_65536.gr",
-    "G3_circuit.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/mis/G3_circuit.graph",
-    "ecology1.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/mis/ecology1.graph",
-    "coAuthorsDBLP.graph": "https://storage.googleapis.com/dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph",
-    "USA-road-d.NY.gr.gz": "http://www.diag.uniroma1.it/challenge9/data/USA-road-d/USA-road-d.NY.gr.gz",
 }
 
 
