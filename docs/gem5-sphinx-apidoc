@@ -1,0 +1,14 @@
+import re
+import sys
+
+extensions = ['myst_parser']
+
+source_suffix = {
+    '.md': 'markdown',
+    '.py': 'markdown'
+}
+
+from sphinx.ext.apidoc import main
+if __name__ == '__m5_main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
