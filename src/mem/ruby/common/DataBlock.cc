@@ -60,7 +60,6 @@ DataBlock::DataBlock(const DataBlock &cp)
     m_data = new uint8_t[m_block_size];
     memcpy(m_data, cp.m_data, m_block_size);
     m_alloc = true;
-    m_block_size = m_block_size;
     // If this data block is involved in an atomic operation, the effect
     // of applying the atomic operations on the data block are recorded in
     // m_atomicLog. If so, we must copy over every entry in the change log
