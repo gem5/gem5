@@ -463,7 +463,7 @@ class MMU : public BaseMMU
     void setTestInterface(SimObject *ti);
 
     Fault testTranslation(const RequestPtr &req, Mode mode,
-                          TlbEntry::DomainType domain, CachedState &state) const;
+                          DomainType domain, CachedState &state) const;
 
   protected:
     bool checkWalkCache() const;

@@ -644,7 +644,7 @@ TableWalker::processWalk()
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
                     TranMethod::VmsaTran);
@@ -665,7 +665,7 @@ TableWalker::processWalk()
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
                     TranMethod::VmsaTran);
@@ -762,7 +762,7 @@ TableWalker::processWalkLPAE()
                 else
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess,
+                        DomainType::NoAccess,
                         is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
@@ -788,7 +788,7 @@ TableWalker::processWalkLPAE()
                 else
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess,
+                        DomainType::NoAccess,
                         is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
@@ -813,7 +813,7 @@ TableWalker::processWalkLPAE()
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1,
                     isStage2, TranMethod::LpaeTran);
@@ -1078,7 +1078,7 @@ TableWalker::processWalkAArch64()
         } else {
             return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
-                TlbEntry::DomainType::NoAccess,
+                DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + LookupLevel::L0,
                 isStage2, TranMethod::LpaeTran);
@@ -1115,7 +1115,7 @@ TableWalker::processWalkAArch64()
         else
             return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
-                TlbEntry::DomainType::NoAccess,
+                DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
@@ -1692,7 +1692,7 @@ TableWalker::doL1Descriptor()
             currState->fault =
                 std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
                     TranMethod::VmsaTran);
@@ -1762,7 +1762,7 @@ TableWalker::generateLongDescFault(ArmFault::FaultSource src)
     } else {
         return std::make_shared<DataAbort>(
             currState->vaddr_tainted,
-            TlbEntry::DomainType::NoAccess,
+            DomainType::NoAccess,
             currState->req->isAtomic() ? false : currState->isWrite,
             src + currState->longDesc.lookupLevel,
             isStage2,
@@ -1973,7 +1973,7 @@ TableWalker::doL2Descriptor()
 
         currState->fault = std::make_shared<DataAbort>(
             currState->vaddr_tainted,
-            TlbEntry::DomainType::NoAccess,
+            DomainType::NoAccess,
             is_atomic ? false : currState->isWrite,
             ArmFault::AccessFlagLL + LookupLevel::L2, isStage2,
             TranMethod::VmsaTran);
@@ -2427,7 +2427,7 @@ TableWalker::pendingChange()
 }
 
 Fault
-TableWalker::testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
+TableWalker::testWalk(const RequestPtr &walk_req, DomainType domain,
                       LookupLevel lookup_level)
 {
     if (!test) {

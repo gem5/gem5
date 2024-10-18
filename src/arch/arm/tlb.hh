@@ -79,7 +79,7 @@ class TlbTestInterface
      */
     virtual Fault translationCheck(const RequestPtr &req, bool is_priv,
                                    BaseMMU::Mode mode,
-                                   TlbEntry::DomainType domain) = 0;
+                                   DomainType domain) = 0;
 
     /**
      * Check if a page table walker access should be forced to fail.
@@ -95,7 +95,7 @@ class TlbTestInterface
     virtual Fault walkCheck(const RequestPtr &walk_req,
                             Addr va, bool is_secure,
                             Addr is_priv, BaseMMU::Mode mode,
-                            TlbEntry::DomainType domain,
+                            DomainType domain,
                             enums::ArmLookupLevel lookup_level) = 0;
 };
 

@@ -79,7 +79,7 @@ class TableWalker : public ClockedObject
         LookupLevel lookupLevel;
 
         virtual Addr pfn() const = 0;
-        virtual TlbEntry::DomainType domain() const = 0;
+        virtual DomainType domain() const = 0;
         virtual bool xn() const = 0;
         virtual uint8_t ap() const = 0;
         virtual bool global(WalkerState *currState) const = 0;
@@ -209,10 +209,10 @@ class TableWalker : public ClockedObject
         }
 
         /** Domain Client/Manager: ARM DDI 0406B: B3-31 */
-        TlbEntry::DomainType
+        DomainType
         domain() const override
         {
-            return static_cast<TlbEntry::DomainType>(bits(data, 8, 5));
+            return static_cast<DomainType>(bits(data, 8, 5));
         }
 
         /** Address of L2 descriptor if it exists */
@@ -316,7 +316,7 @@ class TableWalker : public ClockedObject
             return "Inserting L2 Descriptor into TLB\n";
         }
 
-        TlbEntry::DomainType
+        DomainType
         domain() const override
         {
             return l1Parent->domain();
@@ -744,11 +744,11 @@ class TableWalker : public ClockedObject
             return ((!rw) << 2) | (user << 1);
         }
 
-        TlbEntry::DomainType
+        DomainType
         domain() const override
         {
             // Long-desc. format only supports Client domain
-            return TlbEntry::DomainType::Client;
+            return DomainType::Client;
         }
 
         /** Attribute index */
@@ -1249,7 +1249,7 @@ class TableWalker : public ClockedObject
 
     void setTestInterface(TlbTestInterface *ti);
 
-    Fault testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
+    Fault testWalk(const RequestPtr &walk_req, DomainType domain,
                    LookupLevel lookup_level);
 };
 

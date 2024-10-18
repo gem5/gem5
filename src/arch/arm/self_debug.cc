@@ -145,7 +145,7 @@ SelfDebug::triggerWatchpointException(ThreadContext *tc, Addr vaddr,
         ArmFault::DebugType d = cm? ArmFault::WPOINT_CM:
                                     ArmFault::WPOINT_NOCM;
         return std::make_shared<DataAbort>(vaddr,
-                                           TlbEntry::DomainType::NoAccess,
+                                           DomainType::NoAccess,
                                            write, ArmFault::DebugEvent, cm,
                                            TranMethod::UnknownTran, d);
     } else {

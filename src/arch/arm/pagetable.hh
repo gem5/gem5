@@ -174,14 +174,6 @@ struct TlbEntry : public Serializable
         Normal
     };
 
-    enum class DomainType : std::uint8_t
-    {
-        NoAccess = 0,
-        Client,
-        Reserved,
-        Manager
-    };
-
     struct Lookup
     {
         // virtual address

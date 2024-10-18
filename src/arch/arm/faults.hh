@@ -473,7 +473,7 @@ class AbortFault : public ArmFaultVals<T>
      */
     Addr OVAddr;
     bool write;
-    TlbEntry::DomainType domain;
+    DomainType domain;
     uint8_t source;
     uint8_t srcEncoded;
     bool stage2;
@@ -482,7 +482,7 @@ class AbortFault : public ArmFaultVals<T>
     ArmFault::DebugType debugType;
 
   public:
-    AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
+    AbortFault(Addr _faultAddr, bool _write, DomainType _domain,
                uint8_t _source, bool _stage2,
                TranMethod _tranMethod = TranMethod::UnknownTran,
                ArmFault::DebugType _debug = ArmFault::NODEBUG) :
@@ -518,7 +518,7 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     PrefetchAbort(Addr _addr, uint8_t _source, bool _stage2 = false,
                   TranMethod _tran_method = TranMethod::UnknownTran,
                   ArmFault::DebugType _debug = ArmFault::NODEBUG) :
-        AbortFault<PrefetchAbort>(_addr, false, TlbEntry::DomainType::NoAccess,
+        AbortFault<PrefetchAbort>(_addr, false, DomainType::NoAccess,
                 _source, _stage2, _tran_method, _debug)
     {}
 
@@ -549,7 +549,7 @@ class DataAbort : public AbortFault<DataAbort>
     bool sf;
     bool ar;
 
-    DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write, uint8_t _source,
+    DataAbort(Addr _addr, DomainType _domain, bool _write, uint8_t _source,
               bool _stage2=false,
               TranMethod _tran_method=TranMethod::UnknownTran,
               ArmFault::DebugType _debug_type=ArmFault::NODEBUG) :
@@ -577,7 +577,7 @@ class VirtualDataAbort : public AbortFault<VirtualDataAbort>
     static const MiscRegIndex FarIndex  = MISCREG_DFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HDFAR;
 
-    VirtualDataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write,
+    VirtualDataAbort(Addr _addr, DomainType _domain, bool _write,
                      uint8_t _source) :
         AbortFault<VirtualDataAbort>(_addr, _write, _domain, _source, false)
     {}

@@ -207,7 +207,7 @@ MMU::testAndFinalize(const RequestPtr &req,
 {
     // If we don't have a valid tlb entry it means virtual memory
     // is not enabled
-    auto domain = te ? te-> domain : TlbEntry::DomainType::NoAccess;
+    auto domain = te ? te-> domain : DomainType::NoAccess;
 
     mpam::tagRequest(tc, req, mode == Execute);
 
@@ -277,7 +277,7 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
                 // LPAE is always disabled in SE mode
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess, is_write,
+                    DomainType::NoAccess, is_write,
                     ArmFault::AlignmentFault, state.isStage2,
                     TranMethod::VmsaTran);
             }
@@ -343,7 +343,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
             if (vaddr & mask(flags & AlignmentMask)) {
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
-                    vaddr, TlbEntry::DomainType::NoAccess, is_write,
+                    vaddr, DomainType::NoAccess, is_write,
                     ArmFault::AlignmentFault, state.isStage2,
                     tran_method);
             }
@@ -538,7 +538,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : is_write,
                     ArmFault::AlignmentFault, state.isStage2,
                     TranMethod::LpaeTran);
@@ -831,7 +831,7 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
                     TranMethod::LpaeTran);
             else
                 f = std::make_shared<DataAbort>( vaddr,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : mode==Write,
                     ArmFault::AddressSizeLL, state.isStage2,
                     TranMethod::LpaeTran);
@@ -934,7 +934,7 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
                 bool is_write  = (mode == Write);
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess, is_write,
+                    DomainType::NoAccess, is_write,
                     ArmFault::AlignmentFault, state.isStage2,
                     tran_method);
         }
@@ -996,7 +996,7 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess, is_write,
+                    DomainType::NoAccess, is_write,
                     ArmFault::AlignmentFault, state.isStage2,
                     tran_method);
             }
@@ -1590,7 +1590,7 @@ MMU::setTestInterface(SimObject *_ti)
 
 Fault
 MMU::testTranslation(const RequestPtr &req, Mode mode,
-                     TlbEntry::DomainType domain, CachedState &state) const
+                     DomainType domain, CachedState &state) const
 {
     if (!test || !req->hasSize() || req->getSize() == 0 ||
         req->isCacheMaintenance()) {

@@ -289,6 +289,14 @@ namespace ArmISA
         UnknownTran
     };
 
+    enum class DomainType : std::uint8_t
+    {
+        NoAccess = 0,
+        Client,
+        Reserved,
+        Manager
+    };
+
     enum ExceptionLevel
     {
         EL0 = 0,
