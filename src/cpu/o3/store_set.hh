@@ -34,11 +34,73 @@
 #include <utility>
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
+#include "base/named.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "params/SSITIndexingPolicy.hh"
+#include "params/SSITSetAssociative.hh"
 
 namespace gem5
 {
+
+class SSITTagTypes
+{
+  public:
+    struct KeyType
+    {
+        Addr address;
+    };
+
+    using Params = SSITIndexingPolicyParams;
+};
+
+using SSITIndexingPolicy = IndexingPolicyTemplate<SSITTagTypes>;
+template class IndexingPolicyTemplate<SSITTagTypes>;
+
+class SSITSetAssociative : public SSITIndexingPolicy
+{
+  public:
+    PARAMS(SSITSetAssociative);
+    using KeyType = SSITTagTypes::KeyType;
+
+    SSITSetAssociative(const Params &p)
+        : SSITIndexingPolicy(p, p.num_entries, p.set_shift)
+    {
+    }
+
+  protected:
+    /**
+     * Extract the set index for the instruction PC based on tid.
+     */
+    uint32_t
+    extractSet(const KeyType &key) const
+    {
+        return ((key.address >> setShift) & setMask);
+    }
+
+  public:
+    /**
+     * Find all possible entries for insertion and replacement of an address.
+     */
+    std::vector<ReplaceableEntry*>
+    getPossibleEntries(const KeyType &key) const override
+    {
+        auto set_idx = extractSet(key);
+
+        assert(set_idx < sets.size());
+
+        return sets[set_idx];
+    }
+
+    Addr regenerateAddr(const KeyType &key,
+                        const ReplaceableEntry* entry) const override
+    {
+        panic("regenerateAddr() not implemented!");
+        return 0;
+    }
+};
 
 namespace o3
 {
@@ -52,6 +114,7 @@ struct ltseqnum
     }
 };
 
+
 /**
  * Implements a store set predictor for determining if memory
  * instructions are dependent upon each other.  See paper "Memory
@@ -59,23 +122,48 @@ struct ltseqnum
  * stands for Store Set ID, SSIT stands for Store Set ID Table, and
  * LFST is Last Fetched Store Table.
  */
-class StoreSet
+class StoreSet : public Named
 {
   public:
-    typedef unsigned SSID;
+    typedef Addr SSID;
 
-  public:
+    class SSITEntry : public CacheEntry
+    {
+        SSID _ssid;
+      public:
+        using IndexingPolicy = gem5::SSITIndexingPolicy;
+        using KeyType = SSITTagTypes::KeyType;
+        using TagExtractor = std::function<Addr(Addr)>;
+
+        SSITEntry(TagExtractor ext) : CacheEntry(ext), _ssid(MaxAddr) {}
+
+        bool match(const KeyType &key) { return match(key.address); }
+        void insert(const KeyType &key) { return insert(key.address); }
+
+        void setSSID(SSID id) { _ssid = id; }
+        SSID getSSID(void) const { return _ssid; }
+      private:
+        using CacheEntry::match;
+        using CacheEntry::insert;
+    };
+
     /** Default constructor.  init() must be called prior to use. */
-    StoreSet() { };
+    StoreSet() : Named("StoreSets"), SSIT("SSIT") {};
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
+    StoreSet(std::string name, uint64_t clear_period,
+             size_t SSIT_entries, int SSIT_assoc,
+             replacement_policy::Base *replPolicy,
+             SSITIndexingPolicy *indexingPolicy, int LFST_size);
 
     /** Default destructor. */
     ~StoreSet();
 
     /** Initializes the store set predictor with the given table sizes. */
-    void init(uint64_t clear_period, int SSIT_size, int LFST_size);
+    void init(uint64_t clear_period,
+              size_t SSIT_entries, int SSIT_assoc,
+              replacement_policy::Base *_replPolicy,
+              SSITIndexingPolicy *_indexingPolicy, int LFST_size);
 
     /** Records a memory ordering violation between the younger load
      * and the older store. */
@@ -115,19 +203,12 @@ class StoreSet
     void dump();
 
   private:
-    /** Calculates the index into the SSIT based on the PC. */
-    inline int calcIndex(Addr PC)
-    { return (PC >> offsetBits) & indexMask; }
-
     /** Calculates a Store Set ID based on the PC. */
     inline SSID calcSSID(Addr PC)
     { return ((PC ^ (PC >> 10)) % LFSTSize); }
 
     /** The Store Set ID Table. */
-    std::vector<SSID> SSIT;
-
-    /** Bit vector to tell if the SSIT has a valid entry. */
-    std::vector<bool> validSSIT;
+    AssociativeCache<SSITEntry> SSIT;
 
     /** Last Fetched Store Table. */
     std::vector<InstSeqNum> LFST;
@@ -153,17 +234,26 @@ class StoreSet
     /** Last Fetched Store Table size, in entries. */
     int LFSTSize;
 
-    /** Mask to obtain the index. */
-    int indexMask;
-
-    // HACK: Hardcoded for now.
-    int offsetBits;
-
     /** Number of memory operations predicted since last clear of predictor */
     int memOpsPred;
 };
 
 } // namespace o3
+
+/**
+ * This helper generates a tag extractor function object
+ * which will be typically used by Replaceable entries indexed
+ * with the SSITIndexingPolicy.
+ * It allows to "decouple" indexing from tagging. Those entries
+ * would call the functor without directly holding a pointer
+ * to the indexing policy which should reside in the cache.
+ */
+static constexpr auto
+genTagExtractor(SSITIndexingPolicy *ip)
+{
+    return [ip] (Addr addr) { return ip->extractTag(addr); };
+}
+
 } // namespace gem5
 
 #endif // __CPU_O3_STORE_SET_HH__
