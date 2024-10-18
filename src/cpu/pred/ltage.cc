@@ -73,11 +73,21 @@ LTAGE::init()
     TAGE::init();
 }
 
+void
+LTAGE::branchPlaceholder(ThreadID tid, Addr pc,
+                         bool uncond, void * &bpHistory)
+{
+    LTageBranchInfo *bi = new LTageBranchInfo(*tage, *loopPredictor,
+                                              pc, !uncond);
+    bpHistory = (void*)(bi);
+}
+
 //prediction
 bool
 LTAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 {
-    LTageBranchInfo *bi = new LTageBranchInfo(*tage, *loopPredictor);
+    LTageBranchInfo *bi = new LTageBranchInfo(*tage, *loopPredictor,
+                                              branch_pc, cond_branch);
     b = (void*)(bi);
 
     bool pred_taken = tage->tagePredict(tid, branch_pc, cond_branch,
@@ -117,7 +127,7 @@ LTAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
             // and recomputes the folded histories.
-            tage->squash(tid, taken, bi->tageBranchInfo, target);
+            tage->squash(tid, taken, target, inst, bi->tageBranchInfo);
 
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
@@ -141,8 +151,8 @@ LTAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
             nrand, target, bi->lpBranchInfo->predTaken);
     }
 
-    tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, false,
-                          inst, target);
+    tage->updateHistories(tid, pc, false, taken, target,
+                           inst, bi->tageBranchInfo);
 
     delete bi;
     bp_history = nullptr;

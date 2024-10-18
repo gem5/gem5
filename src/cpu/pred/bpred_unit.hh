@@ -150,16 +150,19 @@ class BPredUnit : public SimObject
      * path and global history. All branches call this function
      * including unconditional once.
      * @param tid The thread id.
-     * @param PC The branch's PC that will be updated.
+     * @param pc The branch's pc that will be updated.
      * @param uncond Wheather or not this branch is an unconditional branch.
      * @param taken Whether or not the branch was taken
      * @param target The final target of branch. Some modern
      * predictors use the target in their history.
+     * @param inst Static instruction information
      * @param bp_history Pointer that will be set to an object that
      * has the branch predictor state associated with the lookup.
+     *
      */
     virtual void updateHistories(ThreadID tid, Addr pc, bool uncond,
-                            bool taken, Addr target, void * &bp_history) = 0;
+                           bool taken, Addr target,
+                           const StaticInstPtr &inst, void * &bp_history) = 0;
 
     /**
      * @param tid The thread id.
@@ -172,7 +175,7 @@ class BPredUnit : public SimObject
     /**
      * Updates the BP with taken/not taken information.
      * @param tid The thread id.
-     * @param PC The branch's PC that will be updated.
+     * @param pc The branch's PC that will be updated.
      * @param taken Whether the branch was taken or not taken.
      * @param bp_history Pointer to the branch predictor state that is
      * associated with the branch lookup that is being updated.
@@ -187,6 +190,22 @@ class BPredUnit : public SimObject
                    void * &bp_history, bool squashed,
                    const StaticInstPtr &inst, Addr target) = 0;
 
+    /**
+     * Special function for the decoupled front-end. In it there can be
+     * branches which are not detected by the BPU in the first place as it
+     * requires a BTB hit. This function will generate a placeholder for
+     * such a branch once it is pre-decoded in the fetch stage. It will
+     * only create the branch history object but not update any internal state
+     * of the BPU.
+     * If the branch turns to be wrong then decode or commit will
+     * be able to use the normal squash functionality to correct the branch.
+     * Note that not all branch predictors implement this functionality.
+     * @param pc The branch's PC.
+     * @param uncond Whether or not this branch is an unconditional branch.
+     * @param bp_history Pointer that will be set to an branch history object.
+     */
+    virtual void branchPlaceholder(ThreadID tid, Addr pc,
+                                   bool uncond, void * &bp_history);
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -245,6 +264,76 @@ class BPredUnit : public SimObject
     void dump();
 
   private:
+
+
+    /** Branch Predictor Unit (BPU) history object `PredictorHistory`
+     * This class holds all information needed to manage the speculative
+     * state of a in-flight branch prediction.
+     * In case of the default (coupled/synchronous) front-end, the branch
+     * predictor is queried whenever the a branch is decoded by the fetch
+     * unit. In case of the decoupled front-end, the branch predictor is
+     * queried whenever a branch is detected using the BTB.
+     *
+     * Lifetime of a PredictorHistory (coupled front-end):
+     *
+     *   + ------------------------------------------- +
+     *   | FETCH:                                      |
+     *   |  - The fetch unit pre-decodes a branch.     |
+     *   |  - The BPU is queried to make a prediction  |
+     *   |    using the `predict` function             |
+     *   |  - A PredictorHistory object is created.    |
+     *   + ------------------------------------------- +
+     *                          |
+     *                          |
+     *   + ------------------------------------------- +
+     *   | DECODE:                                     |
+     *   |  - The branch is decoded and the target for |
+     *   |    direct branches is available.            |
+     *   + ------------------------------------------- +
+     *                          |
+     *                 ( target correct ? ) ----------------+
+     *                          |                           |
+     *         +-------------------------------------+      |
+     *         | Squash all predictions made AFTER   |      |
+     *         | this branch using `squashHistories`.|      |
+     *         | Will revert all speculative history |      |
+     *         | updates and delete the history      |      |
+     *         | history updates of those branches.  |      |
+     *         | It also corrects the target of the  |      |
+     *         | mispredicted branch using the       |      |
+     *         | `squash` function.                  |      |
+     *         +-------------------------------------+      |
+     *                          |                           |
+     *                          | <-------------------------+
+     *                          |
+     *  + --------------------------------------------+
+     *  | COMMIT:                                     |
+     *  |  - The branch is resolved and the correct   |
+     *  |    branch direction and target is known.    |
+     *  + --------------------------------------------+
+     *                          |
+     *              ( prediction correct ? ) ----------------+
+     *                          |                           |
+     *         +-------------------------------------+      |
+     *         | Squash all predictions made AFTER   |      |
+     *         | this branch using `squashHistories`.|      |
+     *         | Will revert all speculative history |      |
+     *         | updates and delete the history      |      |
+     *         | history updates of those branches.  |      |
+     *         | It also corrects the target and     |      |
+     *         | the direction of the mispredicted   |      |
+     *         | branch using the `squash` function. |      |
+     *         +-------------------------------------+      |
+     *                          |                           |
+     *                          | <-------------------------+
+     *                          |
+     *         +-------------------------------------+
+     *         | Update the internal state (counter) |
+     *         | of the BPU using the `update`       |
+     *         | function.                           |
+     *         +-------------------------------------+
+     *
+     */
     struct PredictorHistory
     {
         /**
@@ -343,12 +432,13 @@ class BPredUnit : public SimObject
 
     /**
      * Internal prediction function.
-    */
+     */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history);
 
     /**
-     * Squashes a particular branch instance
+     * Squashes a particular branch instance. Reverts
+     * all speculative updated state and deletes the history object
      * @param tid The thread id.
      * @param bpu_history The history to be squashed.
      */
