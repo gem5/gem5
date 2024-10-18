@@ -33,7 +33,6 @@
 
 #include <fstream>
 
-#include "base/random.hh"
 #include "debug/ProtocolTest.hh"
 
 namespace gem5
@@ -147,7 +146,7 @@ void
 TesterThread::issueNewEpisode()
 {
     int num_reg_loads = \
-        random_mt.random<unsigned int>() % tester->getEpisodeLength();
+        rng->random<unsigned int>() % tester->getEpisodeLength();
     int num_reg_stores = tester->getEpisodeLength() - num_reg_loads;
 
     // create a new episode

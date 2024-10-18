@@ -148,11 +148,14 @@ struct SpatterAccess : public Packet::SenderState
         uint8_t* pkt_data = new uint8_t[req->getSize()];
         // Randomly intialize pkt_data, for testing cache coherence.
         for (int i = 0; i < req->getSize(); i++) {
-            pkt_data[i] = random_mt.random<uint8_t>();
+            pkt_data[i] = rng->random<uint8_t>();
         }
         pkt->dataDynamic(pkt_data);
         return pkt;
     }
+
+  private:
+    mutable Random::RandomPtr rng = Random::genRandom();
 };
 
 class SpatterKernel

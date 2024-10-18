@@ -31,7 +31,6 @@
 #include <cstring>
 #include <string>
 
-#include "base/random.hh"
 #include "debug/GUPSGen.hh"
 #include "sim/sim_exit.hh"
 
@@ -212,7 +211,7 @@ GUPSGen::createNextReq()
         assert (readRequests < numUpdates);
 
         uint64_t value = readRequests;
-        uint64_t index = random_mt.random((int64_t) 0, tableSize);
+        uint64_t index = rng->random<int64_t>((int64_t) 0, tableSize);
         Addr addr = indexToAddr(index);
         PacketPtr pkt = getReadPacket(addr, elementSize);
         updateTable[pkt->req] = value;

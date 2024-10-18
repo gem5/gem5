@@ -48,7 +48,6 @@
 #include <queue>
 
 #include "arch/generic/tlb.hh"
-#include "base/random.hh"
 #include "base/types.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -881,7 +880,7 @@ Fetch::tick()
     // Pick a random thread to start trying to grab instructions from
     auto tid_itr = activeThreads->begin();
     std::advance(tid_itr,
-            random_mt.random<uint8_t>(0, activeThreads->size() - 1));
+            rng->random<uint8_t>(0, activeThreads->size() - 1));
 
     while (available_insts != 0 && insts_to_decode < decodeWidth) {
         ThreadID tid = *tid_itr;
