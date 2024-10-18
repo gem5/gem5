@@ -651,14 +651,16 @@ CPU::removeThread(ThreadID tid)
     rename.clearStates(tid);
     iew.clearStates(tid);
 
-    // Flush out any old data from the time buffers.
-    for (int i = 0; i < timeBuffer.getSize(); ++i) {
-        timeBuffer.advance();
-        fetchQueue.advance();
-        decodeQueue.advance();
-        renameQueue.advance();
-        iewQueue.advance();
-    }
+    // Clear all thread-specific state from the time buffers.
+    auto clear_timebuf = [tid] (auto &buf) {
+        for (int i = -buf.getPast(); i <= buf.getFuture(); ++i)
+            buf[i].clearStates(tid);
+    };
+    clear_timebuf(timeBuffer);
+    clear_timebuf(fetchQueue);
+    clear_timebuf(decodeQueue);
+    clear_timebuf(renameQueue);
+    clear_timebuf(iewQueue);
 
     // at this step, all instructions in the pipeline should be already
     // either committed successfully or squashed. All thread-specific
