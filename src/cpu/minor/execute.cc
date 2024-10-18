@@ -604,6 +604,24 @@ Execute::issue(ThreadID thread_id)
             do {
                 FUPipeline *fu = funcUnits[fu_index];
 
+                // Update ALU access stats.
+                if (inst->staticInst->isVector()) {
+                    cpu.executeStats[inst->id.threadId]->numVecAluAccesses++;
+                }
+
+                if (inst->staticInst->isFloating()) {
+                    cpu.executeStats[inst->id.threadId]->numFpAluAccesses++;
+                }
+
+                if (inst->staticInst->isInteger()) {
+                    cpu.executeStats[inst->id.threadId]->numIntAluAccesses++;
+                }
+
+                if (inst->staticInst->isMemRef()) {
+                    cpu.executeStats[inst->id.threadId]->numMemRefs++;
+                }
+
+
                 DPRINTF(MinorExecute, "Trying to issue inst: %s to FU: %d\n",
                     *inst, fu_index);
 
@@ -866,6 +884,31 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         thread->numInst++;
         thread->threadStats.numInsts++;
         cpu.commitStats[inst->id.threadId]->numInsts++;
+
+        if (inst->staticInst->isInteger()) {
+            cpu.commitStats[inst->id.threadId]->numIntInsts++;
+        }
+
+        if (inst->staticInst->isFloating()) {
+            cpu.commitStats[inst->id.threadId]->numFpInsts++;
+        }
+
+        if (inst->staticInst->isVector()) {
+            cpu.commitStats[inst->id.threadId]->numVecInsts++;
+        }
+
+        if (inst->staticInst->isMemRef()) {
+            cpu.commitStats[inst->id.threadId]->numMemRefs++;
+        }
+
+        if (inst->staticInst->isLoad()) {
+            cpu.commitStats[inst->id.threadId]->numLoadInsts++;
+        }
+
+        if (inst->staticInst->isStore() || inst->staticInst->isAtomic()) {
+            cpu.commitStats[inst->id.threadId]->numStoreInsts++;
+        }
+
         cpu.baseStats.numInsts++;
 
         /* Act on events related to instruction counts */
