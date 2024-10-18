@@ -279,7 +279,7 @@ class TLBIALLN : public TLBIOp
 class TLBIMVAA : public TLBIOp
 {
   protected:
-    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
+    TlbEntry::KeyType lookupGen(vmid_t vmid) const;
   public:
     TLBIMVAA(TranslationRegime _target_regime, SecurityState _ss,
              Addr _addr, bool last_level, Attr _attr=Attr::None)
@@ -299,7 +299,7 @@ class TLBIMVAA : public TLBIOp
 class TLBIMVA : public TLBIOp
 {
   protected:
-    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
+    TlbEntry::KeyType lookupGen(vmid_t vmid) const;
 
   public:
     TLBIMVA(TranslationRegime _target_regime, SecurityState _ss,
@@ -405,7 +405,7 @@ class TLBIRange
 class TLBIIPA : public TLBIOp
 {
   protected:
-    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
+    TlbEntry::KeyType lookupGen(vmid_t vmid) const;
   public:
     TLBIIPA(TranslationRegime _target_regime, SecurityState _ss, Addr _addr,
             bool last_level, Attr _attr=Attr::None)

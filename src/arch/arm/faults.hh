@@ -147,13 +147,6 @@ class ArmFault : public FaultBase
         AR     // DataAbort: Acquire/Release semantics
     };
 
-    enum TranMethod
-    {
-        LpaeTran,
-        VmsaTran,
-        UnknownTran
-    };
-
     enum DebugType
     {
         NODEBUG = 0,
@@ -480,18 +473,18 @@ class AbortFault : public ArmFaultVals<T>
      */
     Addr OVAddr;
     bool write;
-    TlbEntry::DomainType domain;
+    DomainType domain;
     uint8_t source;
     uint8_t srcEncoded;
     bool stage2;
     bool s1ptw;
-    ArmFault::TranMethod tranMethod;
+    TranMethod tranMethod;
     ArmFault::DebugType debugType;
 
   public:
-    AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
+    AbortFault(Addr _faultAddr, bool _write, DomainType _domain,
                uint8_t _source, bool _stage2,
-               ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
+               TranMethod _tranMethod = TranMethod::UnknownTran,
                ArmFault::DebugType _debug = ArmFault::NODEBUG) :
         faultAddr(_faultAddr), OVAddr(0), write(_write),
         domain(_domain), source(_source), srcEncoded(0),
@@ -523,10 +516,10 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     static const MiscRegIndex HFarIndex = MISCREG_HIFAR;
 
     PrefetchAbort(Addr _addr, uint8_t _source, bool _stage2 = false,
-                  ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
+                  TranMethod _tran_method = TranMethod::UnknownTran,
                   ArmFault::DebugType _debug = ArmFault::NODEBUG) :
-        AbortFault<PrefetchAbort>(_addr, false, TlbEntry::DomainType::NoAccess,
-                _source, _stage2, _tranMethod, _debug)
+        AbortFault<PrefetchAbort>(_addr, false, DomainType::NoAccess,
+                _source, _stage2, _tran_method, _debug)
     {}
 
     // @todo: external aborts should be routed if SCR.EA == 1
@@ -556,12 +549,12 @@ class DataAbort : public AbortFault<DataAbort>
     bool sf;
     bool ar;
 
-    DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write, uint8_t _source,
+    DataAbort(Addr _addr, DomainType _domain, bool _write, uint8_t _source,
               bool _stage2=false,
-              ArmFault::TranMethod _tranMethod=ArmFault::UnknownTran,
+              TranMethod _tran_method=TranMethod::UnknownTran,
               ArmFault::DebugType _debug_type=ArmFault::NODEBUG) :
         AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
-                              _tranMethod, _debug_type),
+                              _tran_method, _debug_type),
         isv(false), sas (0), sse(0), srt(0), cm(0), sf(false), ar(false)
     {}
 
@@ -584,7 +577,7 @@ class VirtualDataAbort : public AbortFault<VirtualDataAbort>
     static const MiscRegIndex FarIndex  = MISCREG_DFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HDFAR;
 
-    VirtualDataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write,
+    VirtualDataAbort(Addr _addr, DomainType _domain, bool _write,
                      uint8_t _source) :
         AbortFault<VirtualDataAbort>(_addr, _write, _domain, _source, false)
     {}
