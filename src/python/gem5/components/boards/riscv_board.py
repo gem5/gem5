@@ -500,6 +500,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     def get_disk_device(self):
         return "/dev/vda"
 
+    @overrides(AbstractSystemBoard)
     def _pre_instantiate(self, full_system: Optional[bool] = None):
         # This is a bit of a hack necessary to get the RiscDemoBoard working
         # At the time of writing the RiscvBoard does not support SE mode so
