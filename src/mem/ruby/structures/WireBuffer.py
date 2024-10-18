@@ -35,5 +35,3 @@ class RubyWireBuffer(SimObject):
     type = "RubyWireBuffer"
     cxx_class = "gem5::ruby::WireBuffer"
     cxx_header = "mem/ruby/structures/WireBuffer.hh"
-
-    ruby_system = Param.RubySystem(Parent.any, "")

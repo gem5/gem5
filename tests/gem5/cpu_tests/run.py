@@ -55,7 +55,7 @@ class L1ICache(L1Cache):
     """Simple L1 instruction cache with default values"""
 
     # Set the default size
-    size = "32kB"
+    size = "32KiB"
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU icache port"""
@@ -66,7 +66,7 @@ class L1DCache(L1Cache):
     """Simple L1 data cache with default values"""
 
     # Set the default size
-    size = "32kB"
+    size = "32KiB"
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU dcache port"""
@@ -77,7 +77,7 @@ class L2Cache(Cache):
     """Simple L2 Cache with default values"""
 
     # Default parameters
-    size = "512kB"
+    size = "512KiB"
     assoc = 16
     tag_latency = 10
     data_latency = 10
@@ -134,7 +134,7 @@ if args.cpu not in (
 ):
     system.mem_mode = "timing"
 
-system.mem_ranges = [AddrRange("512MB")]
+system.mem_ranges = [AddrRange("512MiB")]
 
 system.cpu = valid_cpu[args.cpu]()
 

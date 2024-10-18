@@ -362,6 +362,8 @@ class ComputeUnit : public ClockedObject
     Tick scalar_req_tick_latency;
     Tick scalar_resp_tick_latency;
 
+    Tick memtime_latency;
+
     /**
      * Number of WFs to schedule to each SIMD. This vector is populated
      * by hasDispResources(), and consumed by the subsequent call to

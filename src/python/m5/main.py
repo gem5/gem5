@@ -409,30 +409,36 @@ def main():
     if not os.path.isdir(options.outdir):
         os.makedirs(options.outdir)
 
-    # These filenames are used only if the redirect_std* options are set
-    stdout_file = os.path.join(options.outdir, options.stdout_file)
-    stderr_file = os.path.join(options.outdir, options.stderr_file)
+    # simout.txt and simerr.txt for multisim are created in
+    # src/python/m5/core.py. We skip creating them here to avoid generating
+    # extra files.
+    if not (options.c and "multiprocessing" in options.c[0]):
+        # These filenames are used only if the redirect_std* options are set
+        stdout_file = os.path.join(options.outdir, options.stdout_file)
+        stderr_file = os.path.join(options.outdir, options.stderr_file)
 
-    if not options.silent_redirect:
-        # Print redirection notices here before doing any redirection
-        if options.redirect_stdout and not options.redirect_stderr:
-            print("Redirecting stdout and stderr to", stdout_file)
-        else:
-            if options.redirect_stdout:
-                print("Redirecting stdout to", stdout_file)
-            if options.redirect_stderr:
-                print("Redirecting stderr to", stderr_file)
-
-    # Now redirect stdout/stderr as desired
-    if options.redirect_stdout:
-        redir_fd = os.open(stdout_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
-        os.dup2(redir_fd, sys.stdout.fileno())
-        if not options.redirect_stderr:
+        if not options.silent_redirect:
+            # Print redirection notices here before doing any redirection
+            if options.redirect_stdout and not options.redirect_stderr:
+                print("Redirecting stdout and stderr to", stdout_file)
+            else:
+                if options.redirect_stdout:
+                    print("Redirecting stdout to", stdout_file)
+                if options.redirect_stderr:
+                    print("Redirecting stderr to", stderr_file)
+        # Now redirect stdout/stderr as desired
+        if options.redirect_stdout:
+            redir_fd = os.open(
+                stdout_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            )
+            os.dup2(redir_fd, sys.stdout.fileno())
+            if not options.redirect_stderr:
+                os.dup2(redir_fd, sys.stderr.fileno())
+        if options.redirect_stderr:
+            redir_fd = os.open(
+                stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            )
             os.dup2(redir_fd, sys.stderr.fileno())
-
-    if options.redirect_stderr:
-        redir_fd = os.open(stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
-        os.dup2(redir_fd, sys.stderr.fileno())
 
     done = False
 
@@ -440,8 +446,8 @@ def main():
         done = True
         print("Build information:")
         print()
-        print(f"gem5 version {defines.gem5Version}")
-        print(f"compiled {defines.compileDate}")
+        print(f"gem5 version {_m5.core.gem5Version}")
+        print(f"compiled {_m5.core.compileDate}")
         print("build options:")
         keys = list(defines.buildEnv.keys())
         keys.sort()

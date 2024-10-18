@@ -92,7 +92,7 @@ from m5.util.pybind import *
 # object, either using keyword assignment in the constructor or in
 # separate assignment statements.  For example:
 #
-# cache = BaseCache(size='64KB')
+# cache = BaseCache(size='64KiB')
 # cache.hit_latency = 3
 # cache.assoc = 8
 #
@@ -489,6 +489,12 @@ def cxxMethod(*args, **kwargs):
                 # We don't cound 'self' as an argument in this case.
                 continue
             param = sig.parameters[param_name]
+            if param.kind in [
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            ]:
+                # *args and **kwargs shouldn't be in generated parameters
+                continue
             if param.default is param.empty:
                 args.append(param_name)
             else:
@@ -1253,7 +1259,9 @@ class SimObject(metaclass=MetaSimObject):
         if not self._ccObject:
             # Make sure this object is in the configuration hierarchy
             if not self._parent and not isRoot(self):
-                raise RuntimeError("Attempt to instantiate orphan node")
+                raise RuntimeError(
+                    f"Attempt to instantiate orphan node {self}"
+                )
             # Cycles in the configuration hierarchy are not supported. This
             # will catch the resulting recursion and stop.
             self._ccObject = -1

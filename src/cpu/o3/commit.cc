@@ -964,6 +964,17 @@ Commit::commitInsts()
 
             // Record that the number of ROB entries has changed.
             changedROBNumEntries[tid] = true;
+        // Inst at head of ROB cannot execute because the CPU
+        // does not know how to (lack of FU). This is a misconfiguration,
+        // so panic.
+        } else if (head_inst->noCapableFU() &&
+            head_inst->getFault() == NoFault)  {
+            panic("CPU cannot execute [sn:%llu] op_class: %u but"
+              " did not trigger a fault. Do you need to update"
+              " the configuration and add a functional unit for"
+              " that op class?\n",
+              head_inst->seqNum,
+              head_inst->opClass());
         } else {
             set(pc[tid], head_inst->pcState());
 

@@ -66,12 +66,12 @@ from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierar
 
 # Here we setup the parameters of the l1 and l2 caches.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
+    l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
 
-memory = DualChannelDDR4_2400(size="2GB")
+memory = DualChannelDDR4_2400(size="2GiB")
 
 # Here we setup the processor. We use a simple TIMING processor. The config
 # script was also tested with ATOMIC processor.

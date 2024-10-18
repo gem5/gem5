@@ -45,7 +45,7 @@ class SubBlock
 {
   public:
     SubBlock() { }
-    SubBlock(Addr addr, int size);
+    SubBlock(Addr addr, int size, int cl_bits);
     ~SubBlock() { }
 
     Addr getAddress() const { return m_address; }
@@ -74,6 +74,7 @@ class SubBlock
     // Data Members (m_ prefix)
     Addr m_address;
     std::vector<uint8_t> m_data;
+    int m_cache_line_bits;
 };
 
 inline std::ostream&

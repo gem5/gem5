@@ -528,12 +528,12 @@ let {{
         global header_output, decoder_output, exec_output
 
         code = singleTernOp % { "op": singleOp, "palam": paramStr }
-        sIop = ArmInstObjParams(Name.lower() + "s", Name + "S", base,
+        sIop = ArmInstObjParams(Name.lower() + ".f32", Name + "S", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
         code = doubleTernOp % { "op": doubleOp, "palam": paramStr }
-        dIop = ArmInstObjParams(Name.lower() + "d", Name + "D", base,
+        dIop = ArmInstObjParams(Name.lower() + ".f64", Name + "D", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
@@ -560,13 +560,13 @@ let {{
 
         code = singleCode % { "op": singleBinOp }
         code = code % { "func": singleOp }
-        sIop = ArmInstObjParams(name + "s", Name + "S", base,
+        sIop = ArmInstObjParams(name + ".f32", Name + "S", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
         code = doubleCode % { "op": doubleBinOp }
         code = code % { "func": doubleOp }
-        dIop = ArmInstObjParams(name + "d", Name + "D", base,
+        dIop = ArmInstObjParams(name + ".f64", Name + "D", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
@@ -655,13 +655,13 @@ let {{
 
         code = singleCode % { "op": singleUnaryOp }
         code = code % { "func": singleOp }
-        sIop = ArmInstObjParams(name + "s", Name + "S", base,
+        sIop = ArmInstObjParams(name + ".f32", Name + "S", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
         code = doubleCode % { "op": doubleUnaryOp }
         code = code % { "func": doubleOp }
-        dIop = ArmInstObjParams(name + "d", Name + "D", base,
+        dIop = ArmInstObjParams(name + ".f64", Name + "D", base,
                 { "code": code,
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
@@ -682,11 +682,11 @@ let {{
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
 
-        sIop = ArmInstObjParams(name + "s", Name + "S", base,
+        sIop = ArmInstObjParams(name + ".f32", Name + "S", base,
                 { "code": singleSimpleCode % { "op": singleOp },
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
-        dIop = ArmInstObjParams(name + "d", Name + "D", base,
+        dIop = ArmInstObjParams(name + ".f64", Name + "D", base,
                 { "code": doubleCode % { "op": doubleOp },
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
@@ -1360,13 +1360,12 @@ let {{
     vcmpZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpDest);
-        // This only handles imm == 0 for now.
-        assert(imm == 0);
-        if (FpDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (FpDest == 0.0f) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (FpDest < imm) {
+        } else if (FpDest < 0.0f) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (FpDest > imm) {
+        } else if (FpDest > 0.0f) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint32_t qnan = 0x7fc00000;
@@ -1388,16 +1387,15 @@ let {{
     exec_output += PredOpExecute.subst(vcmpZeroSIop);
 
     vcmpZeroDCode = vfpEnabledCheckCode + '''
-        // This only handles imm == 0 for now.
-        assert(imm == 0);
         double cDest = dbl(FpDestP0_uw, FpDestP1_uw);
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, cDest);
-        if (cDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (cDest == 0.0) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (cDest < imm) {
+        } else if (cDest < 0.0) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (cDest > imm) {
+        } else if (cDest > 0.0) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint64_t qnan = 0x7ff8000000000000ULL;
@@ -1471,11 +1469,12 @@ let {{
     vcmpeZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpDest);
-        if (FpDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (FpDest == 0.0f) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (FpDest < imm) {
+        } else if (FpDest < 0.0f) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (FpDest > imm) {
+        } else if (FpDest > 0.0f) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             fpscr.ioc = 1;
@@ -1496,11 +1495,12 @@ let {{
         double cDest = dbl(FpDestP0_uw, FpDestP1_uw);
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, cDest);
-        if (cDest == imm) {
+        assert(imm == 0); // immediate must be zero.
+        if (cDest == 0.0) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
-        } else if (cDest < imm) {
+        } else if (cDest < 0.0) {
             fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
-        } else if (cDest > imm) {
+        } else if (cDest > 0.0) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             fpscr.ioc = 1;
@@ -1531,7 +1531,7 @@ let {{
             FpDest = FpOp2;
         } '''
 
-    vselSIop = ArmInstObjParams("vsels", "VselS", "FpRegRegRegCondOp",
+    vselSIop = ArmInstObjParams("vsel.f32", "VselS", "FpRegRegRegCondOp",
                                 { "code" : vselSCode,
                                   "predicate_test" : predicateTest,
                                   "op_class" : "SimdFloatCmpOp" }, [] )
@@ -1548,7 +1548,7 @@ let {{
             FpDestP1_uw = FpOp2P1_uw;
         } '''
 
-    vselDIop = ArmInstObjParams("vseld", "VselD", "FpRegRegRegCondOp",
+    vselDIop = ArmInstObjParams("vsel.f64", "VselD", "FpRegRegRegCondOp",
                                 { "code" : vselDCode,
                                   "predicate_test" : predicateTest,
                                   "op_class" : "SimdFloatCmpOp" }, [] )

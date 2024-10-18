@@ -659,7 +659,7 @@ class CHI_MN(CHI_Node):
         super().__init__(ruby_system)
 
         # MiscNode has internal address range starting at 0
-        addr_range = AddrRange(0, size="1kB")
+        addr_range = AddrRange(0, size="1KiB")
 
         self._cntrl = CHI_MNController(
             ruby_system, addr_range, l1d_caches, early_nonsync_comp

@@ -1031,29 +1031,6 @@ template<class T>
 void
 AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (tranMethod == ArmFault::UnknownTran) {
-        tranMethod = longDescFormatInUse(tc) ? ArmFault::LpaeTran
-                                             : ArmFault::VmsaTran;
-
-        if ((tranMethod == ArmFault::VmsaTran) && this->routeToMonitor(tc)) {
-            // See ARM ARM B3-1416
-            bool override_LPAE = false;
-            TTBCR ttbcr_s = tc->readMiscReg(MISCREG_TTBCR_S);
-            [[maybe_unused]] TTBCR ttbcr_ns =
-                tc->readMiscReg(MISCREG_TTBCR_NS);
-            if (ttbcr_s.eae) {
-                override_LPAE = true;
-            } else {
-                // Unimplemented code option, not seen in testing.  May need
-                // extension according to the manual exceprt above.
-                DPRINTF(Faults, "Warning: Incomplete translation method "
-                        "override detected.\n");
-            }
-            if (override_LPAE)
-                tranMethod = ArmFault::LpaeTran;
-        }
-    }
-
     if (source == ArmFault::AsynchronousExternalAbort) {
         tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     }
@@ -1109,6 +1086,34 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                 tc, faultAddr, this->toEL);
         }
     }
+}
+
+template<class T>
+void
+AbortFault<T>::update(ThreadContext *tc)
+{
+    if (tranMethod == ArmFault::UnknownTran) {
+        tranMethod = longDescFormatInUse(tc) ? ArmFault::LpaeTran
+                                             : ArmFault::VmsaTran;
+
+        if ((tranMethod == ArmFault::VmsaTran) && this->routeToMonitor(tc)) {
+            // See ARM ARM B3-1416
+            bool override_LPAE = false;
+            TTBCR ttbcr_s = tc->readMiscReg(MISCREG_TTBCR_S);
+            if (ttbcr_s.eae) {
+                override_LPAE = true;
+            } else {
+                // Unimplemented code option, not seen in testing.  May need
+                // extension according to the manual exceprt above.
+                DPRINTF(Faults, "Warning: Incomplete translation method "
+                        "override detected.\n");
+            }
+            if (override_LPAE)
+                tranMethod = ArmFault::LpaeTran;
+        }
+    }
+
+    ArmFault::update(tc);
 }
 
 template<class T>
@@ -1218,6 +1223,17 @@ AbortFault<T>::isMMUFault() const
          (source <  ArmFault::DomainLL + 4))      ||
         ((source >= ArmFault::PermissionLL) &&
          (source <  ArmFault::PermissionLL + 4));
+}
+
+template<class T>
+bool
+AbortFault<T>::isExternalAbort() const
+{
+    return
+        (source == ArmFault::SynchronousExternalAbort)  ||
+        (source == ArmFault::AsynchronousExternalAbort) ||
+        ((source >= ArmFault::SynchExtAbtOnTranslTableWalkLL) &&
+         (source < ArmFault::SynchExtAbtOnTranslTableWalkLL + 4));
 }
 
 template<class T>
@@ -1363,6 +1379,7 @@ DataAbort::iss() const
     iss.wnr = write;
     iss.s1ptw = s1ptw;
     iss.cm = cm;
+    iss.ea = isExternalAbort();
 
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2

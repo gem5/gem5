@@ -52,7 +52,7 @@ namespace gem5
 {
 
 SetAssociative::SetAssociative(const Params &p)
-    : BaseIndexingPolicy(p)
+    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size))
 {
 }
 
@@ -63,14 +63,14 @@ SetAssociative::extractSet(const Addr addr) const
 }
 
 Addr
-SetAssociative::regenerateAddr(const Addr tag, const ReplaceableEntry* entry)
-                                                                        const
+SetAssociative::regenerateAddr(const Addr &tag,
+                               const ReplaceableEntry* entry) const
 {
     return (tag << tagShift) | (entry->getSet() << setShift);
 }
 
 std::vector<ReplaceableEntry*>
-SetAssociative::getPossibleEntries(const Addr addr) const
+SetAssociative::getPossibleEntries(const Addr &addr) const
 {
     return sets[extractSet(addr)];
 }

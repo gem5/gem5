@@ -91,7 +91,7 @@ class LinuxArmSystemBuilder:
         self.aarch64_kernel = aarch64_kernel
         self.enable_dvm = enable_dvm
         self.num_cpus = kwargs.get("num_cpus", 1)
-        self.mem_size = kwargs.get("mem_size", "256MB")
+        self.mem_size = kwargs.get("mem_size", "256MiB")
         self.use_ruby = kwargs.get("use_ruby", False)
 
     def init_kvm(self, system):

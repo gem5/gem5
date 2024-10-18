@@ -89,6 +89,9 @@ AbstractController::init()
         getMemReqQueue()->setConsumer(this);
     }
 
+    downstreamDestinations.setRubySystem(m_ruby_system);
+    upstreamDestinations.setRubySystem(m_ruby_system);
+
     // Initialize the addr->downstream machine mappings. Multiple machines
     // in downstream_destinations can have the same address range if they have
     // different types. If this is the case, mapAddressToDownstreamMachine
@@ -268,7 +271,7 @@ AbstractController::serviceMemoryQueue()
     }
 
     const MemoryMsg *mem_msg = (const MemoryMsg*)mem_queue->peek();
-    unsigned int req_size = RubySystem::getBlockSizeBytes();
+    unsigned int req_size = m_ruby_system->getBlockSizeBytes();
     if (mem_msg->m_Len > 0) {
         req_size = mem_msg->m_Len;
     }
@@ -294,7 +297,7 @@ AbstractController::serviceMemoryQueue()
     SenderState *s = new SenderState(mem_msg->m_Sender);
     pkt->pushSenderState(s);
 
-    if (RubySystem::getWarmupEnabled()) {
+    if (m_ruby_system->getWarmupEnabled()) {
         // Use functional rather than timing accesses during warmup
         mem_queue->dequeue(clockEdge());
         memoryPort.sendFunctional(pkt);
@@ -382,7 +385,10 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         return false;
     }
 
-    std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
+    int blk_size = m_ruby_system->getBlockSizeBytes();
+
+    std::shared_ptr<MemoryMsg> msg =
+        std::make_shared<MemoryMsg>(clockEdge(), blk_size, m_ruby_system);
     (*msg).m_addr = pkt->getAddr();
     (*msg).m_Sender = m_machineID;
 
@@ -396,7 +402,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
 
         // Copy data from the packet
         (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
-                                 RubySystem::getBlockSizeBytes());
+                                 m_ruby_system->getBlockSizeBytes());
     } else if (pkt->isWrite()) {
         (*msg).m_Type = MemoryRequestType_MEMORY_WB;
         (*msg).m_MessageSize = MessageSizeType_Writeback_Control;
@@ -404,7 +410,8 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         panic("Incorrect packet type received from memory controller!");
     }
 
-    memRspQueue->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    memRspQueue->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)),
+        m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
     delete pkt;
     return true;
 }
@@ -469,6 +476,45 @@ AbstractController::sendRetryRespToMem() {
         m_mem_ctrl_waiting_retry = false;
         memoryPort.sendRetryResp();
     }
+}
+
+Addr
+AbstractController::getOffset(Addr addr) const
+{
+    return ruby::getOffset(addr, m_ruby_system->getBlockSizeBits());
+}
+
+Addr
+AbstractController::makeLineAddress(Addr addr) const
+{
+    return ruby::makeLineAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
+std::string
+AbstractController::printAddress(Addr addr) const
+{
+    return ruby::printAddress(addr, m_ruby_system->getBlockSizeBits());
+}
+
+NetDest
+AbstractController::broadcast(MachineType type)
+{
+    assert(m_ruby_system != nullptr);
+    NodeID type_count = m_ruby_system->MachineType_base_count(type);
+
+    NetDest dest;
+    for (NodeID i = 0; i < type_count; i++) {
+        MachineID mach = {type, i};
+        dest.add(mach);
+    }
+    return dest;
+}
+
+int
+AbstractController::machineCount(MachineType machType)
+{
+    assert(m_ruby_system != nullptr);
+    return m_ruby_system->MachineType_base_count(machType);
 }
 
 bool

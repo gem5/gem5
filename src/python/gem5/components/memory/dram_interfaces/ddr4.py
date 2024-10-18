@@ -181,7 +181,7 @@ class DDR4_2400_8x8(DDR4_2400_16x4):
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
 
-    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
+    # Each device has a page (row buffer) size of 1 Kibibyte (1K columns x8)
     device_rowbuffer_size = "1KiB"
 
     # 8x8 configuration, so 8 devices
@@ -214,7 +214,7 @@ class DDR4_2400_4x16(DDR4_2400_16x4):
     # 4x16 configuration, 4 devices each with an 16-bit interface
     device_bus_width = 16
 
-    # Each device has a page (row buffer) size of 2 Kbyte (1K columns x16)
+    # Each device has a page (row buffer) size of 2 Kibibyte (1K columns x16)
     device_rowbuffer_size = "2KiB"
 
     # 4x16 configuration, so 4 devices

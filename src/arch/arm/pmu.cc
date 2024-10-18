@@ -543,8 +543,9 @@ PMU::CounterState::detach()
         sourceEvent->detachEvent(this);
         sourceEvent = nullptr;
     } else {
-        debugCounter("detaching event not currently attached"
-            " to any event\n");
+        DPRINTFS(PMUVerbose, &pmu,
+                 "detaching event %d not currently attached to any event"
+                 " [counterId = %d]\n", eventId, counterId);
     }
 }
 
@@ -601,6 +602,7 @@ PMU::updateCounter(CounterState &ctr)
         if (sourceEvent == eventMap.end()) {
             warn("Can't enable PMU counter of type '0x%x': "
                  "No such event type.\n", ctr.eventId);
+            ctr.detach();
         } else {
             ctr.attach(sourceEvent->second);
         }

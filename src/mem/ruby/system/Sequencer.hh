@@ -45,6 +45,7 @@
 #include <list>
 #include <unordered_map>
 
+#include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/MachineType.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
@@ -210,16 +211,24 @@ class Sequencer : public RubyPort
     statistics::Counter getIncompleteTimes(const MachineType t) const
     { return m_IncompleteTimes[t]; }
 
-  private:
+  protected:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
+    virtual void hitCallback(SequencerRequest* srequest, DataBlock& data,
+                             bool llscSuccess,
+                             const MachineType mach, const bool externalHit,
+                             const Cycles initialRequestTime,
+                             const Cycles forwardRequestTime,
+                             const Cycles firstResponseTime,
+                             const bool was_coalesced);
 
-    void hitCallback(SequencerRequest* srequest, DataBlock& data,
-                     bool llscSuccess,
-                     const MachineType mach, const bool externalHit,
-                     const Cycles initialRequestTime,
-                     const Cycles forwardRequestTime,
-                     const Cycles firstResponseTime,
-                     const bool was_coalesced);
+    virtual bool processReadCallback(SequencerRequest &seq_req,
+                                     DataBlock& data,
+                                     const bool rubyRequest,
+                                     bool externalHit,
+                                     const MachineType mach,
+                                     Cycles initialRequestTime,
+                                     Cycles forwardRequestTime,
+                                     Cycles firstResponseTime);
 
     void recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
                            const MachineType respondingMach,
@@ -227,6 +236,7 @@ class Sequencer : public RubyPort
                            Cycles forwardRequestTime,
                            Cycles firstResponseTime);
 
+  private:
     // Private copy constructor and assignment operator
     Sequencer(const Sequencer& obj);
     Sequencer& operator=(const Sequencer& obj);
@@ -243,6 +253,8 @@ class Sequencer : public RubyPort
     virtual RequestStatus insertRequest(PacketPtr pkt,
                                         RubyRequestType primary_type,
                                         RubyRequestType secondary_type);
+
+    RubySystem *m_ruby_system;
 
   private:
     int m_max_outstanding_requests;

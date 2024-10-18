@@ -368,7 +368,7 @@ namespace VegaISA
         src0.read();
         src1.read();
 
-        scc = (src0.rawData() < src1.rawData()) ? 1 : 0;
+        scc = (src0.rawData() <= src1.rawData()) ? 1 : 0;
 
         scc.write();
     } // execute

@@ -49,11 +49,11 @@ exclude: |
       tests/.*/ref/.*
     )$
 
-default_stages: [commit]
+default_stages: [pre-commit]
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.5.0
+      rev: v5.0.0
       hooks:
           - id: trailing-whitespace
           - id: end-of-file-fixer
@@ -69,7 +69,7 @@ repos:
           - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/PyCQA/isort
-      rev: 5.11.5
+      rev: 5.13.2
       hooks:
           - id: isort
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
@@ -77,11 +77,11 @@ repos:
       hooks:
           - id: yamlfmt
     - repo: https://github.com/psf/black
-      rev: 23.9.1
+      rev: 24.10.0
       hooks:
           - id: black
     - repo: https://github.com/asottile/pyupgrade
-      rev: v3.14.0
+      rev: v3.17.0
       hooks:
           - id: pyupgrade
             # Python 3.8 is the earliest version supported.
@@ -98,13 +98,7 @@ repos:
             description: The gem5 style checker hook.
           - id: gem5-commit-msg-checker
             name: gem5 commit msg checker
-            entry: ext/git-commit-msg
+            entry: util/git-commit-msg.py
             language: system
             stages: [commit-msg]
             description: The gem5 commit message checker hook.
-          - id: gerrit-commit-msg-job
-            name: gerrit commit message job
-            entry: util/gerrit-commit-msg-hook
-            language: system
-            stages: [commit-msg]
-            description: Adds Change-ID to the commit message. Needed by Gerrit.

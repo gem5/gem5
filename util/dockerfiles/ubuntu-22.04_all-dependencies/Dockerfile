@@ -23,8 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+FROM ubuntu:22.04
 
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
+LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
+LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \

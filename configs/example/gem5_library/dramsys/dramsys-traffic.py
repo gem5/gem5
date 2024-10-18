@@ -40,12 +40,12 @@ from gem5.simulate.simulator import Simulator
 memory = DRAMSysMem(
     configuration="ext/dramsys/DRAMSys/configs/ddr4-example.json",
     recordable=True,
-    size="4GB",
+    size="4GiB",
 )
 
 generator = LinearGenerator(
     duration="250us",
-    rate="40GB/s",
+    rate="40GiB/s",
     num_cores=1,
     max_addr=memory.get_size(),
 )

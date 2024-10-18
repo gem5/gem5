@@ -114,14 +114,14 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.L2cache = L2Cache()
         self.L2cache.create(options.l2_size, options.l2_assoc, options)
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1D0cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.coreid = 0
         self.sequencer.is_cpu_sequencer = True
 
-        self.sequencer1 = RubySequencer()
+        self.sequencer1 = RubySequencer(ruby_system=ruby_system)
         self.sequencer1.version = self.seqCount()
         self.sequencer1.dcache = self.L1D1cache
         self.sequencer1.ruby_system = ruby_system
@@ -138,7 +138,7 @@ class CPCntrl(CorePair_Controller, CntrlBase):
 
 
 class TCPCache(RubyCache):
-    size = "16kB"
+    size = "16KiB"
     assoc = 16
     dataArrayBanks = 16  # number of data banks
     tagArrayBanks = 16  # number of tag banks
@@ -150,7 +150,7 @@ class TCPCache(RubyCache):
         self.assoc = options.tcp_assoc
         self.resourceStalls = options.no_tcc_resource_stalls
         if hasattr(options, "tcp_rp"):
-            self.replacement_policy = RP_choose(options.tcp_rp)
+            self.replacement_policy = ObjectList.rp_list.get(options.tcp_rp)()
 
 
 class TCPCntrl(TCP_Controller, CntrlBase):
@@ -169,7 +169,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         # TCP_Controller inherits this from RubyController
         self.mandatory_queue_latency = options.mandatory_queue_latency
 
-        self.coalescer = VIPERCoalescer()
+        self.coalescer = VIPERCoalescer(ruby_system=ruby_system)
         self.coalescer.version = self.seqCount()
         self.coalescer.icache = self.L1cache
         self.coalescer.dcache = self.L1cache
@@ -182,7 +182,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
             options.max_coalesces_per_cycle
         )
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
@@ -211,7 +211,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.L1cache.create(options)
         self.issue_latency = 1
 
-        self.coalescer = VIPERCoalescer()
+        self.coalescer = VIPERCoalescer(ruby_system=ruby_system)
         self.coalescer.version = self.seqCount()
         self.coalescer.icache = self.L1cache
         self.coalescer.dcache = self.L1cache
@@ -219,7 +219,7 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.coalescer.support_inst_reqs = False
         self.coalescer.is_cpu_sequencer = False
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache
         self.sequencer.ruby_system = ruby_system
@@ -243,7 +243,7 @@ class SQCCache(RubyCache):
         self.size = MemorySize(options.sqc_size)
         self.assoc = options.sqc_assoc
         if hasattr(options, "sqc_rp"):
-            self.replacement_policy = RP_choose(options.sqc_rp)
+            self.replacement_policy = ObjectList.rp_list.get(options.sqc_rp)()
 
 
 class SQCCntrl(SQC_Controller, CntrlBase):
@@ -254,7 +254,7 @@ class SQCCntrl(SQC_Controller, CntrlBase):
         self.L1cache.create(options)
         self.L1cache.resourceStalls = options.no_resource_stalls
 
-        self.sequencer = RubySequencer()
+        self.sequencer = VIPERSequencer()
 
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1cache
@@ -276,7 +276,7 @@ class SQCCntrl(SQC_Controller, CntrlBase):
 
 
 class TCC(RubyCache):
-    size = MemorySize("256kB")
+    size = MemorySize("256KiB")
     assoc = 16
     dataAccessLatency = 8
     tagAccessLatency = 2
@@ -289,7 +289,7 @@ class TCC(RubyCache):
         if hasattr(options, "bw_scalor") and options.bw_scalor > 0:
             s = options.num_compute_units
             tcc_size = s * 128
-            tcc_size = str(tcc_size) + "kB"
+            tcc_size = str(tcc_size) + "KiB"
             self.size = MemorySize(tcc_size)
             self.dataArrayBanks = 64
             self.tagArrayBanks = 64
@@ -306,7 +306,7 @@ class TCC(RubyCache):
             options.num_tccs, 2
         )
         if hasattr(options, "tcc_rp"):
-            self.replacement_policy = RP_choose(options.tcc_rp)
+            self.replacement_policy = ObjectList.rp_list.get(options.tcc_rp)()
 
 
 class TCCCntrl(TCC_Controller, CntrlBase):
@@ -387,7 +387,9 @@ class DirCntrl(Directory_Controller, CntrlBase):
         self.response_latency = 30
 
         self.addr_ranges = dir_ranges
-        self.directory = RubyDirectoryMemory()
+        self.directory = RubyDirectoryMemory(
+            block_size=ruby_system.block_size_bytes
+        )
 
         self.L3CacheMemory = L3Cache()
         self.L3CacheMemory.create(options, ruby_system, system)
@@ -443,7 +445,7 @@ def define_options(parser):
         help="number of TCC banks in the GPU",
     )
     parser.add_argument(
-        "--sqc-size", type=str, default="32kB", help="SQC cache size"
+        "--sqc-size", type=str, default="32KiB", help="SQC cache size"
     )
     parser.add_argument(
         "--sqc-assoc", type=int, default=8, help="SQC cache assoc"
@@ -478,11 +480,11 @@ def define_options(parser):
         "--TCC_latency", type=int, default=16, help="TCC latency"
     )
     parser.add_argument(
-        "--tcc-size", type=str, default="256kB", help="agregate tcc size"
+        "--tcc-size", type=str, default="256KiB", help="agregate tcc size"
     )
     parser.add_argument("--tcc-assoc", type=int, default=16, help="tcc assoc")
     parser.add_argument(
-        "--tcp-size", type=str, default="16kB", help="tcp size"
+        "--tcp-size", type=str, default="16KiB", help="tcp size"
     )
     parser.add_argument("--tcp-assoc", type=int, default=16, help="tcp assoc")
     parser.add_argument(
@@ -686,7 +688,7 @@ def construct_gpudirs(options, system, ruby_system, network):
         dir_cntrl.addr_ranges = dram_intf.range
 
         # Append
-        exec("system.ruby.gpu_dir_cntrl%d = dir_cntrl" % i)
+        exec("ruby_system.gpu_dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
         mem_ctrls.append(mem_ctrl)
 
@@ -1127,28 +1129,3 @@ def create_system(
     ruby_system.network.number_of_virtual_networks = 11
 
     return (cpu_sequencers, dir_cntrl_nodes, mainCluster)
-
-
-def RP_choose(test_name):
-    if test_name == "TreePLRURP":
-        replacement_policy = TreePLRURP()
-    elif test_name == "LRURP":
-        replacement_policy = LRURP()
-    elif test_name == "FIFORP":
-        replacement_policy = FIFORP()
-    elif test_name == "LFURP":
-        replacement_policy = LFURP()
-    elif test_name == "LIPRP":
-        replacement_policy = LIPRP()
-    elif test_name == "MRURP":
-        replacement_policy = MRURP()
-    elif test_name == "NRURP":
-        replacement_policy = NRURP()
-    elif test_name == "RRIPRP":
-        replacement_policy = RRIPRP()
-    elif test_name == "SecondChanceRP":
-        replacement_policy = SecondChanceRP()
-    elif test_name == "SHiPMemRP":
-        replacement_policy = SHiPMemRP()
-
-    return replacement_policy

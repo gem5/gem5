@@ -204,6 +204,11 @@ class ComputeUnit(ClockedObject):
         "TCP and cu as well as TCP data array "
         "access. Specified in GPU clock cycles",
     )
+    memtime_latency = Param.Int(
+        41,
+        "Latency for memtimes in scalar memory pipeline. "
+        "Specified in GPU clock cycles",
+    )
     system = Param.System(Parent.any, "system object")
     cu_id = Param.Int("CU id")
     vrf_to_coalescer_bus_width = Param.Int(
@@ -305,7 +310,7 @@ class Shader(ClockedObject):
         """Insert rel packet into
                                          ruby at kernel end""",
     )
-    globalmem = Param.MemorySize("64kB", "Memory size")
+    globalmem = Param.MemorySize("64KiB", "Memory size")
     timing = Param.Bool(False, "timing memory accesses")
 
     cpu_pointer = Param.BaseCPU(NULL, "pointer to base CPU")

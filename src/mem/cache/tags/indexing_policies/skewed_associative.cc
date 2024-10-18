@@ -42,7 +42,8 @@ namespace gem5
 {
 
 SkewedAssociative::SkewedAssociative(const Params &p)
-    : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
+    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size)),
+      msbShift(floorLog2(numSets) - 1)
 {
     if (assoc > NUM_SKEWING_FUNCTIONS) {
         warn_once("Associativity higher than number of skewing functions. " \
@@ -198,7 +199,7 @@ SkewedAssociative::extractSet(const Addr addr, const uint32_t way) const
 }
 
 Addr
-SkewedAssociative::regenerateAddr(const Addr tag,
+SkewedAssociative::regenerateAddr(const Addr &tag,
                                   const ReplaceableEntry* entry) const
 {
     const Addr addr_set = (tag << (msbShift + 1)) | entry->getSet();
@@ -207,7 +208,7 @@ SkewedAssociative::regenerateAddr(const Addr tag,
 }
 
 std::vector<ReplaceableEntry*>
-SkewedAssociative::getPossibleEntries(const Addr addr) const
+SkewedAssociative::getPossibleEntries(const Addr &addr) const
 {
     std::vector<ReplaceableEntry*> entries;
 

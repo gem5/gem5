@@ -133,7 +133,7 @@ class DRAMSysDDR4_1866(DRAMSysMem):
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr4-example.json"
             ).as_posix(),
-            size="4GB",
+            size="4GiB",
             recordable=recordable,
         )
 
@@ -151,7 +151,7 @@ class DRAMSysDDR3_1600(DRAMSysMem):
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr3-gem5-se.json"
             ).as_posix(),
-            size="1GB",
+            size="1GiB",
             recordable=recordable,
         )
 
@@ -169,7 +169,7 @@ class DRAMSysLPDDR4_3200(DRAMSysMem):
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/lpddr4-example.json"
             ).as_posix(),
-            size="1GB",
+            size="1GiB",
             recordable=recordable,
         )
 
@@ -187,6 +187,6 @@ class DRAMSysHBM2(DRAMSysMem):
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/hbm2-example.json"
             ).as_posix(),
-            size="1GB",
+            size="1GiB",
             recordable=recordable,
         )

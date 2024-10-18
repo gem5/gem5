@@ -90,7 +90,9 @@ class RubyTester : public ClockedObject
     {
         ruby::SubBlock subBlock;
 
-        SenderState(Addr addr, int size) : subBlock(addr, size) {}
+        SenderState(Addr addr, int size, int cl_size)
+            : subBlock(addr, size, cl_size)
+        {}
 
     };
 

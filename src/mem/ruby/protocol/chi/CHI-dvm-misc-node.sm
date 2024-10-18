@@ -192,7 +192,7 @@ machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM op
   ////////////////////////////////////////////////////////////////////////////
 
   // Cache block size
-  int blockSize, default="RubySystem::getBlockSizeBytes()";
+  int blockSize, default="m_ruby_system->getBlockSizeBytes()";
 
   // Helper class for tracking expected response and data messages
   structure(ExpectedMap, external ="yes") {

@@ -64,7 +64,9 @@ AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
     std::shuffle(
         randAddressMap.begin(),
         randAddressMap.end(),
-        std::default_random_engine(random_mt.random<unsigned>(0,UINT_MAX))
+        // TODO: This is a bug unrelated to this draft PR but the GPU tester is
+        // useful for testing this PR.
+        std::default_random_engine(random_mt.random<unsigned>(0,UINT_MAX-1))
     );
 
     // initialize atomic locations

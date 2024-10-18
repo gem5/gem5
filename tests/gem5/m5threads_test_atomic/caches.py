@@ -77,7 +77,7 @@ class L1ICache(L1Cache):
     """Simple L1 instruction cache with default values"""
 
     # Set the size
-    size = "32kB"
+    size = "32KiB"
 
     def __init__(self, opts=None):
         super().__init__(opts)
@@ -91,7 +91,7 @@ class L1DCache(L1Cache):
     """Simple L1 data cache with default values"""
 
     # Set the size
-    size = "32kB"
+    size = "32KiB"
 
     def __init__(self, opts=None):
         super().__init__(opts)
@@ -105,7 +105,7 @@ class L2Cache(PrefetchCache):
     """Simple L2 Cache with default values"""
 
     # Default parameters
-    size = "256kB"
+    size = "256KiB"
     assoc = 16
     tag_latency = 10
     data_latency = 10

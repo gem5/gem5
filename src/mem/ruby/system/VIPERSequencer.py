@@ -1,5 +1,4 @@
-# Copyright (c) 2022-2023 Advanced Micro Devices, Inc.
-# All rights reserved.
+# Copyright (c) 2024 The University of Wisconsin
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,6 +26,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import vega10
+from m5.objects.Sequencer import *
+from m5.params import *
+from m5.proxy import *
 
-vega10.runVegaGPUFS("X86KvmCPU")
+
+class VIPERSequencer(RubySequencer):
+    type = "VIPERSequencer"
+    cxx_class = "gem5::ruby::VIPERSequencer"
+    cxx_header = "mem/ruby/system/VIPERSequencer.hh"

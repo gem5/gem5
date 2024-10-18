@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2024 Arm Limited
  * Copyright (c) 2007 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -240,7 +241,7 @@ class X86Linux64 : public X86Linux, public OpenFlagTable<X86Linux64>
     //@{
     /// Basic X86_64 Linux types
     typedef uint64_t size_t;
-    typedef uint64_t off_t;
+    typedef int64_t off_t;
     typedef int64_t time_t;
     typedef int64_t clock_t;
     //@}
@@ -387,7 +388,7 @@ class X86Linux32 : public X86Linux, public OpenFlagTable<X86Linux32>
     //@{
     /// Basic X86 Linux types
     typedef uint32_t size_t;
-    typedef uint32_t off_t;
+    typedef int32_t off_t;
     typedef int32_t time_t;
     typedef int32_t clock_t;
     //@}

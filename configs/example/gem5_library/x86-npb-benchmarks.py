@@ -28,7 +28,7 @@
 Script to run NAS parallel benchmarks with gem5. The script expects the
 benchmark program to run. The input is in the format
 <benchmark_prog>.<class>.x .The system is fixed with 2 CPU cores, MESI
-Two Level system cache and 3 GB DDR4 memory. It uses the x86 board.
+Two Level system cache and 3 GiB DDR4 memory. It uses the x86 board.
 
 This script will count the total number of instructions executed
 in the ROI. It also tracks how much wallclock and simulated time.
@@ -77,8 +77,8 @@ requires(
 # Following are the list of benchmark programs for npb.
 
 # We are restricting classes of NPB to A, B and C as the other classes (D and
-# F) require main memory size of more than 3 GB. The X86Board is currently
-# limited to 3 GB of memory. This limitation is explained later in line 136.
+# F) require main memory size of more than 3 GiB. The X86Board is currently
+# limited to 3 GiB of memory. This limitation is explained later in line 136.
 
 # The resource disk has binaries for class D. However, only `ep` benchmark
 # works with class D in the current configuration. More information on the
@@ -109,13 +109,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-# The simulation may fail in the case of `mg` with class C as it uses 3.3 GB
+# The simulation may fail in the case of `mg` with class C as it uses 3.3 GiB
 # of memory (more information is available at https://arxiv.org/abs/2010.13216).
 # We warn the user here.
 
 if args.benchmark == "npb-mg-c":
     warn(
-        "mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
+        "mg.C uses 3.3 GiB of memory. Currently we are simulating 3 GiB\
     of main memory in the system."
     )
 
@@ -124,7 +124,7 @@ if args.benchmark == "npb-mg-c":
 elif args.benchmark == "npb-ft-c":
     warn(
         "There is not enough memory for ft.C. Currently we are\
-    simulating 3 GB of main memory in the system."
+    simulating 3 GiB of main memory in the system."
     )
 
 # Checking for the maximum number of instructions, if provided by the user.
@@ -137,18 +137,18 @@ from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import
 )
 
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size="32kB",
+    l1d_size="32KiB",
     l1d_assoc=8,
-    l1i_size="32kB",
+    l1i_size="32KiB",
     l1i_assoc=8,
-    l2_size="256kB",
+    l2_size="256KiB",
     l2_assoc=16,
     num_l2_banks=2,
 )
 # Memory: Dual Channel DDR4 2400 DRAM device.
-# The X86 board only supports 3 GB of main memory.
+# The X86 board only supports 3 GiB of main memory.
 
-memory = DualChannelDDR4_2400(size="3GB")
+memory = DualChannelDDR4_2400(size="3GiB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a

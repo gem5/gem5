@@ -125,7 +125,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
 
-    tempBlock = new TempCacheBlk(blkSize);
+    tempBlock = new TempCacheBlk(blkSize,
+        genTagExtractor(tags->params().indexing_policy));
 
     tags->tagsInit();
     if (prefetcher)
@@ -416,7 +417,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // Now that the write is here, mark it accessible again, so the
         // write will succeed.  LockedRMWReadReq brings the block in in
         // exclusive mode, so we know it was previously writable.
-        CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+        CacheBlk *blk = tags->findBlock({pkt->getAddr(), pkt->isSecure()});
         assert(blk && blk->isValid());
         assert(!blk->isSet(CacheBlk::WritableBit) &&
                !blk->isSet(CacheBlk::ReadableBit));
@@ -550,7 +551,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     // the response is an invalidation
     assert(!mshr->wasWholeLineWrite || pkt->isInvalidate());
 
-    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+    CacheBlk *blk = tags->findBlock({pkt->getAddr(), pkt->isSecure()});
 
     if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
@@ -719,7 +720,7 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
     Addr blk_addr = pkt->getBlockAddr(blkSize);
     bool is_secure = pkt->isSecure();
-    CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
+    CacheBlk *blk = tags->findBlock({pkt->getAddr(), is_secure});
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
     pkt->pushLabel(name());
@@ -910,7 +911,7 @@ BaseCache::getNextQueueEntry()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = pkt->getBlockAddr(blkSize);
-            if (tags->findBlock(pf_addr, pkt->isSecure())) {
+            if (tags->findBlock({pf_addr, pkt->isSecure()})) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in cache, "
                         "dropped.\n", pf_addr);
                 prefetcher->pfHitInCache();
@@ -1031,8 +1032,9 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         bool victim_itself = false;
         CacheBlk *victim = nullptr;
         if (replaceExpansions || is_data_contraction) {
-            victim = tags->findVictim(regenerateBlkAddr(blk),
-                blk->isSecure(), compression_size, evict_blks,
+            victim = tags->findVictim(
+                {regenerateBlkAddr(blk), blk->isSecure()},
+                compression_size, evict_blks,
                 blk->getPartitionId());
 
             // It is valid to return nullptr if there is no victim
@@ -1546,7 +1548,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             // cache... just use temporary storage to complete the
             // current request and then get rid of it
             blk = tempBlock;
-            tempBlock->insert(addr, is_secure);
+            tempBlock->insert({addr, is_secure});
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         }
@@ -1647,7 +1649,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         partitionManager->readPacketPartitionID(pkt) : 0;
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
-    CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,
+    CacheBlk *victim = tags->findVictim({addr, is_secure}, blk_size_bits,
                                         evict_blks, partition_id);
 
     // It is valid to return nullptr if there is no victim
@@ -1911,7 +1913,7 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
         }
     }
 
-    CacheBlk *blk = tags->findBlock(mshr->blkAddr, mshr->isSecure);
+    CacheBlk *blk = tags->findBlock({mshr->blkAddr, mshr->isSecure});
 
     // either a prefetch that is not present upstream, or a normal
     // MSHR request, proceed to get the packet to send downstream

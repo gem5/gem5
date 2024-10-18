@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc.
+# Copyright (c) 2021-2024 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -82,10 +82,6 @@ def addRunFSOptions(parser):
         help="The second disk image to mount (/dev/sdb)",
     )
     parser.add_argument("--kernel", default=None, help="Linux kernel to boot")
-    parser.add_argument("--gpu-rom", default=None, help="GPU BIOS to load")
-    parser.add_argument(
-        "--gpu-mmio-trace", default=None, help="GPU MMIO trace to load"
-    )
     parser.add_argument(
         "--checkpoint-before-mmios",
         default=False,
@@ -112,7 +108,7 @@ def addRunFSOptions(parser):
         "--dgpu-mem-size",
         action="store",
         type=str,
-        default="16GB",
+        default="16GiB",
         help="Specify the dGPU physical memory size",
     )
     parser.add_argument(
@@ -199,6 +195,7 @@ def addRunFSOptions(parser):
         "--tcp-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for tcp",
     )
 
@@ -206,6 +203,7 @@ def addRunFSOptions(parser):
         "--tcc-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for tcc",
     )
 
@@ -214,6 +212,7 @@ def addRunFSOptions(parser):
         "--sqc-rp",
         type=str,
         default="TreePLRURP",
+        choices=ObjectList.rp_list.get_names(),
         help="cache replacement policy" "policy for sqc",
     )
 
@@ -237,16 +236,6 @@ def runGpuFSSystem(args):
     args.num_scalar_cache = int(
         math.ceil(float(n_cu) / args.cu_per_scalar_cache)
     )
-
-    # Verify MMIO trace is valid. This is only needed for Vega10 simulations.
-    # The md5sum refers to the md5sum of the Vega10 MMIO hardware trace in
-    # the gem5-resources repository. By checking it here, we avoid potential
-    # errors that would cause the driver not to load and simulations to fail.
-    if args.gpu_device == "Vega10":
-        mmio_file = open(args.gpu_mmio_trace, "rb")
-        mmio_md5 = hashlib.md5(mmio_file.read()).hexdigest()
-        if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
-            m5.util.panic("MMIO file does not match gem5 resources")
 
     system = makeGpuFSSystem(args)
 

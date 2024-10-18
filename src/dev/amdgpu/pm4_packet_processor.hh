@@ -67,6 +67,8 @@ class PM4PacketProcessor : public DmaVirtDevice
     int _ipId;
     AddrRange _mmioRange;
 
+    void unmapAllQueues(bool unmap_static);
+
   public:
     PM4PacketProcessor(const PM4PacketProcessorParams &p);
 

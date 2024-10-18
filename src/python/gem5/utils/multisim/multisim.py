@@ -57,6 +57,8 @@ from typing import (
     Set,
 )
 
+from m5.core import override_re_outdir
+
 # A global variable which __main__.py flips to `True` when multisim is run as
 # an executable module.
 module_run = False
@@ -168,6 +170,8 @@ def _run(module_path: Path, id: str) -> None:
 
     subdir = Path(Path(m5.options.outdir) / Path(sim_list[0].get_id()))
     sim_list[0].override_outdir(subdir)
+    # This doesn't do anything if none of the redirect options are passed
+    override_re_outdir(subdir)
 
     sim_list[0].run()
 

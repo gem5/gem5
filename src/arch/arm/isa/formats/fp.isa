@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011, 2016-2019 ARM Limited
+// Copyright (c) 2010-2011, 2016-2019, 2024 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1889,6 +1889,150 @@ let {{
                         return new NVrsqrteQ<uint32_t>(machInst, vd, vm);
                     } else {
                         return new NVrsqrteD<uint32_t>(machInst, vd, vm);
+                    }
+                }
+            } else if ((b & 0x1c) == 0x00) {
+                if (bits(b, 1)) {
+                    switch(size) {
+                      case 1:
+                        if (q) {
+                            return new NVcvt2uhAQ<uint16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2uhAD<uint16_t>(machInst, vd, vm);
+                        }
+                      case 2:
+                        if (q) {
+                            return new NVcvt2usAQ<uint32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2usAD<uint32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2shAQ<int16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2shAD<int16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2ssAQ<int32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2ssAD<int32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                }
+            } else if ((b & 0x1c) == 0x04) {
+                if (bits(b, 1)) {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2uhNQ<uint16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2uhND<uint16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2usNQ<uint32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2usND<uint32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2shNQ<int16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2shND<int16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2ssNQ<int32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2ssND<int32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                }
+            } else if ((b & 0x1c) == 0x08) {
+                if (bits(b, 1)) {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2uhPQ<uint16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2uhPD<uint16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2usPQ<uint32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2usPD<uint32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2shPQ<int16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2shPD<int16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2ssPQ<int32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2ssPD<int32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                }
+            } else if ((b & 0x1c) == 0x0c) {
+                if (bits(b, 1)) {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2uhMQ<uint16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2uhMD<uint16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2usMQ<uint32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2usMD<uint32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 0b01:
+                        if (q) {
+                            return new NVcvt2shMQ<int16_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2shMD<int16_t>(machInst, vd, vm);
+                        }
+                      case 0b10:
+                        if (q) {
+                            return new NVcvt2ssMQ<int32_t>(machInst, vd, vm);
+                        } else {
+                            return new NVcvt2ssMD<int32_t>(machInst, vd, vm);
+                        }
+                      default:
+                        return new Unknown(machInst);
                     }
                 }
             } else {

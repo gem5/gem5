@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2020 Google Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +69,7 @@ SyscallDescTable<EmuLinux::SyscallABI32> EmuLinux::syscallDescs32 = {
     {  16, "lchown" },
     {  17, "break" },
     {  18, "oldstat" },
-    {  19, "lseek" },
+    {  19, "lseek", lseekFunc<X86Linux32> },
     {  20, "getpid", getpidFunc },
     {  21, "mount" },
     {  22, "umount" },
@@ -226,7 +237,7 @@ SyscallDescTable<EmuLinux::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 180, "pread64", pread64Func<X86Linux64> },
     { 181, "pwrite64", pwrite64Func<X86Linux64> },
     { 182, "chown" },
-    { 183, "getcwd", getcwdFunc },
+    { 183, "getcwd", getcwdFunc<X86Linux32> },
     { 184, "capget" },
     { 185, "capset" },
     { 186, "sigaltstack" },

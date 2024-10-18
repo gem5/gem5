@@ -94,7 +94,7 @@ structure (Set, external = "yes", non_obj="yes") {
   NodeID smallestElement();
 }
 
-structure (NetDest, external = "yes", non_obj="yes") {
+structure (NetDest, external = "yes", non_obj="yes", implicit_ctor="m_ruby_system") {
   void setSize(int);
   void setSize(int, int);
   void add(NodeID);

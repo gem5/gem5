@@ -41,6 +41,7 @@
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -244,7 +245,9 @@ NetworkInterface::wakeup()
                     outNode_ptr[vnet]->areNSlotsAvailable(1, curTime)) {
                     // Space is available. Enqueue to protocol buffer.
                     outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
-                                               cyclesToTicks(Cycles(1)));
+                                               cyclesToTicks(Cycles(1)),
+                                               m_net_ptr->getRandomization(),
+                                               m_net_ptr->getWarmupEnabled());
 
                     // Simply send a credit back since we are not buffering
                     // this flit in the NI
@@ -332,7 +335,9 @@ NetworkInterface::checkStallQueue()
                 if (outNode_ptr[vnet]->areNSlotsAvailable(1,
                     curTime)) {
                     outNode_ptr[vnet]->enqueue(stallFlit->get_msg_ptr(),
-                        curTime, cyclesToTicks(Cycles(1)));
+                        curTime, cyclesToTicks(Cycles(1)),
+                        m_net_ptr->getRandomization(),
+                        m_net_ptr->getWarmupEnabled());
 
                     // Send back a credit with free signal now that the
                     // VC is no longer stalled.
@@ -697,6 +702,12 @@ NetworkInterface::functionalWrite(Packet *pkt)
         num_functional_writes += oPort->outFlitQueue()->functionalWrite(pkt);
     }
     return num_functional_writes;
+}
+
+int
+NetworkInterface::MachineType_base_number(const MachineType& obj)
+{
+    return m_net_ptr->getRubySystem()->MachineType_base_number(obj);
 }
 
 } // namespace garnet

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2018 Metempsy Technology Consulting
+/*
+ * Copyright (c) 2024 Samsung Electronics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
-#define __CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
+/**
+ * @file
+ * Describes a SMS prefetcher.
+ */
 
-#include "base/intmath.hh"
-#include "mem/cache/prefetch/associative_set.hh"
+#ifndef __MEM_CACHE_PREFETCH_SMS_HH__
+#define __MEM_CACHE_PREFETCH_SMS_HH__
+
+#include <set>
+
+#include "mem/cache/prefetch/queued.hh"
+#include "mem/packet.hh"
 
 namespace gem5
 {
 
-template <class Entry>
-AssociativeSet<Entry>::AssociativeSet(const char *name,
-                                      const size_t num_entries,
-                                      const size_t associativity_,
-                                      replacement_policy::Base *repl_policy,
-                                      BaseIndexingPolicy *indexing_policy,
-                                      Entry const &init_val)
-  : AssociativeCache<Entry>(name, num_entries, associativity_,
-                            repl_policy, indexing_policy, init_val)
+struct SmsPrefetcherParams;
+
+namespace prefetch
 {
-}
 
-template <class Entry>
-Entry*
-AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
+
+class Sms : public Queued
 {
-    Addr tag = indexingPolicy->extractTag(addr);
-    auto candidates = indexingPolicy->getPossibleEntries(addr);
 
-    for (auto candidate : candidates) {
-        Entry* entry = static_cast<Entry*>(candidate);
-        if (entry->matchTag(tag, is_secure)) {
-            return entry;
-        }
-    }
+  private:
+    const int Max_Contexts; //= 64;
+    const uint64_t MAX_PHTSize; //= 512;
+    const Addr Region_Size; //= 4096;
 
-    return nullptr;
-}
+    std::map< Addr, std::set<Addr> > AGT;
+    std::map< Addr, std::pair<Addr,Addr> > AGTPC;
+    std::map< Addr, std::pair<Addr,Addr> > FT;
+    std::map< std::pair <Addr,Addr> , std::set<Addr> > PHT;
+    std::deque<Addr> fifoFT;
+    std::deque<Addr> lruAGT;
+    std::deque< std::pair <Addr,Addr> > lruPHT;
 
-template<class Entry>
-void
-AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry* entry)
-{
-   entry->insert(indexingPolicy->extractTag(addr), is_secure);
-   replPolicy->reset(entry->replacementData);
-}
+    using EvictionInfo = CacheDataUpdateProbeArg;
+    void notifyEvict(const EvictionInfo &info) override;
 
+  public:
+    Sms(const SmsPrefetcherParams &p);
+    ~Sms() = default;
+
+    void calculatePrefetch(const PrefetchInfo &pfi,
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
+};
+
+} // namespace prefetch
 } // namespace gem5
 
-#endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
+#endif // __MEM_CACHE_PREFETCH_SMS_HH__

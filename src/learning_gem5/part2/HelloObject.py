@@ -47,8 +47,8 @@ class GoodbyeObject(SimObject):
     cxx_class = "gem5::GoodbyeObject"
 
     buffer_size = Param.MemorySize(
-        "1kB", "Size of buffer to fill with goodbye"
+        "1KiB", "Size of buffer to fill with goodbye"
     )
     write_bandwidth = Param.MemoryBandwidth(
-        "100MB/s", "Bandwidth to fill the buffer"
+        "100MiB/s", "Bandwidth to fill the buffer"
     )

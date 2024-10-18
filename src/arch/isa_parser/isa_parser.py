@@ -111,11 +111,12 @@ class Template:
 
             operands = SubOperandList(self.parser, compositeCode, d.operands)
 
-            myDict[
-                "reg_idx_arr_decl"
-            ] = "RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]" % (
-                d.operands.numSrcRegs + d.srcRegIdxPadding,
-                d.operands.numDestRegs + d.destRegIdxPadding,
+            myDict["reg_idx_arr_decl"] = (
+                "RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]"
+                % (
+                    d.operands.numSrcRegs + d.srcRegIdxPadding,
+                    d.operands.numDestRegs + d.destRegIdxPadding,
+                )
             )
 
             # The reinterpret casts are largely because an array with a known
@@ -821,7 +822,7 @@ class ISAParser(Grammar):
         "DBLCOLON",
         "ASTERISK",
         # C preprocessor directives
-        "CPPDIRECTIVE"
+        "CPPDIRECTIVE",
         # The following are matched but never returned. commented out to
         # suppress PLY warning
         # newfile directive

@@ -69,6 +69,7 @@ class SDMAEngine : public DmaVirtDevice
         SDMAQueueDesc *_mqd;
         Addr _mqd_addr = 0;
         bool _priv = true; // Only used for RLC queues. True otherwise.
+        bool _static = false;
       public:
         SDMAQueue() : _rptr(0), _wptr(0), _valid(false), _processing(false),
             _parent(nullptr), _ib(nullptr), _type(SDMAGfx), _mqd(nullptr) {}
@@ -89,6 +90,7 @@ class SDMAEngine : public DmaVirtDevice
         SDMAQueueDesc* getMQD() { return _mqd; }
         Addr getMQDAddr() { return _mqd_addr; }
         bool priv() { return _priv; }
+        bool isStatic() { return _static; }
 
         void base(Addr value) { _base = value; }
 
@@ -124,6 +126,7 @@ class SDMAEngine : public DmaVirtDevice
         void setMQD(SDMAQueueDesc *mqd) { _mqd = mqd; }
         void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
         void setPriv(bool priv) { _priv = priv; }
+        void setStatic(bool isStatic) { _static = isStatic; }
     };
 
     /* SDMA Engine ID */
@@ -307,9 +310,10 @@ class SDMAEngine : public DmaVirtDevice
     /**
      * Methods for RLC queues
      */
-    void registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd);
-    void unregisterRLCQueue(Addr doorbell);
-    void deallocateRLCQueues();
+    void registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
+                          bool isStatic);
+    void unregisterRLCQueue(Addr doorbell, bool unmap_static);
+    void deallocateRLCQueues(bool unmap_static);
 
     int cur_vmid = 0;
 };

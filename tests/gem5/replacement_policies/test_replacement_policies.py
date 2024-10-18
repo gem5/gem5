@@ -50,7 +50,6 @@ def test_replacement_policy(config_name: str, config_path: str) -> None:
         ),
         config_args=[config_name, config_path],
         valid_isas=(constants.null_tag,),
-        protocol="MI_example",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )

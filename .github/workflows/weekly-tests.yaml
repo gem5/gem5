@@ -8,47 +8,40 @@ on:
     workflow_dispatch:
 
 jobs:
-    build-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        outputs:
-            build-name: ${{ steps.artifact-name.outputs.name }}
+
+    get-date:
+        runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - id: artifact-name
-              run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
-            - name: Build gem5
-              run: |
-                  scons build/ALL/gem5.opt -j $(nproc)
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ steps.artifact-name.outputs.name }}
-                  path: build/ALL/gem5.opt
-                  retention-days: 5
-            - run: echo "This job's status is ${{ job.status }}."
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
     # start running the very-long tests
     testlib-very-long-tests:
         strategy:
             fail-fast: false
             matrix:
-                test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
+                test-type: [gem5_library_example_tests, gem5_resources, stdlib, parsec_benchmarks, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [build-gem5]
         timeout-minutes: 4320 # 3 days
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
               with:
-                  name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
-            - run: chmod u+x build/ALL/gem5.opt
+                  key: testlib-build-all-${{ env.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: very-long ${{ matrix.test-type }}
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv
+              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long -j$(nproc) -vv
             - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
@@ -63,18 +56,29 @@ jobs:
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 300
+        timeout-minutes: 4320 # 3 days
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v4
               with:
                   ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ env.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
             - name: Build VEGA_X86/gem5.opt
-              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+              working-directory: ${{ github.workspace }}
+              run: scons build/VEGA_X86/gem5.opt -j $(nproc)
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long --skip-build -vvv -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=very-long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
 
             - name: Upload results
               if: success() || failure()
@@ -86,7 +90,7 @@ jobs:
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         steps:
             - uses: actions/checkout@v4
