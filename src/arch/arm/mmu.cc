@@ -45,6 +45,7 @@
 #include "arch/arm/reg_abi.hh"
 #include "arch/arm/stage2_lookup.hh"
 #include "arch/arm/table_walker.hh"
+#include "arch/arm/tlb.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
@@ -134,6 +135,18 @@ MMU::drainResume()
     s2State.miscRegValid = false;
 }
 
+ArmISA::TLB *
+MMU::getDTBPtr() const
+{
+    return static_cast<ArmISA::TLB *>(dtb);
+}
+
+ArmISA::TLB *
+MMU::getITBPtr() const
+{
+    return static_cast<ArmISA::TLB *>(itb);
+}
+
 TLB *
 MMU::getTlb(BaseMMU::Mode mode, bool stage2) const
 {
@@ -199,6 +212,70 @@ MMU::invalidateMiscReg()
     s1State.computeAddrTop.flush();
     s2State.computeAddrTop.flush();
 }
+
+void
+MMU::flush(const TLBIOp &tlbi_op)
+{
+    if (tlbi_op.stage1Flush()) {
+        flushStage1(tlbi_op);
+    }
+
+    if (tlbi_op.stage2Flush()) {
+        flushStage2(tlbi_op);
+    }
+}
+
+void
+MMU::flushStage1(const TLBIOp &tlbi_op)
+{
+    for (auto tlb : instruction) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+    for (auto tlb : data) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+    for (auto tlb : unified) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+}
+
+void
+MMU::flushStage2(const TLBIOp &tlbi_op)
+{
+    itbStage2->flush(tlbi_op);
+    dtbStage2->flush(tlbi_op);
+}
+
+void
+MMU::iflush(const TLBIOp &tlbi_op)
+{
+    for (auto tlb : instruction) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+    for (auto tlb : unified) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+}
+
+void
+MMU::dflush(const TLBIOp &tlbi_op)
+{
+    for (auto tlb : data) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+    for (auto tlb : unified) {
+        static_cast<TLB*>(tlb)->flush(tlbi_op);
+    }
+}
+
+void
+MMU::flushAll()
+{
+    BaseMMU::flushAll();
+    itbStage2->flushAll();
+    dtbStage2->flushAll();
+}
+
 
 Fault
 MMU::testAndFinalize(const RequestPtr &req,

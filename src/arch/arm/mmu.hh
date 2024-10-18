@@ -42,7 +42,6 @@
 #define __ARCH_ARM_MMU_HH__
 
 #include "arch/arm/page_size.hh"
-#include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/mmu.hh"
 #include "base/memoizer.hh"
@@ -57,23 +56,18 @@ namespace gem5
 namespace ArmISA {
 
 class TableWalker;
+class TLB;
+class TlbEntry;
+class TLBIOp;
+class TlbTestInterface;
 
 class MMU : public BaseMMU
 {
   protected:
     using LookupLevel = enums::ArmLookupLevel;
 
-    ArmISA::TLB *
-    getDTBPtr() const
-    {
-        return static_cast<ArmISA::TLB *>(dtb);
-    }
-
-    ArmISA::TLB *
-    getITBPtr() const
-    {
-        return static_cast<ArmISA::TLB *>(itb);
-    }
+    ArmISA::TLB * getDTBPtr() const;
+    ArmISA::TLB * getITBPtr() const;
 
     TLB * getTlb(BaseMMU::Mode mode, bool stage2) const;
     TableWalker * getTableWalker(BaseMMU::Mode mode, bool stage2) const;
@@ -298,73 +292,13 @@ class MMU : public BaseMMU
 
     void invalidateMiscReg();
 
-    template <typename OP>
-    void
-    flush(const OP &tlbi_op)
-    {
-        if (tlbi_op.stage1Flush()) {
-            flushStage1(tlbi_op);
-        }
+    void flush(const TLBIOp &tlbi_op);
+    void flushStage1(const TLBIOp &tlbi_op);
+    void flushStage2(const TLBIOp &tlbi_op);
+    void iflush(const TLBIOp &tlbi_op);
+    void dflush(const TLBIOp &tlbi_op);
 
-        if (tlbi_op.stage2Flush()) {
-            flushStage2(tlbi_op);
-        }
-    }
-
-    template <typename OP>
-    void
-    flushStage1(const OP &tlbi_op)
-    {
-        for (auto tlb : instruction) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-        for (auto tlb : data) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-        for (auto tlb : unified) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-    }
-
-    template <typename OP>
-    void
-    flushStage2(const OP &tlbi_op)
-    {
-        itbStage2->flush(tlbi_op);
-        dtbStage2->flush(tlbi_op);
-    }
-
-    template <typename OP>
-    void
-    iflush(const OP &tlbi_op)
-    {
-        for (auto tlb : instruction) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-        for (auto tlb : unified) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-    }
-
-    template <typename OP>
-    void
-    dflush(const OP &tlbi_op)
-    {
-        for (auto tlb : data) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-        for (auto tlb : unified) {
-            static_cast<TLB*>(tlb)->flush(tlbi_op);
-        }
-    }
-
-    void
-    flushAll() override
-    {
-        BaseMMU::flushAll();
-        itbStage2->flushAll();
-        dtbStage2->flushAll();
-    }
+    void flushAll() override;
 
     uint64_t
     getAttr() const
