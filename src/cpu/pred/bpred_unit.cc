@@ -94,6 +94,12 @@ BPredUnit::drainSanityCheck() const
         assert(ph.empty());
 }
 
+void
+BPredUnit::branchPlaceholder(ThreadID tid, Addr pc,
+                             bool uncond, void * &bp_history)
+{
+    panic("BPredUnit::branchPlaceholder() not implemented for this BP.\n");
+}
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
@@ -213,6 +219,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             // In case of a call build the return address and
             // push it to the RAS.
             auto return_addr = inst->buildRetPC(pc, pc);
+            if (inst->size()) {
+                return_addr->set(pc.instAddr() + inst->size());
+            }
             ras->push(tid, *return_addr, hist->rasHistory);
 
             DPRINTF(Branch, "[tid:%i] [sn:%llu] Instr. %s was "
@@ -318,7 +327,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * we know the correct direction.
      **/
     updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
-                    hist->target->instAddr(), hist->bpHistory);
+                    hist->target->instAddr(), hist->inst, hist->bpHistory);
 
 
     if (iPred) {
@@ -385,6 +394,21 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
                          hist->type,
                          hist->rasHistory);
     }
+
+    // Update the BTB with commited branches.
+    // Install all taken
+    if (hist->actuallyTaken) {
+
+        DPRINTF(Branch,"[tid:%i] BTB Update called for [sn:%llu] "
+                    "PC %#x -> T: %#x\n", tid,
+                    hist->seqNum, hist->pc, hist->target->instAddr());
+
+        stats.BTBUpdates++;
+        btb->update(tid, hist->pc,
+                        *hist->target,
+                         hist->type,
+                         hist->inst);
+    }
 }
 
 
@@ -398,14 +422,12 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         auto hist = predHist[tid].front();
 
-        squashHistory(tid, hist);
-
         DPRINTF(Branch, "[tid:%i, squash sn:%llu] Removing history for "
                 "sn:%llu, PC:%#x\n", tid, squashed_sn, hist->seqNum,
                 hist->pc);
 
+        squashHistory(tid, hist);
 
-        delete predHist[tid].front();
         predHist[tid].pop_front();
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] pred_hist.size(): %i\n",
@@ -440,8 +462,10 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
                         history->indirectHistory);
     }
 
-    // This call should delete the bpHistory.
+    // This call will delete the bpHistory.
     squash(tid, history->bpHistory);
+    delete history;
+    history = nullptr;
 }
 
 
@@ -555,7 +579,10 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                     // push it to the RAS.
                     auto return_addr = hist->inst->buildRetPC(
                                                     corr_target, corr_target);
-
+                    if (hist->inst->size()) {
+                        return_addr->set(corr_target.instAddr()
+                                         + hist->inst->size());
+                    }
                     DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
                             "Incorrectly predicted call: [sn:%llu,PC:%#x] "
                             " Push return address %s onto RAS\n", tid,
@@ -590,11 +617,11 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         "PC %#x -> T: %#x\n", tid,
                         hist->seqNum, hist->pc, hist->target->instAddr());
 
-            stats.BTBUpdates++;
-            btb->update(tid, hist->pc,
-                            *hist->target,
-                            hist->type,
-                            hist->inst);
+            // stats.BTBUpdates++;
+            // btb->update(tid, hist->pc,
+            //                 *hist->target,
+            //                  hist->type,
+            //                  hist->inst);
             btb->incorrectTarget(hist->pc, hist->type);
         }
 

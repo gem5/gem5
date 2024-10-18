@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2011, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -111,6 +112,16 @@ struct IssueStruct
 /** Struct that defines all backwards communication. */
 struct TimeStruct
 {
+    struct FetchComm
+    {
+        bool block;
+        /** Signals to redirect BAC if something goes wrong. */
+        bool squash;
+        std::unique_ptr<PCStateBase> nextPC;
+    };
+
+    FetchComm fetchInfo[MaxThreads];
+
     struct DecodeComm
     {
         std::unique_ptr<PCStateBase> nextPC;
@@ -121,7 +132,7 @@ struct TimeStruct
         uint64_t branchAddr;
         unsigned branchCount;
         bool squash;
-        bool predIncorrect;
+        bool controlMispredict;
         bool branchMispredict;
         bool branchTaken;
     };
