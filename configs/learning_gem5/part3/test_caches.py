@@ -96,7 +96,7 @@ class TestCacheSystem(RubySystem):
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.sys_port_proxy = RubyPortProxy()
+        self.sys_port_proxy = RubyPortProxy(ruby_system=self)
         system.system_port = self.sys_port_proxy.in_ports
 
         # Connect up the sequencers to the random tester
