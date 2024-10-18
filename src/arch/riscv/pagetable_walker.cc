@@ -578,6 +578,13 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
                                                        satp.mode, mode);
             req->setPaddr(paddr);
 
+            // look if the physical address is uncacheable
+            // and set the flag accordingly
+            if(walker->pma->isUncacheable(paddr, req->getSize())) {
+                req->setFlags(Request::UNCACHEABLE);
+                DPRINTF(PageTableWalker, "Access to address %#x turned to uncacheable.", paddr);
+            }
+
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
