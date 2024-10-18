@@ -282,6 +282,13 @@ namespace ArmISA
         Secure
     };
 
+    enum class TranMethod
+    {
+        LpaeTran,
+        VmsaTran,
+        UnknownTran
+    };
+
     enum ExceptionLevel
     {
         EL0 = 0,

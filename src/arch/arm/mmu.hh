@@ -46,6 +46,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/mmu.hh"
 #include "base/memoizer.hh"
+#include "base/statistics.hh"
 #include "enums/ArmLookupLevel.hh"
 
 #include "params/ArmMMU.hh"
@@ -270,7 +271,7 @@ class MMU : public BaseMMU
         CachedState &state);
     Fault translateMmuOn(ThreadContext *tc, const RequestPtr &req, Mode mode,
         Translation *translation, bool &delay, bool timing, bool functional,
-        Addr vaddr, ArmFault::TranMethod tranMethod,
+        Addr vaddr, TranMethod tran_method,
         CachedState &state);
 
     Fault translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
