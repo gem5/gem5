@@ -128,6 +128,9 @@ namespace RiscvISA
             }
             void initState(ThreadContext * _tc, BaseMMU::Mode _mode,
                            bool _isTiming = false);
+            std::pair<bool, Fault> tryCoalesce(ThreadContext *_tc,
+                BaseMMU::Translation *translation, const RequestPtr &_req,
+                BaseMMU::Mode mode);
             Fault startWalk();
             Fault startFunctional(Addr &addr, unsigned &logBytes);
             bool recvPacket(PacketPtr pkt);
@@ -165,6 +168,9 @@ namespace RiscvISA
         // Kick off the state machine.
         Fault start(ThreadContext * _tc, BaseMMU::Translation *translation,
                 const RequestPtr &req, BaseMMU::Mode mode);
+        std::pair<bool, Fault> tryCoalesce(ThreadContext *_tc,
+                BaseMMU::Translation *translation, const RequestPtr &_req,
+                BaseMMU::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 unsigned &logBytes, BaseMMU::Mode mode);
         Port &getPort(const std::string &if_name,
