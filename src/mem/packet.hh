@@ -419,6 +419,8 @@ class Packet : public Printable, public Extensible<Packet>
      */
     uint64_t htmTransactionUid;
 
+    bool _isGPUFuncAccess;
+
   public:
 
     /**
@@ -888,7 +890,9 @@ class Packet : public Printable, public Extensible<Packet>
             addr = req->getPaddr();
             flags.set(VALID_ADDR);
             _isSecure = req->isSecure();
+
         }
+        _isGPUFuncAccess = false;
 
         /**
          * hardware transactional memory
@@ -932,6 +936,7 @@ class Packet : public Printable, public Extensible<Packet>
         }
         size = _blkSize;
         flags.set(VALID_SIZE);
+        _isGPUFuncAccess = false;
     }
 
     /**
@@ -984,6 +989,7 @@ class Packet : public Printable, public Extensible<Packet>
                 allocate();
             }
         }
+        _isGPUFuncAccess = false;
     }
 
     /**
@@ -1302,6 +1308,17 @@ class Packet : public Printable, public Extensible<Packet>
             // one to the other, e.g. a forwarded response to a response
             std::memcpy(getPtr<uint8_t>(), p, getSize());
         }
+    }
+
+    void
+    setGPUFuncAccess(bool flag) {
+        _isGPUFuncAccess = flag;
+    }
+
+    bool
+    getGPUFuncAccess()
+    {
+        return _isGPUFuncAccess;
     }
 
     /**
