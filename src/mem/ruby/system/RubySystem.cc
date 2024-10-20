@@ -660,6 +660,7 @@ RubySystem::functionalRead(PacketPtr pkt)
     // Issue functional reads to all controllers found in a stable state
     // until we get a full copy of the line
     WriteMask bytes;
+    bytes.setBlockSize(getBlockSizeBytes());
     if (ctrl_rw != nullptr) {
         ctrl_rw->functionalRead(line_address, pkt, bytes);
         // if a RW controllter has the full line that's all uptodate
