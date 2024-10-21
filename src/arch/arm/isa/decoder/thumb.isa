@@ -138,38 +138,13 @@ decode BIGTHUMB {
                 0x3: Thumb32LongMulMulAccAndDiv::thumb32LongMulMulAccAndDiv();
                 default: Thumb32DataProcReg::thumb32DataProcReg();
             }
-            0x2: Thumb32NeonSIMD::thumb32NeonSIMD();
-            default: decode HTOPCODE_9_8 {
-                0x2: decode LTOPCODE_4 {
-                    0x0: decode LTCOPROC {
-                        0x8: Thumb32NeonSIMD::thumb32NeonSIMD();
-                        0xa, 0xb: VfpData::vfpData();
-                        default: WarnUnimpl::cdp(); // cdp2
-                    }
-                    0x1: decode LTCOPROC {
-                        0x1: Gem5Op::gem5op();
-                        0xa, 0xb: ShortFpTransfer::shortFpTransfer();
-                        0xe: McrMrc14::mcrMrc14();
-                        0xf: McrMrc15::mcrMrc15();
-                    }
-                }
-                0x3: ThumbNeonData::thumbNeonData();
-                default: decode LTCOPROC {
-                    0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStre();
-                    0xf: decode HTOPCODE_9_4 {
-                        0x00: Unknown::undefined();
-                        0x04: WarnUnimpl::mcrr(); // mcrr2
-                        0x05: WarnUnimpl::mrrc(); // mrrc2
-                        0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
-                        0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e:
-                            WarnUnimpl::stc(); // stc2
-                        0x03, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x11,
-                        0x13, 0x15, 0x17, 0x19, 0x1b, 0x1d, 0x1f:
-                            decode HTRN {
-                                0xf: WarnUnimpl::ldc(); // ldc2 (literal)
-                                default: WarnUnimpl::ldc(); // ldc2 (immediate)
-                            }
-                    }
+            // The only remaining instructions that are viable here are
+            // "Additional Advanced SIMD and floating-point instructions"
+            0x2, 0x3: decode LTOPCODE_11 {
+                // The following also applies to this encoding: op0<2:1> != 11
+                0x1: decode HTOPCODE_9_8 {
+                    0x3:  Unknown::unknown();
+                    default: Thumb32NeonSIMD::thumb32NeonSIMD();
                 }
             }
         }
