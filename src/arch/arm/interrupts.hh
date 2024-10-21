@@ -235,7 +235,7 @@ class Interrupts : public BaseInterrupts
             return std::make_shared<SystemError>();
         if (hcr.va && takeVirtualInt(INT_VIRT_ABT))
             return std::make_shared<VirtualDataAbort>(
-                0, TlbEntry::DomainType::NoAccess, false,
+                0, DomainType::NoAccess, false,
                 ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
             return std::make_shared<Reset>();
