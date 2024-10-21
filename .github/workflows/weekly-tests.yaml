@@ -59,7 +59,7 @@ jobs:
     gpu-test-hacc:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -90,7 +90,7 @@ jobs:
     gpu-test-lulesh:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -121,7 +121,7 @@ jobs:
     gpu-test-pannotia-bc:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -152,7 +152,7 @@ jobs:
     gpu-test-pannotia-color-maxmin:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -183,7 +183,7 @@ jobs:
     gpu-test-pannotia-color-max:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -214,7 +214,7 @@ jobs:
     gpu-test-pannotia-fw-hip:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
