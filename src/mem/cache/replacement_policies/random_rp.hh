@@ -35,6 +35,7 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__
 
+#include "base/random.hh"
 #include "mem/cache/replacement_policies/base.hh"
 
 namespace gem5
@@ -48,6 +49,8 @@ namespace replacement_policy
 class Random : public Base
 {
   protected:
+    mutable gem5::Random::RandomPtr rng = gem5::Random::genRandom();
+
     /** Random-specific implementation of replacement data. */
     struct RandomReplData : ReplacementData
     {

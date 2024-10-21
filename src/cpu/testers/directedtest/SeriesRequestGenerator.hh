@@ -35,6 +35,7 @@
 #ifndef __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
 #define __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
 
+#include "base/random.hh"
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "mem/ruby/protocol/SeriesRequestGeneratorStatus.hh"
@@ -60,6 +61,7 @@ class SeriesRequestGenerator : public DirectedGenerator
     uint32_t m_active_node;
     uint32_t m_addr_increment_size;
     uint32_t m_percent_writes;
+    Random::RandomPtr rng = Random::genRandom();
 };
 
 } // namespace gem5

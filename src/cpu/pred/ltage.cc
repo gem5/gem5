@@ -51,7 +51,6 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
 #include "debug/LTage.hh"
@@ -126,7 +125,7 @@ LTAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
         return;
     }
 
-    int nrand = random_mt.random<int>() & 3;
+    int nrand = rng->random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
         DPRINTF(LTage, "Updating tables for branch:%lx; taken?:%d\n",
                 pc, taken);

@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 
+#include "base/random.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/syscall_abi.hh"
@@ -56,6 +57,9 @@ class RiscvProcess : public Process
 
   public:
     virtual bool mmapGrowsDown() const override { return false; }
+
+  protected:
+    Random::RandomPtr rng = Random::genRandom();
 };
 
 class RiscvProcess64 : public RiscvProcess

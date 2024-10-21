@@ -41,6 +41,7 @@
 #ifndef __MEM_FLASH_MEM_HH__
 #define __MEM_FLASH_MEM_HH__
 
+#include "base/random.hh"
 #include "mem/abstract_mem.hh"
 #include "params/CfiMemory.hh"
 
@@ -346,6 +347,8 @@ class CfiMemory : public AbstractMemory
     ProgramBuffer programBuffer;
 
     uint8_t cfiQueryTable[61];
+
+    mutable Random::RandomPtr rng = Random::genRandom();
 
   public:
     CfiMemory(const CfiMemoryParams &p);

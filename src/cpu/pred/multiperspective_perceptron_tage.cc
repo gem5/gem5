@@ -113,7 +113,7 @@ MPP_TAGE::handleAllocAndUReset(bool alloc, bool taken,
 
     int a = 1;
 
-    if ((random_mt.random<int>() & 127) < 32) {
+    if ((rng->random<int>() & 127) < 32) {
         a = 2;
     }
     int dep = bi->hitBank + a;
@@ -195,7 +195,7 @@ void
 MPP_TAGE::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
 {
     // Do not allocate too often if the prediction is ok
-    if ((taken == pred_taken) && ((random_mt.random<int>() & 31) != 0)) {
+    if ((taken == pred_taken) && ((rng->random<int>() & 31) != 0)) {
         alloc = false;
     }
 }
@@ -269,7 +269,7 @@ MPP_LoopPredictor::calcConf(int index) const
 bool
 MPP_LoopPredictor::optionalAgeInc() const
 {
-    return ((random_mt.random<int>() & 7) == 0);
+    return ((rng->random<int>() & 7) == 0);
 }
 
 MPP_StatisticalCorrector::MPP_StatisticalCorrector(
@@ -644,7 +644,7 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
                 tage->getPathHist(tid));
 
         tage->condBranchUpdate(tid, pc, taken, bi->tageBranchInfo,
-                               random_mt.random<int>(), target,
+                               rng->random<int>(), target,
                                bi->predictedTaken, true);
 
         updateHistories(tid, *bi, taken);
