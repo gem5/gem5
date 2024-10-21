@@ -78,9 +78,8 @@ class BaseMemProbe : public SimObject
     class PacketListener : public ProbeListenerArgBase<probing::PacketInfo>
     {
       public:
-        PacketListener(BaseMemProbe &_parent,
-                       ProbeManager *pm, const std::string &name)
-            : ProbeListenerArgBase(pm, name),
+        PacketListener(BaseMemProbe &_parent, std::string name)
+            : ProbeListenerArgBase(std::move(name)),
               parent(_parent) {}
 
         void notify(const probing::PacketInfo &pkt_info) override {
@@ -91,7 +90,7 @@ class BaseMemProbe : public SimObject
         BaseMemProbe &parent;
     };
 
-    std::vector<std::unique_ptr<PacketListener>> listeners;
+    std::vector<ProbeConnectionPtr> listeners;
 };
 
 } // namespace gem5
