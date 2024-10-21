@@ -37,7 +37,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include <gtest/gtest.h>
 
 #include <vector>
@@ -88,14 +87,9 @@ TEST(AddrRangeMapTest, LegacyTests)
 TEST(AddrRangeMapTest, InterleavedTest1)
 {
     const auto N = 16;
-    const auto masks = std::vector<Addr>{
-        0x40,
-        0x80,
-        0x100,
-        0x200
-    };
+    const auto masks = std::vector<Addr>{0x40, 0x80, 0x100, 0x200};
     const Addr start = 0x80000000;
-    const Addr end   = 0xc0000000;
+    const Addr end = 0xc0000000;
 
     AddrRangeMap<int> r;
     AddrRangeMap<int>::const_iterator i;
@@ -132,14 +126,10 @@ TEST(AddrRangeMapTest, InterleavedTest1)
 TEST(AddrRangeMapTest, InterleavedTest2)
 {
     const auto N = 16;
-    const auto masks = std::vector<Addr>{
-        0x4444444444440,
-        0x8888888888880,
-        0x1111111111100,
-        0x2222222222200
-    };
+    const auto masks = std::vector<Addr>{0x4444444444440, 0x8888888888880,
+                                         0x1111111111100, 0x2222222222200};
     const Addr start = 0x80000000;
-    const Addr end   = 0xc0000000;
+    const Addr end = 0xc0000000;
 
     AddrRangeMap<int> r;
     AddrRangeMap<int>::const_iterator i;
@@ -155,4 +145,67 @@ TEST(AddrRangeMapTest, InterleavedTest2)
     ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
     // intlvMatch = 2 for start = 0x80000000
     EXPECT_EQ(i->second, 2);
+}
+
+TEST(AddrRangeMapTest, ModuloInterleavedTest1)
+{
+    const auto N = 16;
+
+    const Addr start = 0x80000000;
+    const Addr end = 0xc0000000;
+
+    AddrRangeMap<int> r;
+    AddrRangeMap<int>::const_iterator i;
+
+    // populate AddrRangeMap with N-way interleaved address ranges
+    // for all intlvMatch values 0..N-1
+    for (int k=0; k < N; k++) {
+        r.insert(AddrRange(start, end, N, 6, k), k);
+    }
+    // find AddrRange element containing start address
+    i = r.contains(start);
+    // i must not be the past-the-end iterator
+    ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
+    // intlvMatch = 0 for start = 0x80000000
+    EXPECT_EQ(i->second, 0);
+}
+
+TEST(AddrRangeMapTest, ModuloInterleavedTest2)
+{
+    // testing prime number interleaving
+    const auto N = 17;
+
+    const Addr start = 0x80000000;
+    const Addr end = 0xc0000000;
+
+    AddrRangeMap<int> r;
+    AddrRangeMap<int>::const_iterator i;
+
+    // populate AddrRangeMap with N-way interleaved address ranges
+    // for all intlvMatch values 0..N-1
+    for (int k=0; k < N; k++) {
+        r.insert(AddrRange(start, end, N, 6, k), k);
+    }
+    // find AddrRange element containing start address
+    i = r.contains(start);
+    // i must not be the past-the-end iterator
+    ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
+    // intlvMatch = 0 for start = 0x80000000
+    EXPECT_EQ(i->second, 2);
+
+    // we are interleaving every 64 bytes,
+    // due to the modulo starting 6 bits from the LSB
+    // test this by increasing the address by 64 bytes
+
+    Addr test_addr = start + 0x40;
+    // initial value found by start shifted 6 bits then % by N, should be 2
+    int base_index = start >> 6 % N;
+    for (int index = 1; index < N; index++) {
+        i = r.contains(test_addr);
+        // i must not be the past-the-end iterator
+        ASSERT_NE(i, r.end()) << "address not found in AddrRangeMap";
+        // intlvMatch = should increment every test_addr+=0x40
+        EXPECT_EQ(i->second, (index + base_index) % N);
+        test_addr += 0x40;
+    }
 }
