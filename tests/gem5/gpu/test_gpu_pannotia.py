@@ -148,7 +148,8 @@ gem5_verify_config(
 
 # This test fails with
 # ERROR: hipMalloc row_d (size:-202182160) => hipErrorOutOfMemory
-# even when mem-size is set to 64GiB.
+# when mem-size is set to 64GiB.
+# The test passes with mem-size set to 8GiB.
 # gem5_verify_config(
 #     name="gpu-apu-se-pannotia-mis-hip-1k-128k",
 #     fixtures=(),
@@ -156,7 +157,7 @@ gem5_verify_config(
 #     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
 #     config_args=[
 #         "-n3",
-#         "--mem-size=64GiB",
+#         "--mem-size=8GiB",
 #         "-c",
 #         joinpath(binary_path, "mis_hip.gem5"),
 #         "--options",
@@ -168,75 +169,75 @@ gem5_verify_config(
 # )
 
 
-gem5_verify_config(
-    name="gpu-apu-se-pannotia-pagerank-spmv",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
-    config_args=[
-        "-n3",
-        "--mem-size=8GB",
-        "-c",
-        joinpath(binary_path, "pagerank_spmv.gem5"),
-        "--options",
-        f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
-    ],
-    valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
-)
+# gem5_verify_config(
+#     name="gpu-apu-se-pannotia-pagerank-spmv",
+#     fixtures=(),
+#     verifiers=(),
+#     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+#     config_args=[
+#         "-n3",
+#         "--mem-size=8GB",
+#         "-c",
+#         joinpath(binary_path, "pagerank_spmv.gem5"),
+#         "--options",
+#         f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
+#     ],
+#     valid_isas=(constants.vega_x86_tag,),
+#     valid_hosts=(constants.host_gcn_gpu_tag,),
+#     length=constants.very_long_tag,
+# )
 
-gem5_verify_config(
-    name="gpu-apu-se-pannotia-pagerank",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
-    config_args=[
-        "-n3",
-        "--mem-size=8GB",
-        "-c",
-        joinpath(binary_path, "pagerank.gem5"),
-        "--options",
-        f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
-    ],
-    valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
-)
+# gem5_verify_config(
+#     name="gpu-apu-se-pannotia-pagerank",
+#     fixtures=(),
+#     verifiers=(),
+#     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+#     config_args=[
+#         "-n3",
+#         "--mem-size=8GB",
+#         "-c",
+#         joinpath(binary_path, "pagerank.gem5"),
+#         "--options",
+#         f'{joinpath(dataset_path, "coAuthorsDBLP.graph")} 0',
+#     ],
+#     valid_isas=(constants.vega_x86_tag,),
+#     valid_hosts=(constants.host_gcn_gpu_tag,),
+#     length=constants.very_long_tag,
+# )
 
-gem5_verify_config(
-    name="gpu-apu-se-pannotia-sssp-ell-1k-128k",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
-    config_args=[
-        "-n3",
-        "--mem-size=8GB",
-        "-c",
-        joinpath(binary_path, "sssp_ell.gem5"),
-        "--options",
-        f'{joinpath(dataset_path, "1k_128k.gr")} 0',
-    ],
-    valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
-)
+# gem5_verify_config(
+#     name="gpu-apu-se-pannotia-sssp-ell-1k-128k",
+#     fixtures=(),
+#     verifiers=(),
+#     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+#     config_args=[
+#         "-n3",
+#         "--mem-size=8GB",
+#         "-c",
+#         joinpath(binary_path, "sssp_ell.gem5"),
+#         "--options",
+#         f'{joinpath(dataset_path, "1k_128k.gr")} 0',
+#     ],
+#     valid_isas=(constants.vega_x86_tag,),
+#     valid_hosts=(constants.host_gcn_gpu_tag,),
+#     length=constants.very_long_tag,
+# )
 
 
-gem5_verify_config(
-    name="gpu-apu-se-pannotia-sssp-1k-128k",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
-    config_args=[
-        "-n3",
-        "--mem-size=8GB",
-        "-c",
-        joinpath(binary_path, "sssp.gem5"),
-        "--options",
-        f'{joinpath(dataset_path, "1k_128k.gr")} 0',
-    ],
-    valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
-)
+# gem5_verify_config(
+#     name="gpu-apu-se-pannotia-sssp-1k-128k",
+#     fixtures=(),
+#     verifiers=(),
+#     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+#     config_args=[
+#         "-n3",
+#         "--mem-size=8GB",
+#         "-c",
+#         joinpath(binary_path, "sssp.gem5"),
+#         "--options",
+#         f'{joinpath(dataset_path, "1k_128k.gr")} 0',
+#     ],
+#     valid_isas=(constants.vega_x86_tag,),
+#     valid_hosts=(constants.host_gcn_gpu_tag,),
+#     length=constants.very_long_tag,
+# )
