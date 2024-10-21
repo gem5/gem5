@@ -624,6 +624,21 @@ namespace Aarch64
                               TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
                                 return new Tlbi64ShareableHub(
                                   machInst, miscReg, rt, dec.dvmEnabled);
+                              // AT instructions
+                              case MISCREG_AT_S1E1R_Xt:
+                              case MISCREG_AT_S1E1W_Xt:
+                              case MISCREG_AT_S1E0R_Xt:
+                              case MISCREG_AT_S1E0W_Xt:
+                              case MISCREG_AT_S1E2R_Xt:
+                              case MISCREG_AT_S1E2W_Xt:
+                              case MISCREG_AT_S12E1R_Xt:
+                              case MISCREG_AT_S12E1W_Xt:
+                              case MISCREG_AT_S12E0R_Xt:
+                              case MISCREG_AT_S12E0W_Xt:
+                              case MISCREG_AT_S1E3R_Xt:
+                              case MISCREG_AT_S1E3W_Xt:
+                                return new At64Hub(machInst, miscReg,
+                                  MiscRegIndex::MISCREG_PAR_EL1, rt);
                               default:
                                 return new Msr64(machInst, miscReg, rt);
                             }

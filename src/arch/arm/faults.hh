@@ -141,6 +141,8 @@ class ArmFault : public FaultBase
                // the abort is triggered by a CMO. The faulting address is
                // then the address specified in the register argument of the
                // instruction and not the cacheline address (See FAR doc)
+        WnR,  // Write or Read. it should be forced to 1 when
+              // Cache maintainance and address translation instruction.
 
         // AArch64 only
         SF,    // DataAbort: width of the accessed register is SixtyFour

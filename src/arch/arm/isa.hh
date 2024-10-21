@@ -173,8 +173,6 @@ namespace ArmISA
       protected:
         void addressTranslation(MMU::ArmTranslationType tran_type,
             BaseMMU::Mode mode, Request::Flags flags, RegVal val);
-        void addressTranslation64(MMU::ArmTranslationType tran_type,
-            BaseMMU::Mode mode, Request::Flags flags, RegVal val);
 
       public:
         SelfDebug*

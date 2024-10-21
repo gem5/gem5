@@ -39,6 +39,7 @@
 #define __ARCH_ARM_INSTS_MISC64_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "arch/arm/types.hh"
 
@@ -337,6 +338,23 @@ class TlbiOp64 : public MiscRegRegImmOp64
 
     void performTlbi(ExecContext *xc,
                      ArmISA::MiscRegIndex idx, RegVal value) const;
+};
+
+class AtOp64 : public MiscRegRegImmOp64
+{
+  protected:
+    AtOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
+             OpClass __opClass, ArmISA::MiscRegIndex _dest,
+             RegIndex _op1) :
+        MiscRegRegImmOp64(mnem, _machInst, __opClass, _dest, _op1)
+    {}
+
+    std::pair<Fault, uint64_t> performAt(ExecContext *xc,
+        ArmISA::MiscRegIndex idx, RegVal val) const;
+
+    std::pair<Fault, uint64_t> addressTranslation64(ThreadContext* tc,
+        ArmISA::MMU::ArmTranslationType tran_type,
+        BaseMMU::Mode mode, Request::Flags flags, RegVal val) const;
 };
 
 } // namespace gem5
