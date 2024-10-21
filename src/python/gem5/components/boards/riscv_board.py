@@ -502,14 +502,24 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _pre_instantiate(self, full_system: Optional[bool] = None):
-        if len(self._bootloader) > 0:
-            self.workload.bootloader_addr = 0x0
-            self.workload.bootloader_filename = self._bootloader[0]
-            self.workload.kernel_addr = 0x80200000
-            self.workload.entry_point = 0x80000000  # Bootloader starting point
-        else:
-            self.workload.kernel_addr = 0x0
-            self.workload.entry_point = 0x80000000
+        # This is a bit of a hack necessary to get the RiscDemoBoard working
+        # At the time of writing the RiscvBoard does not support SE mode so
+        # this branch looks pointless. However, the RiscvDemoBoard does and
+        # needs this logic in place.
+        #
+        # This should be refactored in the future as part of a chance to have
+        # all boards support both FS and SE modes.
+        if self._is_fs:
+            if len(self._bootloader) > 0:
+                self.workload.bootloader_addr = 0x0
+                self.workload.bootloader_filename = self._bootloader[0]
+                self.workload.kernel_addr = 0x80200000
+                self.workload.entry_point = (
+                    0x80000000  # Bootloader starting point
+                )
+            else:
+                self.workload.kernel_addr = 0x0
+                self.workload.entry_point = 0x80000000
         super()._pre_instantiate(full_system=full_system)
 
     @overrides(KernelDiskWorkload)
