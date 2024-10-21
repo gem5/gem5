@@ -132,6 +132,15 @@ class Base : public ClockedObject
 
       public:
         /**
+         * Returns true if the data member is not null
+         * @return true if the data member is not null
+         */
+        bool hasData() const
+        {
+            return (data != nullptr);
+        }
+
+        /**
          * Obtains the address value of this Prefetcher address.
          * @return the addres value.
          */
