@@ -204,6 +204,7 @@ void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
   CacheEntry cache_entry := getCacheEntry(addr);
   DPRINTF(RubySlicc, "functionalRead %x\n", addr);
   WriteMask read_mask;
+  read_mask.setBlockSize(mask.getBlockSize());
   bool dirty := false;
   bool from_tbe := false;
 

@@ -103,7 +103,7 @@ class MyCacheSystem(RubySystem):
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.sys_port_proxy = RubyPortProxy()
+        self.sys_port_proxy = RubyPortProxy(ruby_system=self)
         system.system_port = self.sys_port_proxy.in_ports
 
         # Connect the cpu's cache, interrupt, and TLB ports to Ruby
