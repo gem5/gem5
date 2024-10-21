@@ -35,6 +35,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <set>
 #include <vector>
 
 #include "debug/Vma.hh"
@@ -240,7 +241,7 @@ class MemState : public Serializable
             }
             paramIn(cp, "addrRangeStart", start);
             paramIn(cp, "addrRangeEnd", end);
-            _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name,
+            _vmaList.emplace(AddrRange(start, end), _pageBytes, name,
                                   host_fd, offset);
             close(host_fd);
         }
@@ -277,19 +278,33 @@ class MemState : public Serializable
     Addr _nextThreadStackBase;
     Addr _mmapEnd;
 
+    using OrderedVMAList = std::multiset<VMA, VMA::StrictWeakOrder>;
+
     /**
-     * The _vmaList member is a list of virtual memory areas in the target
+     * The _vmaList member is an ordered set of virtual memory areas in the target
      * application space that have been allocated by the target. In most
      * operating systems, lazy allocation is used and these structures (or
      * equivalent ones) are used to track the valid address ranges.
      *
-     * This could use a more efficient data structure like an interval
-     * tree, but it is unclear whether the vmas will be modified often enough
-     * for the improvement in lookup time to matter. Unmapping VMAs currently
-     * modifies the list while iterating so the STL container must either
-     * support this or the unmapping method must be changed.
+     * The comparator used for this ordered set does not support VMA objects
+     * with an interleaved AddrRange, because such VMA objects never appear in any
+     * use case of _vmaList.
+     *
      */
-    std::list<VMA> _vmaList;
+    OrderedVMAList _vmaList;
+
+    /**
+     * @brief Get the list Of VMA objects that overlap with the interval defined
+     * by start_addr and length
+     *
+     * @param start_addr
+     * @param length
+     * @return std::pair<OrderedVMAList::iterator, OrderedVMAList::iterator>
+     * First element is the starting point of iteration, second
+     * element is the ending point of iteration.
+     */
+    std::pair<OrderedVMAList::iterator, OrderedVMAList::iterator>
+    getListOfOvalappingVMA(Addr start_addr, Addr length);
 };
 
 } // namespace gem5
