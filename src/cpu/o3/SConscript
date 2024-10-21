@@ -33,8 +33,9 @@ Import('*')
 if env['CONF']['BUILD_ISA']:
     SimObject('FUPool.py', sim_objects=['FUPool'])
     SimObject('FuncUnitConfig.py', sim_objects=[])
-    SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'], enums=[
-        'SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
+    SimObject('BaseO3CPU.py',
+        sim_objects=['BaseO3CPU'],
+        enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 
     Source('commit.cc')
     Source('cpu.cc')

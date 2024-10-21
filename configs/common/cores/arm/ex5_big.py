@@ -135,7 +135,7 @@ class ex5_big(ArmO3CPU):
     SQEntries = 16
     LSQDepCheckShift = 0
     LFSTSize = 1024
-    SSITSize = 1024
+    SSITSize = "1024"
     decodeToFetchDelay = 1
     renameToFetchDelay = 1
     iewToFetchDelay = 1
