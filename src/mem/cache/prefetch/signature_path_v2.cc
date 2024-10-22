@@ -125,7 +125,8 @@ SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
     GlobalHistoryEntry *gh_entry = globalHistoryRegister.findVictim(0);
     assert(gh_entry != nullptr);
     // Any address value works, as it is never used
-    globalHistoryRegister.insertEntry(0, gh_entry);
+    constexpr bool is_secure = false;
+    globalHistoryRegister.insertEntry(0, is_secure, gh_entry);
 
     gh_entry->signature = signature;
     gh_entry->lastBlock = last_offset;
