@@ -260,3 +260,10 @@ def addAmdGPUOptions(parser):
         default=41,
         help="Latency for memtimes in scalar memory pipeline.",
     )
+    parser.add_argument(
+        "--mfma-scale",
+        type=float,
+        # Set to a default of 1 to not scale MFMA cycles
+        default=1,
+        help="Scale how long an mfma consumes the matrix core unit",
+    )

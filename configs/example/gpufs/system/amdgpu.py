@@ -76,6 +76,7 @@ def createGPU(system, args):
                 localMemBarrier=args.LocalMemBarrier,
                 countPages=args.countPages,
                 memtime_latency=args.memtime_latency,
+                mfma_scale=args.mfma_scale,
                 localDataStore=LdsState(
                     banks=args.numLdsBanks,
                     bankConflictPenalty=args.ldsBankConflictPenalty,

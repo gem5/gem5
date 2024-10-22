@@ -303,6 +303,13 @@ parser.add_argument(
     default=41,
     help="Latency for memtimes in scalar memory pipeline.",
 )
+parser.add_argument(
+    "--mfma-scale",
+    type=float,
+    # Set to a default of 1 to not scale MFMA cycles
+    default=1,
+    help="Scale how long an mfma consumes the matrix core unit",
+)
 
 parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth for TLBs")
 parser.add_argument(
@@ -552,6 +559,7 @@ for i in range(n_cu):
             scalar_mem_req_latency=args.scalar_mem_req_latency,
             scalar_mem_resp_latency=args.scalar_mem_resp_latency,
             memtime_latency=args.memtime_latency,
+            mfma_scale=args.mfma_scale,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,

@@ -209,6 +209,11 @@ class ComputeUnit(ClockedObject):
         "Latency for memtimes in scalar memory pipeline. "
         "Specified in GPU clock cycles",
     )
+    mfma_scale = Param.Float(
+        1,
+        "Scale how long an mfma consumes the matrix core unit. "
+        "Multiplied into mfma cycle count in scoreboard stage",
+    )
     system = Param.System(Parent.any, "system object")
     cu_id = Param.Int("CU id")
     vrf_to_coalescer_bus_width = Param.Int(

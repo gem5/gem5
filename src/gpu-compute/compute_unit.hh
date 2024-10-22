@@ -43,6 +43,7 @@
 #include "base/stats/group.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
+#include "enums/GfxVersion.hh"
 #include "enums/PrefetchType.hh"
 #include "gpu-compute/comm.hh"
 #include "gpu-compute/exec_stage.hh"
@@ -363,6 +364,10 @@ class ComputeUnit : public ClockedObject
     Tick scalar_resp_tick_latency;
 
     Tick memtime_latency;
+    float mfma_scale;
+
+    // Keeps track of mfma instructions occupying matrix core engine per SM
+    std::vector<Tick> matrix_core_ready;
 
     /**
      * Number of WFs to schedule to each SIMD. This vector is populated
@@ -385,6 +390,9 @@ class ComputeUnit : public ClockedObject
     // per memory instruction per wavefront. The hash map
     // is cleared in GPUDynInst::updateStats() in gpu_dyn_inst.cc.
     std::map<Addr, int> pagesTouched;
+
+    // get cycles for mfma instructions based on their memonic
+    std::map<GfxVersion, std::map<std::string, int>> mfma_cycles;
 
     void insertInPipeMap(Wavefront *w);
     void deleteFromPipeMap(Wavefront *w);

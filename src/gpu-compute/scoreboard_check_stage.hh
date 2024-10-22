@@ -71,6 +71,7 @@ class ScoreboardCheckStage
         NRDY_BARRIER_WAIT,
         NRDY_VGPR_NRDY,
         NRDY_SGPR_NRDY,
+        NRDY_MATRIX_CORE,
         INST_RDY,
         NRDY_CONDITIONS
     };
