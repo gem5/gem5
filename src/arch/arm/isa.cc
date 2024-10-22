@@ -1293,46 +1293,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 idx = MISCREG_CPSR;
             }
             break;
-          case MISCREG_AT_S1E1R_Xt:
-            addressTranslation64(MMU::S1E1Tran, BaseMMU::Read, 0, val);
-            return;
-          case MISCREG_AT_S1E1W_Xt:
-            addressTranslation64(MMU::S1E1Tran, BaseMMU::Write, 0, val);
-            return;
-          case MISCREG_AT_S1E0R_Xt:
-            addressTranslation64(MMU::S1E0Tran, BaseMMU::Read,
-                MMU::UserMode, val);
-            return;
-          case MISCREG_AT_S1E0W_Xt:
-            addressTranslation64(MMU::S1E0Tran, BaseMMU::Write,
-                MMU::UserMode, val);
-            return;
-          case MISCREG_AT_S1E2R_Xt:
-            addressTranslation64(MMU::S1E2Tran, BaseMMU::Read, 0, val);
-            return;
-          case MISCREG_AT_S1E2W_Xt:
-            addressTranslation64(MMU::S1E2Tran, BaseMMU::Write, 0, val);
-            return;
-          case MISCREG_AT_S12E1R_Xt:
-            addressTranslation64(MMU::S12E1Tran, BaseMMU::Read, 0, val);
-            return;
-          case MISCREG_AT_S12E1W_Xt:
-            addressTranslation64(MMU::S12E1Tran, BaseMMU::Write, 0, val);
-            return;
-          case MISCREG_AT_S12E0R_Xt:
-            addressTranslation64(MMU::S12E0Tran, BaseMMU::Read,
-                MMU::UserMode, val);
-            return;
-          case MISCREG_AT_S12E0W_Xt:
-            addressTranslation64(MMU::S12E0Tran, BaseMMU::Write,
-                MMU::UserMode, val);
-            return;
-          case MISCREG_AT_S1E3R_Xt:
-            addressTranslation64(MMU::S1E3Tran, BaseMMU::Read, 0, val);
-            return;
-          case MISCREG_AT_S1E3W_Xt:
-            addressTranslation64(MMU::S1E3Tran, BaseMMU::Write, 0, val);
-            return;
           case MISCREG_L2CTLR:
             warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
                  miscRegName[idx], uint32_t(val));
@@ -1594,57 +1554,6 @@ ISA::unserialize(CheckpointIn &cp)
 
     CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
     updateRegMap(tmp_cpsr);
-}
-
-void
-ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
-    BaseMMU::Mode mode, Request::Flags flags, RegVal val)
-{
-    // If we're in timing mode then doing the translation in
-    // functional mode then we're slightly distorting performance
-    // results obtained from simulations. The translation should be
-    // done in the same mode the core is running in. NOTE: This
-    // can't be an atomic translation because that causes problems
-    // with unexpected atomic snoop requests.
-    warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
-
-    auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcRequestorId,
-        tc->pcState().instAddr(), tc->contextId());
-
-    Fault fault = getMMUPtr(tc)->translateFunctional(
-        req, tc, mode, tran_type);
-
-    PAR par = 0;
-    if (fault == NoFault) {
-        Addr paddr = req->getPaddr();
-        uint64_t attr = getMMUPtr(tc)->getAttr();
-        uint64_t attr1 = attr >> 56;
-        if (!attr1 || attr1 ==0x44) {
-            attr |= 0x100;
-            attr &= ~ uint64_t(0x80);
-        }
-        par = (paddr & mask(47, 12)) | attr;
-        DPRINTF(MiscRegs,
-              "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
-              val, par);
-    } else {
-        ArmFault *arm_fault = static_cast<ArmFault *>(fault.get());
-        arm_fault->update(tc);
-        // Set fault bit and FSR
-        FSR fsr = arm_fault->getFsr(tc);
-
-        par.f = 1; // F bit
-        par.fst = fsr.status; // FST
-        par.ptw = (arm_fault->iss() >> 7) & 0x1; // S1PTW
-        par.s = arm_fault->isStage2() ? 1 : 0; // S
-
-        DPRINTF(MiscRegs,
-                "MISCREG: Translated addr %#x fault fsr %#x: PAR: %#x\n",
-                val, fsr, par);
-    }
-    setMiscRegNoEffect(MISCREG_PAR_EL1, par);
-    return;
 }
 
 void
