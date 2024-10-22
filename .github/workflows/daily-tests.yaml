@@ -4,10 +4,7 @@
 name: Daily Tests
 
 on:
-  # Runs every day from 7AM UTC
-    schedule:
-        - cron: 0 7 * * *
-  # Allows us to manually start workflow for testing
+    # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
 
 jobs:
@@ -60,10 +57,6 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         steps:
             - uses: actions/checkout@v4
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: defconfig gem5
               if: ${{ matrix.setconfig-option  != '' }}
               run: scons defconfig build/${{ matrix.image }} build_opts/${{ matrix.isa-option }}
@@ -147,19 +140,14 @@ jobs:
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
-            - name: create zip of results
-              if: success() || failure()
-              run: |
-                  apt-get -y install zip
-                  zip -r output.zip tests/testing-results
-            - name: upload zip
+            - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4.0.0
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
                   name: ${{ env.MY_STEP_VAR }}
-                  path: output.zip
+                  path: tests/testing-results
                   retention-days: 7
             - run: echo "This job's status is ${{ job.status }}."
 
@@ -191,19 +179,14 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} --length=long
                   --skip-build -vv
-            - name: create zip of results
-              if: success() || failure()
-              run: |
-                  apt-get -y install zip
-                  zip -r output.zip tests/testing-results
-            - name: upload zip
+            - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4.0.0
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
                   name: ${{ env.MY_STEP_VAR }}
-                  path: output.zip
+                  path: tests/testing-results
                   retention-days: 7
             - run: echo "This job's status is ${{ job.status }}."
 
@@ -216,10 +199,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
@@ -241,10 +220,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Build ARM/gem5.opt
               run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
@@ -267,10 +242,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Compile build/VEGA_X86/gem5.opt
               run: scons build/VEGA_X86/gem5.opt -j $(nproc)
             - name: Get Square test-prog from gem5-resources

@@ -4,10 +4,7 @@
 name: Weekly Tests
 
 on:
-    # Runs every Sunday from 7AM UTC
-    schedule:
-        - cron: 00 7 * * 6
-    # Allows us to manually start workflow for testing
+    # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
 
 jobs:
@@ -16,10 +13,6 @@ jobs:
         container: ghcr.io/gem5/gcn-gpu:latest
         steps:
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Build gem5
               run: scons build/VEGA_X86/gem5.opt -j $(nproc) --ignore-style
             - uses: actions/upload-artifact@v4
@@ -36,10 +29,6 @@ jobs:
         timeout-minutes: 480 # 8 hours
         steps:
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
 
             - name: Download build/VEGA_X86/gem5.opt
               uses: actions/download-artifact@v4
@@ -68,10 +57,6 @@ jobs:
         timeout-minutes: 120 # 2 hours
         steps:
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - uses: actions/download-artifact@v4
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
@@ -97,10 +82,6 @@ jobs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - id: artifact-name
               run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
             - name: Build gem5
@@ -127,10 +108,6 @@ jobs:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.build-gem5.outputs.build-name}}
@@ -139,19 +116,14 @@ jobs:
             - name: very-long ${{ matrix.test-type }}
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv
-            - name: create zip of results
-              if: success() || failure()
-              run: |
-                  apt-get -y install zip
-                  zip -r output.zip tests/testing-results
-            - name: upload zip
+            - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
                   name: ${{ env.MY_STEP_VAR }}
-                  path: output.zip
+                  path: tests/testing-results
                   retention-days: 7
             - run: echo "This job's status is ${{ job.status }}."
 
@@ -161,11 +133,6 @@ jobs:
         timeout-minutes: 4320 # 3 days
         steps:
             - uses: actions/checkout@v4
-              with:
-                  # Scheduled workflows run on the default branch by default. We
-                  # therefore need to explicitly checkout the develop branch.
-                  ref: develop
-
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
@@ -191,5 +158,7 @@ jobs:
         needs:
             - testlib-very-long-tests
             - dramsys-tests
+            - LULESH-tests
+            - HACC-tests
         steps:
             - run: echo "This weekly tests have passed."

@@ -1128,26 +1128,27 @@ def create_system(
 
     return (cpu_sequencers, dir_cntrl_nodes, mainCluster)
 
+
 def RP_choose(test_name):
-    if test_name == 'TreePLRURP':
+    if test_name == "TreePLRURP":
         replacement_policy = TreePLRURP()
-    elif test_name == 'LRURP':
+    elif test_name == "LRURP":
         replacement_policy = LRURP()
-    elif test_name == 'FIFORP':
+    elif test_name == "FIFORP":
         replacement_policy = FIFORP()
-    elif test_name == 'LFURP':
+    elif test_name == "LFURP":
         replacement_policy = LFURP()
-    elif test_name == 'LIPRP':
+    elif test_name == "LIPRP":
         replacement_policy = LIPRP()
-    elif test_name == 'MRURP':
+    elif test_name == "MRURP":
         replacement_policy = MRURP()
-    elif test_name == 'NRURP':
+    elif test_name == "NRURP":
         replacement_policy = NRURP()
-    elif test_name == 'RRIPRP':
+    elif test_name == "RRIPRP":
         replacement_policy = RRIPRP()
-    elif test_name == 'SecondChanceRP':
+    elif test_name == "SecondChanceRP":
         replacement_policy = SecondChanceRP()
-    elif test_name == 'SHiPMemRP':
+    elif test_name == "SHiPMemRP":
         replacement_policy = SHiPMemRP()
 
     return replacement_policy
