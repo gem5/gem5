@@ -1683,6 +1683,15 @@ class HPI_MMU(ArmMMU):
 class HPI_BTB(SimpleBTB):
     numEntries = 128
     tagBits = 18
+    associativity = 1
+    instShiftAmt = 2
+    btbReplPolicy = LRURP()
+    btbIndexingPolicy = BTBSetAssociative(
+        num_entries=Parent.numEntries,
+        set_shift=Parent.instShiftAmt,
+        assoc=Parent.associativity,
+        tag_bits=Parent.tagBits,
+    )
 
 
 class HPI_BP(TournamentBP):
@@ -1704,7 +1713,7 @@ class HPI_ICache(Cache):
     response_latency = 1
     mshrs = 2
     tgts_per_mshr = 8
-    size = "32kB"
+    size = "32KiB"
     assoc = 2
     # No prefetcher, this is handled by the core
 
@@ -1715,7 +1724,7 @@ class HPI_DCache(Cache):
     response_latency = 1
     mshrs = 4
     tgts_per_mshr = 8
-    size = "32kB"
+    size = "32KiB"
     assoc = 4
     write_buffers = 4
     prefetcher = StridePrefetcher(queue_size=4, degree=4)
@@ -1727,7 +1736,7 @@ class HPI_L2(Cache):
     response_latency = 5
     mshrs = 4
     tgts_per_mshr = 8
-    size = "1024kB"
+    size = "1024KiB"
     assoc = 16
     write_buffers = 16
     # prefetcher FIXME

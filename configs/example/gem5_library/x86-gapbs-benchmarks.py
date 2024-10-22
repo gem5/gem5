@@ -28,7 +28,7 @@
 Script to run GAPBS benchmarks with gem5. The script expects the
 benchmark program and the simulation size to run. The input is in the format
 <benchmark_prog> <size> <synthetic>
-The system is fixed with 2 CPU cores, MESI Two Level system cache and 3 GB
+The system is fixed with 2 CPU cores, MESI Two Level system cache and 3 GiB
 DDR4 memory. It uses the x86 board.
 
 This script will count the total number of instructions executed
@@ -102,18 +102,18 @@ from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import
 )
 
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size="32kB",
+    l1d_size="32KiB",
     l1d_assoc=8,
-    l1i_size="32kB",
+    l1i_size="32KiB",
     l1i_assoc=8,
-    l2_size="256kB",
+    l2_size="256KiB",
     l2_assoc=16,
     num_l2_banks=2,
 )
 # Memory: Dual Channel DDR4 2400 DRAM device.
-# The X86 board only supports 3 GB of main memory.
+# The X86 board only supports 3 GiB of main memory.
 
-memory = DualChannelDDR4_2400(size="3GB")
+memory = DualChannelDDR4_2400(size="3GiB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a

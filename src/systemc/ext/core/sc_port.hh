@@ -114,19 +114,27 @@ class sc_port_base : public sc_object
     virtual sc_port_policy _portPolicy() const = 0;
 };
 
-// The overloaded virtual is intended in SystemC, so we'll disable the warning.
-// Please check section 9.3 of SystemC 2.3.1 release note for more details.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 template <class IF>
 class sc_port_b : public sc_port_base
 {
   public:
+#pragma GCC diagnostic push
+/**
+ * The following warning is disabled because the bind methods are overloaded
+ * in the derived class and the base class. In GCC v13+ this
+ * 'overloaded-virtual' warning is strict enough to trigger here (though the
+ * code is correct).
+ * Please check section 9.3 of SystemC 2.3.1 release note for more details.
+ */
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 13))
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
     void operator () (IF &i) { bind(i); }
     void operator () (sc_port_b<IF> &p) { bind(p); }
 
     virtual void bind(IF &i) { sc_port_base::bind(i); }
     virtual void bind(sc_port_b<IF> &p) { sc_port_base::bind(p); }
+#pragma GCC diagnostic pop
 
     IF *
     operator -> ()
@@ -248,7 +256,6 @@ class sc_port_b : public sc_port_base
     sc_port_b(const sc_port_b<IF> &) {}
     sc_port_b<IF> &operator = (const sc_port_b<IF> &) { return *this; }
 };
-#pragma GCC diagnostic pop
 
 template <class IF, int N=1, sc_port_policy P=SC_ONE_OR_MORE_BOUND>
 class sc_port : public sc_port_b<IF>

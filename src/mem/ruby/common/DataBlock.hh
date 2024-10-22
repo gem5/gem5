@@ -61,8 +61,14 @@ class WriteMask;
 class DataBlock
 {
   public:
-    DataBlock()
+    // Ideally this should nost be called. We allow default so that protocols
+    // do not need to be changed.
+    DataBlock() = default;
+
+    DataBlock(int blk_size)
     {
+        assert(!m_alloc);
+        m_block_size = blk_size;
         alloc();
     }
 
@@ -101,10 +107,16 @@ class DataBlock
     bool equal(const DataBlock& obj) const;
     void print(std::ostream& out) const;
 
+    int getBlockSize() const { return m_block_size; }
+    void setBlockSize(int block_size) { realloc(block_size); }
+    bool isAlloc() const { return m_alloc; }
+    void realloc(int blk_size);
+
   private:
     void alloc();
-    uint8_t *m_data;
-    bool m_alloc;
+    uint8_t *m_data = nullptr;
+    bool m_alloc = false;
+    int m_block_size = 0;
 
     // Tracks block changes when atomic ops are applied
     std::deque<uint8_t*> m_atomicLog;
@@ -124,18 +136,21 @@ DataBlock::assign(uint8_t *data)
 inline uint8_t
 DataBlock::getByte(int whichByte) const
 {
+    assert(m_alloc);
     return m_data[whichByte];
 }
 
 inline void
 DataBlock::setByte(int whichByte, uint8_t data)
 {
+    assert(m_alloc);
     m_data[whichByte] = data;
 }
 
 inline void
 DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
 {
+    assert(m_alloc);
     setData(&dblk.m_data[offset], offset, len);
 }
 

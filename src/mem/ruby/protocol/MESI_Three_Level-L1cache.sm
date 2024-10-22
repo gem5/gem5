@@ -167,7 +167,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
-  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int l2_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   Tick clockEdge();
   Cycles ticksToCycles(Tick t);

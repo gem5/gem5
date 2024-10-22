@@ -53,7 +53,7 @@ def generator_factory(
 
         return LinearGenerator(
             duration="250us",
-            rate="40GB/s",
+            rate="40GiB/s",
             num_cores=generator_cores,
             max_addr=mem_size,
         )
@@ -62,7 +62,7 @@ def generator_factory(
 
         return RandomGenerator(
             duration="250us",
-            rate="40GB/s",
+            rate="40GiB/s",
             num_cores=generator_cores,
             max_addr=mem_size,
         )
@@ -202,9 +202,7 @@ motherboard = TestBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-root = Root(full_system=False, system=motherboard)
-
-motherboard._pre_instantiate()
+root = motherboard._pre_instantiate()
 m5.instantiate()
 
 generator.start_traffic()

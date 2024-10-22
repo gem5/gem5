@@ -65,23 +65,20 @@ class PCState : public GenericISA::UPCState<4>
 
     bool _compressed = false;
     RiscvType _rvType = RV64;
-    uint64_t _vlenb = 32;
     VTYPE _vtype = (1ULL << 63); // vtype.vill = 1 at initial;
     uint32_t _vl = 0;
 
   public:
     PCState(const PCState &other) : Base(other),
-        _rvType(other._rvType), _vlenb(other._vlenb),
-        _vtype(other._vtype), _vl(other._vl)
+        _rvType(other._rvType), _vtype(other._vtype), _vl(other._vl)
     {}
     PCState &operator=(const PCState &other) = default;
     PCState() = default;
     explicit PCState(Addr addr) { set(addr); }
-    explicit PCState(Addr addr, RiscvType rvType, uint64_t vlenb)
+    explicit PCState(Addr addr, RiscvType rvType)
     {
         set(addr);
         _rvType = rvType;
-        _vlenb = vlenb;
     }
 
     PCStateBase *clone() const override { return new PCState(*this); }
@@ -93,7 +90,6 @@ class PCState : public GenericISA::UPCState<4>
         auto &pcstate = other.as<PCState>();
         _compressed = pcstate._compressed;
         _rvType = pcstate._rvType;
-        _vlenb = pcstate._vlenb;
         _vtype = pcstate._vtype;
         _vl = pcstate._vl;
     }
@@ -103,9 +99,6 @@ class PCState : public GenericISA::UPCState<4>
 
     void rvType(RiscvType rvType) { _rvType = rvType; }
     RiscvType rvType() const { return _rvType; }
-
-    void vlenb(uint64_t v) { _vlenb = v; }
-    uint64_t vlenb() const { return _vlenb; }
 
     void vtype(VTYPE v) { _vtype = v; }
     VTYPE vtype() const { return _vtype; }
@@ -126,7 +119,6 @@ class PCState : public GenericISA::UPCState<4>
     {
         auto &opc = other.as<PCState>();
         return Base::equals(other) &&
-            _vlenb == opc._vlenb &&
             _vtype == opc._vtype &&
             _vl == opc._vl;
     }
@@ -136,7 +128,6 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_rvType);
-        SERIALIZE_SCALAR(_vlenb);
         SERIALIZE_SCALAR(_vtype);
         SERIALIZE_SCALAR(_vl);
         SERIALIZE_SCALAR(_compressed);
@@ -147,7 +138,6 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_rvType);
-        UNSERIALIZE_SCALAR(_vlenb);
         UNSERIALIZE_SCALAR(_vtype);
         UNSERIALIZE_SCALAR(_vl);
         UNSERIALIZE_SCALAR(_compressed);

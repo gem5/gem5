@@ -44,84 +44,38 @@
 #include "base/trace.hh"
 #include "debug/BTB.hh"
 
-namespace gem5
-{
-
-namespace branch_prediction
+namespace gem5::branch_prediction
 {
 
 SimpleBTB::SimpleBTB(const SimpleBTBParams &p)
     : BranchTargetBuffer(p),
-        numEntries(p.numEntries),
-        tagBits(p.tagBits),
-        instShiftAmt(p.instShiftAmt),
-        log2NumThreads(floorLog2(p.numThreads))
+      btb("simpleBTB", p.numEntries, p.associativity,
+          p.btbReplPolicy, p.btbIndexingPolicy,
+          BTBEntry(genTagExtractor(p.btbIndexingPolicy)))
 {
     DPRINTF(BTB, "BTB: Creating BTB object.\n");
 
-    if (!isPowerOf2(numEntries)) {
+    if (!isPowerOf2(p.numEntries)) {
         fatal("BTB entries is not a power of 2!");
     }
-
-    btb.resize(numEntries);
-
-    for (unsigned i = 0; i < numEntries; ++i) {
-        btb[i].valid = false;
-    }
-
-    idxMask = numEntries - 1;
-
-    tagMask = (1 << tagBits) - 1;
-
-    tagShiftAmt = instShiftAmt + floorLog2(numEntries);
 }
 
 void
 SimpleBTB::memInvalidate()
 {
-    for (unsigned i = 0; i < numEntries; ++i) {
-        btb[i].valid = false;
-    }
+    btb.clear();
 }
 
-inline
-unsigned
-SimpleBTB::getIndex(Addr instPC, ThreadID tid)
-{
-    // Need to shift PC over by the word offset.
-    return ((instPC >> instShiftAmt)
-            ^ (tid << (tagShiftAmt - instShiftAmt - log2NumThreads)))
-            & idxMask;
-}
-
-inline
-Addr
-SimpleBTB::getTag(Addr instPC)
-{
-    return (instPC >> tagShiftAmt) & tagMask;
-}
-
-SimpleBTB::BTBEntry *
+BTBEntry *
 SimpleBTB::findEntry(Addr instPC, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC, tid);
-    Addr inst_tag = getTag(instPC);
-
-    assert(btb_idx < numEntries);
-
-    if (btb[btb_idx].valid
-        && inst_tag == btb[btb_idx].tag
-        && btb[btb_idx].tid == tid) {
-        return &btb[btb_idx];
-    }
-
-    return nullptr;
+    return btb.findEntry({instPC, tid});
 }
 
 bool
 SimpleBTB::valid(ThreadID tid, Addr instPC)
 {
-    BTBEntry *entry = findEntry(instPC, tid);
+    BTBEntry *entry = btb.findEntry({instPC, tid});
 
     return entry != nullptr;
 }
@@ -134,11 +88,12 @@ SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
 {
     stats.lookups[type]++;
 
-    BTBEntry *entry = findEntry(instPC, tid);
+    BTBEntry *entry = btb.accessEntry({instPC, tid});
 
     if (entry) {
         return entry->target.get();
     }
+
     stats.misses[type]++;
     return nullptr;
 }
@@ -146,31 +101,27 @@ SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
 const StaticInstPtr
 SimpleBTB::getInst(ThreadID tid, Addr instPC)
 {
-    BTBEntry *entry = findEntry(instPC, tid);
+    BTBEntry *entry = btb.findEntry({instPC, tid});
 
     if (entry) {
         return entry->inst;
     }
+
     return nullptr;
 }
 
 void
 SimpleBTB::update(ThreadID tid, Addr instPC,
-                    const PCStateBase &target,
-                    BranchType type, StaticInstPtr inst)
+                  const PCStateBase &target,
+                  BranchType type, StaticInstPtr inst)
 {
-    unsigned btb_idx = getIndex(instPC, tid);
-
-    assert(btb_idx < numEntries);
-
     stats.updates[type]++;
 
-    btb[btb_idx].tid = tid;
-    btb[btb_idx].valid = true;
-    set(btb[btb_idx].target, target);
-    btb[btb_idx].tag = getTag(instPC);
-    btb[btb_idx].inst = inst;
+    BTBEntry *victim = btb.findVictim({instPC, tid});
+
+    btb.insertEntry({instPC, tid}, victim);
+    victim->update(target, inst);
 }
 
-} // namespace branch_prediction
-} // namespace gem5
+
+} // namespace gem5::branch_prediction

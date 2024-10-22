@@ -1,4 +1,15 @@
 /*
+ * Copyright (c) 2024 Arm Limited
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -192,6 +203,8 @@ class MipsLinux : public Linux, public OpenFlagTable<MipsLinux>
        uint32_t mem_unit;  /* Memory unit size in bytes */
     };
 
+    typedef uint32_t size_t;
+    typedef int32_t off_t;
 };
 
 } // namespace gem5

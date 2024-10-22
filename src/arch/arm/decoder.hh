@@ -94,7 +94,7 @@ class Decoder : public InstDecoder
     enums::DecoderFlavor decoderFlavor;
 
     /// A cache of decoded instruction objects.
-    static GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;
+    GenericISA::BasicDecodeCache<Decoder, ExtMachInst> defaultCache;
     friend class GenericISA::BasicDecodeCache<Decoder, ExtMachInst>;
 
     /**

@@ -34,6 +34,7 @@ from typing import (
 )
 
 import m5
+from m5.util import warn
 
 from ...resources.resource import (
     BootloaderResource,
@@ -179,6 +180,10 @@ class KernelDiskWorkload:
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
+
+        if self.is_workload_set():
+            warn("Workload has been set more than once!")
+        self.set_is_workload_set(True)
 
         # Set the disk device
         self._disk_device = disk_device

@@ -58,9 +58,9 @@ parser.add_argument(
 args = parser.parse_args()
 requires(isa_required=ISA.X86)
 
-cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
+cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16KiB", l1i_size="16KiB")
 
-memory = SingleChannelDDR3_1600(size="32MB")
+memory = SingleChannelDDR3_1600(size="32MiB")
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4)
 
 board = SimpleBoard(

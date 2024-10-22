@@ -33,6 +33,7 @@ from m5.objects import (
 )
 
 from ....coherence_protocol import CoherenceProtocol
+from ....utils.override import overrides
 from ....utils.requires import requires
 
 requires(coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL)
@@ -87,6 +88,7 @@ class MESIThreeLevelCacheHierarchy(
         self._num_l3_banks = num_l3_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
+        super().incorporate_cache(board)
         cache_line_size = board.get_cache_line_size()
 
         self.ruby_system = RubySystem()
@@ -118,6 +120,7 @@ class MESIThreeLevelCacheHierarchy(
                 version=core_idx,
                 dcache=l1_cache.Dcache,
                 clk_domain=l1_cache.clk_domain,
+                ruby_system=self.ruby_system,
             )
 
             if board.has_io_bus():
@@ -196,7 +199,12 @@ class MESIThreeLevelCacheHierarchy(
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(
-                    DMASequencer(version=i, in_ports=port), self.ruby_system
+                    DMASequencer(
+                        version=i,
+                        in_ports=port,
+                        ruby_system=self.ruby_system,
+                    ),
+                    self.ruby_system,
                 )
                 self._dma_controllers.append(ctrl)
 
@@ -223,5 +231,15 @@ class MESIThreeLevelCacheHierarchy(
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy()
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        Directory._version = 0
+        L1Cache._version = 0
+        L2Cache._version = 0
+        L3Cache._version = 0
+        DMAController._version = 0

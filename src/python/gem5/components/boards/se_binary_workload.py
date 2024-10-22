@@ -101,6 +101,10 @@ class SEBinaryWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
+        if self.is_workload_set():
+            warn("Workload has been set more than once!")
+        self.set_is_workload_set(True)
+
         # If we are setting a workload of this type, we need to run as a
         # SE-mode simulation.
         self._set_fullsystem(False)

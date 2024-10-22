@@ -36,5 +36,35 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+import sys
+from pathlib import Path
+
+import m5
+
 from _m5.core import setOutputDir
 from _m5.loader import setInterpDir
+
+"""
+This function is meant to have a similar functionality to override_outdir in
+src/python/gem5/simulate/simulator.py. It changes the output directory for
+simerr.txt and simout.txt, which are generated when the -re flag is passed to
+gem5 in the command line. This function is primarily for use with multisim.
+
+Code copied and adapted from main.py
+"""
+
+
+def override_re_outdir(new_outdir):
+    options = m5.options
+
+    stdout_file = Path(new_outdir) / "stdout.txt"
+    stderr_file = Path(new_outdir) / "stderr.txt"
+    if options.redirect_stdout:
+        redir_fd = os.open(stdout_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        os.dup2(redir_fd, sys.stdout.fileno())
+        if not options.redirect_stderr:
+            os.dup2(redir_fd, sys.stderr.fileno())
+    if options.redirect_stderr:
+        redir_fd = os.open(stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        os.dup2(redir_fd, sys.stderr.fileno())

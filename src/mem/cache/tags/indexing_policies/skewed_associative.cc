@@ -42,7 +42,8 @@ namespace gem5
 {
 
 SkewedAssociative::SkewedAssociative(const Params &p)
-    : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
+    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size)),
+      msbShift(floorLog2(numSets) - 1)
 {
     if (assoc > NUM_SKEWING_FUNCTIONS) {
         warn_once("Associativity higher than number of skewing functions. " \

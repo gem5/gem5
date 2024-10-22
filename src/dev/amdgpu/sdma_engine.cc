@@ -179,7 +179,8 @@ SDMAEngine::translate(Addr vaddr, Addr size)
 }
 
 void
-SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
+SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
+                             bool isStatic)
 {
     uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
     Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
@@ -202,6 +203,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
         rlc0.setMQD(mqd);
         rlc0.setMQDAddr(mqdAddr);
         rlc0.setPriv(priv);
+        rlc0.setStatic(isStatic);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
@@ -216,16 +218,22 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
         rlc1.setMQD(mqd);
         rlc1.setMQDAddr(mqdAddr);
         rlc1.setPriv(priv);
+        rlc1.setStatic(isStatic);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
 }
 
 void
-SDMAEngine::unregisterRLCQueue(Addr doorbell)
+SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
 {
     DPRINTF(SDMAEngine, "Unregistering RLC queue at %#lx\n", doorbell);
     if (rlcInfo[0] == doorbell) {
+        if (!unmap_static && rlc0.isStatic()) {
+            DPRINTF(SDMAEngine, "RLC0 is static. Will not unregister.\n");
+            return;
+        }
+
         SDMAQueueDesc *mqd = rlc0.getMQD();
         if (mqd) {
             DPRINTF(SDMAEngine, "Writing RLC0 SDMAMQD back to %#lx\n",
@@ -243,6 +251,11 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell)
         rlc0.valid(false);
         rlcInfo[0] = 0;
     } else if (rlcInfo[1] == doorbell) {
+        if (!unmap_static && rlc1.isStatic()) {
+            DPRINTF(SDMAEngine, "RLC1 is static. Will not unregister.\n");
+            return;
+        }
+
         SDMAQueueDesc *mqd = rlc1.getMQD();
         if (mqd) {
             DPRINTF(SDMAEngine, "Writing RLC1 SDMAMQD back to %#lx\n",
@@ -262,15 +275,16 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell)
     } else {
         panic("Cannot unregister: no RLC queue at %#lx\n", doorbell);
     }
+
+    gpuDevice->unsetDoorbell(doorbell);
 }
 
 void
-SDMAEngine::deallocateRLCQueues()
+SDMAEngine::deallocateRLCQueues(bool unmap_static)
 {
     for (auto doorbell: rlcInfo) {
         if (doorbell) {
-            unregisterRLCQueue(doorbell);
-            gpuDevice->unsetDoorbell(doorbell);
+            unregisterRLCQueue(doorbell, unmap_static);
         }
     }
 }

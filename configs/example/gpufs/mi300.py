@@ -152,11 +152,11 @@ def runMI300GPUFS(
 
     # Defaults for CPU
     args.cpu_type = "X86KvmCPU"
-    args.mem_size = "8GB"
+    args.mem_size = "8GiB"
 
     # Defaults for MI300X
     args.gpu_device = "MI300X"
-    args.dgpu_mem_size = "16GB"  # GPU memory size, must be 16GB currently.
+    args.dgpu_mem_size = "16GiB"  # GPU memory size, must be 16GiB currently.
 
     # See: https://rocm.docs.amd.com/en/latest/conceptual/gpu-arch/mi300.html
     # Topology for one XCD. Number of CUs is approximately 304 / 8, rounded

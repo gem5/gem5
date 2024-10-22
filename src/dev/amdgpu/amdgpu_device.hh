@@ -217,7 +217,7 @@ class AMDGPUDevice : public PciDevice
     uint16_t allocateVMID(uint16_t pasid);
     void deallocateVmid(uint16_t vmid);
     void deallocatePasid(uint16_t pasid);
-    void deallocateAllQueues();
+    void deallocateAllQueues(bool unmap_static);
     void mapDoorbellToVMID(Addr doorbell, uint16_t vmid);
     uint16_t getVMID(Addr doorbell) { return doorbellVMIDMap[doorbell]; }
     std::unordered_map<uint16_t, std::set<int>>& getUsedVMIDs();

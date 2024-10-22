@@ -52,7 +52,7 @@ namespace gem5
 {
 
 SetAssociative::SetAssociative(const Params &p)
-    : BaseIndexingPolicy(p)
+    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size))
 {
 }
 

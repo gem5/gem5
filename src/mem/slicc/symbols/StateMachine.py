@@ -352,7 +352,6 @@ class $c_ident : public AbstractController
   public:
     typedef ${c_ident}Params Params;
     $c_ident(const Params &p);
-    static int getNumControllers();
     void init();
 
     MessageBuffer *getMandatoryQueue() const;
@@ -449,9 +448,8 @@ int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
 int m_event_counters[${ident}_Event_NUM];
 bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
 
-static std::vector<statistics::Vector *> eventVec;
-static std::vector<std::vector<statistics::Vector *> > transVec;
-static int m_num_controllers;
+std::vector<statistics::Vector *> eventVec;
+std::vector<std::vector<statistics::Vector *> > transVec;
 
 // Internal functions
 """
@@ -625,10 +623,6 @@ namespace gem5
 namespace ruby
 {
 
-int $c_ident::m_num_controllers = 0;
-std::vector<statistics::Vector *>  $c_ident::eventVec;
-std::vector<std::vector<statistics::Vector *> >  $c_ident::transVec;
-
 // for adding information to the protocol debug trace
 std::stringstream ${ident}_transitionComment;
 
@@ -644,8 +638,9 @@ $c_ident::$c_ident(const Params &p)
 {
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
-    m_num_controllers++;
+    p.ruby_system->m_num_controllers[MachineType_${ident}]++;
     p.ruby_system->registerAbstractController(this);
+    m_ruby_system = p.ruby_system;
 
     m_in_ports = $num_in_ports;
 """
@@ -699,7 +694,7 @@ void
 $c_ident::initNetQueues()
 {
     MachineType machine_type = string_to_MachineType("${{self.ident}}");
-    [[maybe_unused]] int base = MachineType_base_number(machine_type);
+    [[maybe_unused]] int base = m_ruby_system->MachineType_base_number(machine_type);
 
 """
         )
@@ -775,6 +770,20 @@ $c_ident::init()
                     elif "default" in vtype:
                         comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
+
+                    # For objects that require knowing the cache line size,
+                    # set the value here.
+                    if vtype.c_ident in ("TBETable", "PerfectCacheMemory"):
+                        block_size_func = "m_ruby_system->getBlockSizeBytes()"
+                        code(f"(*{vid}).setBlockSize({block_size_func});")
+
+                    if vtype.c_ident in ("NetDest"):
+                        code(f"(*{vid}).setRubySystem(m_ruby_system);")
+
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory":
+                assert param.pointer
+                code(f"m_{param.ident}_ptr->setRubySystem(m_ruby_system);")
 
         # Set the prefetchers
         code()
@@ -942,7 +951,9 @@ $c_ident::regStats()
                 "${c_ident}." + ${ident}_Event_to_string(event);
             statistics::Vector *t =
                 new statistics::Vector(profilerStatsPtr, stat_name.c_str());
-            t->init(m_num_controllers);
+            int num_controllers =
+                m_ruby_system->m_num_controllers[MachineType_${ident}];
+            t->init(num_controllers);
             t->flags(statistics::pdf | statistics::total |
                 statistics::oneline | statistics::nozero);
 
@@ -961,7 +972,9 @@ $c_ident::regStats()
                     "." + ${ident}_Event_to_string(event);
                 statistics::Vector *t = new statistics::Vector(
                     profilerStatsPtr, stat_name.c_str());
-                t->init(m_num_controllers);
+                int num_controllers =
+                    m_ruby_system->m_num_controllers[MachineType_${ident}];
+                t->init(num_controllers);
                 t->flags(statistics::pdf | statistics::total |
                     statistics::oneline | statistics::nozero);
                 transVec[state].push_back(t);
@@ -1062,9 +1075,12 @@ $c_ident::regStats()
 void
 $c_ident::collateStats()
 {
+    int num_controllers =
+        m_ruby_system->m_num_controllers[MachineType_${ident}];
+
     for (${ident}_Event event = ${ident}_Event_FIRST;
          event < ${ident}_Event_NUM; ++event) {
-        for (unsigned int i = 0; i < m_num_controllers; ++i) {
+        for (unsigned int i = 0; i < num_controllers; ++i) {
             RubySystem *rs = params().ruby_system;
             std::map<uint32_t, AbstractController *>::iterator it =
                      rs->m_abstract_controls[MachineType_${ident}].find(i);
@@ -1080,7 +1096,7 @@ $c_ident::collateStats()
         for (${ident}_Event event = ${ident}_Event_FIRST;
              event < ${ident}_Event_NUM; ++event) {
 
-            for (unsigned int i = 0; i < m_num_controllers; ++i) {
+            for (unsigned int i = 0; i < num_controllers; ++i) {
                 RubySystem *rs = params().ruby_system;
                 std::map<uint32_t, AbstractController *>::iterator it =
                          rs->m_abstract_controls[MachineType_${ident}].find(i);
@@ -1123,12 +1139,6 @@ $c_ident::getTransitionCount(${ident}_State state,
                              ${ident}_Event event)
 {
     return m_counters[state][event];
-}
-
-int
-$c_ident::getNumControllers()
-{
-    return m_num_controllers;
 }
 
 MessageBuffer*
@@ -1181,6 +1191,7 @@ void
 $c_ident::set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry)
 {
   m_cache_entry_ptr = (${{self.EntryType.c_ident}}*)m_new_cache_entry;
+  m_cache_entry_ptr->setRubySystem(m_ruby_system);
 }
 
 void
@@ -1200,6 +1211,7 @@ void
 $c_ident::set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.TBEType.c_ident}}* m_new_tbe)
 {
   m_tbe_ptr = m_new_tbe;
+  m_tbe_ptr->setRubySystem(m_ruby_system);
 }
 
 void

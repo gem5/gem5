@@ -627,7 +627,7 @@ MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
             "w:%d, x:%d\n", te->hap, xn, pxn, r, w, x);
 
     if (x) {
-        grant = grant_read && !xn;
+        grant = !xn;
     } else if (req->isAtomic()) {
         grant = grant_read || grant_write;
     } else if (w) {

@@ -8,6 +8,16 @@ on:
     workflow_dispatch:
 
 jobs:
+
+    get-date:
+        runs-on: ubuntu-latest
+        outputs:
+            date: ${{ steps.date.outputs.date }}
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
         strategy:
@@ -16,8 +26,16 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
+        needs: get-date
         steps:
             - uses: actions/checkout@v4
+            - name: Cache build/ALL
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
             - name: ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
@@ -26,19 +44,32 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                test-type: [arm_boot_tests, fs, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement_policies, riscv_boot_tests,
+                test-type: [arm_boot_tests, fs, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, replacement_policies, riscv_boot_tests,
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours for entire matrix to run
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
 
+            - name: Restore build/NULL cache
+              uses: actions/cache@v4
+              with:
+                  path: build/NULL
+                  key: testlib-build-null-${{ needs.get-date.outputs.date }}
+
+            - name: Restore build/ALL cache
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} --length=long -vv -t $(nproc)
+              run: ./main.py run gem5/${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc)
             - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
@@ -48,6 +79,7 @@ jobs:
                   name: ${{ env.MY_STEP_VAR }}
                   path: tests/testing-results
                   retention-days: 7
+
             - run: echo "This job's status is ${{ job.status }}."
 
   # split library example tests into runs based on Suite UID
@@ -61,14 +93,24 @@ jobs:
                     gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours
+        needs: get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: long ${{ matrix.test-type }} gem5_library_example_tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} --length=long
-                  -vv
+              run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} -j $(nproc)
+                  --length=long -vv
             - name: upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
@@ -83,18 +125,29 @@ jobs:
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 300
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v4
               with:
                   ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
             - name: Build VEGA_X86/gem5.opt
-              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+              working-directory: ${{ github.workspace }}
+              run: scons build/VEGA_X86/gem5.opt -j $(nproc)
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long --skip-build -vvv -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
 
             - name: Upload results
               if: success() || failure()

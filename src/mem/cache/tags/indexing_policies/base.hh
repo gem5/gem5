@@ -109,14 +109,16 @@ class IndexingPolicyTemplate : public SimObject
     /**
      * Construct and initialize this policy.
      */
-    IndexingPolicyTemplate(const Params &p)
+    IndexingPolicyTemplate(const Params &p,
+                           uint32_t num_entries,
+                           int set_shift)
       : SimObject(p), assoc(p.assoc),
-        numSets(p.size / (p.entry_size * assoc)),
-        setShift(floorLog2(p.entry_size)), setMask(numSets - 1), sets(numSets),
+        numSets(num_entries / assoc),
+        setShift(set_shift), setMask(numSets - 1), sets(numSets),
         tagShift(setShift + floorLog2(numSets))
     {
-        fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power " \
-                 "of 2");
+        fatal_if(!isPowerOf2(numSets),
+            "# of sets must be non-zero and a power of 2");
         fatal_if(assoc <= 0, "associativity must be greater than zero");
 
         // Make space for the entries

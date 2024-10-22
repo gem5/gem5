@@ -27,7 +27,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-FROM --platform=${BUILDPLATFORM} ubuntu:22.04
+FROM ubuntu:22.04
+
+LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
+LABEL org.opencontainers.image.description="An image used to build applications to be run with GPU full system. A pplications targeting AMD's ROCm GPU framework can be built using this image (e.g., HIP, HSA, OpencL, etc.)."
+LABEL org.opencontainers.image.licenses=BSD-3-Clause
+
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
     apt -y install build-essential git m4 scons zlib1g zlib1g-dev \

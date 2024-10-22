@@ -36,7 +36,6 @@
 
 #include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
-#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -74,7 +73,8 @@ WireBuffer::~WireBuffer()
 }
 
 void
-WireBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
+WireBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
+                    bool /*ruby_is_random*/, bool /*ruby_warmup*/)
 {
     m_msg_counter++;
     Tick arrival_time = current_time + delta;

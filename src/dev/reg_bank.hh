@@ -1040,7 +1040,6 @@ class RegisterBank : public RegisterBankBase
         if (it == _offsetMap.end() || it->first > addr)
             it--;
 
-        std::ostringstream ss;
         while (done != bytes) {
           RegisterBase &reg = it->second.get();
           const Addr reg_off = addr - it->first;
@@ -1049,13 +1048,17 @@ class RegisterBank : public RegisterBankBase
 
           if (reg_bytes != reg.size()) {
               if (_debug_flag) {
-                  ccprintf(ss, "Read register %s, byte offset %d, size %d\n",
-                          reg.name(), reg_off, reg_bytes);
+                  ::gem5::trace::getDebugLogger()->dprintf_flag(
+                      curTick(), name(), _debug_flag->name(),
+                      "Read register %s, byte offset %d, size %d\n",
+                      reg.name(), reg_off, reg_bytes);
               }
               reg.read(ptr + done, reg_off, reg_bytes);
           } else {
               if (_debug_flag) {
-                  ccprintf(ss, "Read register %s\n", reg.name());
+                  ::gem5::trace::getDebugLogger()->dprintf_flag(
+                      curTick(), name(), _debug_flag->name(),
+                      "Read register %s\n", reg.name());
               }
               reg.read(ptr + done);
           }
@@ -1063,11 +1066,6 @@ class RegisterBank : public RegisterBankBase
           done += reg_bytes;
           addr += reg_bytes;
           ++it;
-        }
-
-        if (_debug_flag) {
-            ::gem5::trace::getDebugLogger()->dprintf_flag(
-                curTick(), name(), _debug_flag->name(), "%s", ss.str());
         }
     }
 
@@ -1086,7 +1084,6 @@ class RegisterBank : public RegisterBankBase
         if (it == _offsetMap.end() || it->first > addr)
             it--;
 
-        std::ostringstream ss;
         while (done != bytes) {
             RegisterBase &reg = it->second.get();
             const Addr reg_off = addr - it->first;
@@ -1095,13 +1092,17 @@ class RegisterBank : public RegisterBankBase
 
             if (reg_bytes != reg.size()) {
                 if (_debug_flag) {
-                    ccprintf(ss, "Write register %s, byte offset %d, size %d\n",
-                              reg.name(), reg_off, reg_size);
+                    ::gem5::trace::getDebugLogger()->dprintf_flag(
+                        curTick(), name(), _debug_flag->name(),
+                        "Write register %s, byte offset %d, size %d\n",
+                        reg.name(), reg_off, reg_size);
                 }
                 reg.write(ptr + done, reg_off, reg_bytes);
             } else {
                 if (_debug_flag) {
-                  ccprintf(ss, "Write register %s\n", reg.name());
+                    ::gem5::trace::getDebugLogger()->dprintf_flag(
+                        curTick(), name(), _debug_flag->name(),
+                        "Write register %s\n", reg.name());
                 }
                 reg.write(ptr + done);
             }
@@ -1111,10 +1112,6 @@ class RegisterBank : public RegisterBankBase
             ++it;
         }
 
-        if (_debug_flag) {
-            ::gem5::trace::getDebugLogger()->dprintf_flag(
-                curTick(), name(), _debug_flag->name(), "%s", ss.str());
-        }
     }
 
     // By default, reset all the registers in the bank.

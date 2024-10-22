@@ -148,6 +148,7 @@ def create_system(
                 train_misses=5,
                 num_startup_pfs=4,
                 cross_page=True,
+                block_size=options.cacheline_size,
             )
 
             l0_cntrl = L0Cache_Controller(

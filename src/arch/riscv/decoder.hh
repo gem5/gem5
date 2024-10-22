@@ -62,6 +62,7 @@ class Decoder : public InstDecoder
 
     uint32_t vlen;
     uint32_t elen;
+    bool _enableZcd;
 
     virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
 

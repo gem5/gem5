@@ -50,6 +50,7 @@ from common import (
     FileSystemConfig,
     GPUTLBConfig,
     GPUTLBOptions,
+    ObjectList,
     Options,
     Simulation,
 )
@@ -393,6 +394,7 @@ parser.add_argument(
     "--tcp-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for tcp",
 )
 
@@ -400,6 +402,7 @@ parser.add_argument(
     "--tcc-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for tcc",
 )
 
@@ -408,6 +411,7 @@ parser.add_argument(
     "--sqc-rp",
     type=str,
     default="TreePLRURP",
+    choices=ObjectList.rp_list.get_names(),
     help="cache replacement policy" "policy for sqc",
 )
 
@@ -931,9 +935,9 @@ gpu_port_idx = gpu_port_idx - args.num_cp * 2
 token_port_idx = 0
 for i in range(len(system.ruby._cpu_ports)):
     if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
-        system.cpu[shader_idx].CUs[
-            token_port_idx
-        ].gmTokenPort = system.ruby._cpu_ports[i].gmTokenPort
+        system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = (
+            system.ruby._cpu_ports[i].gmTokenPort
+        )
         token_port_idx += 1
 
 wavefront_size = args.wf_size

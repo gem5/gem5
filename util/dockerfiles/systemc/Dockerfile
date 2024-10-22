@@ -23,8 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
+LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV CXX="g++"
 ENV CXXFLAGS="-std=c++17"

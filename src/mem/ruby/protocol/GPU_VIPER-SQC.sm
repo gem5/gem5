@@ -37,7 +37,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
    CacheMemory * L1cache;
    int TCC_select_num_bits;
    Cycles issue_latency := 80;  // time to send data down to TCC
-   Cycles l2_hit_latency := 18; // for 1MB L2, 20 for 2MB
+   Cycles l2_hit_latency := 18; // for 1MiB L2, 20 for 2MiB
 
   MessageBuffer * requestFromSQC, network="To", virtual_network="1", vnet_type="request";
 
@@ -95,7 +95,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   }
 
   TBETable TBEs, template="<SQC_TBE>", constructor="m_number_of_TBEs";
-  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int TCC_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();

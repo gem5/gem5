@@ -108,6 +108,15 @@ class ex5_big_FUP(FUPool):
 class ex5_big_BTB(SimpleBTB):
     numEntries = 4096
     tagBits = 18
+    associativity = 1
+    instShiftAmt = 2
+    btbReplPolicy = LRURP()
+    btbIndexingPolicy = BTBSetAssociative(
+        num_entries=Parent.numEntries,
+        set_shift=Parent.instShiftAmt,
+        assoc=Parent.associativity,
+        tag_bits=Parent.tagBits,
+    )
 
 
 # Bi-Mode Branch Predictor
@@ -177,7 +186,7 @@ class L1Cache(Cache):
 # Instruction Cache
 class L1I(L1Cache):
     mshrs = 2
-    size = "32kB"
+    size = "32KiB"
     assoc = 2
     is_read_only = True
 
@@ -185,7 +194,7 @@ class L1I(L1Cache):
 # Data Cache
 class L1D(L1Cache):
     mshrs = 6
-    size = "32kB"
+    size = "32KiB"
     assoc = 2
     write_buffers = 16
 
@@ -197,7 +206,7 @@ class L2(Cache):
     response_latency = 15
     mshrs = 16
     tgts_per_mshr = 8
-    size = "2MB"
+    size = "2MiB"
     assoc = 16
     write_buffers = 8
     clusivity = "mostly_excl"
