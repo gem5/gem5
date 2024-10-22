@@ -56,6 +56,7 @@ from m5.objects import (
 )
 from m5.util.convert import toMemorySize
 
+from ...components.boards.se_binary_workload import SEBinaryWorkload
 from ...isas import ISA
 from ...resources.resource import AbstractResource
 from ...utils.override import overrides
@@ -66,7 +67,7 @@ from .abstract_system_board import AbstractSystemBoard
 from .kernel_disk_workload import KernelDiskWorkload
 
 
-class X86Board(AbstractSystemBoard, KernelDiskWorkload):
+class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
     """
     A board capable of full system simulation for X86.
 
@@ -97,17 +98,18 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-        self.pc = Pc()
+        if self.is_fullsystem():
+            self.pc = Pc()
 
-        self.workload = X86FsLinux()
+            self.workload = X86FsLinux()
 
-        # North Bridge
-        self.iobus = IOXBar()
+            # North Bridge
+            self.iobus = IOXBar()
 
-        # Set up all of the I/O.
-        self._setup_io_devices()
+            # Set up all of the I/O.
+            self._setup_io_devices()
 
-        self.m5ops_base = 0xFFFF0000
+            self.m5ops_base = 0xFFFF0000
 
     def _setup_io_devices(self):
         """Sets up the x86 IO devices.
@@ -291,27 +293,45 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
-        return True
+        return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
-    def get_io_bus(self) -> BaseXBar:
-        return self.iobus
+    def get_io_bus(self) -> IOXBar:
+        if self.has_io_bus():
+            return self.iobus
+        else:
+            raise NotImplementedError(
+                "Board was not configured for FS mode and does not have an "
+                "I/O bus. Use `has_io_bus()` to check this."
+            )
 
     @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
-        return True
+        return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> Sequence[Port]:
-        return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
+        if self.has_dma_ports():
+            return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
+        else:
+            raise NotImplementedError(
+                "Board was not configured for FS mode and does not have DMA "
+                "ports. Use `has_dma_ports()` to check this."
+            )
 
     @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
-        return True
+        return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
-        return self.iobus.mem_side_ports
+        if self.has_coherent_io():
+            return self.iobus.mem_side_ports
+        else:
+            raise NotImplementedError(
+                "Board was not configured for FS mode and does not have I/O "
+                "ports. Use has_coherent_io to check this."
+            )
 
     @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
