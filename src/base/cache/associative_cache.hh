@@ -271,6 +271,7 @@ class AssociativeCache : public Named
 
         entry->insert(key);
         replPolicy->reset(entry->replacementData);
+
     }
 
     /**

@@ -1,0 +1,7 @@
+
+
+void
+NewMMU::init()
+{
+
+}
