@@ -202,6 +202,7 @@ def template VSetiVliBranchTarget {{
             rpc.vl(), requested_vl, vlmax, rd_bits, rs1_bits);
 
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
+        npc->set(rvSext(npc->pc() + 4));
         npc->vtype(new_vtype);
         npc->vl(new_vl);
         return npc;
