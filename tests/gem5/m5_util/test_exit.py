@@ -10,6 +10,7 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
+# Copyright (c) 2026 The Regents of the University of California
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -37,39 +38,47 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Test file for the util m5 exit assembly instruction.
+Tests the m5-exit magic instruction in SE mode for X86, RISCV and ARM.
 """
 
 import re
+from pathlib import Path
 
-from testlib import *
-
-m5_exit_regex = re.compile(
-    r"Exiting @ tick \d* because m5_exit instruction encountered"
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+    verifier,
 )
 
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+m5_exit_regex = re.compile(r"Exit cause: 'm5_exit instruction encountered'")
 
-a = verifier.MatchRegex(m5_exit_regex)
-gem5_verify_config(
-    name="m5_exit_test",
-    verifiers=[a],
-    fixtures=(),
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "m5_util",
-        "configs",
-        "simple_binary_run.py",
-    ),
-    config_args=[
-        "x86-m5-exit",
-        "--resource-directory",
-        resource_path,
-    ],
-    valid_isas=(constants.all_compiled_tag,),
+resource_directory = (
+    config.bin_path
+    if config.bin_path
+    else str(Path(Path(__file__).parent, "resources"))
 )
+
+exit_cause_verifier = verifier.MatchRegex(
+    re.compile(r"Exit cause: 'm5_exit instruction encountered'")
+)
+
+for isa in ["x86", "arm", "riscv"]:
+    gem5_verify_config(
+        name=f"m5-inst-exit-{isa}-se-mode",
+        verifiers=(exit_cause_verifier,),
+        fixtures=tuple(),
+        config=str(
+            Path(
+                Path(__file__).parent,
+                "configs",
+                "se-m5-exit.py",
+            )
+        ),
+        config_args=[
+            isa,
+            f"--resource-directory='{resource_directory}'",
+        ],
+        valid_isas=(constants.all_compiled_tag,),
+        length=constants.quick_tag,
+    )
