@@ -110,8 +110,8 @@ class IndexingPolicyTemplate : public SimObject
      * Construct and initialize this policy.
      */
     IndexingPolicyTemplate(const Params &p,
-                           uint32_t num_entries,
-                           int set_shift)
+                           const uint32_t num_entries,
+                           const uint32_t set_shift)
       : SimObject(p), assoc(p.assoc),
         numSets(num_entries / assoc),
         setShift(set_shift), setMask(numSets - 1), sets(numSets),

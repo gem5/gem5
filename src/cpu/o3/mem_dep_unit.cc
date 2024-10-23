@@ -26,8 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/o3/mem_dep_unit.hh"
-
 #include <map>
 #include <memory>
 #include <vector>
@@ -37,6 +35,7 @@
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/mem_dep_unit.hh"
 #include "debug/MemDepUnit.hh"
 #include "params/BaseO3CPU.hh"
 
@@ -56,8 +55,9 @@ MemDepUnit::MemDepUnit() : iqPtr(NULL), stats(nullptr) {}
 
 MemDepUnit::MemDepUnit(const BaseO3CPUParams &params)
     : _name(params.name + ".memdepunit"),
-      depPred(params.store_set_clear_period, params.SSITSize,
-              params.LFSTSize),
+      depPred(_name + ".storesets", params.store_set_clear_period,
+              params.SSITSize, params.SSITAssoc, params.SSITReplPolicy,
+              params.SSITIndexingPolicy, params.LFSTSize),
       iqPtr(NULL),
       stats(nullptr)
 {
@@ -91,13 +91,15 @@ MemDepUnit::~MemDepUnit()
 void
 MemDepUnit::init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu)
 {
+    _name = csprintf("%s.memDep%d", params.name, tid);
+
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
-    _name = csprintf("%s.memDep%d", params.name, tid);
     id = tid;
 
-    depPred.init(params.store_set_clear_period, params.SSITSize,
-            params.LFSTSize);
+    depPred.init(params.store_set_clear_period,
+                 params.SSITSize, params.SSITAssoc, params.SSITReplPolicy,
+                 params.SSITIndexingPolicy, params.LFSTSize);
 
     std::string stats_group_name = csprintf("MemDepUnit__%i", tid);
     cpu->addStatGroup(stats_group_name.c_str(), &stats);

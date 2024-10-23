@@ -34,8 +34,17 @@
 #include <utility>
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
+#include "base/cache/cache_entry.hh"
+#include "base/named.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+
+class BaseIndexingPolicy;
+
+namespace replacement_policy {
+class Base;
+}
 
 namespace gem5
 {
@@ -52,6 +61,7 @@ struct ltseqnum
     }
 };
 
+
 /**
  * Implements a store set predictor for determining if memory
  * instructions are dependent upon each other.  See paper "Memory
@@ -59,23 +69,41 @@ struct ltseqnum
  * stands for Store Set ID, SSIT stands for Store Set ID Table, and
  * LFST is Last Fetched Store Table.
  */
-class StoreSet
+class StoreSet : public Named
 {
   public:
-    typedef unsigned SSID;
+    typedef Addr SSID;
 
-  public:
+    class SSITEntry : public CacheEntry
+    {
+      private:
+        SSID _ssid;
+      public:
+        using TagExtractor = std::function<Addr(Addr)>;
+
+        SSITEntry(TagExtractor ext) : CacheEntry(ext), _ssid(MaxAddr) {}
+
+        void setSSID(SSID id) { _ssid = id; }
+        SSID getSSID(void) const { return _ssid; }
+    };
+
     /** Default constructor.  init() must be called prior to use. */
-    StoreSet() { };
+    StoreSet() : Named("StoreSets"), SSIT("SSIT") {};
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
+    StoreSet(std::string name, uint64_t clear_period,
+             size_t SSIT_entries, int SSIT_assoc,
+             replacement_policy::Base *replPolicy,
+             BaseIndexingPolicy *indexingPolicy, int LFST_size);
 
     /** Default destructor. */
     ~StoreSet();
 
     /** Initializes the store set predictor with the given table sizes. */
-    void init(uint64_t clear_period, int SSIT_size, int LFST_size);
+    void init(uint64_t clear_period,
+              size_t SSIT_entries, int SSIT_assoc,
+              replacement_policy::Base *_replPolicy,
+              BaseIndexingPolicy *_indexingPolicy, int LFST_size);
 
     /** Records a memory ordering violation between the younger load
      * and the older store. */
@@ -115,19 +143,12 @@ class StoreSet
     void dump();
 
   private:
-    /** Calculates the index into the SSIT based on the PC. */
-    inline int calcIndex(Addr PC)
-    { return (PC >> offsetBits) & indexMask; }
-
     /** Calculates a Store Set ID based on the PC. */
     inline SSID calcSSID(Addr PC)
     { return ((PC ^ (PC >> 10)) % LFSTSize); }
 
     /** The Store Set ID Table. */
-    std::vector<SSID> SSIT;
-
-    /** Bit vector to tell if the SSIT has a valid entry. */
-    std::vector<bool> validSSIT;
+    AssociativeCache<SSITEntry> SSIT;
 
     /** Last Fetched Store Table. */
     std::vector<InstSeqNum> LFST;
@@ -153,17 +174,12 @@ class StoreSet
     /** Last Fetched Store Table size, in entries. */
     int LFSTSize;
 
-    /** Mask to obtain the index. */
-    int indexMask;
-
-    // HACK: Hardcoded for now.
-    int offsetBits;
-
     /** Number of memory operations predicted since last clear of predictor */
     int memOpsPred;
 };
 
 } // namespace o3
+
 } // namespace gem5
 
 #endif // __CPU_O3_STORE_SET_HH__
