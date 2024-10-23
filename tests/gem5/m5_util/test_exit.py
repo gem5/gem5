@@ -41,7 +41,14 @@ Test file for the util m5 exit assembly instruction.
 """
 import re
 
-from testlib import *
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+    joinpath,
+    verifier,
+)
+from testlib.helper import absdirpath
 
 m5_exit_regex = re.compile(
     r"Exiting @ tick \d* because m5_exit instruction encountered"
@@ -53,22 +60,30 @@ else:
     resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
 a = verifier.MatchRegex(m5_exit_regex)
-gem5_verify_config(
-    name="m5_exit_test",
-    verifiers=[a],
-    fixtures=(),
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "m5_util",
-        "configs",
-        "simple_binary_run.py",
-    ),
-    config_args=[
-        "x86-m5-exit",
-        "--resource-directory",
-        resource_path,
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-)
+
+for isa in ["x86", "arm", "riscv"]:
+    for type in ["addr", "inst"]:
+        if type == "addr" and isa == "riscv":
+            continue  # RISCV does not support address exits.
+
+        gem5_verify_config(
+            name=f"m5_exit_test_{isa}_{type}",
+            verifiers=[a],
+            fixtures=(),
+            config=joinpath(
+                config.base_dir,
+                "tests",
+                "gem5",
+                "m5_util",
+                "configs",
+                "simple_binary_run.py",
+            ),
+            config_args=[
+                isa,
+                type,
+                "--resource-directory",
+                resource_path,
+            ],
+            valid_isas=(constants.all_compiled_tag,),
+            length=constants.quick_tag,
+        )

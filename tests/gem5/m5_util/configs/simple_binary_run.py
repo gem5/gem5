@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2024 The Regents of the University of California
 # Copyright (c) 2022 Google Inc
 # All rights reserved.
 #
@@ -57,12 +57,38 @@ from gem5.isas import (
 from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
 
+supported_isas = {ISA.X86, ISA.ARM, ISA.RISCV}
+inst_exit_resource_id_map = {
+    ISA.X86: "x86-inst-m5-exit",
+    ISA.ARM: "arm-inst-m5-exit",
+    ISA.RISCV: "riscv-inst-m5-exit",
+}
+
+addr_exit_resource_id_map = {
+    ISA.X86: "x86-addr-m5-exit",
+    ISA.ARM: "arm-addr-m5-exit",
+    ISA.RISCV: None,  # No address exit resource for RISCV
+}
+
+assert all(isa in inst_exit_resource_id_map for isa in supported_isas)
+assert all(isa in addr_exit_resource_id_map for isa in supported_isas)
+
 parser = argparse.ArgumentParser(
     description="A gem5 script for running simple binaries in SE mode."
 )
 
 parser.add_argument(
-    "resource", type=str, help="The gem5 resource binary to run."
+    "isa",
+    type=str,
+    choices={isa.value for isa in supported_isas},
+    help="The ISA to test the m5_exit instruction on",
+)
+
+parser.add_argument(
+    "type",
+    type=str,
+    choices={"inst", "addr"},
+    help="The type of m5_exit to test. Address ('addr') or Instruction ('inst')",
 )
 
 parser.add_argument(
@@ -74,13 +100,15 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+isa = get_isa_from_str(args.isa)
+
 # Setup the system.
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
 
 processor = SimpleProcessor(
     cpu_type=CPUTypes.ATOMIC,
-    isa=ISA.X86,
+    isa=isa,
     num_cores=1,
 )
 
@@ -91,8 +119,73 @@ motherboard = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-# Set the workload
-binary = Resource(args.resource, resource_directory=args.resource_directory)
+binary = None
+
+
+if args.type == "addr":
+    assert (
+        isa in addr_exit_resource_id_map
+    ), f"ISA {isa.value} not in addr_exit_resource_id_map"
+    resource_id = addr_exit_resource_id_map[isa]
+elif args.type == "inst":
+    assert (
+        isa in inst_exit_resource_id_map
+    ), f"ISA {isa.value} not in addr_inst_resource_id_map"
+    resource_id = inst_exit_resource_id_map[isa]
+
+if resource_id is None:
+    fatal(
+        f"Script does not support ISA {isa.value} "
+        f"with m5_exit type {args.type}"
+    )
+
+########## Remove this block  when resources are in gem5-resources ############                                                                 ####
+from pathlib import Path
+
+resource_id_to_path_map = {
+    "x86-addr-m5-exit": Path(
+        Path(__file__).parent.parent, "m5_exit", "bin", "x86-addr-m5-exit"
+    ),
+    "x86-inst-m5-exit": Path(
+        Path(__file__).parent.parent, "m5_exit", "bin", "x86-inst-m5-exit"
+    ),
+    "arm-addr-m5-exit": Path(
+        Path(__file__).parent.parent, "m5_exit", "bin", "arm-addr-m5-exit"
+    ),
+    "arm-inst-m5-exit": Path(
+        Path(__file__).parent.parent, "m5_exit", "bin", "arm-inst-m5-exit"
+    ),
+    "riscv-inst-m5-exit": Path(
+        Path(__file__).parent.parent, "m5_exit", "bin", "riscv-inst-m5-exit"
+    ),
+}
+
+assert all(
+    resource_id in resource_id_to_path_map or resource_id is None
+    for resource_id in inst_exit_resource_id_map.values()
+), "resource_id_to_path_map lacks non-None resource_id"
+assert all(
+    resource_id in resource_id_to_path_map or resource_id is None
+    for resource_id in addr_exit_resource_id_map.values()
+), "resource_id_to_path_map lacks non-None resource_id"
+
+from gem5.resources.resource import BinaryResource
+
+binary = BinaryResource(
+    local_path=resource_id_to_path_map[resource_id].as_posix()
+)
+###############################################################################
+
+############# Uncomment this when resources are in gem5-resources #############
+###############################################################################
+# binary = Resource(
+#   resource_id=resource_id,
+#    resource_directory=args.resource_directory,
+# )
+###############################################################################
+
+assert binary is not None, "Binary resource is None"
+
 motherboard.set_se_binary_workload(binary)
 
 # Run the simulation
