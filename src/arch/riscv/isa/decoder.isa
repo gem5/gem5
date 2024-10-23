@@ -4951,6 +4951,26 @@ decode QUADRANT default Unknown::unknown() {
                             NPC = xc->readMiscReg(MISCREG_MEPC);
                         }
                     }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
+                    0x38: mnret({{
+                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                            return std::make_shared<IllegalInstFault>(
+                                        "mnret at lower privilege", machInst);
+                            NPC = NPC;
+                        } else {
+                            NSTATUS nstatus = xc->readMiscReg(
+                                MISCREG_MNSTATUS);
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, nstatus.mnpp);
+                            if (nstatus.mnpp != PRV_M) {
+                                status.mprv = 0;
+                            }
+                            nstatus.nmie = 1;
+                            nstatus.mnpp = PRV_U;
+                            xc->setMiscReg(MISCREG_MNSTATUS, nstatus);
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = xc->readMiscReg(MISCREG_MNEPC);
+                        }
+                    }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                 }
             }
             format CSROp {

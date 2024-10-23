@@ -38,7 +38,8 @@ namespace RiscvISA
 
 Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
                                           ip(0),
-                                          ie(0)
+                                          ie(0),
+                                          nmi_cause(p.nmi_cause)
 {
     for (uint8_t i = 0;
         i < p.port_local_interrupt_pins_connection_count;
@@ -131,7 +132,7 @@ Interrupts::getInterrupt()
 {
     assert(checkInterrupts());
     if (checkNonMaskableInterrupt())
-        return std::make_shared<NonMaskableInterruptFault>();
+        return std::make_shared<NonMaskableInterruptFault>(nmi_cause);
     std::bitset<NumInterruptTypes> mask = globalMask();
     if (((ISA*) tc->getIsaPtr())->rvType() == RV64) {
         const std::vector<int> interrupt_order {

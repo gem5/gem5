@@ -173,6 +173,10 @@ class RiscvFault : public FaultBase
     {
         return _fault_type == FaultType::NON_MASKABLE_INTERRUPT;
     }
+    bool isResumableNonMaskableInterrupt(ISA* isa) const
+    {
+        return isa->enableSmrnmi() && isNonMaskableInterrupt();
+    }
     ExceptionCode exception() const { return _code; }
     virtual RegVal trap_value() const { return 0; }
 
@@ -206,10 +210,14 @@ class NonMaskableInterruptFault : public RiscvFault
 {
   public:
     NonMaskableInterruptFault()
+        : NonMaskableInterruptFault(0) {}
+    NonMaskableInterruptFault(ExceptionCode c)
         : RiscvFault("non_maskable_interrupt",
                      FaultType::NON_MASKABLE_INTERRUPT,
-                     static_cast<ExceptionCode>(0))
+                     c)
     {}
+    NonMaskableInterruptFault(int c)
+        : NonMaskableInterruptFault(static_cast<ExceptionCode>(c)) {}
 };
 
 class InstFault : public RiscvFault

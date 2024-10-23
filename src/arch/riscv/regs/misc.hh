@@ -210,6 +210,12 @@ enum MiscRegIndex
     // non-maskable-interrupt-pending: NMI version of xIP
     MISCREG_NMIP,
 
+    // Resumable Non-Maskable Interrupts
+    MISCREG_MNSCRATCH,
+    MISCREG_MNEPC,
+    MISCREG_MNCAUSE,
+    MISCREG_MNSTATUS,
+
     // the following MicsRegIndex are RV32 only
     MISCREG_MSTATUSH,
 
@@ -508,7 +514,12 @@ enum CSRIndex
     CSR_VCSR         = 0x00F,
     CSR_VL           = 0xC20,
     CSR_VTYPE        = 0xC21,
-    CSR_VLENB        = 0xC22
+    CSR_VLENB        = 0xC22,
+
+    CSR_MNSCRATCH    = 0x740,
+    CSR_MNEPC        = 0x741,
+    CSR_MNCAUSE      = 0x742,
+    CSR_MNSTATUS     = 0x744,
 };
 
 struct CSRMetadata
@@ -1176,7 +1187,18 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_VTYPE,
         {"vtype", MISCREG_VTYPE, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
     {CSR_VLENB,
-        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}}
+        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
+
+    {CSR_MNSCRATCH,
+        {"mnscratch", MISCREG_MNSCRATCH, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}},
+    {CSR_MNEPC,
+        {"mnepc", MISCREG_MNEPC, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+    {CSR_MNCAUSE,
+        {"mncause", MISCREG_MNCAUSE, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+    {CSR_MNSTATUS,
+        {"mnstatus", MISCREG_MNSTATUS, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}}
 };
 
 /**
@@ -1209,6 +1231,17 @@ BitUnion64(STATUS)
     Bitfield<1> sie;
     Bitfield<0> uie;
 EndBitUnion(STATUS)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual.
+ * Resumable Non-Maskable Interrupts. The main register that
+ * uses these fields is the MNSTATUS register
+ */
+BitUnion64(NSTATUS)
+    Bitfield<12, 11> mnpp;
+    Bitfield<7> mnv;
+    Bitfield<3> nmie;
+EndBitUnion(NSTATUS)
 
 /**
  * These fields are specified in the RISC-V Instruction Set Manual, Volume II,

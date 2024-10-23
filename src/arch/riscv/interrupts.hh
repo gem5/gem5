@@ -61,6 +61,7 @@ class Interrupts : public BaseInterrupts
   private:
     std::bitset<NumInterruptTypes> ip;
     std::bitset<NumInterruptTypes> ie;
+    int nmi_cause;
 
     std::vector<gem5::IntSinkPin<Interrupts>*> localInterruptPins;
   public:
