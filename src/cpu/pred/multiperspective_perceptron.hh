@@ -1063,10 +1063,11 @@ class MultiperspectivePerceptron : public BPredUnit
     // Base class methods.
     bool lookup(ThreadID tid, Addr branch_addr, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+                         Addr target, const StaticInstPtr &inst,
+                         void * &bp_history) override;
+    void update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr & inst,
+                Addr corrTarget) override;
     void squash(ThreadID tid, void * &bp_history) override;
 };
 
