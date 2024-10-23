@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2023 The University of Edinburgh
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -36,7 +48,8 @@ SimObject('Prefetcher.py', sim_objects=[
     'AccessMapPatternMatching', 'AMPMPrefetcher',
     'DeltaCorrelatingPredictionTables', 'DCPTPrefetcher',
     'IrregularStreamBufferPrefetcher', 'SlimAMPMPrefetcher',
-    'BOPPrefetcher', 'SBOOEPrefetcher', 'STeMSPrefetcher', 'PIFPrefetcher'])
+    'BOPPrefetcher', 'SBOOEPrefetcher', 'STeMSPrefetcher', 'PIFPrefetcher',
+    'FetchDirectedPrefetcher'])
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')
@@ -55,3 +68,4 @@ Source('slim_ampm.cc')
 Source('spatio_temporal_memory_streaming.cc')
 Source('stride.cc')
 Source('tagged.cc')
+Source('fdp.cc')

@@ -1,5 +1,17 @@
 # -*- mode:python -*-
-
+#
+# Copyright (c) 2023 The University of Edinburgh
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -36,12 +48,14 @@ if env['CONF']['BUILD_ISA']:
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'], enums=[
         'SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 
+    Source('bac.cc')
     Source('commit.cc')
     Source('cpu.cc')
     Source('decode.cc')
     Source('dyn_inst.cc')
     Source('fetch.cc')
     Source('free_list.cc')
+    Source('ftq.cc')
     Source('fu_pool.cc')
     Source('iew.cc')
     Source('inst_queue.cc')
@@ -57,7 +71,9 @@ if env['CONF']['BUILD_ISA']:
     Source('thread_context.cc')
     Source('thread_state.cc')
 
+    DebugFlag('BAC')
     DebugFlag('CommitRate')
+    DebugFlag('FTQ')
     DebugFlag('IEW')
     DebugFlag('IQ')
     DebugFlag('LSQ')
@@ -70,7 +86,8 @@ if env['CONF']['BUILD_ISA']:
     DebugFlag('StoreSet')
     DebugFlag('Writeback')
 
-    CompoundFlag('O3CPUAll', [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit',
+    CompoundFlag('O3CPUAll', [ 'BAC', 'FTQ', 'Fetch', 'Decode', 'Rename',
+        'IEW', 'Commit',
         'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
         'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
 

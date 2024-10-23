@@ -72,7 +72,8 @@ class MPP_TAGE : public TAGEBase
   public:
     struct BranchInfo : public TAGEBase::BranchInfo
     {
-        BranchInfo(TAGEBase &tage) : TAGEBase::BranchInfo(tage)
+        BranchInfo(TAGEBase &tage, Addr pc, bool cond)
+        : TAGEBase::BranchInfo(tage, pc, cond)
         {}
         virtual ~BranchInfo()
         {}
@@ -94,12 +95,9 @@ class MPP_TAGE : public TAGEBase
 
     unsigned getUseAltIdx(TAGEBase::BranchInfo* bi, Addr branch_pc) override;
     void adjustAlloc(bool & alloc, bool taken, bool pred_taken) override;
-    void updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-                         TAGEBase::BranchInfo* b, bool speculative,
-                         const StaticInstPtr &inst, Addr target) override;
-
-    void updatePathAndGlobalHistory(ThreadHistory& tHist, int brtype,
-                                    bool taken, Addr branch_pc, Addr target);
+    void updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                         bool taken, Addr target, const StaticInstPtr & inst,
+                         TAGEBase::BranchInfo* bi) override;
 };
 
 class MPP_LoopPredictor : public LoopPredictor
@@ -221,7 +219,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
                           LoopPredictor &loopPredictor,
                           StatisticalCorrector &statisticalCorrector)
           : MPPBranchInfo(pc, pcshift, cond),
-            tageBranchInfo(tage.makeBranchInfo()),
+            tageBranchInfo(tage.makeBranchInfo(pc, cond)),
             lpBranchInfo(loopPredictor.makeBranchInfo()),
             scBranchInfo(statisticalCorrector.makeBranchInfo()),
             predictedTaken(false)
@@ -252,8 +250,12 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
                 void * &bp_history, bool squashed,
                 const StaticInstPtr & inst, Addr target) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
+                         Addr target, const StaticInstPtr &inst,
+                         void * &bp_history) override;
     void squash(ThreadID tid, void * &bp_history) override;
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bp_history) override
+    { panic("Not implemented for this BP!\n"); }
 
 };
 
