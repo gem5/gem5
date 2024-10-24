@@ -53,12 +53,12 @@
 #include "base/socket.hh"
 #include "base/temperature.hh"
 #include "base/types.hh"
+#include "cpu/probes/pc_count_pair.hh"
 #include "sim/core.hh"
 #include "sim/cur_tick.hh"
 #include "sim/drain.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
-#include "cpu/probes/pc_count_pair.hh"
 
 namespace py = pybind11;
 
@@ -142,6 +142,9 @@ init_range(py::module_ &m_native)
         .def(py::init<Addr, Addr, const std::vector<Addr> &, uint8_t>())
         .def(py::init<const std::vector<AddrRange> &>())
         .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t, uint8_t>())
+        .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t>())
+        .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t,
+             const std::vector<AddrRange> &>())
 
         .def("__str__", &AddrRange::to_string)
 
@@ -157,7 +160,7 @@ init_range(py::module_ &m_native)
         .def("isSubset", &AddrRange::isSubset)
         .def("exclude", static_cast<AddrRangeList (AddrRange::*)(
                     const AddrRangeList &) const>(&AddrRange::exclude))
-        ;
+            ;
 
     m.def("RangeEx", &RangeEx);
     m.def("RangeIn", &RangeIn);
