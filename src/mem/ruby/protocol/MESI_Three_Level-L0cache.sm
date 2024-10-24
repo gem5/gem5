@@ -44,6 +44,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
    CacheMemory * Dcache;
    Cycles request_latency := 2;
    Cycles response_latency := 2;
+   Cycles llsc_lock_timeout_latency := 16;
+   bool use_llsc_lock := "True";
    bool send_evictions;
 
    RubyPrefetcher * prefetcher;
@@ -103,6 +105,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     PF_Inst_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
     PF_IS, AccessPermission:Busy, desc="Issued GETS, have not seen response yet";
     PF_IE, AccessPermission:Busy, desc="Issued GETX, have not seen response yet";
+
+    // LL/SC states
+    LLSC_E, AccessPermission:Read_Only, desc="a L1 cache entry Exclusive (LL/SC locked)";
+    LLSC_M, AccessPermission:Read_Write, desc="a L1 cache entry Modified (LL/SC locked)";
   }
 
   // EVENTS
@@ -141,6 +147,11 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     PF_Ifetch,       desc="Instruction fetch request from prefetcher";
     PF_Store,        desc="Exclusive load request from prefetcher";
     PF_Bad_Addr,     desc="Throw away prefetch request due to bad address generation";
+
+    // LL/SC lock transitions
+    Load_Linked,         desc="Load-Linked request from the home processor";
+    LLSC_Data_Exclusive, desc="Data for processor (start LL/SC  lock timer)";
+    LLSC_Timeout,        desc="LL/SC lock timeout";
   }
 
   // TYPES
@@ -160,6 +171,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     DataBlock DataBlk,                desc="Buffer for the data block";
     bool Dirty, default="false",   desc="data is dirty";
     int pendingAcks, default="0", desc="number of pending acks";
+    bool isLoadLinked, default="false", desc="Set if it was caused by a Load-Linked";
   }
 
   structure(TBETable, external="yes") {
@@ -171,8 +183,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   }
 
   TBETable TBEs, template="<L0Cache_TBE>", constructor="m_number_of_TBEs";
+  TimerTable llscLockTimerTable;
 
   Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
   Cycles ticksToCycles(Tick t);
   void set_cache_entry(AbstractCacheEntry a);
   void unset_cache_entry();
@@ -278,6 +292,12 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   Event mandatory_request_type_to_event(RubyRequestType type) {
     if (type == RubyRequestType:LD) {
       return Event:Load;
+    } else if (type == RubyRequestType:Load_Linked) {
+      if (use_llsc_lock) {
+        return Event:Load_Linked;
+      } else {
+        return Event:Load;
+      }
     } else if (type == RubyRequestType:IFETCH) {
       return Event:Ifetch;
     } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)
@@ -293,7 +313,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
       return Event:PF_Load;
     } else if (type == RubyRequestType:IFETCH) {
       return Event:PF_Ifetch;
-    } else if (type == RubyRequestType:ST) {
+    } else if ((type == RubyRequestType:ST)
+               || (type == RubyRequestType:Load_Linked)) {
       return Event:PF_Store;
     } else {
       error("Invalid RubyRequestType");
@@ -302,6 +323,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
   int getPendingAcks(TBE tbe) {
     return tbe.pendingAcks;
+  }
+
+  bool isLoadLinked(TBE tbe) {
+    return tbe.isLoadLinked;
   }
 
   out_port(requestNetwork_out, CoherenceMsg, bufferToL1);
@@ -313,6 +338,15 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
       out_msg.Type := type;
       out_msg.Prefetch := PrefetchBit:Yes;
       out_msg.AccessMode := RubyAccessMode:Supervisor;
+    }
+  }
+
+  // Use Timer
+  in_port(llscLockTimerTable_in, Addr, llscLockTimerTable, rank = 4) {
+    if (llscLockTimerTable_in.isReady(clockEdge())) {
+        Addr readyAddress := llscLockTimerTable.nextAddress();
+        trigger(Event:LLSC_Timeout, readyAddress, getCacheEntry(readyAddress),
+                TBEs.lookup(readyAddress));
     }
   }
 
@@ -422,7 +456,11 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
         TBE tbe := TBEs[in_msg.addr];
 
         if(in_msg.Class == CoherenceClass:DATA_EXCLUSIVE) {
-            trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
+            if (isLoadLinked(tbe)) {
+              trigger(Event:LLSC_Data_Exclusive, in_msg.addr, cache_entry, tbe);
+            } else {
+              trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
+            }
         } else if(in_msg.Class == CoherenceClass:DATA) {
             trigger(Event:Data, in_msg.addr, cache_entry, tbe);
         } else if(in_msg.Class == CoherenceClass:STALE_DATA) {
@@ -766,6 +804,11 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     stall_and_wait(mandatoryQueue_in, address);
   }
 
+  action(z_stallAndWaitMessageBufferQueue, "\zm", desc="Stall and wait the message buffer queue") {
+    stall_and_wait(messgeBuffer_in, address);
+  }
+
+
   action(kd_wakeUpDependents, "kd", desc="Wake-up dependents") {
     wakeUpAllBuffers(address);
   }
@@ -867,13 +910,35 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     stall_and_wait(optionalQueue_in, address);
   }
 
+  // Actions for LL/SC lock transitions
+  action(ll_scheduleLoadLinkedLockTimeout, "ll", desc="Schedule LL/SC lock timeout.") {
+    llscLockTimerTable.set(address, clockEdge() + cyclesToTicks(llsc_lock_timeout_latency));
+  }
+
+  action(ll_unsetLoadLinkedLockTimer, "\ll", desc="Unset LL/SC lock timer.") {
+    llscLockTimerTable.unset(address);
+  }
+
+  action(ll_markLoadLinked, "llm", desc="Set the isLoadLinked flag.") {
+      assert(is_valid(tbe));
+      tbe.isLoadLinked := true;
+  }
+
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({Inst_IS, IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement}) {
+  transition({Inst_IS, IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement, Load_Linked}) {
     z_stallAndWaitMandatoryQueue;
+  }
+
+  transition({LLSC_E, LLSC_M}, L0_Replacement) {
+    z_stallAndWaitMandatoryQueue;
+  }
+
+  transition({LLSC_E, LLSC_M}, {Fwd_GETS, Fwd_GETX, Fwd_GET_INSTR, InvOwn, InvElse}) {
+    z_stallAndWaitMessageBufferQueue;
   }
 
   // Transitions from Idle
@@ -881,6 +946,16 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     oo_allocateDCacheBlock;
     i_allocateTBE;
     a_issueGETS;
+    uu_profileDataMiss;
+    po_observeMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(I, Load_Linked, IS) {
+    oo_allocateDCacheBlock;
+    i_allocateTBE;
+    ll_markLoadLinked;
+    b_issueGETX;
     uu_profileDataMiss;
     po_observeMiss;
     k_popMandatoryQueue;
@@ -935,6 +1010,22 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     i_allocateTBE;
     c_issueUPGRADE;
     uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, Load_Linked, SM) {
+    i_allocateTBE;
+    ll_markLoadLinked;
+    c_issueUPGRADE;
+    uu_profileDataMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(E, Load_Linked, LLSC_E) {
+    h_load_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    ll_scheduleLoadLinkedLockTimeout;
     k_popMandatoryQueue;
   }
 
@@ -996,6 +1087,14 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     l_popRequestQueue;
   }
 
+  transition(M, Load_Linked, LLSC_M) {
+    h_load_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    ll_scheduleLoadLinkedLockTimeout;
+    k_popMandatoryQueue;
+  }
+
   transition(IS, Data, S) {
     u_writeDataToCache;
     hx_load_hit;
@@ -1008,6 +1107,15 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     u_writeDataToCache;
     hx_load_hit;
     s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS, LLSC_Data_Exclusive, LLSC_E) {
+    u_writeDataToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    ll_scheduleLoadLinkedLockTimeout;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
@@ -1055,9 +1163,18 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     kd_wakeUpDependents;
   }
 
+  transition({IM, SM}, LLSC_Data_Exclusive, LLSC_M) {
+    u_writeDataToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    ll_scheduleLoadLinkedLockTimeout;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
   // store conditionals
 
-  transition({I,S,E,M}, Failed_SC) {
+  transition({I,S,E,M,LLSC_E,LLSC_M}, Failed_SC) {
     // IS,IM,SM don't handle store conditionals
     hhc_storec_fail;
     k_popMandatoryQueue;
@@ -1065,7 +1182,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
   // prefetcher
 
-  transition({Inst_IS, IS, IM, SM, PF_Inst_IS, PF_IS, PF_IE}, PF_L0_Replacement) {
+  transition({Inst_IS, IS, IM, SM, PF_Inst_IS, PF_IS, PF_IE, LLSC_E, LLSC_M}, PF_L0_Replacement) {
      z_stallAndWaitOptionalQueue;
   }
 
@@ -1077,7 +1194,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     z_stallAndWaitMandatoryQueue;
   }
 
-  transition({S,E,M,Inst_IS,IS,IM,SM,PF_Inst_IS,PF_IS,PF_IE},
+  transition({S,E,M,Inst_IS,IS,IM,SM,PF_Inst_IS,PF_IS,PF_IE,LLSC_E,LLSC_M},
              {PF_Load, PF_Store, PF_Ifetch}) {
       pq_popPrefetchQueue;
   }
@@ -1177,5 +1294,38 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
   transition(I, PF_Bad_Addr) {
     pq_popPrefetchQueue;
+  }
+
+  // Transitions from LLSC_E and LLSC_M
+
+  transition({LLSC_E, LLSC_M}, {Load, Load_Linked}) {
+    h_load_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({LLSC_E, LLSC_M}, Ifetch) {
+    h_ifetch_hit;
+    uu_profileInstHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition({LLSC_E, LLSC_M}, Store, LLSC_M) {
+    hh_store_hit;
+    uu_profileDataHit;
+    pph_observePfHit;
+    k_popMandatoryQueue;
+  }
+
+  transition(LLSC_E, LLSC_Timeout, E) {
+    ll_unsetLoadLinkedLockTimer;
+    kd_wakeUpDependents;
+  }
+
+  transition(LLSC_M, LLSC_Timeout, M) {
+    ll_unsetLoadLinkedLockTimer;
+    kd_wakeUpDependents;
   }
 }
