@@ -60,6 +60,7 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
+from ...components.boards.se_binary_workload import SEBinaryWorkload
 from ...isas import ISA
 from ...resources.resource import AbstractResource
 from ...utils.override import overrides
@@ -70,7 +71,7 @@ from .abstract_system_board import AbstractSystemBoard
 from .kernel_disk_workload import KernelDiskWorkload
 
 
-class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
+class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
     """
     A board capable of full system simulation for RISC-V.
 
@@ -100,47 +101,53 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-        self.workload = RiscvBootloaderKernelWorkload()
+        if self.is_fullsystem():
+            self.workload = RiscvBootloaderKernelWorkload()
 
-        # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
-        self.platform = HiFive()
-        # Note: This only works with single threaded cores.
-        self.platform.plic.hart_config = ",".join(
-            ["MS" for _ in range(self.processor.get_num_cores())]
-        )
-        self.platform.attachPlic()
-        self.platform.clint.num_threads = self.processor.get_num_cores()
+            # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
+            self.platform = HiFive()
+            # Note: This only works with single threaded cores.
+            self.platform.plic.hart_config = ",".join(
+                ["MS" for _ in range(self.processor.get_num_cores())]
+            )
+            self.platform.attachPlic()
+            self.platform.clint.num_threads = self.processor.get_num_cores()
 
-        # Add the RTC
-        # TODO: Why 100MHz? Does something else need to change when this does?
-        self.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
-        self.platform.clint.int_pin = self.platform.rtc.int_pin
+            # Add the RTC
+            # TODO: Why 100MHz? Does something else need to change when this does?
+            self.platform.rtc = RiscvRTC(
+                frequency=Frequency("100MHz")
+            )  # page 77, section 7.1
+            self.platform.clint.int_pin = self.platform.rtc.int_pin
 
-        # Incoherent I/O bus
-        self.iobus = IOXBar()
-        self.iobus.badaddr_responder = BadAddr()
-        self.iobus.default = self.iobus.badaddr_responder.pio
+            # Incoherent I/O bus
+            self.iobus = IOXBar()
+            self.iobus.badaddr_responder = BadAddr()
+            self.iobus.default = self.iobus.badaddr_responder.pio
 
-        # The virtio disk
-        self.disk = RiscvMmioVirtIO(
-            vio=VirtIOBlock(),
-            interrupt_id=0x8,
-            pio_size=4096,
-            pio_addr=0x10008000,
-        )
+            # The virtio disk
+            self.disk = RiscvMmioVirtIO(
+                vio=VirtIOBlock(),
+                interrupt_id=0x8,
+                pio_size=4096,
+                pio_addr=0x10008000,
+            )
 
-        # The virtio rng
-        self.rng = RiscvMmioVirtIO(
-            vio=VirtIORng(),
-            interrupt_id=0x8,
-            pio_size=4096,
-            pio_addr=0x10007000,
-        )
+            # The virtio rng
+            self.rng = RiscvMmioVirtIO(
+                vio=VirtIORng(),
+                interrupt_id=0x8,
+                pio_size=4096,
+                pio_addr=0x10007000,
+            )
 
-        # Note: This overrides the platform's code because the platform isn't
-        # general enough.
-        self._on_chip_devices = [self.platform.clint, self.platform.plic]
-        self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
+            # Note: This overrides the platform's code because the platform
+            # isn't general enough.
+            self._on_chip_devices = [self.platform.clint, self.platform.plic]
+            self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
+
+        else:
+            pass
 
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus."""
@@ -213,19 +220,31 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
-        return True
+        return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> IOXBar:
-        return self.iobus
+        if self.has_io_bus():
+            return self.iobus
+        else:
+            raise NotImplementedError(
+                "Board was not configured for FS mode and does not have an "
+                "I/O bus. Use `has_io_bus()` to check this."
+            )
 
     @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
-        return True
+        return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
-        return self.iobus.mem_side_ports
+        if self.has_coherent_io():
+            return self.iobus.mem_side_ports
+        else:
+            raise NotImplementedError(
+                "Board was not configured for FS mode and does not have any "
+                "I/O ports. Use has_coherent_io to check this."
+            )
 
     @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
@@ -509,7 +528,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         #
         # This should be refactored in the future as part of a chance to have
         # all boards support both FS and SE modes.
-        if self._is_fs:
+        if self.is_fullsystem():
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x0
                 self.workload.bootloader_filename = self._bootloader[0]

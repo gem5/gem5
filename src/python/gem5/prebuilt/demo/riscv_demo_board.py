@@ -24,30 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import m5
-from m5.objects import (
-    AddrRange,
-    BadAddr,
-    Bridge,
-    CowDiskImage,
-    Frequency,
-    GenericRiscvPciHost,
-    HiFive,
-    IGbE_e1000,
-    IOXBar,
-    PMAChecker,
-    Port,
-    RawDiskImage,
-    RiscvBootloaderKernelWorkload,
-    RiscvMmioVirtIO,
-    RiscvRTC,
-    VirtIOBlock,
-    VirtIORng,
-)
 from m5.util import warn
 
 from ...components.boards.riscv_board import RiscvBoard
-from ...components.boards.se_binary_workload import SEBinaryWorkload
 from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
     PrivateL1SharedL2CacheHierarchy,
 )
@@ -60,7 +39,7 @@ from ...utils.override import overrides
 from ...utils.requires import requires
 
 
-class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
+class RiscvDemoBoard(RiscvBoard):
     """
     This board is based on the X86DemoBoard.
 
@@ -106,83 +85,3 @@ class RiscvDemoBoard(RiscvBoard, SEBinaryWorkload):
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
-
-    # Taken from Riscv Matched board. Below are functions that are needed to
-    # get SE mode to work.
-
-    @overrides(RiscvBoard)
-    def _setup_board(self) -> None:
-        if self._is_fs:
-            self.workload = RiscvBootloaderKernelWorkload()
-
-            # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
-            self.platform = HiFive()
-            # Note: This only works with single threaded cores.
-            self.platform.plic.hart_config = ",".join(
-                ["MS" for _ in range(self.processor.get_num_cores())]
-            )
-            self.platform.attachPlic()
-            self.platform.clint.num_threads = self.processor.get_num_cores()
-
-            # Add the RTC
-            self.platform.rtc = RiscvRTC(
-                frequency=Frequency("100MHz")
-            )  # page 77, section 7.1
-            self.platform.clint.int_pin = self.platform.rtc.int_pin
-
-            # Incoherent I/O bus
-            self.iobus = IOXBar()
-            self.iobus.badaddr_responder = BadAddr()
-            self.iobus.default = self.iobus.badaddr_responder.pio
-
-            # The virtio disk
-            self.disk = RiscvMmioVirtIO(
-                vio=VirtIOBlock(),
-                interrupt_id=0x8,
-                pio_size=4096,
-                pio_addr=0x10008000,
-            )
-
-            # The virtio rng
-            self.rng = RiscvMmioVirtIO(
-                vio=VirtIORng(),
-                interrupt_id=0x8,
-                pio_size=4096,
-                pio_addr=0x10007000,
-            )
-
-            # Note: This overrides the platform's code because the platform isn't
-            # general enough.
-            self._on_chip_devices = [self.platform.clint, self.platform.plic]
-            self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
-
-        else:
-            pass
-
-    @overrides(RiscvBoard)
-    def has_io_bus(self) -> bool:
-        return self._is_fs
-
-    @overrides(RiscvBoard)
-    def get_io_bus(self) -> IOXBar:
-        if self.has_io_bus():
-            return self.iobus
-        else:
-            raise NotImplementedError(
-                "RiscvDemoBoard does not have an IO bus. "
-                "Use `has_io_bus()` to check this."
-            )
-
-    @overrides(RiscvBoard)
-    def has_coherent_io(self) -> bool:
-        return self._is_fs
-
-    @overrides(RiscvBoard)
-    def get_mem_side_coherent_io_port(self) -> Port:
-        if self.has_coherent_io():
-            return self.iobus.mem_side_ports
-        else:
-            raise NotImplementedError(
-                "RiscvDemoBoard does not have any I/O ports. Use has_coherent_io to "
-                "check this."
-            )

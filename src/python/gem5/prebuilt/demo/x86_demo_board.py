@@ -24,15 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    IOXBar,
-    Pc,
-    Port,
-    X86FsLinux,
-)
 from m5.util import warn
 
-from ...components.boards.se_binary_workload import SEBinaryWorkload
 from ...components.boards.x86_board import X86Board
 from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
     PrivateL1SharedL2CacheHierarchy,
@@ -41,11 +34,10 @@ from ...components.memory.multi_channel import DualChannelDDR4_2400
 from ...components.processors.cpu_types import CPUTypes
 from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
-from ...utils.override import overrides
 from ...utils.requires import requires
 
 
-class X86DemoBoard(X86Board, SEBinaryWorkload):
+class X86DemoBoard(X86Board):
     """
     This prebuilt X86 board is used for demonstration purposes. It simulates
     an X86 3GHz dual-core system with a 3GiB DDR4_2400 memory system. The
@@ -99,46 +91,3 @@ class X86DemoBoard(X86Board, SEBinaryWorkload):
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
-
-    @overrides(X86Board)
-    def _setup_board(self) -> None:
-        if self._is_fs:
-            self.pc = Pc()
-
-            self.workload = X86FsLinux()
-
-            # North Bridge
-            self.iobus = IOXBar()
-
-            # Set up all of the I/O.
-            self._setup_io_devices()
-
-            self.m5ops_base = 0xFFFF0000
-
-    @overrides(X86Board)
-    def has_io_bus(self) -> bool:
-        return self.is_fullsystem()
-
-    @overrides(X86Board)
-    def get_io_bus(self) -> IOXBar:
-        if self.has_io_bus():
-            return self.iobus
-        else:
-            raise NotImplementedError(
-                "X86DemoBoard does not have an IO bus. "
-                "Use `has_io_bus()` to check this."
-            )
-
-    @overrides(X86Board)
-    def has_coherent_io(self) -> bool:
-        return self.is_fullsystem()
-
-    @overrides(X86Board)
-    def get_mem_side_coherent_io_port(self) -> Port:
-        if self.has_coherent_io():
-            return self.iobus.mem_side_ports
-        else:
-            raise NotImplementedError(
-                "x86DemoBoard does not have any I/O ports. Use has_coherent_io"
-                " to check this."
-            )
