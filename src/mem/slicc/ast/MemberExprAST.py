@@ -38,7 +38,7 @@ class MemberExprAST(ExprAST):
     def __repr__(self):
         return f"[MemberExprAST: {self.expr_ast!r}.{self.field!r}]"
 
-    def generate(self, code):
+    def generate(self, code, **kwargs):
         return_type, gcode = self.expr_ast.inline(True)
         fix = code.nofix()
 
