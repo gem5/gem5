@@ -1,4 +1,4 @@
-# Copyright 2021 Google, Inc.
+# Copyright 2024 Barcelona Supercomputing Center.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,44 +23,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
-from m5.objects.BaseFastMemSimpleCPU import BaseFastMemSimpleCPU
-from m5.objects.BaseMinorCPU import BaseMinorCPU
-from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
-from m5.objects.BaseO3CPU import BaseO3CPU
-from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
-from m5.objects.RiscvDecoder import RiscvDecoder
-from m5.objects.RiscvInterrupts import RiscvInterrupts
-from m5.objects.RiscvISA import RiscvISA
-from m5.objects.RiscvMMU import RiscvMMU
+import m5.defines
 
+arch_vars = [
+    "USE_ARM_ISA",
+    "USE_MIPS_ISA",
+    "USE_POWER_ISA",
+    "USE_RISCV_ISA",
+    "USE_SPARC_ISA",
+    "USE_X86_ISA",
+]
 
-class RiscvCPU:
-    ArchDecoder = RiscvDecoder
-    ArchMMU = RiscvMMU
-    ArchInterrupts = RiscvInterrupts
-    ArchISA = RiscvISA
+enabled = list(filter(lambda var: m5.defines.buildEnv[var], arch_vars))
 
-
-class RiscvAtomicSimpleCPU(BaseAtomicSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvNonCachingSimpleCPU(BaseNonCachingSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvFastMemSimpleCPU(BaseFastMemSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvO3CPU(BaseO3CPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
-    mmu = RiscvMMU()
+if len(enabled) == 1:
+    arch = enabled[0]
+    if arch == "USE_ARM_ISA":
+        from m5.objects.ArmCPU import ArmFastMemSimpleCPU as FastMemSimpleCPU
+    elif arch == "USE_MIPS_ISA":
+        from m5.objects.MipsCPU import MipsFastMemSimpleCPU as FastMemSimpleCPU
+    elif arch == "USE_POWER_ISA":
+        from m5.objects.PowerCPU import (
+            PowerFastMemSimpleCPU as FastMemSimpleCPU,
+        )
+    elif arch == "USE_RISCV_ISA":
+        from m5.objects.RiscvCPU import (
+            RiscvFastMemSimpleCPU as FastMemSimpleCPU,
+        )
+    elif arch == "USE_SPARC_ISA":
+        from m5.objects.SparcCPU import (
+            SparcFastMemSimpleCPU as FastMemSimpleCPU,
+        )
+    elif arch == "USE_X86_ISA":
+        from m5.objects.X86CPU import X86FastMemSimpleCPU as FastMemSimpleCPU

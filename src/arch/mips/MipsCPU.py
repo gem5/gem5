@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
+from m5.objects.BaseFastMemSimpleCPU import BaseFastMemSimpleCPU
 from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
@@ -46,6 +47,10 @@ class MipsAtomicSimpleCPU(BaseAtomicSimpleCPU, MipsCPU):
 
 
 class MipsNonCachingSimpleCPU(BaseNonCachingSimpleCPU, MipsCPU):
+    mmu = MipsMMU()
+
+
+class MipsFastMemSimpleCPU(BaseFastMemSimpleCPU, MipsCPU):
     mmu = MipsMMU()
 
 
