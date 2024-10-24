@@ -367,8 +367,6 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const int64_t vlmul = vtype_vlmul(_machInst.vtype8);
-    // Todo: move to Decode template
-    panic_if(vlmul == 3, "LMUL=8 is illegal for widening inst");
     // when LMUL setted as m1, need to split to 2 micro insts
     const uint32_t num_microops = 1 << std::max<int64_t>(0, vlmul + 1);
 
@@ -462,6 +460,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -747,6 +747,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -1884,6 +1886,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
