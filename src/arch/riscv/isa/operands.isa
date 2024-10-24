@@ -110,4 +110,5 @@ def operands {{
     'VL': PCStateOp('uw', 'vl', (None, None, 'IsControl'), 11),
 #VLENB, actually the CSR is read only.
     'VlenbBits': PCStateOp('ud', 'vlenb', (None, None, 'IsControl'), 12),
+    'IsVset': PCStateOp('ub', 'new_vconf', (None, None, 'IsControl'), 13),
 }};
