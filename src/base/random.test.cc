@@ -30,11 +30,38 @@
 #include <gtest/gtest.h>
 
 #include <unordered_map>
+#include <utility>
+#include <set>
+#include <algorithm>
 
 #include "base/gtest/logging.hh"
 #include "base/random.hh"
 
+namespace gem5
+{
+
+/**
+ * Helper class to access private members of
+ * Random
+ */
+class RandomTest : public ::testing::Test
+{
+  public:
+    static Random::Instances* getInstances()
+    {
+        return Random::instances;
+    }
+
+    static uint64_t getGlobalSeed()
+    {
+        return Random::globalSeed;
+    }
+};
+
+}
+
 using namespace gem5;
+using RandomPtr = gem5::Random::RandomPtr;
 
 /**
  * Checking that default construction uses the default
@@ -42,31 +69,32 @@ using namespace gem5;
  */
 TEST(RandomCtor, UInt64DefaultConstruct)
 {
+    ASSERT_EQ(RandomTest::getGlobalSeed(), std::mt19937_64::default_seed);
     // Init seed was default seed 5489
-    Random dut;
+    RandomPtr dut = Random::genRandom();
+    ASSERT_EQ(RandomTest::getGlobalSeed(), std::mt19937_64::default_seed);
     // First uint64_t corresponds to the default seed
-    ASSERT_EQ(dut.random<uint64_t>(), 14514284786278117030llu);
+    ASSERT_EQ(dut->random<uint64_t>(), 14514284786278117030llu);
 }
 
 TEST(RandomCtor, DoubleDefaultConstruct)
 {
     // Init seed was default seed 5489
-    Random dut;
+    RandomPtr dut = Random::genRandom();
     // First double corresponds to the default seed
     // 14514284786278117030llu / std::numeric_limits<uint64_t>::max()
-    ASSERT_EQ(dut.random<double>(),
+    ASSERT_EQ(dut->random<double>(),
       0.7868209548678020137657540544751100242137908935546875d);
 }
 
 TEST(RandomCtor, FloatDefaultConstruct)
 {
     // Init seed was default seed 5489
-    Random dut;
+    RandomPtr dut = Random::genRandom();
     // First float corresponds to the default seed
     // 14514284786278117030llu / std::numeric_limits<uint64_t>::max()
-    ASSERT_EQ(dut.random<float>(), 0.786820948123931884765625f);
+    ASSERT_EQ(dut->random<float>(), 0.786820948123931884765625f);
 }
-
 
 /**
  * Checking that default construction uses the default
@@ -74,8 +102,8 @@ TEST(RandomCtor, FloatDefaultConstruct)
  */
 TEST(RandomCtor, ConstructUserSpecifiedSeed)
 {
-    Random dut{42};
-    ASSERT_EQ(dut.random<uint64_t>(), 13930160852258120406llu);
+    RandomPtr dut = Random::genRandom(42);
+    ASSERT_EQ(dut->random<uint64_t>(), 13930160852258120406llu);
 }
 
 /**
@@ -84,10 +112,10 @@ TEST(RandomCtor, ConstructUserSpecifiedSeed)
  */
 TEST(RandomCtor, ConstructThenReseed)
 {
-    Random dut{};
-    ASSERT_EQ(dut.random<uint64_t>(), 14514284786278117030llu);
-    dut.init(42);
-    ASSERT_EQ(dut.random<uint64_t>(), 13930160852258120406llu);
+    RandomPtr dut = Random::genRandom();
+    ASSERT_EQ(dut->random<uint64_t>(), 14514284786278117030llu);
+    dut->init(42);
+    ASSERT_EQ(dut->random<uint64_t>(), 13930160852258120406llu);
 }
 
 /**
@@ -96,12 +124,12 @@ TEST(RandomCtor, ConstructThenReseed)
  */
 TEST(RandomRange, MinEqualsMax)
 {
-    Random dut;
+    RandomPtr dut = Random::genRandom();
 
     for (int i = 0; i < 10; i++) {
-        ASSERT_EQ(dut.random<int>(0, 0), 0);
-        ASSERT_EQ(dut.random<uint64_t>(1, 1), 1);
-        ASSERT_EQ(dut.random<int>(-1, -1), -1);
+        ASSERT_EQ(dut->random<int>(0, 0), 0);
+        ASSERT_EQ(dut->random<uint64_t>(1, 1), 1);
+        ASSERT_EQ(dut->random<int>(-1, -1), -1);
     }
 }
 
@@ -127,14 +155,14 @@ bool withinFreqRange(int count)
  */
 TEST(RandomRange, Coverage)
 {
-    Random dut;
+    RandomPtr dut = Random::genRandom();
 
     // Count occurences if we want to check
     // frequencies in the future
     std::unordered_map<int, int> values;
 
     for (int i = 0; i < loopCount; i++) {
-        values[dut.random<int>(4,6)]++;
+        values[dut->random<int>(4,6)]++;
     }
 
     ASSERT_EQ(values.count(4), 1);
@@ -147,7 +175,7 @@ TEST(RandomRange, Coverage)
     values.clear();
 
     for (int i = 0; i < loopCount; i++) {
-        values[dut.random<int>(-1,1)]++;
+        values[dut->random<int>(-1,1)]++;
     }
 
     ASSERT_EQ(values.count(-1), 1);
@@ -161,7 +189,7 @@ TEST(RandomRange, Coverage)
     values.clear();
 
     for (int i = 0; i < loopCount; i++) {
-        values[dut.random<int>(-6,-4)]++;
+        values[dut->random<int>(-6,-4)]++;
     }
 
     ASSERT_EQ(values.count(-6), 1);
@@ -173,6 +201,88 @@ TEST(RandomRange, Coverage)
     ASSERT_EQ(withinFreqRange(values[-4]), true);
 }
 
+
+
+/**
+ * Test that all constructed objects get
+ * added to the live instance list
+ */
+TEST(RandomConstruct, LiveInstancesAdd)
+{
+    RandomPtr base_rng = Random::genRandom();
+    RandomPtr my_rng = Random::genRandom();
+
+    // All pointers have been added
+    ASSERT_EQ(RandomTest::getInstances()->size(), 2);
+
+    std::set<Random*> ptrs = { base_rng.get(), my_rng.get() };
+
+    // The correct pointers have been added
+    ASSERT_EQ(std::count_if(
+        RandomTest::getInstances()->begin(),
+        RandomTest::getInstances()->end(),
+        [&](const auto & rng) { return ptrs.count(rng.lock().get()) != 0;}), 2);
+}
+
+/**
+ * Test that all destructed objects get
+ * removed from the live instance list
+ */
+TEST(RandomConstruct, LiveInstancesRemove)
+{
+    {
+        RandomPtr base_rng = Random::genRandom();
+        {
+            RandomPtr my_rng = Random::genRandom(42);
+            ASSERT_EQ(RandomTest::getInstances()->size(), 2);
+        }
+        ASSERT_EQ(RandomTest::getInstances()->size(), 1);
+    }
+    ASSERT_EQ(RandomTest::getInstances(), nullptr);
+}
+
+/**
+ * Test that reseeding after construction with
+ * an explicit seed works
+ */
+TEST(RandomReseed, ConstructThenReseed)
+{
+    RandomPtr rng = Random::genRandom();
+    ASSERT_EQ(rng->random<uint64_t>(), 14514284786278117030llu);
+    rng->init(42);
+    ASSERT_EQ(rng->random<uint64_t>(), 13930160852258120406llu);
+    ASSERT_EQ(RandomTest::getGlobalSeed(), std::mt19937_64::default_seed);
+}
+
+/**
+ * Test if global reseeding updates seed
+ * of live instances
+ */
+TEST(RandomReseed, GlobalReseedLive)
+{
+    RandomPtr base_rng  = Random::genRandom();
+    RandomPtr my_rng = Random::genRandom(1337);
+
+    ASSERT_EQ(base_rng->random<uint64_t>(), 14514284786278117030llu);
+    ASSERT_EQ(my_rng->random<uint64_t>(), 12913197394697896830llu);
+
+    Random::reseedAll(42);
+
+    ASSERT_EQ(base_rng->random<uint64_t>(), 13930160852258120406llu);
+    ASSERT_EQ(my_rng->random<uint64_t>(), 13930160852258120406llu);
+}
+
+/**
+ * Test if global reseeding updates seed
+ * of future instances
+ */
+TEST(RandomReseed, GlobalReseedFuture)
+{
+    Random::reseedAll(42);
+    RandomPtr base_rng = Random::genRandom();
+    ASSERT_EQ(base_rng->random<uint64_t>(), 13930160852258120406llu);
+}
+
 /** Test that the range provided for random
  *  number generation is valid
  */
@@ -182,6 +292,6 @@ TEST(RandomDeathTest, InvalidRange)
     GTEST_SKIP() << "Skipping as assertions are "
         "stripped out of fast builds";
 #endif
-    Random dut;
-    ASSERT_DEATH(dut.random<int>(4, 2), "");
+    RandomPtr dut = Random::genRandom();
+    ASSERT_DEATH(dut->random<int>(4, 2), "");
 }

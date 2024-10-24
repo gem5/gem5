@@ -48,6 +48,7 @@
 #include <queue>
 #include <utility>
 
+#include "base/random.hh"
 #include "base/types.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherpkt.hh"
@@ -86,6 +87,8 @@ class EtherLink : public SimObject
         const Tick linkDelay;
         const Tick delayVar;
         EtherDump *const dump;
+
+        Random::RandomPtr rng = Random::genRandom();
 
       protected:
         /*

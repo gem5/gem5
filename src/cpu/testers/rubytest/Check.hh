@@ -32,6 +32,7 @@
 
 #include <iostream>
 
+#include "base/random.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
@@ -84,6 +85,7 @@ class Check
     int m_num_writers;
     int m_num_readers;
     RubyTester* m_tester_ptr;
+    Random::RandomPtr rng = Random::genRandom();
 };
 
 inline std::ostream&

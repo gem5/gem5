@@ -53,6 +53,7 @@
 #include "arch/arm/types.hh"
 #include "arch/arm/utility.hh"
 #include "arch/generic/isa.hh"
+#include "base/random.hh"
 #include "debug/Checkpoint.hh"
 #include "enums/DecoderFlavor.hh"
 #include "sim/sim_object.hh"
@@ -110,6 +111,8 @@ namespace ArmISA
         bool impdefAsNop;
 
         SelfDebug * selfDebug;
+
+        Random::RandomPtr rng = Random::genRandom();
 
         const MiscRegLUTEntryInitializer
         InitReg(uint32_t reg)

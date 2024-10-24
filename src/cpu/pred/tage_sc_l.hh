@@ -55,6 +55,7 @@
 #ifndef __CPU_PRED_TAGE_SC_L_HH__
 #define __CPU_PRED_TAGE_SC_L_HH__
 
+#include "base/random.hh"
 #include "cpu/pred/ltage.hh"
 #include "cpu/pred/statistical_corrector.hh"
 #include "params/TAGE_SC_L.hh"
@@ -79,6 +80,9 @@ class TAGE_SC_L_TAGE : public TAGEBase
     const unsigned longTagsTageFactor;
 
     const bool truncatePathHist;
+
+  protected:
+    Random::RandomPtr rng = Random::genRandom();
 
   public:
     struct BranchInfo : public TAGEBase::BranchInfo

@@ -48,6 +48,7 @@
 #include <random>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -58,24 +59,90 @@ namespace gem5
 
 class Random
 {
+  friend class RandomTest;
 
   public:
+    using RandomPtr = std::shared_ptr<Random>;
+    using Instances = std::vector<std::weak_ptr<Random>>;
+
+    static RandomPtr genRandom()
+    {
+      if (!instances)
+        instances = new Instances();
+
+      auto ptr = std::shared_ptr<Random>(new Random(globalSeed));
+      instances->emplace_back(ptr);
+      return ptr;
+    }
+
+    static RandomPtr genRandom(uint32_t s)
+    {
+      if (!instances)
+        instances = new Instances();
+
+      auto ptr = std::shared_ptr<Random>(new Random(s));
+      instances->emplace_back(ptr);
+      return ptr;
+    }
+
+    static uint64_t globalSeed;
 
     /**
      * @ingroup api_base_utils
      */
     std::mt19937_64 gen;
 
+  private:
+    /**
+     * Collection of all live instances
+     * of Random to enable global
+     * reseeding. We use a pointer
+     * because the loader will initialize
+     * it to 0x0 (it is in .bss), allowing us to avoid
+     * Static Initialization Order Fiasco
+     * if static Random instances are inialized
+     * before the vector by having the constructors
+     * of Random allocate memory for the pointer.
+     * This requires that nullptr matches how
+     * the loader initializes memory
+     */
+    static_assert(nullptr == 0x0, "nullptr is not 0x0, Random instance tracking will fail");
+    static Instances* instances;
+
     /**
      * @ingroup api_base_utils
      * @{
      */
-    Random();
+    Random() = delete;
     Random(uint32_t s);
+
+    Random(const Random& rng) = delete;
+    Random& operator=(const Random& rng) = delete;
+
+    Random(Random&& rng) = delete;
+    Random& operator=(Random&& rng) = delete;
+
+  public:
     /** @} */ // end of api_base_utils
     ~Random();
 
     void init(uint32_t s);
+
+    /**
+     * Facility to reseed all live instances
+     * and ensure future default constructed
+     * instances also use the new see
+     */
+    static void reseedAll(uint64_t seed)
+    {
+        globalSeed = seed;
+
+        if (instances == nullptr)
+          return;
+
+        for (auto rng_ptr : *instances)
+            rng_ptr.lock()->init(seed);
+    }
 
     /**
      * Use the SFINAE idiom to choose an implementation based on
@@ -117,11 +184,6 @@ class Random
         return r;
     }
 };
-
-/**
- * @ingroup api_base_utils
- */
-extern Random random_mt;
 
 } // namespace gem5
 

@@ -34,6 +34,7 @@
 
 #include <vector>
 
+#include "base/random.hh"
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 
 namespace gem5
@@ -111,6 +112,8 @@ class Episode
     // list of atomic locations picked for this episode
     typedef std::vector<Location> AtomicLocationList;
     AtomicLocationList atomicLocs;
+
+    Random::RandomPtr rng = Random::genRandom();
 
     // is a thread running this episode?
     bool isActive;

@@ -34,7 +34,6 @@
 #include <fstream>
 #include <unordered_set>
 
-#include "base/random.hh"
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
 #include "cpu/testers/gpu_ruby_test/tester_thread.hh"
 
@@ -101,7 +100,7 @@ Episode::initActions()
     int num_loads = numLoads;
     int num_stores = numStores;
     while ((num_loads + num_stores) > 0) {
-        switch (random_mt.random<unsigned int>() % 2) {
+        switch (rng->random<unsigned int>() % 2) {
             case 0: // Load
                 if (num_loads > 0) {
                     actions.push_back(new Action(Action::Type::LOAD,

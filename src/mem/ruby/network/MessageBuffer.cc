@@ -205,10 +205,11 @@ MessageBuffer::peek() const
 Tick
 random_time()
 {
+    static Random::RandomPtr rng = Random::genRandom();
     Tick time = 1;
-    time += random_mt.random(0, 3);  // [0...3]
-    if (random_mt.random(0, 7) == 0) {  // 1 in 8 chance
-        time += 100 + random_mt.random(1, 15); // 100 + [1...15]
+    time += rng->random(0, 3);  // [0...3]
+    if (rng->random(0, 7) == 0) {  // 1 in 8 chance
+        time += 100 + rng->random(1, 15); // 100 + [1...15]
     }
     return time;
 }
