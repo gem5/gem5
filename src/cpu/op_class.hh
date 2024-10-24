@@ -129,6 +129,12 @@ static const OpClass InstPrefetchOp = enums::InstPrefetch;
 static const OpClass SimdUnitStrideSegmentedLoadOp = enums::SimdUnitStrideSegmentedLoad;
 static const OpClass SimdUnitStrideSegmentedStoreOp
              = enums::SimdUnitStrideSegmentedStore;
+static const OpClass SimdStrideSegmentedLoadOp = enums::SimdStrideSegmentedLoad;
+static const OpClass SimdUnitStrideSegmentedFaultOnlyFirstLoadOp
+             = enums::SimdUnitStrideSegmentedFaultOnlyFirstLoad;
+static const OpClass SimdStrideSegmentedStoreOp = enums::SimdStrideSegmentedStore;
+static const OpClass SimdIndexedSegmentedLoadOp = enums::SimdIndexedSegmentedLoad;
+static const OpClass SimdIndexedSegmentedStoreOp = enums::SimdIndexedSegmentedStore;
 static const OpClass SimdExtOp = enums::SimdExt;
 static const OpClass SimdFloatExtOp = enums::SimdFloatExt;
 static const OpClass SimdConfigOp = enums::SimdConfig;

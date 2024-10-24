@@ -213,6 +213,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// Operation class.  Used to select appropriate function unit in issue.
     OpClass opClass() const { return _opClass; }
 
+    void resetOpClass(OpClass op_class) { _opClass = op_class; }
+
 
     /// Return logical index (architectural reg num) of i'th destination reg.
     /// Only the entries from 0 through numDestRegs()-1 are valid.
