@@ -1246,7 +1246,7 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = rvSext(Rs1 | imm);
                     }}, uint64_t);
                 }
-                
+
                 0x7: andi({{
                     Rd = rvSext(Rs1 & imm);
                 }}, uint64_t);
