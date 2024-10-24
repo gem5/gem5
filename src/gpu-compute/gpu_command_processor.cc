@@ -40,6 +40,7 @@
 #include "debug/GPUInitAbi.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
+#include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
@@ -98,6 +99,37 @@ GPUCommandProcessor::translate(Addr vaddr, Addr size)
     return TranslationGenPtr(
         new AMDGPUVM::UserTranslationGen(&gpuDevice->getVM(), walker,
                                          1 /* vmid */, vaddr, size));
+}
+
+void
+GPUCommandProcessor::performTimingRead(PacketPtr pkt)
+{
+        // Use the shader to access the CUs and call the read request from
+        // the SQC port. Call submit kernel dispatch in the timing response
+        // function in receive timing response of SQC port. Schedule this
+        // timing read when...just currTick
+        ComputeUnit *cu = shader()->cuList[0];
+        pkt->senderState = new ComputeUnit::SQCPort::SenderState(
+                cu->wfList[0][0], true);
+        ComputeUnit::SQCPort::SenderState *sender_state =
+            safe_cast<ComputeUnit::SQCPort::SenderState*>(pkt->senderState);
+        ComputeUnit::SQCPort sqc_port = cu->sqcPort;
+        if (!sqc_port.sendTimingReq(pkt)) {
+                sqc_port.retries.push_back(
+                        std::pair<PacketPtr, Wavefront*>(pkt,
+                            sender_state->wavefront));
+        }
+}
+
+void
+GPUCommandProcessor::completeTimingRead()
+{
+        struct KernelDispatchData dispatchData = kernelDispatchList.front();
+        kernelDispatchList.pop_front();
+        delete dispatchData.readPkt;
+        if (kernelDispatchList.size() == 0)
+                dispatchKernelObject(dispatchData.akc, dispatchData.raw_pkt,
+                        dispatchData.queue_id, dispatchData.host_pkt_addr);
 }
 
 /**
@@ -236,16 +268,20 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                 RequestPtr request = std::make_shared<Request>(chunk_addr,
                     akc_alignment_granularity, flags,
                     walker->getDevRequestor());
-                Packet *readPkt = new Packet(request, MemCmd::ReadReq);
+                PacketPtr readPkt = new Packet(request, MemCmd::ReadReq);
                 readPkt->dataStatic((uint8_t *)akc + gen.complete());
                 // If the request spans two device memories, the device memory
                 // returned will be null.
                 assert(system()->getDeviceMemory(readPkt) != nullptr);
-                system()->getDeviceMemory(readPkt)->access(readPkt);
-                delete readPkt;
+                struct KernelDispatchData dispatchData;
+                dispatchData.akc = akc;
+                dispatchData.raw_pkt = raw_pkt;
+                dispatchData.queue_id = queue_id;
+                dispatchData.host_pkt_addr = host_pkt_addr;
+                dispatchData.readPkt = readPkt;
+                kernelDispatchList.push_back(dispatchData);
+                performTimingRead(readPkt);
             }
-
-            dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
         }
     }
 }
