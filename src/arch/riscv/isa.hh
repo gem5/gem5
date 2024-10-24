@@ -116,6 +116,12 @@ class ISA : public BaseISA
      */
     bool _enableZcd;
 
+    /**
+     * Resumable non-maskable interrupt
+     * Set true to make NMI recoverable
+     */
+    bool _enableSmrnmi;
+
   public:
     using Params = RiscvISAParams;
 
@@ -193,6 +199,8 @@ class ISA : public BaseISA
     bool resumeOnPending() { return _wfiResumeOnPending; }
 
     bool enableZcd() { return _enableZcd; }
+
+    bool enableSmrnmi() { return _enableSmrnmi; }
 
     virtual Addr getFaultHandlerAddr(
         RegIndex idx, uint64_t cause, bool intr) const;
