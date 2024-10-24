@@ -163,6 +163,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     }
   }
 
+  int functionalReadPriority() {
+    return 30;
+  }
+
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
 

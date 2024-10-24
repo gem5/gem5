@@ -518,6 +518,7 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     AbstractController *ctrl_ro = nullptr;
     AbstractController *ctrl_rw = nullptr;
+    AbstractController *ctrl_ms = nullptr;
     AbstractController *ctrl_backing_store = nullptr;
 
     // In this loop we count the number of controllers that have the given
@@ -534,9 +535,25 @@ RubySystem::functionalRead(PacketPtr pkt)
         }
         else if (access_perm == AccessPermission_Busy)
             num_busy++;
-        else if (access_perm == AccessPermission_Maybe_Stale)
+        else if (access_perm == AccessPermission_Maybe_Stale) {
+            int priority = cntrl->functionalReadPriority();
+            if (priority >= 0) {
+                if (ctrl_ms == nullptr) {
+                    ctrl_ms = cntrl;
+                } else {
+                    int current_priority = ctrl_ms->functionalReadPriority();
+                    if (ctrl_ms == nullptr || priority < current_priority) {
+                        ctrl_ms = cntrl;
+                    } else if (priority == current_priority) {
+                        warn("More than one Abstract Controller with "
+                             "Maybe_Stale permission and same priority (%d) "
+                             "for addr: %#x on cacheline: %#x.", priority,
+                             address, line_address);
+                    }
+                }
+            }
             num_maybe_stale++;
-        else if (access_perm == AccessPermission_Backing_Store) {
+        } else if (access_perm == AccessPermission_Backing_Store) {
             // See RubySlicc_Exports.sm for details, but Backing_Store is meant
             // to represent blocks in memory *for Broadcast/Snooping protocols*,
             // where memory has no idea whether it has an exclusive copy of data
@@ -604,6 +621,13 @@ RubySystem::functionalRead(PacketPtr pkt)
         for (auto& network : m_networks) {
             if (network->functionalRead(pkt))
                 return true;
+        }
+        if (ctrl_ms != nullptr) {
+            // No copy in transit or buffered indicates that a block marked
+            // as Maybe_Stale is actually up-to-date, just waiting an Ack or
+            // similar type of message which carries no data.
+            ctrl_ms->functionalRead(line_address, pkt);
+            return true;
         }
     }
 
