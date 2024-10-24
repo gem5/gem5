@@ -46,6 +46,7 @@
 #include "debug/GPURename.hh"
 #include "debug/GPUSync.hh"
 #include "debug/GPUTLB.hh"
+#include "enums/GfxVersion.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
@@ -106,6 +107,61 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     scalar_resp_tick_latency(
             p.scalar_mem_resp_latency * p.clk_domain->clockPeriod()),
     memtime_latency(p.memtime_latency * p.clk_domain->clockPeriod()),
+    mfma_scale(p.mfma_scale),
+    mfma_cycles({
+        {GfxVersion::gfx90a, {
+            {"v_mfma_f32_32x32x1_2b_f32", 64},
+            {"v_mfma_f32_16x16x1_4b_f32", 32},
+            {"v_mfma_f32_4x4x1_16b_f32", 8},
+            {"v_mfma_f32_32x32x2_f32", 64},
+            {"v_mfma_f32_16x16x4_f32", 32},
+            {"v_mfma_f32_32x32x4_2b_f16", 64},
+            {"v_mfma_f32_16x16x4_4b_f16", 32},
+            {"v_mfma_f32_4x4x4_16b_f16", 8},
+            {"v_mfma_f32_32x32x8_f16", 64},
+            {"v_mfma_f32_16x16x16_f16", 32},
+            {"v_mfma_i32_32x32x4_2b_i8", 64},
+            {"v_mfma_i32_16x16x4_4b_i8", 32},
+            {"v_mfma_i32_4x4x4_16b_i8", 8},
+            {"v_mfma_i32_32x32x8_i8", 64},
+            {"v_mfma_i32_16x16x16_i8", 32},
+            {"v_mfma_f32_32x32x2_2b_bf16", 64},
+            {"v_mfma_f32_16x16x2_4b_bf16", 32},
+            {"v_mfma_f32_4x4x2_16b_bf16", 8},
+            {"v_mfma_f32_32x32x4_bf16", 64},
+            {"v_mfma_f32_16x16x8_bf16", 32},
+            {"v_mfma_f32_16x16x4_bf64", 32},
+            {"v_mfma_f32_4x4x4_4b_bf64", 16},
+        }},
+        {GfxVersion::gfx942, {
+            {"v_mfma_f32_32x32x1_2b_f32", 64},
+            {"v_mfma_f32_16x16x1_4b_f32", 32},
+            {"v_mfma_f32_4x4x1_16b_f32", 8},
+            {"v_mfma_f32_32x32x2_f32", 64},
+            {"v_mfma_f32_16x16x4_f32", 32},
+            {"v_mfma_f32_32x32x4_2b_f16", 64},
+            {"v_mfma_f32_16x16x4_4b_f16", 32},
+            {"v_mfma_f32_4x4x4_16b_f16", 8},
+            {"v_mfma_f32_32x32x8_f16", 32},
+            {"v_mfma_f32_16x16x16_f16", 16},
+            {"v_mfma_f32_32x32x4_2b_bf16", 64},
+            {"v_mfma_f32_16x16x4_4b_bf16", 32},
+            {"v_mfma_f32_4x4x4_16b_bf16", 8},
+            {"v_mfma_f32_32x32x8_bf16", 32},
+            {"v_mfma_f32_16x16x16_bf16", 16},
+            {"v_mfma_i32_32x32x4_2b_i8", 64},
+            {"v_mfma_i32_16x16x4_4b_i8", 32},
+            {"v_mfma_i32_4x4x4_16b_i8", 8},
+            {"v_mfma_i32_32x32x16_i8", 32},
+            {"v_mfma_i32_16x16x32_i8", 16},
+            {"v_mfma_f32_16x16x8_xf32", 16},
+            {"v_mfma_f32_32x32x4_xf32", 32},
+            {"v_mfma_f32_16x16x32_bf8_bf8", 16},
+            {"v_mfma_f32_16x16x32_bf8_fp8", 16},
+            {"v_mfma_f32_32x32x16_fp8_bf8", 32},
+            {"v_mfma_f32_32x32x16_fp8_fp8", 32},
+        }}
+    }),
     _requestorId(p.system->getRequestorId(this, "ComputeUnit")),
     lds(*p.localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
     ldsPort(csprintf("%s-port", name()), this),
@@ -229,6 +285,11 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     panic_if(!isPowerOf2(_cacheLineSize),
         "Cache line size should be a power of two.");
     cacheLineBits = floorLog2(_cacheLineSize);
+
+    matrix_core_ready.resize(numVectorALUs);
+    for (int i = 0; i < numVectorALUs; i++) {
+        matrix_core_ready[i] = 0;
+    }
 }
 
 ComputeUnit::~ComputeUnit()

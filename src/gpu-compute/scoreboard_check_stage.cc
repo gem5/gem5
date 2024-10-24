@@ -196,6 +196,21 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
             return false;
         }
     }
+
+    if (ii->isMFMA()) {
+        if (computeUnit.matrix_core_ready[w->simdId] <= curTick()) {
+            computeUnit.matrix_core_ready[w->simdId] =
+                curTick() +
+                computeUnit.cyclesToTicks(Cycles(
+                    computeUnit.mfma_scale *
+                    computeUnit.mfma_cycles[w->gfxVersion]
+                                           [ii->staticInstruction()->opcode()]
+                ));
+        } else {
+            *rdyStatus = NRDY_MATRIX_CORE;
+            return false;
+        }
+    }
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit.cu_id,
             w->simdId, w->wfSlotId, ii->disassemble());
     *exeResType = mapWaveToExeUnit(w);
@@ -291,6 +306,7 @@ ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     stallCycles.subname(NRDY_BARRIER_WAIT, csprintf("BarrierWait"));
     stallCycles.subname(NRDY_VGPR_NRDY, csprintf("VgprBusy"));
     stallCycles.subname(NRDY_SGPR_NRDY, csprintf("SgprBusy"));
+    stallCycles.subname(NRDY_MATRIX_CORE, csprintf("MatrixCore"));
     stallCycles.subname(INST_RDY, csprintf("InstrReady"));
 }
 
