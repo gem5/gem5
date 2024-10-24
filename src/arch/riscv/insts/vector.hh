@@ -128,6 +128,8 @@ class VectorMacroInst : public RiscvMacroInst
     uint8_t vtype;
     uint32_t elen;
     uint32_t vlen;
+    int oldDstIdx = -1;
+    int vmsrcIdx = -1;
 
     VectorMacroInst(const char* mnem, ExtMachInst _machInst,
                    OpClass __opClass, uint32_t _elen, uint32_t _vlen)
@@ -149,6 +151,8 @@ protected:
     uint8_t vtype;
     uint32_t elen;
     uint32_t vlen;
+    int oldDstIdx = -1;
+    int vmsrcIdx = -1;
 
     VectorMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
       uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen)
@@ -753,13 +757,13 @@ class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
         RegId srcRegIdxArr[1];
-        RegId destRegIdxArr[1];
-        bool hasVdOffset;
+        RegId destRegIdxArr[2];
+        const bool hasVdOffset;
 
     public:
         VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                         uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
-                        bool _hasVdOffset=false);
+                        bool _hasVdOffset=false, bool _hasTempVd = false);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;

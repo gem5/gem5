@@ -859,7 +859,8 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _hasVdOffset)
+                                 uint32_t _vlen, bool _hasVdOffset,
+                                 bool _hasTempVd)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
                            _microIdx, _elen, _vlen)
     , hasVdOffset(_hasVdOffset)
@@ -881,6 +882,9 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
     setDestRegIdx(0, Vd);
+    if (_hasTempVd) {
+        setDestRegIdx(_numDestRegs++, vecRegClass[VecMemInternalReg0 + _microIdx]);
+    }
 }
 
 Fault
@@ -898,18 +902,20 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     xc->setMiscReg(MISCREG_STATUS, status);
 
     // tail/mask policy: both undisturbed if one is, 1s if none
-    vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || hasVdOffset) {
-        vreg_t old_vd;
-        xc->getRegOperand(this, 0, &old_vd);
-        vd = old_vd;
-    } else {
-        vd.set(0xff);
-    }
+    for (int i = 0; i < _numDestRegs; i++) {
+        vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, i);
+        if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
+                                || hasVdOffset) {
+            vreg_t old_vd;
+            xc->getRegOperand(this, 0, &old_vd);
+            vd = old_vd;
+        } else {
+            vd.set(0xff);
+        }
 
-    if (traceData) {
-        traceData->setData(vecRegClass, &vd);
+        if (traceData) {
+            traceData->setData(vecRegClass, &vd);
+        }
     }
 
     return NoFault;
