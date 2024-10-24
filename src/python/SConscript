@@ -178,10 +178,34 @@ PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
     'dma_controller.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
     'gem5/components/cachehierarchies/ruby/caches/mi_example/l1_cache.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/__init__.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/corepair_cache.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/directory.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/dma_controller.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/tcp.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/sqc.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.viper',
+    'gem5/components/cachehierarchies/ruby/caches/viper/tcc.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py')
+
+PySource('gem5.components.devices',
+    'gem5/components/devices/__init__.py')
+PySource('gem5.components.devices.gpus',
+    'gem5/components/devices/gpus/__init__.py')
+PySource('gem5.components.devices.gpus',
+    'gem5/components/devices/gpus/amdgpu.py')
+PySource('gem5.components.devices.gpus',
+    'gem5/components/devices/gpus/viper_shader.py')
+
 PySource('gem5.components.memory', 'gem5/components/memory/__init__.py')
 PySource('gem5.components.memory', 'gem5/components/memory/abstract_memory_system.py')
 PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
@@ -292,6 +316,14 @@ PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/riscvmatched_processor.py')
 PySource('gem5.prebuilt.riscvmatched',
     'gem5/prebuilt/riscvmatched/riscvmatched_core.py')
+PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/__init__.py')
+PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/board.py')
+PySource('gem5.prebuilt.viper',
+    'gem5/prebuilt/viper/cpu_cache_hierarchy.py')
+PySource('gem5.prebuilt.viper',
+    'gem5/prebuilt/viper/gpu_cache_hierarchy.py')
+PySource('gem5.prebuilt.viper',
+    'gem5/prebuilt/viper/viper_network.py')
 PySource('gem5.resources', 'gem5/resources/__init__.py')
 PySource('gem5.resources', 'gem5/resources/client.py')
 PySource('gem5.resources', 'gem5/resources/downloader.py')
