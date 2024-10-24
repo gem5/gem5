@@ -40,7 +40,6 @@
 #define __ARCH_ARM_SELF_DEBUG_HH__
 
 
-#include "arch/arm/faults.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/types.hh"

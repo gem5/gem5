@@ -49,6 +49,10 @@
 #include "arch/generic/mmu.hh"
 #include "enums/TypeTLB.hh"
 #include "enums/ArmLookupLevel.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "params/TLBIndexingPolicy.hh"
+#include "params/TLBSetAssociative.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -161,31 +165,20 @@ struct V8PageTableOps64k : public PageTableOps
     LookupLevel lastLevel() const override;
 };
 
-// ITB/DTB table entry
-struct TlbEntry : public Serializable
+struct TlbEntry;
+
+class TLBTypes
 {
   public:
-    typedef enums::ArmLookupLevel LookupLevel;
-
-    enum class MemoryType : std::uint8_t
+    struct KeyType
     {
-        StronglyOrdered,
-        Device,
-        Normal
-    };
+        KeyType() = default;
+        explicit KeyType(const TlbEntry &entry);
 
-    enum class DomainType : std::uint8_t
-    {
-        NoAccess = 0,
-        Client,
-        Reserved,
-        Manager
-    };
-
-    struct Lookup
-    {
         // virtual address
         Addr va = 0;
+        // page size
+        Addr pageSize = Grain4KB;
         // lookup size:
         // * != 0 -> this is a range based lookup.
         //           end_address = va + size
@@ -206,6 +199,48 @@ struct TlbEntry : public Serializable
         TranslationRegime targetRegime = TranslationRegime::EL10;
         // mode to differentiate between read/writes/fetches.
         BaseMMU::Mode mode = BaseMMU::Read;
+    };
+
+    using Params = TLBIndexingPolicyParams;
+};
+using TLBIndexingPolicy = IndexingPolicyTemplate<TLBTypes>;
+
+class TLBSetAssociative : public TLBIndexingPolicy
+{
+  public:
+    PARAMS(TLBSetAssociative);
+    TLBSetAssociative(const Params &p)
+      : TLBIndexingPolicy(p, p.num_entries, 0)
+    {}
+
+    std::vector<ReplaceableEntry*>
+    getPossibleEntries(const KeyType &key) const override
+    {
+        Addr set_number = (key.va >> key.pageSize) & setMask;
+        return sets[set_number];
+    }
+
+    Addr
+    regenerateAddr(const KeyType &key,
+                   const ReplaceableEntry *entry) const override
+    {
+        panic("Unimplemented\n");
+    }
+};
+
+// ITB/DTB table entry
+struct TlbEntry : public ReplaceableEntry, Serializable
+{
+  public:
+    using LookupLevel = enums::ArmLookupLevel;
+    using KeyType = TLBTypes::KeyType;
+    using IndexingPolicy = TLBIndexingPolicy;
+
+    enum class MemoryType : std::uint8_t
+    {
+        StronglyOrdered,
+        Device,
+        Normal
     };
 
     // Matching variables
@@ -305,6 +340,59 @@ struct TlbEntry : public Serializable
 
         // @todo Check the memory type
     }
+    TlbEntry(const TlbEntry &rhs) = default;
+    TlbEntry& operator=(TlbEntry rhs)
+    {
+        swap(rhs);
+        return *this;
+    }
+
+    void
+    swap(TlbEntry &rhs)
+    {
+        std::swap(pfn, rhs.pfn);
+        std::swap(size, rhs.size);
+        std::swap(vpn, rhs.vpn);
+        std::swap(attributes, rhs.attributes);
+        std::swap(lookupLevel, rhs.lookupLevel);
+        std::swap(asid, rhs.asid);
+        std::swap(vmid, rhs.vmid);
+        std::swap(tg, rhs.tg);
+        std::swap(N, rhs.N);
+        std::swap(innerAttrs, rhs.innerAttrs);
+        std::swap(outerAttrs, rhs.outerAttrs);
+        std::swap(ap, rhs.ap);
+        std::swap(hap, rhs.hap);
+        std::swap(domain, rhs.domain);
+        std::swap(mtype, rhs.mtype);
+        std::swap(longDescFormat, rhs.longDescFormat);
+        std::swap(global, rhs.global);
+        std::swap(valid, rhs.valid);
+        std::swap(ns, rhs.ns);
+        std::swap(ss, rhs.ss);
+        std::swap(regime, rhs.regime);
+        std::swap(type, rhs.type);
+        std::swap(partial, rhs.partial);
+        std::swap(nonCacheable, rhs.nonCacheable);
+        std::swap(shareable, rhs.shareable);
+        std::swap(outerShareable, rhs.outerShareable);
+        std::swap(xn, rhs.xn);
+        std::swap(pxn, rhs.pxn);
+        std::swap(xs, rhs.xs);
+    }
+
+    /** Need for compliance with the AssociativeCache interface */
+    void
+    invalidate()
+    {
+        valid = false;
+    }
+
+    /** Need for compliance with the AssociativeCache interface */
+    void insert(const KeyType &key) {}
+
+    /** Need for compliance with the AssociativeCache interface */
+    bool isValid() const { return valid; }
 
     void
     updateVaddr(Addr new_vaddr)
@@ -319,32 +407,32 @@ struct TlbEntry : public Serializable
     }
 
     bool
-    matchAddress(const Lookup &lookup) const
+    matchAddress(const KeyType &key) const
     {
         Addr page_addr = vpn << N;
-        if (lookup.size) {
+        if (key.size) {
             // This is a range based loookup
-            return lookup.va <= page_addr + size &&
-                   lookup.va + lookup.size > page_addr;
+            return key.va <= page_addr + size &&
+                   key.va + key.size > page_addr;
         } else {
             // This is a normal lookup
-            return lookup.va >= page_addr && lookup.va <= page_addr + size;
+            return key.va >= page_addr && key.va <= page_addr + size;
         }
     }
 
     bool
-    match(const Lookup &lookup) const
+    match(const KeyType &key) const
     {
         bool match = false;
-        if (valid && matchAddress(lookup) && lookup.ss == ss)
+        if (valid && matchAddress(key) && key.ss == ss)
         {
-            match = checkRegime(lookup.targetRegime);
+            match = checkRegime(key.targetRegime);
 
-            if (match && !lookup.ignoreAsn) {
-                match = global || (lookup.asn == asid);
+            if (match && !key.ignoreAsn) {
+                match = global || (key.asn == asid);
             }
-            if (match && useVMID(lookup.targetRegime)) {
-                match = lookup.vmid == vmid;
+            if (match && useVMID(key.targetRegime)) {
+                match = key.vmid == vmid;
             }
         }
         return match;
@@ -487,6 +575,9 @@ struct TlbEntry : public Serializable
 const PageTableOps *getPageTableOps(GrainSize trans_granule);
 
 } // namespace ArmISA
+
+template class IndexingPolicyTemplate<ArmISA::TLBTypes>;
+
 } // namespace gem5
 
 #endif // __ARCH_ARM_PAGETABLE_H__

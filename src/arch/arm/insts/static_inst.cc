@@ -646,7 +646,7 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
         return std::make_shared<PrefetchAbort>(readPC(xc),
                                                ArmFault::DebugEvent,
                                                false,
-                                               ArmFault::UnknownTran,
+                                               TranMethod::UnknownTran,
                                                ArmFault::BRKPOINT);
     }
 }
