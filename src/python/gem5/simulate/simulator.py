@@ -45,6 +45,9 @@ from m5.objects import Root
 from m5.stats import addStatVisitor
 from m5.util import warn
 
+from _m5.event import ExitEvent as CPPExitEvent
+from _m5.event import GlobalSimLoopExitEvent
+
 from ..components.boards.abstract_board import AbstractBoard
 from ..components.processors.switchable_processor import SwitchableProcessor
 from .exit_event import ExitEvent
@@ -683,10 +686,12 @@ class Simulator:
             # any final things.
             self._board._post_instantiate()
 
-    def run(self, max_ticks: Optional[int] = None) -> None:
+    def run(self, max_ticks: Optional[int] = None) -> CPPExitEvent:
         """
         This function will start or continue the simulator run and handle exit
-        events accordingly.
+        events accordingly. If the the exit event is handled by returning to
+        the Python code (as opposed to re-entering the Simulation loop) the
+        function will return the GlobalSimLoopExitEvent object.
 
         :param max_ticks: The maximum number of ticks to execute per simulation
                           run. If this ``max_ticks`` value is met, a ``MAX_TICK``
@@ -764,9 +769,10 @@ class Simulator:
             self._exit_event_count += 1
 
             # If the generator returned True we will return from the Simulator
-            # run loop. In the case of a function: if it returned True.
+            # run loop with the ExitEvent. (In the case of a function, instead
+            # of a generator, : if it also returned True).
             if exit_on_completion:
-                return
+                return self._last_exit_event
 
     def save_checkpoint(self, checkpoint_dir: Path) -> None:
         """
