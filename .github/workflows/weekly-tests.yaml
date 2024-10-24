@@ -55,10 +55,11 @@ jobs:
                   retention-days: 7
             - run: echo "This job's status is ${{ job.status }}."
 
-    gpu-tests:
+    # The GPU tests are run in different jobs beacuse they take a long time to run. This way we can run them in parallel on different runners.
+    gpu-test-hacc:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 4320 # 3 days
+        timeout-minutes: 720 # 12 hours
         needs: get-date
 
         steps:
@@ -74,19 +75,170 @@ jobs:
                   restore-keys: |
                       testlib-build-vega
 
-            - name: Build VEGA_X86/gem5.opt
-              working-directory: ${{ github.workspace }}
-              run: scons build/VEGA_X86/gem5.opt -j $(nproc)
-
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-hacc-VEGA_X86-gcn_gpu-opt
 
             - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4.0.0
               with:
-                  name: gpu_tests_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  name: gpu_tests_hacc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  path: tests/testing-results
+                  retention-days: 7
+
+    gpu-test-lulesh:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-lulesh-VEGA_X86-gcn_gpu-opt
+
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4.0.0
+              with:
+                  name: gpu_tests_lulesh_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  path: tests/testing-results
+                  retention-days: 7
+
+    gpu-test-pannotia-bc:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-bc-1k-128k-VEGA_X86-gcn_gpu-opt
+
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4.0.0
+              with:
+                  name: gpu_tests_pannotia_bc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  path: tests/testing-results
+                  retention-days: 7
+
+    gpu-test-pannotia-color-maxmin:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-maxmin-1k-128k-VEGA_X86-gcn_gpu-opt
+
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4.0.0
+              with:
+                  name: gpu_tests_pannotia_color_maxmin_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  path: tests/testing-results
+                  retention-days: 7
+
+    gpu-test-pannotia-color-max:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-max-1k-128k-VEGA_X86-gcn_gpu-opt
+
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4.0.0
+              with:
+                  name: gpu_tests_pannotia_color_max_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  path: tests/testing-results
+                  retention-days: 7
+
+    gpu-test-pannotia-fw-hip:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 720 # 12 hours
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: develop
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Run Testlib GPU Tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-fw-hip-1k-128k-VEGA_X86-gcn_gpu-opt
+
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4.0.0
+              with:
+                  name: gpu_tests_pannotia_fw_hip_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
                   path: tests/testing-results
                   retention-days: 7
 
@@ -121,6 +273,11 @@ jobs:
         needs:
             - testlib-very-long-tests
             - dramsys-tests
-            - gpu-tests
+            - gpu-test-hacc
+            - gpu-test-lulesh
+            - gpu-test-pannotia-bc
+            - gpu-test-pannotia-color-maxmin
+            - gpu-test-pannotia-color-max
+            - gpu-test-pannotia-fw-hip
         steps:
             - run: echo "This weekly tests have passed."
