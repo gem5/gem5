@@ -1214,9 +1214,39 @@ decode QUADRANT default Unknown::unknown() {
                         }});
                     }
                 }
-                0x6: ori({{
-                    Rd = rvSext(Rs1 | imm);
-                }}, uint64_t);
+                0x6: decode RD {
+                    0x00: decode RS2 {
+                        0x0: Load::prefetch_i({{
+                                uint64_t temp = Mem_ub; temp = temp;
+                            }}, offset_code = {{
+                                offset = IMM7 << 5;
+                            }}, mem_flags = [PREFETCH],
+                            inst_flags = IsInstPrefetch
+                        );
+                        0x1: Load::prefetch_r({{
+                                uint64_t temp = Mem_ub; temp = temp;
+                            }}, offset_code = {{
+                                offset = IMM7 << 5;
+                            }}, mem_flags = [PREFETCH],
+                            inst_flags = IsDataPrefetch
+                        );
+                        0x3: Load::prefetch_w({{
+                                uint64_t temp = Mem_ub; temp = temp;
+                            }}, offset_code = {{
+                                offset = IMM7 << 5;
+                            }}, mem_flags = [PF_EXCLUSIVE],
+                            inst_flags = IsDataPrefetch
+                        );
+                        // Remaining ori instruction coding space
+                        default: ori_hint({{
+                            Rd = rvSext(Rs1 | imm);
+                        }}, uint64_t);
+                    }
+                    default: ori({{
+                        Rd = rvSext(Rs1 | imm);
+                    }}, uint64_t);
+                }
+
                 0x7: andi({{
                     Rd = rvSext(Rs1 & imm);
                 }}, uint64_t);
