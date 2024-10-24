@@ -2593,7 +2593,7 @@ AtOp64::addressTranslation64(ThreadContext* tc,
         val, 0, flags,  Request::funcRequestorId,
         tc->pcState().instAddr(), tc->contextId());
 
-    Fault fault = getMMUPtr(tc)->translateAtomic(
+    Fault fault = getMMUPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
 
     PAR par = 0;
