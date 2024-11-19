@@ -65,8 +65,47 @@ namespace o3
 {
 
 LSQ::DcachePort::DcachePort(LSQ *_lsq, CPU *_cpu) :
-    RequestPort(_cpu->name() + ".dcache_port"), lsq(_lsq), cpu(_cpu)
+    RequestPort(_cpu->name() + ".dcache_port"), lsq(_lsq), cpu(_cpu),
+    dcachePortStats(_cpu)
 {}
+
+LSQ::DcachePort::DcachePortStats::DcachePortStats(CPU* _cpu)
+    : statistics::Group(_cpu),
+      ADD_STAT(numRecvResp, statistics::units::Count::get(),
+              "Number of received responses"),
+      ADD_STAT(numRecvRespBytes, statistics::units::Byte::get(),
+              "Number of received response bytes"),
+      ADD_STAT(recvRespAvgBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Cycle>::get(),
+               "Average bandwidth of received responses"),
+      ADD_STAT(recvRespAvgSize,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Count>::get(),
+               "Average packet size per received response"),
+      ADD_STAT(recvRespAvgRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "Average rate of received responses per cycle"),
+      ADD_STAT(recvRespAvgRetryRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
+               "Average retry rate per received response"),
+      ADD_STAT(numSendRetryResp, statistics::units::Count::get(),
+               "Number of retry responses sent")
+{
+    recvRespAvgBW.precision(2);
+    recvRespAvgBW = numRecvRespBytes / _cpu->baseStats.numCycles;
+
+    recvRespAvgSize.precision(2);
+    recvRespAvgSize = numRecvRespBytes / numRecvResp;
+
+    recvRespAvgRate.precision(2);
+    recvRespAvgRate = numRecvResp / _cpu->baseStats.numCycles;
+
+    recvRespAvgRetryRate.precision(2);
+    recvRespAvgRetryRate = numSendRetryResp / numRecvResp;
+}
 
 LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
@@ -83,7 +122,15 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params.numThreads,
                   params.smtLSQThreshold)),
       dcachePort(this, cpu_ptr),
-      numThreads(params.numThreads)
+      numThreads(params.numThreads),
+      recvRespThrottling(params.recvRespThrottling),
+      recvRespMaxCachelines(params.recvRespMaxCachelines),
+      recvRespBufferSize(params.recvRespBufferSize),
+      recvRespBytes(0),
+      recvRespCachelines(0),
+      recvRespLastCachelineAddr(0),
+      recvRespLastActiveCycle(0),
+      retryRespEvent([this]{ sendRetryResp(); }, name())
 {
     assert(numThreads > 0 && numThreads <= MaxThreads);
 
@@ -397,6 +444,12 @@ LSQ::completeDataAccess(PacketPtr pkt)
     LSQRequest *request = dynamic_cast<LSQRequest*>(pkt->senderState);
     thread[cpu->contextToThread(request->contextId())]
         .completeDataAccess(pkt);
+}
+
+void
+LSQ::sendRetryResp()
+{
+    dcachePort.sendRetryResp();
 }
 
 bool
@@ -1409,8 +1462,106 @@ LSQ::SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
 }
 
 bool
+LSQ::DcachePort::throttleReadResp(PacketPtr pkt)
+{
+    // Check if tick is unaligned to correct +1 curCycle delta
+    bool is_unaligned_tick = curTick() % cpu->clockPeriod() != 0;
+    Cycles current_cycle = cpu->curCycle() - Cycles(is_unaligned_tick);
+
+    // Reset counters/flags on new cycle
+    if (current_cycle > lsq->recvRespLastActiveCycle) {
+        lsq->recvRespBytes = 0;
+        lsq->recvRespCachelines = 0;
+        lsq->recvRespLastCachelineAddr = 0;
+    }
+
+    lsq->recvRespLastActiveCycle = current_cycle;
+
+    Addr cacheline_addr = addrBlockAlign(pkt->getAddr(), cpu->cacheLineSize());
+
+    bool throttle_cycle = false;
+
+    // Check limits
+    bool is_new_cacheline = cacheline_addr != lsq->recvRespLastCachelineAddr;
+    bool max_cachelines = (lsq->recvRespCachelines + is_new_cacheline)
+                          > lsq->recvRespMaxCachelines;
+    int free_buf_size = lsq->recvRespBufferSize - lsq->recvRespBytes;
+    bool max_bytes = pkt->getSize() > free_buf_size;
+
+    // No pending response and either per cycle limit reached
+    if (lsq->recvRespPendBytes == 0 && (max_cachelines || max_bytes)) {
+        // If the buffer size is an exclusive limit try to saturate it and save
+        // any remaining bytes for later
+        if (max_bytes && !max_cachelines) {
+            lsq->recvRespBytes += free_buf_size;
+            assert(lsq->recvRespBytes <= lsq->recvRespBufferSize);
+
+            lsq->recvRespPendBytes = pkt->getSize() - free_buf_size;
+        }
+
+        // Throttle this cycle
+        throttle_cycle = true;
+        DPRINTF(LSQ, "throttling ReadResp: max_cachelines=%d max_bytes=%d\n",
+                max_cachelines, max_bytes);
+
+    // Still processing previous response
+    } else if (lsq->recvRespPendBytes > 0) {
+        DPRINTF(LSQ, "recvRespPendBytes=%u\n", lsq->recvRespPendBytes);
+
+        // Shouldn't have processed anything this cycle yet
+        assert(lsq->recvRespBytes == 0 && lsq->recvRespCachelines == 0);
+
+        // Throttle if pending bytes are greater than buffer size
+        throttle_cycle = lsq->recvRespPendBytes > lsq->recvRespBufferSize;
+
+        // Process as much pending bytes as possible this cycle
+        lsq->recvRespBytes += (throttle_cycle) ? lsq->recvRespBufferSize
+                                               : lsq->recvRespPendBytes;
+        lsq->recvRespPendBytes -= lsq->recvRespBytes;
+
+    // No pending response and no limit reached
+    } else {
+        // Process whole response
+        lsq->recvRespBytes += pkt->getSize();
+    }
+
+    // Got new cacheline on this cycle. Count and save for later (assumes
+    // we cannot get previous cachelines again this cycle)
+    if (is_new_cacheline) {
+        lsq->recvRespCachelines++;
+        lsq->recvRespLastCachelineAddr = cacheline_addr;
+    }
+
+    // Throttling this cycle
+    if (throttle_cycle) {
+        Tick next_cycle = cpu->cyclesToTicks(current_cycle + Cycles(1));
+
+        // Sanity checks
+        assert(next_cycle > curTick());
+        assert(!(lsq->retryRespEvent.scheduled()));
+
+        // Schedule retry on next cycle
+        cpu->schedule(lsq->retryRespEvent, next_cycle);
+        DPRINTF(LSQ, "retryRespEvent scheduled for tick=%lu\n", next_cycle);
+
+        dcachePortStats.numSendRetryResp++;
+    }
+
+    return throttle_cycle;
+}
+
+bool
 LSQ::DcachePort::recvTimingResp(PacketPtr pkt)
 {
+    if (lsq->recvRespThrottling && pkt->cmd == MemCmd::ReadResp) {
+        if (throttleReadResp(pkt)) {
+            return false;
+        }
+    }
+
+    dcachePortStats.numRecvResp++;
+    dcachePortStats.numRecvRespBytes += pkt->getSize();
+
     return lsq->recvTimingResp(pkt);
 }
 

@@ -206,3 +206,14 @@ class BaseO3CPU(BaseCPU):
         TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
+
+    recvRespThrottling = Param.Bool(
+        False, "Enable load receive response throttling in the LSQ"
+    )
+    recvRespMaxCachelines = Param.Unsigned(
+        1,
+        "Maximum number of different receive response cachelines per cycle",
+    )
+    recvRespBufferSize = Param.Unsigned(
+        64, "Maximum number of receive response bytes per cycle"
+    )
