@@ -51,6 +51,11 @@ class Process(SimObject):
     )
     kvmInSE = Param.Bool("false", "initialize the process for KvmCPU in SE")
     maxStackSize = Param.MemorySize("64MiB", "maximum size of the stack")
+    zeroPages = Param.Bool(
+        True,
+        "ensure all allocated pages are zero-filled. glibc malloc generally "
+        "requires this. Disable at your own risk.",
+    )
 
     uid = Param.Int(100, "user id")
     euid = Param.Int(100, "effective user id")

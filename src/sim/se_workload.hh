@@ -90,6 +90,7 @@ class SEWorkload : public Workload
     void event(ThreadContext *tc) override { syscall(tc); }
 
     Addr allocPhysPages(int npages, int pool_id=0);
+    void deallocPhysPage(Addr paddr, int pool_id=0);
     Addr memSize(int pool_id=0) const;
     Addr freeMemSize(int pool_id=0) const;
 };
