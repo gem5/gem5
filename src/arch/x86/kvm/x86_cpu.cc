@@ -116,6 +116,13 @@ struct GEM5_PACKED FXSave
     uint64_t reserved[12];
 };
 
+// for the upper 128 bits of 16 ymm registers 
+struct GEM5_PACKED AVXState {
+    uint8_t ymmh[16][16];
+};
+
+// update according checker for AVX ymm reg
+static_assert(sizeof(AVXState) == 256, "Unexpected size of AVXState");
 static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
 
 BitUnion64(XStateBV)
@@ -869,6 +876,22 @@ X86KvmCPU::updateKvmStateSRegs()
     setSpecialRegisters(sregs);
 }
 
+
+void
+X86KvmCPU::updateKvmStateAVXCommon(ThreadContext *tc, const kvm_xsave &kxsave)
+{
+    // Like updateKvmStateFPUCommon, updateKvmStateAVXCommon is called by 
+    // updateKvmStateFPU function 
+    // Setting Kvm's ymm reg values to gem5's ymm reg values
+    const AVXState *avx = (const AVXState*)((const char*)kxsave.region 
+                            + sizeof(FXSave) + sizeof(XSaveHeader));
+
+    for (int i = 0; i < 16; i++) {
+        *(uint64_t *)&avx->ymmh[i][0] = tc->getReg(float_reg::ymmHigh(i));
+        *(uint64_t *)&avx->ymmh[i][8] = tc->getReg(float_reg::ymmLow(i));
+    }
+}
+
 template <typename T>
 static void
 updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
@@ -952,6 +975,10 @@ X86KvmCPU::updateKvmStateFPUXSave()
       * (XSaveHeader *) ((char *) &kxsave + sizeof(FXSave));
     xsave_hdr.xstate_bv.fpu = 1;
     xsave_hdr.xstate_bv.sse = 1;
+
+    // enable avx bitmap and run the AVX state update function
+    xsave_hdr.xstate_bv.avx = 1;
+    updateKvmStateAVXCommon(tc, kxsave);
 
     if (tc->readMiscRegNoEffect(misc_reg::Fiseg))
         warn_once("misc_reg::Fiseg is non-zero.\n");
@@ -1121,6 +1148,25 @@ X86KvmCPU::updateThreadContextSRegs(const struct kvm_sregs &sregs)
 #undef APPLY_DTABLE
 }
 
+void 
+X86KvmCPU::updateThreadContextAVXCommon(ThreadContext *tc, 
+                                        const struct kvm_xsave &kxsave) 
+{
+    // Setting gem5's ymm reg values to Kvm's ymm reg values 
+    XSaveHeader& xsave_hdr = * (XSaveHeader *) ((char *) &kxsave 
+                                + sizeof(FXSave));
+    
+    if (xsave_hdr.xstate_bv.avx) {
+        const AVXState *avx = (const AVXState*)((const char*)kxsave.region 
+                                + sizeof(FXSave) + sizeof(XSaveHeader));
+
+        for (int i = 0; i < 16; i++) {
+            tc->setReg(float_reg::ymmLow(i), *(uint64_t *)&avx->ymmh[i][0]);
+            tc->setReg(float_reg::ymmHigh(i), *(uint64_t *)&avx->ymmh[i][8]);
+        }
+    }
+}
+
 template<typename T>
 static void
 updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
@@ -1172,6 +1218,8 @@ X86KvmCPU::updateThreadContextXSave(const struct kvm_xsave &kxsave)
     const FXSave &xsave(*(const FXSave *)kxsave.region);
 
     updateThreadContextFPUCommon(tc, xsave);
+
+    updateThreadContextAVXCommon(tc, kxsave);
 
     tc->setMiscRegNoEffect(misc_reg::Fiseg, 0);
     tc->setMiscRegNoEffect(misc_reg::Fioff, xsave.ctrl64.fpu_ip);
