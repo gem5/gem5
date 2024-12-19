@@ -63,6 +63,12 @@ FlatFloatRegClassOps::regName(const RegId &id) const
         return ss.str();
     }
     reg_idx -= NumXMMRegs * 2;
+    if (reg_idx < NumXMMRegs * 2) {
+        ccprintf(ss, "%%ymm%d_%s", reg_idx / 2,
+                (reg_idx % 2) ? "high": "low");
+        return ss.str();
+    }
+    reg_idx -= NumXMMRegs * 2;
     if (reg_idx < NumMicroFpRegs) {
         ccprintf(ss, "%%ufp%d", reg_idx);
         return ss.str();

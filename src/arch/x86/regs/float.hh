@@ -106,7 +106,41 @@ enum FloatRegIndex
     _Xmm15LowIdx,
     _Xmm15HighIdx,
 
-    MicrofpBase = XmmBase + 2 * NumXMMRegs,
+    YmmBase = XmmBase + 2 * NumXMMRegs,
+    _Ymm0LowIdx = YmmBase,
+    _Ymm0HighIdx,
+    _Ymm1LowIdx,
+    _Ymm1HighIdx,
+    _Ymm2LowIdx,
+    _Ymm2HighIdx,
+    _Ymm3LowIdx,
+    _Ymm3HighIdx,
+    _Ymm4LowIdx,
+    _Ymm4HighIdx,
+    _Ymm5LowIdx,
+    _Ymm5HighIdx,
+    _Ymm6LowIdx,
+    _Ymm6HighIdx,
+    _Ymm7LowIdx,
+    _Ymm7HighIdx,
+    _Ymm8LowIdx,
+    _Ymm8HighIdx,
+    _Ymm9LowIdx,
+    _Ymm9HighIdx,
+    _Ymm10LowIdx,
+    _Ymm10HighIdx,
+    _Ymm11LowIdx,
+    _Ymm11HighIdx,
+    _Ymm12LowIdx,
+    _Ymm12HighIdx,
+    _Ymm13LowIdx,
+    _Ymm13HighIdx,
+    _Ymm14LowIdx,
+    _Ymm14HighIdx,
+    _Ymm15LowIdx,
+    _Ymm15HighIdx,
+
+    MicrofpBase = YmmBase + 2 * NumXMMRegs,
     _Microfp0Idx = MicrofpBase,
     _Microfp1Idx,
     _Microfp2Idx,
@@ -177,6 +211,24 @@ static inline RegId
 xmmHigh(int index)
 {
     return floatRegClass[XmmBase + 2 * index + 1];
+}
+
+static inline RegId
+ymm(int index)
+{
+    return floatRegClass[YmmBase + index];
+}
+
+static inline RegId
+ymmLow(int index)
+{
+    return floatRegClass[YmmBase + 2 * index];
+}
+
+static inline RegId
+ymmHigh(int index)
+{
+    return floatRegClass[YmmBase + 2 * index + 1];
 }
 
 static inline RegId
