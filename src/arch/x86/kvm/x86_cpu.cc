@@ -116,7 +116,7 @@ struct GEM5_PACKED FXSave
     uint64_t reserved[12];
 };
 
-// for the upper 128 bits of 16 ymm registers 
+// for the upper 128 bits of 16 ymm registers
 struct GEM5_PACKED AVXState {
     uint8_t ymmh[16][16];
 };
@@ -880,10 +880,10 @@ X86KvmCPU::updateKvmStateSRegs()
 void
 X86KvmCPU::updateKvmStateAVXCommon(ThreadContext *tc, const kvm_xsave &kxsave)
 {
-    // Like updateKvmStateFPUCommon, updateKvmStateAVXCommon is called by 
-    // updateKvmStateFPU function 
+    // Like updateKvmStateFPUCommon, updateKvmStateAVXCommon is called by
+    // updateKvmStateFPU function
     // Setting Kvm's ymm reg values to gem5's ymm reg values
-    const AVXState *avx = (const AVXState*)((const char*)kxsave.region 
+    const AVXState *avx = (const AVXState*)((const char*)kxsave.region
                             + sizeof(FXSave) + sizeof(XSaveHeader));
 
     for (int i = 0; i < 16; i++) {
@@ -1148,16 +1148,16 @@ X86KvmCPU::updateThreadContextSRegs(const struct kvm_sregs &sregs)
 #undef APPLY_DTABLE
 }
 
-void 
-X86KvmCPU::updateThreadContextAVXCommon(ThreadContext *tc, 
-                                        const struct kvm_xsave &kxsave) 
+void
+X86KvmCPU::updateThreadContextAVXCommon(ThreadContext *tc,
+                                        const struct kvm_xsave &kxsave)
 {
-    // Setting gem5's ymm reg values to Kvm's ymm reg values 
-    XSaveHeader& xsave_hdr = * (XSaveHeader *) ((char *) &kxsave 
+    // Setting gem5's ymm reg values to Kvm's ymm reg values
+    XSaveHeader& xsave_hdr = * (XSaveHeader *) ((char *) &kxsave
                                 + sizeof(FXSave));
-    
+
     if (xsave_hdr.xstate_bv.avx) {
-        const AVXState *avx = (const AVXState*)((const char*)kxsave.region 
+        const AVXState *avx = (const AVXState*)((const char*)kxsave.region
                                 + sizeof(FXSave) + sizeof(XSaveHeader));
 
         for (int i = 0; i < 16; i++) {
