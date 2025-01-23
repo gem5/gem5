@@ -65,24 +65,26 @@ class Random
     using RandomPtr = std::shared_ptr<Random>;
     using Instances = std::vector<std::weak_ptr<Random>>;
 
-    static RandomPtr genRandom()
+    static RandomPtr genRandom(Random* r = nullptr)
     {
-      if (!instances)
-        instances = new Instances();
+        if (instances == nullptr)
+            instances = new Instances();
 
-      auto ptr = std::shared_ptr<Random>(new Random(globalSeed));
-      instances->emplace_back(ptr);
-      return ptr;
-    }
+        auto randpoint = r ? std::shared_ptr<Random>(r, [](Random*){})
+                         : std::shared_ptr<Random>(new Random());
+        // Check if randpoint is not already in the vector
+        bool exists = false;
+        for (const auto& weak_ptr : *instances) {
+            if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
+            exists = true;
+            break;
+            }
+        }
+        if (!exists) {
+            instances->emplace_back(randpoint);
+        }
 
-    static RandomPtr genRandom(uint32_t s)
-    {
-      if (!instances)
-        instances = new Instances();
-
-      auto ptr = std::shared_ptr<Random>(new Random(s));
-      instances->emplace_back(ptr);
-      return ptr;
+        return randpoint;
     }
 
     static uint64_t globalSeed;
@@ -109,13 +111,6 @@ class Random
     static_assert(nullptr == 0x0, "nullptr is not 0x0, Random instance tracking will fail");
     static Instances* instances;
 
-    /**
-     * @ingroup api_base_utils
-     * @{
-     */
-    Random() = delete;
-    Random(uint32_t s);
-
     Random(const Random& rng) = delete;
     Random& operator=(const Random& rng) = delete;
 
@@ -123,6 +118,15 @@ class Random
     Random& operator=(Random&& rng) = delete;
 
   public:
+
+    /**
+     * @ingroup api_base_utils
+     */ /**
+     * @ingroup api_base_utils
+     * @{
+     */
+    Random();
+    Random(uint32_t s);
     /** @} */ // end of api_base_utils
     ~Random();
 

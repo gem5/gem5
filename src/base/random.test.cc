@@ -84,7 +84,7 @@ TEST(RandomCtor, DoubleDefaultConstruct)
     // First double corresponds to the default seed
     // 14514284786278117030llu / std::numeric_limits<uint64_t>::max()
     ASSERT_EQ(dut->random<double>(),
-      0.7868209548678020137657540544751100242137908935546875d);
+      0.7868209548678020137657540544751100242137908935546875);
 }
 
 TEST(RandomCtor, FloatDefaultConstruct)
@@ -102,7 +102,7 @@ TEST(RandomCtor, FloatDefaultConstruct)
  */
 TEST(RandomCtor, ConstructUserSpecifiedSeed)
 {
-    RandomPtr dut = Random::genRandom(42);
+    RandomPtr dut = RandomPtr(new Random(42));
     ASSERT_EQ(dut->random<uint64_t>(), 13930160852258120406llu);
 }
 
@@ -232,10 +232,11 @@ TEST(RandomConstruct, LiveInstancesRemove)
 {
     {
         RandomPtr base_rng = Random::genRandom();
-        {
-            RandomPtr my_rng = Random::genRandom(42);
-            ASSERT_EQ(RandomTest::getInstances()->size(), 2);
-        }
+        RandomPtr my_rng = Random::genRandom();
+        ASSERT_EQ(RandomTest::getInstances()->size(), 2);
+
+        my_rng.reset();
+
         ASSERT_EQ(RandomTest::getInstances()->size(), 1);
     }
     ASSERT_EQ(RandomTest::getInstances(), nullptr);
@@ -261,7 +262,7 @@ TEST(RandomReseed, ConstructThenReseed)
 TEST(RandomReseed, GlobalReseedLive)
 {
     RandomPtr base_rng  = Random::genRandom();
-    RandomPtr my_rng = Random::genRandom(1337);
+    RandomPtr my_rng = Random::genRandom(new Random(1337));
 
     ASSERT_EQ(base_rng->random<uint64_t>(), 14514284786278117030llu);
     ASSERT_EQ(my_rng->random<uint64_t>(), 12913197394697896830llu);

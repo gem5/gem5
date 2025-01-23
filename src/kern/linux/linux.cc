@@ -45,7 +45,8 @@ namespace gem5
 
 // The OS methods are called statically. Instantiate the random number
 // generator for access to /dev/urandom here.
-Random::RandomPtr Linux::random = Random::genRandom();
+static Random rng;
+Random::RandomPtr Linux::random = Random::genRandom(&rng);
 
 int
 Linux::openSpecialFile(std::string path, Process *process,

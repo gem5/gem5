@@ -97,6 +97,9 @@ Episode::initActions()
     actions.push_back(new Action(Action::Type::ATOMIC, numLanes));
     actions.push_back(new Action(Action::Type::ACQUIRE, numLanes));
 
+    static Random r;
+    Random::RandomPtr rng = Random::genRandom(&r);
+
     // second, push a number of LD/ST actions
     int num_loads = numLoads;
     int num_stores = numStores;
