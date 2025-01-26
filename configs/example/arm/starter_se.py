@@ -73,6 +73,14 @@ cpu_types = {
     ),
 }
 
+print("CPU I Cache")
+print(O3_ARM_v7a.O3_ARM_v7a_ICache.size)
+
+print("CPU D Cache")
+print(O3_ARM_v7a.O3_ARM_v7a_DCache.size)
+
+print("CPU L2 Cache")
+print(O3_ARM_v7a.O3_ARM_v7aL2.size)
 
 def get_processes(cmd):
     """Interprets commands to run and returns a list of processes"""
