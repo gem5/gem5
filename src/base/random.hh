@@ -87,6 +87,27 @@ class Random
         return randpoint;
     }
 
+    static RandomPtr genRandom(uint32_t s)
+    {
+        if (instances == nullptr)
+            instances = new Instances();
+
+        auto randpoint = std::shared_ptr<Random>(new Random(s));
+        // Check if randpoint is not already in the vector
+        bool exists = false;
+        for (const auto& weak_ptr : *instances) {
+            if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
+            exists = true;
+            break;
+            }
+        }
+        if (!exists) {
+            instances->emplace_back(randpoint);
+        }
+
+        return randpoint;
+    }
+
     static uint64_t globalSeed;
 
     /**
