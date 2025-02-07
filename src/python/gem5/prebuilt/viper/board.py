@@ -176,8 +176,6 @@ class ViperBoard(X86Board):
     # application or script into a bash script setting up the environment and
     # loading the GPU driver.
     def make_gpu_app(self, gpu: BaseViperGPU, app: str, debug: bool = False):
-        driver_load_command = gpu.get_driver_command(debug=debug)
-
         with open(os.path.abspath(app), "rb") as binfile:
             encodedBin = base64.b64encode(binfile.read()).decode()
 
@@ -188,4 +186,4 @@ class ViperBoard(X86Board):
             "/sbin/m5 exit\n"
         )
 
-        return driver_load_command + application_command
+        return application_command

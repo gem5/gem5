@@ -90,6 +90,19 @@ class AMDGPUDevice;
 #define MI200_INV_ENG17_SEM1                              0x0a288
 #define MI200_INV_ENG17_SEM2                              0x6af88
 
+#define MI300X_INV_ENG17_ACK1                             0x4a298
+#define MI300X_INV_ENG17_ACK2                             0x62f98
+#define MI300X_INV_ENG17_ACK3                             0x8a298
+#define MI300X_INV_ENG17_ACK4                             0xca298
+#define MI300X_INV_ENG17_ACK5                             0x10a298
+#define MI300X_INV_ENG17_ACK6                             0x14a298
+#define MI300X_INV_ENG17_ACK7                             0x18a298
+#define MI300X_INV_ENG17_ACK8                             0x1ca298
+#define MI300X_INV_ENG17_ACK9                             0xe2f98
+#define MI300X_INV_ENG17_ACK10                            0x162f98
+#define MI300X_INV_ENG17_ACK11                            0x1e2f98
+#define MI300X_EPF0_STRAP0                                0x34d8
+
 class AMDGPUNbio
 {
   public:

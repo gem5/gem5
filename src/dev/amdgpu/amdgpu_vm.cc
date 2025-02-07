@@ -122,6 +122,7 @@ AMDGPUVM::readMMIO(PacketPtr pkt, Addr offset)
         break;
       // GRBM MMIOs
       case mmVM_INVALIDATE_ENG17_ACK:
+      case MI300X_VM_INVALIDATE_ENG17_ACK:
         DPRINTF(AMDGPUDevice, "Overwritting invalidation ENG17 ACK\n");
         pkt->setLE<uint32_t>(1);
         break;
@@ -132,7 +133,7 @@ AMDGPUVM::readMMIO(PacketPtr pkt, Addr offset)
 }
 
 void
-AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
+AMDGPUVM::writeMMIOGfx900(PacketPtr pkt, Addr offset)
 {
     switch (offset) {
       // VMID0 MMIOs
@@ -190,6 +191,81 @@ AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
         } break;
       default:
         break;
+    }
+}
+
+void
+AMDGPUVM::writeMMIOGfx940(PacketPtr pkt, Addr offset)
+{
+    switch (offset) {
+      // VMID0 MMIOs
+      case MI300X_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32:
+        vmContext0.ptBaseL = pkt->getLE<uint32_t>();
+        // Clear extra bits not part of address
+        vmContext0.ptBaseL = insertBits(vmContext0.ptBaseL, 0, 0, 0);
+        break;
+      case MI300X_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32:
+        vmContext0.ptBaseH = pkt->getLE<uint32_t>();
+        break;
+      case MI300X_CONTEXT0_PAGE_TABLE_START_ADDR_LO32:
+        vmContext0.ptStartL = pkt->getLE<uint32_t>();
+        break;
+      case MI300X_CONTEXT0_PAGE_TABLE_START_ADDR_HI32:
+        vmContext0.ptStartH = pkt->getLE<uint32_t>();
+        break;
+      case MI300X_CONTEXT0_PAGE_TABLE_END_ADDR_LO32:
+        vmContext0.ptEndL = pkt->getLE<uint32_t>();
+        break;
+      case MI300X_CONTEXT0_PAGE_TABLE_END_ADDR_HI32:
+        vmContext0.ptEndH = pkt->getLE<uint32_t>();
+        break;
+      case MI300X_VM_AGP_TOP: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.agpTop = (((Addr)bits(val, 23, 0)) << 24) | 0xffffff;
+        } break;
+      case MI300X_VM_AGP_BOT: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.agpBot = ((Addr)bits(val, 23, 0)) << 24;
+        } break;
+      case MI300X_VM_AGP_BASE: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.agpBase = ((Addr)bits(val, 23, 0)) << 24;
+        } break;
+      case MI300X_VM_FB_LOCATION_TOP: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.fbTop = (((Addr)bits(val, 23, 0)) << 24) | 0xffffff;
+        } break;
+      case MI300X_VM_FB_LOCATION_BASE: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.fbBase = ((Addr)bits(val, 23, 0)) << 24;
+        } break;
+      case MI300X_VM_FB_OFFSET: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.fbOffset = ((Addr)bits(val, 23, 0)) << 24;
+        } break;
+      case MI300X_VM_SYSTEM_APERTURE_LOW_ADDR: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.sysAddrL = ((Addr)bits(val, 29, 0)) << 18;
+        } break;
+      case MI300X_VM_SYSTEM_APERTURE_HIGH_ADDR: {
+        uint32_t val = pkt->getLE<uint32_t>();
+        vmContext0.sysAddrH = ((Addr)bits(val, 29, 0)) << 18;
+        } break;
+      default:
+        break;
+    }
+}
+
+void
+AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
+{
+    // There are multiple functions due to MMIO addresses being aliased to
+    // something different from a previous GFX version. So far this has not
+    // been the case for supported MMIO reads.
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+        writeMMIOGfx940(pkt, offset);
+    } else {
+        writeMMIOGfx900(pkt, offset);
     }
 }
 

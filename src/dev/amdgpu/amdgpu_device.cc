@@ -147,6 +147,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     cp->hsaPacketProc().setGPUDevice(this);
     cp->setGPUDevice(this);
     nbio.setGPUDevice(this);
+    gpuvm.setGPUDevice(this);
 
     // Address aperture for device memory. We tell this to the driver and
     // could possibly be anything, but these are the values used by hardware.
@@ -168,7 +169,11 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     gpuvm.setMMIOAperture(IH_MMIO_RANGE,   AddrRange(0x4280, 0x4980));
     gpuvm.setMMIOAperture(GRBM_MMIO_RANGE, AddrRange(0x8000, 0xC000));
     gpuvm.setMMIOAperture(GFX_MMIO_RANGE,  AddrRange(0x28000, 0x3F000));
-    gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
+    if (getGfxVersion() == GfxVersion::gfx942) {
+        gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x60D00, 0x62E20));
+    } else {
+        gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
+    }
 
     // These are hardcoded register values to return what the driver expects
     setRegVal(AMDGPU_MP0_SMN_C2PMSG_33, 0x80000000);
@@ -189,11 +194,41 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI200_MEM_SIZE_REG, mem_size);
     } else if (p.device_name == "MI300X") {
-        setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
-        setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
-        setRegVal(MI200_MEM_SIZE_REG, mem_size);
+        // VRAM size in MB (shifted right by 20 bits)
+        setRegVal(MI300X_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI300X_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI300X_MEM_SIZE_REG, mem_size);
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
+    }
+
+    if (getGfxVersion() == GfxVersion::gfx942 && p.ipt_binary != "") {
+        // From ROCk driver: amdgpu/amdgpu_discovery.h:
+        constexpr uint64_t DISCOVERY_TMR_OFFSET = (64 << 10);
+        constexpr int IPT_SIZE_DW = 0xa00;
+        uint64_t ip_table_base = (mem_size << 20) - DISCOVERY_TMR_OFFSET;
+
+        std::ifstream iptBin;
+        std::array<uint32_t, IPT_SIZE_DW> ipTable;
+        iptBin.open(p.ipt_binary, std::ios::binary);
+        iptBin.read((char *)ipTable.data(), IPT_SIZE_DW*4);
+        iptBin.close();
+
+        // Read from the IP discovery ROM starting at offset 0x100 (DW 0x40)
+        for (int ipt_dword = 0x0; ipt_dword < IPT_SIZE_DW; ipt_dword++) {
+            Addr ipt_addr = ip_table_base + ipt_dword*4;
+
+            // The driver is using bit 32 of the address for something not
+            // part of the address. Fixup the address to be ipt_addr >> 31
+            // OR'd with the lower 31 bits and 0x80000000.
+            Addr ipt_addr_hi = ipt_addr >> 31;
+            Addr fixup_addr = (ipt_addr_hi << 32) | (ipt_addr & 0x7fffffff)
+                            | 0x80000000;
+
+            setRegVal(fixup_addr, ipTable[ipt_dword]);
+            DPRINTF(AMDGPUDevice, "IPTable wrote dword %d (%x) to %lx\n",
+                    ipt_dword, ipTable[ipt_dword], fixup_addr);
+        }
     }
 }
 

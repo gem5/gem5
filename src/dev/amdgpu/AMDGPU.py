@@ -81,6 +81,7 @@ class AMDGPUDevice(PciEndpoint):
     InterruptPin = 2
     ExpansionROM = 0
 
+    ipt_binary = Param.String("", "IP table dump from hardware")
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )
