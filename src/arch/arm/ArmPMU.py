@@ -169,6 +169,7 @@ class ArmPMU(SimObject):
         cpu=None,
         itb=None,
         dtb=None,
+        l2_shared=None,
         icache=None,
         dcache=None,
         l2cache=None,
@@ -191,10 +192,10 @@ class ArmPMU(SimObject):
 
         self.addEvent(SoftwareIncrement(self, "SW_INCR"))
         self.addEvent(ProbeEvent(self, "L1I_CACHE_REFILL", icache, "Fill"))
-        self.addEvent(ProbeEvent(self, "L1I_TLB_REFILL", itb, "Refills"))
+        self.addEvent(ProbeEvent(self, "L1I_TLB_REFILL", itb, "InstRefills"))
         self.addEvent(ProbeEvent(self, "L1D_CACHE_REFILL", dcache, "Fill"))
         self.addEvent(ProbeEvent(self, "L1D_CACHE", dcache, "Hit", "Miss"))
-        self.addEvent(ProbeEvent(self, "L1D_TLB_REFILL", dtb, "Refills"))
+        self.addEvent(ProbeEvent(self, "L1D_TLB_REFILL", dtb, "DataRefills"))
         self.addEvent(ProbeEvent(self, "LD_RETIRED", cpu, "RetiredLoads"))
         self.addEvent(ProbeEvent(self, "ST_RETIRED", cpu, "RetiredStores"))
         self.addEvent(ProbeEvent(self, "INST_RETIRED", cpu, "RetiredInsts"))
@@ -238,8 +239,12 @@ class ArmPMU(SimObject):
         # 0x2A: L3D_CACHE_REFILL
         # 0x2B: L3D_CACHE
         # 0x2C: L3D_CACHE_WB
-        # 0x2D: L2D_TLB_REFILL
-        # 0x2E: L2I_TLB_REFILL
+        self.addEvent(
+            ProbeEvent(self, "L2D_TLB_REFILL", l2_shared, "DataRefills")
+        )
+        self.addEvent(
+            ProbeEvent(self, "L2I_TLB_REFILL", l2_shared, "InstRefills")
+        )
         # 0x2F: L2D_TLB
         # 0x30: L2I_TLB
 
