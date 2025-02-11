@@ -37,6 +37,7 @@ from m5.objects import (
     Root,
     SubSystem,
 )
+from m5.util import warn
 
 from ...isas import ISA
 from ...utils.requires import requires
@@ -95,3 +96,11 @@ class AbstractProcessor(SubSystem):
         Subclasses should override this method to set up any connections.
         """
         pass
+
+    def switch(self) -> None:
+        """Switch the processor to a different core type.
+
+        This function prints a warning and does nothing by default. Subclasses
+        should override this method to implement switching.
+        """
+        warn("Switching is not supported for this processor")

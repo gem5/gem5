@@ -506,6 +506,13 @@ class Simulator:
         # hit)
         self._exit_event_id_log = {}
 
+    def switch_processor(self) -> None:
+        """
+        Switch the processor. This is a convenience function to call the
+        processor's switch function.
+        """
+        self._board.get_processor().switch()
+
     def set_id(self, id: str) -> None:
         """Set the ID of the simulator.
 
