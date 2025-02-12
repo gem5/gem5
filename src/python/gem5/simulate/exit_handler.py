@@ -48,6 +48,9 @@ class ExitHandler:
         self._process(simulator)
         return self._exit_simulation()
 
+    def get_handler_description(self) -> str:
+        return f"Exit Handler {self.__class__.__name__} called."
+
     @abstractmethod
     def _process(self, simulator: "Simulator") -> None:
         raise NotImplementedError(
@@ -174,6 +177,11 @@ class ScheduledExitEventHandler(ExitHandler):
 
 
 class KernelBootedExitHandler(ExitHandler):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Kernel booted."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -184,6 +192,11 @@ class KernelBootedExitHandler(ExitHandler):
 
 
 class AfterBootExitHandler(ExitHandler):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Started `after_boot.sh` script."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -194,6 +207,11 @@ class AfterBootExitHandler(ExitHandler):
 
 
 class AfterBootScriptExitHandler(ExitHandler):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Finished `after_boot.sh` script."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -229,6 +247,11 @@ class CheckpointExitHandler(ExitHandler):
 
 
 class WorkBeginExitHandler(ExitHandler):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Started executing Region of Interest (ROI)."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         m5.stats.reset()
@@ -239,6 +262,11 @@ class WorkBeginExitHandler(ExitHandler):
 
 
 class WorkEndExitHandler(ExitHandler):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Finished executing Region of Interest (ROI)."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         m5.stats.dump()

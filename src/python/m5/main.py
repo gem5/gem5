@@ -322,6 +322,13 @@ def parse_options():
         help="Remote gdb base port (set to 0 to disable listening)",
     )
 
+    option(
+        "--show-exit-event-messages",
+        action="store_true",
+        default=False,
+        help="Print information about exit events and when they occur",
+    )
+
     # Help options
     group("Help Options")
     option(
