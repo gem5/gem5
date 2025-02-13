@@ -1264,6 +1264,62 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(wptr, num_queues);
     SERIALIZE_ARRAY(size, num_queues);
     SERIALIZE_ARRAY(processing, num_queues);
+
+    // Capture RLC queue information in checkpoint
+    // Only two RLC queues are supported right now
+    const int num_rlc_queues = 2;
+    std::vector<SDMAQueue *> rlc_queues;
+    rlc_queues.push_back((SDMAQueue *)&rlc0);
+    rlc_queues.push_back((SDMAQueue *)&rlc1);
+
+    Addr rlc_info[num_rlc_queues];
+    bool rlc_valid[num_rlc_queues];
+    Addr rlc_base[num_rlc_queues];
+    Addr rlc_rptr[num_rlc_queues];
+    Addr rlc_global_rptr[num_rlc_queues];
+    Addr rlc_wptr[num_rlc_queues];
+    Addr rlc_size[num_rlc_queues];
+    Addr rlc_rptr_wb_addr[num_rlc_queues];
+    bool rlc_processing[num_rlc_queues];
+    Addr rlc_mqd_addr[num_rlc_queues];
+    bool rlc_priv[num_rlc_queues];
+    bool rlc_static[num_rlc_queues];
+    uint32_t rlc_mqd[num_rlc_queues * 128];
+
+    // Save RLC queue information in arrays that
+    // are easier to serialize
+    for (int i = 0; i < num_rlc_queues; i++) {
+        rlc_valid[i] = rlc_queues[i]->valid();
+        if (rlc_valid[i]) {
+            rlc_info[i] = rlcInfo[i];
+            rlc_base[i] = rlc_queues[i]->base();
+            rlc_rptr[i] = rlc_queues[i]->getRptr();
+            rlc_global_rptr[i] = rlc_queues[i]->globalRptr();
+            rlc_wptr[i] = rlc_queues[i]->getWptr();
+            rlc_size[i] = rlc_queues[i]->size();
+            rlc_rptr_wb_addr[i] = rlc_queues[i]->rptrWbAddr();
+            rlc_processing[i] = rlc_queues[i]->processing();
+            rlc_mqd_addr[i] = rlc_queues[i]->getMQDAddr();
+            rlc_priv[i] = rlc_queues[i]->priv();
+            rlc_static[i] = rlc_queues[i]->isStatic();
+            memcpy(rlc_mqd + 128*i, rlc_queues[i]->getMQD(),
+                    sizeof(SDMAQueueDesc));
+        }
+    }
+
+    SERIALIZE_ARRAY(rlc_info, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_valid, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_base, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_rptr, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_global_rptr, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_wptr, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_size, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_processing, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_priv, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_static, num_rlc_queues);
+    SERIALIZE_ARRAY(rlc_mqd, num_rlc_queues * 128);
 }
 
 void
@@ -1308,6 +1364,63 @@ SDMAEngine::unserialize(CheckpointIn &cp)
         queues[i]->wptr(wptr[i]);
         queues[i]->size(size[i]);
         queues[i]->processing(processing[i]);
+    }
+
+    // Restore RLC queue state information from checkpoint
+    // Only two RLC queues are supported right now
+    const int num_rlc_queues = 2;
+
+    Addr rlc_info[num_rlc_queues];
+    bool rlc_valid[num_rlc_queues];
+    Addr rlc_base[num_rlc_queues];
+    Addr rlc_rptr[num_rlc_queues];
+    Addr rlc_global_rptr[num_rlc_queues];
+    Addr rlc_wptr[num_rlc_queues];
+    Addr rlc_size[num_rlc_queues];
+    Addr rlc_rptr_wb_addr[num_rlc_queues];
+    bool rlc_processing[num_rlc_queues];
+    Addr rlc_mqd_addr[num_rlc_queues];
+    bool rlc_priv[num_rlc_queues];
+    bool rlc_static[num_rlc_queues];
+    uint32_t rlc_mqd[num_rlc_queues * 128];
+
+    UNSERIALIZE_ARRAY(rlc_info, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_valid, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_base, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_rptr, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_global_rptr, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_wptr, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_size, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_processing, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_priv, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_static, num_rlc_queues);
+    UNSERIALIZE_ARRAY(rlc_mqd, num_rlc_queues * 128);
+
+    // Save RLC queue information into RLC0, RLC1
+    std::vector<SDMAQueue *> rlc_queues;
+    rlc_queues.push_back((SDMAQueue *)&rlc0);
+    rlc_queues.push_back((SDMAQueue *)&rlc1);
+
+    for (int i = 0; i < num_rlc_queues; i++) {
+        rlc_queues[i]->valid(rlc_valid[i]);
+        if (rlc_valid[i]) {
+            rlcInfo[i] = rlc_info[i];
+            rlc_queues[i]->base(rlc_base[i]);
+            rlc_queues[i]->rptr(rlc_rptr[i]);
+            rlc_queues[i]->setGlobalRptr(rlc_global_rptr[i]);
+            rlc_queues[i]->wptr(rlc_wptr[i]);
+            rlc_queues[i]->size(rlc_size[i]);
+            rlc_queues[i]->rptrWbAddr(rlc_rptr_wb_addr[i]);
+            rlc_queues[i]->processing(rlc_processing[i]);
+            rlc_queues[i]->setMQDAddr(rlc_mqd_addr[i]);
+            rlc_queues[i]->setPriv(rlc_priv[i]);
+            rlc_queues[i]->setStatic(rlc_static[i]);
+            SDMAQueueDesc* mqd = new SDMAQueueDesc();
+            memcpy(mqd, rlc_mqd + 128*i, sizeof(SDMAQueueDesc));
+            rlc_queues[i]->setMQD(mqd);
+        }
     }
 }
 
