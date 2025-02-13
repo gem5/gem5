@@ -34,7 +34,7 @@
 #include <vector>
 
 #include "cpu/reg_class.hh"
-
+#include "debug/MinorGUI.hh"
 namespace gem5
 {
 
@@ -99,6 +99,20 @@ class RegFile
     set(size_t idx, const void *val)
     {
         std::memcpy(ptr(idx), val, _regBytes);
+    }
+
+    void dump() const
+    {
+        if (regClass.type() != RegClassType::IntRegClass &&
+            regClass.type() != RegClassType::FloatRegClass)
+            return;
+
+        auto regsSize = regClass.type() != RegClassType::IntRegClass ? 32 :  regClass.numRegs();
+        for (size_t i = 0; i < regsSize; ++i) {
+            RegVal val = reg(i);
+            const RegId regId(regClass, i);
+            DPRINTF_GLOBAL(MinorGUI, "%s%d=0x%08x\n", regClass.type() == RegClassType::IntRegClass ? "x" : "f", i, (int32_t) val);
+        }
     }
 
     void clear() { std::fill(data.begin(), data.end(), 0); }

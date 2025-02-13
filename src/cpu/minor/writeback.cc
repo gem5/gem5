@@ -471,7 +471,11 @@ namespace gem5
                             inst ? inst->staticInst->disassemble(inst->pc->instAddr()) : "");
                     /* Note that this includes discarded insts */
                     DPRINTF(MinorWriteback, "Completed inst: %s\n", *inst);
-
+                    DPRINTF(MinorGUI, "REGISTERS\n");
+                    for (auto &rf : inst->getRegsAfterExecution())
+                        rf.dump();
+                    // Print registers
+                    ExecContext context(cpu, *cpu.threads[thread_id], inst);
                     /* Got to the end of a full instruction? */
                     wb_info.lastCommitWasEndOfMacroop = inst->isFault() ||
                                                         inst->isLastOpInInst();

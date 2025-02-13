@@ -58,6 +58,7 @@
 #include "cpu/timing_expr.hh"
 #include "sim/faults.hh"
 #include "sim/insttracer.hh"
+#include "cpu/regfile.hh"
 
 namespace gem5
 {
@@ -236,17 +237,28 @@ class MinorDynInst : public RefCounted
      *  have the same register indices as when the instruction was marked
      *  up */
     std::vector<RegId> flatDestRegIdx;
+    std::vector<RegFile> regsAfterExecution;
 
   public:
-    MinorDynInst(StaticInstPtr si, InstId id_=InstId(), Fault fault_=NoFault) :
-        staticInst(si), id(id_), fault(fault_), translationFault(NoFault),
-        flatDestRegIdx(si ? si->numDestRegs() : 0)
+    MinorDynInst(StaticInstPtr si, InstId id_ = InstId(), Fault fault_ = NoFault) : staticInst(si), id(id_), fault(fault_), translationFault(NoFault),
+                                                                                    flatDestRegIdx(si ? si->numDestRegs() : 0)
     { }
 
   public:
     /** The BubbleIF interface. */
     bool isBubble() const { return id.fetchSeqNum == 0; }
+    void setRegsAfterExecution(const std::array<RegFile, CCRegClass + 1>& regs)
+    {
+      regsAfterExecution.clear();
+      for (auto i = 0; i < CCRegClass + 1; i++) {
+        regsAfterExecution.push_back(regs[i]);
+      }
+    }
 
+    const std::vector<RegFile>& getRegsAfterExecution() const
+    {
+      return regsAfterExecution;
+    }
     /** There is a single bubble inst */
     static MinorDynInstPtr bubble() { return bubbleInst; }
 

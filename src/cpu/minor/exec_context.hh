@@ -214,6 +214,13 @@ class ExecContext : public gem5::ExecContext
     {
         thread.setFwdReg(si->destRegIdx(idx), val);
     }
+    void dumpRegisters() {
+        thread.dumpRegisters();
+    }
+
+    std::array<RegFile, CCRegClass + 1> getFwdRegFiles() const {
+        return std::array<RegFile, CCRegClass + 1>{thread.getFwdRegFiles()};
+    }
 
     void writeback(const StaticInstPtr si)
     {

@@ -254,6 +254,7 @@ namespace gem5
 
                 fault = inst->staticInst->completeAcc(packet, &context, inst->traceData);
                 inst->executed = true;
+                inst->setRegsAfterExecution(context.getFwdRegFiles());
                 context.writeback(inst->staticInst);
 
                 if (fault != NoFault)

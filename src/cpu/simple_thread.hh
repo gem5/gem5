@@ -191,7 +191,17 @@ class SimpleThread : public ThreadState, public ThreadContext
     {
         return comInstEventQueue.getCurTick();
     }
+    void dumpRegisters() {
+        DPRINTF_GLOBAL(MinorGUI, "REGISTERS\n");
+        for (auto &rf: regFiles)
+            rf.dump();
+    }
 
+    void dumpFwdRegisters() {
+        DPRINTF_GLOBAL(MinorGUI, "FORWARD REGISTERS\n");
+        for (auto &rf: fwdRegFiles)
+            rf.dump();
+    }
     BaseCPU *getCpuPtr() override { return baseCpu; }
 
     int cpuId() const override { return ThreadState::cpuId(); }
@@ -314,7 +324,6 @@ protected:
 
     RegVal get_reg(const RegId &arch_reg, const RegFileArray &regFiles) const {
         const RegId reg = arch_reg.flatten(*isa);
-
         const RegIndex idx = reg.index();
 
         const auto &reg_file = regFiles[reg.classValue()];
@@ -451,6 +460,11 @@ public:
         // DPRINTFV(reg_class.debug(), "Reading %s register %s (%d) as %s.\n",
         //         reg.className(), reg_class.regName(arch_reg), idx,
         //         reg_class.valString(val));
+    }
+
+    // Return a copy of fwdRegFiles
+    const std::array<RegFile, CCRegClass + 1>& getFwdRegFiles() const {
+        return fwdRegFiles;
     }
 
     void *
