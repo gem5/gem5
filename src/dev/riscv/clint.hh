@@ -137,7 +137,6 @@ class Clint : public BasicPioDevice
 
     using Register32 = ClintRegisters::Register32;
 
-    uint32_t readMSIP(Register32& reg, const int thread_id);
     void writeMSIP(Register32& reg, const uint32_t& data, const int thread_id);
 
   // External API
@@ -156,6 +155,11 @@ class Clint : public BasicPioDevice
                    PortID idx=InvalidPortID) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    /**
+     * Software Interrupt
+     */
+    void updateMSIP(const int thread_id);
 
   // CLINT reset
   public:
