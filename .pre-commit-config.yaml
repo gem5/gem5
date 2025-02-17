@@ -69,7 +69,7 @@ repos:
           - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/PyCQA/isort
-      rev: 5.13.2
+      rev: 6.0.0
       hooks:
           - id: isort
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
@@ -77,11 +77,11 @@ repos:
       hooks:
           - id: yamlfmt
     - repo: https://github.com/psf/black
-      rev: 24.10.0
+      rev: 25.1.0
       hooks:
           - id: black
     - repo: https://github.com/asottile/pyupgrade
-      rev: v3.17.0
+      rev: v3.19.1
       hooks:
           - id: pyupgrade
             # Python 3.8 is the earliest version supported.
