@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates a set of Ruby caches, the Ruby network, and a simple
+"""This file creates a set of Ruby caches, the Ruby network, and a simple
 point-to-point topology.
 See Part 3 in the Learning gem5 book:
 http://gem5.org/Documentation/learning_gem5/part3/MSIintro

@@ -26,9 +26,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
- This script  contains helper functions for the scripts in this directory.
- This script requires external packages, please install them by running:
-    pip3 install -r requirements.txt
+This script  contains helper functions for the scripts in this directory.
+This script requires external packages, please install them by running:
+   pip3 install -r requirements.txt
 """
 
 import json

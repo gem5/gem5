@@ -42,6 +42,7 @@ from pymongo.errors import (
 
 class DatabaseConnectionError(Exception):
     "Raised for failure to connect to MongoDB client"
+
     pass
 
 

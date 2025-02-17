@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Simple config/run script for the HelloObject
+"""Simple config/run script for the HelloObject
 
 This is probably the simplest gem5 config file you can possibly create.
 It creates a Root object and one *very* simple SimObject and simulates the

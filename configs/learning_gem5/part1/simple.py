@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates a barebones system and executes 'hello', a simple Hello
+"""This file creates a barebones system and executes 'hello', a simple Hello
 World application.
 See Part 1, Chapter 2: Creating a simple configuration script in the
 learning_gem5 book for more information about this script.

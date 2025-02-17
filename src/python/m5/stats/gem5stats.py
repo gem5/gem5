@@ -325,7 +325,7 @@ def _process_simobject_object(simobject: SimObject) -> SimObjectGroup:
 def _process_simobject_stats(
     simobject: Union[
         SimObject, SimObjectVector, List[Union[SimObject, SimObjectVector]]
-    ]
+    ],
 ) -> Union[List[Dict], Dict]:
     """
     Processes the stats of a SimObject, SimObjectVector, or List of either, and
