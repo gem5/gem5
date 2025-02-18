@@ -515,6 +515,7 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
+      case MISCREG_MNEPC:
         {
             MISA misa = readMiscRegNoEffect(MISCREG_ISA);
             auto val = readMiscRegNoEffect(idx);
