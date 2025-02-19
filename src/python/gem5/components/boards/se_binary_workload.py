@@ -118,10 +118,10 @@ class SEBinaryWorkload:
         self,
         binaries: List[BinaryResource],
         exit_on_work_items: bool = True,
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
-        env_list: Optional[List[str]] = None,
+        stdin_files: Optional[List[FileResource]] = None,
+        stdout_files: Optional[List[Path]] = None,
+        stderr_files: Optional[List[Path]] = None,
+        env_lists: Optional[List[List[str]]] = None,
         arguments: List[List[str]] = [],
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
@@ -134,10 +134,10 @@ class SEBinaryWorkload:
         :param binaries: The list of resource encapsulating the binary to be run.
         :param exit_on_work_items: Whether the simulation should exit on work
                                    items. ``True`` by default.
-        :param stdin_file: The input file for the binary
-        :param stdout_file: The output file for the binary
-        :param stderr_file: The error output file for the binary
-        :param env_list: The environment variables defined for the binary
+        :param stdin_files: The list of input file for the binary
+        :param stdout_files: The list of output file for the binary
+        :param stderr_files: The list of error output file for the binary
+        :param env_lists: The list of environment variables defined for the binary
         :param arguments: The list of input arguments for the binary
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
@@ -152,14 +152,23 @@ class SEBinaryWorkload:
             f"Number of binaries({len(binaries)}) "
             f"and cores({num_cores}) should be the same."
         )
-        if arguments:
-            assert len(binaries) == len(arguments), (
-                f"Mismatch between binaries and arguments: "
-                f"{len(binaries)} binaries but {len(arguments)} argument lists provided. "
-                "The 'arguments' list is optional if none of the binaries require arguments. "
-                "However, if any binary requires arguments, a list must be provided for all binaries. "
-                "For binaries that do not require arguments, an empty list should be used."
-            )
+
+        for var_name in [
+            "stdin_files",
+            "stdout_files",
+            "stderr_files",
+            "arguments",
+            "env_lists",
+        ]:
+            var = locals().get(var_name)  # Get the variable dynamically
+            if var:
+                assert len(binaries) == len(var), (
+                    f"Mismatch between binaries and {var_name}: "
+                    f"{len(binaries)} binaries but {len(var)} {var_name} lists provided. "
+                    f"The '{var_name}' list is optional if none of the binaries require it. "
+                    "However, if any binary requires it, a list must be provided for all binaries. "
+                    "For binaries that do not require it, an empty list should be used."
+                )
 
         if self.is_workload_set():
             warn("Workload has been set more than once!")
@@ -172,8 +181,11 @@ class SEBinaryWorkload:
         multiprocesses = []
         binary_arguments = []
         for i, binary in enumerate(binaries):
-            if arguments:
-                binary_arguments = arguments[i]
+            binary_arguments = arguments[i] if arguments else []
+            stdin_file = stdin_files[i] if stdin_files is not None else None
+            stdout_file = stdout_files[i] if stdout_files is not None else None
+            stderr_file = stderr_files[i] if stderr_files is not None else None
+            env_list = env_lists[i] if env_lists is not None else None
             process = self._create_process(
                 binary=binary,
                 pid=100 + i,
