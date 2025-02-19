@@ -179,7 +179,6 @@ class SEBinaryWorkload:
         self._set_fullsystem(False)
 
         multiprocesses = []
-        binary_arguments = []
         for i, binary in enumerate(binaries):
             binary_arguments = arguments[i] if arguments else []
             stdin_file = stdin_files[i] if stdin_files is not None else None
