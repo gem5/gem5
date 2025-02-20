@@ -76,8 +76,8 @@ class Random
         bool exists = false;
         for (const auto& weak_ptr : *instances) {
             if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
-            exists = true;
-            break;
+                exists = true;
+                break;
             }
         }
         if (!exists) {
@@ -97,8 +97,8 @@ class Random
         bool exists = false;
         for (const auto& weak_ptr : *instances) {
             if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
-            exists = true;
-            break;
+                exists = true;
+                break;
             }
         }
         if (!exists) {
