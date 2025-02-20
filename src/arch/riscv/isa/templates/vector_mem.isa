@@ -1702,6 +1702,12 @@ def template VlSegConstructor {{
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
             }
         }
+
+        if (microop->opClass() == SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+            microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
+                                            elen, vlen, microops);
+            this->microops.push_back(microop);
+        }
     }
 
     this->microops.front()->setFlag(IsFirstMicroop);
@@ -1807,6 +1813,8 @@ Fault
     Fault fault = xc->readMem(EA, Mem.as<uint8_t>(), mem_size, memAccessFlags,
                               byte_enable);
 
+    %(fault_code)s;
+
     if (fault != NoFault)
         return fault;
 
@@ -1856,6 +1864,9 @@ Fault
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
                                   byte_enable);
+
+    %(fault_code)s;
+
     return fault;
 }
 
