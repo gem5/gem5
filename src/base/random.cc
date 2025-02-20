@@ -46,8 +46,6 @@
 namespace gem5
 {
 
-Random::Random(): Random(globalSeed){}
-
 Random::Random(uint32_t s)
 {
     init(s);

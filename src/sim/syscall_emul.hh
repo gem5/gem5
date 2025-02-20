@@ -3222,8 +3222,7 @@ getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
               VPtr<> buf_ptr, typename OS::size_t count,
               unsigned int flags)
 {
-    static Random r;
-    Random::RandomPtr se_prng = Random::genRandom(&r);
+    static Random::RandomPtr se_prng(Random::genRandom());
     SETranslatingPortProxy proxy(tc);
 
     TypedBufferArg<uint8_t> buf(buf_ptr, count);

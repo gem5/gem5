@@ -41,6 +41,8 @@
 namespace gem5
 {
 
+//static Random::RandomPtr rng(gem5::Random::genRandom());
+
 Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
                  int num_stores)
       : tester(_tester),
@@ -96,9 +98,6 @@ Episode::initActions()
     // first, push Atomic & then Acquire action
     actions.push_back(new Action(Action::Type::ATOMIC, numLanes));
     actions.push_back(new Action(Action::Type::ACQUIRE, numLanes));
-
-    static Random r;
-    Random::RandomPtr rng = Random::genRandom(&r);
 
     // second, push a number of LD/ST actions
     int num_loads = numLoads;

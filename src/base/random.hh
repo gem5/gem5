@@ -71,7 +71,7 @@ class Random
             instances = new Instances();
 
         auto randpoint = r ? std::shared_ptr<Random>(r, [](Random*){})
-                         : std::shared_ptr<Random>(new Random());
+                         : std::shared_ptr<Random>(new Random(globalSeed));
         // Check if randpoint is not already in the vector
         bool exists = false;
         for (const auto& weak_ptr : *instances) {
@@ -132,6 +132,13 @@ class Random
     static_assert(nullptr == 0x0, "nullptr is not 0x0, Random instance tracking will fail");
     static Instances* instances;
 
+    /**
+     * @ingroup api_base_utils
+     * @{
+     */
+    Random() = delete;
+    Random(uint32_t s);
+
     Random(const Random& rng) = delete;
     Random& operator=(const Random& rng) = delete;
 
@@ -139,15 +146,6 @@ class Random
     Random& operator=(Random&& rng) = delete;
 
   public:
-
-    /**
-     * @ingroup api_base_utils
-     */ /**
-     * @ingroup api_base_utils
-     * @{
-     */
-    Random();
-    Random(uint32_t s);
     /** @} */ // end of api_base_utils
     ~Random();
 

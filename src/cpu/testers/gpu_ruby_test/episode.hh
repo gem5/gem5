@@ -113,6 +113,8 @@ class Episode
     typedef std::vector<Location> AtomicLocationList;
     AtomicLocationList atomicLocs;
 
+    Random::RandomPtr rng = Random::genRandom();
+
     // is a thread running this episode?
     bool isActive;
     // episode length = num_loads + num_stores
