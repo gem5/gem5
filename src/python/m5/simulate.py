@@ -280,8 +280,11 @@ def scheduleTickExitAbsolute(
         _m5.event.exitSimLoop(exit_string, 0, tick, 0, False)
     else:
         _m5.event.exitSimulationLoop(
-            4,
-            {"scheduled_at_tick": str(curTick()), "exit_string": exit_string},
+            6,
+            {
+                "scheduled_at_tick": str(curTick()),
+                "justification": exit_string,
+            },
             tick,
         )
 
