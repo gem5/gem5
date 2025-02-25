@@ -501,7 +501,7 @@ class SimpleSystem(BaseSimpleSystem):
         self.system_port = self.membus.cpu_side_ports
 
     def attach_pci(self, dev):
-        self.realview.attachPciDevice(dev, self.iobus)
+        self.realview.attachPciDevice(dev)
 
 
 class ArmRubySystem(BaseSimpleSystem):

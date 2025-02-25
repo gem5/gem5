@@ -49,8 +49,9 @@
 #include <vector>
 
 #include "dev/dma_device.hh"
-#include "dev/pci/host.hh"
 #include "dev/pci/pcireg.h"
+#include "dev/pci/types.hh"
+#include "dev/pci/upstream.hh"
 #include "params/PciBar.hh"
 #include "params/PciBarNone.hh"
 #include "params/PciBridge.hh"
@@ -84,7 +85,7 @@ class PciBar : public SimObject
     // Accepts a value written to config space, consumes it, and returns what
     // value config space should actually be set to. Both should be in host
     // endian format.
-    virtual uint32_t write(const PciHost::DeviceInterface &host,
+    virtual uint32_t write(const PciUpstream::DeviceInterface &interface,
                            uint32_t val) = 0;
 
     AddrRange range() const { return AddrRange(_addr, _addr + _size); }
@@ -103,7 +104,7 @@ class PciBarNone : public PciBar
     PciBarNone(const PciBarNoneParams &p) : PciBar(p) {}
 
     uint32_t
-    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    write(const PciUpstream::DeviceInterface &interface, uint32_t val) override
     {
         return 0;
     }
@@ -132,7 +133,7 @@ class PciIoBar : public PciBar
     bool isIo() const override { return true; }
 
     uint32_t
-    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    write(const PciUpstream::DeviceInterface &interface, uint32_t val) override
     {
         // Mask away the bits fixed by hardware.
         Bar bar = val & ~(_size - 1);
@@ -141,7 +142,7 @@ class PciIoBar : public PciBar
         bar.io = 1;
 
         // Update our address.
-        _addr = host.pioAddr(bar.addr << 2);
+        _addr = interface.pioAddr(bar.addr << 2);
 
         // Return what should go into config space.
         return bar;
@@ -161,10 +162,10 @@ class PciLegacyIoBar : public PciIoBar
     }
 
     uint32_t
-    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    write(const PciUpstream::DeviceInterface &interface, uint32_t val) override
     {
         // Update the address now that we have a host to translate it.
-        _addr = host.pioAddr(fixedAddr);
+        _addr = interface.pioAddr(fixedAddr);
         // Ignore writes.
         return 0;
     }
@@ -198,7 +199,7 @@ class PciMemBar : public PciBar
     bool isMem() const override { return true; }
 
     uint32_t
-    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    write(const PciUpstream::DeviceInterface &interface, uint32_t val) override
     {
         // Mask away the bits fixed by hardware.
         Bar bar = val & ~(_size - 1);
@@ -211,7 +212,7 @@ class PciMemBar : public PciBar
         _lower = bar.addr << 3;
 
         // Update our address.
-        _addr = host.memAddr(upper() + lower());
+        _addr = interface.memAddr(upper() + lower());
 
         // Return what should go into config space.
         return bar;
@@ -221,13 +222,14 @@ class PciMemBar : public PciBar
     void wide(bool val) { _wide = val; }
 
     uint64_t upper() const { return _upper; }
+
     void
-    upper(const PciHost::DeviceInterface &host, uint32_t val)
+    upper(const PciUpstream::DeviceInterface &interface, uint32_t val)
     {
         _upper = (uint64_t)val << 32;
 
         // Update our address.
-        _addr = host.memAddr(upper() + lower());
+        _addr = interface.memAddr(upper() + lower());
     }
 
     uint64_t lower() const { return _lower; }
@@ -251,7 +253,7 @@ class PciMemUpperBar : public PciBar
     }
 
     uint32_t
-    write(const PciHost::DeviceInterface &host, uint32_t val) override
+    write(const PciUpstream::DeviceInterface &interface, uint32_t val) override
     {
         assert(_lower);
 
@@ -259,7 +261,7 @@ class PciMemUpperBar : public PciBar
         Addr upper = val & ~((_lower->size() - 1) >> 32);
 
         // Let our lower half know about the update.
-        _lower->upper(host, upper);
+        _lower->upper(interface, upper);
 
         return upper;
     }
@@ -288,7 +290,7 @@ class PciDevice : public DmaDevice
     }
 
   protected:
-    const PciBusAddr _busAddr;
+    const PciDevAddr _devAddr;
 
     /** The capability list structures and base addresses
      * @{
@@ -346,26 +348,58 @@ class PciDevice : public DmaDevice
         return false;
     }
 
-  public: // Host configuration interface
+  public:
+    /**
+     * Final implementation of write access from DmaDevice. This function
+     * should not be overriden by the device. For device access
+     * the function PciDevice::writeDevice() should be overriden.
+     * @param pkt Packet describing this request
+     * @return number of ticks it took to complete
+     */
+    Tick write(PacketPtr pkt) final;
+
+    /**
+     * Final implementation of read access from PioDevice. This function
+     * should not be overriden by the device. For device access
+     * the function PciDevice::readDevice() should be overriden.
+     * @param pkt Packet describing this request
+     * @return number of ticks it took to complete
+     */
+    Tick read(PacketPtr pkt) final;
+
+  protected:
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
      * for normal operations that it does not need to override.
-     * @param pkt packet containing the write the offset into config space
+     * @param pkt packet containing the write offset into config space
      */
     virtual Tick writeConfig(PacketPtr pkt);
-
 
     /**
      * Read from the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
      * for normal operations that it does not need to override.
-     * @param pkt packet containing the write the offset into config space
+     * @param pkt packet containing the read offset into config space
      */
     virtual Tick readConfig(PacketPtr pkt);
 
+    /**
+     * Write to the PCI device. This must be implemented by the device to
+     * respond to IO, memory, ... request.
+     * @param pkt packet containing the write request
+     */
+    virtual Tick writeDevice(PacketPtr pkt) = 0;
+
+    /**
+     * Read from the PCI device. This must be implemented by the device to
+     * respond to IO, memory, ... request.
+     * @param pkt packet containing the read request
+     */
+    virtual Tick readDevice(PacketPtr pkt) = 0;
+
   protected:
-    PciHost::DeviceInterface hostInterface;
+    PciUpstream::DeviceInterface upstreamInterface;
 
     Tick pioDelay;
     Tick configDelay;
@@ -374,11 +408,20 @@ class PciDevice : public DmaDevice
     Addr
     pciToDma(Addr pci_addr) const
     {
-        return hostInterface.dmaAddr(pci_addr);
+        return upstreamInterface.dmaAddr(pci_addr);
     }
 
-    void intrPost() { hostInterface.postInt(); }
-    void intrClear() { hostInterface.clearInt(); }
+    void
+    intrPost()
+    {
+        upstreamInterface.postInt();
+    }
+
+    void
+    intrClear()
+    {
+        upstreamInterface.clearInt();
+    }
 
     uint8_t
     interruptLine() const
@@ -414,7 +457,19 @@ class PciDevice : public DmaDevice
      */
     void unserialize(CheckpointIn &cp) override;
 
-    const PciBusAddr &busAddr() const { return _busAddr; }
+    const PciDevAddr &
+    devAddr() const
+    {
+        return _devAddr;
+    }
+
+    /**
+     * Called to receive a bus number change from the PCI upstream.
+     * A bus number change means that all address ranges
+     * (configuration, ...) can be changed, so this will send a range
+     * change to the peer request port.
+     */
+    void recvBusChange();
 };
 
 class PciEndpoint : public PciDevice
@@ -426,14 +481,6 @@ class PciEndpoint : public PciDevice
         return _config.type0;
     }
 
-  public:
-    /**
-     * Constructor for PCI Dev. This function copies data from the
-     * config file object PCIConfigData and registers the device with
-     * a PciHost object.
-     */
-    PciEndpoint(const PciEndpointParams &params);
-
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
@@ -441,6 +488,14 @@ class PciEndpoint : public PciDevice
      * @param pkt packet containing the write the offset into config space
      */
     Tick writeConfig(PacketPtr pkt) override;
+
+  public:
+    /**
+     * Constructor for PCI Dev. This function copies data from the
+     * config file object PCIConfigData and registers the device with
+     * a PciHost object.
+     */
+    PciEndpoint(const PciEndpointParams &params);
 
     /**
      * Reconstruct the state of this object from a checkpoint.
@@ -459,14 +514,6 @@ class PciBridge : public PciDevice
         return _config.type1;
     }
 
-  public:
-    /**
-     * Constructor for PCI Dev. This function copies data from the
-     * config file object PCIConfigData and registers the device with
-     * a PciHost object.
-     */
-    PciBridge(const PciBridgeParams &params);
-
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
@@ -474,6 +521,14 @@ class PciBridge : public PciDevice
      * @param pkt packet containing the write the offset into config space
      */
     Tick writeConfig(PacketPtr pkt) override;
+
+  public:
+    /**
+     * Constructor for PCI Dev. This function copies data from the
+     * config file object PCIConfigData and registers the device with
+     * a PciHost object.
+     */
+    PciBridge(const PciBridgeParams &params);
 
     /**
      * Reconstruct the state of this object from a checkpoint.

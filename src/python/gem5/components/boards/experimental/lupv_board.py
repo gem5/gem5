@@ -44,6 +44,7 @@ from m5.objects import (
     LupioTMR,
     LupioTTY,
     LupV,
+    PciBus,
     Plic,
     PMAChecker,
     Port,
@@ -265,6 +266,17 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
     @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> IOXBar:
         return self.iobus
+
+    @overrides(AbstractSystemBoard)
+    def has_pci_bus(self) -> bool:
+        return False
+
+    @overrides(AbstractSystemBoard)
+    def get_pci_bus(self) -> PciBus:
+        raise NotImplementedError(
+            "The LupvBoard does not have PCI bus. "
+            "Use `has_pci_bus()` to check this."
+        )
 
     def has_coherent_io(self) -> bool:
         return True

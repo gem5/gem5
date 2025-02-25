@@ -38,28 +38,35 @@
 #ifndef __DEV_PCI_TYPES_HH__
 #define __DEV_PCI_TYPES_HH__
 
+#include <cstdint>
+
 namespace gem5
 {
 
-struct PciBusAddr
+typedef uint8_t PciBusNum;
+
+struct PciDevAddr
 {
   public:
-    PciBusAddr() = delete;
+    PciDevAddr() = delete;
 
-    constexpr PciBusAddr(uint8_t _bus, uint8_t _dev, uint8_t _func)
-        : bus(_bus), dev(_dev), func(_func) {}
+    constexpr PciDevAddr(uint8_t _dev, uint8_t _func) : dev(_dev), func(_func)
+    {}
 
-    constexpr bool operator<(const PciBusAddr &rhs) const {
+    constexpr bool
+    operator<(const PciDevAddr &rhs) const
+    {
         return sortValue() < rhs.sortValue();
     }
 
-    uint8_t bus;
     uint8_t dev;
     uint8_t func;
 
   protected:
-    constexpr uint32_t sortValue() const {
-        return (bus << 16) | (dev << 8) | func;
+    constexpr uint32_t
+    sortValue() const
+    {
+        return (dev << 8) | func;
     }
 };
 

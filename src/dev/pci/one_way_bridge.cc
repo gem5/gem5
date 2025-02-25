@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2025 REDS institute of the HEIG-VD
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,56 +35,67 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DEV_VIRTIO_PCI_HH__
-#define __DEV_VIRTIO_PCI_HH__
+#include "dev/pci/one_way_bridge.hh"
 
-#include "base/statistics.hh"
-#include "dev/virtio/base.hh"
-#include "dev/pci/device.hh"
+#include "base/addr_range.hh"
+#include "base/logging.hh"
+#include "debug/PciBridge.hh"
 
 namespace gem5
 {
 
-struct PciVirtIOParams;
+PciOneWayBridge::PciOneWayBridge(const Params &p)
+    : BridgeBase(p), reverseBridge(nullptr), memSideRanges(), configRange()
+{}
 
-class PciVirtIO : public PciEndpoint
+void
+PciOneWayBridge::init()
 {
-  public:
-    typedef PciVirtIOParams Params;
-    PciVirtIO(const Params &params);
-    virtual ~PciVirtIO();
+    fatal_if(!reverseBridge, "No reverse bridge given for this bridge.\n");
 
-    void kick();
+    BridgeBase::init();
+}
 
-  protected:
-    Tick readDevice(PacketPtr pkt) override;
-    Tick writeDevice(PacketPtr pkt) override;
+void
+PciOneWayBridge::setConfigRange(AddrRange config_range)
+{
+    this->configRange = config_range;
+    cpuSidePort.sendRangeChange();
+}
 
-    /** @{ */
-    /** Offsets into VirtIO header (BAR0 relative). */
+AddrRangeList
+PciOneWayBridge::getAddrRanges() const
+{
+    AddrRangeList ranges = memSideRanges;
 
-    static const Addr OFF_DEVICE_FEATURES = 0x00;
-    static const Addr OFF_GUEST_FEATURES = 0x04;
-    static const Addr OFF_QUEUE_ADDRESS = 0x08;
-    static const Addr OFF_QUEUE_SIZE = 0x0C;
-    static const Addr OFF_QUEUE_SELECT = 0x0E;
-    static const Addr OFF_QUEUE_NOTIFY = 0x10;
-    static const Addr OFF_DEVICE_STATUS = 0x12;
-    static const Addr OFF_ISR_STATUS = 0x13;
-    static const Addr OFF_VIO_DEVICE = 0x14;
+    if (configRange.valid()) {
+        // Add whole configuration range, but avoid range duplication for
+        // existing PCI devices.
+        ranges -= configRange;
+        ranges.push_back(configRange);
+    }
 
-    /** @} */
+    return ranges;
+}
 
-    static const Addr BAR0_SIZE_BASE = OFF_VIO_DEVICE;
+void
+PciOneWayBridge::recvRangeChange()
+{
+    AddrRangeList new_ranges = memSidePort.getAddrRanges();
 
+    // Exclude ranges from other way bridge
+    new_ranges -= reverseBridge->getAddrRanges();
 
-    VirtIODeviceBase::QueueID queueNotify;
+    // Avoid potential loop of range change.
+    if (new_ranges != memSideRanges) {
+        DPRINTF(PciBridge, "Received range change\n");
+        for (const auto &r : new_ranges) {
+            DPRINTF(PciBridge, "-- %s\n", r.to_string());
+        }
 
-    bool interruptDeliveryPending;
-
-    VirtIODeviceBase &vio;
-};
+        memSideRanges = new_ranges;
+        cpuSidePort.sendRangeChange();
+    }
+}
 
 } // namespace gem5
-
-#endif // __DEV_VIRTIO_PCI_HH__

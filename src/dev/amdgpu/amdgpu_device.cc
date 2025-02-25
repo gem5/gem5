@@ -293,25 +293,28 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
                 case sizeof(uint8_t):
                     pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
                     DPRINTF(AMDGPUDevice,
-                        "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
-                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
-                        (uint32_t)pkt->getLE<uint8_t>());
+                            "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: "
+                            "data = %#x\n",
+                            _devAddr.dev, _devAddr.func, pxcap_offset,
+                            (uint32_t)pkt->getLE<uint8_t>());
                     break;
                 case sizeof(uint16_t):
                     pkt->setLE<uint16_t>(
                         *(uint16_t*)&pxcap.data[pxcap_offset]);
                     DPRINTF(AMDGPUDevice,
-                        "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
-                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
-                        (uint32_t)pkt->getLE<uint16_t>());
+                            "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: "
+                            "data = %#x\n",
+                            _devAddr.dev, _devAddr.func, pxcap_offset,
+                            (uint32_t)pkt->getLE<uint16_t>());
                     break;
                 case sizeof(uint32_t):
                     pkt->setLE<uint32_t>(
                         *(uint32_t*)&pxcap.data[pxcap_offset]);
                     DPRINTF(AMDGPUDevice,
-                        "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
-                        "= %#x\n",_busAddr.dev, _busAddr.func, pxcap_offset,
-                        (uint32_t)pkt->getLE<uint32_t>());
+                            "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: "
+                            "data = %#x\n",
+                            _devAddr.dev, _devAddr.func, pxcap_offset,
+                            (uint32_t)pkt->getLE<uint32_t>());
                     break;
                 default:
                     panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
@@ -622,7 +625,7 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 }
 
 Tick
-AMDGPUDevice::read(PacketPtr pkt)
+AMDGPUDevice::readDevice(PacketPtr pkt)
 {
     if (isROM(pkt->getAddr())) {
         readROM(pkt);
@@ -651,7 +654,7 @@ AMDGPUDevice::read(PacketPtr pkt)
 }
 
 Tick
-AMDGPUDevice::write(PacketPtr pkt)
+AMDGPUDevice::writeDevice(PacketPtr pkt)
 {
     if (isROM(pkt->getAddr())) {
         writeROM(pkt);

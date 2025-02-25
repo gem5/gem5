@@ -40,6 +40,7 @@ from m5.objects import (
     AddrRange,
     ClockDomain,
     IOXBar,
+    PciBus,
     Port,
     Root,
     SrcClockDomain,
@@ -318,6 +319,28 @@ class AbstractBoard:
         controllers on each core).
 
         :returns: The I/O Bus.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def has_pci_bus(self) -> bool:
+        """Determine whether the board has an PCI bus or not.
+
+        :returns: ``True`` if the board has an PCI bus, otherwise ``False``.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_pci_bus(self) -> PciBus:
+        """Get the board's main PCI Bus.
+
+        This abstract method must be implemented within the subclasses if they
+        support PCI and/or full system simulation.
+
+        The PCI bus is a non-coherent bus (in the classic caches). This bus is
+        connected to the PCI host bridge and to each PCI devices of the system.
+
+        :returns: The PCI Bus.
         """
         raise NotImplementedError
 

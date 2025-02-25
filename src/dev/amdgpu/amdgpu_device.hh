@@ -160,6 +160,16 @@ class AMDGPUDevice : public PciEndpoint
     /* Device information */
     GfxVersion gfx_version = GfxVersion::gfx900;
 
+  protected:
+    /**
+     * Methods inherited from PciEndpoint
+     */
+    Tick writeConfig(PacketPtr pkt) override;
+    Tick readConfig(PacketPtr pkt) override;
+
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
@@ -167,12 +177,6 @@ class AMDGPUDevice : public PciEndpoint
      * Methods inherited from PciEndpoint
      */
     void intrPost();
-
-    Tick writeConfig(PacketPtr pkt) override;
-    Tick readConfig(PacketPtr pkt) override;
-
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
 
     AddrRangeList getAddrRanges() const override;
 

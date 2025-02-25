@@ -182,7 +182,7 @@ def createGPU(system, args):
 
 
 def connectGPU(system, args):
-    system.pc.south_bridge.gpu = AMDGPUDevice(pci_func=0, pci_dev=8, pci_bus=0)
+    system.pc.south_bridge.gpu = AMDGPUDevice(pci_func=0, pci_dev=8)
 
     system.pc.south_bridge.gpu.ipt_binary = args.gpu_ipt
     system.pc.south_bridge.gpu.checkpoint_before_mmios = (

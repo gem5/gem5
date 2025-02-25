@@ -42,6 +42,7 @@ from m5.objects import (
     HiFive,
     IGbE_e1000,
     IOXBar,
+    PciBus,
     PMAChecker,
     Port,
     RawDiskImage,
@@ -153,16 +154,23 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus."""
         # Add PCI
-        self.platform.pci_host.pio = self.iobus.mem_side_ports
+        self.iobus.mem_side_ports = self.platform.pci_host.up_response_port()
+        self.iobus.cpu_side_ports = self.platform.pci_host.up_request_port()
+        self.platform.pci_bus.mem_side_ports = (
+            self.platform.pci_host.down_response_port()
+        )
+        self.platform.pci_bus.cpu_side_ports = (
+            self.platform.pci_host.down_request_port()
+        )
 
         # Add Ethernet card
         self.ethernet = IGbE_e1000(
-            pci_bus=0, pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
+            pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
         )
 
-        self.ethernet.host = self.platform.pci_host
-        self.ethernet.pio = self.iobus.mem_side_ports
-        self.ethernet.dma = self.iobus.cpu_side_ports
+        self.ethernet.upstream = self.platform.pci_host
+        self.ethernet.pio = self.platform.pci_bus.mem_side_ports
+        self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
 
         if self.get_cache_hierarchy().is_ruby():
             for device in self._off_chip_devices + self._on_chip_devices:
@@ -231,6 +239,20 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             raise Exception(
                 "Cannot execute `get_io_bus()`: Board does not have an I/O "
                 "bus to return. Use `has_io_bus()` to check this."
+            )
+
+    @overrides(AbstractSystemBoard)
+    def has_pci_bus(self) -> bool:
+        return self.is_fullsystem()
+
+    @overrides(AbstractSystemBoard)
+    def get_pci_bus(self) -> PciBus:
+        if self.has_pci_bus():
+            return self.platform.pci_bus
+        else:
+            raise Exception(
+                "Cannot execute `get_pci_bus()`: Board does not have an PCI "
+                "bus to return. Use `has_pci_bus()` to check this."
             )
 
     @overrides(AbstractSystemBoard)

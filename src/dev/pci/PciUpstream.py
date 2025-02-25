@@ -1,7 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2015 ARM Limited
-# All rights reserved.
+# Copyright (c) 2025 REDS institute of the HEIG-VD
+#  All rights reserved
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,25 +33,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Bridge import BridgeBase
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.Device import IsaFake
+from m5.objects.XBar import IOXBar
+from m5.params import *
+from m5.proxy import *
 
-SimObject('PciDevice.py', sim_objects=[
-    'PciBar', 'PciBarNone', 'PciIoBar', 'PciLegacyIoBar', 'PciMemBar',
-    'PciMemUpperBar', 'PciDevice', 'PciEndpoint', 'PciBridge'])
-Source('device.cc')
-DebugFlag('PciDevice')
-DebugFlag('PciEndpoint')
-DebugFlag('PciBridge')
 
-SimObject('PciUpstream.py', sim_objects=['PciUpstream', 'PciOneWayBridge'])
-Source('upstream.cc')
-Source('one_way_bridge.cc')
-DebugFlag('PciUpstream')
+class PciBus(IOXBar):
+    badaddr_responder = IsaFake(pio_addr=0, pio_size=MaxAddr)
+    default = Self.badaddr_responder.pio
 
-SimObject('PciHost.py', sim_objects=['PciHost', 'GenericPciHost'])
-Source('host.cc')
-DebugFlag('PciHost')
 
-SimObject('CopyEngine.py', sim_objects=['CopyEngine'])
-Source('copy_engine.cc')
-DebugFlag('DMACopyEngine')
+class PciOneWayBridge(BridgeBase):
+    type = "PciOneWayBridge"
+    cxx_class = "gem5::PciOneWayBridge"
+    cxx_header = "dev/pci/one_way_bridge.hh"
+
+
+class PciUpstream(ClockedObject):
+    type = "PciUpstream"
+    cxx_class = "gem5::PciUpstream"
+    cxx_header = "dev/pci/upstream.hh"
+    abstract = True
+
+    up_to_down = Param.PciOneWayBridge(
+        PciOneWayBridge(), "Bridge upstream -> downstream"
+    )
+    down_to_up = Param.PciOneWayBridge(
+        PciOneWayBridge(), "Bridge downstream -> upstream"
+    )
+
+    def down_response_port(self):
+        return self.down_to_up.cpu_side_port
+
+    def down_request_port(self):
+        return self.up_to_down.mem_side_port
+
+    def up_response_port(self):
+        return self.up_to_down.cpu_side_port
+
+    def up_request_port(self):
+        return self.down_to_up.mem_side_port
