@@ -161,8 +161,14 @@ namespace gem5
                            const std::vector<bool> *cant_forward_from_fu_indices,
                            Cycles now, ThreadContext *thread_context, bool for_effective_address);
 
-      /** MinorTraceIF interface */
-      void minorTrace() const;
+      bool
+      canMemInstIssueAAA(MinorDynInstPtr inst,
+                                     const std::vector<Cycles> *src_reg_relative_latencies,
+                                     const std::vector<bool> *cant_forward_from_fu_indices,
+                                     Cycles now, ThreadContext *thread_context, bool for_effective_address);
+
+          /** MinorTraceIF interface */
+          void minorTrace() const;
     };
 
   } // namespace minor

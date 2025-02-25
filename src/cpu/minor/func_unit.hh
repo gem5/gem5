@@ -208,7 +208,8 @@ class QueuedInst
 {
   public:
     MinorDynInstPtr inst;
-
+    bool just_issued = false;
+    bool fu_was_stalling = false;
   public:
     QueuedInst(MinorDynInstPtr inst_ = MinorDynInst::bubble()) :
         inst(inst_)
