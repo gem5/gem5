@@ -200,16 +200,20 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     }
 
     if (ii->isMFMA()) {
+        std::string opcode = ii->staticInstruction()->opcode();
+        const char *gfx_str = GfxVersionStrings[int(w->gfxVersion)];
+
         panic_if(!computeUnit.mfma_cycles.count(w->gfxVersion),
-            "No MFMA timings for %s\n", GfxVersionStrings[int(w->gfxVersion)]);
+            "No MFMA timings for %s\n", gfx_str);
+        panic_if(!computeUnit.mfma_cycles[w->gfxVersion].count(opcode),
+            "No %s MFMA timings for %s opcode\n", gfx_str, opcode);
 
         if (computeUnit.matrix_core_ready[w->simdId] <= curTick()) {
             computeUnit.matrix_core_ready[w->simdId] =
                 curTick() +
                 computeUnit.cyclesToTicks(Cycles(
                     computeUnit.mfma_scale *
-                    computeUnit.mfma_cycles[w->gfxVersion]
-                                           [ii->staticInstruction()->opcode()]
+                    computeUnit.mfma_cycles[w->gfxVersion][opcode]
                 ));
         } else {
             *rdyStatus = NRDY_MATRIX_CORE;
