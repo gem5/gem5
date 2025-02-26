@@ -210,11 +210,11 @@ class AtlasClient(AbstractClient):
             if resource.get_resource_id() not in resources_by_id:
                 continue
             if not resource.get_gem5_version().startswith("DEVELOP"):
-                if (
-                    resource.get_gem5_version()
-                    not in resources_by_id[resource.get_resource_id()][
-                        "gem5_versions"
-                    ]
+                if not any(
+                    resource.get_gem5_version().startswith(gem5_version)
+                    for gem5_version in resources_by_id[
+                        resource.get_resource_id()
+                    ]["gem5_versions"]
                 ):
                     warn(
                         f"Resource {resource.get_resource_id()} is not compatible with gem5 version {resource.get_gem5_version()}."

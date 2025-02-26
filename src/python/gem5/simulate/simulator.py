@@ -812,12 +812,17 @@ class Simulator:
         # This while loop will continue until an a generator yields True.
         while True:
             self._last_exit_event = m5.simulate(self.get_max_ticks())
-            # sys.exit(1)
             exit_event_hypercall_id = self._last_exit_event.getHypercallId()
-            assert (
+            if (
                 exit_event_hypercall_id
-                in self.get_exit_handler_id_map().keys()
-            ), f"Exit event type ID {self._last_exit_event.getTypeID()} in exit handler ID map"
+                not in self.get_exit_handler_id_map().keys()
+            ):
+                warn(
+                    f"Warning: Exit event type ID "
+                    f"{self._last_exit_event.getHypercallId()} "
+                    f"not in exit handler ID map. Reentering simulation loop."
+                )
+                continue
             exit_handler = self.get_exit_handler_id_map()[
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
