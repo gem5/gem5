@@ -1,0 +1,7 @@
+build/X86/gem5.opt -d stats/test/tagged \
+configs/deprecated/example/se.py \
+--cpu-type=X86MinorCPU --sys-clock=3GHz \
+--caches --l1i_size=32kB --l1d_size=64kB \
+--l2cache --l2_size=2MB --l2-hwp-type=TaggedPrefetcher \
+--mem-size=2GB --mem-type=DDR3_1600_8x8 -F 100 -s 200 -W 5000 -I 1000000 \
+-c ./test

@@ -86,7 +86,6 @@ class ContextBasedPrefetcher : public Queued
     void updateRewardThreshold(); // Update the reward threshold dynamically
     void updateOffsets(); // Update offsets dynamically
 
-    std::ofstream logFile; // File stream for logging
 };
 
 } // namespace prefetch

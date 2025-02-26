@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Filepath to the log file
-log_file_path = '/home/abishek/Desktop/SHELLY/gem5/eda/addr_pc.log'
+log_file_path = './eda/addr_pc.log'
 
 # Initialize lists to store addresses and PCs
 addresses = []

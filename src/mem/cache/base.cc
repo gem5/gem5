@@ -138,21 +138,11 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
-
-    logFile.open("/home/abishek/Desktop/SHELLY/gem5/eda/addr_pc.log");
-    if (!logFile.is_open()) {
-        fatal("Unable to open log file: /home/abishek/Desktop/SHELLY/gem5/eda/addr_pc.log");
-    }
 }
 
 BaseCache::~BaseCache()
 {
     delete tempBlock;
-
-    // Close the log file
-    if (logFile.is_open()) {
-        logFile.close();
-    }
 }
 
 void

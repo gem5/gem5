@@ -102,6 +102,8 @@ class Base : public ClockedObject
     std::vector<ProbeListener *> listeners;
 
   public:
+    /** Address log file */
+    std::ofstream addressLogFile;
 
     /**
      * Class containing the information needed by the prefetch to train and

@@ -95,8 +95,8 @@ BOP::BOP(const BOPPrefetcherParams &p)
 
     offsetsListIterator = offsetsList.begin();
 
-    // Open the log file
-    addressLogFile.open("eda/addresses.log", std::ios::out | std::ios::trunc);
+    // // Open the log file
+    // addressLogFile.open("eda/addresses.log", std::ios::out | std::ios::trunc);
 }
 
 void
@@ -238,7 +238,7 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Log the address that appears to the prefetcher
     if (addressLogFile.is_open()) {
-        addressLogFile << "Miss: " << std::hex << addr;
+        addressLogFile << "Addr: " << std::hex << addr << " PC: " << pfi.getPC() << " Is Miss: " << pfi.isCacheMiss() << " Requester ID: " << pfi.getRequestorId();
     }
     if (delayQueueEnabled) {
         insertIntoDelayQueue(tag_x);
@@ -256,7 +256,7 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
         Addr prefetch_addr = addr + (bestOffset << lBlkSize);
 
         if (addressLogFile.is_open()) {
-            addressLogFile << " Prefetch: " << std::hex << prefetch_addr << std::endl;
+            addressLogFile << " Prefetch: " << std::dec << prefetch_addr << std::endl;
         }
 
         addresses.push_back(AddrPriority(prefetch_addr, 0));
