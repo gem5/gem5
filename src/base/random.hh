@@ -70,6 +70,15 @@ class Random
         if (instances == nullptr)
             instances = new Instances();
 
+        /*
+        * If `r` is null we create a new RNG with the global seed and wrap
+        * it in a `shared_ptr`. Otherwise, we wrap the existing RNG in a
+        * `shared_ptr` and add it to the vector of instances.
+        *
+        * This is done to ensure that the RNG is not deleted while it is still
+        * in use. The `shared_ptr` will keep the RNG alive until all references
+        * to it are gone.
+        */
         auto randpoint = r ? std::shared_ptr<Random>(r, [](Random*){})
                          : std::shared_ptr<Random>(new Random(globalSeed));
         // Check if randpoint is not already in the vector
