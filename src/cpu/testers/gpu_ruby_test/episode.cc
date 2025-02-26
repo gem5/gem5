@@ -41,8 +41,6 @@
 namespace gem5
 {
 
-//static Random::RandomPtr rng(gem5::Random::genRandom());
-
 Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
                  int num_stores)
       : tester(_tester),
