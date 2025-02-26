@@ -166,7 +166,6 @@ class MinorFU : public SimObject
     /** Delay after issuing an operation before the next
      *  operation can be issued */
     Cycles issueLat;
-
     /** FUs which this pipeline can't receive a forwarded (i.e. relative
      *  latency != 0) result from */
     std::vector<unsigned int> cantForwardFromFUIndices;
@@ -246,6 +245,7 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
     /** FUs which this pipeline can't receive a forwarded (i.e. relative
      *  latency != 0) result from */
     std::vector<bool> cantForwardFromFUIndices;
+    bool m_was_stalled = false;
 
   public:
     /** When can a new instruction be inserted into the pipeline?  This is
@@ -264,10 +264,10 @@ class FUPipeline : public FUPipelineBase, public FuncUnit
 
     /** Can an instruction be inserted now? */
     bool canInsert() const;
-
-    /** Find the extra timing information for this instruction.  Returns
-     *  NULL if no decode info. is found */
-    MinorFUTiming *findTiming(const StaticInstPtr &inst);
+    bool canInsertNextCycle() const;
+        /** Find the extra timing information for this instruction.  Returns
+         *  NULL if no decode info. is found */
+        MinorFUTiming *findTiming(const StaticInstPtr &inst);
 
     /** Step the pipeline.  Allow multiple steps? */
     void advance();

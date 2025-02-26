@@ -155,11 +155,16 @@ FUPipeline::canInsert() const
     return nextInsertCycle == 0 || timeSource.curCycle() >= nextInsertCycle;
 }
 
+bool FUPipeline::canInsertNextCycle() const
+{
+    return nextInsertCycle == 0 || (timeSource.curCycle() + 1) >= nextInsertCycle;
+}
+
 void
 FUPipeline::advance()
 {
     bool was_stalled = stalled;
-
+    m_was_stalled = stalled;
     /* If an instruction was pushed into the pipeline, set the delay before
      *  the next instruction can follow */
     if (alreadyPushed()) {

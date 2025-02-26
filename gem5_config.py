@@ -223,6 +223,7 @@ if args.simpoint_profile:
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
 
+
 def minorMakeOpClassSet(op_classes):
     """Make a MinorOpClassSet from a list of OpClass enum value strings"""
 
@@ -262,6 +263,10 @@ system.cpu[0].executeFuncUnits.funcUnits[5].opLat = 8
 # The parameter issueLat controls the issue latency of the functional unit, i.e., the number of cycles
 # until another instruction can be issued to the functional unit after an instruction has already been issued.
 system.cpu[0].executeFuncUnits.funcUnits[0].issueLat = 0
+system.cpu[0].executeFuncUnits.funcUnits[3].issueLat = 0
+system.cpu[0].executeFuncUnits.funcUnits[4].issueLat = 0
+system.cpu[0].executeFuncUnits.funcUnits[5].issueLat = 8
+
 
 # The parameter timings is a list of MinorFUTiming objects, each of which specifies the latency of the
 # functional unit for a specific operation class. The parameter srcRegsRelativeLats specifies the
@@ -271,7 +276,7 @@ system.cpu[0].executeFuncUnits.funcUnits[0].timings = [
     MinorFUTiming(
         description="Int",
         opClasses=minorMakeOpClassSet(["IntAlu"]),
-        srcRegsRelativeLats=[0],
+        srcRegsRelativeLats=[0, 0],
     ),
     MinorFUTiming(
         description="Mem",
@@ -282,14 +287,32 @@ system.cpu[0].executeFuncUnits.funcUnits[0].timings = [
         extraAssumedLat=0,
     ),
 ]
+
+system.cpu[0].executeFuncUnits.funcUnits[4].timings = [
+    MinorFUTiming(
+        description="FloatMult",
+        opClasses=minorMakeOpClassSet(["FloatMult"]),
+        srcRegsRelativeLats=[0, 0],
+        extraCommitLat=0,
+    ),
+]
 # The parameter cantForwardFromFUIndices specifies the indices of the functional units from which the
 # functional unit cannot forward results.
-system.cpu[0].executeFuncUnits.funcUnits[5].cantForwardFromFUIndices = [3,4]
-system.cpu[0].executeFuncUnits.funcUnits[5].timings[0].srcRegsRelativeLats = [0]
+system.cpu[0].executeFuncUnits.funcUnits[5].cantForwardFromFUIndices = [3, 4]
+system.cpu[0].executeFuncUnits.funcUnits[5].timings[0].srcRegsRelativeLats = [
+    0
+]
 system.cpu[0].executeFuncUnits.funcUnits[5].timings[0].extraAssumedLat = 1
 
-system.cpu[0].executeFuncUnits.funcUnits[4].cantForwardFromFUIndices = [3,5]
-system.cpu[0].executeFuncUnits.funcUnits[4].timings[0].srcRegsRelativeLats = [0]
+system.cpu[0].executeFuncUnits.funcUnits[4].cantForwardFromFUIndices = [3, 5]
+system.cpu[0].executeFuncUnits.funcUnits[4].timings[0].srcRegsRelativeLats = [
+    0
+]
+
+system.cpu[0].executeFuncUnits.funcUnits[3].cantForwardFromFUIndices = [4, 5]
+system.cpu[0].executeFuncUnits.funcUnits[3].timings[0].srcRegsRelativeLats = [
+    0
+]
 
 ##################################################################
 # END OF MODIFIABLE PART #
@@ -301,9 +324,7 @@ if args.bp_type:
     bpClass = ObjectList.bp_list.get(args.bp_type)
     system.cpu[0].branchPred = bpClass()
 if args.indirect_bp_type:
-    indirectBPClass = ObjectList.indirect_bp_list.get(
-        args.indirect_bp_type
-    )
+    indirectBPClass = ObjectList.indirect_bp_list.get(args.indirect_bp_type)
     system.cpu[0].branchPred.indirectBranchPred = indirectBPClass()
 system.cpu[0].createThreads()
 

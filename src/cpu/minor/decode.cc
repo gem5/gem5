@@ -639,8 +639,8 @@ namespace gem5
 
                 bool fu_is_capable = (!output_inst->isFault() ? funcUnits[fu_index]->provides(output_inst->staticInst->opClass()) : true);
                 if (fu_is_capable &&
-                    !funcUnits[fu_index]->stalled &&
-                    funcUnits[fu_index]->canInsert() &&
+                    !funcUnits[fu_index]->m_was_stalled &&
+                    funcUnits[fu_index]->canInsertNextCycle() &&
                     !funcUnits[fu_index]->alreadyPushed())
                 {
                     return fu_index;

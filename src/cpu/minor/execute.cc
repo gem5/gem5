@@ -700,10 +700,10 @@ namespace gem5
             {
                 DPRINTF(MinorExecute, "Can't issue as FU: %d is already busy\n", fu_index);
             }
-            else if (fu->stalled)
-            {
-                DPRINTF(MinorExecute, "Can't issue inst: %s into FU: %d, it's stalled\n", *inst, fu_index);
-            }
+            // else if (fu->stalled)
+            // {
+            //     DPRINTF(MinorExecute, "Can't issue inst: %s into FU: %d, it's stalled\n", *inst, fu_index);
+            // }
             else if (!fu->canInsert())
             {
                 DPRINTF(MinorExecute, "Can't issue inst: %s to busy FU for another: %d cycles\n", *inst, fu->cyclesBeforeInsert());
@@ -825,11 +825,16 @@ namespace gem5
                             /* FORMAT >>> Log4GUI: stage: tick: stall_bit: inst_address:
                                 ...assembly: fu_index*/
                             FUPipeline *fu = funcUnits[fu_index];
-                            bool was_stalled = fu->stalled;
-                            fu->advance();
+                            if (fu->opLatency(inst->staticInst->opClass()) == 1 || fu->occupancy == 1)
+                            {
+                                fu->advance();
+                            }
+                            if (!fu->m_was_stalled && fu->stalled) {
+                                DPRINTF(MinorExecute, "Stalling fu %d in issue\n", fu_index);
+                            }
                             DPRINTF(MinorGUI, "Log4GUI: execute: %d: %d: %x: %s: %d\n",
                                     curTick(),
-                                    was_stalled, /* not stalling */
+                                    fu->m_was_stalled, /* not stalling */
                                     inst->pc->instAddr(),
                                     inst->staticInst->disassemble(inst->pc->instAddr()),
                                     fu_index);
@@ -2027,15 +2032,20 @@ namespace gem5
                             if (inst->fuIndex != noCostFUIndex)
                             {
                                 DPRINTF(MinorExecute, "Unstalling %d for inst %s\n", inst->fuIndex, inst->id);
-                                if (funcUnits[inst->fuIndex]->opLatency(inst->staticInst->opClass()) > 1) {
+                                bool aaa = funcUnits[inst->fuIndex]->m_was_stalled;
+                                funcUnits[inst->fuIndex]->stalled = false;
+                                if (funcUnits[inst->fuIndex]->opLatency(inst->staticInst->opClass()) > 1)
+                                {
                                     DPRINTF(MinorGUI, "Log4GUI: execute: %d: %d: %x: %s: %d\n",
                                             curTick(),
-                                            committable_inst->fu_was_stalling,
+                                            funcUnits[inst->fuIndex]->m_was_stalled,
                                             inst->pc->instAddr(),
                                             inst->staticInst->disassemble(inst->pc->instAddr()),
                                             inst->fuIndex);
+                                    // if (funcUnits[inst->fuIndex]->occupancy > 1)
+                                    funcUnits[inst->fuIndex]->advance();
+                                    funcUnits[inst->fuIndex]->m_was_stalled = aaa;
                                 }
-                                funcUnits[inst->fuIndex]->stalled = false;
                             }
                         }
                         else
@@ -2164,6 +2174,7 @@ namespace gem5
                 {
                     DPRINTF(MinorExecute, "No thread to issue\n");
                 }
+                
                 commit_tid = getCommittingThread();
                 attemptCommit(commit_tid, insts_out, &output_index, branch, interrupted);
             }
@@ -2608,27 +2619,45 @@ namespace gem5
             for (unsigned int i = 0; i < numFuncUnits; i++)
             {
                 FUPipeline *fu = funcUnits[i];
-                DPRINTF(MinorExecute, "Advancing FU[%d]\n", i);
-                bool was_stalled = fu->stalled;
-                fu->advance();
+                bool was_stalled = fu->m_was_stalled;
+                auto inst_at_fu_end = fu->front().inst->staticInst;
+                bool has_issued_this_cycle = false;
+                for (auto &inst : executeInfo[0].inFlightInsts->getQueue())
+                {
+                    if (inst.inst->fuIndex == i)
+                    {
+                        has_issued_this_cycle = has_issued_this_cycle || inst.just_issued;
+                    }
+                }
                 bool has_fu_advanced = !fu->stalled;
                 /* If we need to tick again, the pipeline will have been left or set
                  * to be unstalled */
+                fu->advance();
+                if (!has_issued_this_cycle || fu->occupancy <= 1)
+                {
+                    if (!fu->m_was_stalled && fu->stalled)
+                    {
+                        DPRINTF(MinorExecute, "Stalling fu %d in advanceFuncUnits\n", i);
+                        DPRINTF(MinorExecute, "Occupancy: %d\n", fu->occupancy);
+                        DPRINTF(MinorExecute, "Front inst: %s\n", fu->front().inst->id);
+                    }
+                    DPRINTF(MinorExecute, "Advancing FU[%d]\n", i);
+                }
                 if (fu->occupancy != 0 && !fu->stalled)
                 {
                     becoming_stalled = false;
                 }
                 else if (!fu->front().inst->isBubble())
                 {
-                    if (!fu->front().just_issued)
-                        DPRINTF(MinorGUI, "Log4GUI: execute: %d: %d: %x: %s: %d\n",
-                                curTick(),
-                                was_stalled, /* not stalling */
-                                fu->front().inst->pc->instAddr(),
-                                fu->front().inst->staticInst->disassemble(fu->front().inst->pc->instAddr()),
-                                fu->front().inst->fuIndex);
-                    else
-                        fu->front().just_issued = false;
+                    // if (!fu->front().just_issued)
+                    //     DPRINTF(MinorGUI, "Log4GUI: execute: %d: %d: %x: %s: %d\n",
+                    //             curTick(),
+                    //             was_stalled, /* not stalling */
+                    //             fu->front().inst->pc->instAddr(),
+                    //             fu->front().inst->staticInst->disassemble(fu->front().inst->pc->instAddr()),
+                    //             fu->front().inst->fuIndex);
+                    // else
+                    //     fu->front().just_issued = false;
                 }
                 for (auto &inst : executeInfo[0].inFlightInsts->getQueue())
                 {
