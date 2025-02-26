@@ -112,6 +112,8 @@ Base::Base(const BasePrefetcherParams &p)
       prefetchStats(this), issuedPrefetches(0),
       usefulPrefetches(0), mmu(nullptr)
 {
+    // Open the log file
+    addressLogFile.open("eda/addresses.log", std::ios::out | std::ios::trunc);
 }
 
 void

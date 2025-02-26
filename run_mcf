@@ -1,8 +1,8 @@
 build/X86/gem5.opt -d stats/mcf/context \
 configs/deprecated/example/se.py \
---cpu-type=DerivO3CPU --sys-clock=3GHz \
+--cpu-type=X86MinorCPU --sys-clock=3GHz \
 --caches --l1i_size=32kB --l1d_size=64kB \
 --l2cache --l2_size=2MB --l2-hwp-type=ContextBasedPrefetcher \
---mem-size=2GB --mem-type=DDR3_1600_8x8 -F 100000 -s 200000 -W 50000000 -I 50000000 \
+--mem-size=2GB --mem-type=DDR3_1600_8x8 -F 100000 -s 200000 -W 5000000 -I 5000000 \
 -c /home/dhwanish/Documents/Benchmarks/benchspec/CPU2006/429.mcf/exe/mcf_base.gcc43-64bit \
 -o "/home/dhwanish/Documents/Benchmarks/benchspec/CPU2006/429.mcf/data/ref/input/inp.in"

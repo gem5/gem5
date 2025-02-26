@@ -52,12 +52,24 @@ Tagged::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses,
     const CacheAccessor &cache)
 {
+    if (!pfi.isCacheMiss()) return;
+
     Addr blkAddr = blockAddress(pfi.getAddr());
 
+    // Log the address that appears to the prefetcher
+    if (addressLogFile.is_open()) {
+        addressLogFile << "Addr: " << std::dec << pfi.getAddr() << " PC: " << (pfi.getPC() & 0x7FFFFFFF) << " is_miss: " << pfi.isCacheMiss() << " requesterID: " << std::dec << pfi.getRequestorId() << " block_size: " << blkSize;
+    }
     for (int d = 1; d <= degree; d++) {
         Addr newAddr = blkAddr + d*(blkSize);
+
+        if (addressLogFile.is_open()) {
+            addressLogFile << " Prefetch: " << std::dec << newAddr;
+        }
+
         addresses.push_back(AddrPriority(newAddr,0));
     }
+    addressLogFile << std::endl;
 }
 
 } // namespace prefetch

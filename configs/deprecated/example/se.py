@@ -178,7 +178,7 @@ else:
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
 CPUClass = CPUClass[0]
-CPUClass.numThreads = numThreads
+CPUClass.numThreads = 1
 
 # Check -- do not allow SMT with multiple CPUs
 if args.smt and args.num_cpus > 1:

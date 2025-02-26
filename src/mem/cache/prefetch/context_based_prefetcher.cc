@@ -19,12 +19,6 @@ ContextBasedPrefetcher::ContextBasedPrefetcher(const ContextBasedPrefetcherParam
 {
     // Initialize the most seen offsets (as in Python script)
     mostSeenOffsets = {1, 8, -8, 0, -16, 16, 4, -24, 176, -96};
-
-    // Open the log file
-    logFile.open("/home/abishek/Desktop/SHELLY/gem5/eda/addr.log");
-    if (!logFile.is_open()) {
-        fatal("Unable to open log file: /home/abishek/Desktop/SHELLY/gem5/eda/addr.log");
-    }
 }
 
 void
@@ -32,12 +26,17 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                           std::vector<AddrPriority> &addresses,
                                           const CacheAccessor &cache)
 {
+    if (!pfi.isCacheMiss()) {
+        return;
+    }
     Addr addr = pfi.getAddr();
     int pc = pfi.getPC(); // Use PC as context
     int key = hash(addr, pc);
 
-    // Log the address
-    logFile << "Addr: " << std::hex << addr << std::endl;
+    // Log the address that appears to the prefetcher
+    if (addressLogFile.is_open()) {
+        addressLogFile << "Addr: " << std::dec << addr << " PC: " << (pc & 0x7FFFFFFF) << " is_miss: " << pfi.isCacheMiss() << " requesterID: " << std::dec << pfi.getRequestorId() << " prefetch_Queue_size: " << prefetchQueue.size();
+    }
 
     // Data collection: Update state with previous accesses
     for (Addr a : previousAccesses) {
@@ -46,7 +45,7 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
 
     // Prediction: Get the best address for the current context
-    if (states.find(key) != states.end()) {
+    if (pfi.isCacheMiss() && states.find(key) != states.end()) {
         Addr best_addr = getBestAddress(key);
         prefetchQueue.push_back({best_addr, key, (int)prefetchQueue.size()});
     }
@@ -57,10 +56,21 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     // Send prefetch: Add the best address to the prefetch queue if it exceeds the confidence threshold
     if (!prefetchQueue.empty()) {
         Addr next_pref = prefetchQueue.front().addr;
-        prefetchQueue.pop_front();
         if (states[key].ptrs[next_pref] >= confidenceThreshold) {
+            prefetchQueue.pop_front();
+            if (addressLogFile.is_open()) {
+                addressLogFile << " Prefetch: " << std::dec << next_pref << std::endl;
+            }
             addresses.push_back(AddrPriority(next_pref, 0));
             DPRINTF(HWPrefetch, "Generated prefetch %#lx\n", next_pref);
+        } else {
+            if (addressLogFile.is_open()) {
+                addressLogFile << " Prefetch: N/A" << std::endl;
+            }
+        }
+    } else {
+        if (addressLogFile.is_open()) {
+            addressLogFile << " Prefetch: N/A" << std::endl;
         }
     }
 
@@ -71,7 +81,7 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     updateRewardThreshold();
 
     // Update offsets dynamically
-    updateOffsets();
+    // updateOffsets();
 }
 
 void
