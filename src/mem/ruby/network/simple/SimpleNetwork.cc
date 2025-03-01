@@ -119,7 +119,8 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size());
     m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
-    m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
+    m_switches[src]->addOutPort(simple_link->name(),
+                                m_fromNetQueues[local_dest],
                                 routing_table_entry[0],
                                 simple_link->m_latency, 0,
                                 simple_link->m_bw_multiplier, true);
@@ -146,7 +147,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
 
     m_switches[dest]->addInPort(simple_link->m_buffers);
-    m_switches[src]->addOutPort(simple_link->m_buffers, routing_table_entry[0],
+    m_switches[src]->addOutPort(simple_link->name(),
+                                simple_link->m_buffers, routing_table_entry[0],
                                 simple_link->m_latency,
                                 simple_link->m_weight,
                                 simple_link->m_bw_multiplier,
