@@ -29,6 +29,9 @@ This module is the entry point for the multi-simulation (MultiSim) framework.
 It provides a CLI using argparse to obtain the path to the simulation
 configuration script and the number of processes to run in parallel.
 """
+import json
+import os
+
 from gem5.utils.multisim.multisim import (
     module_run,
     run,
@@ -53,7 +56,26 @@ def main():
     )
 
     args = parser.parse_args()
-    run(module_path=Path(args.config))
+    results = run(module_path=Path(args.config))
+
+    print(
+        "##################### END OF SIMULATIONS ############################"
+    )
+
+    stat_files = []
+    print("Verifying statistic file validity:")
+    for result in results:
+        print(f"  - {result[0]}: ", end="")
+        # check if the stats file was properly generated:
+        stat_file = Path(result[0])
+        stat_files.append(f"{stat_file.resolve()}\n")
+        if os.path.getsize(stat_file) == 0:
+            # TODO figure out why this happens
+            print(f"Invalid, regenerating output")
+            with open(stat_file, "w") as f:
+                json.dump(result[1], f)
+        else:
+            print("Valid")
 
 
 if __name__ == "__m5_main__":

@@ -51,12 +51,14 @@ This script is then passed to the child processes to load.
 
 import importlib
 import multiprocessing
+import os
 from pathlib import Path
 from typing import (
     Dict,
     List,
     Optional,
     Set,
+    Tuple,
 )
 
 from m5.core import override_re_outdir
@@ -159,7 +161,7 @@ def get_num_processes(config_module_path: Path) -> Optional[int]:
     return num_processes_dict["num_processes"]
 
 
-def _run(module_path: Path, id: str) -> str:
+def _run(module_path: Path, id: str) -> Tuple[str, str]:
     """Run the simulator with the ID specified."""
 
     _load_module(module_path)
@@ -173,16 +175,19 @@ def _run(module_path: Path, id: str) -> str:
 
     subdir = Path(Path(m5.options.outdir) / Path(sim_list[0].get_id()))
     sim_list[0].override_outdir(subdir)
+    sim_list[0].add_json_stats_output(m5.options.outdir + "/stats.json")
     # This doesn't do anything if none of the redirect options are passed
     override_re_outdir(subdir)
 
     sim_list[0].run()
 
-    # Return the path to the stats file
-    return m5.options.outdir + "/stats.txt"
+    # Return the simulation statistics
+    return m5.options.outdir + "/stats.json", sim_list[0].get_stats()
 
 
-def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
+def run(
+    module_path: Path, processes: Optional[int] = None
+) -> List[Tuple[str, Dict]]:
     """Run the simulators specified in the module in parallel.
 
     :param module_path: The path to the module containing the simulators to
@@ -216,17 +221,9 @@ def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
     # module path (the config script specifying all simulations using MultiSim)
     # but a different ID. The ID is used to select the correct simulator to
     # run.
-    stats_files = pool.starmap(
+    stats = pool.starmap(
         _run, zip([module_path for _ in range(len(ids))], tuple(ids))
     )
-
-    # Collect the simstats files and parse them to return to the driver
-    stats = []
-    for file in stats_files:
-        with open(file) as f:
-            stringified = f.read()
-        simstats = SimStat.from_string(stringified)
-        stats.append(simstats)
 
     return stats
 
