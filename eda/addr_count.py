@@ -2,7 +2,7 @@ import re
 from collections import Counter
 
 # Filepath to the address stream file
-file_path = '/home/abishek/Desktop/SHELLY/gem5/eda/addr_pc.log'
+file_path = './eda/addr_pc.log'
 
 # Initialize a list to store addresses
 addresses = []

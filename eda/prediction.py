@@ -6,7 +6,7 @@ from collections import (
 )
 
 # Filepath to the address stream file
-file_path = '/home/abishek/Desktop/SHELLY/gem5/eda/addr.log'
+file_path = './eda/addr.log'
 
 # Initialize lists to store addresses and PCs
 addresses = []

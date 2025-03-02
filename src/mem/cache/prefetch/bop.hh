@@ -71,7 +71,7 @@ class BOP : public Queued
         const unsigned int delayQueueSize;
         const unsigned int delayTicks;
 
-        std::ofstream addressLogFile;
+        // std::ofstream addressLogFile;
 
         std::vector<Addr> rrLeft;
         std::vector<Addr> rrRight;

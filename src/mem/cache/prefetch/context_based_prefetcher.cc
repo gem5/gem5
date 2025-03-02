@@ -30,12 +30,6 @@ ContextBasedPrefetcher::ContextBasedPrefetcher(const ContextBasedPrefetcherParam
     mostProbableOffsets = { 64, 128, 256, 512, 1024, 2048, 4096};
     mostSeenOffsets = { 128, 1024};
    
-
-    // Open the log file
-    logFile.open("eda/addr.log");
-    if (!logFile.is_open()) {
-        fatal("Unable to open log file: eda/addr.log");
-    }
 }
 
 void
@@ -75,7 +69,6 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Feedback: Update scores based on prefetch queue
     updateScores(addr);
-
     // Update previous accesses
     updatePreviousAccesses(addr);
 
@@ -83,7 +76,7 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     updateRewardThreshold();
 
     // Update offsets dynamically
-    updateOffsets();
+    // updateOffsets();
 }
 
 void

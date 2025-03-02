@@ -16,7 +16,7 @@ def calculate_offsets(addresses):
     return offsets
 
 def main():
-    file_path = '/home/abishek/Desktop/SHELLY/gem5/eda/addr_pc.log'
+    file_path = './eda/addr_pc.log'
     addresses = []
 
     with open(file_path, 'r') as file:
