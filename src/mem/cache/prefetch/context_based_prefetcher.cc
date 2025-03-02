@@ -3,12 +3,20 @@
 #include "params/ContextBasedPrefetcher.hh"
 #include <cmath>
 #include <numeric> // Include for std::accumulate
+#include <algorithm> // Include for std::max_element
+#include <cstdlib> // Include for rand() and srand()
+#include <ctime> // Include for time()
+#include <sstream> // Include for std::ostringstream
 
 namespace gem5
 {
 
 namespace prefetch
 {
+    int index = 0;
+    int cumulativeReward = 0;
+    int rewardCounter = 0;
+
 
 ContextBasedPrefetcher::ContextBasedPrefetcher(const ContextBasedPrefetcherParams &p)
     : Queued(p),
@@ -17,13 +25,16 @@ ContextBasedPrefetcher::ContextBasedPrefetcher(const ContextBasedPrefetcherParam
       rewardThreshold(60), // Initial reward threshold
       confidenceThreshold(10) // Initial confidence threshold
 {
-    // Initialize the most seen offsets (as in Python script)
-    mostSeenOffsets = {1, 8, -8, 0, -16, 16, 4, -24, 176, -96};
+    // Seed the random number generator
+    std::srand(std::time(nullptr));
+    mostProbableOffsets = { 64, 128, 256, 512, 1024, 2048, 4096};
+    mostSeenOffsets = { 128, 1024};
+   
 
     // Open the log file
-    logFile.open("/home/abishek/Desktop/SHELLY/gem5/eda/addr.log");
+    logFile.open("eda/addr.log");
     if (!logFile.is_open()) {
-        fatal("Unable to open log file: /home/abishek/Desktop/SHELLY/gem5/eda/addr.log");
+        fatal("Unable to open log file: eda/addr.log");
     }
 }
 
@@ -32,37 +43,38 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                           std::vector<AddrPriority> &addresses,
                                           const CacheAccessor &cache)
 {
-    Addr addr = pfi.getAddr();
-    int pc = pfi.getPC(); // Use PC as context
-    int key = hash(addr, pc);
-
-    // Log the address
-    logFile << "Addr: " << std::hex << addr << std::endl;
+    Addr addr = blockAddress(pfi.getAddr());
+    int key = hash(addr);
 
     // Data collection: Update state with previous accesses
-    for (Addr a : previousAccesses) {
-        int prev_key = hash(a, pc);
-        addToState(prev_key, addr);
+    for (size_t i = 0; i < previousAccesses.size(); ++i) {
+        if( i % 40 != 0) {
+            continue;
+        }
+        Addr a = previousAccesses[i];
+        int prev_key = hash(a);
+        addToState(prev_key, addr, i);
     }
 
-    // Prediction: Get the best address for the current context
+    for (int offset : mostSeenOffsets) {
+        Addr target_addr = addr + offset;
+        int reward = rewardFunction(30);
+        cumulativeReward += reward;
+        rewardCounter++;
+        states[hash(addr)].ptrs.push({reward, target_addr});
+    }
+
+    // Prediction: Get the best addresses for the current context
     if (states.find(key) != states.end()) {
-        Addr best_addr = getBestAddress(key);
-        prefetchQueue.push_back({best_addr, key, (int)prefetchQueue.size()});
+        std::vector<Addr> best_addrs = getPrefetches(key);
+        for (const auto &best_addr : best_addrs) {
+            prefetchQueue.push_back({best_addr, key, (int)prefetchQueue.size()});
+            addresses.push_back(AddrPriority(best_addr, 0));
+        }
     }
 
     // Feedback: Update scores based on prefetch queue
     updateScores(addr);
-
-    // Send prefetch: Add the best address to the prefetch queue if it exceeds the confidence threshold
-    if (!prefetchQueue.empty()) {
-        Addr next_pref = prefetchQueue.front().addr;
-        prefetchQueue.pop_front();
-        if (states[key].ptrs[next_pref] >= confidenceThreshold) {
-            addresses.push_back(AddrPriority(next_pref, 0));
-            DPRINTF(HWPrefetch, "Generated prefetch %#lx\n", next_pref);
-        }
-    }
 
     // Update previous accesses
     updatePreviousAccesses(addr);
@@ -77,64 +89,80 @@ ContextBasedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 void
 ContextBasedPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 {
-    // Implement if needed
+
 }
 
 int
-ContextBasedPrefetcher::hash(Addr addr, int pc) const
+ContextBasedPrefetcher::hash(Addr addr) const
 {
-    // Improved hash function
     int hash_value = (addr >> 2) & 0x3FF;  // Use lower bits of address
-    hash_value ^= (pc & 0x3FF);            // XOR with lower bits of PC
     hash_value *= 2654435761;              // Multiply by a large prime for better mixing
     hash_value &= 0x3FF;                   // Keep the result within a 10-bit range
     return hash_value;
 }
 
 void
-ContextBasedPrefetcher::addToState(int key, Addr addr)
+ContextBasedPrefetcher::addToState(int key, Addr addr, int index)
 {
     if (states.find(key) == states.end()) {
         states[key] = State();
     }
-    states[key].ptrs[addr]++;
+    int reward = rewardFunction(index);
+    cumulativeReward += reward;
+    rewardCounter++;
+    states[key].ptrs.push({reward, addr});
 }
 
-Addr
-ContextBasedPrefetcher::getBestAddress(int key) const
+std::vector<Addr>
+ContextBasedPrefetcher::getPrefetches(int key) 
 {
     const auto &ptrs = states.at(key).ptrs;
+    std::vector<Addr> best_addrs;
+
     if (ptrs.empty()) {
-        return 0; // Handle case where there are no addresses
+        return best_addrs; // Return empty vector if there are no addresses
     }
-    return std::max_element(ptrs.begin(), ptrs.end(),
-                            [](const auto &a, const auto &b) {
-                                return a.second < b.second;
-                            })->first;
+
+    // Generate a random number between 0 and 1
+    double random_value = static_cast<double>(std::rand()) / RAND_MAX;
+    bool explore = random_value < 0.2; // Explore with 20% probability
+
+    auto temp_ptrs = ptrs; // Copy the heap to a temporary variable
+    int degree = 0;
+
+    while (!temp_ptrs.empty() && degree < 2) {
+        auto top = temp_ptrs.top();
+        if ((explore && top.first < confidenceThreshold) || (!explore && top.first > confidenceThreshold)) {
+            best_addrs.push_back(top.second);
+            degree++;
+        }
+        temp_ptrs.pop();
+    }
+
+    return best_addrs;
 }
 
 void
 ContextBasedPrefetcher::updateScores(Addr addr)
 {
-    for (auto &p : prefetchQueue) {
-        for (int offset : mostSeenOffsets) {
-            Addr target_addr = addr - offset;
-            if (p.addr == target_addr) {
-                int distance = p.index; // Distance is the position in the queue
-                int reward = rewardFunction(distance);
-                states[p.key].ptrs[addr + offset] += reward;
-                DPRINTF(HWPrefetch, "Reward: %d, Distance: %d, Addr: %#lx, Offset: %d\n",
-                        reward, distance, addr, offset);
+    auto it = prefetchQueue.begin();
+    while (it != prefetchQueue.end()) {
+        it = std::find_if(it, prefetchQueue.end(), [&](const PrefetchEntry &e) {
+            return e.addr == addr;
+        });
 
-                // Track offset frequencies
-                offsetFrequencies[offset]++;
-                break;
-            }
+        if (it != prefetchQueue.end()) {
+            int distance = std::distance(prefetchQueue.begin(), it);
+            int reward = rewardFunction(distance);
+            cumulativeReward += reward;
+            rewardCounter++;
+            states[it->key].ptrs.push({reward, addr});
+            ++it; // Move iterator to the next element to continue searching
         }
     }
 
-    // Ensure the prefetch queue does not exceed the size of 128
-    while (prefetchQueue.size() > 128) {
+    // Ensure the prefetch queue does not exceed the size of prefetchWindow
+    while (prefetchQueue.size() > prefetchWindow) {
         prefetchQueue.pop_front();
     }
 }
@@ -158,8 +186,8 @@ ContextBasedPrefetcher::getMostSeenOffsets() const
 void
 ContextBasedPrefetcher::updateRewardThreshold()
 {
-    if (rewards.size() > 0) {
-        int mean_reward = std::accumulate(rewards.begin(), rewards.end(), 0) / rewards.size();
+    if (rewardCounter > 0) {
+        int mean_reward = cumulativeReward / rewardCounter;
         rewardThreshold = mean_reward * 1.5; // Adjust multiplier as needed
     }
 }
@@ -168,19 +196,29 @@ void
 ContextBasedPrefetcher::updateOffsets()
 {
     // Update the most seen offsets based on observed frequencies
-    std::vector<std::pair<int, int>> freq_vector(offsetFrequencies.begin(), offsetFrequencies.end());
-    std::sort(freq_vector.begin(), freq_vector.end(), [](const auto &a, const auto &b) {
+    std::unordered_map<int, int> offset_count;
+    for (size_t i = 0; i < previousAccesses.size(); i += 10) { // Traverse through every 10th element
+        Addr addr = previousAccesses[i];
+        for (const auto &offset : mostProbableOffsets) {
+            Addr target_addr = addr + offset;
+            if (std::find(previousAccesses.begin(), previousAccesses.end(), target_addr) != previousAccesses.end()) {
+                offset_count[offset]++;
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> sorted_offsets(offset_count.begin(), offset_count.end());
+    std::partial_sort(sorted_offsets.begin(), sorted_offsets.begin() + std::min(size_t(10), sorted_offsets.size()), sorted_offsets.end(), [](const auto &a, const auto &b) {
         return a.second > b.second;
     });
 
     mostSeenOffsets.clear();
-    for (const auto &pair : freq_vector) {
-        mostSeenOffsets.push_back(pair.first);
-        if (mostSeenOffsets.size() >= 10) {
-            break; // Limit to top 10 offsets
+    for (size_t i = 0; i < sorted_offsets.size() && i < 10; ++i) {
+        if (sorted_offsets[i].second > 0) { // Only add offsets with a count greater than 0
+            mostSeenOffsets.push_back(sorted_offsets[i].first);
         }
     }
 }
 
 } // namespace prefetch
-} // namespace gem5
+} // namespace gem5 
