@@ -73,7 +73,7 @@ FsLinux::initState()
     }
 
     for (auto *tc: system->threads) {
-        RiscvISA::Reset().invoke(tc);
+        tc->getIsaPtr()->resetThread();
         tc->activate();
     }
 }
@@ -240,7 +240,7 @@ BootloaderKernelWorkload::initState()
     loadDtb();
 
     for (auto *tc: system->threads) {
-        RiscvISA::Reset().invoke(tc);
+        tc->getIsaPtr()->resetThread();
         tc->activate();
     }
 }
