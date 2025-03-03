@@ -84,6 +84,8 @@ class LocalMemPipeline
         stats.loadVrfBankConflictCycles += num_cycles;
     }
 
+    void printProgress();
+
   private:
     ComputeUnit &computeUnit;
     const std::string _name;

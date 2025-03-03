@@ -54,9 +54,6 @@ ProbeListenerObject::ProbeListenerObject(
 
 ProbeListenerObject::~ProbeListenerObject()
 {
-    for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-        delete (*l);
-    }
     listeners.clear();
 }
 

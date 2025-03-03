@@ -26,7 +26,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""
+Generic transmitter for sending JSON payloads to gem5 via shared memory and signals.
+
+This module provides functionality to send correctly formatted JSON strings to gem5.
+
+The JSON payload must:
+    * Be a valid JSON string
+    * Contain required fields (id, payload)
+    * Be less than 4096 bytes when encoded
+    * Follow gem5's IPC protocol format
+
+Example valid JSON format::
+
+    {
+        "id": <numeric_id>,
+        "payload": {
+            "key1": "value1",
+            "key2": "value2"
+        }
+    }
+
+Command line usage::
+
+    # Send string payload
+    python transmitter.py 1234 1000 '{"message": "hello"}'
+
+    # Send numeric payload
+    python transmitter.py 1234 1000 '{"value": 42}'
+
+Note:
+    All payloads must be valid JSON strings, even for numeric values.
+
+The module uses logging for debug output which is disabled by default. To enable debug
+logging, Set environment variable::
+
+    export PYTHONLOG=DEBUG
+"""
+
 import json
+import logging
 import os
 import signal
 import sys
@@ -34,8 +73,18 @@ from multiprocessing import shared_memory
 from time import sleep
 from typing import Optional
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def send_signal(pid: int, id: int, payload: str) -> None:
+    """
+    Sends a signal with payload to a gem5 process via shared memory.
+
+    :param pid: Process ID of the target gem5 process
+    :param id: Message ID for the signal
+    :param payload: String payload to send
+    """
     shared_mem_name = "shared_gem5_signal_mem_" + str(pid)
     shared_mem_size = 4096
     try:
@@ -46,9 +95,9 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         shm = shared_memory.SharedMemory(name=shared_mem_name)
 
     shm.buf[:shared_mem_size] = b"\x00" * shared_mem_size
-    final_payload = create_json(id, payload)
-    shm.buf[: len(final_payload.encode())] = final_payload.encode()
     try:
+        final_payload = create_json(id, payload)
+        shm.buf[: len(final_payload.encode())] = final_payload.encode()
         # Note: SIGHUP is used as SIGUSR1 and SIGUSR2 are already in used by
         # gem5 for other purposes. SIGRTMIN and SIGRTMAX (usually the suggested
         # alternative when SIGUSR1 and SIGUSR2 unavailable) cannot be used in
@@ -60,19 +109,33 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         # their configurations.
         os.kill(pid, signal.SIGHUP)
     except ProcessLookupError:
-        print(
+        logger.error(
             "Process does not exist! Check that you are using the correct PID."
         )
         shm.close()
         shm.unlink()
         sys.exit(1)
+    except json.decoder.JSONDecodeError as e:
+        logger.error(
+            f"JSON Parsing Error: {str(e)}\nPayload that caused error: {payload}"
+        )
+        shm.close()
+        shm.unlink()
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        shm.close()
+        shm.unlink()
+        sys.exit(1)
 
-    print(f"Sent a SIGHUP signal to PID {pid} with payload: '{final_payload}'")
+    logger.debug(
+        f"Sent a SIGHUP signal to PID {pid} with payload: '{final_payload}'"
+    )
 
     while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
-        print("Waiting for gem5 to finish using shared memory...")
+        logger.debug("Waiting for gem5 to finish using shared memory...")
         sleep(1)
-    print("Done message received")
+    logger.debug("Done message received")
     shm.close()
     try:
         shm.unlink()
@@ -80,26 +143,74 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         pass
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python sender.py <PID> <Hypercall ID> <Payload>")
-        sys.exit(1)
+def validate_key(key: str) -> bool:
+    """
+    Validate that a key is a valid string identifier.
+
+    :param key: The key to validate
+    :return: True if key is valid, False otherwise
+    """
+    if not isinstance(key, str):
+        return False
+    if not key:
+        return False
+    # Check if key is a valid identifier (starts with letter/underscore,
+    # contains only letters, numbers, underscores)
+    if not key[0].isalpha() and key[0] != "_":
+        return False
+    return all(c.isalnum() or c == "_" for c in key)
 
 
 def create_json(id: int, payload: Optional[str] = "{}") -> str:
+    """
+    Create a properly formatted JSON message for gem5.
+
+    :param id: Message ID (must be numeric)
+    :param payload: JSON string containing key-value pairs
+    :return: Formatted JSON string
+    :raises ValueError: If payload format is invalid or size exceeds limit
+    """
     try:
         payload_dict = json.loads(payload)
-    except:
-        raise Exception(
-            "Failed to read string as JSON! Try checking its formatting."
-        )
-    final_dict = {"id": id, "payload": payload_dict}
-    return json.dumps(final_dict)
+
+        # Ensure payload is a dictionary
+        if not isinstance(payload_dict, dict):
+            raise ValueError("Payload must be a dictionary/object")
+
+        # Validate and convert all values to strings
+        formatted_dict = {}
+        for key, value in payload_dict.items():
+            # Validate key
+            if not validate_key(key):
+                raise ValueError(f"Invalid key format: {key}")
+
+            # Convert value to string
+            formatted_dict[key] = str(value)
+
+        final_dict = {
+            "id": int(id),  # Ensure ID is numeric
+            "payload": formatted_dict,
+        }
+
+        # Verify final size
+        final_json = json.dumps(final_dict)
+        if len(final_json.encode()) >= 4096:
+            raise ValueError("JSON payload too large (must be < 4096 bytes)")
+
+        return final_json
+
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON payload format")
 
 
-print(sys.argv)
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        logger.error("Usage: python sender.py <PID> <Hypercall ID> <Payload>")
+        sys.exit(1)
 
-if len(sys.argv) == 4:
-    send_signal(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3])
-else:
-    send_signal(int(sys.argv[1]), int(sys.argv[2]), "{}")
+    logger.debug(sys.argv)
+
+    if len(sys.argv) == 4:
+        send_signal(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3])
+    else:
+        send_signal(int(sys.argv[1]), int(sys.argv[2]), "{}")

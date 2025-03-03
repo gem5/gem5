@@ -36,6 +36,7 @@
 #include <deque>
 #include <list>
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -139,6 +140,7 @@ class Wavefront : public SimObject
     GPUDynInstPtr nextInstr();
     void setStatus(status_e newStatus);
     status_e getStatus() { return status; }
+    std::string statusToString(status_e status);
     void resizeRegFiles(int num_vregs, int num_sregs);
     bool isGmInstruction(GPUDynInstPtr ii);
     bool isLmInstruction(GPUDynInstPtr ii);
@@ -286,6 +288,21 @@ class Wavefront : public SimObject
     void decExpInstsIssued();
     void decLGKMInstsIssued();
 
+    std::set<InstSeqNum> vmemIssued;
+    std::set<InstSeqNum> lgkmIssued;
+    std::set<InstSeqNum> expIssued;
+    std::unordered_map<InstSeqNum, std::string> cntInsts;
+
+    void trackVMemInst(GPUDynInstPtr gpu_dyn_inst);
+    void trackLGKMInst(GPUDynInstPtr gpu_dyn_inst);
+    void trackExpInst(GPUDynInstPtr gpu_dyn_inst);
+    void trackInst(GPUDynInstPtr gpu_dyn_inst);
+
+    void untrackVMemInst(GPUDynInstPtr gpu_dyn_inst);
+    void untrackLGKMInst(GPUDynInstPtr gpu_dyn_inst);
+    void untrackExpInst(GPUDynInstPtr gpu_dyn_inst);
+    void untrackInst(InstSeqNum seqNum);
+
     /** Freeing VRF space */
     void freeRegisterFile();
 
@@ -302,6 +319,15 @@ class Wavefront : public SimObject
     int barrierId() const;
     bool hasBarrier() const;
     void releaseBarrier();
+
+    // For periodic progress prints
+    void printProgress();
+
+    // Tracking variables for periodic progress
+    InstSeqNum lastInstSeqNum;
+    std::string lastInstDisasm;
+    std::string lastInstRdyStatus;
+    bool lastVrfStatus, lastSrfStatus;
 
   private:
     TheGpuISA::GPUISA _gpuISA;

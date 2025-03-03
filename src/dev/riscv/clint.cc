@@ -110,15 +110,19 @@ Clint::ClintRegisters::init()
 {
     using namespace std::placeholders;
 
+    // Sanity check
+    assert(clint->pioSize >= minBankSize);
+
     // Calculate reserved space size
     const size_t reserved0_size = mtimecmpStart - clint->nThread * 4;
     reserved.emplace_back("reserved0", reserved0_size);
     const size_t reserved1_size = mtimeStart
         - mtimecmpStart - clint->nThread * 8;
     reserved.emplace_back("reserved1", reserved1_size);
-
-    // Sanity check
-    assert((int) clint->pioSize <= maxBankSize);
+    const size_t reserved2_size = clint->pioSize - minBankSize;
+    if (reserved2_size > 0) {
+        reserved.emplace_back("reserved2", reserved2_size);
+    }
 
     // Initialize registers
     for (int i = 0; i < clint->nThread; i++) {
@@ -142,6 +146,9 @@ Clint::ClintRegisters::init()
     addRegister(reserved[1]);
     mtime.readonly();
     addRegister(mtime);
+    if (reserved2_size > 0) {
+        addRegister(reserved[2]);
+    }
 }
 
 uint32_t

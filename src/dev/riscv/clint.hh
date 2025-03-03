@@ -108,13 +108,14 @@ class Clint : public BasicPioDevice
      * 0x4000 - 0xBFF7: mtimecmp
      * ...:             reserved[1]
      * 0xBFF8:          mtime (read-only)
+     * ...:             reserved[2]
      */
     class ClintRegisters: public RegisterBankLE
     {
       public:
         const Addr mtimecmpStart = 0x4000;
         const Addr mtimeStart = 0xBFF8;
-        const Addr maxBankSize = 0xC000;
+        const Addr minBankSize = 0xC000;
 
         std::vector<Register32> msip;
         std::vector<Register64> mtimecmp;

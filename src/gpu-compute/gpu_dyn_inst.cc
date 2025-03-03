@@ -882,6 +882,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         }
         wavefront()->execUnitId =  wavefront()->flatLmUnitId;
         wavefront()->decVMemInstsIssued();
+        wavefront()->vmemIssued.erase(seqNum());
         if (isLoad()) {
             wavefront()->rdGmReqsInPipe--;
         } else if (isStore()) {
@@ -963,6 +964,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         // decrement these counters if we are explicitly a FLAT instruction.
         if (isFlat()) {
             wavefront()->decLGKMInstsIssued();
+            wavefront()->lgkmIssued.erase(seqNum());
             if (isLoad()) {
                 wavefront()->rdLmReqsInPipe--;
             } else if (isStore()) {

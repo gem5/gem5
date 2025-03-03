@@ -29,11 +29,12 @@ will be returned by the simulation as a hypercall type ID in the order they are
 provided. This script will then check that the hypercall type IDs returned are
 what is expected given what was passed to the binary (and specified as a
 parameter to this script).
+
+Note: This is not the suggested way to use hypercalls in non-testing code.
 """
 
 import argparse
 import urllib.request
-from pathlib import Path
 
 import m5
 
@@ -44,9 +45,8 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import BinaryResource
-from gem5.simulate.exit_handler import ExitHandler
+from gem5.simulate.exit_handler import register_exit_handler
 from gem5.simulate.simulator import Simulator
-from gem5.utils.override import overrides
 
 parser = argparse.ArgumentParser(description="Hypercall Exit Handler tester")
 parser.add_argument(
@@ -100,10 +100,9 @@ board.set_se_binary_workload(binary, arguments=[args.ids])
 # Create aa exit handler which checks the hypercall type IDs returned are what
 # is expected given what was passed to the binary (as specified by the
 # passed to this parameter passed to this script).
-class TypeIDEchoExitHandler(ExitHandler):
+class TypeIDEchoExitHandler:
     hypercall_exits_processed = []
 
-    @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         hypercall_id = simulator.get_hypercall_id()
         print(f"Processing hypercall ID: {hypercall_id}")
@@ -145,37 +144,42 @@ class TypeIDEchoExitHandler(ExitHandler):
             "Processing complete."
         )
 
-    @overrides(ExitHandler)
     def _exit_simulation(self) -> bool:
         return False
 
 
-# For every ID type that we set in the workload, we need to set/override that
-# ID type with the exit handler we created above.
-exit_event_handler_id_map = {}
+# Use a single instance of the exit handler to keep state
+exit_handler = TypeIDEchoExitHandler()
+
+
+def exit_event_handler(simulator, payload):
+    exit_handler._process(simulator)
+    return exit_handler._exit_simulation()
+
+
 for id in ids_int_list:
-    exit_event_handler_id_map[id] = TypeIDEchoExitHandler
+    register_exit_handler(
+        id, exit_event_handler, f"handler for hypercall type {id}"
+    )
 
 # Create the simulator (with exit event handler map)
-simulator = Simulator(
-    board=board, exit_event_handler_id_map=exit_event_handler_id_map
-)
+simulator = Simulator(board=board)
 
 # Run the simulation.
 simulator.run()
 
 # Check that the hypercall type IDs processed match what was expected/passed to
 # the binary.
-if TypeIDEchoExitHandler.hypercall_exits_processed != ids_int_list:
+if exit_handler.hypercall_exits_processed != ids_int_list:
     m5.fatal(
         "The hypercall IDs processed do not match the expected hypercall IDs\n"
         f"Expected: {ids_int_list}\n"
-        f"Received: {TypeIDEchoExitHandler.hypercall_exits_processed}"
+        f"Received: {exit_handler.hypercall_exits_processed}"
     )
 
 
 print(
     "All hypercall IDs received match the expected hypercall IDs.\n"
     f"Expected: {ids_int_list}\n"
-    f"Received: {TypeIDEchoExitHandler.hypercall_exits_processed}"
+    f"Received: {exit_handler.hypercall_exits_processed}"
 )

@@ -41,7 +41,7 @@ RUN apt -y update && \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \
-    cmake wget gnupg2 rpm \
+    cmake wget gnupg2 rpm gfortran \
     # Requirements for ROCm
     mesa-common-dev libgflags-dev libgoogle-glog-dev \
     # ROCm dependencies and requirements to get ROCm repo and build packages.

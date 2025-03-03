@@ -274,6 +274,10 @@ class Shader : public ClockedObject
     int64_t max_valu_insts;
     int64_t total_valu_insts;
 
+    // Member and methods related to printing of GPU progress
+    const Tick progressInterval;
+    Tick getProgressInterval() const { return progressInterval; }
+
     Shader(const Params &p);
     ~Shader();
     virtual void init();

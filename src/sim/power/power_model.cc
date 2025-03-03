@@ -102,9 +102,9 @@ PowerModel::thermalUpdateCallback(const Temperature &temp)
 void
 PowerModel::regProbePoints()
 {
-    thermalListener.reset(new ThermalProbeListener (
-        *this, this->subsystem->getProbeManager(), "thermalUpdate"
-    ));
+    thermalListener =
+        subsystem->getProbeManager()->connect<ThermalProbeListener>(
+            *this, "thermalUpdate");
 }
 
 double
