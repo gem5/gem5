@@ -116,9 +116,11 @@ class JSONClient(AbstractClient):
                         "DEVELOP"
                     )
                 ):
-                    gem5_version_match = (
-                        resource_query.get_gem5_version()
-                        in resource["gem5_versions"]
+                    gem5_version_match = any(
+                        resource_query.get_gem5_version().startswith(
+                            gem5_version
+                        )
+                        for gem5_version in resource["gem5_versions"]
                     )
                 else:
                     gem5_version_match = True

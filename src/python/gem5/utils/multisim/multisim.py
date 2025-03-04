@@ -51,6 +51,9 @@ This script is then passed to the child processes to load.
 
 import importlib
 import multiprocessing
+import signal
+import time
+from multiprocessing import Lock
 from pathlib import Path
 from typing import (
     Optional,
@@ -58,6 +61,7 @@ from typing import (
 )
 
 from m5.core import override_re_outdir
+from m5.util import inform
 
 # A global variable which __main__.py flips to `True` when multisim is run as
 # an executable module.
@@ -172,8 +176,10 @@ def _run(module_path: Path, id: str) -> None:
     sim_list[0].override_outdir(subdir)
     # This doesn't do anything if none of the redirect options are passed
     override_re_outdir(subdir)
-
-    sim_list[0].run()
+    try:
+        sim_list[0].run()
+    except Exception as e:
+        inform(f"Error running simulator {id}: {e}")
 
 
 def run(module_path: Path, processes: Optional[int] = None) -> None:
@@ -200,17 +206,56 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
         "(after determining number of jobs)."
     )
 
-    # Setup the multiprocessing pool. If the number of processes is not
-    # specified (i.e. `None`) the default is the number or available threads.
-    from ..multiprocessing.context import gem5Context
+    active_processes = []
+    remaining_ids = list(ids).copy()
+    process_lock = Lock()
+    from ..multiprocessing import Process
 
-    pool = gem5Context().Pool(processes=max_num_processes, maxtasksperchild=1)
+    def handle_exit(signum, frame):
+        """Signal handler to clean up processes on termination."""
+        import sys
 
-    # Use the starmap function to create N child processes each with same
-    # module path (the config script specifying all simulations using MultiSim)
-    # but a different ID. The ID is used to select the correct simulator to
-    # run.
-    pool.starmap(_run, zip([module_path for _ in range(len(ids))], tuple(ids)))
+        inform("Cleaning up processes")
+        with process_lock:
+            for process in active_processes:
+                if process.is_alive():
+                    inform(f"Terminating process {process.name}")
+                    process.terminate()
+        sys.exit(0)
+
+    # Register signal handler
+    signal.signal(signal.SIGINT, handle_exit)
+    signal.signal(signal.SIGTERM, handle_exit)
+
+    try:
+        while remaining_ids or active_processes:
+            # Start new processes if available
+            while remaining_ids and len(active_processes) < max_num_processes:
+                id_to_run = remaining_ids.pop()
+                try:
+                    process = Process(
+                        target=_run,
+                        args=(module_path, id_to_run),
+                        name=id_to_run,
+                    )
+                    process.start()
+                    with process_lock:
+                        active_processes.append(process)
+                except Exception as e:
+                    inform(f"Error starting process for {id_to_run}: {e}")
+            # Wait for active processes to finish
+            time.sleep(1)  # Avoid busy-waiting
+            with process_lock:
+                # Using list comprehension to remove finished processes
+                # as using `remove` in a loop over the list will cause
+                # the list to be modified during iteration.
+                active_processes = [
+                    process
+                    for process in active_processes
+                    if process.is_alive()
+                ]
+    finally:
+        handle_exit(None, None)
 
 
 def set_num_processes(num_processes: int) -> None:
@@ -248,7 +293,6 @@ def add_simulator(simulator: "Simulator") -> None:
     simulation. This is particularly important when referencing the correct
     m5out subdirectory.
     """
-
     global _multi_sim
     if not simulator.get_id():
         # The default simulator id is the length of the current set of

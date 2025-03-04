@@ -65,12 +65,19 @@ class ProbeListenerObject : public SimObject
 {
   protected:
     ProbeManager *manager;
-    std::vector<ProbeListener *> listeners;
+    std::vector<ProbeListenerPtr<>> listeners;
 
   public:
     ProbeListenerObject(const ProbeListenerObjectParams &params);
     virtual ~ProbeListenerObject();
-    ProbeManager* getProbeManager() { return manager; }
+    ProbeManager *getProbeManager() { return manager; }
+
+    template <typename T, typename... Args>
+    void connectListener(Args &&...args)
+    {
+        listeners.push_back(
+            getProbeManager()->connect<T>(std::forward<Args>(args)...));
+    }
 };
 
 } // namespace gem5

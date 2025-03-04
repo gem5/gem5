@@ -59,6 +59,7 @@
 #include "base/atomicio.hh"
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "debug/ExternalSignal.hh"
 #include "sim/async.hh"
 #include "sim/backtrace.hh"
 #include "sim/eventq.hh"
@@ -184,7 +185,50 @@ ioHandler(int sigtype)
     getEventQueue(0)->wakeup();
 }
 
-// Handle signals from external processes
+/**
+ * @brief Handles signals from external processes by processing JSON data
+ * through shared memory
+ *
+ * This handler processes JSON messages with the following structure:
+ * {
+ *     "id": <numeric_id>,
+ *     "payload": {
+ *         "key1": "value1",
+ *         "key2": "value2",
+ *         ...
+ *     }
+ * }
+ *
+ * Requirements for valid JSON input:
+ * - Must have an "id" field with a numeric value
+ * - Must have a "payload" object containing key-value pairs
+ * - All keys and values in the payload must be quoted strings
+ * - Keys must be valid string identifiers
+ * - Whitespace and newlines are allowed between elements
+ *
+ * Example valid inputs:
+ * {
+ *     "id": 123,
+ *     "payload": {
+ *         "command": "pause",
+ *         "reason": "checkpoint"
+ *     }
+ * }
+ *
+ * {
+ *     "id": 456,
+ *     "payload": {
+ *         "exit_code": "0",
+ *         "message": "normal_termination",
+ *         "timestamp": "12345678"
+ *     }
+ * }
+ *
+ * @param sigtype Signal type that triggered this handler
+ * @note The handler communicates completion by writing "done" to shared
+ *       memory
+ * @note Maximum message size is limited to 4096 bytes
+ */
 static void
 externalProcessHandler(int sigtype)
 {
@@ -213,29 +257,119 @@ externalProcessHandler(int sigtype)
     std::memcpy(full_payload, shm_ptr, shared_mem_size);
     full_payload[shared_mem_size - 1] = '\0';  // Ensure null-termination
 
-    std::cout << "Received signal from external process with payload: '"
-        << full_payload << "'" << std::endl;
+    DPRINTF(ExternalSignal, "Received signal from external "
+            "process with payload: '%s'\n", full_payload);
 
     // process payload json with string processing
     std::string full_payload_str = full_payload;
     std::map<std::string, std::string> payload_map;
 
-    //get the hypercall id
-    std::size_t payload_pos = 0;
-    std::string hypercall_id_str = extractStringFromJSON(full_payload_str,
-        "\"id\":", ",", payload_pos);
-    uint64_t hypercall_id = std::stoi(hypercall_id_str);
+    // Find ID field
+    std::string id_field("\"id\":");
+    std::size_t id_pos = full_payload_str.find(id_field);
+    if (id_pos == std::string::npos) {
+        munmap(shm_ptr, shared_mem_size);
+        close(shm_fd);
+        warn("Error: No message ID found in external processes payload\n");
+        return;
+    }
+
+    // Skip past "id":
+    id_pos += id_field.length();
+
+    // Skip whitespace
+    while (id_pos < full_payload_str.length() && isspace(id_pos)) {
+        id_pos++;
+    }
+
+    // Find end of number (comma or closing brace)
+    std::size_t id_end = full_payload_str.find_first_of(",}", id_pos);
+    if (id_end == std::string::npos) {
+        munmap(shm_ptr, shared_mem_size);
+        close(shm_fd);
+        warn("Error: Invalid ID format in external processes payload\n");
+        return;
+    }
+
+    std::string message_id_str = full_payload_str.substr(id_pos,
+                                                         id_end - id_pos);
+    // Trim whitespace
+    while (!message_id_str.empty() && isspace(message_id_str.back())) {
+        message_id_str.pop_back();
+    }
+
+    long long id_value = std::stoll(message_id_str);
+    if (id_value < 0) {
+        munmap(shm_ptr, shared_mem_size);
+        close(shm_fd);
+        warn("External Process Handler Error: Invalid ID format "
+             "- must be a valid non-negative 64-bit integer\n");
+        return;
+    }
+    uint64_t hypercall_id = static_cast<uint64_t>(id_value);
 
     // parse the payload. Start looking for key-value pairs after `"payload":`
     std::string payload_key = "\"payload\":";
-    payload_pos = full_payload_str.find(payload_key) + payload_key.length();
+    std::size_t payload_pos = full_payload_str.find(payload_key) +
+                                payload_key.length();
 
-    while (full_payload_str.find('"', payload_pos) != std::string::npos){
-        std::string key = extractStringFromJSON(full_payload_str, "\"", "\":",
+    // Skip opening brace of payload object
+    payload_pos = full_payload_str.find('{', payload_pos) + 1;
+
+    while (payload_pos < full_payload_str.length() &&
+           full_payload_str[payload_pos] != '}') {
+        // Skip whitespace and commas
+        payload_pos = full_payload_str.find_first_not_of(", \n\r\t",
+                                                         payload_pos);
+        if (payload_pos == std::string::npos ||
+            full_payload_str[payload_pos] == '}') {
+            break;
+        }
+
+        // Extract key (must be quoted)
+        std::string key = extractStringFromJSON(full_payload_str, "\"", "\"",
             payload_pos);
-        std::string value = extractStringFromJSON(full_payload_str, "\"", "\"",
-            payload_pos);
-        payload_map[key] = value;
+
+        // Skip to the value after the colon
+        payload_pos = full_payload_str.find(":", payload_pos);
+        if (payload_pos == std::string::npos) {
+            break;
+        }
+        payload_pos++; // Move past the colon
+
+        // Skip whitespace before the value
+        payload_pos = full_payload_str.find_first_not_of(" \n\r\t",
+                                                         payload_pos);
+        if (payload_pos == std::string::npos) {
+            break;
+        }
+
+        // Extract value - handle both quoted and unquoted values
+        std::string value;
+        if (full_payload_str[payload_pos] == '"') {
+            value = extractStringFromJSON(full_payload_str, "\"", "\"",
+                                          payload_pos);
+        } else {
+            // For unquoted values, read until comma or closing brace
+            std::size_t value_end = full_payload_str.find_first_of(",}",
+                                                            payload_pos);
+            if (value_end == std::string::npos) {
+                break;
+            }
+            value = full_payload_str.substr(payload_pos,
+                                            value_end - payload_pos);
+            // Trim whitespace
+            while (!value.empty() && isspace(value.back())) {
+                value.pop_back();
+            }
+            payload_pos = value_end;
+        }
+
+        if (!key.empty() && !value.empty()) {
+            payload_map[key] = value;
+            DPRINTF(ExternalSignal, "Parsed key-value pair: %s: %s\n",
+                                    key, value);
+        }
     }
 
     // put a "done" message into the shared memory so the transmitter knows to
@@ -254,13 +388,33 @@ std::string
 extractStringFromJSON(std::string& full_str, std::string start_str,
     std::string end_str, std::size_t& search_start)
 {
-    std::size_t start = full_str.find(start_str, search_start) +
-        start_str.size();
-    std::size_t end = full_str.find(end_str, start);
+    // Find the starting position
+    std::size_t start = full_str.find(start_str, search_start);
+    if (start == std::string::npos) {
+        return "";
+    }
+    start += start_str.size();
 
-    // move position in payload past current key or value
+    // Skip whitespace after start marker
+    while (start < full_str.length() && isspace(full_str[start])) {
+        start++;
+    }
+
+    // Find the ending position
+    std::size_t end = full_str.find(end_str, start);
+    if (end == std::string::npos) {
+        return "";
+    }
+
+    // Trim whitespace before end marker
+    while (end > start && isspace(full_str[end - 1])) {
+        end--;
+    }
+
+    // Update search position to continue after this value
     search_start = end + end_str.size();
-    return (full_str.substr(start, end - start));
+
+    return full_str.substr(start, end - start);
 }
 
 /*

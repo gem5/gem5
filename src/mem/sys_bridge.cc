@@ -32,16 +32,6 @@
 namespace gem5
 {
 
-SysBridge::PacketData
-SysBridge::BridgingPort::replaceReqID(PacketPtr pkt)
-{
-    RequestPtr old_req = pkt->req;
-    RequestPtr new_req = std::make_shared<Request>(
-            old_req->getPaddr(), old_req->getSize(), old_req->getFlags(), id);
-    pkt->req = new_req;
-    return {old_req};
-}
-
 SysBridge::SysBridge(const SysBridgeParams &p) : SimObject(p),
     sourcePort(p.name + ".source_port", &targetPort,
             p.target->getRequestorId(this)),

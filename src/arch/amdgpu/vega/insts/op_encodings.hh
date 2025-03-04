@@ -1579,8 +1579,10 @@ namespace VegaISA
 
             if (gpuDynInst->exec_mask.none()) {
                 wf->decVMemInstsIssued();
+                wf->untrackVMemInst(gpuDynInst);
                 if (isFlat()) {
                     wf->decLGKMInstsIssued();
+                    wf->untrackLGKMInst(gpuDynInst);
                 }
                 return;
             }

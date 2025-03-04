@@ -34,6 +34,7 @@
 #include "base/bitfield.hh"
 #include "debug/GPUExec.hh"
 #include "debug/GPUInitAbi.hh"
+#include "debug/GPUTrace.hh"
 #include "debug/WavefrontStack.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
@@ -97,6 +98,9 @@ Wavefront::Wavefront(const Params &p)
     rawDist.clear();
     lastInstExec = 0;
     vecReads.clear();
+
+    lastInstSeqNum = 0;
+    lastInstDisasm = "none";
 }
 
 void
@@ -950,6 +954,9 @@ Wavefront::exec()
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
             "(pc: %#x; seqNum: %d)\n", computeUnit->cu_id, simdId, wfSlotId,
             wfDynId, ii->disassemble(), old_pc, ii->seqNum());
+    DPRINTF(GPUTrace, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
+            "(pc: %#x; seqNum: %d)\n", computeUnit->cu_id, simdId, wfSlotId,
+            wfDynId, ii->disassemble(), old_pc, ii->seqNum());
 
     ii->execute(ii);
     // delete the dynamic instruction from the pipeline map
@@ -1439,6 +1446,105 @@ Wavefront::decLGKMInstsIssued()
     --lgkmInstsIssued;
 }
 
+void
+Wavefront::trackVMemInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!vmemIssued.count(gpu_dyn_inst->seqNum()));
+    vmemIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackLGKMInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!lgkmIssued.count(gpu_dyn_inst->seqNum()));
+    lgkmIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackExpInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!expIssued.count(gpu_dyn_inst->seqNum()));
+    expIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    cntInsts.insert({gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble()});
+}
+
+void
+Wavefront::untrackVMemInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!vmemIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in VMEM issued!\n", gpu_dyn_inst->seqNum());
+    vmemIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackLGKMInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!lgkmIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in LGKM issued!\n", gpu_dyn_inst->seqNum());
+    lgkmIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackExpInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!expIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in EXP issued!\n", gpu_dyn_inst->seqNum());
+    expIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackInst(InstSeqNum seqNum)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    if (!vmemIssued.count(seqNum) &&
+        !lgkmIssued.count(seqNum) &&
+        !expIssued.count(seqNum)) {
+        cntInsts.erase(seqNum);
+    }
+}
+
 Addr
 Wavefront::pc() const
 {
@@ -1514,6 +1620,59 @@ void
 Wavefront::releaseBarrier()
 {
     barId = WFBarrier::InvalidID;
+}
+
+std::string
+Wavefront::statusToString(status_e status)
+{
+    switch (status) {
+        case S_STOPPED: return "S_STOPPED";
+        case S_RETURNING: return "S_RETURNING";
+        case S_RUNNING: return "S_RUNNING";
+        case S_STALLED: return "S_STALLED";
+        case S_STALLED_SLEEP: return "S_STALLED_SLEEP";
+        case S_WAITCNT: return "S_WAITCNT";
+        case S_BARRIER: return "S_BARRIER";
+        default: break;
+    }
+
+    return "Unknown";
+}
+
+void
+Wavefront::printProgress()
+{
+    std::cout << "wave[" << wfDynId << "] status: "
+              << statusToString(getStatus()) << " last inst: "
+              << lastInstDisasm << " waitcnts: vmem: " << vmemInstsIssued
+              << "/" << vmWaitCnt << "(";
+    for (auto &elem : vmemIssued) {
+        std::cout << elem << ' ';
+    }
+    std::cout << ") exp: " << expInstsIssued << "/"
+              << expWaitCnt << "(";
+    for (auto &elem : expIssued) {
+        std::cout << elem << ' ';
+    }
+
+    std::cout << ") lgkm: " << lgkmInstsIssued << " / "
+              << lgkmWaitCnt << "(";
+    for (auto &elem : lgkmIssued) {
+        std::cout << elem << ' ';
+    }
+    std::cout << ") last ready status: " << lastInstRdyStatus
+              << " status VRF/SRF: " << lastVrfStatus << "/" << lastSrfStatus
+              << " wait insts:\n";
+
+    for (auto &elem : vmemIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
+    for (auto &elem : lgkmIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
+    for (auto &elem : expIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
 }
 
 Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent)

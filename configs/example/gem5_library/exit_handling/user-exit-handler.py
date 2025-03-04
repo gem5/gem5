@@ -129,9 +129,5 @@ class MyExitHandler(ScheduledExitEventHandler):
 # Create the Simulator and set the the exit event handler for type ID 4.
 simulator = Simulator(board=board)
 
-# The scheduler for the to-tick exit events returns type ID of one.
-# Here we override it for the behavior we desire.
-simulator.update_exit_handler_id_map({6: MyExitHandler})
-
 # Run the simulation.
 simulator.run()

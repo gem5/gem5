@@ -79,6 +79,13 @@ class AbstractProcessor(SubSystem):
     def get_isa(self) -> ISA:
         return self._isa
 
+    def get_total_instructions(self) -> int:
+        """Return the number of instructions executed by all cores.
+
+        Note: This total is the sum since the last call to reset stats
+        """
+        return sum(core.get_total_instructions() for core in self.get_cores())
+
     @abstractmethod
     def incorporate_processor(self, board: AbstractBoard) -> None:
         raise NotImplementedError

@@ -135,10 +135,13 @@ class ArmPMU(SimObject):
         # 0x00: SW_INCR
         self.addEvent(SoftwareIncrement(self, 0x00))
         # 0x01: L1I_CACHE_REFILL
+        self.addEvent(ProbeEvent(self, 0x01, icache, "Fill"))
         # 0x02: L1I_TLB_REFILL,
         self.addEvent(ProbeEvent(self, 0x02, itb, "Refills"))
         # 0x03: L1D_CACHE_REFILL
+        self.addEvent(ProbeEvent(self, 0x03, dcache, "Fill"))
         # 0x04: L1D_CACHE
+        self.addEvent(ProbeEvent(self, 0x04, dcache, "Hit", "Miss"))
         # 0x05: L1D_TLB_REFILL
         self.addEvent(ProbeEvent(self, 0x05, dtb, "Refills"))
         # 0x06: LD_RETIRED
@@ -167,9 +170,12 @@ class ArmPMU(SimObject):
             ProbeEvent(self, 0x13, cpu, "RetiredLoads", "RetiredStores")
         )
         # 0x14: L1I_CACHE
+        self.addEvent(ProbeEvent(self, 0x14, icache, "Hit", "Miss"))
         # 0x15: L1D_CACHE_WB
         # 0x16: L2D_CACHE
+        self.addEvent(ProbeEvent(self, 0x16, l2cache, "Hit", "Miss"))
         # 0x17: L2D_CACHE_REFILL
+        self.addEvent(ProbeEvent(self, 0x17, l2cache, "Fill"))
         # 0x18: L2D_CACHE_WB
         # 0x19: BUS_ACCESS
         # 0x1A: MEMORY_ERROR

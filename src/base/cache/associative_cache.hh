@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -196,6 +196,13 @@ class AssociativeCache : public Named
     virtual void
     accessEntry(Entry *entry)
     {
+         if (debugFlag && debugFlag->tracing()) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), debugFlag->name(),
+                "Accessing entry: %s\n", entry->print());
+        }
+
+
         replPolicy->touch(entry->replacementData);
     }
 

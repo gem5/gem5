@@ -486,6 +486,8 @@ class ComputeUnit : public ClockedObject
 
     void sendInvL2(Addr paddr);
 
+    void printProgress();
+
   protected:
     RequestorID _requestorId;
 
@@ -988,6 +990,7 @@ class ComputeUnit : public ClockedObject
     int cacheLineBits;
     InstSeqNum globalSeqNum;
     int wavefrontSize;
+    uint64_t execCycles;
 
     /**
      * TODO: Update these comments once the pipe stage interface has
