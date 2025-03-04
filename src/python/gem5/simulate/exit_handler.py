@@ -319,16 +319,6 @@ class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
         return True
 
 
-class ToTickExitHandler(ExitHandler, hypercall_num=5):
-    @overrides(ExitHandler)
-    def _process(self, simulator: "Simulator") -> None:
-        pass
-
-    @overrides(ExitHandler)
-    def _exit_simulation(self) -> bool:
-        return True
-
-
 class CheckpointExitHandler(ExitHandler, hypercall_num=7):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
