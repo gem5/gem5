@@ -3,6 +3,7 @@
 #include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "vector_scalar.hh"
 
 void mtvsrd(ThreadContext *tc, int xt, int ra) {
     // Ensure valid register indices
@@ -25,11 +26,21 @@ void mtvsrd(ThreadContext *tc, int xt, int ra) {
     tc->setReg(RegId(VecRegClass, xt), vsr_value);
 }
 
-void mfvsrd(ThreadContext *tc, int rt, int xs) {
-    // Read the lower 64 bits of the VSR[XS] register
-    uint128_t vsr_value = tc->getReg(RegId(VecRegClass, xs));
-    uint64_t lower_64_bits = vsr_value & 0xFFFFFFFFFFFFFFFFULL;
 
-    // Write the lower 64 bits to GPR[RT]
+void mfvsrd(ThreadContext *tc, int rt, int xs) {
+    // Ensure valid register indices
+    assert(rt >= 0 && rt < NumIntRegs);
+    assert(xs >= 0 && xs < NumVecRegs);
+
+    // Read the current value of the VSR[XS] register (128-bit)
+    uint128_t vsr_value = tc->getReg(RegId(VecRegClass, xs));
+
+    // Extract only the lower 64 bits of the VSR[XS]
+    uint64_t lower_64_bits = static_cast<uint64_t>(
+    vsr_value & 0xFFFFFFFFFFFFFFFFULL
+    );
+
+
+    // Write the extracted lower 64 bits to GPR[RT]
     tc->setReg(RegId(IntRegClass, rt), lower_64_bits);
 }
