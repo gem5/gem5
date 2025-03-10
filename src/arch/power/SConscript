@@ -36,6 +36,7 @@ if env['CONF']['USE_POWER_ISA']:
 Source('decoder.cc', tags='power isa')
 Source('faults.cc', tags='power isa')
 Source('insts/branch.cc', tags='power isa')
+Source('insts/vector_scalar.cc', tags='power isa')
 Source('insts/mem.cc', tags='power isa')
 Source('insts/integer.cc', tags='power isa')
 Source('insts/floating.cc', tags='power isa')
