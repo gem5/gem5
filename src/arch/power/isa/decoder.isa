@@ -37,37 +37,23 @@
 //
 decode PO default Unknown::unknown() {
 
-    def mtvsrd : PowerInst_VSX
-    {
-        bits<5> XT, RA;
-        format ("mtvsrd", XT, ",", RA);
+    31: decode VSX_INST {  // Grouping VSX-related instructions
 
-        decode OPCD == 31 & XO == 179
-        // Opcode is 31 and Extended Opcode is 179
-        {
-            execute
-            {
-                VSR[XT][0] = GPR[RA];
-                // Move GPR to lower 64-bits of VSR
-            }
-        }
-    };
+    format ("mtvsrd", XT, ",", RA") {
+        179: mtvsrd({{
+            // Move GPR to lower 64-bits of VSR
+            VSR[XT][0] = GPR[RA];
+        }});
+    }
 
-    def mfvsrd : PowerInst_VSX
-    {
-        bits<5> RT, XS;
-        format ("mfvsrd", RT, ",", XS);
+    format ("mfvsrd", RT, ",", XS") {
+        51: mfvsrd({{
+            // Move lower 64 bits of VSR to GPR
+            GPR[RT] = VSR[XS][0];
+        }});
+    }
+}
 
-        decode OPCD == 31 & XO == 51
-        // Opcode is 31 and Extended Opcode is 51
-        {
-            execute
-            {
-                GPR[RT] = VSR[XS][0];
-                // Move the lower 64 bits of VSR[XS] to GPR[RT]
-            }
-        }
-    };
 
     format IntImmTrapOp {
         2: tdi({{ Ra }});
