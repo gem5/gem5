@@ -106,6 +106,9 @@ class ExitHandler(metaclass=ExitHandlerMeta):
         self._process(simulator)
         return self._exit_simulation()
 
+    def get_handler_description(self) -> str:
+        return f"Exit Handler {self.__class__.__name__} called."
+
     @abstractmethod
     def _process(self, simulator: "Simulator") -> None:
         raise NotImplementedError(
@@ -290,6 +293,11 @@ class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
 
 
 class KernelBootedExitHandler(ExitHandler, hypercall_num=1):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Kernel booted."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -300,6 +308,11 @@ class KernelBootedExitHandler(ExitHandler, hypercall_num=1):
 
 
 class AfterBootExitHandler(ExitHandler, hypercall_num=2):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Started `after_boot.sh` script."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -310,16 +323,11 @@ class AfterBootExitHandler(ExitHandler, hypercall_num=2):
 
 
 class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
-    @overrides(ExitHandler)
-    def _process(self, simulator: "Simulator") -> None:
-        pass
 
     @overrides(ExitHandler)
-    def _exit_simulation(self) -> bool:
-        return True
+    def get_handler_description(self):
+        return "Finished `after_boot.sh` script."
 
-
-class ToTickExitHandler(ExitHandler, hypercall_num=5):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         pass
@@ -345,6 +353,11 @@ class CheckpointExitHandler(ExitHandler, hypercall_num=7):
 
 
 class WorkBeginExitHandler(ExitHandler, hypercall_num=4):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Started executing Region of Interest (ROI)."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         m5.stats.reset()
@@ -355,6 +368,11 @@ class WorkBeginExitHandler(ExitHandler, hypercall_num=4):
 
 
 class WorkEndExitHandler(ExitHandler, hypercall_num=5):
+
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Finished executing Region of Interest (ROI)."
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         m5.stats.dump()

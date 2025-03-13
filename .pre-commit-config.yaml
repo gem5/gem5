@@ -69,7 +69,7 @@ repos:
           - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/PyCQA/isort
-      rev: 6.0.0
+      rev: 6.0.1
       hooks:
           - id: isort
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt

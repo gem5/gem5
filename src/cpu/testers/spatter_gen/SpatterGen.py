@@ -99,14 +99,14 @@ benchmark a variety of indexed access patterns, including variations of gather
 Spatter includes backends for OpenMP and CUDA, and experiments show how it can
 be used to evaluate 1) uniform access patterns for CPU and GPU, 2) prefetching
 regimes for gather / scatter, 3) compiler implementations of vectorization for
-gather / scatter, and 4) trace-driven “proxy patterns” that reflect the
+gather / scatter, and 4) trace-driven "proxy patterns" that reflect the
 patterns found in multiple applications. The results from Spatter experiments
 show, for instance, that GPUs typically outperform CPUs for these operations
 in absolute bandwidth but not fraction of peak bandwidth, and that Spatter can
 better represent the performance of some cache-dependent mini-apps than
 traditional STREAM bandwidth measurements.},
 booktitle = {Proceedings of the International Symposium on Memory Systems},
-pages = {209–222},
+pages = {209-222},
 numpages = {14},
 location = {Washington, DC, USA},
 series = {MEMSYS '20}

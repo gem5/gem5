@@ -223,6 +223,23 @@ transition({UD_RU,UC_RU,RU,RSD,RUSD}, {ReadShared,ReadNotSharedDirty}, BUSY_BLKD
   ProcessNextState;
 }
 
+// ReadNoSnp
+transition(I, ReadNoSnp, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_ReadNoSnp;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD,SD,UC,SC}, ReadNoSnp, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_ReadNoSnp_Hit;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 // ReadOnce
 
 transition(I, ReadOnce, BUSY_BLKD) {
@@ -948,6 +965,7 @@ transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_R
 
 transition({BUSY_BLKD,BUSY_INTR},
             {ReadShared, ReadNotSharedDirty, ReadUnique, ReadUnique_PoC,
+            ReadNoSnp,
             ReadOnce, CleanUnique, CleanUnique_Stale,
             Load, Store, AtomicLoad, AtomicStore, Prefetch,
             MakeReadUnique,

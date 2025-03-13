@@ -39,6 +39,7 @@ from typing import (
 )
 
 import m5
+import m5.options
 import m5.ticks
 from m5.ext.pystats.simstat import SimStat
 from m5.stats import addStatVisitor
@@ -212,6 +213,13 @@ class Simulator:
         # matters (say an exit event acts differently for the Nth time it is
         # hit)
         self._exit_event_id_log = {}
+
+    def switch_processor(self) -> None:
+        """
+        Switch the processor. This is a convenience function to call the
+        processor's switch function.
+        """
+        self._board.get_processor().switch()
 
     def get_exit_handler_id_map(self) -> Dict[int, Type[ExitHandler]]:
         """
@@ -445,6 +453,20 @@ class Simulator:
 
         return to_return
 
+    def get_exit_event_id_log(self) -> Dict[int, str]:
+        """
+        Returns a dictionary mapping tick at which an exit event was encountered
+        to the exit event description.
+        """
+        return self._exit_event_id_log
+
+    def show_exit_event_messages(self) -> None:
+        """
+        Show exit event messages. This will print the exit event messages to
+        the console.
+        """
+        m5.options.show_exit_event_messages = True
+
     def override_outdir(self, new_outdir: Path) -> None:
         """This function can be used to override the output directory locatiomn
         Assiming the path passed is valid, the directory will be created
@@ -554,9 +576,15 @@ class Simulator:
             exit_handler = self.get_exit_handler_id_map()[
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
+
+            if m5.options.show_exit_event_messages:
+                print(
+                    f"Exit event: {exit_handler.get_handler_description()} called at tick {self.get_current_tick()}"
+                )
+
             exit_on_completion = exit_handler.handle(self)
             self._exit_event_id_log[self.get_current_tick()] = (
-                self._last_exit_event.getHypercallId()
+                exit_handler.get_handler_description()
             )
 
             # If the generator returned True we will return from the Simulator

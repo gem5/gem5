@@ -94,6 +94,12 @@ BPredUnit::drainSanityCheck() const
         assert(ph.empty());
 }
 
+void
+BPredUnit::branchPlaceholder(ThreadID tid, Addr pc,
+                             bool uncond, void * &bp_history)
+{
+    panic("BPredUnit::branchPlaceholder() not implemented for this BP.\n");
+}
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
@@ -318,7 +324,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * we know the correct direction.
      **/
     updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
-                    hist->target->instAddr(), hist->bpHistory);
+                    hist->target->instAddr(), hist->inst, hist->bpHistory);
 
 
     if (iPred) {
@@ -358,6 +364,12 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
     stats.committed[tid][hist->type]++;
     if (hist->mispredict) {
         stats.mispredicted[tid][hist->type]++;
+        // stats for identifying miss-prediction due to BTB or predictor
+        if (hist->actuallyTaken && !hist->btbHit) {
+            stats.mispredictDueToBTBMiss[tid][hist->type]++;
+        } else {
+            stats.mispredictDueToPredictor[tid][hist->type]++;
+        }
     }
 
 
@@ -400,12 +412,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         squashHistory(tid, hist);
 
-        DPRINTF(Branch, "[tid:%i, squash sn:%llu] Removing history for "
-                "sn:%llu, PC:%#x\n", tid, squashed_sn, hist->seqNum,
-                hist->pc);
-
-
-        delete predHist[tid].front();
         predHist[tid].pop_front();
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] pred_hist.size(): %i\n",
@@ -442,6 +448,9 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
 
     // This call should delete the bpHistory.
     squash(tid, history->bpHistory);
+
+    delete history;
+    history = nullptr;
 }
 
 
@@ -501,12 +510,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             stats.earlyResteers[tid][hist->type]++;
         }
 
-        if (actually_taken) {
-            ++stats.NotTakenMispredicted;
-        } else {
-           ++stats.TakenMispredicted;
-        }
-
 
         // There are separate functions for in-order and out-of-order
         // branch prediction, but not for update. Therefore, this
@@ -555,6 +558,10 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                     // push it to the RAS.
                     auto return_addr = hist->inst->buildRetPC(
                                                     corr_target, corr_target);
+
+                    if (hist->inst->size()) {
+                        return_addr->set(hist->pc + hist->inst->size());
+                    }
 
                     DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
                             "Incorrectly predicted call: [sn:%llu,PC:%#x] "
@@ -649,6 +656,12 @@ BPredUnit::BPredUnitStats::BPredUnitStats(BPredUnit *bp)
               "Number of branches finally committed "),
       ADD_STAT(mispredicted, statistics::units::Count::get(),
               "Number of committed branches that were mispredicted."),
+      ADD_STAT(mispredictDueToPredictor, statistics::units::Count::get(),
+              "Number of committed branches that were mispredicted by the "
+              "predictor."),
+      ADD_STAT(mispredictDueToBTBMiss, statistics::units::Count::get(),
+              "Number of committed branches that were mispredicted because of "
+              "a BTB miss."),
       ADD_STAT(targetProvider, statistics::units::Count::get(),
               "The component providing the target for taken branches"),
       ADD_STAT(targetWrong, statistics::units::Count::get(),
@@ -662,11 +675,6 @@ BPredUnit::BPredUnitStats::BPredUnitStats(BPredUnit *bp)
                "Number of conditional branches incorrect"),
       ADD_STAT(predTakenBTBMiss, statistics::units::Count::get(),
                "Number of branches predicted taken but missed in BTB"),
-      ADD_STAT(NotTakenMispredicted, statistics::units::Count::get(),
-               "Number branches predicted 'not taken' but turned out "
-               "to be taken"),
-      ADD_STAT(TakenMispredicted, statistics::units::Count::get(),
-               "Number branches predicted taken but are actually not taken"),
       ADD_STAT(BTBLookups, statistics::units::Count::get(),
                "Number of BTB lookups"),
       ADD_STAT(BTBUpdates, statistics::units::Count::get(),
@@ -719,6 +727,16 @@ BPredUnit::BPredUnitStats::BPredUnitStats(BPredUnit *bp)
         .init(bp->numThreads, enums::Num_BranchType)
         .flags(total | pdf);
     mispredicted.ysubnames(enums::BranchTypeStrings);
+
+    mispredictDueToPredictor
+        .init(bp->numThreads, enums::Num_BranchType)
+        .flags(total | pdf);
+    mispredictDueToPredictor.ysubnames(enums::BranchTypeStrings);
+
+    mispredictDueToBTBMiss
+        .init(bp->numThreads, enums::Num_BranchType)
+        .flags(total | pdf);
+    mispredictDueToBTBMiss.ysubnames(enums::BranchTypeStrings);
 
     targetProvider
         .init(bp->numThreads, enums::Num_TargetProvider)

@@ -515,6 +515,35 @@ action(Initiate_ReadShared_HitUpstream_NoOwner, desc="") {
   tbe.actions.push(Event:MaintainCoherence);
 }
 
+action(Initiate_ReadNoSnp, desc="") {
+  assert(is_HN);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.push(Event:ReadMissPipe);
+
+  if (tbe.use_DMT) {
+    assert(is_invalid(cache_entry));
+    if (enable_DMT_early_dealloc) {
+      tbe.actions.push(Event:SendRespSepData);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendReadNoSnpDMT);
+  } else {
+    tbe.actions.push(Event:SendReadNoSnp);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+
+  tbe.updateDirOnCompAck := false;
+}
+
+action(Initiate_ReadNoSnp_Hit, desc="") {
+  assert(is_HN);
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.updateDirOnCompAck := false;
+}
 
 action(Initiate_ReadOnce_Miss, desc="") {
   // drop at the end if not doing a fill
@@ -2746,6 +2775,7 @@ action(Send_CompData, desc="") {
   assert(tbe.dataValid);
 
   bool is_rd_once := tbe.reqType == CHIRequestType:ReadOnce;
+  bool is_rd_no_snp := tbe.reqType == CHIRequestType:ReadNoSnp;
   bool is_rd_shared := (tbe.reqType == CHIRequestType:ReadShared) ||
                        (tbe.reqType == CHIRequestType:ReadNotSharedDirty);
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
@@ -2765,7 +2795,7 @@ action(Send_CompData, desc="") {
   bool snd_dirty_on_rs := (is_rd_shared && !is_rd_nsd) &&
                           !tbe.dir_ownerExists;
 
-  if (is_rd_once) {
+  if (is_rd_once || is_rd_no_snp) {
     tbe.snd_msgType := CHIDataType:CompData_I;
   } else if (is_rd_unique || (is_rd_shared && snd_unique_on_rs)) {
     assert(tbe.dataUnique);
