@@ -53,9 +53,14 @@ import importlib
 import multiprocessing
 import signal
 import time
-from multiprocessing import Lock
+from multiprocessing import (
+    Lock,
+    Pipe,
+)
 from pathlib import Path
 from typing import (
+    Dict,
+    List,
     Optional,
     Set,
 )
@@ -160,7 +165,7 @@ def get_num_processes(config_module_path: Path) -> Optional[int]:
     return num_processes_dict["num_processes"]
 
 
-def _run(module_path: Path, id: str) -> None:
+def _run(module_path: Path, id: str, pipe: Pipe) -> None:
     """Run the simulator with the ID specified."""
 
     _load_module(module_path)
@@ -181,8 +186,11 @@ def _run(module_path: Path, id: str) -> None:
     except Exception as e:
         inform(f"Error running simulator {id}: {e}")
 
+    pipe.send(sim_list[0].get_stats())
+    pipe.close()
 
-def run(module_path: Path, processes: Optional[int] = None) -> None:
+
+def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
     """Run the simulators specified in the module in parallel.
 
     :param module_path: The path to the module containing the simulators to
@@ -207,21 +215,22 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     )
 
     active_processes = []
+    stats = []
     remaining_ids = list(ids).copy()
     process_lock = Lock()
     from ..multiprocessing import Process
 
     def handle_exit(signum, frame):
         """Signal handler to clean up processes on termination."""
-        import sys
+        # import sys
 
         inform("Cleaning up processes")
         with process_lock:
-            for process in active_processes:
+            for process, pipe in active_processes:
                 if process.is_alive():
                     inform(f"Terminating process {process.name}")
                     process.terminate()
-        sys.exit(0)
+        # sys.exit(0) # since we actually want to return our values
 
     # Register signal handler
     signal.signal(signal.SIGINT, handle_exit)
@@ -233,14 +242,15 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
             while remaining_ids and len(active_processes) < max_num_processes:
                 id_to_run = remaining_ids.pop()
                 try:
+                    parent, child = Pipe()
                     process = Process(
                         target=_run,
-                        args=(module_path, id_to_run),
+                        args=(module_path, id_to_run, child),
                         name=id_to_run,
                     )
                     process.start()
                     with process_lock:
-                        active_processes.append(process)
+                        active_processes.append((process, parent))
                 except Exception as e:
                     inform(f"Error starting process for {id_to_run}: {e}")
             # Wait for active processes to finish
@@ -250,12 +260,20 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
                 # as using `remove` in a loop over the list will cause
                 # the list to be modified during iteration.
                 active_processes = [
-                    process
-                    for process in active_processes
+                    (process, pipe)
+                    for process, pipe in active_processes
                     if process.is_alive()
                 ]
+
+                for process, pipe in active_processes:
+                    if not pipe.poll(0):
+                        continue
+                    stats.append(pipe.recv())
+
     finally:
         handle_exit(None, None)
+
+    return stats
 
 
 def set_num_processes(num_processes: int) -> None:
