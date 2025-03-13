@@ -63,6 +63,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Tuple,
 )
 
 from m5.core import override_re_outdir
@@ -190,7 +191,9 @@ def _run(module_path: Path, id: str, pipe: Pipe) -> None:
     pipe.close()
 
 
-def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
+def run(
+    module_path: Path, processes: Optional[int] = None
+) -> List[Tuple[str, Dict]]:
     """Run the simulators specified in the module in parallel.
 
     :param module_path: The path to the module containing the simulators to
@@ -214,7 +217,7 @@ def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
         "(after determining number of jobs)."
     )
 
-    active_processes = []
+    active_processes: List[Tuple[Process, Pipe, str]] = []
     stats = []
     remaining_ids = list(ids).copy()
     process_lock = Lock()
@@ -226,7 +229,7 @@ def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
 
         inform("Cleaning up processes")
         with process_lock:
-            for process, pipe in active_processes:
+            for process, _, _ in active_processes:
                 if process.is_alive():
                     inform(f"Terminating process {process.name}")
                     process.terminate()
@@ -242,15 +245,17 @@ def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
             while remaining_ids and len(active_processes) < max_num_processes:
                 id_to_run = remaining_ids.pop()
                 try:
-                    parent, child = Pipe()
+                    parent_pipe, child_pipe = Pipe()
                     process = Process(
                         target=_run,
-                        args=(module_path, id_to_run, child),
+                        args=(module_path, id_to_run, child_pipe),
                         name=id_to_run,
                     )
                     process.start()
                     with process_lock:
-                        active_processes.append((process, parent))
+                        active_processes.append(
+                            (process, parent_pipe, id_to_run)
+                        )
                 except Exception as e:
                     inform(f"Error starting process for {id_to_run}: {e}")
             # Wait for active processes to finish
@@ -260,15 +265,15 @@ def run(module_path: Path, processes: Optional[int] = None) -> List[Dict]:
                 # as using `remove` in a loop over the list will cause
                 # the list to be modified during iteration.
                 active_processes = [
-                    (process, pipe)
-                    for process, pipe in active_processes
+                    (process, pipe, id)
+                    for process, pipe, id in active_processes
                     if process.is_alive()
                 ]
 
-                for process, pipe in active_processes:
+                for _, pipe, id in active_processes:
                     if not pipe.poll(0):
                         continue
-                    stats.append(pipe.recv())
+                    stats.append((id, pipe.recv()))
 
     finally:
         handle_exit(None, None)
