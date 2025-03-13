@@ -10,7 +10,11 @@ from gem5.resources.resource import (
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
-# accept 2 arguments from the command line
+"""
+This script is used to test that the gem5-bridge driver is correctly installed.
+This test runs a simple C program that called m5 hypercall 8 without sudo.
+"""
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--workload", help="The workload to run")
 parser.add_argument(
@@ -31,7 +35,7 @@ board.set_workload(
 )
 board.set_binary_to_run(
     application=BinaryResource(
-        "/home/harshilp/worktrees/disk-image-validate/util/disk-image-validator/test_gem5_bridge.sh"
+        "./util/disk-image-validator/test_gem5_bridge.sh"
     ),
     args=[],
 )

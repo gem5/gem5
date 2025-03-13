@@ -14,7 +14,11 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
-# Accept command-line arguments
+"""
+This script is used to test disk images and make sure that the disks boot and
+call the hypercalls in intended order.
+"""
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--workload", help="The workload to run")
 parser.add_argument(
@@ -22,9 +26,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--validate-npb", action="store_true", help="Validate the NPB output"
-)
-parser.add_argument(
-    "--output-stats", action="store_true", help="Output stats to JSON"
 )
 
 args = parser.parse_args()
@@ -39,6 +40,7 @@ board.set_workload(
 
 simulator = Simulator(board=board)
 
+exit_order = []
 from gem5.simulate.exit_handler import ExitHandler
 
 
@@ -47,6 +49,7 @@ class KernelBootedDumpReset(ExitHandler, hypercall_num=1):
         print("Dumping and resetting stats after kernel boot! Hypercall 1")
         m5.stats.dump()
         m5.stats.reset()
+        exit_order.append(1)
 
     def _exit_simulation(self) -> bool:
         return False
@@ -57,6 +60,7 @@ class AfterBootDumpReset(ExitHandler, hypercall_num=2):
         print("Dumping and resetting stats after Ubuntu boot! Hypercall 2")
         m5.stats.dump()
         m5.stats.reset()
+        exit_order.append(2)
 
     def _exit_simulation(self) -> bool:
         return False
@@ -69,6 +73,7 @@ class AfterBootScriptDumpReset(ExitHandler, hypercall_num=3):
         )
         m5.stats.dump()
         m5.stats.reset()
+        exit_order.append(3)
 
     def _exit_simulation(self) -> bool:
         return True
@@ -79,6 +84,7 @@ class WorkBeginDumpReset(ExitHandler, hypercall_num=4):
         m5.stats.dump()
         m5.stats.reset()
         print("Dumping and resetting stats at ROI begin! Hypercall 4")
+        exit_order.append(4)
 
     def _exit_simulation(self) -> bool:
         return False
@@ -89,6 +95,7 @@ class WorkEndDumpReset(ExitHandler, hypercall_num=5):
         print("Dumping and resetting stats at ROI end! Hypercall 5")
         m5.stats.dump()
         m5.stats.reset()
+        exit_order.append(5)
 
     def _exit_simulation(self) -> bool:
         return False
@@ -99,21 +106,14 @@ simulator.run()
 out_dir = m5.options.outdir
 terminal_out_path = Path(out_dir) / "board.pc.com_1.device"
 
+if exit_order == [1, 2, 3] or exit_order == [1, 2, 4, 5, 3]:
+    print("All exit events are called in expected order")
+else:
+    print("Exit events are not called in expected order")
+
 if args.validate_npb:
     is_valid = validate_npb_output(
         output_file=terminal_out_path, workload=workload_id
     )
     if not is_valid:
         print("Validation failed.")
-
-if args.output_stats:
-    stats_file = Path(out_dir) / "stats.txt"
-    stats = parse_stats(stats_file)
-    print(stats)
-    update_json_with_stats(
-        json_file="/home/harshilp/worktrees/disk-image-validate/hypercall_workloads.json",
-        workload_id=workload_id,
-        version=resource_version,
-        stats=stats,
-        output_file="updated_out_with_stats.json",
-    )
