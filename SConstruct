@@ -798,10 +798,12 @@ for variant_path in variant_paths:
     with gem5_scons.Configure(env) as conf:
         # On Solaris you need to use libsocket for socket ops
         if not conf.CheckLibWithHeader(
-                [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+                [None, 'socket'], 'sys/socket.h', 'C++',
+                call='accept(0,0,0);'):
            error("Can't find library with socket calls (e.g. accept()).")
 
-        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
+        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++',
+                                       call='zlibVersion();'):
             error('Did not find needed zlib compression library '
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
