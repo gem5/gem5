@@ -57,6 +57,7 @@ from m5.params import (
     AddrRange,
     Port,
 )
+from m5.util.attrdict import attrdict
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -137,7 +138,7 @@ class RiscvBoard(
             self.iobus.default = self.iobus.badaddr_responder.pio
 
             # The virtio disk
-            self.disk = RiscvMmioVirtIO(
+            self.platform.disk = RiscvMmioVirtIO(
                 vio=VirtIOBlock(),
                 interrupt_id=0x8,
                 pio_size=4096,
@@ -145,17 +146,12 @@ class RiscvBoard(
             )
 
             # The virtio rng
-            self.rng = RiscvMmioVirtIO(
+            self.platform.rng = RiscvMmioVirtIO(
                 vio=VirtIORng(),
                 interrupt_id=0x8,
                 pio_size=4096,
                 pio_addr=0x10007000,
             )
-
-            # Note: This overrides the platform's code because the platform
-            # isn't general enough.
-            self._on_chip_devices = [self.platform.clint, self.platform.plic]
-            self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
 
         else:
             # SE mode board setup
@@ -185,15 +181,22 @@ class RiscvBoard(
         self.ethernet.pio = self.platform.pci_bus.mem_side_ports
         self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
 
+        self.platform.attachOffChipIO(
+            self.iobus, self.get_cache_hierarchy().is_ruby()
+        )
+
         if self.get_cache_hierarchy().is_ruby():
-            for device in self._off_chip_devices + self._on_chip_devices:
-                device.pio = self.iobus.mem_side_ports
+            self.platform.attachOnChipIO(self.iobus, True)
 
         else:
-            for device in self._off_chip_devices:
-                device.pio = self.iobus.mem_side_ports
-            for device in self._on_chip_devices:
-                device.pio = self.get_cache_hierarchy().get_mem_side_port()
+            membus = attrdict()
+            membus["mem_side_ports"] = (
+                self.get_cache_hierarchy().get_mem_side_port()
+            )
+            membus["cpu_side_ports"] = (
+                self.get_cache_hierarchy().get_cpu_side_port()
+            )
+            self.platform.attachOnChipIO(membus, False)
 
             self.bridge = Bridge(delay="10ns")
             self.bridge.mem_side_port = self.iobus.cpu_side_ports
@@ -202,7 +205,7 @@ class RiscvBoard(
             )
             self.bridge.ranges = [
                 AddrRange(dev.pio_addr, size=dev.pio_size)
-                for dev in self._off_chip_devices
+                for dev in self.platform._off_chip_devices()
             ]
 
             # PCI
@@ -215,7 +218,8 @@ class RiscvBoard(
 
         uncacheable_range = [
             AddrRange(dev.pio_addr, size=dev.pio_size)
-            for dev in self._on_chip_devices + self._off_chip_devices
+            for dev in self.platform._on_chip_devices()
+            + self.platform._off_chip_devices()
         ]
 
         # PCI
@@ -231,13 +235,18 @@ class RiscvBoard(
 
     @overrides(AbstractBoard)
     def has_dma_ports(self) -> bool:
-        return False
+        return self.is_fullsystem()
 
     @overrides(AbstractBoard)
     def get_dma_ports(self) -> List[Port]:
-        raise Exception(
-            "Cannot execute `get_dma_ports()`: Board does not have DMA ports "
-            "to return. Use `has_dma_ports()` to check this."
+        if not self.has_dma_ports():
+            raise Exception(
+                "Cannot execute `get_dma_ports()`: Board does not have DMA ports "
+                "to return. Use `has_dma_ports()` to check this."
+            )
+        return (
+            self.platform._on_chip_ports_req()
+            + self.platform._off_chip_ports_req()
         )
 
     @overrides(AbstractBoard)
@@ -522,7 +531,7 @@ class RiscvBoard(
         soc_node.append(uart_node)
 
         # VirtIO MMIO disk node
-        disk = self.disk
+        disk = self.platform.disk
         disk_node = disk.generateBasicPioDeviceNode(
             soc_state, "virtio_mmio", disk.pio_addr, disk.pio_size
         )
@@ -534,7 +543,7 @@ class RiscvBoard(
         soc_node.append(disk_node)
 
         # VirtIO MMIO rng node
-        rng = self.rng
+        rng = self.platform.rng
         rng_node = rng.generateBasicPioDeviceNode(
             soc_state, "virtio_mmio", rng.pio_addr, rng.pio_size
         )
@@ -544,6 +553,10 @@ class RiscvBoard(
         )
         rng_node.appendCompatible(["virtio,mmio"])
         soc_node.append(rng_node)
+
+        # DMA controller
+        dma_node = self.platform.pdma.generateDeviceTree(soc_state)
+        soc_node.append(dma_node)
 
         root.append(soc_node)
 
@@ -595,7 +608,7 @@ class RiscvBoard(
             child=RawDiskImage(read_only=True), read_only=False
         )
         image.child.image_file = disk_image.get_local_path()
-        self.disk.vio.image = image
+        self.platform.disk.vio.image = image
 
         # Note: The below is a bit of a hack. We need to wait to generate the
         # device tree until after the disk is set up. Now that the disk and
