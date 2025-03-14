@@ -27,6 +27,7 @@
 from m5.objects.Device import PioDevice
 from m5.params import *
 from m5.proxy import *
+from m5.util.fdthelper import *
 
 
 class SfPDMA(PioDevice):
@@ -70,3 +71,50 @@ class SfPDMA(PioDevice):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pio_size = 0x1000 * int(self.chan_cnt)
+
+    # fdt generation
+    _dma_coherent = True
+    _iommu = None
+
+    def generateDeviceTree(self, state):
+        node = FdtNode(f"dma@{int(self.pio_addr):x}")
+        node.appendCompatible(["microchip,mpfs-pdma", "sifive,pdma0"])
+        node.append(
+            FdtPropertyWords(
+                "reg",
+                state.addrCells(self.pio_addr)
+                + state.sizeCells(0x1000 * int(self.chan_cnt)),
+            )
+        )
+        node.append(FdtPropertyWords("#dma-cells", [1]))
+        node.append(FdtPropertyWords("dma-channels", [self.chan_cnt]))
+
+        platform = self.platform.unproxy(self)
+        plic = platform.plic
+
+        if plic is not None:
+            node.append(
+                FdtPropertyWords("interrupt-parent", state.phandle(plic))
+            )
+
+            # driver awaits interrupts list in form [done_irq0, err_irq0, ...]
+            driver_irq = []
+            for done, err in zip(self.done_irq, self.error_irq):
+                driver_irq.append(done)
+                driver_irq.append(err)
+
+            node.append(FdtPropertyWords("interrupts", driver_irq))
+        else:
+            print("SfPDMA: Failed to find plic")
+
+        if self._dma_coherent:
+            node.append(FdtProperty("dma-coherent"))
+
+        if self._iommu is not None:
+            node.append(
+                FdtPropertyWords(
+                    "iommus", [state.phandle(self._iommu), self.sid]
+                )
+            )
+
+        yield node
