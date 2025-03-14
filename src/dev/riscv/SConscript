@@ -50,10 +50,12 @@ SimObject(
 SimObject('RTC.py', sim_objects=['RiscvRTC'], tags=['riscv isa'])
 SimObject('RiscvVirtIOMMIO.py', sim_objects=['RiscvMmioVirtIO'],
     tags=['riscv isa'])
+SimObject('Sf_PDMA.py', sim_objects=['SfPDMA'], tags=['riscv isa'])
 
 DebugFlag('Clint', tags=['riscv isa'])
 DebugFlag('Plic', tags=['riscv isa'])
 DebugFlag('VirtIOMMIO', tags=['riscv isa'])
+DebugFlag('SfPDMA', tags=['riscv isa'])
 
 Source('pci_host.cc', tags=['riscv isa'])
 
@@ -64,3 +66,4 @@ Source('plic_device.cc', tags=['riscv isa'])
 Source('plic.cc', tags=['riscv isa'])
 Source('rtc.cc', tags=['riscv isa'])
 Source('vio_mmio.cc', tags=['riscv isa'])
+Source('sf_pdma.cc', tags=['riscv isa'])
