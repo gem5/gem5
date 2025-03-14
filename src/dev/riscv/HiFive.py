@@ -35,18 +35,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import (
+    Generator,
+    List,
+)
+
 from m5.objects.Clint import Clint
+from m5.objects.ClockedObject import ClockedObject
 from m5.objects.PciHost import GenericPciHost
 from m5.objects.PciUpstream import PciBus
 from m5.objects.Platform import Platform
 from m5.objects.Plic import Plic
 from m5.objects.PMAChecker import PMAChecker
 from m5.objects.RTC import RiscvRTC
+from m5.objects.Sf_PDMA import SfPDMA
 from m5.objects.Terminal import Terminal
 from m5.objects.Uart import RiscvUart8250
+from m5.objects.XBar import BaseXBar
 from m5.params import *
+from m5.params.port_params import PortRef
 from m5.proxy import *
 from m5.util.fdthelper import *
+
+from gem5.utils.override import overrides
 
 
 class GenericRiscvPciHost(GenericPciHost):
@@ -104,15 +115,31 @@ class HiFiveBase(Platform):
     # Set to 0 if using a pci interrupt for Uart instead
     uart_int_id = Param.Int(0, "PLIC Uart interrupt ID")
 
-    def _on_chip_devices(self):
+    def _on_chip_devices(self) -> List[ClockedObject]:
         """Returns a list of on-chip peripherals"""
         return []
 
-    def _off_chip_devices(self):
+    def _off_chip_devices(self) -> List[ClockedObject]:
         """Returns a list of off-chip peripherals"""
         return []
 
-    def _on_chip_ranges(self):
+    def _on_chip_ports_resp(self) -> List[PortRef]:
+        """Returns a list of on-chip peripherals response ports"""
+        return []
+
+    def _off_chip_ports_resp(self) -> List[PortRef]:
+        """Returns a list of off-chip peripherals response ports"""
+        return []
+
+    def _on_chip_ports_req(self) -> List[PortRef]:
+        """Returns a list of on-chip peripherals request/dma ports"""
+        return []
+
+    def _off_chip_ports_req(self) -> List[PortRef]:
+        """Returns a list of off-chip peripherals request/dma ports"""
+        return []
+
+    def _on_chip_ranges(self) -> List[AddrRange]:
         """Returns a list of on-chip peripherals
         address range
         """
@@ -121,7 +148,7 @@ class HiFiveBase(Platform):
             for dev in self._on_chip_devices()
         ]
 
-    def _off_chip_ranges(self):
+    def _off_chip_ranges(self) -> List[AddrRange]:
         """Returns a list of off-chip peripherals
         address range
         """
@@ -130,19 +157,19 @@ class HiFiveBase(Platform):
             for dev in self._off_chip_devices()
         ]
 
-    def attachOnChipIO(self, bus):
-        """Attach on-chip IO devices, needs modification
-        to support DMA
-        """
-        for device in self._on_chip_devices():
-            device.pio = bus.mem_side_ports
+    def attachOnChipIO(self, bus: BaseXBar, ruby: bool = False) -> None:
+        for port in self._on_chip_ports_resp():
+            port.connect(bus.mem_side_ports)
+        if not ruby:
+            for port in self._on_chip_ports_req():
+                port.connect(bus.cpu_side_ports)
 
-    def attachOffChipIO(self, bus):
-        """Attach off-chip IO devices, needs modification
-        to support DMA
-        """
-        for device in self._off_chip_devices():
-            device.pio = bus.mem_side_ports
+    def attachOffChipIO(self, bus: BaseXBar, ruby: bool = False) -> None:
+        for port in self._off_chip_ports_resp():
+            port.connect(bus.mem_side_ports)
+        if not ruby:
+            for port in self._off_chip_ports_req():
+                port.connect(bus.cpu_side_ports)
 
 
 class HiFive(HiFiveBase):
@@ -198,38 +225,83 @@ class HiFive(HiFiveBase):
     uart_int_id = 0xA
     terminal = Terminal()
 
-    def _on_chip_devices(self):
+    # DMA-controller
+    pdma = SfPDMA(
+        pio_addr=0x3000000,
+        done_irq=[i for i in range(23, 30, 2)],
+        error_irq=[i for i in range(24, 31, 2)],
+        _dma_coherent=True,
+    )
+
+    _off_chip_ports_extra = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        for i in range(self.pdma.chan_cnt):
+            self._off_chip_ports_extra.append(self.pdma.dma[i])
+
+    @overrides(HiFiveBase)
+    def _on_chip_devices(self) -> List[ClockedObject]:
         """Returns a list of on-chip peripherals"""
         return [self.clint, self.plic]
 
-    def _off_chip_devices(self):
+    @overrides(HiFiveBase)
+    def _off_chip_devices(self) -> List[ClockedObject]:
         """Returns a list of off-chip peripherals"""
-        devices = [self.uart]
+        devices = [self.uart, self.pdma]
         if hasattr(self, "disk"):
             devices.append(self.disk)
         if hasattr(self, "rng"):
             devices.append(self.rng)
         return devices
 
-    def attachPlic(self):
+    @overrides(HiFiveBase)
+    def _on_chip_ports_resp(self) -> List[PortRef]:
+        ports = []
+        for dev in self._on_chip_devices():
+            if hasattr(dev, "pio"):
+                ports.append(dev.pio)
+        return [i for i in ports if i.role == "GEM5 RESPONDER"]
+
+    @overrides(HiFiveBase)
+    def _off_chip_ports_resp(self) -> List[PortRef]:
+        ports = []
+        for dev in self._off_chip_devices():
+            if hasattr(dev, "pio"):
+                ports.append(dev.pio)
+        ports += self._off_chip_ports_extra
+        return [i for i in ports if i.role == "GEM5 RESPONDER"]
+
+    @overrides(HiFiveBase)
+    def _off_chip_ports_req(self) -> List[PortRef]:
+        ports = self._off_chip_ports_extra
+        return [i for i in ports if i.role == "GEM5 REQUESTOR"]
+
+    def attachPlic(self) -> None:
         """Count and set number of PLIC interrupt sources"""
         plic_srcs = [
             self.uart_int_id,
             self.pci_host.int_base + self.pci_host.int_count,
+            *self.pdma.done_irq,
+            *self.pdma.error_irq,
         ]
         for device in self._off_chip_devices():
             if hasattr(device, "interrupt_id"):
                 plic_srcs.append(device.interrupt_id)
         self.plic.n_src = max(plic_srcs) + 1
 
-    def setNumCores(self, num_cpu):
+    def setNumCores(self, num_cpu: int) -> None:
         """Sets the CLINT to number of threads and the PLIC hartID/pmode for
         each contexts. Assumes that the cores have a single hardware thread.
         """
         self.plic.hart_config = ",".join(["MS" for _ in range(num_cpu)])
         self.clint.num_threads = num_cpu
 
-    def generateDeviceTree(self, state):
+    @overrides(SimObject)
+    def generateDeviceTree(
+        self, state: FdtState
+    ) -> Generator[FdtNode, None, None]:
         cpus_node = FdtNode("cpus")
         cpus_node.append(FdtPropertyWords("timebase-frequency", [10000000]))
         yield cpus_node
@@ -249,7 +321,8 @@ class HiFive(HiFiveBase):
     # For generating devicetree
     _cpu_count = 0
 
-    def annotateCpuDeviceNode(self, cpu, state):
+    @overrides(Platform)
+    def annotateCpuDeviceNode(self, cpu: FdtNode, state: FdtState) -> None:
         cpu.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
         cpu.append(FdtPropertyStrings("status", "okay"))
         cpu.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
