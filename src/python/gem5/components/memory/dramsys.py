@@ -65,13 +65,11 @@ class DRAMSysMem(AbstractMemorySystem):
         self,
         configuration: str,
         size: str,
-        recordable: bool,
         resource_directory: Optional[str] = None,
     ) -> None:
         """
         :param configuration: Path to the base configuration JSON for DRAMSys.
         :param size: Memory size of DRAMSys. Must match the size specified in JSON configuration.
-        :param recordable: Whether the database recording feature of DRAMSys is enabled.
         :param resource_directory: Path to the base resource directory for DRAMSys.
         """
         super().__init__()
@@ -85,7 +83,6 @@ class DRAMSysMem(AbstractMemorySystem):
         self.dramsys = DRAMSys(
             configuration=configuration,
             resource_directory=resource_directory_path.as_posix(),
-            recordable=recordable,
         )
 
         self._size = toMemorySize(size)
@@ -125,16 +122,12 @@ class DRAMSysDDR4_1866(DRAMSysMem):
     An example DDR4 1866 DRAMSys configuration.
     """
 
-    def __init__(self, recordable: bool):
-        """
-        :param recordable: Whether the database recording feature of DRAMSys is enabled.
-        """
+    def __init__(self):
         super().__init__(
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr4-example.json"
             ).as_posix(),
             size="4GiB",
-            recordable=recordable,
         )
 
 
@@ -143,16 +136,12 @@ class DRAMSysDDR3_1600(DRAMSysMem):
     An example DDR3 1600 DRAMSys configuration.
     """
 
-    def __init__(self, recordable: bool):
-        """
-        :param recordable: Whether the database recording feature of DRAMSys is enabled.
-        """
+    def __init__(self):
         super().__init__(
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr3-gem5-se.json"
             ).as_posix(),
             size="1GiB",
-            recordable=recordable,
         )
 
 
@@ -161,16 +150,12 @@ class DRAMSysLPDDR4_3200(DRAMSysMem):
     An example LPDDR4 3200 DRAMSys configuration.
     """
 
-    def __init__(self, recordable: bool):
-        """
-        :param recordable: Whether the database recording feature of DRAMSys is enabled.
-        """
+    def __init__(self):
         super().__init__(
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/lpddr4-example.json"
             ).as_posix(),
             size="1GiB",
-            recordable=recordable,
         )
 
 
@@ -179,14 +164,10 @@ class DRAMSysHBM2(DRAMSysMem):
     An example HBM2 DRAMSys configuration.
     """
 
-    def __init__(self, recordable: bool):
-        """
-        :param recordable: Whether the database recording feature of DRAMSys is enabled.
-        """
+    def __init__(self):
         super().__init__(
             configuration=(
                 DEFAULT_DRAMSYS_DIRECTORY / "configs/hbm2-example.json"
             ).as_posix(),
             size="1GiB",
-            recordable=recordable,
         )

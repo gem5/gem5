@@ -73,10 +73,10 @@ subprocess.run(
     check=True
 )
 
-env.Append(LIBS="DRAMSys_libdramsys")
+env.Append(LIBS="liblibdramsys")
 env.Append(LIBPATH=Dir("./DRAMSys/src/libdramsys").abspath)
 
-env.Append(LIBS="DRAMSys_Configuration")
+env.Append(LIBS="libconfiguration")
 env.Append(LIBPATH=Dir("./DRAMSys/src/configuration").abspath)
 
 env.Append(LIBS="sqlite3")

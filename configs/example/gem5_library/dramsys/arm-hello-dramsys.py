@@ -53,7 +53,7 @@ requires(isa_required=ISA.ARM)
 cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB")
 
 # We use a single channel DDR3_1600 memory system
-memory = DRAMSysDDR3_1600(recordable=True)
+memory = DRAMSysDDR3_1600()
 
 # We use a simple Timing processor with one core.
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1)

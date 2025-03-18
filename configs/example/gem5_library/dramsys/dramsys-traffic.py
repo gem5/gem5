@@ -39,7 +39,6 @@ from gem5.simulate.simulator import Simulator
 
 memory = DRAMSysMem(
     configuration="ext/dramsys/DRAMSys/configs/ddr4-example.json",
-    recordable=True,
     size="4GiB",
 )
 
