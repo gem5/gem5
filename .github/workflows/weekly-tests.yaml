@@ -250,7 +250,7 @@ jobs:
             - uses: actions/checkout@v4
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
-              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
