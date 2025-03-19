@@ -31,8 +31,12 @@ system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
 system.gpu = Vortex(
-    pio_addr=0x20000000,
-    int_gpu=1
+    pio_addr=0x80000000,
+    int_gpu=1,
+    num_clusters=1,
+    num_cores=1,
+    num_warps=1,
+    num_threads=1,
 )
 
 system.gpu.pio = system.membus.mem_side_ports
@@ -58,7 +62,7 @@ system.cpu.workload[0].map(
     0x00000000, 0x00000000, 0xFFFF
 )
 system.cpu.workload[0].map(
-    0x20000000, 0x20000000, 0xFFFF
+    0x80000000, 0x80000000, 0xFFFF
 )
 
 print("Beginning simulation!")

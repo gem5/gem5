@@ -5,7 +5,10 @@
 #include "params/Vortex.hh"
 #include "sim/eventq.hh"
 #include "sim/system.hh"
-#include "runtime/include/vortex.h"
+#include "enums/MemoryMode.hh"
+#include "mem/packet_access.hh"
+#include "vortex/runtime/include/vortex.h"
+#include "vortex/build/hw/VX_config.h"
 
 
 namespace gem5
@@ -32,8 +35,8 @@ class Vortex : public PioDevice
 
     // Put wrapper functions here
     protected:
-        void reset();
-
+        int vortex_read(vx_device_h hdevice, uint32_t addr, uint32_t* value);
+        int vortex_write(vx_device_h hdevice, uint32_t addr, uint32_t* value);
     /*
     private:
         void setCallback(const_vortex_t &callback);
@@ -43,6 +46,12 @@ class Vortex : public PioDevice
     protected:
         const Addr pioAddr;
         const uint32_t intGpu;
+        const uint32_t numClusters;
+        const uint32_t numCores;
+        const uint32_t numWarps;
+        const uint32_t numThreads;
+
+        vx_device_h device;
 };
 
 } // namespace gem5

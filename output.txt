@@ -1,0 +1,17 @@
+Global frequency set at 1000000000000 ticks per second
+      0: system.gpu: Creating Vortex
+vx_dev_open() success
+      0: system.gpu: num cores = 1
+      0: system.gpu: reset()
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 24.1.0.2
+gem5 compiled Mar 19 2025 14:18:03
+gem5 started Mar 19 2025 14:54:14
+gem5 executing on DESKTOP-O14TLKV, pid 341103
+command line: build/ARM/gem5.opt --debug-flags=Vortex configs/vortex/vortex_config.py
+
+Beginning simulation!
+399793000: system.gpu: write()
+Exiting @ tick 432463000 because exiting with last active thread context
