@@ -1,0 +1,6 @@
+Import('*')
+
+SimObject('Vortex.py', sim_objects=['Vortex'])
+Source('vortex_gpu.cc')
+
+DebugFlag('Vortex')
