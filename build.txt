@@ -51,10 +51,8 @@ Checking for linker -Wno-free-nonheap-object support... (cached) yes
 scons: done reading SConscript files.
 scons: Building targets ...
  [VER TAGS]  -> ARM/sim/tags.cc
- [     CXX] ARM/python/_m5/param_Vortex.cc -> .o
  [     CXX] src/vortex-gpu/vortex_gpu.cc -> ARM/vortex-gpu/vortex_gpu.o
- [    LINK]  -> ARM/gem5.opt
-scons: done building targets.
+scons: building terminated because of errors.
 *** Summary of Warnings ***
 Warning: Header file <png.h> not found.
          This host has no libpng library.

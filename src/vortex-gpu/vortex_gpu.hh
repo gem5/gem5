@@ -33,10 +33,15 @@ class Vortex : public PioDevice
         Tick write(PacketPtr pkt) override;
         AddrRangeList getAddrRanges() const override;
 
+    private:
+        EventFunctionWrapper tickEvent;
+
+        void processTick();
+
     // Put wrapper functions here
     protected:
         int vortex_read(vx_device_h hdevice, uint32_t addr, uint32_t* value);
-        int vortex_write(vx_device_h hdevice, uint32_t addr, uint32_t* value);
+        int vortex_write(vx_device_h hdevice, uint32_t addr, uint32_t value);
     /*
     private:
         void setCallback(const_vortex_t &callback);

@@ -13,7 +13,8 @@ Vortex::Vortex(const VortexParams &p)
     numClusters(p.num_clusters),
     numCores(p.num_cores),
     numWarps(p.num_warps),
-    numThreads(p.num_threads)
+    numThreads(p.num_threads),
+    tickEvent([this]{processTick();}, name())
 {
     DPRINTF(Vortex, "Creating Vortex\n");
 
@@ -31,9 +32,14 @@ void
 Vortex::init()
 {
     PioDevice::init();
+    schedule(tickEvent, 1);
+}
 
-    // reset the GPU
-    reset();
+void Vortex::processTick() 
+{
+    // FIX THIS SIMPLATFORM ISSUE
+    //SimPlatform::instance().tick();
+    schedule(tickEvent, curTick() + 1);
 }
 
 void Vortex::serialize(CheckpointOut &cp) const
@@ -47,8 +53,8 @@ void Vortex::unserialize(CheckpointIn &cp)
 Tick Vortex::read(PacketPtr pkt) 
 {
     const Addr addr(pkt->getAddr() - pioAddr);
-    int* value;
-    vortex_read(device, addr, value);
+    uint32_t value;
+    vortex_read(device, addr, &value);
 
     // example read
     pkt->setLE<uint32_t>(value);
@@ -59,8 +65,6 @@ Tick Vortex::read(PacketPtr pkt)
 
 Tick Vortex::write(PacketPtr pkt) 
 {
-    DPRINTF(Vortex, "write()\n");
-
     const Addr addr(pkt->getAddr() - pioAddr);
     vortex_write(device, addr, pkt->getLE<uint32_t>());
 
