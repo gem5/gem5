@@ -2,6 +2,13 @@
 #include "debug/Vortex.hh"
 #include "sim/system.hh"
 #include "mem/request.hh"
+#include "arch.h"
+#include "processor.h"
+#include "mem.h"
+#include "constants.h"
+#include <util.h>
+#include "core.h"
+#include "VX_types.h"
 
 namespace gem5
 {
@@ -18,14 +25,34 @@ Vortex::Vortex(const VortexParams &p)
 {
     DPRINTF(Vortex, "Creating Vortex\n");
 
-    // open device connection
-    device = nullptr;
-    vx_dev_open(&device);
+    vortex::Arch arch(numThreads, numWarps, numCores);
 
-    // checking core configuration
-    uint64_t num_cores;
-    vx_dev_caps(device, VX_CAPS_NUM_CORES, &num_cores);
-    DPRINTF(Vortex, "num cores = %x\n", num_cores);
+    // create memory module
+    // vortex::RAM ram(0, MEM_PAGE_SIZE);
+
+    // create processor
+    vortex::Processor processor(arch);
+
+    DPRINTF(Vortex, "Created Processor\n");
+    // attach memory module
+    // processor.attach_ram(&ram);
+
+	  // setup base DCRs
+    const uint64_t startup_addr(STARTUP_ADDR);
+    processor.dcr_write(VX_DCR_BASE_STARTUP_ADDR0, startup_addr & 0xffffffff);
+  #if (XLEN == 64)
+    processor.dcr_write(VX_DCR_BASE_STARTUP_ADDR1, startup_addr >> 32);
+  #endif
+	processor.dcr_write(VX_DCR_BASE_MPM_CLASS, 0);
+
+    DPRINTF(Vortex, "DCR Setup\n");
+
+    processor.run();
+
+    DPRINTF(Vortex, "Vortex Running\n");
+
+    // read exitcode from @MPM.1
+    //ram.read(&exitcode, (IO_MPM_ADDR + 8), 4);
 }
 
 void
@@ -38,7 +65,7 @@ Vortex::init()
 void Vortex::processTick() 
 {
     // FIX THIS SIMPLATFORM ISSUE
-    //SimPlatform::instance().tick();
+    SimPlatform::instance().tick();
     schedule(tickEvent, curTick() + 1);
 }
 
@@ -53,11 +80,11 @@ void Vortex::unserialize(CheckpointIn &cp)
 Tick Vortex::read(PacketPtr pkt) 
 {
     const Addr addr(pkt->getAddr() - pioAddr);
-    uint32_t value;
-    vortex_read(device, addr, &value);
+    uint32_t* value;
+    vortex_read(device, addr, value);
 
     // example read
-    pkt->setLE<uint32_t>(value);
+    pkt->setLE<uint32_t>(*value);
     pkt->makeResponse();
 
     return 0;

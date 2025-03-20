@@ -10,7 +10,6 @@
 #include "vortex/runtime/include/vortex.h"
 #include "vortex/build/hw/VX_config.h"
 
-
 namespace gem5
 {
 struct VortexParams;

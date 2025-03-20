@@ -52,7 +52,9 @@ scons: done reading SConscript files.
 scons: Building targets ...
  [VER TAGS]  -> ARM/sim/tags.cc
  [     CXX] src/vortex-gpu/vortex_gpu.cc -> ARM/vortex-gpu/vortex_gpu.o
-scons: building terminated because of errors.
+ [     CXX] src/base/date.cc -> ARM/base/date.o
+ [    LINK]  -> ARM/gem5.opt
+scons: done building targets.
 *** Summary of Warnings ***
 Warning: Header file <png.h> not found.
          This host has no libpng library.
