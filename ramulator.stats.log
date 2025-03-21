@@ -6,7 +6,7 @@ MemorySystem:
   total_num_other_requests: 0
   total_num_write_requests: 0
   total_num_read_requests: 0
-  memory_system_cycles: 1
+  memory_system_cycles: 0
   DRAM:
     impl: HBM2
   AddrMapper:
@@ -17,22 +17,22 @@ MemorySystem:
     impl: Generic
     id: Channel 0
     avg_read_latency_0: .nan
-    read_queue_len_avg_0: 0
+    read_queue_len_avg_0: .nan
     write_queue_len_0: 0
     queue_len_0: 0
     num_other_reqs_0: 0
     num_write_reqs_0: 0
     read_latency_0: 0
-    priority_queue_len_avg_0: 0
+    priority_queue_len_avg_0: .nan
     row_hits_0: 0
     priority_queue_len_0: 0
     row_misses_0: 0
     row_conflicts_0: 0
     read_row_misses_0: 0
-    queue_len_avg_0: 0
+    queue_len_avg_0: .nan
     read_row_conflicts_core_0: 0
     read_row_hits_0: 0
-    write_queue_len_avg_0: 0
+    write_queue_len_avg_0: .nan
     read_row_conflicts_0: 0
     write_row_misses_0: 0
     write_row_conflicts_0: 0
@@ -55,17 +55,17 @@ MemorySystem:
   Controller:
     impl: Generic
     id: Channel 1
-    read_queue_len_avg_1: 0
+    read_queue_len_avg_1: .nan
     priority_queue_len_1: 0
     write_queue_len_1: 0
     num_write_reqs_1: 0
     row_hits_1: 0
     row_misses_1: 0
     avg_read_latency_1: .nan
-    queue_len_avg_1: 0
+    queue_len_avg_1: .nan
     read_queue_len_1: 0
     read_row_misses_1: 0
-    priority_queue_len_avg_1: 0
+    priority_queue_len_avg_1: .nan
     read_row_hits_1: 0
     queue_len_1: 0
     read_row_conflicts_1: 0
@@ -73,7 +73,7 @@ MemorySystem:
     num_other_reqs_1: 0
     row_conflicts_1: 0
     write_row_hits_1: 0
-    write_queue_len_avg_1: 0
+    write_queue_len_avg_1: .nan
     write_row_misses_1: 0
     write_row_conflicts_1: 0
     read_row_hits_core_0: 0

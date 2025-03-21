@@ -27,15 +27,17 @@ Vortex::Vortex(const VortexParams &p)
 
     vortex::Arch arch(numThreads, numWarps, numCores);
 
+    // TODO: REPLACE THIS RAM WITH THIS PIODEVICE
     // create memory module
-    // vortex::RAM ram(0, MEM_PAGE_SIZE);
+    vortex::RAM ram(0, MEM_PAGE_SIZE);
 
     // create processor
     vortex::Processor processor(arch);
 
     DPRINTF(Vortex, "Created Processor\n");
+
     // attach memory module
-    // processor.attach_ram(&ram);
+    processor.attach_ram(&ram);
 
 	  // setup base DCRs
     const uint64_t startup_addr(STARTUP_ADDR);
@@ -47,9 +49,9 @@ Vortex::Vortex(const VortexParams &p)
 
     DPRINTF(Vortex, "DCR Setup\n");
 
-    processor.run();
+    //processor.run();
 
-    DPRINTF(Vortex, "Vortex Running\n");
+    //DPRINTF(Vortex, "Vortex Running\n");
 
     // read exitcode from @MPM.1
     //ram.read(&exitcode, (IO_MPM_ADDR + 8), 4);
@@ -59,13 +61,19 @@ void
 Vortex::init()
 {
     PioDevice::init();
-    schedule(tickEvent, 1);
+    schedule(tickEvent, 0);
 }
 
 void Vortex::processTick() 
 {
-    // FIX THIS SIMPLATFORM ISSUE
+    if (curTick() % 10000000 == 0) {
+        DPRINTF(Vortex, "Vortex tick = %d\n", SimPlatform::instance().cycles());
+    }
+
+    // simulate Vortex tick
     SimPlatform::instance().tick();
+
+    // simulate Gem5 tick
     schedule(tickEvent, curTick() + 1);
 }
 

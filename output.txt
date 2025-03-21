@@ -6,8 +6,54 @@ gem5 Simulator System.  https://www.gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
 gem5 version 24.1.0.2
-gem5 compiled Mar 20 2025 13:52:34
-gem5 started Mar 20 2025 14:05:39
-gem5 executing on DESKTOP-O14TLKV, pid 566991
+gem5 compiled Mar 20 2025 18:20:29
+gem5 started Mar 20 2025 18:25:22
+gem5 executing on DESKTOP-O14TLKV, pid 639070
 command line: build/ARM/gem5.opt --debug-flags=Vortex configs/vortex/vortex_config.py
 
+Beginning simulation!
+      0: system.gpu: Vortex tick = 0
+10000000: system.gpu: Vortex tick = 10000000
+20000000: system.gpu: Vortex tick = 20000000
+30000000: system.gpu: Vortex tick = 30000000
+40000000: system.gpu: Vortex tick = 40000000
+50000000: system.gpu: Vortex tick = 50000000
+60000000: system.gpu: Vortex tick = 60000000
+70000000: system.gpu: Vortex tick = 70000000
+80000000: system.gpu: Vortex tick = 80000000
+90000000: system.gpu: Vortex tick = 90000000
+100000000: system.gpu: Vortex tick = 100000000
+110000000: system.gpu: Vortex tick = 110000000
+120000000: system.gpu: Vortex tick = 120000000
+130000000: system.gpu: Vortex tick = 130000000
+140000000: system.gpu: Vortex tick = 140000000
+150000000: system.gpu: Vortex tick = 150000000
+160000000: system.gpu: Vortex tick = 160000000
+170000000: system.gpu: Vortex tick = 170000000
+180000000: system.gpu: Vortex tick = 180000000
+190000000: system.gpu: Vortex tick = 190000000
+200000000: system.gpu: Vortex tick = 200000000
+210000000: system.gpu: Vortex tick = 210000000
+220000000: system.gpu: Vortex tick = 220000000
+230000000: system.gpu: Vortex tick = 230000000
+240000000: system.gpu: Vortex tick = 240000000
+250000000: system.gpu: Vortex tick = 250000000
+260000000: system.gpu: Vortex tick = 260000000
+270000000: system.gpu: Vortex tick = 270000000
+280000000: system.gpu: Vortex tick = 280000000
+290000000: system.gpu: Vortex tick = 290000000
+300000000: system.gpu: Vortex tick = 300000000
+310000000: system.gpu: Vortex tick = 310000000
+320000000: system.gpu: Vortex tick = 320000000
+330000000: system.gpu: Vortex tick = 330000000
+340000000: system.gpu: Vortex tick = 340000000
+350000000: system.gpu: Vortex tick = 350000000
+360000000: system.gpu: Vortex tick = 360000000
+370000000: system.gpu: Vortex tick = 370000000
+380000000: system.gpu: Vortex tick = 380000000
+390000000: system.gpu: Vortex tick = 390000000
+400000000: system.gpu: Vortex tick = 400000000
+410000000: system.gpu: Vortex tick = 410000000
+420000000: system.gpu: Vortex tick = 420000000
+430000000: system.gpu: Vortex tick = 430000000
+Exiting @ tick 432515000 because exiting with last active thread context
