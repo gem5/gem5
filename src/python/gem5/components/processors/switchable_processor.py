@@ -121,7 +121,11 @@ class SwitchableProcessor(AbstractProcessor):
     def switch_to_processor(self, switchable_core_key: str):
         # Run various checks.
         if not hasattr(self, "_board"):
-            raise AssertionError("The processor has not been incorporated.")
+            raise AssertionError(
+                "The processor has not been incorporated. "
+                "If you are using multisim, please use "
+                "simulator.switch_processor() instead of processor.switch()."
+            )
 
         if switchable_core_key not in self._switchable_cores.keys():
             raise AssertionError(
