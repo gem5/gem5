@@ -1,0 +1,6 @@
+Import('*')
+
+SimObject('Vortex_vadd.py', sim_objects=['VortexVADD'])
+Source('vortex_vadd.cc')
+
+DebugFlag('VortexVADD')
