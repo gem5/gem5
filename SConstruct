@@ -139,6 +139,7 @@ AddOption('--gprof', action='store_true',
           help='Enable support for the gprof profiler')
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
+AddOption('--debug-fission', action='store_true', help='Enable debug fission')
 # Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
 # of this new build behaviour in case it introduces regressions. We could use
 # action=argparse.BooleanOptionalAction here once Python 3.9 is required.
@@ -609,6 +610,14 @@ for variant_path in variant_paths:
                     env.Append(LINKFLAGS=['-Wl,--no-keep-memory'])
                 else:
                     error("Unable to use --no-keep-memory with the linker")
+
+        debug_fission = GetOption('debug_fission')
+        if debug_fission:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-gsplit-dwarf'
+                ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
+                    error('Debug fission is not supported in the toolchain')
 
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
