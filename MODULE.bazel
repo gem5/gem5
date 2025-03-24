@@ -1,0 +1,506 @@
+# Copyright 2025 Google, Inc.
+# All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_python", version = "1.2.0")
+
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.1",
+    dev_dependency = True,
+)
+
+local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
+
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+
+new_git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+
+local_repository(
+    name = "bazelize_gem5",
+    dev_dependency = True,
+    path = "util/bazelizer",
+)
+
+new_git_repository(
+    name = "Kconfiglib",
+    build_file_content = """
+py_library(
+    name = "kconfiglib",
+    srcs = ["kconfiglib.py"],
+    visibility = ["//visibility:public"],
+)
+""",
+    commit = "061e71f7d78cb057762d88de088055361863deff",
+    patch_cmds = [
+        "sed -i 's/self._line = s/s = s.replace(\"cont_choice\", \"choice\"); self._line = s/' kconfiglib.py",
+    ],
+    remote = "https://github.com/ulfalizer/Kconfiglib.git",
+)
+
+new_local_repository(
+    name = "pybind11",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    hdrs = glob([
+        "include/**/*.h",
+    ]),
+    strip_include_prefix = "include",
+    #include_prefix = "python",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/pybind11",
+)
+
+new_local_repository(
+    name = "magic_enum",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    hdrs = glob(["*.hh"]),
+    include_prefix = "magic_enum",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/magic_enum",
+)
+
+new_local_repository(
+    name = "dnet",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    hdrs = glob(["*.h"]),
+    include_prefix = "dnet",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/dnet",
+)
+
+new_local_repository(
+    name = "iostream3",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    srcs = ["zfstream.cc"],
+    hdrs = ["zfstream.h"],
+    include_prefix = ".",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/iostream3",
+)
+
+new_local_repository(
+    name = "libfdt",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    srcs = glob(["*.c"]),
+    hdrs = glob(["*.h"]),
+    include_prefix = ".",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/libfdt",
+)
+
+new_local_repository(
+    name = "libelf",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    srcs = glob(["*.c"]) + [
+        ":libelf_convert_c",
+        ":libelf_msize_c",
+        ":libelf_fsize_c",
+    ],
+    hdrs = glob(["*.h"]) + [
+        ":native_elf_format_h",
+    ],
+    include_prefix = ".",
+    visibility = ["//visibility:public"],
+)
+sh_binary(
+    name = "native_elf_format_sh",
+    srcs = ["native-elf-format"],
+)
+genrule(
+    name = "native_elf_format_h",
+    srcs = [],
+    outs = ["native-elf-format.h"],
+    tools = [":native_elf_format_sh"],
+    # Skipping the first (redundant) line for hermeticity to hold
+    cmd = "$(execpath :native_elf_format_sh) | tail -n +2 > \\"$@\\"",
+)
+genrule(
+    name = "libelf_convert_c",
+    srcs = ["libelf_convert.m4", "elf_types.m4"],
+    outs = ["libelf_convert.c"],
+    cmd = "m4 -E -DSRCDIR=`dirname $(execpath :libelf_convert.m4)` $(SRCS) > \\"$@\\"",
+)
+genrule(
+    name = "libelf_fsize_c",
+    srcs = ["libelf_fsize.m4", "elf_types.m4"],
+    outs = ["libelf_fsize.c"],
+    cmd = "m4 -E -DSRCDIR=`dirname $(execpath :libelf_fsize.m4)` $(SRCS) > \\"$@\\"",
+)
+genrule(
+    name = "libelf_msize_c",
+    srcs = ["libelf_msize.m4", "elf_types.m4"],
+    outs = ["libelf_msize.c"],
+    cmd = "m4 -E -DSRCDIR=`dirname $(execpath :libelf_msize.m4)` $(SRCS) > \\"$@\\"",
+)
+""",
+    path = "ext/libelf",
+)
+
+new_local_repository(
+    name = "gdbremote",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    hdrs = glob(["*.hh"]),
+    include_prefix = "gdbremote",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/gdbremote",
+)
+
+new_local_repository(
+    name = "drampower",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    srcs = glob(["src/**/*.cc"]),
+    hdrs = glob(["src/**/*.h"]),
+    include_prefix = ".",
+    strip_include_prefix = "src",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/drampower",
+)
+
+new_local_repository(
+    name = "x11keysym",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    hdrs = glob(["*.h"]),
+    include_prefix = "x11keysym",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/x11keysym",
+)
+
+new_local_repository(
+    name = "softfloat",
+    build_file_content = """
+cc_library(
+    name = "lib",
+    srcs = [
+        "f16_add.c",
+        "f16_classify.c",
+        "f16_div.c",
+        "f16_eq.c",
+        "f16_eq_signaling.c",
+        "f16_isSignalingNaN.c",
+        "f16_le.c",
+        "f16_le_quiet.c",
+        "f16_lt.c",
+        "f16_lt_quiet.c",
+        "f16_mulAdd.c",
+        "f16_mul.c",
+        "f16_rem.c",
+        "f16_roundToInt.c",
+        "f16_sqrt.c",
+        "f16_sub.c",
+        "f16_to_f32.c",
+        "f16_to_f64.c",
+        "f16_to_i16.c",
+        "f16_to_i32.c",
+        "f16_to_i32_r_minMag.c",
+        "f16_to_i64.c",
+        "f16_to_i64_r_minMag.c",
+        "f16_to_i8.c",
+        "f16_to_ui16.c",
+        "f16_to_ui32.c",
+        "f16_to_ui32_r_minMag.c",
+        "f16_to_ui64.c",
+        "f16_to_ui64_r_minMag.c",
+        "f16_to_ui8.c",
+        "f32_add.c",
+        "f32_classify.c",
+        "f32_div.c",
+        "f32_eq.c",
+        "f32_eq_signaling.c",
+        "f32_isSignalingNaN.c",
+        "f32_le.c",
+        "f32_le_quiet.c",
+        "f32_lt.c",
+        "f32_lt_quiet.c",
+        "f32_mulAdd.c",
+        "f32_mul.c",
+        "f32_rem.c",
+        "f32_roundToInt.c",
+        "f32_sqrt.c",
+        "f32_sub.c",
+        "f32_to_f16.c",
+        "f32_to_f64.c",
+        "f32_to_i16.c",
+        "f32_to_i32.c",
+        "f32_to_i32_r_minMag.c",
+        "f32_to_i64.c",
+        "f32_to_i64_r_minMag.c",
+        "f32_to_ui16.c",
+        "f32_to_ui32.c",
+        "f32_to_ui32_r_minMag.c",
+        "f32_to_ui64.c",
+        "f32_to_ui64_r_minMag.c",
+        "f16_to_extF80M.c",
+        "f16_to_f128M.c",
+        "f32_to_extF80M.c",
+        "f32_to_f128M.c",
+        "f64_add.c",
+        "f64_classify.c",
+        "f64_div.c",
+        "f64_eq.c",
+        "f64_eq_signaling.c",
+        "f64_isSignalingNaN.c",
+        "f64_le.c",
+        "f64_le_quiet.c",
+        "f64_lt.c",
+        "f64_lt_quiet.c",
+        "f64_mulAdd.c",
+        "f64_mul.c",
+        "f64_rem.c",
+        "f64_roundToInt.c",
+        "f64_sqrt.c",
+        "f64_sub.c",
+        "f64_to_extF80M.c",
+        "f64_to_f128M.c",
+        "f64_to_f16.c",
+        "f64_to_f32.c",
+        "f64_to_i32.c",
+        "f64_to_i32_r_minMag.c",
+        "f64_to_i64.c",
+        "f64_to_i64_r_minMag.c",
+        "f64_to_ui32.c",
+        "f64_to_ui32_r_minMag.c",
+        "f64_to_ui64.c",
+        "f64_to_ui64_r_minMag.c",
+        "fall_maxmin.c",
+        "fall_reciprocal.c",
+        "i32_to_extF80M.c",
+        "i32_to_f128M.c",
+        "i32_to_f16.c",
+        "i32_to_f32.c",
+        "i32_to_f64.c",
+        "i64_to_extF80M.c",
+        "i64_to_f128M.c",
+        "i64_to_f16.c",
+        "i64_to_f32.c",
+        "i64_to_f64.c",
+        "s_addMagsF16.c",
+        "s_addMagsF32.c",
+        "s_addMagsF64.c",
+        "s_approxRecip_1Ks.c",
+        "s_approxRecip32_1.c",
+        "s_approxRecipSqrt_1Ks.c",
+        "s_approxRecipSqrt32_1.c",
+        "s_commonNaNToF16UI.c",
+        "s_commonNaNToF32UI.c",
+        "s_commonNaNToF64UI.c",
+        "s_countLeadingZeros16.c",
+        "s_countLeadingZeros32.c",
+        "s_countLeadingZeros64.c",
+        "s_countLeadingZeros8.c",
+        "s_f128UIToCommonNaN.c",
+        "s_f16UIToCommonNaN.c",
+        "s_f32UIToCommonNaN.c",
+        "s_f64UIToCommonNaN.c",
+        "s_mulAddF16.c",
+        "s_mulAddF32.c",
+        "s_mulAddF64.c",
+        "s_normRoundPackToF16.c",
+        "s_normRoundPackToF32.c",
+        "s_normRoundPackToF64.c",
+        "s_normSubnormalF16Sig.c",
+        "s_normSubnormalF32Sig.c",
+        "s_normSubnormalF64Sig.c",
+        "s_propagateNaNF16UI.c",
+        "s_propagateNaNF32UI.c",
+        "s_propagateNaNF64UI.c",
+        "s_roundPackToF16.c",
+        "s_roundPackToF32.c",
+        "s_roundPackToF64.c",
+        "s_roundPackToI32.c",
+        "s_roundPackToI64.c",
+        "s_roundPackToUI32.c",
+        "s_roundPackToUI64.c",
+        "s_roundToI32.c",
+        "s_roundToI64.c",
+        "s_roundToUI32.c",
+        "s_shiftRightJam32.c",
+        "s_shiftRightJam64.c",
+        "s_shortShiftRightExtendM.c",
+        "s_shortShiftRightJam64.c",
+        "s_subMagsF16.c",
+        "s_subMagsF32.c",
+        "s_subMagsF64.c",
+        "softfloat_raiseFlags.c",
+        "softfloat_state.c",
+        "ui32_to_f16.c",
+        "ui32_to_f32.c",
+        "ui32_to_f64.c",
+        "ui64_to_f16.c",
+        "ui64_to_f32.c",
+        "ui64_to_f64.c",
+        "extF80_add.c",
+        "extF80_div.c",
+        "extF80_eq.c",
+        "extF80_eq_signaling.c",
+        "extF80_isSignalingNaN.c",
+        "extF80_le.c",
+        "extF80_le_quiet.c",
+        "extF80_lt.c",
+        "extF80_lt_quiet.c",
+        "extF80_mul.c",
+        "extF80_rem.c",
+        "extF80_roundToInt.c",
+        "extF80_sqrt.c",
+        "extF80_sub.c",
+        "extF80_to_f128.c",
+        "extF80_to_f16.c",
+        "extF80_to_f32.c",
+        "extF80_to_f64.c",
+        "extF80_to_i32.c",
+        "extF80_to_i32_r_minMag.c",
+        "extF80_to_i64.c",
+        "extF80_to_i64_r_minMag.c",
+        "extF80_to_ui32.c",
+        "extF80_to_ui32_r_minMag.c",
+        "extF80_to_ui64.c",
+        "extF80_to_ui64_r_minMag.c",
+        "f128_add.c",
+        "f128_classify.c",
+        "f128_div.c",
+        "f128_eq.c",
+        "f128_eq_signaling.c",
+        "f128_isSignalingNaN.c",
+        "f128_le.c",
+        "f128_le_quiet.c",
+        "f128_lt.c",
+        "f128_lt_quiet.c",
+        "f128_mulAdd.c",
+        "f128_mul.c",
+        "f128_rem.c",
+        "f128_roundToInt.c",
+        "f128_sqrt.c",
+        "f128_sub.c",
+        "f128_to_extF80.c",
+        "f128_to_f16.c",
+        "f128_to_f32.c",
+        "f128_to_f64.c",
+        "f128_to_i32.c",
+        "f128_to_i32_r_minMag.c",
+        "f128_to_i64.c",
+        "f128_to_i64_r_minMag.c",
+        "f128_to_ui32.c",
+        "f128_to_ui32_r_minMag.c",
+        "f128_to_ui64.c",
+        "f128_to_ui64_r_minMag.c",
+        "f16_to_extF80.c",
+        "f16_to_f128.c",
+        "f32_to_extF80.c",
+        "f32_to_f128.c",
+        "f64_to_extF80.c",
+        "f64_to_f128.c",
+        "i32_to_extF80.c",
+        "i32_to_f128.c",
+        "i64_to_extF80.c",
+        "i64_to_f128.c",
+        "s_addMagsExtF80.c",
+        "s_addMagsF128.c",
+        "s_add128.c",
+        "s_add256M.c",
+        "s_commonNaNToF128UI.c",
+        "s_eq128.c",
+        "s_le128.c",
+        "s_lt128.c",
+        "s_mulAddF128.c",
+        "s_mul64ByShifted32To128.c",
+        "s_mul64To128.c",
+        "s_mul128By32.c",
+        "s_mul128To256M.c",
+        "s_normRoundPackToExtF80.c",
+        "s_normRoundPackToF128.c",
+        "s_normSubnormalExtF80Sig.c",
+        "s_normSubnormalF128Sig.c",
+        "s_propagateNaNF128UI.c",
+        "s_roundPackToExtF80.c",
+        "s_roundPackToF128.c",
+        "s_roundToUI64.c",
+        "s_shiftRightJam128.c",
+        "s_shiftRightJam128Extra.c",
+        "s_shiftRightJam256M.c",
+        "s_shiftRightJam64Extra.c",
+        "s_shortShiftLeft128.c",
+        "s_shortShiftRight128.c",
+        "s_shortShiftRightJam64Extra.c",
+        "s_shortShiftRightJam128.c",
+        "s_shortShiftRightJam128Extra.c",
+        "s_subMagsExtF80.c",
+        "s_subMagsF128.c",
+        "s_sub128.c",
+        "s_sub256M.c",
+        "ui32_to_extF80.c",
+        "ui32_to_f128.c",
+        "ui64_to_extF80.c",
+        "ui64_to_f128.c",
+    ],
+    hdrs = glob(["*.h"]),
+    copts = [
+        "-Wno-unused-variable",
+        "-Wno-unused-label",
+        "-Wno-implicit-fallthrough",
+        "-Wno-implicit-function-declaration",
+        "-g",
+        "-DSOFTFLOAT_FAST_INT64",
+    ],
+    include_prefix = ".",
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "ext/softfloat",
+)
