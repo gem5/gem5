@@ -57,7 +57,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "enums/RiscvType.hh"
-#include "rvk.hh"
+#include "arch/riscv/rvk.hh"
 
 namespace gem5
 {
