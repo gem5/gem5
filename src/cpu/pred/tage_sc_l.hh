@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023 The University of Edinburgh
+ * Copyright (c) 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -137,7 +138,7 @@ class TAGE_SC_L_TAGE : public TAGEBase
 
     void updatePathAndGlobalHistory(
         ThreadID tid, int brtype, bool taken,
-        Addr branch_pc, Addr target);
+        Addr branch_pc, Addr target, TAGEBase::BranchInfo* bi) override;
 
     void adjustAlloc(bool & alloc, bool taken, bool pred_taken) override;
 
