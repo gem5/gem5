@@ -3,7 +3,7 @@
     "image": "ghcr.io/gem5/devcontainer:latest",
     "hostRequirements": {
         "cpus": 8,
-        "memory": "16gb",
+        "memory": "4gb",
         "storage": "32gb"
      },
     "customizations": {
