@@ -311,12 +311,7 @@ LSQ::commitStores(InstSeqNum &youngest_inst, ThreadID tid)
 void
 LSQ::writebackStores()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (numStoresToWB(tid) > 0) {
             DPRINTF(Writeback,"[tid:%i] Writing back stores. %i stores "
                 "available for Writeback.\n", tid, numStoresToWB(tid));
@@ -336,12 +331,7 @@ bool
 LSQ::violation()
 {
     /* Answers: Does Anybody Have a Violation?*/
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (thread[tid].violation())
             return true;
     }
@@ -527,12 +517,7 @@ LSQ::getCount()
 {
     unsigned total = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         total += getCount(tid);
     }
 
@@ -544,12 +529,7 @@ LSQ::numLoads()
 {
     unsigned total = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         total += numLoads(tid);
     }
 
@@ -561,12 +541,7 @@ LSQ::numStores()
 {
     unsigned total = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         total += thread[tid].numStores();
     }
 
@@ -578,12 +553,7 @@ LSQ::numFreeLoadEntries()
 {
     unsigned total = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         total += thread[tid].numFreeLoadEntries();
     }
 
@@ -595,12 +565,7 @@ LSQ::numFreeStoreEntries()
 {
     unsigned total = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         total += thread[tid].numFreeStoreEntries();
     }
 
@@ -622,12 +587,7 @@ LSQ::numFreeStoreEntries(ThreadID tid)
 bool
 LSQ::isFull()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!(thread[tid].lqFull() || thread[tid].sqFull()))
             return false;
     }
@@ -655,12 +615,7 @@ LSQ::isEmpty() const
 bool
 LSQ::lqEmpty() const
 {
-    std::list<ThreadID>::const_iterator threads = activeThreads->begin();
-    std::list<ThreadID>::const_iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!thread[tid].lqEmpty())
             return false;
     }
@@ -671,12 +626,7 @@ LSQ::lqEmpty() const
 bool
 LSQ::sqEmpty() const
 {
-    std::list<ThreadID>::const_iterator threads = activeThreads->begin();
-    std::list<ThreadID>::const_iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!thread[tid].sqEmpty())
             return false;
     }
@@ -687,12 +637,7 @@ LSQ::sqEmpty() const
 bool
 LSQ::lqFull()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!thread[tid].lqFull())
             return false;
     }
@@ -714,12 +659,7 @@ LSQ::lqFull(ThreadID tid)
 bool
 LSQ::sqFull()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!sqFull(tid))
             return false;
     }
@@ -741,12 +681,7 @@ LSQ::sqFull(ThreadID tid)
 bool
 LSQ::isStalled()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!thread[tid].isStalled())
             return false;
     }
@@ -766,12 +701,7 @@ LSQ::isStalled(ThreadID tid)
 bool
 LSQ::hasStoresToWB()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (hasStoresToWB(tid))
             return true;
     }
@@ -794,12 +724,7 @@ LSQ::numStoresToWB(ThreadID tid)
 bool
 LSQ::willWB()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (willWB(tid))
             return true;
     }
@@ -816,12 +741,7 @@ LSQ::willWB(ThreadID tid)
 void
 LSQ::dumpInsts() const
 {
-    std::list<ThreadID>::const_iterator threads = activeThreads->begin();
-    std::list<ThreadID>::const_iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         thread[tid].dumpInsts();
     }
 }

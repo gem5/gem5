@@ -427,11 +427,7 @@ Decode::skidInsert(ThreadID tid)
 bool
 Decode::skidsEmpty()
 {
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -444,12 +440,7 @@ Decode::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (decodeStatus[tid] == Unblocking) {
             any_unblocking = true;
             break;
@@ -564,15 +555,10 @@ Decode::tick()
 
     toRenameIndex = 0;
 
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
     sortInsts();
 
     //Check stall and squash signals.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         DPRINTF(Decode,"Processing [tid:%i]\n",tid);
         status_change =  checkSignalsAndUpdate(tid) || status_change;
 
