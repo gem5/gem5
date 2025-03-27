@@ -415,7 +415,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         assert(!(pte.n) || level == 0);
                         entry.logBytes = (pte.n) ? PageShift + NapotShift :
                                             PageShift + (level * LEVEL_BITS);
-                        entry.paddr = pte.ppn;
+                        entry.paddr = (!pte.n) ? pte.ppn :
+                                        pte.ppn & ~((1UL << NapotShift) - 1);
                         entry.vaddr &= ~((1 << entry.logBytes) - 1);
                         entry.pte = pte;
                         // put it non-writable into the TLB to detect
