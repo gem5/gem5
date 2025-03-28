@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
 import os
 import sys
 from pathlib import Path
@@ -559,8 +560,40 @@ class Simulator:
         # We instantiate the board if it has not already been instantiated.
         self._instantiate()
 
+        total_insts = int(self._board.get_workload()._estimated_instructions)
+
         # This while loop will continue until an a generator yields True.
         while True:
+            # If the workload provides the estimated number of total
+            # instructions, print a progress bar.
+            if total_insts:
+                curr_insts = self.get_instruction_count()
+                completion_fraction = curr_insts / total_insts
+                bar_length = 80
+                complete_bar = (
+                    int(math.floor(completion_fraction * bar_length)) * "#"
+                )
+                incomplete_bar = (
+                    int(
+                        math.ceil(
+                            bar_length - completion_fraction * bar_length
+                        )
+                    )
+                    * "-"
+                )
+                if not m5.options.redirect_stdout:
+                    sys.stdout.write(
+                        f"\rProgress: {curr_insts} / {total_insts} instructions, {completion_fraction:.4%}\n[{complete_bar}{incomplete_bar}]\033[1A"
+                    )
+                    sys.stdout.flush()
+                else:
+                    with open(
+                        f"{m5.options.outdir}/progress_bar.log", "w"
+                    ) as f:
+                        f.write(
+                            f"Progress: {curr_insts} / {total_insts} instructions, {completion_fraction:.4%}\n[{complete_bar}{incomplete_bar}]"
+                        )
+                m5.progressBarTickExit(200_000_000)
             self._last_exit_event = m5.simulate(self.get_max_ticks())
             exit_event_hypercall_id = self._last_exit_event.getHypercallId()
             if (

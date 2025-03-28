@@ -292,6 +292,32 @@ class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
         return True
 
 
+class ProgressBarExitEventHandler(ExitHandler, hypercall_num=1100):
+    """This is a specialized version of ScheduledExitEventHandler for the
+    progress bar implementation. It continues simulation instead of exiting.
+    """
+
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        pass
+
+    def scheduled_at_tick(self) -> Optional[int]:
+        """Returns the tick in which the event was scheduled on (not scheduled
+        to occur, but the tick the event was created).
+
+        Returns "None" if this information is not available.
+        """
+        return (
+            None
+            if "scheduled_at_tick" not in self._payload
+            else int(self._payload["scheduled_at_tick"])
+        )
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return False
+
+
 class KernelBootedExitHandler(ExitHandler, hypercall_num=1):
 
     @overrides(ExitHandler)

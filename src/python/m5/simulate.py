@@ -289,6 +289,19 @@ def scheduleTickExitAbsolute(
         )
 
 
+def progressBarTickExit(tick: int) -> None:
+    if tick + curTick() <= curTick():
+        warn("Tick exit scheduled for the past. This will not be triggered.")
+
+    _m5.event.exitSimulationLoop(
+        1100,
+        {
+            "scheduled_at_tick": str(curTick()),
+        },
+        tick + curTick(),
+    )
+
+
 def drain():
     """Drain the simulator in preparation of a checkpoint or memory mode
     switch.

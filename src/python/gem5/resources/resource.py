@@ -874,6 +874,12 @@ class WorkloadResource(AbstractResource):
         self._id = id
         self._func = function
         self._params = parameters
+        self._estimated_instructions = kwargs.get("simulation_run_results")[
+            "total_instructions"
+        ]
+
+    def get_estimated_instructions(self):
+        return self._estimated_instructions
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
