@@ -80,6 +80,11 @@ class GPUDispatcher : public SimObject
     void scheduleDispatch();
     void dispatch(HSAQueueEntry *task);
     HSAQueueEntry *hsaTask(int disp_id);
+    bool
+    hasKernelExitEvents() const
+    {
+        return kernelExitEvents;
+    }
 
   private:
     Shader *shader;
