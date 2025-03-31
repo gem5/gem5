@@ -30,10 +30,41 @@ import os
 import subprocess
 
 """
-This script will run the provided workload with several different gem5 configurations.
-All the configurations run the workload till the Kernel is booted (hypercall 1).
-This tests are run to make sure that the gem5 can boot the full system workloads with
-various CPU types and cache hierarchies.
+gem5 Configuration Test Script
+
+This script runs a specified workload across multiple gem5 configurations to verify
+that gem5 can successfully boot full-system workloads with different CPU models
+and cache hierarchies.
+
+Usage:
+    python3 run_config_tests.py --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION>
+
+Arguments:
+    --workload           The ID of the workload to be executed.
+    --resource_version   The version of the workload resource.
+
+Example:
+    python3 run_config_tests.py --workload linux-boot --resource_version 1.0
+
+Requirements:
+    - gem5 binary must be built and located at: ./build/ALL/gem5.opt
+    - Configuration script must be present at: util/disk-image-validator/config_tester.py
+    - Python 3 must be installed
+    - Required Python modules: argparse, subprocess, os
+
+Functionality:
+    - Runs gem5 with different configurations:
+        * KVM_test
+        * MESI_cache_test
+        * O3_test
+        * MINOR_test
+        * ATOMIC_test
+    - Outputs results in m5out/<workload_id>-<test_name>
+    - Prints a summary of test results and exits with an appropriate status code.
+
+Exit Codes:
+    - 0: All tests passed.
+    - 1: One or more tests failed.
 """
 
 

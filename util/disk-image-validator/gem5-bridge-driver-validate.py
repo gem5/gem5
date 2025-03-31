@@ -28,6 +28,8 @@ import argparse
 
 import m5.options
 
+from gem5.prebuilt.demo.arm_demo_board import ArmDemoBoard
+from gem5.prebuilt.demo.riscv_demo_board import RiscvDemoBoard
 from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
 from gem5.resources.resource import (
     BinaryResource,
@@ -37,24 +39,72 @@ from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
 """
-This script is used to test that the gem5-bridge driver is correctly installed.
-This test runs a simple C program that called m5 hypercall 8 without sudo.
+gem5 Bridge Driver Test Script
+
+This script tests whether the gem5-bridge driver is correctly installed by
+running a simple C program that makes an m5 hypercall (hypercall number 8)
+without requiring superuser privileges.
+
+Usage:
+    python3 gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
+
+Arguments:
+    --isa                The instruction set architecture (ISA) for the simulation.
+                         Options: x86, arm, riscv (Required).
+    --workload           The workload ID to run (Optional).
+    --resource-version   The version of the workload resource (Optional).
+
+Example:
+    python3 gem5-bridge-driver-validate.py --isa x86 --workload test_workload --resource-version 1.0.0
+
+Requirements:
+    - gem5 must be installed and properly configured.
+    - The necessary prebuilt demo board classes must be available.
+    - The gem5 resource system should be able to fetch the specified workload.
+    - Python 3 must be installed.
+
+Functionality:
+    - Selects the appropriate demo board (x86, ARM, or RISC-V) based on the given ISA.
+    - Loads the specified workload and resource version (if provided).
+    - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall 8
+      executes successfully without requiring `sudo`.
+    - Prints a success message if the test passes.
+
+Exit Conditions:
+    - If the hypercall executes successfully, the script prints a success message.
+    - If an invalid ISA is provided, the script raises an exception.
+
 """
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--workload", help="The workload to run")
 parser.add_argument(
-    "--resource_version", help="The version of the workload to run"
+    "--resource-version", help="The version of the workload to run"
 )
-
+parser.add_argument(
+    "--isa",
+    help="The isa of the simulation to run. Options: x86, arm and riscv",
+    choices=["x86", "riscv", "arm"],
+    required=True,
+)
 
 args = parser.parse_args()
 workload_id = args.workload
 resource_version = args.resource_version
+isa = args.isa
 
-# Here we setup the board. The prebuilt X86DemoBoard allows for Full-System X86
-# simulation.
-board = X86DemoBoard()
+board = None
+
+match isa:
+    case "x86":
+        board = X86DemoBoard()
+    case "arm":
+        board = ArmDemoBoard()
+    case "riscv":
+        board = RiscvDemoBoard()
+    case _:
+        raise Exception("The isa must be arm, x86 or riscv")
 
 board.set_workload(
     obtain_resource(workload_id, resource_version=resource_version)

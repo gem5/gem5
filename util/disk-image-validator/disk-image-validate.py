@@ -35,15 +35,59 @@ from helper import (
 
 import m5.options
 
+from gem5.prebuilt.demo.arm_demo_board import ArmDemoBoard
+from gem5.prebuilt.demo.riscv_demo_board import RiscvDemoBoard
 from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
 """
-This script is used to test disk images and make sure that the disks boot and
-call the hypercalls in intended order.
+gem5 Disk Image Validation Script
+
+This script tests disk images to ensure they boot correctly and execute
+hypercalls in the intended order.
+
+Usage:
+    python3 disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
+
+Arguments:
+    --isa                The instruction set architecture (ISA) for the simulation.
+                         Options: x86, arm, riscv (Required).
+    --workload           The workload ID to run (Optional).
+    --resource_version   The version of the workload resource (Optional).
+    --validate-npb       Validate the NAS Parallel Benchmarks (NPB) output (Optional).
+
+Example:
+    python3 disk-image-validate.py --isa x86 --workload linux-boot --resource_version 1.0 --validate-npb
+
+Requirements:
+    - gem5 must be installed and properly configured.
+    - The necessary prebuilt demo board classes must be available.
+    - The gem5 resource system should be able to fetch the specified workload.
+    - Python 3 must be installed.
+    - Required Python modules: argparse, pathlib.
+
+Functionality:
+    - Selects the appropriate demo board (x86, ARM, or RISC-V) based on the given ISA.
+    - Loads the specified workload and resource version (if provided).
+    - Monitors key hypercalls:
+        * Hypercall 1: Kernel boot
+        * Hypercall 2: In `after_boot.sh`
+        * Hypercall 3: Done running `after_boot.sh`
+        * Hypercall 4: Start of Region of Interest (ROI)
+        * Hypercall 5: End of ROI
+    - Dumps and resets gem5 statistics at each hypercall.
+    - Checks whether the hypercalls are executed in the correct order.
+    - If `--validate-npb` is passed, it verifies the correctness of the NPB output.
+
+Exit Conditions:
+    - If the hypercalls are executed in the expected order, a success message is printed.
+    - If the order is incorrect, an error message is printed.
+    - If `--validate-npb` is used and validation fails, an error message is printed.
+
 """
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--workload", help="The workload to run")
@@ -53,13 +97,30 @@ parser.add_argument(
 parser.add_argument(
     "--validate-npb", action="store_true", help="Validate the NPB output"
 )
+parser.add_argument(
+    "--isa",
+    help="The isa of the simulation to run. Options: x86, arm and riscv",
+    choices=["x86", "riscv", "arm"],
+    required=True,
+)
 
 args = parser.parse_args()
 workload_id = args.workload
 resource_version = args.resource_version
+isa = args.isa
 
-# Setup the board for Full-System X86 simulation
-board = X86DemoBoard()
+board = None
+
+match isa:
+    case "x86":
+        board = X86DemoBoard()
+    case "arm":
+        board = ArmDemoBoard()
+    case "riscv":
+        board = RiscvDemoBoard()
+    case _:
+        raise Exception("The isa must be arm, x86 or riscv")
+
 board.set_workload(
     obtain_resource(workload_id, resource_version=resource_version)
 )
