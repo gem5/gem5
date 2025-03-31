@@ -63,7 +63,8 @@ GPUCommandProcessor::GPUCommandProcessor(const Params &p)
       _driver(nullptr),
       walker(p.walker),
       hsaPP(p.hsapp),
-      target_non_blit_kernel_id(p.target_non_blit_kernel_id)
+      target_non_blit_kernel_id(p.target_non_blit_kernel_id),
+      emulateBlitKernels(p.emulate_blits)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -367,6 +368,24 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
     // The driver expects the start time to be in ns
     Tick start_ts = curTick() / sim_clock::as_int::ns;
     dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+
+    if (is_blit_kernel && emulateBlitKernels) {
+        DPRINTF(GPUCommandProc, "Emulating blit kernel (Task ID: %i)\n",
+                dynamic_task_id);
+
+        // DMA the kernargs
+        readBlitKernargs(task);
+
+        // This allows debug-at and exit-at GPU task options to work
+        if (dispatcher.hasKernelExitEvents()) {
+            exitSimLoop("GPU Blit Kernel Completed");
+        }
+
+        ++dynamic_task_id;
+        delete akc;
+
+        return;
+    }
 
     // Potentially skip a non-blit kernel
     if (!is_blit_kernel && (non_blit_kernel_id < target_non_blit_kernel_id)) {

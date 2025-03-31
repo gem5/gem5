@@ -54,6 +54,7 @@
 #include "dev/dma_virt_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "dev/hsa/hsa_signal.hh"
+#include "gpu-compute/blit_emulation.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_compute_driver.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
@@ -338,6 +339,18 @@ class GPUCommandProcessor : public DmaVirtDevice
             dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer, 1e9);
         }
     }
+
+    /* Methods for blit kernel emulation. */
+    bool emulateBlitKernels = false;
+
+    void readBlitKernargs(HSAQueueEntry *task);
+    void processBlitKernargs(HSAQueueEntry *task, uint32_t *args);
+    void completeBlit(HSAQueueEntry *task);
+    void copyAligned(HSAQueueEntry *task, uint32_t *args);
+
+    void blitRead(BlitCopyDesc *desc, HSAQueueEntry *task);
+    void blitWrite(BlitCopyDesc *desc, HSAQueueEntry *task, uint8_t *buf);
+    void blitAck(BlitCopyDesc *desc, HSAQueueEntry *task, uint8_t *buf);
 
     void readPreload(AMDKernelCode *akc, HSAQueueEntry *task);
     void initPreload(AMDKernelCode *akc, HSAQueueEntry *task);
