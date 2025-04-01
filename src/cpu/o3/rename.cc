@@ -425,13 +425,8 @@ Rename::tick()
 
     sortInsts();
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check stall and squash signals.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         DPRINTF(Rename, "Processing [tid:%i]\n", tid);
 
         status_change = checkSignalsAndUpdate(tid) || status_change;
@@ -448,11 +443,7 @@ Rename::tick()
         cpu->activityThisCycle();
     }
 
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // If we committed this cycle then doneSeqNum will be > 0
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
             !fromCommit->commitInfo[tid].squash &&
@@ -831,12 +822,7 @@ Rename::sortInsts()
 bool
 Rename::skidsEmpty()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -849,12 +835,7 @@ Rename::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (renameStatus[tid] == Unblocking) {
             any_unblocking = true;
             break;

@@ -346,6 +346,24 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                         wfSlotId, wfDynId, physSgprIdx,
                         task->privMemPerItem());
                 break;
+              case KernargPreload:
+                DPRINTF(GPUInitAbi, "Preload %d user SGPRs starting at virtual"
+                        "SGPR %d\n", task->preloadLength(), regInitIdx);
+
+                for (int idx = 0; idx < task->preloadLength(); ++idx) {
+                    uint32_t finalValue = task->preloadArgs()[idx];
+                    physSgprIdx =
+                        computeUnit->registerManager->mapSgpr(this,
+                                                              regInitIdx);
+
+                    DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] Setting "
+                            "s[%d] = %x\n", computeUnit->cu_id, simdId,
+                            wfSlotId, wfDynId, physSgprIdx, finalValue);
+
+                    computeUnit->srf[simdId]->write(physSgprIdx, finalValue);
+                    ++regInitIdx;
+                }
+                break;
               case WorkgroupIdX:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);

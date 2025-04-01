@@ -450,13 +450,13 @@ CPU::startup()
 void
 CPU::activateThread(ThreadID tid)
 {
-    std::list<ThreadID>::iterator isActive =
-        std::find(activeThreads.begin(), activeThreads.end(), tid);
+    auto active_it = std::find(
+            activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i] Calling activate thread.\n", tid);
     assert(!switchedOut());
 
-    if (isActive == activeThreads.end()) {
+    if (active_it == activeThreads.end()) {
         DPRINTF(O3CPU, "[tid:%i] Adding to active threads list\n", tid);
 
         activeThreads.push_back(tid);
@@ -471,16 +471,16 @@ CPU::deactivateThread(ThreadID tid)
     assert(!commit.executingHtmTransaction(tid));
 
     //Remove From Active List, if Active
-    std::list<ThreadID>::iterator thread_it =
-        std::find(activeThreads.begin(), activeThreads.end(), tid);
+    auto active_it = std::find(
+            activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i] Calling deactivate thread.\n", tid);
     assert(!switchedOut());
 
-    if (thread_it != activeThreads.end()) {
+    if (active_it != activeThreads.end()) {
         DPRINTF(O3CPU,"[tid:%i] Removing from active threads list\n",
                 tid);
-        activeThreads.erase(thread_it);
+        activeThreads.erase(active_it);
     }
 
     fetch.deactivateThread(tid);
@@ -1355,7 +1355,7 @@ CPU::updateThreadPriority()
     if (activeThreads.size() > 1) {
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
-        std::list<ThreadID>::iterator list_begin = activeThreads.begin();
+        auto list_begin = activeThreads.begin();
 
         unsigned high_thread = *list_begin;
 

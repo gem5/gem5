@@ -490,7 +490,8 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 365, "sys_recvmmsg" },
         { base + 384, "getrandom", getrandomFunc<ArmLinux32> },
         { base + 397, "sys_statx", ignoreFunc },
-        { base + 398, "sys_rseq", ignoreFunc }
+        { base + 398, "sys_rseq", ignoreFunc },
+        { base + 435, "clone3", clone3Func<ArmLinux32> },
     })
     {}
 };

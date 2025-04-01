@@ -1159,9 +1159,10 @@ ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
         // then the request is an instruction fetch and can be handled in
         // the compute unit
         if (sender_state->isKernDispatch) {
-          computeUnit->shader->gpuCmdProc.completeTimingRead();
+            int dispType = sender_state->dispatchType;
+            computeUnit->shader->gpuCmdProc.completeTimingRead(dispType);
         } else {
-          computeUnit->handleSQCReturn(pkt);
+            computeUnit->handleSQCReturn(pkt);
         }
     } else {
         delete pkt->senderState;

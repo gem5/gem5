@@ -407,6 +407,32 @@ class HSAQueueEntry
         return _accumOffset;
     }
 
+    void
+    preloadLength(unsigned val)
+    {
+        _preloadLength = val;
+
+        /**
+         * set the enable bit for KernargPreload if used. The preloaded
+         * kernargs go between private segment size and sgpr workgroup IDs.
+         */
+        if (_preloadLength) {
+            initialSgprState.set(KernargPreload, true);
+        }
+    }
+
+    unsigned
+    preloadLength() const
+    {
+        return _preloadLength;
+    }
+
+    uint32_t *
+    preloadArgs()
+    {
+        return &(_preloadArgs[0]);
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -504,6 +530,13 @@ class HSAQueueEntry
     std::bitset<NumScalarInitFields> initialSgprState;
 
     unsigned _accumOffset;
+
+    // For preloading args there are extra bytes of space after the dispatch
+    // packet containing values that should be preloaded into SGPRs. This
+    // field serves as a buffer to DMA into and therefore is sized at the
+    // max amount. It is of dword type to easily access during wave start.
+    unsigned _preloadLength = 0;
+    uint32_t _preloadArgs[KernargPreloadPktSize / sizeof(uint32_t)];
 };
 
 } // namespace gem5

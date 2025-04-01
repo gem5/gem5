@@ -771,12 +771,7 @@ Fetch::FetchStatus
 Fetch::updateFetchStatus()
 {
     //Check Running
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (fetchStatus[tid] == Running ||
             fetchStatus[tid] == Squashing ||
             fetchStatus[tid] == IcacheAccessComplete) {
@@ -821,8 +816,6 @@ Fetch::squash(const PCStateBase &new_pc, const InstSeqNum seq_num,
 void
 Fetch::tick()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
     bool status_change = false;
 
     wroteToTimeBuffer = false;
@@ -831,9 +824,7 @@ Fetch::tick()
         issuePipelinedIfetch[i] = false;
     }
 
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // Check the signals for each thread to determine the proper status
         // for each thread.
         bool updated_status = checkSignalsAndUpdate(tid);
@@ -1383,7 +1374,7 @@ Fetch::getFetchingThread()
             return InvalidThreadID;
         }
     } else {
-        std::list<ThreadID>::iterator thread = activeThreads->begin();
+        auto thread = activeThreads->begin();
         if (thread == activeThreads->end()) {
             return InvalidThreadID;
         }
@@ -1404,8 +1395,8 @@ Fetch::getFetchingThread()
 ThreadID
 Fetch::roundRobin()
 {
-    std::list<ThreadID>::iterator pri_iter = priorityList.begin();
-    std::list<ThreadID>::iterator end      = priorityList.end();
+    auto pri_iter = priorityList.begin();
+    auto end      = priorityList.end();
 
     ThreadID high_pri;
 
@@ -1438,11 +1429,7 @@ Fetch::iqCount()
                         std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         unsigned iqCount = fromIEW->iewInfo[tid].iqCount;
 
         //we can potentially get tid collisions if two threads
@@ -1474,11 +1461,7 @@ Fetch::lsqCount()
                         std::greater<unsigned> > PQ;
     std::map<unsigned, ThreadID> threadMap;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         unsigned ldstqCount = fromIEW->iewInfo[tid].ldstqCount;
 
         //we can potentially get tid collisions if two threads

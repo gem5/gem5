@@ -85,6 +85,7 @@ import SCons
 import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
+import SCons.Errors
 
 if getattr(SCons, '__version__', None) in ('3.0.0', '3.0.1'):
     # Monkey patch a fix which appears in version 3.0.2, since we only
@@ -265,6 +266,15 @@ Targets:
 
         scons build/SPARC/base/bitunion.test.opt
         build/SPARC/base/bitunion.test.opt
+
+        To generate the compile_commands.json, you can use a target:
+
+        scons build/{{ISA}}/compile_commands.json
+
+        The {{ISA}} is a target Instruction Set Architecture (X86, ARM,
+        RISCV, etc.). This command creates a compile_commands.json in the
+        respective build directory. You can generate a compile_commands.json
+        only with scons version 4.0+.
 """, append=True)
 
 
@@ -536,6 +546,23 @@ for variant_path in variant_paths:
     # Make a copy of the build-root environment to use for this config.
     env = main.Clone()
     env['BUILDDIR'] = variant_path
+
+    try:
+        # try-except section is required because
+        # SConsEnvironmentError/UserError exception raises if FindTool
+        # can't find a tool module. This exeption rises BEFORE check
+        # that tool exists and makes FindTool function useless in some way.
+        cdb_tool = SCons.Tool.FindTool(['compilation_db'], env)
+
+        if cdb_tool:
+            env['COMPILATIONDB_USE_ABSPATH'] = True
+            env.Tool(cdb_tool)
+
+            cdb_path = f"{variant_path}/compile_commands.json"
+            env.CompilationDatabase(cdb_path)
+    except (SCons.Errors.SConsEnvironmentError, SCons.Errors.UserError):
+        # Looks like different scons versions raise different exeptions
+        pass
 
     gem5_build = os.path.join(variant_path, 'gem5.build')
     env['GEM5BUILD'] = gem5_build
