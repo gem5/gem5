@@ -37,7 +37,7 @@ import os
 from m5.objects import *
 
 # Add the common scripts to our path
-m5.util.addToPath("../../")
+m5.util.addToPath("../")
 
 # import the caches which we made
 from caches import *
@@ -50,7 +50,7 @@ from common import SimpleOpts
 thispath = os.path.dirname(os.path.realpath(__file__))
 default_binary = os.path.join(
     thispath,
-    "../../../",
+    "../../",
     "tests/test-progs/hello/bin/x86/linux/hello",
 )
 
@@ -73,8 +73,8 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MiB")]  # Create an address range
 
 # Create a simple CPU
-# system.cpu = X86TimingSimpleCPU()
-system.cpu = RiscvTimingSimpleCPU()
+system.cpu = X86TimingSimpleCPU()
+# system.cpu = RiscvTimingSimpleCPU()
 
 # The Valid ISAs are:
 #   - Riscv
