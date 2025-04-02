@@ -84,7 +84,7 @@ FDArray::FDArray(std::string const& input, std::string const& output,
         sim_fd = openOutputFile(output);
 
     ffd = std::make_shared<FileFDEntry>(sim_fd, O_WRONLY | O_CREAT | O_TRUNC,
-                                        output, false);
+                                        simout.resolve(output), false);
     _fdArray[STDOUT_FILENO] = ffd;
 
     if (output == errout)
@@ -95,7 +95,7 @@ FDArray::FDArray(std::string const& input, std::string const& output,
         sim_fd = openOutputFile(errout);
 
     ffd = std::make_shared<FileFDEntry>(sim_fd, O_WRONLY | O_CREAT | O_TRUNC,
-                                        errout, false);
+                                        simout.resolve(errout), false);
     _fdArray[STDERR_FILENO] = ffd;
 }
 
