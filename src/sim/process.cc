@@ -158,6 +158,13 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
     exitGroup = new bool();
     sigchld = new bool();
 
+    /**
+     * Set the base of dynamically linked executables to Linux's default
+     * (when ASLR is disabled).
+     */
+    if (objFile->getInterpreter())
+        objFile->updateBias(0x0000555555554000ULL);
+
     image = objFile->buildImage();
 
     if (loader::debugSymbolTable.empty())

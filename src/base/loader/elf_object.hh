@@ -121,9 +121,14 @@ class ElfObject : public ObjectFile
 
     bool hasTLS() override { return sectionExists(".tbss"); }
 
-    Addr programHeaderTable() {return _programHeaderTable;}
-    uint16_t programHeaderSize() {return _programHeaderSize;}
-    uint16_t programHeaderCount() {return _programHeaderCount;}
+    Addr programHeaderTable() const { return _programHeaderTable; }
+    Addr
+    programHeaderTableBiased() const
+    {
+        return programHeaderTable() + bias();
+    }
+    uint16_t programHeaderSize() const { return _programHeaderSize; }
+    uint16_t programHeaderCount() const { return _programHeaderCount; }
 };
 
 /**

@@ -195,7 +195,8 @@ SparcProcess::argsInit(int pageSize)
         auxv.emplace_back(gem5::auxv::Clktck, 100);
         // For statically linked executables, this is the virtual address of
         // the program header tables if they appear in the executable image
-        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr,
+                          elfObject->programHeaderTableBiased());
         // This is the size of a program header entry from the elf file.
         auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.

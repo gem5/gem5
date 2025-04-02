@@ -103,7 +103,8 @@ MipsProcess::argsInit(int pageSize)
         // For statically linked executables, this is the virtual
         // address of the program header tables if they appear in the
         // executable image.
-        auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Phdr,
+                          elfObject->programHeaderTableBiased());
         DPRINTF(Loader, "auxv at PHDR %08p\n",
                 elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
