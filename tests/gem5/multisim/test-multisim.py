@@ -41,7 +41,7 @@ gem5_verify_config(
         "gem5",
         "multisim",
         "configs",
-        "processor-switch-x86-npb.py",
+        "processor-switch-simulator-x86-npb.py",
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),
