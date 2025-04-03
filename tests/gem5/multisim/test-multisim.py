@@ -41,7 +41,7 @@ gem5_verify_config(
         "gem5",
         "multisim",
         "configs",
-        "hello-save-checkpoint.py",
+        "hello-save-checkpoint-hypercall.py",
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),
