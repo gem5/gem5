@@ -32,8 +32,9 @@ This is a simplified version that removes the L2 cache to be used as a baseline
 in ECE757 project.
 """
 
-import m5
 import os
+
+import m5
 from m5.objects import *
 
 # Add the common scripts to our path
@@ -73,8 +74,8 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MiB")]  # Create an address range
 
 # Create a simple CPU
-system.cpu = X86TimingSimpleCPU()
-# system.cpu = RiscvTimingSimpleCPU()
+# system.cpu = X86TimingSimpleCPU()
+system.cpu = RiscvTimingSimpleCPU()
 
 # The Valid ISAs are:
 #   - Riscv
@@ -83,7 +84,7 @@ system.cpu = X86TimingSimpleCPU()
 #   - Sparc
 #   - Power
 #   - Mips
-# 
+#
 # The CPU types are:
 #   - AtomicSimpleCPU
 #   - O3CPU
@@ -108,9 +109,9 @@ system.cpu.dcache.connectBus(system.membus)
 
 # create the interrupt controller for the CPU
 system.cpu.createInterruptController()
-system.cpu.interrupts[0].pio = system.membus.mem_side_ports
-system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
-system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
+# system.cpu.interrupts[0].pio = system.membus.mem_side_ports
+# system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
+# system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports

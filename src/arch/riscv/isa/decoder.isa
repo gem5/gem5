@@ -571,6 +571,9 @@ decode QUADRANT default Unknown::unknown() {
                 0x5: lhu({{
                     Rd = Mem_uh;
                 }});
+                0x7: lax({{
+                    Rd = Mem;
+                }});
                 0x6: decode RVTYPE {
                     0x1: lwu({{
                         Rd = Mem_uw;
