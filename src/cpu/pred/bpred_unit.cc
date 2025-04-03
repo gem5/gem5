@@ -271,7 +271,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             ++stats.indirectHits;
             hist->targetProvider = TargetProvider::Indirect;
             set(hist->target, *itarget);
-
+            delete itarget;
             DPRINTF(Branch,
                     "[tid:%i, sn:%llu] Instruction %s predicted "
                     "indirect target is %s\n",
