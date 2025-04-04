@@ -126,13 +126,19 @@ class AtomicGenericPair3Op : public TypedAtomicOpFunctor<T>
     std::function<void(T*, std::array<T, 2>&, std::array<T, 2>)> op;
 };
 
+// IMPORTANT: The following operations assume the guest is little-endian.
+
 template<typename T>
 class AtomicOpAnd : public TypedAtomicOpFunctor<T>
 {
     // Bitwise operations are only legal on integral types
     template<typename B>
     typename std::enable_if<std::is_integral<B>::value, void>::type
-    executeImpl(B *b) { *b &= a; }
+    executeImpl(B *b) {
+        B mem_data = letoh(*b);
+        B new_data = mem_data & a;
+        *b = htole(new_data);
+    }
 
     template<typename B>
     typename std::enable_if<!std::is_integral<B>::value, void>::type
@@ -151,7 +157,11 @@ class AtomicOpOr : public TypedAtomicOpFunctor<T>
     // Bitwise operations are only legal on integral types
     template<typename B>
     typename std::enable_if<std::is_integral<B>::value, void>::type
-    executeImpl(B *b) { *b |= a; }
+    executeImpl(B *b) {
+        B mem_data = letoh(*b);
+        B new_data = mem_data | a;
+        *b = htole(new_data);
+    }
 
     template<typename B>
     typename std::enable_if<!std::is_integral<B>::value, void>::type
@@ -170,7 +180,11 @@ class AtomicOpXor : public TypedAtomicOpFunctor<T>
     // Bitwise operations are only legal on integral types
     template<typename B>
     typename std::enable_if<std::is_integral<B>::value, void>::type
-    executeImpl(B *b) { *b ^= a; }
+    executeImpl(B *b) {
+        B mem_data = letoh(*b);
+        B new_data = mem_data ^ a;
+        *b = htole(new_data);
+    }
 
     template<typename B>
     typename std::enable_if<!std::is_integral<B>::value, void>::type
@@ -199,7 +213,11 @@ class AtomicOpAdd : public TypedAtomicOpFunctor<T>
   public:
     T a;
     AtomicOpAdd(T _a) : a(_a) { }
-    void execute(T *b) { *b += a; }
+    void execute(T *b) {
+        T mem_data = letoh(*b);
+        T new_data = mem_data + a;
+        *b = htole(new_data);
+    }
     AtomicOpFunctor* clone () { return new AtomicOpAdd(a); }
 };
 
@@ -209,7 +227,11 @@ class AtomicOpSub : public TypedAtomicOpFunctor<T>
   public:
     T a;
     AtomicOpSub(T _a) : a(_a) { }
-    void execute(T *b) { *b -= a; }
+    void execute(T *b) {
+        T mem_data = letoh(*b);
+        T new_data = mem_data - a;
+        *b = htole(new_data);
+    }
     AtomicOpFunctor* clone () { return new AtomicOpSub(a); }
 };
 
@@ -218,7 +240,11 @@ class AtomicOpInc : public TypedAtomicOpFunctor<T>
 {
   public:
     AtomicOpInc() { }
-    void execute(T *b) { *b += 1; }
+    void execute(T *b) {
+        T mem_data = letoh(*b);
+        T new_data = mem_data + 1;
+        *b = htole(new_data);
+    }
     AtomicOpFunctor* clone () { return new AtomicOpInc(); }
 };
 
@@ -227,7 +253,11 @@ class AtomicOpDec : public TypedAtomicOpFunctor<T>
 {
   public:
     AtomicOpDec() {}
-    void execute(T *b) { *b -= 1; }
+    void execute(T *b) {
+        T mem_data = letoh(*b);
+        T new_data = mem_data - 1;
+        *b = htole(new_data);
+    }
     AtomicOpFunctor* clone () { return new AtomicOpDec(); }
 };
 
@@ -241,8 +271,11 @@ class AtomicOpMax : public TypedAtomicOpFunctor<T>
     void
     execute(T *b)
     {
-        if (a > *b)
-            *b = a;
+        T mem_data = letoh(*b);
+        T new_data = mem_data;
+        if (a > mem_data)
+            new_data = a;
+        *b = htole(new_data);
     }
     AtomicOpFunctor* clone () { return new AtomicOpMax(a); }
 };
@@ -257,8 +290,11 @@ class AtomicOpMin : public TypedAtomicOpFunctor<T>
     void
     execute(T *b)
     {
-        if (a < *b)
-            *b = a;
+        T mem_data = letoh(*b);
+        T new_data = mem_data;
+        if (a < mem_data)
+            new_data = a;
+        *b = htole(new_data);
     }
     AtomicOpFunctor* clone () { return new AtomicOpMin(a); }
 };
