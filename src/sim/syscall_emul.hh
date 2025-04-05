@@ -2408,6 +2408,7 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
     pp->cwd.assign(p->tgtCwd);
     pp->system = p->system;
     pp->release = p->release;
+    pp->maxStackSize = p->memState->getMaxStackSize();
     /**
      * Prevent process object creation with identical PIDs (which will trip
      * a fatal check in Process constructor). The execve call is supposed to
