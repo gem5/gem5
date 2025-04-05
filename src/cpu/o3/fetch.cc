@@ -68,6 +68,9 @@
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
+
+#include "debug/Instr.hh" // Modified by Mutian: add a new debug tag
+
 namespace gem5
 {
 
@@ -1249,6 +1252,17 @@ Fetch::fetch(bool &status_change)
 
             DynInstPtr instruction = buildInst(
                     tid, staticInst, curMacroop, this_pc, *next_pc, true);
+
+
+            // Modified by Mutian: add log to print the information of the fetched instruction
+            DPRINTF(Instr, "%s: T%d : %#x @i%012d : %s\n",
+                cpu->name(),
+                tid,
+                instruction->pcState().instAddr(),
+                instruction->seqNum,
+                instruction->staticInst->disassemble(instruction->pcState().instAddr()));
+            // ======
+
 
             ppFetch->notify(instruction);
             numInst++;
