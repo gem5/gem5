@@ -61,7 +61,7 @@ class Ipcp : public Queued
            int conf = 0;
            int valid = 0;
            int dir = 1;
-           bool streamValid = false; 
+           bool streamValid = false;
 
            IpEntry() {}
            ~IpEntry() = default;
