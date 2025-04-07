@@ -63,7 +63,10 @@ subprocess.run(
         f"-B{build_current}",
         "-DCMAKE_BUILD_TYPE=Release",
         f"-DSCONS_SOURCE_DIR:STRING={scons_root}",
-        "-DDRAMSYS_BUILD_CLI=OFF"
+        "-DDRAMSYS_BUILD_CLI=OFF",
+        "-DDRAMSYS_USE_FETCH_CONTENT=ON",
+        "-DDRAMSYS_USE_FETCH_CONTENT_INTERNAL=OFF",
+        "-DDRAMSYS_USE_FETCH_CONTENT_SYSTEMC=OFF",
     ],
     check=True
 )
@@ -85,7 +88,8 @@ env.Append(LIBPATH=Dir("./DRAMSys/lib/sqlite3").abspath)
 env.Append(CPPPATH=src_root + "/DRAMSys/src/libdramsys")
 env.Append(CPPPATH=src_root + "/DRAMSys/src/configuration")
 env.Append(CPPPATH=src_root + "/DRAMSys/src/util")
-env.Append(CPPPATH=src_root + "/DRAMSys/lib/nlohmann_json/include")
+
+env.Append(CPPPATH=build_current + "/_deps/nlohmann_json-src/include/")
 
 env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])
 env.Prepend(CPPDEFINES=[("DRAMSYS_RESOURCE_DIR",
