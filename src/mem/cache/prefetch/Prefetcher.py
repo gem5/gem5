@@ -36,6 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -229,7 +230,6 @@ class TaggedPrefetcher(QueuedPrefetcher):
 
 
 class IpcpPrefetcher(QueuedPrefetcher):
-    # Paper: https://doi.org/10.1109/ISCA45697.2020.00021
     # CS and CPLX prefetcher
     type = "IpcpPrefetcher"
     cxx_class = "gem5::prefetch::Ipcp"
@@ -258,6 +258,20 @@ class IpcpPrefetcher(QueuedPrefetcher):
     queue_filter = True
     cache_snoop = True
     prefetch_on_access = True
+
+    # add_citation(IpcpPrefetcher,
+    # """
+    #     @inproceedings{pakalapati2020bouquet,
+    #     title={Bouquet of instruction pointers: Instruction pointer classifier-based spatial hardware prefetching},
+    #     author={Pakalapati, Samuel and Panda, Biswabandan},
+    #     booktitle={2020 ACM/IEEE 47th Annual International Symposium on Computer Architecture (ISCA)},
+    #     pages={118--131},
+    #     year={2020},
+    #     url={https://doi.org/10.1109/ISCA45697.2020.00021},
+    #     organization={IEEE}
+    #     }
+    # """,)
+
 
 
 class IndirectMemoryPrefetcher(QueuedPrefetcher):

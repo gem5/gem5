@@ -52,35 +52,28 @@ class Ipcp : public Queued
    class IpEntry
    {
        public:
-           Addr ipTag, lastVpage, lastLineOffset, signature, regionAddr;
-           int stride, conf, valid, dir;
-           bool streamValid;
+           Addr ipTag = 0;
+           Addr lastVpage = 0;
+           Addr lastLineOffset = 0;
+           Addr signature = 0;
+           Addr regionAddr = 0;
+           int64_t stride = 0;
+           int conf = 0;
+           int valid = 0;
+           int dir = 1;
+           bool streamValid = false; 
 
-           IpEntry() {
-               ipTag = 0;
-               lastVpage = 0;
-               lastLineOffset = 0;
-               signature = 0;
-               regionAddr = 0;
-               stride = 0;
-               conf = 0;
-               valid = 0;
-               dir = 1;
-               streamValid = false;
-           }
-           ~IpEntry() {}
+           IpEntry() {}
+           ~IpEntry() = default;
    };
 
    class CsptEntry
    {
        public:
-           int stride;
-           int conf;
-           CsptEntry() {
-               stride = 0;
-               conf = 0;
-           }
-           ~CsptEntry() {}
+           int64_t stride = 0;
+           int conf = 0;
+           CsptEntry() {}
+           ~CsptEntry() = default;
    };
 
    //IPCP Table (CS + CPLX)
@@ -89,11 +82,14 @@ class Ipcp : public Queued
    std::map<Addr, CsptEntry> cspt;
 
    //Bit widths to create bitmask
-   uint64_t bitsIpIndex, bitsCsptIndex,
-    bitsIpTag, bitsLastVpage, bitsSignature;
+   uint64_t bitsIpIndex;
+   uint64_t bitsCsptIndex;
+   uint64_t bitsIpTag;
+   uint64_t bitsLastVpage;
+   uint64_t bitsSignature;
    const int degree;
    bool csOn, cplxOn;
-   Addr getSignature(Addr curSignature, int stride);
+   Addr getSignature(Addr curSignature, int64_t stride);
 
    //GS IP
    //Structure sizes
@@ -105,22 +101,19 @@ class Ipcp : public Queued
    {
        public:
            //Addr regionAddr;
-           int dir;
-           bool trained, tentative;
+           int dir = 32;
+           bool trained = false;
+           bool tentative = false;
            Tick lastTouch;
            std::set<Addr> cacheLineTouched;
-           Addr lastAddr;
+           Addr lastAddr = 0;
 
            RstEntry() {
-               dir = 32;
-               trained = false;
-               tentative = false;
                lastTouch = curTick();
                cacheLineTouched.clear();
-               lastAddr = 0;
            }
 
-           ~RstEntry() {}
+           ~RstEntry() = default;
    };
    std::map<Addr, RstEntry> RST;
 
