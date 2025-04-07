@@ -273,7 +273,6 @@ class IpcpPrefetcher(QueuedPrefetcher):
     # """,)
 
 
-
 class IndirectMemoryPrefetcher(QueuedPrefetcher):
     type = "IndirectMemoryPrefetcher"
     cxx_class = "gem5::prefetch::IndirectMemory"
