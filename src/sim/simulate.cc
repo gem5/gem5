@@ -47,7 +47,9 @@
 
 #include "base/logging.hh"
 #include "base/pollevent.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/EnteringEventQueue.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
 #include "sim/init_signals.hh"
@@ -197,7 +199,8 @@ simulate(Tick num_cycles)
         global_exit_event->clean();
     std::unique_ptr<GlobalSyncEvent, DescheduleDeleter> quantum_event;
 
-    inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
+    DPRINTF(EnteringEventQueue, "Entering event queue @ %d. Starting "
+        "simulation...\n", curTick());
 
     if (!simulatorThreads)
         simulatorThreads.reset(new SimulatorThreads(numMainEventQueues));
