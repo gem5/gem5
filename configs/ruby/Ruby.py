@@ -305,6 +305,12 @@ def create_system(
 
 
 def create_directories(options, bootmem, ruby_system, system):
+    import importlib
+
+    Directory_Controller = getattr(
+        importlib.import_module("m5.objects"),
+        f"{options.protocol}_Directory_Controller",
+    )
     dir_cntrl_nodes = []
     for i in range(options.num_dirs):
         dir_cntrl = Directory_Controller()
