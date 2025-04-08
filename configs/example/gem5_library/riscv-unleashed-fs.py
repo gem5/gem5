@@ -56,9 +56,12 @@ board = RiscvUnleashedBoard()
 # inspect `m5out/system.pc.com_1.device` to see the stdout.
 #
 board.set_kernel_disk_workload(
-    kernel=DiskImageResource("/home/karan/Desktop/TECS-RISC-V/riscv-fs/riscv-bootloader-vmlinux-5.10"),
-    disk_image=DiskImageResource("/home/karan/Desktop/TECS-RISC-V/riscv-fs/riscv_disk"),
+    kernel=obtain_resource(
+        "riscv-bootloader-vmlinux-5.10", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource("riscv-disk-img", resource_version="1.0.0"),
 )
+
 
 simulator = Simulator(board=board)
 simulator.run()
