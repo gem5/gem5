@@ -53,10 +53,11 @@ board = RiscvRocketBoard()
 
 # Set the Full System workload.
 board.set_kernel_disk_workload(
-    kernel=DiskImageResource("/home/karan/Desktop/CXL-Sims/gem5_scripts/riscv-bootloader-vmlinux-5.10"),
-    disk_image=DiskImageResource("/home/karan/Desktop/TECS-RISC-V/riscv-fs/riscv_disk"),
+    kernel=obtain_resource(
+        "riscv-bootloader-vmlinux-5.10", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource("riscv-disk-img", resource_version="1.0.0"),
 )
-
 simulator = Simulator(board=board)
 print("Beginning simulation!")
 # Note: This simulation will never stop. You can access the terminal upon boot
