@@ -874,6 +874,19 @@ class WorkloadResource(AbstractResource):
         self._id = id
         self._func = function
         self._params = parameters
+        try:
+            self._estimated_instructions = kwargs.get(
+                "simulation_run_results"
+            )["total_instructions"]
+        except:
+            self._estimated_instructions = None
+            warn(
+                "Workload doesn't have simulation_run_results field,"
+                "util/hypercall_external_signal/gem5-dashboard.py won't print a progress bar"
+            )
+
+    def get_estimated_instructions(self) -> Optional[str]:
+        return self._estimated_instructions
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""

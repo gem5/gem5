@@ -84,6 +84,7 @@ import select
 import signal
 import socket
 import sys
+from typing import List
 
 from transmitter import send_signal
 
@@ -92,7 +93,7 @@ socket_path = None
 sock = None
 
 
-def find_gem5_pid() -> int:
+def find_gem5_pids() -> List[int]:
     """
     Find the PID of a running gem5 process.
 
@@ -121,6 +122,11 @@ def find_gem5_pid() -> int:
 
     if not gem5_pids:
         raise ValueError("No gem5 process found")
+    return gem5_pids
+
+
+def find_gem5_single_pid() -> int:
+    gem5_pids = find_gem5_pids()
     if len(gem5_pids) > 1:
         raise ValueError(f"Multiple gem5 processes found: {gem5_pids}")
     return gem5_pids[0]
@@ -205,10 +211,22 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
             {"function": function, "response_socket": socket_path}
         )
         send_signal(pid, 1000, payload)
-
-        ready, _, _ = select.select([sock], [], [], 30.0)
+        if function == "get_progress_bar_inst_count":
+            timeout = 2.0
+        else:
+            timeout = 30.0
+        ready, _, _ = select.select([sock], [], [], timeout)
         if not ready:
-            raise TimeoutError("Timeout waiting for gem5 response")
+            if function == "get_progress_bar_inst_count":
+                try:
+                    # print("Trying os.kill to see if PID active!")
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    # print(f"gem5 process with PID {pid} ended!")
+                    # sys.exit(0)
+                    return "ended"
+            else:
+                raise TimeoutError("Timeout waiting for gem5 response")
 
         conn, addr = sock.accept()
         try:
@@ -249,7 +267,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        pid = args.pid if args.pid is not None else find_gem5_pid()
+        pid = args.pid if args.pid is not None else find_gem5_single_pid()
         response = send_and_receive_hypercall(pid, args.function)
         if args.output:
             write_response_to_file(response, args.output)

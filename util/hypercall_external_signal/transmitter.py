@@ -109,12 +109,18 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         # their configurations.
         os.kill(pid, signal.SIGHUP)
     except ProcessLookupError:
-        logger.error(
-            "Process does not exist! Check that you are using the correct PID."
-        )
-        shm.close()
-        shm.unlink()
-        sys.exit(1)
+        if "get_progress_bar_inst_count" in payload:
+            shm.close()
+            shm.unlink()
+            return
+        else:
+            logger.error(
+                "Process does not exist! Check that you are using the correct PID."
+            )
+            shm.close()
+            shm.unlink()
+            sys.exit(1)
+
     except json.decoder.JSONDecodeError as e:
         logger.error(
             f"JSON Parsing Error: {str(e)}\nPayload that caused error: {payload}"

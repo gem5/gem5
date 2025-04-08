@@ -407,6 +407,18 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 elif function == "get_stats":
                     stats = simulator.get_stats()
                     response = json.dumps(stats)
+                elif function == "get_progress_bar_init_stats":
+                    response = json.dumps(
+                        {
+                            "total_insts": simulator.get_total_insts(),
+                            "sim_id": simulator.get_id(),
+                            "workload": simulator.get_workload().get_id(),
+                        }
+                    )
+                elif function == "get_progress_bar_inst_count":
+                    response = json.dumps(
+                        self._get_status(simulator)["instruction_count"]
+                    )
                 else:
                     response = json.dumps(
                         {"error": f"Unknown function: {function}"}
