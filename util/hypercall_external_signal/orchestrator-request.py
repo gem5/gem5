@@ -171,7 +171,9 @@ def receive_full_message(conn: socket.socket, timeout: float = 30.0) -> str:
     return b"".join(chunks).decode()
 
 
-def send_and_receive_hypercall(pid: int, function: str) -> str:
+def send_and_receive_hypercall(
+    pid: int, function: str, debug_flags_to_add: str = None
+) -> str:
     """
     Send a hypercall to gem5 and wait for response.
 
@@ -180,8 +182,10 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
 
     :param pid: Process ID of gem5 instance
     :type pid: int
-    :param function: Hypercall function to execute ('status'|'get_stats')
+    :param function: Hypercall function to execute ('status'|'get_stats'|'add_debug_flags')
     :type function: str
+    :param debug_flags_to_add: Contains a ',' separated string of debug flags to add to the simulation. This field will be only work if the value of the 'function' argument is 'add_debug_flags'.
+    :type debug_flags_to_add: str
     :return: JSON response from gem5
     :rtype: str
     :raises TimeoutError: If gem5 doesn't respond within timeout
@@ -202,7 +206,11 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
 
     try:
         payload = json.dumps(
-            {"function": function, "response_socket": socket_path}
+            {
+                "function": function,
+                "debug_flags_to_add": debug_flags_to_add,
+                "response_socket": socket_path,
+            }
         )
         send_signal(pid, 1000, payload)
 
@@ -241,7 +249,14 @@ def main():
         "(auto-detected if not specified)",
     )
     parser.add_argument(
-        "function", choices=["status", "get_stats"], help="Function to execute"
+        "function",
+        choices=["status", "get_stats", "add_debug_flags"],
+        help="Function to execute",
+    )
+    parser.add_argument(
+        "--debug-flags-to-add",
+        metavar="FLAG1,FLAG2,..",
+        help="Sets the flags for debug output. This flag will only work if positional argument 'add_debug_flags' is passed",
     )
     parser.add_argument(
         "--output", type=str, help="Write response to specified file"
@@ -250,7 +265,9 @@ def main():
 
     try:
         pid = args.pid if args.pid is not None else find_gem5_pid()
-        response = send_and_receive_hypercall(pid, args.function)
+        response = send_and_receive_hypercall(
+            pid, args.function, args.debug_flags_to_add
+        )
         if args.output:
             write_response_to_file(response, args.output)
         else:
