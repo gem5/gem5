@@ -103,6 +103,15 @@ class Request : public Extensible<Request>
 
     enum : FlagsType
     {
+        
+        /** 
+         * ECE757 todo:
+         *   The request is for an approximate load (LAX instruction).
+         *   Currently I just choose a random hex which is not used for any other flag.
+         */
+        // Example code: 
+        //   APPROXIMATE                  = 0x0002000000000000,
+        
         /**
          * Architecture specific flags.
          *
