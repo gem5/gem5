@@ -15,9 +15,11 @@ class ProgressBar:
 
     def __init__(self, pid):
         # get static stats for the progress bar
-        init_stats = json.loads(
-            send_and_receive_hypercall(pid, "get_progress_bar_init_stats")
+        init_stats_str = send_and_receive_hypercall(
+            pid, "get_progress_bar_init_stats"
         )
+        # print(f"init_stats_str: {init_stats_str}")
+        init_stats = json.loads(init_stats_str)
         self.total_insts = init_stats["total_insts"]
         self.sim_id = init_stats["sim_id"]
         self.workload = init_stats["workload"]
@@ -29,7 +31,7 @@ class ProgressBar:
             desc=f" {pid} | {self.sim_id} | {self.workload}",
             position=self.bar_pos,
         )
-        bar_pos += 1
+        ProgressBar.bar_pos += 1
 
 
 def main():
@@ -77,11 +79,17 @@ def main():
             curr_status = send_and_receive_hypercall(
                 pid, "get_progress_bar_inst_count"
             )
-            if curr_status == "ended":
+            if "ended" in curr_status:
+                # print("current status is ended!")
                 pids_to_remove.append(
                     pid
                 )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
-                break
+                # break
+                continue
+            elif "timeout" in curr_status:
+                # print("current status is timeout!")
+                continue
+            # print(f"curr_status: {curr_status}")
             curr_insts = int(json.loads(curr_status))
             bar_obj.prog_bar.update(curr_insts - bar_obj.prev_insts)
             # print(f"updating progress bar for pid {pid}")

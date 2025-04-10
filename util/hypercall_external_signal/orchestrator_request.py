@@ -213,17 +213,26 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
         )
         send_signal(pid, 1000, payload)
         if (
-            function == "get_progress_bar_inst_count"
-            or function == "get_progress_bar_init_stats"
+            function
+            == "get_progress_bar_inst_count"
+            # or function == "get_progress_bar_init_stats"
         ):
+            #
+            # for the progress bar: gem5 may take > 30 s to respond, but we don't
+            # want the dashboard to exit early. If we use timeout=None, however, the
+            # dashboard might get stuck in some cases, such as if the simulation
+            # exits while we are waiting.
             timeout = 2.0
         else:
             timeout = 30.0
+
+        # print(f"timeout is {timeout} seconds")
         ready, _, _ = select.select([sock], [], [], timeout)
         if not ready:
             if (
-                function == "get_progress_bar_inst_count"
-                or function == "get_progress_bar_init_stats"
+                function
+                == "get_progress_bar_inst_count"
+                # or function == "get_progress_bar_init_stats"
             ):
                 try:
                     # print("Trying os.kill to see if PID active!")
@@ -232,6 +241,8 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
                     # print(f"gem5 process with PID {pid} ended!")
                     # sys.exit(0)
                     return "ended"
+                else:
+                    return "timeout"
             else:
                 raise TimeoutError("Timeout waiting for gem5 response")
 
