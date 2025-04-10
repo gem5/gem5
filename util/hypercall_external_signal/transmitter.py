@@ -140,8 +140,15 @@ def send_signal(pid: int, id: int, payload: str) -> None:
 
     while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
         logger.debug("Waiting for gem5 to finish using shared memory...")
+        # print(f"In transmitter.py send_signal, done message is: {bytes(shm.buf[:shared_mem_size]).decode().strip('\x00')}")
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            logger.debug("Process has ended!")
+            break
         sleep(1)
     logger.debug("Done message received")
+    # print(f"Done message received for pid {pid}")
     shm.close()
     try:
         shm.unlink()

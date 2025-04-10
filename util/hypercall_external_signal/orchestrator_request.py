@@ -195,7 +195,8 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
     """
     global sock, socket_path
 
-    socket_path = f"/tmp/hypercall_{os.getpid()}.sock"
+    # socket_path = f"/tmp/hypercall_{os.getpid()}.sock"
+    socket_path = f"/tmp/hypercall_{pid}.sock"
 
     try:
         os.unlink(socket_path)
@@ -211,13 +212,19 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
             {"function": function, "response_socket": socket_path}
         )
         send_signal(pid, 1000, payload)
-        if function == "get_progress_bar_inst_count":
+        if (
+            function == "get_progress_bar_inst_count"
+            or function == "get_progress_bar_init_stats"
+        ):
             timeout = 2.0
         else:
             timeout = 30.0
         ready, _, _ = select.select([sock], [], [], timeout)
         if not ready:
-            if function == "get_progress_bar_inst_count":
+            if (
+                function == "get_progress_bar_inst_count"
+                or function == "get_progress_bar_init_stats"
+            ):
                 try:
                     # print("Trying os.kill to see if PID active!")
                     os.kill(pid, 0)
