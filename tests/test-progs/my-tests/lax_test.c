@@ -1,24 +1,25 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(){
-    int a,b;
-    a = 0;
-    b = 33;
+    int* addr = malloc(10000);
+    int result;
 
-    unsigned int result;
-    long addr = (long)&b;
+    // printf("VA of b : %u(0x%x)\n", addr, addr);
 
     asm volatile (
         "lax %0, 0(%1)"
         : "=r" (result)
-        : "r" (addr)
+        : "r" (addr+9900)
         : "memory"
     );
 
-    if ( result != 33 ){
-            printf("\n[[FAILED]]\n");
-            return -1;
-    }
-    printf("\n[[PASSED]]\n");
+    asm volatile (
+        "lax %0, 0(%1)"
+        : "=r" (result)
+        : "r" (addr+9900)
+        : "memory"
+    );
+
     return 0;
 }

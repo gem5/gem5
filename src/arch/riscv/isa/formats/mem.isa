@@ -133,15 +133,6 @@ def template LoadExecute {{
 
         {
 
-            # ECE757 todo:
-            #   Determine if it's LAX or not and add the customized flag to memAccessFlags.
-            #   After this, we need to add the "Approximate" flag in request.hh as well.
-            #
-            #   Example code: 
-            #     if (strcmp(mnemonic, "lax") == 0) {
-            #       memAccessFlags |= Request::APPROXIMATE;
-            #     }
-
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
             if (fault != NoFault)
@@ -166,16 +157,6 @@ def template LoadInitiateAcc {{
         %(op_src_decl)s;
         %(op_rd)s;
         %(ea_code)s;
-
-        # ECE757 todo:
-        #   Determine if it's LAX or not and add the customized flag to memAccessFlags.
-        #   This part is the same with the modification in loadExecute.
-        #   We probably don't need a new format definition since we're reusing the load instruction.
-        #
-        #   Example code:
-        #     if (strcmp(mnemonic, "lax") == 0) {
-        #       memAccessFlags |= Request::APPROXIMATE;
-        #     }
 
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }

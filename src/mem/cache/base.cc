@@ -48,6 +48,7 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "debug/Cache.hh"
+#include "debug/CacheAx.hh"
 #include "debug/CacheComp.hh"
 #include "debug/CachePort.hh"
 #include "debug/CacheRepl.hh"
@@ -228,27 +229,27 @@ BaseCache::inRange(Addr addr) const
 void
 BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
 {
-    /** 
+    /**
      * ECE757 todo:
      *   Here I added a debug print for LAX to see if the flag is handled correctly.
      */
-    if (pkt->req->hasFlag(Request::APPROXIMATE) && pkt->isRead()) {
-        DPRINTF(Cache, "Approximate load hit: reduced latency for %s\n", 
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        DPRINTF(CacheAx, "Approximate load hit: reduced latency for %s\n",
                 pkt->print());
 
         // Actually, we have two options, either do the truncation in software or hardware way.
         //   Option 1:
-        //     Do it right here, which we modify the pkt size, 
+        //     Do it right here, which we modify the pkt size,
         //     just return half of the pkt size using software setting.
-        //     The code will be something similar to: 
+        //     The code will be something similar to:
         //       if (size==4) // representing 32-bit float
         //         pkt->setSize(2) // set it to half word
         //   Option 2:
         //     Modify the cache structure and truncate the data at that end.
         //     Once the cache itself sees the APPROX flag, we truncate and return the
-        //     approximation data. 
+        //     approximation data.
     }
-    
+
     // handle special cases for LockedRMW transactions
     if (pkt->isLockedRMW()) {
         Addr blk_addr = pkt->getBlockAddr(blkSize);
@@ -330,18 +331,18 @@ void
 BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                                Tick forward_time, Tick request_time)
 {
-    /** 
+    /**
      * ECE757 todo:
      *   Here I added a debug print for LAX to see if the flag is handled correctly.
-     *   Still, we have to discuss where to add the truncation process to get the 
+     *   Still, we have to discuss where to add the truncation process to get the
      *   correct data format.
      */
-    if (pkt && pkt->req->hasFlag(Request::APPROXIMATE) && pkt->isRead()) {
-        DPRINTF(Cache, "Approximate load miss detected for %s\n", 
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        DPRINTF(CacheAx, "Approximate load miss detected for %s\n",
                 pkt->print());
     }
-    
-    
+
+
     if (writeAllocator &&
         pkt && pkt->isWrite() && !pkt->req->isUncacheable()) {
         writeAllocator->updateMode(pkt->getAddr(), pkt->getSize(),
@@ -524,14 +525,14 @@ BaseCache::handleUncacheableWriteResp(PacketPtr pkt)
 void
 BaseCache::recvTimingResp(PacketPtr pkt)
 {
-    /** 
+    /**
      * ECE757 todo:
-     *   Add debug print here also. 
+     *   Add debug print here also.
      */
-    if (pkt->req->hasFlag(Request::APPROXIMATE) && pkt->isRead()) {
-        DPRINTF(Cache, "Received response for approximate load %s\n", pkt->print());
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        DPRINTF(CacheAx, "Received response for approximate load %s\n", pkt->print());
     }
-    
+
     assert(pkt->isResponse());
 
     // all header delay should be paid for by the crossbar, unless
@@ -1566,12 +1567,13 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
                       bool allocate)
 {
 
-    /** 
+    /**
      * ECE757 todo:
-     *   Add debug print here also. 
+     *   Add debug print here also.
      */
-    if (pkt->req->hasFlag(Request::APPROXIMATE) && pkt->isRead()) {
-        DPRINTF(Cache, "Filling cache with approximate data for %s\n", pkt->print());
+
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        DPRINTF(CacheAx, "Filling cache with approximate data for %s\n", pkt->print());
     }
 
     assert(pkt->isResponse());

@@ -573,7 +573,7 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x7: lax({{
                     Rd = Mem;
-                }});
+                }}, mem_flags = [APPROXIMATE]);
                 0x6: decode RVTYPE {
                     0x1: lwu({{
                         Rd = Mem_uw;

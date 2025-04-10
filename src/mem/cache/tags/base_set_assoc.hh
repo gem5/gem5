@@ -129,6 +129,15 @@ class BaseSetAssoc : public BaseTags
     {
         CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
 
+        // ECE 757 : Apr 9th
+        // TODO:
+        // - Add a different findBlock function if the Approximate flag is set on the pkt
+        // - Inside this function we need to figure out how to change the set indexing
+        // - MSHR stuff happens above this function
+        // - Valid bit change, check how to do this and in which class (maybe CacheBlk.cc?)
+        // -
+
+
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
         // a hit.  Sequential access with a miss doesn't access data.

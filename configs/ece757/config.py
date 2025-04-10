@@ -52,7 +52,7 @@ thispath = os.path.dirname(os.path.realpath(__file__))
 default_binary = os.path.join(
     thispath,
     "../../",
-    "tests/test-progs/hello/bin/x86/linux/hello",
+    "tests/test-progs/my-tests/lax",
 )
 
 # Binary to execute
