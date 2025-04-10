@@ -47,39 +47,39 @@ from scons2bzl.types import Path
 
 
 def main():
-  logging.basicConfig(level=logging.INFO)
-  parser = argparse.ArgumentParser()
-  parser.add_argument('buildifier_bin')
-  parser.add_argument('--allow-code-execution', action='store_true')
-  args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("buildifier_bin")
+    parser.add_argument("--allow-code-execution", action="store_true")
+    args = parser.parse_args()
 
-  if 'BUILD_WORKSPACE_DIRECTORY' not in os.environ:
-    raise RuntimeError('Need to invoke using `bazel run ...`')
-  gem5_home = os.environ['BUILD_WORKSPACE_DIRECTORY']
-  buildifier_bin = os.path.join(gem5_home, args.buildifier_bin)
-  assert os.path.isfile(buildifier_bin)
+    if "BUILD_WORKSPACE_DIRECTORY" not in os.environ:
+        raise RuntimeError("Need to invoke using `bazel run ...`")
+    gem5_home = os.environ["BUILD_WORKSPACE_DIRECTORY"]
+    buildifier_bin = os.path.join(gem5_home, args.buildifier_bin)
+    assert os.path.isfile(buildifier_bin)
 
-  if not args.allow_code_execution:
-    raise RuntimeError(
-        'This tool uses `exec()` on SConscript and SimObject '
-        'parameter files.  Specify --allow-code-execution to '
-        'allow this.'
-    )
-  scons = SConstruct(os.path.join(gem5_home, Path.SCONSTRUCT))
-  scons.bazelize(args.allow_code_execution)
+    if not args.allow_code_execution:
+        raise RuntimeError(
+            "This tool uses `exec()` on SConscript and SimObject "
+            "parameter files.  Specify --allow-code-execution to "
+            "allow this."
+        )
+    scons = SConstruct(os.path.join(gem5_home, Path.SCONSTRUCT))
+    scons.bazelize(args.allow_code_execution)
 
-  # Generate bazel configurations from Kconfig
-  logging.info('Scanning Kconfig files')
-  configs = config.read_kconfig(gem5_home)
-  config.update_build_files(gem5_home, configs)
+    # Generate bazel configurations from Kconfig
+    logging.info("Scanning Kconfig files")
+    configs = config.read_kconfig(gem5_home)
+    config.update_build_files(gem5_home, configs)
 
-  scons.finalize()
+    scons.finalize()
 
-  logging.info('Running buildifier')
-  os.system(f'{buildifier_bin} $(find {gem5_home}/src -name BUILD.bazel)')
+    logging.info("Running buildifier")
+    os.system(f"{buildifier_bin} $(find {gem5_home}/src -name BUILD.bazel)")
 
-  logging.info('Done')
+    logging.info("Done")
 
 
-if __name__ == '__main__':
-  main()
+if __name__ == "__main__":
+    main()

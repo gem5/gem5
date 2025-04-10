@@ -37,103 +37,109 @@ import os
 import kconfiglib as kcfg
 from scons2bzl import io
 from scons2bzl.defines import config_headers
-from scons2bzl.types import AbsPath
-from scons2bzl.types import Path
+from scons2bzl.types import (
+    AbsPath,
+    Path,
+)
 
 
 class KconfigEnvContext:
-  """Gem5 context for kconfiglib."""
+    """Gem5 context for kconfiglib."""
 
-  def __init__(self):
-    self.old_env = os.environ.copy()
+    def __init__(self):
+        self.old_env = os.environ.copy()
 
-  def __enter__(self):
-    # Enable all switches to get the maximum set of config options
-    os.environ["HAVE_FENV"] = "y"
-    os.environ["HAVE_PNG"] = "y"
-    os.environ["HAVE_VALGRIND"] = "y"
-    os.environ["HAVE_DEPRECATED_NAMESPACE"] = "y"
-    os.environ["HAVE_POSIX_CLOCK"] = "y"
-    os.environ["HAVE_HDF5"] = "y"
-    os.environ["HAVE_PROTOBUF"] = "y"
-    os.environ["HAVE_TUNTAP"] = "y"
-    os.environ["HAVE_CAPSTONE"] = "y"
+    def __enter__(self):
+        # Enable all switches to get the maximum set of config options
+        os.environ["HAVE_FENV"] = "y"
+        os.environ["HAVE_PNG"] = "y"
+        os.environ["HAVE_VALGRIND"] = "y"
+        os.environ["HAVE_DEPRECATED_NAMESPACE"] = "y"
+        os.environ["HAVE_POSIX_CLOCK"] = "y"
+        os.environ["HAVE_HDF5"] = "y"
+        os.environ["HAVE_PROTOBUF"] = "y"
+        os.environ["HAVE_TUNTAP"] = "y"
+        os.environ["HAVE_CAPSTONE"] = "y"
 
-  def __exit__(self, exc_type, exc_value, traceback):
-    os.environ = self.old_env
+    def __exit__(self, exc_type, exc_value, traceback):
+        os.environ = self.old_env
 
 
 def read_kconfig(gem5_home: str) -> dict[str, str]:
-  """Get the maximum set of config to type mapping by reading Kconfig files.
+    """Get the maximum set of config to type mapping by reading Kconfig files.
 
-  Args:
-      gem5_home: Path to the gem5 repository root.
+    Args:
+        gem5_home: Path to the gem5 repository root.
 
-  Returns:
-      A dict mapping config names to the corresponding type name.  Implemented
-      type names are ['bool', 'string', 'int'].  For example:
+    Returns:
+        A dict mapping config names to the corresponding type name.  Implemented
+        type names are ['bool', 'string', 'int'].  For example:
 
-      {'have_abc': 'bool',
-       'have_xyz': 'bool',
-       'kvm_isa': 'string'}
-  """
-  gem5_home = AbsPath(gem5_home)
-  type_from_config = {}
+        {'have_abc': 'bool',
+         'have_xyz': 'bool',
+         'kvm_isa': 'string'}
+    """
+    gem5_home = AbsPath(gem5_home)
+    type_from_config = {}
 
-  def visit(node):
-    while node:
-      if not isinstance(node.item, int):
-        config_type = kcfg.TYPE_TO_STR[node.item.type]
-        assert config_type in ["bool", "string", "int"]
-        type_from_config[node.item.name] = config_type
-      if node.list:
-        visit(node.list)
-      node = node.next
+    def visit(node):
+        while node:
+            if not isinstance(node.item, int):
+                config_type = kcfg.TYPE_TO_STR[node.item.type]
+                assert config_type in ["bool", "string", "int"]
+                type_from_config[node.item.name] = config_type
+            if node.list:
+                visit(node.list)
+            node = node.next
 
-  with KconfigEnvContext():
-    kconf = kcfg.Kconfig(os.path.join(gem5_home.abs, "src/Kconfig"))
-  visit(kconf.top_node)
-  return type_from_config
+    with KconfigEnvContext():
+        kconf = kcfg.Kconfig(os.path.join(gem5_home.abs, "src/Kconfig"))
+    visit(kconf.top_node)
+    return type_from_config
 
 
 def update_build_files(
     gem5_home: str, type_from_config: dict[str, str]
 ) -> None:
-  """Update config related BUILD files.
+    """Update config related BUILD files.
 
-  Args:
-      gem5_home: Path to the gem5 repository root.
-      type_from_config: Map of config names to type names.
-  """
-  gem5_home = AbsPath(gem5_home)
-  build_file = gem5_home.append("src/generated/config", Path.BUILD_FILE)
-  for config, decl in config_headers.items():
-    io.update_build(build_file, "OBJS_GOES_HERE", f'":{config}",')
-    io.update_build(
-        build_file,
-        "TARGET_GOES_HERE",
-        io.CONFIG_HDR_ENTRY_TEMPLATE.format(config=config, decl=decl),
-    )
-  for conf_name, config_type in type_from_config.items():
-    target_name = conf_name.lower()
-    if config_type == "bool":
-      default = "False"
-    elif config_type == "int":
-      default = 0
-    elif config_type == "string":
-      default = '""'
-    # using flags/ instead of config/ because target name conflicts
-    build_file = gem5_home.append("src/generated/flags", Path.BUILD_FILE)
-    io.update_build(
-        build_file,
-        "TARGET_GOES_HERE",
-        io.CONFIG_FLAG_ENTRY_TEMPLATE.format(
-            config_type=config_type, target_name=target_name, default=default
-        ),
-    )
-    if config_type == "bool":
-      io.update_build(
-          build_file,
-          "TARGET_GOES_HERE",
-          io.CONFIG_SETTING_ENTRY_TEMPLATE.format(target_name=target_name),
-      )
+    Args:
+        gem5_home: Path to the gem5 repository root.
+        type_from_config: Map of config names to type names.
+    """
+    gem5_home = AbsPath(gem5_home)
+    build_file = gem5_home.append("src/generated/config", Path.BUILD_FILE)
+    for config, decl in config_headers.items():
+        io.update_build(build_file, "OBJS_GOES_HERE", f'":{config}",')
+        io.update_build(
+            build_file,
+            "TARGET_GOES_HERE",
+            io.CONFIG_HDR_ENTRY_TEMPLATE.format(config=config, decl=decl),
+        )
+    for conf_name, config_type in type_from_config.items():
+        target_name = conf_name.lower()
+        if config_type == "bool":
+            default = "False"
+        elif config_type == "int":
+            default = 0
+        elif config_type == "string":
+            default = '""'
+        # using flags/ instead of config/ because target name conflicts
+        build_file = gem5_home.append("src/generated/flags", Path.BUILD_FILE)
+        io.update_build(
+            build_file,
+            "TARGET_GOES_HERE",
+            io.CONFIG_FLAG_ENTRY_TEMPLATE.format(
+                config_type=config_type,
+                target_name=target_name,
+                default=default,
+            ),
+        )
+        if config_type == "bool":
+            io.update_build(
+                build_file,
+                "TARGET_GOES_HERE",
+                io.CONFIG_SETTING_ENTRY_TEMPLATE.format(
+                    target_name=target_name
+                ),
+            )

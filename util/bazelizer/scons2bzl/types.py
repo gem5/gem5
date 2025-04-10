@@ -30,103 +30,103 @@ import os
 
 
 class Path:
-  """Class represents a path with some handy utils."""
+    """Class represents a path with some handy utils."""
 
-  def __init__(self, path, absolute=False, base=None):
-    self.absolute = absolute
-    if isinstance(path, str):
-      pass
-    elif isinstance(path, list):
-      path = os.path.join(*path)
-    else:
-      raise TypeError()
-    if base is None:
-      self.base = None
-    elif isinstance(base, str):
-      assert os.path.isabs(base)
-      self.base = os.path.normpath(base)
-    else:
-      raise TypeError()
-    if absolute:
-      self._abs_path = os.path.normpath(path)
-    else:
-      self._rel_path = os.path.normpath(path)
+    def __init__(self, path, absolute=False, base=None):
+        self.absolute = absolute
+        if isinstance(path, str):
+            pass
+        elif isinstance(path, list):
+            path = os.path.join(*path)
+        else:
+            raise TypeError()
+        if base is None:
+            self.base = None
+        elif isinstance(base, str):
+            assert os.path.isabs(base)
+            self.base = os.path.normpath(base)
+        else:
+            raise TypeError()
+        if absolute:
+            self._abs_path = os.path.normpath(path)
+        else:
+            self._rel_path = os.path.normpath(path)
 
-  @property
-  def abs(self):
-    if self.absolute:
-      return self._abs_path
-    else:
-      assert self.base is not None
-      return os.path.join(self.base, self._rel_path)
+    @property
+    def abs(self):
+        if self.absolute:
+            return self._abs_path
+        else:
+            assert self.base is not None
+            return os.path.join(self.base, self._rel_path)
 
-  @property
-  def rel(self):
-    if self.absolute:
-      assert self.base is not None
-      assert self._abs_path.startswith(self.base)
-      return os.path.relpath(self._abs_path, self.base)
-    else:
-      return self._rel_path
+    @property
+    def rel(self):
+        if self.absolute:
+            assert self.base is not None
+            assert self._abs_path.startswith(self.base)
+            return os.path.relpath(self._abs_path, self.base)
+        else:
+            return self._rel_path
 
-  def sibling(self, sibling_path, from_base=False, inherit_base=True):
-    """Derives the path to the adjacent file of the current path."""
-    if self.absolute:
-      old_dirname = self.abs_dirname
-    else:
-      old_dirname = self.rel_dirname
-    if from_base:
-      new_path = os.path.join(self.base, sibling_path)
-    else:
-      new_path = os.path.join(old_dirname, sibling_path)
-    if from_base or inherit_base or self.base is None:
-      new_base = self.base
-    else:
-      new_base = self.abs_dirname
-    return Path(new_path, self.absolute, new_base)
+    def sibling(self, sibling_path, from_base=False, inherit_base=True):
+        """Derives the path to the adjacent file of the current path."""
+        if self.absolute:
+            old_dirname = self.abs_dirname
+        else:
+            old_dirname = self.rel_dirname
+        if from_base:
+            new_path = os.path.join(self.base, sibling_path)
+        else:
+            new_path = os.path.join(old_dirname, sibling_path)
+        if from_base or inherit_base or self.base is None:
+            new_base = self.base
+        else:
+            new_base = self.abs_dirname
+        return Path(new_path, self.absolute, new_base)
 
-  def append(self, *path):
-    return self.sibling(os.path.join(self.basename, *path), False, True)
+    def append(self, *path):
+        return self.sibling(os.path.join(self.basename, *path), False, True)
 
-  @property
-  def abs_dirname(self):
-    return os.path.dirname(self.abs)
+    @property
+    def abs_dirname(self):
+        return os.path.dirname(self.abs)
 
-  @property
-  def rel_dirname(self):
-    return os.path.dirname(self.rel)
+    @property
+    def rel_dirname(self):
+        return os.path.dirname(self.rel)
 
-  @property
-  def basename(self):
-    if self.absolute:
-      return os.path.basename(self._abs_path)
-    else:
-      return os.path.basename(self._rel_path)
+    @property
+    def basename(self):
+        if self.absolute:
+            return os.path.basename(self._abs_path)
+        else:
+            return os.path.basename(self._rel_path)
 
-  @property
-  def ext(self):
-    return os.path.splitext(self.basename)[1]
+    @property
+    def ext(self):
+        return os.path.splitext(self.basename)[1]
 
-  @property
-  def no_ext_basename(self):
-    return os.path.splitext(self.basename)[0]
+    @property
+    def no_ext_basename(self):
+        return os.path.splitext(self.basename)[0]
 
-  def startswith(self, s):
-    return self.rel.startswith(s)
+    def startswith(self, s):
+        return self.rel.startswith(s)
 
-  def __hash__(self):
-    if not self.absolute and self.base is None:
-      return hash((False, self._rel_path))
-    else:
-      return hash((True, self.abs))
+    def __hash__(self):
+        if not self.absolute and self.base is None:
+            return hash((False, self._rel_path))
+        else:
+            return hash((True, self.abs))
 
-  def __eq__(self, another):
-    return hash(self) == hash(another)
+    def __eq__(self, another):
+        return hash(self) == hash(another)
 
 
 AbsPath = lambda path, base=None: Path(path, True, base)
 RelPath = lambda path, base=None: Path(path, False, base)
 
-Path.BUILD_FILE = 'BUILD.bazel'
-Path.SCONSCRIPT = 'SConscript'
-Path.SCONSTRUCT = 'SConstruct'
+Path.BUILD_FILE = "BUILD.bazel"
+Path.SCONSCRIPT = "SConscript"
+Path.SCONSTRUCT = "SConstruct"

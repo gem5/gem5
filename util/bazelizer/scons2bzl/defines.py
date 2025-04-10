@@ -38,83 +38,92 @@ BOOL_CONFIG_DECL = (
     ' "//conditions:default": "0"})'
 )
 config_headers = {
-    'have_valgrind': BOOL_CONFIG_DECL % 'have_valgrind',
-    'have_fenv': BOOL_CONFIG_DECL % 'have_fenv',
-    'have_protobuf': BOOL_CONFIG_DECL % 'have_protobuf',
-    'build_gpu': BOOL_CONFIG_DECL % 'build_gpu',
-    'have_deprecated_namespace': BOOL_CONFIG_DECL % 'have_deprecated_namespace',
-    'use_posix_clock': BOOL_CONFIG_DECL % 'use_posix_clock',
-    'have_hdf5': BOOL_CONFIG_DECL % 'have_hdf5',
-    'have_tuntap': BOOL_CONFIG_DECL % 'have_tuntap',
-    'have_png': BOOL_CONFIG_DECL % 'have_png',
-    'use_kvm': BOOL_CONFIG_DECL % 'use_kvm',
-    'the_gpu_isa': 'value = "None", guard = True, def_name = "TheGpuISA"',
-    'have_perf_attr_exclude_host': 'value = "0"',
-    'kvm_isa': 'value = "x86"',
+    "have_valgrind": BOOL_CONFIG_DECL % "have_valgrind",
+    "have_fenv": BOOL_CONFIG_DECL % "have_fenv",
+    "have_protobuf": BOOL_CONFIG_DECL % "have_protobuf",
+    "build_gpu": BOOL_CONFIG_DECL % "build_gpu",
+    "have_deprecated_namespace": BOOL_CONFIG_DECL
+    % "have_deprecated_namespace",
+    "use_posix_clock": BOOL_CONFIG_DECL % "use_posix_clock",
+    "have_hdf5": BOOL_CONFIG_DECL % "have_hdf5",
+    "have_tuntap": BOOL_CONFIG_DECL % "have_tuntap",
+    "have_png": BOOL_CONFIG_DECL % "have_png",
+    "use_kvm": BOOL_CONFIG_DECL % "use_kvm",
+    "the_gpu_isa": 'value = "None", guard = True, def_name = "TheGpuISA"',
+    "have_perf_attr_exclude_host": 'value = "0"',
+    "kvm_isa": 'value = "x86"',
 }
 
 
 ext_lib_map = {
-    'zfstream.': '@iostream3//:lib',
-    'python/m5ImporterCode.hh': '//src/python:m5_importer_code_pyo',
-    'fdt.': '@libfdt//:lib',
-    'libfdt.': '@libfdt//:lib',
-    'gelf.': '@libelf//:lib',
-    'gem5/': '//include:hdr',
-    'magic_enum/': '@magic_enum//:lib',
-    'dnet/': '@dnet//:lib',
-    'gdbremote/': '@gdbremote//:lib',
-    'pybind11/': '@pybind11//:lib',
-    'libdrampower/': '@drampower//:lib',
-    'x11keysym/': '@x11keysym//:lib',
-    'softfloat.h': '@softfloat//:lib',
+    "zfstream.": "@iostream3//:lib",
+    "python/m5ImporterCode.hh": "//src/python:m5_importer_code_pyo",
+    "fdt.": "@libfdt//:lib",
+    "libfdt.": "@libfdt//:lib",
+    "gelf.": "@libelf//:lib",
+    "gem5/": "//include:hdr",
+    "magic_enum/": "@magic_enum//:lib",
+    "dnet/": "@dnet//:lib",
+    "gdbremote/": "@gdbremote//:lib",
+    "pybind11/": "@pybind11//:lib",
+    "libdrampower/": "@drampower//:lib",
+    "x11keysym/": "@x11keysym//:lib",
+    "softfloat.h": "@softfloat//:lib",
 }
 
 
 config_setting_from_tag = {
-    'riscv_isa': 'use_riscv_isa_is_true',
-    'x86_isa': 'use_x86_isa_is_true',
-    'x86_kvm': False,  # TODO(hchsiao): make a config_setting for this
-    'kvm': 'use_kvm_is_true',
-    'mips_isa': 'use_mips_isa_is_true',
-    'power_isa': 'use_power_isa_is_true',
-    'arm_isa': 'use_arm_isa_is_true',
-    'sparc_isa': 'use_sparc_isa_is_true',
-    'protobuf': 'have_protobuf_is_true',
-    'fenv': 'have_fenv_is_true',
-    'png': 'have_png_is_true',
-    'hdf5': 'have_hdf5_is_true',
-    'python': True,
-    'gem5_lib': True,
-    'gem5_trace': True,
-    'gem5_serialize': True,
-    'gem5_simobject': True,
-    'gem5_drain': True,
-    'gem5_events': True,
-    'main': True,
-    'gtest_lib': True,
+    "riscv_isa": "use_riscv_isa_is_true",
+    "x86_isa": "use_x86_isa_is_true",
+    "x86_kvm": False,  # TODO(hchsiao): make a config_setting for this
+    "kvm": "use_kvm_is_true",
+    "mips_isa": "use_mips_isa_is_true",
+    "power_isa": "use_power_isa_is_true",
+    "arm_isa": "use_arm_isa_is_true",
+    "sparc_isa": "use_sparc_isa_is_true",
+    "protobuf": "have_protobuf_is_true",
+    "fenv": "have_fenv_is_true",
+    "png": "have_png_is_true",
+    "hdf5": "have_hdf5_is_true",
+    "python": True,
+    "gem5_lib": True,
+    "gem5_trace": True,
+    "gem5_serialize": True,
+    "gem5_simobject": True,
+    "gem5_drain": True,
+    "gem5_events": True,
+    "main": True,
+    "gtest_lib": True,
 }
 
-all_sim_object_targets = '\n'.join([
-    '"//src/kern:sim_objects",',
-    '"//src/proto:sim_objects",',
-    '"//src/base:sim_objects",',
-    '"//src/python:sim_objects",',
-    '"//src/sst:sim_objects",',
-    '"//src/mem:sim_objects",',
-    '"//src/dev:sim_objects",',
-    '"//src/cpu:sim_objects",',
-    '"//src/sim:sim_objects",',
-    '"//src/arch:sim_objects",',
-    '"//src/learning_gem5:sim_objects",',
-])
+all_sim_object_targets = "\n".join(
+    [
+        '"//src/kern:sim_objects",',
+        '"//src/proto:sim_objects",',
+        '"//src/base:sim_objects",',
+        '"//src/python:sim_objects",',
+        '"//src/sst:sim_objects",',
+        '"//src/mem:sim_objects",',
+        '"//src/dev:sim_objects",',
+        '"//src/cpu:sim_objects",',
+        '"//src/sim:sim_objects",',
+        '"//src/arch:sim_objects",',
+        '"//src/learning_gem5:sim_objects",',
+    ]
+)
 
 hardcoded_contents = {
     # TODO(hchsiao): remove this workaround
-    ('src', 'OBJS_GOES_HERE'): """
+    (
+        "src",
+        "OBJS_GOES_HERE",
+    ): """
 "//src/learning_gem5:lib",
 """,  # end of OBJS_GOES_HERE of src
-    ('src', 'TARGET_GOES_HERE'): """
+    (
+        "src",
+        "TARGET_GOES_HERE",
+    ): """
 cc_binary(
     name = "gem5",
     deps = [
@@ -131,11 +140,15 @@ cc_binary(
     copts = COMMON_COPTS,
     linkopts = COMMON_LINKOPTS,
     visibility = ["//tests/bazel:__pkg__"],
-)""" % all_sim_object_targets,  # end of TARGET_GOES_HERE of src
-    ('src/base', 'OBJS_GOES_HERE'): '":manual_date",',
-    ('src/python', 'OBJS_GOES_HERE'): '":m5_importer_code_pyo",',
+)"""
+    % all_sim_object_targets,  # end of TARGET_GOES_HERE of src
+    ("src/base", "OBJS_GOES_HERE"): '":manual_date",',
+    ("src/python", "OBJS_GOES_HERE"): '":m5_importer_code_pyo",',
     # TODO(hchsiao): use `proto_library` rule instead of system `protoc`
-    ('src/proto', 'TARGET_GOES_HERE'): r"""
+    (
+        "src/proto",
+        "TARGET_GOES_HERE",
+    ): r"""
 cc_library(
     name = "inst_pb",
     srcs = [":inst_proto_cc"],
@@ -235,7 +248,10 @@ genrule(
         "\"$<\"",
     ]),
 )""",  # end of TARGET_GOES_HERE of src/proto
-    ('src/sim', 'TARGET_GOES_HERE'): r"""
+    (
+        "src/sim",
+        "TARGET_GOES_HERE",
+    ): r"""
 genrule(
     name = "gen_tags_cc",
     srcs = [],
@@ -245,7 +261,10 @@ genrule(
         "//build_tools/bazel/hermetic_wrapper:stub_tags_cc",
     ],
 )""",  # end of TARGET_GOES_HERE of src/sim
-    ('src/python', 'TARGET_GOES_HERE'): r"""
+    (
+        "src/python",
+        "TARGET_GOES_HERE",
+    ): r"""
 cc_binary(
 	name = "gem5py",
     srcs = [
@@ -304,8 +323,12 @@ cc_library(
     srcs = ["m5ImporterCode.cc"],
     hdrs = ["m5ImporterCode.hh"],
     include_prefix = "python",
-)""" % all_sim_object_targets,  # end of TARGET_GOES_HERE of src/python
-    ('src/python/m5/objects', 'TARGET_GOES_HERE'): r"""
+)"""
+    % all_sim_object_targets,  # end of TARGET_GOES_HERE of src/python
+    (
+        "src/python/m5/objects",
+        "TARGET_GOES_HERE",
+    ): r"""
 exports_files([
     "__init__.py",
     "SimObject.py",
@@ -320,7 +343,10 @@ cc_library(
     visibility = ["//build_tools/bazel/package_group:sim_object_core"],
 )""",  # end of TARGET_GOES_HERE of src/python/m5/objects
     # TODO(hchsiao): try writing rules to invoke `gem5py` or use real py rules
-    ('src/python/m5', 'TARGET_GOES_HERE'): r"""
+    (
+        "src/python/m5",
+        "TARGET_GOES_HERE",
+    ): r"""
 genrule(
     name = "gen_defines_py",
     srcs = [],

@@ -26,47 +26,53 @@
 
 # TODO(hchsiao): Detect system package availability
 import argparse
+import logging
 import os
 import re
-import logging
+
 
 def convert_config(gem5_home, config_file):
-  config_values = {}
-  with open(config_file, 'r') as f:
-    for line in f.readlines():
-      if match := re.match(r'# ([A-Za-z0-9_]+) is not set', line):
-        config_values[match.group(1)] = None
-      elif match := re.match(r'([A-Za-z0-9_]+)=(.*)', line):
-        config_values[match.group(1)] = match.group(2)
-  # TODO(hchsiao): derive config from the detection result and .config
-  fixed_config = '\n'.join([
-      'build --//src/generated/flags:have_tuntap=True',
-      'build --//src/generated/flags:build_isa=True',
-      'build --//src/generated/flags:use_riscv_isa=True',
-      'build --//build_tools/bazel:python_version=3.11',
-  ] + [f'# {opt}={val}' for opt, val in config_values.items()])
-  bazelrc_path = os.path.join(gem5_home, 'build/bazelrc')
-  if not os.path.isdir(os.path.dirname(bazelrc_path)):
-    os.mkdir(os.path.dirname(bazelrc_path))
-  with open(bazelrc_path, 'w') as f:
-    f.write(fixed_config)
+    config_values = {}
+    with open(config_file) as f:
+        for line in f.readlines():
+            if match := re.match(r"# ([A-Za-z0-9_]+) is not set", line):
+                config_values[match.group(1)] = None
+            elif match := re.match(r"([A-Za-z0-9_]+)=(.*)", line):
+                config_values[match.group(1)] = match.group(2)
+    # TODO(hchsiao): derive config from the detection result and .config
+    fixed_config = "\n".join(
+        [
+            "build --//src/generated/flags:have_tuntap=True",
+            "build --//src/generated/flags:build_isa=True",
+            "build --//src/generated/flags:use_riscv_isa=True",
+            "build --//build_tools/bazel:python_version=3.11",
+        ]
+        + [f"# {opt}={val}" for opt, val in config_values.items()]
+    )
+    bazelrc_path = os.path.join(gem5_home, "build/bazelrc")
+    if not os.path.isdir(os.path.dirname(bazelrc_path)):
+        os.mkdir(os.path.dirname(bazelrc_path))
+    with open(bazelrc_path, "w") as f:
+        f.write(fixed_config)
+
 
 def main():
-  logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
-  assert 'BUILD_WORKSPACE_DIRECTORY' in os.environ, 'invoke with `bazel run`'
-  gem5_home = os.environ['BUILD_WORKSPACE_DIRECTORY']
+    assert "BUILD_WORKSPACE_DIRECTORY" in os.environ, "invoke with `bazel run`"
+    gem5_home = os.environ["BUILD_WORKSPACE_DIRECTORY"]
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument('config_file')
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config_file")
+    args = parser.parse_args()
 
-  if not os.path.isfile(args.config_file):
-    raise RuntimeError(f'Cannot open {args.config_file}')
+    if not os.path.isfile(args.config_file):
+        raise RuntimeError(f"Cannot open {args.config_file}")
 
-  logging.info(f'Writing config to `build/bazelrc`')
-  convert_config(gem5_home, args.config_file)
-  logging.info('Done')
+    logging.info(f"Writing config to `build/bazelrc`")
+    convert_config(gem5_home, args.config_file)
+    logging.info("Done")
 
-if __name__ == '__main__':
-  main()
+
+if __name__ == "__main__":
+    main()
