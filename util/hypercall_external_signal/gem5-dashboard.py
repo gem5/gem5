@@ -9,7 +9,27 @@ from orchestrator_request import (
     send_and_receive_hypercall,
 )
 
-# from transmitter import send_signal
+
+class ProgressBar:
+    bar_pos = 0
+
+    def __init__(self, pid):
+        # get static stats for the progress bar
+        init_stats = json.loads(
+            send_and_receive_hypercall(pid, "get_progress_bar_init_stats")
+        )
+        self.total_insts = init_stats["total_insts"]
+        self.sim_id = init_stats["sim_id"]
+        self.workload = init_stats["workload"]
+
+        self.pid = pid
+        self.prev_insts = 0
+        self.prog_bar = tqdm.tqdm(
+            total=int(self.total_insts),
+            desc=f" {pid} | {self.sim_id} | {self.workload}",
+            position=self.bar_pos,
+        )
+        bar_pos += 1
 
 
 def main():
@@ -24,69 +44,58 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.pid:
-        gem5_pids = find_gem5_pids()
-    else:
-        gem5_pids = [int(args.pid)]
-
-    # for pid in gem5_simulations:
-    print(f"gem5 pids: {gem5_pids}")
-    init_stats = {
-        pid: json.loads(
-            send_and_receive_hypercall(pid, "get_progress_bar_init_stats")
-        )
-        for pid in gem5_pids
-    }
-    # init_stats = json.loads(send_and_receive_hypercall(args.pid, "get_progress_bar_init_stats"))
-    # total_insts = int(init_stats["total_insts"])
-    print(f"init_stats: {init_stats}")
-
     # clear screen, print dashboard
-
     print_dashboard_label()
 
-    prev_insts = {pid: 0 for pid in gem5_pids}
-    bar_pos = 0
     progress_bar_dict = {}
-    for pid, stats in init_stats.items():
-        # total_insts = int(stats["total_insts"])
-        progress_bar_dict[pid] = tqdm.tqdm(
-            total=int(stats["total_insts"]),
-            desc=f" {pid} | {stats["sim_id"]} | {stats["workload"]}",
-            position=bar_pos,
-        )
-        bar_pos += 1
-        # print(f"bar pos: {bar_pos}")
-        # while curr_status := send_and_receive_hypercall(args.pid, "status"):
-    while (
-        init_stats
-    ):  # continue updating progress bars until all pids have been popped from init_stats
+
+    if args.pid:
+        gem5_pids = [int(args.pid)]
+    else:
+        gem5_pids = find_gem5_pids()
+        # print(f"gem5_pids: {gem5_pids}")
+    for pid in gem5_pids:
+        if pid not in progress_bar_dict.keys():
+            # print(f"Adding progress bar for pid {pid}")
+            progress_bar_dict[pid] = ProgressBar(pid)
+    while True:
+        # If new gem5 processes are launched while the dashboard is running,
+        # add them. Only do this if --pid is not passed, as we assume the user
+        # only wants to monitor a specific PID in that case.
+        # For now, this code is commented out because it doesn't work
+        # if not args.pid:
+        #     gem5_pids = find_gem5_pids()
+        #     # print(f"gem5_pids: {gem5_pids}")
+        # for pid in gem5_pids:
+        #     if pid not in progress_bar_dict.keys():
+        #         # print(f"Adding progress bar for pid {pid}")
+        #         progress_bar_dict[pid] = ProgressBar(pid, bar_pos)
+        #         bar_pos += 1
+
         pids_to_remove = []
-        for pid, stats in init_stats.items():
-            # while curr_status := send_and_receive_hypercall(pid, "get_progress_bar_inst_count"):
+        for pid, bar_obj in progress_bar_dict.items():
             curr_status = send_and_receive_hypercall(
                 pid, "get_progress_bar_inst_count"
             )
             if curr_status == "ended":
-                # gem5_pids.remove(pid)
-                pids_to_remove.append(pid)
-                # progress_bar_dict[pid].close()
-                # continue
+                pids_to_remove.append(
+                    pid
+                )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
                 break
             curr_insts = int(json.loads(curr_status))
-            progress_bar_dict[pid].update(curr_insts - prev_insts[pid])
-            prev_insts[pid] = curr_insts
-            time.sleep(0.5)
+            bar_obj.prog_bar.update(curr_insts - bar_obj.prev_insts)
+            # print(f"updating progress bar for pid {pid}")
+            bar_obj.prev_insts = curr_insts
 
         for pid in pids_to_remove:
-            progress_bar_dict[pid].set_description(
-                f" {pid} (exited) | {stats["sim_id"]} | {stats["workload"]}"
+            bar_obj.prog_bar.set_description(
+                f" {pid} (exited) | {bar_obj.sim_id} | {bar_obj.workload}"
             )
-            init_stats.pop(pid)
-        # if pids_to_remove:
-        #     print_dashboard_label()
-    # for bar in progress_bar_dict.values():
-    #     bar.close()
+            progress_bar_dict.pop(pid)
+
+        if not progress_bar_dict:
+            break
+        time.sleep(0.1)
 
 
 def print_dashboard_label() -> None:
