@@ -282,7 +282,7 @@ RubyTester::checkForDeadlock()
 void
 RubyTester::updateProgress(int index, Addr address, Cycles current_time){
     m_last_progress_vector[index].emplace(address, current_time);
-    DPRINTF(RubyTest, "Update progress: index: %d
+    DPRINTF(RubyTest, "Update progress: index: %d\\
         address: %#x current_time: %d\n",
         index, address, current_time);
 }
