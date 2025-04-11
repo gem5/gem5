@@ -58,21 +58,25 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
 from gem5.components.boards.abstract_system_board import AbstractSystemBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+    PrivateL1PrivateL2WalkCacheHierarchy,
+)
 from gem5.components.memory import SingleChannelDDR4_2400
+from gem5.components.processors.abstract_processor import AbstractProcessor
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import AbstractResource
 from gem5.utils.override import overrides
 from gem5.utils.requires import requires
-from gem5.components.processors.abstract_processor import AbstractProcessor
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
-    PrivateL1PrivateL2WalkCacheHierarchy,
-)
-from gem5.components.processors.cpu_types import CPUTypes
-from .riscvunleashed_processor import U54Processor
+
 from .riscvunleashed_cache import RISCVUnleashedCacheHierarchy
+from .riscvunleashed_processor import U54Processor
+
+
 class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V.
@@ -82,7 +86,7 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
     This board assumes that you will be booting Linux. The boards caches,
 
     memory hierarchy has been validated against the Sifive HiFive Unleashed
-    
+
     Board for SPEC 2017 benchmark suite
 
     **Limitations**
@@ -92,8 +96,8 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
     def __init__(
         self,
     ) -> None:
-        clk_freq="1GHz"
-        cache_hierarchy = RISCVUnleashedCacheHierarchy(l2_size="2MiB")  
+        clk_freq = "1GHz"
+        cache_hierarchy = RISCVUnleashedCacheHierarchy(l2_size="2MiB")
         processor = U54Processor()
         memory = SingleChannelDDR4_2400("8GB")
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
@@ -149,8 +153,9 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
             self._on_chip_devices = [self.platform.clint, self.platform.plic]
             self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
         else:
-                    # SE mode board setup
-                    pass
+            # SE mode board setup
+            pass
+
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus."""
         # Add PCI
@@ -232,9 +237,11 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
                 "Cannot execute `get_io_bus()`: Board does not have an I/O "
                 "bus to return. Use `has_io_bus()` to check this."
             )
+
     @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
         return self.is_fullsystem()
+
     @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         if self.has_coherent_io():
@@ -245,6 +252,7 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
                 "not have any I/O ports to return. Use `has_coherent_io()` to "
                 "check this."
             )
+
     @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
         memory = self.get_memory()
@@ -532,6 +540,7 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
                 self.workload.kernel_addr = 0x0
                 self.workload.entry_point = 0x80000000
         super()._pre_instantiate(full_system=full_system)
+
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):
         image = CowDiskImage(

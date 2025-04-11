@@ -106,12 +106,12 @@ class U54CPU(RiscvMinorCPU):
     """
     The U54 core is a 64-bit RISCV core capable of
     booting linux. The core has no prefetchers and comes
-    with Multiperspective branch predictor model that 
+    with Multiperspective branch predictor model that
     has shown good results with respect to the hardware.
     Rest assured the parameters match the post-validation, application
-    of "component-level" calibration methodology. 
-    
-    
+    of "component-level" calibration methodology.
+
+
     """
 
     threadPolicy = "RoundRobin"
@@ -161,7 +161,7 @@ class U54CPU(RiscvMinorCPU):
 
 class U54Core(BaseCPUCore):
     """
- 
+
 
     .. note::
 

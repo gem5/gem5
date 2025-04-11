@@ -101,11 +101,11 @@ class RocketBP(GshareBP):
 
 class RocketCPU(RiscvMinorCPU):
     """
-        The Rocket core is a 64-bit RISCV core capable of
-        booting linux. The core has no prefetchers and comes with Gshare
-        branch predictor. One can configure some other branch predictor.
-        Rest assured the parameters match the post-validation, application
-        of "component-level" calibration methodology.   
+    The Rocket core is a 64-bit RISCV core capable of
+    booting linux. The core has no prefetchers and comes with Gshare
+    branch predictor. One can configure some other branch predictor.
+    Rest assured the parameters match the post-validation, application
+    of "component-level" calibration methodology.
     """
 
     threadPolicy = "RoundRobin"
@@ -154,7 +154,7 @@ class RocketCPU(RiscvMinorCPU):
 
 class RocketCore(BaseCPUCore):
     """
-   
+
     .. note::
 
         The GshareBP deviates from the actual GshareBP.

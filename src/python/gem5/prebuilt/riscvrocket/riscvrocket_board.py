@@ -59,21 +59,25 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
 from gem5.components.boards.abstract_system_board import AbstractSystemBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
+from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
+    PrivateL1CacheHierarchy,
+)
 from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.abstract_processor import AbstractProcessor
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import AbstractResource
 from gem5.utils.override import overrides
 from gem5.utils.requires import requires
-from gem5.components.processors.abstract_processor import AbstractProcessor
-from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
-    PrivateL1CacheHierarchy,
-)
-from gem5.components.processors.cpu_types import CPUTypes
-from .riscvrocket_processor import RocketProcessor
+
 from .riscvrocket_cache import RISCVRocketCacheHierarchy
+from .riscvrocket_processor import RocketProcessor
+
+
 class RiscvRocketBoard(AbstractSystemBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V.
@@ -85,7 +89,7 @@ class RiscvRocketBoard(AbstractSystemBoard, KernelDiskWorkload):
     The performance of this board has been validated against Rocket core (CHISEL)
     emulated on VC707 FPGA. CHISEL provides convenient waty of configuring the
     entire system (except the MIG for DDR3, AXI Interconnects, which are AMD/XILINX
-    IPs). 
+    IPs).
 
     **Limitations**
     * Only works with classic caches
@@ -94,8 +98,10 @@ class RiscvRocketBoard(AbstractSystemBoard, KernelDiskWorkload):
     def __init__(
         self,
     ) -> None:
-        clk_freq="100MHz"
-        cache_hierarchy = RISCVRocketCacheHierarchy(l1d_size="16KiB", l1i_size="16KiB",assoc=4)  
+        clk_freq = "100MHz"
+        cache_hierarchy = RISCVRocketCacheHierarchy(
+            l1d_size="16KiB", l1i_size="16KiB", assoc=4
+        )
         processor = RocketProcessor()
         memory = SingleChannelDDR3_1600()
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
@@ -241,6 +247,7 @@ class RiscvRocketBoard(AbstractSystemBoard, KernelDiskWorkload):
     @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
         return self.is_fullsystem()
+
     @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         if self.has_coherent_io():
@@ -251,6 +258,7 @@ class RiscvRocketBoard(AbstractSystemBoard, KernelDiskWorkload):
                 "not have any I/O ports to return. Use `has_coherent_io()` to "
                 "check this."
             )
+
     @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
         memory = self.get_memory()

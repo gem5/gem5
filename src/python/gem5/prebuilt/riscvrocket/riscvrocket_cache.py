@@ -51,10 +51,11 @@ from gem5.components.cachehierarchies.classic.caches.mmu_cache import MMUCache
 from gem5.isas import ISA
 from gem5.utils.override import *
 
-class RISCVRocketCacheHierarchy (AbstractClassicCacheHierarchy):
+
+class RISCVRocketCacheHierarchy(AbstractClassicCacheHierarchy):
     """
     A cache setup where each core has a private L1 data and instruction Cache.
-    There is no L2 cache, and the size of the caches has been matched to 
+    There is no L2 cache, and the size of the caches has been matched to
     the caches in the emulated system.
     """
 
@@ -66,7 +67,7 @@ class RISCVRocketCacheHierarchy (AbstractClassicCacheHierarchy):
         :returns: The default memory bus for the PrivateL1PrivateL2
                   CacheHierarchy.
         """
-        membus = SystemXBar(width=64,frontend_latency=10)
+        membus = SystemXBar(width=64, frontend_latency=10)
         membus.badaddr_responder = BadAddr()
         membus.default = membus.badaddr_responder.pio
         return membus
@@ -93,6 +94,7 @@ class RISCVRocketCacheHierarchy (AbstractClassicCacheHierarchy):
         self._l1d_size = l1d_size
         self._l1i_size = l1i_size
         self._assoc = assoc
+
     @overrides(AbstractClassicCacheHierarchy)
     def get_mem_side_port(self) -> Port:
         return self.membus.mem_side_ports
@@ -110,22 +112,22 @@ class RISCVRocketCacheHierarchy (AbstractClassicCacheHierarchy):
             self.membus.mem_side_ports = port
 
         self.l1icaches = [
-            L1ICache(size=self._l1i_size,assoc=self._assoc)
+            L1ICache(size=self._l1i_size, assoc=self._assoc)
             for i in range(board.get_processor().get_num_cores())
         ]
 
         self.l1dcaches = [
-            L1DCache(size=self._l1d_size,assoc=self._assoc)
+            L1DCache(size=self._l1d_size, assoc=self._assoc)
             for i in range(board.get_processor().get_num_cores())
         ]
         # ITLB Page walk caches
         self.iptw_caches = [
-            MMUCache(size="1KiB",assoc=1)
+            MMUCache(size="1KiB", assoc=1)
             for _ in range(board.get_processor().get_num_cores())
         ]
         # DTLB Page walk caches
         self.dptw_caches = [
-            MMUCache(size="1KiB",assoc=1)
+            MMUCache(size="1KiB", assoc=1)
             for _ in range(board.get_processor().get_num_cores())
         ]
 

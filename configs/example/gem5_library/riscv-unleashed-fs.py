@@ -41,8 +41,13 @@ scons build/RISCV/gem5.opt
 import argparse
 
 from gem5.isas import ISA
-from gem5.prebuilt.riscvunleashed.riscvunleashed_board import RiscvUnleashedBoard
-from gem5.resources.resource import obtain_resource, DiskImageResource
+from gem5.prebuilt.riscvunleashed.riscvunleashed_board import (
+    RiscvUnleashedBoard,
+)
+from gem5.resources.resource import (
+    DiskImageResource,
+    obtain_resource,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 

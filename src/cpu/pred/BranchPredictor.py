@@ -1091,11 +1091,9 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
 
 
 class GshareBP(BranchPredictor):
-    type = 'GshareBP'
-    cxx_class = 'gem5::branch_prediction::GshareBP'
+    type = "GshareBP"
+    cxx_class = "gem5::branch_prediction::GshareBP"
     cxx_header = "cpu/pred/gshare.hh"
 
     globalPredictorSize = Param.Unsigned(512, "Size of global predictor")
     globalCtrBits = Param.Unsigned(2, "Bits per counter")
-
-

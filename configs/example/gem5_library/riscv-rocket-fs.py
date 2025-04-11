@@ -39,16 +39,19 @@ Characteristics
   password: `root`)
 """
 
-from gem5.prebuilt.riscvrocket.riscvrocket_board import RiscvRocketBoard
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource, DiskImageResource
+from gem5.prebuilt.riscvrocket.riscvrocket_board import RiscvRocketBoard
+from gem5.resources.resource import (
+    DiskImageResource,
+    obtain_resource,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
 
-#Set up the board
+# Set up the board
 board = RiscvRocketBoard()
 
 # Set the Full System workload.

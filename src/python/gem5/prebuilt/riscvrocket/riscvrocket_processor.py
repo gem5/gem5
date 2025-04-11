@@ -38,10 +38,10 @@ from .riscvrocket_core import RocketCore
 
 class RocketProcessor(BaseCPUProcessor):
     """
-    A RocketProcessor contains one core of RocketCore. 
-    This can be changes easily by setting num_cores 
+    A RocketProcessor contains one core of RocketCore.
+    This can be changes easily by setting num_cores
     and core_ids in the code below. We provide a single
-    core system, as it was validated against a single 
+    core system, as it was validated against a single
     rocket core emulated on the FPGA
     """
 
