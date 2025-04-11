@@ -719,6 +719,17 @@ class TableWalker : public ClockedObject
             return bits(data, 7, 6);
         }
 
+        /** Stage 1 Indirect permissions  */
+        uint8_t
+        piindex() const
+        {
+            assert(type() == Block || type() == Page);
+            return (bits(data, 54) << 3) +
+                (bits(data, 53) << 2) +
+                (bits(data, 51) << 1) +
+                bits(data, 6);
+        }
+
         /** Read/write access protection flag */
         bool
         rw() const

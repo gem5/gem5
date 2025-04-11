@@ -47,7 +47,7 @@ namespace gem5
 
 struct PciVirtIOParams;
 
-class PciVirtIO : public PciDevice
+class PciVirtIO : public PciEndpoint
 {
   public:
     typedef PciVirtIOParams Params;

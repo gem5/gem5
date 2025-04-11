@@ -160,5 +160,6 @@ class RiscvISA(BaseISA):
         isa_string += "_Zba"  # Address Generation
         isa_string += "_Zbb"  # Basic Bit Manipulation
         isa_string += "_Zbs"  # Single-bit Instructions
+        isa_string += "_svnapot"
 
         return isa_string

@@ -33,7 +33,7 @@
 
 #include "cpu/probes/pc_count_tracker_manager.hh"
 #include "params/PcCountTracker.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {

@@ -168,7 +168,7 @@ code(
 # the normal Param mechanism; we slip them in here (needed
 # predecls now, actual declarations below)
 if sim_object == SimObject:
-    code("""#include <string>""")
+    code("""#include <string>""", add_once=True)
 
 cxx_class = CxxClass(
     sim_object._value_dict["cxx_class"],
@@ -186,12 +186,12 @@ for port in ports.values():
 code()
 
 if sim_object._base:
-    code('#include "params/${{sim_object._base.type}}.hh"')
+    code('#include "params/${{sim_object._base.type}}.hh"', add_once=True)
     code()
 
 for ptype in ptypes:
     if issubclass(ptype, Enum):
-        code('#include "enums/${{ptype.__name__}}.hh"')
+        code('#include "enums/${{ptype.__name__}}.hh"', add_once=True)
         code()
 
 code("namespace gem5")

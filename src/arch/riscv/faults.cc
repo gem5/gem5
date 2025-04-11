@@ -150,7 +150,11 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
            _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
         }
         tc->setMiscReg(cause, _cause);
-        tc->setMiscReg(epc, tc->pcState().instAddr());
+        if (pc_state.zcmtSecondFetch()) {
+            tc->setMiscReg(epc, pc_state.zcmtPc());
+        } else {
+            tc->setMiscReg(epc, pc_state.instAddr());
+        }
         tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
         if (is_rnmi) {
@@ -170,6 +174,10 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
         // Set PC to fault handler address
         Addr addr = isa->getFaultHandlerAddr(tvec, _code, isInterrupt());
+        if (pc_state.zcmtSecondFetch()) {
+            pc_state.zcmtSecondFetch(false);
+            pc_state.zcmtPc(0);
+        }
         pc_state.set(isa->rvSext(addr));
         tc->pcState(pc_state);
     } else {

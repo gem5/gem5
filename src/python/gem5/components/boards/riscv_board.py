@@ -541,6 +541,17 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             else:
                 self.workload.kernel_addr = 0x0
                 self.workload.entry_point = 0x80000000
+
+            # Set up the device tree. We need to wait until pre-instantiate to
+            # do this since the workload could change until this point.
+            # Default DTB address if bbl is built with --with-dts option
+            self.workload.dtb_addr = 0x87E00000
+
+            self.generate_device_tree(m5.options.outdir)
+            self.workload.dtb_filename = os.path.join(
+                m5.options.outdir, "device.dtb"
+            )
+
         super()._pre_instantiate(full_system=full_system)
 
     @overrides(KernelDiskWorkload)
@@ -556,14 +567,6 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         # workload are set, we can generate the device tree file.
         self._setup_io_devices()
         self._setup_pma()
-
-        # Default DTB address if bbl is built with --with-dts option
-        self.workload.dtb_addr = 0x87E00000
-
-        self.generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:

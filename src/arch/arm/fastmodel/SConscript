@@ -134,11 +134,11 @@ fm_static_libs = (
     'IrisSupport',
 )
 for lib in fm_static_libs:
-    SourceLib(staticify(env, lib), tags='arm fastmodel')
+    SourceLib(staticify(env, lib), tags=['arm fastmodel'])
 
-SourceLib('atomic', tags='arm fastmodel')
-SourceLib('dl', tags='arm fastmodel')
-SourceLib('rt', tags='arm fastmodel')
+SourceLib('atomic', tags=['arm fastmodel'])
+SourceLib('dl', tags=['arm fastmodel'])
+SourceLib('rt', tags=['arm fastmodel'])
 
 class ProjectFileParser(Grammar):
     def __init__(self):
@@ -426,11 +426,14 @@ class ArmFastModelComponent(object):
 
 Export('ArmFastModelComponent')
 
-PySource('m5', 'arm_fast_model.py', tags='arm fastmodel')
-Source('fastmodel.cc', tags='arm fastmodel')
+PySource('m5', 'arm_fast_model.py', tags=['arm fastmodel'])
+Source('fastmodel.cc', tags=['arm fastmodel', 'python'])
 
-SimObject('FastModel.py', sim_objects=[
-    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'], tags='arm fastmodel')
-Source('amba_to_tlm_bridge.cc', tags='arm fastmodel')
-Source('amba_from_tlm_bridge.cc', tags='arm fastmodel')
-Source('remote_gdb.cc', tags='arm fastmodel')
+SimObject(
+    'FastModel.py',
+    sim_objects=['AmbaToTlmBridge64', 'AmbaFromTlmBridge64'],
+    tags=['arm fastmodel']
+)
+Source('amba_to_tlm_bridge.cc', tags=['arm fastmodel'])
+Source('amba_from_tlm_bridge.cc', tags=['arm fastmodel'])
+Source('remote_gdb.cc', tags=['arm fastmodel'])

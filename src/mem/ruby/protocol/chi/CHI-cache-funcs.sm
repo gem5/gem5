@@ -1192,6 +1192,7 @@ bool isReadReqType(CHIRequestType type) {
       type == CHIRequestType:ReadShared ||
       type == CHIRequestType:ReadNotSharedDirty ||
       type == CHIRequestType:MakeReadUnique ||
+      type == CHIRequestType:ReadNoSnp ||
       type == CHIRequestType:ReadOnce) {
     return true;
   }
@@ -1248,6 +1249,8 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     }
   } else if (type == CHIRequestType:CleanUnique) {
     return Event:CleanUnique;
+  } else if (type == CHIRequestType:ReadNoSnp) {
+    return Event:ReadNoSnp;
   } else if (type == CHIRequestType:ReadOnce) {
     return Event:ReadOnce;
   } else if (type == CHIRequestType:MakeReadUnique) {

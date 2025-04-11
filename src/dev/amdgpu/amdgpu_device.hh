@@ -60,7 +60,7 @@ class SDMAEngine;
  * sent to the corresponding IP block. BAR5 is the MMIO interface which writes
  * data values to registers controlling the IP blocks.
  */
-class AMDGPUDevice : public PciDevice
+class AMDGPUDevice : public PciEndpoint
 {
   private:
     /**
@@ -164,7 +164,7 @@ class AMDGPUDevice : public PciDevice
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
     /**
-     * Methods inherited from PciDevice
+     * Methods inherited from PciEndpoint
      */
     void intrPost();
 

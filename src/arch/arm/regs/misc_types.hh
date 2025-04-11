@@ -388,6 +388,7 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion64(SCR)
+        Bitfield<45> piEn;
         Bitfield<44> sctlr2En;
         Bitfield<43> tcr2En;
         Bitfield<40> trndr;
@@ -623,6 +624,7 @@ namespace ArmISA
         Bitfield<29> tbid; // EL2
         Bitfield<31, 30> tg1; // EL1
         Bitfield<34, 32> ips; // EL1
+        Bitfield<35> pie; // EL3
         Bitfield<36> as; // EL1
         Bitfield<37> tbi0; // EL1
         Bitfield<38> tbi1; // EL1
@@ -633,6 +635,10 @@ namespace ArmISA
         Bitfield<51> tbid0; // EL1
         Bitfield<52> tbid1; // EL1
     EndBitUnion(TCR)
+
+    BitUnion64(TCR2)
+        Bitfield<1> pie;    // EL1/EL2
+    EndBitUnion(TCR2)
 
     BitUnion32(HTCR)
         Bitfield<2, 0> t0sz;
@@ -757,6 +763,12 @@ namespace ArmISA
 
    BitUnion64(ESR)
         Bitfield<55, 32> iss2;
+
+        // Data Abort ISS2
+        SubBitUnion(data_abort_iss2, 55, 32)
+            Bitfield<5> dirtyBit;
+        EndSubBitUnion(data_abort_iss2)
+
         Bitfield<31, 26> ec;
         Bitfield<25> il;
         Bitfield<24, 0> iss;
@@ -1022,6 +1034,8 @@ namespace ArmISA
     // HFGRTR and HFGWTR. Some fields are
     // for HFGRTR only (RO registers)
     BitUnion64(HFGTR)
+        Bitfield<58> nPirEL1;
+        Bitfield<57> nPire0EL1;
         Bitfield<50> nAccdataEL1;
         Bitfield<49> erxaddrEL1;
         Bitfield<48> erxpfgcdnEL1;

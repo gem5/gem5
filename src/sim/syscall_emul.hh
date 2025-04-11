@@ -807,7 +807,7 @@ ioctlFunc(SyscallDesc *desc, ThreadContext *tc,
      * For lack of a better return code, return ENOTTY. Ideally, we should
      * return something better here, but at least we issue the warning.
      */
-    warn("Unsupported ioctl call (return ENOTTY): ioctl(%d, 0x%x, ...) @ \n",
+    warn("Unsupported ioctl call (return ENOTTY): ioctl(%d, 0x%x, ...) @ %s\n",
          tgt_fd, req, tc->pcState());
     return -ENOTTY;
 }
@@ -2408,6 +2408,7 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
     pp->cwd.assign(p->tgtCwd);
     pp->system = p->system;
     pp->release = p->release;
+    pp->maxStackSize = p->memState->getMaxStackSize();
     /**
      * Prevent process object creation with identical PIDs (which will trip
      * a fatal check in Process constructor). The execve call is supposed to
@@ -3222,7 +3223,7 @@ getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
               VPtr<> buf_ptr, typename OS::size_t count,
               unsigned int flags)
 {
-    static Random::RandomPtr se_prng = Random::genRandom();
+    static Random::RandomPtr se_prng(Random::genRandom());
     SETranslatingPortProxy proxy(tc);
 
     TypedBufferArg<uint8_t> buf(buf_ptr, count);

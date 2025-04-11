@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates a system with Ruby caches and executes 'threads', a
+"""This file creates a system with Ruby caches and executes 'threads', a
 simple multi-threaded application with false sharing to stress the Ruby
 protocol.
 

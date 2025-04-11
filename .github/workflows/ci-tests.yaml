@@ -37,7 +37,7 @@ jobs:
         steps:
             - name: Get the current date
               id: date
-              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     unittests-all-opt:
         runs-on: [self-hosted, linux, x64]
@@ -122,7 +122,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Cache build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
               with:
                   path: build/ALL
@@ -244,10 +244,9 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            # Obtain the cache if available. If not available this will upload
-            # this job's instance of the cache.
+            # Obtain the cache if available.
             - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}

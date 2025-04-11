@@ -216,6 +216,13 @@ def addRunFSOptions(parser):
         help="cache replacement policy" "policy for sqc",
     )
 
+    parser.add_argument(
+        "--gpu-progress-interval",
+        type=int,
+        default=0,
+        help="Frequency in exec cycles of GPU progress prints",
+    )
+
 
 def runGpuFSSystem(args):
     """

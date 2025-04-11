@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+from importlib import import_module
 
 import m5
 from m5.defines import buildEnv
@@ -125,9 +126,8 @@ def define_options(parser):
         help="Recycle latency for ruby controller input buffers",
     )
 
-    protocol = buildEnv["PROTOCOL"]
-    exec(f"from . import {protocol}")
-    eval(f"{protocol}.define_options(parser)")
+    import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
+
     Network.define_options(parser)
 
 
@@ -246,16 +246,17 @@ def create_system(
     if cpus is None:
         cpus = system.cpu
 
-    protocol = buildEnv["PROTOCOL"]
-    exec(f"from . import {protocol}")
     try:
-        (cpu_sequencers, dir_cntrls, topology) = eval(
-            "%s.create_system(options, full_system, system, dma_ports,\
-                                    bootmem, ruby, cpus)"
-            % protocol
+        (cpu_sequencers, dir_cntrls, topology) = import_module(
+            f"ruby.{buildEnv['PROTOCOL']}"
+        ).create_system(
+            options, full_system, system, dma_ports, bootmem, ruby, cpus
         )
     except:
-        print(f"Error: could not create sytem for ruby protocol {protocol}")
+        print(
+            "Error: could not create sytem for ruby protocol "
+            f"{buildEnv['PROTOCOL']}"
+        )
         raise
 
     # Create the network topology

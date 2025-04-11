@@ -33,7 +33,7 @@ from m5.objects.Device import (
     DmaVirtDevice,
 )
 from m5.objects.PciDevice import (
-    PciDevice,
+    PciEndpoint,
     PciLegacyIoBar,
     PciMemBar,
     PciMemUpperBar,
@@ -49,7 +49,7 @@ from m5.proxy import *
 # This class requires a ROM binary and an MMIO trace to initialize the
 # device registers and memory. It is intended only to be used in full-system
 # simulation under Linux where the amdgpu driver is modprobed.
-class AMDGPUDevice(PciDevice):
+class AMDGPUDevice(PciEndpoint):
     type = "AMDGPUDevice"
     cxx_header = "dev/amdgpu/amdgpu_device.hh"
     cxx_class = "gem5::AMDGPUDevice"

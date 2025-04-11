@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1123,6 +1123,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 9, 14, 1), MISCREG_PMINTENSET_EL1 },
     { MiscRegNum64(3, 0, 9, 14, 2), MISCREG_PMINTENCLR_EL1 },
     { MiscRegNum64(3, 0, 10, 2, 0), MISCREG_MAIR_EL1 },
+    { MiscRegNum64(3, 0, 10, 2, 2), MISCREG_PIRE0_EL1 },
+    { MiscRegNum64(3, 0, 10, 2, 3), MISCREG_PIR_EL1 },
     { MiscRegNum64(3, 0, 10, 3, 0), MISCREG_AMAIR_EL1 },
     { MiscRegNum64(3, 0, 10, 4, 4), MISCREG_MPAMIDR_EL1 },
     { MiscRegNum64(3, 0, 10, 5, 0), MISCREG_MPAM1_EL1 },
@@ -1276,6 +1278,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 6, 0, 0), MISCREG_FAR_EL2 },
     { MiscRegNum64(3, 4, 6, 0, 4), MISCREG_HPFAR_EL2 },
     { MiscRegNum64(3, 4, 10, 2, 0), MISCREG_MAIR_EL2 },
+    { MiscRegNum64(3, 4, 10, 2, 2), MISCREG_PIRE0_EL2 },
+    { MiscRegNum64(3, 4, 10, 2, 3), MISCREG_PIR_EL2 },
     { MiscRegNum64(3, 4, 10, 3, 0), MISCREG_AMAIR_EL2 },
     { MiscRegNum64(3, 4, 10, 4, 0), MISCREG_MPAMHCR_EL2 },
     { MiscRegNum64(3, 4, 10, 4, 1), MISCREG_MPAMVPMV_EL2 },
@@ -1354,6 +1358,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 5, 5, 2, 0), MISCREG_ESR_EL12 },
     { MiscRegNum64(3, 5, 6, 0, 0), MISCREG_FAR_EL12 },
     { MiscRegNum64(3, 5, 10, 2, 0), MISCREG_MAIR_EL12 },
+    { MiscRegNum64(3, 5, 10, 2, 2), MISCREG_PIRE0_EL12 },
+    { MiscRegNum64(3, 5, 10, 2, 3), MISCREG_PIR_EL12 },
     { MiscRegNum64(3, 5, 10, 3, 0), MISCREG_AMAIR_EL12 },
     { MiscRegNum64(3, 5, 10, 5, 0), MISCREG_MPAM1_EL12 },
     { MiscRegNum64(3, 5, 12, 0, 0), MISCREG_VBAR_EL12 },
@@ -1384,6 +1390,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 6, 5, 2, 0), MISCREG_ESR_EL3 },
     { MiscRegNum64(3, 6, 6, 0, 0), MISCREG_FAR_EL3 },
     { MiscRegNum64(3, 6, 10, 2, 0), MISCREG_MAIR_EL3 },
+    { MiscRegNum64(3, 6, 10, 2, 3), MISCREG_PIR_EL3 },
     { MiscRegNum64(3, 6, 10, 3, 0), MISCREG_AMAIR_EL3 },
     { MiscRegNum64(3, 6, 10, 5, 0), MISCREG_MPAM3_EL3 },
     { MiscRegNum64(3, 6, 12, 0, 0), MISCREG_VBAR_EL3 },
@@ -1447,12 +1454,12 @@ faultFgtEL0(const MiscRegLUTEntry &entry,
  * @tparam read: is this a read access to the register?
  * @tparam r_bitfield: register (HFGTR) bitfield
  */
-template<bool read, auto r_bitfield>
+template<bool read, auto r_bitfield, RegVal r_match=0b1>
 Fault
 faultFgtEL1(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
-    if (fgtEnabled(tc) && fgtRegister<read>(tc).*r_bitfield) {
+    if (fgtEnabled(tc) && (fgtRegister<read>(tc).*r_bitfield == r_match)) {
         return inst.generateTrap(EL2);
     } else {
         return NoFault;
@@ -1569,7 +1576,7 @@ faultHcrFgtEL0(const MiscRegLUTEntry &entry,
  * @tparam g_bitfield: group (HCR) bitfield
  * @tparam r_bitfield: register (HFGTR) bitfield
  */
-template<bool read, auto g_bitfield, auto r_bitfield>
+template<bool read, auto g_bitfield, auto r_bitfield, RegVal r_match=0b1>
 Fault
 faultHcrFgtEL1(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
@@ -1578,7 +1585,7 @@ faultHcrFgtEL1(const MiscRegLUTEntry &entry,
 
     if (EL2Enabled(tc) && hcr.*g_bitfield) {
         return inst.generateTrap(EL2);
-    } else if (auto fault = faultFgtEL1<read, r_bitfield>(entry, tc, inst);
+    } else if (auto fault = faultFgtEL1<read, r_bitfield, r_match>(entry, tc, inst);
                fault != NoFault) {
         return fault;
     } else {
@@ -2877,6 +2884,42 @@ faultVheEL2(const MiscRegLUTEntry &entry,
 {
     if (ELIsInHost(tc, EL2)) {
         return faultAtEL2(entry, tc, inst);
+    } else {
+        return inst.undefined();
+    }
+}
+
+template <bool read, auto g_bitfield, auto r_bitifield>
+Fault
+faultPieEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_S1PIE)) {
+        SCR scr_el3 = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (auto fault = faultHcrFgtEL1<read, g_bitfield, r_bitifield, 0>(entry, tc, inst);
+            fault != NoFault) {
+            return fault;
+        } else if (ArmSystem::haveEL(tc, EL3) && !scr_el3.piEn) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultPieEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_S1PIE)) {
+        SCR scr_el3 = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && !scr_el3.piEn) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
     } else {
         return inst.undefined();
     }
@@ -4856,6 +4899,8 @@ ISA::initializeMiscRegMetadata()
           pfr0_el1.el2 = release->has(ArmExtension::VIRTUALIZATION)
                                   ? 0x2 : 0x0;
           pfr0_el1.el3 = release->has(ArmExtension::SECURITY) ? 0x2 : 0x0;
+          pfr0_el1.fp = release->has(ArmExtension::FEAT_FP16) ? 0x1 : 0x0;
+          pfr0_el1.advsimd = release->has(ArmExtension::FEAT_FP16) ? 0x1 : 0x0;
           pfr0_el1.sve = release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0;
           pfr0_el1.sel2 = release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0;
           // See MPAM frac in MISCREG_ID_AA64PFR1_EL1. Currently supporting
@@ -4986,6 +5031,7 @@ ISA::initializeMiscRegMetadata()
           mmfr3_el1.sctlrx =
             release->has(ArmExtension::FEAT_SCTLR2) ? 0x1 : 0x0;
           mmfr3_el1.tcrx = release->has(ArmExtension::FEAT_TCR2) ? 0x1 : 0x0;
+          mmfr3_el1.s1pie = release->has(ArmExtension::FEAT_S1PIE) ? 0x1 : 0x0;
           return mmfr3_el1;
       }())
       .faultRead(EL0, faultIdst)
@@ -6947,6 +6993,35 @@ ISA::initializeMiscRegMetadata()
         .fault(EL1, faultMpamsmEL1)
         .fault(EL2, faultMpamEL2)
         .allPrivileges().exceptUserMode();
+
+    // FEAT_S1PIE
+    InitReg(MISCREG_PIRE0_EL1)
+        .faultRead(EL1, faultPieEL1<true, &HCR::trvm, &HFGTR::nPire0EL1>)
+        .faultWrite(EL1, faultPieEL1<false, &HCR::tvm, &HFGTR::nPire0EL1>)
+        .fault(EL2, faultPieEL2)
+        .mon();
+    InitReg(MISCREG_PIRE0_EL2)
+        .fault(EL2, faultPieEL2)
+        .mon();
+    InitReg(MISCREG_PIR_EL1)
+        .faultRead(EL1, faultPieEL1<true, &HCR::trvm, &HFGTR::nPirEL1>)
+        .faultWrite(EL1, faultPieEL1<false, &HCR::tvm, &HFGTR::nPirEL1>)
+        .fault(EL2, faultPieEL2)
+        .mon();
+    InitReg(MISCREG_PIRE0_EL12)
+        .fault(EL2, faultVheEL2<faultPieEL2>)
+        .fault(EL3, defaultFaultE2H_EL3)
+        .mapsTo(MISCREG_PIRE0_EL1);
+    InitReg(MISCREG_PIR_EL12)
+        .fault(EL2, faultVheEL2<faultPieEL2>)
+        .fault(EL3, defaultFaultE2H_EL3)
+        .mapsTo(MISCREG_PIR_EL1);
+    InitReg(MISCREG_PIR_EL2)
+        .fault(EL2, faultPieEL2)
+        .mon();
+    InitReg(MISCREG_PIR_EL3)
+        .mon();
+
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR

@@ -45,19 +45,27 @@ class ProtocolInfo
 
   protected:
     const bool partialFuncReads;
+    const bool useSecondaryLoadLinked;
     const bool useSecondaryStoreConditional;
 
   public:
     ProtocolInfo(std::string name, bool partial_func_reads,
+                 bool use_secondary_load_linked,
                  bool use_secondary_store_conditional) :
         name(name),
         partialFuncReads(partial_func_reads),
+        useSecondaryLoadLinked(use_secondary_load_linked),
         useSecondaryStoreConditional(use_secondary_store_conditional)
     {
     }
 
     std::string getName() const { return name; }
     bool getPartialFuncReads() const { return partialFuncReads; }
+    bool
+    getUseSecondaryLoadLinked() const
+    {
+        return useSecondaryLoadLinked;
+    }
     bool
     getUseSecondaryStoreConditional() const
     {

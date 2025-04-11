@@ -675,7 +675,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
         } else {
             stats.permsFaults++;
             DPRINTF(MMU, "MMU Fault: Data abort on permission check."
-                    "ns:%d", te->ns);
+                    " ns:%d\n", te->ns);
             return std::make_shared<DataAbort>(
                 vaddr_tainted, te->domain,
                 (is_atomic && !grant_read) ? false : is_write,
@@ -728,12 +728,152 @@ MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     return std::make_pair(grant, grant_read);
 }
 
-std::pair<bool, bool>
-MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
-                  ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
+std::tuple<bool, bool, bool>
+MMU::s1IndirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
+                          ThreadContext *tc, CachedState &state,
+                          bool r, bool w, bool x)
 {
-    bool grant = false, grant_read = true, grant_write = true, grant_exec = true;
+    const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
+    TranslationRegime regime = !is_priv ? TranslationRegime::EL10 :
+                                          state.currRegime;
 
+    bool wxn = false;
+    uint8_t xn =  te->xn;
+    uint8_t pxn = te->pxn;
+
+    // Read PIR corresponding to target configuration.
+    uint8_t piindex = te->piindex;
+    uint8_t ppi = bits(state.pir, 4 * piindex + 3, 4 * piindex);
+    uint8_t upi = bits(state.pire0, 4 * piindex + 3, 4 * piindex);
+
+    DPRINTF(MMU, "Checking S1 indirect permissions: "
+                 "piindex:%d, ppi:%d, xn:%d, pxn:%d, r:%d, "
+                 "w:%d, x:%d, is_priv: %d, wxn: %d\n", piindex, ppi,
+                 xn, pxn, r, w, x, is_priv, wxn);
+
+    // Indirect permission check.
+    // Decode indirect permissions
+    bool pr = false;
+    bool pw = false;
+    bool px = false;
+    bool p_wxn = ppi == 0b0110;
+    switch (ppi) {
+      // No access
+      case 0b0000: pr = 0; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged read
+      case 0b0001: pr = 1; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged execute
+      case 0b0010: pr = 0; pw = 0; px = 1; /* pgcs = 0; */ break;
+      // Privileged read and execute
+      case 0b0011: pr = 1; pw = 0; px = 1; /* pgcs = 0; */ break;
+      // Reserved
+      case 0b0100: pr = 0; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged read and write
+      case 0b0101: pr = 1; pw = 1; px = 0; /* pgcs = 0; */ break;
+      // Privileged read, write and execute
+      case 0b0110: pr = 1; pw = 1; px = 1; /* pgcs = 0; */ break;
+      // Privileged read, write and execute
+      case 0b0111: pr = 1; pw = 1; px = 1; /* pgcs = 0; */ break;
+      // Privileged read
+      case 0b1000: pr = 1; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged read and gcs
+      case 0b1001: pr = 1; pw = 0; px = 0; /* pgcs = 1; */ break;
+      // Privileged read and execute
+      case 0b1010: pr = 1; pw = 0; px = 1; /* pgcs = 0; */ break;
+      // Reserved
+      case 0b1011: pr = 0; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged read and write
+      case 0b1100: pr = 1; pw = 1; px = 0; /* pgcs = 0; */ break;
+      // Reserved
+      case 0b1101: pr = 0; pw = 0; px = 0; /* pgcs = 0; */ break;
+      // Privileged read, write and execute
+      case 0b1110: pr = 1; pw = 1; px = 1; /* pgcs = 0; */ break;
+      // Reserved
+      case 0b1111: pr = 0; pw = 0; px = 0; /* pgcs = 0; */ break;
+    }
+
+    bool grant_read;
+    bool grant_write;
+    bool grant_exec;
+    if (hasUnprivRegime(regime)) {
+        bool ur = false;
+        bool uw = false;
+        bool ux = false;
+        bool u_wxn = upi == 0b0110;
+        switch (upi) {
+          // No access
+          case 0b0000: ur = 0; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read
+          case 0b0001: ur = 1; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged execute
+          case 0b0010: ur = 0; uw = 0; ux = 1; /* ugcs = 0; */ break;
+          // Unprivileged read and execute
+          case 0b0011: ur = 1; uw = 0; ux = 1; /* ugcs = 0; */ break;
+          // Reserved
+          case 0b0100: ur = 0; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read and write
+          case 0b0101: ur = 1; uw = 1; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read, write and execute
+          case 0b0110: ur = 1; uw = 1; ux = 1; /* ugcs = 0; */ break;
+          // Unprivileged read, write and execute
+          case 0b0111: ur = 1; uw = 1; ux = 1; /* ugcs = 0; */ break;
+          // Unprivileged read
+          case 0b1000: ur = 1; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read and gcs
+          case 0b1001: ur = 1; uw = 0; ux = 0; /* ugcs = 1; */ break;
+          // Unprivileged read and execute
+          case 0b1010: ur = 1; uw = 0; ux = 1; /* ugcs = 0; */ break;
+          // Reserved
+          case 0b1011: ur = 0; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read and write
+          case 0b1100: ur = 1; uw = 1; ux = 0; /* ugcs = 0; */ break;
+          // Reserved
+          case 0b1101: ur = 0; uw = 0; ux = 0; /* ugcs = 0; */ break;
+          // Unprivileged read,write and execute
+          case 0b1110: ur = 1; uw = 1; ux = 1; /* ugcs = 0; */ break;
+          // Reserved
+          case 0b1111: ur = 0; uw = 0; ux = 0; /* ugcs = 0; */ break;
+        }
+
+        // PAN does not affect CMOs other than DC ZVA
+        bool pan_access = !req->isCacheMaintenance() ||
+            req->getFlags() & Request::CACHE_BLOCK_ZERO;
+
+        if (_release->has(ArmExtension::FEAT_PAN) && pan_access) {
+            if (state.cpsr.pan && upi != 0) {
+                pr = false;
+                pw = false;
+            }
+        }
+
+        grant_read = is_priv ? pr : ur;
+        grant_write = is_priv ? pw : uw;
+        grant_exec = is_priv ? px : ux;
+        wxn = is_priv ? p_wxn : u_wxn;
+    } else {
+        grant_read = pr;
+        grant_write = pw;
+        grant_exec = px;
+        wxn = p_wxn;
+    }
+
+    // Do not allow execution from writable location
+    // if wxn is set
+    grant_exec = grant_exec && !(wxn && grant_write);
+
+    if (ArmSystem::haveEL(tc, EL3) &&
+        state.securityState == SecurityState::Secure && te->ns) {
+        grant_exec = grant_exec && !state.scr.sif;
+    }
+
+    return std::make_tuple(grant_read, grant_write, grant_exec);
+}
+
+std::tuple<bool, bool, bool>
+MMU::s1DirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
+                        ThreadContext *tc, CachedState &state,
+                        bool r, bool w, bool x)
+{
     const uint8_t ap  = te->ap & 0b11;  // 2-bit access protection field
     const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
 
@@ -741,11 +881,17 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     uint8_t xn =  te->xn;
     uint8_t pxn = te->pxn;
 
-    DPRINTF(MMU, "Checking S1 permissions: ap:%d, xn:%d, pxn:%d, r:%d, "
-                        "w:%d, x:%d, is_priv: %d, wxn: %d\n", ap, xn,
-                        pxn, r, w, x, is_priv, wxn);
+    DPRINTF(MMU, "Checking S1 direct permissions: ap:%d, xn:%d, pxn:%d, r:%d, "
+                 "w:%d, x:%d, is_priv: %d, wxn: %d\n", ap, xn,
+                  pxn, r, w, x, is_priv, wxn);
 
-    TranslationRegime regime = !is_priv ? TranslationRegime::EL10 : state.currRegime;
+    bool grant_read;
+    bool grant_write;
+    bool grant_exec;
+
+    TranslationRegime regime = !is_priv ? TranslationRegime::EL10 :
+                                          state.currRegime;
+    // Tranditional permission check.
     if (hasUnprivRegime(regime)) {
         bool pr = false;
         bool pw = false;
@@ -767,7 +913,8 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
             break;
         }
 
-        // Locations writable by unprivileged cannot be executed by privileged
+        // Locations writable by unprivileged cannot be executed by
+        // privileged
         const bool px = !(pxn || uw);
         const bool ux = !xn;
 
@@ -803,6 +950,26 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     if (ArmSystem::haveEL(tc, EL3) &&
         state.securityState == SecurityState::Secure && te->ns) {
         grant_exec = grant_exec && !state.scr.sif;
+    }
+
+    return std::make_tuple(grant_read, grant_write, grant_exec);
+}
+
+std::pair<bool, bool>
+MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
+                  ThreadContext *tc, CachedState &state,
+                  bool r, bool w, bool x)
+{
+    bool grant = false;
+    bool grant_read = true, grant_write = true, grant_exec = true;
+
+    // Check the feature of indirected premission.
+    if (state.pie) {
+        std::tie(grant_read, grant_write, grant_exec) =
+            s1IndirectPermBits64(te, req, mode, tc, state, r, w, x);
+    } else {
+        std::tie(grant_read, grant_write, grant_exec) =
+            s1DirectPermBits64(te, req, mode, tc, state, r, w, x);
     }
 
     if (x) {
@@ -1275,6 +1442,12 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             {
                 sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
                 ttbcr = tc->readMiscReg(MISCREG_TCR_EL1);
+                tcr2 = tc->readMiscReg(MISCREG_TCR2_EL1);
+                if (mmu->release()->has(ArmExtension::FEAT_S1PIE)) {
+                    pir = tc->readMiscReg(MISCREG_PIR_EL1);
+                    pire0 = tc->readMiscReg(MISCREG_PIRE0_EL1);
+                    pie = tcr2.pie;
+                }
                 uint64_t ttbr_asid = ttbcr.a1 ?
                     tc->readMiscReg(MISCREG_TTBR1_EL1) :
                     tc->readMiscReg(MISCREG_TTBR0_EL1);
@@ -1287,6 +1460,12 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                 // VHE code for EL2&0 regime
                 sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
                 ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
+                tcr2 = tc->readMiscReg(MISCREG_TCR2_EL2);
+                if (mmu->release()->has(ArmExtension::FEAT_S1PIE)) {
+                    pir = tc->readMiscReg(MISCREG_PIR_EL2);
+                    pire0 = tc->readMiscReg(MISCREG_PIRE0_EL2);
+                    pie = tcr2.pie;
+                }
                 uint64_t ttbr_asid = ttbcr.a1 ?
                     tc->readMiscReg(MISCREG_TTBR1_EL2) :
                     tc->readMiscReg(MISCREG_TTBR0_EL2);
@@ -1297,11 +1476,20 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
           case TranslationRegime::EL2:
             sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
             ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
+            tcr2 = tc->readMiscReg(MISCREG_TCR2_EL2);
+            if (mmu->release()->has(ArmExtension::FEAT_S1PIE)) {
+                pir = tc->readMiscReg(MISCREG_PIR_EL2);
+                pie = tcr2.pie;
+            }
             asid = -1;
             break;
           case TranslationRegime::EL3:
             sctlr = tc->readMiscReg(MISCREG_SCTLR_EL3);
             ttbcr = tc->readMiscReg(MISCREG_TCR_EL3);
+            if (mmu->release()->has(ArmExtension::FEAT_S1PIE)) {
+                pir = tc->readMiscReg(MISCREG_PIR_EL3);
+                pie = static_cast<TCR>(ttbcr).pie;
+            }
             asid = -1;
             break;
         }

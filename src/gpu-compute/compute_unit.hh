@@ -486,6 +486,8 @@ class ComputeUnit : public ClockedObject
 
     void sendInvL2(Addr paddr);
 
+    void printProgress();
+
   protected:
     RequestorID _requestorId;
 
@@ -689,11 +691,19 @@ class ComputeUnit : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
+            enum : int
+            {
+                DISPATCH_NONE,
+                DISPATCH_KERNEL_OBJECT,
+                DISPATCH_PRELOAD_ARG
+            };
+
             Wavefront *wavefront;
             Packet::SenderState *saved;
             // kernel id to be used in handling I-Cache invalidate response
             int kernId;
             bool isKernDispatch;
+            int dispatchType = DISPATCH_NONE;
             SenderState(Wavefront *_wavefront, Packet::SenderState
                     *sender_state=nullptr, int _kernId=-1)
                 : wavefront(_wavefront), saved(sender_state),
@@ -988,6 +998,7 @@ class ComputeUnit : public ClockedObject
     int cacheLineBits;
     InstSeqNum globalSeqNum;
     int wavefrontSize;
+    uint64_t execCycles;
 
     /**
      * TODO: Update these comments once the pipe stage interface has

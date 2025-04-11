@@ -60,12 +60,13 @@ enum ScalarRegInitFields : int
     DispatchId = 4,
     FlatScratchInit = 5,
     PrivateSegSize = 6,
-    WorkgroupIdX = 7,
-    WorkgroupIdY = 8,
-    WorkgroupIdZ = 9,
-    WorkgroupInfo = 10,
-    PrivSegWaveByteOffset = 11,
-    NumScalarInitFields = 12
+    KernargPreload = 7,
+    WorkgroupIdX = 8,
+    WorkgroupIdY = 9,
+    WorkgroupIdZ = 10,
+    WorkgroupInfo = 11,
+    PrivSegWaveByteOffset = 12,
+    NumScalarInitFields = 13
 };
 
 enum VectorRegInitFields : int
@@ -75,6 +76,12 @@ enum VectorRegInitFields : int
     WorkitemIdZ = 2,
     NumVectorInitFields = 3
 };
+
+/**
+ * The number of bytes after the dispatch packet which contain kernel
+ * arguments that should be preloaded into SGPRs before dispatch.
+ */
+constexpr int KernargPreloadPktSize = 256;
 
 // Kernel code object based on the table on LLVM's website:
 // https://llvm.org/docs/AMDGPUUsage.html#code-object-v3-kernel-descriptor

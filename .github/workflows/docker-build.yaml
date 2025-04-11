@@ -1,13 +1,12 @@
 ---
 name: Docker images build and push
 
-#on:
-#  push:
-#    branches:
-#      - 'develop'
-#    paths:
-#      - util/dockerfiles/**
 on:
+    push:
+        branches:
+            - develop
+        paths:
+            - util/dockerfiles/**
     workflow_dispatch:
 
 
@@ -20,7 +19,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: List targets
               id: generate
@@ -29,23 +28,15 @@ jobs:
                   target: default
                   workdir: util/dockerfiles
 
-    docker-buildx-bake:
+    docker-buildx-bake-base-images:
+        # This job is used to build the base images -- the images which other
+        # images use as a base (usually an Ubuntu release).
+        # We do this prior to building the other images to ensure that the base
+        # are available when building the other images.
         runs-on: [self-hosted, linux, x64]
-        needs:
-            - obtain-targets
-
-        strategy:
-            fail-fast: false
-            matrix:
-                target: ${{ fromJson(needs.obtain-targets.outputs.targets) }}
-
-        permissions:
-            packages: write
-            contents: read
-
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
@@ -54,12 +45,53 @@ jobs:
               uses: docker/login-action@v3
               with:
                   registry: ghcr.io
-                  username: ${{ github.actor }}
+                  username: ${{ github.repository_owner }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build and push
-              uses: docker/bake-action@v5
+            - name: Build and Push
+              uses: docker/bake-action@v6
               with:
+                  source: '{{defaultContext}}:util/dockerfiles'
+                  targets: base-images
+                  provenance: true
+                  push: true
+
+    docker-buildx-bake-all:
+        runs-on: [self-hosted, linux, x64]
+        needs:
+            - obtain-targets
+            - docker-buildx-bake-base-images
+
+        strategy:
+            fail-fast: false
+            # Limit the number of parallel jobs to not overwhelm the runners
+            max-parallel: 4
+            matrix:
+                target: ${{ fromJSON(needs.obtain-targets.outputs.targets) }}
+
+        permissions:
+            packages: write
+            contents: read
+
+        steps:
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and Push
+              uses: docker/bake-action@v6
+              with:
+                  source: '{{defaultContext}}:util/dockerfiles'
                   targets: ${{ matrix.target }}
-                  workdir: util/dockerfiles
+                  provenance: true
                   push: true

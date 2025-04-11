@@ -452,10 +452,10 @@ class MetaSimObject(type):
 
     # See ParamValue.cxx_predecls for description.
     def cxx_predecls(cls, code):
-        code('#include "params/$cls.hh"')
+        code('#include "params/$cls.hh"', add_once=True)
 
     def pybind_predecls(cls, code):
-        code('#include "${{cls.cxx_header}}"')
+        code('#include "${{cls.cxx_header}}"', add_once=True)
 
 
 # This *temporary* definition is required to support calls from the

@@ -262,6 +262,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
     uint8_t outerAttrs;
     uint8_t ap;             // Access permissions bits
     uint8_t hap;            // Hyp access permissions bits
+    uint8_t piindex;        // Indirect permission index.
     DomainType domain;         // Access Domain
 
     MemoryType mtype;
@@ -306,6 +307,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
          attributes(0), lookupLevel(LookupLevel::L1),
          asid(_asn), vmid(0), tg(Grain4KB), N(0),
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
+         piindex(0),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(true),
          ns(true), ss(SecurityState::NonSecure),
@@ -326,7 +328,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
     TlbEntry() :
          pfn(0), size(0), vpn(0), attributes(0), lookupLevel(LookupLevel::L1),
          asid(0), vmid(0), tg(ReservedGrain), N(0),
-         innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
+         innerAttrs(0), outerAttrs(0), ap(0), hap(0x3), piindex(0),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(false),
          ns(true), ss(SecurityState::NonSecure),
@@ -363,6 +365,7 @@ struct TlbEntry : public ReplaceableEntry, Serializable
         std::swap(outerAttrs, rhs.outerAttrs);
         std::swap(ap, rhs.ap);
         std::swap(hap, rhs.hap);
+        std::swap(piindex, rhs.piindex);
         std::swap(domain, rhs.domain);
         std::swap(mtype, rhs.mtype);
         std::swap(longDescFormat, rhs.longDescFormat);

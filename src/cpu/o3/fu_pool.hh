@@ -131,8 +131,6 @@ class FUPool : public SimObject
     /** Functional units. */
     std::vector<FuncUnit *> funcUnits;
 
-    typedef std::vector<FuncUnit *>::iterator fuListIterator;
-
   public:
     typedef FUPoolParams Params;
     /** Constructs a FU pool. */

@@ -28,6 +28,9 @@
 
 Import('*')
 
-Source('float.cc', tags='x86 isa')
-Source('int.cc', tags='x86 isa')
-Source('msr.cc', tags='x86 isa')
+if not env['CONF']['USE_X86_ISA']:
+    Return()
+
+Source('float.cc', tags=['x86 isa'])
+Source('int.cc', tags=['x86 isa'])
+Source('msr.cc', tags=['x86 isa'])

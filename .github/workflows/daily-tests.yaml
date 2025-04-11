@@ -16,7 +16,49 @@ jobs:
         steps:
             - name: Get the current date
               id: date
-              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    build-all-gem5:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
+            - name: Build ALL/gem5.opt
+              run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
+
+
+    build-vega-gem5:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+
+            - name: Build VEGA_X86/gem5.opt
+              run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j $(nproc)
+
 
   # this builds both unittests.fast and unittests.debug
     unittests-fast-debug:
@@ -26,16 +68,9 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
-        needs: get-date
         steps:
             - uses: actions/checkout@v4
-            - name: Cache build/ALL
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
+
             - name: ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
@@ -49,23 +84,21 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours for entire matrix to run
-        needs: get-date
+        needs:
+            - build-all-gem5
+            - get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
 
-            - name: Restore build/NULL cache
-              uses: actions/cache@v4
-              with:
-                  path: build/NULL
-                  key: testlib-build-null-${{ needs.get-date.outputs.date }}
-
             - name: Restore build/ALL cache
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
 
             - name: long ${{ matrix.test-type }} tests
               working-directory: ${{ github.workspace }}/tests
@@ -93,14 +126,16 @@ jobs:
                     gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours
-        needs: get-date
+        needs:
+            - build-all-gem5
+            - get-date
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
 
             - name: Cache build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -126,7 +161,9 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 720 # 12 hours
-        needs: get-date
+        needs:
+            - build-vega-gem5
+            - get-date
 
         steps:
             - uses: actions/checkout@v4
@@ -134,20 +171,17 @@ jobs:
                   ref: develop
 
             - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-vega
 
-            - name: Build VEGA_X86/gem5.opt
-              working-directory: ${{ github.workspace }}
-              run: scons build/VEGA_X86/gem5.opt -j $(nproc)
 
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=long -vvv -t $(nproc) --host gcn_gpu  gem5/gpu
 
             - name: Upload results
               if: success() || failure()

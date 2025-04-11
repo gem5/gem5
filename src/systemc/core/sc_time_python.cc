@@ -41,12 +41,17 @@ namespace
         .def(pybind11::init<double, sc_core::sc_time_unit>())
         .def(pybind11::init<const sc_core::sc_time &>())
 
-        // Converters.
+        // Converters from sc_time.
         .def("value", &sc_core::sc_time::value)
         .def("to_double", &sc_core::sc_time::to_double)
         .def("to_seconds", &sc_core::sc_time::to_seconds)
         .def("to_string", &sc_core::sc_time::to_string)
         .def("__str__", &sc_core::sc_time::to_string)
+
+        // Converters into sc_time.
+        .def_static("from_value", &sc_core::sc_time::from_value)
+        .def_static("from_seconds", &sc_core::sc_time::from_seconds)
+        .def_static("from_string", &sc_core::sc_time::from_string)
 
         // Operators.
         .def(pybind11::self == pybind11::self)

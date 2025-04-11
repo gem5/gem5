@@ -1,4 +1,16 @@
 /**
+ * Copyright (c) 2025 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * Copyright (c) 2024 Samsung Electronics
  * All rights reserved.
@@ -205,16 +217,16 @@ BOP::tag(Addr addr) const
 }
 
 bool
-BOP::testRR(Addr addr) const
+BOP::testRR(Addr addr_tag) const
 {
     for (auto& it : rrLeft) {
-        if (it == addr) {
+        if (it == addr_tag) {
             return true;
         }
     }
 
     for (auto& it : rrRight) {
-        if (it == addr) {
+        if (it == addr_tag) {
             return true;
         }
     }
@@ -223,18 +235,16 @@ BOP::testRR(Addr addr) const
 }
 
 void
-BOP::bestOffsetLearning(Addr addr_tag)
+BOP::bestOffsetLearning(Addr addr)
 {
     Addr offset_tag = (*offsetsListIterator).first;
 
     /*
-     * Compute the lookup tag for the RR table. Since addr_tag is a tag value,
-     * and not an address, subtracting the offset from addr_tag may result in
-     * integer underflow. Therefore, we first convert the tag back to address
-     * by right shifting it, and then subtract the offset. This gives us a
-     * new lookup address which we use to compute the lookup tag
+     * Compute the lookup tag for the RR table. As tags are generated using
+     * lower 12 bits we subtract offset from the full address rather than the
+     * tag to avoid integer underflow.
      */
-    Addr lookup_tag = tag((addr_tag << lBlkSize) - (offset_tag << lBlkSize));
+    Addr lookup_tag = tag((addr) - (offset_tag << lBlkSize));
 
     // There was a hit in the RR table, increment the score for this offset
     if (testRR(lookup_tag)) {

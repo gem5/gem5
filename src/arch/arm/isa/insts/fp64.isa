@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2012-2013, 2016-2018 ARM Limited
+// Copyright (c) 2012-2013, 2016-2018, 2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -518,11 +518,32 @@ let {{
     decoder_output = ""
     exec_output = ""
 
+    def bitsToSuffix(bits):
+        if bits == 64:
+            return 'D'
+        elif bits == 32:
+            return 'S'
+        elif bits == 16:
+            return 'H'
+        else:
+            raise Exception("Invalid bits")
+
+    def bitsToStorage(bits):
+        if bits == 64:
+            return 'uint64_t'
+        elif bits == 32:
+            return 'uint32_t'
+        elif bits == 16:
+            return 'uint16_t'
+        else:
+            raise Exception("Invalid bits")
+
+
     # Creates the integer to floating point instructions, including variants for
     # signed/unsigned, float/double, etc
     for regL, regOpL, width in [["W", "w", 32],
                                 ["X", "d", 64]]:
-        for isDouble in True, False:
+        for bits in (16, 32, 64):
             for us, usCode in [["U", "uint%d_t cSrc = %sOp1_u%s;" %(width, regL, regOpL)],
                                ["S", "int%d_t  cSrc = %sOp1_u%s;" %(width, regL, regOpL)]]:
                 fcvtIntFpDCode = vfp64EnabledCheckCode + '''
@@ -530,7 +551,7 @@ let {{
                     %s
                 ''' %(usCode)
 
-                if isDouble:
+                if bits == 64:
                     fcvtIntFpDCode += '''
                         uint64_t cDest = fplibFixedToFP<uint64_t>(cSrc, 0,
                             %s, FPCRRounding(fpscr), fpscr);
@@ -539,18 +560,18 @@ let {{
                     ''' % ("true" if us == "U" else "false")
                 else:
                     fcvtIntFpDCode += '''
-                        uint32_t cDest = fplibFixedToFP<uint32_t>(cSrc, 0,
+                        uint32_t cDest = fplibFixedToFP<%s>(cSrc, 0,
                             %s, FPCRRounding(fpscr), fpscr);
                         AA64FpDestP0_uw = cDest;
                         AA64FpDestP1_uw = 0;
-                    ''' % ("true" if us == "U" else "false")
+                    ''' % (bitsToStorage(bits), "true" if us == "U" else "false")
                 fcvtIntFpDCode += '''
                     AA64FpDestP2_uw = 0;
                     AA64FpDestP3_uw = 0;
                     FpscrExc = fpscr;
                 '''
 
-                instName = "Fcvt%s%sIntFp%s" %(regL, us, "D" if isDouble else "S")
+                instName = "Fcvt%s%sIntFp%s" %(regL, us, bitsToSuffix(bits))
                 mnem     = "%scvtf" %(us.lower())
                 fcvtIntFpDIop = ArmInstObjParams(mnem, instName, "FpRegRegOp",
                                                  { "code": fcvtIntFpDCode,
@@ -703,38 +724,41 @@ let {{
         decoder_output += AA64FpRegRegOpConstructor.subst(fcvtFpFpHIop);
         exec_output    += BasicExecute.subst(fcvtFpFpHIop);
 
+
     # Build the various versions of the floating point compare instructions
-    def buildFCmpOp(isQuiet, isDouble, isImm):
+    def buildFCmpOp(isQuiet, bits, isImm):
         global header_output, decoder_output, exec_output
+
+        storage = bitsToStorage(bits)
+        suffix = bitsToSuffix(bits)
 
         fcmpCode = vfp64EnabledCheckCode + '''
             FPSCR fpscr = (FPSCR) FpscrExc;
             %s cOp1 = %s;
-        ''' % ("uint64_t" if isDouble else "uint32_t",
+        ''' % (storage,
                "AA64FpDestP0_uw | (uint64_t)AA64FpDestP1_uw << 32"
-               if isDouble else "AA64FpDestP0_uw")
+               if bits > 32 else "AA64FpDestP0_uw")
         if isImm:
             fcmpCode += '''
                 %s cOp2 = imm;
-            ''' % ("uint64_t" if isDouble else "uint32_t")
+            ''' % (storage)
         else:
             fcmpCode += '''
                 %s cOp2  = %s;
-            ''' % ("uint64_t" if isDouble else "uint32_t",
+            ''' % (storage,
                    "AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32"
-                   if isDouble else "AA64FpOp1P0_uw")
+                   if bits > 32 else "AA64FpOp1P0_uw")
         fcmpCode += '''
-            int cc = fplibCompare<uint%s_t>(cOp1, cOp2, %s, fpscr);
+            int cc = fplibCompare<%s>(cOp1, cOp2, %s, fpscr);
             CondCodesNZ = cc >> 2 & 3;
             CondCodesC = cc >> 1 & 1;
             CondCodesV = cc & 1;
             FpCondCodes = fpscr & FpCondCodesMask;
             FpscrExc    = fpscr;
-        ''' % ("64" if isDouble else "32", "false" if isQuiet else "true")
+        ''' % (storage, "false" if isQuiet else "true")
 
         typeName = "Imm" if isImm else "Reg"
-        instName = "FCmp%s%s%s" %(""  if isQuiet  else "E", typeName,
-                                  "D" if isDouble else "S")
+        instName = "FCmp%s%s%s" %("" if isQuiet  else "E", typeName, suffix)
         fcmpIop = ArmInstObjParams("fcmp%s" % ("" if isQuiet else "e"),
                                    instName, "FpReg%sOp" % typeName,
                                    { "code": fcmpCode,
@@ -747,9 +771,9 @@ let {{
         exec_output    += BasicExecute.subst(fcmpIop);
 
     for isQuiet in True, False:
-        for isDouble in True, False:
+        for bits in (16, 32, 64):
             for isImm in True, False:
-                buildFCmpOp(isQuiet, isDouble, isImm)
+                buildFCmpOp(isQuiet, bits, isImm)
 
     # Build the various versions of the conditional floating point compare
     # instructions

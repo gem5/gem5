@@ -620,7 +620,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
                       continue;
                   }
 
-                  irqGrpmod[int_id] = data & (1 << int_id);
+                  irqGrpmod[int_id] = bits(data, int_id);
               }
           }
 

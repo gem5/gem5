@@ -75,6 +75,7 @@ class SLICC(Grammar):
         # Update slicc_interface/ProtocolInfo.cc/hh if updating this.
         self.options = {
             "partial_func_reads": False,
+            "use_secondary_load_linked": False,
             "use_secondary_store_conditional": False,
         }
 

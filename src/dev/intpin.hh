@@ -30,6 +30,8 @@
 
 #include <type_traits>
 
+#include "base/trace.hh"
+#include "debug/IntPin.hh"
 #include "sim/signal.hh"
 
 namespace gem5
@@ -86,8 +88,14 @@ class IntSourcePinBase : public SignalSourcePort<bool>
         SignalSourcePort(_name, _id)
     {}
 
-    void raise() { set(true); }
-    void lower() { set(false); }
+    void raise() {
+      DPRINTF(IntPin, "Raise interrupt.\n");
+      set(true);
+    }
+    void lower() {
+      DPRINTF(IntPin, "Lower interrupt.\n");
+      set(false);
+    }
 };
 
 template <class Compat>

@@ -43,7 +43,7 @@
 #include "base/output.hh"
 #include "cpu/simple_thread.hh"
 #include "params/SimPoint.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {

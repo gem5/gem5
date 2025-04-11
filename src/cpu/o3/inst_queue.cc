@@ -493,12 +493,7 @@ InstructionQueue::resetEntries()
     if (iqPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
-        list<ThreadID>::iterator threads = activeThreads->begin();
-        list<ThreadID>::iterator end = activeThreads->end();
-
-        while (threads != end) {
-            ThreadID tid = *threads++;
-
+        for (ThreadID tid : *activeThreads) {
             if (iqPolicy == SMTQueuePolicy::Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
             } else if (iqPolicy == SMTQueuePolicy::Threshold &&

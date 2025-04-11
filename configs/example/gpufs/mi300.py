@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates an X86 system with a KVM CPU and GPU device capable of
+"""This file creates an X86 system with a KVM CPU and GPU device capable of
 running the MI300 ISA (gfx942). Most of this file sets up a runscript which
 will load in a binary, shell script, or python file from the host and run that
 within gem5. Jump to line 146 for list of system parameters to configure.

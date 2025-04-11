@@ -367,6 +367,14 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
     Addr line_addr = makeLineAddress(pkt->getAddr());
     // Check if there is any outstanding request for the same cache line.
     auto &seq_req_list = m_RequestTable[line_addr];
+
+    // For software prefetches, if the same cache line is already requested we
+    // can return aliased and skip emplacing it on the request table, this way
+    // we won't need to handle any response at all
+    if (pkt->cmd.isSWPrefetch() && seq_req_list.size() > 1) {
+        return RequestStatus_Aliased;
+    }
+
     // Create a default entry
     seq_req_list.emplace_back(pkt, primary_type,
         secondary_type, curCycle());
@@ -737,6 +745,14 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked) ||
             (type == RubyRequestType_ATOMIC_RETURN)) {
+
+            // For software prefetches, since we've already sent an early
+            // response back to the core, we can just ignore this
+            if (pkt->cmd.isSWPrefetch()) {
+                delete pkt;
+                return;
+            }
+
             pkt->setData(
                 data.getData(getOffset(request_address), pkt->getSize()));
 
@@ -959,12 +975,11 @@ Sequencer::makeRequest(PacketPtr pkt)
         //
         // The following logic works correctly with the semantics
         // of armV8 LDEX/STEX instructions.
+        const ProtocolInfo &protocol_info = m_ruby_system->getProtocolInfo();
 
         if (pkt->isWrite()) {
             DPRINTF(RubySequencer, "Issuing SC\n");
             primary_type = RubyRequestType_Store_Conditional;
-            const ProtocolInfo &protocol_info =
-                m_ruby_system->getProtocolInfo();
             if (protocol_info.getUseSecondaryStoreConditional()) {
                 secondary_type = RubyRequestType_Store_Conditional;
             } else {
@@ -974,11 +989,11 @@ Sequencer::makeRequest(PacketPtr pkt)
             DPRINTF(RubySequencer, "Issuing LL\n");
             assert(pkt->isRead());
             primary_type = RubyRequestType_Load_Linked;
-#if defined (PROTOCOL_MESI_Two_Level) || defined (PROTOCOL_MESI_Three_Level)
-            secondary_type = RubyRequestType_Load_Linked;
-#else
-            secondary_type = RubyRequestType_LD;
-#endif
+            if (protocol_info.getUseSecondaryLoadLinked()) {
+                secondary_type = RubyRequestType_Load_Linked;
+            } else {
+                secondary_type = RubyRequestType_LD;
+            }
         }
     } else if (pkt->req->isLockedRMW()) {
         //

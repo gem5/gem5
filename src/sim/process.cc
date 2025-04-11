@@ -117,6 +117,7 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       useArchPT(params.useArchPT),
       kvmInSE(params.kvmInSE),
       useForClone(false),
+      zeroPages(params.zeroPages),
       pTable(pTable),
       objFile(obj_file),
       argv(params.cmd), envp(params.env),
@@ -341,6 +342,44 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     pTable->map(page_addr, paddr, pages_size,
                 clobber ? EmulationPageTable::Clobber :
                           EmulationPageTable::MappingFlags(0));
+}
+
+void
+Process::deallocateMem(Addr vaddr, int64_t size)
+{
+    const auto page_size = pTable->pageSize();
+    const Addr page_vbase = roundDown(vaddr, page_size);
+    const Addr page_vend = roundUp(vaddr + size, page_size);
+    const int npages = (page_vend - page_vbase) / page_size;
+
+    // Free any physical pages that were mapped to by this virtual
+    // address range.
+    for (int i = 0; i < npages; ++i) {
+        const Addr page_vaddr = page_vbase + page_size * i;
+        Addr page_paddr;
+        if (pTable->translate(page_vaddr, page_paddr)) {
+            if (zeroPages) {
+                // Zero out the physical page upon deallocation.
+                // Pages that have never been allocated before are already
+                // zero-filled. Zeroing out deallocated pages ensures that
+                // if they're ever reallocated, they will be zero-filled.
+                // Note that zeroing out pages before allocation would
+                // achieve the same result, but would be more expensive
+                // because it would unnecessarily zero out pages that
+                // were allocated for the first time.
+                SETranslatingPortProxy virt_mem(
+                    system->threads[0], SETranslatingPortProxy::Always);
+                const std::vector<uint8_t> zero_page(page_size, 0);
+                virt_mem.writeBlob(page_vaddr, zero_page.data(), page_size);
+            }
+
+            // Unmap the virtual page.
+            pTable->unmap(page_vaddr, page_size);
+
+            // Deallocate the physical page.
+            seWorkload->deallocPhysPage(page_paddr);
+        }
+    }
 }
 
 void

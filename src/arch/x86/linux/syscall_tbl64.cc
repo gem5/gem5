@@ -325,7 +325,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 264, "renameat", renameatFunc<X86Linux64> },
     { 265, "linkat" },
     { 266, "symlinkat" },
-    { 267, "readlinkat", readlinkFunc<X86Linux64> },
+    { 267, "readlinkat", readlinkatFunc<X86Linux64> },
     { 268, "fchmodat", fchmodatFunc<X86Linux64> },
     { 269, "faccessat", faccessatFunc<X86Linux64> },
     { 270, "pselect6" },

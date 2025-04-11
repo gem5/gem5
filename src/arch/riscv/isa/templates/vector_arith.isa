@@ -1713,13 +1713,40 @@ template<typename ElemType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    if (machInst.vd == machInst.vs1) {
+        microop = new VCpyVsMicroInst(machInst, 0, machInst.vs1, elen, vlen);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        if (machInst.vd == (machInst.vs2 + i) && machInst.vd != machInst.vs1) {
+            microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen,
+                                          vlen);
+            microop->setFlag(IsDelayedCommit);
+            this->microops.push_back(microop);
+        }
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+    }
+
+    microop = new VPinVdMicroInst(machInst, 0, num_microops, elen, vlen);
+    microop->setFlag(IsDelayedCommit);
+    this->microops.push_back(microop);
+
+    tmp_vl = this->vl;
+    micro_vl = std::min(tmp_vl, micro_vlmax);
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
+        if (flags[IsSerializeAfter] && i < num_microops-1) { // ordered
+            microop->setFlag(StaticInst::IsSerializeAfter);
+        }
         microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
+
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
@@ -1734,8 +1761,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs2, vs1, vd, vm
-    RegId srcRegIdxArr[4];
+    // vs2, vs1, vm
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1795,11 +1822,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            ElemType microop_result = Vs1[0];
+            ElemType microop_result = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -1845,11 +1871,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vu tmp_val = Vs1[0];
+            vu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -1896,11 +1921,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vwu tmp_val = Vs1[0];
+            vu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -2255,11 +2279,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vwu tmp_val = Vs1[0];
+            vwu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;

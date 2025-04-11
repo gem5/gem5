@@ -1,3 +1,22 @@
+# Version 24.1.0.1
+
+**[HOTFIX]** This hotfix release applies the following:
+
+* Generalization of the class types in CHI RNF/MN generators thus fixing an issue with missing attributes when using the CHI protocol.
+PR: <https://github.com/gem5/gem5/pull/1851>.
+* Add Sphinx documentation for the gem5 standard library.
+This is largely generated from Python docstrings.
+See "docs/README" for more information on building and deploying Sphinx documentation.
+PR: <https://github.com/gem5/gem5/pull/335>.
+* Add missing `RubySystem` member and related methods in `PerfectCacheMemory`'s entries.
+This was causing assertions to trigger in "src/mem/ruby/commonNetDest.cc".
+PR: <https://github.com/gem5/gem5/pull/1864>.
+* Add `useSecondaryLoadLinked` function to "src/mem/ruby/slicc_interface/ProtocolInfo.hh".
+This fixes a bug which was introduced after the removal of the `PROTOCOL_MESI_Two_Level` and `PROTOCOL_MESI_Three_Level` MACROs in v24.1.0.0.
+These MACROs were being used to infer if `Load_Linked` requests are sent to the Ruby protocol or not.
+The `useSecondaryLoadLinked` function has been introduced to specify this directly where needed.
+PR: <https://github.com/gem5/gem5/pull/1865>.
+
 # Version 24.1
 
 ## User facing changes

@@ -490,7 +490,8 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 365, "sys_recvmmsg" },
         { base + 384, "getrandom", getrandomFunc<ArmLinux32> },
         { base + 397, "sys_statx", ignoreFunc },
-        { base + 398, "sys_rseq", ignoreFunc }
+        { base + 398, "sys_rseq", ignoreFunc },
+        { base + 435, "clone3", clone3Func<ArmLinux32> },
     })
     {}
 };
@@ -784,6 +785,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {  base + 292, "io_pgetevents"},
         {  base + 293, "rseq", ignoreWarnOnceFunc },
         {  base + 294, "kexec_file_load"},
+        {  base + 435, "clone3", clone3Func<ArmLinux64> },
         { base + 1024, "open", openFunc<ArmLinux64> },
         { base + 1025, "link" },
         { base + 1026, "unlink", unlinkFunc },

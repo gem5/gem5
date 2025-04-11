@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2020, 2023 ARM Limited
+# Copyright (c) 2013, 2015-2020, 2023, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -85,6 +85,13 @@ import SCons
 import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
+from SCons.Errors import UserError as SConsUserError
+try:
+    # SCons.Errors.SConsEnvironmentError for version > 4.0.0
+    from SCons.Errors import SConsEnvironmentError
+except ImportError:
+    # SCons.Errors.EnvironmentError for version < 4.0.0
+    from SCons.Errors import EnvironmentError as SConsEnvironmentError
 
 if getattr(SCons, '__version__', None) in ('3.0.0', '3.0.1'):
     # Monkey patch a fix which appears in version 3.0.2, since we only
@@ -139,6 +146,7 @@ AddOption('--gprof', action='store_true',
           help='Enable support for the gprof profiler')
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
+AddOption('--debug-fission', action='store_true', help='Enable debug fission')
 # Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
 # of this new build behaviour in case it introduces regressions. We could use
 # action=argparse.BooleanOptionalAction here once Python 3.9 is required.
@@ -264,6 +272,15 @@ Targets:
 
         scons build/SPARC/base/bitunion.test.opt
         build/SPARC/base/bitunion.test.opt
+
+        To generate the compile_commands.json, you can use a target:
+
+        scons build/{{ISA}}/compile_commands.json
+
+        The {{ISA}} is a target Instruction Set Architecture (X86, ARM,
+        RISCV, etc.). This command creates a compile_commands.json in the
+        respective build directory. You can generate a compile_commands.json
+        only with scons version 4.0+.
 """, append=True)
 
 
@@ -536,6 +553,23 @@ for variant_path in variant_paths:
     env = main.Clone()
     env['BUILDDIR'] = variant_path
 
+    try:
+        # try-except section is required because
+        # SConsEnvironmentError/UserError exception raises if FindTool
+        # can't find a tool module. This exeption rises BEFORE check
+        # that tool exists and makes FindTool function useless in some way.
+        cdb_tool = SCons.Tool.FindTool(['compilation_db'], env)
+
+        if cdb_tool:
+            env['COMPILATIONDB_USE_ABSPATH'] = True
+            env.Tool(cdb_tool)
+
+            cdb_path = f"{variant_path}/compile_commands.json"
+            env.CompilationDatabase(cdb_path)
+    except (SConsEnvironmentError, SConsUserError):
+        # Looks like different scons versions raise different exeptions
+        pass
+
     gem5_build = os.path.join(variant_path, 'gem5.build')
     env['GEM5BUILD'] = gem5_build
     Execute(Mkdir(gem5_build))
@@ -610,6 +644,14 @@ for variant_path in variant_paths:
                 else:
                     error("Unable to use --no-keep-memory with the linker")
 
+        debug_fission = GetOption('debug_fission')
+        if debug_fission:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-gsplit-dwarf'
+                ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
+                    error('Debug fission is not supported in the toolchain')
+
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
         env.Append(CCFLAGS=['-Werror',
@@ -670,6 +712,8 @@ for variant_path in variant_paths:
         with gem5_scons.Configure(env) as conf:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
+        if compareVersions(env['CXXVERSION'], '18') > 0:
+            env.Append(CCFLAGS=['-Wno-vla-cxx-extension'])
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
@@ -690,6 +734,25 @@ for variant_path in variant_paths:
         if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
+
+    if sys.platform == 'cygwin':
+        # cygwin has some header file issues...
+        env.Append(CCFLAGS=["-Wno-uninitialized"])
+
+
+    if not GetOption('no_compress_debug'):
+        with gem5_scons.Configure(env) as conf:
+            if not conf.CheckCxxFlag('-gz'):
+                warning("Can't enable object file debug section compression")
+            if not conf.CheckLinkFlag('-gz'):
+                warning("Can't enable executable debug section compression")
+
+    if env['USE_PYTHON']:
+        config_embedded_python(env)
+        gem5py_env = env.Clone()
+    else:
+        gem5py_env = env.Clone()
+        config_embedded_python(gem5py_env)
 
     # Add sanitizers flags
     sanitizers=[]
@@ -761,25 +824,6 @@ for variant_path in variant_paths:
             warning("Don't know how to enable %s sanitizer(s) for your "
                     "compiler." % sanitizers)
 
-    if sys.platform == 'cygwin':
-        # cygwin has some header file issues...
-        env.Append(CCFLAGS=["-Wno-uninitialized"])
-
-
-    if not GetOption('no_compress_debug'):
-        with gem5_scons.Configure(env) as conf:
-            if not conf.CheckCxxFlag('-gz'):
-                warning("Can't enable object file debug section compression")
-            if not conf.CheckLinkFlag('-gz'):
-                warning("Can't enable executable debug section compression")
-
-    if env['USE_PYTHON']:
-        config_embedded_python(env)
-        gem5py_env = env.Clone()
-    else:
-        gem5py_env = env.Clone()
-        config_embedded_python(gem5py_env)
-
     # Bare minimum environment that only includes python
     gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
     gem5py_env.Append(LINKFLAGS=['${GEM5PY_LINKFLAGS_EXTRA}'])
@@ -798,10 +842,12 @@ for variant_path in variant_paths:
     with gem5_scons.Configure(env) as conf:
         # On Solaris you need to use libsocket for socket ops
         if not conf.CheckLibWithHeader(
-                [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+                [None, 'socket'], 'sys/socket.h', 'C++',
+                call='accept(0,0,0);'):
            error("Can't find library with socket calls (e.g. accept()).")
 
-        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
+        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++',
+                                       call='zlibVersion();'):
             error('Did not find needed zlib compression library '
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')

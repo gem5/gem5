@@ -323,6 +323,12 @@ class Shader(ClockedObject):
     timer_period = Param.Clock("10us", "system timer period")
     idlecu_timeout = Param.Tick(0, "Idle CU watchdog timeout threshold")
     max_valu_insts = Param.Int(0, "Maximum vALU insts before exiting")
+    progress_interval = Param.Tick(
+        0,
+        "Print periodic status of GPU, with last executed instruction, "
+        "sequence number, and wavefront state. 1_000_000 is a reasonable "
+        "value in most cases. Set to 0 to disable.",
+    )
 
 
 class GPUComputeDriver(EmulatedDriver):

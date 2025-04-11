@@ -39,12 +39,16 @@ def format VConfOp(code, write_code, declare_class, branch_class, *flags) {{
         flags
     )
     declareTemplate = eval(declare_class)
-    branchTargetTemplate = eval(branch_class)
 
     header_output = declareTemplate.subst(iop)
     decoder_output = VConfConstructor.subst(iop)
     decode_block = VConfDecodeBlock.subst(iop)
-    exec_output = VConfExecute.subst(iop) + branchTargetTemplate.subst(iop)
+
+    if "vsetivli" in name:
+        branchTargetTemplate = eval(branch_class)
+        exec_output = VConfExecute.subst(iop) + branchTargetTemplate.subst(iop)
+    else:
+        exec_output = VConfExecute.subst(iop)
 }};
 
 def template VSetVlDeclare {{
@@ -63,10 +67,7 @@ def template VSetVlDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, uint32_t elen, uint32_t vlen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
-        std::unique_ptr<PCStateBase> branchTarget(
-                ThreadContext *tc) const override;
 
-        using StaticInst::branchTarget;
         using %(base_class)s::generateDisassembly;
 
     };
@@ -203,54 +204,9 @@ def template VSetiVliBranchTarget {{
 
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
         npc->set(rvSext(npc->pc() + 4));
+        npc->new_vconf(true);
         npc->vtype(new_vtype);
         npc->vl(new_vl);
         return npc;
-    }
-}};
-
-def template VSetVliBranchTarget {{
-    std::unique_ptr<PCStateBase>
-    %(class_name)s::branchTarget(ThreadContext *tc) const
-    {
-        PCStateBase *pc_ptr = tc->pcState().clone();
-
-        uint64_t rd_bits = machInst.rd;
-        uint64_t rs1_bits = machInst.rs1;
-        uint64_t requested_vl = tc->getReg(srcRegIdx(0));
-        uint64_t requested_vtype = zimm11;
-
-        VTYPE new_vtype = getNewVtype(
-            pc_ptr->as<PCState>().vtype(), requested_vtype);
-        uint32_t vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
-        uint32_t new_vl = getNewVL(
-            pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
-
-        pc_ptr->as<PCState>().vtype(new_vtype);
-        pc_ptr->as<PCState>().vl(new_vl);
-        return std::unique_ptr<PCStateBase>{pc_ptr};
-    }
-}};
-
-def template VSetVlBranchTarget {{
-    std::unique_ptr<PCStateBase>
-    %(class_name)s::branchTarget(ThreadContext *tc) const
-    {
-        PCStateBase *pc_ptr = tc->pcState().clone();
-
-        uint64_t rd_bits = machInst.rd;
-        uint64_t rs1_bits = machInst.rs1;
-        uint64_t requested_vl = tc->getReg(srcRegIdx(0));
-        uint64_t requested_vtype = tc->getReg(srcRegIdx(1));
-
-        VTYPE new_vtype = getNewVtype(
-            pc_ptr->as<PCState>().vtype(), requested_vtype);
-        uint32_t vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
-        uint32_t new_vl = getNewVL(
-            pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
-
-        pc_ptr->as<PCState>().vtype(new_vtype);
-        pc_ptr->as<PCState>().vl(new_vl);
-        return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 }};

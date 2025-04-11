@@ -112,6 +112,7 @@ class AbstractBoard:
         # determined by which kind of workload is set.
         self._is_fs = None
         self._is_workload_set = False
+        self._workload: WorkloadResource = None
 
         # This variable is used to record the checkpoint directory which is
         # set when declaring the board's workload and then used by the
@@ -235,6 +236,7 @@ class AbstractBoard:
 
         :param workload: The workload to be set to this board.
         """
+        self._workload = workload
 
         try:
             func = getattr(self, workload.get_function_str())
@@ -255,6 +257,9 @@ class AbstractBoard:
                 )
 
         func(**workload.get_parameters())
+
+    def get_workload(self) -> Optional[WorkloadResource]:
+        return self._workload
 
     @abstractmethod
     def _setup_board(self) -> None:

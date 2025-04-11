@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Options wrapper for simple gem5 configuration scripts
+"""Options wrapper for simple gem5 configuration scripts
 
 This module wraps the argparse class so that we can register options
 from each class instead of only from the configuration script.

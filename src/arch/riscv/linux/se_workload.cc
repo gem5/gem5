@@ -320,6 +320,7 @@ hwprobe_one_pair(ThreadContext *tc, RiscvLinux::riscv_hwprobe *pair,
             ext->ZFHMIN = 1;
             ext->ZVFH = 1;
             ext->ZVFHMIN = 1;
+            ext->ZFA = 1;
             ext->ZICOND = 1;
             ext->ZVE64D = 1;
             ext->ZCB = 1;

@@ -60,11 +60,16 @@ DebugFlag('GUPSGen')
 SimObject('GUPSGen.py', sim_objects=['GUPSGen'])
 
 if env['USE_PYTHON']:
-    Source('pygen.cc', add_tags='python')
+    Source('pygen.cc', tags=['python'])
     SimObject('PyTrafficGen.py', sim_objects=['PyTrafficGen'])
 
 # Only build the traffic generator if we have support for protobuf as the
 # tracing relies on it
-SimObject('TrafficGen.py', sim_objects=['TrafficGen'], tags='protobuf')
-Source('trace_gen.cc', tags='protobuf')
-Source('traffic_gen.cc', tags='protobuf')
+if env['CONF']['HAVE_PROTOBUF']:
+    SimObject(
+        'TrafficGen.py',
+        sim_objects=['TrafficGen'],
+        tags=['protobuf']
+    )
+    Source('trace_gen.cc', tags=['protobuf'])
+    Source('traffic_gen.cc', tags=['protobuf'])

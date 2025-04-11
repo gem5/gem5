@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012-2013, 2017-2018, 2020 ARM Limited
+* Copyright (c) 2012-2013, 2017-2018, 2020, 2025 Arm Limited
 * Copyright (c) 2020 Metempsy Technology Consulting
 * All rights reserved
 *
@@ -1396,6 +1396,67 @@ fp64_add(uint64_t a, uint64_t b, int neg, int mode, int *flags)
     x_mnt = fp64_normalise(x_mnt, &x_exp);
 
     return fp64_round(x_sgn, x_exp + FP64_EXP_BITS - 3, x_mnt << 1,
+                      mode, flags);
+}
+
+static uint16_t
+fp16_halved_add(uint16_t a, uint16_t b, int neg, int mode, int *flags)
+{
+    int a_sgn, a_exp, b_sgn, b_exp, x_sgn, x_exp;
+    uint16_t a_mnt, b_mnt, x, x_mnt;
+
+    fp16_unpack(&a_sgn, &a_exp, &a_mnt, a, mode, flags);
+    fp16_unpack(&b_sgn, &b_exp, &b_mnt, b, mode, flags);
+
+    if ((x = fp16_process_NaNs(a, b, mode, flags))) {
+        return x;
+    }
+
+    b_sgn ^= neg;
+
+    // Handle infinities and zeroes:
+    if (a_exp == FP16_EXP_INF && b_exp == FP16_EXP_INF && a_sgn != b_sgn) {
+        *flags |= FPLIB_IOC;
+        return fp16_defaultNaN();
+    } else if (a_exp == FP16_EXP_INF) {
+        return fp16_infinity(a_sgn);
+    } else if (b_exp == FP16_EXP_INF) {
+        return fp16_infinity(b_sgn);
+    } else if (!a_mnt && !b_mnt && a_sgn == b_sgn) {
+        return fp16_zero(a_sgn);
+    }
+
+    a_mnt <<= 3;
+    b_mnt <<= 3;
+    if (a_exp >= b_exp) {
+        b_mnt = (lsr16(b_mnt, a_exp - b_exp) |
+                 !!(b_mnt & (lsl16(1, a_exp - b_exp) - 1)));
+        b_exp = a_exp;
+    } else {
+        a_mnt = (lsr16(a_mnt, b_exp - a_exp) |
+                 !!(a_mnt & (lsl16(1, b_exp - a_exp) - 1)));
+        a_exp = b_exp;
+    }
+    x_sgn = a_sgn;
+    x_exp = a_exp;
+    if (a_sgn == b_sgn) {
+        x_mnt = a_mnt + b_mnt;
+    } else if (a_mnt >= b_mnt) {
+        x_mnt = a_mnt - b_mnt;
+    } else {
+        x_sgn ^= 1;
+        x_mnt = b_mnt - a_mnt;
+    }
+
+    if (!x_mnt) {
+        // Sign of exact zero result depends on rounding mode
+        return fp16_zero((mode & 3) == 2);
+    }
+
+    x_exp -= 1; // halved
+    x_mnt = fp16_normalise(x_mnt, &x_exp);
+
+    return fp16_round(x_sgn, x_exp + FP16_EXP_BITS - 3, x_mnt << 1,
                       mode, flags);
 }
 
@@ -4968,7 +5029,7 @@ fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
 {
     int flags = 0;
     uint16_t res = fp16_cvtf(op, fbits, u,
-                             (int)rounding | ((uint32_t)fpscr >> 22 & 12),
+                             (int)rounding | (modeConv(fpscr) & 0xFC),
                              &flags);
     set_fpscr0(fpscr, flags);
     return res;
@@ -4980,7 +5041,7 @@ fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr
 {
     int flags = 0;
     uint32_t res = fp32_cvtf(op, fbits, u,
-                             (int)rounding | ((uint32_t)fpscr >> 22 & 12),
+                             (int)rounding | (modeConv(fpscr) & 0xFC),
                              &flags);
     set_fpscr0(fpscr, flags);
     return res;
@@ -4992,7 +5053,7 @@ fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr
 {
     int flags = 0;
     uint64_t res = fp64_cvtf(op, fbits, u,
-                             (int)rounding | ((uint32_t)fpscr >> 22 & 12),
+                             (int)rounding | (modeConv(fpscr) & 0xFC),
                              &flags);
     set_fpscr0(fpscr, flags);
     return res;
@@ -5038,6 +5099,64 @@ uint64_t
 fplibDefaultNaN()
 {
     return fp64_defaultNaN();
+}
+
+
+template <>
+uint16_t
+fplib32RSqrtStep(uint16_t op1, uint16_t op2, FPSCR &fpscr)
+{
+    int mode = modeConv(fpscr);
+    int flags = 0;
+    int sgn1, exp1, sgn2, exp2;
+    uint16_t mnt1, mnt2, result;
+
+    fp16_unpack(&sgn1, &exp1, &mnt1, op1, mode, &flags);
+    fp16_unpack(&sgn2, &exp2, &mnt2, op2, mode, &flags);
+
+    result = fp16_process_NaNs(op1, op2, mode, &flags);
+    if (!result) {
+        if ((exp1 == FP16_EXP_INF && !mnt2) ||
+            (exp2 == FP16_EXP_INF && !mnt1)) {
+            result = fp16_FPOnePointFive(0);
+        } else {
+            uint16_t product = fp16_mul(op1, op2, mode, &flags);
+            result = fp16_halved_add(fp16_FPThree(0), product, 1, mode,
+                                     &flags);
+        }
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
+}
+
+template <>
+uint16_t
+fplib32RecipStep(uint16_t op1, uint16_t op2, FPSCR &fpscr)
+{
+    int mode = modeConv(fpscr);
+    int flags = 0;
+    int sgn1, exp1, sgn2, exp2;
+    uint16_t mnt1, mnt2, result;
+
+    fp16_unpack(&sgn1, &exp1, &mnt1, op1, mode, &flags);
+    fp16_unpack(&sgn2, &exp2, &mnt2, op2, mode, &flags);
+
+    result = fp16_process_NaNs(op1, op2, mode, &flags);
+    if (!result) {
+        if ((exp1 == FP16_EXP_INF && !mnt2) ||
+            (exp2 == FP16_EXP_INF && !mnt1)) {
+            result = fp16_FPTwo(0);
+        } else {
+            uint16_t product = fp16_mul(op1, op2, mode, &flags);
+            result = fp16_add(fp16_FPTwo(0), product, 1, mode, &flags);
+        }
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
 }
 
 } // namespace ArmISA

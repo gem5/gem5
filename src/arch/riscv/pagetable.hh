@@ -62,6 +62,8 @@ const Addr LEVEL_BITS  = 9;
 const Addr LEVEL_MASK  = (1 << LEVEL_BITS) - 1;
 
 BitUnion64(PTESv39)
+    Bitfield<63> n;
+    Bitfield<62, 54> reserved;
     Bitfield<53, 10> ppn;
     Bitfield<53, 28> ppn2;
     Bitfield<27, 19> ppn1;

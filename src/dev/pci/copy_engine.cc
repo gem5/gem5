@@ -62,7 +62,7 @@ namespace gem5
 using namespace copy_engine_reg;
 
 CopyEngine::CopyEngine(const Params &p)
-    : PciDevice(p),
+    : PciEndpoint(p),
       copyEngineStats(this, p.ChanCnt)
 {
     // All Reg regs are initialized to 0 by default
@@ -120,7 +120,7 @@ CopyEngine::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "dma") {
         // pass it along to our super class
-        return PciDevice::getPort(if_name, idx);
+        return PciEndpoint::getPort(if_name, idx);
     } else {
         if (idx >= static_cast<int>(chan.size())) {
             panic("CopyEngine::getPort: unknown index %d\n", idx);
@@ -651,7 +651,7 @@ CopyEngine::CopyEngineChannel::drain()
 void
 CopyEngine::serialize(CheckpointOut &cp) const
 {
-    PciDevice::serialize(cp);
+    PciEndpoint::serialize(cp);
     regs.serialize(cp);
     for (int x =0; x < chan.size(); x++)
         chan[x]->serializeSection(cp, csprintf("channel%d", x));
@@ -660,7 +660,7 @@ CopyEngine::serialize(CheckpointOut &cp) const
 void
 CopyEngine::unserialize(CheckpointIn &cp)
 {
-    PciDevice::unserialize(cp);
+    PciEndpoint::unserialize(cp);
     regs.unserialize(cp);
     for (int x = 0; x < chan.size(); x++)
         chan[x]->unserializeSection(cp, csprintf("channel%d", x));

@@ -63,5 +63,112 @@
             "24.0",
             "24.1"
         ]
+    },
+    {
+        "category": "invalid-category",
+        "id": "test-invalid-category-resource",
+        "description": "test description for invalid category test",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "24.0",
+            "24.1"
+        ]
+    },
+    {
+        "id": "test-missing-category-resource",
+        "description": "test description for missing category test",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "24.0",
+            "24.1"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "test-missing-md5sum-resource",
+        "description": "test description for missing md5sum test",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "24.0",
+            "24.1"
+        ]
+    },
+    {
+        "category": "workload",
+        "id": "test-workload-no-resources-field",
+        "description": "test description of missing field in workload",
+        "function": "set_kernel_disk_workload",
+        "additional_params": {
+            "readfile_contents": "echo 'Boot successful'; m5 exit"
+        },
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "24.0",
+            "24.1"
+        ]
+    },
+    {
+        "category": "workload",
+        "id": "test-workload-invalid-resources-field",
+        "description": "Description of workload here",
+        "function": "set_kernel_disk_workload",
+        "resources":[],
+        "additional_params": {
+            "readfile_contents": "echo 'Boot successful'; m5 exit"
+        },
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "24.0",
+            "24.1"
+        ]
+    },
+    {
+        "id": "tests-no-workload-field-suite",
+        "category": "suite",
+        "resource_version": "1.0.0",
+        "gem5_versions": ["develop","23.1", "24.0", "24.1"]
+    },
+    {
+        "id": "tests-no-id-in-workload-field-suite",
+        "category": "suite",
+        "resource_version": "1.0.0",
+        "gem5_versions": ["develop","23.1", "24.0", "24.1"],
+        "workloads": [
+            {
+                "resource_version": "1.0.0",
+                "input_group": ["testtag1", "testtag2"]
+            }
+        ]
+    },
+    {
+        "id": "tests-no-input-group-in-workload-field-suite",
+        "category": "suite",
+        "resource_version": "1.0.0",
+        "gem5_versions": ["develop","23.1", "24.0", "24.1"],
+        "workloads": [
+            {
+                "id": "simple-workload-1",
+                "resource_version": "1.0.0"
+            }
+        ]
     }
 ]

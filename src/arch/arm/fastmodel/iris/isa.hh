@@ -40,7 +40,7 @@ namespace Iris
 class ISA : public BaseISA
 {
   public:
-    ISA(const Params &p) : BaseISA(p) {}
+    ISA(const Params &p) : BaseISA(p, "fastmodel") {}
 
     void serialize(CheckpointOut &cp) const override;
 

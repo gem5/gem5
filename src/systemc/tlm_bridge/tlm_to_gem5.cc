@@ -435,6 +435,7 @@ TlmToGem5Bridge<BITWIDTH>::transport_dbg(tlm::tlm_generic_payload &trans)
         pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
         bmp.sendFunctional(pkt);
+        setPayloadResponse(trans, pkt);
 
         gem5::Packet::SenderState *senderState = pkt->popSenderState();
         sc_assert(

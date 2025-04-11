@@ -933,6 +933,8 @@ class RegisterBank : public RegisterBankBase
 
     virtual ~RegisterBank() {}
 
+    RegisterBank(RegisterBank &&) = default;
+
     class RegisterAdder
     {
       private:

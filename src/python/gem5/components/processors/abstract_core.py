@@ -175,3 +175,11 @@ class AbstractCore(SubSystem):
         self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
     ) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    def get_total_instructions(self) -> int:
+        """Return the number of instructions executed by this core.
+
+        Note: This total is the sum since the last call to reset stats
+        """
+        raise NotImplementedError

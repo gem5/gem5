@@ -247,6 +247,8 @@ namespace RiscvISA
     [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
 
+    [MISCREG_JVT] = "JVT",
+
     [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
 
@@ -513,6 +515,7 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
+      case MISCREG_MNEPC:
         {
             MISA misa = readMiscRegNoEffect(MISCREG_ISA);
             auto val = readMiscRegNoEffect(idx);
@@ -753,9 +756,10 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
           case MISCREG_IP:
             {
-                val = val & MI_MASK[getPrivilegeModeSet()];
+                RegVal mask = MIP_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
+                val = (val & mask) | (ic->readIP() & ~mask);
                 ic->setIP(val);
             }
             break;
@@ -768,7 +772,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_SIP:
             {
-                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                RegVal mask = SIP_MASK[getPrivilegeModeSet()];
                 val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
                 setMiscReg(MISCREG_IP, val);
             }
@@ -931,6 +935,11 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 setMiscRegNoEffect(MISCREG_NMIE,
                     (RegVal)nstatus.nmie | readMiscRegNoEffect(MISCREG_NMIE));
                 setMiscRegNoEffect(idx, val);
+            }
+            break;
+          case MISCREG_JVT:
+            {
+                setMiscRegNoEffect(idx, rvSext(val));
             }
             break;
           default:

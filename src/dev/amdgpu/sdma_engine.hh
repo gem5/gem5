@@ -127,6 +127,12 @@ class SDMAEngine : public DmaVirtDevice
         void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
         void setPriv(bool priv) { _priv = priv; }
         void setStatic(bool isStatic) { _static = isStatic; }
+
+        // setGlobalRptr is only used during checkpoint restoration
+        // It is needed because _global_rptr is incremented each time
+        // incRptr() is called pre-checkpointing and the pointer
+        // needs to be set to the incremented value at restoration
+        void setGlobalRptr(Addr global_rptr) { _global_rptr = global_rptr;}
     };
 
     /* SDMA Engine ID */

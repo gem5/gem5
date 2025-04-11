@@ -45,6 +45,7 @@
 #include <unordered_map>
 
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -70,7 +71,7 @@ class TBETable
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
-    void setBlockSize(const int block_size) { m_block_size = block_size; }
+    void setRubySystem(RubySystem* rs);
 
     ENTRY *getNullEntry();
     ENTRY *lookup(Addr address);
@@ -89,6 +90,10 @@ class TBETable
   private:
     int m_number_of_TBEs = 0;
     int m_block_size = 0;
+    RubySystem* m_ruby_system = nullptr;
+
+    static constexpr bool entryRequiresRubySystem =
+        std::is_member_function_pointer_v<decltype(&ENTRY::setRubySystem)>;
 };
 
 template<class ENTRY>
@@ -98,6 +103,14 @@ operator<<(std::ostream& out, const TBETable<ENTRY>& obj)
     obj.print(out);
     out << std::flush;
     return out;
+}
+
+template<class ENTRY>
+inline
+void TBETable<ENTRY>::setRubySystem(RubySystem* rs)
+{
+    m_ruby_system = rs;
+    m_block_size = rs->getBlockSizeBytes();
 }
 
 template<class ENTRY>
@@ -116,7 +129,9 @@ TBETable<ENTRY>::allocate(Addr address)
     assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
     assert(m_block_size > 0);
-    m_map.emplace(address, ENTRY(m_block_size));
+    ENTRY new_entry = ENTRY(m_block_size);
+    new_entry.setRubySystem(m_ruby_system);
+    m_map.emplace(address, new_entry);
 }
 
 template<class ENTRY>

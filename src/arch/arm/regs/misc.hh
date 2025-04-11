@@ -1185,6 +1185,15 @@ namespace ArmISA
         MISCREG_MPAMVPM6_EL2,
         MISCREG_MPAMVPM7_EL2,
 
+        // S1PIE
+        MISCREG_PIRE0_EL1,
+        MISCREG_PIRE0_EL2,
+        MISCREG_PIRE0_EL12,
+        MISCREG_PIR_EL1,
+        MISCREG_PIR_EL2,
+        MISCREG_PIR_EL3,
+        MISCREG_PIR_EL12,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -2932,6 +2941,14 @@ namespace ArmISA
         "mpamvpm5_el2",
         "mpamvpm6_el2",
         "mpamvpm7_el2",
+
+        "pire0_el1",
+        "pire0_el2",
+        "pire0_el12",
+        "pir_el1",
+        "pir_el2",
+        "pir_el3",
+        "pir_el12",
 
         "num_phys_regs",
 

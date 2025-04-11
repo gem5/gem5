@@ -46,6 +46,7 @@
 #include "debug/GPURename.hh"
 #include "debug/GPUSync.hh"
 #include "debug/GPUTLB.hh"
+#include "debug/GPUTrace.hh"
 #include "enums/GfxVersion.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_command_processor.hh"
@@ -136,8 +137,8 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
             {"v_mfma_f32_4x4x2_16b_bf16", 8},
             {"v_mfma_f32_32x32x4_bf16", 64},
             {"v_mfma_f32_16x16x8_bf16", 32},
-            {"v_mfma_f32_16x16x4_bf64", 32},
-            {"v_mfma_f32_4x4x4_4b_bf64", 16},
+            {"v_mfma_f64_16x16x4_f64", 32},
+            {"v_mfma_f64_4x4x4_4b_f64", 16},
         }},
         // gfx942 is MI300X. The latency values are taken from table 28 in
         // section 7.1.2 in the MI300 Instruction Set Architecture reference:
@@ -167,6 +168,8 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
             {"v_mfma_i32_16x16x32_i8", 16},
             {"v_mfma_f32_16x16x8_xf32", 16},
             {"v_mfma_f32_32x32x4_xf32", 32},
+            {"v_mfma_f64_16x16x4_f64", 32},
+            {"v_mfma_f64_4x4x4_4b_f64", 16},
             {"v_mfma_f32_16x16x32_bf8_bf8", 16},
             {"v_mfma_f32_16x16x32_bf8_fp8", 16},
             {"v_mfma_f32_32x32x16_fp8_bf8", 32},
@@ -301,6 +304,9 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     for (int i = 0; i < numVectorALUs; i++) {
         matrix_core_ready[i] = 0;
     }
+
+    // Used for periodic pipeline prints
+    execCycles = 0;
 }
 
 ComputeUnit::~ComputeUnit()
@@ -460,6 +466,10 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
 
     stats.waveLevelParallelism.sample(activeWaves);
     activeWaves++;
+
+    w->vmemIssued.clear();
+    w->lgkmIssued.clear();
+    w->expIssued.clear();
 
     panic_if(w->wrGmReqsInPipe, "GM write counter for wavefront non-zero\n");
     panic_if(w->rdGmReqsInPipe, "GM read counter for wavefront non-zero\n");
@@ -849,6 +859,13 @@ ComputeUnit::exec()
     fetchStage.exec();
 
     stats.totalCycles++;
+    execCycles++;
+
+    if (shader->getProgressInterval() != 0 &&
+        execCycles >= shader->getProgressInterval()) {
+        printProgress();
+        execCycles = 0;
+    }
 
     // Put this CU to sleep if there is no more work to be done.
     if (!isDone()) {
@@ -1142,9 +1159,10 @@ ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
         // then the request is an instruction fetch and can be handled in
         // the compute unit
         if (sender_state->isKernDispatch) {
-          computeUnit->shader->gpuCmdProc.completeTimingRead();
+            int dispType = sender_state->dispatchType;
+            computeUnit->shader->gpuCmdProc.completeTimingRead(dispType);
         } else {
-          computeUnit->handleSQCReturn(pkt);
+            computeUnit->handleSQCReturn(pkt);
         }
     } else {
         delete pkt->senderState;
@@ -1662,6 +1680,11 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     Addr vaddr = pkt->req->getVaddr();
     gpuDynInst->memStatusVector[line].push_back(mp_index);
     gpuDynInst->tlbHitLevel[mp_index] = hit_level;
+
+    DPRINTF(GPUTrace, "CU%d WF[%d][%d]: Translated %#lx -> %#lx for "
+            "instruction %s (seqNum: %ld)\n", computeUnit->cu_id,
+            gpuDynInst->simdId, gpuDynInst->wfSlotId, pkt->req->getVaddr(),
+            line, gpuDynInst->disassemble().c_str(), gpuDynInst->seqNum());
 
     MemCmd requestCmd;
 
@@ -2287,6 +2310,26 @@ RequestorID
 ComputeUnit::vramRequestorId()
 {
     return FullSystem ? shader->vramRequestorId() : requestorId();
+}
+
+void
+ComputeUnit::printProgress()
+{
+    for (int j = 0; j < numVectorALUs; ++j) {
+        for (int i = 0; i < shader->n_wf; ++i) {
+            if (wfList[j][i]->getStatus() == Wavefront::status_e::S_STOPPED) {
+                continue;
+            }
+
+            std::cout << curTick() << ": ";
+            std::cout << "CU" << cu_id << " WF[" << j << "][" << i << "] ";
+            wfList[j][i]->printProgress();
+        }
+    }
+    globalMemoryPipe.printProgress();
+    scalarMemoryPipe.printProgress();
+    localMemoryPipe.printProgress();
+    std::cout << std::endl;
 }
 
 /**

@@ -79,5 +79,5 @@ if env['CONF']['BUILD_ISA']:
     Source('checker.cc')
 
     # For backwards compatibility
-    SimObject('O3CPU.py', sim_objects=[])
-    SimObject('O3Checker.py', sim_objects=[])
+    SimObject('O3CPU.py', sim_objects=[], tags=['isa'])
+    SimObject('O3Checker.py', sim_objects=[], tags=['isa'])

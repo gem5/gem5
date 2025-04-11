@@ -141,14 +141,18 @@ ScheduleStage::exec()
         } else {
             if (gpu_dyn_inst->isScalar() || gpu_dyn_inst->isGroupSeg()) {
                 wf->incLGKMInstsIssued();
+                wf->trackLGKMInst(gpu_dyn_inst);
             } else {
                 wf->incVMemInstsIssued();
+                wf->trackVMemInst(gpu_dyn_inst);
                 if (gpu_dyn_inst->isFlat()) {
                     wf->incLGKMInstsIssued();
+                    wf->trackLGKMInst(gpu_dyn_inst);
                 }
             }
             if (gpu_dyn_inst->isStore() && gpu_dyn_inst->isGlobalSeg()) {
                 wf->incExpInstsIssued();
+                wf->trackExpInst(gpu_dyn_inst);
             }
         }
     }
@@ -309,6 +313,8 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
     // place wave in wavesInSch and pipeMap, and schedule Rd/Wr operands
     // to the VRF
     bool accessRf = accessVrf && accessSrf;
+    wf->lastVrfStatus = accessVrf;
+    wf->lastSrfStatus = accessSrf;
     if (accessRf) {
         DPRINTF(GPUSched, "schList[%d]: Adding: SIMD[%d] WV[%d]: %d: %s\n",
                 exeType, wf->simdId, wf->wfDynId,

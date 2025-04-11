@@ -831,13 +831,13 @@ $c_ident::init()
                         comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
-                    # For objects that require knowing the cache line size,
+                    # For objects that require a pointer to RubySystem,
                     # set the value here.
-                    if vtype.c_ident in ("TBETable", "PerfectCacheMemory"):
-                        block_size_func = "m_ruby_system->getBlockSizeBytes()"
-                        code(f"(*{vid}).setBlockSize({block_size_func});")
-
-                    if vtype.c_ident in ("NetDest"):
+                    if vtype.c_ident in (
+                        "NetDest",
+                        "PerfectCacheMemory",
+                        "TBETable",
+                    ):
                         code(f"(*{vid}).setRubySystem(m_ruby_system);")
 
         for param in self.config_parameters:
@@ -1271,7 +1271,6 @@ void
 $c_ident::set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.TBEType.c_ident}}* m_new_tbe)
 {
   m_tbe_ptr = m_new_tbe;
-  m_tbe_ptr->setRubySystem(m_ruby_system);
 }
 
 void

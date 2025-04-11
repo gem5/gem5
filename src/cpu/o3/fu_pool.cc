@@ -75,10 +75,9 @@ FUPool::FUIdxQueue::getFU()
 
 FUPool::~FUPool()
 {
-    fuListIterator i = funcUnits.begin();
-    fuListIterator end = funcUnits.end();
-    for (; i != end; ++i)
-        delete *i;
+    for (FuncUnit* fu : funcUnits) {
+        delete fu;
+    }
 }
 
 
@@ -96,13 +95,11 @@ FUPool::FUPool(const Params &p)
     //
     //  Iterate through the list of FUDescData structures
     //
-    const std::vector<FUDesc *> &paramList =  p.FUList;
-    for (FUDDiterator i = paramList.begin(); i != paramList.end(); ++i) {
-
+    for (FUDesc *i : p.FUList) {
         //
         //  Don't bother with this if we're not going to create any FU's
         //
-        if ((*i)->number) {
+        if (i->number) {
             //
             //  Create the FuncUnit object from this structure
             //   - add the capabilities listed in the FU's operation
@@ -112,39 +109,37 @@ FUPool::FUPool(const Params &p)
             //
             FuncUnit *fu = new FuncUnit;
 
-            OPDDiterator j = (*i)->opDescList.begin();
-            OPDDiterator end = (*i)->opDescList.end();
-            for (; j != end; ++j) {
+            for (OpDesc *j : i->opDescList) {
                 // indicate that this pool has this capability
-                capabilityList.set((*j)->opClass);
+                capabilityList.set(j->opClass);
 
                 // Add each of the FU's that will have this capability to the
                 // appropriate queue.
-                for (int k = 0; k < (*i)->number; ++k)
-                    fuPerCapList[(*j)->opClass].addFU(numFU + k);
+                for (int k = 0; k < i->number; ++k)
+                    fuPerCapList[j->opClass].addFU(numFU + k);
 
                 // indicate that this FU has the capability
-                fu->addCapability((*j)->opClass, (*j)->opLat, (*j)->pipelined);
+                fu->addCapability(j->opClass, j->opLat, j->pipelined);
 
-                if ((*j)->opLat > maxOpLatencies[(*j)->opClass])
-                    maxOpLatencies[(*j)->opClass] = (*j)->opLat;
+                if (j->opLat > maxOpLatencies[j->opClass])
+                    maxOpLatencies[j->opClass] = j->opLat;
 
-                if (!(*j)->pipelined)
-                    pipelined[(*j)->opClass] = false;
+                if (!j->pipelined)
+                    pipelined[j->opClass] = false;
             }
 
             numFU++;
 
             //  Add the appropriate number of copies of this FU to the list
-            fu->name = (*i)->name() + "(0)";
+            fu->name = i->name() + "(0)";
             funcUnits.push_back(fu);
 
-            for (int c = 1; c < (*i)->number; ++c) {
+            for (int c = 1; c < i->number; ++c) {
                 std::ostringstream s;
                 numFU++;
                 FuncUnit *fu2 = new FuncUnit(*fu);
 
-                s << (*i)->name() << "(" << c << ")";
+                s << i->name() << "(" << c << ")";
                 fu2->name = s.str();
                 funcUnits.push_back(fu2);
             }

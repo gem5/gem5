@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "arch/arm/pcstate.hh"
+#include "arch/arm/regs/misc.hh"
 #include "cpu/kvm/base.hh"
 #include "params/ArmKvmCPU.hh"
 
@@ -68,7 +69,7 @@ class ArmKvmCPU : public BaseKvmCPU
 
     void startup();
 
-    void dump();
+    void dump() const override;
 
   protected:
     struct KvmIntRegInfo
@@ -100,7 +101,7 @@ class ArmKvmCPU : public BaseKvmCPU
     void
     stutterPC(PCStateBase &pc) const
     {
-        pc.as<ArmISA::PCState>().setNPC(pc->instAddr());
+        pc.as<ArmISA::PCState>().setNPC(pc.instAddr());
     }
 
     /**

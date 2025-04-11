@@ -50,6 +50,10 @@
 #include "base/bitfield.hh"
 #include "base/bitunion.hh"
 
+// Device specific offsets
+#define PCI_DEVICE_SPECIFIC 0x40 // 64 bytes
+#define PCI_CONFIG_SIZE 0xFF
+
 BitUnion16(PciCommandRegister)
     Bitfield<15, 10> reserved;
     Bitfield<9> fastBackToBackEn;
@@ -64,40 +68,109 @@ BitUnion16(PciCommandRegister)
     Bitfield<0> ioSpace;
 EndBitUnion(PciCommandRegister)
 
+struct PCIConfigCommon
+{
+    uint16_t vendor;
+    uint16_t device;
+    uint16_t command;
+    uint16_t status;
+    uint8_t revision;
+    uint8_t progIF;
+    uint8_t subClassCode;
+    uint8_t classCode;
+    uint8_t cacheLineSize;
+    uint8_t latencyTimer;
+    uint8_t headerType;
+    uint8_t bist;
+    uint8_t typeSpecific0[36];
+    uint8_t capabilityPtr;
+    uint8_t typeSpecific1[7];
+    uint8_t interruptLine;
+    uint8_t interruptPin;
+    uint8_t typeSpecific2[2];
+};
+
+struct PCIConfigType0
+{
+    uint16_t vendor;
+    uint16_t device;
+    uint16_t command;
+    uint16_t status;
+    uint8_t revision;
+    uint8_t progIF;
+    uint8_t subClassCode;
+    uint8_t classCode;
+    uint8_t cacheLineSize;
+    uint8_t latencyTimer;
+    uint8_t headerType;
+    uint8_t bist;
+    uint32_t baseAddr[6];
+    uint32_t cardbusCIS;
+    uint16_t subsystemVendorID;
+    uint16_t subsystemID;
+    uint32_t expansionROM;
+    uint8_t capabilityPtr;
+    // Was 8 bytes in the legacy PCI spec, but to support PCIe
+    // this field is now 7 bytes with PCIe's addition of the
+    // capability list pointer.
+    uint8_t reserved[7];
+    uint8_t interruptLine;
+    uint8_t interruptPin;
+    uint8_t minimumGrant;
+    uint8_t maximumLatency;
+};
+
+struct PCIConfigType1
+{
+    uint16_t vendor;
+    uint16_t device;
+    uint16_t command;
+    uint16_t status;
+    uint8_t revision;
+    uint8_t progIF;
+    uint8_t subClassCode;
+    uint8_t classCode;
+    uint8_t cacheLineSize;
+    uint8_t primaryLatencyTimer;
+    uint8_t headerType;
+    uint8_t bist;
+    uint32_t baseAddr[2];
+    uint8_t primaryBusNum;
+    uint8_t secondaryBusNum;
+    uint8_t subordinateBusNum;
+    uint8_t secondaryLatencyTimer;
+    uint8_t ioBase;
+    uint8_t ioLimit;
+    uint16_t secondaryStatus;
+    uint16_t memBase;
+    uint16_t memLimit;
+    uint16_t prefetchMemBase;
+    uint16_t prefetchMemLimit;
+    uint32_t prefetchBaseUpper;
+    uint32_t prefetchLimitUpper;
+    uint16_t ioBaseUpper;
+    uint16_t ioLimitUpper;
+    uint8_t capabilityPtr;
+    uint8_t reserved[3];
+    uint32_t expansionROM;
+    uint8_t interruptLine;
+    uint8_t interruptPin;
+    uint16_t bridgeControl;
+};
+
 union PCIConfig
 {
-    uint8_t data[64];
+    uint8_t data[PCI_DEVICE_SPECIFIC];
 
-    struct
-    {
-        uint16_t vendor;
-        uint16_t device;
-        uint16_t command;
-        uint16_t status;
-        uint8_t revision;
-        uint8_t progIF;
-        uint8_t subClassCode;
-        uint8_t classCode;
-        uint8_t cacheLineSize;
-        uint8_t latencyTimer;
-        uint8_t headerType;
-        uint8_t bist;
-        uint32_t baseAddr[6];
-        uint32_t cardbusCIS;
-        uint16_t subsystemVendorID;
-        uint16_t subsystemID;
-        uint32_t expansionROM;
-        uint8_t capabilityPtr;
-        // Was 8 bytes in the legacy PCI spec, but to support PCIe
-        // this field is now 7 bytes with PCIe's addition of the
-        // capability list pointer.
-        uint8_t reserved[7];
-        uint8_t interruptLine;
-        uint8_t interruptPin;
-        uint8_t minimumGrant;
-        uint8_t maximumLatency;
-    };
+    PCIConfigCommon common;
+    PCIConfigType0 type0;
+    PCIConfigType1 type1;
 };
+
+static_assert(sizeof(PCIConfig) == PCI_DEVICE_SPECIFIC);
+static_assert(sizeof(PCIConfig::common) == PCI_DEVICE_SPECIFIC);
+static_assert(sizeof(PCIConfig::type0) == PCI_DEVICE_SPECIFIC);
+static_assert(sizeof(PCIConfig::type1) == PCI_DEVICE_SPECIFIC);
 
 // Common PCI offsets
 #define PCI_VENDOR_ID           0x00    // Vendor ID                    ro
@@ -112,6 +185,9 @@ union PCIConfig
 #define PCI_LATENCY_TIMER       0x0D    // Latency Timer                ro+
 #define PCI_HEADER_TYPE         0x0E    // Header Type                  ro
 #define PCI_BIST                0x0F    // Built in self test           rw
+#define PCI_CAP_PTR             0x34    // Capability list pointer      ro
+#define PCI_INTERRUPT_LINE      0x3C    // Interrupt Line               rw
+#define PCI_INTERRUPT_PIN       0x3D    // Interrupt Pin                ro
 
 // some pci command reg bitfields
 #define PCI_CMD_BME     0x04 // Bus master function enable
@@ -129,10 +205,7 @@ union PCIConfig
 #define PCI0_SUB_VENDOR_ID      0x2C    // Sub-Vendor ID                ro
 #define PCI0_SUB_SYSTEM_ID      0x2E    // Sub-System ID                ro
 #define PCI0_ROM_BASE_ADDR      0x30    // Expansion ROM Base Address   rw
-#define PCI0_CAP_PTR            0x34    // Capability list pointer      ro
 #define PCI0_RESERVED           0x35
-#define PCI0_INTERRUPT_LINE     0x3C    // Interrupt Line               rw
-#define PCI0_INTERRUPT_PIN      0x3D    // Interrupt Pin                ro
 #define PCI0_MINIMUM_GRANT      0x3E    // Maximum Grant                ro
 #define PCI0_MAXIMUM_LATENCY    0x3F    // Maximum Latency              ro
 
@@ -154,15 +227,9 @@ union PCIConfig
 #define PCI1_PRF_LIMIT_UPPER    0x2C    // Prefetchable Limit Upper 32  rw
 #define PCI1_IO_BASE_UPPER      0x30    // I/O Base Upper 16 bits       rw
 #define PCI1_IO_LIMIT_UPPER     0x32    // I/O Limit Upper 16 bits      rw
-#define PCI1_RESERVED           0x34    // Reserved                     ro
+#define PCI1_RESERVED           0x35
 #define PCI1_ROM_BASE_ADDR      0x38    // Expansion ROM Base Address   rw
-#define PCI1_INTR_LINE          0x3C    // Interrupt Line               rw
-#define PCI1_INTR_PIN           0x3D    // Interrupt Pin                ro
 #define PCI1_BRIDGE_CTRL        0x3E    // Bridge Control               rw
-
-// Device specific offsets
-#define PCI_DEVICE_SPECIFIC             0x40    // 192 bytes
-#define PCI_CONFIG_SIZE         0xFF
 
 // Some Vendor IDs
 #define PCI_VENDOR_DEC                  0x1011
@@ -210,9 +277,22 @@ union PCIConfig
 #define PXCAP_PXLCAP 0x0C
 #define PXCAP_PXLC 0x10
 #define PXCAP_PXLS 0x12
+#define PXCAP_PXSCAP 0x14
+#define PXCAP_PXSC 0x18
+#define PXCAP_PXSS 0x1A
+#define PXCAP_PXRC 0x1C
+#define PXCAP_PXRCAP 0x1E
+#define PXCAP_PXRS 0x20
 #define PXCAP_PXDCAP2 0x24
 #define PXCAP_PXDC2 0x28
-#define PXCAP_SIZE 0x30
+#define PXCAP_PXDS2 0x2A
+#define PXCAP_PXLCAP2 0x2C
+#define PXCAP_PXLC2 0x30
+#define PXCAP_PXLS2 0x32
+#define PXCAP_PXSCAP2 0x34
+#define PXCAP_PXSC2 0x38
+#define PXCAP_PXSS2 0x3A
+#define PXCAP_SIZE 0x3C
 
 /** @struct PMCAP
  *  Defines the Power Management capability register and all its associated
@@ -328,7 +408,7 @@ struct MSIXPbaEntry
  */
 union PXCAP
 {
-    uint8_t data[48];
+    uint8_t data[60];
     struct
     {
         uint16_t pxid; /* 0:7  cid
@@ -402,7 +482,12 @@ union PXCAP
                         * 12    slot_clk_config;
                         * 13:15 reserved;
                         */
-        uint8_t reserved[20];
+        uint32_t pxscap;
+        uint16_t pxsc;
+        uint16_t pxss;
+        uint16_t pxrc;
+        uint16_t pxrcap;
+        uint32_t pxrs;
         uint32_t pxdcap2; /* 0:3   ctrs;
                            * 4     ctds;
                            * 5     arifs;
@@ -420,14 +505,20 @@ union PXCAP
                            * 22:23 meetp;
                            * 24:31 reserved;
                            */
-        uint32_t pxdc2; /* 0:3   ctv;
-                         * 4     ctd;
-                         * 5:9   reserved;
-                         * 10    ltrme;
-                         * 11:12 reserved;
-                         * 13:14 obffe;
-                         * 15:31 reserved;
-                         */
+        uint16_t pxdc2;   /* 0:3   ctv;
+                           * 4     ctd;
+                           * 5:9   reserved;
+                           * 10    ltrme;
+                           * 11:12 reserved;
+                           * 13:14 obffe;
+                           */
+        uint16_t pxds2;
+        uint32_t pxlcap2;
+        uint16_t pxlc2;
+        uint16_t pxls2;
+        uint32_t pxscap2;
+        uint16_t pxsc2;
+        uint16_t pxss2;
     };
 };
 #endif // __PCIREG_H__

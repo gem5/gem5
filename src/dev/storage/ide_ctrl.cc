@@ -71,7 +71,7 @@ IdeController::Channel::Channel(std::string new_name, IdeController *new_ctrl,
 }
 
 IdeController::IdeController(const Params &p)
-    : PciDevice(p), configSpaceRegs(name() + ".config_space_regs"),
+    : PciEndpoint(p), configSpaceRegs(name() + ".config_space_regs"),
     primary(name() + ".primary", this, true),
     secondary(name() + ".secondary", this, false),
     ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
@@ -142,7 +142,7 @@ IdeController::postInterrupt(bool is_primary)
     auto &other = is_primary ? secondary : primary;
     // If an interrupt isn't already posted for the other channel...
     if (!other.pendingInterrupt())
-        PciDevice::intrPost();
+        PciEndpoint::intrPost();
 }
 
 void
@@ -151,7 +151,7 @@ IdeController::clearInterrupt(bool is_primary)
     auto &other = is_primary ? secondary : primary;
     // If the interrupt isn't still needed by the other channel...
     if (!other.pendingInterrupt())
-        PciDevice::intrClear();
+        PciEndpoint::intrClear();
 }
 
 Tick
@@ -159,7 +159,7 @@ IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
-        return PciDevice::readConfig(pkt);
+        return PciEndpoint::readConfig(pkt);
 
     size_t size = pkt->getSize();
 
@@ -179,7 +179,7 @@ IdeController::writeConfig(PacketPtr pkt)
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
 
     if (offset < PCI_DEVICE_SPECIFIC)
-        return PciDevice::writeConfig(pkt);
+        return PciEndpoint::writeConfig(pkt);
 
     size_t size = pkt->getSize();
 
@@ -347,7 +347,7 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
         break;
       case 4:
         {
-            PciCommandRegister command = letoh(config.command);
+            PciCommandRegister command = letoh(config().command);
             if (!read && !command.busMaster)
                 return;
 
@@ -400,8 +400,8 @@ IdeController::write(PacketPtr pkt)
 void
 IdeController::serialize(CheckpointOut &cp) const
 {
-    // Serialize the PciDevice base class
-    PciDevice::serialize(cp);
+    // Serialize the PciEndpoint base class
+    PciEndpoint::serialize(cp);
 
     // Serialize channels
     primary.serialize("primary", cp);
@@ -428,8 +428,8 @@ IdeController::Channel::serialize(const std::string &base,
 void
 IdeController::unserialize(CheckpointIn &cp)
 {
-    // Unserialize the PciDevice base class
-    PciDevice::unserialize(cp);
+    // Unserialize the PciEndpoint base class
+    PciEndpoint::unserialize(cp);
 
     // Unserialize channels
     primary.unserialize("primary", cp);

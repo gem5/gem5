@@ -1477,22 +1477,36 @@ namespace VegaISA
                 }
 
                 Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
+                VecElemI32 swizzleOffset = soffset.rawData() + offset;
 
-                int elemSize;
-                auto staticInst = gpuDynInst->staticInstruction();
-                if (gpuDynInst->isLoad()) {
-                    elemSize = staticInst->getOperandSize(2);
-                } else {
-                    assert(gpuDynInst->isStore());
-                    elemSize = staticInst->getOperandSize(1);
+                // These are the same as RDNA3. From RDNA3 ISA manual:
+                // In Scratch SS mode (saddr != NULL (0x7f) SVE==0), the
+                // inst_offset must be aligned to the payload size: 4 byte
+                // aligned for 1-DWORD, 16-byte aligned for 4-DWORD.
+                //
+                // Also (SADDR + INST_OFFSET) must be at least DWORD-aligned.
+                if (!instData.SVE) {
+                    [[maybe_unused]] int elemSize;
+                    [[maybe_unused]] auto staticInst =
+                        gpuDynInst->staticInstruction();
+                    if (gpuDynInst->isLoad()) {
+                        elemSize = staticInst->getOperandSize(2);
+                    } else {
+                        assert(gpuDynInst->isStore());
+                        elemSize = staticInst->getOperandSize(1);
+                    }
+
+                    // Check offset aligned to payload and saddr+offset is
+                    // dword aligned.
+                    assert((offset % elemSize) == 0);
+                    assert((swizzleOffset % 4) == 0);
                 }
 
-                unsigned swizzleOffset = soffset.rawData() + offset;
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                     if (gpuDynInst->exec_mask[lane]) {
                         swizzleOffset += instData.SVE ? voffset[lane] : 0;
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzleAddr(swizzleOffset, lane, elemSize);
+                            + swizzleAddr(swizzleOffset, lane);
                     }
                 }
             } else {
@@ -1501,18 +1515,13 @@ namespace VegaISA
                 ConstVecOperandU32 voffset(gpuDynInst, vaddr);
                 if (instData.SVE) {
                     voffset.read();
+                } else {
+                    // In Scratch-ST mode (saddr == NULL (0x7f) and SVE==0),
+                    // inst_offset must not be negative.
+                    assert(offset > 0);
                 }
 
                 Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
-
-                int elemSize;
-                auto staticInst = gpuDynInst->staticInstruction();
-                if (gpuDynInst->isLoad()) {
-                    elemSize = staticInst->getOperandSize(2);
-                } else {
-                    assert(gpuDynInst->isStore());
-                    elemSize = staticInst->getOperandSize(1);
-                }
 
                 for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                     if (gpuDynInst->exec_mask[lane]) {
@@ -1520,7 +1529,7 @@ namespace VegaISA
                             instData.SVE ? voffset[lane] : 0;
 
                         gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzleAddr(vgpr_offset+offset, lane, elemSize);
+                            + swizzleAddr(vgpr_offset+offset, lane);
                     }
                 }
             }
@@ -1570,8 +1579,10 @@ namespace VegaISA
 
             if (gpuDynInst->exec_mask.none()) {
                 wf->decVMemInstsIssued();
+                wf->untrackVMemInst(gpuDynInst);
                 if (isFlat()) {
                     wf->decLGKMInstsIssued();
+                    wf->untrackLGKMInst(gpuDynInst);
                 }
                 return;
             }
@@ -1700,15 +1711,15 @@ namespace VegaISA
             }
         }
 
-        VecElemU32
-        swizzleAddr(VecElemU32 offset, int lane, int elem_size)
+        VecElemI32
+        swizzleAddr(VecElemI32 offset, int tid)
         {
-            // This is not described in the spec. We use the swizzle from
-            // buffer memory instructions and fix the stride to 4. Multiply
-            // the thread ID by the storage size to avoid threads clobbering
-            // their data.
-            return ((offset / 4) * 4 * 64)
-                + (offset % 4) + (lane * elem_size);
+            // See: RDNA3 Instruction Set Architecture, Section 11.2:
+            // https://www.amd.com/content/dam/amd/en/documents/
+            //        radeon-tech-docs/instruction-set-architectures/
+            //        rdna3-shader-instruction-set-architecture-feb-2023_0.pdf
+            // Description in Scratch Addressing Equation.
+            return ((offset / 4) * 4 * 64) + (offset % 4) + (tid * 4);
         }
 
         Addr

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 ARM Limited
+ * Copyright (c) 2017, 2019, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -515,6 +515,92 @@ constexpr inline int
 clz64(uint64_t value)
 {
     return value ? __builtin_clzll(value) : 64;
+}
+
+template<typename T, int pos, char curr_bit>
+constexpr auto
+dontCareMask()
+{
+    if constexpr (curr_bit != 'X' && curr_bit != 'x') {
+        return static_cast<T>(1) << pos;
+    } else {
+        return 0;
+    }
+}
+
+template<typename T, int msb, int lsb, char curr, char... rest>
+constexpr auto
+dontCareMask()
+{
+    if constexpr (msb < lsb) {
+        return 0;
+    } else if constexpr (msb == lsb) {
+        return dontCareMask<T, msb, curr>();
+    } else {
+        return dontCareMask<T, msb, curr>() |
+               dontCareMask<T, msb-1, lsb, rest...>();
+    }
+}
+
+template<typename T, int pos, char curr_bit>
+constexpr auto
+bitMatch()
+{
+    if constexpr (curr_bit == '1') {
+        return 1ULL << pos;
+    } else {
+        return 0;
+    }
+}
+
+template<typename T, int msb, int lsb, char curr, char... rest>
+constexpr auto
+bitMatch()
+{
+    if constexpr (msb < lsb) {
+        return 0;
+    } else if constexpr (msb == lsb) {
+        return bitMatch<T, msb, curr>();
+    } else {
+        return bitMatch<T, msb, curr>() |
+               bitMatch<T, msb-1, lsb, rest...>();
+    }
+}
+
+/**
+ * This helper implements a pattern matcher that can be used
+ * for instruction decoding. A pattern is provided as a template
+ * parameter (a series of 1,0 and X=don't care). It will produce
+ * a lambda that can be used to match a sequence of bits over
+ * the provided pattern.
+ *
+ * Example: match bit 31, 30, and 29 with '0X0'
+ *
+ * constexpr auto decoder = bitPatternMatcher<31, 29, '0', 'X', '0'>;
+ *
+ * uint32_t msbs_are_010 = 0x40000000;
+ * uint32_t msbs_are_000 = 0x10000000;
+ * uint32_t msbs_are_100 = 0x80000000;
+ *
+ * decoder(msbs_are_010) -> returns true
+ * decoder(msbs_are_000) -> returns true
+ * decoder(msbs_are_100) -> returns false
+ */
+template<typename T, int msb, int lsb, char curr, char... rest>
+constexpr auto
+bitPatternMatcher()
+{
+    // No need to check if msb > lsb as it's already covered by
+    // the last conditin in the assertion (impossible to get a negative
+    // sizeof)
+    static_assert(msb >= 0 && lsb >= 0 && msb - lsb == sizeof...(rest));
+    constexpr T mask = dontCareMask<T, msb, lsb, curr, rest...>();
+    constexpr T match = bitMatch<T, msb, lsb, curr, rest...>();
+    auto ret = [] (T value) constexpr
+    {
+        return (value & mask) == match;
+    };
+    return ret;
 }
 
 } // namespace gem5

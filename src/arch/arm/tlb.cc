@@ -162,13 +162,15 @@ TLB::lookup(Lookup lookup_data)
     }
 
     DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x ss %s "
-            "ppn %#x size: %#x pa: %#x ap:%d ns:%d ss:%s g:%d asid: %d "
+            "ppn %#x size: %#x pa: %#x ap:%d piindex:%d "
+            "ns:%d ss:%s g:%d asid: %d "
             "xs: %d regime: %s\n",
             lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
             lookup_data.vmid, lookup_data.ss,
             retval ? retval->pfn       : 0, retval ? retval->size  : 0,
             retval ? retval->pAddr(lookup_data.va) : 0,
             retval ? retval->ap        : 0,
+            retval ? retval->piindex   : 0,
             retval ? retval->ns        : 0,
             retval ? retval->ss : SecurityState::NonSecure,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,

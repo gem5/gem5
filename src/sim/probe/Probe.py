@@ -42,7 +42,7 @@ from m5.SimObject import SimObject
 
 class ProbeListenerObject(SimObject):
     type = "ProbeListenerObject"
-    cxx_header = "sim/probe/probe.hh"
+    cxx_header = "sim/probe/probe_listener_object.hh"
     cxx_class = "gem5::ProbeListenerObject"
 
     manager = Param.SimObject(Parent.any, "ProbeManager")
