@@ -74,50 +74,31 @@ Interrupts::globalMask() const
         case PRV_U:
             // status.uie is always 0 if misa.rvn is disabled
             if (misa.rvs) {
-                mask.local = ~sideleg.local;
-                if (status.uie)
-                    mask.local = mask.local | sideleg.local;
-                mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
-                mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
-                mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
-                mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
-                mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
-                mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
+                mask = ~mideleg | (mideleg & ~sideleg);
+                if (status.uie) {
+                    mask |= sideleg;
+                }
             } else {
                 // According to the RISC-V privilege spec v1.10, if the
                 // S privilege mode is not implemented and user-trap
                 // support, setting mideleg/medeleg bits will delegate the
                 // trap to U-mode trap handler
-                mask.local = ~mideleg.local;
-                if (status.uie)
-                    mask.local = mask.local | mideleg.local;
-                mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
-                mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
-                mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
-                mask.sei = mask.sti = mask.ssi = 0;
+                mask = ~mideleg;
+                if (status.uie) {
+                    mask |= mideleg;
+                }
             }
-            if (status.uie)
-                mask.uei = mask.uti = mask.usi = 1;
             break;
         case PRV_S:
-            mask.local = ~mideleg.local;
-            mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
-            mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
-            mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
+            mask = ~mideleg;
             if (status.sie) {
-                mask.sei = mask.sti = mask.ssi = 1;
-                mask.local = mask.local | mideleg.local;
+                mask |= (mideleg & ~sideleg);
             }
-            mask.uei = mask.uti = mask.usi = 0;
             break;
         case PRV_M:
-
             if (status.mie) {
-                    mask.local = gem5::mask(48);
-                    mask.mei = mask.mti = mask.msi = 1;
+                mask = ~mideleg;
             }
-            mask.sei = mask.sti = mask.ssi = 0;
-            mask.uei = mask.uti = mask.usi = 0;
             break;
         default:
             panic("Unknown privilege mode %d.", prv);

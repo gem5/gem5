@@ -493,11 +493,14 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_UIP:
         {
-            return readMiscReg(MISCREG_IP) & UI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+            mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IP) & mask;
         }
       case MISCREG_SIP:
         {
-            return readMiscReg(MISCREG_IP) & SI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IP) & mask;
         }
       case MISCREG_IE:
         {
@@ -507,11 +510,14 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_UIE:
         {
-            return readMiscReg(MISCREG_IE) & UI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+            mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IE) & mask;
         }
       case MISCREG_SIE:
         {
-            return readMiscReg(MISCREG_IE) & SI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IE) & mask;
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
@@ -753,7 +759,18 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 }
             }
             break;
-
+          case MISCREG_MIDELEG:
+            {
+                setMiscRegNoEffect(
+                    idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
+            }
+            break;
+          case MISCREG_SIDELEG:
+            {
+                setMiscRegNoEffect(
+                    idx, val & SIDELEG_MASK[getPrivilegeModeSet()]);
+            }
+            break;
           case MISCREG_IP:
             {
                 RegVal mask = MIP_MASK[getPrivilegeModeSet()];
@@ -765,7 +782,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_UIP:
             {
-                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
                 setMiscReg(MISCREG_IP, val);
             }
@@ -773,6 +791,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_SIP:
             {
                 RegVal mask = SIP_MASK[getPrivilegeModeSet()];
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
                 setMiscReg(MISCREG_IP, val);
             }
@@ -787,14 +806,15 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_UIE:
             {
-                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
                 setMiscReg(MISCREG_IE, val);
             }
             break;
           case MISCREG_SIE:
             {
-                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
                 setMiscReg(MISCREG_IE, val);
             }
