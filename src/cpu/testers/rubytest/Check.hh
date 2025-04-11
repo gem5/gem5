@@ -65,10 +65,10 @@ class Check
     void print(std::ostream& out) const;
 
   private:
-    void initiateFlush();
-    void initiatePrefetch();
-    void initiateAction();
-    void initiateCheck();
+    void initiateFlush(Cycles current_time);
+    void initiatePrefetch(Cycles current_time);
+    void initiateAction(Cycles current_time);
+    void initiateCheck(Cycles current_time);
 
     void pickValue();
     void pickInitiatingNode();

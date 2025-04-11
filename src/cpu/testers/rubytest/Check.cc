@@ -55,24 +55,26 @@ Check::Check(Addr address, Addr pc, int _num_writers, int _num_readers,
 }
 
 void
-Check::initiate()
+Check::initiate(Cycles current_time)
 {
     DPRINTF(RubyTest, "initiating\n");
     debugPrint();
 
     // currently no protocols support prefetches
     if (false && (rng->random(0, 0xf) == 0)) {
-        initiatePrefetch(); // Prefetch from random processor
+        // Prefetch from random processor
+        initiatePrefetch(current_time);
     }
 
     if (m_tester_ptr->getCheckFlush() && (rng->random(0, 0xff) == 0)) {
-        initiateFlush(); // issue a Flush request from random processor
+        // issue a Flush request from random processor
+        initiateFlush(current_time);
     }
 
     if (m_status == ruby::TesterStatus_Idle) {
-        initiateAction();
+        initiateAction(current_time);
     } else if (m_status == ruby::TesterStatus_Ready) {
-        initiateCheck();
+        initiateCheck(current_time);
     } else {
         // Pending - do nothing
         DPRINTF(RubyTest,
@@ -81,7 +83,7 @@ Check::initiate()
 }
 
 void
-Check::initiatePrefetch()
+Check::initiatePrefetch(Cycles current_time)
 {
     DPRINTF(RubyTest, "initiating prefetch\n");
 
@@ -127,6 +129,7 @@ Check::initiatePrefetch()
                                        CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
+        m_tester_ptr->updateProgress(index, m_address, current_time);
         DPRINTF(RubyTest, "successfully initiated prefetch.\n");
     } else {
         // If the packet did not issue, must delete
@@ -139,7 +142,7 @@ Check::initiatePrefetch()
 }
 
 void
-Check::initiateFlush()
+Check::initiateFlush(Cycles current_time)
 {
 
     DPRINTF(RubyTest, "initiating Flush\n");
@@ -165,12 +168,13 @@ Check::initiateFlush()
                                        CACHE_LINE_BITS);
 
     if (port->sendTimingReq(pkt)) {
+        m_tester_ptr->updateProgress(index, m_address, current_time);
         DPRINTF(RubyTest, "initiating Flush - successful\n");
     }
 }
 
 void
-Check::initiateAction()
+Check::initiateAction(Cycles current_time)
 {
     DPRINTF(RubyTest, "initiating Action\n");
     assert(m_status == ruby::TesterStatus_Idle);
@@ -216,6 +220,7 @@ Check::initiateAction()
         DPRINTF(RubyTest, "status before action update: %s\n",
                 (ruby::TesterStatus_to_string(m_status)).c_str());
         m_status = ruby::TesterStatus_Action_Pending;
+        m_tester_ptr->updateProgress(index, m_address, current_time);
         DPRINTF(RubyTest, "Check %#x, State=Action_Pending\n", m_address);
     } else {
         // If the packet did not issue, must delete
@@ -232,7 +237,7 @@ Check::initiateAction()
 }
 
 void
-Check::initiateCheck()
+Check::initiateCheck(Cycles current_time)
 {
     DPRINTF(RubyTest, "Initiating Check\n");
     assert(m_status == ruby::TesterStatus_Ready);
@@ -271,6 +276,7 @@ Check::initiateCheck()
         DPRINTF(RubyTest, "status before check update: %s\n",
                 ruby::TesterStatus_to_string(m_status).c_str());
         m_status = ruby::TesterStatus_Check_Pending;
+        m_tester_ptr->updateProgress(index, m_address, current_time);
         DPRINTF(RubyTest, "Check %#x, State=Check_Pending\n", m_address);
     } else {
         // If the packet did not issue, must delete
@@ -349,6 +355,7 @@ Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,
             ruby::makeLineAddress(m_address, block_size_bits));
     DPRINTF(RubyTest, "Callback done\n");
+    m_tester_ptr->eraseProgress(proc, m_address);
     debugPrint();
 }
 
