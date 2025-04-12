@@ -115,7 +115,17 @@ def find_gem5_pids() -> List[int]:
             with open(f"/proc/{pid}/comm") as f:
                 comm = f.read().strip()
                 if "gem5" in comm:
-                    gem5_pids.append(int(pid))
+                    with open(f"/proc/{pid}/cmdline") as cmd_file:
+                        cmdline = cmd_file.read().strip()
+                        # exclude multisim processes that aren't simulations
+                        # Use both comm and cmdline. If only cmdline is used, we also pick up processes that have "gem5" in their names
+                        # and aren't necessarily gem5 simulations.
+                        if (
+                            "gem5.utils.multisim" not in cmdline
+                            and "multiprocessing.resource_tracker"
+                            not in cmdline
+                        ):
+                            gem5_pids.append(int(pid))
         except (OSError, PermissionError):
             # Skip processes we can't read
             continue
