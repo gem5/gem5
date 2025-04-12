@@ -231,7 +231,7 @@ class Simulator:
     def set_id(self, id: str) -> None:
         """Set the ID of the simulator.
 
-        As, in the caae of multisim, this ID will be used to create an
+        As, in the case of multisim, this ID will be used to create an
         output subdirectory, there needs to be rules on what an ID can be.
         For now, this function encoures that IDs can only be alphanumeric
         characters with underscores  and dashes. Uunderscores and dashes cannot
@@ -272,6 +272,26 @@ class Simulator:
             return self._id
 
         return None
+
+    def set_on_exit_handler(
+        on_exit_event: Dict[
+            ExitEvent,
+            Union[
+                Generator[Optional[bool], None, None],
+                List[Callable],
+                Callable,
+            ],
+        ],
+        expected_execution_order: Optional[List[ExitEvent]] = None,
+    ) -> None:
+        """Set the on_exit_event handler for the simulator.
+
+        Set the exit event handler that specifies what to execute on each exit
+        event."""
+
+        ClassicGeneratorExitHandler.set_exit_event_map(
+            on_exit_event, expected_execution_order
+        )
 
     def set_max_ticks(self, max_tick: int) -> None:
         """Set the absolute (not relative) maximum number of ticks to run the
