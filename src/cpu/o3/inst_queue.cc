@@ -559,6 +559,7 @@ InstructionQueue::hasReadyInsts()
     return false;
 }
 
+
 void
 InstructionQueue::insert(const DynInstPtr &new_inst)
 {
@@ -578,6 +579,32 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
     assert(freeEntries != 0);
 
     instList[new_inst->threadNumber].push_back(new_inst);
+
+    // Modified by Mutian
+    iqEntries[new_inst->threadNumber].push_back(new_inst);
+    new_inst -> iq_position = 0;
+//    DPRINTF(IQ, "Insertion of PC %s: entry %d took new value (PC: %s, SN: %llu)\n",
+//                    new_inst->pcState(), new_inst->iq_position, new_inst->pcState(),
+//                    new_inst->seqNum);
+    auto it = iqEntries[new_inst->threadNumber].end();
+    --it; // Now points to the newly inserted instruction at the end
+    while (it != iqEntries[new_inst->threadNumber].begin()){
+        auto prev = std::prev(it);
+        if ((*it)->iq_position == (*prev)->iq_position){
+            (*prev) -> iq_position++;
+//            DPRINTF(IQ, "Insertion of PC %s: entry %d took new value (PC: %s, SN: %llu)\n",
+//                    new_inst->pcState(), (*prev)->iq_position, (*prev)->pcState(),
+//                    (*prev)->seqNum);
+        } else {
+//            DPRINTF(IQ, "Insertion of PC %s: entry %d keep the original value (PC: %s, SN: %llu)\n",
+//                    new_inst->pcState(), (*prev)->iq_position, (*prev)->pcState(),
+//                    (*prev)->seqNum);
+            ;
+        }
+        it = prev;
+    }
+
+    //
 
     --freeEntries;
 
@@ -663,6 +690,12 @@ InstructionQueue::getInstToExecute()
 {
     assert(!instsToExecute.empty());
     DynInstPtr inst = std::move(instsToExecute.front());
+
+    //=== Modified by Mutian ===
+    DPRINTF(IQ, "Issued [sn:%llu] PC %s from iq_position %d to FU index %d\n", inst->seqNum, inst->pcState(), inst->iq_position, inst->assigned_fu);
+    // ===
+
+
     instsToExecute.pop_front();
     if (inst->isFloating()) {
         iqIOStats.fpInstQueueReads++;
@@ -834,6 +867,10 @@ InstructionQueue::scheduleReadyInsts()
         // valid FU, then schedule for execution.
         if (idx > FUPool::NoFreeFU || idx == FUPool::NoNeedFU ||
             idx == FUPool::NoCapableFU) {
+
+            issuing_inst->assigned_fu = idx;
+
+
             if (op_latency == Cycles(1)) {
                 i2e_info->size++;
                 instsToExecute.push_back(issuing_inst);
@@ -900,6 +937,14 @@ InstructionQueue::scheduleReadyInsts()
                 // Memory instructions can not be freed from the IQ until they
                 // complete.
                 ++freeEntries;
+
+                // Modified by Mutian
+                iqEntries[issuing_inst->threadNumber].remove(issuing_inst);
+//                DPRINTF(IQ, "Issued [sn:%llu] PC %s from iq_position %d to FU index %d\n", issuing_inst->seqNum, issuing_inst->pcState(), issuing_inst->iq_position, idx);
+                //
+
+
+
                 count[tid]--;
                 issuing_inst->clearInIQ();
             } else {
@@ -1005,6 +1050,13 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
             completed_inst->pcState(), completed_inst->seqNum);
 
         ++freeEntries;
+
+        // Modified by Mutian
+        iqEntries[completed_inst->threadNumber].remove(completed_inst);
+        //
+
+
+
         completed_inst->memOpDone(true);
         count[tid]--;
     } else if (completed_inst->isReadBarrier() ||
@@ -1309,6 +1361,13 @@ InstructionQueue::doSquash(ThreadID tid)
             count[squashed_inst->threadNumber]--;
 
             ++freeEntries;
+
+            // Modified by Mutian
+            iqEntries[squashed_inst->threadNumber].remove(squashed_inst);
+            //
+
+
+
         }
 
         // IQ clears out the heads of the dependency graph only when

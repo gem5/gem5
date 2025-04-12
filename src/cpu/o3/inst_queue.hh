@@ -317,6 +317,10 @@ class InstructionQueue
     // Instruction lists, ready queues, and ordering
     //////////////////////////////////////
 
+    // Modified by Mutian
+    std::list<DynInstPtr> iqEntries[MaxThreads]; // issue queue following physical issue queue
+    //
+
     /** List of all the instructions in the IQ (some of which may be issued). */
     std::list<DynInstPtr> instList[MaxThreads];
 

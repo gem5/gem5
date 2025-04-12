@@ -1416,6 +1416,9 @@ IEW::tick()
 
         checkSignalsAndUpdate(tid);
         dispatch(tid);
+        // === Modified by Mutian ===
+//        instQueue.updateIQPositions(); // Log if no instructions have been dispatched
+        //
     }
 
     if (exeStatus != Squashing) {

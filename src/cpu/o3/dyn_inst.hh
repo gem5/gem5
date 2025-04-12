@@ -74,6 +74,13 @@ namespace o3
 
 class DynInst : public ExecContext, public RefCounted
 {
+
+  // Modified bu Mutian
+  public:
+    int iq_position = -1; // position in the physical issue queue
+    int assigned_fu = -1; // Function unit id assigned to the instruction
+  //
+
   private:
     DynInst(const StaticInstPtr &staticInst, const StaticInstPtr &macroop,
             InstSeqNum seq_num, CPU *cpu);
