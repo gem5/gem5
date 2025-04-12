@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 import time
 
 import tqdm
@@ -19,7 +20,11 @@ class ProgressBar:
             pid, "get_progress_bar_init_stats"
         )
         # print(f"init_stats_str: {init_stats_str}")
-        init_stats = json.loads(init_stats_str)
+        try:
+            init_stats = json.loads(init_stats_str)
+        except json.decoder.JSONDecodeError:
+            print(f"Failed to load the initial stats for pid {pid}!")
+            sys.exit(1)
         self.total_insts = init_stats["total_insts"]
         self.sim_id = init_stats["sim_id"]
         self.workload = init_stats["workload"]
@@ -96,7 +101,7 @@ def main():
             bar_obj.prev_insts = curr_insts
 
         for pid in pids_to_remove:
-            bar_obj.prog_bar.set_description(
+            progress_bar_dict[pid].prog_bar.set_description(
                 f" {pid} (exited) | {bar_obj.sim_id} | {bar_obj.workload}"
             )
             progress_bar_dict.pop(pid)
