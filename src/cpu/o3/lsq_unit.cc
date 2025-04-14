@@ -1601,11 +1601,12 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
     // an exta cycle to re-issue and execute
     request->buildPackets();
     request->sendPacketToCache();
-    if (!request->isSent()){
-        if (!lsq->cacheBlocked())
+    if (!request->isSent()) {
+        if (!lsq->cacheBlocked()) {
             iewStage->retryMemInst(load_inst);
-        else
+       } else {
             iewStage->blockMemInst(load_inst);
+       }
     }
 
     return NoFault;
