@@ -46,7 +46,7 @@ running a simple C program that makes an m5 hypercall (hypercall number 8)
 without requiring superuser privileges.
 
 Usage:
-    python3 gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
+    build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
 
 Arguments:
     --isa                The instruction set architecture (ISA) for the simulation.
@@ -55,7 +55,7 @@ Arguments:
     --resource-version   The version of the workload resource (Optional).
 
 Example:
-    python3 gem5-bridge-driver-validate.py --isa x86 --workload test_workload --resource-version 1.0.0
+     build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa x86 --workload test_workload --resource-version 1.0.0
 
 Requirements:
     - gem5 must be installed and properly configured.

@@ -49,17 +49,17 @@ This script tests disk images to ensure they boot correctly and execute
 hypercalls in the intended order.
 
 Usage:
-    python3 disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
+    build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
 
 Arguments:
     --isa                The instruction set architecture (ISA) for the simulation.
-                         Options: x86, arm, riscv (Required).
-    --workload           The workload ID to run (Optional).
-    --resource_version   The version of the workload resource (Optional).
+                         Options: x86, arm, riscv.
+    --workload           The workload ID to run.
+    --resource_version   The version of the workload resource.
     --validate-npb       Validate the NAS Parallel Benchmarks (NPB) output (Optional).
 
 Example:
-    python3 disk-image-validate.py --isa x86 --workload linux-boot --resource_version 1.0 --validate-npb
+    build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload linux-boot --resource_version 1.0 --validate-npb
 
 Requirements:
     - gem5 must be installed and properly configured.
@@ -191,7 +191,19 @@ class WorkEndDumpReset(ExitHandler, hypercall_num=5):
 simulator.run()
 
 out_dir = m5.options.outdir
-terminal_out_path = Path(out_dir) / "board.pc.com_1.device"
+terminal_out_path = None
+match isa:
+    case "x86":
+        terminal_out_path = Path(out_dir) / "board.pc.com_1.device"
+
+    case "arm":
+        terminal_out_path = Path(out_dir) / "board.terminal"
+
+    case "riscv":
+        terminal_out_path = Path(out_dir) / "board.platform.terminal"
+
+    case _:
+        raise Exception("The isa must be arm, x86 or riscv")
 
 if exit_order == [1, 2, 3] or exit_order == [1, 2, 4, 5, 3]:
     print("All exit events are called in expected order")
