@@ -22,13 +22,14 @@ class ProgressBar:
         # print(f"init_stats_str: {init_stats_str}")
         try:
             init_stats = json.loads(init_stats_str)
+
         except json.decoder.JSONDecodeError:
             print(f"Failed to load the initial stats for pid {pid}!")
-            sys.exit(1)
+            return
+
         self.total_insts = init_stats["total_insts"]
         self.sim_id = init_stats["sim_id"]
         self.workload = init_stats["workload"]
-
         self.pid = pid
         self.prev_insts = 0
         self.prog_bar = tqdm.tqdm(
@@ -65,6 +66,10 @@ def main():
         if pid not in progress_bar_dict.keys():
             # print(f"Adding progress bar for pid {pid}")
             progress_bar_dict[pid] = ProgressBar(pid)
+            # If the initial stats for the workload didn't load, remove it from
+            # the list
+            if not hasattr(progress_bar_dict[pid], "total_insts"):
+                progress_bar_dict.pop(pid)
     while True:
         # If new gem5 processes are launched while the dashboard is running,
         # add them. Only do this if --pid is not passed, as we assume the user
@@ -108,7 +113,7 @@ def main():
 
         if not progress_bar_dict:
             break
-        time.sleep(0.1)
+        time.sleep(10.0)
 
 
 def print_dashboard_label() -> None:
