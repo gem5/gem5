@@ -191,18 +191,6 @@ class Simulator:
         self._last_exit_event = None
         self._exit_event_count = 0
 
-        # self._total_insts = int(self._board.get_workload()._estimated_instructions)
-        # if self._board.get_workload():
-        try:
-            self._total_insts = int(
-                self._board.get_workload().get_estimated_instructions()
-            )
-        except:
-            print(
-                "Workload doesn't have a total number of estimated instructions. Progress bar"
-                "won't be printed."
-            )
-
         if checkpoint_path:
             warn(
                 "Setting the checkpoint path via the Simulator constructor is "
@@ -225,9 +213,6 @@ class Simulator:
         # matters (say an exit event acts differently for the Nth time it is
         # hit)
         self._exit_event_id_log = {}
-
-    def get_total_insts(self) -> Optional[int]:
-        return self._total_insts
 
     def switch_processor(self) -> None:
         """

@@ -410,7 +410,7 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 elif function == "get_progress_bar_init_stats":
                     response = json.dumps(
                         {
-                            "total_insts": simulator.get_total_insts(),
+                            "total_insts": simulator.get_workload().get_estimated_instructions(),
                             "sim_id": simulator.get_id(),
                             "workload": simulator.get_workload().get_id(),
                         }
