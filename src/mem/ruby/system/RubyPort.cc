@@ -258,25 +258,6 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
         panic("RubyPort should never see request with the "
               "cacheResponding flag set\n");
 
-    // For software prefetches, immediately respond to avoid stalling on the
-    // core while still processing the prefetch by passing a copy of the
-    // request through
-    if (pkt->cmd.isSWPrefetch()) {
-        RequestPtr req = std::make_shared<Request>(pkt->req->getPaddr(),
-                                                   pkt->req->getSize(),
-                                                   pkt->req->getFlags(),
-                                                   pkt->req->requestorId());
-        PacketPtr pf = new Packet(req, pkt->cmd);
-        pf->allocate();
-        assert(pf->matchAddr(pkt));
-        assert(pf->getSize() == pkt->getSize());
-
-        pkt->makeResponse();
-        schedTimingResp(pkt, curTick());
-
-        pkt = pf;
-    }
-
     // ruby doesn't support cache maintenance operations at the
     // moment, as a workaround, we respond right away
     if (pkt->req->isCacheMaintenance()) {
