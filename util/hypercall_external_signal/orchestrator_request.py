@@ -232,7 +232,7 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
             # want the dashboard to exit early. If we use timeout=None, however, the
             # dashboard might get stuck in some cases, such as if the simulation
             # exits while we are waiting.
-            timeout = 2.0
+            timeout = 10.0
         else:
             timeout = 30.0
 

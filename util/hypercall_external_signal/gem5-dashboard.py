@@ -54,7 +54,6 @@ def main():
 
     # clear screen, print dashboard
     print_dashboard_label()
-
     progress_bar_dict = {}
 
     if args.pid:
@@ -70,6 +69,9 @@ def main():
             # the list
             if not hasattr(progress_bar_dict[pid], "total_insts"):
                 progress_bar_dict.pop(pid)
+                gem5_pids.remove(pid)
+
+    pids_to_remove = []
     while True:
         # If new gem5 processes are launched while the dashboard is running,
         # add them. Only do this if --pid is not passed, as we assume the user
@@ -84,35 +86,34 @@ def main():
         #         progress_bar_dict[pid] = ProgressBar(pid, bar_pos)
         #         bar_pos += 1
 
-        pids_to_remove = []
+        for pid in pids_to_remove:
+            progress_bar_dict[pid].prog_bar.set_description(
+                f" {pid} (exited) | {progress_bar_dict[pid].sim_id} | {progress_bar_dict[pid].workload}"
+            )
+            progress_bar_dict[pid].prog_bar.bar_format = (
+                "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<00:00,{rate_fmt}{postfix}]"
+            )
+            gem5_pids.remove(pid)
+        # if not progress_bar_dict:
+        #     break
+        if not gem5_pids:
+            break
+
         for pid, bar_obj in progress_bar_dict.items():
             curr_status = send_and_receive_hypercall(
                 pid, "get_progress_bar_inst_count"
             )
             if "ended" in curr_status:
-                # print("current status is ended!")
                 pids_to_remove.append(
                     pid
                 )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
-                # break
                 continue
             elif "timeout" in curr_status:
-                # print("current status is timeout!")
                 continue
-            # print(f"curr_status: {curr_status}")
             curr_insts = int(json.loads(curr_status))
             bar_obj.prog_bar.update(curr_insts - bar_obj.prev_insts)
-            # print(f"updating progress bar for pid {pid}")
             bar_obj.prev_insts = curr_insts
 
-        for pid in pids_to_remove:
-            progress_bar_dict[pid].prog_bar.set_description(
-                f" {pid} (exited) | {bar_obj.sim_id} | {bar_obj.workload}"
-            )
-            progress_bar_dict.pop(pid)
-
-        if not progress_bar_dict:
-            break
         time.sleep(10.0)
 
 
