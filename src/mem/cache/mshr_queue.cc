@@ -54,14 +54,30 @@ namespace gem5
 
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve,
-                     int demand_reserve, std::string cache_name = "")
+                     int demand_reserve, std::string cache_name = "",
+                     int num_banks = 0, bool _enableBanks = false)
     : Queue<MSHR>(_label, num_entries, reserve, cache_name + ".mshr_queue"),
-      demandReserve(demand_reserve)
-{}
+      demandReserve(demand_reserve),
+      enableBanks(_enableBanks),
+      maxMSHRsPerBank(0)  // Initialize with safe default
+{
+    if (num_banks > 0 && enableBanks) {
+        // Calculate max MSHRs per bank - allow at least 2 per bank
+        maxMSHRsPerBank = std::max(2, (num_entries - reserve) / num_banks);
+        DPRINTF(MSHR, "Initialized MSHRQueue with %d max MSHRs per bank\n",
+                maxMSHRsPerBank);
+        // Initialize per-bank MSHR count
+        for (int i = 0; i < num_banks; ++i) {
+            perBankMSHRCount[i] = 0;
+        }
+    }
+
+}
 
 MSHR *
 MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                    Tick when_ready, Counter order, bool alloc_on_fill)
+                    Tick when_ready, Counter order, bool alloc_on_fill,
+                    int bank_id)
 {
     assert(!freeList.empty());
     MSHR *mshr = freeList.front();
@@ -75,6 +91,12 @@ MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = addToReadyList(mshr);
 
+    // Track bank ID but don't enforce limits
+    if (enableBanks) {
+        mshr->setBankID(bank_id);
+        perBankMSHRCount[bank_id]++;
+    }
+
     allocated += 1;
     return mshr;
 }
@@ -82,6 +104,12 @@ MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
 void
 MSHRQueue::deallocate(MSHR* mshr)
 {
+    if (enableBanks){
+        // Update per-bank count
+        int bankId = mshr->getBankID();
+        perBankMSHRCount[bankId]--;
+        DPRINTF(MSHR, "Deallocating MSHR from bank %d", bankId);
+    }
 
     DPRINTF(MSHR, "Deallocating all targets: %s", mshr->print());
     Queue<MSHR>::deallocate(mshr);

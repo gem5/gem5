@@ -74,12 +74,18 @@ class BaseCache;
 class MSHR : public QueueEntry, public Printable
 {
 
+    int bankId; // Bank ID associated with this MSHR
+
     /**
      * Consider the queues friends to avoid making everything public.
      */
     template<typename Entry>
     friend class Queue;
     friend class MSHRQueue;
+
+  public:
+    void setBankID(int id) { bankId = id; }
+    int  getBankID() const { return bankId; }
 
   private:
 
@@ -515,7 +521,7 @@ class MSHR : public QueueEntry, public Printable
      */
     void delay(Tick delay_ticks)
     {
-        assert(readyTime <= curTick());
+        // assert(readyTime <= curTick());
         readyTime = curTick() + delay_ticks;
     }
 

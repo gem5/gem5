@@ -68,6 +68,18 @@ class MSHRQueue : public Queue<MSHR>
      */
     const int demandReserve;
 
+    bool enableBanks;
+
+    /**
+     * Track MSHRs per bank
+    */
+    std::map<int, int> perBankMSHRCount;  // Maps bank ID to MSHR count
+
+    /**
+     * Maximum MSHRs per bank
+    */
+    int maxMSHRsPerBank;
+
   public:
 
     /**
@@ -79,7 +91,24 @@ class MSHRQueue : public Queue<MSHR>
      * demand accesses.
      */
     MSHRQueue(const std::string &_label, int num_entries, int reserve,
-              int demand_reserve, std::string cache_name);
+              int demand_reserve, std::string cache_name, int num_banks,
+              bool _enableBanks);
+
+
+    /**
+     * Check if a bank has reached its MSHR limit
+     */
+    bool isBankFull(int bank_id) const
+    {
+        if (!enableBanks) {
+            return false;  // Bank tracking disabled, so never "full"
+        }
+        auto it = perBankMSHRCount.find(bank_id);
+        if (it == perBankMSHRCount.end()) {
+            return false;
+        }
+        return it->second >= maxMSHRsPerBank;
+    }
 
     /**
      * Allocates a new MSHR for the request and size. This places the request
@@ -97,7 +126,8 @@ class MSHRQueue : public Queue<MSHR>
      * @pre There are free entries.
      */
     MSHR *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                   Tick when_ready, Counter order, bool alloc_on_fill);
+                   Tick when_ready, Counter order, bool alloc_on_fill,
+                   int bank_id);
 
     /**
      * Deallocate a MSHR and its targets

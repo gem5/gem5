@@ -78,9 +78,9 @@ NoncoherentCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 
 bool
 NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-                         PacketList &writebacks)
+                         PacketList &writebacks, ArrayAccessType &data_access)
 {
-    bool success = BaseCache::access(pkt, blk, lat, writebacks);
+    bool success = BaseCache::access(pkt, blk, lat, writebacks, data_access);
 
     if (pkt->isWriteback() || pkt->cmd == MemCmd::WriteClean) {
         assert(blk && blk->isValid());

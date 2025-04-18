@@ -52,6 +52,7 @@ Source('noncoherent_cache.cc')
 Source('write_queue.cc')
 Source('write_queue_entry.cc')
 
+DebugFlag('CacheBank')
 DebugFlag('Cache')
 DebugFlag('CacheComp')
 DebugFlag('CachePort')
@@ -68,4 +69,4 @@ DebugFlag('PartitionPolicy')
 # it explicitly even above and beyond CacheAll.
 CompoundFlag('CacheAll', ['Cache', 'CacheComp', 'CachePort', 'CacheRepl',
                           'CacheVerbose', 'HWPrefetch', 'MSHR',
-                          'PartitionPolicy'])
+                          'PartitionPolicy', 'CacheBank'])

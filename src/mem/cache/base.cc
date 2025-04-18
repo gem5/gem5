@@ -83,7 +83,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       cpuSidePort (p.name + ".cpu_side_port", *this, "CpuSidePort"),
       memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
       accessor(*this),
-      mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name),
+      mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name,
+                p.num_banks, p.enable_banks),
       writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
       compressor(p.compressor),
@@ -101,6 +102,17 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       forwardLatency(p.tag_latency),
       fillLatency(p.data_latency),
       responseLatency(p.response_latency),
+      writeLatency(p.write_latency ? p.write_latency : p.data_latency),
+      enableBanks(p.enable_banks),
+      numBanks(p.num_banks),
+      bankIntlvBits(ceilLog2(p.num_banks)),
+      bankIntlvHighBit(p.bank_intlv_high_bit ? p.bank_intlv_high_bit :
+                       ceilLog2(blkSize) + bankIntlvBits -1),
+      bankIntlvLowBit(bankIntlvHighBit + 1 - bankIntlvBits),
+      bankIntlvMask(((1ULL << bankIntlvBits) - 1 ) << bankIntlvLowBit),
+      unlockedTags(p.unlocked_tags),
+      bankBlockedNum(0),
+      bankLastEvent(0),
       sequentialAccess(p.sequential_access),
       numTarget(p.tgts_per_mshr),
       forwardSnoops(true),
@@ -139,11 +151,198 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+
+    if (enableBanks)
+    {
+        if (1ULL << bankIntlvBits != numBanks)
+            fatal("%s: number of banks is not a power of 2", name());
+        uint64_t granularity = 1ULL << bankIntlvLowBit;
+        if (granularity < blkSize)
+            fatal("%s: bank interleave granularity (%ld) smaller than line "
+                "size (%ld)", name(), granularity, blkSize);
+
+        DPRINTF(CacheBank, "%s: creating banks\n", __func__);
+        for (unsigned i = 0; i < banks.size(); ++i) {
+            banks[i] = new Bank(csprintf("%s.bank_%d", p.name, i), this, i);
+        }
+    }
 }
 
 BaseCache::~BaseCache()
 {
     delete tempBlock;
+
+    for (unsigned i = 0; i < banks.size(); ++i) {
+        delete banks[i];
+    }
+}
+
+void
+BaseCache::logBankInService(Tick time)
+{
+    int banks_size = banks.size();
+
+    // Re-define some stats if they have been reset
+    if (stats.concurrentBanksWeight[banks_size].value() == 0)
+    {
+        for (unsigned i = 0; i <= banks_size; ++i)
+            stats.concurrentBanksWeight[i] = (float)i / banks_size;
+        bankLastEvent = curTick() - simTicks.value();
+    }
+
+    assert(bankBlockedNum < banks_size);
+    stats.concurrentBanksTicks[bankBlockedNum] += time - bankLastEvent;
+    stats.concurrentBanksCycles[bankBlockedNum]
+        += ticksToCycles(time - bankLastEvent);
+    bankBlockedNum++;
+    bankLastEvent = time;
+}
+
+void
+BaseCache::logBankOutOfService(Tick time)
+{
+    assert(bankBlockedNum && bankBlockedNum <= banks.size());
+    stats.concurrentBanksTicks[bankBlockedNum] += time - bankLastEvent;
+    stats.concurrentBanksCycles[bankBlockedNum]
+        += ticksToCycles(time - bankLastEvent);
+    bankBlockedNum--;
+    bankLastEvent = time;
+}
+
+void
+BaseCache::Bank::setBlockedCause(BlockedCause cause)
+{
+    // If bank is already busy, extend the service time
+    if (inService) {
+        // Add a small delay to ensure we don't process requests too soon
+        extendService(owner.ticksToCycles(1));
+        DPRINTF(CacheBank, "Bank %d already busy, extending service "
+             " for blocked cause %d\n", bankId, cause);
+    } else {
+        // Mark the bank in service until a future tick
+        Tick blockUntil = curTick() + owner.cyclesToTicks(Cycles(1));
+        markInService(blockUntil, Busy_ReadPkt_CpuSidePort);
+        DPRINTF(CacheBank, "Bank %d blocked for cause %d until tick %ld\n",
+                bankId, cause, blockUntil);
+    }
+
+    // Set the retry flag to ensure we retry when bank becomes available
+    setRetryFlag();
+
+    // Update owner's blocked state if appropriate for global blocking causes
+    if (cause == Blocked_NoMSHRs) {
+        DPRINTF(CacheBank, "Bank %d has no MSHRs available\n", bankId);
+    }
+}
+
+void
+BaseCache::Bank::processUpdateBusy()
+{
+    assert(inService);
+    DPRINTF(CacheBank, "%s: processing event updateBusyEvent\n", __func__);
+    busyCause = Busy_ReadPkt_MemSidePort;
+    resetConflict();
+    if (!updateBusyList.empty()) {
+        Tick fillTick = updateBusyList.front();
+        DPRINTF(CacheBank, "%s: scheduling event updateBusyEvent "
+                "to tick %ld (from pending queue)\n", __func__, fillTick);
+        owner.schedule(updateBusyEvent, fillTick);
+        updateBusyList.pop();
+    }
+}
+
+void
+BaseCache::Bank::processEndService()
+{
+    assert(inService);
+    DPRINTF(CacheBank, "%s: processing event endServiceEvent\n", __func__);
+    unmarkInService();
+}
+
+void
+BaseCache::Bank::processSendRetry()
+{
+    DPRINTF(CacheBank, "%s: processing event bankSendRetryEvent\n", __func__);
+    owner.cpuSidePort.sendRetryReq();
+}
+
+void
+BaseCache::Bank::extendService(Tick extraTick)
+{
+    assert(inService);
+    assert(nextIdleTick >= curTick());
+    assert(endServiceEvent.scheduled());
+
+    if (!updateBusyEvent.scheduled())
+    {
+        DPRINTF(CacheBank, "%s: scheduling event updateBusyEvent "
+                "to tick %ld\n", __func__, nextIdleTick);
+        owner.schedule(updateBusyEvent, nextIdleTick);
+    } else {
+        DPRINTF(CacheBank, "%s: updateBusyEvent already scheduled, adding "
+                "future tick to the queue (%ld)\n", __func__, nextIdleTick);
+        updateBusyList.push(nextIdleTick);
+    }
+
+    DPRINTF(CacheBank, "%s: extending service until tick %ld\n",
+            __func__, nextIdleTick + extraTick);
+
+    nextIdleTick += extraTick;
+    owner.reschedule(endServiceEvent, nextIdleTick);
+}
+
+void
+BaseCache::Bank::markInService(Tick finishTick, BankBusyCause newCause)
+{
+    assert(!inService);
+    assert(finishTick > curTick());
+    assert(!(endServiceEvent.scheduled()));
+
+    DPRINTF(CacheBank, "%s: Bank %d in service until tick %ld (cause: %d)\n",
+            __func__, bankId, finishTick, newCause);
+
+    nextIdleTick = finishTick;
+    inService = true;
+    busyCause = newCause;
+    owner.logBankInService(curTick());
+    owner.schedule(endServiceEvent, nextIdleTick);
+}
+
+void
+BaseCache::Bank::unmarkInService()
+{
+    assert(inService && nextIdleTick <= curTick());
+    DPRINTF(CacheBank, "%s: service done, become idle\n", __func__);
+    inService = false;
+    owner.logBankOutOfService(nextIdleTick);
+    resetConflict();
+    if (mustSendRetry)
+    {
+        mustSendRetry = false;
+        owner.schedule(sendRetryEvent, curTick() + 1);
+    }
+}
+
+void
+BaseCache::Bank::setRetryFlag()
+{
+    mustSendRetry = true;
+}
+
+void
+BaseCache::Bank::setConflict()
+{
+    if (!conflict) {
+        conflict = true;
+        DPRINTF(CacheBank, "Bank %d conflict detected at tick %ld "
+            " with busy cause %d\n", bankId, curTick(), busyCause);
+    }
+}
+
+void
+BaseCache::Bank::resetConflict()
+{
+    conflict = false;
 }
 
 void
@@ -427,12 +626,13 @@ BaseCache::recvTimingReq(PacketPtr pkt)
 
     Cycles lat;
     CacheBlk *blk = nullptr;
+    ArrayAccessType data_access;
     bool satisfied = false;
     {
         PacketList writebacks;
         // Note that lat is passed by reference here. The function
         // access() will set the lat value.
-        satisfied = access(pkt, blk, lat, writebacks);
+        satisfied = access(pkt, blk, lat, writebacks, data_access);
 
         // After the evicted blocks are selected, they must be forwarded
         // to the write buffer to ensure they logically precede anything
@@ -458,6 +658,58 @@ BaseCache::recvTimingReq(PacketPtr pkt)
             DPRINTF(Cache, "Hit on prefetch for addr %#x (%s)\n",
                     pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
             blk->clearPrefetched();
+        }
+
+        if (data_access != None && enableBanks) {
+            unsigned bank_id = getBankId(pkt->getAddr());
+            RequestorID requestor_id = pkt->req->requestorId();
+
+            Tick access_time;
+            if (data_access == Read) {
+                access_time = request_time;
+            } else if (data_access == Write) {
+                access_time = clockEdge(writeLatency) +
+                              pkt->headerDelay +
+                              std::max(cyclesToTicks(lookupLatency),
+                                       (uint64_t)pkt->payloadDelay);
+            } else if (data_access == Writeback) {
+                access_time = clockEdge(fillLatency) +
+                              pkt->headerDelay +
+                              std::max(cyclesToTicks(lookupLatency),
+                                       (uint64_t)pkt->payloadDelay);
+            } else {
+                // Not a conventional read, but data array was accessed
+                // anyway. Recalculate the access latency, then use it
+                // as the access time (not touching the request time)
+                access_time = clockEdge(calculateAccessLatency(blk,
+                    pkt->headerDelay, lookupLatency));
+            }
+
+            DPRINTF(CacheBank, "%s: blocking bank %d until tick %ld\n",
+                    __func__, bank_id, access_time);
+            DPRINTF(CacheBank, "requestor_id: %d\n", requestor_id);
+            DPRINTF(CacheBank, "%s: blocking packet info: cmd = %s, "
+                    "PC = 0x%lX, address = 0x%lX, size = %d, "
+                    "bank_id = %d\n", __func__, pkt->cmdString(),
+                    pkt->req->hasPC() ? pkt->req->getPC() : 0,
+                    pkt->getAddr(), pkt->getSize(), bank_id);
+
+            banks[bank_id]->markInService(access_time, pkt->isWrite() ?
+                                          Busy_WritePkt_CpuSidePort :
+                                          Busy_ReadPkt_CpuSidePort);
+
+            // Update statistics
+            if (pkt->isWrite()) {
+                stats.bankNumWrites[bank_id][requestor_id]++;
+                stats.bankBytesWritten[bank_id] += pkt->getSize();
+            } else if (pkt->isRead()) {
+                stats.bankNumReads[bank_id][requestor_id]++;
+                stats.bankBytesRead[bank_id] += pkt->getSize();
+            }
+            stats.bankBlockedTicks[bank_id][requestor_id] +=
+                access_time - curTick();
+            stats.bankBlockedCycles[bank_id][requestor_id] +=
+                ticksToCycles(access_time - curTick());
         }
 
         handleTimingReqHit(pkt, blk, request_time);
@@ -562,6 +814,65 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+
+        if (blk != tempBlock && enableBanks) {
+            unsigned bank_id = getBankId(pkt->getAddr());
+            RequestorID requestor_id = pkt->req->requestorId();
+            Tick request_time =
+                clockEdge(fillLatency) + pkt->headerDelay + pkt->payloadDelay;
+
+            if (banks[bank_id]->isBusy()) {
+                DPRINTF(CacheBank, "%s: bank %d is busy, service delayed\n",
+                        __func__, bank_id);
+
+                if (!banks[bank_id]->anyConflict()) {
+                    // update statistics
+                    switch(banks[bank_id]->whyBusy()) {
+                      case Busy_WritePkt_CpuSidePort:
+                        stats.bankCflBusyblkCpuspWrite
+                              [bank_id][requestor_id]++;
+                        break;
+                      case Busy_ReadPkt_CpuSidePort:
+                        stats.bankCflBusyblkCpuspRead[bank_id][requestor_id]++;
+                        break;
+                      case Busy_ReadPkt_MemSidePort:
+                        stats.bankCflBusyblkMemspFill[bank_id][requestor_id]++;
+                        break;
+                      default:
+                        break;
+                    }
+                    stats.bankCflTargetblkMemspFill[bank_id][requestor_id]++;
+                    banks[bank_id]->setConflict();
+                }
+
+                // Add the latency for the new pkt write
+                banks[bank_id]->extendService(request_time - curTick());
+
+                DPRINTF(CacheBank, "%s: nextIdleTick for bank %d is: %ld\n",
+                        __func__, bank_id, banks[bank_id]->finishTick());
+            } else {
+                DPRINTF(CacheBank, "%s: blocking bank %d until tick %ld\n",
+                        __func__, bank_id, request_time);
+
+                // Mark the corresponding bank in service
+                banks[bank_id]->markInService(request_time,
+                                              Busy_ReadPkt_MemSidePort);
+            }
+
+            DPRINTF(CacheBank, "%s: blocking packet info: cmd = %s, "
+                    "PC = 0x%lX, address = 0x%lX, size = %d, bank_id = %d\n",
+                    __func__, pkt->cmdString(),
+                    pkt->req->hasPC() ? pkt->req->getPC() : 0,
+                    pkt->getAddr(), pkt->getSize(), bank_id);
+
+            // Update statistics
+            stats.bankNumWrites[bank_id][requestor_id]++;
+            stats.bankBytesWritten[bank_id] += pkt->getSize();
+            stats.bankBlockedTicks[bank_id][requestor_id] +=
+                request_time - curTick();
+            stats.bankBlockedCycles[bank_id][requestor_id] +=
+                ticksToCycles(request_time - curTick());
+        }
     }
 
     // Don't want to promote the Locked RMW Read until
@@ -648,7 +959,8 @@ BaseCache::recvAtomic(PacketPtr pkt)
 
     CacheBlk *blk = nullptr;
     PacketList writebacks;
-    bool satisfied = access(pkt, blk, lat, writebacks);
+    ArrayAccessType data_access;
+    bool satisfied = access(pkt, blk, lat, writebacks, data_access);
 
     if (pkt->isClean() && blk && blk->isSet(CacheBlk::DirtyBit)) {
         // A cache clean opearation is looking for a dirty
@@ -719,6 +1031,7 @@ void
 BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
     Addr blk_addr = pkt->getBlockAddr(blkSize);
+
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock({pkt->getAddr(), is_secure});
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
@@ -1197,6 +1510,53 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 // Access path: requests coming in from the CPU side
 //
 /////////////////////////////////////////////////////
+
+bool
+BaseCache::checkDataArrayAccess(PacketPtr pkt)
+{
+    // Cache maintenance
+    if (pkt->req->isCacheMaintenance())
+        return false;
+
+    // Clean eviction or writeback
+    if (pkt->isCleanEviction()) {
+
+        // CleanEvict command
+        if (pkt->cmd == MemCmd::CleanEvict)
+            return false;
+
+        // WritebackClean command and entry in MSHR queue
+        if (pkt->cmd == MemCmd::WritebackClean &&
+            mshrQueue.findMatch(pkt->getAddr(), pkt->isSecure()))
+            return false;
+
+        // Entry in writebuffer queue
+        if (writeBuffer.findMatch(pkt->getAddr(), pkt->isSecure()))
+            return false;
+    }
+
+    CacheBlk *blk = tags->findBlock({pkt->getAddr(), pkt->isSecure()});
+
+    // WriteClean command
+    if (pkt->cmd == MemCmd::WriteClean)
+    {
+        if (!blk && pkt->writeThrough())
+            return false;
+    }
+
+    // Cache miss
+    bool dataRequest =
+        pkt->isRead() || (pkt->isWrite() && !pkt->isWriteback());
+    bool blkAccessible = blk &&
+        (pkt->needsWritable() ? blk->isSet(CacheBlk::WritableBit)
+                              : blk->isSet(CacheBlk::ReadableBit));
+    if (dataRequest && !blkAccessible)
+        return false;
+
+    // Return true in all the other cases
+    return true;
+}
+
 Cycles
 BaseCache::calculateTagOnlyLatency(const uint32_t delay,
                                    const Cycles lookup_lat) const
@@ -1222,13 +1582,17 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
             lat = ticksToCycles(delay) + std::max(lookup_lat, dataLatency);
         }
 
-        // Check if the block to be accessed is available. If not, apply the
-        // access latency on top of when the block is ready to be accessed.
-        const Tick tick = curTick() + delay;
-        const Tick when_ready = blk->getWhenReady();
-        if (when_ready > tick &&
-            ticksToCycles(when_ready - tick) > lat) {
-            lat += ticksToCycles(when_ready - tick);
+        if (!enableBanks)
+        {
+            // Check if the block to be accessed is available. If not, apply
+            // the access latency on top of when the block is ready to be
+            // accessed.
+            const Tick tick = curTick() + delay;
+            const Tick when_ready = blk->getWhenReady();
+            if (when_ready > tick &&
+                ticksToCycles(when_ready - tick) > lat) {
+                lat += ticksToCycles(when_ready - tick);
+            }
         }
     } else {
         // In case of a miss, we neglect the data access in a parallel
@@ -1242,7 +1606,7 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
 
 bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-                  PacketList &writebacks)
+                  PacketList &writebacks, ArrayAccessType &data_access)
 {
     // sanity check
     assert(pkt->isRequest());
@@ -1250,6 +1614,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     gem5_assert(!(isReadOnly && pkt->isWrite()),
                 "Should never see a write in a read-only cache %s\n",
                 name());
+
+    // Assume no data array access by default
+    data_access = None;
 
     // Access block in the tags
     Cycles tag_latency(0);
@@ -1360,6 +1727,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
+                // This is a failed data expansion (write), which happened
+                // after finding the replacement entries and accessing the
+                // block's data. There were no replaceable entries
+                // available to make room for the expanded block, and since
+                // it does not fit anymore and it has been properly updated
+                // to contain the new data, forward it to the next level
+                data_access = FailExp;
                 invalidateBlock(blk);
                 return false;
             }
@@ -1383,6 +1757,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
+
+        // A writeback searches for the block, then writes the data
+        data_access = Writeback;
 
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
@@ -1439,6 +1816,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
+                // This is a failed data expansion (write), which happened
+                // after finding the replacement entries and accessing the
+                // block's data. There were no replaceable entries
+                // available to make room for the expanded block, and since
+                // it does not fit anymore and it has been properly updated
+                // to contain the new data, forward it to the next level
+                data_access = FailExp;
                 invalidateBlock(blk);
                 return false;
             }
@@ -1460,6 +1844,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         incHitCount(pkt);
 
+        // A writeback searches for the block, then writes the data
+        data_access = Writeback;
+
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
@@ -1477,12 +1864,15 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // Calculate access latency based on the need to access the data array
         if (pkt->isRead()) {
             lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+            data_access = Read;
 
             // When a block is compressed, it must first be decompressed
             // before being read. This adds to the access latency.
             if (compressor) {
                 lat += compressor->getDecompressionLatency(blk);
             }
+        } else if (pkt->isWrite()) {
+            data_access = Write;
         } else {
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
@@ -1983,6 +2373,12 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
     }
 }
 
+void
+BaseCache::delayMSHRQueuePacket(MSHR* mshr, Tick delay_ticks)
+{
+    mshrQueue.delay(mshr, delay_ticks);
+}
+
 bool
 BaseCache::sendWriteQueuePacket(WriteQueueEntry* wq_entry)
 {
@@ -2290,6 +2686,57 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
              "number of data expansions"),
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
+    ADD_STAT(concurrentBanksTicks, statistics::units::Tick::get(),
+             "number of ticks (i) banks are used concurrently"),
+    ADD_STAT(concurrentBanksCycles, statistics::units::Cycle::get(),
+             "number of cycles (i) banks are used concurrently"),
+    ADD_STAT(concurrentBanksRatio, statistics::units::Ratio::get(),
+             "ratio of time (i) banks are used concurrently"),
+    ADD_STAT(concurrentBanksWeight, statistics::units::Ratio::get(),
+             "weight of each number of concurrent banks"),
+    ADD_STAT(averageBankActivity, statistics::units::Ratio::get(),
+             "average ratio of active banks during the execution"),
+    ADD_STAT(bankNumReads, statistics::units::Count::get(),
+             "number of read operations performed on a bank"),
+    ADD_STAT(bankNumWrites, statistics::units::Count::get(),
+             "number of write operations performed on a bank"),
+    ADD_STAT(bankBlockedTicks, statistics::units::Tick::get(),
+             "number of ticks for which the bank is blocked"),
+    ADD_STAT(bankBlockedCycles, statistics::units::Cycle::get(),
+             "number of cycles for which the bank is blocked"),
+    ADD_STAT(bankBlockedRetryPkts, statistics::units::Count::get(),
+             "number of rejected packets because the bank is blocked"),
+    ADD_STAT(bankBlockedRetryTicks, statistics::units::Tick::get(),
+             "total number of ticks for which requests are postponed"),
+    ADD_STAT(bankCflBusyblkCpuspRead, statistics::units::Count::get(),
+             "rescheduled requests while reading from CpuSidePort"),
+    ADD_STAT(bankCflBusyblkCpuspWrite, statistics::units::Count::get(),
+             "rescheduled requests while writing from CpuSidePort"),
+    ADD_STAT(bankCflBusyblkMemspFill, statistics::units::Count::get(),
+             "rescheduled requests while filling from MemSidePort"),
+    ADD_STAT(bankCflTargetblkCpuspRead, statistics::units::Count::get(),
+             "read requests rescheduled due to a bank being busy"),
+    ADD_STAT(bankCflTargetblkCpuspWrite, statistics::units::Count::get(),
+             "write/wb requests rescheduled due to a bank being busy"),
+    ADD_STAT(bankCflTargetblkMemspFill, statistics::units::Count::get(),
+             "write fills rescheduled due to a bank being busy"),
+    ADD_STAT(bankBwBytesSent, statistics::units::Count::get(),
+             "number of bytes sent through each bank"),
+    ADD_STAT(bankBytesRead, statistics::units::Count::get(),
+             "Number of bytes read from each bank"),
+    ADD_STAT(bankBytesWritten, statistics::units::Count::get(),
+             "Number of bytes written to each bank"),
+    ADD_STAT(bankAvgRdBW, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
+             "Average bank read bandwidth in Byte/s"),
+    ADD_STAT(bankAvgWrBW, statistics::units::Rate<
+                statistics::units::Byte, statistics::units::Second>::get(),
+             "Average bank write bandwidth in Byte/s"),
+    ADD_STAT(bankBwAvgRate,
+                statistics::units::Rate<statistics::units::Byte,
+                statistics::units::Second>::get(),
+             "Average bandwidth usage per bank in bytes/second"),
+
     cmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
@@ -2305,6 +2752,7 @@ BaseCache::CacheStats::regStats()
 
     System *system = cache.system;
     const auto max_requestors = system->maxRequestors();
+    const int num_banks = cache.banks.size();
 
     for (auto &cs : cmd)
         cs->regStatsFromParent();
@@ -2517,6 +2965,173 @@ BaseCache::CacheStats::regStats()
             system->getRequestorName(i));
     }
 
+    concurrentBanksTicks
+        .init(num_banks + 1)
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b <= num_banks; b++)
+        concurrentBanksTicks.subname(b, std::to_string(b));
+
+    concurrentBanksCycles
+        .init(num_banks + 1)
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b <= num_banks; b++)
+        concurrentBanksCycles.subname(b, std::to_string(b));
+
+    concurrentBanksRatio.flags(total | nozero | nonan);
+    concurrentBanksRatio =
+        concurrentBanksTicks / sum(concurrentBanksTicks);
+    for (int b = 0; b <= num_banks; b++)
+        concurrentBanksRatio.subname(b, std::to_string(b));
+
+    concurrentBanksWeight
+        .init(num_banks + 1)
+        .flags(nozero | nonan)
+        ;
+    for (int b = 0; b <= num_banks; b++)
+        concurrentBanksWeight.subname(b, std::to_string(b));
+
+    averageBankActivity.flags(total | nozero | nonan);
+    averageBankActivity =
+        sum(concurrentBanksRatio * concurrentBanksWeight);
+
+    bankNumReads
+            .init(num_banks, system->maxRequestors())
+            .flags(total | nozero)
+            ;
+    for (int b = 0; b < num_banks; b++)
+        bankNumReads.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankNumReads.ysubname(i, system->getRequestorName(i));
+
+    bankNumWrites
+            .init(num_banks, system->maxRequestors())
+            .flags(total | nozero)
+            ;
+    for (int b = 0; b < num_banks; b++)
+        bankNumWrites.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankNumWrites.ysubname(i, system->getRequestorName(i));
+
+    bankBlockedTicks
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankBlockedTicks.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankBlockedTicks.ysubname(i, system->getRequestorName(i));
+
+    bankBlockedCycles
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankBlockedCycles.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankBlockedCycles.ysubname(i, system->getRequestorName(i));
+
+    bankBlockedRetryPkts
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankBlockedRetryPkts.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankBlockedRetryPkts.ysubname(i, system->getRequestorName(i));
+
+    bankBlockedRetryTicks
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankBlockedRetryTicks.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankBlockedRetryTicks.ysubname(i, system->getRequestorName(i));
+
+    bankCflBusyblkCpuspRead
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflBusyblkCpuspRead.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflBusyblkCpuspRead.ysubname(i, system->getRequestorName(i));
+
+    bankCflBusyblkCpuspWrite
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflBusyblkCpuspWrite.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflBusyblkCpuspWrite.ysubname(i, system->getRequestorName(i));
+
+
+    bankCflBusyblkMemspFill
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflBusyblkMemspFill.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflBusyblkMemspFill.ysubname(i, system->getRequestorName(i));
+
+    bankCflTargetblkCpuspRead
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflTargetblkCpuspRead.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflTargetblkCpuspRead.ysubname(i, system->getRequestorName(i));
+
+    bankCflTargetblkCpuspWrite
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflTargetblkCpuspWrite.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflTargetblkCpuspWrite.ysubname(i, system->getRequestorName(i));
+
+
+    bankCflTargetblkMemspFill
+        .init(num_banks, system->maxRequestors())
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankCflTargetblkMemspFill.subname(b, std::to_string(b));
+    for (int i = 0; i < system->maxRequestors(); i++)
+        bankCflTargetblkMemspFill.ysubname(i, system->getRequestorName(i));
+
+    bankBwBytesSent
+        .init(num_banks)
+        .flags(total | nozero)
+        ;
+    for (int b = 0; b < num_banks; b++)
+        bankBwBytesSent.subname(b, std::to_string(b));
+
+    bankBytesRead
+        .init(num_banks)
+        .flags(total | nozero);
+    for (int b = 0; b < num_banks; b++)
+        bankBytesRead.subname(b, std::to_string(b));
+
+    bankBytesWritten
+        .init(num_banks)
+        .flags(total | nozero);
+    for (int b = 0; b < num_banks; b++)
+        bankBytesWritten.subname(b, std::to_string(b));
+
+    bankBwAvgRate.flags(total | nozero | nonan);
+
+    bankAvgRdBW = bankBytesRead / simSeconds;
+    bankAvgWrBW = bankBytesWritten / simSeconds;
+    bankBwAvgRate = bankBwBytesSent / simSeconds;
+
+
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
 }
@@ -2557,6 +3172,17 @@ BaseCache::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 bool
 BaseCache::CpuSidePort::tryTiming(PacketPtr pkt)
 {
+    Addr blk_addr = pkt->getAddr();
+    RequestorID requestor_id = pkt->req->requestorId();
+    unsigned bank_id = cache.getBankId(blk_addr);
+
+    // Check if this access requires the data array
+    bool dataArrayAccess = cache.checkDataArrayAccess(pkt);
+
+    bool doNotBlock = cache.unlockedTags && !dataArrayAccess;
+
+    bool bank_busy = cache.enableBanks && cache.banks[bank_id]->isBusy();
+
     if (cache.system->bypassCaches() || pkt->isExpressSnoop()) {
         // always let express snoop packets through even if blocked
         return true;
@@ -2564,6 +3190,58 @@ BaseCache::CpuSidePort::tryTiming(PacketPtr pkt)
         // either already committed to send a retry, or blocked
         mustSendRetry = true;
         return false;
+    } else if (bank_busy) {
+        // the target bank is busy, check if the packet can be accepted
+        if (doNotBlock) {
+            DPRINTF(CacheBank, "%s: accepting packet %s with bank %d busy\n",
+                    __func__, pkt->cmdString(), bank_id);
+            return true;
+        } else {
+            DPRINTF(CacheBank, "%s: bank %d is busy, service denied\n",
+                    __func__, bank_id);
+            DPRINTF(CacheBank, "%s: blocked packet info: cmd = %s, "
+                    "PC = 0x%lX, address = 0x%lX, size = %d, bank_id = %d\n",
+                    __func__, pkt->cmdString(),
+                    pkt->req->hasPC() ? pkt->req->getPC() : 0,
+                    pkt->getAddr(), pkt->getSize(), bank_id);
+
+            // allow the packet flow again at the end of the operation
+            cache.banks[bank_id]->setRetryFlag();
+
+            // update statistics
+            cache.stats.bankBlockedRetryPkts[bank_id][requestor_id]++;
+            cache.stats.bankBlockedRetryTicks[bank_id][requestor_id]
+                += (cache.banks[bank_id]->finishTick() + 1 - curTick());
+
+            if (!cache.banks[bank_id]->anyConflict()) {
+                BankBusyCause cause = cache.banks[bank_id]->whyBusy();
+                switch(cause) {
+                  case Busy_WritePkt_CpuSidePort:
+                    cache.stats.bankCflBusyblkCpuspWrite
+                                 [bank_id][requestor_id]++;
+                    break;
+                  case Busy_ReadPkt_CpuSidePort:
+                    cache.stats.bankCflBusyblkCpuspRead
+                                 [bank_id][requestor_id]++;
+                    break;
+                  case Busy_ReadPkt_MemSidePort:
+                    cache.stats.bankCflBusyblkMemspFill
+                                 [bank_id][requestor_id]++;
+                    break;
+                  default:
+                    break;
+                }
+                if (pkt->isRead()) {
+                    cache.stats.bankCflTargetblkCpuspRead
+                                 [bank_id][requestor_id]++;
+                } else {
+                    cache.stats.bankCflTargetblkCpuspWrite
+                                 [bank_id][requestor_id]++;
+                }
+                cache.banks[bank_id]->setConflict();
+            }
+            return false;
+        }
     }
     mustSendRetry = false;
     return true;
@@ -2677,7 +3355,7 @@ BaseCache::CacheReqPacketQueue::sendDeferredPacket()
     assert(!waitingOnRetry);
 
     // there should never be any deferred request packets in the
-    // queue, instead we resly on the cache to provide the packets
+    // queue, instead we rely on the cache to provide the packets
     // from the MSHR queue or write queue
     assert(deferredPacketReadyTime() == MaxTick);
 

@@ -159,7 +159,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
 
 bool
 Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-              PacketList &writebacks)
+              PacketList &writebacks, ArrayAccessType &data_access)
 {
 
     if (pkt->req->isUncacheable()) {
@@ -183,7 +183,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         return false;
     }
 
-    return BaseCache::access(pkt, blk, lat, writebacks);
+    return BaseCache::access(pkt, blk, lat, writebacks, data_access);
 }
 
 void
