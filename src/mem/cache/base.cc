@@ -359,11 +359,23 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         // Coalesce unless it was a software prefetch (see above).
         if (pkt) {
             assert(!pkt->isWriteback());
+
             // CleanEvicts corresponding to blocks which have
             // outstanding requests in MSHRs are simply sunk here
             if (pkt->cmd == MemCmd::CleanEvict) {
-                pendingDelete.reset(pkt);
-            } else if (pkt->cmd == MemCmd::WriteClean) {
+                pendingDelete.reset(pkt); /*
+                                           * ECE757: 
+                                           *   This happens if address in L2 MSHR but L1 no longer needs it,
+                                           *   we will still complete the MSHR to L2 but will not response to L1.
+                                           */ 
+
+
+            } else if (pkt->cmd == MemCmd::WriteClean) { /*
+                                                          * ECE757:
+                                                          *   For special memory operation like MMIO or uncached memory region. 
+                                                          *   We bypass the normal cache coherence mechanism.
+                                                          */
+
                 // A WriteClean should never coalesce with any
                 // outstanding cache maintenance requests.
 
@@ -375,7 +387,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                         pkt->print());
 
                 assert(pkt->req->requestorId() < system->maxRequestors());
-                stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
+                stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++; // ECE757: update MSHR hit statistics
 
                 // We use forward_time here because it is the same
                 // considering new targets. We have multiple
@@ -385,8 +397,8 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                 // port and also takes into account the additional
                 // delay of the xbar.
                 mshr->allocateTarget(pkt, forward_time, order++,
-                                     allocOnFill(pkt->cmd));
-                if (mshr->getNumTargets() >= numTarget) {
+                                     allocOnFill(pkt->cmd)); // ECE757: creating a new target for waiting the memory response
+                if (mshr->getNumTargets() >= numTarget) { // ECE757: reach the maximum number of target, block the request
                     noTargetMSHR = mshr;
                     setBlocked(Blocked_NoTargets);
                     // need to be careful with this... if this mshr isn't
@@ -399,11 +411,14 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
     } else {
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
-        stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
+        stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++; // ECE757: record as MSHR miss
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
 
-        if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean) {
+        if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean) { /*
+                                                                    * ECE757:
+                                                                    *   For special memory operation like MMIO or uncached memory region. 
+                                                                    */
             // We use forward_time here because there is an
             // writeback or writeclean, forwarded to WriteBuffer.
             allocateWriteBuffer(pkt, forward_time);
@@ -432,7 +447,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
             // Here we are using forward_time, modelling the latency of
             // a miss (outbound) just as forwardLatency, neglecting the
             // lookupLatency component.
-            allocateMissBuffer(pkt, forward_time);
+            allocateMissBuffer(pkt, forward_time); // ECE757: allocate buffer to track this miss
         }
     }
 }
