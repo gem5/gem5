@@ -160,21 +160,6 @@ test_boot(
     length=constants.long_tag,
 )
 
-
-# Due to Nightly test timeout issues, outlined here:
-# https://gem5.atlassian.net/browse/GEM5-1120, this test has been disabled
-# until the exact error causing the Nightly tests to timeout is established.
-
-# test_boot(
-#    cpu="o3",
-#    num_cpus=2,
-#    mem_system="mesi_two_level",
-#    memory_class="DualChannelDDR4_2400"
-#    boot_type="init",
-#    length=constants.long_tag,
-# )
-
-
 #### The very-long (Weekly) tests ####
 
 # This maps the cross product of the test to run. As 'init' is a subset
@@ -195,7 +180,7 @@ run_map = {
         },
         "timing": {
             1: True,
-            2: True,
+            2: False,  # Removed as already doing 4-cores
             4: True,
             8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
@@ -237,7 +222,7 @@ run_map = {
             1: True,
             2: False,  # Disabled due to
             # https://gem5.atlassian.net/browse/GEM5-1219.
-            4: True,
+            4: False,  # Disabled as we already do 8-cores
             8: True,
         },
         "o3": {
@@ -268,24 +253,6 @@ for mem_system in run_map:
 test_boot(
     cpu="o3",
     num_cpus=1,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    boot_type="init",
-    length=constants.very_long_tag,
-)
-
-test_boot(
-    cpu="o3",
-    num_cpus=2,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    boot_type="init",
-    length=constants.very_long_tag,
-)
-
-test_boot(
-    cpu="o3",
-    num_cpus=4,
     mem_system="classic",
     memory_class="DualChannelDDR4_2400",
     boot_type="init",

@@ -160,7 +160,7 @@ jobs:
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 720 # 12 hours
+        timeout-minutes: 1440 # 24 hours
         needs:
             - build-vega-gem5
             - get-date

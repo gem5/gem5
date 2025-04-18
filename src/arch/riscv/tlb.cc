@@ -253,7 +253,7 @@ TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
 {
     Fault fault = NoFault;
 
-    if (mode == BaseMMU::Read && !pte.r) {
+    if (mode == BaseMMU::Read && !pte.r && !(pte.x && status.mxr)) {
         DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
