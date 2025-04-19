@@ -93,28 +93,33 @@ def main():
             progress_bar_dict[pid].prog_bar.bar_format = (
                 "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<00:00,{rate_fmt}{postfix}]"
             )
+            # print(f"gem5_pids: {gem5_pids}, pid to remove: {pid}")
             gem5_pids.remove(pid)
+            pids_to_remove.remove(pid)
         # if not progress_bar_dict:
         #     break
         if not gem5_pids:
             break
 
         for pid, bar_obj in progress_bar_dict.items():
-            curr_status = send_and_receive_hypercall(
-                pid, "get_progress_bar_inst_count"
-            )
-            if "ended" in curr_status:
-                pids_to_remove.append(
-                    pid
-                )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
-                continue
-            elif "timeout" in curr_status:
-                continue
-            curr_insts = int(json.loads(curr_status))
-            bar_obj.prog_bar.update(curr_insts - bar_obj.prev_insts)
-            bar_obj.prev_insts = curr_insts
+            if (
+                pid in gem5_pids
+            ):  # check if process is still active. might be better to add a "status" member variable to each progress bar object later
+                curr_status = send_and_receive_hypercall(
+                    pid, "get_progress_bar_inst_count"
+                )
+                if "ended" in curr_status:
+                    pids_to_remove.append(
+                        pid
+                    )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
+                    continue
+                elif "timeout" in curr_status:
+                    continue
+                curr_insts = int(json.loads(curr_status))
+                bar_obj.prog_bar.update(curr_insts - bar_obj.prev_insts)
+                bar_obj.prev_insts = curr_insts
 
-        time.sleep(10.0)
+        time.sleep(5.0)
 
 
 def print_dashboard_label() -> None:
