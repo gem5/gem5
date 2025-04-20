@@ -42,6 +42,7 @@
 #define __CACHE_TAGGED_ENTRY_HH__
 
 #include <cassert>
+#include "debug/CacheAx.hh"
 
 #include "base/cprintf.hh"
 #include "base/types.hh"
@@ -79,7 +80,18 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
     virtual uint32_t
     extractSet(const KeyType &key) const
     {
+        DPRINTF(CacheAx, "[TaggedSetAssociative::extractSet] setShift: %x, setMask: %x\n", setShift, setMask);
+        DPRINTF(CacheAx, "[TaggedSetAssociative::extractSet] Extracted set index : %x for address : %x\n", (key.address >> (setShift)) & setMask, key.address);
         return (key.address >> setShift) & setMask;
+    }
+
+    uint32_t
+    extractSetAx(const Addr addr) const
+    {
+      
+      DPRINTF(CacheAx, "[TaggedSetAssociative::extractSetAx] setShift: %x, setMask: %x\n", setShift, setMask);
+      DPRINTF(CacheAx, "[TaggedSetAssociative::extractSetAx] Extracted set index : %x for address : %x\n", (addr >> (setShift + 1)) & setMask, addr);
+      return (addr >> (setShift + 1)) & setMask;
     }
 
   public:
@@ -92,6 +104,12 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
     getPossibleEntries(const KeyType &key) const override
     {
         return sets[extractSet(key)];
+    }
+
+    std::vector<ReplaceableEntry*>
+    getPossibleEntriesAx(const KeyType &key) const override
+    {
+        return sets[extractSetAx(key.address)];
     }
 
     Addr

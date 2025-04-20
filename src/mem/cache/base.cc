@@ -1300,6 +1300,7 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
+    DPRINTF(CacheAx, "Inside BaseCache::access for addr: %x\n", pkt->getAddr());
     // sanity check
     assert(pkt->isRequest());
 

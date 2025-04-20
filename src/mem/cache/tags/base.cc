@@ -47,6 +47,8 @@
 
 #include <cassert>
 
+#include "debug/CacheAx.hh"
+
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
@@ -81,9 +83,33 @@ BaseTags::findBlockBySetAndWay(int set, int way) const
 CacheBlk*
 BaseTags::findBlock(const CacheBlk::KeyType &key) const
 {
+    DPRINTF(CacheAx, "Inside findBlock for addr: %x\n", key.address);
     // Find possible entries that may contain the given address
     const std::vector<ReplaceableEntry*> entries =
         indexingPolicy->getPossibleEntries(key);
+
+    // Search for block
+    for (const auto& location : entries) {
+        CacheBlk* blk = static_cast<CacheBlk*>(location);
+        if (blk->match(key)) {
+            return blk;
+        }
+    }
+
+    // Did not find block
+    return nullptr;
+}
+
+CacheBlk*
+BaseTags::findBlockAx(const CacheBlk::KeyType &key) const
+{
+    DPRINTF(CacheAx, "[BaseTags::findBlockAx] Inside findBlockAx for addr: %x\n", key.address);
+    // const std::vector<ReplaceableEntry*> entries = sa->getPossibleEntriesAx(pkt->getAddr());
+    // DPRINTF(CacheAx, "Indexing policy: %s\n", typeid(indexingPolicy).name());
+
+    // Find possible entries that may contain the given address
+    const std::vector<ReplaceableEntry*> entries =
+        indexingPolicy->getPossibleEntriesAx(key);
 
     // Search for block
     for (const auto& location : entries) {

@@ -193,6 +193,10 @@ class IndexingPolicyTemplate : public SimObject
      */
     virtual std::vector<ReplaceableEntry*> getPossibleEntries(const KeyType &key)
                                                                     const = 0;
+    
+    virtual std::vector<ReplaceableEntry*> getPossibleEntriesAx(const KeyType &key) const {
+        return {};
+    }
 
     /**
      * Regenerate an entry's address from its tag and assigned indexing bits.

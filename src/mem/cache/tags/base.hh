@@ -201,6 +201,8 @@ class BaseTags : public ClockedObject
      */
     virtual CacheBlk *findBlock(const CacheBlk::KeyType &key) const;
 
+    virtual CacheBlk *findBlockAx(const CacheBlk::KeyType &key) const;
+
     /**
      * Find a block given set and way.
      *

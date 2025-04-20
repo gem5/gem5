@@ -51,6 +51,7 @@
 #include <string>
 #include <vector>
 
+#include "debug/CacheAx.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"
@@ -127,7 +128,19 @@ class BaseSetAssoc : public BaseTags
      */
     CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override
     {
-        CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
+        CacheBlk *blk;
+        if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+            DPRINTF(CacheAx, "[BaseSetAssoc::accessBlock] Approximate request: This request has the approximate flag set %s\n", pkt->print());
+            blk = findBlockAx({pkt->getAddr(), pkt->isSecure()});
+
+        }
+        else {
+            DPRINTF(CacheAx, "[BaseSetAssoc::accessBlock] Standard request %s\n", pkt->print());
+            blk = findBlock({pkt->getAddr(), pkt->isSecure()});
+        }
+
+
+
 
         // ECE 757 : Apr 9th
         // TODO:

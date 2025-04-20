@@ -8,6 +8,13 @@ int main(){
     // printf("VA of b : %u(0x%x)\n", addr, addr);
 
     asm volatile (
+        "lw %0, 0(%1)"
+        : "=r" (result)
+        : "r" (addr+9900)
+        : "memory"
+    );
+
+    asm volatile (
         "lax %0, 0(%1)"
         : "=r" (result)
         : "r" (addr+9900)
@@ -20,6 +27,20 @@ int main(){
         : "r" (addr+9900)
         : "memory"
     );
+
+    // asm volatile (
+    //     "lw %0, 0(%1)"
+    //     : "=r" (result)
+    //     : "r" (addr+9900)
+    //     : "memory"
+    // );
+
+    // asm volatile (
+    //     "lw %0, 0(%1)"
+    //     : "=r" (result)
+    //     : "r" (addr+9900)
+    //     : "memory"
+    // );
 
     return 0;
 }
