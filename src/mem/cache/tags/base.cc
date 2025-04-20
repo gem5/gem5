@@ -115,6 +115,7 @@ BaseTags::findBlockAx(const CacheBlk::KeyType &key) const
     for (const auto& location : entries) {
         CacheBlk* blk = static_cast<CacheBlk*>(location);
         if (blk->match(key)) {
+            // Debug print for approx hit?
             return blk;
         }
     }

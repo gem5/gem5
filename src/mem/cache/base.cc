@@ -343,6 +343,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
     }
 
 
+    // ECE 757: Read this later
     if (writeAllocator &&
         pkt && pkt->isWrite() && !pkt->req->isUncacheable()) {
         writeAllocator->updateMode(pkt->getAddr(), pkt->getSize(),
@@ -358,6 +359,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
 
         // Coalesce unless it was a software prefetch (see above).
         if (pkt) {
+            DPRINTF(CacheAx, "pkt is already in the MSHR: %s\n", pkt->print());
             assert(!pkt->isWriteback());
 
             // CleanEvicts corresponding to blocks which have
@@ -544,6 +546,9 @@ BaseCache::recvTimingResp(PacketPtr pkt)
      * ECE757 todo:
      *   Add debug print here also.
      */
+    if(pkt) {
+        DPRINTF(CacheAx, "ECE 757 Pkt: %s\n", pkt->print());
+    }
     if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
         DPRINTF(CacheAx, "Received response for approximate load %s\n", pkt->print());
     }
@@ -607,7 +612,13 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     // the response is an invalidation
     assert(!mshr->wasWholeLineWrite || pkt->isInvalidate());
 
-    CacheBlk *blk = tags->findBlock({pkt->getAddr(), pkt->isSecure()});
+    CacheBlk *blk = nullptr;
+    if(pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        blk = tags->findBlockAx({pkt->getAddr(), pkt->isSecure()});
+
+    } else {
+        blk = tags->findBlock({pkt->getAddr(), pkt->isSecure()});
+    }
 
     if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
@@ -1676,6 +1687,11 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(pkt->getSize() == blkSize);
 
         updateBlockData(blk, pkt, has_old_data);
+
+        // ECE 757
+        // if(pkt is Approximate) {
+        // updateBlockDataAx()
+        // }
     }
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
@@ -1716,6 +1732,18 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         partitionManager->readPacketPartitionID(pkt) : 0;
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
+
+    // ECE 757 if Approximate, we need to call findVictimAx instead
+    /*
+        - allocateBlock needs to look at the new valid bits we add for half cache lines
+        and figure out if an actual eviction is needed to if this is the same set index
+        but just a different half of the cache line
+        - Possibly add 2 new valid bits to CacheBlk to track if this needs to go
+        in the first half or the second. These are the same bits as LSB of the non-approximate set index (>>6)
+        - Need new isValid function for half line cache blocks or need to change isValid
+        - updateBlockData needs to look at the new valid bits and decide which half of the cache line the pkt's data needs to be
+        copied into, also truncation probably needs to happen here
+    */
     CacheBlk *victim = tags->findVictim({addr, is_secure}, blk_size_bits,
                                         evict_blks, partition_id);
 
@@ -1980,7 +2008,13 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
         }
     }
 
-    CacheBlk *blk = tags->findBlock({mshr->blkAddr, mshr->isSecure});
+    CacheBlk *blk = nullptr;
+    if (tgt_pkt->req->getFlags().isSet(Request::APPROXIMATE) && tgt_pkt->isRead()) {
+        DPRINTF(CacheAx, "%s Approximate MSHR: %s", __func__, tgt_pkt->print());
+        blk = tags->findBlockAx({mshr->blkAddr, mshr->isSecure});
+    } else {
+        blk = tags->findBlock({mshr->blkAddr, mshr->isSecure});
+    }
 
     // either a prefetch that is not present upstream, or a normal
     // MSHR request, proceed to get the packet to send downstream

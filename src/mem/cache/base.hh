@@ -1178,6 +1178,7 @@ class BaseCache : public ClockedObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool sched_send = true)
     {
+        DPRINTF(CacheAx, "Allocating miss buffer for packet: %s\n", pkt->print());
         MSHR *mshr = mshrQueue.allocate(pkt->getBlockAddr(blkSize), blkSize,
                                         pkt, time, order++,
                                         allocOnFill(pkt->cmd));
