@@ -45,6 +45,7 @@ void initSigInt();
 void initSigRtmin();
 std::string extractStringFromJSON(std::string& full_str, std::string start_str,
     std::string end_str, size_t& search_start);
+void processExternalSignal(void);
 void restoreSigInt();
 
 } // namespace gem5

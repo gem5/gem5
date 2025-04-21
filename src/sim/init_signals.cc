@@ -233,7 +233,15 @@ static void
 externalProcessHandler(int sigtype)
 {
     async_event = true;
+    async_hypercall = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 
+}
+
+void
+processExternalSignal(void)
+{
     std::string shared_mem_name_str = "shared_gem5_signal_mem_" +
         std::to_string(getpid());
     const char* shared_mem_name = shared_mem_name_str.c_str();
@@ -382,7 +390,7 @@ externalProcessHandler(int sigtype)
     close(shm_fd);
 
     exitSimLoopWithHypercall("Handling external signal!", 0, curTick(), 0,
-    payload_map, hypercall_id, false);
+                             payload_map, hypercall_id, false);
 }
 
 std::string
