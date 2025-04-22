@@ -15,11 +15,16 @@ class ProgressBar:
     bar_pos = 0
 
     def __init__(self, pid):
-        # get static stats for the progress bar
+
         init_stats_str = send_and_receive_hypercall(
             pid, "get_progress_bar_init_stats"
         )
-        # print(f"init_stats_str: {init_stats_str}")
+        # If the external signal handler times out getting the initial stats,
+        # which might happen if a gem5 simulation is launched while the
+        # dashboard is running, return without initializing anything so the
+        # pid will be excluded from the current loop
+        if init_stats_str == "timeout":
+            return
         try:
             init_stats = json.loads(init_stats_str)
 
@@ -59,32 +64,21 @@ def main():
     if args.pid:
         gem5_pids = [int(args.pid)]
     else:
-        gem5_pids = find_gem5_pids()
-        # print(f"gem5_pids: {gem5_pids}")
-    for pid in gem5_pids:
-        if pid not in progress_bar_dict.keys():
-            # print(f"Adding progress bar for pid {pid}")
-            progress_bar_dict[pid] = ProgressBar(pid)
-            # If the initial stats for the workload didn't load, remove it from
-            # the list
-            if not hasattr(progress_bar_dict[pid], "total_insts"):
-                progress_bar_dict.pop(pid)
-                gem5_pids.remove(pid)
+        gem5_pids = []
 
     pids_to_remove = []
+    pids_to_add = []
     while True:
-        # If new gem5 processes are launched while the dashboard is running,
-        # add them. Only do this if --pid is not passed, as we assume the user
-        # only wants to monitor a specific PID in that case.
-        # For now, this code is commented out because it doesn't work
-        # if not args.pid:
-        #     gem5_pids = find_gem5_pids()
-        #     # print(f"gem5_pids: {gem5_pids}")
-        # for pid in gem5_pids:
-        #     if pid not in progress_bar_dict.keys():
-        #         # print(f"Adding progress bar for pid {pid}")
-        #         progress_bar_dict[pid] = ProgressBar(pid, bar_pos)
-        #         bar_pos += 1
+
+        if not args.pid:
+            pids_to_add = [
+                pid for pid in find_gem5_pids() if pid not in gem5_pids
+            ]
+        for pid in pids_to_add:
+            temp_bar = ProgressBar(pid)
+            if hasattr(temp_bar, "total_insts"):
+                progress_bar_dict[pid] = temp_bar
+                gem5_pids.append(pid)
 
         for pid in pids_to_remove:
             progress_bar_dict[pid].prog_bar.set_description(
@@ -93,25 +87,18 @@ def main():
             progress_bar_dict[pid].prog_bar.bar_format = (
                 "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<00:00,{rate_fmt}{postfix}]"
             )
-            # print(f"gem5_pids: {gem5_pids}, pid to remove: {pid}")
             gem5_pids.remove(pid)
-            pids_to_remove.remove(pid)
-        # if not progress_bar_dict:
-        #     break
+        pids_to_remove = []
         if not gem5_pids:
             break
 
         for pid, bar_obj in progress_bar_dict.items():
-            if (
-                pid in gem5_pids
-            ):  # check if process is still active. might be better to add a "status" member variable to each progress bar object later
+            if pid in gem5_pids:
                 curr_status = send_and_receive_hypercall(
                     pid, "get_progress_bar_inst_count"
                 )
                 if "ended" in curr_status:
-                    pids_to_remove.append(
-                        pid
-                    )  # Can't pop the progress bar here, as it will cause an error if it is popped while Python is still iterating over the dict
+                    pids_to_remove.append(pid)
                     continue
                 elif "timeout" in curr_status:
                     continue
