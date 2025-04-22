@@ -42,7 +42,7 @@ void initSignals();
 
 // separate out sigint handler so that we can restore the python one
 void initSigInt();
-void initSigRtmin();
+void initSigCont();
 std::string extractStringFromJSON(std::string& full_str, std::string start_str,
     std::string end_str, size_t& search_start);
 void processExternalSignal(void);

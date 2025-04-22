@@ -462,9 +462,9 @@ initSignals()
     installSignalHandler(SIGIO, ioHandler);
 }
 
-void initSigRtmin()
+void initSigCont()
 {
-    installSignalHandler(SIGHUP, externalProcessHandler);
+    installSignalHandler(SIGCONT, externalProcessHandler);
 }
 
 struct sigaction old_int_sa;
