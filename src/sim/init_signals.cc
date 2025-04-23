@@ -381,7 +381,8 @@ externalProcessHandler(int sigtype)
     munmap(shm_ptr, shared_mem_size);
     close(shm_fd);
 
-    exitSimulationLoopNow(hypercall_id, payload_map);
+    exitSimLoopWithHypercall("Handling external signal!", 0, curTick(), 0,
+    payload_map, hypercall_id, false);
 }
 
 std::string
