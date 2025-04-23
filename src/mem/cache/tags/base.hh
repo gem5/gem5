@@ -288,6 +288,13 @@ class BaseTags : public ClockedObject
                                  const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks,
                                  const uint64_t partition_id=0) = 0;
+    
+    virtual CacheBlk* findVictimAx(const CacheBlk::KeyType &key,
+                                 const std::size_t size,
+                                 std::vector<CacheBlk*>& evict_blks,
+                                 const uint64_t partition_id=0) {
+                                    return nullptr;
+                                 }
 
     /**
      * Access block and update replacement data. May not succeed, in which case

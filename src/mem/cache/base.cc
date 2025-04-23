@@ -626,6 +626,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         const bool allocate = (writeAllocator && mshr->wasWholeLineWrite) ?
             writeAllocator->allocate() : mshr->allocOnFill();
+        DPRINTF(CacheAx, "allocate is set to %s\n", allocate);
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(CacheAccessProbeArg(pkt, accessor));
@@ -1619,6 +1620,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
+        DPRINTF(CacheAx, "Before allocateBlock\n");
         blk = allocate ? allocateBlock(pkt, writebacks) : nullptr;
 
         if (!blk) {
@@ -1744,8 +1746,16 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         - updateBlockData needs to look at the new valid bits and decide which half of the cache line the pkt's data needs to be
         copied into, also truncation probably needs to happen here
     */
-    CacheBlk *victim = tags->findVictim({addr, is_secure}, blk_size_bits,
+
+    CacheBlk *victim = nullptr;
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE) && pkt->isRead()) {
+        DPRINTF(CacheAx, "Approximate packet, right before calling findVictim()\n");
+        victim = tags->findVictimAx({addr, is_secure}, blk_size_bits,
                                         evict_blks, partition_id);
+    } else {
+        victim = tags->findVictim({addr, is_secure}, blk_size_bits,
+                                        evict_blks, partition_id);
+    }
 
     // It is valid to return nullptr if there is no victim
     if (!victim)

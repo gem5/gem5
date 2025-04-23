@@ -213,6 +213,40 @@ class BaseSetAssoc : public BaseTags
         return victim;
     }
 
+    // ECE 757: We need to make sure we are not evicting this block if at least one of valid_1 or valid_2 is set
+    CacheBlk* findVictimAx(const CacheBlk::KeyType& key,
+                         const std::size_t size,
+                         std::vector<CacheBlk*>& evict_blks,
+                         const uint64_t partition_id=0) override
+    {
+        // Get possible entries to be victimized
+        std::vector<ReplaceableEntry*> entries =
+            indexingPolicy->getPossibleEntriesAx(key);
+
+        
+
+        // Filter entries based on PartitionID
+        if (partitionManager) {
+            partitionManager->filterByPartition(entries, partition_id);
+        }
+
+        // // Choose replacement victim from replacement candidates
+        CacheBlk* victim = entries.empty() ? nullptr :
+            static_cast<CacheBlk*>(replacementPolicy->getVictim(entries));
+
+
+        evict_blks.push_back(victim);
+
+        return victim;
+        // There is only one eviction for this replacement
+        // if(victim->valid_1 && victim->valid_2) {
+        //     evict_blks.push_back(victim);
+        //     return victim;
+        // }
+
+        return nullptr;
+    }
+
     /**
      * Insert the new block into the cache and update replacement data.
      *
