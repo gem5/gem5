@@ -420,17 +420,20 @@ let {{
                     bits(FpSrcReg2_uqw, (i - items + 1) * srcBits - 1,
                                         (i - items + 0) * srcBits);
                 unsigned signBit = bits(picked, srcBits - 1);
-                uint64_t overflow = bits(picked, srcBits - 1, destBits - 1);
 
                 // Handle saturation.
                 if (signBit) {
-                    if (overflow != mask(srcBits - destBits + 1)) {
-                        if (signedOp())
+                    if (signedOp()) {
+                        uint64_t overflow = bits(picked, srcBits - 1,
+                                                 destBits - 1);
+                        if (overflow != mask(srcBits - destBits + 1)) {
                             picked = (1ULL << (destBits - 1));
-                        else
-                            picked = 0;
+                        }
+                    } else {
+                        picked = 0;
                     }
                 } else {
+                    uint64_t overflow = bits(picked, srcBits - 1, destBits);
                     if (overflow != 0) {
                         if (signedOp())
                             picked = mask(destBits - 1);
