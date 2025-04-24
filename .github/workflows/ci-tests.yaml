@@ -101,7 +101,7 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-18:latest
+        container: ghcr.io/gem5/clang-version-19:latest
         needs: [pre-commit]
         timeout-minutes: 90
         steps:
