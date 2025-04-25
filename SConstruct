@@ -673,9 +673,17 @@ for variant_path in variant_paths:
               "src/SConscript to support that compiler.")))
 
     if env['GCC']:
-        if compareVersions(env['CXXVERSION'], "10") < 0:
-            error('gcc version 10 or newer required.\n'
-                  'Installed version:', env['CXXVERSION'])
+        gcc_min_version = "10"
+        gcc_max_version = "14"
+        gcc_version = env['CXXVERSION']
+        if compareVersions(gcc_version, gcc_min_version) < 0 or \
+              compareVersions(gcc_version, gcc_max_version) > 0:
+            warn(
+                f'Detected GCC version {gcc_version} is not officially '
+                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '\
+                f'to v{gcc_max_version}.\n'
+            )
+
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -699,10 +707,16 @@ for variant_path in variant_paths:
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
     elif env['CLANG']:
-        if compareVersions(env['CXXVERSION'], "6") < 0:
-            error('clang version 6 or newer required.\n'
-                  'Installed version:', env['CXXVERSION'])
-
+        clang_min_version = "10"
+        clang_max_version = "14"
+        clang_version = env['CXXVERSION']
+        if compareVersions(clang_version, clang_min_version) < 0 or \
+              compareVersions(clang_version, clang_max_version) > 0:
+            warn(
+                f'Detected Clang version {clang_version} is not officially '
+                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '\
+                f'to v{clang_max_version}.\n'
+            )
         # Set the Link-Time Optimization (LTO) flags if enabled.
         if GetOption('with_lto'):
             for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
