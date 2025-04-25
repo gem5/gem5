@@ -23,18 +23,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:24.04
+FROM ghcr.io/gem5/ubuntu-24.04_min-dependencies:latest
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && apt -y install \
-    build-essential \
-    scons \
-    python3-dev \
-    git \
-    pre-commit \
+RUN apt -y update && apt -y upgrade && apt -y install --no-install-recommends \
     zlib1g \
     zlib1g-dev \
     libprotobuf-dev \

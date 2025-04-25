@@ -33,7 +33,7 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt -y update && \
-    apt -y install \
+    apt -y install --no-install-recommends \
     # General gem5 requirements when building/running in Ubuntu 20.04, also
     # some utilities needed to compile and obtain the right packages that
     # make up this Docker image.
@@ -64,7 +64,7 @@ RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.0.1/ xenial main' 
     tee /etc/apt/sources.list.d/rocm.list
 
 # Install/apt/4.0.1 packages.
-RUN apt -y update && apt -y install hsakmt-roct hsakmt-roct-dev
+RUN apt -y update && apt -y install --no-install-recommends hsakmt-roct hsakmt-roct-dev
 
 # Create symbolic link: /opt/rocm -> /opt/rocm-4.0.1.
 RUN ln -s /opt/rocm-4.0.1 /opt/rocm
@@ -97,7 +97,7 @@ RUN git clone -b rocm-4.0.0 --depth=1 \
         https://github.com/ROCm-Developer-Tools/ROCclr.git && \
     # Get ROCclr dependencies
     apt -y update && \
-    apt -y install llvm-amdgpu libncurses5 libtinfo-dev rocm-device-libs \
+    apt -y install --no-install-recommends llvm-amdgpu libncurses5 libtinfo-dev rocm-device-libs \
                    comgr && \
     mkdir -p ROCclr/build && \
     cd ROCclr && \
@@ -127,7 +127,7 @@ RUN git clone -b rocm-4.0.0 --depth=1 \
         -DCMAKE_BUILD_TYPE=Release .. && \
     make -j$(nproc) && \
     make package && \
-    apt -y install ./rocm-opencl-2.0.0-amd64.deb \
+    apt -y install --no-install-recommends ./rocm-opencl-2.0.0-amd64.deb \
                    ./rocm-opencl-dev-2.0.0-amd64.deb && \
     # Build and install HIP.
     mkdir -p /HIP/build && \
@@ -140,7 +140,7 @@ RUN git clone -b rocm-4.0.0 --depth=1 \
         -DCMAKE_PREFIX_PATH="/opt/rocm" .. && \
     make -j$(nproc) && \
     make package && \
-    apt -y install ./hip-base*.deb ./hip-rocclr*.deb && \
+    apt -y install --no-install-recommends ./hip-base*.deb ./hip-rocclr*.deb && \
     cp -r /HIP/build/rocclr/CMakeFiles/Export/_opt/rocm/hip/lib/cmake/hip/* \
           /opt/rocm/hip/lib/cmake/hip/ && \
     # Cleanup.
@@ -158,7 +158,7 @@ RUN git clone -b rocm-4.0.0 --depth=1 \
     # rocBLAS downloads the most recent rocm-cmake if it isn't installed before
     # building
     apt -y update && \
-    apt -y install rocm-cmake && \
+    apt -y install --no-install-recommends rocm-cmake && \
     mkdir rocBLAS/build && \
     cd rocBLAS && \
     ./install.sh -d -i && \
@@ -181,7 +181,7 @@ RUN ln -s /root/.cache/miopen/2.9.0.8252-rocm-rel-4.0-26-64506314 \
 
 # Add commands from halofinder Dockerfile
 RUN apt -y update && \
-    apt -y install libopenmpi-dev libomp-dev
+    apt -y install --no-install-recommends libopenmpi-dev libomp-dev
 
 ENV HIPCC_BIN=/opt/rocm/bin
 ENV MPI_INCLUDE=/usr/lib/x86_64-linux-gnu/openmpi/include

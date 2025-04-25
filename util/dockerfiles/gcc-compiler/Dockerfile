@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 ARG version=14 # Version of GCC to install in this image. Default is 14.
 
 RUN apt -y update && \
-    apt -y install gcc-${version} g++-${version} && \
+    apt -y install --no-install-recommends gcc-${version} g++-${version} && \
     update-alternatives --install \
         /usr/bin/g++ g++ /usr/bin/g++-${version} 100 && \
     update-alternatives --install \

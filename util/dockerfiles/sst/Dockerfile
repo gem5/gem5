@@ -34,7 +34,7 @@ ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/
 ENV SST_CORE_HOME="/sst/"
 
 # Use GCC 10
-RUN apt -y update && apt -y install gcc-10 g++-10 &&\
+RUN apt -y update && apt -y install --no-install-recommends gcc-10 g++-10 &&\
    update-alternatives --install \
     /usr/bin/g++ g++ /usr/bin/g++-10 100 && \
    update-alternatives --install \

@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 ARG version=16 # Version of Clang to install in this image. Default is 16.
 
 RUN apt -y update && \
-    apt -y install clang-${version} && \
+    apt -y install --no-install-recommends clang-${version} && \
     update-alternatives --install \
         /usr/bin/clang++ clang++ /usr/bin/clang++-${version} 100 && \
     update-alternatives --install \

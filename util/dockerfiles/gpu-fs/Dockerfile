@@ -35,11 +35,11 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
+    apt -y install --no-install-recommends build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config
-RUN apt -y install wget
+RUN apt -y install --no-install-recommends wget
 
 # The follow were adapted from instructions at the URL below, accessed 4/12/24:
 # https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/
@@ -66,4 +66,4 @@ RUN apt update
 
 # This package should be the minimum needed to build and is significantly
 # smaller than the full `rocm` package.
-RUN apt -y install rocm-dev
+RUN apt -y install --no-install-recommends rocm-dev

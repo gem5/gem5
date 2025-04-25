@@ -61,7 +61,7 @@ COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5
 # developing gem5. (e.g. vim to edit files, qemu for building disk images,
 # etc.).
 RUN apt -y update  && \
-    apt -y install \
+    apt -y install --no-install-recommends \
     vim \
     qemu-system \
     qemu-kvm \

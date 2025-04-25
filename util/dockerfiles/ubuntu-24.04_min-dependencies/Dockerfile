@@ -31,4 +31,6 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential m4 scons python3-dev
+    apt -y install --no-install-recommends build-essential m4 scons \
+    python3-dev && apt autoremove -y && apt clean -y && \
+    rm -rf /var/lib/apt/lists/*
