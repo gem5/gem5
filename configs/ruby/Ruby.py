@@ -310,7 +310,7 @@ def create_directories(options, bootmem, ruby_system, system):
     try:
         # The supported way to use Ruby is now to use the protocol name as
         # part of the names for all of the controllers. This is *required*
-        # when using `MULTIPLE` as the protocl and the `ALL` target.
+        # when using `MULTIPLE` as the protocol and the `ALL` target.
         Directory_Controller = getattr(
             importlib.import_module("m5.objects"),
             f"{options.protocol}_Directory_Controller",
