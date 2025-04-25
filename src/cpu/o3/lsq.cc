@@ -1079,7 +1079,7 @@ LSQ::LSQRequest::addReq(Addr addr, unsigned size,
            const std::vector<bool>& byte_enable)
 {
     if (isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
-        auto req = std::make_shared<Request>(
+        auto req = new Request(
                 addr, size, _flags, _inst->requestorId(),
                 _inst->pcState().instAddr(), _inst->contextId(),
                 std::move(_amo_op));
@@ -1101,7 +1101,7 @@ LSQ::LSQRequest::addReq(Addr addr, unsigned size,
             );
         }
 
-        _reqs.push_back(req);
+        _reqs.emplace_back(req);
     }
 }
 
