@@ -44,16 +44,16 @@ FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest AS builder
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
-RUN wget https://github.com/gem5/gem5/archive/refs/tags/v24.1.0.1.tar.gz && \
-    tar xzf v24.1.0.1.tar.gz && mv gem5-24.1.0.1 gem5 && rm v24.1.0.1.tar.gz
+RUN wget --no-check-certificate https://github.com/gem5/gem5/archive/refs/tags/v24.1.0.3.tar.gz && \
+    tar xzf v24.1.0.3.tar.gz && mv gem5-24.1.0.3 gem5 && rm v24.1.0.3.tar.gz
 WORKDIR /gem5
-RUN scons build/ALL/gem5.opt -j`nproc`
+RUN scons build/ALL/gem5.fast -j`nproc`
 
 # Stage 2: Create the devcontainer image.
 # This includes all dependencies for building and running gem5, the
 # dependencies for developing gem5, and a pre-built gem5 binary.
 FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5
+COPY --from=builder /gem5/build/ALL/gem5.fast /usr/local/bin/gem5
 
 # Stage 3: Install additional packages.
 # While the base image includes all dependencies for building and running gem5,
