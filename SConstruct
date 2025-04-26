@@ -726,8 +726,6 @@ for variant_path in variant_paths:
         with gem5_scons.Configure(env) as conf:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
-        if compareVersions(env['CXXVERSION'], '18') > 0:
-            env.Append(CCFLAGS=['-Wno-vla-cxx-extension'])
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
