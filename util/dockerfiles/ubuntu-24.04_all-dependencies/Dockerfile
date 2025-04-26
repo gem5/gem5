@@ -48,3 +48,8 @@ RUN apt -y update && apt -y upgrade && apt -y install --no-install-recommends \
     cmake \
     jq \
     && apt autoremove -y && apt clean -y && rm -rf /var/lib/apt/lists/*
+
+RUN apt update -y && apt install -y ca-certificates && update-ca-certificates --fresh
+ENV SSL_CERT_DIR=/etc/ssl/certs
+
+RUN apt update -y && apt install git -y
