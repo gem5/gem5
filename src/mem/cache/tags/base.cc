@@ -140,8 +140,19 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // Insert block with tag, src requestor id, task id and PartitionId
     const auto partition_id = partitionManager ?
         partitionManager->readPacketPartitionID(pkt) : 0;
-    blk->insert({pkt->getAddr(), pkt->isSecure()}, requestor_id,
+
+    /* 
+     * ECE757
+     *   
+     */
+    if (pkt->req->getFlags().isSet(Request::APPROXIMATE)) {
+        bool useFirstHalf = ((pkt->getAddr() >> 6) & 0x1) == 0; // LSB of the non-approximate set index
+        blk->insertAx({pkt->getAddr(), pkt->isSecure()}, useFirstHalf, requestor_id,
                 pkt->req->taskId(), partition_id);
+    } else {
+        blk->insert({pkt->getAddr(), pkt->isSecure()}, requestor_id,
+                pkt->req->taskId(), partition_id);
+    }
 
     // Check if cache warm up is done
     if (!warmedUp && stats.tagsInUse.value() >= warmupBound) {

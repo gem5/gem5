@@ -853,9 +853,32 @@ BaseCache::updateBlockData(CacheBlk *blk, const PacketPtr cpkt,
         }
     }
 
+    /**
+     * ECE757 
+     *   Modify the writeDataToBlock function only. 
+     *   Assuming the hasListeners() part remains the same,
+     *   tracking the hasListeners() state of the entire block.
+     * 
+     *   I think we can complete through simply doing 
+     *   cpkt->writeDataToBlock(blk->data + blkSize/2, blkSize/2);
+     *   just move the pointer for the starting address, 
+     *   so we don't have to modify the blk->data for approximate 
+     *   instruction. -- Yoshi
+     */
     // Actually perform the data update
     if (cpkt) {
-        cpkt->writeDataToBlock(blk->data, blkSize);
+        // if FIRST half tag is set valid
+        if (blk->isHalfValid(true)) {
+            cpkt->writeDataToBlock(blk->data, blkSize/2);
+        }
+        // if SECOND half tag is set valid
+        else if (blk->isHalfValid(false)) {
+            // not sure if we need to +1 to the first pointer
+            cpkt->writeDataToBlock(blk->data + blkSize/2, blkSize/2);
+        }   
+        // if NOT LAX instruction
+        else
+            cpkt->writeDataToBlock(blk->data, blkSize);
     }
 
     if (ppDataUpdate->hasListeners()) {
@@ -1621,6 +1644,14 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
         DPRINTF(CacheAx, "Before allocateBlock\n");
+        
+        /**
+         * ECE757
+         *   In the allocateBlock function, we added the feature for 
+         *   allocating half block only. So, after this function, 
+         *   we are able to use blk->isHalfValid to determine to insert
+         *   into the first or the second half of the block.
+         */
         blk = allocate ? allocateBlock(pkt, writebacks) : nullptr;
 
         if (!blk) {
@@ -1688,12 +1719,22 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(pkt->hasData());
         assert(pkt->getSize() == blkSize);
 
-        updateBlockData(blk, pkt, has_old_data);
+        /* 
+         * ECE757:
+         *   This part needs to be modified for inserting the data into cache.
+         *   We only need to handle the 'isRead' request since LAX instruction itself
+         *   is a read. And if we are doing some sort of write request. For instance,
+         *   write-allocate request, the cache miss fetches the block as read, so here we 
+         *   don't have to do it again.
+         */
+        if (pkt->req->getFlags().isSet(Request::APPROXIMATE)) {
+            DPRINTF(CacheAx, "Entered truncating updateBlockData section. \n");
+            updateBlockData(blk, pkt, has_old_data);
+        }
+        else {
+            updateBlockData(blk, pkt, has_old_data);
+        }
 
-        // ECE 757
-        // if(pkt is Approximate) {
-        // updateBlockDataAx()
-        // }
     }
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +

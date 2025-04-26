@@ -150,6 +150,18 @@ class TaggedEntry : public ReplaceableEntry
      */
     virtual bool isValid() const { return _valid; }
 
+    /*
+     * ECE757:
+     *   Check if the first half or second half of this entry is valid.
+     *
+     * @param first_half True to check first half, false to check second half
+     * @return True if the specified half is valid
+     */
+    virtual bool isHalfValid(bool first_half) const 
+    { 
+        return first_half ? _firstValidAx : _SecondValidAx; 
+    }
+
     /**
      * Check if this block holds data from the secure memory space.
      *
@@ -194,10 +206,35 @@ class TaggedEntry : public ReplaceableEntry
         }
     }
 
+    /* ECE757:
+     *   Insert approximate data into one half of the block.
+     *
+     * @param key The tag and secure information
+     * @param first_half True to use first half, false to use second half
+     */
+    virtual void insertAx(const KeyType &key, bool first_half)
+    {
+        setTag(extractTag(key.address));
+        if (key.secure) {
+            setSecure();
+        }
+        
+        // Set only the specified half as valid
+        setHalfValid(first_half, !first_half);
+    }
+
     /** Invalidate the block. Its contents are no longer valid. */
     virtual void invalidate()
     {
         _valid = false;
+
+        /*
+         * ECE757
+         *   Add the invalidation for _firstValidAx and _SecondValidAx.
+         */
+        _firstValidAx = false;
+        _SecondValidAx = false;
+
         setTag(MaxAddr);
         clearSecure();
     }
@@ -241,6 +278,33 @@ class TaggedEntry : public ReplaceableEntry
      * @sa insert()
      */
     bool _valid;
+
+    /*
+     * ECE757
+     *   Add two valid bit for representing if the first or the second block
+     *   of the approximate cache block is valid or not
+     */
+    bool _firstValidAx;
+    bool _SecondValidAx;
+
+    /*
+     * ECE757
+     *   Set the valid bits for the first and/or second half of this entry.
+     *   If either half becomes valid, the main valid bit is also set.
+     *
+     * @param first_half Whether to set the first half valid
+     * @param second_half Whether to set the second half valid
+     */
+    virtual void setHalfValid(bool first_half, bool second_half)
+    {
+        if (first_half) { _firstValidAx = true; }
+        if (second_half) { _SecondValidAx = true; }
+        
+        // If either half is valid, the main valid (_valid) is set as well
+        if (_firstValidAx || _SecondValidAx) {
+            _valid = true;
+        }
+    }
 
     /**
      * Secure bit. Marks whether this entry refers to an address in the secure
