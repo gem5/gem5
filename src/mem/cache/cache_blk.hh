@@ -109,6 +109,12 @@ class CacheBlk : public TaggedEntry
      */
     Tick whenReady = 0;
 
+    // free fault cacheline
+    bool ffLock = false;
+    // free fault retire scrub
+    bool ffRecent = false;
+
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on
