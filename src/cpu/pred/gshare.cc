@@ -88,8 +88,8 @@ GshareBP::uncondBranch(ThreadID tid, Addr pc, void * &bp_history)
 
 void
 GshareBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken,const StaticInstPtr &inst,
-                         Addr target, void * &bp_history)
+                         bool taken, Addr target,
+                         const StaticInstPtr &inst, void * &bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {
