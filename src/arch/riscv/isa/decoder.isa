@@ -1009,88 +1009,92 @@ decode QUADRANT default Unknown::unknown() {
                     IsSquashAfter, No_OpClass);
             }
 
-            0x2: decode FUNCT12 {
-                format CBMOp {
-                    0x0: cbo_inval({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
+            0x2: decode RD {
+                0x0: decode FUNCT12 {
+                    format CBMOp {
+                        0x0: cbo_inval({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                        if (pm == PRV_U) {
-                            if (senvcfg.cbie == 0) {
-                                return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.clean in current "
-                                        "privilege mode!", machInst);
-                            }
-                            else if (senvcfg.cbie == 1){ //flush
+                            if (pm == PRV_U) {
+                                if (senvcfg.cbie == 0) {
+                                    return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.clean in current"
+                                            " privilege mode!", machInst);
+                                }
+                                else if (senvcfg.cbie == 1){ //flush
+                                    Mem = 0;
+                                }
+                                else if (senvcfg.cbie == 3) { // invalidate
+                                    Mem = 0;
+                                } else { //sebvcfg.cbie == 2, reserved
+                                    return std::make_shared<IllegalInstFault>(
+                                            "Invalid value for senvcfg.cbie!",
+                                            machInst);
+                                }
+                            } else if (pm == PRV_M){ // all invalidate
+                                Mem = 0;
+                            } else if (pm == PRV_S) {
+                                // whether it's a flush or invalidate depends
+                                // on menvcfg (01 and 11 respectively)
                                 Mem = 0;
                             }
-                            else if (senvcfg.cbie == 3) { // invalidate
-                                Mem = 0;
-                            } else { //sebvcfg.cbie == 2, reserved
+                        }}, mem_flags = [INVALIDATE, DST_POC]);
+                            // mem_flags might need a conditional to add CLEAN
+                            // in certain cases; unsure of syntax for that
+
+                        0x1: cbo_clean({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
+
+                            if (pm == PRV_U && !senvcfg.cbcfe){
                                 return std::make_shared<IllegalInstFault>(
-                                        "Invalid value for senvcfg.cbie!",
-                                        machInst);
+                                            "Can't execute cbo.clean in "
+                                            "current privilege mode!",
+                                            machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
                             }
-                        } else if (pm == PRV_M){ // all invalidate
-                            Mem = 0;
-                        } else if (pm == PRV_S) {
-                            // whether it's a flush or invalidate depends on
-                            // menvcfg (01 and 11 respectively)
-                            Mem = 0;
-                        }
-                    }}, mem_flags = [INVALIDATE, DST_POC]);
-                        // mem_flags might need a conditional to add CLEAN
-                        // in certain cases; unsure of syntax for that
+                        }}, mem_flags=[CLEAN, DST_POC]);
+                        0x2: cbo_flush({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                    0x1: cbo_clean({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
+                            if (pm == PRV_U && !senvcfg.cbcfe){
+                                return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.flush in "
+                                            "current privilege mode!",
+                                            machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
+                            }
+                        }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
+                        0x4: cbo_zero({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                        if (pm == PRV_U && !senvcfg.cbcfe){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.clean in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CLEAN, DST_POC]);
-                    0x2: cbo_flush({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-
-                        if (pm == PRV_U && !senvcfg.cbcfe){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.flush in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
-                    0x4: cbo_zero({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-
-                        if (pm == PRV_U && !senvcfg.cbze){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.zero in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                            if (pm == PRV_U && !senvcfg.cbze){
+                                return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.zero in current"
+                                            " privilege mode!", machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
+                            }
+                        }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                    }
                 }
             }
         }
