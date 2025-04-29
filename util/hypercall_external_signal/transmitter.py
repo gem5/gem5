@@ -87,6 +87,7 @@ def send_signal(pid: int, id: int, payload: str) -> None:
     """
     shared_mem_name = "shared_gem5_signal_mem_" + str(pid)
     shared_mem_size = 4096
+    logger.debug(f"shared_mem_name is: {shared_mem_name}")
     try:
         shm = shared_memory.SharedMemory(
             name=shared_mem_name, create=True, size=shared_mem_size

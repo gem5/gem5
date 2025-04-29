@@ -242,7 +242,7 @@ externalProcessHandler(int sigtype)
 void
 processExternalSignal(void)
 {
-    std::string shared_mem_name_str = "shared_gem5_signal_mem_" +
+    std::string shared_mem_name_str = "/shared_gem5_signal_mem_" +
         std::to_string(getpid());
     const char* shared_mem_name = shared_mem_name_str.c_str();
     const std::size_t shared_mem_size = 4096;

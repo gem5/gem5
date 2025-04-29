@@ -80,9 +80,11 @@ import argparse
 import json
 import logging
 import os
+import platform
 import select
 import signal
 import socket
+import subprocess
 import sys
 from typing import List
 
@@ -106,31 +108,57 @@ def find_gem5_pids() -> List[int]:
     gem5_pids = []
 
     # List all processes in /proc
-    for pid in os.listdir("/proc"):
-        if not pid.isdigit():
-            continue
+    if platform.system() == "Linux":
+        for pid in os.listdir("/proc"):
+            if not pid.isdigit():
+                continue
 
-        try:
-            # Read process name from /proc/[pid]/comm
-            with open(f"/proc/{pid}/comm") as f:
-                comm = f.read().strip()
-                if "gem5" in comm:
-                    with open(f"/proc/{pid}/cmdline") as cmd_file:
-                        cmdline = cmd_file.read().strip()
-                        # Exclude multisim processes that aren't simulations
-                        # using both comm and cmdline. If only cmdline is used,
-                        # we also pick up processes that have "gem5" in their
-                        # names but aren't gem5 simulations.
-                        if (
-                            "gem5.utils.multisim" not in cmdline
-                            and "multiprocessing.resource_tracker"
-                            not in cmdline
-                        ):
-                            gem5_pids.append(int(pid))
-        except (OSError, PermissionError):
-            # Skip processes we can't read
-            continue
+            try:
+                # Read process name from /proc/[pid]/comm
+                with open(f"/proc/{pid}/comm") as f:
+                    comm = f.read().strip()
+                    if "gem5" in comm:
+                        with open(f"/proc/{pid}/cmdline") as cmd_file:
+                            cmdline = cmd_file.read().strip()
+                            # exclude multisim processes that aren't simulations
+                            # using both comm and cmdline. If only cmdline is
+                            # used, we also pick up processes that have "gem5"
+                            # in their names but aren't gem5 simulations.
+                            if (
+                                "gem5.utils.multisim" not in cmdline
+                                and "multiprocessing.resource_tracker"
+                                not in cmdline
+                            ):
+                                gem5_pids.append(int(pid))
+            except (OSError, PermissionError):
+                # Skip processes we can't read
+                continue
 
+    # Mac OS doesn't have /proc, so we have to do something else.
+    elif platform.system() == "Darwin":
+        gem5_pids_proc = subprocess.run(["pgrep", "gem5"], capture_output=True)
+        if gem5_pids_proc.returncode != 0:
+            raise ValueError("Could not list gem5 processes!")
+        str_gem5_pids = gem5_pids_proc.stdout.decode("UTF-8").split("\n")
+        # remove empty strings
+        str_gem5_pids = [pid for pid in str_gem5_pids if pid]
+        logger.debug(f"gem5 processes: {str_gem5_pids}")
+        gem5_pids = []
+        for pid in str_gem5_pids:
+            cmdline = subprocess.run(
+                ["ps", "-p", pid], capture_output=True
+            ).stdout.decode("UTF-8")
+            # exclude multisim processes
+            if (
+                "gem5.utils.multisim" not in cmdline
+                and "multiprocessing.resource_tracker" not in cmdline
+                and not (
+                    "multiprocessing.spawn" in cmdline
+                    and "--outdir" not in cmdline
+                )
+            ):
+                gem5_pids.append(int(pid))
+        logger.debug(f"gem5 processes that are simulations: {gem5_pids}")
     if not gem5_pids:
         raise ValueError("No gem5 process found")
     return gem5_pids
@@ -241,6 +269,9 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
                 else:
                     return "timeout"
             elif function == "get_progress_bar_init_stats":
+                logger.debug(
+                    "returning timeout for" " get_progress_bar_init_stats"
+                )
                 return "timeout"
             else:
                 raise TimeoutError("Timeout waiting for gem5 response")
