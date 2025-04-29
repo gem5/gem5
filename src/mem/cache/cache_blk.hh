@@ -52,6 +52,7 @@
 #include <limits>
 #include <list>
 #include <string>
+#include "debug/CacheAx.hh"
 
 #include "base/printable.hh"
 #include "base/types.hh"

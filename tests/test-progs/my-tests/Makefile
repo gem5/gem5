@@ -3,7 +3,7 @@ CFLAGS = -static
 
 TARGET = lax
 
-SRC = lax_test.c
+SRC = cache.c
 
 all: $(TARGET)
 

@@ -73,6 +73,32 @@ CacheBlk::insert(const KeyType &tag,
 }
 
 void
+CacheBlk::insertAx(const KeyType &tag, bool first_half,
+                 const int src_requestor_ID, const uint32_t task_ID,
+                 const uint64_t partition_id)
+{
+    // Make sure that the block has been properly invalidated
+    assert(!isValid());
+
+    insert(tag);
+
+    // Set source requestor ID
+    setSrcRequestorId(src_requestor_ID);
+
+    // Set task ID
+    setTaskId(task_ID);
+
+    // Set partition ID
+    setPartitionId(partition_id);
+
+    // Set insertion tick as current tick
+    setTickInserted();
+
+    // Insertion counts as a reference to the block
+    increaseRefCount();
+}
+
+void
 CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
                             const std::string &prefix) const
 {

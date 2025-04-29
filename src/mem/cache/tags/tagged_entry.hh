@@ -214,6 +214,8 @@ class TaggedEntry : public ReplaceableEntry
      */
     virtual void insertAx(const KeyType &key, bool first_half)
     {
+        DPRINTF(CacheAx, "taged_entry.hh: Correct version of insertAx(?)\n");
+        setValid();
         setTag(extractTag(key.address));
         if (key.secure) {
             setSecure();
