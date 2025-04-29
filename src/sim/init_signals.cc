@@ -249,14 +249,16 @@ processExternalSignal(void)
 
     int shm_fd = shm_open(shared_mem_name, O_RDWR, 0666); //0666 = rw-rw-rw-
     if (shm_fd == -1) {
-        std::cerr << "Error: Unable to open shared memory" << std::endl;
+        DPRINTF(ExternalSignal, "Error: Unable to open shared memory: %s\n",
+                std::strerror(errno));
         return;
     }
 
     void* shm_ptr = mmap(0, shared_mem_size, PROT_READ | PROT_WRITE,
         MAP_SHARED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED) {
-        std::cerr << "Error: Unable to map shared memory" << std::endl;
+        DPRINTF(ExternalSignal, "Error: Unable to map shared memory: %s\n",
+                std::strerror(errno));
         close(shm_fd);
         return;
     }
