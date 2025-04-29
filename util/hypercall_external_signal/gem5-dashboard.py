@@ -52,7 +52,6 @@ def main():
         "--pid",
         help="Enter the pid of the gem5 process for which you would like to"
         "observe the progress",
-        type=int,
     )
 
     args = parser.parse_args()
@@ -60,14 +59,21 @@ def main():
     # clear screen, print dashboard
     print_dashboard_label()
     progress_bar_dict = {}
-
+    pids_to_remove = []
+    pids_to_add = []
     if args.pid:
-        gem5_pids = [int(args.pid)]
+        if args.pid[0] == "[":
+            try:
+                gem5_pids = [int(pid) for pid in args.pid[1:-1].split(",")]
+            except:
+                print("Incorrect format for list of gem5 pids, exiting...")
+                sys.exit(1)
+        else:
+            gem5_pids = [int(args.pid)]
+        pids_to_add = gem5_pids
     else:
         gem5_pids = []
 
-    pids_to_remove = []
-    pids_to_add = []
     while True:
 
         if not args.pid:
