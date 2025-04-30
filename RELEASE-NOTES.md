@@ -1,3 +1,7 @@
+# Version 24.1.0.3
+
+**[HOTFIX]** This hotfix release adds `#import <algorithm>` to "src/base/random.cc" to fix a compilation error affecting some systems (compilation error: "‘remove_if’ is not a member of ‘std’.").
+
 # Version 24.1.0.2
 
 **[HOTFIX]** Adds PR <https://github.com/gem5/gem5/pull/1930> as a hotfix to v24.1.0.
