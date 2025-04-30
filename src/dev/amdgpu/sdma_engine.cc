@@ -1252,11 +1252,11 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     queues.push_back((SDMAQueue *)&gfxIb);
     queues.push_back((SDMAQueue *)&pageIb);
 
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr size[num_queues];
-    bool processing[num_queues];
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto size = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
 
     for (int i = 0; i < num_queues; i++) {
         base[i] = queues[i]->base();
@@ -1266,11 +1266,11 @@ SDMAEngine::serialize(CheckpointOut &cp) const
         processing[i] = queues[i]->processing();
     }
 
-    SERIALIZE_ARRAY(base, num_queues);
-    SERIALIZE_ARRAY(rptr, num_queues);
-    SERIALIZE_ARRAY(wptr, num_queues);
-    SERIALIZE_ARRAY(size, num_queues);
-    SERIALIZE_ARRAY(processing, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(size, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
 
     // Capture RLC queue information in checkpoint
     // Only two RLC queues are supported right now
@@ -1279,19 +1279,19 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     rlc_queues.push_back((SDMAQueue *)&rlc0);
     rlc_queues.push_back((SDMAQueue *)&rlc1);
 
-    Addr rlc_info[num_rlc_queues];
-    bool rlc_valid[num_rlc_queues];
-    Addr rlc_base[num_rlc_queues];
-    Addr rlc_rptr[num_rlc_queues];
-    Addr rlc_global_rptr[num_rlc_queues];
-    Addr rlc_wptr[num_rlc_queues];
-    Addr rlc_size[num_rlc_queues];
-    Addr rlc_rptr_wb_addr[num_rlc_queues];
-    bool rlc_processing[num_rlc_queues];
-    Addr rlc_mqd_addr[num_rlc_queues];
-    bool rlc_priv[num_rlc_queues];
-    bool rlc_static[num_rlc_queues];
-    uint32_t rlc_mqd[num_rlc_queues * 128];
+    auto rlc_info = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_valid = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_base = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_global_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_wptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_size = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr_wb_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_processing = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
 
     // Save RLC queue information in arrays that
     // are easier to serialize
@@ -1309,24 +1309,24 @@ SDMAEngine::serialize(CheckpointOut &cp) const
             rlc_mqd_addr[i] = rlc_queues[i]->getMQDAddr();
             rlc_priv[i] = rlc_queues[i]->priv();
             rlc_static[i] = rlc_queues[i]->isStatic();
-            memcpy(rlc_mqd + 128*i, rlc_queues[i]->getMQD(),
+            memcpy(rlc_mqd.get() + 128*i, rlc_queues[i]->getMQD(),
                     sizeof(SDMAQueueDesc));
         }
     }
 
-    SERIALIZE_ARRAY(rlc_info, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_valid, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_base, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_rptr, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_global_rptr, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_wptr, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_size, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_processing, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_mqd_addr, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_priv, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_static, num_rlc_queues);
-    SERIALIZE_ARRAY(rlc_mqd, num_rlc_queues * 128);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_info, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_valid, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_base, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_global_rptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_wptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_size, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_processing, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 }
 
 void
@@ -1347,17 +1347,17 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(pageWptr);
 
     int num_queues = 4;
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr size[num_queues];
-    bool processing[num_queues];
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto size = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
 
-    UNSERIALIZE_ARRAY(base, num_queues);
-    UNSERIALIZE_ARRAY(rptr, num_queues);
-    UNSERIALIZE_ARRAY(wptr, num_queues);
-    UNSERIALIZE_ARRAY(size, num_queues);
-    UNSERIALIZE_ARRAY(processing, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(size, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
 
     std::vector<SDMAQueue *> queues;
     queues.push_back((SDMAQueue *)&gfx);
@@ -1376,34 +1376,33 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     // Restore RLC queue state information from checkpoint
     // Only two RLC queues are supported right now
     const int num_rlc_queues = 2;
+    auto rlc_info = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_valid = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_base = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_global_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_wptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_size = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr_wb_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_processing = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
 
-    Addr rlc_info[num_rlc_queues];
-    bool rlc_valid[num_rlc_queues];
-    Addr rlc_base[num_rlc_queues];
-    Addr rlc_rptr[num_rlc_queues];
-    Addr rlc_global_rptr[num_rlc_queues];
-    Addr rlc_wptr[num_rlc_queues];
-    Addr rlc_size[num_rlc_queues];
-    Addr rlc_rptr_wb_addr[num_rlc_queues];
-    bool rlc_processing[num_rlc_queues];
-    Addr rlc_mqd_addr[num_rlc_queues];
-    bool rlc_priv[num_rlc_queues];
-    bool rlc_static[num_rlc_queues];
-    uint32_t rlc_mqd[num_rlc_queues * 128];
-
-    UNSERIALIZE_ARRAY(rlc_info, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_valid, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_base, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_rptr, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_global_rptr, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_wptr, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_size, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_processing, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_mqd_addr, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_priv, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_static, num_rlc_queues);
-    UNSERIALIZE_ARRAY(rlc_mqd, num_rlc_queues * 128);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_info, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_valid, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_base, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_global_rptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_wptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_size, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_processing, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 
     // Save RLC queue information into RLC0, RLC1
     std::vector<SDMAQueue *> rlc_queues;
@@ -1425,7 +1424,7 @@ SDMAEngine::unserialize(CheckpointIn &cp)
             rlc_queues[i]->setPriv(rlc_priv[i]);
             rlc_queues[i]->setStatic(rlc_static[i]);
             SDMAQueueDesc* mqd = new SDMAQueueDesc();
-            memcpy(mqd, rlc_mqd + 128*i, sizeof(SDMAQueueDesc));
+            memcpy(mqd, rlc_mqd.get() + 128*i, sizeof(SDMAQueueDesc));
             rlc_queues[i]->setMQD(mqd);
         }
     }

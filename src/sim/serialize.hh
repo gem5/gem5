@@ -619,6 +619,23 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
         ::gem5::arrayParamIn(cp, #member, member, size)
 
 /**
+ * \def SERIALIZE_UNIQUE_PTR_ARRAY(member, size)
+ *
+ * @ingroup api_serialize
+ */
+#define SERIALIZE_UNIQUE_PTR_ARRAY(member, size) \
+        ::gem5::arrayParamOut(cp, #member, member.get(), size)
+
+/**
+* \def UNSERIALIZE_UNIQUE_PTR_ARRAY(member, size)
+*
+* @ingroup api_serialize
+*/
+#define UNSERIALIZE_UNIQUE_PTR_ARRAY(member, size) \
+        ::gem5::arrayParamIn(cp, #member, member.get(), size)
+
+
+/**
  * \def SERIALIZE_CONTAINER(member)
  *
  * @ingroup api_serialize
