@@ -673,7 +673,7 @@ for variant_path in variant_paths:
               "src/SConscript to support that compiler.")))
 
     if env['GCC']:
-        gcc_min_version = "10"
+        gcc_min_version = "11"
         gcc_max_version = "14"
         gcc_version = env['CXXVERSION']
         if compareVersions(gcc_version, gcc_min_version) < 0 or \
