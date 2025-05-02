@@ -128,6 +128,7 @@ def find_gem5_pids() -> List[int]:
                                 "gem5.utils.multisim" not in cmdline
                                 and "multiprocessing.resource_tracker"
                                 not in cmdline
+                                and int(pid) != os.getpid()
                             ):
                                 gem5_pids.append(int(pid))
             except (OSError, PermissionError):
