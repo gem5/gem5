@@ -500,12 +500,10 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_POLL_REGMEM: {
         DPRINTF(SDMAEngine, "SDMA PollRegMem packet\n");
-        sdmaPollRegMemHeader *h = new sdmaPollRegMemHeader();
-        *h = *(sdmaPollRegMemHeader *)&header;
         dmaBuffer = new sdmaPollRegMem();
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { pollRegMem(q, h, (sdmaPollRegMem *)dmaBuffer); });
+                { pollRegMem(q, header, (sdmaPollRegMem *)dmaBuffer); });
         dmaReadVirt(q->rptr(), sizeof(sdmaPollRegMem), cb, dmaBuffer);
         switch (sub_opcode) {
           case SDMA_SUBOP_POLL_REG_WRITE_MEM: {
@@ -529,11 +527,9 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
       case SDMA_OP_ATOMIC: {
         DPRINTF(SDMAEngine, "SDMA Atomic packet\n");
         dmaBuffer = new sdmaAtomic();
-        sdmaAtomicHeader *h = new sdmaAtomicHeader();
-        *h = *(sdmaAtomicHeader *)&header;
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { atomic(q, h, (sdmaAtomic *)dmaBuffer); });
+                { atomic(q, header, (sdmaAtomic *)dmaBuffer); });
         dmaReadVirt(q->rptr(), sizeof(sdmaAtomic), cb, dmaBuffer);
         } break;
       case SDMA_OP_CONST_FILL: {
@@ -588,8 +584,6 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_SRBM_WRITE: {
         DPRINTF(SDMAEngine, "SDMA SRBMWrite packet\n");
-        sdmaSRBMWriteHeader *header = new sdmaSRBMWriteHeader();
-        *header = *(sdmaSRBMWriteHeader *)&header;
         dmaBuffer = new sdmaSRBMWrite();
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
@@ -897,18 +891,20 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 
 /* Implements a write SRBM packet. */
 void
-SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
-                      sdmaSRBMWrite *pkt)
+SDMAEngine::srbmWrite(SDMAQueue *q, uint32_t header, sdmaSRBMWrite *pkt)
 {
     q->incRptr(sizeof(sdmaSRBMWrite));
+
+    sdmaSRBMWriteHeader srbm_header;
+    srbm_header.ordinal = header;
 
     [[maybe_unused]] uint32_t reg_addr = pkt->regAddr << 2;
     uint32_t reg_mask = 0x00000000;
 
-    if (header->byteEnable & 0x8) reg_mask |= 0xFF000000;
-    if (header->byteEnable & 0x4) reg_mask |= 0x00FF0000;
-    if (header->byteEnable & 0x2) reg_mask |= 0x0000FF00;
-    if (header->byteEnable & 0x1) reg_mask |= 0x000000FF;
+    if (srbm_header.byteEnable & 0x8) reg_mask |= 0xFF000000;
+    if (srbm_header.byteEnable & 0x4) reg_mask |= 0x00FF0000;
+    if (srbm_header.byteEnable & 0x2) reg_mask |= 0x0000FF00;
+    if (srbm_header.byteEnable & 0x1) reg_mask |= 0x000000FF;
     pkt->data &= reg_mask;
 
     DPRINTF(SDMAEngine, "SRBM write to %#x with data %#x\n",
@@ -916,7 +912,6 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
 
     gpuDevice->setRegVal(reg_addr, pkt->data);
 
-    delete header;
     delete pkt;
     decodeNext(q);
 }
@@ -927,21 +922,23 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
  * unsuccessfull it retries indefinitely or for a limited number of times.
  */
 void
-SDMAEngine::pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                       sdmaPollRegMem *pkt)
+SDMAEngine::pollRegMem(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt)
 {
     q->incRptr(sizeof(sdmaPollRegMem));
 
+    sdmaPollRegMemHeader prm_header;
+    prm_header.ordinal = header;
+
     DPRINTF(SDMAEngine, "POLL_REGMEM: M=%d, func=%d, op=%d, addr=%p, ref=%d, "
-            "mask=%p, retry=%d, pinterval=%d\n", header->mode, header->func,
-            header->op, pkt->address, pkt->ref, pkt->mask, pkt->retryCount,
-            pkt->pollInt);
+            "mask=%p, retry=%d, pinterval=%d\n", prm_header.mode,
+            prm_header.func, prm_header.op, pkt->address, pkt->ref, pkt->mask,
+            pkt->retryCount, pkt->pollInt);
 
     bool skip = false;
 
-    if (header->mode == 1) {
+    if (prm_header.mode == 1) {
         // polling on a memory location
-        if (header->op == 0) {
+        if (prm_header.op == 0) {
             auto cb = new DmaVirtCallback<uint32_t>(
                 [ = ] (const uint32_t &dma_buffer) {
                     pollRegMemRead(q, header, pkt, dma_buffer, 0); });
@@ -958,19 +955,21 @@ SDMAEngine::pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
     }
 
     if (skip) {
-        delete header;
         delete pkt;
         decodeNext(q);
     }
 }
 
 void
-SDMAEngine::pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                           sdmaPollRegMem *pkt, uint32_t dma_buffer, int count)
+SDMAEngine::pollRegMemRead(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt,
+                           uint32_t dma_buffer, int count)
 {
-    assert(header->mode == 1 && header->op == 0);
+    sdmaPollRegMemHeader prm_header;
+    prm_header.ordinal = header;
 
-    if (!pollRegMemFunc(dma_buffer, pkt->ref, header->func) &&
+    assert(prm_header.mode == 1 && prm_header.op == 0);
+
+    if (!pollRegMemFunc(dma_buffer, pkt->ref, prm_header.func) &&
         ((count < (pkt->retryCount + 1) && pkt->retryCount != 0xfff) ||
          pkt->retryCount == 0xfff)) {
 
@@ -988,7 +987,6 @@ SDMAEngine::pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
         DPRINTF(SDMAEngine, "SDMA polling mem addr %p, val %d ref %d done.\n",
                 pkt->address, dma_buffer, pkt->ref);
 
-        delete header;
         delete pkt;
         decodeNext(q);
     }
@@ -1095,12 +1093,16 @@ SDMAEngine::ptePdeCleanup(uint64_t *dmaBuffer)
 }
 
 void
-SDMAEngine::atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt)
+SDMAEngine::atomic(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt)
 {
     q->incRptr(sizeof(sdmaAtomic));
+
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
+
     DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx, src: %ld, cmp: %ld, loop?"
-            " %d loopInt: %d\n", header->opcode, pkt->addr, pkt->srcData,
-            pkt->cmpData, header->loop, pkt->loopInt);
+            " %d loopInt: %d\n", at_header.opcode, pkt->addr, pkt->srcData,
+            pkt->cmpData, at_header.loop, pkt->loopInt);
 
     // Read the data at pkt->addr
     uint64_t *dmaBuffer = new uint64_t;
@@ -1111,13 +1113,16 @@ SDMAEngine::atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt)
 }
 
 void
-SDMAEngine::atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+SDMAEngine::atomicData(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                        uint64_t *dmaBuffer)
 {
-    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx got data %#lx\n",
-            header->opcode, pkt->addr, *dmaBuffer);
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
 
-    if (header->opcode == SDMA_ATOMIC_ADD64) {
+    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx got data %#lx\n",
+            at_header.opcode, pkt->addr, *dmaBuffer);
+
+    if (at_header.opcode == SDMA_ATOMIC_ADD64) {
         // Atomic add with return -- dst = dst + src
         int64_t dst_data = *dmaBuffer;
         int64_t src_data = pkt->srcData;
@@ -1133,19 +1138,21 @@ SDMAEngine::atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
                 { atomicDone(q, header, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer);
     } else {
-        panic("Unsupported SDMA atomic opcode: %d\n", header->opcode);
+        panic("Unsupported SDMA atomic opcode: %d\n", at_header.opcode);
     }
 }
 
 void
-SDMAEngine::atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+SDMAEngine::atomicDone(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                        uint64_t *dmaBuffer)
 {
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
+
     DPRINTF(SDMAEngine, "Atomic op %d op addr %#lx complete (sent %lx)\n",
-            header->opcode, pkt->addr, *dmaBuffer);
+            at_header.opcode, pkt->addr, *dmaBuffer);
 
     delete dmaBuffer;
-    delete header;
     delete pkt;
     decodeNext(q);
 }
