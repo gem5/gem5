@@ -678,7 +678,7 @@ for variant_path in variant_paths:
         gcc_version = env['CXXVERSION']
         if compareVersions(gcc_version, gcc_min_version) < 0 or \
               compareVersions(gcc_version, gcc_max_version) > 0:
-            warn(
+            warning(
                 f'Detected GCC version {gcc_version} is not officially '
                 f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
                 f'to v{gcc_max_version}.\n'
@@ -712,7 +712,7 @@ for variant_path in variant_paths:
         clang_version = env['CXXVERSION']
         if compareVersions(clang_version, clang_min_version) < 0 or \
               compareVersions(clang_version, clang_max_version) > 0:
-            warn(
+            warning(
                 f'Detected Clang version {clang_version} is not officially '
                 f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
                 f'to v{clang_max_version}.\n'
