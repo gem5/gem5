@@ -707,8 +707,8 @@ for variant_path in variant_paths:
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
     elif env['CLANG']:
-        clang_min_version = "10"
-        clang_max_version = "14"
+        clang_min_version = "14"
+        clang_max_version = "19"
         clang_version = env['CXXVERSION']
         if compareVersions(clang_version, clang_min_version) < 0 or \
               compareVersions(clang_version, clang_max_version) > 0:
