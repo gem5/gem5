@@ -680,7 +680,7 @@ for variant_path in variant_paths:
               compareVersions(gcc_version, gcc_max_version) > 0:
             warn(
                 f'Detected GCC version {gcc_version} is not officially '
-                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '\
+                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
                 f'to v{gcc_max_version}.\n'
             )
 
@@ -714,7 +714,7 @@ for variant_path in variant_paths:
               compareVersions(clang_version, clang_max_version) > 0:
             warn(
                 f'Detected Clang version {clang_version} is not officially '
-                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '\
+                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
                 f'to v{clang_max_version}.\n'
             )
         # Set the Link-Time Optimization (LTO) flags if enabled.
