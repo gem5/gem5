@@ -65,7 +65,6 @@ group "base-images" {
 # `docker buildx bake --push ubuntu-releases`.
 group "default" {
   targets=[
-    "qemu-riscv-env",
     "clang-compilers",
     "gcc-compilers",
     "ubuntu-releases",
@@ -76,16 +75,6 @@ group "default" {
     "devcontainer"
   ]
 }
-
-target "qemu-riscv-env" {
-    inherits = ["common"]
-    context = "qemu-riscv-env"
-    annotations = ["index,manifest:org.opencontainers.image.description=An image capable of running a RISC-V QEMU simulation. Used to build RISC-V disk images for gem5-resources."]
-    cache-from = ["${CACHE_PREFIX}/qemu-riscv-env:${CACHE_TAG}"]
-    cache-to = ["${CACHE_PREFIX}/qemu-riscv-env:${CACHE_TAG}"]
-    tags=["${IMAGE_URI}/qemu-riscv-env:${TAG}"]
-}
-
 
 group "clang-compilers" {
   targets = [
