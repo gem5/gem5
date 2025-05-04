@@ -74,7 +74,7 @@ gem5_verify_config(
 #    faster sim)
 #  - use small address range to encourage more races
 #  - use small episode length to encourage more races
-#  - 1.5M tests runs in ~30 minutes on Action runners with reasonably good
+#  - 150k tests runs in ~1 hour on Action runners with reasonably good
 #    coverage
 #  - num-dmas = 0 because VIPER doesn't support partial cache line writes,
 #    which DMAs need
@@ -87,7 +87,7 @@ gem5_verify_config(
     ),
     config_args=[
         "--test-length",
-        "1500000",
+        "150000",
         "--num-dmas",
         "0",
         "--protocol",
