@@ -416,6 +416,37 @@ class VectorParamDesc(ParamDesc):
         code("std::vector< ${{self.ptype.cxx_type}} > ${{self.name}};")
 
 
+class OptionalParamDesc(ParamDesc):
+    def __init__(self, ptype_str, ptype, *args, **kwargs):
+        if len(args) != 1:
+            raise TypeError(
+                "OptionalParamDesc takes exactly one argument: description."
+            )
+        if ptype_str not in allParams:
+            raise TypeError(
+                "OptionalParam only supports primitive parameter types."
+            )
+        kwargs["default"] = NullOpt
+        super().__init__(ptype_str, ptype, *args, **kwargs)
+
+    def convert(self, value):
+        if isNullOpt(value):
+            return value
+        else:
+            return ParamDesc.convert(self, value)
+
+    def cxx_predecls(self, code):
+        code("#include <optional>", add_once=True)
+        self.ptype.cxx_predecls(code)
+
+    def pybind_predecls(self, code):
+        code("#include <optional>", add_once=True)
+        self.ptype.pybind_predecls(code)
+
+    def cxx_decl(self, code):
+        code("std::optional< ${{self.ptype.cxx_type}} > ${{self.name}};")
+
+
 class ParamFactory:
     def __init__(self, param_desc_class, ptype_str=None):
         self.param_desc_class = param_desc_class
@@ -440,6 +471,7 @@ class ParamFactory:
 
 Param = ParamFactory(ParamDesc)
 VectorParam = ParamFactory(VectorParamDesc)
+OptionalParam = ParamFactory(OptionalParamDesc)
 
 #####################################################################
 #
@@ -2041,6 +2073,35 @@ def isNullPointer(value):
     return isinstance(value, NullSimObject)
 
 
+class NullOptT(metaclass=Singleton):
+    _name = "NullOpt"
+
+    def __call__(cls):
+        return cls
+
+    def ini_str(self):
+        return "NullOpt"
+
+    def unproxy(self, base):
+        return self
+
+    def __str__(self):
+        return self._name
+
+    def config_value(self):
+        return None
+
+    def getValue(self):
+        return None
+
+
+NullOpt = NullOptT()
+
+
+def isNullOpt(value):
+    return isinstance(value, NullOptT)
+
+
 # Some memory range specifications use this as a default upper bound.
 MaxAddr = Addr.max
 MaxTick = Tick.max
@@ -2484,6 +2545,7 @@ def clear():
 __all__ = [
     "Param",
     "VectorParam",
+    "OptionalParam",
     "Enum",
     "ScopedEnum",
     "Bool",
@@ -2527,6 +2589,7 @@ __all__ = [
     "Time",
     "NextEthernetAddr",
     "NULL",
+    "NullOpt",
     "Port",
     "RequestPort",
     "ResponsePort",
